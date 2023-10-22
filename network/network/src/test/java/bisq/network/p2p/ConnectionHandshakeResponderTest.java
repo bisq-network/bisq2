@@ -19,11 +19,17 @@ package bisq.network.p2p;
 
 import bisq.common.util.FileUtils;
 import bisq.network.p2p.message.NetworkEnvelope;
-import bisq.network.p2p.node.*;
+import bisq.network.p2p.node.Capability;
+import bisq.network.p2p.node.ConnectionException;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
+import bisq.network.p2p.node.data.NetworkLoad;
+import bisq.network.p2p.node.envelope.NetworkEnvelopeSocketChannel;
+import bisq.network.p2p.node.handshake.ConnectionHandshake;
+import bisq.network.p2p.node.handshake.ConnectionHandshakeResponder;
 import bisq.network.p2p.node.transport.TransportType;
 import bisq.network.p2p.services.peergroup.BanList;
+import bisq.network.p2p.vo.Address;
 import bisq.persistence.PersistenceService;
 import bisq.security.SecurityService;
 import bisq.security.pow.ProofOfWorkService;
@@ -92,9 +98,9 @@ public class ConnectionHandshakeResponderTest {
 
     @Test
     void wrongEnvelopeVersion() throws IOException {
-        ConnectionHandshake.Request request = new ConnectionHandshake.Request(responderCapability, Load.INITIAL_LOAD);
+        ConnectionHandshake.Request request = new ConnectionHandshake.Request(responderCapability, NetworkLoad.INITIAL_NETWORK_LOAD);
         AuthorizationToken token = authorizationService.createToken(request,
-                Load.INITIAL_LOAD,
+                NetworkLoad.INITIAL_NETWORK_LOAD,
                 Address.localHost(1234).toString(),
                 0);
         NetworkEnvelope requestNetworkEnvelope = new NetworkEnvelope(NetworkEnvelope.VERSION + 1000, token, request);
@@ -107,10 +113,10 @@ public class ConnectionHandshakeResponderTest {
 
     @Test
     void wrongNetworkMessage() throws IOException {
-        ConnectionHandshake.Response response = new ConnectionHandshake.Response(responderCapability, Load.INITIAL_LOAD);
+        ConnectionHandshake.Response response = new ConnectionHandshake.Response(responderCapability, NetworkLoad.INITIAL_NETWORK_LOAD);
         AuthorizationToken token = authorizationService.createToken(
                 response,
-                Load.INITIAL_LOAD,
+                NetworkLoad.INITIAL_NETWORK_LOAD,
                 Address.localHost(1234).toString(),
                 0);
         NetworkEnvelope responseEnvelope = new NetworkEnvelope(NetworkEnvelope.VERSION, token, response);
@@ -126,9 +132,9 @@ public class ConnectionHandshakeResponderTest {
 
     @Test
     void bannedPeer() throws IOException {
-        ConnectionHandshake.Request request = new ConnectionHandshake.Request(responderCapability, Load.INITIAL_LOAD);
+        ConnectionHandshake.Request request = new ConnectionHandshake.Request(responderCapability, NetworkLoad.INITIAL_NETWORK_LOAD);
         AuthorizationToken token = authorizationService.createToken(request,
-                Load.INITIAL_LOAD,
+                NetworkLoad.INITIAL_NETWORK_LOAD,
                 Address.localHost(1234).toString(),
                 0);
         NetworkEnvelope requestNetworkEnvelope = new NetworkEnvelope(NetworkEnvelope.VERSION, token, request);
@@ -146,9 +152,9 @@ public class ConnectionHandshakeResponderTest {
 
     @Test
     void invalidPoW() throws IOException {
-        ConnectionHandshake.Request request = new ConnectionHandshake.Request(responderCapability, Load.INITIAL_LOAD);
+        ConnectionHandshake.Request request = new ConnectionHandshake.Request(responderCapability, NetworkLoad.INITIAL_NETWORK_LOAD);
         AuthorizationToken token = authorizationService.createToken(request,
-                Load.INITIAL_LOAD,
+                NetworkLoad.INITIAL_NETWORK_LOAD,
                 Address.localHost(1234).toString(),
                 5);
         NetworkEnvelope requestNetworkEnvelope = new NetworkEnvelope(NetworkEnvelope.VERSION, token, request);
@@ -165,9 +171,9 @@ public class ConnectionHandshakeResponderTest {
     @Test
     void correctPoW() throws IOException {
         Capability peerCapability = new Capability(Address.localHost(2345), supportedTransportTypes);
-        ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, Load.INITIAL_LOAD);
+        ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, NetworkLoad.INITIAL_NETWORK_LOAD);
         AuthorizationToken token = authorizationService.createToken(request,
-                Load.INITIAL_LOAD,
+                NetworkLoad.INITIAL_NETWORK_LOAD,
                 responderCapability.getAddress().getFullAddress(),
                 0);
         NetworkEnvelope requestNetworkEnvelope = new NetworkEnvelope(NetworkEnvelope.VERSION, token, request);
@@ -178,14 +184,14 @@ public class ConnectionHandshakeResponderTest {
 
         ConnectionHandshake.Response response = (ConnectionHandshake.Response) responseNetworkEnvelope.getNetworkMessage();
         assertThat(response.getCapability()).isEqualTo(responderCapability);
-        assertThat(response.getLoad()).isEqualTo(Load.INITIAL_LOAD);
+        assertThat(response.getNetworkLoad()).isEqualTo(NetworkLoad.INITIAL_NETWORK_LOAD);
     }
 
     private NetworkEnvelope createValidRequest() {
         Capability peerCapability = new Capability(Address.localHost(2345), supportedTransportTypes);
-        ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, Load.INITIAL_LOAD);
+        ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, NetworkLoad.INITIAL_NETWORK_LOAD);
         AuthorizationToken token = authorizationService.createToken(request,
-                Load.INITIAL_LOAD,
+                NetworkLoad.INITIAL_NETWORK_LOAD,
                 responderCapability.getAddress().getFullAddress(),
                 0);
         return new NetworkEnvelope(NetworkEnvelope.VERSION, token, request);

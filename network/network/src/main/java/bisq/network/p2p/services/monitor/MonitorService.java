@@ -17,11 +17,11 @@
 
 package bisq.network.p2p.services.monitor;
 
-import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.peergroup.Peer;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
+import bisq.network.p2p.vo.Address;
 
 import java.text.SimpleDateFormat;
 import java.util.Comparator;
@@ -67,7 +67,7 @@ public class MonitorService {
     }
 
     private void appendConnectionInfo(StringBuilder sb, Connection connection, boolean isOutbound) {
-        String date = " at " + new SimpleDateFormat("HH:mm:ss.SSS").format(connection.getMetrics().getCreationDate());
+        String date = " at " + new SimpleDateFormat("HH:mm:ss.SSS").format(connection.getConnectionMetrics().getCreationDate());
         String peerAddressVerified = connection.isPeerAddressVerified() ? " !]" : " ?]";
         String peerAddress = connection.getPeerAddress().toString().replace("]", peerAddressVerified);
         String dir = isOutbound ? " --> " : " <-- ";

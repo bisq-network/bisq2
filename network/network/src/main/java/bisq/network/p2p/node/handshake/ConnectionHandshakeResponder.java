@@ -15,14 +15,19 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.node;
+package bisq.network.p2p.node.handshake;
 
 import bisq.common.data.Pair;
 import bisq.common.util.StringUtils;
 import bisq.network.p2p.message.NetworkEnvelope;
+import bisq.network.p2p.node.Capability;
+import bisq.network.p2p.node.ConnectionException;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
+import bisq.network.p2p.node.data.NetworkLoad;
+import bisq.network.p2p.node.envelope.NetworkEnvelopeSocketChannel;
 import bisq.network.p2p.services.peergroup.BanList;
+import bisq.network.p2p.vo.Address;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -59,7 +64,8 @@ public class ConnectionHandshakeResponder {
         verifyPoW(requestNetworkEnvelope);
 
         Address peerAddress = request.getCapability().getAddress();
-        NetworkEnvelope responseEnvelope = createResponseEnvelope(Load.INITIAL_LOAD, request.getLoad(), peerAddress);
+        // TODO myLoad should be used here
+        NetworkEnvelope responseEnvelope = createResponseEnvelope(NetworkLoad.INITIAL_NETWORK_LOAD, request.getNetworkLoad(), peerAddress);
 
         return new Pair<>(request, responseEnvelope);
     }
@@ -77,10 +83,12 @@ public class ConnectionHandshakeResponder {
     private void verifyPoW(NetworkEnvelope requestNetworkEnvelope) {
         ConnectionHandshake.Request request = (ConnectionHandshake.Request) requestNetworkEnvelope.getNetworkMessage();
         String myAddress = capability.getAddress().getFullAddress();
+        // As the request did not know our load at the initial request, they used the Load.INITIAL_LOAD for the
+        // AuthorizationToken.
         boolean isAuthorized = authorizationService.isAuthorized(
                 request,
                 requestNetworkEnvelope.getAuthorizationToken(),
-                Load.INITIAL_LOAD,
+                NetworkLoad.INITIAL_NETWORK_LOAD,
                 StringUtils.createUid(),
                 myAddress
         );
@@ -92,7 +100,7 @@ public class ConnectionHandshakeResponder {
             throw new ConnectionException("Request authorization failed. request=" + request);
         }
 
-        log.debug("Clients capability {}, load={}", request.getCapability(), request.getLoad());
+        log.debug("Clients capability {}, load={}", request.getCapability(), request.getNetworkLoad());
     }
 
     private NetworkEnvelope parseAndValidateRequest(NetworkEnvelope requestNetworkEnvelope) {
@@ -108,9 +116,9 @@ public class ConnectionHandshakeResponder {
         }
     }
 
-    private NetworkEnvelope createResponseEnvelope(Load myLoad, Load peerLoad, Address peerAddress) {
-        ConnectionHandshake.Response response = new ConnectionHandshake.Response(capability, myLoad);
-        AuthorizationToken token = authorizationService.createToken(response, peerLoad, peerAddress.getFullAddress(), 0);
+    private NetworkEnvelope createResponseEnvelope(NetworkLoad myNetworkLoad, NetworkLoad peerNetworkLoad, Address peerAddress) {
+        ConnectionHandshake.Response response = new ConnectionHandshake.Response(capability, myNetworkLoad);
+        AuthorizationToken token = authorizationService.createToken(response, peerNetworkLoad, peerAddress.getFullAddress(), 0);
         return new NetworkEnvelope(NetworkEnvelope.VERSION, token, response);
     }
 

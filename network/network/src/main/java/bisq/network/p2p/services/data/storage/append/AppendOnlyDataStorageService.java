@@ -18,9 +18,9 @@
 package bisq.network.p2p.services.data.storage.append;
 
 import bisq.common.data.ByteArray;
+import bisq.network.p2p.services.data.storage.DataStorageResult;
 import bisq.network.p2p.services.data.storage.DataStorageService;
 import bisq.network.p2p.services.data.storage.DataStore;
-import bisq.network.p2p.services.data.storage.Result;
 import bisq.persistence.PersistenceService;
 import bisq.security.DigestUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -57,25 +57,25 @@ public class AppendOnlyDataStorageService extends DataStorageService<AddAppendOn
         return 1000;
     }
 
-    public Result add(AddAppendOnlyDataRequest addAppendOnlyDataRequest) {
+    public DataStorageResult add(AddAppendOnlyDataRequest addAppendOnlyDataRequest) {
         AppendOnlyData appendOnlyData = addAppendOnlyDataRequest.getAppendOnlyData();
         Map<ByteArray, AddAppendOnlyDataRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
             if (map.size() > getMaxMapSize()) {
-                return new Result(false).maxMapSizeReached();
+                return new DataStorageResult(false).maxMapSizeReached();
             }
 
             byte[] hash = DigestUtil.hash(appendOnlyData.serialize());
             ByteArray byteArray = new ByteArray(hash);
             if (map.containsKey(byteArray)) {
-                return new Result(false).payloadAlreadyStored();
+                return new DataStorageResult(false).payloadAlreadyStored();
             }
 
             map.put(byteArray, addAppendOnlyDataRequest);
         }
         persist();
         listeners.forEach(listener -> listener.onAppended(appendOnlyData));
-        return new Result(true);
+        return new DataStorageResult(true);
     }
 
     @Override

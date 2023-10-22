@@ -1,6 +1,6 @@
 package bisq.network.p2p.services.confidential.ack;
 
-import bisq.network.NetworkId;
+import bisq.network.p2p.vo.NetworkId;
 
 /**
  * Interface marking a message which expects an AckMessage to be sent back as confidential message to the message sender.

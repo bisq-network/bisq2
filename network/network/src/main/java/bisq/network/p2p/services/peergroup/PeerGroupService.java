@@ -19,7 +19,11 @@ package bisq.network.p2p.services.peergroup;
 
 import bisq.common.util.MathUtils;
 import bisq.network.NetworkService;
-import bisq.network.p2p.node.*;
+import bisq.network.p2p.node.Connection;
+import bisq.network.p2p.node.InboundConnection;
+import bisq.network.p2p.node.Node;
+import bisq.network.p2p.node.OutboundConnection;
+import bisq.network.p2p.vo.Address;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -157,7 +161,7 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
     }
 
     public Comparator<Connection> getConnectionAgeComparator() {
-        return Comparator.comparing(connection -> connection.getMetrics().getCreationDate());
+        return Comparator.comparing(connection -> connection.getConnectionMetrics().getCreationDate());
     }
 
 
@@ -167,7 +171,7 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
 
     public Stream<Peer> getAllConnectedPeers() {
         return getAllConnections().map(con ->
-                new Peer(con.getPeersCapability(), con.getPeersLoad(), con.isOutboundConnection()));
+                new Peer(con.getPeersCapability(), con.getPeersNetworkLoad(), con.isOutboundConnection()));
     }
 
     public boolean isNotBanned(Peer peer) {

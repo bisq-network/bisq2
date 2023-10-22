@@ -19,9 +19,9 @@ package bisq.network.p2p.services.peergroup;
 
 import bisq.common.proto.Proto;
 import bisq.common.validation.NetworkDataValidation;
-import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.Capability;
-import bisq.network.p2p.node.Load;
+import bisq.network.p2p.node.data.NetworkLoad;
+import bisq.network.p2p.vo.Address;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -35,17 +35,17 @@ import java.util.Date;
 public final class Peer implements Proto, Comparable<Peer> {
     @EqualsAndHashCode.Include
     private final Capability capability;
-    private final Load load;
+    private final NetworkLoad networkLoad;
     private final boolean isOutboundConnection;
     private final long created;
 
-    public Peer(Capability capability, Load load, boolean isOutboundConnection) {
-        this(capability, load, isOutboundConnection, System.currentTimeMillis());
+    public Peer(Capability capability, NetworkLoad networkLoad, boolean isOutboundConnection) {
+        this(capability, networkLoad, isOutboundConnection, System.currentTimeMillis());
     }
 
-    public Peer(Capability capability, Load load, boolean isOutboundConnection, long created) {
+    public Peer(Capability capability, NetworkLoad networkLoad, boolean isOutboundConnection, long created) {
         this.capability = capability;
-        this.load = load;
+        this.networkLoad = networkLoad;
         this.isOutboundConnection = isOutboundConnection;
         this.created = created;
 
@@ -55,7 +55,7 @@ public final class Peer implements Proto, Comparable<Peer> {
     public bisq.network.protobuf.Peer toProto() {
         return bisq.network.protobuf.Peer.newBuilder()
                 .setCapability(capability.toProto())
-                .setLoad(load.toProto())
+                .setNetworkLoad(networkLoad.toProto())
                 .setIsOutboundConnection(isOutboundConnection)
                 .setCreated(created)
                 .build();
@@ -63,7 +63,7 @@ public final class Peer implements Proto, Comparable<Peer> {
 
     public static Peer fromProto(bisq.network.protobuf.Peer proto) {
         return new Peer(Capability.fromProto(proto.getCapability()),
-                Load.fromProto(proto.getLoad()),
+                NetworkLoad.fromProto(proto.getNetworkLoad()),
                 proto.getIsOutboundConnection(),
                 proto.getCreated());
     }

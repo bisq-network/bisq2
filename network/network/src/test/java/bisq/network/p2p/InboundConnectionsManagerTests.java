@@ -20,11 +20,18 @@ package bisq.network.p2p;
 import bisq.common.util.FileUtils;
 import bisq.common.util.NetworkUtils;
 import bisq.network.p2p.message.NetworkEnvelope;
-import bisq.network.p2p.node.*;
+import bisq.network.p2p.node.Capability;
+import bisq.network.p2p.node.InboundConnectionsManager;
+import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
+import bisq.network.p2p.node.data.NetworkLoad;
+import bisq.network.p2p.node.envelope.NetworkEnvelopeSocketChannel;
+import bisq.network.p2p.node.envelope.ProtoBufMessageLengthWriter;
+import bisq.network.p2p.node.handshake.ConnectionHandshake;
 import bisq.network.p2p.node.transport.TransportType;
 import bisq.network.p2p.services.peergroup.BanList;
+import bisq.network.p2p.vo.Address;
 import bisq.persistence.PersistenceService;
 import bisq.security.SecurityService;
 import bisq.security.pow.ProofOfWorkService;
@@ -235,10 +242,10 @@ public class InboundConnectionsManagerTests {
         supportedTransportTypes.add(TransportType.CLEAR);
         Capability peerCapability = new Capability(peerAddress, supportedTransportTypes);
 
-        ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, Load.INITIAL_LOAD);
+        ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, NetworkLoad.INITIAL_NETWORK_LOAD);
         AuthorizationService authorizationService = createAuthorizationService();
         AuthorizationToken token = authorizationService.createToken(request,
-                Load.INITIAL_LOAD,
+                NetworkLoad.INITIAL_NETWORK_LOAD,
                 myAddress.getFullAddress(),
                 0);
         return new NetworkEnvelope(NetworkEnvelope.VERSION, token, request).toProto();

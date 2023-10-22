@@ -19,7 +19,7 @@ package bisq.trade.bisq_easy.protocol.messages;
 
 import bisq.contract.ContractSignatureData;
 import bisq.contract.bisq_easy.BisqEasyContract;
-import bisq.network.NetworkId;
+import bisq.network.p2p.vo.NetworkId;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;

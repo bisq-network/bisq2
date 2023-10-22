@@ -207,12 +207,12 @@ public class StorageService {
         MailboxData mailboxData = request.getMailboxSequentialData().getMailboxData();
         return getOrCreateMailboxDataStore(mailboxData.getClassName())
                 .thenApply(store -> {
-                    Result result = store.add(request);
-                    if (result.isSuccess()) {
+                    DataStorageResult dataStorageResult = store.add(request);
+                    if (dataStorageResult.isSuccess()) {
                         return Optional.of(mailboxData);
                     } else {
-                        if (result.isSevereFailure()) {
-                            log.warn("AddAuthenticatedDataRequest was not added to store. Result={}", result);
+                        if (dataStorageResult.isSevereFailure()) {
+                            log.warn("AddAuthenticatedDataRequest was not added to store. Result={}", dataStorageResult);
                         }
                         return Optional.empty();
                     }
@@ -223,12 +223,12 @@ public class StorageService {
         AuthenticatedData authenticatedData = request.getAuthenticatedSequentialData().getAuthenticatedData();
         return getOrCreateAuthenticatedDataStore(authenticatedData.getClassName())
                 .thenApply(store -> {
-                    Result result = store.add(request);
-                    if (result.isSuccess()) {
+                    DataStorageResult dataStorageResult = store.add(request);
+                    if (dataStorageResult.isSuccess()) {
                         return Optional.of(authenticatedData);
                     } else {
-                        if (result.isSevereFailure()) {
-                            log.warn("AddAuthenticatedDataRequest was not added to store. Result={}", result);
+                        if (dataStorageResult.isSevereFailure()) {
+                            log.warn("AddAuthenticatedDataRequest was not added to store. Result={}", dataStorageResult);
                         }
                         return Optional.empty();
                     }
@@ -239,12 +239,12 @@ public class StorageService {
         AppendOnlyData appendOnlyData = request.getAppendOnlyData();
         return getOrCreateAppendOnlyDataStore(appendOnlyData.getMetaData().getClassName())
                 .thenApply(store -> {
-                    Result result = store.add(request);
-                    if (result.isSuccess()) {
+                    DataStorageResult dataStorageResult = store.add(request);
+                    if (dataStorageResult.isSuccess()) {
                         return Optional.of(appendOnlyData);
                     } else {
-                        if (result.isSevereFailure()) {
-                            log.warn("AddAuthenticatedDataRequest was not added to store. Result={}", result);
+                        if (dataStorageResult.isSevereFailure()) {
+                            log.warn("AddAuthenticatedDataRequest was not added to store. Result={}", dataStorageResult);
                         }
                         return Optional.empty();
                     }
@@ -271,12 +271,12 @@ public class StorageService {
     private CompletableFuture<Optional<StorageData>> onRemoveMailboxRequest(RemoveMailboxRequest request) {
         return getOrCreateMailboxDataStore(request.getClassName())
                 .thenApply(store -> {
-                    Result result = store.remove(request);
-                    if (result.isSuccess()) {
-                        return Optional.of(result.getRemovedData());
+                    DataStorageResult dataStorageResult = store.remove(request);
+                    if (dataStorageResult.isSuccess()) {
+                        return Optional.of(dataStorageResult.getRemovedData());
                     } else {
-                        if (result.isSevereFailure()) {
-                            log.warn("AddAuthenticatedDataRequest was not added to store. Result={}", result);
+                        if (dataStorageResult.isSevereFailure()) {
+                            log.warn("AddAuthenticatedDataRequest was not added to store. Result={}", dataStorageResult);
                         }
                         return Optional.empty();
                     }
@@ -286,12 +286,12 @@ public class StorageService {
     private CompletableFuture<Optional<StorageData>> onRemoveAuthenticatedDataRequest(RemoveAuthenticatedDataRequest request) {
         return getOrCreateAuthenticatedDataStore(request.getClassName())
                 .thenApply(store -> {
-                    Result result = store.remove(request);
-                    if (result.isSuccess()) {
-                        return Optional.of(result.getRemovedData());
+                    DataStorageResult dataStorageResult = store.remove(request);
+                    if (dataStorageResult.isSuccess()) {
+                        return Optional.of(dataStorageResult.getRemovedData());
                     } else {
-                        if (result.isSevereFailure()) {
-                            log.warn("RemoveAuthenticatedDataRequest was not added to store. Result={}", result);
+                        if (dataStorageResult.isSevereFailure()) {
+                            log.warn("RemoveAuthenticatedDataRequest was not added to store. Result={}", dataStorageResult);
                         }
                         return Optional.empty();
                     }

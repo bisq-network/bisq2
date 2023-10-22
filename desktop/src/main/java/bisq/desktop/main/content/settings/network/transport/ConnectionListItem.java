@@ -24,7 +24,7 @@ import bisq.i18n.Res;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
-import bisq.network.p2p.node.Metrics;
+import bisq.network.p2p.node.data.ConnectionMetrics;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.TimeFormatter;
 import javafx.beans.property.SimpleStringProperty;
@@ -40,7 +40,7 @@ public class ConnectionListItem implements TableItem {
     private final Connection connection;
     private final Connection.Listener listener;
 
-    private final Metrics metrics;
+    private final ConnectionMetrics connectionMetrics;
     @Getter
     private final String date;
     @Getter
@@ -63,9 +63,9 @@ public class ConnectionListItem implements TableItem {
         this.connection = connection;
         this.nodeId = nodeId;
         connectionId = connection.getId();
-        metrics = connection.getMetrics();
+        connectionMetrics = connection.getConnectionMetrics();
 
-        date = DateFormatter.formatDateTime(metrics.getCreationDate());
+        date = DateFormatter.formatDateTime(connectionMetrics.getCreationDate());
         address = connection.getPeerAddress().getFullAddress();
 
         direction = connection.isOutboundConnection() ?
@@ -93,7 +93,7 @@ public class ConnectionListItem implements TableItem {
     }
 
     private void updateRtt() {
-        long rrt = Math.round(metrics.getAverageRtt());
+        long rrt = Math.round(connectionMetrics.getAverageRtt());
         if (rrt > 0) {
             rtt.set(TimeFormatter.formatDuration(rrt));
         }
@@ -101,18 +101,18 @@ public class ConnectionListItem implements TableItem {
 
     private void updateSent() {
         sent.set(Res.get("settings.network.connections.value.ioData",
-                StringUtils.fromBytes(metrics.getSentBytes().get()),
-                metrics.getNumMessagesSent().get()));
+                StringUtils.fromBytes(connectionMetrics.getSentBytes().get()),
+                connectionMetrics.getNumMessagesSent().get()));
     }
 
     private void updateReceived() {
         received.set(Res.get("settings.network.connections.value.ioData",
-                StringUtils.fromBytes(metrics.getReceivedBytes().get()),
-                metrics.getNumMessagesReceived().get()));
+                StringUtils.fromBytes(connectionMetrics.getReceivedBytes().get()),
+                connectionMetrics.getNumMessagesReceived().get()));
     }
 
     public int compareDate(ConnectionListItem other) {
-        return metrics.getCreationDate().compareTo(other.metrics.getCreationDate());
+        return connectionMetrics.getCreationDate().compareTo(other.connectionMetrics.getCreationDate());
     }
 
     public int compareAddress(ConnectionListItem other) {

@@ -23,13 +23,11 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.CompletableFutureUtils;
-import bisq.network.http.HttpService;
-import bisq.network.http.common.BaseHttpClient;
+import bisq.network.http.BaseHttpClient;
+import bisq.network.http.HttpClientRepository;
 import bisq.network.p2p.ServiceNode;
 import bisq.network.p2p.ServiceNodesByTransport;
 import bisq.network.p2p.message.NetworkMessage;
-import bisq.network.p2p.node.Address;
-import bisq.network.p2p.node.AddressByTransportTypeMap;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.transport.BootstrapInfo;
@@ -46,6 +44,10 @@ import bisq.network.p2p.services.data.storage.append.AppendOnlyData;
 import bisq.network.p2p.services.data.storage.auth.DefaultAuthenticatedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
+import bisq.network.p2p.vo.Address;
+import bisq.network.p2p.vo.AddressByTransportTypeMap;
+import bisq.network.p2p.vo.NetworkId;
+import bisq.network.p2p.vo.NetworkIdWithKeyPair;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -98,7 +100,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     private final NetworkServiceStore persistableStore = new NetworkServiceStore();
     @Getter
     private final Persistence<NetworkServiceStore> persistence;
-    private final HttpService httpService;
+    private final HttpClientRepository httpClientRepository;
     private final Optional<String> socks5ProxyAddress; // Optional proxy address of external tor instance
     @Getter
     private final Set<TransportType> supportedTransportTypes;
@@ -112,7 +114,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                           PersistenceService persistenceService,
                           KeyPairService keyPairService,
                           ProofOfWorkService proofOfWorkService) {
-        httpService = new HttpService();
+        httpClientRepository = new HttpClientRepository();
 
         Set<ServiceNode.Service> services = config.getServiceNodeConfig().getServices();
 
@@ -175,8 +177,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         messageDeliveryStatusService.ifPresent(MessageDeliveryStatusService::shutdown);
         return CompletableFutureUtils.allOf(
                         dataService.map(DataService::shutdown).orElse(completedFuture(true)),
-                        serviceNodesByTransport.shutdown(),
-                        httpService.shutdown())
+                        serviceNodesByTransport.shutdown())
                 .thenApply(list -> list.stream().filter(e -> e).count() == 3);
     }
 
@@ -337,7 +338,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     public BaseHttpClient getHttpClient(String url, String userAgent, TransportType transportType) {
         // socksProxy only supported for TOR
         Optional<Socks5Proxy> socksProxy = transportType == TOR ? serviceNodesByTransport.getSocksProxy() : Optional.empty();
-        return httpService.getHttpClient(url, userAgent, transportType, socksProxy, socks5ProxyAddress);
+        return httpClientRepository.getHttpClient(url, userAgent, transportType, socksProxy, socks5ProxyAddress);
     }
 
     public Map<TransportType, Map<String, Address>> getMyAddresses() {

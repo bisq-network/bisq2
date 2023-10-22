@@ -22,6 +22,10 @@ import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
+import bisq.network.p2p.node.data.ConnectionMetrics;
+import bisq.network.p2p.node.data.NetworkLoad;
+import bisq.network.p2p.node.envelope.NetworkEnvelopeSocket;
+import bisq.network.p2p.vo.Address;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -46,7 +50,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 @Slf4j
 public abstract class Connection {
-    interface Handler {
+    protected interface Handler {
         void handleNetworkMessage(NetworkMessage networkMessage, AuthorizationToken authorizationToken, Connection connection);
 
         void handleConnectionClosed(Connection connection, CloseReason closeReason);
@@ -59,38 +63,34 @@ public abstract class Connection {
     }
 
     @Getter
-    protected final String id = StringUtils.createUid();
+    private final String id = StringUtils.createUid();
     @Getter
     private final Capability peersCapability;
     @Getter
-    private final Load peersLoad;
+    private final NetworkLoad peersNetworkLoad;
     @Getter
-    private final Metrics metrics;
+    private final ConnectionMetrics connectionMetrics;
 
     private NetworkEnvelopeSocket networkEnvelopeSocket;
-
     private final Handler handler;
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     @Nullable
-    private Future<?> future;
-
-    @Getter
-    private volatile boolean isStopped;
-    private volatile boolean listeningStopped;
-    @Getter
+    private Future<?> inputHandlerFuture;
     private final AtomicInteger sentMessageCounter = new AtomicInteger(0);
     private final Object writeLock = new Object();
+    private volatile boolean isStopped;
+    private volatile boolean listeningStopped;
 
     protected Connection(Socket socket,
                          Capability peersCapability,
-                         Load peersLoad,
-                         Metrics metrics,
+                         NetworkLoad peersNetworkLoad,
+                         ConnectionMetrics connectionMetrics,
                          Handler handler,
                          BiConsumer<Connection, Exception> errorHandler) {
         this.peersCapability = peersCapability;
-        this.peersLoad = peersLoad;
+        this.peersNetworkLoad = peersNetworkLoad;
         this.handler = handler;
-        this.metrics = metrics;
+        this.connectionMetrics = connectionMetrics;
 
         try {
             this.networkEnvelopeSocket = new NetworkEnvelopeSocket(socket);
@@ -101,7 +101,7 @@ public abstract class Connection {
             return;
         }
 
-        future = NetworkService.NETWORK_IO_POOL.submit(() -> {
+        inputHandlerFuture = NetworkService.NETWORK_IO_POOL.submit(() -> {
             Thread.currentThread().setName("Connection.read-" + getThreadNameId());
             try {
                 while (isInputStreamActive()) {
@@ -117,7 +117,7 @@ public abstract class Connection {
                         NetworkMessage networkMessage = networkEnvelope.getNetworkMessage();
                         log.debug("Received message: {} at: {}",
                                 StringUtils.truncate(networkMessage.toString(), 200), this);
-                        metrics.onReceived(networkEnvelope);
+                        connectionMetrics.onReceived(networkEnvelope);
                         NetworkService.DISPATCHER.submit(() -> handler.handleNetworkMessage(networkMessage,
                                 networkEnvelope.getAuthorizationToken(),
                                 this));
@@ -136,6 +136,51 @@ public abstract class Connection {
             }
         });
     }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Public API
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+    public void addListener(Listener listener) {
+        listeners.add(listener);
+    }
+
+    public void removeListener(Listener listener) {
+        listeners.remove(listener);
+    }
+
+    public Address getPeerAddress() {
+        return peersCapability.getAddress();
+    }
+
+    // Only at outbound connections we can be sure that the peer address is correct.
+    // The announced peer address in capability is not guaranteed to be valid.
+    // For most cases that is sufficient as the peer would not gain anything if lying about their address
+    // as it would make them unreachable for receiving messages from newly established connections. But there are
+    // cases where we need to be sure that it is the real address, like if we might use the peer address for banning a
+    // not correctly behaving peer.
+    public abstract boolean isPeerAddressVerified();
+
+    public boolean isOutboundConnection() {
+        return this instanceof OutboundConnection;
+    }
+
+    public boolean isRunning() {
+        return !isStopped();
+    }
+
+    @Override
+    public String toString() {
+        return "'" + getClass().getSimpleName() + " [peerAddress=" + getPeersCapability().getAddress() +
+                ", socket=" + networkEnvelopeSocket +
+                ", keyId=" + getId() + "]'";
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Package scope API
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     Connection send(NetworkMessage networkMessage, AuthorizationToken authorizationToken) {
         if (isStopped) {
@@ -157,7 +202,7 @@ public abstract class Connection {
                 }
             }
             if (sent) {
-                metrics.onSent(networkEnvelope);
+                connectionMetrics.onSent(networkEnvelope);
                 if (networkMessage instanceof CloseConnectionMessage) {
                     log.info("Sent {} from {}",
                             StringUtils.truncate(networkMessage.toString(), 300), this);
@@ -189,8 +234,8 @@ public abstract class Connection {
         }
         log.info("Close {}", this);
         isStopped = true;
-        if (future != null) {
-            future.cancel(true);
+        if (inputHandlerFuture != null) {
+            inputHandlerFuture.cancel(true);
         }
         try {
             networkEnvelopeSocket.close();
@@ -207,42 +252,18 @@ public abstract class Connection {
         listeners.forEach(listener -> listener.onNetworkMessage(networkMessage));
     }
 
-    public void addListener(Listener listener) {
-        listeners.add(listener);
+    AtomicInteger getSentMessageCounter() {
+        return sentMessageCounter;
     }
 
-    public void removeListener(Listener listener) {
-        listeners.remove(listener);
+    boolean isStopped() {
+        return isStopped;
     }
 
-    public Address getPeerAddress() {
-        return peersCapability.getAddress();
-    }
 
-    // Only at outbound connections we can be sure that the peer address is correct.
-    // The announced peer address in capability is not guaranteed to be valid.
-    // For most cases that is sufficient as the peer would not gain anything if lying about their address
-    // as it would make them unreachable for receiving messages from newly established connections. But there are
-    // cases where we need to be sure that it is the real address, like if we might use the peer address for banning a
-    // not correctly behaving peer.
-    public boolean getPeerAddressVerified() {
-        return isOutboundConnection();
-    }
-
-    public boolean isOutboundConnection() {
-        return this instanceof OutboundConnection;
-    }
-
-    public boolean isRunning() {
-        return !isStopped();
-    }
-
-    @Override
-    public String toString() {
-        return "'" + getClass().getSimpleName() + " [peerAddress=" + getPeersCapability().getAddress() +
-                ", socket=" + networkEnvelopeSocket +
-                ", keyId=" + getId() + "]'";
-    }
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private String getThreadNameId() {
         return StringUtils.truncate(getPeersCapability().getAddress().toString() + "-" + id.substring(0, 8));
@@ -251,6 +272,4 @@ public abstract class Connection {
     private boolean isInputStreamActive() {
         return !listeningStopped && !isStopped && !Thread.currentThread().isInterrupted();
     }
-
-    public abstract boolean isPeerAddressVerified();
 }

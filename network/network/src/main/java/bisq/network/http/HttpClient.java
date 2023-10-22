@@ -15,32 +15,22 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network;
+package bisq.network.http;
 
-import bisq.security.PubKey;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.ToString;
+import bisq.common.data.Pair;
 
-import java.security.KeyPair;
+import java.io.IOException;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
-@Getter
-@ToString
-@EqualsAndHashCode
-public final class NetworkIdWithKeyPair {
-    private final NetworkId networkId;
-    private final KeyPair keyPair;
+public interface HttpClient {
+    String get(String param, Optional<Pair<String, String>> optionalHeader) throws IOException;
 
-    public NetworkIdWithKeyPair(NetworkId networkId, KeyPair keyPair) {
-        this.networkId = networkId;
-        this.keyPair = keyPair;
-    }
+    String post(String param, Optional<Pair<String, String>> optionalHeader) throws IOException;
 
-    public String getNodeId() {
-        return networkId.getNodeId();
-    }
+    String getBaseUrl();
 
-    public PubKey getPubKey() {
-        return networkId.getPubKey();
-    }
+    boolean hasPendingRequest();
+
+    CompletableFuture<Boolean> shutdown();
 }

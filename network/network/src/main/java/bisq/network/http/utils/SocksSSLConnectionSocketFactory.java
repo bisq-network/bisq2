@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.http.common;
+package bisq.network.http.utils;
 
 import org.apache.http.HttpHost;
 import org.apache.http.conn.ssl.DefaultHostnameVerifier;
@@ -32,7 +32,7 @@ import java.net.Socket;
 //   http://stackoverflow.com/a/25203021/5616248
 //
 // This class routes connections over Socks, and avoids resolving hostnames locally.
-class SocksSSLConnectionSocketFactory extends SSLConnectionSocketFactory {
+public class SocksSSLConnectionSocketFactory extends SSLConnectionSocketFactory {
     public SocksSSLConnectionSocketFactory(final SSLContext sslContext) {
         // Only allow connections to sites with valid certs.
         super(sslContext, new DefaultHostnameVerifier());

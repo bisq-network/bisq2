@@ -15,14 +15,18 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p;
+package bisq.network.p2p.node.handshake;
 
 import bisq.common.util.StringUtils;
 import bisq.network.p2p.message.NetworkEnvelope;
-import bisq.network.p2p.node.*;
+import bisq.network.p2p.node.Capability;
+import bisq.network.p2p.node.ConnectionException;
+import bisq.network.p2p.node.OutboundConnection;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
+import bisq.network.p2p.node.data.NetworkLoad;
 import bisq.network.p2p.services.peergroup.BanList;
+import bisq.network.p2p.vo.Address;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,23 +38,24 @@ public class ConnectionHandshakeInitiator {
     private final Capability myCapability;
     private final AuthorizationService authorizationService;
     private final BanList banList;
-    private final Load myLoad;
+    private final NetworkLoad myNetworkLoad;
     private final Address peerAddress;
     @Getter
     private final CompletableFuture<OutboundConnection> completableFuture = new CompletableFuture<>();
 
-    public ConnectionHandshakeInitiator(Capability myCapability, AuthorizationService authorizationService, BanList banList, Load myLoad, Address peerAddress) {
+    public ConnectionHandshakeInitiator(Capability myCapability, AuthorizationService authorizationService, BanList banList, NetworkLoad myNetworkLoad, Address peerAddress) {
         this.myCapability = myCapability;
         this.authorizationService = authorizationService;
         this.banList = banList;
-        this.myLoad = myLoad;
+        this.myNetworkLoad = myNetworkLoad;
         this.peerAddress = peerAddress;
     }
 
     public NetworkEnvelope initiate() {
-        ConnectionHandshake.Request request = new ConnectionHandshake.Request(myCapability, myLoad);
+        ConnectionHandshake.Request request = new ConnectionHandshake.Request(myCapability, myNetworkLoad);
+        // As we do not know he peers load yet, we use the Load.INITIAL_LOAD
         AuthorizationToken token = authorizationService.createToken(request,
-                Load.INITIAL_LOAD,
+                NetworkLoad.INITIAL_NETWORK_LOAD,
                 peerAddress.getFullAddress(),
                 0);
         return new NetworkEnvelope(NetworkEnvelope.VERSION, token, request);
@@ -82,7 +87,7 @@ public class ConnectionHandshakeInitiator {
         String myAddress = myCapability.getAddress().getFullAddress();
         boolean isAuthorized = authorizationService.isAuthorized(response,
                 responseNetworkEnvelope.getAuthorizationToken(),
-                myLoad,
+                myNetworkLoad,
                 StringUtils.createUid(),
                 myAddress);
 
@@ -94,7 +99,7 @@ public class ConnectionHandshakeInitiator {
             throw new ConnectionException("Response authorization failed. request=" + response);
         }
 
-        log.debug("Servers capability {}, load={}", response.getCapability(), response.getLoad());
+        log.debug("Servers capability {}, load={}", response.getCapability(), response.getNetworkLoad());
         return response;
     }
 }

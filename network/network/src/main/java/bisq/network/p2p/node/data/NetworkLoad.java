@@ -15,30 +15,34 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.submarine;
+package bisq.network.p2p.node.data;
 
-import bisq.network.p2p.vo.NetworkId;
-import bisq.trade.TradeParty;
+import bisq.common.proto.Proto;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-@ToString(callSuper = true)
-@EqualsAndHashCode(callSuper = true)
 @Getter
-public class SubmarineTradeParty extends TradeParty {
+@ToString
+@EqualsAndHashCode
+public final class NetworkLoad implements Proto {
+    public static final NetworkLoad INITIAL_NETWORK_LOAD = new NetworkLoad(1);
+    private final int numConnections;
 
-    public SubmarineTradeParty(NetworkId networkId) {
-        super(networkId);
+    public NetworkLoad(int numConnections) {
+        this.numConnections = numConnections;
     }
 
-    @Override
-    public bisq.trade.protobuf.TradeParty toProto() {
-        bisq.trade.protobuf.SubmarineTradeParty.Builder builder = bisq.trade.protobuf.SubmarineTradeParty.newBuilder();
-        return getTradePartyBuilder().setSubmarineTradeParty(builder).build();
+    public bisq.network.protobuf.NetworkLoad toProto() {
+        return bisq.network.protobuf.NetworkLoad.newBuilder().setNumConnections(numConnections).build();
     }
 
-    public static SubmarineTradeParty fromProto(bisq.trade.protobuf.TradeParty proto) {
-        return new SubmarineTradeParty(NetworkId.fromProto(proto.getNetworkId()));
+    public static NetworkLoad fromProto(bisq.network.protobuf.NetworkLoad proto) {
+        return new NetworkLoad(proto.getNumConnections());
+    }
+
+    public int getFactor() {
+        //todo
+        return 10;
     }
 }

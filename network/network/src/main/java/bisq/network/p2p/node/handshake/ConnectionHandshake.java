@@ -15,14 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.node;
+package bisq.network.p2p.node.handshake;
 
 import bisq.common.util.StringUtils;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.node.Capability;
+import bisq.network.p2p.node.ConnectionException;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
+import bisq.network.p2p.node.data.ConnectionMetrics;
+import bisq.network.p2p.node.data.NetworkLoad;
+import bisq.network.p2p.node.envelope.NetworkEnvelopeSocket;
 import bisq.network.p2p.services.peergroup.BanList;
+import bisq.network.p2p.vo.Address;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -51,11 +57,11 @@ public final class ConnectionHandshake {
     @EqualsAndHashCode
     public static final class Request implements NetworkMessage {
         private final Capability capability;
-        private final Load load;
+        private final NetworkLoad networkLoad;
 
-        public Request(Capability capability, Load load) {
+        public Request(Capability capability, NetworkLoad networkLoad) {
             this.capability = capability;
-            this.load = load;
+            this.networkLoad = networkLoad;
         }
 
         @Override
@@ -63,13 +69,13 @@ public final class ConnectionHandshake {
             return getNetworkMessageBuilder().setConnectionHandshakeRequest(
                             bisq.network.protobuf.ConnectionHandshake.Request.newBuilder()
                                     .setCapability(capability.toProto())
-                                    .setLoad(load.toProto()))
+                                    .setNetworkLoad(networkLoad.toProto()))
                     .build();
         }
 
         public static Request fromProto(bisq.network.protobuf.ConnectionHandshake.Request proto) {
             return new Request(Capability.fromProto(proto.getCapability()),
-                    Load.fromProto(proto.getLoad()));
+                    NetworkLoad.fromProto(proto.getNetworkLoad()));
         }
     }
 
@@ -78,11 +84,11 @@ public final class ConnectionHandshake {
     @EqualsAndHashCode
     public static final class Response implements NetworkMessage {
         private final Capability capability;
-        private final Load load;
+        private final NetworkLoad networkLoad;
 
-        public Response(Capability capability, Load load) {
+        public Response(Capability capability, NetworkLoad networkLoad) {
             this.capability = capability;
-            this.load = load;
+            this.networkLoad = networkLoad;
         }
 
         @Override
@@ -90,13 +96,13 @@ public final class ConnectionHandshake {
             return getNetworkMessageBuilder().setConnectionHandshakeResponse(
                             bisq.network.protobuf.ConnectionHandshake.Response.newBuilder()
                                     .setCapability(capability.toProto())
-                                    .setLoad(load.toProto()))
+                                    .setNetworkLoad(networkLoad.toProto()))
                     .build();
         }
 
         public static Response fromProto(bisq.network.protobuf.ConnectionHandshake.Response proto) {
             return new Response(Capability.fromProto(proto.getCapability()),
-                    Load.fromProto(proto.getLoad()));
+                    NetworkLoad.fromProto(proto.getNetworkLoad()));
         }
     }
 
@@ -105,21 +111,21 @@ public final class ConnectionHandshake {
     @EqualsAndHashCode
     public static final class Result {
         private final Capability capability;
-        private final Load load;
-        private final Metrics metrics;
+        private final NetworkLoad networkLoad;
+        private final ConnectionMetrics connectionMetrics;
 
-        Result(Capability capability, Load load, Metrics metrics) {
+        Result(Capability capability, NetworkLoad networkLoad, ConnectionMetrics connectionMetrics) {
             this.capability = capability;
-            this.load = load;
-            this.metrics = metrics;
+            this.networkLoad = networkLoad;
+            this.connectionMetrics = connectionMetrics;
         }
     }
 
-    ConnectionHandshake(Socket socket,
-                        BanList banList,
-                        int socketTimeout,
-                        Capability capability,
-                        AuthorizationService authorizationService) {
+    public ConnectionHandshake(Socket socket,
+                               BanList banList,
+                               int socketTimeout,
+                               Capability capability,
+                               AuthorizationService authorizationService) {
         this.banList = banList;
         this.capability = capability;
         this.authorizationService = authorizationService;
@@ -136,19 +142,20 @@ public final class ConnectionHandshake {
     }
 
     // Client side protocol
-    Result start(Load myLoad, Address peerAddress) {
+    public Result start(NetworkLoad myNetworkLoad, Address peerAddress) {
         try {
-            Metrics metrics = new Metrics();
-            Request request = new Request(capability, myLoad);
+            ConnectionMetrics connectionMetrics = new ConnectionMetrics();
+            Request request = new Request(capability, myNetworkLoad);
+            // As we do not know he peers load yet, we use the Load.INITIAL_LOAD
             AuthorizationToken token = authorizationService.createToken(request,
-                    Load.INITIAL_LOAD,
+                    NetworkLoad.INITIAL_NETWORK_LOAD,
                     peerAddress.getFullAddress(),
                     0);
             NetworkEnvelope requestNetworkEnvelope = new NetworkEnvelope(NetworkEnvelope.VERSION, token, request);
             long ts = System.currentTimeMillis();
 
             networkEnvelopeSocket.send(requestNetworkEnvelope);
-            metrics.onSent(requestNetworkEnvelope);
+            connectionMetrics.onSent(requestNetworkEnvelope);
 
             bisq.network.protobuf.NetworkEnvelope responseProto = networkEnvelopeSocket.receiveNextEnvelope();
             if (responseProto == null) {
@@ -172,7 +179,7 @@ public final class ConnectionHandshake {
             String myAddress = capability.getAddress().getFullAddress();
             boolean isAuthorized = authorizationService.isAuthorized(response,
                     responseNetworkEnvelope.getAuthorizationToken(),
-                    myLoad,
+                    myNetworkLoad,
                     StringUtils.createUid(),
                     myAddress);
 
@@ -180,10 +187,10 @@ public final class ConnectionHandshake {
                 throw new ConnectionException("Request authorization failed. request=" + request);
             }
 
-            metrics.onReceived(responseNetworkEnvelope);
-            metrics.addRtt(System.currentTimeMillis() - ts);
-            log.debug("Servers capability {}, load={}", response.getCapability(), response.getLoad());
-            return new Result(response.getCapability(), response.getLoad(), metrics);
+            connectionMetrics.onReceived(responseNetworkEnvelope);
+            connectionMetrics.addRtt(System.currentTimeMillis() - ts);
+            log.debug("Servers capability {}, load={}", response.getCapability(), response.getNetworkLoad());
+            return new Result(response.getCapability(), response.getNetworkLoad(), connectionMetrics);
         } catch (Exception e) {
             try {
                 networkEnvelopeSocket.close();
@@ -198,9 +205,9 @@ public final class ConnectionHandshake {
     }
 
     // Server side protocol
-    Result onSocket(Load myLoad) {
+    public Result onSocket(NetworkLoad myNetworkLoad) {
         try {
-            Metrics metrics = new Metrics();
+            ConnectionMetrics connectionMetrics = new ConnectionMetrics();
             bisq.network.protobuf.NetworkEnvelope requestProto = networkEnvelopeSocket.receiveNextEnvelope();
             if (requestProto == null) {
                 throw new ConnectionException("Request NetworkEnvelope protobuf is null");
@@ -223,26 +230,28 @@ public final class ConnectionHandshake {
             }
 
             String myAddress = capability.getAddress().getFullAddress();
+            // As the request did not know our load at the initial request, they used the Load.INITIAL_LOAD for the
+            // AuthorizationToken.
             boolean isAuthorized = authorizationService.isAuthorized(request,
                     requestNetworkEnvelope.getAuthorizationToken(),
-                    Load.INITIAL_LOAD,
+                    NetworkLoad.INITIAL_NETWORK_LOAD,
                     StringUtils.createUid(),
                     myAddress);
             if (!isAuthorized) {
                 throw new ConnectionException("Request authorization failed. request=" + request);
             }
 
-            log.debug("Clients capability {}, load={}", request.getCapability(), request.getLoad());
-            metrics.onReceived(requestNetworkEnvelope);
+            log.debug("Clients capability {}, load={}", request.getCapability(), request.getNetworkLoad());
+            connectionMetrics.onReceived(requestNetworkEnvelope);
 
-            Response response = new Response(capability, myLoad);
-            AuthorizationToken token = authorizationService.createToken(response, request.getLoad(), peerAddress.getFullAddress(), 0);
+            Response response = new Response(capability, myNetworkLoad);
+            AuthorizationToken token = authorizationService.createToken(response, request.getNetworkLoad(), peerAddress.getFullAddress(), 0);
             NetworkEnvelope responseNetworkEnvelope = new NetworkEnvelope(NetworkEnvelope.VERSION, token, response);
             networkEnvelopeSocket.send(responseNetworkEnvelope);
 
-            metrics.onSent(responseNetworkEnvelope);
-            metrics.addRtt(System.currentTimeMillis() - ts);
-            return new Result(request.getCapability(), request.getLoad(), metrics);
+            connectionMetrics.onSent(responseNetworkEnvelope);
+            connectionMetrics.addRtt(System.currentTimeMillis() - ts);
+            return new Result(request.getCapability(), request.getNetworkLoad(), connectionMetrics);
         } catch (Exception e) {
             try {
                 networkEnvelopeSocket.close();
@@ -256,7 +265,7 @@ public final class ConnectionHandshake {
         }
     }
 
-    void shutdown() {
+    public void shutdown() {
         // todo close pending requests but do not close sockets
     }
 }

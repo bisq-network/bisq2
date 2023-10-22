@@ -19,7 +19,7 @@ package bisq.network.p2p.node.authorization;
 
 import bisq.common.util.ByteArrayUtils;
 import bisq.network.p2p.message.NetworkMessage;
-import bisq.network.p2p.node.Load;
+import bisq.network.p2p.node.data.NetworkLoad;
 import bisq.security.DigestUtil;
 import bisq.security.pow.ProofOfWork;
 import bisq.security.pow.ProofOfWorkService;
@@ -43,17 +43,27 @@ public class AuthorizationService {
         this.proofOfWorkService = proofOfWorkService;
     }
 
-    public AuthorizationToken createToken(NetworkMessage message, Load peersLoad, String peerAddress, int messageCounter) {
+    public AuthorizationToken createToken(NetworkMessage message,
+                                          NetworkLoad peersNetworkLoad,
+                                          String peerAddress,
+                                          int messageCounter) {
         long ts = System.currentTimeMillis();
-        AuthorizationToken token = proofOfWorkService.mint(getPayload(message), getChallenge(peerAddress, messageCounter), calculateDifficulty(message, peersLoad))
+        double difficulty = calculateDifficulty(message, peersNetworkLoad);
+        byte[] challenge = getChallenge(peerAddress, messageCounter);
+        byte[] payload = getPayload(message);
+        AuthorizationToken token = proofOfWorkService.mint(payload, challenge, difficulty)
                 .thenApply(proofOfWork -> new AuthorizationToken(proofOfWork, messageCounter))
                 .join();
         log.debug("Create token for {} took {} ms\n token={}, peersLoad={}, peerAddress={}",
-                message.getClass().getSimpleName(), System.currentTimeMillis() - ts, token, peersLoad, peerAddress);
+                message.getClass().getSimpleName(), System.currentTimeMillis() - ts, token, peersNetworkLoad, peerAddress);
         return token;
     }
 
-    public boolean isAuthorized(NetworkMessage message, AuthorizationToken authorizationToken, Load myLoad, String connectionId, String myAddress) {
+    public boolean isAuthorized(NetworkMessage message,
+                                AuthorizationToken authorizationToken,
+                                NetworkLoad myNetworkLoad,
+                                String connectionId,
+                                String myAddress) {
         ProofOfWork proofOfWork = authorizationToken.getProofOfWork();
         int messageCounter = authorizationToken.getMessageCounter();
 
@@ -71,12 +81,6 @@ public class AuthorizationService {
         }
         receivedMessageCounters.add(messageCounter);
 
-        // Verify difficulty
-        if (calculateDifficulty(message, myLoad) != proofOfWork.getDifficulty()) {
-            log.warn("Invalid difficulty");
-            return false;
-        }
-
         // Verify payload
         if (!Arrays.equals(getPayload(message), proofOfWork.getPayload())) {
             log.warn("Invalid payload");
@@ -89,8 +93,14 @@ public class AuthorizationService {
             return false;
         }
 
+        // Verify difficulty
+        if (calculateDifficulty(message, myNetworkLoad) != proofOfWork.getDifficulty()) {
+            log.warn("Invalid difficulty");
+            return false;
+        }
+
         log.debug("Verify token for {}. token={}, myLoad={}, myAddress={}",
-                message.getClass().getSimpleName(), authorizationToken, myLoad, myAddress);
+                message.getClass().getSimpleName(), authorizationToken, myNetworkLoad, myAddress);
         return proofOfWorkService.verify(proofOfWork);
     }
 
@@ -103,10 +113,10 @@ public class AuthorizationService {
                 BigInteger.valueOf(messageCounter).toByteArray()));
     }
 
-    private double calculateDifficulty(NetworkMessage message, Load load) {
+    private double calculateDifficulty(NetworkMessage message, NetworkLoad networkLoad) {
         //todo impl formula and add costs to messages
         int cost = message.getCost();
-        int loadFactor = load.getFactor();
+        int loadFactor = networkLoad.getFactor();
         return cost * loadFactor;
         // return 1048576; // = Math.pow(2, 20) = 1048576; -> high value which takes several seconds
     }

@@ -19,7 +19,6 @@ package bisq.network.p2p.services.peergroup;
 
 import bisq.common.timer.Scheduler;
 import bisq.network.NetworkService;
-import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
@@ -27,6 +26,7 @@ import bisq.network.p2p.services.peergroup.exchange.PeerExchangeService;
 import bisq.network.p2p.services.peergroup.exchange.PeerExchangeStrategy;
 import bisq.network.p2p.services.peergroup.keepalive.KeepAliveService;
 import bisq.network.p2p.services.peergroup.validateaddress.AddressValidationService;
+import bisq.network.p2p.vo.Address;
 import bisq.persistence.PersistenceService;
 import dev.failsafe.Failsafe;
 import dev.failsafe.RetryPolicy;
@@ -307,7 +307,7 @@ public class PeerGroupManager {
         log.debug("Node {} called maybeCloseAgedConnections", node);
         peerGroupService.getAllConnections()
                 .filter(this::mayDisconnect)
-                .filter(connection -> connection.getMetrics().getAge() > config.getMaxAge())
+                .filter(connection -> connection.getConnectionMetrics().getAge() > config.getMaxAge())
                 .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as the connection age " +
                                 "is too old.",
                         node, connection.getPeersCapability().getAddress()))
@@ -412,7 +412,7 @@ public class PeerGroupManager {
 
     // TODO find better solution than to use a hard coded estimated value
     private boolean notBootstrapping(Connection connection) {
-        return connection.getMetrics().getAge() > config.getBootstrapTime();
+        return connection.getConnectionMetrics().getAge() > config.getBootstrapTime();
     }
 
     private int getMissingOutboundConnections() {

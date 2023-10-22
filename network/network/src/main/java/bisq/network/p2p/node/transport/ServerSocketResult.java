@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.node.transport;
 
-import bisq.network.p2p.node.Address;
+import bisq.network.p2p.vo.Address;
 import bisq.tor.onionservice.CreateOnionServiceResponse;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

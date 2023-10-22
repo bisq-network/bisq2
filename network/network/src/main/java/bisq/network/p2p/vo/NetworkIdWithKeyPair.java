@@ -15,34 +15,32 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.node;
+package bisq.network.p2p.vo;
 
-import bisq.common.proto.Proto;
+import bisq.security.PubKey;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.security.KeyPair;
+
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class Load implements Proto {
-    public static final Load INITIAL_LOAD = new Load(1);
-    private final int numConnections;
+public final class NetworkIdWithKeyPair {
+    private final NetworkId networkId;
+    private final KeyPair keyPair;
 
-    public Load(int numConnections) {
-        this.numConnections = numConnections;
+    public NetworkIdWithKeyPair(NetworkId networkId, KeyPair keyPair) {
+        this.networkId = networkId;
+        this.keyPair = keyPair;
     }
 
-    public bisq.network.protobuf.Load toProto() {
-        return bisq.network.protobuf.Load.newBuilder().setNumConnections(numConnections).build();
+    public String getNodeId() {
+        return networkId.getNodeId();
     }
 
-    public static Load fromProto(bisq.network.protobuf.Load proto) {
-        return new Load(proto.getNumConnections());
-    }
-
-    public int getFactor() {
-        //todo
-        return 10;
+    public PubKey getPubKey() {
+        return networkId.getPubKey();
     }
 }

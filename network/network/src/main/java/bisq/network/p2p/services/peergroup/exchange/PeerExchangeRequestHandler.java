@@ -73,7 +73,7 @@ class PeerExchangeRequestHandler implements Connection.Listener {
                         node, connection.getPeerAddress(), addresses);*/
                 log.info("Node {} received PeerExchangeResponse from {} with {} peers",
                         node, connection.getPeerAddress(), response.getPeers().size());
-                connection.getMetrics().addRtt(System.currentTimeMillis() - ts);
+                connection.getConnectionMetrics().addRtt(System.currentTimeMillis() - ts);
                 removeListeners();
                 future.complete(new HashSet<>(response.getPeers()));
             } else {

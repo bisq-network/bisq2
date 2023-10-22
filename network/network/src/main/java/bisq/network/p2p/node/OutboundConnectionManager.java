@@ -17,10 +17,16 @@
 
 package bisq.network.p2p.node;
 
-import bisq.network.p2p.ConnectionHandshakeInitiator;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.authorization.AuthorizationService;
+import bisq.network.p2p.node.data.ConnectionMetrics;
+import bisq.network.p2p.node.data.NetworkLoad;
+import bisq.network.p2p.node.envelope.NetworkEnvelopeSocketChannel;
+import bisq.network.p2p.node.envelope.ProtoBufMessageLengthWriter;
+import bisq.network.p2p.node.handshake.ConnectionHandshake;
+import bisq.network.p2p.node.handshake.ConnectionHandshakeInitiator;
 import bisq.network.p2p.services.peergroup.BanList;
+import bisq.network.p2p.vo.Address;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -48,7 +54,7 @@ public class OutboundConnectionManager {
 
     private final AuthorizationService authorizationService;
     private final BanList banList;
-    private final Load myLoad;
+    private final NetworkLoad myNetworkLoad;
     private final Capability myCapability;
     private final Node node;
     @Getter
@@ -67,13 +73,13 @@ public class OutboundConnectionManager {
 
     public OutboundConnectionManager(AuthorizationService authorizationService,
                                      BanList banList,
-                                     Load myLoad,
+                                     NetworkLoad myNetworkLoad,
                                      Capability myCapability,
                                      Node node,
                                      Selector selector) {
         this.authorizationService = authorizationService;
         this.banList = banList;
-        this.myLoad = myLoad;
+        this.myNetworkLoad = myNetworkLoad;
         this.myCapability = myCapability;
         this.node = node;
         this.selector = selector;
@@ -128,7 +134,7 @@ public class OutboundConnectionManager {
                     myCapability,
                     authorizationService,
                     banList,
-                    myLoad,
+                    myNetworkLoad,
                     addressByChannel.get(socketChannel)
             );
             handshakeInitiatorByChannel.put(socketChannel, handshakeInitiator);
@@ -157,9 +163,9 @@ public class OutboundConnectionManager {
             Capability peerCapability = handshakeResponse.getCapability();
             OutboundConnectionChannel outboundConnectionChannel = new OutboundConnectionChannel(
                     peerCapability,
-                    handshakeResponse.getLoad(),
+                    handshakeResponse.getNetworkLoad(),
                     networkEnvelopeSocketChannel,
-                    new Metrics()
+                    new ConnectionMetrics()
             );
 
             connectionByChannel.put(socketChannel, outboundConnectionChannel);

@@ -17,6 +17,8 @@
 
 package bisq.network.p2p.node;
 
+import bisq.network.p2p.node.data.ConnectionMetrics;
+import bisq.network.p2p.node.data.NetworkLoad;
 import bisq.network.p2p.node.transport.ServerSocketResult;
 import lombok.Getter;
 import lombok.Setter;
@@ -36,11 +38,11 @@ public class InboundConnection extends Connection {
     InboundConnection(Socket socket,
                       ServerSocketResult serverSocketResult,
                       Capability peersCapability,
-                      Load peersLoad,
-                      Metrics metrics,
+                      NetworkLoad peersNetworkLoad,
+                      ConnectionMetrics connectionMetrics,
                       Handler handler,
                       BiConsumer<Connection, Exception> errorHandler) {
-        super(socket, peersCapability, peersLoad, metrics, handler, errorHandler);
+        super(socket, peersCapability, peersNetworkLoad, connectionMetrics, handler, errorHandler);
         this.serverSocketResult = serverSocketResult;
         log.debug("Create inboundConnection from server: {}", serverSocketResult);
     }

@@ -19,8 +19,8 @@ package bisq.network.p2p.services.data.storage.mailbox;
 
 import bisq.common.data.ByteArray;
 import bisq.common.timer.Scheduler;
+import bisq.network.p2p.services.data.storage.DataStorageResult;
 import bisq.network.p2p.services.data.storage.DataStorageService;
-import bisq.network.p2p.services.data.storage.Result;
 import bisq.persistence.PersistenceService;
 import bisq.security.DigestUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -54,7 +54,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
         scheduler.stop();
     }
 
-    public Result add(AddMailboxRequest request) {
+    public DataStorageResult add(AddMailboxRequest request) {
         MailboxSequentialData mailboxSequentialData = request.getMailboxSequentialData();
         MailboxData mailboxData = mailboxSequentialData.getMailboxData();
         byte[] hash = DigestUtil.hash(mailboxData.serialize());
@@ -63,33 +63,33 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
         Map<ByteArray, MailboxRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
             if (map.size() > getMaxMapSize()) {
-                return new Result(false).maxMapSizeReached();
+                return new DataStorageResult(false).maxMapSizeReached();
             }
             requestFromMap = map.get(byteArray);
             int sequenceNumberFromMap = requestFromMap != null ? requestFromMap.getSequenceNumber() : 0;
 
             if (request.equals(requestFromMap)) {
-                return new Result(false).requestAlreadyReceived();
+                return new DataStorageResult(false).requestAlreadyReceived();
             }
 
             if (requestFromMap != null && mailboxSequentialData.isSequenceNrInvalid(sequenceNumberFromMap)) {
-                return new Result(false).sequenceNrInvalid();
+                return new DataStorageResult(false).sequenceNrInvalid();
             }
 
             if (mailboxSequentialData.isExpired()) {
-                return new Result(false).expired();
+                return new DataStorageResult(false).expired();
             }
 
             if (mailboxData.isDataInvalid(mailboxSequentialData.getSenderPublicKeyHash())) {
-                return new Result(false).dataInvalid();
+                return new DataStorageResult(false).dataInvalid();
             }
 
             if (request.isPublicKeyInvalid()) {
-                return new Result(false).publicKeyHashInvalid();
+                return new DataStorageResult(false).publicKeyHashInvalid();
             }
 
             if (request.isSignatureInvalid()) {
-                return new Result(false).signatureInvalid();
+                return new DataStorageResult(false).signatureInvalid();
             }
             map.put(byteArray, request);
         }
@@ -98,14 +98,14 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
         // If we had already the data (only updated seq nr) we return false as well and do not notify listeners.
         // This should only happen if client re-publishes mailbox data 
         if (requestFromMap != null) {
-            return new Result(false).payloadAlreadyStored();
+            return new DataStorageResult(false).payloadAlreadyStored();
         }
 
         listeners.forEach(listener -> listener.onAdded(mailboxData));
-        return new Result(true);
+        return new DataStorageResult(true);
     }
 
-    public Result remove(RemoveMailboxRequest request) {
+    public DataStorageResult remove(RemoveMailboxRequest request) {
         ByteArray byteArray = new ByteArray(request.getHash());
         Map<ByteArray, MailboxRequest> map = persistableStore.getMap();
         MailboxRequest requestFromMap = map.get(byteArray);
@@ -116,7 +116,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
                 // track of the sequence number
                 map.put(byteArray, request);
                 persist();
-                return new Result(false).noEntry();
+                return new DataStorageResult(false).noEntry();
             }
 
             if (requestFromMap instanceof RemoveMailboxRequest) {
@@ -126,7 +126,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
                     map.put(byteArray, request);
                     persist();
                 }
-                return new Result(false).alreadyRemoved();
+                return new DataStorageResult(false).alreadyRemoved();
             }
 
             // At that point we know requestFromMap is an AddMailboxRequest
@@ -135,16 +135,16 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
             sequentialDataFromMap = addRequest.getMailboxSequentialData();
             if (request.isSequenceNrInvalid(sequentialDataFromMap.getSequenceNumber())) {
                 // Sequence number has not increased
-                return new Result(false).sequenceNrInvalid();
+                return new DataStorageResult(false).sequenceNrInvalid();
             }
 
             if (request.isPublicKeyHashInvalid(sequentialDataFromMap)) {
                 // Hash of pubKey of data does not match provided one
-                return new Result(false).publicKeyHashInvalid();
+                return new DataStorageResult(false).publicKeyHashInvalid();
             }
 
             if (request.isSignatureInvalid()) {
-                return new Result(false).signatureInvalid();
+                return new DataStorageResult(false).signatureInvalid();
             }
 
             map.put(byteArray, request);
@@ -152,7 +152,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
         }
 
         persist();
-        return new Result(true).removedData(sequentialDataFromMap.getMailboxData());
+        return new DataStorageResult(true).removedData(sequentialDataFromMap.getMailboxData());
     }
 
     public void addListener(Listener listener) {

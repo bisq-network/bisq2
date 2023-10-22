@@ -17,20 +17,16 @@
 
 package bisq.network.http;
 
-import bisq.network.http.common.BaseHttpClient;
-import bisq.network.http.common.ClearNetHttpClient;
-import bisq.network.http.common.Socks5ProxyProvider;
-import bisq.network.http.common.TorHttpClient;
+import bisq.network.http.utils.Socks5ProxyProvider;
 import bisq.network.p2p.node.transport.TransportType;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
-public class HttpService {
-    public HttpService() {
+public class HttpClientRepository {
+    public HttpClientRepository() {
     }
 
     public BaseHttpClient getHttpClient(String url,
@@ -57,9 +53,5 @@ public class HttpService {
             default:
                 throw new IllegalArgumentException("Providers network type not recognized. " + transportType);
         }
-    }
-
-    public CompletableFuture<Boolean> shutdown() {
-        return CompletableFuture.completedFuture(true);
     }
 }

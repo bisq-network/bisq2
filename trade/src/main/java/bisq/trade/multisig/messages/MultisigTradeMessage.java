@@ -18,7 +18,7 @@
 package bisq.trade.multisig.messages;
 
 import bisq.common.proto.UnresolvableProtobufMessageException;
-import bisq.network.NetworkId;
+import bisq.network.p2p.vo.NetworkId;
 import bisq.trade.protocol.messages.TradeMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

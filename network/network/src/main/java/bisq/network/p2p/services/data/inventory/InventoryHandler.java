@@ -112,7 +112,7 @@ class InventoryHandler implements Connection.Listener {
                                 .collect(Collectors.joining("\n")) +
                         "\n##########################################################################################");
                 removeListeners();
-                connection.getMetrics().addRtt(ts = System.currentTimeMillis() - ts);
+                connection.getConnectionMetrics().addRtt(System.currentTimeMillis() - ts);
                 future.complete(response.getInventory());
             } else {
                 log.warn("Node {} received Pong from {} with invalid nonce {}. Request nonce was {}. Connection={}",

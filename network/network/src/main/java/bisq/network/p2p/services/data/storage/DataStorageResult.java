@@ -22,82 +22,81 @@ import lombok.ToString;
 
 @ToString
 @Getter
-public class Result {
+public class DataStorageResult {
     private final boolean success;
     private boolean requestAlreadyReceived, payloadAlreadyStored, publicKeyHashInvalid, sequenceNrInvalid, signatureInvalid,
             dataInvalid, isNotAuthorized, expired, noEntry, alreadyRemoved, maxMapSizeReached, isSevereFailure, metaDataInvalid;
     private StorageData removedData;
 
-    public Result(boolean success) {
+    public DataStorageResult(boolean success) {
         this.success = success;
     }
 
-    public Result maxMapSizeReached() {
+    public DataStorageResult maxMapSizeReached() {
         maxMapSizeReached = true;
         return this;
     }
 
-    public Result publicKeyHashInvalid() {
+    public DataStorageResult publicKeyHashInvalid() {
         publicKeyHashInvalid = true;
         isSevereFailure = true;
         return this;
     }
 
-    public Result requestAlreadyReceived() {
+    public DataStorageResult requestAlreadyReceived() {
         requestAlreadyReceived = true;
         return this;
     }
 
-    public Result payloadAlreadyStored() {
+    public DataStorageResult payloadAlreadyStored() {
         payloadAlreadyStored = true;
         return this;
     }
 
-    public Result sequenceNrInvalid() {
+    public DataStorageResult sequenceNrInvalid() {
         sequenceNrInvalid = true;
         return this;
     }
 
-    public Result signatureInvalid() {
+    public DataStorageResult signatureInvalid() {
         signatureInvalid = true;
         isSevereFailure = true;
         return this;
     }
 
-    public Result metaDataInvalid() {
+    public DataStorageResult metaDataInvalid() {
         metaDataInvalid = true;
         return this;
     }
 
-    public Result expired() {
+    public DataStorageResult expired() {
         expired = true;
         return this;
     }
 
-    public Result dataInvalid() {
+    public DataStorageResult dataInvalid() {
         dataInvalid = true;
         isSevereFailure = true;
         return this;
     }
 
-    public Result isNotAuthorized() {
+    public DataStorageResult isNotAuthorized() {
         isNotAuthorized = true;
         isSevereFailure = true;
         return this;
     }
 
-
-    public Result noEntry() {
+    public DataStorageResult noEntry() {
         noEntry = true;
         return this;
     }
 
-    public Result alreadyRemoved() {
+    public DataStorageResult alreadyRemoved() {
         alreadyRemoved = true;
         return this;
     }
 
-    public Result removedData(StorageData removedData) {
+    public DataStorageResult removedData(StorageData removedData) {
         this.removedData = removedData;
         return this;
     }

@@ -30,7 +30,7 @@ import bisq.common.util.ExceptionUtil;
 import bisq.common.util.MathUtils;
 import bisq.common.util.Version;
 import bisq.network.NetworkService;
-import bisq.network.http.common.BaseHttpClient;
+import bisq.network.http.BaseHttpClient;
 import bisq.network.p2p.node.transport.TransportType;
 import com.google.gson.Gson;
 import lombok.EqualsAndHashCode;

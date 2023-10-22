@@ -22,6 +22,7 @@ import bisq.common.util.CompletableFutureUtils;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.transport.TransportService;
 import bisq.network.p2p.services.peergroup.BanList;
+import bisq.network.p2p.vo.Address;
 
 import java.util.Collection;
 import java.util.Map;

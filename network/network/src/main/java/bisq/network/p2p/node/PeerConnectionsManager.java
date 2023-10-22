@@ -18,9 +18,11 @@
 package bisq.network.p2p.node;
 
 import bisq.network.p2p.node.authorization.AuthorizationService;
+import bisq.network.p2p.node.data.NetworkLoad;
 import bisq.network.p2p.node.transport.ServerSocketResult;
 import bisq.network.p2p.node.transport.TransportService;
 import bisq.network.p2p.services.peergroup.BanList;
+import bisq.network.p2p.vo.Address;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -134,10 +136,11 @@ public class PeerConnectionsManager {
 
     private void createAndStartOutboundConnectionMultiplexer(Capability serverCapability, Node node) {
         try {
+            // TODO myLoad should be used here
             OutboundConnectionManager outboundConnectionManager = new OutboundConnectionManager(
                     authorizationService,
                     banList,
-                    Load.INITIAL_LOAD,
+                    NetworkLoad.INITIAL_NETWORK_LOAD,
                     serverCapability,
                     node,
                     SelectorProvider.provider().openSelector()

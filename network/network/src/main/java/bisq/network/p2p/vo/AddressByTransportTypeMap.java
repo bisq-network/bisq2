@@ -1,4 +1,4 @@
-package bisq.network.p2p.node;
+package bisq.network.p2p.vo;
 
 import bisq.common.proto.Proto;
 import bisq.network.p2p.node.transport.TransportType;
