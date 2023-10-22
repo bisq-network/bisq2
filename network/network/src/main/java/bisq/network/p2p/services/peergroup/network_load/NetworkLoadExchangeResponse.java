@@ -47,4 +47,9 @@ public final class NetworkLoadExchangeResponse implements EnvelopePayloadMessage
     public static NetworkLoadExchangeResponse fromProto(bisq.network.protobuf.NetworkLoadExchangeResponse proto) {
         return new NetworkLoadExchangeResponse(proto.getRequestNonce(), NetworkLoad.fromProto(proto.getNetworkLoad()));
     }
+
+    @Override
+    public double getCostFactor() {
+        return 0.05;
+    }
 }

@@ -77,6 +77,11 @@ public final class ConnectionHandshake {
             return new Request(Capability.fromProto(proto.getCapability()),
                     NetworkLoad.fromProto(proto.getNetworkLoad()));
         }
+
+        @Override
+        public double getCostFactor() {
+            return 0.05;
+        }
     }
 
     @Getter
@@ -103,6 +108,11 @@ public final class ConnectionHandshake {
         public static Response fromProto(bisq.network.protobuf.ConnectionHandshake.Response proto) {
             return new Response(Capability.fromProto(proto.getCapability()),
                     NetworkLoad.fromProto(proto.getNetworkLoad()));
+        }
+
+        @Override
+        public double getCostFactor() {
+            return 0.05;
         }
     }
 

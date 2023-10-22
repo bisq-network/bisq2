@@ -27,4 +27,9 @@ public final class CloseConnectionMessage implements EnvelopePayloadMessage {
         return new CloseConnectionMessage(ProtobufUtils.enumFromProto(CloseReason.class,
                 proto.getCloseReason()));
     }
+
+    @Override
+    public double getCostFactor() {
+        return 0.05;
+    }
 }

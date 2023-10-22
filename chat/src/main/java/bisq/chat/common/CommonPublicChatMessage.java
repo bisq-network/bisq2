@@ -99,4 +99,9 @@ public final class CommonPublicChatMessage extends PublicChatMessage {
                 baseProto.getWasEdited(),
                 ChatMessageType.fromProto(baseProto.getChatMessageType()));
     }
+
+    @Override
+    public double getCostFactor() {
+        return 0.3;
+    }
 }

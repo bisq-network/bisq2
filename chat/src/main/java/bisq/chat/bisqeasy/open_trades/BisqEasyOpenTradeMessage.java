@@ -146,11 +146,6 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage implement
     }
 
     @Override
-    public boolean hasBisqEasyOffer() {
-        return bisqEasyOffer.isPresent();
-    }
-
-    @Override
     public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
         return getNetworkMessageBuilder()
                 .setExternalNetworkMessage(ExternalNetworkMessage.newBuilder().setAny(Any.pack(toChatMessageProto())))
@@ -198,4 +193,15 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage implement
                 bisqEasyOffer
         );
     }
+
+    @Override
+    public double getCostFactor() {
+        return getCostFactor(0.1, 0.3);
+    }
+
+    @Override
+    public boolean hasBisqEasyOffer() {
+        return bisqEasyOffer.isPresent();
+    }
+
 }

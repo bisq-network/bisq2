@@ -17,7 +17,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_2_DAYS;
 @Getter
 @EqualsAndHashCode
 @ToString
-public class AckMessage implements MailboxMessage {
+public final class AckMessage implements MailboxMessage {
     private final MetaData metaData = new MetaData(TTL_2_DAYS, getClass().getSimpleName(), MAX_MAP_SIZE_100);
 
     private final String id;
@@ -39,5 +39,10 @@ public class AckMessage implements MailboxMessage {
 
     public static AckMessage fromProto(bisq.network.protobuf.AckMessage proto) {
         return new AckMessage(proto.getId());
+    }
+
+    @Override
+    public double getCostFactor() {
+        return getCostFactor(0.05, 0.1);
     }
 }

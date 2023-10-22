@@ -109,6 +109,11 @@ public final class MediationRequest implements MailboxMessage {
         };
     }
 
+    @Override
+    public double getCostFactor() {
+        return getCostFactor(0.25, 0.5);
+    }
+
     private List<BisqEasyOpenTradeMessage> maybePrune(List<BisqEasyOpenTradeMessage> chatMessages) {
         StringBuilder sb = new StringBuilder();
         List<BisqEasyOpenTradeMessage> result = chatMessages.stream()

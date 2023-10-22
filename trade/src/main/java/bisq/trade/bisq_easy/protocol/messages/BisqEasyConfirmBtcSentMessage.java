@@ -65,4 +65,9 @@ public final class BisqEasyConfirmBtcSentMessage extends BisqEasyTradeMessage {
                 NetworkId.fromProto(proto.getReceiver()),
                 bisqEasyConfirmBtcSentMessage.getTxId());
     }
+
+    @Override
+    public double getCostFactor() {
+        return getCostFactor(0.1, 0.3);
+    }
 }

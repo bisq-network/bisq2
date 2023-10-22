@@ -39,9 +39,7 @@ import bisq.network.p2p.services.peergroup.validateaddress.AddressValidationResp
  * Interface for any message sent as payload in NetworkEnvelope
  */
 public interface EnvelopePayloadMessage extends Proto {
-    default double getCostFactor() {
-        return 0.1;
-    }
+    double getCostFactor();
 
     default bisq.network.protobuf.EnvelopePayloadMessage.Builder getNetworkMessageBuilder() {
         return bisq.network.protobuf.EnvelopePayloadMessage.newBuilder();

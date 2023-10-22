@@ -38,6 +38,11 @@ public class MockMessage implements EnvelopePayloadMessage {
     }
 
     @Override
+    public double getCostFactor() {
+        return 0;
+    }
+
+    @Override
     public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
         return null;
     }

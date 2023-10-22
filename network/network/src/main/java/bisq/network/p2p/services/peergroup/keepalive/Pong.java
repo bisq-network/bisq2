@@ -43,4 +43,9 @@ public final class Pong implements EnvelopePayloadMessage {
     public static Pong fromProto(bisq.network.protobuf.Pong proto) {
         return new Pong(proto.getRequestNonce());
     }
+
+    @Override
+    public double getCostFactor() {
+        return 0.05;
+    }
 }

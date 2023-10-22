@@ -42,4 +42,9 @@ public final class AddressValidationRequest implements EnvelopePayloadMessage {
     public static AddressValidationRequest fromProto(bisq.network.protobuf.AddressValidationRequest proto) {
         return new AddressValidationRequest(proto.getNonce());
     }
+
+    @Override
+    public double getCostFactor() {
+        return 0.05;
+    }
 }

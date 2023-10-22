@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data.storage.mailbox;
 
+import bisq.common.util.MathUtils;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
 
@@ -25,4 +26,8 @@ import bisq.network.p2p.services.data.storage.MetaData;
  */
 public interface MailboxMessage extends EnvelopePayloadMessage {
     MetaData getMetaData();
+
+    default double getCostFactor(double lowerBound, double upperBound) {
+        return MathUtils.bounded(lowerBound, upperBound, getMetaData().getCostFactor());
+    }
 }

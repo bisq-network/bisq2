@@ -96,6 +96,11 @@ public final class AuthorizedOracleNode implements AuthorizedDistributedData {
     }
 
     @Override
+    public double getCostFactor() {
+        return 0.5;
+    }
+
+    @Override
     public boolean isDataInvalid(byte[] pubKeyHash) {
         return !Arrays.equals(networkId.getPubKey().getHash(), pubKeyHash);
     }

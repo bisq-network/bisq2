@@ -23,6 +23,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Slf4j
 public class MathUtils {
 
@@ -89,14 +91,20 @@ public class MathUtils {
     }
 
     public static double bounded(double lowerBound, double upperBound, double value) {
+        checkArgument(lowerBound <= upperBound,
+                "lowerBound must not be larger than upperBound");
         return Math.min(Math.max(value, lowerBound), upperBound);
     }
 
     public static int bounded(int lowerBound, int upperBound, int value) {
+        checkArgument(lowerBound <= upperBound,
+                "lowerBound must not be larger than upperBound");
         return Math.min(Math.max(value, lowerBound), upperBound);
     }
 
     public static long bounded(long lowerBound, long upperBound, long value) {
+        checkArgument(lowerBound <= upperBound,
+                "lowerBound must not be larger than upperBound");
         return Math.min(Math.max(value, lowerBound), upperBound);
     }
 }

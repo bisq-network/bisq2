@@ -18,8 +18,10 @@
 package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.encoding.Hex;
+import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.AddDataRequest;
+import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.security.DigestUtil;
 import bisq.security.KeyGeneration;
 import bisq.security.SignatureUtil;
@@ -113,6 +115,15 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
             e.printStackTrace();
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public double getCostFactor() {
+        DistributedData distributedData = authenticatedSequentialData.getAuthenticatedData().getDistributedData();
+        double metaDataImpact = distributedData.getMetaData().getCostFactor();
+        double dataImpact = distributedData.getCostFactor();
+        double impact = metaDataImpact + dataImpact;
+        return MathUtils.bounded(0.25, 0.75, impact);
     }
 
     public boolean isSignatureInvalid() {

@@ -103,4 +103,9 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
                 baseProto.getWasEdited(),
                 ChatMessageType.fromProto(baseProto.getChatMessageType()));
     }
+
+    @Override
+    public double getCostFactor() {
+        return getCostFactor(0.1, 0.3);
+    }
 }

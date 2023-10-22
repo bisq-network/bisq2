@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data.storage.mailbox;
 
+import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.RemoveDataRequest;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -111,6 +112,11 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
             e.printStackTrace();
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public double getCostFactor() {
+        return MathUtils.bounded(0.1, 0.3, metaData.getCostFactor());
     }
 
     public boolean isPublicKeyHashInvalid(MailboxSequentialData mailboxSequentialData) {

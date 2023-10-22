@@ -46,4 +46,10 @@ public final class InventoryResponse implements BroadcastMessage {
     public static InventoryResponse fromProto(bisq.network.protobuf.InventoryResponse proto) {
         return new InventoryResponse(Inventory.fromProto(proto.getInventory()), proto.getRequestNonce());
     }
+
+
+    @Override
+    public double getCostFactor() {
+        return 0.1;
+    }
 }

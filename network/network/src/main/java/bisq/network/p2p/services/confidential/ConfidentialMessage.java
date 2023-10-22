@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.confidential;
 
+import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.data.storage.DistributedData;
@@ -59,6 +60,11 @@ public final class ConfidentialMessage implements EnvelopePayloadMessage, Distri
                 ConfidentialData.fromProto(proto.getConfidentialData()),
                 proto.getReceiverKeyId()
         );
+    }
+
+    @Override
+    public double getCostFactor() {
+        return MathUtils.bounded(0.1, 1, confidentialData.getCostFactor());
     }
 
     @Override

@@ -103,4 +103,9 @@ public final class ReportToModeratorMessage implements MailboxMessage {
             }
         };
     }
+
+    @Override
+    public double getCostFactor() {
+        return getCostFactor(0.25, 0.5);
+    }
 }

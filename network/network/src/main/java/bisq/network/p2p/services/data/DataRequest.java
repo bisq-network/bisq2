@@ -31,8 +31,6 @@ public interface DataRequest extends BroadcastMessage {
         return bisq.network.protobuf.DataRequest.newBuilder();
     }
 
-    boolean isExpired();
-
     static DataRequest fromProto(bisq.network.protobuf.DataRequest proto) {
         switch (proto.getMessageCase()) {
             case ADDAUTHENTICATEDDATAREQUEST: {
@@ -59,6 +57,8 @@ public interface DataRequest extends BroadcastMessage {
         }
         throw new UnresolvableProtobufMessageException(proto);
     }
+
+    boolean isExpired();
 
     long getCreated();
 

@@ -77,4 +77,9 @@ public final class AuthorizeTimestampRequest implements MailboxMessage {
             }
         };
     }
+
+    @Override
+    public double getCostFactor() {
+        return getCostFactor(0.5, 1);
+    }
 }

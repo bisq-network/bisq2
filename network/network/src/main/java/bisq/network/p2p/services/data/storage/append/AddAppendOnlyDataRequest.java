@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data.storage.append;
 
+import bisq.common.util.MathUtils;
 import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import lombok.EqualsAndHashCode;
@@ -48,6 +49,11 @@ public final class AddAppendOnlyDataRequest implements AddDataRequest {
 
     public static AddAppendOnlyDataRequest fromProto(bisq.network.protobuf.AddAppendOnlyDataRequest proto) {
         return new AddAppendOnlyDataRequest((AppendOnlyData) DistributedData.fromAny(proto.getAppendOnlyData()));
+    }
+
+    @Override
+    public double getCostFactor() {
+        return MathUtils.bounded(0.5, 1, appendOnlyData.getCostFactor());
     }
 
     @Override

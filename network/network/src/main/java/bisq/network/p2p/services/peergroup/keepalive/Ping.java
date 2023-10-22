@@ -42,4 +42,9 @@ public final class Ping implements EnvelopePayloadMessage {
     public static Ping fromProto(bisq.network.protobuf.Ping proto) {
         return new Ping(proto.getNonce());
     }
+
+    @Override
+    public double getCostFactor() {
+        return 0.05;
+    }
 }

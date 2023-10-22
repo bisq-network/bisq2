@@ -56,4 +56,9 @@ public final class PeerExchangeResponse implements EnvelopePayloadMessage {
         return new PeerExchangeResponse(proto.getNonce(),
                 proto.getPeersList().stream().map(Peer::fromProto).collect(Collectors.toList()));
     }
+
+    @Override
+    public double getCostFactor() {
+        return 0.1;
+    }
 }

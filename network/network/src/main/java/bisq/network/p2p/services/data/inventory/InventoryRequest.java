@@ -47,4 +47,9 @@ public final class InventoryRequest implements BroadcastMessage {
     public static InventoryRequest fromProto(bisq.network.protobuf.InventoryRequest proto) {
         return new InventoryRequest(DataFilter.fromProto(proto.getDataFilter()), proto.getNonce());
     }
+
+    @Override
+    public double getCostFactor() {
+        return 0.25;
+    }
 }
