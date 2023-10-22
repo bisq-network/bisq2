@@ -770,17 +770,6 @@ public class ChatMessagesListView {
                                     }
                             ));
                             deliveryState.getTooltip().textProperty().bind(item.messageDeliveryStatusTooltip);
-
-                            messageBgHBox.getStyleClass().remove("chat-message-bg-my-message");
-                            messageBgHBox.getStyleClass().remove("chat-message-bg-peer-message");
-
-                            if (isMyMessage) {
-                                messageBgHBox.getStyleClass().add("chat-message-bg-my-message");
-                            } else {
-                                messageBgHBox.getStyleClass().add("chat-message-bg-peer-message");
-                            }
-
-
                             editInputField.maxWidthProperty().bind(message.widthProperty());
                             setGraphic(cellHBox);
                         }
