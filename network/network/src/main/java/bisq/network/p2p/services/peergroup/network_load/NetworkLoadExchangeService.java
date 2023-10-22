@@ -89,17 +89,18 @@ public class NetworkLoadExchangeService implements Node.Listener {
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, String nodeId) {
         if (envelopePayloadMessage instanceof NetworkLoadExchangeRequest) {
-            NetworkLoadExchangeRequest networkLoadExchangeRequest = (NetworkLoadExchangeRequest) envelopePayloadMessage;
-            NetworkLoad peersNetworkLoad = networkLoadExchangeRequest.getNetworkLoad();
+            NetworkLoadExchangeRequest request = (NetworkLoadExchangeRequest) envelopePayloadMessage;
+            NetworkLoad peersNetworkLoad = request.getNetworkLoad();
             log.info("Node {} received NetworkLoadRequest with nonce {} and peers networkLoad {} from {}",
-                    node, networkLoadExchangeRequest.getNonce(), peersNetworkLoad, connection.getPeerAddress());
+                    node, request.getNonce(), peersNetworkLoad, connection.getPeerAddress());
             connection.getPeersNetworkLoadService().updatePeersNetworkLoad(peersNetworkLoad);
-            NetworkLoadExchangeResponse networkLoadExchangeResponse = new NetworkLoadExchangeResponse(networkLoadExchangeRequest.getNonce(),
-                    node.getNetworkLoadService().getCurrentNetworkLoad());
+            NetworkLoad myNetworkLoad = node.getNetworkLoadService().getCurrentNetworkLoad();
+            NetworkLoadExchangeResponse response = new NetworkLoadExchangeResponse(request.getNonce(),
+                    myNetworkLoad);
             NetworkService.NETWORK_IO_POOL.submit(() ->
-                    node.send(networkLoadExchangeResponse, connection));
-            log.info("Node {} sent NetworkLoadResponse with nonce {} to {}. Connection={}",
-                    node, networkLoadExchangeRequest.getNonce(), connection.getPeerAddress(), connection.getId());
+                    node.send(response, connection));
+            log.info("Node {} sent NetworkLoadResponse with nonce {} and my networkLoad {} to {}. Connection={}",
+                    node, request.getNonce(), myNetworkLoad, connection.getPeerAddress(), connection.getId());
         }
     }
 

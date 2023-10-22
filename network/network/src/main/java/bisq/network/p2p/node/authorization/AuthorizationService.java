@@ -129,9 +129,9 @@ public class AuthorizationService {
     private static boolean isInvalidDifficulty(double difficulty, ProofOfWork proofOfWork) {
         double difference = Math.abs(difficulty - proofOfWork.getDifficulty());
         if (difference > 0) {
-            log.warn("Calculated difficulty does not match difficulty from the proofOfWork object. " +
-                            "difference={}, proofOfWork.getDifficulty()={}",
-                    difference, proofOfWork.getDifficulty());
+            log.warn("Calculated difficulty does not match difficulty from the proofOfWork object. \n" +
+                            "difficulty={}; proofOfWork.getDifficulty()={}; difference={}",
+                    difficulty, proofOfWork.getDifficulty(), difference);
         }
         return difference > DIFFICULTY_TOLERANCE;
     }
@@ -148,7 +148,9 @@ public class AuthorizationService {
     private double calculateDifficulty(EnvelopePayloadMessage message, NetworkLoad networkLoad) {
         double messageCostFactor = MathUtils.bounded(0.01, 1, message.getCostFactor());
         double loadValue = MathUtils.bounded(0.01, 1, networkLoad.getValue());
-        return MAX_DIFFICULTY * messageCostFactor * loadValue;
+        double result = MAX_DIFFICULTY * messageCostFactor + MAX_DIFFICULTY * loadValue;
+        log.info("calculateDifficulty {}, {}, {}", messageCostFactor, loadValue, result);
+        return MathUtils.bounded(0.01, 1, result);
         // MAX_DIFFICULTY = Math.pow(2, 18) = 262144; takes on an old laptop about 70 - 2000ms, average about 1 sec
         // Math.pow(2, 19) = 524288 -> 1-5 sec
     }

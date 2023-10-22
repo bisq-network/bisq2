@@ -18,6 +18,7 @@
 package bisq.network.p2p.node.network_load;
 
 import bisq.common.util.ByteUnit;
+import bisq.common.util.MathUtils;
 import bisq.network.p2p.services.data.inventory.Inventory;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -134,17 +135,17 @@ public final class NetworkLoadService {
                 networkDatabaseSizeImpact;
         StringBuilder sb = new StringBuilder("\n##############################################\n");
         sb.append("numConnectionsImpact=" + numConnectionsImpact);
-        sb.append("; sentBytesImpact=" + sentBytesImpact);
-        sb.append("; spentSendTimeImpact=" + spentSendTimeImpact);
-        sb.append("; numMessagesSentImpact=" + numMessagesSentImpact);
-        sb.append("; receivedBytesImpact=" + receivedBytesImpact);
-        sb.append("; deserializeTimeImpact=" + deserializeTimeImpact);
-        sb.append("; numMessagesReceivedImpact=" + numMessagesReceivedImpact);
-        sb.append("; networkDatabaseSizeImpact=" + networkDatabaseSizeImpact);
-        sb.append("; sum=" + sum);
+        sb.append("\nsentBytesImpact=" + sentBytesImpact);
+        sb.append("\nspentSendTimeImpact=" + spentSendTimeImpact);
+        sb.append("\nnumMessagesSentImpact=" + numMessagesSentImpact);
+        sb.append("\nreceivedBytesImpact=" + receivedBytesImpact);
+        sb.append("\ndeserializeTimeImpact=" + deserializeTimeImpact);
+        sb.append("\nnumMessagesReceivedImpact=" + numMessagesReceivedImpact);
+        sb.append("\nnetworkDatabaseSizeImpact=" + networkDatabaseSizeImpact);
+        sb.append("\nsum=" + sum);
         sb.append("\n##############################################\n");
-        log.debug(sb.toString());
+        log.info(sb.toString());
 
-        return sum;
+        return MathUtils.bounded(0, 1, sum);
     }
 }
