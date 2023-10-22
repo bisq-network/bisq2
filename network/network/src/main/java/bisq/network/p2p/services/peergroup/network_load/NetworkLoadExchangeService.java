@@ -39,7 +39,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class NetworkLoadExchangeService implements Node.Listener {
     private static final long TIMEOUT_SEC = 120;
-    private static final long INITIAL_DELAY = TimeUnit.MINUTES.toSeconds(1);
+    private static final long INITIAL_DELAY = TimeUnit.SECONDS.toSeconds(10);
     private static final long INTERVAL = TimeUnit.MINUTES.toSeconds(3);
     private static final long MAX_IDLE = TimeUnit.MINUTES.toMillis(5);
 

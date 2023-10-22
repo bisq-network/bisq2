@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class MonitorService {
-    private static final long INITIAL_DELAY = TimeUnit.SECONDS.toSeconds(30);
+    private static final long INITIAL_DELAY = TimeUnit.SECONDS.toSeconds(5);
     private static final long INTERVAL = TimeUnit.MINUTES.toSeconds(3);
 
     private final ServiceNodesByTransport serviceNodesByTransport;
