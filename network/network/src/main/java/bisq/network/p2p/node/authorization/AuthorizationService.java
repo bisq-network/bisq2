@@ -18,14 +18,16 @@
 package bisq.network.p2p.node.authorization;
 
 import bisq.common.util.ByteArrayUtils;
-import bisq.network.p2p.message.NetworkMessage;
-import bisq.network.p2p.node.data.NetworkLoad;
+import bisq.common.util.MathUtils;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
+import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.security.DigestUtil;
 import bisq.security.pow.ProofOfWork;
 import bisq.security.pow.ProofOfWorkService;
 import com.google.common.base.Charsets;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -35,6 +37,10 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 public class AuthorizationService {
+    public final static int MIN_DIFFICULTY = 128;  // Math.pow(2, 7) = 128; 3 ms on old CPU, 1 ms on high-end CPU
+    public final static int MAX_DIFFICULTY = 65536;  // Math.pow(2, 16) = 262144; 1000 ms on old CPU, 60 ms on high-end CPU
+    public final static int DIFFICULTY_TOLERANCE = 50_000;
+
     private final ProofOfWorkService proofOfWorkService;
     // Keep track of message counter per connection to avoid reuse of pow
     private final Map<String, Set<Integer>> receivedMessageCountersByConnectionId = new ConcurrentHashMap<>();
@@ -43,25 +49,34 @@ public class AuthorizationService {
         this.proofOfWorkService = proofOfWorkService;
     }
 
-    public AuthorizationToken createToken(NetworkMessage message,
-                                          NetworkLoad peersNetworkLoad,
+    public AuthorizationToken createToken(EnvelopePayloadMessage message,
+                                          NetworkLoad networkLoad,
                                           String peerAddress,
                                           int messageCounter) {
         long ts = System.currentTimeMillis();
-        double difficulty = calculateDifficulty(message, peersNetworkLoad);
+        double difficulty = calculateDifficulty(message, networkLoad);
         byte[] challenge = getChallenge(peerAddress, messageCounter);
         byte[] payload = getPayload(message);
         AuthorizationToken token = proofOfWorkService.mint(payload, challenge, difficulty)
                 .thenApply(proofOfWork -> new AuthorizationToken(proofOfWork, messageCounter))
                 .join();
         log.debug("Create token for {} took {} ms\n token={}, peersLoad={}, peerAddress={}",
-                message.getClass().getSimpleName(), System.currentTimeMillis() - ts, token, peersNetworkLoad, peerAddress);
+                message.getClass().getSimpleName(), System.currentTimeMillis() - ts, token, networkLoad, peerAddress);
         return token;
     }
 
-    public boolean isAuthorized(NetworkMessage message,
+    public boolean isAuthorized(EnvelopePayloadMessage message,
                                 AuthorizationToken authorizationToken,
-                                NetworkLoad myNetworkLoad,
+                                NetworkLoad currentNetworkLoad,
+                                String connectionId,
+                                String myAddress) {
+        return isAuthorized(message, authorizationToken, currentNetworkLoad, null, connectionId, myAddress);
+    }
+
+    public boolean isAuthorized(EnvelopePayloadMessage message,
+                                AuthorizationToken authorizationToken,
+                                NetworkLoad currentNetworkLoad,
+                                @Nullable NetworkLoad previousNetworkLoad,
                                 String connectionId,
                                 String myAddress) {
         ProofOfWork proofOfWork = authorizationToken.getProofOfWork();
@@ -94,17 +109,35 @@ public class AuthorizationService {
         }
 
         // Verify difficulty
-        if (calculateDifficulty(message, myNetworkLoad) != proofOfWork.getDifficulty()) {
-            log.warn("Invalid difficulty");
-            return false;
+        double difficulty = calculateDifficulty(message, currentNetworkLoad);
+        if (isInvalidDifficulty(difficulty, proofOfWork)) {
+            if (previousNetworkLoad == null) {
+                log.warn("Invalid difficulty using currentNetworkLoad. No previousNetworkLoad is provided.");
+                return false;
+            } else {
+                log.info("Invalid difficulty using currentNetworkLoad. " +
+                        "This can happen if the peer did not had the most recent networkLoad. We try again with the previous state.");
+                difficulty = calculateDifficulty(message, previousNetworkLoad);
+                if (isInvalidDifficulty(difficulty, proofOfWork)) {
+                    log.warn("Invalid difficulty using previousNetworkLoad");
+                    return false;
+                }
+            }
         }
-
-        log.debug("Verify token for {}. token={}, myLoad={}, myAddress={}",
-                message.getClass().getSimpleName(), authorizationToken, myNetworkLoad, myAddress);
         return proofOfWorkService.verify(proofOfWork);
     }
 
-    private byte[] getPayload(NetworkMessage message) {
+    private static boolean isInvalidDifficulty(double difficulty, ProofOfWork proofOfWork) {
+        double difference = Math.abs(difficulty - proofOfWork.getDifficulty());
+        if (difference > 0) {
+            log.warn("Calculated difficulty does not match difficulty from the proofOfWork object. \n" +
+                            "difficulty={}; proofOfWork.getDifficulty()={}; difference={}",
+                    difficulty, proofOfWork.getDifficulty(), difference);
+        }
+        return difference > DIFFICULTY_TOLERANCE;
+    }
+
+    private byte[] getPayload(EnvelopePayloadMessage message) {
         return message.toProto().toByteArray();
     }
 
@@ -113,11 +146,13 @@ public class AuthorizationService {
                 BigInteger.valueOf(messageCounter).toByteArray()));
     }
 
-    private double calculateDifficulty(NetworkMessage message, NetworkLoad networkLoad) {
-        //todo impl formula and add costs to messages
-        int cost = message.getCost();
-        int loadFactor = networkLoad.getFactor();
-        return cost * loadFactor;
-        // return 1048576; // = Math.pow(2, 20) = 1048576; -> high value which takes several seconds
+    private double calculateDifficulty(EnvelopePayloadMessage message, NetworkLoad networkLoad) {
+        double messageCostFactor = MathUtils.bounded(0.01, 1, message.getCostFactor());
+        double loadValue = MathUtils.bounded(0.01, 1, networkLoad.getValue());
+        double difficulty = MAX_DIFFICULTY * messageCostFactor + MAX_DIFFICULTY * loadValue;
+        log.debug("calculated difficulty={}, Math.pow(2, {}), messageCostFactor={}, loadValue={}",
+                difficulty, MathUtils.roundDouble(Math.log(difficulty) / MathUtils.LOG2, 2),
+                messageCostFactor, loadValue);
+        return MathUtils.bounded(MIN_DIFFICULTY, MAX_DIFFICULTY, difficulty);
     }
 }

@@ -141,7 +141,7 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
     }
 
     public Stream<Connection> getAllConnections() {
-        return Stream.concat(getOutboundConnections(), getInboundConnections());
+        return node.getAllConnections().filter(Connection::isRunning);
     }
 
     public int getNumConnections() {
@@ -170,8 +170,10 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public Stream<Peer> getAllConnectedPeers() {
-        return getAllConnections().map(con ->
-                new Peer(con.getPeersCapability(), con.getPeersNetworkLoad(), con.isOutboundConnection()));
+        return getAllConnections().map(connection ->
+                new Peer(connection.getPeersCapability(),
+                        connection.getPeersNetworkLoadService().getCurrentNetworkLoad(),
+                        connection.isOutboundConnection()));
     }
 
     public boolean isNotBanned(Peer peer) {

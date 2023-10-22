@@ -20,7 +20,7 @@ package bisq.trade.multisig;
 import bisq.common.application.Service;
 import bisq.contract.multisig.MultisigContract;
 import bisq.identity.Identity;
-import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.vo.NetworkId;
 import bisq.offer.multisig.MultisigOffer;
@@ -81,7 +81,7 @@ public class MultisigTradeService implements PersistenceClient<MultisigTradeStor
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(NetworkMessage networkMessage) {
+    public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
     }
 
 

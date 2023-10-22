@@ -17,10 +17,10 @@
 
 package bisq.network.p2p.services.confidential;
 
-import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 
 import java.security.PublicKey;
 
 public interface ConfidentialMessageListener {
-    void onMessage(NetworkMessage networkMessage, PublicKey senderPublicKey);
+    void onMessage(EnvelopePayloadMessage envelopePayloadMessage, PublicKey senderPublicKey);
 }

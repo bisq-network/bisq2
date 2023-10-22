@@ -20,6 +20,7 @@ package bisq.network.p2p.vo;
 import bisq.common.proto.Proto;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.security.PubKey;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -27,6 +28,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
+@EqualsAndHashCode
 public final class NetworkId implements Proto {
     private final PubKey pubKey;
     private final String nodeId;
@@ -59,7 +61,6 @@ public final class NetworkId implements Proto {
     public String getId() {
         return pubKey.getId();
     }
-
 
     @Override
     public String toString() {

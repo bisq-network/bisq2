@@ -131,6 +131,11 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
     }
 
     @Override
+    public double getCostFactor() {
+        return 0.5;
+    }
+
+    @Override
     public Set<String> getAuthorizedPublicKeys() {
         if (DevMode.isDevMode()) {
             return DevMode.AUTHORIZED_DEV_PUBLIC_KEYS;

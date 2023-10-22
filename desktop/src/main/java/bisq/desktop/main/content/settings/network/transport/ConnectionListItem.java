@@ -21,10 +21,10 @@ import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.table.TableItem;
 import bisq.i18n.Res;
-import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
-import bisq.network.p2p.node.data.ConnectionMetrics;
+import bisq.network.p2p.node.network_load.ConnectionMetrics;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.TimeFormatter;
 import javafx.beans.property.SimpleStringProperty;
@@ -78,7 +78,7 @@ public class ConnectionListItem implements TableItem {
 
         listener = new Connection.Listener() {
             @Override
-            public void onNetworkMessage(NetworkMessage networkMessage) {
+            public void onNetworkMessage(EnvelopePayloadMessage envelopePayloadMessage) {
                 UIThread.run(() -> {
                     updateSent();
                     updateReceived();
@@ -101,14 +101,14 @@ public class ConnectionListItem implements TableItem {
 
     private void updateSent() {
         sent.set(Res.get("settings.network.connections.value.ioData",
-                StringUtils.fromBytes(connectionMetrics.getSentBytes().get()),
-                connectionMetrics.getNumMessagesSent().get()));
+                StringUtils.fromBytes(connectionMetrics.getSentBytes()),
+                connectionMetrics.getNumMessagesSent()));
     }
 
     private void updateReceived() {
         received.set(Res.get("settings.network.connections.value.ioData",
-                StringUtils.fromBytes(connectionMetrics.getReceivedBytes().get()),
-                connectionMetrics.getNumMessagesReceived().get()));
+                StringUtils.fromBytes(connectionMetrics.getReceivedBytes()),
+                connectionMetrics.getNumMessagesReceived()));
     }
 
     public int compareDate(ConnectionListItem other) {

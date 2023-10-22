@@ -19,6 +19,7 @@ package bisq.support.mediation;
 
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.network.protobuf.ExternalNetworkMessage;
@@ -49,7 +50,7 @@ public final class MediationResponse implements MailboxMessage {
     }
 
     @Override
-    public bisq.network.protobuf.NetworkMessage toProto() {
+    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
         return getNetworkMessageBuilder()
                 .setExternalNetworkMessage(ExternalNetworkMessage.newBuilder()
                         .setAny(Any.pack(toMediationResponseProto())))
@@ -67,7 +68,7 @@ public final class MediationResponse implements MailboxMessage {
         return new MediationResponse(proto.getTradeId(), BisqEasyOffer.fromProto(proto.getBisqEasyOffer()));
     }
 
-    public static ProtoResolver<bisq.network.p2p.message.NetworkMessage> getNetworkMessageResolver() {
+    public static ProtoResolver<EnvelopePayloadMessage> getNetworkMessageResolver() {
         return any -> {
             try {
                 bisq.support.protobuf.MediationResponse proto = any.unpack(bisq.support.protobuf.MediationResponse.class);
@@ -76,5 +77,10 @@ public final class MediationResponse implements MailboxMessage {
                 throw new UnresolvableProtobufMessageException(e);
             }
         };
+    }
+
+    @Override
+    public double getCostFactor() {
+        return getCostFactor(0.1, 0.2);
     }
 }

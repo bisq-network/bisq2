@@ -30,25 +30,24 @@ import bisq.network.p2p.services.peergroup.exchange.PeerExchangeRequest;
 import bisq.network.p2p.services.peergroup.exchange.PeerExchangeResponse;
 import bisq.network.p2p.services.peergroup.keepalive.Ping;
 import bisq.network.p2p.services.peergroup.keepalive.Pong;
+import bisq.network.p2p.services.peergroup.network_load.NetworkLoadExchangeRequest;
+import bisq.network.p2p.services.peergroup.network_load.NetworkLoadExchangeResponse;
 import bisq.network.p2p.services.peergroup.validateaddress.AddressValidationRequest;
 import bisq.network.p2p.services.peergroup.validateaddress.AddressValidationResponse;
 
 /**
  * Interface for any message sent as payload in NetworkEnvelope
  */
-public interface NetworkMessage extends Proto {
-    default int getCost() {
-        //todo
-        return 10;
+public interface EnvelopePayloadMessage extends Proto {
+    double getCostFactor();
+
+    default bisq.network.protobuf.EnvelopePayloadMessage.Builder getNetworkMessageBuilder() {
+        return bisq.network.protobuf.EnvelopePayloadMessage.newBuilder();
     }
 
-    default bisq.network.protobuf.NetworkMessage.Builder getNetworkMessageBuilder() {
-        return bisq.network.protobuf.NetworkMessage.newBuilder();
-    }
+    bisq.network.protobuf.EnvelopePayloadMessage toProto();
 
-    bisq.network.protobuf.NetworkMessage toProto();
-
-    static NetworkMessage fromProto(bisq.network.protobuf.NetworkMessage proto) {
+    static EnvelopePayloadMessage fromProto(bisq.network.protobuf.EnvelopePayloadMessage proto) {
         switch (proto.getMessageCase()) {
             case CONNECTIONHANDSHAKEREQUEST: {
                 return ConnectionHandshake.Request.fromProto(proto.getConnectionHandshakeRequest());
@@ -91,6 +90,12 @@ public interface NetworkMessage extends Proto {
             }
             case DATAREQUEST: {
                 return DataRequest.fromProto(proto.getDataRequest());
+            }
+            case NETWORKLOADEXCHANGEREQUEST: {
+                return NetworkLoadExchangeRequest.fromProto(proto.getNetworkLoadExchangeRequest());
+            }
+            case NETWORKLOADEXCHANGERESPONSE: {
+                return NetworkLoadExchangeResponse.fromProto(proto.getNetworkLoadExchangeResponse());
             }
             case EXTERNALNETWORKMESSAGE: {
                 // Externally defined messages

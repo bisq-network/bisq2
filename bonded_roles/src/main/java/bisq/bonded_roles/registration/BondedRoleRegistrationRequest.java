@@ -21,6 +21,7 @@ import bisq.bonded_roles.BondedRoleType;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.network.p2p.vo.AddressByTransportTypeMap;
@@ -78,7 +79,7 @@ public final class BondedRoleRegistrationRequest implements MailboxMessage {
     }
 
     @Override
-    public bisq.network.protobuf.NetworkMessage toProto() {
+    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
         return getNetworkMessageBuilder()
                 .setExternalNetworkMessage(ExternalNetworkMessage.newBuilder()
                         .setAny(Any.pack(toAuthorizeRoleRegistrationRequestProto())))
@@ -109,7 +110,7 @@ public final class BondedRoleRegistrationRequest implements MailboxMessage {
                 proto.getIsCancellationRequest());
     }
 
-    public static ProtoResolver<bisq.network.p2p.message.NetworkMessage> getNetworkMessageResolver() {
+    public static ProtoResolver<EnvelopePayloadMessage> getNetworkMessageResolver() {
         return any -> {
             try {
                 bisq.bonded_roles.protobuf.BondedRoleRegistrationRequest proto = any.unpack(bisq.bonded_roles.protobuf.BondedRoleRegistrationRequest.class);
@@ -118,5 +119,10 @@ public final class BondedRoleRegistrationRequest implements MailboxMessage {
                 throw new UnresolvableProtobufMessageException(e);
             }
         };
+    }
+
+    @Override
+    public double getCostFactor() {
+        return getCostFactor(0.5, 1);
     }
 }

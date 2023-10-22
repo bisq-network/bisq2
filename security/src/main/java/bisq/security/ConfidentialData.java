@@ -32,6 +32,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 @ToString
 @EqualsAndHashCode
 public final class ConfidentialData implements Proto {
+    private static final int MAX_SIZE_CIPHERTEXT = 20_000;
+
     private final byte[] senderPublicKey;
     private final byte[] iv;
     private final byte[] cipherText;    // message with 1000 chars has about 1500 bytes
@@ -46,8 +48,8 @@ public final class ConfidentialData implements Proto {
         this.cipherText = cipherText;
         this.signature = signature;
 
-        checkArgument(iv.length < 20);
-        checkArgument(cipherText.length < 20_000);
+        checkArgument(iv.length <= 20);
+        checkArgument(cipherText.length <= MAX_SIZE_CIPHERTEXT);
 
         NetworkDataValidation.validateECPubKey(senderPublicKey);
         NetworkDataValidation.validateECSignature(signature);
@@ -67,5 +69,9 @@ public final class ConfidentialData implements Proto {
                 proto.getIv().toByteArray(),
                 proto.getCipherText().toByteArray(),
                 proto.getSignature().toByteArray());
+    }
+
+    public double getCostFactor() {
+        return cipherText.length / (double) MAX_SIZE_CIPHERTEXT;
     }
 }

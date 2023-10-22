@@ -19,7 +19,6 @@ package bisq.network.p2p.services.data.inventory;
 
 import bisq.network.p2p.services.data.broadcast.BroadcastMessage;
 import bisq.network.p2p.services.data.filter.DataFilter;
-import bisq.network.protobuf.NetworkMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -37,7 +36,7 @@ public final class InventoryRequest implements BroadcastMessage {
     }
 
     @Override
-    public NetworkMessage toProto() {
+    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
         return getNetworkMessageBuilder().setInventoryRequest(
                         bisq.network.protobuf.InventoryRequest.newBuilder()
                                 .setDataFilter(dataFilter.toProto())
@@ -47,5 +46,10 @@ public final class InventoryRequest implements BroadcastMessage {
 
     public static InventoryRequest fromProto(bisq.network.protobuf.InventoryRequest proto) {
         return new InventoryRequest(DataFilter.fromProto(proto.getDataFilter()), proto.getNonce());
+    }
+
+    @Override
+    public double getCostFactor() {
+        return 0.25;
     }
 }

@@ -29,7 +29,7 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
-import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageListener;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.vo.NetworkIdWithKeyPair;
@@ -120,9 +120,9 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(NetworkMessage networkMessage, PublicKey senderPublicKey) {
-        if (networkMessage instanceof ReportToModeratorMessage) {
-            processReportToModeratorMessage((ReportToModeratorMessage) networkMessage);
+    public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, PublicKey senderPublicKey) {
+        if (envelopePayloadMessage instanceof ReportToModeratorMessage) {
+            processReportToModeratorMessage((ReportToModeratorMessage) envelopePayloadMessage);
         }
     }
 

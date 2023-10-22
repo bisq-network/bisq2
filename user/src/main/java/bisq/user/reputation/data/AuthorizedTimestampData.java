@@ -83,6 +83,11 @@ public final class AuthorizedTimestampData implements AuthorizedDistributedData 
     }
 
     @Override
+    public double getCostFactor() {
+        return 0.5;
+    }
+
+    @Override
     public boolean isDataInvalid(byte[] pubKeyHash) {
         return false;
     }

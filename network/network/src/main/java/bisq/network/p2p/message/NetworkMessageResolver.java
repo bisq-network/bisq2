@@ -22,13 +22,13 @@ import bisq.common.proto.ProtoResolverMap;
 import com.google.protobuf.Any;
 
 public class NetworkMessageResolver {
-    private static final ProtoResolverMap<NetworkMessage> protoResolverMap = new ProtoResolverMap<>(true);
+    private static final ProtoResolverMap<EnvelopePayloadMessage> protoResolverMap = new ProtoResolverMap<>(true);
 
-    public static void addResolver(String protoTypeName, ProtoResolver<NetworkMessage> resolver) {
+    public static void addResolver(String protoTypeName, ProtoResolver<EnvelopePayloadMessage> resolver) {
         protoResolverMap.addProtoResolver(protoTypeName, resolver);
     }
 
-    static NetworkMessage fromAny(Any any) {
+    static EnvelopePayloadMessage fromAny(Any any) {
         return protoResolverMap.fromAny(any);
     }
 }

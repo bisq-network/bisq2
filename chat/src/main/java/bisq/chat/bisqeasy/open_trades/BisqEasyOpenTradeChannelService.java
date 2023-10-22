@@ -25,7 +25,7 @@ import bisq.common.observable.collection.ObservableArray;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
-import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
@@ -70,9 +70,9 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(NetworkMessage networkMessage) {
-        if (networkMessage instanceof BisqEasyOpenTradeMessage) {
-            processMessage((BisqEasyOpenTradeMessage) networkMessage);
+    public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
+        if (envelopePayloadMessage instanceof BisqEasyOpenTradeMessage) {
+            processMessage((BisqEasyOpenTradeMessage) envelopePayloadMessage);
         }
     }
 

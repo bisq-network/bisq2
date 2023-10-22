@@ -19,12 +19,12 @@ package bisq.network.p2p.node;
 
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.NetworkEnvelope;
-import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
-import bisq.network.p2p.node.data.ConnectionMetrics;
-import bisq.network.p2p.node.data.NetworkLoad;
 import bisq.network.p2p.node.envelope.NetworkEnvelopeSocketChannel;
+import bisq.network.p2p.node.network_load.ConnectionMetrics;
+import bisq.network.p2p.node.network_load.NetworkLoadService;
 import bisq.network.p2p.vo.Address;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -44,13 +44,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Slf4j
 public abstract class ConnectionChannel {
     interface Handler {
-        void handleNetworkMessage(NetworkMessage networkMessage, AuthorizationToken authorizationToken, ConnectionChannel connectionChannel);
+        void handleNetworkMessage(EnvelopePayloadMessage envelopePayloadMessage, AuthorizationToken authorizationToken, ConnectionChannel connectionChannel);
 
         void handleConnectionClosed(ConnectionChannel connectionChannel, CloseReason closeReason);
     }
 
     public interface Listener {
-        void onNetworkMessage(NetworkMessage networkMessage);
+        void onNetworkMessage(EnvelopePayloadMessage envelopePayloadMessage);
 
         void onConnectionClosed(CloseReason closeReason);
     }
@@ -60,7 +60,7 @@ public abstract class ConnectionChannel {
     @Getter
     private final Capability peersCapability;
     @Getter
-    private final NetworkLoad peersNetworkLoad;
+    private final NetworkLoadService peersNetworkLoadService;
     @Getter
     private final NetworkEnvelopeSocketChannel networkEnvelopeSocketChannel;
     @Getter
@@ -76,24 +76,25 @@ public abstract class ConnectionChannel {
     private final Object writeLock = new Object();
 
     protected ConnectionChannel(Capability peersCapability,
-                                NetworkLoad peersNetworkLoad,
+                                NetworkLoadService peersNetworkLoadService,
                                 NetworkEnvelopeSocketChannel networkEnvelopeSocketChannel,
                                 ConnectionMetrics connectionMetrics) {
         this.peersCapability = peersCapability;
-        this.peersNetworkLoad = peersNetworkLoad;
+        this.peersNetworkLoadService = peersNetworkLoadService;
         this.networkEnvelopeSocketChannel = networkEnvelopeSocketChannel;
         this.connectionMetrics = connectionMetrics;
     }
 
-    ConnectionChannel send(NetworkMessage networkMessage, AuthorizationToken authorizationToken) {
+    ConnectionChannel send(EnvelopePayloadMessage envelopePayloadMessage, AuthorizationToken authorizationToken) {
         if (isStopped) {
             log.warn("Message not sent as connection has been shut down already. Message={}, ConnectionChannel={}",
-                    StringUtils.truncate(networkMessage.toString(), 200), this);
+                    StringUtils.truncate(envelopePayloadMessage.toString(), 200), this);
             throw new ConnectionClosedException(this);
         }
         try {
-            NetworkEnvelope networkEnvelope = new NetworkEnvelope(NetworkEnvelope.VERSION, authorizationToken, networkMessage);
+            NetworkEnvelope networkEnvelope = new NetworkEnvelope(authorizationToken, envelopePayloadMessage);
             boolean sent = false;
+            long ts = System.currentTimeMillis();
             synchronized (writeLock) {
                 try {
                     networkEnvelopeSocketChannel.send(networkEnvelope);
@@ -105,13 +106,13 @@ public abstract class ConnectionChannel {
                 }
             }
             if (sent) {
-                connectionMetrics.onSent(networkEnvelope);
-                if (networkMessage instanceof CloseConnectionMessage) {
+                connectionMetrics.onSent(networkEnvelope, System.currentTimeMillis() - ts);
+                if (envelopePayloadMessage instanceof CloseConnectionMessage) {
                     log.info("Sent {} from {}",
-                            StringUtils.truncate(networkMessage.toString(), 300), this);
+                            StringUtils.truncate(envelopePayloadMessage.toString(), 300), this);
                 } else {
                     log.debug("Sent {} from {}",
-                            StringUtils.truncate(networkMessage.toString(), 300), this);
+                            StringUtils.truncate(envelopePayloadMessage.toString(), 300), this);
                 }
             }
             return this;
@@ -147,8 +148,8 @@ public abstract class ConnectionChannel {
         });
     }
 
-    void notifyListeners(NetworkMessage networkMessage) {
-        listeners.forEach(listener -> listener.onNetworkMessage(networkMessage));
+    void notifyListeners(EnvelopePayloadMessage envelopePayloadMessage) {
+        listeners.forEach(listener -> listener.onNetworkMessage(envelopePayloadMessage));
     }
 
     public void addListener(Listener listener) {

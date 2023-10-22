@@ -20,7 +20,7 @@ package bisq.trade.submarine;
 import bisq.common.application.Service;
 import bisq.contract.submarine.SubmarineContract;
 import bisq.identity.Identity;
-import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.vo.NetworkId;
 import bisq.offer.submarine.SubmarineOffer;
@@ -81,7 +81,7 @@ public class SubmarineTradeService implements PersistenceClient<SubmarineTradeSt
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(NetworkMessage networkMessage) {
+    public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
     }
 
 

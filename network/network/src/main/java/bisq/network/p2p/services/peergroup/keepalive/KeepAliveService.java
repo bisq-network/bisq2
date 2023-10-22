@@ -19,7 +19,7 @@ package bisq.network.p2p.services.peergroup.keepalive;
 
 import bisq.common.timer.Scheduler;
 import bisq.network.NetworkService;
-import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
@@ -37,7 +37,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 @Slf4j
 public class KeepAliveService implements Node.Listener {
-    private static final long TIMEOUT = TimeUnit.SECONDS.toMillis(30);
+    private static final long TIMEOUT_SEC = 120;
 
     @Getter
     @ToString
@@ -93,7 +93,7 @@ public class KeepAliveService implements Node.Listener {
         KeepAliveHandler handler = new KeepAliveHandler(node, connection);
         requestHandlerMap.put(key, handler);
         handler.request()
-                .orTimeout(TIMEOUT, TimeUnit.SECONDS)
+                .orTimeout(TIMEOUT_SEC, TimeUnit.SECONDS)
                 .whenComplete((__, throwable) -> requestHandlerMap.remove(key));
     }
 
@@ -104,9 +104,9 @@ public class KeepAliveService implements Node.Listener {
     }
 
     @Override
-    public void onMessage(NetworkMessage networkMessage, Connection connection, String nodeId) {
-        if (networkMessage instanceof Ping) {
-            Ping ping = (Ping) networkMessage;
+    public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, String nodeId) {
+        if (envelopePayloadMessage instanceof Ping) {
+            Ping ping = (Ping) envelopePayloadMessage;
             log.debug("Node {} received Ping with nonce {} from {}", node, ping.getNonce(), connection.getPeerAddress());
             NetworkService.NETWORK_IO_POOL.submit(() -> node.send(new Pong(ping.getNonce()), connection));
             log.debug("Node {} sent Pong with nonce {} to {}. Connection={}", node, ping.getNonce(), connection.getPeerAddress(), connection.getId());

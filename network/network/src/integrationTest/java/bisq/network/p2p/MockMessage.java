@@ -17,13 +17,13 @@
 
 package bisq.network.p2p;
 
-import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 @EqualsAndHashCode
 @Getter
-public class MockMessage implements NetworkMessage {
+public class MockMessage implements EnvelopePayloadMessage {
     private final String msg;
 
     public MockMessage(String msg) {
@@ -38,7 +38,12 @@ public class MockMessage implements NetworkMessage {
     }
 
     @Override
-    public bisq.network.protobuf.NetworkMessage toProto() {
+    public double getCostFactor() {
+        return 0;
+    }
+
+    @Override
+    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
         return null;
     }
 }

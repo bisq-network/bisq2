@@ -70,7 +70,7 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
     }
 
     @Override
-    public bisq.network.protobuf.NetworkMessage toProto() {
+    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
         return getNetworkMessageBuilder()
                 .setExternalNetworkMessage(ExternalNetworkMessage.newBuilder().setAny(Any.pack(toChatMessageProto())))
                 .build();
@@ -102,5 +102,10 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
                 baseProto.getDate(),
                 baseProto.getWasEdited(),
                 ChatMessageType.fromProto(baseProto.getChatMessageType()));
+    }
+
+    @Override
+    public double getCostFactor() {
+        return getCostFactor(0.1, 0.3);
     }
 }

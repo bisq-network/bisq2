@@ -31,7 +31,7 @@ message Capability {
 }
 
 message NetworkLoad {
-  sint32 numConnections = 1;
+  double value = 1;
 }
 
 message FilterEntry {
@@ -97,6 +97,16 @@ message Pong {
   sint32 requestNonce = 1;
 }
 
+message NetworkLoadExchangeRequest {
+  sint32 nonce = 1;
+  NetworkLoad networkLoad = 2;
+}
+
+message NetworkLoadExchangeResponse {
+  sint32 requestNonce = 1;
+  NetworkLoad networkLoad = 2;
+}
+
 message ConfidentialMessage {
   security.ConfidentialData confidentialData = 1;
   string receiverKeyId = 2;
@@ -122,10 +132,10 @@ message ExternalNetworkMessage {
 
 
 ////////////////////////////////////////////////////////////////////
-// NetworkMessage types
+// EnvelopePayloadMessage types
 ////////////////////////////////////////////////////////////////////
 
-message NetworkMessage {
+message EnvelopePayloadMessage {
   oneof message {
     ConnectionHandshake.Request connectionHandshakeRequest = 1;
     ConnectionHandshake.Response connectionHandshakeResponse = 2;
@@ -149,8 +159,11 @@ message NetworkMessage {
 
     DataRequest dataRequest = 14;
 
+    NetworkLoadExchangeRequest networkLoadExchangeRequest = 15;
+    NetworkLoadExchangeResponse networkLoadExchangeResponse = 16;
+
     // Wrapper for NetworkMessages defined in other modules like PrivateChatMessage which are wrapped in an Any blob
-    ExternalNetworkMessage externalNetworkMessage = 15;
+    ExternalNetworkMessage externalNetworkMessage = 17;
   }
 }
 
@@ -263,7 +276,7 @@ message AuthorizationToken {
 message NetworkEnvelope {
   sint32 version = 1;
   AuthorizationToken authorizationToken = 2;
-  NetworkMessage networkMessage = 3;
+  EnvelopePayloadMessage networkMessage = 3;
 }
 
 enum MessageDeliveryStatus {

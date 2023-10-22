@@ -23,10 +23,11 @@ import bisq.common.observable.Observable;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkService;
 import bisq.network.common.TransportConfig;
-import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.authorization.AuthorizationService;
+import bisq.network.p2p.node.network_load.NetworkLoadService;
 import bisq.network.p2p.node.transport.BootstrapInfo;
 import bisq.network.p2p.node.transport.TransportType;
 import bisq.network.p2p.services.confidential.ConfidentialMessageListener;
@@ -64,7 +65,6 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 /**
  * Maintains a map of ServiceNodes by transportType. Delegates to relevant ServiceNode.
- *
  */
 // TODO: if we change the supported transports we need to clean up the persisted networkIds.
 @Slf4j
@@ -87,7 +87,8 @@ public class ServiceNodesByTransport implements PersistenceClient<ServiceNodesBy
                                    Optional<MessageDeliveryStatusService> messageDeliveryStatusService,
                                    KeyPairService keyPairService,
                                    PersistenceService persistenceService,
-                                   ProofOfWorkService proofOfWorkService) {
+                                   ProofOfWorkService proofOfWorkService,
+                                   NetworkLoadService networkLoadService) {
         this.supportedTransportTypes = supportedTransportTypes;
         this.keyPairService = keyPairService;
 
@@ -115,7 +116,8 @@ public class ServiceNodesByTransport implements PersistenceClient<ServiceNodesBy
                     keyPairService,
                     persistenceService,
                     seedAddresses,
-                    transportType);
+                    transportType,
+                    networkLoadService);
             map.put(transportType, serviceNode);
         });
 
@@ -213,7 +215,7 @@ public class ServiceNodesByTransport implements PersistenceClient<ServiceNodesBy
         });
     }
 
-    public NetworkService.SendMessageResult confidentialSend(NetworkMessage networkMessage,
+    public NetworkService.SendMessageResult confidentialSend(EnvelopePayloadMessage envelopePayloadMessage,
                                                              NetworkId receiverNetworkId,
                                                              KeyPair senderKeyPair,
                                                              String senderNodeId) {
@@ -221,7 +223,7 @@ public class ServiceNodesByTransport implements PersistenceClient<ServiceNodesBy
         receiverNetworkId.getAddressByTransportTypeMap().forEach((transportType, address) -> {
             if (map.containsKey(transportType)) {
                 ServiceNode serviceNode = map.get(transportType);
-                ConfidentialMessageService.Result result = serviceNode.confidentialSend(networkMessage,
+                ConfidentialMessageService.Result result = serviceNode.confidentialSend(envelopePayloadMessage,
                         address,
                         receiverNetworkId.getPubKey(),
                         senderKeyPair,
@@ -233,12 +235,12 @@ public class ServiceNodesByTransport implements PersistenceClient<ServiceNodesBy
     }
 
     public Map<TransportType, Connection> send(String senderNodeId,
-                                               NetworkMessage networkMessage,
+                                               EnvelopePayloadMessage envelopePayloadMessage,
                                                AddressByTransportTypeMap receiver) {
         return receiver.entrySet().stream().map(entry -> {
                     TransportType transportType = entry.getKey();
                     if (map.containsKey(transportType)) {
-                        return new Pair<>(transportType, map.get(transportType).send(senderNodeId, networkMessage, entry.getValue()));
+                        return new Pair<>(transportType, map.get(transportType).send(senderNodeId, envelopePayloadMessage, entry.getValue()));
                     } else {
                         return null;
                     }

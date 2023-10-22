@@ -25,10 +25,10 @@ import bisq.network.p2p.node.InboundConnectionsManager;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
-import bisq.network.p2p.node.data.NetworkLoad;
 import bisq.network.p2p.node.envelope.NetworkEnvelopeSocketChannel;
 import bisq.network.p2p.node.envelope.ProtoBufMessageLengthWriter;
 import bisq.network.p2p.node.handshake.ConnectionHandshake;
+import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.network.p2p.node.transport.TransportType;
 import bisq.network.p2p.services.peergroup.BanList;
 import bisq.network.p2p.vo.Address;
@@ -82,7 +82,11 @@ public class InboundConnectionsManagerTests {
 
         Selector selector = SelectorProvider.provider().openSelector();
         InboundConnectionsManager inboundConnectionsManager = new InboundConnectionsManager(
-                mock(BanList.class), myCapability, authorizationService, serverSocketChannel,
+                mock(BanList.class),
+                myCapability,
+                new NetworkLoad(),
+                authorizationService,
+                serverSocketChannel,
                 selector,
                 mock(Node.class)
         );
@@ -167,7 +171,11 @@ public class InboundConnectionsManagerTests {
 
         Selector selector = SelectorProvider.provider().openSelector();
         InboundConnectionsManager inboundConnectionsManager = new InboundConnectionsManager(
-                mock(BanList.class), myCapability, authorizationService, serverSocketChannel,
+                mock(BanList.class),
+                myCapability,
+                new NetworkLoad(),
+                authorizationService,
+                serverSocketChannel,
                 selector,
                 mock(Node.class)
         );
@@ -242,13 +250,13 @@ public class InboundConnectionsManagerTests {
         supportedTransportTypes.add(TransportType.CLEAR);
         Capability peerCapability = new Capability(peerAddress, supportedTransportTypes);
 
-        ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, NetworkLoad.INITIAL_NETWORK_LOAD);
+        ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, new NetworkLoad());
         AuthorizationService authorizationService = createAuthorizationService();
         AuthorizationToken token = authorizationService.createToken(request,
-                NetworkLoad.INITIAL_NETWORK_LOAD,
+                new NetworkLoad(),
                 myAddress.getFullAddress(),
                 0);
-        return new NetworkEnvelope(NetworkEnvelope.VERSION, token, request).toProto();
+        return new NetworkEnvelope(token, request).toProto();
     }
 
     private AuthorizationService createAuthorizationService() {

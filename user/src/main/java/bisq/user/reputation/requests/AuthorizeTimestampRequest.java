@@ -20,6 +20,7 @@ package bisq.user.reputation.requests;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.network.protobuf.ExternalNetworkMessage;
@@ -49,7 +50,7 @@ public final class AuthorizeTimestampRequest implements MailboxMessage {
     }
 
     @Override
-    public bisq.network.protobuf.NetworkMessage toProto() {
+    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
         return getNetworkMessageBuilder()
                 .setExternalNetworkMessage(ExternalNetworkMessage.newBuilder()
                         .setAny(Any.pack(toAuthorizeTimestampRequestProto())))
@@ -66,7 +67,7 @@ public final class AuthorizeTimestampRequest implements MailboxMessage {
         return new AuthorizeTimestampRequest(proto.getProfileId());
     }
 
-    public static ProtoResolver<bisq.network.p2p.message.NetworkMessage> getNetworkMessageResolver() {
+    public static ProtoResolver<EnvelopePayloadMessage> getNetworkMessageResolver() {
         return any -> {
             try {
                 bisq.user.protobuf.AuthorizeTimestampRequest proto = any.unpack(bisq.user.protobuf.AuthorizeTimestampRequest.class);
@@ -75,5 +76,10 @@ public final class AuthorizeTimestampRequest implements MailboxMessage {
                 throw new UnresolvableProtobufMessageException(e);
             }
         };
+    }
+
+    @Override
+    public double getCostFactor() {
+        return getCostFactor(0.5, 1);
     }
 }

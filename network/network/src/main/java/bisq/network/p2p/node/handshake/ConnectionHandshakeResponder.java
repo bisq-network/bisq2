@@ -24,8 +24,8 @@ import bisq.network.p2p.node.Capability;
 import bisq.network.p2p.node.ConnectionException;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
-import bisq.network.p2p.node.data.NetworkLoad;
 import bisq.network.p2p.node.envelope.NetworkEnvelopeSocketChannel;
+import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.network.p2p.services.peergroup.BanList;
 import bisq.network.p2p.vo.Address;
 import lombok.extern.slf4j.Slf4j;
@@ -38,15 +38,18 @@ public class ConnectionHandshakeResponder {
 
     private final BanList banList;
     private final Capability capability;
+    private final NetworkLoad myNetworkLoad;
     private final AuthorizationService authorizationService;
     private final NetworkEnvelopeSocketChannel networkEnvelopeSocketChannel;
 
     public ConnectionHandshakeResponder(BanList banList,
                                         Capability capability,
+                                        NetworkLoad myNetworkLoad,
                                         AuthorizationService authorizationService,
                                         NetworkEnvelopeSocketChannel networkEnvelopeSocketChannel) {
         this.banList = banList;
         this.capability = capability;
+        this.myNetworkLoad = myNetworkLoad;
         this.authorizationService = authorizationService;
         this.networkEnvelopeSocketChannel = networkEnvelopeSocketChannel;
     }
@@ -58,14 +61,12 @@ public class ConnectionHandshakeResponder {
         NetworkEnvelope requestProto = requestEnvelopes.get(0);
         NetworkEnvelope requestNetworkEnvelope = parseAndValidateRequest(requestProto);
 
-        ConnectionHandshake.Request request = (ConnectionHandshake.Request) requestNetworkEnvelope.getNetworkMessage();
+        ConnectionHandshake.Request request = (ConnectionHandshake.Request) requestNetworkEnvelope.getEnvelopePayloadMessage();
         verifyPeerIsNotBanned(request);
-
         verifyPoW(requestNetworkEnvelope);
 
         Address peerAddress = request.getCapability().getAddress();
-        // TODO myLoad should be used here
-        NetworkEnvelope responseEnvelope = createResponseEnvelope(NetworkLoad.INITIAL_NETWORK_LOAD, request.getNetworkLoad(), peerAddress);
+        NetworkEnvelope responseEnvelope = createResponseEnvelope(myNetworkLoad, request.getNetworkLoad(), peerAddress);
 
         return new Pair<>(request, responseEnvelope);
     }
@@ -81,21 +82,21 @@ public class ConnectionHandshakeResponder {
     }
 
     private void verifyPoW(NetworkEnvelope requestNetworkEnvelope) {
-        ConnectionHandshake.Request request = (ConnectionHandshake.Request) requestNetworkEnvelope.getNetworkMessage();
+        ConnectionHandshake.Request request = (ConnectionHandshake.Request) requestNetworkEnvelope.getEnvelopePayloadMessage();
         String myAddress = capability.getAddress().getFullAddress();
-        // As the request did not know our load at the initial request, they used the Load.INITIAL_LOAD for the
+        // As the request did not know our load at the initial request, they used the NetworkLoad.INITIAL_LOAD for the
         // AuthorizationToken.
         boolean isAuthorized = authorizationService.isAuthorized(
                 request,
                 requestNetworkEnvelope.getAuthorizationToken(),
-                NetworkLoad.INITIAL_NETWORK_LOAD,
+                NetworkLoad.INITIAL_LOAD,
                 StringUtils.createUid(),
                 myAddress
         );
 
         if (isAuthorized) {
             log.debug("Peer {} passed PoW authorization.",
-                    ((ConnectionHandshake.Request) requestNetworkEnvelope.getNetworkMessage()).getCapability().getAddress());
+                    ((ConnectionHandshake.Request) requestNetworkEnvelope.getEnvelopePayloadMessage()).getCapability().getAddress());
         } else {
             throw new ConnectionException("Request authorization failed. request=" + request);
         }
@@ -104,7 +105,8 @@ public class ConnectionHandshakeResponder {
     }
 
     private NetworkEnvelope parseAndValidateRequest(NetworkEnvelope requestNetworkEnvelope) {
-        validateEnvelopeVersion(requestNetworkEnvelope);
+        requestNetworkEnvelope.verifyVersion();
+
         validateNetworkMessage(requestNetworkEnvelope);
         return requestNetworkEnvelope;
     }
@@ -119,18 +121,11 @@ public class ConnectionHandshakeResponder {
     private NetworkEnvelope createResponseEnvelope(NetworkLoad myNetworkLoad, NetworkLoad peerNetworkLoad, Address peerAddress) {
         ConnectionHandshake.Response response = new ConnectionHandshake.Response(capability, myNetworkLoad);
         AuthorizationToken token = authorizationService.createToken(response, peerNetworkLoad, peerAddress.getFullAddress(), 0);
-        return new NetworkEnvelope(NetworkEnvelope.VERSION, token, response);
-    }
-
-    private void validateEnvelopeVersion(NetworkEnvelope requestNetworkEnvelope) {
-        if (requestNetworkEnvelope.getVersion() != NetworkEnvelope.VERSION) {
-            throw new ConnectionException("Invalid version. requestEnvelop.version()=" +
-                    requestNetworkEnvelope.getVersion() + "; Version.VERSION=" + NetworkEnvelope.VERSION);
-        }
+        return new NetworkEnvelope(token, response);
     }
 
     private void validateNetworkMessage(NetworkEnvelope requestNetworkEnvelope) {
-        if (!(requestNetworkEnvelope.getNetworkMessage() instanceof ConnectionHandshake.Request)) {
+        if (!(requestNetworkEnvelope.getEnvelopePayloadMessage() instanceof ConnectionHandshake.Request)) {
             throw new ConnectionException("RequestEnvelope.message() not type of Request. requestEnvelope=" +
                     requestNetworkEnvelope);
         }

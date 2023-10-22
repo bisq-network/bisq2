@@ -18,6 +18,7 @@
 package bisq.network.p2p.node;
 
 import bisq.network.p2p.node.authorization.AuthorizationService;
+import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.network.p2p.services.peergroup.BanList;
 import bisq.network.p2p.vo.Address;
 import lombok.Setter;
@@ -41,6 +42,7 @@ public class ServerChannel {
     }
 
     private final Capability myCapability;
+    private final NetworkLoad myNetworkLoad;
     private final BanList banList;
     private final AuthorizationService authorizationService;
     private final Node node;
@@ -54,11 +56,13 @@ public class ServerChannel {
     private Optional<Listener> onServerReadyListener = Optional.empty();
 
     public ServerChannel(Capability myCapability,
+                         NetworkLoad myNetworkLoad,
                          BanList banList,
                          AuthorizationService authorizationService,
                          Node node,
                          ServerSocketChannel serverSocketChannel) {
         this.myCapability = myCapability;
+        this.myNetworkLoad = myNetworkLoad;
         this.banList = banList;
         this.authorizationService = authorizationService;
         this.node = node;
@@ -82,6 +86,7 @@ public class ServerChannel {
                         new InboundConnectionsManager(
                                 banList,
                                 myCapability,
+                                myNetworkLoad,
                                 authorizationService,
                                 serverSocketChannel,
                                 selector,

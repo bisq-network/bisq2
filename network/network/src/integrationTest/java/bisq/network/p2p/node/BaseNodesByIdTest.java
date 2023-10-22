@@ -18,7 +18,8 @@
 package bisq.network.p2p.node;
 
 import bisq.network.p2p.BaseNetworkTest;
-import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
+import bisq.network.p2p.node.network_load.NetworkLoadService;
 import bisq.network.p2p.node.transport.TransportService;
 import bisq.network.p2p.services.peergroup.BanList;
 import bisq.network.p2p.services.peergroup.keepalive.Ping;
@@ -38,7 +39,7 @@ public abstract class BaseNodesByIdTest extends BaseNetworkTest {
     void test_messageRoundTrip(Node.Config nodeConfig) throws InterruptedException {
         BanList banList = new BanList();
         TransportService transportService = TransportService.create(nodeConfig.getTransportType(), nodeConfig.getTransportConfig());
-        NodesById nodesById = new NodesById(banList, nodeConfig, transportService);
+        NodesById nodesById = new NodesById(banList, nodeConfig, transportService, new NetworkLoadService());
         long ts = System.currentTimeMillis();
         numNodes = 5;
         int numRepeats = 1;
@@ -62,14 +63,14 @@ public abstract class BaseNodesByIdTest extends BaseNetworkTest {
             initializeServerLatch.countDown();
             nodesById.addNodeListener(new Node.Listener() {
                 @Override
-                public void onMessage(NetworkMessage networkMessage, Connection connection, String nodeId) {
-                    log.info("Received " + networkMessage.toString());
-                    if (networkMessage instanceof Ping) {
-                        Pong pong = new Pong(((Ping) networkMessage).getNonce());
+                public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, String nodeId) {
+                    log.info("Received " + envelopePayloadMessage.toString());
+                    if (envelopePayloadMessage instanceof Ping) {
+                        Pong pong = new Pong(((Ping) envelopePayloadMessage).getNonce());
                         log.info("Send pong " + pong);
                         nodesById.send(nodeId, pong, connection);
                         sendPongLatch.countDown();
-                    } else if (networkMessage instanceof Pong) {
+                    } else if (envelopePayloadMessage instanceof Pong) {
                         receivedPongLatch.countDown();
                     }
                 }
@@ -126,7 +127,7 @@ public abstract class BaseNodesByIdTest extends BaseNetworkTest {
     void test_initializeServer(Node.Config nodeConfig) {
         BanList banList = new BanList();
         TransportService transportService = TransportService.create(nodeConfig.getTransportType(), nodeConfig.getTransportConfig());
-        NodesById nodesById = new NodesById(banList, nodeConfig, transportService);
+        NodesById nodesById = new NodesById(banList, nodeConfig, transportService, new NetworkLoadService());
         initializeServers(2, nodesById);
         nodesById.shutdown().join();
     }

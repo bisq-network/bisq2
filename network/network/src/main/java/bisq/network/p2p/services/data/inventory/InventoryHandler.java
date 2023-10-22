@@ -19,7 +19,7 @@ package bisq.network.p2p.services.data.inventory;
 
 import bisq.common.encoding.Hex;
 import bisq.network.NetworkService;
-import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
@@ -70,9 +70,9 @@ class InventoryHandler implements Connection.Listener {
     }
 
     @Override
-    public void onNetworkMessage(NetworkMessage networkMessage) {
-        if (networkMessage instanceof InventoryResponse) {
-            InventoryResponse response = (InventoryResponse) networkMessage;
+    public void onNetworkMessage(EnvelopePayloadMessage envelopePayloadMessage) {
+        if (envelopePayloadMessage instanceof InventoryResponse) {
+            InventoryResponse response = (InventoryResponse) envelopePayloadMessage;
             if (response.getRequestNonce() == nonce) {
                 Map<String, List<String>> details = new HashMap<>();
                 response.getInventory().getEntries()
@@ -105,11 +105,15 @@ class InventoryHandler implements Connection.Listener {
                                 details.put(key, list);
                             }
                         });
+
+                String report = details.entrySet().stream().map(e -> e.getValue().size() + " " + e.getKey() + ": " + e.getValue())
+                        .collect(Collectors.joining("\n"));
+                if (report.isEmpty()) {
+                    report = "No items received";
+                }
                 log.info("\n##########################################################################################\n" +
-                        "## INVENTORY from: " + connection.getPeerAddress() + "\n" +
-                        "##########################################################################################\n" +
-                        details.entrySet().stream().map(e -> e.getValue().size() + " " + e.getKey() + ": " + e.getValue())
-                                .collect(Collectors.joining("\n")) +
+                        "Inventory from: " + connection.getPeerAddress() + "\n" +
+                        report +
                         "\n##########################################################################################");
                 removeListeners();
                 connection.getConnectionMetrics().addRtt(System.currentTimeMillis() - ts);

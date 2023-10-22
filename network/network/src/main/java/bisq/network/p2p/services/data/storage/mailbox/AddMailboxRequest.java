@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data.storage.mailbox;
 
+import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.security.DigestUtil;
@@ -80,7 +81,7 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
     }
 
     @Override
-    public bisq.network.protobuf.NetworkMessage toProto() {
+    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
         return getNetworkMessageBuilder().setDataRequest(getDataRequestBuilder().setAddMailboxRequest(
                         bisq.network.protobuf.AddMailboxRequest.newBuilder()
                                 .setMailboxSequentialData(mailboxSequentialData.toProto())
@@ -103,6 +104,15 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
             e.printStackTrace();
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public double getCostFactor() {
+        MailboxData mailboxData = mailboxSequentialData.getMailboxData();
+        double metaDataImpact = mailboxData.getMetaData().getCostFactor();
+        double dataImpact = mailboxData.getConfidentialMessage().getCostFactor();
+        double impact = metaDataImpact + dataImpact;
+        return MathUtils.bounded(0.25, 1, impact);
     }
 
     public boolean isSignatureInvalid() {

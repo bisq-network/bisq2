@@ -21,7 +21,7 @@ import bisq.common.util.FileUtils;
 import bisq.common.util.NetworkUtils;
 import bisq.network.p2p.node.*;
 import bisq.network.p2p.node.authorization.AuthorizationService;
-import bisq.network.p2p.node.data.NetworkLoad;
+import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.network.p2p.node.transport.TransportType;
 import bisq.network.p2p.services.peergroup.BanList;
 import bisq.network.p2p.vo.Address;
@@ -62,6 +62,7 @@ public class OutboundConnectionsMultiplexerTest {
         Capability serverCapability = new Capability(serverAddress, supportedTransportTypes);
         ServerChannel serverChannel = new ServerChannel(
                 serverCapability,
+                new NetworkLoad(),
                 mock(BanList.class),
                 createAuthorizationService(),
                 mock(Node.class),
@@ -88,7 +89,7 @@ public class OutboundConnectionsMultiplexerTest {
                 var outboundConnectionManager = new OutboundConnectionManager(
                         authorizationService,
                         mock(BanList.class),
-                        NetworkLoad.INITIAL_NETWORK_LOAD,
+                        new NetworkLoad(),
                         outboundCapability,
                         mock(Node.class),
                         selector

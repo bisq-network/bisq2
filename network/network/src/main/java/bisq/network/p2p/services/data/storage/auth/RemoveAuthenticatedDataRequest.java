@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.encoding.Hex;
+import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.RemoveDataRequest;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -110,7 +111,7 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
     }
 
     @Override
-    public bisq.network.protobuf.NetworkMessage toProto() {
+    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
         return getNetworkMessageBuilder().setDataRequest(getDataRequestBuilder().setRemoveAuthenticatedDataRequest(
                         bisq.network.protobuf.RemoveAuthenticatedDataRequest.newBuilder()
                                 .setMetaData(metaData.toProto())
@@ -139,6 +140,11 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
             e.printStackTrace();
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public double getCostFactor() {
+        return MathUtils.bounded(0.1, 0.3, metaData.getCostFactor());
     }
 
     public boolean isSignatureInvalid() {

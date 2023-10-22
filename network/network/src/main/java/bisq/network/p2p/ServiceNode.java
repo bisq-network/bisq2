@@ -22,11 +22,12 @@ import bisq.common.observable.Observable;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.NetworkUtils;
 import bisq.network.NetworkService;
-import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.NodesById;
+import bisq.network.p2p.node.network_load.NetworkLoadService;
 import bisq.network.p2p.node.transport.TransportService;
 import bisq.network.p2p.node.transport.TransportType;
 import bisq.network.p2p.services.confidential.ConfidentialMessageListener;
@@ -35,7 +36,6 @@ import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatusService;
 import bisq.network.p2p.services.data.DataNetworkService;
 import bisq.network.p2p.services.data.DataService;
-import bisq.network.p2p.services.monitor.MonitorService;
 import bisq.network.p2p.services.peergroup.BanList;
 import bisq.network.p2p.services.peergroup.PeerGroupManager;
 import bisq.network.p2p.vo.Address;
@@ -119,8 +119,6 @@ public class ServiceNode {
     private final Optional<PeerGroupManager> peerGroupService;
     @Getter
     private final Optional<DataNetworkService> dataServicePerTransport;
-    @Getter
-    private final Optional<MonitorService> monitorService;
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     @Getter
     public Observable<State> state = new Observable<>(State.NEW);
@@ -133,12 +131,13 @@ public class ServiceNode {
                        KeyPairService keyPairService,
                        PersistenceService persistenceService,
                        Set<Address> seedNodeAddresses,
-                       TransportType transportType) {
+                       TransportType transportType,
+                       NetworkLoadService networkLoadService) {
         BanList banList = new BanList();
 
         transportService = TransportService.create(transportType, nodeConfig.getTransportConfig());
-        nodesById = new NodesById(banList, nodeConfig, transportService);
-        defaultNode = nodesById.getOrCreateDefaultNode();
+        nodesById = new NodesById(banList, nodeConfig, transportService, networkLoadService);
+        defaultNode = nodesById.createAndConfigNode(Node.DEFAULT);
         defaultNodePort = nodeConfig.getTransportConfig().getDefaultNodePort();
 
         Set<Service> services = config.getServices();
@@ -150,7 +149,8 @@ public class ServiceNode {
                         seedNodeAddresses)) :
                 Optional.empty();
 
-        dataServicePerTransport = services.contains(Service.PEER_GROUP) && services.contains(Service.DATA) ?
+        boolean dataServiceEnabled = services.contains(Service.PEER_GROUP) && services.contains(Service.DATA);
+        dataServicePerTransport = dataServiceEnabled ?
                 Optional.of(dataService.orElseThrow().getDataServicePerTransport(transportType,
                         defaultNode,
                         peerGroupService.orElseThrow())) :
@@ -158,11 +158,6 @@ public class ServiceNode {
 
         confidentialMessageService = services.contains(Service.CONFIDENTIAL) ?
                 Optional.of(new ConfidentialMessageService(nodesById, keyPairService, dataService, messageDeliveryStatusService)) :
-                Optional.empty();
-
-        monitorService = services.contains(Service.PEER_GROUP) && services.contains(Service.MONITOR) ?
-                Optional.of(new MonitorService(defaultNode,
-                        peerGroupService.orElseThrow().getPeerGroupService())) :
                 Optional.empty();
     }
 
@@ -203,7 +198,6 @@ public class ServiceNode {
                         confidentialMessageService.map(ConfidentialMessageService::shutdown).orElse(completedFuture(true)),
                         peerGroupService.map(PeerGroupManager::shutdown).orElse(completedFuture(true)),
                         dataServicePerTransport.map(DataNetworkService::shutdown).orElse(completedFuture(true)),
-                        monitorService.map(MonitorService::shutdown).orElse(completedFuture(true)),
                         nodesById.shutdown()
                 )
                 .orTimeout(10, TimeUnit.SECONDS)
@@ -230,25 +224,25 @@ public class ServiceNode {
         peerGroupService.ifPresent(peerGroupService -> peerGroupService.removeSeedNodeAddress(seedNodeAddress));
     }
 
-    public ConfidentialMessageService.Result confidentialSend(NetworkMessage networkMessage,
+    public ConfidentialMessageService.Result confidentialSend(EnvelopePayloadMessage envelopePayloadMessage,
                                                               Address address,
                                                               PubKey receiverPubKey,
                                                               KeyPair senderKeyPair,
                                                               String senderNodeId) {
         checkArgument(confidentialMessageService.isPresent(), "ConfidentialMessageService not present at confidentialSend");
-        return confidentialMessageService.get().send(networkMessage, address, receiverPubKey, senderKeyPair, senderNodeId);
+        return confidentialMessageService.get().send(envelopePayloadMessage, address, receiverPubKey, senderKeyPair, senderNodeId);
     }
 
-    public Connection send(String senderNodeId, NetworkMessage networkMessage, Address address) {
-        return getNodesById().send(senderNodeId, networkMessage, address);
+    public Connection send(String senderNodeId, EnvelopePayloadMessage envelopePayloadMessage, Address address) {
+        return getNodesById().send(senderNodeId, envelopePayloadMessage, address);
     }
 
     public void addMessageListener(MessageListener messageListener) {
         //todo rename NodeListener
         nodesById.addNodeListener(new Node.Listener() {
             @Override
-            public void onMessage(NetworkMessage networkMessage, Connection connection, String nodeId) {
-                messageListener.onMessage(networkMessage);
+            public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, String nodeId) {
+                messageListener.onMessage(envelopePayloadMessage);
             }
 
             @Override

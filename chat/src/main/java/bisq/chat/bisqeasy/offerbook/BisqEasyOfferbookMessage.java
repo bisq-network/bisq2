@@ -116,6 +116,11 @@ public final class BisqEasyOfferbookMessage extends PublicChatMessage implements
     }
 
     @Override
+    public double getCostFactor() {
+        return 0.3;
+    }
+
+    @Override
     public boolean hasBisqEasyOffer() {
         return bisqEasyOffer.isPresent();
     }

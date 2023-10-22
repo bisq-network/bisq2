@@ -22,7 +22,7 @@ import bisq.desktop.components.table.TableItem;
 import bisq.i18n.Res;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
-import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
@@ -69,7 +69,7 @@ public class NodeListItem implements TableItem {
 
         listener = new Node.Listener() {
             @Override
-            public void onMessage(NetworkMessage networkMessage, Connection connection, String nodeId) {
+            public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, String nodeId) {
             }
 
             @Override

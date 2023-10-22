@@ -18,6 +18,7 @@
 package bisq.network.p2p.message;
 
 import bisq.common.proto.Proto;
+import bisq.network.p2p.node.ConnectionException;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -36,25 +37,39 @@ public final class NetworkEnvelope implements Proto {
 
     private final int version;
     private final AuthorizationToken authorizationToken;
-    private final NetworkMessage networkMessage;
+    private final EnvelopePayloadMessage envelopePayloadMessage;
 
-    public NetworkEnvelope(int version, AuthorizationToken authorizationToken, NetworkMessage networkMessage) {
+    public NetworkEnvelope(AuthorizationToken authorizationToken, EnvelopePayloadMessage envelopePayloadMessage) {
+        this(VERSION, authorizationToken, envelopePayloadMessage);
+    }
+
+    public NetworkEnvelope(int version, AuthorizationToken authorizationToken, EnvelopePayloadMessage envelopePayloadMessage) {
         this.version = version;
         this.authorizationToken = authorizationToken;
-        this.networkMessage = networkMessage;
+        this.envelopePayloadMessage = envelopePayloadMessage;
     }
 
     public bisq.network.protobuf.NetworkEnvelope toProto() {
         return bisq.network.protobuf.NetworkEnvelope.newBuilder()
                 .setVersion(version)
                 .setAuthorizationToken(authorizationToken.toProto())
-                .setNetworkMessage(networkMessage.toProto())
+                .setNetworkMessage(envelopePayloadMessage.toProto())
                 .build();
     }
 
     public static NetworkEnvelope fromProto(bisq.network.protobuf.NetworkEnvelope proto) {
         return new NetworkEnvelope(proto.getVersion(),
                 AuthorizationToken.fromProto(proto.getAuthorizationToken()),
-                NetworkMessage.fromProto(proto.getNetworkMessage()));
+                EnvelopePayloadMessage.fromProto(proto.getNetworkMessage()));
     }
+
+    public void verifyVersion() throws ConnectionException {
+        if (version != VERSION) {
+            throw new ConnectionException("Invalid networkEnvelopeVersion. " +
+                    "version=" + version +
+                    "; NetworkEnvelope.VERSION=" + VERSION +
+                    "; networkMessage=" + envelopePayloadMessage.getClass().getSimpleName());
+        }
+    }
+
 }

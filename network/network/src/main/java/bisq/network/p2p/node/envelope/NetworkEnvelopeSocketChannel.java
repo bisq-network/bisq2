@@ -17,10 +17,7 @@
 
 package bisq.network.p2p.node.envelope;
 
-import bisq.common.util.StringUtils;
 import bisq.network.p2p.message.NetworkEnvelope;
-import bisq.network.p2p.message.NetworkMessage;
-import bisq.network.p2p.node.ConnectionException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -84,21 +81,10 @@ public class NetworkEnvelopeSocketChannel implements Closeable {
 
         List<NetworkEnvelope>
                 allNetworkEnvelopes = networkEnvelopeDeserializer.getAllNetworkEnvelopes();
-        allNetworkEnvelopes.forEach(this::validateNetworkMessage);
+        allNetworkEnvelopes.forEach(NetworkEnvelope::verifyVersion);
 
         return allNetworkEnvelopes;
     }
-
-    private void validateNetworkMessage(NetworkEnvelope networkEnvelope) {
-        if (networkEnvelope.getVersion() != NetworkEnvelope.VERSION) {
-            throw new ConnectionException("Invalid network version. " +
-                    networkEnvelope.getClass().getSimpleName());
-        }
-        NetworkMessage networkMessage = networkEnvelope.getNetworkMessage();
-        log.debug("Received message: {} at: {}",
-                StringUtils.truncate(networkMessage.toString(), 200), this);
-    }
-
 
     @Override
     public void close() throws IOException {

@@ -29,6 +29,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.security.GeneralSecurityException;
 import java.security.PublicKey;
 
+// The PublicKey implementation (BCECPublicKey) has an equals and hashCode method implemented.
+// Therefor we can use the @EqualsAndHashCode annotation.
 @Slf4j
 @EqualsAndHashCode
 public final class PubKey implements Proto {

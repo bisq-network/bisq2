@@ -24,7 +24,7 @@ import bisq.network.p2p.node.ConnectionException;
 import bisq.network.p2p.node.OutboundConnection;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
-import bisq.network.p2p.node.data.NetworkLoad;
+import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.network.p2p.services.peergroup.BanList;
 import bisq.network.p2p.vo.Address;
 import lombok.Getter;
@@ -53,12 +53,12 @@ public class ConnectionHandshakeInitiator {
 
     public NetworkEnvelope initiate() {
         ConnectionHandshake.Request request = new ConnectionHandshake.Request(myCapability, myNetworkLoad);
-        // As we do not know he peers load yet, we use the Load.INITIAL_LOAD
+        // As we do not know he peers load yet, we use the NetworkLoad.INITIAL_LOAD
         AuthorizationToken token = authorizationService.createToken(request,
-                NetworkLoad.INITIAL_NETWORK_LOAD,
+                NetworkLoad.INITIAL_LOAD,
                 peerAddress.getFullAddress(),
                 0);
-        return new NetworkEnvelope(NetworkEnvelope.VERSION, token, request);
+        return new NetworkEnvelope(token, request);
     }
 
     public ConnectionHandshake.Response finish(List<NetworkEnvelope> responseNetworkEnvelopes) {
@@ -71,15 +71,13 @@ public class ConnectionHandshakeInitiator {
         }
 
         NetworkEnvelope responseNetworkEnvelope = responseNetworkEnvelopes.get(0);
-        if (responseNetworkEnvelope.getVersion() != NetworkEnvelope.VERSION) {
-            throw new ConnectionException("Invalid version. responseEnvelope.version()=" +
-                    responseNetworkEnvelope.getVersion() + "; Version.VERSION=" + NetworkEnvelope.VERSION);
-        }
-        if (!(responseNetworkEnvelope.getNetworkMessage() instanceof ConnectionHandshake.Response)) {
+        responseNetworkEnvelope.verifyVersion();
+
+        if (!(responseNetworkEnvelope.getEnvelopePayloadMessage() instanceof ConnectionHandshake.Response)) {
             throw new ConnectionException("ResponseEnvelope.message() not type of Response. responseEnvelope=" +
                     responseNetworkEnvelope);
         }
-        ConnectionHandshake.Response response = (ConnectionHandshake.Response) responseNetworkEnvelope.getNetworkMessage();
+        ConnectionHandshake.Response response = (ConnectionHandshake.Response) responseNetworkEnvelope.getEnvelopePayloadMessage();
         if (banList.isBanned(response.getCapability().getAddress())) {
             throw new ConnectionException("Peers address is in quarantine. response=" + response);
         }

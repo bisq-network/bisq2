@@ -68,4 +68,9 @@ public final class BisqEasyTakeOfferRequest extends BisqEasyTradeMessage {
                 BisqEasyContract.fromProto(bisqEasyTakeOfferRequest.getBisqEasyContract()),
                 ContractSignatureData.fromProto(bisqEasyTakeOfferRequest.getContractSignatureData()));
     }
+
+    @Override
+    public double getCostFactor() {
+        return getCostFactor(0.1, 0.3);
+    }
 }

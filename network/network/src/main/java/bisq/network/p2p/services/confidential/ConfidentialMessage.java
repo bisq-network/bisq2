@@ -17,8 +17,9 @@
 
 package bisq.network.p2p.services.confidential;
 
+import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
-import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.security.ConfidentialData;
@@ -34,7 +35,7 @@ import java.util.Arrays;
 @ToString
 @EqualsAndHashCode
 @Getter
-public final class ConfidentialMessage implements NetworkMessage, DistributedData {
+public final class ConfidentialMessage implements EnvelopePayloadMessage, DistributedData {
     private final ConfidentialData confidentialData;
     private final String receiverKeyId;
 
@@ -46,7 +47,7 @@ public final class ConfidentialMessage implements NetworkMessage, DistributedDat
     }
 
     @Override
-    public bisq.network.protobuf.NetworkMessage toProto() {
+    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
         return getNetworkMessageBuilder().setConfidentialMessage(
                 bisq.network.protobuf.ConfidentialMessage.newBuilder()
                         .setConfidentialData(confidentialData.toProto())
@@ -59,6 +60,11 @@ public final class ConfidentialMessage implements NetworkMessage, DistributedDat
                 ConfidentialData.fromProto(proto.getConfidentialData()),
                 proto.getReceiverKeyId()
         );
+    }
+
+    @Override
+    public double getCostFactor() {
+        return MathUtils.bounded(0.1, 1, confidentialData.getCostFactor());
     }
 
     @Override

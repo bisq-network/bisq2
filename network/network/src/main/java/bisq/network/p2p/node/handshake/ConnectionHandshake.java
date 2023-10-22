@@ -18,15 +18,15 @@
 package bisq.network.p2p.node.handshake;
 
 import bisq.common.util.StringUtils;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.NetworkEnvelope;
-import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.Capability;
 import bisq.network.p2p.node.ConnectionException;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
-import bisq.network.p2p.node.data.ConnectionMetrics;
-import bisq.network.p2p.node.data.NetworkLoad;
 import bisq.network.p2p.node.envelope.NetworkEnvelopeSocket;
+import bisq.network.p2p.node.network_load.ConnectionMetrics;
+import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.network.p2p.services.peergroup.BanList;
 import bisq.network.p2p.vo.Address;
 import lombok.EqualsAndHashCode;
@@ -55,7 +55,7 @@ public final class ConnectionHandshake {
     @Getter
     @ToString
     @EqualsAndHashCode
-    public static final class Request implements NetworkMessage {
+    public static final class Request implements EnvelopePayloadMessage {
         private final Capability capability;
         private final NetworkLoad networkLoad;
 
@@ -65,7 +65,7 @@ public final class ConnectionHandshake {
         }
 
         @Override
-        public bisq.network.protobuf.NetworkMessage toProto() {
+        public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
             return getNetworkMessageBuilder().setConnectionHandshakeRequest(
                             bisq.network.protobuf.ConnectionHandshake.Request.newBuilder()
                                     .setCapability(capability.toProto())
@@ -77,12 +77,17 @@ public final class ConnectionHandshake {
             return new Request(Capability.fromProto(proto.getCapability()),
                     NetworkLoad.fromProto(proto.getNetworkLoad()));
         }
+
+        @Override
+        public double getCostFactor() {
+            return 0.05;
+        }
     }
 
     @Getter
     @ToString
     @EqualsAndHashCode
-    public static final class Response implements NetworkMessage {
+    public static final class Response implements EnvelopePayloadMessage {
         private final Capability capability;
         private final NetworkLoad networkLoad;
 
@@ -92,7 +97,7 @@ public final class ConnectionHandshake {
         }
 
         @Override
-        public bisq.network.protobuf.NetworkMessage toProto() {
+        public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
             return getNetworkMessageBuilder().setConnectionHandshakeResponse(
                             bisq.network.protobuf.ConnectionHandshake.Response.newBuilder()
                                     .setCapability(capability.toProto())
@@ -104,6 +109,11 @@ public final class ConnectionHandshake {
             return new Response(Capability.fromProto(proto.getCapability()),
                     NetworkLoad.fromProto(proto.getNetworkLoad()));
         }
+
+        @Override
+        public double getCostFactor() {
+            return 0.05;
+        }
     }
 
     @Getter
@@ -111,12 +121,12 @@ public final class ConnectionHandshake {
     @EqualsAndHashCode
     public static final class Result {
         private final Capability capability;
-        private final NetworkLoad networkLoad;
+        private final NetworkLoad peersNetworkLoad;
         private final ConnectionMetrics connectionMetrics;
 
-        Result(Capability capability, NetworkLoad networkLoad, ConnectionMetrics connectionMetrics) {
+        Result(Capability capability, NetworkLoad peersNetworkLoad, ConnectionMetrics connectionMetrics) {
             this.capability = capability;
-            this.networkLoad = networkLoad;
+            this.peersNetworkLoad = peersNetworkLoad;
             this.connectionMetrics = connectionMetrics;
         }
     }
@@ -146,32 +156,31 @@ public final class ConnectionHandshake {
         try {
             ConnectionMetrics connectionMetrics = new ConnectionMetrics();
             Request request = new Request(capability, myNetworkLoad);
-            // As we do not know he peers load yet, we use the Load.INITIAL_LOAD
+            // As we do not know he peers load yet, we use the NetworkLoad.INITIAL_LOAD
             AuthorizationToken token = authorizationService.createToken(request,
-                    NetworkLoad.INITIAL_NETWORK_LOAD,
+                    NetworkLoad.INITIAL_LOAD,
                     peerAddress.getFullAddress(),
                     0);
-            NetworkEnvelope requestNetworkEnvelope = new NetworkEnvelope(NetworkEnvelope.VERSION, token, request);
+            NetworkEnvelope requestNetworkEnvelope = new NetworkEnvelope(token, request);
             long ts = System.currentTimeMillis();
-
             networkEnvelopeSocket.send(requestNetworkEnvelope);
-            connectionMetrics.onSent(requestNetworkEnvelope);
+            connectionMetrics.onSent(requestNetworkEnvelope, System.currentTimeMillis() - ts);
 
             bisq.network.protobuf.NetworkEnvelope responseProto = networkEnvelopeSocket.receiveNextEnvelope();
             if (responseProto == null) {
                 throw new ConnectionException("Response NetworkEnvelope protobuf is null");
             }
 
+            long startDeserializeTs = System.currentTimeMillis();
             NetworkEnvelope responseNetworkEnvelope = NetworkEnvelope.fromProto(responseProto);
-            if (responseNetworkEnvelope.getVersion() != NetworkEnvelope.VERSION) {
-                throw new ConnectionException("Invalid version. responseEnvelope.version()=" +
-                        responseNetworkEnvelope.getVersion() + "; Version.VERSION=" + NetworkEnvelope.VERSION);
-            }
-            if (!(responseNetworkEnvelope.getNetworkMessage() instanceof Response)) {
+            long deserializeTime = System.currentTimeMillis() - startDeserializeTs;
+
+            responseNetworkEnvelope.verifyVersion();
+            if (!(responseNetworkEnvelope.getEnvelopePayloadMessage() instanceof Response)) {
                 throw new ConnectionException("ResponseEnvelope.message() not type of Response. responseEnvelope=" +
                         responseNetworkEnvelope);
             }
-            Response response = (Response) responseNetworkEnvelope.getNetworkMessage();
+            Response response = (Response) responseNetworkEnvelope.getEnvelopePayloadMessage();
             if (banList.isBanned(response.getCapability().getAddress())) {
                 throw new ConnectionException("Peers address is in quarantine. response=" + response);
             }
@@ -187,8 +196,11 @@ public final class ConnectionHandshake {
                 throw new ConnectionException("Request authorization failed. request=" + request);
             }
 
-            connectionMetrics.onReceived(responseNetworkEnvelope);
-            connectionMetrics.addRtt(System.currentTimeMillis() - ts);
+            connectionMetrics.onReceived(responseNetworkEnvelope, deserializeTime);
+
+            long rrt = System.currentTimeMillis() - ts;
+            connectionMetrics.addRtt(rrt);
+
             log.debug("Servers capability {}, load={}", response.getCapability(), response.getNetworkLoad());
             return new Result(response.getCapability(), response.getNetworkLoad(), connectionMetrics);
         } catch (Exception e) {
@@ -212,29 +224,28 @@ public final class ConnectionHandshake {
             if (requestProto == null) {
                 throw new ConnectionException("Request NetworkEnvelope protobuf is null");
             }
-            NetworkEnvelope requestNetworkEnvelope = NetworkEnvelope.fromProto(requestProto);
-
             long ts = System.currentTimeMillis();
-            if (requestNetworkEnvelope.getVersion() != NetworkEnvelope.VERSION) {
-                throw new ConnectionException("Invalid version. requestEnvelop.version()=" +
-                        requestNetworkEnvelope.getVersion() + "; Version.VERSION=" + NetworkEnvelope.VERSION);
-            }
-            if (!(requestNetworkEnvelope.getNetworkMessage() instanceof Request)) {
+            NetworkEnvelope requestNetworkEnvelope = NetworkEnvelope.fromProto(requestProto);
+            long deserializeTime = System.currentTimeMillis() - ts;
+
+            requestNetworkEnvelope.verifyVersion();
+
+            if (!(requestNetworkEnvelope.getEnvelopePayloadMessage() instanceof Request)) {
                 throw new ConnectionException("RequestEnvelope.message() not type of Request. requestEnvelope=" +
                         requestNetworkEnvelope);
             }
-            Request request = (Request) requestNetworkEnvelope.getNetworkMessage();
+            Request request = (Request) requestNetworkEnvelope.getEnvelopePayloadMessage();
             Address peerAddress = request.getCapability().getAddress();
             if (banList.isBanned(peerAddress)) {
                 throw new ConnectionException("Peers address is in quarantine. request=" + request);
             }
 
             String myAddress = capability.getAddress().getFullAddress();
-            // As the request did not know our load at the initial request, they used the Load.INITIAL_LOAD for the
+            // As the request did not know our load at the initial request, they used the NetworkLoad.INITIAL_LOAD for the
             // AuthorizationToken.
             boolean isAuthorized = authorizationService.isAuthorized(request,
                     requestNetworkEnvelope.getAuthorizationToken(),
-                    NetworkLoad.INITIAL_NETWORK_LOAD,
+                    NetworkLoad.INITIAL_LOAD,
                     StringUtils.createUid(),
                     myAddress);
             if (!isAuthorized) {
@@ -242,14 +253,14 @@ public final class ConnectionHandshake {
             }
 
             log.debug("Clients capability {}, load={}", request.getCapability(), request.getNetworkLoad());
-            connectionMetrics.onReceived(requestNetworkEnvelope);
+            connectionMetrics.onReceived(requestNetworkEnvelope, deserializeTime);
 
             Response response = new Response(capability, myNetworkLoad);
             AuthorizationToken token = authorizationService.createToken(response, request.getNetworkLoad(), peerAddress.getFullAddress(), 0);
-            NetworkEnvelope responseNetworkEnvelope = new NetworkEnvelope(NetworkEnvelope.VERSION, token, response);
+            NetworkEnvelope responseNetworkEnvelope = new NetworkEnvelope(token, response);
+            long startSendTs = System.currentTimeMillis();
             networkEnvelopeSocket.send(responseNetworkEnvelope);
-
-            connectionMetrics.onSent(responseNetworkEnvelope);
+            connectionMetrics.onSent(responseNetworkEnvelope, System.currentTimeMillis() - startSendTs);
             connectionMetrics.addRtt(System.currentTimeMillis() - ts);
             return new Result(request.getCapability(), request.getNetworkLoad(), connectionMetrics);
         } catch (Exception e) {

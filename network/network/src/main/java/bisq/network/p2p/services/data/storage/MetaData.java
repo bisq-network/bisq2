@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.data.storage;
 
 import bisq.common.proto.Proto;
+import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -74,5 +75,12 @@ public final class MetaData implements Proto {
 
     public static MetaData fromProto(bisq.network.protobuf.MetaData proto) {
         return new MetaData(proto.getTtl(), proto.getClassName(), proto.getMaxMapSize());
+    }
+
+    public double getCostFactor() {
+        double ttlImpact = MathUtils.bounded(0, 1, ttl / (double) TTL_100_DAYS);
+        double mapSizeImpact = MathUtils.bounded(0, 1, maxMapSize / (double) MAX_MAP_SIZE_10_000);
+        double impact = ttlImpact + mapSizeImpact;
+        return MathUtils.bounded(0, 1, impact);
     }
 }

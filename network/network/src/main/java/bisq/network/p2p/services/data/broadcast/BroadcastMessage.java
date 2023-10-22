@@ -17,8 +17,8 @@
 
 package bisq.network.p2p.services.data.broadcast;
 
-import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 
-public interface BroadcastMessage extends NetworkMessage {
+public interface BroadcastMessage extends EnvelopePayloadMessage {
 }
 

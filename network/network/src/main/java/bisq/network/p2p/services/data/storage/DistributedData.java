@@ -38,4 +38,6 @@ public interface DistributedData extends Proto {
     }
 
     boolean isDataInvalid(byte[] pubKeyHash);
+
+    double getCostFactor();
 }

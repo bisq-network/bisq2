@@ -18,15 +18,14 @@
 package bisq.network.p2p.vo;
 
 import bisq.security.PubKey;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
 import java.security.KeyPair;
+import java.util.Objects;
 
 @Getter
 @ToString
-@EqualsAndHashCode
 public final class NetworkIdWithKeyPair {
     private final NetworkId networkId;
     private final KeyPair keyPair;
@@ -42,5 +41,26 @@ public final class NetworkIdWithKeyPair {
 
     public PubKey getPubKey() {
         return networkId.getPubKey();
+    }
+
+    // KeyPair does not implement equals and hashCode, though the public and private key implementations do.
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        NetworkIdWithKeyPair that = (NetworkIdWithKeyPair) o;
+
+        if (!Objects.equals(networkId, that.networkId)) return false;
+        return keyPair.getPublic().equals(that.keyPair.getPublic()) &&
+                keyPair.getPrivate().equals(that.keyPair.getPrivate());
+    }
+
+    @Override
+    public int hashCode() {
+        int result = networkId != null ? networkId.hashCode() : 0;
+        result = 31 * result + keyPair.getPublic().hashCode();
+        result = 31 * result + keyPair.getPrivate().hashCode();
+        return result;
     }
 }

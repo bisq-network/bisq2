@@ -24,11 +24,11 @@ import bisq.common.util.NetworkUtils;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
 import bisq.network.common.TransportConfig;
-import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
-import bisq.network.p2p.node.data.NetworkLoad;
 import bisq.network.p2p.node.handshake.ConnectionHandshake;
+import bisq.network.p2p.node.network_load.NetworkLoadService;
 import bisq.network.p2p.node.transport.ServerSocketResult;
 import bisq.network.p2p.node.transport.TransportService;
 import bisq.network.p2p.node.transport.TransportType;
@@ -88,7 +88,7 @@ public class Node implements Connection.Handler {
     }
 
     public interface Listener {
-        void onMessage(NetworkMessage networkMessage, Connection connection, String nodeId);
+        void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, String nodeId);
 
         void onConnection(Connection connection);
 
@@ -144,14 +144,17 @@ public class Node implements Connection.Handler {
     public final AtomicReference<State> state = new AtomicReference<>(State.NEW);
     @Getter
     public final Observable<State> observableState = new Observable<>(State.NEW);
+    @Getter
+    public final NetworkLoadService networkLoadService;
 
-    public Node(BanList banList, Config config, String nodeId, TransportService transportService) {
+    public Node(BanList banList, Config config, String nodeId, TransportService transportService, NetworkLoadService networkLoadService) {
         this.banList = banList;
         this.transportService = transportService;
         transportType = config.getTransportType();
         authorizationService = config.getAuthorizationService();
         this.config = config;
         this.nodeId = nodeId;
+        this.networkLoadService = networkLoadService;
 
         retryPolicy = RetryPolicy.<Boolean>builder()
                 .handle(IllegalStateException.class)
@@ -225,7 +228,7 @@ public class Node implements Connection.Handler {
         connectionHandshakes.put(connectionHandshake.getId(), connectionHandshake);
         log.debug("Inbound handshake request at: {}", myCapability.getAddress());
         try {
-            ConnectionHandshake.Result result = connectionHandshake.onSocket(getMyLoad()); // Blocking call
+            ConnectionHandshake.Result result = connectionHandshake.onSocket(networkLoadService.getCurrentNetworkLoad()); // Blocking call
             connectionHandshakes.remove(connectionHandshake.getId());
 
             Address address = result.getCapability().getAddress();
@@ -244,7 +247,7 @@ public class Node implements Connection.Handler {
             InboundConnection connection = new InboundConnection(socket,
                     serverSocketResult,
                     result.getCapability(),
-                    result.getNetworkLoad(),
+                    new NetworkLoadService(result.getPeersNetworkLoad()),
                     result.getConnectionMetrics(),
                     this,
                     this::handleException);
@@ -281,21 +284,21 @@ public class Node implements Connection.Handler {
     // Send
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public Connection send(NetworkMessage networkMessage, Address address) {
+    public Connection send(EnvelopePayloadMessage envelopePayloadMessage, Address address) {
         Connection connection = getConnection(address);
-        return send(networkMessage, connection);
+        return send(envelopePayloadMessage, connection);
     }
 
-    public Connection send(NetworkMessage networkMessage, Connection connection) {
+    public Connection send(EnvelopePayloadMessage envelopePayloadMessage, Connection connection) {
         if (connection.isStopped()) {
             throw new ConnectionClosedException(connection);
         }
         try {
-            AuthorizationToken token = authorizationService.createToken(networkMessage,
-                    connection.getPeersNetworkLoad(),
+            AuthorizationToken token = authorizationService.createToken(envelopePayloadMessage,
+                    connection.getPeersNetworkLoadService().getCurrentNetworkLoad(),
                     connection.getPeerAddress().getFullAddress(),
                     connection.getSentMessageCounter().incrementAndGet());
-            return connection.send(networkMessage, token);
+            return connection.send(envelopePayloadMessage, token);
         } catch (Throwable throwable) {
             if (connection.isRunning()) {
                 handleException(connection, throwable);
@@ -367,7 +370,7 @@ public class Node implements Connection.Handler {
         connectionHandshakes.put(connectionHandshake.getId(), connectionHandshake);
         log.debug("Outbound handshake started: Initiated by {} to {}", myCapability.getAddress(), address);
         try {
-            ConnectionHandshake.Result result = connectionHandshake.start(getMyLoad(), address); // Blocking call
+            ConnectionHandshake.Result result = connectionHandshake.start(networkLoadService.getCurrentNetworkLoad(), address); // Blocking call
             connectionHandshakes.remove(connectionHandshake.getId());
             log.debug("Outbound handshake completed: Initiated by {} to {}", myCapability.getAddress(), address);
             log.debug("Create new outbound connection to {}", address);
@@ -391,7 +394,7 @@ public class Node implements Connection.Handler {
             OutboundConnection connection = new OutboundConnection(socket,
                     address,
                     result.getCapability(),
-                    result.getNetworkLoad(),
+                    new NetworkLoadService(result.getPeersNetworkLoad()),
                     result.getConnectionMetrics(),
                     this,
                     this::handleException);
@@ -421,55 +424,57 @@ public class Node implements Connection.Handler {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void handleNetworkMessage(NetworkMessage networkMessage, AuthorizationToken authorizationToken, Connection connection) {
+    public void handleNetworkMessage(EnvelopePayloadMessage envelopePayloadMessage, AuthorizationToken authorizationToken, Connection connection) {
         if (isShutdown()) {
             return;
         }
         String myAddress = findMyAddress().orElseThrow().getFullAddress();
-        boolean isAuthorized = authorizationService.isAuthorized(networkMessage,
+        boolean isAuthorized = authorizationService.isAuthorized(envelopePayloadMessage,
                 authorizationToken,
-                getMyLoad(),
+                networkLoadService.getCurrentNetworkLoad(),
+                networkLoadService.getPreviousNetworkLoad(),
                 connection.getId(),
                 myAddress);
         if (isAuthorized) {
-            if (networkMessage instanceof CloseConnectionMessage) {
-                CloseConnectionMessage closeConnectionMessage = (CloseConnectionMessage) networkMessage;
+            if (envelopePayloadMessage instanceof CloseConnectionMessage) {
+                CloseConnectionMessage closeConnectionMessage = (CloseConnectionMessage) envelopePayloadMessage;
                 log.debug("Node {} received CloseConnectionMessage from {} with reason: {}", this, connection.getPeerAddress(), closeConnectionMessage.getCloseReason());
                 closeConnection(connection, CloseReason.CLOSE_MSG_RECEIVED.details(closeConnectionMessage.getCloseReason().name()));
             } else {
                 // We got called from Connection on the dispatcher thread, so no mapping needed here.
-                connection.notifyListeners(networkMessage);
-                listeners.forEach(listener -> listener.onMessage(networkMessage, connection, nodeId));
+                connection.notifyListeners(envelopePayloadMessage);
+                listeners.forEach(listener -> listener.onMessage(envelopePayloadMessage, connection, nodeId));
             }
         } else {
             //todo handle
-            log.warn("Message authorization failed. authorizedMessage={}", StringUtils.truncate(networkMessage.toString()));
+            log.warn("Message authorization failed. authorizedMessage={}", StringUtils.truncate(envelopePayloadMessage.toString()));
         }
     }
 
-    public void handleNetworkMessage(NetworkMessage networkMessage, AuthorizationToken authorizationToken, ConnectionChannel connection) {
+    public void handleNetworkMessage(EnvelopePayloadMessage envelopePayloadMessage, AuthorizationToken authorizationToken, ConnectionChannel connection) {
         if (isShutdown()) {
             return;
         }
         String myAddress = findMyAddress().orElseThrow().getFullAddress();
-        boolean isAuthorized = authorizationService.isAuthorized(networkMessage,
+        boolean isAuthorized = authorizationService.isAuthorized(envelopePayloadMessage,
                 authorizationToken,
-                getMyLoad(),
+                networkLoadService.getCurrentNetworkLoad(),
+                networkLoadService.getPreviousNetworkLoad(),
                 connection.getId(),
                 myAddress);
         if (isAuthorized) {
-            if (networkMessage instanceof CloseConnectionMessage) {
-                CloseConnectionMessage closeConnectionMessage = (CloseConnectionMessage) networkMessage;
+            if (envelopePayloadMessage instanceof CloseConnectionMessage) {
+                CloseConnectionMessage closeConnectionMessage = (CloseConnectionMessage) envelopePayloadMessage;
                 log.debug("Node {} received CloseConnectionMessage from {} with reason: {}", this, connection.getPeerAddress(), closeConnectionMessage.getCloseReason());
                 // closeConnection(connection, CloseReason.CLOSE_MSG_RECEIVED.details(closeConnectionMessage.getCloseReason().name()));
             } else {
                 // We got called from Connection on the dispatcher thread, so no mapping needed here.
-                connection.notifyListeners(networkMessage);
+                connection.notifyListeners(envelopePayloadMessage);
                 // listeners.forEach(listener -> listener.onMessage(networkMessage, connection, nodeId));
             }
         } else {
             //todo handle
-            log.warn("Message authorization failed. authorizedMessage={}", StringUtils.truncate(networkMessage.toString()));
+            log.warn("Message authorization failed. authorizedMessage={}", StringUtils.truncate(envelopePayloadMessage.toString()));
         }
     }
 
@@ -612,10 +617,6 @@ public class Node implements Connection.Handler {
         } else {
             log.error(exception.toString(), exception);
         }
-    }
-
-    private NetworkLoad getMyLoad() {
-        return new NetworkLoad(getNumConnections());
     }
 
     private void setState(State newState) {

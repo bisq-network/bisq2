@@ -65,4 +65,9 @@ public final class BisqEasyAccountDataMessage extends BisqEasyTradeMessage {
                 NetworkId.fromProto(proto.getReceiver()),
                 bisqEasyAccountDataMessage.getPaymentAccountData());
     }
+
+    @Override
+    public double getCostFactor() {
+        return getCostFactor(0.1, 0.3);
+    }
 }
