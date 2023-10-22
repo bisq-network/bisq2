@@ -704,227 +704,232 @@ public class ChatMessagesListView {
                         @Override
                         public void updateItem(final ChatMessageListItem<? extends ChatMessage> item, boolean empty) {
                             super.updateItem(item, empty);
-                            if (item != null && !empty) {
-
-                                subscriptions.clear();
-                                ChatMessage chatMessage = item.getChatMessage();
-
-                                Node flow = this.getListView().lookup(".virtual-flow");
-                                if (flow != null && !flow.isVisible())
-                                    return;
-
-                                boolean hasTradeChatOffer = model.hasTradeChatOffer(chatMessage);
-                                boolean isBisqEasyPublicChatMessageWithOffer = chatMessage instanceof BisqEasyOfferbookMessage && hasTradeChatOffer;
-                                boolean isMyMessage = model.isMyMessage(chatMessage);
-
-                                if (isBisqEasyPublicChatMessageWithOffer) {
-                                    supportedLanguages.setText(controller.getSupportedLanguageCodes(((BisqEasyOfferbookMessage) chatMessage)));
-                                    supportedLanguages.setTooltip(new BisqTooltip(controller.getSupportedLanguageCodesForTooltip(((BisqEasyOfferbookMessage) chatMessage))));
-                                }
-
-                                dateTime.setVisible(false);
-
-                                cellHBox.getChildren().setAll(mainVBox);
-
-                                message.maxWidthProperty().unbind();
-                                if (hasTradeChatOffer) {
-                                    messageBgHBox.setPadding(new Insets(15));
-                                } else {
-                                    messageBgHBox.setPadding(new Insets(5, 15, 5, 15));
-                                }
-                                messageBgHBox.getStyleClass().remove("chat-message-bg-my-message");
-                                messageBgHBox.getStyleClass().remove("chat-message-bg-peer-message");
-                                VBox userProfileIconVbox = new VBox(userProfileIcon);
-                                if (isMyMessage) {
-                                    HBox userNameAndDateHBox = new HBox(10, dateTime, userName);
-                                    userNameAndDateHBox.setAlignment(Pos.CENTER_RIGHT);
-                                    message.setAlignment(Pos.CENTER_RIGHT);
-
-                                    quotedMessageVBox.setId("chat-message-quote-box-my-msg");
-
-                                    messageBgHBox.getStyleClass().add("chat-message-bg-my-message");
-                                    VBox.setMargin(userNameAndDateHBox, new Insets(-5, 10, -5, 0));
-
-                                    VBox messageVBox = new VBox(quotedMessageVBox, message, editInputField);
-                                    if (isBisqEasyPublicChatMessageWithOffer) {
-                                        message.maxWidthProperty().bind(root.widthProperty().subtract(160));
-                                        userProfileIcon.setSize(60);
-                                        userProfileIconVbox.setAlignment(Pos.CENTER_LEFT);
-                                        HBox.setMargin(userProfileIconVbox, new Insets(-5, 0, -5, 0));
-                                        HBox.setMargin(editInputField, new Insets(-4, -10, -15, 0));
-                                        HBox.setMargin(messageVBox, new Insets(0, -10, 0, 0));
-
-                                        removeOfferButton.setOnAction(e -> controller.onDeleteMessage(chatMessage));
-                                        reactionsHBox.getChildren().setAll(Spacer.fillHBox(), replyIcon, pmIcon, editIcon, supportedLanguages, copyIcon);
-                                        reactionsHBox.setAlignment(Pos.CENTER_RIGHT);
-
-                                        HBox.setMargin(userProfileIconVbox, new Insets(0, 0, 10, 0));
-                                        HBox hBox = new HBox(15, messageVBox, userProfileIconVbox);
-                                        HBox removeOfferButtonHBox = new HBox(Spacer.fillHBox(), removeOfferButton);
-                                        VBox vBox = new VBox(hBox, removeOfferButtonHBox);
-                                        messageBgHBox.getChildren().setAll(vBox);
-                                    } else {
-                                        message.maxWidthProperty().bind(root.widthProperty().subtract(140));
-                                        userProfileIcon.setSize(30);
-                                        userProfileIconVbox.setAlignment(Pos.TOP_LEFT);
-                                        HBox.setMargin(deleteIcon, new Insets(0, 10, 0, 0));
-                                        reactionsHBox.getChildren().setAll(Spacer.fillHBox(), replyIcon, pmIcon, editIcon, copyIcon, deleteIcon);
-                                        HBox.setMargin(messageVBox, new Insets(0, -15, 0, 0));
-                                        HBox.setMargin(userProfileIconVbox, new Insets(7.5, 0, -5, 5));
-                                        HBox.setMargin(editInputField, new Insets(6, -10, -25, 0));
-                                        messageBgHBox.getChildren().setAll(messageVBox, userProfileIconVbox);
-                                    }
-
-                                    HBox.setMargin(deliveryState, new Insets(0, 10, 0, 0));
-                                    HBox deliveryStateHBox = new HBox(Spacer.fillHBox(), reactionsHBox);
-
-                                    subscriptions.add(EasyBind.subscribe(reactionsHBox.visibleProperty(), v -> {
-                                        if (v) {
-                                            deliveryStateHBox.getChildren().remove(deliveryState);
-                                            if (!reactionsHBox.getChildren().contains(deliveryState)) {
-                                                reactionsHBox.getChildren().add(deliveryState);
-                                            }
-                                        } else {
-                                            reactionsHBox.getChildren().remove(deliveryState);
-                                            if (!deliveryStateHBox.getChildren().contains(deliveryState)) {
-                                                deliveryStateHBox.getChildren().add(deliveryState);
-                                            }
-                                        }
-                                    }));
-
-                                    VBox.setMargin(deliveryStateHBox, new Insets(4, 0, -3, 0));
-                                    mainVBox.getChildren().setAll(userNameAndDateHBox, messageHBox, editButtonsHBox, deliveryStateHBox);
-
-                                    messageHBox.getChildren().setAll(Spacer.fillHBox(), messageBgHBox);
-
-                                } else {
-                                    // Peer
-                                    HBox userNameAndDateHBox = new HBox(10, userName, dateTime);
-                                    message.setAlignment(Pos.CENTER_LEFT);
-                                    userNameAndDateHBox.setAlignment(Pos.CENTER_LEFT);
-
-                                    userProfileIcon.setSize(60);
-                                    HBox.setMargin(replyIcon, new Insets(4, 0, -4, 10));
-                                    HBox.setMargin(pmIcon, new Insets(4, 0, -4, 0));
-                                    HBox.setMargin(moreOptionsIcon, new Insets(6, 0, -6, 0));
-
-
-                                    quotedMessageVBox.setId("chat-message-quote-box-peer-msg");
-
-                                    messageBgHBox.getStyleClass().add("chat-message-bg-peer-message");
-                                    if (isBisqEasyPublicChatMessageWithOffer) {
-                                        reactionsHBox.getChildren().setAll(replyIcon, pmIcon, editIcon, deleteIcon, moreOptionsIcon, supportedLanguages, Spacer.fillHBox());
-                                        message.maxWidthProperty().bind(root.widthProperty().subtract(430));
-                                        userProfileIconVbox.setAlignment(Pos.CENTER_LEFT);
-
-                                        Label reputationLabel = new Label(Res.get("chat.message.reputation").toUpperCase());
-                                        reputationLabel.getStyleClass().add("bisq-text-7");
-
-                                        reputationScoreDisplay.setReputationScore(item.getReputationScore());
-                                        VBox reputationVBox = new VBox(4, reputationLabel, reputationScoreDisplay);
-                                        reputationVBox.setAlignment(Pos.CENTER_LEFT);
-
-                                        BisqEasyOfferbookMessage bisqEasyOfferbookMessage = (BisqEasyOfferbookMessage) chatMessage;
-                                        takeOfferButton.setOnAction(e -> controller.onTakeOffer(bisqEasyOfferbookMessage, item.isCanTakeOffer()));
-                                        takeOfferButton.setDefaultButton(item.isCanTakeOffer());
-
-                                        VBox messageVBox = new VBox(quotedMessageVBox, message);
-                                        HBox.setMargin(userProfileIconVbox, new Insets(-5, 0, -5, 0));
-                                        HBox.setMargin(messageVBox, new Insets(0, 0, 0, -10));
-                                        HBox.setMargin(reputationVBox, new Insets(-5, 10, 0, 0));
-                                        HBox.setMargin(takeOfferButton, new Insets(0, 10, 0, 0));
-                                        messageBgHBox.getChildren().setAll(userProfileIconVbox, messageVBox, Spacer.fillHBox(), reputationVBox, takeOfferButton);
-
-                                        VBox.setMargin(userNameAndDateHBox, new Insets(-5, 0, 5, 10));
-                                        mainVBox.getChildren().setAll(userNameAndDateHBox, messageBgHBox, reactionsHBox);
-                                    } else {
-                                        reactionsHBox.getChildren().setAll(replyIcon, pmIcon, editIcon, deleteIcon, moreOptionsIcon, Spacer.fillHBox());
-                                        message.maxWidthProperty().bind(root.widthProperty().subtract(140));//165
-                                        userProfileIcon.setSize(30);
-                                        userProfileIconVbox.setAlignment(Pos.TOP_LEFT);
-
-                                        VBox messageVBox = new VBox(quotedMessageVBox, message);
-                                        HBox.setMargin(userProfileIconVbox, new Insets(7.5, 0, -5, 5));
-                                        HBox.setMargin(messageVBox, new Insets(0, 0, 0, -10));
-                                        messageBgHBox.getChildren().setAll(userProfileIconVbox, messageVBox);
-                                        messageHBox.getChildren().setAll(messageBgHBox, Spacer.fillHBox());
-
-                                        VBox.setMargin(userNameAndDateHBox, new Insets(-5, 0, -5, 10));
-                                        mainVBox.getChildren().setAll(userNameAndDateHBox, messageHBox, reactionsHBox);
-                                    }
-                                }
-
-                                handleQuoteMessageBox(item);
-                                handleReactionsBox(item);
-                                handleEditBox(chatMessage);
-
-                                message.setText(item.getMessage());
-                                dateTime.setText(item.getDate());
-
-                                item.getSenderUserProfile().ifPresent(author -> {
-                                    userName.setText(author.getUserName());
-                                    userName.setOnMouseClicked(e -> controller.onMention(author));
-
-                                    userProfileIcon.setUserProfile(author);
-                                    userProfileIcon.setCursor(Cursor.HAND);
-                                    Tooltip.install(userProfileIcon, new BisqTooltip(author.getTooltipString()));
-                                    userProfileIcon.setOnMouseClicked(e -> controller.onShowChatUserDetails(chatMessage));
-                                });
-
-                                subscriptions.add(EasyBind.subscribe(item.getMessageDeliveryStatusIcon(), icon -> {
-                                            deliveryState.setManaged(icon != null);
-                                            deliveryState.setVisible(icon != null);
-                                            if (icon != null) {
-                                                AwesomeDude.setIcon(deliveryState, icon, AwesomeDude.DEFAULT_ICON_SIZE);
-                                            }
-                                        }
-                                ));
-                                deliveryState.getTooltip().textProperty().bind(item.messageDeliveryStatusTooltip);
-
-                                messageBgHBox.getStyleClass().remove("chat-message-bg-my-message");
-                                messageBgHBox.getStyleClass().remove("chat-message-bg-peer-message");
-
-                                if (isMyMessage) {
-                                    messageBgHBox.getStyleClass().add("chat-message-bg-my-message");
-                                } else {
-                                    messageBgHBox.getStyleClass().add("chat-message-bg-peer-message");
-                                }
-
-
-                                editInputField.maxWidthProperty().bind(message.widthProperty());
-                                setGraphic(cellHBox);
-                            } else {
-                                message.maxWidthProperty().unbind();
-                                editInputField.maxWidthProperty().unbind();
-
-                                editInputField.maxWidthProperty().unbind();
-                                removeOfferButton.setOnAction(null);
-                                takeOfferButton.setOnAction(null);
-
-                                saveEditButton.setOnAction(null);
-                                cancelEditButton.setOnAction(null);
-
-                                userName.setOnMouseClicked(null);
-                                userProfileIcon.setOnMouseClicked(null);
-                                replyIcon.setOnMouseClicked(null);
-                                pmIcon.setOnMouseClicked(null);
-                                editIcon.setOnMouseClicked(null);
-                                copyIcon.setOnMouseClicked(null);
-                                deleteIcon.setOnMouseClicked(null);
-                                moreOptionsIcon.setOnMouseClicked(null);
-
-                                editInputField.setOnKeyPressed(null);
-
-                                cellHBox.setOnMouseEntered(null);
-                                cellHBox.setOnMouseExited(null);
-
-                                userProfileIcon.releaseResources();
-
-                                subscriptions.forEach(Subscription::unsubscribe);
-                                subscriptions.clear();
-
-                                setGraphic(null);
+                            if (item == null || empty) {
+                                cleanup();
+                                return;
                             }
+
+                            subscriptions.clear();
+                            ChatMessage chatMessage = item.getChatMessage();
+
+                            Node flow = this.getListView().lookup(".virtual-flow");
+                            if (flow != null && !flow.isVisible())
+                                return;
+
+                            boolean hasTradeChatOffer = model.hasTradeChatOffer(chatMessage);
+                            boolean isBisqEasyPublicChatMessageWithOffer = chatMessage instanceof BisqEasyOfferbookMessage && hasTradeChatOffer;
+                            boolean isMyMessage = model.isMyMessage(chatMessage);
+
+                            if (isBisqEasyPublicChatMessageWithOffer) {
+                                supportedLanguages.setText(controller.getSupportedLanguageCodes(((BisqEasyOfferbookMessage) chatMessage)));
+                                supportedLanguages.setTooltip(new BisqTooltip(controller.getSupportedLanguageCodesForTooltip(((BisqEasyOfferbookMessage) chatMessage))));
+                            }
+
+                            dateTime.setVisible(false);
+
+                            cellHBox.getChildren().setAll(mainVBox);
+
+                            message.maxWidthProperty().unbind();
+                            if (hasTradeChatOffer) {
+                                messageBgHBox.setPadding(new Insets(15));
+                            } else {
+                                messageBgHBox.setPadding(new Insets(5, 15, 5, 15));
+                            }
+                            messageBgHBox.getStyleClass().remove("chat-message-bg-my-message");
+                            messageBgHBox.getStyleClass().remove("chat-message-bg-peer-message");
+                            VBox userProfileIconVbox = new VBox(userProfileIcon);
+                            if (isMyMessage) {
+                                HBox userNameAndDateHBox = new HBox(10, dateTime, userName);
+                                userNameAndDateHBox.setAlignment(Pos.CENTER_RIGHT);
+                                message.setAlignment(Pos.CENTER_RIGHT);
+
+                                quotedMessageVBox.setId("chat-message-quote-box-my-msg");
+
+                                messageBgHBox.getStyleClass().add("chat-message-bg-my-message");
+                                VBox.setMargin(userNameAndDateHBox, new Insets(-5, 10, -5, 0));
+
+                                VBox messageVBox = new VBox(quotedMessageVBox, message, editInputField);
+                                if (isBisqEasyPublicChatMessageWithOffer) {
+                                    message.maxWidthProperty().bind(root.widthProperty().subtract(160));
+                                    userProfileIcon.setSize(60);
+                                    userProfileIconVbox.setAlignment(Pos.CENTER_LEFT);
+                                    HBox.setMargin(userProfileIconVbox, new Insets(-5, 0, -5, 0));
+                                    HBox.setMargin(editInputField, new Insets(-4, -10, -15, 0));
+                                    HBox.setMargin(messageVBox, new Insets(0, -10, 0, 0));
+
+                                    removeOfferButton.setOnAction(e -> controller.onDeleteMessage(chatMessage));
+                                    reactionsHBox.getChildren().setAll(Spacer.fillHBox(), replyIcon, pmIcon, editIcon, supportedLanguages, copyIcon);
+                                    reactionsHBox.setAlignment(Pos.CENTER_RIGHT);
+
+                                    HBox.setMargin(userProfileIconVbox, new Insets(0, 0, 10, 0));
+                                    HBox hBox = new HBox(15, messageVBox, userProfileIconVbox);
+                                    HBox removeOfferButtonHBox = new HBox(Spacer.fillHBox(), removeOfferButton);
+                                    VBox vBox = new VBox(hBox, removeOfferButtonHBox);
+                                    messageBgHBox.getChildren().setAll(vBox);
+                                } else {
+                                    message.maxWidthProperty().bind(root.widthProperty().subtract(140));
+                                    userProfileIcon.setSize(30);
+                                    userProfileIconVbox.setAlignment(Pos.TOP_LEFT);
+                                    HBox.setMargin(deleteIcon, new Insets(0, 10, 0, 0));
+                                    reactionsHBox.getChildren().setAll(Spacer.fillHBox(), replyIcon, pmIcon, editIcon, copyIcon, deleteIcon);
+                                    HBox.setMargin(messageVBox, new Insets(0, -15, 0, 0));
+                                    HBox.setMargin(userProfileIconVbox, new Insets(7.5, 0, -5, 5));
+                                    HBox.setMargin(editInputField, new Insets(6, -10, -25, 0));
+                                    messageBgHBox.getChildren().setAll(messageVBox, userProfileIconVbox);
+                                }
+
+                                HBox.setMargin(deliveryState, new Insets(0, 10, 0, 0));
+                                HBox deliveryStateHBox = new HBox(Spacer.fillHBox(), reactionsHBox);
+
+                                subscriptions.add(EasyBind.subscribe(reactionsHBox.visibleProperty(), v -> {
+                                    if (v) {
+                                        deliveryStateHBox.getChildren().remove(deliveryState);
+                                        if (!reactionsHBox.getChildren().contains(deliveryState)) {
+                                            reactionsHBox.getChildren().add(deliveryState);
+                                        }
+                                    } else {
+                                        reactionsHBox.getChildren().remove(deliveryState);
+                                        if (!deliveryStateHBox.getChildren().contains(deliveryState)) {
+                                            deliveryStateHBox.getChildren().add(deliveryState);
+                                        }
+                                    }
+                                }));
+
+                                VBox.setMargin(deliveryStateHBox, new Insets(4, 0, -3, 0));
+                                mainVBox.getChildren().setAll(userNameAndDateHBox, messageHBox, editButtonsHBox, deliveryStateHBox);
+
+                                messageHBox.getChildren().setAll(Spacer.fillHBox(), messageBgHBox);
+
+                            } else {
+                                // Peer
+                                HBox userNameAndDateHBox = new HBox(10, userName, dateTime);
+                                message.setAlignment(Pos.CENTER_LEFT);
+                                userNameAndDateHBox.setAlignment(Pos.CENTER_LEFT);
+
+                                userProfileIcon.setSize(60);
+                                HBox.setMargin(replyIcon, new Insets(4, 0, -4, 10));
+                                HBox.setMargin(pmIcon, new Insets(4, 0, -4, 0));
+                                HBox.setMargin(moreOptionsIcon, new Insets(6, 0, -6, 0));
+
+
+                                quotedMessageVBox.setId("chat-message-quote-box-peer-msg");
+
+                                messageBgHBox.getStyleClass().add("chat-message-bg-peer-message");
+                                if (isBisqEasyPublicChatMessageWithOffer) {
+                                    reactionsHBox.getChildren().setAll(replyIcon, pmIcon, editIcon, deleteIcon, moreOptionsIcon, supportedLanguages, Spacer.fillHBox());
+                                    message.maxWidthProperty().bind(root.widthProperty().subtract(430));
+                                    userProfileIconVbox.setAlignment(Pos.CENTER_LEFT);
+
+                                    Label reputationLabel = new Label(Res.get("chat.message.reputation").toUpperCase());
+                                    reputationLabel.getStyleClass().add("bisq-text-7");
+
+                                    reputationScoreDisplay.setReputationScore(item.getReputationScore());
+                                    VBox reputationVBox = new VBox(4, reputationLabel, reputationScoreDisplay);
+                                    reputationVBox.setAlignment(Pos.CENTER_LEFT);
+
+                                    BisqEasyOfferbookMessage bisqEasyOfferbookMessage = (BisqEasyOfferbookMessage) chatMessage;
+                                    takeOfferButton.setOnAction(e -> controller.onTakeOffer(bisqEasyOfferbookMessage, item.isCanTakeOffer()));
+                                    takeOfferButton.setDefaultButton(item.isCanTakeOffer());
+
+                                    VBox messageVBox = new VBox(quotedMessageVBox, message);
+                                    HBox.setMargin(userProfileIconVbox, new Insets(-5, 0, -5, 0));
+                                    HBox.setMargin(messageVBox, new Insets(0, 0, 0, -10));
+                                    HBox.setMargin(reputationVBox, new Insets(-5, 10, 0, 0));
+                                    HBox.setMargin(takeOfferButton, new Insets(0, 10, 0, 0));
+                                    messageBgHBox.getChildren().setAll(userProfileIconVbox, messageVBox, Spacer.fillHBox(), reputationVBox, takeOfferButton);
+
+                                    VBox.setMargin(userNameAndDateHBox, new Insets(-5, 0, 5, 10));
+                                    mainVBox.getChildren().setAll(userNameAndDateHBox, messageBgHBox, reactionsHBox);
+                                } else {
+                                    reactionsHBox.getChildren().setAll(replyIcon, pmIcon, editIcon, deleteIcon, moreOptionsIcon, Spacer.fillHBox());
+                                    message.maxWidthProperty().bind(root.widthProperty().subtract(140));//165
+                                    userProfileIcon.setSize(30);
+                                    userProfileIconVbox.setAlignment(Pos.TOP_LEFT);
+
+                                    VBox messageVBox = new VBox(quotedMessageVBox, message);
+                                    HBox.setMargin(userProfileIconVbox, new Insets(7.5, 0, -5, 5));
+                                    HBox.setMargin(messageVBox, new Insets(0, 0, 0, -10));
+                                    messageBgHBox.getChildren().setAll(userProfileIconVbox, messageVBox);
+                                    messageHBox.getChildren().setAll(messageBgHBox, Spacer.fillHBox());
+
+                                    VBox.setMargin(userNameAndDateHBox, new Insets(-5, 0, -5, 10));
+                                    mainVBox.getChildren().setAll(userNameAndDateHBox, messageHBox, reactionsHBox);
+                                }
+                            }
+
+                            handleQuoteMessageBox(item);
+                            handleReactionsBox(item);
+                            handleEditBox(chatMessage);
+
+                            message.setText(item.getMessage());
+                            dateTime.setText(item.getDate());
+
+                            item.getSenderUserProfile().ifPresent(author -> {
+                                userName.setText(author.getUserName());
+                                userName.setOnMouseClicked(e -> controller.onMention(author));
+
+                                userProfileIcon.setUserProfile(author);
+                                userProfileIcon.setCursor(Cursor.HAND);
+                                Tooltip.install(userProfileIcon, new BisqTooltip(author.getTooltipString()));
+                                userProfileIcon.setOnMouseClicked(e -> controller.onShowChatUserDetails(chatMessage));
+                            });
+
+                            subscriptions.add(EasyBind.subscribe(item.getMessageDeliveryStatusIcon(), icon -> {
+                                        deliveryState.setManaged(icon != null);
+                                        deliveryState.setVisible(icon != null);
+                                        if (icon != null) {
+                                            AwesomeDude.setIcon(deliveryState, icon, AwesomeDude.DEFAULT_ICON_SIZE);
+                                        }
+                                    }
+                            ));
+                            deliveryState.getTooltip().textProperty().bind(item.messageDeliveryStatusTooltip);
+
+                            messageBgHBox.getStyleClass().remove("chat-message-bg-my-message");
+                            messageBgHBox.getStyleClass().remove("chat-message-bg-peer-message");
+
+                            if (isMyMessage) {
+                                messageBgHBox.getStyleClass().add("chat-message-bg-my-message");
+                            } else {
+                                messageBgHBox.getStyleClass().add("chat-message-bg-peer-message");
+                            }
+
+
+                            editInputField.maxWidthProperty().bind(message.widthProperty());
+                            setGraphic(cellHBox);
+                        }
+
+
+                        private void cleanup() {
+                            message.maxWidthProperty().unbind();
+                            editInputField.maxWidthProperty().unbind();
+
+                            editInputField.maxWidthProperty().unbind();
+                            removeOfferButton.setOnAction(null);
+                            takeOfferButton.setOnAction(null);
+
+                            saveEditButton.setOnAction(null);
+                            cancelEditButton.setOnAction(null);
+
+                            userName.setOnMouseClicked(null);
+                            userProfileIcon.setOnMouseClicked(null);
+                            replyIcon.setOnMouseClicked(null);
+                            pmIcon.setOnMouseClicked(null);
+                            editIcon.setOnMouseClicked(null);
+                            copyIcon.setOnMouseClicked(null);
+                            deleteIcon.setOnMouseClicked(null);
+                            moreOptionsIcon.setOnMouseClicked(null);
+
+                            editInputField.setOnKeyPressed(null);
+
+                            cellHBox.setOnMouseEntered(null);
+                            cellHBox.setOnMouseExited(null);
+
+                            userProfileIcon.releaseResources();
+
+                            subscriptions.forEach(Subscription::unsubscribe);
+                            subscriptions.clear();
+
+                            setGraphic(null);
                         }
 
                         private void handleEditBox(ChatMessage chatMessage) {
