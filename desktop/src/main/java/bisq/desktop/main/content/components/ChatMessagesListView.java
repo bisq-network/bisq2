@@ -741,60 +741,7 @@ public class ChatMessagesListView {
                             if (isMyMessage) {
                                 buildMyMessage(isBisqEasyPublicChatMessageWithOffer, userProfileIconVbox, chatMessage);
                             } else {
-                                // Peer
-                                HBox userNameAndDateHBox = new HBox(10, userName, dateTime);
-                                message.setAlignment(Pos.CENTER_LEFT);
-                                userNameAndDateHBox.setAlignment(Pos.CENTER_LEFT);
-
-                                userProfileIcon.setSize(60);
-                                HBox.setMargin(replyIcon, new Insets(4, 0, -4, 10));
-                                HBox.setMargin(pmIcon, new Insets(4, 0, -4, 0));
-                                HBox.setMargin(moreOptionsIcon, new Insets(6, 0, -6, 0));
-
-
-                                quotedMessageVBox.setId("chat-message-quote-box-peer-msg");
-
-                                messageBgHBox.getStyleClass().add("chat-message-bg-peer-message");
-                                if (isBisqEasyPublicChatMessageWithOffer) {
-                                    reactionsHBox.getChildren().setAll(replyIcon, pmIcon, editIcon, deleteIcon, moreOptionsIcon, supportedLanguages, Spacer.fillHBox());
-                                    message.maxWidthProperty().bind(root.widthProperty().subtract(430));
-                                    userProfileIconVbox.setAlignment(Pos.CENTER_LEFT);
-
-                                    Label reputationLabel = new Label(Res.get("chat.message.reputation").toUpperCase());
-                                    reputationLabel.getStyleClass().add("bisq-text-7");
-
-                                    reputationScoreDisplay.setReputationScore(item.getReputationScore());
-                                    VBox reputationVBox = new VBox(4, reputationLabel, reputationScoreDisplay);
-                                    reputationVBox.setAlignment(Pos.CENTER_LEFT);
-
-                                    BisqEasyOfferbookMessage bisqEasyOfferbookMessage = (BisqEasyOfferbookMessage) chatMessage;
-                                    takeOfferButton.setOnAction(e -> controller.onTakeOffer(bisqEasyOfferbookMessage, item.isCanTakeOffer()));
-                                    takeOfferButton.setDefaultButton(item.isCanTakeOffer());
-
-                                    VBox messageVBox = new VBox(quotedMessageVBox, message);
-                                    HBox.setMargin(userProfileIconVbox, new Insets(-5, 0, -5, 0));
-                                    HBox.setMargin(messageVBox, new Insets(0, 0, 0, -10));
-                                    HBox.setMargin(reputationVBox, new Insets(-5, 10, 0, 0));
-                                    HBox.setMargin(takeOfferButton, new Insets(0, 10, 0, 0));
-                                    messageBgHBox.getChildren().setAll(userProfileIconVbox, messageVBox, Spacer.fillHBox(), reputationVBox, takeOfferButton);
-
-                                    VBox.setMargin(userNameAndDateHBox, new Insets(-5, 0, 5, 10));
-                                    mainVBox.getChildren().setAll(userNameAndDateHBox, messageBgHBox, reactionsHBox);
-                                } else {
-                                    reactionsHBox.getChildren().setAll(replyIcon, pmIcon, editIcon, deleteIcon, moreOptionsIcon, Spacer.fillHBox());
-                                    message.maxWidthProperty().bind(root.widthProperty().subtract(140));//165
-                                    userProfileIcon.setSize(30);
-                                    userProfileIconVbox.setAlignment(Pos.TOP_LEFT);
-
-                                    VBox messageVBox = new VBox(quotedMessageVBox, message);
-                                    HBox.setMargin(userProfileIconVbox, new Insets(7.5, 0, -5, 5));
-                                    HBox.setMargin(messageVBox, new Insets(0, 0, 0, -10));
-                                    messageBgHBox.getChildren().setAll(userProfileIconVbox, messageVBox);
-                                    messageHBox.getChildren().setAll(messageBgHBox, Spacer.fillHBox());
-
-                                    VBox.setMargin(userNameAndDateHBox, new Insets(-5, 0, -5, 10));
-                                    mainVBox.getChildren().setAll(userNameAndDateHBox, messageHBox, reactionsHBox);
-                                }
+                                buildPeerMessage(item, isBisqEasyPublicChatMessageWithOffer, userProfileIconVbox, chatMessage);
                             }
 
                             handleQuoteMessageBox(item);
@@ -836,6 +783,63 @@ public class ChatMessagesListView {
 
                             editInputField.maxWidthProperty().bind(message.widthProperty());
                             setGraphic(cellHBox);
+                        }
+
+                        private void buildPeerMessage(ChatMessageListItem<? extends ChatMessage> item, boolean isBisqEasyPublicChatMessageWithOffer, VBox userProfileIconVbox, ChatMessage chatMessage) {
+                            // Peer
+                            HBox userNameAndDateHBox = new HBox(10, userName, dateTime);
+                            message.setAlignment(Pos.CENTER_LEFT);
+                            userNameAndDateHBox.setAlignment(Pos.CENTER_LEFT);
+
+                            userProfileIcon.setSize(60);
+                            HBox.setMargin(replyIcon, new Insets(4, 0, -4, 10));
+                            HBox.setMargin(pmIcon, new Insets(4, 0, -4, 0));
+                            HBox.setMargin(moreOptionsIcon, new Insets(6, 0, -6, 0));
+
+
+                            quotedMessageVBox.setId("chat-message-quote-box-peer-msg");
+
+                            messageBgHBox.getStyleClass().add("chat-message-bg-peer-message");
+                            if (isBisqEasyPublicChatMessageWithOffer) {
+                                reactionsHBox.getChildren().setAll(replyIcon, pmIcon, editIcon, deleteIcon, moreOptionsIcon, supportedLanguages, Spacer.fillHBox());
+                                message.maxWidthProperty().bind(root.widthProperty().subtract(430));
+                                userProfileIconVbox.setAlignment(Pos.CENTER_LEFT);
+
+                                Label reputationLabel = new Label(Res.get("chat.message.reputation").toUpperCase());
+                                reputationLabel.getStyleClass().add("bisq-text-7");
+
+                                reputationScoreDisplay.setReputationScore(item.getReputationScore());
+                                VBox reputationVBox = new VBox(4, reputationLabel, reputationScoreDisplay);
+                                reputationVBox.setAlignment(Pos.CENTER_LEFT);
+
+                                BisqEasyOfferbookMessage bisqEasyOfferbookMessage = (BisqEasyOfferbookMessage) chatMessage;
+                                takeOfferButton.setOnAction(e -> controller.onTakeOffer(bisqEasyOfferbookMessage, item.isCanTakeOffer()));
+                                takeOfferButton.setDefaultButton(item.isCanTakeOffer());
+
+                                VBox messageVBox = new VBox(quotedMessageVBox, message);
+                                HBox.setMargin(userProfileIconVbox, new Insets(-5, 0, -5, 0));
+                                HBox.setMargin(messageVBox, new Insets(0, 0, 0, -10));
+                                HBox.setMargin(reputationVBox, new Insets(-5, 10, 0, 0));
+                                HBox.setMargin(takeOfferButton, new Insets(0, 10, 0, 0));
+                                messageBgHBox.getChildren().setAll(userProfileIconVbox, messageVBox, Spacer.fillHBox(), reputationVBox, takeOfferButton);
+
+                                VBox.setMargin(userNameAndDateHBox, new Insets(-5, 0, 5, 10));
+                                mainVBox.getChildren().setAll(userNameAndDateHBox, messageBgHBox, reactionsHBox);
+                            } else {
+                                reactionsHBox.getChildren().setAll(replyIcon, pmIcon, editIcon, deleteIcon, moreOptionsIcon, Spacer.fillHBox());
+                                message.maxWidthProperty().bind(root.widthProperty().subtract(140));//165
+                                userProfileIcon.setSize(30);
+                                userProfileIconVbox.setAlignment(Pos.TOP_LEFT);
+
+                                VBox messageVBox = new VBox(quotedMessageVBox, message);
+                                HBox.setMargin(userProfileIconVbox, new Insets(7.5, 0, -5, 5));
+                                HBox.setMargin(messageVBox, new Insets(0, 0, 0, -10));
+                                messageBgHBox.getChildren().setAll(userProfileIconVbox, messageVBox);
+                                messageHBox.getChildren().setAll(messageBgHBox, Spacer.fillHBox());
+
+                                VBox.setMargin(userNameAndDateHBox, new Insets(-5, 0, -5, 10));
+                                mainVBox.getChildren().setAll(userNameAndDateHBox, messageHBox, reactionsHBox);
+                            }
                         }
 
                         private void buildMyMessage(boolean isBisqEasyPublicChatMessageWithOffer, VBox userProfileIconVbox, ChatMessage chatMessage) {
