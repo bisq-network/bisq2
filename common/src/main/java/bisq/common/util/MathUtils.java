@@ -27,6 +27,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class MathUtils {
+    public static final double LOG2 = 0.6931471805599453; // Math.log(2)
 
     public static double roundDouble(double value, int precision) {
         return roundDouble(value, precision, RoundingMode.HALF_UP);

@@ -19,7 +19,7 @@ package bisq.security;
 
 import bisq.common.application.Service;
 import bisq.persistence.PersistenceService;
-import bisq.security.pow.EquihashProofOfWorkService;
+import bisq.security.pow.HashCashService;
 import bisq.security.pow.ProofOfWorkService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +35,7 @@ public class SecurityService implements Service {
 
     public SecurityService(PersistenceService persistenceService) {
         keyPairService = new KeyPairService(persistenceService);
-        proofOfWorkService = new EquihashProofOfWorkService();
+        proofOfWorkService = new HashCashService();
     }
 
     public CompletableFuture<Boolean> initialize() {

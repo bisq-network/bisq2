@@ -17,7 +17,6 @@
 
 package bisq.security.pow;
 
-import bisq.common.encoding.Hex;
 import bisq.common.proto.Proto;
 import bisq.common.validation.NetworkDataValidation;
 import com.google.protobuf.ByteString;
@@ -26,6 +25,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.util.Arrays;
 import java.util.Optional;
 
 // Borrowed from: https://github.com/bisq-network/bisq
@@ -35,21 +35,27 @@ import java.util.Optional;
 public final class ProofOfWork implements Proto {
     // payload is usually the pubKeyHash
     private final byte[] payload;       // message of 1000 chars has about 1300 bytes
+    private final long counter;
     // If challenge does not make sense we set it null
     // Challenge need to be hashed to 256 bits
     @Nullable
     private final byte[] challenge; // 32 bytes
     private final double difficulty;
     private final byte[] solution; // 72 bytes
+    private final long duration;
 
     public ProofOfWork(byte[] payload,
+                       long counter,
                        @Nullable byte[] challenge,
                        double difficulty,
-                       byte[] solution) {
+                       byte[] solution,
+                       long duration) {
         this.payload = payload;
+        this.counter = counter;
         this.challenge = challenge;
         this.difficulty = difficulty;
         this.solution = solution;
+        this.duration = duration;
 
         NetworkDataValidation.validateByteArray(payload, 20_000);
         if (challenge != null) {
@@ -67,8 +73,10 @@ public final class ProofOfWork implements Proto {
     public bisq.security.protobuf.ProofOfWork toProto() {
         bisq.security.protobuf.ProofOfWork.Builder builder = bisq.security.protobuf.ProofOfWork.newBuilder()
                 .setPayload(ByteString.copyFrom(payload))
+                .setCounter(counter)
                 .setDifficulty(difficulty)
-                .setSolution(ByteString.copyFrom(solution));
+                .setSolution(ByteString.copyFrom(solution))
+                .setDuration(duration);
 
         Optional.ofNullable(challenge).ifPresent(challenge -> builder.setChallenge(ByteString.copyFrom(challenge)));
         return builder.build();
@@ -77,19 +85,23 @@ public final class ProofOfWork implements Proto {
     public static ProofOfWork fromProto(bisq.security.protobuf.ProofOfWork proto) {
         return new ProofOfWork(
                 proto.getPayload().toByteArray(),
+                proto.getCounter(),
                 proto.getChallenge().isEmpty() ? null : proto.getChallenge().toByteArray(),
                 proto.getDifficulty(),
-                proto.getSolution().toByteArray()
+                proto.getSolution().toByteArray(),
+                proto.getDuration()
         );
     }
 
     @Override
     public String toString() {
-        return "ProofOfWork(" +
-                "payload=" + Hex.encode(payload) +
-                ", challenge=" + (challenge == null ? "null" : Hex.encode(challenge)) +
+        return "ProofOfWork{" +
+                "duration=" + duration +
                 ", difficulty=" + difficulty +
-                ", solution=" + Hex.encode(solution) +
-                ")";
+                ", counter=" + counter +
+                ", challenge=" + Arrays.toString(challenge) +
+                ", solution=" + Arrays.toString(solution) +
+                ", payload=" + Arrays.toString(payload) +
+                '}';
     }
 }

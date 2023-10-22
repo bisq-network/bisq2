@@ -93,6 +93,19 @@ public final class NetworkLoadService {
                 .sum();
         long networkDatabaseSize = inventory.getEntries().stream().mapToLong(e -> e.toProto().getSerializedSize()).sum();
 
+        StringBuilder sb = new StringBuilder("\n##########################################################################################");
+        sb.append("\nNetwork statistics:")
+                .append("\nnumConnections=").append(numConnections)
+                .append("\nsentBytesOfLastHour=").append(sentBytesOfLastHour)
+                .append("\nspentSendMessageTimeOfLastHour=").append(spentSendMessageTimeOfLastHour)
+                .append("\nnumMessagesSentOfLastHour=").append(numMessagesSentOfLastHour)
+                .append("\nreceivedBytesOfLastHour=").append(receivedBytesOfLastHour)
+                .append("\ndeserializeTimeOfLastHour=").append(deserializeTimeOfLastHour)
+                .append("\nnumMessagesReceivedOfLastHour=").append(numMessagesReceivedOfLastHour)
+                .append("\nnetworkDatabaseSize=").append(networkDatabaseSize)
+                .append("\n##########################################################################################");
+        log.info(sb.toString());
+
         double MAX_NUM_CON = 30;
         double NUM_CON_WEIGHT = 0.1;
         double numConnectionsImpact = numConnections / MAX_NUM_CON * NUM_CON_WEIGHT;
@@ -133,18 +146,17 @@ public final class NetworkLoadService {
                 deserializeTimeImpact +
                 numMessagesReceivedImpact +
                 networkDatabaseSizeImpact;
-        StringBuilder sb = new StringBuilder("\n##############################################\n");
-        sb.append("numConnectionsImpact=" + numConnectionsImpact);
-        sb.append("\nsentBytesImpact=" + sentBytesImpact);
-        sb.append("\nspentSendTimeImpact=" + spentSendTimeImpact);
-        sb.append("\nnumMessagesSentImpact=" + numMessagesSentImpact);
-        sb.append("\nreceivedBytesImpact=" + receivedBytesImpact);
-        sb.append("\ndeserializeTimeImpact=" + deserializeTimeImpact);
-        sb.append("\nnumMessagesReceivedImpact=" + numMessagesReceivedImpact);
-        sb.append("\nnetworkDatabaseSizeImpact=" + networkDatabaseSizeImpact);
-        sb.append("\nsum=" + sum);
-        sb.append("\n##############################################\n");
-        log.info(sb.toString());
+        sb = new StringBuilder("\n");
+        sb.append("numConnectionsImpact=").append(numConnectionsImpact);
+        sb.append("\nsentBytesImpact=").append(sentBytesImpact);
+        sb.append("\nspentSendTimeImpact=").append(spentSendTimeImpact);
+        sb.append("\nnumMessagesSentImpact=").append(numMessagesSentImpact);
+        sb.append("\nreceivedBytesImpact=").append(receivedBytesImpact);
+        sb.append("\ndeserializeTimeImpact=").append(deserializeTimeImpact);
+        sb.append("\nnumMessagesReceivedImpact=").append(numMessagesReceivedImpact);
+        sb.append("\nnetworkDatabaseSizeImpact=").append(networkDatabaseSizeImpact);
+        sb.append("\nsum=").append(sum);
+        log.debug(sb.toString());
 
         return MathUtils.bounded(0, 1, sum);
     }

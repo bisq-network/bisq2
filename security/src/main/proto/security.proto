@@ -53,9 +53,11 @@ message ProofOfWorkStore {
 
 message ProofOfWork {
   bytes payload = 1;
-  optional bytes challenge = 2;
-  double difficulty = 3;
-  bytes solution = 4;
+  sint64 counter = 2;
+  optional bytes challenge = 3;
+  double difficulty = 4;
+  bytes solution = 5;
+  sint64 duration = 6;
 }
 
 message ScryptParameters {

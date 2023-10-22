@@ -105,11 +105,15 @@ class InventoryHandler implements Connection.Listener {
                                 details.put(key, list);
                             }
                         });
+
+                String report = details.entrySet().stream().map(e -> e.getValue().size() + " " + e.getKey() + ": " + e.getValue())
+                        .collect(Collectors.joining("\n"));
+                if (report.isEmpty()) {
+                    report = "No items received";
+                }
                 log.info("\n##########################################################################################\n" +
-                        "## INVENTORY from: " + connection.getPeerAddress() + "\n" +
-                        "##########################################################################################\n" +
-                        details.entrySet().stream().map(e -> e.getValue().size() + " " + e.getKey() + ": " + e.getValue())
-                                .collect(Collectors.joining("\n")) +
+                        "Inventory from: " + connection.getPeerAddress() + "\n" +
+                        report +
                         "\n##########################################################################################");
                 removeListeners();
                 connection.getConnectionMetrics().addRtt(System.currentTimeMillis() - ts);

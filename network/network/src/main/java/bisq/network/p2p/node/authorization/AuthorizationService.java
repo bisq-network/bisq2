@@ -37,7 +37,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 public class AuthorizationService {
-    public final static int MAX_DIFFICULTY = 262_144;  // Math.pow(2, 18) = 262144;
+    public final static int MIN_DIFFICULTY = 128;  // Math.pow(2, 7) = 128; 3 ms on old CPU, 1 ms on high-end CPU
+    public final static int MAX_DIFFICULTY = 65536;  // Math.pow(2, 16) = 262144; 1000 ms on old CPU, 60 ms on high-end CPU
     public final static int DIFFICULTY_TOLERANCE = 50_000;
 
     private final ProofOfWorkService proofOfWorkService;
@@ -148,10 +149,10 @@ public class AuthorizationService {
     private double calculateDifficulty(EnvelopePayloadMessage message, NetworkLoad networkLoad) {
         double messageCostFactor = MathUtils.bounded(0.01, 1, message.getCostFactor());
         double loadValue = MathUtils.bounded(0.01, 1, networkLoad.getValue());
-        double result = MAX_DIFFICULTY * messageCostFactor + MAX_DIFFICULTY * loadValue;
-        log.info("calculateDifficulty {}, {}, {}", messageCostFactor, loadValue, result);
-        return MathUtils.bounded(0.01, 1, result);
-        // MAX_DIFFICULTY = Math.pow(2, 18) = 262144; takes on an old laptop about 70 - 2000ms, average about 1 sec
-        // Math.pow(2, 19) = 524288 -> 1-5 sec
+        double difficulty = MAX_DIFFICULTY * messageCostFactor + MAX_DIFFICULTY * loadValue;
+        log.debug("calculated difficulty={}, Math.pow(2, {}), messageCostFactor={}, loadValue={}",
+                difficulty, MathUtils.roundDouble(Math.log(difficulty) / MathUtils.LOG2, 2),
+                messageCostFactor, loadValue);
+        return MathUtils.bounded(MIN_DIFFICULTY, MAX_DIFFICULTY, difficulty);
     }
 }

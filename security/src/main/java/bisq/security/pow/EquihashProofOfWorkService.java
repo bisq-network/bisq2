@@ -27,6 +27,7 @@ import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 
+// TODO the scaling of the difficulty does not provide the expected results
 // Borrowed from: https://github.com/bisq-network/bisq
 @Slf4j
 public class EquihashProofOfWorkService extends ProofOfWorkService {
@@ -48,9 +49,9 @@ public class EquihashProofOfWorkService extends ProofOfWorkService {
             long ts = System.currentTimeMillis();
             byte[] seed = getSeed(payload, challenge);
             byte[] solution = new Equihash(90, 5, scaledDifficulty).puzzle(seed).findSolution().serialize();
-            var proofOfWork = new ProofOfWork(payload, challenge, difficulty, solution);
             long counter = Longs.fromByteArray(Arrays.copyOf(solution, 8));
             long duration = System.currentTimeMillis() - ts;
+            var proofOfWork = new ProofOfWork(payload, counter, challenge, difficulty, solution, duration);
             log.debug("Completed minting proofOfWork: {}. {} iterations took {} ms.", proofOfWork, counter, duration);
             return proofOfWork;
         });
