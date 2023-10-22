@@ -33,6 +33,11 @@ public class Popup extends Overlay<Popup> {
     }
 
     @Override
+    protected Popup cast() {
+        return this;
+    }
+
+    @Override
     protected void onShow() {
         Manager.queueForDisplay(this);
     }

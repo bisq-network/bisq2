@@ -185,11 +185,6 @@ public abstract class Overlay<T extends Overlay<T>> {
     protected Transitions.Type transitionsType;
     protected int maxChar = 2200;
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public API
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     public Overlay() {
         TypeToken<T> typeToken = new TypeToken<>(getClass()) {
         };
@@ -198,6 +193,11 @@ public abstract class Overlay<T extends Overlay<T>> {
         }
         owner = primaryStageOwner;
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Public API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void show(boolean showAgainChecked) {
         if (dontShowAgainId == null || DontShowAgainService.showAgain(dontShowAgainId)) {
@@ -1047,10 +1047,7 @@ public abstract class Overlay<T extends Overlay<T>> {
         return isDisplayed;
     }
 
-    private T cast() {
-        //noinspection unchecked
-        return (T) this;
-    }
+    protected abstract T cast();
 
     @Override
     public String toString() {
