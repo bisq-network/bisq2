@@ -26,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Getter
@@ -69,12 +70,20 @@ public final class NetworkLoadService {
                 .map(ConnectionMetrics::getSentBytesOfLastHour)
                 .mapToLong(e -> e)
                 .sum();
+        long spentSendMessageTimeOfLastHour = allConnectionMetrics.stream()
+                .map(ConnectionMetrics::getSpentSendMessageTimeOfLastHour)
+                .mapToLong(e -> e)
+                .sum();
         long numMessagesSentOfLastHour = allConnectionMetrics.stream()
                 .map(ConnectionMetrics::getNumMessagesSentOfLastHour)
                 .mapToLong(e -> e)
                 .sum();
         long receivedBytesOfLastHour = allConnectionMetrics.stream()
                 .map(ConnectionMetrics::getReceivedBytesOfLastHour)
+                .mapToLong(e -> e)
+                .sum();
+        long deserializeTimeOfLastHour = allConnectionMetrics.stream()
+                .map(ConnectionMetrics::getDeserializeTimeOfLastHour)
                 .mapToLong(e -> e)
                 .sum();
         long numMessagesReceivedOfLastHour = allConnectionMetrics.stream()
@@ -88,16 +97,24 @@ public final class NetworkLoadService {
         double numConnectionsImpact = numConnections / MAX_NUM_CON * NUM_CON_WEIGHT;
 
         double MAX_SENT_BYTES = ByteUnit.MB.toBytes(20);
-        double SENT_BYTES_WEIGHT = 0.2;
+        double SENT_BYTES_WEIGHT = 0.1;
         double sentBytesImpact = sentBytesOfLastHour / MAX_SENT_BYTES * SENT_BYTES_WEIGHT;
+
+        double MAX_SPENT_SEND_TIME = TimeUnit.MINUTES.toMillis(1);
+        double SPENT_SEND_TIME_WEIGHT = 0.1;
+        double spentSendTimeImpact = spentSendMessageTimeOfLastHour / MAX_SPENT_SEND_TIME * SPENT_SEND_TIME_WEIGHT;
 
         double MAX_NUM_MSG_SENT = 2000;
         double NUM_MSG_SENT_WEIGHT = 0.1;
         double numMessagesSentImpact = numMessagesSentOfLastHour / MAX_NUM_MSG_SENT * NUM_MSG_SENT_WEIGHT;
 
         double MAX_REC_BYTES = ByteUnit.MB.toBytes(20);
-        double REC_BYTES_WEIGHT = 0.2;
+        double REC_BYTES_WEIGHT = 0.1;
         double receivedBytesImpact = receivedBytesOfLastHour / MAX_REC_BYTES * REC_BYTES_WEIGHT;
+
+        double MAX_DESERIALIZE_TIME = TimeUnit.MINUTES.toMillis(1);
+        double DESERIALIZE_TIME_WEIGHT = 0.1;
+        double deserializeTimeImpact = deserializeTimeOfLastHour / MAX_DESERIALIZE_TIME * DESERIALIZE_TIME_WEIGHT;
 
         double MAX_NUM_MSG_REC = 1000;
         double NUM_MSG_REC_WEIGHT = 0.1;
@@ -109,15 +126,19 @@ public final class NetworkLoadService {
 
         double sum = numConnectionsImpact +
                 sentBytesImpact +
+                spentSendTimeImpact +
                 numMessagesSentImpact +
                 receivedBytesImpact +
+                deserializeTimeImpact +
                 numMessagesReceivedImpact +
                 networkDatabaseSizeImpact;
         StringBuilder sb = new StringBuilder("\n##############################################\n");
         sb.append("numConnectionsImpact=" + numConnectionsImpact);
         sb.append("; sentBytesImpact=" + sentBytesImpact);
+        sb.append("; spentSendTimeImpact=" + spentSendTimeImpact);
         sb.append("; numMessagesSentImpact=" + numMessagesSentImpact);
         sb.append("; receivedBytesImpact=" + receivedBytesImpact);
+        sb.append("; deserializeTimeImpact=" + deserializeTimeImpact);
         sb.append("; numMessagesReceivedImpact=" + numMessagesReceivedImpact);
         sb.append("; networkDatabaseSizeImpact=" + networkDatabaseSizeImpact);
         sb.append("; sum=" + sum);

@@ -109,12 +109,15 @@ public abstract class Connection {
                     // parsing might need some time wo we check again if connection is still active
                     if (isInputStreamActive()) {
                         checkNotNull(proto, "Proto from NetworkEnvelope.parseDelimitedFrom(inputStream) must not be null");
+                        long ts = System.currentTimeMillis();
                         NetworkEnvelope networkEnvelope = NetworkEnvelope.fromProto(proto);
+                        long deserializeTime = System.currentTimeMillis() - ts;
+
                         networkEnvelope.verifyVersion();
                         EnvelopePayloadMessage envelopePayloadMessage = networkEnvelope.getEnvelopePayloadMessage();
                         log.debug("Received message: {} at: {}",
                                 StringUtils.truncate(envelopePayloadMessage.toString(), 200), this);
-                        connectionMetrics.onReceived(networkEnvelope);
+                        connectionMetrics.onReceived(networkEnvelope, deserializeTime);
                         NetworkService.DISPATCHER.submit(() -> handler.handleNetworkMessage(envelopePayloadMessage,
                                 networkEnvelope.getAuthorizationToken(),
                                 this));
@@ -188,6 +191,7 @@ public abstract class Connection {
         try {
             NetworkEnvelope networkEnvelope = new NetworkEnvelope(authorizationToken, envelopePayloadMessage);
             boolean sent = false;
+            long ts = System.currentTimeMillis();
             synchronized (writeLock) {
                 try {
                     networkEnvelopeSocket.send(networkEnvelope);
@@ -199,7 +203,7 @@ public abstract class Connection {
                 }
             }
             if (sent) {
-                connectionMetrics.onSent(networkEnvelope);
+                connectionMetrics.onSent(networkEnvelope, System.currentTimeMillis() - ts);
                 if (envelopePayloadMessage instanceof CloseConnectionMessage) {
                     log.info("Sent {} from {}",
                             StringUtils.truncate(envelopePayloadMessage.toString(), 300), this);

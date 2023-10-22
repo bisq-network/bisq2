@@ -37,6 +37,8 @@ public class ConnectionMetrics {
     private final AtomicLong lastUpdate = new AtomicLong();
     private final TreeMap<Integer, AtomicLong> numMessagesSentPerMinute = new TreeMap<>();
     private final TreeMap<Integer, AtomicLong> sentBytesPerMinute = new TreeMap<>();
+    private final TreeMap<Integer, AtomicLong> spentSendMessageTimePerMinute = new TreeMap<>();
+    private final TreeMap<Integer, AtomicLong> deserializeTimePerMinute = new TreeMap<>();
     private final TreeMap<Integer, AtomicLong> numMessagesReceivedPerMinute = new TreeMap<>();
     private final TreeMap<Integer, AtomicLong> receivedBytesPerMinute = new TreeMap<>();
 
@@ -55,28 +57,34 @@ public class ConnectionMetrics {
         return System.currentTimeMillis() - created;
     }
 
-    public void onSent(NetworkEnvelope networkEnvelope) {
+    public void onSent(NetworkEnvelope networkEnvelope, long spentTime) {
         long now = System.currentTimeMillis();
         lastUpdate.set(now);
 
         int ageInMinutes = getAgeInMinutes(now);
         sentBytesPerMinute.putIfAbsent(ageInMinutes, new AtomicLong());
-        sentBytesPerMinute.get(ageInMinutes).addAndGet(networkEnvelope.toProto().getSerializedSize());
+        sentBytesPerMinute.get(ageInMinutes).getAndAdd(networkEnvelope.toProto().getSerializedSize());
 
         numMessagesSentPerMinute.putIfAbsent(ageInMinutes, new AtomicLong());
         numMessagesSentPerMinute.get(ageInMinutes).incrementAndGet();
+
+        spentSendMessageTimePerMinute.putIfAbsent(ageInMinutes, new AtomicLong());
+        spentSendMessageTimePerMinute.get(ageInMinutes).getAndAdd(spentTime);
     }
 
-    public void onReceived(NetworkEnvelope networkEnvelope) {
+    public void onReceived(NetworkEnvelope networkEnvelope, long deserializeTime) {
         long now = System.currentTimeMillis();
         lastUpdate.set(now);
 
         int ageInMinutes = getAgeInMinutes(now);
         receivedBytesPerMinute.putIfAbsent(ageInMinutes, new AtomicLong());
-        receivedBytesPerMinute.get(ageInMinutes).addAndGet(networkEnvelope.toProto().getSerializedSize());
+        receivedBytesPerMinute.get(ageInMinutes).getAndAdd(networkEnvelope.toProto().getSerializedSize());
 
         numMessagesReceivedPerMinute.putIfAbsent(ageInMinutes, new AtomicLong());
         numMessagesReceivedPerMinute.get(ageInMinutes).incrementAndGet();
+
+        deserializeTimePerMinute.putIfAbsent(ageInMinutes, new AtomicLong());
+        deserializeTimePerMinute.get(ageInMinutes).getAndAdd(deserializeTime);
     }
 
     public void addRtt(long value) {
@@ -95,6 +103,10 @@ public class ConnectionMetrics {
         return sumOf(numMessagesSentPerMinute);
     }
 
+    public long getSpentSendMessageTimePerMinute() {
+        return sumOf(spentSendMessageTimePerMinute);
+    }
+
     public long getReceivedBytes() {
         return sumOf(receivedBytesPerMinute);
     }
@@ -103,8 +115,8 @@ public class ConnectionMetrics {
         return sumOf(numMessagesReceivedPerMinute);
     }
 
-    private long sumOf(TreeMap<Integer, AtomicLong> treeMap) {
-        return treeMap.values().stream().mapToLong(AtomicLong::get).sum();
+    public long getDeserializeTimePerMinute() {
+        return sumOf(deserializeTimePerMinute);
     }
 
     public long getNumMessagesSentOfLastHour() {
@@ -115,12 +127,20 @@ public class ConnectionMetrics {
         return getSentBytesOfLastMinutes(60);
     }
 
-    public long getNumMessagesReceivedOfLastHour() {
-        return getNumMessagesReceivedOfLastMinutes(60);
+    public long getSpentSendMessageTimeOfLastHour() {
+        return getSpentSendMessageTimeOfLastMinutes(60);
     }
 
     public long getReceivedBytesOfLastHour() {
         return getReceivedBytesOfLastMinutes(60);
+    }
+
+    public long getDeserializeTimeOfLastHour() {
+        return getDeserializeTimeOfLastMinutes(60);
+    }
+
+    public long getNumMessagesReceivedOfLastHour() {
+        return getNumMessagesReceivedOfLastMinutes(60);
     }
 
     public long getNumMessagesSentOfLastMinutes(int lastMinutes) {
@@ -131,12 +151,24 @@ public class ConnectionMetrics {
         return sumOfLastMinute(sentBytesPerMinute, lastMinutes);
     }
 
+    public long getSpentSendMessageTimeOfLastMinutes(int lastMinutes) {
+        return sumOfLastMinute(spentSendMessageTimePerMinute, lastMinutes);
+    }
+
     public long getNumMessagesReceivedOfLastMinutes(int lastMinutes) {
         return sumOfLastMinute(numMessagesReceivedPerMinute, lastMinutes);
     }
 
     public long getReceivedBytesOfLastMinutes(int lastMinutes) {
         return sumOfLastMinute(receivedBytesPerMinute, lastMinutes);
+    }
+
+    public long getDeserializeTimeOfLastMinutes(int lastMinutes) {
+        return sumOfLastMinute(deserializeTimePerMinute, lastMinutes);
+    }
+
+    private long sumOf(TreeMap<Integer, AtomicLong> treeMap) {
+        return treeMap.values().stream().mapToLong(AtomicLong::get).sum();
     }
 
     private long sumOfLastMinute(TreeMap<Integer, AtomicLong> treeMap, int lastMinutes) {

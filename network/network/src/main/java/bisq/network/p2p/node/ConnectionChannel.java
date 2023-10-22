@@ -94,6 +94,7 @@ public abstract class ConnectionChannel {
         try {
             NetworkEnvelope networkEnvelope = new NetworkEnvelope(authorizationToken, envelopePayloadMessage);
             boolean sent = false;
+            long ts = System.currentTimeMillis();
             synchronized (writeLock) {
                 try {
                     networkEnvelopeSocketChannel.send(networkEnvelope);
@@ -105,7 +106,7 @@ public abstract class ConnectionChannel {
                 }
             }
             if (sent) {
-                connectionMetrics.onSent(networkEnvelope);
+                connectionMetrics.onSent(networkEnvelope, System.currentTimeMillis() - ts);
                 if (envelopePayloadMessage instanceof CloseConnectionMessage) {
                     log.info("Sent {} from {}",
                             StringUtils.truncate(envelopePayloadMessage.toString(), 300), this);

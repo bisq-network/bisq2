@@ -62,7 +62,6 @@ public final class NetworkId implements Proto {
         return pubKey.getId();
     }
 
-
     @Override
     public String toString() {
         return "NetworkId(" +
