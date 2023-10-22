@@ -18,7 +18,7 @@
 package bisq.network.p2p.node;
 
 import bisq.network.p2p.BaseNetworkTest;
-import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.network_load.NetworkLoadService;
 import bisq.network.p2p.node.transport.TransportService;
 import bisq.network.p2p.services.peergroup.BanList;
@@ -63,14 +63,14 @@ public abstract class BaseNodesByIdTest extends BaseNetworkTest {
             initializeServerLatch.countDown();
             nodesById.addNodeListener(new Node.Listener() {
                 @Override
-                public void onMessage(NetworkMessage networkMessage, Connection connection, String nodeId) {
-                    log.info("Received " + networkMessage.toString());
-                    if (networkMessage instanceof Ping) {
-                        Pong pong = new Pong(((Ping) networkMessage).getNonce());
+                public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, String nodeId) {
+                    log.info("Received " + envelopePayloadMessage.toString());
+                    if (envelopePayloadMessage instanceof Ping) {
+                        Pong pong = new Pong(((Ping) envelopePayloadMessage).getNonce());
                         log.info("Send pong " + pong);
                         nodesById.send(nodeId, pong, connection);
                         sendPongLatch.countDown();
-                    } else if (networkMessage instanceof Pong) {
+                    } else if (envelopePayloadMessage instanceof Pong) {
                         receivedPongLatch.countDown();
                     }
                 }

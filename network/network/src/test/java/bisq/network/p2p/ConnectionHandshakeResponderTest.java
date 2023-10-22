@@ -182,7 +182,7 @@ public class ConnectionHandshakeResponderTest {
 
         NetworkEnvelope responseNetworkEnvelope = handshakeResponder.verifyAndBuildRespond().getSecond();
 
-        ConnectionHandshake.Response response = (ConnectionHandshake.Response) responseNetworkEnvelope.getNetworkMessage();
+        ConnectionHandshake.Response response = (ConnectionHandshake.Response) responseNetworkEnvelope.getEnvelopePayloadMessage();
         assertThat(response.getCapability()).isEqualTo(responderCapability);
         assertThat(response.getNetworkLoad()).isEqualTo(new NetworkLoad());
     }

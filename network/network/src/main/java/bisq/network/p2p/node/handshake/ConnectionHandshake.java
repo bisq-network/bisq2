@@ -18,8 +18,8 @@
 package bisq.network.p2p.node.handshake;
 
 import bisq.common.util.StringUtils;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.NetworkEnvelope;
-import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.Capability;
 import bisq.network.p2p.node.ConnectionException;
 import bisq.network.p2p.node.authorization.AuthorizationService;
@@ -55,7 +55,7 @@ public final class ConnectionHandshake {
     @Getter
     @ToString
     @EqualsAndHashCode
-    public static final class Request implements NetworkMessage {
+    public static final class Request implements EnvelopePayloadMessage {
         private final Capability capability;
         private final NetworkLoad networkLoad;
 
@@ -65,7 +65,7 @@ public final class ConnectionHandshake {
         }
 
         @Override
-        public bisq.network.protobuf.NetworkMessage toProto() {
+        public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
             return getNetworkMessageBuilder().setConnectionHandshakeRequest(
                             bisq.network.protobuf.ConnectionHandshake.Request.newBuilder()
                                     .setCapability(capability.toProto())
@@ -82,7 +82,7 @@ public final class ConnectionHandshake {
     @Getter
     @ToString
     @EqualsAndHashCode
-    public static final class Response implements NetworkMessage {
+    public static final class Response implements EnvelopePayloadMessage {
         private final Capability capability;
         private final NetworkLoad networkLoad;
 
@@ -92,7 +92,7 @@ public final class ConnectionHandshake {
         }
 
         @Override
-        public bisq.network.protobuf.NetworkMessage toProto() {
+        public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
             return getNetworkMessageBuilder().setConnectionHandshakeResponse(
                             bisq.network.protobuf.ConnectionHandshake.Response.newBuilder()
                                     .setCapability(capability.toProto())
@@ -164,11 +164,11 @@ public final class ConnectionHandshake {
 
             NetworkEnvelope responseNetworkEnvelope = NetworkEnvelope.fromProto(responseProto);
             responseNetworkEnvelope.verifyVersion();
-            if (!(responseNetworkEnvelope.getNetworkMessage() instanceof Response)) {
+            if (!(responseNetworkEnvelope.getEnvelopePayloadMessage() instanceof Response)) {
                 throw new ConnectionException("ResponseEnvelope.message() not type of Response. responseEnvelope=" +
                         responseNetworkEnvelope);
             }
-            Response response = (Response) responseNetworkEnvelope.getNetworkMessage();
+            Response response = (Response) responseNetworkEnvelope.getEnvelopePayloadMessage();
             if (banList.isBanned(response.getCapability().getAddress())) {
                 throw new ConnectionException("Peers address is in quarantine. response=" + response);
             }
@@ -213,11 +213,11 @@ public final class ConnectionHandshake {
             requestNetworkEnvelope.verifyVersion();
 
             long ts = System.currentTimeMillis();
-            if (!(requestNetworkEnvelope.getNetworkMessage() instanceof Request)) {
+            if (!(requestNetworkEnvelope.getEnvelopePayloadMessage() instanceof Request)) {
                 throw new ConnectionException("RequestEnvelope.message() not type of Request. requestEnvelope=" +
                         requestNetworkEnvelope);
             }
-            Request request = (Request) requestNetworkEnvelope.getNetworkMessage();
+            Request request = (Request) requestNetworkEnvelope.getEnvelopePayloadMessage();
             Address peerAddress = request.getCapability().getAddress();
             if (banList.isBanned(peerAddress)) {
                 throw new ConnectionException("Peers address is in quarantine. request=" + request);

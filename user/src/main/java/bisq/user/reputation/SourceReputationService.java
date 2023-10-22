@@ -22,7 +22,7 @@ import bisq.common.application.Service;
 import bisq.common.data.ByteArray;
 import bisq.common.observable.Observable;
 import bisq.network.NetworkService;
-import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
@@ -126,7 +126,7 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
         userProfileIdOfUpdatedScore.set(userProfileId);
     }
 
-    protected boolean send(UserIdentity userIdentity, NetworkMessage request) {
+    protected boolean send(UserIdentity userIdentity, EnvelopePayloadMessage request) {
         checkArgument(!bannedUserService.isUserProfileBanned(userIdentity.getUserProfile()));
         if (authorizedBondedRolesService.getAuthorizedOracleNodes().isEmpty()) {
             return false;

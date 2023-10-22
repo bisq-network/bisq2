@@ -91,7 +91,7 @@ public final class RefreshAuthenticatedDataRequest implements DataRequest {
     }
 
     @Override
-    public bisq.network.protobuf.NetworkMessage toProto() {
+    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
         return getNetworkMessageBuilder().setDataRequest(getDataRequestBuilder().setRefreshAuthenticatedDataRequest(
                         bisq.network.protobuf.RefreshAuthenticatedDataRequest.newBuilder()
                                 .setMetaData(metaData.toProto())

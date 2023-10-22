@@ -148,7 +148,7 @@ public class InboundConnectionsManager {
                 log.debug("Received {} messages from peer {}.", networkEnvelopes.size(), peerAddress.getFullAddress());
 
                 networkEnvelopes.forEach(networkEnvelope -> node.handleNetworkMessage(
-                        networkEnvelope.getNetworkMessage(),
+                        networkEnvelope.getEnvelopePayloadMessage(),
                         networkEnvelope.getAuthorizationToken(),
                         inboundConnection
                 ));

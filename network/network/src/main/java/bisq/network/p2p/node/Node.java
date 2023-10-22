@@ -24,7 +24,7 @@ import bisq.common.util.NetworkUtils;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
 import bisq.network.common.TransportConfig;
-import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
 import bisq.network.p2p.node.handshake.ConnectionHandshake;
@@ -88,7 +88,7 @@ public class Node implements Connection.Handler {
     }
 
     public interface Listener {
-        void onMessage(NetworkMessage networkMessage, Connection connection, String nodeId);
+        void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, String nodeId);
 
         void onConnection(Connection connection);
 
@@ -284,21 +284,21 @@ public class Node implements Connection.Handler {
     // Send
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public Connection send(NetworkMessage networkMessage, Address address) {
+    public Connection send(EnvelopePayloadMessage envelopePayloadMessage, Address address) {
         Connection connection = getConnection(address);
-        return send(networkMessage, connection);
+        return send(envelopePayloadMessage, connection);
     }
 
-    public Connection send(NetworkMessage networkMessage, Connection connection) {
+    public Connection send(EnvelopePayloadMessage envelopePayloadMessage, Connection connection) {
         if (connection.isStopped()) {
             throw new ConnectionClosedException(connection);
         }
         try {
-            AuthorizationToken token = authorizationService.createToken(networkMessage,
+            AuthorizationToken token = authorizationService.createToken(envelopePayloadMessage,
                     connection.getPeersNetworkLoadService().getCurrentNetworkLoad(),
                     connection.getPeerAddress().getFullAddress(),
                     connection.getSentMessageCounter().incrementAndGet());
-            return connection.send(networkMessage, token);
+            return connection.send(envelopePayloadMessage, token);
         } catch (Throwable throwable) {
             if (connection.isRunning()) {
                 handleException(connection, throwable);
@@ -424,57 +424,57 @@ public class Node implements Connection.Handler {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void handleNetworkMessage(NetworkMessage networkMessage, AuthorizationToken authorizationToken, Connection connection) {
+    public void handleNetworkMessage(EnvelopePayloadMessage envelopePayloadMessage, AuthorizationToken authorizationToken, Connection connection) {
         if (isShutdown()) {
             return;
         }
         String myAddress = findMyAddress().orElseThrow().getFullAddress();
-        boolean isAuthorized = authorizationService.isAuthorized(networkMessage,
+        boolean isAuthorized = authorizationService.isAuthorized(envelopePayloadMessage,
                 authorizationToken,
                 networkLoadService.getCurrentNetworkLoad(),
                 networkLoadService.getPreviousNetworkLoad(),
                 connection.getId(),
                 myAddress);
         if (isAuthorized) {
-            if (networkMessage instanceof CloseConnectionMessage) {
-                CloseConnectionMessage closeConnectionMessage = (CloseConnectionMessage) networkMessage;
+            if (envelopePayloadMessage instanceof CloseConnectionMessage) {
+                CloseConnectionMessage closeConnectionMessage = (CloseConnectionMessage) envelopePayloadMessage;
                 log.debug("Node {} received CloseConnectionMessage from {} with reason: {}", this, connection.getPeerAddress(), closeConnectionMessage.getCloseReason());
                 closeConnection(connection, CloseReason.CLOSE_MSG_RECEIVED.details(closeConnectionMessage.getCloseReason().name()));
             } else {
                 // We got called from Connection on the dispatcher thread, so no mapping needed here.
-                connection.notifyListeners(networkMessage);
-                listeners.forEach(listener -> listener.onMessage(networkMessage, connection, nodeId));
+                connection.notifyListeners(envelopePayloadMessage);
+                listeners.forEach(listener -> listener.onMessage(envelopePayloadMessage, connection, nodeId));
             }
         } else {
             //todo handle
-            log.warn("Message authorization failed. authorizedMessage={}", StringUtils.truncate(networkMessage.toString()));
+            log.warn("Message authorization failed. authorizedMessage={}", StringUtils.truncate(envelopePayloadMessage.toString()));
         }
     }
 
-    public void handleNetworkMessage(NetworkMessage networkMessage, AuthorizationToken authorizationToken, ConnectionChannel connection) {
+    public void handleNetworkMessage(EnvelopePayloadMessage envelopePayloadMessage, AuthorizationToken authorizationToken, ConnectionChannel connection) {
         if (isShutdown()) {
             return;
         }
         String myAddress = findMyAddress().orElseThrow().getFullAddress();
-        boolean isAuthorized = authorizationService.isAuthorized(networkMessage,
+        boolean isAuthorized = authorizationService.isAuthorized(envelopePayloadMessage,
                 authorizationToken,
                 networkLoadService.getCurrentNetworkLoad(),
                 networkLoadService.getPreviousNetworkLoad(),
                 connection.getId(),
                 myAddress);
         if (isAuthorized) {
-            if (networkMessage instanceof CloseConnectionMessage) {
-                CloseConnectionMessage closeConnectionMessage = (CloseConnectionMessage) networkMessage;
+            if (envelopePayloadMessage instanceof CloseConnectionMessage) {
+                CloseConnectionMessage closeConnectionMessage = (CloseConnectionMessage) envelopePayloadMessage;
                 log.debug("Node {} received CloseConnectionMessage from {} with reason: {}", this, connection.getPeerAddress(), closeConnectionMessage.getCloseReason());
                 // closeConnection(connection, CloseReason.CLOSE_MSG_RECEIVED.details(closeConnectionMessage.getCloseReason().name()));
             } else {
                 // We got called from Connection on the dispatcher thread, so no mapping needed here.
-                connection.notifyListeners(networkMessage);
+                connection.notifyListeners(envelopePayloadMessage);
                 // listeners.forEach(listener -> listener.onMessage(networkMessage, connection, nodeId));
             }
         } else {
             //todo handle
-            log.warn("Message authorization failed. authorizedMessage={}", StringUtils.truncate(networkMessage.toString()));
+            log.warn("Message authorization failed. authorizedMessage={}", StringUtils.truncate(envelopePayloadMessage.toString()));
         }
     }
 

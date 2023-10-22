@@ -90,7 +90,7 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
     }
 
     @Override
-    public bisq.network.protobuf.NetworkMessage toProto() {
+    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
         return getNetworkMessageBuilder().setDataRequest(getDataRequestBuilder().setAddAuthenticatedDataRequest(
                 bisq.network.protobuf.AddAuthenticatedDataRequest.newBuilder()
                         .setAuthenticatedSequentialData(authenticatedSequentialData.toProto())

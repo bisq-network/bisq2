@@ -22,19 +22,19 @@ import com.google.protobuf.Any;
 // Wrapper for NetworkMessages which are not part of the network module (e.g. PrivateChatMessage).
 // We wrap them into an Any binary blob.
 public final class ExternalNetworkMessage {
-    private final NetworkMessage networkMessage;
+    private final EnvelopePayloadMessage envelopePayloadMessage;
 
-    public ExternalNetworkMessage(NetworkMessage networkMessage) {
-        this.networkMessage = networkMessage;
+    public ExternalNetworkMessage(EnvelopePayloadMessage envelopePayloadMessage) {
+        this.envelopePayloadMessage = envelopePayloadMessage;
     }
 
     public bisq.network.protobuf.ExternalNetworkMessage toProto() {
         return bisq.network.protobuf.ExternalNetworkMessage.newBuilder()
-                .setAny(Any.pack(networkMessage.toProto()))
+                .setAny(Any.pack(envelopePayloadMessage.toProto()))
                 .build();
     }
 
-    public static NetworkMessage fromProto(bisq.network.protobuf.ExternalNetworkMessage externalNetworkMessage) {
+    public static EnvelopePayloadMessage fromProto(bisq.network.protobuf.ExternalNetworkMessage externalNetworkMessage) {
         return NetworkMessageResolver.fromAny(externalNetworkMessage.getAny());
     }
 }

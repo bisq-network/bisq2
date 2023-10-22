@@ -38,18 +38,18 @@ import bisq.network.p2p.services.peergroup.validateaddress.AddressValidationResp
 /**
  * Interface for any message sent as payload in NetworkEnvelope
  */
-public interface NetworkMessage extends Proto {
+public interface EnvelopePayloadMessage extends Proto {
     default double getCostFactor() {
         return 0.1;
     }
 
-    default bisq.network.protobuf.NetworkMessage.Builder getNetworkMessageBuilder() {
-        return bisq.network.protobuf.NetworkMessage.newBuilder();
+    default bisq.network.protobuf.EnvelopePayloadMessage.Builder getNetworkMessageBuilder() {
+        return bisq.network.protobuf.EnvelopePayloadMessage.newBuilder();
     }
 
-    bisq.network.protobuf.NetworkMessage toProto();
+    bisq.network.protobuf.EnvelopePayloadMessage toProto();
 
-    static NetworkMessage fromProto(bisq.network.protobuf.NetworkMessage proto) {
+    static EnvelopePayloadMessage fromProto(bisq.network.protobuf.EnvelopePayloadMessage proto) {
         switch (proto.getMessageCase()) {
             case CONNECTIONHANDSHAKEREQUEST: {
                 return ConnectionHandshake.Request.fromProto(proto.getConnectionHandshakeRequest());

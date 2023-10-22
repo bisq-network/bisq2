@@ -187,7 +187,7 @@ public class OutboundConnectionManager {
                     networkEnvelopes.size(), connectionChannel.getPeerAddress().getFullAddress());
 
             networkEnvelopes.forEach(networkEnvelope -> node.handleNetworkMessage(
-                    networkEnvelope.getNetworkMessage(),
+                    networkEnvelope.getEnvelopePayloadMessage(),
                     networkEnvelope.getAuthorizationToken(),
                     connectionChannel
             ));

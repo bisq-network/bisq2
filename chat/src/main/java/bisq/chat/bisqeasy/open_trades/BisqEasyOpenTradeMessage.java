@@ -26,7 +26,6 @@ import bisq.common.util.StringUtils;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.vo.NetworkId;
 import bisq.network.protobuf.ExternalNetworkMessage;
-import bisq.network.protobuf.NetworkMessage;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.user.profile.UserProfile;
 import com.google.protobuf.Any;
@@ -152,7 +151,7 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage implement
     }
 
     @Override
-    public NetworkMessage toProto() {
+    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
         return getNetworkMessageBuilder()
                 .setExternalNetworkMessage(ExternalNetworkMessage.newBuilder().setAny(Any.pack(toChatMessageProto())))
                 .build();

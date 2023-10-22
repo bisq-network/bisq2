@@ -21,7 +21,7 @@ import bisq.bonded_roles.oracle.AuthorizedOracleNode;
 import bisq.common.application.Service;
 import bisq.identity.Identity;
 import bisq.network.NetworkService;
-import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
@@ -97,9 +97,9 @@ public class TimestampService implements Service, PersistenceClient<TimestampSto
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(NetworkMessage networkMessage) {
-        if (networkMessage instanceof AuthorizeTimestampRequest) {
-            processAuthorizeTimestampRequest((AuthorizeTimestampRequest) networkMessage);
+    public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
+        if (envelopePayloadMessage instanceof AuthorizeTimestampRequest) {
+            processAuthorizeTimestampRequest((AuthorizeTimestampRequest) envelopePayloadMessage);
         }
     }
 

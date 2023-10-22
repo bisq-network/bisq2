@@ -132,10 +132,10 @@ message ExternalNetworkMessage {
 
 
 ////////////////////////////////////////////////////////////////////
-// NetworkMessage types
+// EnvelopePayloadMessage types
 ////////////////////////////////////////////////////////////////////
 
-message NetworkMessage {
+message EnvelopePayloadMessage {
   oneof message {
     ConnectionHandshake.Request connectionHandshakeRequest = 1;
     ConnectionHandshake.Response connectionHandshakeResponse = 2;
@@ -276,7 +276,7 @@ message AuthorizationToken {
 message NetworkEnvelope {
   sint32 version = 1;
   AuthorizationToken authorizationToken = 2;
-  NetworkMessage networkMessage = 3;
+  EnvelopePayloadMessage networkMessage = 3;
 }
 
 enum MessageDeliveryStatus {

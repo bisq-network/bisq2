@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.services.peergroup.validateaddress;
 
-import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.InboundConnection;
@@ -96,9 +96,9 @@ public class AddressValidationService implements Node.Listener {
     }
 
     @Override
-    public void onMessage(NetworkMessage networkMessage, Connection connection, String nodeId) {
-        if (networkMessage instanceof AddressValidationRequest) {
-            AddressValidationRequest addressValidationRequest = (AddressValidationRequest) networkMessage;
+    public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, String nodeId) {
+        if (envelopePayloadMessage instanceof AddressValidationRequest) {
+            AddressValidationRequest addressValidationRequest = (AddressValidationRequest) envelopePayloadMessage;
             Address peerAddress = connection.getPeerAddress();
             if (connection instanceof InboundConnection) {
                 InboundConnection inboundConnection = (InboundConnection) connection;

@@ -20,7 +20,7 @@ package bisq.user.reputation.requests;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
-import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.network.protobuf.ExternalNetworkMessage;
@@ -73,7 +73,7 @@ public final class AuthorizeSignedWitnessRequest implements MailboxMessage {
     }
 
     @Override
-    public bisq.network.protobuf.NetworkMessage toProto() {
+    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
         return getNetworkMessageBuilder()
                 .setExternalNetworkMessage(ExternalNetworkMessage.newBuilder()
                         .setAny(Any.pack(toAuthorizeSignedWitnessRequestProto())))
@@ -100,7 +100,7 @@ public final class AuthorizeSignedWitnessRequest implements MailboxMessage {
                 proto.getSignatureBase64());
     }
 
-    public static ProtoResolver<NetworkMessage> getNetworkMessageResolver() {
+    public static ProtoResolver<EnvelopePayloadMessage> getNetworkMessageResolver() {
         return any -> {
             try {
                 bisq.user.protobuf.AuthorizeSignedWitnessRequest proto = any.unpack(bisq.user.protobuf.AuthorizeSignedWitnessRequest.class);

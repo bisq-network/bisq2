@@ -27,7 +27,7 @@ import bisq.network.http.BaseHttpClient;
 import bisq.network.http.HttpClientRepository;
 import bisq.network.p2p.ServiceNode;
 import bisq.network.p2p.ServiceNodesByTransport;
-import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.network_load.NetworkLoadService;
@@ -225,11 +225,11 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
      * If peer is offline and if message is of type mailBoxMessage it will not be stored as mailbox message in the
      * network.
      */
-    public CompletableFuture<SendMessageResult> confidentialSend(NetworkMessage networkMessage,
+    public CompletableFuture<SendMessageResult> confidentialSend(EnvelopePayloadMessage envelopePayloadMessage,
                                                                  NetworkId receiverNetworkId,
                                                                  NetworkIdWithKeyPair senderNetworkIdWithKeyPair) {
         return getNetworkIdOfInitializedNode(senderNetworkIdWithKeyPair.getNodeId(), senderNetworkIdWithKeyPair.getPubKey())
-                .thenCompose(networkId -> supplyAsync(() -> serviceNodesByTransport.confidentialSend(networkMessage,
+                .thenCompose(networkId -> supplyAsync(() -> serviceNodesByTransport.confidentialSend(envelopePayloadMessage,
                                 receiverNetworkId,
                                 senderNetworkIdWithKeyPair.getKeyPair(),
                                 senderNetworkIdWithKeyPair.getNodeId()),
@@ -244,9 +244,9 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
      * mailbox message.
      */
     public CompletableFuture<Map<TransportType, Connection>> send(String senderNodeId,
-                                                                  NetworkMessage networkMessage,
+                                                                  EnvelopePayloadMessage envelopePayloadMessage,
                                                                   AddressByTransportTypeMap receiver) {
-        return supplyAsync(() -> serviceNodesByTransport.send(senderNodeId, networkMessage, receiver),
+        return supplyAsync(() -> serviceNodesByTransport.send(senderNodeId, envelopePayloadMessage, receiver),
                 NETWORK_IO_POOL);
     }
 

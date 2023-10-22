@@ -19,7 +19,7 @@ package bisq.network.p2p.services.peergroup.network_load;
 
 import bisq.common.timer.Scheduler;
 import bisq.network.NetworkService;
-import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
@@ -87,9 +87,9 @@ public class NetworkLoadExchangeService implements Node.Listener {
     }
 
     @Override
-    public void onMessage(NetworkMessage networkMessage, Connection connection, String nodeId) {
-        if (networkMessage instanceof NetworkLoadExchangeRequest) {
-            NetworkLoadExchangeRequest networkLoadExchangeRequest = (NetworkLoadExchangeRequest) networkMessage;
+    public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, String nodeId) {
+        if (envelopePayloadMessage instanceof NetworkLoadExchangeRequest) {
+            NetworkLoadExchangeRequest networkLoadExchangeRequest = (NetworkLoadExchangeRequest) envelopePayloadMessage;
             NetworkLoad peersNetworkLoad = networkLoadExchangeRequest.getNetworkLoad();
             log.info("Node {} received NetworkLoadRequest with nonce {} and peers networkLoad {} from {}",
                     node, networkLoadExchangeRequest.getNonce(), peersNetworkLoad, connection.getPeerAddress());

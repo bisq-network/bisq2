@@ -23,7 +23,7 @@ import bisq.common.observable.Observable;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkService;
 import bisq.network.common.TransportConfig;
-import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.authorization.AuthorizationService;
@@ -215,7 +215,7 @@ public class ServiceNodesByTransport implements PersistenceClient<ServiceNodesBy
         });
     }
 
-    public NetworkService.SendMessageResult confidentialSend(NetworkMessage networkMessage,
+    public NetworkService.SendMessageResult confidentialSend(EnvelopePayloadMessage envelopePayloadMessage,
                                                              NetworkId receiverNetworkId,
                                                              KeyPair senderKeyPair,
                                                              String senderNodeId) {
@@ -223,7 +223,7 @@ public class ServiceNodesByTransport implements PersistenceClient<ServiceNodesBy
         receiverNetworkId.getAddressByTransportTypeMap().forEach((transportType, address) -> {
             if (map.containsKey(transportType)) {
                 ServiceNode serviceNode = map.get(transportType);
-                ConfidentialMessageService.Result result = serviceNode.confidentialSend(networkMessage,
+                ConfidentialMessageService.Result result = serviceNode.confidentialSend(envelopePayloadMessage,
                         address,
                         receiverNetworkId.getPubKey(),
                         senderKeyPair,
@@ -235,12 +235,12 @@ public class ServiceNodesByTransport implements PersistenceClient<ServiceNodesBy
     }
 
     public Map<TransportType, Connection> send(String senderNodeId,
-                                               NetworkMessage networkMessage,
+                                               EnvelopePayloadMessage envelopePayloadMessage,
                                                AddressByTransportTypeMap receiver) {
         return receiver.entrySet().stream().map(entry -> {
                     TransportType transportType = entry.getKey();
                     if (map.containsKey(transportType)) {
-                        return new Pair<>(transportType, map.get(transportType).send(senderNodeId, networkMessage, entry.getValue()));
+                        return new Pair<>(transportType, map.get(transportType).send(senderNodeId, envelopePayloadMessage, entry.getValue()));
                     } else {
                         return null;
                     }

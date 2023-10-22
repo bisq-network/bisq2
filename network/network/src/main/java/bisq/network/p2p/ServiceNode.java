@@ -22,7 +22,7 @@ import bisq.common.observable.Observable;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.NetworkUtils;
 import bisq.network.NetworkService;
-import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
@@ -224,25 +224,25 @@ public class ServiceNode {
         peerGroupService.ifPresent(peerGroupService -> peerGroupService.removeSeedNodeAddress(seedNodeAddress));
     }
 
-    public ConfidentialMessageService.Result confidentialSend(NetworkMessage networkMessage,
+    public ConfidentialMessageService.Result confidentialSend(EnvelopePayloadMessage envelopePayloadMessage,
                                                               Address address,
                                                               PubKey receiverPubKey,
                                                               KeyPair senderKeyPair,
                                                               String senderNodeId) {
         checkArgument(confidentialMessageService.isPresent(), "ConfidentialMessageService not present at confidentialSend");
-        return confidentialMessageService.get().send(networkMessage, address, receiverPubKey, senderKeyPair, senderNodeId);
+        return confidentialMessageService.get().send(envelopePayloadMessage, address, receiverPubKey, senderKeyPair, senderNodeId);
     }
 
-    public Connection send(String senderNodeId, NetworkMessage networkMessage, Address address) {
-        return getNodesById().send(senderNodeId, networkMessage, address);
+    public Connection send(String senderNodeId, EnvelopePayloadMessage envelopePayloadMessage, Address address) {
+        return getNodesById().send(senderNodeId, envelopePayloadMessage, address);
     }
 
     public void addMessageListener(MessageListener messageListener) {
         //todo rename NodeListener
         nodesById.addNodeListener(new Node.Listener() {
             @Override
-            public void onMessage(NetworkMessage networkMessage, Connection connection, String nodeId) {
-                messageListener.onMessage(networkMessage);
+            public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, String nodeId) {
+                messageListener.onMessage(envelopePayloadMessage);
             }
 
             @Override

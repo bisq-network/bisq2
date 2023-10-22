@@ -61,7 +61,7 @@ public class ConnectionHandshakeResponder {
         NetworkEnvelope requestProto = requestEnvelopes.get(0);
         NetworkEnvelope requestNetworkEnvelope = parseAndValidateRequest(requestProto);
 
-        ConnectionHandshake.Request request = (ConnectionHandshake.Request) requestNetworkEnvelope.getNetworkMessage();
+        ConnectionHandshake.Request request = (ConnectionHandshake.Request) requestNetworkEnvelope.getEnvelopePayloadMessage();
         verifyPeerIsNotBanned(request);
         verifyPoW(requestNetworkEnvelope);
 
@@ -82,7 +82,7 @@ public class ConnectionHandshakeResponder {
     }
 
     private void verifyPoW(NetworkEnvelope requestNetworkEnvelope) {
-        ConnectionHandshake.Request request = (ConnectionHandshake.Request) requestNetworkEnvelope.getNetworkMessage();
+        ConnectionHandshake.Request request = (ConnectionHandshake.Request) requestNetworkEnvelope.getEnvelopePayloadMessage();
         String myAddress = capability.getAddress().getFullAddress();
         // As the request did not know our load at the initial request, they used the NetworkLoad.INITIAL_LOAD for the
         // AuthorizationToken.
@@ -96,7 +96,7 @@ public class ConnectionHandshakeResponder {
 
         if (isAuthorized) {
             log.debug("Peer {} passed PoW authorization.",
-                    ((ConnectionHandshake.Request) requestNetworkEnvelope.getNetworkMessage()).getCapability().getAddress());
+                    ((ConnectionHandshake.Request) requestNetworkEnvelope.getEnvelopePayloadMessage()).getCapability().getAddress());
         } else {
             throw new ConnectionException("Request authorization failed. request=" + request);
         }
@@ -125,7 +125,7 @@ public class ConnectionHandshakeResponder {
     }
 
     private void validateNetworkMessage(NetworkEnvelope requestNetworkEnvelope) {
-        if (!(requestNetworkEnvelope.getNetworkMessage() instanceof ConnectionHandshake.Request)) {
+        if (!(requestNetworkEnvelope.getEnvelopePayloadMessage() instanceof ConnectionHandshake.Request)) {
             throw new ConnectionException("RequestEnvelope.message() not type of Request. requestEnvelope=" +
                     requestNetworkEnvelope);
         }

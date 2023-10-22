@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.services.peergroup.validateaddress;
 
-import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -25,7 +25,7 @@ import lombok.ToString;
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class AddressValidationRequest implements NetworkMessage {
+public final class AddressValidationRequest implements EnvelopePayloadMessage {
     private final int nonce;
 
     public AddressValidationRequest(int nonce) {
@@ -33,7 +33,7 @@ public final class AddressValidationRequest implements NetworkMessage {
     }
 
     @Override
-    public bisq.network.protobuf.NetworkMessage toProto() {
+    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
         return getNetworkMessageBuilder().setAddressValidationRequest(
                         bisq.network.protobuf.AddressValidationRequest.newBuilder().setNonce(nonce))
                 .build();

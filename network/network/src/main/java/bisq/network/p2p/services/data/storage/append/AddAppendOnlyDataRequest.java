@@ -36,7 +36,7 @@ public final class AddAppendOnlyDataRequest implements AddDataRequest {
     }
 
     @Override
-    public bisq.network.protobuf.NetworkMessage toProto() {
+    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
         return getNetworkMessageBuilder()
                 .setDataRequest(getDataRequestBuilder()
                         .setAddAppendOnlyDataRequest(

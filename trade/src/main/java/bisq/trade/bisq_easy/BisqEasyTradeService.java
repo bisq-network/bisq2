@@ -22,7 +22,7 @@ import bisq.common.monetary.Monetary;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.identity.Identity;
-import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.vo.NetworkId;
 import bisq.offer.bisq_easy.BisqEasyOffer;
@@ -91,9 +91,9 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(NetworkMessage networkMessage) {
-        if (networkMessage instanceof BisqEasyTradeMessage) {
-            BisqEasyTradeMessage bisqEasyTradeMessage = (BisqEasyTradeMessage) networkMessage;
+    public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
+        if (envelopePayloadMessage instanceof BisqEasyTradeMessage) {
+            BisqEasyTradeMessage bisqEasyTradeMessage = (BisqEasyTradeMessage) envelopePayloadMessage;
             if (bannedUserService.isNetworkIdBanned(bisqEasyTradeMessage.getSender())) {
                 log.warn("Message ignored as sender is banned");
                 return;

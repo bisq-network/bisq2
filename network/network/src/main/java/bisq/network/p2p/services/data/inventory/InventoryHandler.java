@@ -19,7 +19,7 @@ package bisq.network.p2p.services.data.inventory;
 
 import bisq.common.encoding.Hex;
 import bisq.network.NetworkService;
-import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
@@ -70,9 +70,9 @@ class InventoryHandler implements Connection.Listener {
     }
 
     @Override
-    public void onNetworkMessage(NetworkMessage networkMessage) {
-        if (networkMessage instanceof InventoryResponse) {
-            InventoryResponse response = (InventoryResponse) networkMessage;
+    public void onNetworkMessage(EnvelopePayloadMessage envelopePayloadMessage) {
+        if (envelopePayloadMessage instanceof InventoryResponse) {
+            InventoryResponse response = (InventoryResponse) envelopePayloadMessage;
             if (response.getRequestNonce() == nonce) {
                 Map<String, List<String>> details = new HashMap<>();
                 response.getInventory().getEntries()

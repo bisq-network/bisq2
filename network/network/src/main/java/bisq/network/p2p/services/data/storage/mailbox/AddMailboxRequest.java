@@ -80,7 +80,7 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
     }
 
     @Override
-    public bisq.network.protobuf.NetworkMessage toProto() {
+    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
         return getNetworkMessageBuilder().setDataRequest(getDataRequestBuilder().setAddMailboxRequest(
                         bisq.network.protobuf.AddMailboxRequest.newBuilder()
                                 .setMailboxSequentialData(mailboxSequentialData.toProto())

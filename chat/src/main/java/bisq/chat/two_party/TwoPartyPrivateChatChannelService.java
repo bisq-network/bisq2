@@ -24,7 +24,7 @@ import bisq.chat.priv.PrivateChatChannelService;
 import bisq.common.observable.collection.ObservableArray;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
-import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
 import bisq.security.pow.ProofOfWorkService;
@@ -64,9 +64,9 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(NetworkMessage networkMessage) {
-        if (networkMessage instanceof TwoPartyPrivateChatMessage) {
-            processMessage((TwoPartyPrivateChatMessage) networkMessage);
+    public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
+        if (envelopePayloadMessage instanceof TwoPartyPrivateChatMessage) {
+            processMessage((TwoPartyPrivateChatMessage) envelopePayloadMessage);
         }
     }
 

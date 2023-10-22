@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.services.peergroup.keepalive;
 
-import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -25,7 +25,7 @@ import lombok.ToString;
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class Ping implements NetworkMessage {
+public final class Ping implements EnvelopePayloadMessage {
     private final int nonce;
 
     public Ping(int nonce) {
@@ -33,7 +33,7 @@ public final class Ping implements NetworkMessage {
     }
 
     @Override
-    public bisq.network.protobuf.NetworkMessage toProto() {
+    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
         return getNetworkMessageBuilder().setPing(
                         bisq.network.protobuf.Ping.newBuilder().setNonce(nonce))
                 .build();

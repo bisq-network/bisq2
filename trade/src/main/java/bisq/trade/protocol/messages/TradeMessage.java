@@ -21,7 +21,7 @@ import bisq.common.fsm.Event;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
-import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ack.AckRequestingMessage;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.network.p2p.vo.NetworkId;
@@ -63,7 +63,7 @@ public abstract class TradeMessage implements MailboxMessage, AckRequestingMessa
     }
 
     @Override
-    public bisq.network.protobuf.NetworkMessage toProto() {
+    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
         return getNetworkMessageBuilder()
                 .setExternalNetworkMessage(ExternalNetworkMessage.newBuilder().setAny(Any.pack(toTradeMessageProto())))
                 .build();
@@ -87,7 +87,7 @@ public abstract class TradeMessage implements MailboxMessage, AckRequestingMessa
         throw new UnresolvableProtobufMessageException(proto);
     }
 
-    public static ProtoResolver<NetworkMessage> getNetworkMessageResolver() {
+    public static ProtoResolver<EnvelopePayloadMessage> getNetworkMessageResolver() {
         return any -> {
             try {
                 return fromProto(any.unpack(bisq.trade.protobuf.TradeMessage.class));

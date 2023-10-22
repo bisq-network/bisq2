@@ -30,7 +30,7 @@ import bisq.common.timer.Scheduler;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.identity.Identity;
 import bisq.network.NetworkService;
-import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageListener;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
@@ -159,13 +159,13 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageListener,
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(NetworkMessage networkMessage, PublicKey senderPublicKey) {
-        if (networkMessage instanceof AuthorizeAccountAgeRequest) {
-            processAuthorizeAccountAgeRequest((AuthorizeAccountAgeRequest) networkMessage);
-        } else if (networkMessage instanceof AuthorizeSignedWitnessRequest) {
-            processAuthorizeSignedWitnessRequest((AuthorizeSignedWitnessRequest) networkMessage);
-        } else if (networkMessage instanceof BondedRoleRegistrationRequest) {
-            processBondedRoleRegistrationRequest((BondedRoleRegistrationRequest) networkMessage, senderPublicKey);
+    public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, PublicKey senderPublicKey) {
+        if (envelopePayloadMessage instanceof AuthorizeAccountAgeRequest) {
+            processAuthorizeAccountAgeRequest((AuthorizeAccountAgeRequest) envelopePayloadMessage);
+        } else if (envelopePayloadMessage instanceof AuthorizeSignedWitnessRequest) {
+            processAuthorizeSignedWitnessRequest((AuthorizeSignedWitnessRequest) envelopePayloadMessage);
+        } else if (envelopePayloadMessage instanceof BondedRoleRegistrationRequest) {
+            processBondedRoleRegistrationRequest((BondedRoleRegistrationRequest) envelopePayloadMessage, senderPublicKey);
         }
     }
 

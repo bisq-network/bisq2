@@ -19,7 +19,7 @@ package bisq.network.p2p.node;
 
 
 import bisq.common.util.CompletableFutureUtils;
-import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.network_load.NetworkLoadService;
 import bisq.network.p2p.node.transport.TransportService;
 import bisq.network.p2p.services.peergroup.BanList;
@@ -87,12 +87,12 @@ public class NodesById implements Node.Listener {
         return getOrCreateNode(nodeId).getConnection(address);
     }
 
-    public Connection send(String senderNodeId, NetworkMessage networkMessage, Address address) {
-        return getOrCreateNode(senderNodeId).send(networkMessage, address);
+    public Connection send(String senderNodeId, EnvelopePayloadMessage envelopePayloadMessage, Address address) {
+        return getOrCreateNode(senderNodeId).send(envelopePayloadMessage, address);
     }
 
-    public Connection send(String senderNodeId, NetworkMessage networkMessage, Connection connection) {
-        return getOrCreateNode(senderNodeId).send(networkMessage, connection);
+    public Connection send(String senderNodeId, EnvelopePayloadMessage envelopePayloadMessage, Connection connection) {
+        return getOrCreateNode(senderNodeId).send(envelopePayloadMessage, connection);
     }
 
     public CompletableFuture<Boolean> shutdown() {
@@ -162,8 +162,8 @@ public class NodesById implements Node.Listener {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(NetworkMessage networkMessage, Connection connection, String nodeId) {
-        nodeListeners.forEach(listener -> listener.onMessage(networkMessage, connection, nodeId));
+    public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, String nodeId) {
+        nodeListeners.forEach(listener -> listener.onMessage(envelopePayloadMessage, connection, nodeId));
     }
 
     @Override

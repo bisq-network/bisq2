@@ -19,7 +19,7 @@ package bisq.network.p2p.node.authorization;
 
 import bisq.common.util.ByteArrayUtils;
 import bisq.common.util.MathUtils;
-import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.security.DigestUtil;
 import bisq.security.pow.ProofOfWork;
@@ -48,7 +48,7 @@ public class AuthorizationService {
         this.proofOfWorkService = proofOfWorkService;
     }
 
-    public AuthorizationToken createToken(NetworkMessage message,
+    public AuthorizationToken createToken(EnvelopePayloadMessage message,
                                           NetworkLoad networkLoad,
                                           String peerAddress,
                                           int messageCounter) {
@@ -64,7 +64,7 @@ public class AuthorizationService {
         return token;
     }
 
-    public boolean isAuthorized(NetworkMessage message,
+    public boolean isAuthorized(EnvelopePayloadMessage message,
                                 AuthorizationToken authorizationToken,
                                 NetworkLoad currentNetworkLoad,
                                 String connectionId,
@@ -72,7 +72,7 @@ public class AuthorizationService {
         return isAuthorized(message, authorizationToken, currentNetworkLoad, null, connectionId, myAddress);
     }
 
-    public boolean isAuthorized(NetworkMessage message,
+    public boolean isAuthorized(EnvelopePayloadMessage message,
                                 AuthorizationToken authorizationToken,
                                 NetworkLoad currentNetworkLoad,
                                 @Nullable NetworkLoad previousNetworkLoad,
@@ -136,7 +136,7 @@ public class AuthorizationService {
         return difference > DIFFICULTY_TOLERANCE;
     }
 
-    private byte[] getPayload(NetworkMessage message) {
+    private byte[] getPayload(EnvelopePayloadMessage message) {
         return message.toProto().toByteArray();
     }
 
@@ -145,7 +145,7 @@ public class AuthorizationService {
                 BigInteger.valueOf(messageCounter).toByteArray()));
     }
 
-    private double calculateDifficulty(NetworkMessage message, NetworkLoad networkLoad) {
+    private double calculateDifficulty(EnvelopePayloadMessage message, NetworkLoad networkLoad) {
         double messageCostFactor = MathUtils.bounded(0.01, 1, message.getCostFactor());
         double loadValue = MathUtils.bounded(0.01, 1, networkLoad.getValue());
         return MAX_DIFFICULTY * messageCostFactor * loadValue;

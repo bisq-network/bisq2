@@ -18,7 +18,7 @@
 package bisq.network.p2p.services.peergroup.keepalive;
 
 import bisq.network.NetworkService;
-import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
@@ -62,9 +62,9 @@ class KeepAliveHandler implements Connection.Listener {
     }
 
     @Override
-    public void onNetworkMessage(NetworkMessage networkMessage) {
-        if (networkMessage instanceof Pong) {
-            Pong pong = (Pong) networkMessage;
+    public void onNetworkMessage(EnvelopePayloadMessage envelopePayloadMessage) {
+        if (envelopePayloadMessage instanceof Pong) {
+            Pong pong = (Pong) envelopePayloadMessage;
             if (pong.getRequestNonce() == nonce) {
                 log.info("Node {} received Pong from {} with nonce {}. Connection={}",
                         node, connection.getPeerAddress(), pong.getRequestNonce(), connection.getId());

@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.services.peergroup.network_load;
 
-import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -26,7 +26,7 @@ import lombok.ToString;
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class NetworkLoadExchangeRequest implements NetworkMessage {
+public final class NetworkLoadExchangeRequest implements EnvelopePayloadMessage {
     private final int nonce;
     private final NetworkLoad networkLoad;
 
@@ -36,7 +36,7 @@ public final class NetworkLoadExchangeRequest implements NetworkMessage {
     }
 
     @Override
-    public bisq.network.protobuf.NetworkMessage toProto() {
+    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
         return getNetworkMessageBuilder().setNetworkLoadExchangeRequest(
                         bisq.network.protobuf.NetworkLoadExchangeRequest.newBuilder()
                                 .setNonce(nonce)

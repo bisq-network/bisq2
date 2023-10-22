@@ -73,11 +73,11 @@ public class ConnectionHandshakeInitiator {
         NetworkEnvelope responseNetworkEnvelope = responseNetworkEnvelopes.get(0);
         responseNetworkEnvelope.verifyVersion();
 
-        if (!(responseNetworkEnvelope.getNetworkMessage() instanceof ConnectionHandshake.Response)) {
+        if (!(responseNetworkEnvelope.getEnvelopePayloadMessage() instanceof ConnectionHandshake.Response)) {
             throw new ConnectionException("ResponseEnvelope.message() not type of Response. responseEnvelope=" +
                     responseNetworkEnvelope);
         }
-        ConnectionHandshake.Response response = (ConnectionHandshake.Response) responseNetworkEnvelope.getNetworkMessage();
+        ConnectionHandshake.Response response = (ConnectionHandshake.Response) responseNetworkEnvelope.getEnvelopePayloadMessage();
         if (banList.isBanned(response.getCapability().getAddress())) {
             throw new ConnectionException("Peers address is in quarantine. response=" + response);
         }

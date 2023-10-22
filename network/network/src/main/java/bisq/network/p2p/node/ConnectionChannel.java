@@ -19,8 +19,8 @@ package bisq.network.p2p.node;
 
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.NetworkEnvelope;
-import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
 import bisq.network.p2p.node.envelope.NetworkEnvelopeSocketChannel;
 import bisq.network.p2p.node.network_load.ConnectionMetrics;
@@ -44,13 +44,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Slf4j
 public abstract class ConnectionChannel {
     interface Handler {
-        void handleNetworkMessage(NetworkMessage networkMessage, AuthorizationToken authorizationToken, ConnectionChannel connectionChannel);
+        void handleNetworkMessage(EnvelopePayloadMessage envelopePayloadMessage, AuthorizationToken authorizationToken, ConnectionChannel connectionChannel);
 
         void handleConnectionClosed(ConnectionChannel connectionChannel, CloseReason closeReason);
     }
 
     public interface Listener {
-        void onNetworkMessage(NetworkMessage networkMessage);
+        void onNetworkMessage(EnvelopePayloadMessage envelopePayloadMessage);
 
         void onConnectionClosed(CloseReason closeReason);
     }
@@ -85,14 +85,14 @@ public abstract class ConnectionChannel {
         this.connectionMetrics = connectionMetrics;
     }
 
-    ConnectionChannel send(NetworkMessage networkMessage, AuthorizationToken authorizationToken) {
+    ConnectionChannel send(EnvelopePayloadMessage envelopePayloadMessage, AuthorizationToken authorizationToken) {
         if (isStopped) {
             log.warn("Message not sent as connection has been shut down already. Message={}, ConnectionChannel={}",
-                    StringUtils.truncate(networkMessage.toString(), 200), this);
+                    StringUtils.truncate(envelopePayloadMessage.toString(), 200), this);
             throw new ConnectionClosedException(this);
         }
         try {
-            NetworkEnvelope networkEnvelope = new NetworkEnvelope(authorizationToken, networkMessage);
+            NetworkEnvelope networkEnvelope = new NetworkEnvelope(authorizationToken, envelopePayloadMessage);
             boolean sent = false;
             synchronized (writeLock) {
                 try {
@@ -106,12 +106,12 @@ public abstract class ConnectionChannel {
             }
             if (sent) {
                 connectionMetrics.onSent(networkEnvelope);
-                if (networkMessage instanceof CloseConnectionMessage) {
+                if (envelopePayloadMessage instanceof CloseConnectionMessage) {
                     log.info("Sent {} from {}",
-                            StringUtils.truncate(networkMessage.toString(), 300), this);
+                            StringUtils.truncate(envelopePayloadMessage.toString(), 300), this);
                 } else {
                     log.debug("Sent {} from {}",
-                            StringUtils.truncate(networkMessage.toString(), 300), this);
+                            StringUtils.truncate(envelopePayloadMessage.toString(), 300), this);
                 }
             }
             return this;
@@ -147,8 +147,8 @@ public abstract class ConnectionChannel {
         });
     }
 
-    void notifyListeners(NetworkMessage networkMessage) {
-        listeners.forEach(listener -> listener.onNetworkMessage(networkMessage));
+    void notifyListeners(EnvelopePayloadMessage envelopePayloadMessage) {
+        listeners.forEach(listener -> listener.onNetworkMessage(envelopePayloadMessage));
     }
 
     public void addListener(Listener listener) {

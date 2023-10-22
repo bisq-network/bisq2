@@ -32,7 +32,7 @@ public class AckMessage implements MailboxMessage {
     }
 
     @Override
-    public bisq.network.protobuf.NetworkMessage toProto() {
+    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
         return getNetworkMessageBuilder().setAckMessage(
                 bisq.network.protobuf.AckMessage.newBuilder().setId(id)).build();
     }

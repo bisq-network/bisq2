@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.services.peergroup.exchange;
 
-import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.peergroup.Peer;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class PeerExchangeRequest implements NetworkMessage {
+public final class PeerExchangeRequest implements EnvelopePayloadMessage {
     private final int nonce;
     private final List<Peer> peers;
 
@@ -42,7 +42,7 @@ public final class PeerExchangeRequest implements NetworkMessage {
     }
 
     @Override
-    public bisq.network.protobuf.NetworkMessage toProto() {
+    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
         return getNetworkMessageBuilder().setPeerExchangeRequest(
                         bisq.network.protobuf.PeerExchangeRequest.newBuilder()
                                 .setNonce(nonce)
