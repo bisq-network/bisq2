@@ -24,6 +24,7 @@ import bisq.desktop.common.view.View;
 import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,13 +33,16 @@ public abstract class BondedRolesTabView<M extends BondedRolesTabModel, C extend
     public BondedRolesTabView(M model, C controller) {
         super(model, controller);
 
-        root.setPadding(new Insets(30));
+        root.setPadding(new Insets(20, 30, 20, 30));
         root.getStyleClass().add("user-bonded-roles-tab-view");
 
-        topBox.setPadding(new Insets(0, 0, 0, 0));
-        lineAndMarker.setPadding(new Insets(0, 0, 0, 0));
-
         addTabs();
+
+        // We apply the height of the viewpoint according the content height as we delegate the scrolling to the parent.
+        // Using setFitToHeight(true) should be the preferred way to do it but there seems to be a bug in calculating
+        // the height and there is cut off about 20 px. We turn off vert. scrollbar as when toggling the show info button
+        // in the child view we would get a flicker of the scrollbar.
+        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
     }
 
     protected abstract void addTabs();
@@ -60,24 +64,21 @@ public abstract class BondedRolesTabView<M extends BondedRolesTabModel, C extend
     protected void setupTopBox() {
         headLine = new Label(getHeadline());
         headLine.getStyleClass().add("bisq-text-headline-5");
+        VBox.setMargin(headLine, new Insets(0, 0, 17, -2));
 
         tabs.setFillHeight(true);
         tabs.setSpacing(46);
         tabs.setMinHeight(35);
 
         topBox = new VBox();
-        VBox.setMargin(headLine, new Insets(-10, 0, 17, -2));
         topBox.getChildren().addAll(headLine, tabs);
     }
 
     protected abstract String getHeadline();
 
     @Override
-    protected void setupLineAndMarker() {
-        super.setupLineAndMarker();
-
-        line.getStyleClass().remove("bisq-dark-bg");
-        line.getStyleClass().add("bisq-mid-grey");
+    protected boolean useFitToHeight(View<? extends Parent, ? extends Model, ? extends Controller> childView) {
+        return false;
     }
 
     @Override
@@ -87,7 +88,6 @@ public abstract class BondedRolesTabView<M extends BondedRolesTabModel, C extend
 
         scrollPane.prefViewportHeightProperty().unbind();
         scrollPane.prefViewportWidthProperty().unbind();
-
         if (newValue != null) {
             scrollPane.prefViewportHeightProperty().bind(newValue.getRoot().heightProperty());
             scrollPane.prefViewportWidthProperty().bind(newValue.getRoot().widthProperty());
