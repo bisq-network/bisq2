@@ -95,7 +95,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
 
         supportedLanguagesComboBox = new AutoCompleteComboBox<>(model.getSupportedLanguageCodeFilteredList(),
                 Res.get("settings.preferences.language.supported.select"));
-        supportedLanguagesComboBox.setMinWidth(330);
+        supportedLanguagesComboBox.setMinWidth(150);
         supportedLanguagesComboBox.setMaxWidth(Double.MAX_VALUE); // Needed to force scale to available space
         supportedLanguagesComboBox.setConverter(new StringConverter<>() {
             @Override
@@ -127,7 +127,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
 
         ListView<String> supportedLanguageListView = new ListView<>(model.getSelectedSupportedLanguageCodes());
         supportedLanguageListView.setCellFactory(getSupportedLanguageCellFactory(controller));
-        supportedLanguageListView.setMinWidth(300);
+        supportedLanguageListView.setMinWidth(150);
         supportedLanguageGridPane.setMaxHeight(150);
         supportedLanguageGridPane.add(supportedLanguageListView, 1, ++rowIndex);
 
