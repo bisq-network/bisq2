@@ -47,6 +47,7 @@ public class ChipButton extends HBox {
         getStyleClass().add("chips-button");
 
         toggleButton = new ToggleButton();
+        toggleButton.setFocusTraversable(false);
         toggleButton.setText(text);
         toggleButton.setMouseTransparent(true);
         toggleButton.setAlignment(Pos.CENTER_LEFT);

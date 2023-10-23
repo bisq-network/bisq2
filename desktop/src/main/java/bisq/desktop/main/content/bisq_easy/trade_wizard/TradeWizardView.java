@@ -136,8 +136,10 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
         backButton.visibleProperty().bind(model.getBackButtonVisible());
         backButton.managedProperty().bind(model.getBackButtonVisible());
         backButton.defaultButtonProperty().bind(model.getIsBackButtonHighlighted());
+        backButton.setFocusTraversable(false);
 
         closeButton.visibleProperty().bind(model.getCloseButtonVisible());
+        closeButton.setFocusTraversable(false);
 
         model.getCurrentIndex().addListener(currentIndexListener);
         model.getView().addListener(viewChangeListener);
@@ -157,6 +159,7 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
         nextButton.setOnAction(e -> controller.onNext());
         backButton.setOnAction(evt -> controller.onBack());
         closeButton.setOnAction(e -> controller.onClose());
+        root.setOnKeyPressed(controller::onKeyPressed);
 
         applyProgress(model.getCurrentIndex().get(), false);
     }
@@ -183,6 +186,7 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
         nextButton.setOnAction(null);
         backButton.setOnAction(null);
         closeButton.setOnAction(null);
+        root.setOnKeyPressed(null);
 
         if (progressLabelAnimationScheduler != null) {
             progressLabelAnimationScheduler.stop();

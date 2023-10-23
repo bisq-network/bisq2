@@ -48,6 +48,7 @@ public class ChipToggleButton extends HBox implements Toggle {
 
         toggleButton = new ToggleButton();
         toggleButton.setToggleGroup(toggleGroup);
+        toggleButton.setFocusTraversable(false);
         toggleButton.setText(text);
         toggleButton.setMouseTransparent(true);
         toggleButton.setAlignment(Pos.CENTER_LEFT);
