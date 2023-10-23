@@ -36,7 +36,7 @@ public class CreatePaymentAccountView extends View<VBox, CreatePaymentAccountMod
     private final MaterialTextField accountName;
     private final MaterialTextArea accountData;
     private final Button saveButton, cancelButton;
-    private final Label headLineLabel;
+    private final Label headlineLabel;
 
     public CreatePaymentAccountView(CreatePaymentAccountModel model, CreatePaymentAccountController controller) {
         super(new VBox(), model, controller);
@@ -47,8 +47,8 @@ public class CreatePaymentAccountView extends View<VBox, CreatePaymentAccountMod
         root.setPrefWidth(OverlayModel.WIDTH);
         root.setPrefHeight(OverlayModel.HEIGHT);
         int width = 600;
-        headLineLabel = new Label(Res.get("user.paymentAccounts.createAccount.headline"));
-        headLineLabel.getStyleClass().add("bisq-text-headline-2");
+        headlineLabel = new Label(Res.get("user.paymentAccounts.createAccount.headline"));
+        headlineLabel.getStyleClass().add("bisq-text-headline-2");
 
         Label subtitleLabel = new Label(Res.get("user.paymentAccounts.createAccount.subtitle"));
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
@@ -81,11 +81,11 @@ public class CreatePaymentAccountView extends View<VBox, CreatePaymentAccountMod
         HBox buttons = new HBox(20, cancelButton, saveButton);
         buttons.setAlignment(Pos.CENTER);
 
-        VBox.setMargin(headLineLabel, new Insets(0, 0, 0, 0));
+        VBox.setMargin(headlineLabel, new Insets(0, 0, 0, 0));
         VBox.setMargin(subtitleLabel, new Insets(0, 0, 40, 0));
         VBox.setMargin(buttons, new Insets(60, 0, 0, 0));
         root.getChildren().addAll(
-                headLineLabel,
+                headlineLabel,
                 subtitleLabel,
                 centerHBox,
                 buttons

@@ -54,8 +54,8 @@ public class CreateProfileView extends View<VBox, CreateProfileModel, CreateProf
         root.setPrefWidth(OverlayModel.WIDTH);
         root.setPrefHeight(OverlayModel.HEIGHT);
 
-        Label headLineLabel = new Label(Res.get("onboarding.createProfile.headline"));
-        headLineLabel.getStyleClass().add("bisq-text-headline-2");
+        Label headlineLabel = new Label(Res.get("onboarding.createProfile.headline"));
+        headlineLabel.getStyleClass().add("bisq-text-headline-2");
 
         Label subtitleLabel = new Label(Res.get("onboarding.createProfile.subTitle"));
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
@@ -120,9 +120,9 @@ public class CreateProfileView extends View<VBox, CreateProfileModel, CreateProf
         HBox buttons = new HBox(20, regenerateButton, createProfileButton, createProfileIndicator, feedbackLabel);
         buttons.setAlignment(Pos.CENTER);
 
-        VBox.setMargin(headLineLabel, new Insets(40, 0, 0, 0));
+        VBox.setMargin(headlineLabel, new Insets(40, 0, 0, 0));
         root.getChildren().addAll(
-                headLineLabel,
+                headlineLabel,
                 subtitleLabel,
                 nickname,
                 roboVBox,

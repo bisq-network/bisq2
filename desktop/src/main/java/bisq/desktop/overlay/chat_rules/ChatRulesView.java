@@ -46,7 +46,7 @@ public class ChatRulesView extends View<VBox, ChatRulesModel, ChatRulesControlle
         root.setPadding(new Insets(30, 60, 30, 60));
 
         Label headline = new Label(Res.get("chat.chatRules.headline"));
-        headline.getStyleClass().add("chat-guide-headLine");
+        headline.getStyleClass().add("chat-guide-headline");
 
         UnorderedList content = new UnorderedList(Res.get("chat.chatRules.content"), "bisq-text-13",
                 7, 5, UnorderedList.REGEX, UnorderedList.MARK);

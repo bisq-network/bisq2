@@ -183,15 +183,15 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
         takeOfferSuccess.setVisible(false);
         takeOfferSuccess.setAlignment(Pos.TOP_CENTER);
 
-        Label headLineLabel = new Label(Res.get("bisqEasy.takeOffer.review.takeOfferSuccess.headline"));
-        headLineLabel.getStyleClass().add("bisq-text-headline-2");
+        Label headlineLabel = new Label(Res.get("bisqEasy.takeOffer.review.takeOfferSuccess.headline"));
+        headlineLabel.getStyleClass().add("bisq-text-headline-2");
 
         Label subtitleLabel = new Label(Res.get("bisqEasy.takeOffer.review.takeOfferSuccess.subTitle"));
         configFeedbackSubtitleLabel(subtitleLabel);
 
         takeOfferSuccessButton.setDefaultButton(true);
         VBox.setMargin(takeOfferSuccessButton, new Insets(10, 0, 0, 0));
-        contentBox.getChildren().addAll(headLineLabel, subtitleLabel, takeOfferSuccessButton);
+        contentBox.getChildren().addAll(headlineLabel, subtitleLabel, takeOfferSuccessButton);
         takeOfferSuccess.getChildren().addAll(contentBox, Spacer.fillVBox());
     }
 

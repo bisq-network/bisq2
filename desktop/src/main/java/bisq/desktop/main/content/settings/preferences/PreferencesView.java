@@ -90,7 +90,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         int rowIndex = 0;
 
         Label selectSupportedLanguageHeadline = new Label(Res.get("settings.preferences.language.supported.subHeadLine"));
-        selectSupportedLanguageHeadline.getStyleClass().add("settings-sub-headLine");
+        selectSupportedLanguageHeadline.getStyleClass().add("settings-sub-headline");
         supportedLanguageGridPane.add(selectSupportedLanguageHeadline, 0, rowIndex);
 
         supportedLanguagesComboBox = new AutoCompleteComboBox<>(model.getSupportedLanguageCodeFilteredList(),
@@ -121,7 +121,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         supportedLanguageGridPane.add(hBox, 0, ++rowIndex);
 
         Label supportedLanguageListViewSubHeadline = new Label(Res.get("settings.preferences.language.supported.list.subHeadLine"));
-        supportedLanguageListViewSubHeadline.getStyleClass().add("settings-sub-headLine");
+        supportedLanguageListViewSubHeadline.getStyleClass().add("settings-sub-headline");
         rowIndex = 0;
         supportedLanguageGridPane.add(supportedLanguageListViewSubHeadline, 1, rowIndex);
 

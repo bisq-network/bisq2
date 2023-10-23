@@ -22,15 +22,13 @@ import bisq.desktop.common.Styles;
 import bisq.desktop.common.view.*;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
-import bisq.desktop.main.content.chat.ChatView;
-import bisq.desktop.main.content.user.reputation.burn.tab3.BurnBsqTab3View;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -80,15 +78,15 @@ public class BondedReputationView extends TabView<BondedReputationModel, BondedR
 
     @Override
     protected void setupTopBox() {
-        headLine = new Label();
-        headLine.getStyleClass().add("bisq-text-17");
+        headline = new Label();
+        headline.getStyleClass().add("bisq-text-17");
 
         closeButton = BisqIconButton.createIconButton("close");
 
-        headLine.setText(Res.get("user.reputation.bond"));
+        headline.setText(Res.get("user.reputation.bond"));
 
-        HBox.setMargin(headLine, new Insets(0, 0, 0, -2));
-        HBox hBox = new HBox(headLine, Spacer.fillHBox(), closeButton);
+        HBox.setMargin(headline, new Insets(0, 0, 0, -2));
+        HBox hBox = new HBox(headline, Spacer.fillHBox(), closeButton);
 
         tabs.setFillHeight(true);
         tabs.setSpacing(46);

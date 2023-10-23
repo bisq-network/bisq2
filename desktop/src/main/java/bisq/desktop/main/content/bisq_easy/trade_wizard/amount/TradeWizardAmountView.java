@@ -33,15 +33,15 @@ import lombok.extern.slf4j.Slf4j;
 public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, TradeWizardAmountController> {
     private final Button toggleButton;
     private final VBox minAmountRoot;
-    private final Label headLineLabel;
+    private final Label headlineLabel;
 
     public TradeWizardAmountView(TradeWizardAmountModel model, TradeWizardAmountController controller, AmountComponent minAmountComponent, AmountComponent maxOrFixAmountComponent) {
         super(new VBox(10), model, controller);
 
         root.setAlignment(Pos.TOP_CENTER);
 
-        headLineLabel = new Label();
-        headLineLabel.getStyleClass().add("bisq-text-headline-2");
+        headlineLabel = new Label();
+        headlineLabel.getStyleClass().add("bisq-text-headline-2");
 
         minAmountRoot = minAmountComponent.getView().getRoot();
         HBox amountBox = new HBox(30, minAmountRoot, maxOrFixAmountComponent.getView().getRoot());
@@ -51,14 +51,14 @@ public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, Tr
         toggleButton.getStyleClass().add("outlined-button");
         toggleButton.setMinWidth(AmountComponent.View.AMOUNT_BOX_WIDTH);
 
-        VBox.setMargin(headLineLabel, new Insets(-30, 0, 10, 0));
+        VBox.setMargin(headlineLabel, new Insets(-30, 0, 10, 0));
         VBox.setMargin(toggleButton, new Insets(25, 0, 0, 0));
-        root.getChildren().addAll(Spacer.fillVBox(), headLineLabel, amountBox, toggleButton, Spacer.fillVBox());
+        root.getChildren().addAll(Spacer.fillVBox(), headlineLabel, amountBox, toggleButton, Spacer.fillVBox());
     }
 
     @Override
     protected void onViewAttached() {
-        headLineLabel.setText(model.getHeadline());
+        headlineLabel.setText(model.getHeadline());
         minAmountRoot.visibleProperty().bind(model.getIsMinAmountEnabled());
         minAmountRoot.managedProperty().bind(model.getIsMinAmountEnabled());
         toggleButton.visibleProperty().bind(model.getShowRangeAmounts());

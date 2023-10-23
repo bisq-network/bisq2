@@ -62,16 +62,16 @@ public abstract class BondedRolesTabView<M extends BondedRolesTabModel, C extend
 
     @Override
     protected void setupTopBox() {
-        headLine = new Label(getHeadline());
-        headLine.getStyleClass().add("bisq-text-headline-5");
-        VBox.setMargin(headLine, new Insets(0, 0, 17, -2));
+        headline = new Label(getHeadline());
+        headline.getStyleClass().add("bisq-text-headline-5");
+        VBox.setMargin(headline, new Insets(0, 0, 17, -2));
 
         tabs.setFillHeight(true);
         tabs.setSpacing(46);
         tabs.setMinHeight(35);
 
         topBox = new VBox();
-        topBox.getChildren().addAll(headLine, tabs);
+        topBox.getChildren().addAll(headline, tabs);
     }
 
     protected abstract String getHeadline();

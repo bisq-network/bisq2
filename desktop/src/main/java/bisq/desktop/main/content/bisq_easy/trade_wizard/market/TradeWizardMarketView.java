@@ -49,15 +49,15 @@ import java.util.Comparator;
 public class TradeWizardMarketView extends View<VBox, TradeWizardMarketModel, TradeWizardMarketController> {
     private final BisqTableView<MarketListItem> tableView;
     private final SearchBox searchBox;
-    private final Label headLineLabel;
+    private final Label headlineLabel;
 
     public TradeWizardMarketView(TradeWizardMarketModel model, TradeWizardMarketController controller) {
         super(new VBox(10), model, controller);
 
         root.setAlignment(Pos.TOP_CENTER);
 
-        headLineLabel = new Label();
-        headLineLabel.getStyleClass().add("bisq-text-headline-2");
+        headlineLabel = new Label();
+        headlineLabel.getStyleClass().add("bisq-text-headline-2");
 
         Label subtitleLabel = new Label(Res.get("bisqEasy.createOffer.market.subTitle"));
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
@@ -84,12 +84,12 @@ public class TradeWizardMarketView extends View<VBox, TradeWizardMarketModel, Tr
         tableViewWithSearchBox.setPrefSize(tableWidth, tableHeight);
         tableViewWithSearchBox.setMaxWidth(tableWidth);
 
-        root.getChildren().addAll(Spacer.fillVBox(), headLineLabel, subtitleLabel, tableViewWithSearchBox, Spacer.fillVBox());
+        root.getChildren().addAll(Spacer.fillVBox(), headlineLabel, subtitleLabel, tableViewWithSearchBox, Spacer.fillVBox());
     }
 
     @Override
     protected void onViewAttached() {
-        headLineLabel.setText(model.getHeadline());
+        headlineLabel.setText(model.getHeadline());
         tableView.getSelectionModel().select(model.getSelectedMarketListItem().get());
 
         searchBox.textProperty().bindBidirectional(model.getSearchText());

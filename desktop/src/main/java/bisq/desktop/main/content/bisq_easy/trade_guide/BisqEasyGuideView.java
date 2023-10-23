@@ -77,15 +77,15 @@ public class BisqEasyGuideView extends TabView<BisqEasyGuideModel, BisqEasyGuide
 
     @Override
     protected void setupTopBox() {
-        headLine = new Label();
-        headLine.setText(Res.get("bisqEasy.tradeGuide.tabs.headline"));
-        headLine.getStyleClass().add("tab-view");
+        headline = new Label();
+        headline.setText(Res.get("bisqEasy.tradeGuide.tabs.headline"));
+        headline.getStyleClass().add("tab-view");
 
         closeIconButton = BisqIconButton.createIconButton("close");
 
         HBox.setMargin(closeIconButton, new Insets(-1, -15, 0, 0));
-        HBox.setMargin(headLine, new Insets(0, 0, 0, -2));
-        HBox hBox = new HBox(headLine, Spacer.fillHBox(), closeIconButton);
+        HBox.setMargin(headline, new Insets(0, 0, 0, -2));
+        HBox hBox = new HBox(headline, Spacer.fillHBox(), closeIconButton);
 
         tabs.setFillHeight(true);
         tabs.setSpacing(46);

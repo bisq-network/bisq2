@@ -47,8 +47,8 @@ public class BurnBsqTab3View extends View<VBox, BurnBsqTab3Model, BurnBsqTab3Con
         root.setSpacing(20);
         root.setAlignment(Pos.TOP_LEFT);
 
-        Label headLine = new Label(Res.get("user.reputation.burnedBsq.howToHeadline"));
-        headLine.getStyleClass().add("bisq-text-headline-2");
+        Label headline = new Label(Res.get("user.reputation.burnedBsq.howToHeadline"));
+        headline.getStyleClass().add("bisq-text-headline-2");
 
         OrderedList info = new OrderedList(Res.get("user.reputation.burnedBsq.howTo"), "bisq-text-13");
 
@@ -71,11 +71,11 @@ public class BurnBsqTab3View extends View<VBox, BurnBsqTab3Model, BurnBsqTab3Con
         buttons.setAlignment(Pos.BOTTOM_RIGHT);
 
         VBox.setVgrow(info, Priority.ALWAYS);
-        VBox.setMargin(headLine, new Insets(10, 0, 0, 0));
+        VBox.setMargin(headline, new Insets(10, 0, 0, 0));
         VBox.setMargin(userProfileSelectLabel, new Insets(10, 0, -20, 0));
         VBox.setMargin(userProfileSelection, new Insets(0, 0, -30, 0));
         VBox.setMargin(buttons, new Insets(10, 0, 0, 0));
-        root.getChildren().addAll(headLine, info, userProfileSelectLabel, userProfileSelection, pubKeyHash, buttons);
+        root.getChildren().addAll(headline, info, userProfileSelectLabel, userProfileSelection, pubKeyHash, buttons);
     }
 
     @Override

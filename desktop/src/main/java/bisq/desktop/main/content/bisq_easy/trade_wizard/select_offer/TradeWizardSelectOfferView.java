@@ -65,7 +65,7 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
     private final HBox noMatchingOffersBox;
 
     private final BisqTableView<ListItem> tableView;
-    private final Label headLineLabel, subtitleLabel;
+    private final Label headlineLabel, subtitleLabel;
     private Button goBackButton, browseOfferbookButton;
     private boolean isTableViewConfigured;
 
@@ -74,8 +74,8 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
 
         root.setAlignment(Pos.CENTER);
 
-        headLineLabel = new Label();
-        headLineLabel.getStyleClass().add("bisq-text-headline-2");
+        headlineLabel = new Label();
+        headlineLabel.getStyleClass().add("bisq-text-headline-2");
 
         subtitleLabel = new Label();
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
@@ -93,7 +93,7 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
         noMatchingOffersBox = new HBox(25);
 
         VBox.setMargin(noMatchingOffersBox, new Insets(10, 0, 0, 0));
-        root.getChildren().addAll(Spacer.fillVBox(), headLineLabel, subtitleLabel, tableView, noMatchingOffersBox, Spacer.fillVBox());
+        root.getChildren().addAll(Spacer.fillVBox(), headlineLabel, subtitleLabel, tableView, noMatchingOffersBox, Spacer.fillVBox());
     }
 
     @Override
@@ -105,11 +105,11 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
         noMatchingOffersBox.setVisible(!showOffers);
         noMatchingOffersBox.setManaged(!showOffers);
         if (showOffers) {
-            VBox.setMargin(headLineLabel, new Insets(-30, 0, 0, 0));
+            VBox.setMargin(headlineLabel, new Insets(-30, 0, 0, 0));
             maybeConfigTableView();
             tableView.getSelectionModel().select(model.getSelectedItem());
         } else {
-            VBox.setMargin(headLineLabel, new Insets(0, 0, 0, 0));
+            VBox.setMargin(headlineLabel, new Insets(0, 0, 0, 0));
             if (noMatchingOffersBox.getChildren().isEmpty()) {
                 Pair<VBox, Button> goBackPair = getBoxPair(Res.get("bisqEasy.tradeWizard.selectOffer.noMatchingOffers.goBack"),
                         Res.get("bisqEasy.tradeWizard.selectOffer.noMatchingOffers.goBack.info"));
@@ -130,7 +130,7 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
             browseOfferbookButton.setOnAction(e -> controller.onOpenOfferbook());
         }
 
-        headLineLabel.setText(model.getHeadLine());
+        headlineLabel.setText(model.getHeadline());
         subtitleLabel.setText(model.getSubHeadLine());
     }
 

@@ -149,7 +149,7 @@
  * Settings                                                              *
  ******************************************************************************/
 
-.settings-sub-headLine {
+.settings-sub-headline {
     -fx-fill: -fx-mid-text-color;
     -fx-text-fill: -fx-mid-text-color;
     -fx-font-family: "IBM Plex Sans Light";

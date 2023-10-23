@@ -239,12 +239,12 @@ public class TradeWizardSelectOfferController implements Controller {
         model.getIsBackButtonHighlighted().set(!showOffers);
 
         if (showOffers) {
-            model.setHeadLine(model.getDirection().isBuy() ?
+            model.setHeadline(model.getDirection().isBuy() ?
                     Res.get("bisqEasy.tradeWizard.selectOffer.headline.buyer", quoteAmountAsString) :
                     Res.get("bisqEasy.tradeWizard.selectOffer.headline.seller", quoteAmountAsString));
             model.setSubHeadLine(Res.get("bisqEasy.tradeWizard.selectOffer.subHeadline"));
         } else {
-            model.setHeadLine(Res.get("bisqEasy.tradeWizard.selectOffer.noMatchingOffers.headline", quoteAmountAsString));
+            model.setHeadline(Res.get("bisqEasy.tradeWizard.selectOffer.noMatchingOffers.headline", quoteAmountAsString));
             model.setSubHeadLine(Res.get("bisqEasy.tradeWizard.selectOffer.noMatchingOffers.subHeadline"));
         }
     }

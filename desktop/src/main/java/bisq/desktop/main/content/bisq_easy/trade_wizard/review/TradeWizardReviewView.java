@@ -264,15 +264,15 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
         createOfferSuccess.setVisible(false);
         createOfferSuccess.setAlignment(Pos.TOP_CENTER);
 
-        Label headLineLabel = new Label(Res.get("bisqEasy.tradeWizard.review.createOfferSuccess.headline"));
-        headLineLabel.getStyleClass().add("bisq-text-headline-2");
+        Label headlineLabel = new Label(Res.get("bisqEasy.tradeWizard.review.createOfferSuccess.headline"));
+        headlineLabel.getStyleClass().add("bisq-text-headline-2");
 
         Label subtitleLabel = new Label(Res.get("bisqEasy.tradeWizard.review.createOfferSuccess.subTitle"));
         configFeedbackSubtitleLabel(subtitleLabel);
 
         createOfferSuccessButton.setDefaultButton(true);
         VBox.setMargin(createOfferSuccessButton, new Insets(10, 0, 0, 0));
-        contentBox.getChildren().addAll(headLineLabel, subtitleLabel, createOfferSuccessButton);
+        contentBox.getChildren().addAll(headlineLabel, subtitleLabel, createOfferSuccessButton);
         createOfferSuccess.getChildren().addAll(contentBox, Spacer.fillVBox());
     }
 
@@ -282,15 +282,15 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
         takeOfferSuccess.setVisible(false);
         takeOfferSuccess.setAlignment(Pos.TOP_CENTER);
 
-        Label headLineLabel = new Label(Res.get("bisqEasy.tradeWizard.review.takeOfferSuccess.headline"));
-        headLineLabel.getStyleClass().add("bisq-text-headline-2");
+        Label headlineLabel = new Label(Res.get("bisqEasy.tradeWizard.review.takeOfferSuccess.headline"));
+        headlineLabel.getStyleClass().add("bisq-text-headline-2");
 
         Label subtitleLabel = new Label(Res.get("bisqEasy.tradeWizard.review.takeOfferSuccess.subTitle"));
         configFeedbackSubtitleLabel(subtitleLabel);
 
         takeOfferSuccessButton.setDefaultButton(true);
         VBox.setMargin(takeOfferSuccessButton, new Insets(10, 0, 0, 0));
-        contentBox.getChildren().addAll(headLineLabel, subtitleLabel, takeOfferSuccessButton);
+        contentBox.getChildren().addAll(headlineLabel, subtitleLabel, takeOfferSuccessButton);
         takeOfferSuccess.getChildren().addAll(contentBox, Spacer.fillVBox());
     }
 

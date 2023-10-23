@@ -42,7 +42,7 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
     public static final double SIDE_PADDING = 40;
     public static final Insets DEFAULT_TOP_PANE_PADDING = new Insets(30, SIDE_PADDING, 0, SIDE_PADDING);
 
-    protected Label headLine;
+    protected Label headline;
     protected final HBox tabs = new HBox();
     protected Region selectionMarker, line;
     private final ToggleGroup toggleGroup = new ToggleGroup();
@@ -151,16 +151,16 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
     }
 
     protected void setupTopBox(boolean isRightSide) {
-        headLine = new Label();
-        headLine.getStyleClass().add("tab-view");
+        headline = new Label();
+        headline.getStyleClass().add("tab-view");
 
         tabs.setFillHeight(true);
         tabs.setSpacing(46);
 
         if (isRightSide) {
-            topBox = new HBox(headLine, Spacer.fillHBox(), tabs);
+            topBox = new HBox(headline, Spacer.fillHBox(), tabs);
         } else {
-            topBox = new HBox(tabs, Spacer.fillHBox(), headLine);
+            topBox = new HBox(tabs, Spacer.fillHBox(), headline);
         }
         topBox.setPadding(DEFAULT_TOP_PANE_PADDING);
     }

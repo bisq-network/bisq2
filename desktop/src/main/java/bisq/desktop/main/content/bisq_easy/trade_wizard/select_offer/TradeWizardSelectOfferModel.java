@@ -65,7 +65,7 @@ class TradeWizardSelectOfferModel implements Model {
     @Setter
     private String myOfferText;
     @Setter
-    private String headLine;
+    private String headline;
     @Setter
     private String subHeadLine;
     @Setter
@@ -89,7 +89,7 @@ class TradeWizardSelectOfferModel implements Model {
         myOfferMessage = null;
         quoteAmountAsString = null;
         myOfferText = null;
-        headLine = null;
+        headline = null;
         subHeadLine = null;
         selectedItem = null;
         showOffers.set(false);
