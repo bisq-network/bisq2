@@ -206,6 +206,7 @@ public class DesktopController extends NavigationController {
             }
         } else {
             // After the domain is initialized we show the application content
+            OverlayController.getInstance().setUseEscapeKeyHandler(true);
             settingsService.getCookie().asString(CookieKey.NAVIGATION_TARGET)
                     .ifPresentOrElse(target -> {
                                 try {
