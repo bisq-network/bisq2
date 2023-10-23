@@ -128,14 +128,14 @@
     -fx-font-family: "IBM Plex Sans Regular";
 }
 
-.notification-hyperlink, .hyperlink:visited {
+.notification-hyperlink, .notification-hyperlink:visited {
     -fx-fill: -bisq-black-light;
     -fx-text-fill: -bisq-black-light;
     -fx-font-size: 1.15em;
     -fx-font-family: "IBM Plex Sans Regular";
 }
 
-.notification-hyperlink:hover, .hyperlink:visited:hover {
+.notification-hyperlink:hover, .notification-hyperlink:visited:hover {
     -fx-fill: -bisq-white-dimmed;
     -fx-text-fill: -bisq-white-dimmed;
     -fx-font-size: 1.15em;
