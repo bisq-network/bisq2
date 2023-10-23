@@ -17,7 +17,6 @@
 
 package bisq.desktop.common.utils;
 
-import bisq.common.util.OsUtils;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.SnapshotParameters;
@@ -80,16 +79,11 @@ public class ImageUtil {
     }
 
     public static void addAppIcons(Stage stage) {
-        if (OsUtils.isMac()) {
-            String iconPath = ImageUtil.isRetina() ? "images/app_window/mac@2x.png" : "images/app_window/mac.png";
-            stage.getIcons().add(ImageUtil.getImageByPath(iconPath));
-        } else {
-            stage.getIcons().add(ImageUtil.getImageByPath("images/app_window/icon_256.png"));
-            stage.getIcons().add(ImageUtil.getImageByPath("images/app_window/icon_128.png"));
-            stage.getIcons().add(ImageUtil.getImageByPath("images/app_window/icon_64.png"));
-            stage.getIcons().add(ImageUtil.getImageByPath("images/app_window/icon_32.png"));
-            stage.getIcons().add(ImageUtil.getImageByPath("images/app_window/icon_16.png"));
-        }
+        stage.getIcons().add(ImageUtil.getImageByPath("images/app_window/icon_256.png"));
+        stage.getIcons().add(ImageUtil.getImageByPath("images/app_window/icon_128.png"));
+        stage.getIcons().add(ImageUtil.getImageByPath("images/app_window/icon_64.png"));
+        stage.getIcons().add(ImageUtil.getImageByPath("images/app_window/icon_32.png"));
+        stage.getIcons().add(ImageUtil.getImageByPath("images/app_window/icon_16.png"));
     }
 
     public static Image composeImage(String[] paths, int width, int height) {
