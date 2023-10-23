@@ -22,7 +22,6 @@ import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.main.content.chat.ChatView;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.scene.Parent;
@@ -108,12 +107,16 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
     protected void onChildView(View<? extends Parent, ? extends Model, ? extends Controller> oldValue,
                                View<? extends Parent, ? extends Model, ? extends Controller> newValue) {
         if (newValue != null) {
-            scrollPane.setFitToHeight(newValue instanceof ChatView);
+            scrollPane.setFitToHeight(useFitToHeight(newValue));
             scrollPane.setContent(newValue.getRoot());
             scrollPane.setVvalue(0);
         } else {
             scrollPane.setContent(null);
         }
+    }
+
+    protected boolean useFitToHeight(View<? extends Parent, ? extends Model, ? extends Controller> childView) {
+        return false;
     }
 
     @Override
