@@ -114,12 +114,16 @@ public class UtilsController implements Controller {
                 });
     }
 
-    void onChatRules() {
+    void onOpenChatRules() {
         Navigation.navigateTo(NavigationTarget.CHAT_RULES);
     }
 
-    void onTradeGuide() {
+    void onOpenTradeGuide() {
         Navigation.navigateTo(NavigationTarget.BISQ_EASY_GUIDE);
+    }
+
+    void onOpenWalletGuide() {
+        Navigation.navigateTo(NavigationTarget.WALLET_GUIDE);
     }
 
     void onTac() {
