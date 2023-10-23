@@ -602,19 +602,12 @@
 .hyperlink:hover:visited {
     -fx-text-fill: -fx-accent;
 }
-.hyperlink:armed,
-.hyperlink:hover:armed {
-    -fx-text-fill: -fx-text-background-color;
-}
-.hyperlink:visited,
-.hyperlink:armed:visited,
-.hyperlink:hover:armed {
+.hyperlink:visited {
     -fx-text-fill: -fx-mid-text-color;
 }
 
 .hyperlink:hover,
 .hyperlink:visited,
-.hyperlink:visited:armed
 .hyperlink:hover:visited {
     -fx-underline: true;
 }
