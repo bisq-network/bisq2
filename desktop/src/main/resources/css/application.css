@@ -125,21 +125,24 @@
     -fx-fill: -bisq-darkgrey-light;
     -fx-text-fill: -bisq-darkgrey-light;
     -fx-font-size: 1.15em;
-    -fx-font-family: "IBM Plex Sans Regular";
+    -fx-font-family: "IBM Plex Sans";
 }
 
-.notification-hyperlink, .notification-hyperlink:visited {
-    -fx-fill: -bisq-black-light;
+.notification-hyperlink,
+.notification-hyperlink:visited {
     -fx-text-fill: -bisq-black-light;
     -fx-font-size: 1.15em;
-    -fx-font-family: "IBM Plex Sans Regular";
+    -fx-font-family: "IBM Plex Sans";
 }
 
-.notification-hyperlink:hover, .notification-hyperlink:visited:hover {
-    -fx-fill: -bisq-white-dimmed;
+.notification-hyperlink:hover,
+.notification-hyperlink:visited:hover {
     -fx-text-fill: -bisq-white-dimmed;
-    -fx-font-size: 1.15em;
-    -fx-font-family: "IBM Plex Sans Regular";
+}
+.notification-hyperlink:visited,
+.notification-hyperlink:armed:visited,
+.notification-hyperlink:hover:armed {
+    -fx-text-fill: -bisq-darkgrey-light;
 }
 
 /*******************************************************************************
