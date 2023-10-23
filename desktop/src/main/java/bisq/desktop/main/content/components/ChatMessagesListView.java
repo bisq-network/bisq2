@@ -197,6 +197,10 @@ public class ChatMessagesListView {
                         chatMessagesPin.unbind();
                     }
 
+                    // Clear and call dispose on the current messages when we change the channel.
+                    model.chatMessages.forEach(ChatMessageListItem::dispose);
+                    model.chatMessages.clear();
+
                     if (channel instanceof BisqEasyOfferbookChannel) {
                         chatMessagesPin = bindChatMessages((BisqEasyOfferbookChannel) channel);
                     } else if (channel instanceof BisqEasyOpenTradeChannel) {
@@ -205,8 +209,6 @@ public class ChatMessagesListView {
                         chatMessagesPin = bindChatMessages((CommonPublicChatChannel) channel);
                     } else if (channel instanceof TwoPartyPrivateChatChannel) {
                         chatMessagesPin = bindChatMessages((TwoPartyPrivateChatChannel) channel);
-                    } else if (channel == null) {
-                        model.chatMessages.clear();
                     }
 
                     if (focusSubscription != null) {
