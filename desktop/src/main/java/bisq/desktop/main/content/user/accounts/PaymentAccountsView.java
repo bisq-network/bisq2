@@ -54,7 +54,6 @@ public class PaymentAccountsView extends View<VBox, PaymentAccountsModel, Paymen
 
         headline = new Label();
         headline.getStyleClass().add("large-thin-headline");
-        // headline.setPadding(new Insets(-8, 0, 0, 0));
 
         Label noAccountsInfo = new Label(Res.get("user.paymentAccounts.noAccounts.info"));
         noAccountsInfo.setWrapText(true);
@@ -69,9 +68,8 @@ public class PaymentAccountsView extends View<VBox, PaymentAccountsModel, Paymen
         whySetupNote.setWrapText(true);
         whySetupNote.getStyleClass().add("user-content-note");
 
-        VBox.setMargin(noAccountsInfo, new Insets(-10, 0, 0, 0));
-        VBox.setMargin(whySetup, new Insets(15, 0, -10, 0));
-        VBox.setMargin(whySetupNote, new Insets(10, 0, 20, 0));
+        VBox.setMargin(whySetup, new Insets(5, 0, -10, 0));
+        VBox.setMargin(whySetupNote, new Insets(10, 0, 15, 0));
         noAccountsVBox = new VBox(20, noAccountsInfo, whySetup, whySetupInfo, whySetupNote);
 
         largeCreateButton = new Button(Res.get("user.paymentAccounts.createAccount"));
