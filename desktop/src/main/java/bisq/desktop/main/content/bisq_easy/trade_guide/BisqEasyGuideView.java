@@ -65,7 +65,7 @@ public class BisqEasyGuideView extends TabView<BisqEasyGuideModel, BisqEasyGuide
         closeIconButton.setOnAction(e -> controller.onClose());
 
         root.setPrefWidth(OverlayModel.WIDTH);
-        root.setPrefHeight(OverlayModel.HEIGHT + 30);
+        root.setPrefHeight(OverlayModel.HEIGHT + 10);
     }
 
     @Override
