@@ -86,6 +86,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
+import javafx.stage.Window;
 import javafx.util.Callback;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -174,21 +175,16 @@ public class ChatMessagesListView {
             view = new View(model, this);
         }
 
-        public void setCreateOfferCompleteHandler(Runnable createOfferCompleteHandler) {
-            model.createOfferCompleteHandler = Optional.of(createOfferCompleteHandler);
-        }
-
-        public void setTakeOfferCompleteHandler(Runnable takeOfferCompleteHandler) {
-            model.takeOfferCompleteHandler = Optional.of(takeOfferCompleteHandler);
-        }
-
         @Override
         public void onActivate() {
+            Window window = view.getRoot().getScene().getWindow();
+
             model.getSortedChatMessages().setComparator(ChatMessagesListView.ChatMessageListItem::compareTo);
 
             offerOnlySettingsPin = FxBindings.subscribe(settingsService.getOffersOnly(), offerOnly -> UIThread.run(this::applyPredicate));
 
-            selectedChannelPin = chatService.getChatChannelSelectionServices().get(model.getChatChannelDomain()).getSelectedChannel().addObserver(channel -> {
+            ChatChannelSelectionService chatChannelSelectionService = chatService.getChatChannelSelectionServices().get(model.getChatChannelDomain());
+            selectedChannelPin = chatChannelSelectionService.getSelectedChannel().addObserver(channel -> {
                 UIThread.run(() -> {
                     model.selectedChannel.set(channel);
                     model.isPublicChannel.set(channel instanceof PublicChatChannel);
@@ -218,7 +214,7 @@ public class ChatMessagesListView {
                         selectedChannelSubscription.unsubscribe();
                     }
                     if (channel != null) {
-                        focusSubscription = EasyBind.subscribe(view.getRoot().getScene().getWindow().focusedProperty(),
+                        focusSubscription = EasyBind.subscribe(window.focusedProperty(),
                                 focused -> {
                                     if (focused && model.getSelectedChannel().get() != null) {
                                         chatNotificationService.consumeNotificationId(model.getSelectedChannel().get());
