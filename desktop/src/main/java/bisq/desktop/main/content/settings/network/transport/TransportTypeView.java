@@ -55,8 +55,8 @@ public class TransportTypeView extends View<GridPane, TransportTypeModel, Transp
         configConnectionsTableView();
 
         VBox vBoxConnections = new VBox(16, connectionsTableView);
-        vBoxConnections.getStyleClass().add("bisq-box-2");
-        vBoxConnections.setPadding(new Insets(20, 0, 20, 0));
+        vBoxConnections.getStyleClass().add("bisq-grey-2-bg");
+        vBoxConnections.setPadding(new Insets(20, 0, 0, 0));
         vBoxConnections.setAlignment(Pos.TOP_LEFT);
         root.add(vBoxConnections, 0, root.getRowCount(), 2, 1);
 
@@ -73,8 +73,8 @@ public class TransportTypeView extends View<GridPane, TransportTypeModel, Transp
         configNodesTableView();
 
         VBox vBoxNodes = new VBox(16, nodesTableView);
-        vBoxNodes.getStyleClass().add("bisq-box-2");
-        vBoxNodes.setPadding(new Insets(20, 0, 20, 0));
+        vBoxNodes.getStyleClass().add("bisq-grey-2-bg");
+        vBoxNodes.setPadding(new Insets(20, 0, 0, 0));
         vBoxNodes.setAlignment(Pos.TOP_LEFT);
         root.add(vBoxNodes, 0, root.getRowCount(), 2, 1);
 
