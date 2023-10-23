@@ -644,55 +644,6 @@
 
 /*******************************************************************************
  *                                                                             *
- * Hyperlink                                                                  *
- *                                                                             *
- ******************************************************************************/
-
-.hyperlink {
-    -fx-text-fill: -fx-light-text-color;
-}
-
-.hyperlink:hover {
-    -fx-text-fill: -bisq-green;
-}
-
-.hyperlink:visited {
-    -fx-text-fill: -fx-mid-text-color;
-}
-
-.hyperlink:hover:visited {
-    -fx-text-fill: derive(-fx-mid-text-color, 20%);
-}
-
-.hyperlink,
-.hyperlink.force-underline .text,
-.hyperlink:hover,
-.hyperlink:visited,
-.hyperlink:hover:visited,
-.hyperlink:focused {
-    -fx-border-style: none;
-    -fx-border-width: 0px;
-    -fx-underline: true;
-}
-
-.hyperlink.no-underline {
-    -fx-text-fill: -fx-mid-text-color;
-}
-
-.hyperlink.highlight,
-.hyperlink.highlight .text.hyperlink.no-underline {
-    -fx-text-fill: -bisq-green;
-    -fx-fill: -bisq-green;
-}
-
-.hyperlink.error {
-    -fx-text-fill: -bisq-red;
-    -fx-fill: -bisq-red;
-}
-
-
-/*******************************************************************************
- *                                                                             *
  * Custom TextInputBox based                                                                  *
  *                                                                             *
  ******************************************************************************/

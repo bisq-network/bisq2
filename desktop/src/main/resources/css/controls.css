@@ -584,6 +584,55 @@
 
 /*******************************************************************************
  *                                                                             *
+ * Hyperlink                                                                  *
+ *                                                                             *
+ ******************************************************************************/
+
+
+.hyperlink {
+    -fx-padding: 0.166667em 0.25em 0.166667em 0.25em; /* 2 3 2 3 */
+    -fx-cursor: hand;
+    -fx-content-display: LEFT;
+    -fx-border-color: transparent;
+    -fx-border-width: 1px;
+    -fx-text-fill: -fx-text-background-color;
+    -fx-underline: true;
+}
+.hyperlink:hover,
+.hyperlink:hover:visited {
+    -fx-text-fill: -fx-accent;
+}
+.hyperlink:armed,
+.hyperlink:hover:armed {
+    -fx-text-fill: -fx-text-background-color;
+}
+.hyperlink:visited,
+.hyperlink:armed:visited,
+.hyperlink:hover:armed {
+    -fx-text-fill: -fx-mid-text-color;
+}
+
+.hyperlink:hover,
+.hyperlink:visited,
+.hyperlink:visited:armed
+.hyperlink:hover:visited {
+    -fx-underline: true;
+}
+.hyperlink:focused {
+    -fx-border-color: -fx-focus-color;
+    -fx-border-width: 0px;
+}
+
+/* Fix for RT-37971 */
+.cell:selected .hyperlink,
+.cell:selected .hyperlink:hover,
+.cell:selected .hyperlink:hover:visited {
+    -fx-text-fill: -fx-text-background-color;
+}
+
+
+/*******************************************************************************
+ *                                                                             *
  * CheckBox                                                                    *
  *                                                                             *
  ******************************************************************************/
