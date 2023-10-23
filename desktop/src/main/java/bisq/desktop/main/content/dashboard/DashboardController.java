@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.dashboard;
 
+import bisq.bisq_easy.BisqEasyNotificationsService;
 import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannelService;
@@ -24,6 +25,7 @@ import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.currency.Market;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
@@ -43,13 +45,16 @@ public class DashboardController implements Controller {
     private final DashboardModel model;
     private final UserProfileService userProfileService;
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
+    private final BisqEasyNotificationsService bisqEasyNotificationsService;
     private Pin selectedMarketPin, getMarketPriceUpdateTimestampPin, getNumUserProfilesPin;
     private boolean allowUpdateOffersOnline;
+    private Pin isNotificationVisiblePin;
 
     public DashboardController(ServiceProvider serviceProvider) {
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         userProfileService = serviceProvider.getUserService().getUserProfileService();
         bisqEasyOfferbookChannelService = serviceProvider.getChatService().getBisqEasyOfferbookChannelService();
+        bisqEasyNotificationsService = serviceProvider.getBisqEasyService().getBisqEasyNotificationsService();
 
         model = new DashboardModel();
         view = new DashboardView(model, this);
@@ -71,6 +76,9 @@ public class DashboardController implements Controller {
         // so we block execution of the code inside updateOffersOnline to only call it once.
         allowUpdateOffersOnline = true;
         updateOffersOnline();
+
+        isNotificationVisiblePin = FxBindings.bind(model.getIsNotificationVisible())
+                .to(bisqEasyNotificationsService.getIsNotificationPanelVisible());
     }
 
     @Override
@@ -78,6 +86,7 @@ public class DashboardController implements Controller {
         selectedMarketPin.unbind();
         getMarketPriceUpdateTimestampPin.unbind();
         getNumUserProfilesPin.unbind();
+        isNotificationVisiblePin.unbind();
     }
 
     public void onLearn() {

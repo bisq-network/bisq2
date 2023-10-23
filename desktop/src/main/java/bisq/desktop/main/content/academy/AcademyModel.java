@@ -18,9 +18,9 @@
 package bisq.desktop.main.content.academy;
 
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabModel;
+import bisq.desktop.main.content.ContentTabModel;
 
-public class AcademyModel extends TabModel {
+public class AcademyModel extends ContentTabModel {
 
     public AcademyModel() {
     }

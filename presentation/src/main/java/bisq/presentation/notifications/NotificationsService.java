@@ -19,6 +19,7 @@ package bisq.presentation.notifications;
 
 
 import bisq.common.application.Service;
+import bisq.common.observable.Observable;
 import bisq.common.util.OperatingSystem;
 import bisq.common.util.OsUtils;
 import bisq.persistence.Persistence;
@@ -50,6 +51,11 @@ public class NotificationsService implements PersistenceClient<NotificationsStor
     private final Persistence<NotificationsStore> persistence;
     private NotificationsDelegate delegate;
     private final Set<Subscriber> subscribers = new HashSet<>();
+
+    // We do not persist the state of a closed notification panel as we prefer to show the panel again at restart.
+    // If any new notification gets added the panel will also be shown again.
+    @Getter
+    private final Observable<Boolean> isNotificationPanelDismissed = new Observable<>(false);
 
     public NotificationsService(PersistenceService persistenceService) {
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);

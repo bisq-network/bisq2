@@ -68,9 +68,9 @@ public class ProtocolRoadmapView extends View<VBox, ProtocolRoadmapModel, Protoc
         VBox.setMargin(overviewHeadline, new Insets(25, 0, 0, 0));
         VBox.setMargin(releaseHeadline, new Insets(35, 0, 0, 0));
         VBox.setMargin(tradeOffsHeadline, new Insets(35, 0, 0, 0));
-        VBox.setMargin(con, new Insets(0, 0, 15, 0));
+        VBox.setMargin(con, new Insets(20, 0, 15, 0));
 
-        root.setPadding(new Insets(20, 40, 40, 40));
+        root.setPadding(new Insets(0, 40, 40, 40));
         root.getChildren().addAll(headline, subHeadline,
                 overviewHeadline, overview,
                 releaseHeadline, release,

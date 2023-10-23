@@ -175,7 +175,7 @@ public class BisqEasyOfferbookView extends ChatView {
         HBox.setHgrow(centerVBox, Priority.ALWAYS);
         HBox.setHgrow(sideBar, Priority.NEVER);
         containerHBox.getChildren().addAll(centerVBox, sideBar);
-        containerHBox.setPadding(new Insets(20, 40, 40, 40));
+        containerHBox.setPadding(new Insets(0, 40, 0, 40));
 
         Layout.pinToAnchorPane(containerHBox, 0, 40, 40, 40);
         root.setContent(containerHBox);

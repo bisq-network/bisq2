@@ -17,9 +17,10 @@
 
 package bisq.desktop.main.notification;
 
-import bisq.chat.ChatChannelDomain;
-import bisq.chat.notifications.ChatNotificationService;
+import bisq.bisq_easy.BisqEasyNotificationsService;
+import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
@@ -27,11 +28,11 @@ import bisq.desktop.common.view.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.presentation.notifications.NotificationsService;
 import com.google.common.base.Joiner;
+import javafx.beans.property.ReadOnlyBooleanProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class NotificationPanelController implements Controller {
@@ -39,67 +40,60 @@ public class NotificationPanelController implements Controller {
     private final NotificationPanelView view;
     private final NotificationPanelModel model;
     private final NotificationsService notificationsService;
-    private boolean notificationSubscriptionDone;
+    private final BisqEasyNotificationsService bisqEasyNotificationsService;
+    private boolean tradeIdsOfNotificationsSubscribed;
+    private Pin isNotificationVisiblePin, tradeIdsOfNotificationsPin;
 
     public NotificationPanelController(ServiceProvider serviceProvider) {
         notificationsService = serviceProvider.getNotificationsService();
+        bisqEasyNotificationsService = serviceProvider.getBisqEasyService().getBisqEasyNotificationsService();
+
         model = new NotificationPanelModel();
         view = new NotificationPanelView(model, this);
     }
 
+    public ReadOnlyBooleanProperty getIsNotificationVisible() {
+        return model.getIsNotificationVisible();
+    }
+
     public void setNavigationTarget(NavigationTarget navigationTarget) {
         // We subscribe once we get the content target
-        if (!notificationSubscriptionDone && navigationTarget == NavigationTarget.CONTENT) {
-            notificationSubscriptionDone = true;
-            notificationsService.subscribe(e -> {
+        if (!tradeIdsOfNotificationsSubscribed && navigationTarget == NavigationTarget.CONTENT) {
+            tradeIdsOfNotificationsSubscribed = true;
+            tradeIdsOfNotificationsPin = bisqEasyNotificationsService.getTradeIdsOfNotifications().addObserver(() -> {
                 UIThread.run(() -> {
-                    if (Navigation.getCurrentNavigationTarget().get() != NavigationTarget.BISQ_EASY_OPEN_TRADES) {
-                        Set<String> tradeIdSet = notificationsService.getNotConsumedNotificationIds().stream()
-                                .filter(id -> ChatNotificationService.getChatChannelDomain(id) == ChatChannelDomain.BISQ_EASY_OPEN_TRADES)
-                                .flatMap(id -> ChatNotificationService.findTradeId(id).stream())
-                                .collect(Collectors.toSet());
-                        if (tradeIdSet.size() == 1) {
-                            String tradeId = tradeIdSet.iterator().next();
-                            model.getHeadline().set(Res.get("notificationPanel.headline.single", tradeId));
-                            model.getContent().set(Res.get("notificationPanel.content.single", tradeId,
-                                    Res.get("notificationPanel.content.part2")));
-                        } else if (tradeIdSet.size() > 1) {
-                            String tradeIds = Joiner.on(", ").join(tradeIdSet);
-                            model.getHeadline().set(Res.get("notificationPanel.headline.multiple", tradeIds));
-                            model.getContent().set(Res.get("notificationPanel.content.multiple", tradeIds,
-                                    Res.get("notificationPanel.content.part2")));
-                        }
-                        model.getIsVisible().set(!tradeIdSet.isEmpty());
+                    Set<String> tradeIdsOfNotifications = bisqEasyNotificationsService.getTradeIdsOfNotifications();
+                    if (tradeIdsOfNotifications.size() == 1) {
+                        String tradeId = tradeIdsOfNotifications.iterator().next();
+                        model.getHeadline().set(Res.get("notificationPanel.headline.single", tradeId));
+                    } else if (tradeIdsOfNotifications.size() > 1) {
+                        String tradeIds = Joiner.on(", ").join(tradeIdsOfNotifications);
+                        model.getHeadline().set(Res.get("notificationPanel.headline.multiple", tradeIds));
                     }
                 });
             });
         }
-        if (navigationTarget == NavigationTarget.BISQ_EASY_OPEN_TRADES) {
-            model.getIsVisible().set(false);
-        }
-
-        model.getUseLessPadding().set(navigationTarget == NavigationTarget.DASHBOARD ||
-                navigationTarget == NavigationTarget.ACADEMY ||
-                navigationTarget == NavigationTarget.TRADE_PROTOCOLS ||
-                navigationTarget == NavigationTarget.BISQ_EASY ||
-                navigationTarget == NavigationTarget.USER ||
-                navigationTarget == NavigationTarget.SETTINGS);
     }
 
     @Override
     public void onActivate() {
+        isNotificationVisiblePin = FxBindings.bind(model.getIsNotificationVisible())
+                .to(bisqEasyNotificationsService.getIsNotificationPanelVisible());
     }
 
     @Override
     public void onDeactivate() {
+        isNotificationVisiblePin.unbind();
+        if (tradeIdsOfNotificationsPin != null) {
+            tradeIdsOfNotificationsPin.unbind();
+        }
     }
 
     void onClose() {
-        model.getIsVisible().set(false);
+        notificationsService.getIsNotificationPanelDismissed().set(true);
     }
 
     void onGoToOpenTrades() {
-        model.getIsVisible().set(false);
         Navigation.navigateTo(NavigationTarget.BISQ_EASY_OPEN_TRADES);
     }
 }

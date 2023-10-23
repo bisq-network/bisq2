@@ -18,14 +18,15 @@
 package bisq.desktop.main.content.trade_apps;
 
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabModel;
+import bisq.desktop.main.content.ContentTabModel;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import lombok.Getter;
 
 @Getter
-public class TradeAppsModel extends TabModel {
+public class TradeAppsModel extends ContentTabModel {
     private final BooleanProperty moreTabVisible = new SimpleBooleanProperty();
+
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
         return NavigationTarget.TRADE_PROTOCOLS_OVERVIEW;

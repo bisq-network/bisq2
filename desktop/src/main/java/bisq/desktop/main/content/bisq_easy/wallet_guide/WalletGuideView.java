@@ -96,12 +96,4 @@ public class WalletGuideView extends TabView<WalletGuideModel, WalletGuideContro
         VBox.setMargin(hBox, new Insets(0, 0, 17, 0));
         topBox.getChildren().addAll(hBox, tabs);
     }
-
-    @Override
-    protected void setupLineAndMarker() {
-        super.setupLineAndMarker();
-
-        line.getStyleClass().remove("tab-view-line");
-        line.getStyleClass().add("tab-view-line-light");
-    }
 }

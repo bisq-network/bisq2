@@ -50,11 +50,11 @@ public class PaymentAccountsView extends View<VBox, PaymentAccountsModel, Paymen
         super(new VBox(20), model, controller);
 
         root.setAlignment(Pos.TOP_LEFT);
-        root.setPadding(new Insets(20, 40, 40, 40));
+        root.setPadding(new Insets(0, 40, 40, 40));
 
         headline = new Label();
         headline.getStyleClass().add("large-thin-headline");
-        headline.setPadding(new Insets(-8, 0, 0, 0));
+        // headline.setPadding(new Insets(-8, 0, 0, 0));
 
         Label noAccountsInfo = new Label(Res.get("user.paymentAccounts.noAccounts.info"));
         noAccountsInfo.setWrapText(true);

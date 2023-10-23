@@ -19,13 +19,13 @@ package bisq.desktop.main.content.settings.network.transport;
 
 import bisq.desktop.common.utils.GridPaneUtil;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 
@@ -36,28 +36,17 @@ public class TransportTypeView extends View<GridPane, TransportTypeModel, Transp
     public TransportTypeView(TransportTypeModel model, TransportTypeController controller) {
         super(GridPaneUtil.getGridPane(5, 20, new Insets(0)), model, controller);
 
-        Label nodeAddressLabel = GridPaneUtil.getHeadline(
-                Res.get("settings.network.nodeInfo.title"),
-                "bisq-content-headline-label",
-                "",
-                0);
-        root.add(nodeAddressLabel, 0, root.getRowCount());
-
-        TextField nodeAddressTxtFld = GridPaneUtil.addTextField(
-                Res.get("settings.network.nodeInfo.myAddress"),
-                model.getMyDefaultNodeAddress(),
-                root);
-        VBox vBoxNode = new VBox(16, nodeAddressTxtFld);
-        vBoxNode.getStyleClass().add("bisq-box-2");
-        vBoxNode.setPadding(new Insets(20));
-        vBoxNode.setAlignment(Pos.TOP_LEFT);
-        root.add(vBoxNode, 0, root.getRowCount(), 2, 1);
+        MaterialTextField myAddress = new MaterialTextField(Res.get("settings.network.nodeInfo.myAddress"), "", "", model.getMyDefaultNodeAddress().get());
+        myAddress.setEditable(false);
+        myAddress.showCopyIcon();
+        root.add(myAddress, 0, root.getRowCount(), 2, 1);
 
         Label connectionsLabel = GridPaneUtil.getHeadline(
                 Res.get("settings.network.connections.title"),
-                "bisq-content-headline-label",
+                "bisq-sub-title-label",
                 "",
                 0);
+        GridPane.setMargin(connectionsLabel, new Insets(0, 0, -15, 10));
         root.add(connectionsLabel, 0, root.getRowCount());
 
         connectionsTableView = new BisqTableView<>(model.getSortedConnectionListItems());
@@ -67,14 +56,15 @@ public class TransportTypeView extends View<GridPane, TransportTypeModel, Transp
 
         VBox vBoxConnections = new VBox(16, connectionsTableView);
         vBoxConnections.getStyleClass().add("bisq-box-2");
-        vBoxConnections.setPadding(new Insets(30));
+        vBoxConnections.setPadding(new Insets(20, 0, 20, 0));
         vBoxConnections.setAlignment(Pos.TOP_LEFT);
         root.add(vBoxConnections, 0, root.getRowCount(), 2, 1);
 
         Label nodesLabel = GridPaneUtil.getHeadline(Res.get("settings.network.nodes.title"),
-                "bisq-content-headline-label",
+                "bisq-sub-title-label",
                 "",
                 0);
+        GridPane.setMargin(nodesLabel, new Insets(0, 0, -15, 10));
         root.add(nodesLabel, 0, root.getRowCount());
 
         nodesTableView = new BisqTableView<>(model.getSortedNodeListItems());
@@ -84,7 +74,7 @@ public class TransportTypeView extends View<GridPane, TransportTypeModel, Transp
 
         VBox vBoxNodes = new VBox(16, nodesTableView);
         vBoxNodes.getStyleClass().add("bisq-box-2");
-        vBoxNodes.setPadding(new Insets(30));
+        vBoxNodes.setPadding(new Insets(20, 0, 20, 0));
         vBoxNodes.setAlignment(Pos.TOP_LEFT);
         root.add(vBoxNodes, 0, root.getRowCount(), 2, 1);
 
@@ -95,6 +85,7 @@ public class TransportTypeView extends View<GridPane, TransportTypeModel, Transp
                 .title(Res.get("settings.network.connections.header.established"))
                 .minWidth(180)
                 .maxWidth(180)
+                .left()
                 .valueSupplier(ConnectionListItem::getDate)
                 .comparator(ConnectionListItem::compareDate)
                 .build();
@@ -143,6 +134,7 @@ public class TransportTypeView extends View<GridPane, TransportTypeModel, Transp
         nodesTableView.getColumns().add(new BisqTableColumn.Builder<NodeListItem>()
                 .title(Res.get("settings.network.nodes.header.type"))
                 .minWidth(100)
+                .left()
                 .valueSupplier(NodeListItem::getType)
                 .comparator(NodeListItem::compareType)
                 .build());

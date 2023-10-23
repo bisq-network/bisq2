@@ -45,7 +45,6 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 @Getter
 public class BisqEasyService implements Service {
-
     private final PersistenceService persistenceService;
     private final SecurityService securityService;
     private final Optional<WalletService> walletService;
@@ -62,6 +61,7 @@ public class BisqEasyService implements Service {
     private final NotificationsService notificationsService;
     private final TradeService tradeService;
     private final UserIdentityService userIdentityService;
+    private final BisqEasyNotificationsService bisqEasyNotificationsService;
 
     public BisqEasyService(PersistenceService persistenceService,
                            SecurityService securityService,
@@ -94,6 +94,8 @@ public class BisqEasyService implements Service {
         this.notificationsService = notificationsService;
         this.tradeService = tradeService;
         userIdentityService = userService.getUserIdentityService();
+
+        bisqEasyNotificationsService = new BisqEasyNotificationsService(notificationsService);
     }
 
 
@@ -103,12 +105,12 @@ public class BisqEasyService implements Service {
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        return CompletableFuture.completedFuture(true);
+        return bisqEasyNotificationsService.initialize();
     }
 
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
-        return CompletableFuture.completedFuture(true);
+        return bisqEasyNotificationsService.shutdown();
     }
 
     public boolean isDeleteUserIdentityProhibited(UserIdentity userIdentity) {

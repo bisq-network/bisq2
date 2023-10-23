@@ -20,7 +20,7 @@ package bisq.desktop.main.content.user;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabController;
+import bisq.desktop.main.content.ContentTabController;
 import bisq.desktop.main.content.user.accounts.PaymentAccountsController;
 import bisq.desktop.main.content.user.bonded_roles.nodes.NodesController;
 import bisq.desktop.main.content.user.bonded_roles.roles.RolesController;
@@ -33,25 +33,14 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public class UserController extends TabController<UserModel> {
-    private final ServiceProvider serviceProvider;
+public class UserController extends ContentTabController<UserModel> {
     @Getter
     private final UserView view;
 
     public UserController(ServiceProvider serviceProvider) {
-        super(new UserModel(), NavigationTarget.USER);
-
-        this.serviceProvider = serviceProvider;
+        super(new UserModel(), NavigationTarget.USER, serviceProvider);
 
         view = new UserView(model, this);
-    }
-
-    @Override
-    public void onActivate() {
-    }
-
-    @Override
-    public void onDeactivate() {
     }
 
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {

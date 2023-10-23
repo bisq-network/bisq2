@@ -19,19 +19,16 @@ package bisq.desktop.main.content.trade_apps;
 
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabButton;
-import bisq.desktop.common.view.TabView;
+import bisq.desktop.main.content.ContentTabView;
 import bisq.i18n.Res;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class TradeAppsView extends TabView<TradeAppsModel, TradeAppsController> {
-
+public class TradeAppsView extends ContentTabView<TradeAppsModel, TradeAppsController> {
     private final TabButton more;
 
     public TradeAppsView(TradeAppsModel model, TradeAppsController controller) {
         super(model, controller);
-
-        // headLine.setText(Res.get("tradeApps.headline"));
 
         addTab(Res.get("tradeApps.overview"), NavigationTarget.TRADE_PROTOCOLS_OVERVIEW);
         addTab(Res.get("tradeApps.multisig"), NavigationTarget.MULTISIG);
@@ -42,11 +39,17 @@ public class TradeAppsView extends TabView<TradeAppsModel, TradeAppsController> 
 
     @Override
     protected void onViewAttached() {
+        super.onViewAttached();
+
         more.visibleProperty().bind(model.getMoreTabVisible());
         more.managedProperty().bind(model.getMoreTabVisible());
     }
 
     @Override
     protected void onViewDetached() {
+        super.onViewDetached();
+
+        more.visibleProperty().unbind();
+        more.managedProperty().unbind();
     }
 }

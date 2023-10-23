@@ -75,7 +75,6 @@ public class BisqEasyGuideView extends TabView<BisqEasyGuideModel, BisqEasyGuide
         closeIconButton.setOnAction(null);
     }
 
-
     @Override
     protected void setupTopBox() {
         headLine = new Label();
@@ -95,13 +94,5 @@ public class BisqEasyGuideView extends TabView<BisqEasyGuideModel, BisqEasyGuide
         topBox = new VBox();
         VBox.setMargin(hBox, new Insets(0, 0, 17, 0));
         topBox.getChildren().addAll(hBox, tabs);
-    }
-
-    @Override
-    protected void setupLineAndMarker() {
-        super.setupLineAndMarker();
-
-        line.getStyleClass().remove("tab-view-line");
-        line.getStyleClass().add("tab-view-line-light");
     }
 }

@@ -18,15 +18,13 @@
 package bisq.desktop.main.content.academy;
 
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabView;
+import bisq.desktop.main.content.ContentTabView;
 import bisq.i18n.Res;
 
-public class AcademyView extends TabView<AcademyModel, AcademyController> {
+public class AcademyView extends ContentTabView<AcademyModel, AcademyController> {
 
     public AcademyView(AcademyModel model, AcademyController controller) {
         super(model, controller);
-
-        // headLine.setText(Res.get("academy.learn"));
 
         addTab(Res.get("academy.overview"), NavigationTarget.OVERVIEW_ACADEMY);
         addTab(Res.get("academy.overview.bisq"), NavigationTarget.BISQ_ACADEMY);
@@ -35,13 +33,5 @@ public class AcademyView extends TabView<AcademyModel, AcademyController> {
         addTab(Res.get("academy.overview.security"), NavigationTarget.SECURITY_ACADEMY);
         addTab(Res.get("academy.overview.privacy"), NavigationTarget.PRIVACY_ACADEMY);
         addTab(Res.get("academy.overview.foss"), NavigationTarget.FOSS_ACADEMY);
-    }
-
-    @Override
-    protected void onViewAttached() {
-    }
-
-    @Override
-    protected void onViewDetached() {
     }
 }

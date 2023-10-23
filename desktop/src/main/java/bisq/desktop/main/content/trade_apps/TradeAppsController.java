@@ -21,7 +21,7 @@ import bisq.account.protocol_type.TradeProtocolType;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabController;
+import bisq.desktop.main.content.ContentTabController;
 import bisq.desktop.main.content.trade_apps.more.MoreProtocolsController;
 import bisq.desktop.main.content.trade_apps.overview.TradeOverviewController;
 import bisq.desktop.main.content.trade_apps.roadmap.ProtocolRoadmapController;
@@ -31,25 +31,14 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public class TradeAppsController extends TabController<TradeAppsModel> {
-    private final ServiceProvider serviceProvider;
+public class TradeAppsController extends ContentTabController<TradeAppsModel> {
     @Getter
     private final TradeAppsView view;
 
     public TradeAppsController(ServiceProvider serviceProvider) {
-        super(new TradeAppsModel(), NavigationTarget.TRADE_PROTOCOLS);
-
-        this.serviceProvider = serviceProvider;
+        super(new TradeAppsModel(), NavigationTarget.TRADE_PROTOCOLS, serviceProvider);
 
         view = new TradeAppsView(model, this);
-    }
-
-    @Override
-    public void onActivate() {
-    }
-
-    @Override
-    public void onDeactivate() {
     }
 
     @Override

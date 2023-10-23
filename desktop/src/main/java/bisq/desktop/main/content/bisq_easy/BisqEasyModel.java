@@ -18,11 +18,11 @@
 package bisq.desktop.main.content.bisq_easy;
 
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabModel;
+import bisq.desktop.main.content.ContentTabModel;
 import lombok.Getter;
 
 @Getter
-public class BisqEasyModel extends TabModel {
+public class BisqEasyModel extends ContentTabModel {
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
         return NavigationTarget.BISQ_EASY_ONBOARDING;

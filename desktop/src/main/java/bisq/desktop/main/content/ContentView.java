@@ -19,12 +19,15 @@ package bisq.desktop.main.content;
 
 import bisq.desktop.common.ViewTransition;
 import bisq.desktop.common.view.NavigationView;
+import javafx.geometry.Insets;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ContentView extends NavigationView<StackPane, ContentModel, ContentController> {
+    private static final Insets NOTIFICATION_PADDING = new Insets(0, 40, 0, 40);
+
     private ViewTransition viewTransition;
 
     public ContentView(ContentModel model, ContentController controller) {

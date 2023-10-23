@@ -20,7 +20,7 @@ package bisq.desktop.main.content.wallet;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabController;
+import bisq.desktop.main.content.ContentTabController;
 import bisq.desktop.main.content.wallet.dashboard.WalletDashboardController;
 import bisq.desktop.main.content.wallet.receive.WalletReceiveController;
 import bisq.desktop.main.content.wallet.send.WalletSendController;
@@ -32,25 +32,14 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public class WalletController extends TabController<WalletModel> {
-    private final ServiceProvider serviceProvider;
+public class WalletController extends ContentTabController<WalletModel> {
     @Getter
     private final WalletView view;
 
     public WalletController(ServiceProvider serviceProvider) {
-        super(new WalletModel(), NavigationTarget.WALLET);
-
-        this.serviceProvider = serviceProvider;
+        super(new WalletModel(), NavigationTarget.WALLET, serviceProvider);
 
         view = new WalletView(model, this);
-    }
-
-    @Override
-    public void onActivate() {
-    }
-
-    @Override
-    public void onDeactivate() {
     }
 
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
