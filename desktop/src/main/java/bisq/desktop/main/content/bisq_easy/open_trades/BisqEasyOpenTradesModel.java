@@ -53,7 +53,6 @@ public class BisqEasyOpenTradesModel extends ChatModel {
         return NavigationTarget.NONE;
     }
 
-
     void reset() {
         noOpenTrades.set(false);
         tradeWelcomeVisible.set(false);
@@ -63,6 +62,7 @@ public class BisqEasyOpenTradesModel extends ChatModel {
         chatWindowTitle.set(null);
         chatWindow.set(null);
         selectedItem.set(null);
+        listItems.forEach(BisqEasyOpenTradesView.ListItem::dispose);
         listItems.clear();
     }
 }
