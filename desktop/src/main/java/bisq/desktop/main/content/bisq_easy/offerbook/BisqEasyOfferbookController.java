@@ -136,7 +136,7 @@ public class BisqEasyOfferbookController extends ChatController<BisqEasyOfferboo
                 }
             };
 
-            Comparator<MarketChannelItem> byName = (left, right) -> left.getMarket().toString().compareTo(right.toString());
+            Comparator<MarketChannelItem> byName = Comparator.comparing(MarketChannelItem::getMarketString);
             return byNumMessages
                     .thenComparing(byMajorMarkets)
                     .thenComparing(byName)
