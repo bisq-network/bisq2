@@ -102,9 +102,13 @@
 
 
 .open-trades-badge.bisq-badge .badge-pane {
-    -fx-background-color: -bisq-red;
+    -fx-background-color: -bisq-yellow;
 }
-
+.open-trades-badge.bisq-badge .badge-pane .label {
+    -fx-font-size: 0.85em;
+    -fx-text-fill: black !important;
+    -fx-font-family: "IBM Plex Sans SemiBold";
+}
 
 /*******************************************************************************
  * OpenTradesWelcome                                                            *
