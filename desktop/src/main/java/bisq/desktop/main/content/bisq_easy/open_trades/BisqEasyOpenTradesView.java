@@ -45,10 +45,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
+import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.stage.Modality;
@@ -292,21 +289,27 @@ public class BisqEasyOpenTradesView extends ChatView {
 
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.me"))
-                .minWidth(45)
+                .fixWidth(45)
                 .left()
                 .comparator(Comparator.comparing(ListItem::getMyUserName))
                 .setCellFactory(getMyUserCellFactory())
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+                .minWidth(95)
+                .left()
+                .comparator(Comparator.comparing(ListItem::getDirection))
+                .valueSupplier(ListItem::getDirection)
+                .build());
+        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.tradePeer"))
-                .minWidth(120)
+                .minWidth(110)
                 .left()
                 .comparator(Comparator.comparing(ListItem::getPeersUserName))
                 .setCellFactory(getTradePeerCellFactory())
                 .build());
         BisqTableColumn<ListItem> dateColumn = new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("temporal.date"))
-                .minWidth(80)
+                .fixWidth(85)
                 .comparator(Comparator.comparing(ListItem::getDate).reversed())
                 .setCellFactory(getDateCellFactory())
                 .build();
@@ -321,19 +324,19 @@ public class BisqEasyOpenTradesView extends ChatView {
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.quoteAmount"))
-                .minWidth(90)
+                .fixWidth(95)
                 .comparator(Comparator.comparing(ListItem::getQuoteAmount))
                 .valueSupplier(ListItem::getQuoteAmountString)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.baseAmount"))
-                .minWidth(120)
+                .fixWidth(120)
                 .comparator(Comparator.comparing(ListItem::getBaseAmount))
                 .valueSupplier(ListItem::getBaseAmountString)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.price"))
-                .minWidth(135)
+                .fixWidth(135)
                 .comparator(Comparator.comparing(ListItem::getPrice))
                 .valueSupplier(ListItem::getPriceString)
                 .build());
@@ -344,8 +347,8 @@ public class BisqEasyOpenTradesView extends ChatView {
                 .valueSupplier(ListItem::getPaymentMethod)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
-                .title(Res.get("bisqEasy.openTrades.table.myRole"))
-                .minWidth(110)
+                .title(Res.get("bisqEasy.openTrades.table.makerTakerRole"))
+                .minWidth(80)
                 .right()
                 .comparator(Comparator.comparing(ListItem::getMyRole))
                 .valueSupplier(ListItem::getMyRole)
@@ -375,6 +378,34 @@ public class BisqEasyOpenTradesView extends ChatView {
         };
     }
 
+    private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getMyUserCellFactory() {
+        return column -> new TableCell<>() {
+
+            private BisqTooltip tooltip = new BisqTooltip();
+
+            {
+                tooltip.getStyleClass().add("dark-tooltip");
+            }
+
+            @Override
+            public void updateItem(final ListItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    UserProfileIcon userProfileIcon = new UserProfileIcon();
+                    UserProfile userProfile = item.getChannel().getMyUserIdentity().getUserProfile();
+                    userProfileIcon.setUserProfile(userProfile);
+                    tooltip.setText(userProfile.getUserName());
+                    Tooltip.install(this, tooltip);
+                    setGraphic(userProfileIcon);
+                } else {
+                    Tooltip.uninstall(this, tooltip);
+                    setGraphic(null);
+                }
+            }
+        };
+    }
+
     private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getTradePeerCellFactory() {
         return column -> new TableCell<>() {
 
@@ -386,24 +417,6 @@ public class BisqEasyOpenTradesView extends ChatView {
                     UserProfileDisplay userProfileDisplay = new UserProfileDisplay(item.getChannel().getPeer());
                     userProfileDisplay.setReputationScore(item.getReputationScore());
                     setGraphic(userProfileDisplay);
-                } else {
-                    setGraphic(null);
-                }
-            }
-        };
-    }
-
-    private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getMyUserCellFactory() {
-        return column -> new TableCell<>() {
-
-            @Override
-            public void updateItem(final ListItem item, boolean empty) {
-                super.updateItem(item, empty);
-
-                if (item != null && !empty) {
-                    UserProfileIcon userProfileIcon = new UserProfileIcon();
-                    userProfileIcon.setUserProfile(item.getChannel().getMyUserIdentity().getUserProfile());
-                    setGraphic(userProfileIcon);
                 } else {
                     setGraphic(null);
                 }
@@ -424,12 +437,8 @@ public class BisqEasyOpenTradesView extends ChatView {
     static class ListItem implements TableItem {
         private final BisqEasyOpenTradeChannel channel;
         private final BisqEasyTrade trade;
-        private final String offerId;
-        private final String tradeId;
-        private final String shortTradeId;
-        private final String peersUserName, myUserName;
-        private final String dateString, timeString, market, priceString,
-                baseAmountString, quoteAmountString, paymentMethod, myRole;
+        private final String offerId, tradeId, shortTradeId, myUserName, direction, peersUserName, dateString, timeString,
+                market, priceString, baseAmountString, quoteAmountString, paymentMethod, myRole;
         private final long date, price, baseAmount, quoteAmount;
         private final UserProfile peersUserProfile;
         private final ReputationScore reputationScore;
@@ -441,6 +450,7 @@ public class BisqEasyOpenTradesView extends ChatView {
             peersUserProfile = channel.getPeer();
             peersUserName = peersUserProfile.getUserName();
             myUserName = channel.getMyUserIdentity().getUserName();
+            direction = BisqEasyTradeFormatter.getDirection(trade);
             offerId = channel.getBisqEasyOffer().getId();
             this.tradeId = trade.getId();
             shortTradeId = trade.getShortId();
@@ -457,7 +467,7 @@ public class BisqEasyOpenTradesView extends ChatView {
             quoteAmount = contract.getQuoteSideAmount();
             quoteAmountString = BisqEasyTradeFormatter.formatQuoteSideAmountWithCode(trade);
             paymentMethod = contract.getQuoteSidePaymentMethodSpec().getShortDisplayString();
-            myRole = BisqEasyTradeFormatter.getMyRole(trade);
+            myRole = BisqEasyTradeFormatter.getMakerTakerRole(trade);
             reputationScore = reputationService.getReputationScore(peersUserProfile);
         }
     }
