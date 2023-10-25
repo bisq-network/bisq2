@@ -66,7 +66,6 @@
     -bisq-white-bright: #FAFAFA;
 
     /* Greys */
-    -bisq-grey-dimmed-old: -bisq-grey-medium;
     -bisq-grey-disabled: -bisq-grey-dimmed;
     -bisq-darkgrey-light: -bisq-grey-dark-bright;
 
@@ -125,7 +124,7 @@
     -bisq-green-pressed: derive(-fx-default-button, -5%);
 
     -fx-dark-text-color: -bisq-black;
-    -fx-mid-text-color: -bisq-grey-dimmed-old;
+    -fx-mid-text-color: -bisq-grey-medium;
     -fx-light-text-color: -bisq-white;
 
     -bisq-error: -bisq-red;

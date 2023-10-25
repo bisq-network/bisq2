@@ -84,7 +84,7 @@ public class MaterialTextField extends Pane {
         bg.getStyleClass().add("material-text-field-bg");
 
         line.setPrefHeight(1);
-        line.setStyle("-fx-background-color: -bisq-grey-dimmed-old");
+        line.setStyle("-fx-background-color: -bisq-grey-medium");
         line.setMouseTransparent(true);
 
         selectionLine.setPrefWidth(0);
