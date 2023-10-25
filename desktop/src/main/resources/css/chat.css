@@ -60,15 +60,15 @@
 }
 
 #chat-user-profile-bg {
-    -fx-background-color: -bisq-grey-19;
+    -fx-background-color: -bisq-grey-dark-medium;
     -fx-background-insets: 1 20 1 9;
     -fx-background-radius: 8;
 }
 
 #chat-input-field {
-    -fx-background-color: -bisq-grey-19;
+    -fx-background-color: -bisq-grey-dark-medium;
     -fx-background-radius: 8;
-    -fx-border-color: -bisq-grey-19;
+    -fx-border-color: -bisq-grey-dark-medium;
     -fx-border-width: 1;
     -fx-border-radius: 8;
     -fx-faint-focus-color: transparent;

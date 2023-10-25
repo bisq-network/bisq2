@@ -246,7 +246,7 @@
 }
 
 .table-view .table-row-cell:selected .table-cell {
-    -fx-background-color: -bisq-grey-19;
+    -fx-background-color: -bisq-grey-dark-medium;
 }
 
 /* Custom style used in selection column for vertical green bar */
