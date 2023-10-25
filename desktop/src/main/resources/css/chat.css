@@ -15,7 +15,7 @@
 
 .channel-large-thin-headline {
     -fx-font-size: 1.692em;
-    -fx-text-fill: -bisq-grey-5;
+    -fx-text-fill: -bisq-grey-dark-bright;
 }
 
 .market-fiat-label {
@@ -143,7 +143,7 @@
 }
 
 .chat-message-bg-peer-message {
-    -fx-background-color: -bisq-grey-5;
+    -fx-background-color: -bisq-grey-dark-bright;
     -fx-background-radius: 8;
 }
 
@@ -174,7 +174,7 @@
 }
 
 #button-inactive {
-    -fx-background-color: -bisq-grey-5;
+    -fx-background-color: -bisq-grey-dark-bright;
     -fx-text-fill: -fx-light-text-color;
     -fx-background-insets: 0;
 }
@@ -215,7 +215,7 @@
 }
 
 #chat-message-reactions-separator {
-    -fx-text-fill: -bisq-grey-5;
+    -fx-text-fill: -bisq-grey-dark-bright;
 }
 
 

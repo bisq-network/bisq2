@@ -101,7 +101,7 @@
  ******************************************************************************/
 
 .bg-grey-5 {
-    -fx-background-color: -bisq-grey-5;
+    -fx-background-color: -bisq-grey-dark-bright;
 }
 
 .popup-bg {
@@ -242,7 +242,7 @@
 }
 
 .table-view .table-row-cell:hover .table-cell {
-    -fx-background-color: -bisq-grey-5;
+    -fx-background-color: -bisq-grey-dark-bright;
 }
 
 .table-view .table-row-cell:selected .table-cell {
@@ -456,12 +456,12 @@
 
 .scroll-bar:horizontal .thumb:hover,
 .scroll-bar:vertical .thumb:hover {
-    -fx-background-color: -bisq-grey-5;
+    -fx-background-color: -bisq-grey-dark-bright;
 }
 
 .scroll-bar:horizontal .thumb:pressed,
 .scroll-bar:vertical .thumb:pressed {
-    -fx-background-color: -bisq-grey-5;
+    -fx-background-color: -bisq-grey-dark-bright;
 }
 
 .scroll-bar:vertical:focused,
@@ -558,7 +558,7 @@
 }
 
 #chat-message-quote-box-my-msg {
-    -fx-background-color: -bisq-grey-5;
+    -fx-background-color: -bisq-grey-dark-bright;
     -fx-background-radius: 0 8 8 0;
     -fx-border-radius: 0;
     -fx-border-width: 0 0 0 3;

@@ -237,7 +237,7 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
                         int size = 20;
                         roboIcon.setFitWidth(size);
                         roboIcon.setFitHeight(size);
-                        StackPane roboIconWithRing = ImageUtil.addRingToNode(roboIcon, size, 1.5, "-bisq-grey-5");
+                        StackPane roboIconWithRing = ImageUtil.addRingToNode(roboIcon, size, 1.5, "-bisq-grey-dark-bright");
                         hBox = new HBox(10, roboIconWithRing, userName);
                         hBox.setAlignment(Pos.CENTER_LEFT);
                     }
