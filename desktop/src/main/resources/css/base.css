@@ -48,39 +48,56 @@
     -bisq-warning: #d0831f;
     -bisq-yellow: #e5a500;
 
+    /* Bisq Grey Palette */
+    -bisq-black-dimmed: #050505;
+    -bisq-black-medium: #0D0D0D;
+    -bisq-black-bright: #151515;
+    -bisq-grey-dark-dimmed: #1E1E1E;
+    -bisq-grey-dark-medium: #2B2B2B;
+    -bisq-grey-dark-bright: #383838;
+    -bisq-grey-dimmed: #4D4D4D;
+    -bisq-grey-medium: #808080;
+    -bisq-grey-bright: #B2B2B2;
+    -bisq-grey-light-dimmed: #C7C7C7;
+    -bisq-grey-light-medium: #D4D4D4;
+    -bisq-grey-light-bright: #E1E1E1;
+    -bisq-white-dimmed: #EAEAEA;
+    -bisq-white-medium: #F2F2F2;
+    -bisq-white-bright: #FAFAFA;
+
     /* Greys */
-    -bisq-grey-dimmed-old: #828282;
-    -bisq-grey-disabled: #4D4D4D;
-    -bisq-darkgrey-light: #3d3d3d;
+    -bisq-grey-dimmed-old: -bisq-grey-medium;
+    -bisq-grey-disabled: -bisq-grey-dimmed;
+    -bisq-darkgrey-light: -bisq-grey-dark-bright;
 
-    -bisq-grey-2: #1D1D1D;
-    -bisq-grey-3: #212121;
-    -bisq-grey-4: #262626;
-    -bisq-grey-5: #333333;
-    -bisq-grey-6: #474748;
-    -bisq-grey-8: #545454;
-    -bisq-grey-10: #a9a9a9;
-    -bisq-grey-11: #C9C9C9;
-    -bisq-grey-12: #2E2E2E;
-    -bisq-grey-13: #6A6A6A;
-    -bisq-grey-14: #474747;
-    -bisq-grey-15: #292929;
-    -bisq-grey-16: #393939;
-    -bisq-grey-17: #2f2f2f;
-    -bisq-grey-18: #151515;
-    -bisq-grey-19: #282828;
-    -bisq-grey-20: #454545;
-    -bisq-grey-21: #343434;
-    -bisq-grey-22: #707070;
-    -bisq-grey-23: #1e1e1e;
-    -bisq-grey-24: #2c2c2c;
-    -bisq-grey-25: #313131;
+    -bisq-grey-2: -bisq-grey-dark-dimmed;
+    -bisq-grey-3: -bisq-grey-dark-dimmed;
+    -bisq-grey-4: -bisq-grey-dark-medium;
+    -bisq-grey-5: -bisq-grey-dark-bright;
+    -bisq-grey-6: -bisq-grey-dimmed;
+    -bisq-grey-8: -bisq-grey-dimmed;
+    -bisq-grey-10: -bisq-grey-bright;
+    -bisq-grey-11: -bisq-grey-light-dimmed;
+    -bisq-grey-12: -bisq-grey-dark-medium;
+    -bisq-grey-13: -bisq-grey-medium;
+    -bisq-grey-14: -bisq-grey-dimmed;
+    -bisq-grey-15: -bisq-grey-dark-medium;
+    -bisq-grey-16: -bisq-grey-dark-bright;
+    -bisq-grey-17: -bisq-grey-dark-medium;
+    -bisq-grey-18: -bisq-black-bright;
+    -bisq-grey-19: -bisq-grey-dark-medium;
+    -bisq-grey-20: -bisq-grey-dimmed;
+    -bisq-grey-21: -bisq-grey-dark-bright;
+    -bisq-grey-22: -bisq-grey-medium;
+    -bisq-grey-23: -bisq-grey-dark-dimmed;
+    -bisq-grey-24: -bisq-grey-dark-medium;
+    -bisq-grey-25: -bisq-grey-dark-bright;
 
-    -bisq-white: #fafafa;
-    -bisq-white-dimmed-old: #f0f0f0;
-    -bisq-black: #000000;
-    -bisq-black-light: #0f0f0f;
-    -bisq-table-base: #1D1D1D;
+    -bisq-white: -bisq-white-bright;
+    -bisq-white-dimmed-old: -bisq-white-medium;
+    -bisq-black: -bisq-black-dimmed;
+    -bisq-black-light: -bisq-black-medium;
+    -bisq-table-base: -bisq-grey-dark-dimmed;
 
     /* Background colors */
     -bisq-darker-grey: -bisq-grey-2;
