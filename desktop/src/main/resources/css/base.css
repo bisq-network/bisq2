@@ -66,7 +66,6 @@
     -bisq-white-bright: #FAFAFA;
 
     /* Greys */
-    -bisq-grey-3: -bisq-grey-dark-dimmed;
     -bisq-grey-4: -bisq-grey-dark-medium;
     -bisq-grey-5: -bisq-grey-dark-bright;
     -bisq-grey-6: -bisq-grey-dimmed;
@@ -96,7 +95,7 @@
 
     /* Background colors */
     -bisq-darker-grey: -bisq-grey-dark-dimmed;
-    -bisq-dark-grey: -bisq-grey-3;
+    -bisq-dark-grey: -bisq-grey-dark-dimmed;
     -bisq-content-bg-grey: -bisq-grey-4;
     -bisq-popup-bg-grey: -bisq-grey-15;
 

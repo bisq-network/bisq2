@@ -3,7 +3,7 @@
  ******************************************************************************/
 
 .bisq-easy-container {
-    -fx-background-color: -bisq-grey-3;
+    -fx-background-color: -bisq-grey-dark-dimmed;
     -fx-background-radius: 8;
 }
 

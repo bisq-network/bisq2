@@ -107,7 +107,7 @@
 }
 
 .dark-grey-button:hover {
-    -fx-background-color: -bisq-grey-3;
+    -fx-background-color: -bisq-grey-dark-dimmed;
     -fx-text-fill: rgba(255, 255, 255, 0.9);
     -fx-effect: none;
 }
@@ -878,7 +878,7 @@
 }
 
 .search-box-active {
-    -fx-background-color: -bisq-grey-3;
+    -fx-background-color: -bisq-grey-dark-dimmed;
 }
 
 .search-text-field {
