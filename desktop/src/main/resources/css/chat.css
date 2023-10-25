@@ -96,7 +96,7 @@
 }
 
 #chat-messages-send-button {
-    -fx-background-color: -bisq-white;
+    -fx-background-color: -bisq-white-bright;
     -fx-background-radius: 8;
     -fx-text-fill: -bisq-green;
 }

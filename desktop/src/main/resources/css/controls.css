@@ -77,7 +77,7 @@
 
 
 .white-button {
-    -fx-background-color: -bisq-white;
+    -fx-background-color: -bisq-white-bright;
     -fx-fill: -bisq-black !important;
     -fx-text-fill: -bisq-black !important;
 }
@@ -102,8 +102,8 @@
 .dark-grey-button {
     -fx-background-color: -bisq-grey-dark-medium;
     -fx-border-color: transparent;
-    -fx-fill: -bisq-white;
-    -fx-text-fill: -bisq-white;
+    -fx-fill: -bisq-white-bright;
+    -fx-text-fill: -bisq-white-bright;
 }
 
 .dark-grey-button:hover {
@@ -206,8 +206,8 @@
 
 .white-transparent-outlined-button {
     -fx-background-color: transparent;
-    -fx-border-color: -bisq-white;
-    -fx-text-fill: -bisq-white;
+    -fx-border-color: -bisq-white-bright;
+    -fx-text-fill: -bisq-white-bright;
 }
 
 .white-transparent-outlined-button:hover {
@@ -467,7 +467,7 @@
     -fx-background-insets: 0px;
     -fx-padding: 2px;
     -bisq-toggle-color: -fx-default-button;
-    -bisq-un-toggle-color: -bisq-white;
+    -bisq-un-toggle-color: -bisq-white-bright;
     -bisq-toggle-line-color: derive(-bisq-toggle-color, 65%);
     -bisq-un-toggle-line-color: -bisq-grey-medium;
     -bisq-size: 8;
@@ -550,17 +550,17 @@
 
 .card-button-border {
     -fx-background-color: transparent;
-    -fx-border-color: derive(-bisq-white, -25%);
+    -fx-border-color: derive(-bisq-white-bright, -25%);
 }
 
 .card-button-border:hover {
     -fx-background-color: rgba(0, 0, 0, 0.15);
-    -fx-border-color: derive(-bisq-white, -15%);
+    -fx-border-color: derive(-bisq-white-bright, -15%);
 }
 
 .card-button-border:pressed {
     -fx-background-color: rgba(0, 0, 0, 0.2);
-    -fx-border-color: derive(-bisq-white, -10%);
+    -fx-border-color: derive(-bisq-white-bright, -10%);
 }
 
 .card-button-border:default {
@@ -669,7 +669,7 @@
 
 .check-box:selected > .box > .mark,
 .check-box:indeterminate > .box > .mark {
-    -fx-background-color: -bisq-white;
+    -fx-background-color: -bisq-white-bright;
     -fx-background-insets: 1 0 -1 0, 0;
     -fx-border-color: transparent;
 }
@@ -859,7 +859,7 @@
 }
 
 .radio-button:selected .radio .dot {
-    -fx-background-color: -bisq-white;
+    -fx-background-color: -bisq-white-bright;
 }
 
 
