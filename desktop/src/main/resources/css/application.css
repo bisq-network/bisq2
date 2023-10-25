@@ -83,12 +83,12 @@
 
 .updater-release-notes .content {
     -fx-padding: 1.0em;
-    -fx-background-color: -bisq-grey-2;
+    -fx-background-color: -bisq-grey-dark-dimmed;
 }
 
 .updater-release-notes:focused .content {
     -fx-padding: 1.0em;
-    -fx-background-color: -bisq-grey-2;
+    -fx-background-color: -bisq-grey-dark-dimmed;
 }
 
 .updater-text {
@@ -99,7 +99,7 @@
 }
 
 .updater-table-view {
-    -fx-background-color: -bisq-grey-2;
+    -fx-background-color: -bisq-grey-dark-dimmed;
 }
 
 
@@ -112,7 +112,7 @@
 }
 
 .notification-pane-dark {
-    -fx-background-color: -bisq-grey-2;
+    -fx-background-color: -bisq-grey-dark-dimmed;
 }
 
 .notification-box {

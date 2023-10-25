@@ -113,7 +113,7 @@
 }
 
 .dark-grey-button:pressed {
-    -fx-background-color: -bisq-grey-2;
+    -fx-background-color: -bisq-grey-dark-dimmed;
     -fx-text-fill: rgba(255, 255, 255, 0.85);
     -fx-effect: none;
 }
@@ -517,7 +517,7 @@
  ******************************************************************************/
 
 .card-button {
-    -fx-background-color: derive(-bisq-grey-2, -20%);
+    -fx-background-color: derive(-bisq-grey-dark-dimmed, -20%);
     -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 1.55em;
     -fx-background-radius: 4;
@@ -525,11 +525,11 @@
 }
 
 .card-button:hover {
-    -fx-background-color: derive(-bisq-grey-2, -30%);
+    -fx-background-color: derive(-bisq-grey-dark-dimmed, -30%);
 }
 
 .card-button:pressed {
-    -fx-background-color: derive(-bisq-grey-2, -40%);
+    -fx-background-color: derive(-bisq-grey-dark-dimmed, -40%);
 }
 
 .card-button:default {
@@ -735,7 +735,7 @@
 
 .tooltip .dark-tooltip {
     -fx-text-fill: -bisq-grey-11;
-    -fx-background-color: -bisq-grey-2;
+    -fx-background-color: -bisq-grey-dark-dimmed;
     -fx-font-size: 0.85em;
 }
 
@@ -870,7 +870,7 @@
  ******************************************************************************/
 
 .search-box {
-    -fx-background-color: -bisq-grey-2;
+    -fx-background-color: -bisq-grey-dark-dimmed;
     -fx-background-radius: 6;
     -fx-border-color: transparent;
     -fx-border-width: 1;
