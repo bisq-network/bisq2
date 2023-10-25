@@ -467,7 +467,7 @@
 }
 
 .bisq-easy-trade-wizard-market.table-view .table-row-cell .table-cell {
-    -fx-background-color: -bisq-grey-24;
+    -fx-background-color: -bisq-grey-dark-medium;
 }
 
 .bisq-easy-trade-wizard-market.table-view .table-row-cell:hover .table-cell {
@@ -496,7 +496,7 @@
 }
 
 .bisq-easy-trade-wizard-select-offer.table-view .table-row-cell .table-cell {
-    -fx-background-color: -bisq-grey-24;
+    -fx-background-color: -bisq-grey-dark-medium;
 }
 
 .bisq-easy-trade-wizard-select-offer.table-view .table-row-cell:hover .table-cell {
@@ -508,15 +508,15 @@
 }
 
 .bisq-easy-trade-wizard-select-offer.table-view .table-row-cell:empty {
-    -fx-border-color: derive(-bisq-grey-24, -30%);
+    -fx-border-color: derive(-bisq-grey-dark-medium, -30%);
 }
 
 .bisq-easy-trade-wizard-select-offer.table-view .table-row-cell:empty .table-cell {
-    -fx-background-color: derive(-bisq-grey-24, -15%);
+    -fx-background-color: derive(-bisq-grey-dark-medium, -15%);
 }
 
 .bisq-easy-trade-wizard-select-offer.table-view .table-row-cell:empty:hover .table-cell {
-    -fx-background-color: derive(-bisq-grey-24, -15%);
+    -fx-background-color: derive(-bisq-grey-dark-medium, -15%);
 }
 
 .bisq-easy-trade-wizard-select-offer.table-view .table-row-cell:selected .button.white-button .text {
