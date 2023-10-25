@@ -98,6 +98,7 @@ public class TakeOfferView extends NavigationView<VBox, TakeOfferModel, TakeOffe
         takeOfferButton.setDefaultButton(true);
 
         backButton = new Button(Res.get("action.back"));
+        backButton.setFocusTraversable(false);
         HBox buttons = new HBox(10, backButton, nextButton, takeOfferButton);
         buttons.setAlignment(Pos.CENTER);
 
@@ -200,6 +201,7 @@ public class TakeOfferView extends NavigationView<VBox, TakeOfferModel, TakeOffe
         backButton.setOnAction(evt -> controller.onBack());
         closeButton.setOnAction(e -> controller.onClose());
         takeOfferButton.setOnAction(e -> controller.onTakeOffer());
+        root.setOnKeyPressed(controller::onKeyPressed);
 
         applyProgress(model.getCurrentIndex().get(), false);
     }
@@ -231,6 +233,7 @@ public class TakeOfferView extends NavigationView<VBox, TakeOfferModel, TakeOffe
         backButton.setOnAction(null);
         closeButton.setOnAction(null);
         takeOfferButton.setOnAction(null);
+        root.setOnKeyPressed(null);
     }
 
     private Region getHLine() {

@@ -78,15 +78,15 @@ public class AccountAgeView extends TabView<AccountAgeModel, AccountAgeControlle
 
     @Override
     protected void setupTopBox() {
-        headLine = new Label();
-        headLine.getStyleClass().add("bisq-text-17");
+        headline = new Label();
+        headline.getStyleClass().add("bisq-text-17");
 
         closeButton = BisqIconButton.createIconButton("close");
 
-        headLine.setText(Res.get("user.reputation.accountAge"));
+        headline.setText(Res.get("user.reputation.accountAge"));
 
-        HBox.setMargin(headLine, new Insets(0, 0, 0, -2));
-        HBox hBox = new HBox(headLine, Spacer.fillHBox(), closeButton);
+        HBox.setMargin(headline, new Insets(0, 0, 0, -2));
+        HBox hBox = new HBox(headline, Spacer.fillHBox(), closeButton);
 
         tabs.setFillHeight(true);
         tabs.setSpacing(46);

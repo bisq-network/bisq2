@@ -100,7 +100,7 @@ public class ReputationController implements Controller {
     }
 
     public void onShowDetails(ReputationView.ListItem item) {
-        new Popup().headLine(Res.get("user.reputation.table.columns.details.popup.headline"))
+        new Popup().headline(Res.get("user.reputation.table.columns.details.popup.headline"))
                 .content(new ReputationDetailsPopup(item.getUserProfile(), item.getReputationScore(), reputationService))
                 .width(1000)
                 .show();

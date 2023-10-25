@@ -58,6 +58,7 @@ public class PasswordView extends View<VBox, PasswordModel, PasswordController> 
         super(new VBox(20), model, controller);
 
         root.setAlignment(Pos.TOP_LEFT);
+        root.setPadding(new Insets(0, 40, 40, 40));
 
         headline = new Label();
         headline.getStyleClass().add("large-thin-headline");
@@ -77,8 +78,7 @@ public class PasswordView extends View<VBox, PasswordModel, PasswordController> 
 
         button = new Button();
         button.setDefaultButton(true);
-
-        root.setPadding(new Insets(0, 40, 40, 40));
+        VBox.setMargin(password, new Insets(0, 0, -10, 0));
         root.getChildren().setAll(headline, password, confirmedPassword, button);
     }
 

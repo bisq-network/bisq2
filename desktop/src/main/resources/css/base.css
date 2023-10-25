@@ -112,4 +112,11 @@
     -fx-light-text-color: -bisq-white;
 
     -bisq-error: -bisq-red;
+
+    -fx-text-background-color: ladder(
+                -fx-background,
+                -fx-light-text-color,
+                -fx-mid-text-color,
+                -fx-dark-text-color
+        );
 }

@@ -44,7 +44,7 @@ public class TradeWizardPaymentMethodView extends View<VBox, TradeWizardPaymentM
     private final MaterialTextField custom;
     private final ListChangeListener<FiatPaymentMethod> paymentMethodListener;
     private final FlowPane flowPane;
-    private final Label headLineLabel, nonFoundLabel;
+    private final Label headlineLabel, nonFoundLabel;
     private final BisqIconButton addButton;
     private Subscription addCustomMethodIconEnabledPin;
 
@@ -53,8 +53,8 @@ public class TradeWizardPaymentMethodView extends View<VBox, TradeWizardPaymentM
 
         root.setAlignment(Pos.TOP_CENTER);
 
-        headLineLabel = new Label();
-        headLineLabel.getStyleClass().add("bisq-text-headline-2");
+        headlineLabel = new Label();
+        headlineLabel.getStyleClass().add("bisq-text-headline-2");
 
         Label subtitleLabel = new Label(Res.get("bisqEasy.createOffer.paymentMethod.subTitle"));
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
@@ -82,9 +82,9 @@ public class TradeWizardPaymentMethodView extends View<VBox, TradeWizardPaymentM
         addButton.setAlignment(Pos.CENTER);
         custom.setMaxWidth(300);
 
-        VBox.setMargin(headLineLabel, new Insets(-10, 0, 0, 0));
+        VBox.setMargin(headlineLabel, new Insets(-10, 0, 0, 0));
         VBox.setMargin(flowPane, new Insets(20, 60, 25, 60));
-        root.getChildren().addAll(Spacer.fillVBox(), headLineLabel, subtitleLabel, nonFoundLabel, flowPane, custom, Spacer.fillVBox());
+        root.getChildren().addAll(Spacer.fillVBox(), headlineLabel, subtitleLabel, nonFoundLabel, flowPane, custom, Spacer.fillVBox());
 
         paymentMethodListener = c -> {
             c.next();
@@ -94,7 +94,7 @@ public class TradeWizardPaymentMethodView extends View<VBox, TradeWizardPaymentM
 
     @Override
     protected void onViewAttached() {
-        headLineLabel.setText(model.getHeadline());
+        headlineLabel.setText(model.getHeadline());
         custom.textProperty().bindBidirectional(model.getCustomFiatPaymentMethodName());
         nonFoundLabel.visibleProperty().bind(model.getIsPaymentMethodsEmpty());
         nonFoundLabel.managedProperty().bind(model.getIsPaymentMethodsEmpty());

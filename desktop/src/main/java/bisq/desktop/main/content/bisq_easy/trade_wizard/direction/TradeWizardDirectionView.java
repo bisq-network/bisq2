@@ -53,8 +53,8 @@ public class TradeWizardDirectionView extends View<StackPane, TradeWizardDirecti
         content = new VBox(10);
         content.setAlignment(Pos.TOP_CENTER);
 
-        Label headLineLabel = new Label(Res.get("bisqEasy.createOffer.direction.headline"));
-        headLineLabel.getStyleClass().add("bisq-text-headline-2");
+        Label headlineLabel = new Label(Res.get("bisqEasy.createOffer.direction.headline"));
+        headlineLabel.getStyleClass().add("bisq-text-headline-2");
 
         Label subtitleLabel = new Label(Res.get("bisqEasy.createOffer.direction.subTitle"));
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
@@ -75,9 +75,9 @@ public class TradeWizardDirectionView extends View<StackPane, TradeWizardDirecti
         HBox directionBox = new HBox(25, buyBox, sellBox);
         directionBox.setAlignment(Pos.CENTER);
 
-        VBox.setMargin(headLineLabel, new Insets(-20, 0, 0, 0));
+        VBox.setMargin(headlineLabel, new Insets(-20, 0, 0, 0));
         VBox.setMargin(directionBox, new Insets(10, 0, 0, 0));
-        content.getChildren().addAll(Spacer.fillVBox(), headLineLabel, subtitleLabel, directionBox, Spacer.fillVBox());
+        content.getChildren().addAll(Spacer.fillVBox(), headlineLabel, subtitleLabel, directionBox, Spacer.fillVBox());
 
         reputationInfo = new VBox(20);
         setupReputationInfo();
@@ -168,11 +168,11 @@ public class TradeWizardDirectionView extends View<StackPane, TradeWizardDirecti
         // We don't use setManaged as the transition would not work as expected if set to false
         reputationInfo.setVisible(false);
         reputationInfo.setAlignment(Pos.TOP_CENTER);
-        Label headLineLabel = new Label(Res.get("bisqEasy.createOffer.direction.feedback.headline"));
-        headLineLabel.getStyleClass().add("bisq-text-headline-2");
-        headLineLabel.setTextAlignment(TextAlignment.CENTER);
-        headLineLabel.setAlignment(Pos.CENTER);
-        headLineLabel.setMaxWidth(width - 60);
+        Label headlineLabel = new Label(Res.get("bisqEasy.createOffer.direction.feedback.headline"));
+        headlineLabel.getStyleClass().add("bisq-text-headline-2");
+        headlineLabel.setTextAlignment(TextAlignment.CENTER);
+        headlineLabel.setAlignment(Pos.CENTER);
+        headlineLabel.setMaxWidth(width - 60);
 
         Label subtitleLabel1 = new Label(Res.get("bisqEasy.createOffer.direction.feedback.subTitle1"));
         subtitleLabel1.setMaxWidth(width - 60);
@@ -193,7 +193,7 @@ public class TradeWizardDirectionView extends View<StackPane, TradeWizardDirecti
 
         VBox.setMargin(gainReputationButton, new Insets(10, 0, 20, 0));
         VBox.setMargin(buttons, new Insets(30, 0, 0, 0));
-        contentBox.getChildren().addAll(headLineLabel,
+        contentBox.getChildren().addAll(headlineLabel,
                 subtitleLabel1,
                 gainReputationButton,
                 subtitleLabel2,

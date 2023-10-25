@@ -39,7 +39,7 @@ public class CreateNewProfileStep2View extends View<VBox, CreateNewProfileStep2M
     private final MaterialTextArea terms;
     private final Button saveButton, cancelButton;
     private final Label nickName, nym;
-    protected final Label headLineLabel;
+    protected final Label headlineLabel;
 
     public CreateNewProfileStep2View(CreateNewProfileStep2Model model, CreateNewProfileStep2Controller controller) {
         super(new VBox(25), model, controller);
@@ -49,8 +49,8 @@ public class CreateNewProfileStep2View extends View<VBox, CreateNewProfileStep2M
         root.setPrefWidth(OverlayModel.WIDTH);
         root.setPrefHeight(OverlayModel.HEIGHT);
 
-        headLineLabel = new Label(Res.get("user.userProfile.new.step2.headline"));
-        headLineLabel.getStyleClass().add("bisq-text-headline-2");
+        headlineLabel = new Label(Res.get("user.userProfile.new.step2.headline"));
+        headlineLabel.getStyleClass().add("bisq-text-headline-2");
 
         Label subtitleLabel = new Label(Res.get("user.userProfile.new.step2.subTitle"));
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
@@ -100,10 +100,10 @@ public class CreateNewProfileStep2View extends View<VBox, CreateNewProfileStep2M
         HBox buttons = new HBox(20, cancelButton, saveButton);
         buttons.setAlignment(Pos.CENTER);
 
-        VBox.setMargin(headLineLabel, new Insets(40, 0, 0, 0));
+        VBox.setMargin(headlineLabel, new Insets(40, 0, 0, 0));
         VBox.setMargin(buttons, new Insets(40, 0, 0, 0));
         root.getChildren().addAll(
-                headLineLabel,
+                headlineLabel,
                 subtitleLabel,
                 centerHBox,
                 buttons

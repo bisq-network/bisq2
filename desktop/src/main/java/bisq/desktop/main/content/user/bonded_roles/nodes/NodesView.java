@@ -130,7 +130,7 @@ public class NodesView extends BondedRolesView<NodesModel, NodesController> {
                     tooltip.getStyleClass().add("dark-tooltip");
                     address.setTooltip(tooltip);
                     icon.setOnAction(e -> new Popup()
-                            .headLine(Res.get("user.bondedRoles.table.columns.node.address.popup.headline"))
+                            .headline(Res.get("user.bondedRoles.table.columns.node.address.popup.headline"))
                             .message(item.getAddressInfoJson())
                             .show());
                     setGraphic(hBox);

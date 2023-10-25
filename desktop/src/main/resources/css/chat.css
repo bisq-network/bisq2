@@ -333,3 +333,14 @@
 .chat-messages-list-view .list-cell:filled:hover {
     -fx-background-color: rgba(0, 0, 0, 0.15);
 }
+
+
+/*******************************************************************************
+ * Chat guide                                                              *
+ ******************************************************************************/
+
+.chat-guide-headline {
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 2.15em;
+}
+

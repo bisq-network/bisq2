@@ -50,8 +50,8 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
 
         root.setAlignment(Pos.TOP_CENTER);
 
-        Label headLine = new Label(Res.get("bisqEasy.price.headline"));
-        headLine.getStyleClass().add("bisq-text-headline-2");
+        Label headline = new Label(Res.get("bisqEasy.price.headline"));
+        headline.getStyleClass().add("bisq-text-headline-2");
 
         Label subtitleLabel = new Label(Res.get("bisqEasy.createOffer.price.subtitle"));
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
@@ -74,8 +74,8 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         HBox.setMargin(fieldsBox, new Insets(0, 0, 0, 44));
         HBox hBox = new HBox(10, fieldsBox, useFixPriceToggle);
         hBox.setAlignment(Pos.CENTER);
-        VBox.setMargin(headLine, new Insets(60, 0, 0, 0));
-        root.getChildren().addAll(headLine, subtitleLabel, hBox);
+        VBox.setMargin(headline, new Insets(60, 0, 0, 0));
+        root.getChildren().addAll(headline, subtitleLabel, hBox);
     }
 
     @Override

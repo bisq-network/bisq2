@@ -18,10 +18,11 @@
 package bisq.desktop.main.content;
 
 import bisq.desktop.common.threading.UIScheduler;
-import bisq.desktop.common.view.TabButton;
-import bisq.desktop.common.view.TabView;
+import bisq.desktop.common.view.*;
+import bisq.desktop.main.content.chat.ChatView;
 import bisq.desktop.main.notification.NotificationPanelView;
 import javafx.geometry.Insets;
+import javafx.scene.Parent;
 import javafx.scene.layout.VBox;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -70,5 +71,10 @@ public abstract class ContentTabView<M extends ContentTabModel, C extends Conten
     @Override
     protected double getSelectionMarkerX(TabButton selectedTabButton) {
         return super.getSelectionMarkerX(selectedTabButton) - SIDE_PADDING;
+    }
+
+    @Override
+    protected boolean useFitToHeight(View<? extends Parent, ? extends Model, ? extends Controller> childView) {
+        return childView instanceof ChatView;
     }
 }

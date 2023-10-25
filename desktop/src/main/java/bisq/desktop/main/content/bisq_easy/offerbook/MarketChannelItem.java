@@ -33,8 +33,7 @@ class MarketChannelItem {
         market = channel.getMarket();
     }
 
-    @Override
-    public String toString() {
+    public String getMarketString() {
         return market.toString();
     }
 }

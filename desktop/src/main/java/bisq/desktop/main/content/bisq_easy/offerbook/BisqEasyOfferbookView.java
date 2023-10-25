@@ -20,7 +20,6 @@ package bisq.desktop.main.content.bisq_easy.offerbook;
 import bisq.desktop.common.Icons;
 import bisq.desktop.common.Layout;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.controls.Badge;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.SearchBox;
@@ -265,35 +264,46 @@ public class BisqEasyOfferbookView extends ChatView {
                 .show();
     }
 
-    protected ListCell<MarketChannelItem> getMarketListCell() {
+    private ListCell<MarketChannelItem> getMarketListCell() {
         return new ListCell<>() {
-            final Label label = new Label();
-            final HBox hBox = new HBox();
-            final Badge badge = new Badge(hBox);
+            final Label market = new Label();
+            final Label numOffers = new Label();
+            final HBox hBox = new HBox(10, market, Spacer.fillHBox(), numOffers);
+            final Tooltip tooltip = new BisqTooltip();
 
             {
                 setCursor(Cursor.HAND);
                 setPrefHeight(40);
                 setPadding(new Insets(0, 0, -20, 0));
 
-                // FIXME tooltip not working yet
-                badge.setTooltip(Res.get("bisqEasy.offerbook.marketListCell.numOffers"));
-                badge.setPosition(Pos.CENTER_RIGHT);
-                badge.getStyleClass().add("num-offers-badge");
+                market.getStyleClass().add("market-selection");
 
-                hBox.setSpacing(10);
                 hBox.setAlignment(Pos.CENTER_LEFT);
-                hBox.getChildren().addAll(label, Spacer.fillHBox());
+                hBox.setPadding(new Insets(0, 10, 0, -5));
+                Tooltip.install(hBox, tooltip);
             }
 
             @Override
             protected void updateItem(MarketChannelItem item, boolean empty) {
                 super.updateItem(item, empty);
                 if (item != null && !empty) {
-                    label.setText(item.toString());
+                    market.setText(item.getMarketString());
                     int numMessages = bisqEasyOfferbookController.getNumMessages(item.getMarket());
-                    badge.setText(numMessages > 0 ? String.valueOf(numMessages) : "");
-                    setGraphic(badge);
+                    numOffers.setText(numMessages > 0 ?
+                            numMessages > 1 ?
+                                    Res.get("bisqEasy.offerbook.marketListCell.numOffers.many", numMessages) :
+                                    Res.get("bisqEasy.offerbook.marketListCell.numOffers.one", numMessages) :
+                            "");
+                    String quoteCurrencyName = item.getMarket().getQuoteCurrencyName();
+                    tooltip.setText(numMessages > 0 ?
+                            numMessages > 1 ?
+                                    Res.get("bisqEasy.offerbook.marketListCell.numOffers.tooltip.many",
+                                            numMessages, quoteCurrencyName) :
+                                    Res.get("bisqEasy.offerbook.marketListCell.numOffers.tooltip.one",
+                                            numMessages, quoteCurrencyName) :
+                            Res.get("bisqEasy.offerbook.marketListCell.numOffers.tooltip.none",
+                                    quoteCurrencyName));
+                    setGraphic(hBox);
                 } else {
                     setGraphic(null);
                 }

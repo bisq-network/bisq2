@@ -159,8 +159,8 @@ public abstract class Overlay<T extends Overlay<T>> {
 
     protected boolean useAnimation = true;
 
-    protected Label headlineIcon, headLineLabel, messageLabel;
-    protected String headLine, message, closeButtonText, actionButtonText,
+    protected Label headlineIcon, headlineLabel, messageLabel;
+    protected String headline, message, closeButtonText, actionButtonText,
             secondaryActionButtonText, dontShowAgainId, dontShowAgainText,
             truncatedMessage;
     private List<String> messageHyperlinks;
@@ -298,39 +298,39 @@ public abstract class Overlay<T extends Overlay<T>> {
         return cast();
     }
 
-    public T headLine(String headLine) {
-        this.headLine = headLine;
+    public T headline(String headline) {
+        this.headline = headline;
         return cast();
     }
 
     public T instruction(String message) {
         type = Type.INSTRUCTION;
-        if (headLine == null)
-            this.headLine = Res.get("popup.headline.instruction");
+        if (headline == null)
+            this.headline = Res.get("popup.headline.instruction");
         processMessage(message);
         return cast();
     }
 
     public T attention(String message) {
         type = Type.ATTENTION;
-        if (headLine == null)
-            this.headLine = Res.get("popup.headline.attention");
+        if (headline == null)
+            this.headline = Res.get("popup.headline.attention");
         processMessage(message);
         return cast();
     }
 
     public T backgroundInfo(String message) {
         type = Type.BACKGROUND_INFO;
-        if (headLine == null)
-            this.headLine = Res.get("popup.headline.backgroundInfo");
+        if (headline == null)
+            this.headline = Res.get("popup.headline.backgroundInfo");
         processMessage(message);
         return cast();
     }
 
     public T feedback(String message) {
         type = Type.FEEDBACK;
-        if (headLine == null)
-            this.headLine = Res.get("popup.headline.feedback");
+        if (headline == null)
+            this.headline = Res.get("popup.headline.feedback");
         processMessage(message);
         return cast();
     }
@@ -362,16 +362,16 @@ public abstract class Overlay<T extends Overlay<T>> {
 
     public T confirmation(String message) {
         type = Type.CONFIRMATION;
-        if (headLine == null)
-            this.headLine = Res.get("popup.headline.confirmation");
+        if (headline == null)
+            this.headline = Res.get("popup.headline.confirmation");
         processMessage(message);
         return cast();
     }
 
     public T information(String message) {
         type = Type.INFORMATION;
-        if (headLine == null)
-            this.headLine = Res.get("popup.headline.information");
+        if (headline == null)
+            this.headline = Res.get("popup.headline.information");
         processMessage(message);
         return cast();
     }
@@ -379,8 +379,8 @@ public abstract class Overlay<T extends Overlay<T>> {
     public T warning(String message) {
         type = Type.WARNING;
 
-        if (headLine == null)
-            this.headLine = Res.get("popup.headline.warning");
+        if (headline == null)
+            this.headline = Res.get("popup.headline.warning");
         processMessage(message);
         return cast();
     }
@@ -388,8 +388,8 @@ public abstract class Overlay<T extends Overlay<T>> {
     public T invalid(String message) {
         type = Type.INVALID;
 
-        if (headLine == null)
-            this.headLine = Res.get("popup.headline.invalid");
+        if (headline == null)
+            this.headline = Res.get("popup.headline.invalid");
         processMessage(message);
         return cast();
     }
@@ -402,8 +402,8 @@ public abstract class Overlay<T extends Overlay<T>> {
         type = Type.ERROR;
         showReportErrorButtons();
         width = 1100;
-        if (headLine == null)
-            this.headLine = Res.get("popup.headline.error");
+        if (headline == null)
+            this.headline = Res.get("popup.headline.error");
         processMessage(message);
         return cast();
     }
@@ -793,10 +793,10 @@ public abstract class Overlay<T extends Overlay<T>> {
         Region rootContainer = getRootContainer();
         rootContainer.getStyleClass().add("overlay-bg");
 
-        if (headLineLabel != null) {
+        if (headlineLabel != null) {
             headlineIcon.setManaged(true);
             headlineIcon.setVisible(true);
-            headLineLabel.getStyleClass().add("overlay-headline");
+            headlineLabel.getStyleClass().add("overlay-headline");
             switch (type) {
                 case INFORMATION:
                 case BACKGROUND_INFO:
@@ -806,18 +806,18 @@ public abstract class Overlay<T extends Overlay<T>> {
                 case NOTIFICATION:
                 case ATTENTION:
                     Icons.getIconForLabel(AwesomeIcon.INFO_SIGN, headlineIcon, "1.8em");
-                    headLineLabel.getStyleClass().add("overlay-headline-information");
+                    headlineLabel.getStyleClass().add("overlay-headline-information");
                     headlineIcon.getStyleClass().add("overlay-icon-information");
                     break;
                 case WARNING:
                 case INVALID:
                     Icons.getIconForLabel(AwesomeIcon.WARNING_SIGN, headlineIcon, "1.5em");
-                    headLineLabel.getStyleClass().add("overlay-headline-warning");
+                    headlineLabel.getStyleClass().add("overlay-headline-warning");
                     headlineIcon.getStyleClass().add("overlay-icon-warning");
                     break;
                 case ERROR:
                     Icons.getIconForLabel(AwesomeIcon.EXCLAMATION_SIGN, headlineIcon, "1.5em");
-                    headLineLabel.getStyleClass().add("overlay-headline-error");
+                    headlineLabel.getStyleClass().add("overlay-headline-error");
                     headlineIcon.getStyleClass().add("overlay-icon-error");
                     break;
             }
@@ -834,21 +834,21 @@ public abstract class Overlay<T extends Overlay<T>> {
     }
 
     protected void addHeadLine() {
-        if (headLine != null) {
+        if (headline != null) {
             HBox hBox = new HBox();
             hBox.setSpacing(7);
-            headLineLabel = new Label(headLine);
+            headlineLabel = new Label(headline);
             headlineIcon = new Label();
             headlineIcon.setManaged(false);
             headlineIcon.setVisible(false);
             headlineIcon.setAlignment(Pos.CENTER);
             headlineIcon.setPadding(new Insets(-2, 5, 0, 0));
-            headLineLabel.setMouseTransparent(true);
+            headlineLabel.setMouseTransparent(true);
 
             if (headlineStyle != null)
-                headLineLabel.setStyle(headlineStyle);
+                headlineLabel.setStyle(headlineStyle);
 
-            hBox.getChildren().addAll(headlineIcon, headLineLabel);
+            hBox.getChildren().addAll(headlineIcon, headlineLabel);
             hBox.setAlignment(Pos.CENTER_LEFT);
 
             GridPane.setHalignment(hBox, HPos.LEFT);
@@ -1052,7 +1052,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     @Override
     public String toString() {
         return "Popup{" +
-                "headLine='" + headLine + '\'' +
+                "headline='" + headline + '\'' +
                 ", message='" + message + '\'' +
                 '}';
     }

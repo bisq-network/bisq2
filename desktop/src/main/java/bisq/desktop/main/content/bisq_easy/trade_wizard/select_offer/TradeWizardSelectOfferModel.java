@@ -38,6 +38,7 @@ import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -49,7 +50,7 @@ class TradeWizardSelectOfferModel implements Model {
     @Setter
     private Market market;
     @Setter
-    private List<FiatPaymentMethod> fiatPaymentMethods;
+    private List<FiatPaymentMethod> fiatPaymentMethods = new ArrayList<>();
     @Setter
     private PriceSpec priceSpec = new MarketPriceSpec();
     @Setter
@@ -65,7 +66,7 @@ class TradeWizardSelectOfferModel implements Model {
     @Setter
     private String myOfferText;
     @Setter
-    private String headLine;
+    private String headline;
     @Setter
     private String subHeadLine;
     @Setter
@@ -89,7 +90,7 @@ class TradeWizardSelectOfferModel implements Model {
         myOfferMessage = null;
         quoteAmountAsString = null;
         myOfferText = null;
-        headLine = null;
+        headline = null;
         subHeadLine = null;
         selectedItem = null;
         showOffers.set(false);

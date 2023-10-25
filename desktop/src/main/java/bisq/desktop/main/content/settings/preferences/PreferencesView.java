@@ -90,12 +90,12 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         int rowIndex = 0;
 
         Label selectSupportedLanguageHeadline = new Label(Res.get("settings.preferences.language.supported.subHeadLine"));
-        selectSupportedLanguageHeadline.getStyleClass().add("settings-sub-headLine");
+        selectSupportedLanguageHeadline.getStyleClass().add("settings-sub-headline");
         supportedLanguageGridPane.add(selectSupportedLanguageHeadline, 0, rowIndex);
 
         supportedLanguagesComboBox = new AutoCompleteComboBox<>(model.getSupportedLanguageCodeFilteredList(),
                 Res.get("settings.preferences.language.supported.select"));
-        supportedLanguagesComboBox.setMinWidth(330);
+        supportedLanguagesComboBox.setMinWidth(150);
         supportedLanguagesComboBox.setMaxWidth(Double.MAX_VALUE); // Needed to force scale to available space
         supportedLanguagesComboBox.setConverter(new StringConverter<>() {
             @Override
@@ -121,13 +121,13 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         supportedLanguageGridPane.add(hBox, 0, ++rowIndex);
 
         Label supportedLanguageListViewSubHeadline = new Label(Res.get("settings.preferences.language.supported.list.subHeadLine"));
-        supportedLanguageListViewSubHeadline.getStyleClass().add("settings-sub-headLine");
+        supportedLanguageListViewSubHeadline.getStyleClass().add("settings-sub-headline");
         rowIndex = 0;
         supportedLanguageGridPane.add(supportedLanguageListViewSubHeadline, 1, rowIndex);
 
         ListView<String> supportedLanguageListView = new ListView<>(model.getSelectedSupportedLanguageCodes());
         supportedLanguageListView.setCellFactory(getSupportedLanguageCellFactory(controller));
-        supportedLanguageListView.setMinWidth(300);
+        supportedLanguageListView.setMinWidth(150);
         supportedLanguageGridPane.setMaxHeight(150);
         supportedLanguageGridPane.add(supportedLanguageListView, 1, ++rowIndex);
 

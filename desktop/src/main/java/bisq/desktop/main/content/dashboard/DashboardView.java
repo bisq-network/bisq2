@@ -84,9 +84,10 @@ public class DashboardView extends View<ScrollPane, DashboardModel, DashboardCon
         gridPane.add(firstBox, 0, 1, 2, 1);
 
         //Third row
-        Insets gridPaneInsets = new Insets(0, 0, -20, 0);
+        Insets gridPaneInsets = new Insets(0, 0, -7.5, 0);
         GridPane subGridPane = GridPaneUtil.getTwoColumnsGridPane(PADDING, 15, gridPaneInsets);
-        this.gridPane.add(subGridPane, 0, 2, 2, 1);
+
+        gridPane.add(subGridPane, 0, 2, 2, 1);
 
         String groupPaneStyleClass = "bisq-box-1";
         String headlineLabelStyleClass = "bisq-text-headline-2";
@@ -135,7 +136,7 @@ public class DashboardView extends View<ScrollPane, DashboardModel, DashboardCon
 
         root.setFitToWidth(true);
         root.setFitToHeight(true);
-        root.setContent(this.gridPane);
+        root.setContent(gridPane);
     }
 
     @Override

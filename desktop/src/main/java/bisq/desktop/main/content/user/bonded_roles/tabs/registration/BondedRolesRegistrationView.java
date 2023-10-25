@@ -17,6 +17,8 @@
 
 package bisq.desktop.main.content.user.bonded_roles.tabs.registration;
 
+import bisq.desktop.common.threading.UIScheduler;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTooltip;
@@ -35,6 +37,8 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -44,10 +48,11 @@ public abstract class BondedRolesRegistrationView<M extends BondedRolesRegistrat
     protected final Hyperlink learnMore;
     protected final MaterialTextField bondHolderName, profileId, signature;
     protected final Button requestRegistrationButton, requestCancellationButton;
-    protected final Label aboutHeadline, howHeadline, aboutInfo;
+    protected final Label aboutHeadline, howHeadline;
     protected final HBox headerHBox, buttons;
     protected final OrderedList howInfo;
     private final Hyperlink showInfo, hideInfo;
+    private final Text aboutInfo;
     protected Subscription isCollapsedPin;
 
     public BondedRolesRegistrationView(M model,
@@ -65,15 +70,15 @@ public abstract class BondedRolesRegistrationView<M extends BondedRolesRegistrat
         showInfo = new Hyperlink(Res.get("user.bondedRoles.registration.showInfo"));
         hideInfo = new Hyperlink(Res.get("user.bondedRoles.registration.hideInfo"));
 
-        HBox.setMargin(aboutHeadline, new Insets(2.5, 0, 0, -2));
         headerHBox = new HBox(aboutHeadline, Spacer.fillHBox(), hideInfo, showInfo);
+        aboutHeadline.setAlignment(Pos.TOP_LEFT);
         headerHBox.setCursor(Cursor.HAND);
         BisqTooltip tooltip = new BisqTooltip(Res.get("action.expandOrCollapse"));
         tooltip.setStyle("-fx-show-delay: 500ms;");
         Tooltip.install(headerHBox, tooltip);
 
-        aboutInfo = new Label(Res.get(bondedRoleType + ".about.info"));
-        aboutInfo.setWrapText(true);
+        aboutInfo = new Text(Res.get(bondedRoleType + ".about.info"));
+        TextFlow aboutInfoTextFlow = new TextFlow(aboutInfo);
         aboutInfo.getStyleClass().add("user-bonded-roles-info-text");
 
 
@@ -109,13 +114,12 @@ public abstract class BondedRolesRegistrationView<M extends BondedRolesRegistrat
         buttons = new HBox(20, requestRegistrationButton, requestCancellationButton, Spacer.fillHBox(), learnMore);
         buttons.setAlignment(Pos.BOTTOM_RIGHT);
 
-        VBox.setMargin(headerHBox, new Insets(10, 0, 0, 0));
         VBox.setMargin(howHeadline, new Insets(20, 0, 0, 0));
         VBox.setMargin(registerHeadline, new Insets(20, 0, 0, 0));
         VBox.setMargin(buttons, new Insets(10, 0, 0, 0));
         VBox.setVgrow(aboutInfo, Priority.ALWAYS);
         VBox.setVgrow(howHeadline, Priority.ALWAYS);
-        root.getChildren().addAll(headerHBox, aboutInfo,
+        root.getChildren().addAll(headerHBox, aboutInfoTextFlow,
                 howHeadline, howInfo,
                 registerHeadline, materialUserProfileSelection, profileId, bondHolderName, signature,
                 buttons);
@@ -139,7 +143,7 @@ public abstract class BondedRolesRegistrationView<M extends BondedRolesRegistrat
         headerHBox.setOnMouseClicked(e -> controller.onHeaderClicked());
         isCollapsedPin = EasyBind.subscribe(model.getIsCollapsed(),
                 isCollapsed -> {
-                    VBox.setMargin(headerHBox, new Insets(0, 0, isCollapsed ? -50 : 0, 0));
+                    VBox.setMargin(headerHBox, new Insets(20, 0, isCollapsed ? -50 : 0, 0));
                     aboutHeadline.setVisible(!isCollapsed);
                     aboutInfo.setVisible(!isCollapsed);
                     howHeadline.setVisible(!isCollapsed);
@@ -153,6 +157,11 @@ public abstract class BondedRolesRegistrationView<M extends BondedRolesRegistrat
                     howInfo.setManaged(!isCollapsed);
                     hideInfo.setManaged(!isCollapsed);
                     showInfo.setManaged(isCollapsed);
+
+                    // Hack to get the height of the scrollPane viewpoint updated.
+                    root.requestLayout();
+                    UIThread.runOnNextRenderFrame(root::requestLayout);
+                    UIScheduler.run(root::requestFocus).after(100);
                 });
 
     }

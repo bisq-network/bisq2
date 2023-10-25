@@ -19,11 +19,8 @@ package bisq.desktop.main.content.bisq_easy.trade_wizard;
 
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.InitWithDataController;
-import bisq.desktop.common.view.Navigation;
-import bisq.desktop.common.view.NavigationController;
-import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.common.utils.KeyHandlerUtil;
+import bisq.desktop.common.view.*;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.amount.TradeWizardAmountController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.direction.TradeWizardDirectionController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.market.TradeWizardMarketController;
@@ -35,6 +32,7 @@ import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
 import javafx.collections.ListChangeListener;
+import javafx.scene.input.KeyEvent;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -59,6 +57,7 @@ public class TradeWizardController extends NavigationController implements InitW
     }
 
     private final ServiceProvider serviceProvider;
+    private final OverlayController overlayController;
     @Getter
     private final TradeWizardModel model;
     @Getter
@@ -80,6 +79,7 @@ public class TradeWizardController extends NavigationController implements InitW
         super(NavigationTarget.TRADE_WIZARD);
 
         this.serviceProvider = serviceProvider;
+        overlayController = OverlayController.getInstance();
 
         model = new TradeWizardModel();
         view = new TradeWizardView(model, this);
@@ -115,6 +115,10 @@ public class TradeWizardController extends NavigationController implements InitW
 
     @Override
     public void onActivate() {
+        overlayController.setUseEscapeKeyHandler(false);
+        overlayController.setEnterKeyHandler(null);
+        overlayController.getApplicationRoot().setOnKeyPressed(this::onKeyPressed);
+
         model.getNextButtonDisabled().set(false);
         model.getChildTargets().clear();
         model.getChildTargets().addAll(List.of(
@@ -172,6 +176,8 @@ public class TradeWizardController extends NavigationController implements InitW
 
     @Override
     public void onDeactivate() {
+        overlayController.setUseEscapeKeyHandler(true);
+
         directionPin.unsubscribe();
         marketPin.unsubscribe();
         amountSpecPin.unsubscribe();
@@ -278,12 +284,17 @@ public class TradeWizardController extends NavigationController implements InitW
         }
     }
 
+    void onKeyPressed(KeyEvent keyEvent) {
+        KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onClose);
+        KeyHandlerUtil.handleEnterKeyEvent(keyEvent, this::onNext);
+    }
+
     private boolean isPaymentMethodsScreen() {
         return model.getSelectedChildTarget().get() == NavigationTarget.TRADE_WIZARD_PAYMENT_METHOD;
     }
 
     private boolean validatePaymentMethods() {
-        if(tradeWizardPaymentMethodController.getCustomFiatPaymentMethodNameNotEmpty()) {
+        if (tradeWizardPaymentMethodController.getCustomFiatPaymentMethodNameNotEmpty()) {
             tradeWizardPaymentMethodController.tryAddCustomPaymentMethodAndNavigateNext();
             return true;
         }

@@ -125,6 +125,7 @@ public class OverlayView extends NavigationView<AnchorPane, OverlayModel, Overla
         window.xProperty().addListener(positionListener);
         window.yProperty().addListener(positionListener);
         window.widthProperty().addListener(positionListener);
+        window.heightProperty().addListener(positionListener);
 
         model.getTransitionsType().apply(owner);
         animateDisplay(controller::onShown);

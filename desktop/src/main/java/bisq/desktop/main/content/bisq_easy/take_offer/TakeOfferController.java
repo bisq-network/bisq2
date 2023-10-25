@@ -19,6 +19,7 @@ package bisq.desktop.main.content.bisq_easy.take_offer;
 
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.*;
 import bisq.desktop.main.content.bisq_easy.take_offer.amount.TakeOfferAmountController;
 import bisq.desktop.main.content.bisq_easy.take_offer.payment_method.TakeOfferPaymentController;
@@ -29,6 +30,7 @@ import bisq.i18n.Res;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
+import javafx.scene.input.KeyEvent;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -44,7 +46,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class TakeOfferController extends NavigationController implements InitWithDataController<TakeOfferController.InitData> {
-
     @Getter
     @EqualsAndHashCode
     @ToString
@@ -64,7 +65,7 @@ public class TakeOfferController extends NavigationController implements InitWit
         }
     }
 
-    private final ServiceProvider serviceProvider;
+    private final OverlayController overlayController;
     @Getter
     private final TakeOfferModel model;
     @Getter
@@ -78,7 +79,7 @@ public class TakeOfferController extends NavigationController implements InitWit
     public TakeOfferController(ServiceProvider serviceProvider) {
         super(NavigationTarget.TAKE_OFFER);
 
-        this.serviceProvider = serviceProvider;
+        overlayController = OverlayController.getInstance();
 
         model = new TakeOfferModel();
         view = new TakeOfferView(model, this);
@@ -125,6 +126,10 @@ public class TakeOfferController extends NavigationController implements InitWit
 
     @Override
     public void onActivate() {
+        overlayController.setUseEscapeKeyHandler(false);
+        overlayController.setEnterKeyHandler(null);
+        overlayController.getApplicationRoot().setOnKeyPressed(this::onKeyPressed);
+
         model.getBackButtonText().set(Res.get("action.back"));
         model.getNextButtonVisible().set(true);
         tradePriceSpecPin = EasyBind.subscribe(takeOfferPriceController.getPriceSpec(),
@@ -145,6 +150,7 @@ public class TakeOfferController extends NavigationController implements InitWit
 
     @Override
     public void onDeactivate() {
+        overlayController.setUseEscapeKeyHandler(true);
         tradePriceSpecPin.unsubscribe();
         takersQuoteSideAmountPin.unsubscribe();
         takersBaseSideAmountPin.unsubscribe();
@@ -232,8 +238,9 @@ public class TakeOfferController extends NavigationController implements InitWit
         model.getTakeOfferButtonVisible().set(false);
     }
 
-    void onQuit() {
-        serviceProvider.getShutDownHandler().shutdown();
+    void onKeyPressed(KeyEvent keyEvent) {
+        KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onClose);
+        KeyHandlerUtil.handleEnterKeyEvent(keyEvent, this::onNext);
     }
 
     private void closeAndNavigateTo(NavigationTarget NavigationTarget) {

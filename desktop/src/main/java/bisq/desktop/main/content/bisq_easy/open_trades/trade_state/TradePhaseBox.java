@@ -201,7 +201,7 @@ class TradePhaseBox {
             BisqEasyOpenTradeChannel channel = model.getSelectedChannel();
             Optional<UserProfile> mediator = channel.getMediator();
             if (mediator.isPresent()) {
-                new Popup().headLine(Res.get("bisqEasy.mediation.request.confirm.headline"))
+                new Popup().headline(Res.get("bisqEasy.mediation.request.confirm.headline"))
                         .information(Res.get("bisqEasy.mediation.request.confirm.msg"))
                         .actionButtonText(Res.get("bisqEasy.mediation.request.confirm.openMediation"))
                         .onAction(() -> {
@@ -210,7 +210,7 @@ class TradePhaseBox {
 
                             channel.setIsInMediation(true);
                             mediationService.requestMediation(channel);
-                            new Popup().headLine(Res.get("bisqEasy.mediation.request.feedback.headline"))
+                            new Popup().headline(Res.get("bisqEasy.mediation.request.feedback.headline"))
                                     .feedback(Res.get("bisqEasy.mediation.request.feedback.msg"))
                                     .show();
                         })
