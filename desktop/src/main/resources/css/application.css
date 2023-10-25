@@ -130,7 +130,7 @@
 
 .notification-hyperlink,
 .notification-hyperlink:visited {
-    -fx-text-fill: -bisq-black-light;
+    -fx-text-fill: -bisq-black-medium;
     -fx-font-size: 1.15em;
     -fx-font-family: "IBM Plex Sans";
 }
