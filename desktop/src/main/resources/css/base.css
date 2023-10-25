@@ -50,21 +50,21 @@
 
     /* Bisq Grey Palette */
     -bisq-black-dimmed: #050505;
-    -bisq-black-medium: #0D0D0D;
+    -bisq-black-medium: #0d0d0d;
     -bisq-black-bright: #151515;
-    -bisq-grey-dark-dimmed: #1E1E1E;
-    -bisq-grey-dark-medium: #2B2B2B;
+    -bisq-grey-dark-dimmed: #1e1e1e;
+    -bisq-grey-dark-medium: #2b2b2b;
     -bisq-grey-dark-bright: #383838;
-    -bisq-grey-dimmed: #4D4D4D;
+    -bisq-grey-dimmed: #4d4d4d;
     -bisq-grey-medium: #808080;
-    -bisq-grey-bright: #B2B2B2;
-    -bisq-grey-light-dimmed: #C7C7C7;
-    -bisq-grey-light-medium: #D4D4D4;
-    -bisq-grey-light-bright: #E1E1E1;
-    -bisq-white-dimmed: #EAEAEA;
-    -bisq-white-medium: #F2F2F2;
-    -bisq-white-bright: #FAFAFA;
-    
+    -bisq-grey-bright: #b2b2b2;
+    -bisq-grey-light-dimmed: #c7c7c7;
+    -bisq-grey-light-medium: #d4d4d4;
+    -bisq-grey-light-bright: #e1e1e1;
+    -bisq-white-dimmed: #eaeaea;
+    -bisq-white-medium: #f2f2f2;
+    -bisq-white-bright: #fafafa;
+
     /* Background colors */
     -bisq-darker-grey: -bisq-grey-dark-dimmed;
     -bisq-dark-grey: -bisq-grey-dark-dimmed;
