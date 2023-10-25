@@ -100,7 +100,7 @@
 }
 
 .dark-grey-button {
-    -fx-background-color: -bisq-grey-4;
+    -fx-background-color: -bisq-grey-dark-medium;
     -fx-border-color: transparent;
     -fx-fill: -bisq-white;
     -fx-text-fill: -bisq-white;

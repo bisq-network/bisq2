@@ -108,7 +108,7 @@
  ******************************************************************************/
 
 .notification-pane {
-    -fx-background-color: -bisq-grey-4;
+    -fx-background-color: -bisq-grey-dark-medium;
 }
 
 .notification-pane-dark {
