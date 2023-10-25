@@ -54,7 +54,7 @@
 }
 
 #chat-filter-box {
-    -fx-border-color: -bisq-grey-disabled;
+    -fx-border-color: -bisq-grey-dimmed;
     -fx-border-width: 0 0 1 0;
     -fx-border-insets: 0 0 -1 0;
 }
