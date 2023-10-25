@@ -68,12 +68,12 @@
  ******************************************************************************/
 
 .h-line {
-    -fx-border-color: -bisq-grey-16;
+    -fx-border-color: -bisq-grey-dark-bright;
     -fx-border-width: 1 0 0 0;
 }
 
 .v-line {
-    -fx-border-color: -bisq-grey-16;
+    -fx-border-color: -bisq-grey-dark-bright;
     -fx-border-width: 0 1 0 0;
 }
 

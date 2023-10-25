@@ -697,7 +697,7 @@
 
 .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:hover,
 .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected:hover {
-    -fx-background-color: -bisq-grey-16;
+    -fx-background-color: -bisq-grey-dark-bright;
     -fx-background: transparent;
 }
 
@@ -850,12 +850,12 @@
 }
 
 .radio-button:armed .radio {
-    -fx-background-color: -bisq-grey-16;
+    -fx-background-color: -bisq-grey-dark-bright;
 }
 
 .radio-button:armed .radio .dot,
 .radio-button:hover .radio .dot {
-    -fx-background-color: -bisq-grey-16;
+    -fx-background-color: -bisq-grey-dark-bright;
 }
 
 .radio-button:selected .radio .dot {

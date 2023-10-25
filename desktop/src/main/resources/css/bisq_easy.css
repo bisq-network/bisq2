@@ -441,7 +441,7 @@
 
 
 .trade-wizard-review-payment-combo-box {
-    -fx-background-color: -bisq-grey-16;
+    -fx-background-color: -bisq-grey-dark-bright;
     -fx-background-insets: 6 0 6 0;
     -fx-fill: -fx-light-text-color;
     -fx-text-fill: -fx-light-text-color;
