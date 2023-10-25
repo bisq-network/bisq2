@@ -122,8 +122,8 @@
 }
 
 .notification-headline {
-    -fx-fill: -bisq-darkgrey-light;
-    -fx-text-fill: -bisq-darkgrey-light;
+    -fx-fill: -bisq-grey-dark-bright;
+    -fx-text-fill: -bisq-grey-dark-bright;
     -fx-font-size: 1.15em;
     -fx-font-family: "IBM Plex Sans";
 }
@@ -142,7 +142,7 @@
 .notification-hyperlink:visited,
 .notification-hyperlink:armed:visited,
 .notification-hyperlink:hover:armed {
-    -fx-text-fill: -bisq-darkgrey-light;
+    -fx-text-fill: -bisq-grey-dark-bright;
 }
 
 /*******************************************************************************
