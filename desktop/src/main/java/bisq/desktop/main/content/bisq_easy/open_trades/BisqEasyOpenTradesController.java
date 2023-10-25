@@ -23,6 +23,7 @@ import bisq.chat.ChatMessage;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeSelectionService;
+import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.desktop.ServiceProvider;
@@ -35,6 +36,7 @@ import bisq.desktop.main.content.bisq_easy.components.TradeDataHeader;
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.TradeStateController;
 import bisq.desktop.main.content.chat.ChatController;
 import bisq.i18n.Res;
+import bisq.presentation.notifications.NotificationsService;
 import bisq.settings.SettingsService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
@@ -54,6 +56,8 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
     private final BisqEasyTradeService bisqEasyTradeService;
     private final SettingsService settingsService;
     private final ReputationService reputationService;
+    private final NotificationsService notificationsService;
+    private final ChatNotificationService chatNotificationService;
     private TradeStateController tradeStateController;
     private Pin channelItemPin, selectedChannelPin, tradeRulesConfirmedPin;
     private OpenTradesWelcome openTradesWelcome;
@@ -68,6 +72,8 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
         bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
         settingsService = serviceProvider.getSettingsService();
         reputationService = serviceProvider.getUserService().getReputationService();
+        notificationsService = serviceProvider.getNotificationsService();
+        chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
     }
 
     @Override
@@ -109,7 +115,11 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
                         .ifPresent(trade -> {
                             if (findListItem(trade).isEmpty()) {
                                 UIThread.run(() -> {
-                                    model.getListItems().add(new BisqEasyOpenTradesView.ListItem(channel, trade, reputationService));
+                                    model.getListItems().add(new BisqEasyOpenTradesView.ListItem(channel,
+                                            trade,
+                                            reputationService,
+                                            notificationsService,
+                                            chatNotificationService));
                                     updateVisibility();
                                 });
                             }
@@ -125,6 +135,7 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
                                 Optional<BisqEasyOpenTradesView.ListItem> toRemove = findListItem(trade);
                                 toRemove.ifPresent(item -> {
                                     UIThread.run(() -> {
+                                        item.dispose();
                                         model.getListItems().remove(item);
                                         updateVisibility();
                                     });
@@ -136,6 +147,7 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
             @Override
             public void clear() {
                 UIThread.run(() -> {
+                    model.getListItems().forEach(BisqEasyOpenTradesView.ListItem::dispose);
                     model.getListItems().clear();
                     updateVisibility();
                 });

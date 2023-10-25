@@ -38,19 +38,29 @@ public class BisqEasyTradeFormatter {
         return PriceFormatter.formatWithCode(BisqEasyTradeUtils.getPriceQuote(trade));
     }
 
-    public static String getMyRole(BisqEasyTrade trade) {
+    public static String getDirection(BisqEasyTrade trade) {
         switch (trade.getTradeRole()) {
             case BUYER_AS_TAKER:
-                return Res.get("bisqEasy.openTrades.table.myRole.buyerAsTaker");
             case BUYER_AS_MAKER:
-                return Res.get("bisqEasy.openTrades.table.myRole.buyerAsMaker");
+                return Res.get("bisqEasy.openTrades.table.direction.buyer");
             case SELLER_AS_TAKER:
-                return Res.get("bisqEasy.openTrades.table.myRole.sellerAsTaker");
             case SELLER_AS_MAKER:
-                return Res.get("bisqEasy.openTrades.table.myRole.sellerAsMaker");
+                return Res.get("bisqEasy.openTrades.table.direction.seller");
             default:
                 throw new RuntimeException("Invalid trade role");
         }
+    }
 
+    public static String getMakerTakerRole(BisqEasyTrade trade) {
+        switch (trade.getTradeRole()) {
+            case BUYER_AS_TAKER:
+            case SELLER_AS_TAKER:
+                return Res.get("bisqEasy.openTrades.table.makerTakerRole.taker");
+            case BUYER_AS_MAKER:
+            case SELLER_AS_MAKER:
+                return Res.get("bisqEasy.openTrades.table.makerTakerRole.maker");
+            default:
+                throw new RuntimeException("Invalid trade role");
+        }
     }
 }

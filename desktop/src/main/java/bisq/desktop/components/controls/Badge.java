@@ -23,6 +23,8 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.Node;
@@ -43,9 +45,11 @@ import javax.annotation.Nullable;
 public class Badge extends StackPane {
     @Getter
     private final Group badge;
-    private final Label labelControl;
+    @Getter
+    private final Label label;
     @Getter
     private final StackPane badgePane;
+    private final ChangeListener<String> textListener;
     @Nullable
     @Getter
     protected Node control;
@@ -54,7 +58,7 @@ public class Badge extends StackPane {
     private boolean enabled = true;
     protected ObjectProperty<Pos> position = new SimpleObjectProperty<>();
     private final SimpleStringProperty text = new SimpleStringProperty("");
-    private FadeTransition transition;
+    private final FadeTransition transition;
 
     public Badge() {
         this(null);
@@ -65,14 +69,15 @@ public class Badge extends StackPane {
     }
 
     public Badge(Node control, Pos position) {
-        labelControl = new Label();
+        label = new Label();
 
         badgePane = new StackPane();
         badgePane.getStyleClass().add("badge-pane");
-        badgePane.getChildren().add(labelControl);
+        badgePane.getChildren().add(label);
 
         badge = new Group();
         badge.getChildren().add(badgePane);
+        badge.setOpacity(0);
 
         transition = new FadeTransition(Duration.millis(666), badge);
         transition.setFromValue(0);
@@ -85,15 +90,23 @@ public class Badge extends StackPane {
 
         setPosition(position);
         setControl(control);
+
+        // Using weak listeners here was not safe. Some update did not get processed.
+        textListener = (observable, oldValue, newValue) -> refreshBadge();
+        text.addListener(textListener);
+    }
+
+    public void dispose() {
+        text.removeListener(textListener);
     }
 
     private void refreshBadge() {
-        int textLength = text.get().length();
+        int textLength = text.get() != null ? text.get().length() : 0;
         boolean show = enabled && textLength > 0;
         badge.setVisible(show);
         badge.setManaged(show);
         if (show) {
-            labelControl.setText(text.get());
+            label.setText(text.get());
             double prefWidth = (textLength - 1) * 7.5 + 15;
             badgePane.setPrefWidth(prefWidth);
             transition.play();
@@ -107,7 +120,7 @@ public class Badge extends StackPane {
     public void setControl(Node control) {
         if (control != null) {
             this.control = control;
-            getChildren().add(control);
+            getChildren().add(0, control);
 
             // if the control got resized the badge must be reset
             if (control instanceof Region) {
@@ -120,6 +133,12 @@ public class Badge extends StackPane {
     public void setTooltip(String tooltip) {
         if (tooltip != null) {
             Tooltip.install(badgePane, new BisqTooltip(tooltip));
+        }
+    }
+
+    public void setTooltip(Tooltip tooltip) {
+        if (tooltip != null) {
+            Tooltip.install(badgePane, tooltip);
         }
     }
 
@@ -148,5 +167,9 @@ public class Badge extends StackPane {
 
     public final StringProperty textProperty() {
         return text;
+    }
+
+    public void setBadgeInsets(Insets insets) {
+        StackPane.setMargin(badge, insets);
     }
 }
