@@ -120,12 +120,12 @@
 }
 
 .scroll-bar > .thumb {
-    -fx-background-color: -bisq-grey-14;
+    -fx-background-color: -bisq-grey-dimmed;
 }
 
 .scroll-bar > .increment-button,
 .scroll-bar > .decrement-button {
-    -fx-background-color: -bisq-grey-14;
+    -fx-background-color: -bisq-grey-dimmed;
 }
 
 
