@@ -5,7 +5,7 @@
  ******************************************************************************/
 
 .bisq-popup {
-    -fx-background-color: -bisq-grey-dark-dimmed;
+    -fx-background-color: -bisq-grey-dark-dim;
 }
 
 /*******************************************************************************
@@ -120,12 +120,12 @@
 }
 
 .scroll-bar > .thumb {
-    -fx-background-color: -bisq-grey-dimmed;
+    -fx-background-color: -bisq-grey-dim;
 }
 
 .scroll-bar > .increment-button,
 .scroll-bar > .decrement-button {
-    -fx-background-color: -bisq-grey-dimmed;
+    -fx-background-color: -bisq-grey-dim;
 }
 
 
@@ -269,8 +269,8 @@
 
 /* disabled */
 .table-view .table-row-cell:disabled .table-cell .text {
-    -fx-text-fill: -bisq-grey-dimmed;
-    -fx-fill: -bisq-grey-dimmed;
+    -fx-text-fill: -bisq-grey-dim;
+    -fx-fill: -bisq-grey-dim;
 }
 
 
@@ -496,7 +496,7 @@
 }
 
 .tab-view-line {
-    -fx-background-color: -bisq-grey-dimmed;
+    -fx-background-color: -bisq-grey-dim;
 }
 
 .tab-view-selection {
@@ -515,7 +515,7 @@
 }
 
 .bisq-box-2 {
-    -fx-background-color: -bisq-grey-dark-dimmed;
+    -fx-background-color: -bisq-grey-dark-dim;
     -fx-background-radius: 8;
 }
 
@@ -533,7 +533,7 @@
 }
 
 .bisq-mid-grey {
-    -fx-background-color: -bisq-grey-dimmed;
+    -fx-background-color: -bisq-grey-dim;
 }
 
 .bisq-green-line {
@@ -549,7 +549,7 @@
 }
 
 #chat-message-quote-box-peer-msg {
-    -fx-background-color: -bisq-grey-dark-dimmed;
+    -fx-background-color: -bisq-grey-dark-dim;
     -fx-background-radius: 0 8 8 0;
     -fx-border-radius: 0;
     -fx-border-width: 0 0 0 3;

@@ -54,7 +54,7 @@
 }
 
 #chat-filter-box {
-    -fx-border-color: -bisq-grey-dimmed;
+    -fx-border-color: -bisq-grey-dim;
     -fx-border-width: 0 0 1 0;
     -fx-border-insets: 0 0 -1 0;
 }
@@ -224,7 +224,7 @@
 }
 
 .chat-mention-popup-menu-item {
-    -fx-background-color: -bisq-grey-dark-dimmed;
+    -fx-background-color: -bisq-grey-dark-dim;
     -fx-text-fill: -fx-light-text-color;
     -fx-alignment: center-left;
     -fx-padding: 8 14 8 14;
@@ -241,7 +241,7 @@
 }
 
 #onboarding-top-panel {
-    -fx-background-color: -bisq-grey-dark-dimmed;
+    -fx-background-color: -bisq-grey-dark-dim;
 }
 
 /*******************************************************************************
