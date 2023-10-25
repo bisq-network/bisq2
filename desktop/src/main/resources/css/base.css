@@ -64,10 +64,7 @@
     -bisq-white-dimmed: #EAEAEA;
     -bisq-white-medium: #F2F2F2;
     -bisq-white-bright: #FAFAFA;
-
-    /* Greys */
-    -bisq-table-base: -bisq-grey-dark-dimmed;
-
+    
     /* Background colors */
     -bisq-darker-grey: -bisq-grey-dark-dimmed;
     -bisq-dark-grey: -bisq-grey-dark-dimmed;
