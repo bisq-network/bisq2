@@ -269,8 +269,8 @@
 
 /* disabled */
 .table-view .table-row-cell:disabled .table-cell .text {
-    -fx-text-fill: -bisq-grey-20;
-    -fx-fill: -bisq-grey-20;
+    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-fill: -bisq-grey-dimmed;
 }
 
 
@@ -496,7 +496,7 @@
 }
 
 .tab-view-line {
-    -fx-background-color: -bisq-grey-20;
+    -fx-background-color: -bisq-grey-dimmed;
 }
 
 .tab-view-selection {
@@ -533,7 +533,7 @@
 }
 
 .bisq-mid-grey {
-    -fx-background-color: -bisq-grey-20;
+    -fx-background-color: -bisq-grey-dimmed;
 }
 
 .bisq-green-line {
