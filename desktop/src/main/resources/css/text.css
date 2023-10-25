@@ -649,7 +649,7 @@
  ******************************************************************************/
 
 .bisq-input-box-top-pane {
-    -fx-background-color: -bisq-grey-12;
+    -fx-background-color: -bisq-grey-dark-medium;
     -fx-background-radius: 4 4 0 0;
 }
 
