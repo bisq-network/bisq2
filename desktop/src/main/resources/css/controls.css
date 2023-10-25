@@ -78,13 +78,13 @@
 
 .white-button {
     -fx-background-color: -bisq-white-bright;
-    -fx-fill: -bisq-black !important;
-    -fx-text-fill: -bisq-black !important;
+    -fx-fill: -bisq-black-dimmed !important;
+    -fx-text-fill: -bisq-black-dimmed !important;
 }
 
 .white-button > .text {
-    -fx-fill: -bisq-black !important;
-    -fx-text-fill: -bisq-black !important;
+    -fx-fill: -bisq-black-dimmed !important;
+    -fx-text-fill: -bisq-black-dimmed !important;
 }
 
 .white-button:hover {

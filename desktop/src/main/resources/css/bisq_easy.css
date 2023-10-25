@@ -520,7 +520,7 @@
 }
 
 .bisq-easy-trade-wizard-select-offer.table-view .table-row-cell:selected .button.white-button .text {
-    -fx-fill: -bisq-black !important;
+    -fx-fill: -bisq-black-dimmed !important;
     -fx-font-family: "IBM Plex Sans Medium" !important;
 }
 
