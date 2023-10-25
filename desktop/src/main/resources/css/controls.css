@@ -758,7 +758,7 @@
 }
 
 .progress-bar > .track {
-    -fx-background-color: -bisq-grey-21;
+    -fx-background-color: -bisq-grey-dark-bright;
 }
 
 .progress-bar > .bar,
@@ -804,7 +804,7 @@
  ******************************************************************************/
 
 .slider .track {
-    -fx-background-color: -bisq-grey-21;
+    -fx-background-color: -bisq-grey-dark-bright;
     -fx-pref-height: 2px;
 }
 

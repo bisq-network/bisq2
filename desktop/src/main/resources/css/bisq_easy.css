@@ -236,7 +236,7 @@
 }
 
 .bisq-easy-trade-state-phase-badge-inactive .badge-pane {
-    -fx-background-color: -bisq-grey-21;
+    -fx-background-color: -bisq-grey-dark-bright;
 }
 
 .bisq-easy-trade-state-phase-badge-active .badge-pane {
