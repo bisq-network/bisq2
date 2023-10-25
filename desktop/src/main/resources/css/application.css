@@ -17,7 +17,7 @@
 .splash-bootstrap-details {
     -fx-font-size: 1em;
     -fx-font-family: "IBM Plex Sans Light";
-    -fx-text-fill: -bisq-grey-13;
+    -fx-text-fill: -bisq-grey-medium;
 }
 
 .splash-bootstrap-progress {
