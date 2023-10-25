@@ -60,7 +60,7 @@ public class MaterialUserProfileSelection extends Pane {
         bg.getStyleClass().add("material-text-field-bg");
 
         line.setPrefHeight(1);
-        line.setStyle("-fx-background-color: -bisq-grey-dimmed");
+        line.setStyle("-fx-background-color: -bisq-grey-dimmed-old");
         line.setMouseTransparent(true);
 
         selectionLine.setPrefWidth(0);

@@ -41,20 +41,15 @@
 
     /* Colors */
     -bisq-green: #56ae48; /* #56ae48 rgb(86,174,72) */
-    -bisq-white: #fafafa;
-    -bisq-white-dimmed: #f0f0f0;
-    -bisq-black: #000000;
-    -bisq-black-light: #0f0f0f;
     -bisq-turquoise: #2cacaf;
     -bisq-buy: #006600;
     -bisq-sell: #660000;
     -bisq-red: #d02c1f;
     -bisq-warning: #d0831f;
-    -bisq-table-base: #1D1D1D;
     -bisq-yellow: #e5a500;
 
     /* Greys */
-    -bisq-grey-dimmed: #828282;
+    -bisq-grey-dimmed-old: #828282;
     -bisq-grey-disabled: #4D4D4D;
     -bisq-darkgrey-light: #3d3d3d;
 
@@ -81,6 +76,11 @@
     -bisq-grey-24: #2c2c2c;
     -bisq-grey-25: #313131;
 
+    -bisq-white: #fafafa;
+    -bisq-white-dimmed-old: #f0f0f0;
+    -bisq-black: #000000;
+    -bisq-black-light: #0f0f0f;
+    -bisq-table-base: #1D1D1D;
 
     /* Background colors */
     -bisq-darker-grey: -bisq-grey-2;
@@ -108,7 +108,7 @@
     -bisq-green-pressed: derive(-fx-default-button, -5%);
 
     -fx-dark-text-color: -bisq-black;
-    -fx-mid-text-color: -bisq-grey-dimmed;
+    -fx-mid-text-color: -bisq-grey-dimmed-old;
     -fx-light-text-color: -bisq-white;
 
     -bisq-error: -bisq-red;

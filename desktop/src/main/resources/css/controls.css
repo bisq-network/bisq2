@@ -469,7 +469,7 @@
     -bisq-toggle-color: -fx-default-button;
     -bisq-un-toggle-color: -bisq-white;
     -bisq-toggle-line-color: derive(-bisq-toggle-color, 65%);
-    -bisq-un-toggle-line-color: -bisq-grey-dimmed;
+    -bisq-un-toggle-line-color: -bisq-grey-dimmed-old;
     -bisq-size: 8;
 }
 
@@ -639,12 +639,12 @@
 .check-box > .box {
     -fx-background-color: transparent;
     -fx-background-radius: 0;
-    -fx-border-color: -bisq-grey-dimmed;
+    -fx-border-color: -bisq-grey-dimmed-old;
     -fx-border-width: 1;
 }
 
 .check-box:hover > .box {
-    -fx-border-color: derive(-bisq-grey-dimmed, 20%);
+    -fx-border-color: derive(-bisq-grey-dimmed-old, 20%);
 }
 
 .check-box > .box > .mark {
