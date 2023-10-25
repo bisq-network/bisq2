@@ -458,7 +458,7 @@
 }
 
 .bisq-large-profile-id-label {
-    -fx-background-color: -bisq-grey-6;
+    -fx-background-color: -bisq-grey-dimmed;
     -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 1em;
 }
