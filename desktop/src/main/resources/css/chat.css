@@ -50,7 +50,7 @@
 
 .close-sidebar-button {
     -fx-background-color: -bisq-grey-medium;
-    -fx-text-fill: -bisq-grey-17;
+    -fx-text-fill: -bisq-grey-dark-medium;
 }
 
 #chat-filter-box {
@@ -153,7 +153,7 @@
 }
 
 .create-offer-box-my-offer {
-    -fx-background-color: -bisq-grey-17;
+    -fx-background-color: -bisq-grey-dark-medium;
 }
 
 .trade-wizard-feedback-bg {

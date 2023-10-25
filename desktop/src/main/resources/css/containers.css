@@ -85,12 +85,12 @@
  ******************************************************************************/
 
 .separator:horizontal .line {
-    -fx-border-color: -bisq-grey-17;
+    -fx-border-color: -bisq-grey-dark-medium;
     -fx-border-width: 0.5;
 }
 
 .separator:vertical .line {
-    -fx-border-color: -bisq-grey-17;
+    -fx-border-color: -bisq-grey-dark-medium;
     -fx-border-width: 0.5;
 }
 
@@ -520,7 +520,7 @@
 }
 
 .bisq-dual-amount-bg {
-    -fx-background-color: -bisq-grey-17;
+    -fx-background-color: -bisq-grey-dark-medium;
     -fx-background-radius: 8 8 0 0;
 }
 
