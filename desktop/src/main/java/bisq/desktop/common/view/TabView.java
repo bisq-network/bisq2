@@ -28,13 +28,18 @@ import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.ToggleGroup;
-import javafx.scene.layout.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
+import javax.annotation.Nullable;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import javax.annotation.Nullable;
+
 
 @Slf4j
 public abstract class TabView<M extends TabModel, C extends TabController<M>> extends NavigationView<VBox, M, C>
@@ -97,7 +102,19 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
             }
         });
 
-        viewListener = (observable, oldValue, newValue) -> onChildView(oldValue, newValue);
+        viewListener = (observable, oldValue, newValue) -> {
+            onChildView(oldValue, newValue);
+
+            if (newValue != null) {
+                Region childRoot = newValue.getRoot();
+                if (oldValue != null) {
+                    Transitions.animateTabView(childRoot, oldValue.getRoot(), selectionMarker,
+                            getSelectionMarkerX(model.getSelectedTabButton().get()));
+                } else {
+                    Transitions.fadeIn(childRoot);
+                }
+            }
+        };
         model.getView().addListener(viewListener);
         onChildView(null, model.getView().get());
 

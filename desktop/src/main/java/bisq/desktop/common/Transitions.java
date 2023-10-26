@@ -25,7 +25,14 @@ import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.TransitionedView;
 import bisq.desktop.common.view.View;
 import bisq.settings.SettingsService;
-import javafx.animation.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Consumer;
+import javafx.animation.FadeTransition;
+import javafx.animation.Interpolator;
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.Timeline;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.Camera;
@@ -39,13 +46,9 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.transform.Rotate;
 import javafx.util.Duration;
+import javax.annotation.Nullable;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-
-import javax.annotation.Nullable;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Consumer;
 
 @Slf4j
 public class Transitions {
@@ -303,9 +306,10 @@ public class Transitions {
         KeyFrame kf2 = new KeyFrame(Duration.millis(getDuration(duration)), kv2);
         timeline.getKeyFrames().addAll(kf1, kf2);
         node.setEffect(blur);
-        if (removeNode)
+        if (removeNode) {
             timeline.setOnFinished(actionEvent -> UIThread.runOnNextRenderFrame(() -> ((Pane) (node.getParent()))
                     .getChildren().remove(node)));
+        }
         timeline.play();
     }
 
@@ -398,10 +402,10 @@ public class Transitions {
         }
     }
 
-    public static void transitRightOut(Region nodeIn, Region nodeOut) {
+    public static void transitRightOut(Region nodeIn, Region nodeOut, int customDuration) {
         nodeIn.setOpacity(0);
         UIScheduler.run(() -> slideInLeft(nodeIn, () -> {
-        })).after(DEFAULT_DURATION / 4);
+        })).after(customDuration);
         slideOutRight(nodeOut, () -> {
             Parent parent = nodeOut.getParent();
             if (parent != null) {
@@ -413,10 +417,14 @@ public class Transitions {
         });
     }
 
-    public static void transitLeftOut(Region nodeIn, Region nodeOut) {
+    public static void transitRightOut(Region nodeIn, Region nodeOut) {
+        transitRightOut(nodeIn, nodeOut, DEFAULT_DURATION / 4);
+    }
+
+    public static void transitLeftOut(Region nodeIn, Region nodeOut, int customDuration) {
         nodeIn.setOpacity(0);
         UIScheduler.run(() -> slideInRight(nodeIn, () -> {
-        })).after(DEFAULT_DURATION / 4);
+        })).after(customDuration);
         slideOutLeft(nodeOut, () -> {
             Parent parent = nodeOut.getParent();
             if (parent != null) {
@@ -426,6 +434,10 @@ public class Transitions {
                 }
             }
         });
+    }
+
+    public static void transitLeftOut(Region nodeIn, Region nodeOut) {
+        transitLeftOut(nodeIn, nodeOut, DEFAULT_DURATION / 4);
     }
 
     public static void transitInNewTab(Region nodeIn) {
@@ -441,18 +453,17 @@ public class Transitions {
             nodeIn.setOpacity(0);
 
             UIScheduler.run(() -> {
-                        if (newView instanceof TransitionedView) {
-                            ((TransitionedView) newView).onStartTransition();
-                        }
-                        fadeIn(nodeIn,
-                                DEFAULT_DURATION / 2,
-                                () -> {
-                                    if (newView instanceof TransitionedView) {
-                                        ((TransitionedView) newView).onTransitionCompleted();
-                                    }
-                                });
-                    })
-                    .after(DEFAULT_DURATION / 2);
+                if (newView instanceof TransitionedView) {
+                    ((TransitionedView) newView).onStartTransition();
+                }
+                fadeIn(nodeIn,
+                        DEFAULT_DURATION / 2,
+                        () -> {
+                            if (newView instanceof TransitionedView) {
+                                ((TransitionedView) newView).onTransitionCompleted();
+                            }
+                        });
+            }).after(DEFAULT_DURATION / 2);
             slideOutRight(nodeOut, () -> {
                 Parent parent = nodeOut.getParent();
                 if (parent != null) {
@@ -977,6 +988,18 @@ public class Transitions {
             node.setScaleY(targetScale);
         }
         return timeline;
+    }
+
+    public static void animateTabView(Region nodeIn, Region nodeOut, Region tabButtonNode, double targetX) {
+        double startX = tabButtonNode.getLayoutX();
+        int duration = getDuration(DEFAULT_DURATION / 10);
+        if (startX == 0) {
+            transitRightOut(nodeIn, nodeOut, duration);
+        } else if (startX > targetX) {
+            transitLeftOut(nodeIn, nodeOut, duration);
+        } else {
+            transitRightOut(nodeIn, nodeOut, duration);
+        }
     }
 
     public static boolean getUseAnimations() {
