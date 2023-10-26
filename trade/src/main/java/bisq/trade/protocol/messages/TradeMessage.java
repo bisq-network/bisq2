@@ -24,7 +24,7 @@ import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ack.AckRequestingMessage;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
-import bisq.network.p2p.vo.NetworkId;
+import bisq.network.identity.NetworkId;
 import bisq.network.protobuf.ExternalNetworkMessage;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTradeMessage;
 import bisq.trade.submarine.messages.SubmarineTradeMessage;

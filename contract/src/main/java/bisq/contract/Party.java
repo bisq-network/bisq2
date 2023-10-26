@@ -18,7 +18,7 @@
 package bisq.contract;
 
 import bisq.common.proto.Proto;
-import bisq.network.p2p.vo.NetworkId;
+import bisq.network.identity.NetworkId;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;

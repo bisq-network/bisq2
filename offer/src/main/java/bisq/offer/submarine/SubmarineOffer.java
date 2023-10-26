@@ -5,7 +5,7 @@ import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.currency.Market;
 import bisq.common.util.StringUtils;
-import bisq.network.p2p.vo.NetworkId;
+import bisq.network.identity.NetworkId;
 import bisq.offer.Direction;
 import bisq.offer.Offer;
 import bisq.offer.amount.spec.AmountSpec;

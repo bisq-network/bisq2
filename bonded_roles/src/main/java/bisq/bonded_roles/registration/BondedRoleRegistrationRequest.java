@@ -25,7 +25,7 @@ import bisq.network.common.AddressByTransportTypeMap;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
-import bisq.network.p2p.vo.NetworkId;
+import bisq.network.identity.NetworkId;
 import bisq.network.protobuf.ExternalNetworkMessage;
 import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;

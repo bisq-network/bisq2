@@ -21,7 +21,7 @@ package contract;
 option java_package = "bisq.contract.protobuf";
 option java_multiple_files = true;
 
-import "network.proto";
+import "network_identity.proto";
 import "account.proto";
 import "offer.proto";
 import "user.proto";
@@ -35,7 +35,7 @@ enum Role {
 
 message Party {
   Role role = 1;
-  network.NetworkId networkId = 2;
+  network.identity.NetworkId networkId = 2;
 }
 message Contract {
   offer.Offer offer = 1;

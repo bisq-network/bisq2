@@ -3,7 +3,7 @@ package offer;
 option java_package = "bisq.offer.protobuf";
 option java_multiple_files = true;
 import "common.proto";
-import "network.proto";
+import "network_identity.proto";
 import "security.proto";
 import "account.proto";
 
@@ -119,7 +119,7 @@ message OfferOption {
 message Offer {
   string id = 1;
   sint64 date = 2;
-  network.NetworkId makerNetworkId = 3;
+  network.identity.NetworkId makerNetworkId = 3;
   common.Market market = 4;
   Direction direction = 5;
   AmountSpec amountSpec = 6;

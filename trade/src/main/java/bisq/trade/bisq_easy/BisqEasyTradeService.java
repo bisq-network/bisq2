@@ -24,7 +24,7 @@ import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.identity.Identity;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.MessageListener;
-import bisq.network.p2p.vo.NetworkId;
+import bisq.network.identity.NetworkId;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;

@@ -22,7 +22,7 @@ import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.util.ProtobufUtils;
 import bisq.contract.submarine.SubmarineContract;
 import bisq.identity.Identity;
-import bisq.network.p2p.vo.NetworkId;
+import bisq.network.identity.NetworkId;
 import bisq.offer.submarine.SubmarineOffer;
 import bisq.trade.Trade;
 import bisq.trade.TradeParty;

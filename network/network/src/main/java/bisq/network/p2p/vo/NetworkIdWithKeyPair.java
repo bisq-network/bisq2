@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.vo;
 
+import bisq.network.identity.NetworkId;
 import bisq.security.PubKey;
 import lombok.Getter;
 import lombok.ToString;

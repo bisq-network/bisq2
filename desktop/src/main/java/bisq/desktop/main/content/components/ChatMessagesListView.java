@@ -53,7 +53,7 @@ import bisq.desktop.main.content.bisq_easy.take_offer.TakeOfferController;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
-import bisq.network.p2p.vo.NetworkId;
+import bisq.network.identity.NetworkId;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.settings.SettingsService;

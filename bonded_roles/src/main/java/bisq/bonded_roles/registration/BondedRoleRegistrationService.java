@@ -25,7 +25,7 @@ import bisq.common.encoding.Hex;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.network.NetworkService;
 import bisq.network.common.AddressByTransportTypeMap;
-import bisq.network.p2p.vo.NetworkId;
+import bisq.network.identity.NetworkId;
 import bisq.network.p2p.vo.NetworkIdWithKeyPair;
 import bisq.security.DigestUtil;
 import lombok.extern.slf4j.Slf4j;

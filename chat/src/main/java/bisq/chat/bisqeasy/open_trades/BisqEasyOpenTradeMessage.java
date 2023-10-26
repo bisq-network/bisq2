@@ -24,7 +24,7 @@ import bisq.chat.bisqeasy.BisqEasyOfferMessage;
 import bisq.chat.priv.PrivateChatMessage;
 import bisq.common.util.StringUtils;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.p2p.vo.NetworkId;
+import bisq.network.identity.NetworkId;
 import bisq.network.protobuf.ExternalNetworkMessage;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.user.profile.UserProfile;

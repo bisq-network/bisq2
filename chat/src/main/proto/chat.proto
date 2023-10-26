@@ -21,7 +21,7 @@ package chat;
 option java_package = "bisq.chat.protobuf";
 option java_multiple_files = true;
 import "common.proto";
-import "network.proto";
+import "network_identity.proto";
 import "security.proto";
 import "offer.proto";
 import "user.proto";
@@ -91,7 +91,7 @@ message ChatChannel {
 message TwoPartyPrivateChatMessage {
   string receiverUserProfileId = 1;
   user.UserProfile sender = 2;
-  network.NetworkId receiverNetworkId = 3;
+  network.identity.NetworkId receiverNetworkId = 3;
 }
 message TwoPartyPrivateChatChannel {
   user.UserIdentity myUserIdentity = 1;
@@ -119,7 +119,7 @@ message CommonPublicChatChannelStore {
 message BisqEasyOpenTradeMessage {
   string tradeId = 1;
   string receiverUserProfileId = 2;
-  network.NetworkId receiverNetworkId = 3;
+  network.identity.NetworkId receiverNetworkId = 3;
   user.UserProfile sender = 4;
   optional user.UserProfile mediator = 5;
   optional offer.Offer bisqEasyOffer = 6;

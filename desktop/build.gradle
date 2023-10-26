@@ -28,6 +28,8 @@ dependencies {
 
     implementation("network:common")
     implementation("network:network")
+    implementation("network:network-identity")
+
     implementation("wallets:electrum")
     implementation("wallets:bitcoind")
 

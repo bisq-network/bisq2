@@ -25,6 +25,7 @@ import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.http.BaseHttpClient;
 import bisq.network.http.HttpClientRepository;
+import bisq.network.identity.NetworkId;
 import bisq.network.p2p.ServiceNode;
 import bisq.network.p2p.ServiceNodesByTransport;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
@@ -48,7 +49,6 @@ import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistribu
 import bisq.network.p2p.services.monitor.MonitorService;
 import bisq.network.common.Address;
 import bisq.network.common.AddressByTransportTypeMap;
-import bisq.network.p2p.vo.NetworkId;
 import bisq.network.p2p.vo.NetworkIdWithKeyPair;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;

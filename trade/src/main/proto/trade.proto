@@ -22,12 +22,12 @@ option java_package = "bisq.trade.protobuf";
 option java_multiple_files = true;
 
 import "offer.proto";
-import "network.proto";
+import "network_identity.proto";
 import "contract.proto";
 import "identity.proto";
 
 message TradeParty {
-  network.NetworkId networkId = 1;
+  network.identity.NetworkId networkId = 1;
   optional contract.ContractSignatureData contractSignatureData = 2;
   oneof message {
     BisqEasyTradeParty bisqEasyTradeParty = 20;
@@ -62,8 +62,8 @@ message Trade {
 message TradeMessage {
   string id = 1;
   string tradeId = 2;
-  network.NetworkId sender = 3;
-  network.NetworkId receiver = 4;
+  network.identity.NetworkId sender = 3;
+  network.identity.NetworkId receiver = 4;
   oneof message {
     BisqEasyTradeMessage bisqEasyTradeMessage = 20;
     SubmarineTradeMessage submarineTradeMessage = 21;

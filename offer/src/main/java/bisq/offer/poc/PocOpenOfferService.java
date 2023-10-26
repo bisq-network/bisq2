@@ -32,7 +32,7 @@ import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.StringUtils;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
-import bisq.network.p2p.vo.NetworkId;
+import bisq.network.identity.NetworkId;
 import bisq.offer.Direction;
 import bisq.offer.options.OfferOption;
 import bisq.offer.payment_method.BitcoinPaymentMethodSpec;

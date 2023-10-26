@@ -20,12 +20,12 @@ syntax = "proto3";
 package identity;
 option java_package = "bisq.identity.protobuf";
 option java_multiple_files = true;
-import "network.proto";
+import "network_identity.proto";
 import "security.proto";
 
 message Identity {
   string domainId = 1;
-  network.NetworkId networkId = 2;
+  network.identity.NetworkId networkId = 2;
   security.KeyPair keyPair = 3;
 }
 
