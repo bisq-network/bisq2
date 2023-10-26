@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.tor;
+package bisq.network.identity;
 
 import lombok.Getter;
 import lombok.ToString;
@@ -112,3 +112,4 @@ public class TorIdentity {
         };
     }
 }
+
