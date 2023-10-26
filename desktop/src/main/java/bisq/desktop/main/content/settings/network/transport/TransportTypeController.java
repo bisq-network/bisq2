@@ -19,7 +19,7 @@ package bisq.desktop.main.content.settings.network.transport;
 
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
-import bisq.network.p2p.node.transport.TransportType;
+import bisq.network.common.TransportType;
 import lombok.Getter;
 
 public class TransportTypeController implements Controller {

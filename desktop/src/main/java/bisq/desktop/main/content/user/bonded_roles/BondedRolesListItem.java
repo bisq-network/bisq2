@@ -22,7 +22,7 @@ import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.bonded_role.BondedRole;
 import bisq.desktop.components.table.TableItem;
 import bisq.i18n.Res;
-import bisq.network.p2p.vo.AddressByTransportTypeMap;
+import bisq.network.common.AddressByTransportTypeMap;
 import bisq.user.UserService;
 import bisq.user.profile.UserProfile;
 import com.google.common.base.Joiner;

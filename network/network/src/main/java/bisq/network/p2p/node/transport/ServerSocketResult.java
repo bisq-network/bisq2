@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.node.transport;
 
-import bisq.network.p2p.vo.Address;
+import bisq.network.common.Address;
 import bisq.tor.onionservice.CreateOnionServiceResponse;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -40,6 +40,6 @@ public final class ServerSocketResult {
     }
 
     public ServerSocketResult(CreateOnionServiceResponse response) {
-        this(response.getNodeId(), response.getServerSocket(), new Address(response.getOnionAddress()));
+        this(response.getNodeId(), response.getServerSocket(), new Address(response.getOnionAddress().toString()));
     }
 }

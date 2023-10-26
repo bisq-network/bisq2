@@ -27,7 +27,7 @@ import bisq.network.p2p.services.peergroup.exchange.PeerExchangeStrategy;
 import bisq.network.p2p.services.peergroup.keepalive.KeepAliveService;
 import bisq.network.p2p.services.peergroup.network_load.NetworkLoadExchangeService;
 import bisq.network.p2p.services.peergroup.validateaddress.AddressValidationService;
-import bisq.network.p2p.vo.Address;
+import bisq.network.common.Address;
 import bisq.persistence.PersistenceService;
 import dev.failsafe.Failsafe;
 import dev.failsafe.RetryPolicy;

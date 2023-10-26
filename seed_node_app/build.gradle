@@ -22,6 +22,7 @@ dependencies {
     implementation project(':bonded_roles')
     implementation project(':application')
 
+    implementation 'network:common'
     implementation 'network:network'
 
     implementation libs.typesafe.config

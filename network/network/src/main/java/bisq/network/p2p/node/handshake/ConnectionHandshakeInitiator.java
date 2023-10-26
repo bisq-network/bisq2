@@ -26,7 +26,7 @@ import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.network.p2p.services.peergroup.BanList;
-import bisq.network.p2p.vo.Address;
+import bisq.network.common.Address;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

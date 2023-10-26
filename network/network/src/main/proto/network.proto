@@ -3,6 +3,7 @@ package network;
 option java_package = "bisq.network.protobuf";
 option java_multiple_files = true;
 import "common.proto";
+import "network_common.proto";
 import "security.proto";
 import "google/protobuf/any.proto";
 
@@ -10,23 +11,14 @@ import "google/protobuf/any.proto";
 // Data
 ////////////////////////////////////////////////////////////////////
 
-message Address {
-  string host = 1;
-  sint32 port = 2;
-}
-
-message AddressByTransportTypeMap {
-  map<string, Address> addressByTransportType = 1;
-}
-
 message NetworkId {
-  AddressByTransportTypeMap addressByNetworkTypeMap = 1;
+  network.common.AddressByTransportTypeMap addressByNetworkTypeMap = 1;
   security.PubKey pubKey = 2;
   string nodeId = 3;
 }
 
 message Capability {
-  Address address = 1;
+  network.common.Address address = 1;
   repeated string supportedTransportTypes = 2;
 }
 
@@ -295,14 +287,14 @@ enum MessageDeliveryStatus {
 
 message DataStore {
   message MapEntry {
-    common.ByteArray key = 1;
+    .common.ByteArray key = 1;
     DataRequest value = 2;
   }
   repeated MapEntry mapEntries = 1;
 }
 
 message NetworkServiceStore {
-  repeated AddressByTransportTypeMap seedNodes = 1;
+  repeated network.common.AddressByTransportTypeMap seedNodes = 1;
 }
 
 message ServiceNodesByTransportStore {

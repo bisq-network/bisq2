@@ -20,7 +20,7 @@ package bisq.desktop.main.content.settings.network;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.settings.network.transport.TransportTypeController;
-import bisq.network.p2p.node.transport.TransportType;
+import bisq.network.common.TransportType;
 import javafx.scene.Node;
 import lombok.Getter;
 

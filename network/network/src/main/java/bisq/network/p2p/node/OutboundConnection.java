@@ -19,7 +19,7 @@ package bisq.network.p2p.node;
 
 import bisq.network.p2p.node.network_load.ConnectionMetrics;
 import bisq.network.p2p.node.network_load.NetworkLoadService;
-import bisq.network.p2p.vo.Address;
+import bisq.network.common.Address;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

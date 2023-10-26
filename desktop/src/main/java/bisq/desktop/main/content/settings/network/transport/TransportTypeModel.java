@@ -30,7 +30,7 @@ import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.NodesById;
-import bisq.network.p2p.node.transport.TransportType;
+import bisq.network.common.TransportType;
 import bisq.network.p2p.vo.NetworkId;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;

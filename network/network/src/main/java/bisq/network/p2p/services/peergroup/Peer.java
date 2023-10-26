@@ -21,7 +21,7 @@ import bisq.common.proto.Proto;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.node.Capability;
 import bisq.network.p2p.node.network_load.NetworkLoad;
-import bisq.network.p2p.vo.Address;
+import bisq.network.common.Address;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;

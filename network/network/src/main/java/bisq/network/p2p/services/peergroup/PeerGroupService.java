@@ -23,7 +23,7 @@ import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.InboundConnection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.OutboundConnection;
-import bisq.network.p2p.vo.Address;
+import bisq.network.common.Address;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;

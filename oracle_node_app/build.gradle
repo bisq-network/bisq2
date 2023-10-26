@@ -23,6 +23,7 @@ dependencies {
     implementation project(':oracle_node')
     implementation project(':application')
 
+    implementation 'network:common'
     implementation 'network:network'
 
     implementation libs.google.gson

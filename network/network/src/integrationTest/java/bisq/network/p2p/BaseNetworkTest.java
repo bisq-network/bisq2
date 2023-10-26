@@ -19,9 +19,9 @@ package bisq.network.p2p;
 
 import bisq.common.util.OsUtils;
 import bisq.network.common.TransportConfig;
+import bisq.network.common.TransportType;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.authorization.AuthorizationService;
-import bisq.network.p2p.node.transport.TransportType;
 import bisq.security.pow.HashCashService;
 
 import java.nio.file.Path;

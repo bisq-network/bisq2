@@ -24,7 +24,7 @@ import bisq.desktop.common.utils.ImageUtil;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.p2p.node.transport.BootstrapInfo;
-import bisq.network.p2p.node.transport.TransportType;
+import bisq.network.common.TransportType;
 import bisq.presentation.formatters.PercentageFormatter;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;

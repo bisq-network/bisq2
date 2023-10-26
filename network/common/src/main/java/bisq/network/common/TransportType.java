@@ -15,9 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.node.transport;
-
-import bisq.network.p2p.vo.Address;
+package bisq.network.common;
 
 /**
  * We do not use a protobuf enum for Type as it is used as key in a protobuf map and that does not support enums.

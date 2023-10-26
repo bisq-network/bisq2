@@ -21,7 +21,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Model;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
-import bisq.network.p2p.node.transport.TransportType;
+import bisq.network.common.TransportType;
 import bisq.security.KeyPairService;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;

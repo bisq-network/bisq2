@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.node;
 
-import bisq.network.p2p.node.transport.TransportType;
+import bisq.network.common.TransportType;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 
