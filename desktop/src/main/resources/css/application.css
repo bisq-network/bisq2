@@ -17,7 +17,7 @@
 .splash-bootstrap-details {
     -fx-font-size: 1em;
     -fx-font-family: "IBM Plex Sans Light";
-    -fx-text-fill: -bisq-grey-medium;
+    -fx-text-fill: -bisq-medium-grey-mid;
 }
 
 .splash-bootstrap-progress {
@@ -83,12 +83,12 @@
 
 .updater-release-notes .content {
     -fx-padding: 1.0em;
-    -fx-background-color: -bisq-grey-dark-dim;
+    -fx-background-color: -bisq-dark-grey-dim;
 }
 
 .updater-release-notes:focused .content {
     -fx-padding: 1.0em;
-    -fx-background-color: -bisq-grey-dark-dim;
+    -fx-background-color: -bisq-dark-grey-dim;
 }
 
 .updater-text {
@@ -99,7 +99,7 @@
 }
 
 .updater-table-view {
-    -fx-background-color: -bisq-grey-dark-dim;
+    -fx-background-color: -bisq-dark-grey-dim;
 }
 
 
@@ -108,11 +108,11 @@
  ******************************************************************************/
 
 .notification-pane {
-    -fx-background-color: -bisq-grey-dark-medium;
+    -fx-background-color: -bisq-dark-grey-mid;
 }
 
 .notification-pane-dark {
-    -fx-background-color: -bisq-grey-dark-dim;
+    -fx-background-color: -bisq-dark-grey-dim;
 }
 
 .notification-box {
@@ -122,27 +122,27 @@
 }
 
 .notification-headline {
-    -fx-fill: -bisq-grey-dark-bright;
-    -fx-text-fill: -bisq-grey-dark-bright;
+    -fx-fill: -bisq-dark-grey-lit;
+    -fx-text-fill: -bisq-dark-grey-lit;
     -fx-font-size: 1.15em;
     -fx-font-family: "IBM Plex Sans";
 }
 
 .notification-hyperlink,
 .notification-hyperlink:visited {
-    -fx-text-fill: -bisq-black-medium;
+    -fx-text-fill: -bisq-black-mid;
     -fx-font-size: 1.15em;
     -fx-font-family: "IBM Plex Sans";
 }
 
 .notification-hyperlink:hover,
 .notification-hyperlink:visited:hover {
-    -fx-text-fill: -bisq-white-medium;
+    -fx-text-fill: -bisq-white-mid;
 }
 .notification-hyperlink:visited,
 .notification-hyperlink:armed:visited,
 .notification-hyperlink:hover:armed {
-    -fx-text-fill: -bisq-grey-dark-bright;
+    -fx-text-fill: -bisq-dark-grey-lit;
 }
 
 /*******************************************************************************

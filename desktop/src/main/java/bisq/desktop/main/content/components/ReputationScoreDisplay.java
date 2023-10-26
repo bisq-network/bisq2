@@ -51,7 +51,7 @@ public class ReputationScoreDisplay extends HBox {
         super(SPACING);
         setAlignment(Pos.CENTER_LEFT);
 
-        tooltip.setStyle("-fx-text-fill: black; -fx-background-color: -bisq-grey-light-dim;");
+        tooltip.setStyle("-fx-text-fill: black; -fx-background-color: -bisq-light-grey-dim;");
         tooltip.setMaxWidth(300);
         tooltip.setWrapText(true);
         Tooltip.install(this, tooltip);

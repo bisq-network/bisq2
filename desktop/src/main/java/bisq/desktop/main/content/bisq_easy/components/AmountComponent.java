@@ -533,7 +533,7 @@ public class AmountComponent {
             line.setLayoutY(121);
             line.setPrefHeight(1);
             line.setPrefWidth(AMOUNT_BOX_WIDTH);
-            line.setStyle("-fx-background-color: -bisq-grey-medium");
+            line.setStyle("-fx-background-color: -bisq-medium-grey-mid");
             line.setMouseTransparent(true);
 
             selectionLine = new Region();
