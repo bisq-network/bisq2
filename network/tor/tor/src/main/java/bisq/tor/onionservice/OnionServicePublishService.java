@@ -17,7 +17,7 @@
 
 package bisq.tor.onionservice;
 
-import bisq.tor.TorIdentity;
+import bisq.network.identity.TorIdentity;
 import bisq.tor.controller.NativeTorController;
 import lombok.extern.slf4j.Slf4j;
 import net.freehaven.tor.control.TorControlConnection;
