@@ -17,7 +17,7 @@
 
 package bisq.trade.protocol.events;
 
-import bisq.network.p2p.vo.NetworkId;
+import bisq.network.identity.NetworkId;
 import bisq.trade.ServiceProvider;
 import bisq.trade.Trade;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTradeMessage;

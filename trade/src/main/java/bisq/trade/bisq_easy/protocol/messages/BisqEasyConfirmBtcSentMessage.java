@@ -18,7 +18,7 @@
 package bisq.trade.bisq_easy.protocol.messages;
 
 import bisq.common.validation.NetworkDataValidation;
-import bisq.network.p2p.vo.NetworkId;
+import bisq.network.identity.NetworkId;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;

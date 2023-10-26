@@ -19,6 +19,7 @@ dependencies {
     implementation project(':presentation')
 
     implementation 'network:network'
+    implementation 'network:network-identity'
 
     implementation libs.chimp.jsocks
     implementation libs.google.gson

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.vo;
+package bisq.network.identity;
 
 import bisq.common.proto.Proto;
 import bisq.common.validation.NetworkDataValidation;
@@ -45,15 +45,15 @@ public final class NetworkId implements Proto {
         NetworkDataValidation.validateId(nodeId);
     }
 
-    public bisq.network.protobuf.NetworkId toProto() {
-        return bisq.network.protobuf.NetworkId.newBuilder()
+    public bisq.network.identity.protobuf.NetworkId toProto() {
+        return bisq.network.identity.protobuf.NetworkId.newBuilder()
                 .setAddressByNetworkTypeMap(addressByTransportTypeMap.toProto())
                 .setPubKey(pubKey.toProto())
                 .setNodeId(nodeId)
                 .build();
     }
 
-    public static NetworkId fromProto(bisq.network.protobuf.NetworkId proto) {
+    public static NetworkId fromProto(bisq.network.identity.protobuf.NetworkId proto) {
         return new NetworkId(AddressByTransportTypeMap.fromProto(proto.getAddressByNetworkTypeMap()),
                 PubKey.fromProto(proto.getPubKey()),
                 proto.getNodeId());
@@ -72,3 +72,4 @@ public final class NetworkId implements Proto {
                 ")";
     }
 }
+

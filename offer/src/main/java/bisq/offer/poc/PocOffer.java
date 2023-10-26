@@ -25,7 +25,7 @@ import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.p2p.vo.NetworkId;
+import bisq.network.identity.NetworkId;
 import bisq.offer.Direction;
 import bisq.offer.options.OfferOption;
 import bisq.offer.payment_method.BitcoinPaymentMethodSpec;

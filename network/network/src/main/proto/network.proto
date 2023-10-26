@@ -4,18 +4,13 @@ option java_package = "bisq.network.protobuf";
 option java_multiple_files = true;
 import "common.proto";
 import "network_common.proto";
+import "network_identity.proto";
 import "security.proto";
 import "google/protobuf/any.proto";
 
 ////////////////////////////////////////////////////////////////////
 // Data
 ////////////////////////////////////////////////////////////////////
-
-message NetworkId {
-  network.common.AddressByTransportTypeMap addressByNetworkTypeMap = 1;
-  security.PubKey pubKey = 2;
-  string nodeId = 3;
-}
 
 message Capability {
   network.common.Address address = 1;
@@ -298,7 +293,7 @@ message NetworkServiceStore {
 }
 
 message ServiceNodesByTransportStore {
-  map<string, NetworkId> networkIdByNodeId = 1;
+  map<string, network.identity.NetworkId> networkIdByNodeId = 1;
 }
 
 message MessageDeliveryStatusStore {

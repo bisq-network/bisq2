@@ -20,7 +20,7 @@ package bisq.contract.poc;
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.monetary.Monetary;
 import bisq.common.proto.Proto;
-import bisq.network.p2p.vo.NetworkId;
+import bisq.network.identity.NetworkId;
 import bisq.offer.poc.PocOffer;
 import com.google.protobuf.Message;
 import lombok.EqualsAndHashCode;

@@ -31,7 +31,7 @@ import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.NodesById;
 import bisq.network.common.TransportType;
-import bisq.network.p2p.vo.NetworkId;
+import bisq.network.identity.NetworkId;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;

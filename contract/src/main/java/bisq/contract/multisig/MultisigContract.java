@@ -21,7 +21,7 @@ import bisq.account.protocol_type.TradeProtocolType;
 import bisq.contract.Party;
 import bisq.contract.Role;
 import bisq.contract.TwoPartyContract;
-import bisq.network.p2p.vo.NetworkId;
+import bisq.network.identity.NetworkId;
 import bisq.offer.multisig.MultisigOffer;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

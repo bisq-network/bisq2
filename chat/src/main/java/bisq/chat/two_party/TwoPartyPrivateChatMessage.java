@@ -22,7 +22,7 @@ import bisq.chat.ChatMessageType;
 import bisq.chat.Citation;
 import bisq.chat.priv.PrivateChatMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.p2p.vo.NetworkId;
+import bisq.network.identity.NetworkId;
 import bisq.network.protobuf.ExternalNetworkMessage;
 import bisq.user.profile.UserProfile;
 import com.google.protobuf.Any;

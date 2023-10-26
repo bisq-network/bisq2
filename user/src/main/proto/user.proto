@@ -20,13 +20,13 @@ syntax = "proto3";
 package user;
 option java_package = "bisq.user.protobuf";
 option java_multiple_files = true;
-import "network.proto";
+import "network_identity.proto";
 import "security.proto";
 import "identity.proto";
 
 message UserProfile {
   string nickName = 1;
-  network.NetworkId networkId = 2;
+  network.identity.NetworkId networkId = 2;
   security.ProofOfWork proofOfWork = 3;
   string terms = 4;
   string statement = 5;
