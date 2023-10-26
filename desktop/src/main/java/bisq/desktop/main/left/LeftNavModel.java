@@ -26,7 +26,7 @@ import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
-import bisq.network.p2p.node.transport.TransportType;
+import bisq.network.common.TransportType;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
 import bisq.settings.SettingsService;
 import javafx.beans.property.*;

@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.peergroup.exchange;
 
+import bisq.network.common.Address;
 import bisq.network.p2p.BaseNetworkTest;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.network_load.NetworkLoadService;
@@ -24,7 +25,6 @@ import bisq.network.p2p.node.transport.TransportService;
 import bisq.network.p2p.services.peergroup.BanList;
 import bisq.network.p2p.services.peergroup.PeerGroupManager;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
-import bisq.network.p2p.vo.Address;
 import bisq.persistence.PersistenceService;
 import lombok.extern.slf4j.Slf4j;
 

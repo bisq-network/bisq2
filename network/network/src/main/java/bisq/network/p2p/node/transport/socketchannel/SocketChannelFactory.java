@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.node.transport.socketchannel;
 
-import bisq.network.p2p.vo.Address;
+import bisq.network.common.Address;
 
 import java.io.IOException;
 import java.nio.channels.SocketChannel;

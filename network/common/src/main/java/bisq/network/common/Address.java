@@ -15,12 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.vo;
+package bisq.network.common;
 
 import bisq.common.proto.Proto;
 import bisq.common.util.StringUtils;
 import bisq.common.validation.NetworkDataValidation;
-import bisq.tor.onionservice.OnionAddress;
 import com.google.common.net.InetAddresses;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -56,22 +55,18 @@ public final class Address implements Proto, Comparable<Address> {
         NetworkDataValidation.validateText(host, 700);
     }
 
-    public Address(OnionAddress onionAddress) {
-        this(onionAddress.getHost(), onionAddress.getPort());
-    }
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protobuf
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public bisq.network.protobuf.Address toProto() {
-        return bisq.network.protobuf.Address.newBuilder()
+    public bisq.network.common.protobuf.Address toProto() {
+        return bisq.network.common.protobuf.Address.newBuilder()
                 .setHost(host)
                 .setPort(port)
                 .build();
     }
 
-    public static Address fromProto(bisq.network.protobuf.Address proto) {
+    public static Address fromProto(bisq.network.common.protobuf.Address proto) {
         return new Address(proto.getHost(), proto.getPort());
     }
 
@@ -110,3 +105,4 @@ public final class Address implements Proto, Comparable<Address> {
         return getFullAddress().compareTo(o.getFullAddress());
     }
 }
+

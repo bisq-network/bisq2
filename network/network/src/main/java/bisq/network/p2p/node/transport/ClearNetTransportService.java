@@ -1,7 +1,7 @@
 package bisq.network.p2p.node.transport;
 
 import bisq.network.common.TransportConfig;
-import bisq.network.p2p.vo.Address;
+import bisq.network.common.Address;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;

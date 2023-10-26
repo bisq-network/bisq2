@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.services.peergroup;
 
-import bisq.network.p2p.vo.Address;
+import bisq.network.common.Address;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;

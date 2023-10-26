@@ -13,6 +13,7 @@ dependencies {
     implementation project(':i18n')
     implementation project(':identity')
 
+    implementation 'network:common'
     implementation 'network:network'
 
     implementation libs.google.gson

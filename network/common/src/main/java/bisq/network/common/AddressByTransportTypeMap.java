@@ -1,7 +1,23 @@
-package bisq.network.p2p.vo;
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bisq.network.common;
 
 import bisq.common.proto.Proto;
-import bisq.network.p2p.node.transport.TransportType;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -33,15 +49,15 @@ public class AddressByTransportTypeMap implements Map<TransportType, Address>, P
         this.map.putAll(map);
     }
 
-    public bisq.network.protobuf.AddressByTransportTypeMap toProto() {
-        return bisq.network.protobuf.AddressByTransportTypeMap.newBuilder()
+    public bisq.network.common.protobuf.AddressByTransportTypeMap toProto() {
+        return bisq.network.common.protobuf.AddressByTransportTypeMap.newBuilder()
                 .putAllAddressByTransportType(map.entrySet().stream()
                         .collect(Collectors.toMap(e -> e.getKey().name(),
                                 e -> e.getValue().toProto())))
                 .build();
     }
 
-    public static AddressByTransportTypeMap fromProto(bisq.network.protobuf.AddressByTransportTypeMap proto) {
+    public static AddressByTransportTypeMap fromProto(bisq.network.common.protobuf.AddressByTransportTypeMap proto) {
         Map<TransportType, Address> map = proto.getAddressByTransportTypeMap().entrySet().stream()
                 .collect(Collectors.toMap(e -> Enum.valueOf(TransportType.class, e.getKey()),
                         e -> Address.fromProto(e.getValue())));
@@ -109,3 +125,4 @@ public class AddressByTransportTypeMap implements Map<TransportType, Address>, P
         return map.entrySet();
     }
 }
+

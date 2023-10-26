@@ -32,7 +32,7 @@ import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
-import bisq.network.p2p.vo.Address;
+import bisq.network.common.Address;
 import bisq.security.*;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;

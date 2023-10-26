@@ -19,6 +19,8 @@ package bisq.network.p2p;
 
 import bisq.common.util.FileUtils;
 import bisq.common.util.NetworkUtils;
+import bisq.network.common.Address;
+import bisq.network.common.TransportType;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.Capability;
 import bisq.network.p2p.node.authorization.AuthorizationService;
@@ -26,8 +28,6 @@ import bisq.network.p2p.node.authorization.AuthorizationToken;
 import bisq.network.p2p.node.envelope.NetworkEnvelopeSocketChannel;
 import bisq.network.p2p.node.handshake.ConnectionHandshake;
 import bisq.network.p2p.node.network_load.NetworkLoad;
-import bisq.network.p2p.node.transport.TransportType;
-import bisq.network.p2p.vo.Address;
 import bisq.persistence.PersistenceService;
 import bisq.security.SecurityService;
 import bisq.security.pow.ProofOfWorkService;

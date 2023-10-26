@@ -23,7 +23,7 @@ import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.OutboundConnection;
 import bisq.network.p2p.services.peergroup.BanList;
-import bisq.network.p2p.vo.Address;
+import bisq.network.common.Address;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

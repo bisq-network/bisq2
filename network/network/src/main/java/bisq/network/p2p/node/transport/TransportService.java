@@ -18,7 +18,8 @@
 package bisq.network.p2p.node.transport;
 
 import bisq.network.common.TransportConfig;
-import bisq.network.p2p.vo.Address;
+import bisq.network.common.Address;
+import bisq.network.common.TransportType;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 
 import java.io.IOException;

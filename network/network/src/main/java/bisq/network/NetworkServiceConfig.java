@@ -18,16 +18,16 @@
 package bisq.network;
 
 import bisq.common.util.ConfigUtil;
+import bisq.network.common.Address;
 import bisq.network.common.TransportConfig;
+import bisq.network.common.TransportType;
 import bisq.network.p2p.ServiceNode;
 import bisq.network.p2p.node.transport.ClearNetTransportService;
 import bisq.network.p2p.node.transport.I2PTransportService;
-import bisq.network.p2p.node.transport.TransportType;
 import bisq.network.p2p.services.peergroup.PeerGroupManager;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
 import bisq.network.p2p.services.peergroup.exchange.PeerExchangeStrategy;
 import bisq.network.p2p.services.peergroup.keepalive.KeepAliveService;
-import bisq.network.p2p.vo.Address;
 import bisq.tor.TorTransportConfig;
 import com.typesafe.config.Config;
 import lombok.Getter;

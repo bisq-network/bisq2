@@ -23,7 +23,7 @@ import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.network_load.NetworkLoadService;
 import bisq.network.p2p.node.transport.TransportService;
 import bisq.network.p2p.services.peergroup.BanList;
-import bisq.network.p2p.vo.Address;
+import bisq.network.common.Address;
 
 import java.util.Collection;
 import java.util.Map;

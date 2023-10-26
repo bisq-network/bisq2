@@ -24,7 +24,7 @@ import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.network.NetworkService;
-import bisq.network.p2p.vo.AddressByTransportTypeMap;
+import bisq.network.common.AddressByTransportTypeMap;
 import bisq.network.p2p.vo.NetworkId;
 import bisq.network.p2p.vo.NetworkIdWithKeyPair;
 import bisq.security.DigestUtil;

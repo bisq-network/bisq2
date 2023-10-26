@@ -2,7 +2,7 @@ package bisq.network.p2p.node.transport;
 
 import bisq.network.common.TransportConfig;
 import bisq.network.p2p.node.ConnectionException;
-import bisq.network.p2p.vo.Address;
+import bisq.network.common.Address;
 import bisq.tor.TorService;
 import bisq.tor.TorTransportConfig;
 import bisq.tor.onionservice.CreateOnionServiceResponse;

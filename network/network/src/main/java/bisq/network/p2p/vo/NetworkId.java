@@ -19,6 +19,7 @@ package bisq.network.p2p.vo;
 
 import bisq.common.proto.Proto;
 import bisq.common.validation.NetworkDataValidation;
+import bisq.network.common.AddressByTransportTypeMap;
 import bisq.security.PubKey;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

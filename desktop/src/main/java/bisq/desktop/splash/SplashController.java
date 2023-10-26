@@ -26,7 +26,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.splash.temp.BootstrapStateDisplay;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
-import bisq.network.p2p.node.transport.TransportType;
+import bisq.network.common.TransportType;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

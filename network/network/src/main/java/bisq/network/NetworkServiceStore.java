@@ -19,7 +19,7 @@ package bisq.network;
 
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
-import bisq.network.p2p.vo.AddressByTransportTypeMap;
+import bisq.network.common.AddressByTransportTypeMap;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;

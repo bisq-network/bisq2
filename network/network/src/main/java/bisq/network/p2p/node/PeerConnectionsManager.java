@@ -22,7 +22,7 @@ import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.network.p2p.node.transport.ServerSocketResult;
 import bisq.network.p2p.node.transport.TransportService;
 import bisq.network.p2p.services.peergroup.BanList;
-import bisq.network.p2p.vo.Address;
+import bisq.network.common.Address;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
