@@ -17,6 +17,9 @@
 
 package bisq.network.identity;
 
+import bisq.common.proto.Proto;
+import com.google.protobuf.ByteString;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import org.bouncycastle.crypto.digests.SHA3Digest;
@@ -28,22 +31,48 @@ import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 
 @Getter
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString
-public class TorIdentity {
+public class TorIdentity implements Proto {
 
     @ToString.Exclude
     private final byte[] privateKey;
+
+    @EqualsAndHashCode.Include
+    @Getter
     private final int port;
 
-    public TorIdentity(byte[] privateKey, int port) {
+    @EqualsAndHashCode.Include
+    @Getter
+    private final String onionAddress;
+
+    private TorIdentity(byte[] privateKey, int port, String onionAddress) {
         this.privateKey = privateKey;
         this.port = port;
+        this.onionAddress = onionAddress;
     }
 
     public static TorIdentity generate(int port) {
         byte[] privateKey = new byte[32];
         Ed25519.generatePrivateKey(new SecureRandom(), privateKey);
-        return new TorIdentity(privateKey, port);
+        return new TorIdentity(privateKey, port, computeOnionAddressFromPrivateKey(privateKey));
+    }
+
+    @Override
+    public bisq.network.identity.protobuf.TorIdentity toProto() {
+        return bisq.network.identity.protobuf.TorIdentity.newBuilder()
+                .setPrivateKey(ByteString.copyFrom(privateKey))
+                .setPort(port)
+                .build();
+    }
+
+    public static TorIdentity fromProto(bisq.network.identity.protobuf.TorIdentity proto) {
+        byte[] privateKey = proto.getPrivateKey().toByteArray();
+        return new TorIdentity(
+                privateKey,
+                proto.getPort(),
+                computeOnionAddressFromPrivateKey(privateKey)
+        );
     }
 
     public String getTorOnionKey() {
@@ -59,7 +88,7 @@ public class TorIdentity {
                 "-----END OPENSSH PRIVATE KEY-----\n";
     }
 
-    public String getOnionAddress() {
+    private static String computeOnionAddressFromPrivateKey(byte[] privateKey) {
         byte[] publicKey = new byte[32];
         Ed25519.generatePublicKey(privateKey, 0, publicKey, 0);
 
@@ -92,7 +121,7 @@ public class TorIdentity {
         return secretScalar;
     }
 
-    private byte[] computeOnionAddressChecksum(byte[] publicKey) {
+    private static byte[] computeOnionAddressChecksum(byte[] publicKey) {
         ByteBuffer byteBuffer = ByteBuffer.allocate(15 + 32 + 1);
         byteBuffer.put(".onion checksum".getBytes()); // 15 bytes
         byteBuffer.put(publicKey); // 32 bytes

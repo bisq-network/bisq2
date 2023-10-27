@@ -34,10 +34,13 @@ public final class NetworkId implements Proto {
     private final PubKey pubKey;
     private final String nodeId;
     private final AddressByTransportTypeMap addressByTransportTypeMap = new AddressByTransportTypeMap();
+    private final TorIdentity torIdentity;
 
-    public NetworkId(AddressByTransportTypeMap addressByTransportTypeMap, PubKey pubKey, String nodeId) {
+    public NetworkId(AddressByTransportTypeMap addressByTransportTypeMap, PubKey pubKey, String nodeId, TorIdentity torIdentity) {
         this.pubKey = pubKey;
         this.nodeId = nodeId;
+        this.torIdentity = torIdentity;
+
         checkArgument(!addressByTransportTypeMap.isEmpty(),
                 "We require at least 1 addressByNetworkType for a valid NetworkId");
         this.addressByTransportTypeMap.putAll(addressByTransportTypeMap);
@@ -50,13 +53,15 @@ public final class NetworkId implements Proto {
                 .setAddressByNetworkTypeMap(addressByTransportTypeMap.toProto())
                 .setPubKey(pubKey.toProto())
                 .setNodeId(nodeId)
+                .setTorIdentity(torIdentity.toProto())
                 .build();
     }
 
     public static NetworkId fromProto(bisq.network.identity.protobuf.NetworkId proto) {
         return new NetworkId(AddressByTransportTypeMap.fromProto(proto.getAddressByNetworkTypeMap()),
                 PubKey.fromProto(proto.getPubKey()),
-                proto.getNodeId());
+                proto.getNodeId(),
+                TorIdentity.fromProto(proto.getTorIdentity()));
     }
 
     public String getId() {

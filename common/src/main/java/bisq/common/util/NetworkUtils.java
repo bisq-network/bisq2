@@ -51,6 +51,10 @@ public class NetworkUtils {
         }
     }
 
+    public static int selectRandomPort() {
+        return new Random().nextInt(65_536); // 2^16
+    }
+
     public static boolean isPortInUse(String host, int port) {
         try (var tmp = new Socket(host, port)) {
             // Successful connection means the port is taken
