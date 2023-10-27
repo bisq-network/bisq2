@@ -3,12 +3,12 @@
  ******************************************************************************/
 
 .bisq-easy-container {
-    -fx-background-color: -bisq-grey-3;
+    -fx-background-color: -bisq-dark-grey-dim;
     -fx-background-radius: 8;
 }
 
 .bisq-easy-container-header {
-    -fx-background-color: -bisq-grey-2;
+    -fx-background-color: -bisq-dark-grey-dim;
     -fx-background-radius: 8 8 0 0;
 }
 
@@ -44,7 +44,7 @@
  ******************************************************************************/
 
 .bisq-easy-onboarding-big-box {
-    -fx-background-color: -bisq-grey-2;
+    -fx-background-color: -bisq-dark-grey-dim;
     -fx-background-radius: 8;
 }
 
@@ -112,7 +112,7 @@
  ******************************************************************************/
 
 .bisq-easy-open-trades-welcome-bg {
-    -fx-background-color: -bisq-grey-2;
+    -fx-background-color: -bisq-dark-grey-dim;
     -fx-background-radius: 8;
 }
 
@@ -147,7 +147,7 @@
 }
 
 .bisq-easy-open-trades.table-view .table-row-cell:filled:selected .table-cell {
-    -fx-background-color: -bisq-grey-18;
+    -fx-background-color: -bisq-black-lit;
 }
 
 
@@ -214,8 +214,8 @@
 }
 
 .bisq-easy-trade-state-phase-inactive {
-    -fx-fill: -bisq-grey-22;
-    -fx-text-fill: -bisq-grey-22;
+    -fx-fill: -bisq-medium-grey-mid;
+    -fx-text-fill: -bisq-medium-grey-mid;
     -fx-font-family: "IBM Plex Sans Light";
 }
 
@@ -236,7 +236,7 @@
 }
 
 .bisq-easy-trade-state-phase-badge-inactive .badge-pane {
-    -fx-background-color: -bisq-grey-21;
+    -fx-background-color: -bisq-dark-grey-lit;
 }
 
 .bisq-easy-trade-state-phase-badge-active .badge-pane {
@@ -441,7 +441,7 @@
 
 
 .trade-wizard-review-payment-combo-box {
-    -fx-background-color: -bisq-grey-16;
+    -fx-background-color: -bisq-dark-grey-lit;
     -fx-background-insets: 6 0 6 0;
     -fx-fill: -fx-light-text-color;
     -fx-text-fill: -fx-light-text-color;
@@ -467,7 +467,7 @@
 }
 
 .bisq-easy-trade-wizard-market.table-view .table-row-cell .table-cell {
-    -fx-background-color: -bisq-grey-24;
+    -fx-background-color: -bisq-dark-grey-mid;
 }
 
 .bisq-easy-trade-wizard-market.table-view .table-row-cell:hover .table-cell {
@@ -496,7 +496,7 @@
 }
 
 .bisq-easy-trade-wizard-select-offer.table-view .table-row-cell .table-cell {
-    -fx-background-color: -bisq-grey-24;
+    -fx-background-color: -bisq-dark-grey-mid;
 }
 
 .bisq-easy-trade-wizard-select-offer.table-view .table-row-cell:hover .table-cell {
@@ -508,19 +508,19 @@
 }
 
 .bisq-easy-trade-wizard-select-offer.table-view .table-row-cell:empty {
-    -fx-border-color: derive(-bisq-grey-24, -30%);
+    -fx-border-color: derive(-bisq-dark-grey-mid, -30%);
 }
 
 .bisq-easy-trade-wizard-select-offer.table-view .table-row-cell:empty .table-cell {
-    -fx-background-color: derive(-bisq-grey-24, -15%);
+    -fx-background-color: derive(-bisq-dark-grey-mid, -15%);
 }
 
 .bisq-easy-trade-wizard-select-offer.table-view .table-row-cell:empty:hover .table-cell {
-    -fx-background-color: derive(-bisq-grey-24, -15%);
+    -fx-background-color: derive(-bisq-dark-grey-mid, -15%);
 }
 
 .bisq-easy-trade-wizard-select-offer.table-view .table-row-cell:selected .button.white-button .text {
-    -fx-fill: -bisq-black !important;
+    -fx-fill: -bisq-black-dim !important;
     -fx-font-family: "IBM Plex Sans Medium" !important;
 }
 
@@ -561,7 +561,7 @@
  ******************************************************************************/
 
 .bisq-easy-chat-sidebar-bg {
-    -fx-background-color: -bisq-grey-2;
+    -fx-background-color: -bisq-dark-grey-dim;
     -fx-background-radius: 8;
 }
 
@@ -620,7 +620,7 @@
 #bisq-easy-next-button {
     -fx-background-color: transparent;
     -fx-background-radius: 4;
-    -fx-border-color: -bisq-grey-22;
+    -fx-border-color: -bisq-medium-grey-mid;
     -fx-border-width: 0.75;
     -fx-border-radius: 2.5;
     -fx-text-fill: -fx-light-text-color;
@@ -650,5 +650,5 @@
  ******************************************************************************/
 
 .bisq-easy-private-chats-table-view {
-    -fx-background-color: -bisq-grey-2;
+    -fx-background-color: -bisq-dark-grey-dim;
 }

@@ -15,7 +15,7 @@
 
 .channel-large-thin-headline {
     -fx-font-size: 1.692em;
-    -fx-text-fill: -bisq-grey-5;
+    -fx-text-fill: -bisq-dark-grey-lit;
 }
 
 .market-fiat-label {
@@ -49,26 +49,26 @@
 }
 
 .close-sidebar-button {
-    -fx-background-color: -bisq-grey-13;
-    -fx-text-fill: -bisq-grey-17;
+    -fx-background-color: -bisq-medium-grey-mid;
+    -fx-text-fill: -bisq-dark-grey-mid;
 }
 
 #chat-filter-box {
-    -fx-border-color: -bisq-grey-disabled;
+    -fx-border-color: -bisq-medium-grey-dim;
     -fx-border-width: 0 0 1 0;
     -fx-border-insets: 0 0 -1 0;
 }
 
 #chat-user-profile-bg {
-    -fx-background-color: -bisq-grey-19;
+    -fx-background-color: -bisq-dark-grey-mid;
     -fx-background-insets: 1 20 1 9;
     -fx-background-radius: 8;
 }
 
 #chat-input-field {
-    -fx-background-color: -bisq-grey-19;
+    -fx-background-color: -bisq-dark-grey-mid;
     -fx-background-radius: 8;
-    -fx-border-color: -bisq-grey-19;
+    -fx-border-color: -bisq-dark-grey-mid;
     -fx-border-width: 1;
     -fx-border-radius: 8;
     -fx-faint-focus-color: transparent;
@@ -96,7 +96,7 @@
 }
 
 #chat-messages-send-button {
-    -fx-background-color: -bisq-white;
+    -fx-background-color: -bisq-white-lit;
     -fx-background-radius: 8;
     -fx-text-fill: -bisq-green;
 }
@@ -138,26 +138,26 @@
 }
 
 .chat-message-bg-my-message {
-    -fx-background-color: -bisq-grey-18;
+    -fx-background-color: -bisq-black-lit;
     -fx-background-radius: 8;
 }
 
 .chat-message-bg-peer-message {
-    -fx-background-color: -bisq-grey-5;
+    -fx-background-color: -bisq-dark-grey-lit;
     -fx-background-radius: 8;
 }
 
 .create-offer-message-my-offer {
-    -fx-background-color: -bisq-grey-18;
+    -fx-background-color: -bisq-black-lit;
     -fx-background-radius: 8;
 }
 
 .create-offer-box-my-offer {
-    -fx-background-color: -bisq-grey-17;
+    -fx-background-color: -bisq-dark-grey-mid;
 }
 
 .trade-wizard-feedback-bg {
-    -fx-background-color: -bisq-grey-18;
+    -fx-background-color: -bisq-black-lit;
     -fx-background-radius: 0 0 16 16;
 }
 
@@ -174,13 +174,13 @@
 }
 
 #button-inactive {
-    -fx-background-color: -bisq-grey-5;
+    -fx-background-color: -bisq-dark-grey-lit;
     -fx-text-fill: -fx-light-text-color;
     -fx-background-insets: 0;
 }
 
 #bisq-combo-box-list-view {
-    -fx-background-color: -bisq-grey-16;
+    -fx-background-color: -bisq-dark-grey-lit;
     -fx-border-color: -bisq-dark-grey;;
     -fx-border-width: 1;
     -fx-border-insets: 0;
@@ -215,7 +215,7 @@
 }
 
 #chat-message-reactions-separator {
-    -fx-text-fill: -bisq-grey-5;
+    -fx-text-fill: -bisq-dark-grey-lit;
 }
 
 
@@ -224,7 +224,7 @@
 }
 
 .chat-mention-popup-menu-item {
-    -fx-background-color: -bisq-grey-2;
+    -fx-background-color: -bisq-dark-grey-dim;
     -fx-text-fill: -fx-light-text-color;
     -fx-alignment: center-left;
     -fx-padding: 8 14 8 14;
@@ -241,7 +241,7 @@
 }
 
 #onboarding-top-panel {
-    -fx-background-color: -bisq-grey-23;
+    -fx-background-color: -bisq-dark-grey-dim;
 }
 
 /*******************************************************************************
@@ -301,7 +301,7 @@
 }
 
 .channel-selection-list-view .list-cell:selected {
-    -fx-background-color: -bisq-grey-4;
+    -fx-background-color: -bisq-dark-grey-mid;
     -fx-fill: -fx-dark-text-color;
     -fx-text-fill: -fx-dark-text-color;
 }

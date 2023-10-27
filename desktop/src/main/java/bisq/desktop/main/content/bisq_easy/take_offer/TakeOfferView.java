@@ -82,7 +82,7 @@ public class TakeOfferView extends NavigationView<VBox, TakeOfferModel, TakeOffe
 
         HBox hBox = new HBox();
         hBox.setAlignment(Pos.CENTER);
-        hBox.setStyle("-fx-background-color: -bisq-grey-23");
+        hBox.setStyle("-fx-background-color: -bisq-dark-grey-dim");
         hBox.setMinHeight(TOP_PANE_HEIGHT);
         hBox.setMaxHeight(TOP_PANE_HEIGHT);
         hBox.setPadding(new Insets(0, 20, 0, 50));
@@ -189,7 +189,7 @@ public class TakeOfferView extends NavigationView<VBox, TakeOfferModel, TakeOffe
            /* if (showProgressBox) {
                 // VBox.setMargin(content, new Insets(0, 0, 0, 0));
                 Transitions.fadeIn(progressBox, 200);
-                topPane.setStyle("-fx-background-color: -bisq-grey-23");
+                topPane.setStyle("-fx-background-color: -bisq-dark-grey-dim");
             } else {
                 // VBox.setMargin(content, new Insets(0, 40, 0, 40));
                 Transitions.fadeOut(progressBox, 200);

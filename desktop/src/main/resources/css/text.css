@@ -137,8 +137,8 @@
 }
 
 .bisq-text-2 {
-    -fx-fill: -bisq-grey-13;
-    -fx-text-fill: -bisq-grey-13;
+    -fx-fill: -bisq-medium-grey-mid;
+    -fx-text-fill: -bisq-medium-grey-mid;
     -fx-font-size: 1.2em;
 }
 
@@ -280,7 +280,7 @@
 }
 
 .text-fill-light-dimmed {
-    -fx-text-fill: -bisq-grey-11 !Important;
+    -fx-text-fill: -bisq-light-grey-dim !Important;
 }
 
 .text-fill-grey-dimmed {
@@ -433,7 +433,7 @@
 #quote-amount-text-field {
     -fx-background-color: transparent;
     -fx-border-style: none;
-    -fx-text-fill: -bisq-grey-10;
+    -fx-text-fill: -bisq-medium-grey-lit;
     -fx-font-size: 1.1em;
     -fx-font-family: "IBM Plex Sans Light";
 }
@@ -458,7 +458,7 @@
 }
 
 .bisq-large-profile-id-label {
-    -fx-background-color: -bisq-grey-6;
+    -fx-background-color: -bisq-medium-grey-dim;
     -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 1em;
 }
@@ -472,7 +472,7 @@
 .bisq-small-light-label-dimmed {
     -fx-font-size: 0.9em;
     -fx-font-family: "IBM Plex Sans Light";
-    -fx-text-fill: -bisq-grey-13;
+    -fx-text-fill: -bisq-medium-grey-mid;
 }
 
 .bisq-content-headline-label {
@@ -504,7 +504,7 @@
 }
 
 .bisq-grey-dimmed {
-    -fx-text-fill: -bisq-grey-13;
+    -fx-text-fill: -bisq-medium-grey-mid;
 }
 
 .bisq-text-white {
@@ -520,7 +520,7 @@
 }
 
 .bisq-text-grey-10 {
-    -fx-text-fill: -bisq-grey-10;
+    -fx-text-fill: -bisq-medium-grey-lit;
 }
 
 .font-medium {
@@ -570,7 +570,7 @@
     -fx-faint-focus-color: transparent;
     -fx-background-color: transparent;
     -fx-text-fill: -fx-light-text-color;
-    -fx-prompt-text-fill: -bisq-grey-disabled;
+    -fx-prompt-text-fill: -bisq-medium-grey-dim;
     -fx-font-size: 1.25em;
     -fx-font-family: "IBM Plex Sans Light";
 }
@@ -649,7 +649,7 @@
  ******************************************************************************/
 
 .bisq-input-box-top-pane {
-    -fx-background-color: -bisq-grey-12;
+    -fx-background-color: -bisq-dark-grey-mid;
     -fx-background-radius: 4 4 0 0;
 }
 
@@ -663,7 +663,7 @@
     -fx-faint-focus-color: transparent;
     -fx-background-color: transparent;
     -fx-text-fill: -fx-light-text-color;
-    -fx-prompt-text-fill: -bisq-grey-14;
+    -fx-prompt-text-fill: -bisq-medium-grey-dim;
     -fx-font-size: 1.25em;
     -fx-font-family: "IBM Plex Sans Light";
 }

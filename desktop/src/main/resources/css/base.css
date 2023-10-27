@@ -41,63 +41,46 @@
 
     /* Colors */
     -bisq-green: #56ae48; /* #56ae48 rgb(86,174,72) */
-    -bisq-white: #fafafa;
-    -bisq-white-dimmed: #f0f0f0;
-    -bisq-black: #000000;
-    -bisq-black-light: #0f0f0f;
     -bisq-turquoise: #2cacaf;
     -bisq-buy: #006600;
     -bisq-sell: #660000;
     -bisq-red: #d02c1f;
     -bisq-warning: #d0831f;
-    -bisq-table-base: #1D1D1D;
     -bisq-yellow: #e5a500;
 
-    /* Greys */
-    -bisq-grey-dimmed: #828282;
-    -bisq-grey-disabled: #4D4D4D;
-    -bisq-darkgrey-light: #3d3d3d;
-
-    -bisq-grey-2: #1D1D1D;
-    -bisq-grey-3: #212121;
-    -bisq-grey-4: #262626;
-    -bisq-grey-5: #333333;
-    -bisq-grey-6: #474748;
-    -bisq-grey-8: #545454;
-    -bisq-grey-10: #a9a9a9;
-    -bisq-grey-11: #C9C9C9;
-    -bisq-grey-12: #2E2E2E;
-    -bisq-grey-13: #6A6A6A;
-    -bisq-grey-14: #474747;
-    -bisq-grey-15: #292929;
-    -bisq-grey-16: #393939;
-    -bisq-grey-17: #2f2f2f;
-    -bisq-grey-18: #151515;
-    -bisq-grey-19: #282828;
-    -bisq-grey-20: #454545;
-    -bisq-grey-21: #343434;
-    -bisq-grey-22: #707070;
-    -bisq-grey-23: #1e1e1e;
-    -bisq-grey-24: #2c2c2c;
-    -bisq-grey-25: #313131;
-
+    /* Bisq Grey Palette */
+    -bisq-black-dim: #050505;
+    -bisq-black-mid: #0d0d0d;
+    -bisq-black-lit: #151515;
+    -bisq-dark-grey-dim: #1e1e1e;
+    -bisq-dark-grey-mid: #2b2b2b;
+    -bisq-dark-grey-lit: #383838;
+    -bisq-medium-grey-dim: #4d4d4d;
+    -bisq-medium-grey-mid: #808080;
+    -bisq-medium-grey-lit: #b2b2b2;
+    -bisq-light-grey-dim: #c7c7c7;
+    -bisq-light-grey-mid: #d4d4d4;
+    -bisq-light-grey-lit: #e1e1e1;
+    -bisq-white-dim: #eaeaea;
+    -bisq-white-mid: #f2f2f2;
+    -bisq-white-lit: #fafafa;
 
     /* Background colors */
-    -bisq-darker-grey: -bisq-grey-2;
-    -bisq-dark-grey: -bisq-grey-3;
-    -bisq-content-bg-grey: -bisq-grey-4;
-    -bisq-popup-bg-grey: -bisq-grey-15;
+    -bisq-darker-grey: -bisq-dark-grey-dim;
+    -bisq-dark-grey: -bisq-dark-grey-dim;
+    -bisq-content-bg-grey: -bisq-dark-grey-mid;
+    -bisq-popup-bg-grey: -bisq-dark-grey-mid;
 
     /* Border colors */
-    -bisq-border-color-grey: -bisq-grey-disabled;
-    -bisq-border-color-grey-hover: -bisq-grey-11;
+    -bisq-border-color-grey: -bisq-medium-grey-dim;
+    -bisq-border-color-grey-hover: -bisq-light-grey-dim;
 
 
     -fx-base: -bisq-content-bg-grey;
     -fx-accent: -bisq-green;
     -fx-background: -bisq-content-bg-grey;
 
-    -fx-color: -bisq-grey-17;
+    -fx-color: -bisq-dark-grey-mid;
     -fx-body-color: -fx-color;
 
     -fx-box-border: transparent;
@@ -107,9 +90,9 @@
     -bisq-green-hover: derive(-fx-default-button, 10%);
     -bisq-green-pressed: derive(-fx-default-button, -5%);
 
-    -fx-dark-text-color: -bisq-black;
-    -fx-mid-text-color: -bisq-grey-dimmed;
-    -fx-light-text-color: -bisq-white;
+    -fx-dark-text-color: -bisq-black-dim;
+    -fx-mid-text-color: -bisq-medium-grey-mid;
+    -fx-light-text-color: -bisq-white-lit;
 
     -bisq-error: -bisq-red;
 
