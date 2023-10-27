@@ -1,12 +1,13 @@
 package bisq.network.p2p.node.transport;
 
+import bisq.common.timer.Scheduler;
 import bisq.common.util.NetworkUtils;
 import bisq.i2p.I2pClient;
 import bisq.i2p.I2pEmbeddedRouter;
 import bisq.network.NetworkService;
+import bisq.network.common.Address;
 import bisq.network.common.TransportConfig;
 import bisq.network.p2p.node.ConnectionException;
-import bisq.network.common.Address;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -81,6 +82,7 @@ public class I2PTransportService implements TransportService {
     private final BootstrapInfo bootstrapInfo = new BootstrapInfo();
     private int numSocketsCreated = 0;
     private I2PTransportService.Config config;
+    private Scheduler startBootstrapProgressUpdater;
 
     public I2PTransportService(TransportConfig config) {
         // Demonstrate potential usage of specific config.
@@ -102,6 +104,7 @@ public class I2PTransportService implements TransportService {
         log.debug("Initialize");
 
         bootstrapInfo.getBootstrapState().set(BootstrapState.BOOTSTRAP_TO_NETWORK);
+        startBootstrapProgressUpdater = Scheduler.run(() -> updateStartBootstrapProgress(bootstrapInfo)).periodically(1000);
         bootstrapInfo.getBootstrapDetails().set("Start bootstrapping");
 
         //If embedded router, start it already ...
@@ -129,6 +132,10 @@ public class I2PTransportService implements TransportService {
     @Override
     public CompletableFuture<Boolean> shutdown() {
         initializeCalled = false;
+        if (startBootstrapProgressUpdater != null) {
+            startBootstrapProgressUpdater.stop();
+            startBootstrapProgressUpdater = null;
+        }
         if (i2pClient == null) {
             return CompletableFuture.completedFuture(true);
         }
@@ -161,6 +168,10 @@ public class I2PTransportService implements TransportService {
     public ServerSocketResult getServerSocket(int port, String nodeId) {
         log.debug("Create serverSocket");
         try {
+            if (startBootstrapProgressUpdater != null) {
+                startBootstrapProgressUpdater.stop();
+                startBootstrapProgressUpdater = null;
+            }
             bootstrapInfo.getBootstrapState().set(BootstrapState.START_PUBLISH_SERVICE);
             // 25%-50% we attribute to the publishing of the hidden service. Takes usually 5-10 sec.
             bootstrapInfo.getBootstrapProgress().set(0.25);

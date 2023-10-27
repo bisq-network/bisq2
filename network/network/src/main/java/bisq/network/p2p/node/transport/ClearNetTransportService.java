@@ -1,7 +1,8 @@
 package bisq.network.p2p.node.transport;
 
-import bisq.network.common.TransportConfig;
+import bisq.common.timer.Scheduler;
 import bisq.network.common.Address;
+import bisq.network.common.TransportConfig;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -46,6 +47,7 @@ public class ClearNetTransportService implements TransportService {
     @Getter
     private final BootstrapInfo bootstrapInfo = new BootstrapInfo();
     private boolean initializeCalled;
+    private Scheduler startBootstrapProgressUpdater;
 
     public ClearNetTransportService(TransportConfig config) {
     }
@@ -57,11 +59,16 @@ public class ClearNetTransportService implements TransportService {
         }
         initializeCalled = true;
         bootstrapInfo.getBootstrapState().set(BootstrapState.BOOTSTRAP_TO_NETWORK);
+        startBootstrapProgressUpdater = Scheduler.run(() -> updateStartBootstrapProgress(bootstrapInfo)).periodically(1000);
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
         // Simulate delay
+        if (startBootstrapProgressUpdater != null) {
+            startBootstrapProgressUpdater.stop();
+            startBootstrapProgressUpdater = null;
+        }
         return CompletableFuture.supplyAsync(() -> true,
                 CompletableFuture.delayedExecutor(20, TimeUnit.MILLISECONDS));
     }
@@ -70,6 +77,10 @@ public class ClearNetTransportService implements TransportService {
     public ServerSocketResult getServerSocket(int port, String nodeId) {
         log.info("Create serverSocket at port {}", port);
 
+        if (startBootstrapProgressUpdater != null) {
+            startBootstrapProgressUpdater.stop();
+            startBootstrapProgressUpdater = null;
+        }
         bootstrapInfo.getBootstrapState().set(BootstrapState.START_PUBLISH_SERVICE);
         bootstrapInfo.getBootstrapProgress().set(0.25);
         bootstrapInfo.getBootstrapDetails().set("Start creating server");

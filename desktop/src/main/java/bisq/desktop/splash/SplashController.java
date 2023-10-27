@@ -79,11 +79,11 @@ public class SplashController implements Controller {
     }
 
     public void startAnimation() {
-        model.getProgress().set(-1);
+        applyMaxProgress(-1);
     }
 
     public void stopAnimation() {
-        model.getProgress().set(0);
+        applyMaxProgress(0);
     }
 
     private void applyMaxProgress(double progress) {
