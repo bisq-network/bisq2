@@ -116,7 +116,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
         model.getChatUserDetailsRoot().set(userProfileSidebar.getRoot());
     }
 
-    protected void chatChannelChanged(@Nullable ChatChannel<? extends ChatMessage> chatChannel) {
+    protected void selectedChannelChanged(@Nullable ChatChannel<? extends ChatMessage> chatChannel) {
         UIThread.run(() -> {
             model.selectedChannelProperty().set(chatChannel);
 

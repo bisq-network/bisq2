@@ -86,9 +86,9 @@ public class BisqEasyPrivateChatsController extends ChatController<BisqEasyPriva
                 .map(channel -> new BisqEasyPrivateChatsView.ListItem(channel, reputationService))
                 .to(channelService.getChannels());
 
-        channelsPin = channelService.getChannels().addObserver(this::onChannelsChanged);
+        channelsPin = channelService.getChannels().addObserver(this::channelsChanged);
 
-        selectedChannelPin = selectionService.getSelectedChannel().addObserver(this::chatChannelChanged);
+        selectedChannelPin = selectionService.getSelectedChannel().addObserver(this::selectedChannelChanged);
 
         maybeSelectFirst();
     }
@@ -103,13 +103,13 @@ public class BisqEasyPrivateChatsController extends ChatController<BisqEasyPriva
     }
 
     @Override
-    protected void chatChannelChanged(ChatChannel<? extends ChatMessage> chatChannel) {
+    protected void selectedChannelChanged(ChatChannel<? extends ChatMessage> chatChannel) {
         if (chatChannel == null) {
             model.getSelectedItem().set(null);
         }
 
         if (chatChannel instanceof TwoPartyPrivateChatChannel) {
-            super.chatChannelChanged(chatChannel);
+            super.selectedChannelChanged(chatChannel);
 
             UIThread.run(() -> {
                 TwoPartyPrivateChatChannel privateChannel = (TwoPartyPrivateChatChannel) chatChannel;
@@ -140,7 +140,7 @@ public class BisqEasyPrivateChatsController extends ChatController<BisqEasyPriva
         }
     }
 
-    private void onChannelsChanged() {
+    private void channelsChanged() {
         UIThread.run(() -> model.getNoOpenChats().set(model.getFilteredList().isEmpty()));
 
         // As we use the list from the model which gets filled by the same observable source, and we do not have a

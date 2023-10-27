@@ -174,7 +174,7 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
         updateVisibility();
         maybeSelectFirstItem();
 
-        selectedChannelPin = selectionService.getSelectedChannel().addObserver(this::chatChannelChanged);
+        selectedChannelPin = selectionService.getSelectedChannel().addObserver(this::selectedChannelChanged);
         selectedItemPin = EasyBind.subscribe(model.getSelectedItem(), this::selectedItemChanged);
     }
 
@@ -191,9 +191,9 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
     }
 
     @Override
-    protected void chatChannelChanged(ChatChannel<? extends ChatMessage> chatChannel) {
+    protected void selectedChannelChanged(ChatChannel<? extends ChatMessage> chatChannel) {
         if (chatChannel instanceof BisqEasyOpenTradeChannel) {
-            super.chatChannelChanged(chatChannel);
+            super.selectedChannelChanged(chatChannel);
 
             UIThread.run(() -> {
                 BisqEasyOpenTradeChannel channel = (BisqEasyOpenTradeChannel) chatChannel;
