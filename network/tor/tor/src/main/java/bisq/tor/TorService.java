@@ -79,9 +79,7 @@ public class TorService implements Service {
         PasswordDigest hashedControlPassword = PasswordDigest.generateDigest();
         createTorrcConfigFile(torDataDirPath, controlPort, hashedControlPassword);
 
-        Path torBinaryPath = torDataDirPath.resolve("tor");
-        Path torrcPath = torDataDirPath.resolve("torrc");
-        var nativeTorProcess = new NativeTorProcess(torBinaryPath, torrcPath);
+        var nativeTorProcess = new NativeTorProcess(torDataDirPath);
         torProcess = Optional.of(nativeTorProcess);
 
         File debugLogFile = torDataDirPath.resolve("debug.log").toFile();
