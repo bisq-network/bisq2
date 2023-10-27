@@ -45,6 +45,7 @@ import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -276,6 +277,7 @@ public class BisqEasyPrivateChatsView extends ChatView {
     }
 
     @Getter
+    @ToString
     @EqualsAndHashCode
     static class ListItem implements TableItem {
         private final TwoPartyPrivateChatChannel channel;
