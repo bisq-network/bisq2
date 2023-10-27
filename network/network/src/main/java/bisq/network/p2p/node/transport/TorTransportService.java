@@ -1,8 +1,9 @@
 package bisq.network.p2p.node.transport;
 
+import bisq.common.timer.Scheduler;
+import bisq.network.common.Address;
 import bisq.network.common.TransportConfig;
 import bisq.network.p2p.node.ConnectionException;
-import bisq.network.common.Address;
 import bisq.tor.TorService;
 import bisq.tor.TorTransportConfig;
 import bisq.tor.onionservice.CreateOnionServiceResponse;
@@ -28,18 +29,24 @@ public class TorTransportService implements TransportService {
 
     @Getter
     private final BootstrapInfo bootstrapInfo = new BootstrapInfo();
+    private Scheduler startBootstrapProgressUpdater;
     private int numSocketsCreated = 0;
 
     public TorTransportService(TransportConfig config) {
         if (torService == null) {
             torService = new TorService((TorTransportConfig) config);
             bootstrapInfo.getBootstrapState().set(BootstrapState.BOOTSTRAP_TO_NETWORK);
+            startBootstrapProgressUpdater = Scheduler.run(() -> updateStartBootstrapProgress(bootstrapInfo)).periodically(1000);
             bootstrapInfo.getBootstrapDetails().set("Start bootstrapping");
             torService.getBootstrapEvent().addObserver(bootstrapEvent -> {
                 if (bootstrapEvent != null) {
                     int bootstrapEventProgress = bootstrapEvent.getProgress();
                     // First 25% we attribute to the bootstrap to the Tor network. Takes usually about 3 sec.
                     if (bootstrapInfo.getBootstrapProgress().get() < 0.25) {
+                        if (startBootstrapProgressUpdater != null) {
+                            startBootstrapProgressUpdater.stop();
+                            startBootstrapProgressUpdater = null;
+                        }
                         bootstrapInfo.getBootstrapProgress().set(bootstrapEventProgress / 400d);
                         bootstrapInfo.getBootstrapDetails().set("Tor bootstrap event: " + bootstrapEvent.getTag());
                     }
@@ -57,6 +64,10 @@ public class TorTransportService implements TransportService {
     @Override
     public CompletableFuture<Boolean> shutdown() {
         log.info("Shutdown tor.");
+        if (startBootstrapProgressUpdater != null) {
+            startBootstrapProgressUpdater.stop();
+            startBootstrapProgressUpdater = null;
+        }
         torService.shutdown().join();
         return CompletableFuture.completedFuture(true);
     }

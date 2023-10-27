@@ -17,8 +17,8 @@
 
 package bisq.network.p2p.node.transport;
 
-import bisq.network.common.TransportConfig;
 import bisq.network.common.Address;
+import bisq.network.common.TransportConfig;
 import bisq.network.common.TransportType;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 
@@ -59,4 +59,9 @@ public interface TransportService {
     Optional<Address> getServerAddress(String serverId);
 
     boolean isPeerOnline(Address address);
+
+    default void updateStartBootstrapProgress(BootstrapInfo bootstrapInfo) {
+        double newValue = Math.min(0.24, bootstrapInfo.getBootstrapProgress().get() + 0.01);
+        bootstrapInfo.getBootstrapProgress().set(Math.max(0, newValue));
+    }
 }
