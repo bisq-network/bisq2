@@ -21,24 +21,26 @@ package bisq.network.p2p;
 import bisq.common.data.Pair;
 import bisq.common.observable.Observable;
 import bisq.common.util.CompletableFutureUtils;
+import bisq.common.util.NetworkUtils;
 import bisq.network.NetworkService;
+import bisq.network.common.Address;
+import bisq.network.common.AddressByTransportTypeMap;
 import bisq.network.common.TransportConfig;
+import bisq.network.common.TransportType;
 import bisq.network.identity.NetworkId;
+import bisq.network.identity.TorIdentity;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.network_load.NetworkLoadService;
 import bisq.network.p2p.node.transport.BootstrapInfo;
-import bisq.network.common.TransportType;
 import bisq.network.p2p.services.confidential.ConfidentialMessageListener;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatusService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.peergroup.PeerGroupManager;
-import bisq.network.common.Address;
-import bisq.network.common.AddressByTransportTypeMap;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -350,7 +352,11 @@ public class ServiceNodesByTransport implements PersistenceClient<ServiceNodesBy
             } else {
                 AddressByTransportTypeMap addressByTransportTypeMap = new AddressByTransportTypeMap();
                 addressByTransportTypeMap.put(transportType, address);
-                NetworkId networkId = new NetworkId(addressByTransportTypeMap, pubKey, nodeId);
+
+                int randomPort = NetworkUtils.selectRandomPort();
+                var torIdentity = TorIdentity.generate(randomPort);
+
+                NetworkId networkId = new NetworkId(addressByTransportTypeMap, pubKey, nodeId, torIdentity);
                 persistableStore.getNetworkIdByNodeId().put(nodeId, networkId);
             }
             persist();
