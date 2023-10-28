@@ -28,6 +28,7 @@ import bisq.network.identity.NetworkId;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
+import bisq.offer.price.spec.PriceSpec;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.trade.ServiceProvider;
@@ -208,7 +209,9 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
                                      Monetary baseSideAmount,
                                      Monetary quoteSideAmount,
                                      BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec,
-                                     FiatPaymentMethodSpec fiatPaymentMethodSpec) throws TradeException {
+                                     FiatPaymentMethodSpec fiatPaymentMethodSpec,
+                                     PriceSpec agreedPriceSpec,
+                                     long marketPrice) throws TradeException {
         Optional<UserProfile> mediator = serviceProvider.getSupportService().getMediationService().selectMediator(bisqEasyOffer.getMakersUserProfileId(), takerIdentity.getId());
         NetworkId takerNetworkId = takerIdentity.getNetworkId();
         BisqEasyContract contract = new BisqEasyContract(bisqEasyOffer,
@@ -217,7 +220,9 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
                 quoteSideAmount.getValue(),
                 bitcoinPaymentMethodSpec,
                 fiatPaymentMethodSpec,
-                mediator);
+                mediator,
+                agreedPriceSpec,
+                marketPrice);
         boolean isBuyer = bisqEasyOffer.getTakersDirection().isBuy();
         BisqEasyTrade bisqEasyTrade = new BisqEasyTrade(isBuyer, true, takerIdentity, contract, takerNetworkId);
 
