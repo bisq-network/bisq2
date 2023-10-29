@@ -21,27 +21,30 @@ import bisq.common.FileCreationWatcher;
 import bisq.common.scanner.FileScanner;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class NativeTorProcess {
-
     public static final String ARG_OWNER_PID = "__OwningControllerProcess";
+
+    private final Path torDataDirPath;
     private final Path torBinaryPath;
     private final Path torrcPath;
     private Optional<Process> process = Optional.empty();
     private Optional<Future<Path>> logFileCreationWaiter = Optional.empty();
 
-    public NativeTorProcess(Path torBinaryPath, Path torrcPath) {
-        this.torBinaryPath = torBinaryPath;
-        this.torrcPath = torrcPath;
+    public NativeTorProcess(Path torDataDirPath) {
+        this.torDataDirPath = torDataDirPath;
+        this.torBinaryPath = torDataDirPath.resolve("tor");
+        this.torrcPath = torDataDirPath.resolve("torrc");
     }
 
     public void start() {
@@ -53,6 +56,9 @@ public class NativeTorProcess {
                 "-f", absoluteTorrcPathAsString,
                 ARG_OWNER_PID, ownerPid
         );
+
+        Map<String, String> environment = processBuilder.environment();
+        environment.put("LD_PRELOAD", computeLdPreloadVariable());
 
         processBuilder.redirectError(ProcessBuilder.Redirect.DISCARD);
         processBuilder.redirectOutput(ProcessBuilder.Redirect.DISCARD);
@@ -96,6 +102,16 @@ public class NativeTorProcess {
                 throw new CouldNotWaitForTorShutdownException(e);
             }
         });
+    }
+
+    private String computeLdPreloadVariable() {
+        File[] sharedLibraries = torDataDirPath.toFile()
+                .listFiles((file, fileName) -> fileName.contains(".so."));
+        Objects.requireNonNull(sharedLibraries);
+
+        return Arrays.stream(sharedLibraries)
+                .map(File::getAbsolutePath)
+                .collect(Collectors.joining(":"));
     }
 
     private Future<Path> createLogFileCreationWaiter() {
