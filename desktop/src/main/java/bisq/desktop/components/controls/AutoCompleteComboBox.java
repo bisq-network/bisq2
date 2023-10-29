@@ -19,6 +19,7 @@ package bisq.desktop.components.controls;
 
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
+import bisq.desktop.components.controls.validator.ValidatorBase;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
@@ -112,6 +113,15 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
         // todo does not update items when we change list so add a handler here for a quick fix
         // need to figure out why its not updating
         items.addListener(new WeakReference<>((ListChangeListener<T>) c -> setAutocompleteItems(items)).get());
+    }
+
+    public void validateOnNoItemSelectedWithMessage(String message) {
+        skin.materialTextField.setValidators(new ValidatorBase(message) {
+            @Override
+            protected void eval() {
+                hasErrors.set(getSelectionModel().getSelectedItem() == null);
+            }
+        });
     }
 
     public Skin<T> getAutoCompleteComboBoxSkin() {
@@ -329,7 +339,6 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
                 materialTextField = new MaterialTextField(description, prompt);
             }
             materialTextField.setStyle("-fx-background-color: transparent");
-
             arrow = ImageUtil.getImageViewById("arrow-down");
             arrow.setLayoutY(22);
             arrow.setMouseTransparent(true);

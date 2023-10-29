@@ -31,8 +31,19 @@ import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.VPos;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
+import javafx.scene.control.RadioButton;
+import javafx.scene.control.Toggle;
+import javafx.scene.control.ToggleGroup;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 import javafx.util.converter.NumberStringConverter;
@@ -74,7 +85,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
                 return null;
             }
         });
-
+        languageSelection.validateOnNoItemSelectedWithMessage(Res.get("settings.preferences.language.select.invalid"));
 
         // Supported languages
         Label supportedLanguagesHeadline = new Label(Res.get("settings.preferences.language.supported.headline"));
