@@ -143,6 +143,9 @@ public class TakeOfferReviewController implements Controller {
 
             applyPriceQuote(priceQuote);
             applyPriceDetails(priceSpec, model.getBisqEasyOffer().getMarket());
+
+            OfferAmountUtil.findBaseSideMinOrFixedAmount(marketPriceService, model.getBisqEasyOffer().getAmountSpec(), priceSpec, model.getBisqEasyOffer().getMarket())
+                    .ifPresent(model::setTakersBaseSideAmount);
         }
     }
 

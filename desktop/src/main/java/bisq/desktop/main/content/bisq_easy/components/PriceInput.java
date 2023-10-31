@@ -113,7 +113,7 @@ public class PriceInput {
             if (model.market != null && model.description.get() == null) {
                 model.description.set(Res.get("component.priceInput.description", model.market.getMarketCodes()));
             }
-            if (model.isEditable && model.priceQuote.get() == null) {
+            if (model.isEditable) {
                 setQuoteFromMarketPrice();
             }
         }
