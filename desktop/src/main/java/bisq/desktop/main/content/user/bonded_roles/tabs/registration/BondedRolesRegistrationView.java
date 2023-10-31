@@ -38,6 +38,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
 import javafx.scene.text.TextFlow;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -106,10 +107,16 @@ public abstract class BondedRolesRegistrationView<M extends BondedRolesRegistrat
 
         requestRegistrationButton = new Button(Res.get("user.bondedRoles.registration.requestRegistration"));
         requestRegistrationButton.setDefaultButton(true);
+        requestRegistrationButton.getStyleClass().add("button-reduced-padding");
+        requestRegistrationButton.setPrefWidth(180);
 
         requestCancellationButton = new Button(Res.get("user.bondedRoles.cancellation.requestCancellation"));
+        requestCancellationButton.getStyleClass().add("button-reduced-padding");
+        requestCancellationButton.setPrefWidth(180);
 
         learnMore = new Hyperlink(Res.get("action.learnMore"));
+        learnMore.setWrapText(true);
+        learnMore.setTextAlignment(TextAlignment.CENTER);
 
         buttons = new HBox(20, requestRegistrationButton, requestCancellationButton, Spacer.fillHBox(), learnMore);
         buttons.setAlignment(Pos.BOTTOM_RIGHT);

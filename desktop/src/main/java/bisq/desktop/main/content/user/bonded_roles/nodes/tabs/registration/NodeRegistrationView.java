@@ -44,8 +44,12 @@ public class NodeRegistrationView extends BondedRolesRegistrationView<NodeRegist
 
         importNodeAddressButton = new Button(Res.get("user.bondedRoles.registration.node.importAddress"));
         importNodeAddressButton.getStyleClass().add("outlined-button");
+        importNodeAddressButton.getStyleClass().add("button-reduced-padding");
+        importNodeAddressButton.setPrefWidth(200);
 
         showKeyPairButton = new Button(Res.get("user.bondedRoles.registration.node.showKeyPair"));
+        showKeyPairButton.getStyleClass().add("button-reduced-padding");
+        showKeyPairButton.setPrefWidth(150);
 
         buttons.getChildren().add(0, importNodeAddressButton);
         buttons.getChildren().add(2, showKeyPairButton);

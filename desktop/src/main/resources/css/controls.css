@@ -37,6 +37,10 @@
     -fx-text-fill: derive(-fx-light-text-color, -20%);
 }
 
+.button-reduced-padding {
+    -fx-label-padding: 0 -15 0 -15;
+}
+
 .button:default,
 .default-button {
     -fx-background-color: -fx-default-button;

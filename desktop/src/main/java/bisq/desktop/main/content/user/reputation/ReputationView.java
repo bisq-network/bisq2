@@ -28,9 +28,14 @@ import bisq.presentation.formatters.TimeFormatter;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
+import java.util.Comparator;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Hyperlink;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -41,8 +46,6 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
-
-import java.util.Comparator;
 
 @Slf4j
 public class ReputationView extends View<VBox, ReputationModel, ReputationController> {
@@ -64,9 +67,20 @@ public class ReputationView extends View<VBox, ReputationModel, ReputationContro
         info.setMinHeight(220);
 
         burnBsqButton = new Button(Res.get("user.reputation.burnBsq"));
+        burnBsqButton.getStyleClass().add("button-reduced-padding");
+        burnBsqButton.setPrefWidth(140);
+
         bsqBondButton = new Button(Res.get("user.reputation.bond"));
+        bsqBondButton.getStyleClass().add("button-reduced-padding");
+        bsqBondButton.setPrefWidth(130);
+
         accountAgeButton = new Button(Res.get("user.reputation.accountAge"));
+        accountAgeButton.getStyleClass().add("button-reduced-padding");
+        accountAgeButton.setPrefWidth(140);
+
         signedAccountButton = new Button(Res.get("user.reputation.signedWitness"));
+        signedAccountButton.getStyleClass().add("button-reduced-padding");
+        signedAccountButton.setPrefWidth(230);
 
         learnMore = new Hyperlink(Res.get("action.learnMore"));
 
@@ -103,8 +117,7 @@ public class ReputationView extends View<VBox, ReputationModel, ReputationContro
         signedAccountButton.setOnAction(e -> controller.onSignedAccount());
         learnMore.setOnAction(e -> controller.onLearnMore());
 
-        userProfileIdOfScoreUpdatePin = EasyBind.subscribe(model.getUserProfileIdOfScoreUpdate(), profileId ->
-        {
+        userProfileIdOfScoreUpdatePin = EasyBind.subscribe(model.getUserProfileIdOfScoreUpdate(), profileId -> {
             if (profileId != null) {
                 tableView.refresh();
             }
