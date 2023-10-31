@@ -459,7 +459,7 @@ public class ChatMessagesListView {
             return channel.getChatMessages().addObserver(new CollectionObserver<>() {
                 @Override
                 public void add(M chatMessage) {
-                    UIThread.run(() -> {
+                    UIThread.runOnNextRenderFrame(() -> {
                         model.chatMessages.add(new ChatMessageListItem<>(chatMessage, userProfileService, reputationService,
                                 bisqEasyTradeService, userIdentityService, networkService));
                     });
@@ -468,7 +468,7 @@ public class ChatMessagesListView {
                 @Override
                 public void remove(Object element) {
                     if (element instanceof ChatMessage) {
-                        UIThread.run(() -> {
+                        UIThread.runOnNextRenderFrame(() -> {
                             ChatMessage chatMessage = (ChatMessage) element;
                             Optional<ChatMessageListItem<? extends ChatMessage>> toRemove = model.chatMessages.stream()
                                     .filter(item -> item.getChatMessage().getId().equals(chatMessage.getId()))
@@ -483,7 +483,7 @@ public class ChatMessagesListView {
 
                 @Override
                 public void clear() {
-                    UIThread.run(() -> {
+                    UIThread.runOnNextRenderFrame(() -> {
                         model.chatMessages.forEach(ChatMessageListItem::dispose);
                         model.chatMessages.clear();
                     });
