@@ -38,7 +38,6 @@ import java.util.Optional;
 
 @Slf4j
 public class BisqEasyPrivateChatsController extends ChatController<BisqEasyPrivateChatsView, BisqEasyPrivateChatsModel> {
-    private final BisqEasyPrivateChatsModel bisqEasyPrivateChatsModel;
     private final TwoPartyPrivateChatChannelService channelService;
     private final BisqEasyPrivateChatChannelSelectionService selectionService;
     private final ReputationService reputationService;
@@ -51,7 +50,6 @@ public class BisqEasyPrivateChatsController extends ChatController<BisqEasyPriva
         channelService = chatService.getTwoPartyPrivateChatChannelServices().get(ChatChannelDomain.BISQ_EASY_PRIVATE_CHAT);
         selectionService = chatService.getBisqEasyPrivateChatChannelSelectionService();
         reputationService = serviceProvider.getUserService().getReputationService();
-        bisqEasyPrivateChatsModel = getModel();
     }
 
     @Override
@@ -112,13 +110,13 @@ public class BisqEasyPrivateChatsController extends ChatController<BisqEasyPriva
             super.selectedChannelChanged(chatChannel);
 
             UIThread.run(() -> {
-                TwoPartyPrivateChatChannel privateChannel = (TwoPartyPrivateChatChannel) chatChannel;
-                applyPeersIcon(privateChannel);
-                UserProfile peer = privateChannel.getPeer();
+                TwoPartyPrivateChatChannel channel = (TwoPartyPrivateChatChannel) chatChannel;
+                applyPeersIcon(channel);
+                UserProfile peer = channel.getPeer();
                 model.setPeersReputationScore(reputationService.getReputationScore(peer));
                 model.getPeersUserProfile().set(peer);
                 model.getListItems().stream()
-                        .filter(item -> item.getChannel().equals(privateChannel))
+                        .filter(item -> item.getChannel().equals(channel))
                         .findAny()
                         .ifPresent(item -> model.getSelectedItem().set(item));
             });
@@ -149,7 +147,9 @@ public class BisqEasyPrivateChatsController extends ChatController<BisqEasyPriva
     }
 
     private void maybeSelectFirst() {
-        if (selectionService.getSelectedChannel().get() == null && !channelService.getChannels().isEmpty()) {
+        if (selectionService.getSelectedChannel().get() == null &&
+                !channelService.getChannels().isEmpty() &&
+                !model.getSortedList().isEmpty()) {
             selectionService.getSelectedChannel().set(model.getSortedList().get(0).getChannel());
         }
     }
