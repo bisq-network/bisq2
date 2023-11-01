@@ -52,9 +52,6 @@ public class NotificationPanelController implements Controller {
 
     @Override
     public void onActivate() {
-        isNotificationVisiblePin = FxBindings.bind(model.getIsNotificationVisible())
-                .to(bisqEasyNotificationsService.getIsNotificationPanelVisible());
-
         tradeIdsOfNotificationsPin = bisqEasyNotificationsService.getTradeIdsOfNotifications().addObserver(() -> {
             UIThread.run(() -> {
                 Set<String> tradeIdsOfNotifications = bisqEasyNotificationsService.getTradeIdsOfNotifications();
@@ -67,6 +64,9 @@ public class NotificationPanelController implements Controller {
                 }
             });
         });
+
+        isNotificationVisiblePin = FxBindings.bind(model.getIsNotificationVisible())
+                .to(bisqEasyNotificationsService.getIsNotificationPanelVisible());
     }
 
     @Override

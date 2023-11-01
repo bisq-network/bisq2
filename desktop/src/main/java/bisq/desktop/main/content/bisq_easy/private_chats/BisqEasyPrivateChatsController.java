@@ -81,7 +81,11 @@ public class BisqEasyPrivateChatsController extends ChatController<BisqEasyPriva
     @Override
     public void onActivate() {
         channelItemPin = FxBindings.<TwoPartyPrivateChatChannel, BisqEasyPrivateChatsView.ListItem>bind(model.getListItems())
-                .map(channel -> new BisqEasyPrivateChatsView.ListItem(channel, reputationService))
+                .map(channel -> {
+                    // We call maybeSelectFirst one render frame after we applied the item to the model list.
+                    UIThread.runOnNextRenderFrame(this::maybeSelectFirst);
+                    return new BisqEasyPrivateChatsView.ListItem(channel, reputationService);
+                })
                 .to(channelService.getChannels());
 
         channelsPin = channelService.getChannels().addObserver(this::channelsChanged);
@@ -102,14 +106,15 @@ public class BisqEasyPrivateChatsController extends ChatController<BisqEasyPriva
 
     @Override
     protected void selectedChannelChanged(ChatChannel<? extends ChatMessage> chatChannel) {
-        if (chatChannel == null) {
-            model.getSelectedItem().set(null);
-        }
+        super.selectedChannelChanged(chatChannel);
 
-        if (chatChannel instanceof TwoPartyPrivateChatChannel) {
-            super.selectedChannelChanged(chatChannel);
+        UIThread.run(() -> {
+            if (chatChannel == null) {
+                model.getSelectedItem().set(null);
+                maybeSelectFirst();
+            }
 
-            UIThread.run(() -> {
+            if (chatChannel instanceof TwoPartyPrivateChatChannel) {
                 TwoPartyPrivateChatChannel channel = (TwoPartyPrivateChatChannel) chatChannel;
                 applyPeersIcon(channel);
                 UserProfile peer = channel.getPeer();
@@ -119,8 +124,8 @@ public class BisqEasyPrivateChatsController extends ChatController<BisqEasyPriva
                         .filter(item -> item.getChannel().equals(channel))
                         .findAny()
                         .ifPresent(item -> model.getSelectedItem().set(item));
-            });
-        }
+            }
+        });
     }
 
     void onSelectItem(BisqEasyPrivateChatsView.ListItem item) {
@@ -139,11 +144,10 @@ public class BisqEasyPrivateChatsController extends ChatController<BisqEasyPriva
     }
 
     private void channelsChanged() {
-        UIThread.run(() -> model.getNoOpenChats().set(model.getFilteredList().isEmpty()));
-
-        // As we use the list from the model which gets filled by the same observable source, and we do not have a
-        // defined order of observer calls we delay the selection of the first item to the next render frame.
-        UIThread.runOnNextRenderFrame(this::maybeSelectFirst);
+        UIThread.run(() -> {
+            model.getNoOpenChats().set(model.getFilteredList().isEmpty());
+            maybeSelectFirst();
+        });
     }
 
     private void maybeSelectFirst() {

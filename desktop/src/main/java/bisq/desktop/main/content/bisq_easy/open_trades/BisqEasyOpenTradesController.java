@@ -44,8 +44,6 @@ import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationService;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
 import java.util.Optional;
 
@@ -59,9 +57,8 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
     private final NotificationsService notificationsService;
     private final ChatNotificationService chatNotificationService;
     private TradeStateController tradeStateController;
-    private Pin channelItemPin, selectedChannelPin, tradeRulesConfirmedPin;
+    private Pin channelItemPin, tradesPin, channelsPin, selectedChannelPin, tradeRulesConfirmedPin;
     private OpenTradesWelcome openTradesWelcome;
-    private Subscription selectedItemPin;
     private TradeDataHeader tradeDataHeader;
 
     public BisqEasyOpenTradesController(ServiceProvider serviceProvider) {
@@ -108,22 +105,32 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
     public void onActivate() {
         model.getFilteredList().setPredicate(e -> false);
 
+        tradesPin = bisqEasyTradeService.getTrades().addObserver(new CollectionObserver<>() {
+            @Override
+            public void add(BisqEasyTrade trade) {
+                channelService.findChannelByTradeId(trade.getId())
+                        .ifPresent(channel -> onTradeAndChannelAdded(trade, channel));
+            }
+
+            @Override
+            public void remove(Object element) {
+                if (element instanceof BisqEasyTrade) {
+                    BisqEasyTrade trade = (BisqEasyTrade) element;
+                    onTradeRemoved(trade);
+                }
+            }
+
+            @Override
+            public void clear() {
+                onClearTrades();
+            }
+        });
+
         channelItemPin = channelService.getChannels().addObserver(new CollectionObserver<>() {
             @Override
             public void add(BisqEasyOpenTradeChannel channel) {
                 bisqEasyTradeService.findTrade(channel.getTradeId())
-                        .ifPresent(trade -> {
-                            if (findListItem(trade).isEmpty()) {
-                                UIThread.run(() -> {
-                                    model.getListItems().add(new BisqEasyOpenTradesView.ListItem(channel,
-                                            trade,
-                                            reputationService,
-                                            notificationsService,
-                                            chatNotificationService));
-                                    updateVisibility();
-                                });
-                            }
-                        });
+                        .ifPresent(trade -> onTradeAndChannelAdded(trade, channel));
             }
 
             @Override
@@ -131,26 +138,13 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
                 if (element instanceof BisqEasyOpenTradeChannel) {
                     BisqEasyOpenTradeChannel channel = (BisqEasyOpenTradeChannel) element;
                     bisqEasyTradeService.findTrade(channel.getTradeId())
-                            .ifPresent(trade -> {
-                                Optional<BisqEasyOpenTradesView.ListItem> toRemove = findListItem(trade);
-                                toRemove.ifPresent(item -> {
-                                    UIThread.run(() -> {
-                                        item.dispose();
-                                        model.getListItems().remove(item);
-                                        updateVisibility();
-                                    });
-                                });
-                            });
+                            .ifPresent(trade -> onTradeRemoved(trade));
                 }
             }
 
             @Override
             public void clear() {
-                UIThread.run(() -> {
-                    model.getListItems().forEach(BisqEasyOpenTradesView.ListItem::dispose);
-                    model.getListItems().clear();
-                    updateVisibility();
-                });
+                onClearTrades();
             }
         });
 
@@ -158,7 +152,7 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
                 UIThread.run(() -> {
                     if (isConfirmed) {
                         model.getTradeRulesAccepted().set(true);
-                        maybeSelectFirstItem();
+                        maybeSelectFirst();
                         updateVisibility();
                     }
                 }));
@@ -167,23 +161,27 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
             UIThread.run(() -> {
                 model.getFilteredList()
                         .setPredicate(e -> bisqEasyTradeService.findTrade(e.getTradeId()).isPresent());
+                maybeSelectFirst();
                 updateVisibility();
             });
         });
 
-        updateVisibility();
-        maybeSelectFirstItem();
+        channelsPin = channelService.getChannels().addObserver(this::channelsChanged);
 
         selectedChannelPin = selectionService.getSelectedChannel().addObserver(this::selectedChannelChanged);
-        selectedItemPin = EasyBind.subscribe(model.getSelectedItem(), this::selectedItemChanged);
+
+        maybeSelectFirst();
+        updateVisibility();
     }
+
 
     @Override
     public void onDeactivate() {
         tradeRulesConfirmedPin.unbind();
         channelItemPin.unbind();
+        tradesPin.unbind();
         selectedChannelPin.unbind();
-        selectedItemPin.unsubscribe();
+        channelsPin.unbind();
         doCloseChatWindow();
         model.reset();
         resetSelectedChildTarget();
@@ -192,11 +190,19 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
 
     @Override
     protected void selectedChannelChanged(ChatChannel<? extends ChatMessage> chatChannel) {
-        if (chatChannel instanceof BisqEasyOpenTradeChannel) {
-            super.selectedChannelChanged(chatChannel);
+        super.selectedChannelChanged(chatChannel);
 
-            UIThread.run(() -> {
+        UIThread.run(() -> {
+            if (chatChannel == null) {
+                model.getSelectedItem().set(null);
+                tradeStateController.setSelectedChannel(null);
+                tradeDataHeader.setSelectedChannel(null);
+                maybeSelectFirst();
+            }
+
+            if (chatChannel instanceof BisqEasyOpenTradeChannel) {
                 BisqEasyOpenTradeChannel channel = (BisqEasyOpenTradeChannel) chatChannel;
+
                 applyPeersIcon(channel);
                 UserProfile peerUserProfile = ((BisqEasyOpenTradeChannel) chatChannel).getPeer();
                 String peerUserName = peerUserProfile.getUserName();
@@ -204,15 +210,29 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
                 String shortTradeId = channel.getTradeId().substring(0, 8);
                 model.getChatWindowTitle().set(Res.get("bisqEasy.openTrades.chat.window.title",
                         serviceProvider.getConfig().getAppName(), peerUserName, shortTradeId));
-            });
-        }
+
+                model.getListItems().stream()
+                        .filter(item -> item.getChannel().equals(channel))
+                        .findAny()
+                        .ifPresent(item -> model.getSelectedItem().set(item));
+
+                tradeStateController.setSelectedChannel(channel);
+                tradeDataHeader.setSelectedChannel(channel);
+            }
+        });
     }
 
     void onSelectItem(BisqEasyOpenTradesView.ListItem item) {
-        if (item != null) {
+        if (item == null) {
+            selectionService.selectChannel(null);
+        } else {
             onShowTradeRulesAcceptedWarning();
+            BisqEasyOpenTradeChannel channel = item.getChannel();
+            if (!channel.equals(selectionService.getSelectedChannel().get())) {
+                selectionService.selectChannel(channel);
+                updateVisibility();
+            }
         }
-        model.getSelectedItem().set(item);
     }
 
     void onShowTradeRulesAcceptedWarning() {
@@ -243,28 +263,49 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
         model.getChatWindow().set(null);
     }
 
-    private void selectedItemChanged(BisqEasyOpenTradesView.ListItem selectedItem) {
-        BisqEasyOpenTradeChannel channel = selectedItem != null ? selectedItem.getChannel() : null;
-        selectionService.selectChannel(channel);
-        tradeStateController.setSelectedChannel(channel);
-        tradeDataHeader.setSelectedChannel(channel);
-        updateVisibility();
-    }
-
     private void handleTradeClosed(BisqEasyTrade trade, BisqEasyOpenTradeChannel channel) {
-        bisqEasyTradeService.removeTrade(trade);
-        channelService.leaveChannel(channel);
-        maybeSelectFirstItem();
+        if (model.getSelectedChannel() != null) {
+            bisqEasyTradeService.removeTrade(trade);
+            channelService.leaveChannel(channel);
+            selectionService.getSelectedChannel().set(null);
+        }
     }
 
-    private void maybeSelectFirstItem() {
-        model.getSelectedItem().set(model.getSortedList().stream().findFirst().orElse(null));
+    private void onTradeAndChannelAdded(BisqEasyTrade trade, BisqEasyOpenTradeChannel channel) {
+        UIThread.run(() -> {
+            if (findListItem(trade).isEmpty()) {
+                model.getListItems().add(new BisqEasyOpenTradesView.ListItem(channel,
+                        trade,
+                        reputationService,
+                        notificationsService,
+                        chatNotificationService));
+                maybeSelectFirst();
+                updateVisibility();
+            }
+        });
     }
 
-    private Optional<BisqEasyOpenTradesView.ListItem> findListItem(BisqEasyTrade trade) {
-        return model.getListItems().stream()
-                .filter(e -> e.getTrade().equals(trade))
-                .findAny();
+    private void onTradeRemoved(BisqEasyTrade trade) {
+        UIThread.run(() -> {
+            Optional<BisqEasyOpenTradesView.ListItem> toRemove = findListItem(trade);
+            toRemove.ifPresent(item -> {
+                UIThread.run(() -> {
+                    item.dispose();
+                    model.getListItems().remove(item);
+                    maybeSelectFirst();
+                    updateVisibility();
+                });
+            });
+        });
+    }
+
+    private void onClearTrades() {
+        UIThread.run(() -> {
+            model.getListItems().forEach(BisqEasyOpenTradesView.ListItem::dispose);
+            model.getListItems().clear();
+            maybeSelectFirst();
+            updateVisibility();
+        });
     }
 
     private void updateVisibility() {
@@ -275,5 +316,26 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
         model.getTradeWelcomeVisible().set(openTradesAvailable && !tradeRuleConfirmed);
         model.getTradeStateVisible().set(openTradesAvailable && tradeRuleConfirmed);
         model.getChatVisible().set(openTradesAvailable && tradeRuleConfirmed);
+    }
+
+    private void channelsChanged() {
+        UIThread.run(() -> {
+            maybeSelectFirst();
+            updateVisibility();
+        });
+    }
+
+    private void maybeSelectFirst() {
+        if (selectionService.getSelectedChannel().get() == null &&
+                !channelService.getChannels().isEmpty() &&
+                !model.getSortedList().isEmpty()) {
+            selectionService.getSelectedChannel().set(model.getSortedList().get(0).getChannel());
+        }
+    }
+
+    private Optional<BisqEasyOpenTradesView.ListItem> findListItem(BisqEasyTrade trade) {
+        return model.getListItems().stream()
+                .filter(e -> e.getTrade().equals(trade))
+                .findAny();
     }
 }
