@@ -18,8 +18,8 @@
 package bisq.trade.bisq_easy.protocol.messages;
 
 import bisq.common.proto.UnresolvableProtobufMessageException;
-import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.identity.NetworkId;
+import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.trade.protocol.messages.TradeMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -61,6 +61,12 @@ public abstract class BisqEasyTradeMessage extends TradeMessage {
             }
             case BISQEASYCONFIRMFIATRECEIPTMESSAGE: {
                 return BisqEasyConfirmFiatReceiptMessage.fromProto(proto);
+            }
+            case BISQEASYREJECTTRADEMESSAGE: {
+                return BisqEasyRejectTradeMessage.fromProto(proto);
+            }
+            case BISQEASYCANCELTRADEMESSAGE: {
+                return BisqEasyCancelTradeMessage.fromProto(proto);
             }
 
             case MESSAGE_NOT_SET: {

@@ -78,5 +78,83 @@ public class BisqEasySellerAsTakerProtocol extends BisqEasyProtocol {
                 .on(BisqEasyBtcConfirmedEvent.class)
                 .run(BisqEasyBtcConfirmedEventHandler.class)
                 .to(BTC_CONFIRMED);
+
+
+        // Reject trade
+        addTransition()
+                .from(TAKER_SENT_TAKE_OFFER_REQUEST)
+                .on(BisqEasyRejectTradeEvent.class)
+                .run(BisqEasyRejectTradeEventHandler.class)
+                .to(REJECTED);
+        addTransition()
+                .from(TAKER_RECEIVED_TAKE_OFFER_RESPONSE)
+                .on(BisqEasyRejectTradeEvent.class)
+                .run(BisqEasyRejectTradeEventHandler.class)
+                .to(REJECTED);
+        // Peer rejected trade
+        addTransition()
+                .from(TAKER_SENT_TAKE_OFFER_REQUEST)
+                .on(BisqEasyRejectTradeMessage.class)
+                .run(BisqEasyRejectTradeMessageHandler.class)
+                .to(REJECTED);
+        addTransition()
+                .from(TAKER_RECEIVED_TAKE_OFFER_RESPONSE)
+                .on(BisqEasyRejectTradeMessage.class)
+                .run(BisqEasyRejectTradeMessageHandler.class)
+                .to(REJECTED);
+
+        // Cancel trade
+        addTransition()
+                .from(SELLER_SENT_ACCOUNT_DATA)
+                .on(BisqEasyCancelTradeMessage.class)
+                .run(BisqEasyCancelTradeMessageHandler.class)
+                .to(CANCELLED);
+        addTransition()
+                .from(SELLER_RECEIVED_FIAT_SENT_CONFIRMATION)
+                .on(BisqEasyCancelTradeMessage.class)
+                .run(BisqEasyCancelTradeMessageHandler.class)
+                .to(CANCELLED);
+        addTransition()
+                .from(SELLER_RECEIVED_BTC_ADDRESS)
+                .on(BisqEasyCancelTradeMessage.class)
+                .run(BisqEasyCancelTradeMessageHandler.class)
+                .to(CANCELLED);
+        addTransition()
+                .from(SELLER_CONFIRMED_FIAT_RECEIPT)
+                .on(BisqEasyCancelTradeMessage.class)
+                .run(BisqEasyCancelTradeMessageHandler.class)
+                .to(CANCELLED);
+        addTransition()
+                .from(SELLER_SENT_BTC_SENT_CONFIRMATION)
+                .on(BisqEasyCancelTradeMessage.class)
+                .run(BisqEasyCancelTradeMessageHandler.class)
+                .to(CANCELLED);
+
+        // Peer cancelled trade
+        addTransition()
+                .from(SELLER_SENT_ACCOUNT_DATA)
+                .on(BisqEasyCancelTradeEvent.class)
+                .run(BisqEasyCancelTradeEventHandler.class)
+                .to(CANCELLED);
+        addTransition()
+                .from(SELLER_RECEIVED_FIAT_SENT_CONFIRMATION)
+                .on(BisqEasyCancelTradeEvent.class)
+                .run(BisqEasyCancelTradeEventHandler.class)
+                .to(CANCELLED);
+        addTransition()
+                .from(SELLER_RECEIVED_BTC_ADDRESS)
+                .on(BisqEasyCancelTradeEvent.class)
+                .run(BisqEasyCancelTradeEventHandler.class)
+                .to(CANCELLED);
+        addTransition()
+                .from(SELLER_CONFIRMED_FIAT_RECEIPT)
+                .on(BisqEasyCancelTradeEvent.class)
+                .run(BisqEasyCancelTradeEventHandler.class)
+                .to(CANCELLED);
+        addTransition()
+                .from(SELLER_SENT_BTC_SENT_CONFIRMATION)
+                .on(BisqEasyCancelTradeEvent.class)
+                .run(BisqEasyCancelTradeEventHandler.class)
+                .to(CANCELLED);
     }
 }

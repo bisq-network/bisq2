@@ -96,6 +96,8 @@ message BisqEasyTradeMessage {
     BisqEasyBtcAddressMessage bisqEasyBtcAddressMessage = 24;
     BisqEasyConfirmFiatReceiptMessage bisqEasyConfirmFiatReceiptMessage = 25;
     BisqEasyConfirmBtcSentMessage bisqEasyConfirmBtcSentMessage = 26;
+    BisqEasyRejectTradeMessage bisqEasyRejectTradeMessage = 27;
+    BisqEasyCancelTradeMessage bisqEasyCancelTradeMessage = 28;
   }
 }
 message BisqEasyTakeOfferRequest {
@@ -118,6 +120,11 @@ message BisqEasyConfirmFiatReceiptMessage {
 message BisqEasyConfirmBtcSentMessage {
   string txId = 1;
 }
+message BisqEasyRejectTradeMessage {
+}
+message BisqEasyCancelTradeMessage {
+}
+
 
 // MultiSig
 message MultisigTradeMessage{
