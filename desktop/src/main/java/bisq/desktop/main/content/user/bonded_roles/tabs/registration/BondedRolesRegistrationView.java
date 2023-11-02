@@ -38,7 +38,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
-import javafx.scene.text.TextAlignment;
 import javafx.scene.text.TextFlow;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -115,15 +114,14 @@ public abstract class BondedRolesRegistrationView<M extends BondedRolesRegistrat
         requestCancellationButton.setPrefWidth(180);
 
         learnMore = new Hyperlink(Res.get("action.learnMore"));
-        learnMore.setWrapText(true);
-        learnMore.setTextAlignment(TextAlignment.CENTER);
 
         buttons = new HBox(20, requestRegistrationButton, requestCancellationButton, Spacer.fillHBox(), learnMore);
         buttons.setAlignment(Pos.BOTTOM_RIGHT);
 
         VBox.setMargin(howHeadline, new Insets(20, 0, 0, 0));
         VBox.setMargin(registerHeadline, new Insets(20, 0, 0, 0));
-        VBox.setMargin(buttons, new Insets(10, 0, 0, 0));
+        //The 2 pixels on the left are a workaround to the issue 1246
+        VBox.setMargin(buttons, new Insets(10, 0, 0, 2));
         VBox.setVgrow(aboutInfo, Priority.ALWAYS);
         VBox.setVgrow(howHeadline, Priority.ALWAYS);
         root.getChildren().addAll(headerHBox, aboutInfoTextFlow,
