@@ -18,10 +18,22 @@
 package bisq.desktop.main.content.user.reputation.bond.tab2;
 
 import bisq.desktop.common.view.Model;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
 public class BondedReputationTab2Model implements Model {
+
+    private final IntegerProperty ageAsInt = new SimpleIntegerProperty();
+    private final StringProperty lockTime = new SimpleStringProperty();
+    private final StringProperty age = new SimpleStringProperty();
+    private final StringProperty amount = new SimpleStringProperty();
+    private final StringProperty score = new SimpleStringProperty();
+
+
 }

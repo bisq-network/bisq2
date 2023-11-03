@@ -25,10 +25,9 @@ import bisq.desktop.main.content.user.reputation.bond.tab1.BondedReputationTab1C
 import bisq.desktop.main.content.user.reputation.bond.tab2.BondedReputationTab2Controller;
 import bisq.desktop.main.content.user.reputation.bond.tab3.BondedReputationTab3Controller;
 import bisq.desktop.overlay.OverlayController;
+import java.util.Optional;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.Optional;
 
 @Slf4j
 public class BondedReputationController extends TabController<BondedReputationModel> {
@@ -71,5 +70,11 @@ public class BondedReputationController extends TabController<BondedReputationMo
 
     void onClose() {
         OverlayController.hide();
+    }
+
+    //Not caching as the view needs to validate window boundaries during rendering
+    @Override
+    public boolean useCaching() {
+        return false;
     }
 }

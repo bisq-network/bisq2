@@ -29,7 +29,6 @@ import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
@@ -73,7 +72,6 @@ public class AccountAgeTab3View extends View<VBox, AccountAgeTab3Model, AccountA
         HBox buttons = new HBox(20, backButton, closeButton, Spacer.fillHBox(), learnMore);
         buttons.setAlignment(Pos.BOTTOM_RIGHT);
 
-        VBox.setVgrow(info, Priority.ALWAYS);
         VBox.setMargin(headline, new Insets(10, 0, 0, 0));
         VBox.setMargin(userProfileSelectLabel, new Insets(10, 0, -20, 0));
         VBox.setMargin(userProfileSelection, new Insets(0, 0, -30, 0));

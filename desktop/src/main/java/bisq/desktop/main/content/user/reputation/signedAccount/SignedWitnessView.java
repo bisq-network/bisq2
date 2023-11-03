@@ -29,6 +29,8 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
+import javafx.stage.Window;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -38,12 +40,16 @@ public class SignedWitnessView extends TabView<SignedWitnessModel, SignedWitness
     public SignedWitnessView(SignedWitnessModel model, SignedWitnessController controller) {
         super(model, controller);
 
-        double width = DesktopModel.MIN_WIDTH - 20;
-        root.setMinWidth(width);
-        root.setMaxWidth(width);
-        double height = DesktopModel.MIN_HEIGHT - 40;
-        root.setMinHeight(height);
-        root.setMaxHeight(height);
+        Window window = Stage.getWindows().stream().filter(Window::isShowing)
+                .findFirst().orElse(null);
+        double prefWidth = DesktopModel.PREF_WIDTH - DesktopModel.MIN_WIDTH - 50;
+        double prefHeight = DesktopModel.PREF_HEIGHT - DesktopModel.MIN_HEIGHT + 40;
+        if (window.getWidth() <= 1100 || window.getHeight() <= 880) {
+            prefWidth = 105;
+            prefHeight = 70;
+        }
+        root.prefWidthProperty().bind(window.widthProperty().subtract(prefWidth));
+        root.prefHeightProperty().bind(window.heightProperty().subtract(prefHeight));
 
         root.setPadding(new Insets(40, 68, 40, 68));
         root.getStyleClass().add("popup-bg");

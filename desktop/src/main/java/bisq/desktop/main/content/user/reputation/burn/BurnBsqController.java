@@ -25,10 +25,9 @@ import bisq.desktop.main.content.user.reputation.burn.tab1.BurnBsqTab1Controller
 import bisq.desktop.main.content.user.reputation.burn.tab2.BurnBsqTab2Controller;
 import bisq.desktop.main.content.user.reputation.burn.tab3.BurnBsqTab3Controller;
 import bisq.desktop.overlay.OverlayController;
+import java.util.Optional;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.Optional;
 
 @Slf4j
 public class BurnBsqController extends TabController<BurnBsqModel> {
@@ -71,5 +70,11 @@ public class BurnBsqController extends TabController<BurnBsqModel> {
 
     void onClose() {
         OverlayController.hide();
+    }
+
+    //Not caching as the view needs to validate window boundaries during rendering
+    @Override
+    public boolean useCaching() {
+        return false;
     }
 }

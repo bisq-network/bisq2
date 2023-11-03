@@ -27,6 +27,8 @@ import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -43,16 +45,16 @@ public class BurnBsqTab1View extends View<VBox, BurnBsqTab1Model, BurnBsqTab1Con
         Label headline = new Label(Res.get("user.reputation.burnedBsq.infoHeadline"));
         headline.getStyleClass().add("bisq-text-headline-2");
 
-        Label info = new Label(Res.get("user.reputation.burnedBsq.info"));
-        info.setWrapText(true);
-        info.getStyleClass().addAll("bisq-text-13");
+        Text infoLabelText = new Text(Res.get("user.reputation.burnedBsq.info"));
+        infoLabelText.getStyleClass().add("bisq-text-13");
+        TextFlow info = new TextFlow(infoLabelText);
 
         Label headline2 = new Label(Res.get("user.reputation.burnedBsq.infoHeadline2"));
         headline2.getStyleClass().add("bisq-text-headline-2");
 
-        Label info2 = new Label(Res.get("user.reputation.burnedBsq.info2"));
-        info2.setWrapText(true);
-        info2.getStyleClass().addAll("bisq-text-13");
+        Text info2LabelText = new Text(Res.get("user.reputation.burnedBsq.info2"));
+        info2LabelText.getStyleClass().add("bisq-text-13");
+        TextFlow info2 = new TextFlow(info2LabelText);
 
         nextButton = new Button(Res.get("action.next"));
         nextButton.setDefaultButton(true);

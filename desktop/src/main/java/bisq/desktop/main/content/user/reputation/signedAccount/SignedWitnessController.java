@@ -25,10 +25,9 @@ import bisq.desktop.main.content.user.reputation.signedAccount.tab1.SignedWitnes
 import bisq.desktop.main.content.user.reputation.signedAccount.tab2.SignedWitnessTab2Controller;
 import bisq.desktop.main.content.user.reputation.signedAccount.tab3.SignedWitnessTab3Controller;
 import bisq.desktop.overlay.OverlayController;
+import java.util.Optional;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.Optional;
 
 @Slf4j
 public class SignedWitnessController extends TabController<SignedWitnessModel> {
@@ -71,5 +70,11 @@ public class SignedWitnessController extends TabController<SignedWitnessModel> {
 
     void onClose() {
         OverlayController.hide();
+    }
+
+    //Not caching as the view needs to validate window boundaries during rendering
+    @Override
+    public boolean useCaching() {
+        return false;
     }
 }

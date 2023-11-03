@@ -24,34 +24,54 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.user.reputation.ProofOfBurnService;
+import bisq.user.reputation.SignedWitnessService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class SignedWitnessTab2Controller implements Controller {
     @Getter
     private final SignedWitnessTab2View view;
 
+    private final SignedWitnessTab2Model model;
+
+    private Subscription agePin, ageAsStringPin, scorePin;
+
     public SignedWitnessTab2Controller(ServiceProvider serviceProvider) {
-        SignedWitnessTab2Model model = new SignedWitnessTab2Model();
-        SignedWitnessScoreSimulation simulation = new SignedWitnessScoreSimulation();
-        view = new SignedWitnessTab2View(model, this, simulation.getViewRoot());
+        model = new SignedWitnessTab2Model();
+        view = new SignedWitnessTab2View(model, this);
+
+        model.getAge().set(0);
+        model.getAgeAsString().set("0");
     }
 
     @Override
     public void onActivate() {
+        agePin = EasyBind.subscribe(model.getAge(), age -> model.getAgeAsString().set(String.valueOf(age)));
+        ageAsStringPin = EasyBind.subscribe(model.getAgeAsString(), ageAsString -> {
+            try {
+                model.getAge().set(Integer.parseInt(ageAsString));
+            } catch (Exception e) {
+                log.error("A failure occurred while setting the age string value from the age pin.");
+            }
+        });
+
+        scorePin = EasyBind.subscribe(model.getAge(), age -> model.getScore().set(calculateSimScore(age)));
     }
 
     @Override
     public void onDeactivate() {
+        agePin.unsubscribe();
+        ageAsStringPin.unsubscribe();
+        scorePin.unsubscribe();
     }
 
-    private static String calculateSimScore(String amount, Number age) {
+    private String calculateSimScore(Number age) {
         try {
-            // amountAsLong is the smallest unit of BSQ (100 = 1 BSQ)
-            long amountAsLong = MathUtils.roundDoubleToLong(Double.parseDouble(amount) * 100);
             long ageInDays = age.intValue();
-            long totalScore = ProofOfBurnService.doCalculateScore(amountAsLong, ageInDays);
+            long totalScore = SignedWitnessService.doCalculateScore(ageInDays);
             return String.valueOf(totalScore);
         } catch (Exception e) {
             return "";

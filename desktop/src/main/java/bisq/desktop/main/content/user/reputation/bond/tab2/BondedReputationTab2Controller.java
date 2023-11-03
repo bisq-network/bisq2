@@ -17,31 +17,70 @@
 
 package bisq.desktop.main.content.user.reputation.bond.tab2;
 
+import bisq.common.util.MathUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.user.reputation.BondedReputationService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
+import org.fxmisc.easybind.monadic.MonadicBinding;
 
 @Slf4j
 public class BondedReputationTab2Controller implements Controller {
     @Getter
     private final BondedReputationTab2View view;
+    private Subscription agePin, ageAsStringPin, scorePin;
+
+    private final BondedReputationTab2Model model;
 
     public BondedReputationTab2Controller(ServiceProvider serviceProvider) {
-        BondedReputationTab2Model model = new BondedReputationTab2Model();
-        BondScoreSimulation simulation = new BondScoreSimulation();
-        view = new BondedReputationTab2View(model, this, simulation.getViewRoot());
+        model = new BondedReputationTab2Model();
+        view = new BondedReputationTab2View(model, this);
+
+        model.getAmount().set("100");
+        model.getLockTime().set("10000");
+        model.getAgeAsInt().set(0);
+        model.getAge().set("0");
     }
 
     @Override
     public void onActivate() {
+        agePin = EasyBind.subscribe(model.getAgeAsInt(), age -> model.getAge().set(String.valueOf(age)));
+        ageAsStringPin = EasyBind.subscribe(model.getAge(), ageAsString -> {
+            try {
+                model.getAgeAsInt().set(Integer.parseInt(ageAsString));
+            } catch (Exception e) {
+                log.error("A failure ocurred while setting the age string value from the age pin.");
+            }
+        });
+
+        MonadicBinding<String> binding = EasyBind.combine(model.getAmount(), model.getLockTime(), model.getAgeAsInt(), this::calculateSimScore);
+        scorePin = EasyBind.subscribe(binding, score -> model.getScore().set(score));
     }
 
     @Override
     public void onDeactivate() {
+        agePin.unsubscribe();
+        ageAsStringPin.unsubscribe();
+        scorePin.unsubscribe();
+    }
+
+    private String calculateSimScore(String amount, String lockTime, Number age) {
+        try {
+            // amountAsLong is the smallest unit of BSQ (100 = 1 BSQ)
+            long amountAsLong = MathUtils.roundDoubleToLong(Double.parseDouble(amount) * 100);
+            long lockTimeAsLong = Long.parseLong(lockTime);
+            long ageInDays = age.intValue();
+            long totalScore = BondedReputationService.doCalculateScore(amountAsLong, lockTimeAsLong, ageInDays);
+            return String.valueOf(totalScore);
+        } catch (Exception e) {
+            return "";
+        }
     }
 
     void onBack() {

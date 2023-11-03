@@ -22,26 +22,57 @@ import bisq.desktop.common.Browser;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.user.reputation.AccountAgeService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class AccountAgeTab2Controller implements Controller {
     @Getter
     private final AccountAgeTab2View view;
 
+    private final AccountAgeTab2Model model;
+
+    private Subscription agePin, ageAsStringPin, scorePin;
+
     public AccountAgeTab2Controller(ServiceProvider serviceProvider) {
-        AccountAgeTab2Model model = new AccountAgeTab2Model();
-        AccountAgeScoreSimulation simulation = new AccountAgeScoreSimulation();
-        view = new AccountAgeTab2View(model, this, simulation.getViewRoot());
+        model = new AccountAgeTab2Model();
+        view = new AccountAgeTab2View(model, this);
+        model.getAge().set(0);
+        model.getAgeAsString().set("0");
     }
 
     @Override
     public void onActivate() {
+        agePin = EasyBind.subscribe(model.getAge(), age -> model.getAgeAsString().set(String.valueOf(age)));
+        ageAsStringPin = EasyBind.subscribe(model.getAgeAsString(), ageAsString -> {
+            try {
+                model.getAge().set(Integer.parseInt(ageAsString));
+            } catch (Exception e) {
+                log.error("A failure ocurred while setting the age string value from the age pin.");
+            }
+        });
+
+        scorePin = EasyBind.subscribe(model.getAge(), age -> model.getScore().set(calculateSimScore(age)));
     }
 
     @Override
     public void onDeactivate() {
+        agePin.unsubscribe();
+        ageAsStringPin.unsubscribe();
+        scorePin.unsubscribe();
+    }
+
+    private String calculateSimScore(Number age) {
+        try {
+            long ageInDays = age.intValue();
+            long totalScore = AccountAgeService.doCalculateScore(ageInDays);
+            return String.valueOf(totalScore);
+        } catch (Exception e) {
+            return "";
+        }
     }
 
     void onBack() {

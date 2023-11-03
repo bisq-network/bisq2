@@ -25,10 +25,9 @@ import bisq.desktop.main.content.user.reputation.accountAge.tab1.AccountAgeTab1C
 import bisq.desktop.main.content.user.reputation.accountAge.tab2.AccountAgeTab2Controller;
 import bisq.desktop.main.content.user.reputation.accountAge.tab3.AccountAgeTab3Controller;
 import bisq.desktop.overlay.OverlayController;
+import java.util.Optional;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.Optional;
 
 @Slf4j
 public class AccountAgeController extends TabController<AccountAgeModel> {
@@ -71,5 +70,11 @@ public class AccountAgeController extends TabController<AccountAgeModel> {
 
     void onClose() {
         OverlayController.hide();
+    }
+
+    //Not caching as the view needs to validate window boundaries during rendering
+    @Override
+    public boolean useCaching() {
+        return false;
     }
 }

@@ -18,10 +18,17 @@
 package bisq.desktop.main.content.user.reputation.accountAge.tab2;
 
 import bisq.desktop.common.view.Model;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
 public class AccountAgeTab2Model implements Model {
+    private final IntegerProperty age = new SimpleIntegerProperty();
+    private final StringProperty ageAsString = new SimpleStringProperty();
+    private final StringProperty score = new SimpleStringProperty();
 }

@@ -19,7 +19,11 @@ package bisq.desktop.main.content.user.reputation.burn;
 
 import bisq.desktop.DesktopModel;
 import bisq.desktop.common.Styles;
-import bisq.desktop.common.view.*;
+import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Model;
+import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.common.view.TabView;
+import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.i18n.Res;
@@ -29,6 +33,8 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
+import javafx.stage.Window;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -38,12 +44,16 @@ public class BurnBsqView extends TabView<BurnBsqModel, BurnBsqController> {
     public BurnBsqView(BurnBsqModel model, BurnBsqController controller) {
         super(model, controller);
 
-        double width = DesktopModel.MIN_WIDTH - 20;
-        root.setMinWidth(width);
-        root.setMaxWidth(width);
-        double height = DesktopModel.MIN_HEIGHT - 40;
-        root.setMinHeight(height);
-        root.setMaxHeight(height);
+        Window window = Stage.getWindows().stream().filter(Window::isShowing)
+                .findFirst().orElse(null);
+        double prefWidth = DesktopModel.PREF_WIDTH - DesktopModel.MIN_WIDTH - 50;
+        double prefHeight = DesktopModel.PREF_HEIGHT - DesktopModel.MIN_HEIGHT + 40;
+        if (window.getWidth() <= 1100 || window.getHeight() <= 880) {
+            prefWidth = 105;
+            prefHeight = 70;
+        }
+        root.prefWidthProperty().bind(window.widthProperty().subtract(prefWidth));
+        root.prefHeightProperty().bind(window.heightProperty().subtract(prefHeight));
 
         root.setPadding(new Insets(40, 68, 40, 68));
         root.getStyleClass().add("popup-bg");
@@ -51,7 +61,10 @@ public class BurnBsqView extends TabView<BurnBsqModel, BurnBsqController> {
         topBox.setPadding(new Insets(0, 0, 0, 0));
         lineAndMarker.setPadding(new Insets(0, 0, 0, 0));
 
-        Styles styles = new Styles("bisq-text-grey-9", "bisq-text-white", "bisq-text-green", "bisq-text-grey-9");
+        Styles styles = new Styles("bisq-text-grey-9",
+                "bisq-text-white",
+                "bisq-text-green",
+                "bisq-text-grey-9");
         addTab(Res.get("user.reputation.burnedBsq.tab1"),
                 NavigationTarget.BURN_BSQ_TAB_1,
                 styles);
