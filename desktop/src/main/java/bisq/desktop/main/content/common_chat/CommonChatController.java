@@ -95,7 +95,7 @@ public class CommonChatController extends ChatController<CommonChatView, CommonC
         twoPartyPrivateChatChannelsPin = twoPartyPrivateChatChannels.addObserver(() ->
                 model.getIsTwoPartyPrivateChatChannelSelectionVisible().set(!twoPartyPrivateChatChannels.isEmpty()));
 
-        selectedChannelPin = chatChannelSelectionService.getSelectedChannel().addObserver(this::chatChannelChanged);
+        selectedChannelPin = chatChannelSelectionService.getSelectedChannel().addObserver(this::selectedChannelChanged);
     }
 
     @Override
@@ -106,8 +106,8 @@ public class CommonChatController extends ChatController<CommonChatView, CommonC
     }
 
     @Override
-    protected void chatChannelChanged(ChatChannel<? extends ChatMessage> chatChannel) {
-        super.chatChannelChanged(chatChannel);
+    protected void selectedChannelChanged(ChatChannel<? extends ChatMessage> chatChannel) {
+        super.selectedChannelChanged(chatChannel);
 
         UIThread.run(() -> {
             model.getSearchText().set("");

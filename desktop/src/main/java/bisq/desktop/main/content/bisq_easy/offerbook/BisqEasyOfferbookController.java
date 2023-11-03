@@ -106,7 +106,7 @@ public class BisqEasyOfferbookController extends ChatController<BisqEasyOfferboo
                 chatMessagesComponent.setSearchPredicate(item -> item.match(searchText));
             }
         });
-        selectedChannelPin = bisqEasyOfferbookSelectionService.getSelectedChannel().addObserver(this::chatChannelChanged);
+        selectedChannelPin = bisqEasyOfferbookSelectionService.getSelectedChannel().addObserver(this::selectedChannelChanged);
         offerOnlySettingsPin = FxBindings.bindBiDir(model.getOfferOnly()).to(settingsService.getOffersOnly());
 
         ObservableArray<BisqEasyOpenTradeChannel> bisqEasyOpenTradeChannels = chatService.getBisqEasyOpenTradeChannelService().getChannels();
@@ -154,8 +154,8 @@ public class BisqEasyOfferbookController extends ChatController<BisqEasyOfferboo
     }
 
     @Override
-    protected void chatChannelChanged(ChatChannel<? extends ChatMessage> chatChannel) {
-        super.chatChannelChanged(chatChannel);
+    protected void selectedChannelChanged(ChatChannel<? extends ChatMessage> chatChannel) {
+        super.selectedChannelChanged(chatChannel);
 
         if (chatChannel instanceof BisqEasyOfferbookChannel) {
             UIThread.run(() -> {

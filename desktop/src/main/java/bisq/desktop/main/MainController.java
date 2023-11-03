@@ -159,6 +159,5 @@ public class MainController extends NavigationController {
     @Override
     public void onStartProcessNavigationTarget(NavigationTarget navigationTarget, Optional<Object> data) {
         leftNavController.setNavigationTarget(navigationTarget);
-        notificationPanelController.setNavigationTarget(navigationTarget);
     }
 }

@@ -230,6 +230,12 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
                 .findAny();
     }
 
+    public Optional<BisqEasyOpenTradeChannel> findChannelByTradeId(String tradeId) {
+        return getChannels().stream()
+                .filter(channel -> channel.getTradeId().equals(tradeId))
+                .findAny();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected

@@ -38,7 +38,6 @@ import java.util.Optional;
 
 @Slf4j
 public class BisqEasyPrivateChatsController extends ChatController<BisqEasyPrivateChatsView, BisqEasyPrivateChatsModel> {
-    private final BisqEasyPrivateChatsModel bisqEasyPrivateChatsModel;
     private final TwoPartyPrivateChatChannelService channelService;
     private final BisqEasyPrivateChatChannelSelectionService selectionService;
     private final ReputationService reputationService;
@@ -51,7 +50,6 @@ public class BisqEasyPrivateChatsController extends ChatController<BisqEasyPriva
         channelService = chatService.getTwoPartyPrivateChatChannelServices().get(ChatChannelDomain.BISQ_EASY_PRIVATE_CHAT);
         selectionService = chatService.getBisqEasyPrivateChatChannelSelectionService();
         reputationService = serviceProvider.getUserService().getReputationService();
-        bisqEasyPrivateChatsModel = getModel();
     }
 
     @Override
@@ -83,28 +81,18 @@ public class BisqEasyPrivateChatsController extends ChatController<BisqEasyPriva
     @Override
     public void onActivate() {
         channelItemPin = FxBindings.<TwoPartyPrivateChatChannel, BisqEasyPrivateChatsView.ListItem>bind(model.getListItems())
-                .map(channel -> new BisqEasyPrivateChatsView.ListItem(channel, reputationService))
+                .map(channel -> {
+                    // We call maybeSelectFirst one render frame after we applied the item to the model list.
+                    UIThread.runOnNextRenderFrame(this::maybeSelectFirst);
+                    return new BisqEasyPrivateChatsView.ListItem(channel, reputationService);
+                })
                 .to(channelService.getChannels());
 
-        channelsPin = channelService.getChannels().addObserver(this::updateVisibility);
-        if (selectionService.getSelectedChannel().get() == null && !model.getListItems().isEmpty()) {
-            selectionService.getSelectedChannel().set(model.getListItems().get(0).getChannel());
-        }
+        channelsPin = channelService.getChannels().addObserver(this::channelsChanged);
 
-        selectedChannelPin = selectionService.getSelectedChannel().addObserver(this::chatChannelChanged);
+        selectedChannelPin = selectionService.getSelectedChannel().addObserver(this::selectedChannelChanged);
 
-        if (!model.getSortedList().isEmpty()) {
-            BisqEasyPrivateChatsView.ListItem listItem = model.getSortedList().get(0);
-            TwoPartyPrivateChatChannel channel = listItem.getChannel();
-            selectionService.selectChannel(channel);
-
-            // If there is only one item we do not select it in the tableview
-            if (model.getSortedList().size() > 1) {
-                model.getSelectedItem().set(listItem);
-            }
-        }
-        maybeSelectFirstItem();
-        updateVisibility();
+        maybeSelectFirst();
     }
 
     @Override
@@ -117,35 +105,56 @@ public class BisqEasyPrivateChatsController extends ChatController<BisqEasyPriva
     }
 
     @Override
-    protected void chatChannelChanged(ChatChannel<? extends ChatMessage> chatChannel) {
-        if (chatChannel instanceof TwoPartyPrivateChatChannel) {
-            super.chatChannelChanged(chatChannel);
+    protected void selectedChannelChanged(ChatChannel<? extends ChatMessage> chatChannel) {
+        super.selectedChannelChanged(chatChannel);
 
-            UIThread.run(() -> {
-                TwoPartyPrivateChatChannel privateChannel = (TwoPartyPrivateChatChannel) chatChannel;
-                applyPeersIcon(privateChannel);
-                UserProfile peer = privateChannel.getPeer();
+        UIThread.run(() -> {
+            if (chatChannel == null) {
+                model.getSelectedItem().set(null);
+                maybeSelectFirst();
+            }
+
+            if (chatChannel instanceof TwoPartyPrivateChatChannel) {
+                TwoPartyPrivateChatChannel channel = (TwoPartyPrivateChatChannel) chatChannel;
+                applyPeersIcon(channel);
+                UserProfile peer = channel.getPeer();
                 model.setPeersReputationScore(reputationService.getReputationScore(peer));
                 model.getPeersUserProfile().set(peer);
-            });
-        }
+                model.getListItems().stream()
+                        .filter(item -> item.getChannel().equals(channel))
+                        .findAny()
+                        .ifPresent(item -> model.getSelectedItem().set(item));
+            }
+        });
     }
 
     void onSelectItem(BisqEasyPrivateChatsView.ListItem item) {
-        selectionService.selectChannel(item.getChannel());
+        if (item == null) {
+            selectionService.selectChannel(null);
+        } else if (!item.getChannel().equals(selectionService.getSelectedChannel().get())) {
+            selectionService.selectChannel(item.getChannel());
+        }
     }
 
     void onLeaveChat() {
         if (model.getSelectedChannel() != null) {
             channelService.leaveChannel(model.getSelectedChannel().getId());
+            selectionService.getSelectedChannel().set(null);
         }
     }
 
-    private void maybeSelectFirstItem() {
-        model.getSelectedItem().set(model.getSortedList().stream().findFirst().orElse(null));
+    private void channelsChanged() {
+        UIThread.run(() -> {
+            model.getNoOpenChats().set(model.getFilteredList().isEmpty());
+            maybeSelectFirst();
+        });
     }
 
-    private void updateVisibility() {
-        model.getNoOpenChats().set(model.getFilteredList().isEmpty());
+    private void maybeSelectFirst() {
+        if (selectionService.getSelectedChannel().get() == null &&
+                !channelService.getChannels().isEmpty() &&
+                !model.getSortedList().isEmpty()) {
+            selectionService.getSelectedChannel().set(model.getSortedList().get(0).getChannel());
+        }
     }
 }
