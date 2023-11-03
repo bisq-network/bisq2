@@ -735,8 +735,7 @@ public class ChatMessagesListView {
                             } else {
                                 messageBgHBox.setPadding(new Insets(5, 15, 5, 15));
                             }
-                            messageBgHBox.getStyleClass().remove("chat-message-bg-my-message");
-                            messageBgHBox.getStyleClass().remove("chat-message-bg-peer-message");
+                            messageBgHBox.getStyleClass().removeAll("chat-message-bg-my-message", "chat-message-bg-peer-message");
                             VBox userProfileIconVbox = new VBox(userProfileIcon);
                             if (isMyMessage) {
                                 buildMyMessage(isBisqEasyPublicChatMessageWithOffer, userProfileIconVbox, chatMessage);
