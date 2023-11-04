@@ -89,9 +89,9 @@
     -fx-box-border: transparent;
     -fx-focus-color: -bisq2-green;
     -fx-faint-focus-color: -bisq2-green;
-    -fx-default-button: derive(-bisq2-green, -15%);
-    -bisq-green-hover: derive(-fx-default-button, 10%);
-    -bisq-green-pressed: derive(-fx-default-button, -5%);
+    -fx-default-button: -bisq2-green-dim-20;
+    -bisq-green-hover: -bisq2-green-dim-10;
+    -bisq-green-pressed: -bisq2-green-dim-30;
 
     -fx-dark-text-color: -bisq-black-dim;
     -fx-mid-text-color: -bisq-medium-grey-mid;
