@@ -222,8 +222,8 @@
 }
 
 .bisq-text-15 {
-    -fx-fill: -bisq-green;
-    -fx-text-fill: -bisq-green;
+    -fx-fill: -bisq2-green;
+    -fx-text-fill: -bisq2-green;
     -fx-font-size: 2.15em;
     -fx-font-family: "IBM Plex Sans Light";
 }
@@ -288,8 +288,8 @@
 }
 
 .text-fill-green {
-    -fx-fill: -bisq-green !Important;
-    -fx-text-fill: -bisq-green !Important;
+    -fx-fill: -bisq2-green !Important;
+    -fx-text-fill: -bisq2-green !Important;
 }
 
 /* sizes */
@@ -400,23 +400,23 @@
 }
 
 .text-color-green {
-    -fx-fill: -bisq-green !Important;
-    -fx-text-fill: -bisq-green !Important;
+    -fx-fill: -bisq2-green !Important;
+    -fx-text-fill: -bisq2-green !Important;
 }
 
 .text-input {
-    -fx-highlight-fill: -bisq-green;
+    -fx-highlight-fill: -bisq2-green;
 }
 
 .text-input:focused {
-    -fx-highlight-fill: -bisq-green;
+    -fx-highlight-fill: -bisq2-green;
 }
 
 #base-amount-text-field {
     -fx-background-color: transparent;
     -fx-border-style: none;
     -fx-text-fill: -fx-light-text-color;
-    -fx-highlight-fill: -bisq-green;
+    -fx-highlight-fill: -bisq2-green;
     -fx-font-size: 5.2em;
     -fx-font-family: "IBM Plex Sans Thin";
 }
@@ -425,7 +425,7 @@
     -fx-background-color: transparent;
     -fx-border-style: none;
     -fx-text-fill: -fx-light-text-color;
-    -fx-highlight-fill: -bisq-green;
+    -fx-highlight-fill: -bisq2-green;
     -fx-font-size: 3em;
     -fx-font-family: "IBM Plex Sans Thin";
 }
@@ -484,7 +484,7 @@
 .bisq-popup-headline-label {
     -fx-font-size: 1.35em;
     -fx-font-family: "IBM Plex Sans Light";
-    -fx-text-fill: -bisq-green;
+    -fx-text-fill: -bisq2-green;
 }
 
 .bisq-tab-button-label {
@@ -512,7 +512,7 @@
 }
 
 .bisq-text-green {
-    -fx-text-fill: -bisq-green;
+    -fx-text-fill: -bisq2-green;
 }
 
 .bisq-text-grey-9 {
@@ -576,7 +576,7 @@
 }
 
 .material-text-field-selection-line {
-    -fx-background-color: -bisq-green;
+    -fx-background-color: -bisq2-green;
 }
 
 .material-text-field-selection-line:error {
@@ -605,7 +605,7 @@
 }
 
 .material-text-field-description-selected {
-    -fx-text-fill: -bisq-green;
+    -fx-text-fill: -bisq2-green;
 }
 
 .material-text-field-description-selected:error {

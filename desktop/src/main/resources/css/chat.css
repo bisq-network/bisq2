@@ -6,7 +6,7 @@
 
 
 .keyword-customTags {
-    -fx-fill: -bisq-green;
+    -fx-fill: -bisq2-green;
 }
 
 .keyword-none {
@@ -98,7 +98,7 @@
 #chat-messages-send-button {
     -fx-background-color: -bisq-white-lit;
     -fx-background-radius: 8;
-    -fx-text-fill: -bisq-green;
+    -fx-text-fill: -bisq2-green;
 }
 
 #chat-messages-headline {
@@ -311,7 +311,7 @@
 }
 
 .channel-selection-list-view .list-cell:selected .label {
-    -fx-text-fill: -bisq-green;
+    -fx-text-fill: -bisq2-green;
 }
 
 

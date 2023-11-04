@@ -240,7 +240,7 @@
 }
 
 .bisq-easy-trade-state-phase-badge-active .badge-pane {
-    -fx-background-color: -bisq-green;
+    -fx-background-color: -bisq2-green;
 }
 
 .bisq-easy-trade-state-phase-badge .badge-pane .label {
@@ -475,7 +475,7 @@
 }
 
 .bisq-easy-trade-wizard-market.table-view .table-row-cell:selected .table-cell {
-    -fx-background-color: -bisq-green;
+    -fx-background-color: -bisq2-green;
 }
 
 
@@ -504,7 +504,7 @@
 }
 
 .bisq-easy-trade-wizard-select-offer.table-view .table-row-cell:selected .table-cell {
-    -fx-background-color: -bisq-green;
+    -fx-background-color: -bisq2-green;
 }
 
 .bisq-easy-trade-wizard-select-offer.table-view .table-row-cell:empty {
@@ -525,7 +525,7 @@
 }
 
 .bisq-easy-trade-wizard-select-offer.table-view .table-row-cell:hover .button.outlined-button .text {
-    -fx-fill: -bisq-green;
+    -fx-fill: -bisq2-green;
     -fx-font-family: "IBM Plex Sans Medium";
 }
 
@@ -552,7 +552,7 @@
 
 .bisq-easy-offerbook-search-box-active {
     -fx-background-color: rgba(255, 255, 255, 0.075);
-    -fx-border-color: -bisq-green;
+    -fx-border-color: -bisq2-green;
 }
 
 

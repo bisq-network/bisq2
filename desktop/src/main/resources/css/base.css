@@ -38,7 +38,6 @@
     -fx-font-size: 13;
 
     /* Colors */
-    -bisq-green: #56ae48; /* #56ae48 rgb(86,174,72) */
     -bisq-buy: #006600;
     -bisq-sell: #660000;
     -bisq-red: #d02c1f;
@@ -81,16 +80,16 @@
 
 
     -fx-base: -bisq-content-bg-grey;
-    -fx-accent: -bisq-green;
+    -fx-accent: -bisq2-green;
     -fx-background: -bisq-content-bg-grey;
 
     -fx-color: -bisq-dark-grey-mid;
     -fx-body-color: -fx-color;
 
     -fx-box-border: transparent;
-    -fx-focus-color: -bisq-green;
-    -fx-faint-focus-color: -bisq-green;
-    -fx-default-button: derive(-bisq-green, -15%);
+    -fx-focus-color: -bisq2-green;
+    -fx-faint-focus-color: -bisq2-green;
+    -fx-default-button: derive(-bisq2-green, -15%);
     -bisq-green-hover: derive(-fx-default-button, 10%);
     -bisq-green-pressed: derive(-fx-default-button, -5%);
 
