@@ -267,6 +267,9 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         addLanguageButton.setOnAction(null);
         languageSelection.setOnChangeConfirmed(null);
         supportedLanguagesComboBox.setOnChangeConfirmed(null);
+
+        languageSelection.resetValidation();
+        supportedLanguagesComboBox.resetValidation();
     }
 
     private Region getLine() {
