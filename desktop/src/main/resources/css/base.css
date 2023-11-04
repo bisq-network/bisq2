@@ -37,8 +37,6 @@
     -fx-font-family: "IBM Plex Sans";
     -fx-font-size: 13;
 
-    /* Green logo color used in Bisq 1 is #25b135*/
-
     /* Colors */
     -bisq-green: #56ae48; /* #56ae48 rgb(86,174,72) */
     -bisq-buy: #006600;
@@ -46,6 +44,13 @@
     -bisq-red: #d02c1f;
     -bisq-warning: #d0831f;
     -bisq-yellow: #e5a500;
+
+    /* Bisq 2 Colors */
+    -bisq-green-logo: #25b135;
+    -bisq2-green: #56ae48;
+    -bisq2-green-dim-10: #4d9c40;
+    -bisq2-green-dim-20: #448b39;
+    -bisq2-green-dim-30: #3c7932;
 
     /* Bisq Grey Palette */
     -bisq-black-dim: #050505;
