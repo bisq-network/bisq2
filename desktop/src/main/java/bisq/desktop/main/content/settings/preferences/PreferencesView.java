@@ -60,8 +60,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
     private final ChangeListener<Toggle> notificationsToggleListener;
     private final AutoCompleteComboBox<String> languageSelection, supportedLanguagesComboBox;
     private final MaterialTextField requiredTotalReputationScore;
-    private Subscription selectedNotificationTypePin, getSelectedLSupportedLanguageCodePin, addLanguageButtonDisabledPin,
-            supportedLanguageValidationPin;
+    private Subscription selectedNotificationTypePin, getSelectedLSupportedLanguageCodePin;
 
     public PreferencesView(PreferencesModel model, PreferencesController controller) {
         super(new VBox(50), model, controller);
@@ -233,18 +232,16 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
             }
             controller.onSelectSupportedLanguage(supportedLanguagesComboBox.getSelectionModel().getSelectedItem());
         });
-        supportedLanguageValidationPin = EasyBind.subscribe(supportedLanguagesComboBox.getIsValidSelection(), controller::onSupportedLanguageValidationChanged);
-        addLanguageButtonDisabledPin = EasyBind.subscribe(model.getAddSupportedLanguageButtonDisabled(),
-                disabled -> {
-                    addLanguageButton.setOpacity(disabled ? 0.15 : 1);
-                    addLanguageButton.setMouseTransparent(disabled);
-                });
 
         getSelectedLSupportedLanguageCodePin = EasyBind.subscribe(model.getSelectedLSupportedLanguageCode(),
                 e -> supportedLanguagesComboBox.getSelectionModel().select(e));
 
         resetDontShowAgain.setOnAction(e -> controller.onResetDontShowAgain());
-        addLanguageButton.setOnAction(e -> controller.onAddSupportedLanguage());
+        addLanguageButton.setOnAction(e -> {
+            if(supportedLanguagesComboBox.validate()) {
+                controller.onAddSupportedLanguage();
+            }
+        });
     }
 
     @Override
@@ -260,8 +257,6 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         notificationsToggleGroup.selectedToggleProperty().removeListener(notificationsToggleListener);
         selectedNotificationTypePin.unsubscribe();
         getSelectedLSupportedLanguageCodePin.unsubscribe();
-        addLanguageButtonDisabledPin.unsubscribe();
-        supportedLanguageValidationPin.unsubscribe();
 
         resetDontShowAgain.setOnAction(null);
         addLanguageButton.setOnAction(null);

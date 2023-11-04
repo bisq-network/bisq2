@@ -53,7 +53,6 @@ public class PreferencesController implements Controller {
     public void onActivate() {
         model.getLanguageCodes().setAll(LanguageRepository.I18N_CODES);
         model.setSelectedLanguageCode(settingsService.getLanguageCode());
-        model.getAddSupportedLanguageButtonDisabled().set(true);
         model.getSupportedLanguageCodes().setAll(LanguageRepository.CODES);
 
         chatNotificationTypePin = FxBindings.bindBiDir(model.getChatNotificationType())
@@ -112,13 +111,11 @@ public class PreferencesController implements Controller {
         if (languageCode != null) {
             model.getSelectedLSupportedLanguageCode().set(languageCode);
         }
-        model.getAddSupportedLanguageButtonDisabled().set(languageCode == null || model.getSelectedSupportedLanguageCodes().contains(languageCode));
     }
 
     void onAddSupportedLanguage() {
         if (model.getSelectedLSupportedLanguageCode() != null) {
             settingsService.getSupportedLanguageCodes().add(model.getSelectedLSupportedLanguageCode().get());
-            model.getAddSupportedLanguageButtonDisabled().set(true);
             model.getSelectedLSupportedLanguageCode().set(null);
             model.getSupportedLanguageCodeFilteredList().setPredicate(e -> !model.getSelectedSupportedLanguageCodes().contains(e));
         }
@@ -129,9 +126,5 @@ public class PreferencesController implements Controller {
             settingsService.getSupportedLanguageCodes().remove(languageCode);
             model.getSupportedLanguageCodeFilteredList().setPredicate(e -> !model.getSelectedSupportedLanguageCodes().contains(e));
         }
-    }
-
-    void onSupportedLanguageValidationChanged(boolean isValid) {
-        model.getAddSupportedLanguageButtonDisabled().set(!isValid);
     }
 }

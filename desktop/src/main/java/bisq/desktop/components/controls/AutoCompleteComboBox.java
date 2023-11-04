@@ -130,6 +130,10 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
         });
     }
 
+    public boolean validate() {
+        return skin.materialTextField.validate();
+    }
+
     public void resetValidation() {
         skin.materialTextField.resetValidation();
     }

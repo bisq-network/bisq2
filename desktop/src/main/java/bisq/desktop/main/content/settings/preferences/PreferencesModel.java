@@ -37,7 +37,6 @@ public class PreferencesModel implements Model {
     private final LongProperty requiredTotalReputationScore = new SimpleLongProperty();
     private final BooleanProperty offerOnly = new SimpleBooleanProperty();
     private final BooleanProperty closeMyOfferWhenTaken = new SimpleBooleanProperty();
-    private final BooleanProperty addSupportedLanguageButtonDisabled = new SimpleBooleanProperty();
     @Setter
     private String selectedLanguageCode;
     private final StringProperty selectedLSupportedLanguageCode = new SimpleStringProperty();
