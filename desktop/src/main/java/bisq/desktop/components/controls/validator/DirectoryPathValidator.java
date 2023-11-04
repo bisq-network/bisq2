@@ -34,9 +34,10 @@ public class DirectoryPathValidator extends ValidatorBase {
     protected void eval() {
         var textField = (TextInputControl) srcControl.get();
         try {
-            hasErrors.set(!isDirectory(get(textField.getText())));
+            var path = textField.getText();
+            hasErrors.set(path.isEmpty() || !isDirectory(get(path)));
         } catch (Exception e) {
-            log.info("Exception found while validating directory path. " +
+            log.debug("Exception found while validating directory path. " +
                     "Directory path validation will treat this as directory not valid. ", e);
             hasErrors.set(true);
         }

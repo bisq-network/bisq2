@@ -107,13 +107,12 @@ public class UtilsView extends View<VBox, UtilsModel, UtilsController> {
         backupLocation.resetValidation();
         backupLocation.textProperty().bindBidirectional(model.getBackupLocation());
         setBackupLocationButton.defaultButtonProperty().bind(model.getBackupButtonDefault().not());
-        backupButton.disableProperty().bind(model.getBackupButtonDisabled());
         backupButton.defaultButtonProperty().bind(model.getBackupButtonDefault());
 
         openLogFileButton.setOnAction(e -> controller.onOpenLogFile());
         openDataDirButton.setOnAction(e -> controller.onOpenDataDir());
         setBackupLocationButton.setOnAction(e -> controller.onSetBackupLocation());
-        backupButton.setOnAction(e -> onBackupClick());
+        backupButton.setOnAction(e -> onBackupButtonPressed());
         chatRules.setOnAction(e -> controller.onOpenChatRules());
         tradeGuide.setOnAction(e -> controller.onOpenTradeGuide());
         walletGuide.setOnAction(e -> controller.onOpenWalletGuide());
@@ -126,7 +125,7 @@ public class UtilsView extends View<VBox, UtilsModel, UtilsController> {
         contribute.setOnAction(e -> controller.onOpenContribute());
     }
 
-    private void onBackupClick() {
+    private void onBackupButtonPressed() {
         if(backupLocation.validate()) {
             controller.onBackup();
         }
@@ -138,7 +137,6 @@ public class UtilsView extends View<VBox, UtilsModel, UtilsController> {
         backupLocation.resetValidation();
         backupLocation.textProperty().unbindBidirectional(model.getBackupLocation());
         setBackupLocationButton.defaultButtonProperty().unbind();
-        backupButton.disableProperty().unbind();
         backupButton.defaultButtonProperty().unbind();
 
         openLogFileButton.setOnAction(null);
