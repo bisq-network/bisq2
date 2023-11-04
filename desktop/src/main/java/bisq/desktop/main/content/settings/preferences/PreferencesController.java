@@ -130,4 +130,8 @@ public class PreferencesController implements Controller {
             model.getSupportedLanguageCodeFilteredList().setPredicate(e -> !model.getSelectedSupportedLanguageCodes().contains(e));
         }
     }
+
+    void onSupportedLanguageValidationChanged(boolean isValid) {
+        model.getAddSupportedLanguageButtonDisabled().set(!isValid);
+    }
 }

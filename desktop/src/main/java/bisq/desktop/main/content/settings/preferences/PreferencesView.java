@@ -60,7 +60,8 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
     private final ChangeListener<Toggle> notificationsToggleListener;
     private final AutoCompleteComboBox<String> languageSelection, supportedLanguagesComboBox;
     private final MaterialTextField requiredTotalReputationScore;
-    private Subscription selectedNotificationTypePin, getSelectedLSupportedLanguageCodePin, addLanguageButtonDisabledPin;
+    private Subscription selectedNotificationTypePin, getSelectedLSupportedLanguageCodePin, addLanguageButtonDisabledPin,
+            supportedLanguageValidationPin;
 
     public PreferencesView(PreferencesModel model, PreferencesController controller) {
         super(new VBox(50), model, controller);
@@ -119,6 +120,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
                 return null;
             }
         });
+        supportedLanguagesComboBox.validateOnNoItemSelectedWithMessage(Res.get("settings.preferences.language.supported.invalid"));
 
         addLanguageButton = BisqIconButton.createIconButton("arrow-right-sign",
                 Res.get("settings.preferences.language.supported.addButton.tooltip"));
@@ -228,10 +230,10 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         supportedLanguagesComboBox.setOnChangeConfirmed(e -> {
             if (supportedLanguagesComboBox.getSelectionModel().getSelectedItem() == null) {
                 supportedLanguagesComboBox.getSelectionModel().select(model.getSelectedLSupportedLanguageCode().get());
-                return;
             }
             controller.onSelectSupportedLanguage(supportedLanguagesComboBox.getSelectionModel().getSelectedItem());
         });
+        supportedLanguageValidationPin = EasyBind.subscribe(supportedLanguagesComboBox.getIsValidSelection(), controller::onSupportedLanguageValidationChanged);
         addLanguageButtonDisabledPin = EasyBind.subscribe(model.getAddSupportedLanguageButtonDisabled(),
                 disabled -> {
                     addLanguageButton.setOpacity(disabled ? 0.15 : 1);
@@ -259,6 +261,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         selectedNotificationTypePin.unsubscribe();
         getSelectedLSupportedLanguageCodePin.unsubscribe();
         addLanguageButtonDisabledPin.unsubscribe();
+        supportedLanguageValidationPin.unsubscribe();
 
         resetDontShowAgain.setOnAction(null);
         addLanguageButton.setOnAction(null);
