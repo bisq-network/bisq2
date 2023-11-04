@@ -24,6 +24,8 @@ import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.Switch;
+import bisq.desktop.components.controls.validator.NumberValidator;
+import bisq.desktop.components.controls.validator.ValidatorBase;
 import bisq.i18n.Res;
 import bisq.settings.ChatNotificationType;
 import javafx.beans.binding.Bindings;
@@ -53,6 +55,10 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class PreferencesView extends View<VBox, PreferencesModel, PreferencesController> {
+
+    private static final ValidatorBase REPUTATION_SCORE_VALIDATOR =
+            new NumberValidator(Res.get("settings.preferences.trade.requiredTotalReputationScore.invalid"));
+
     private final Button resetDontShowAgain, addLanguageButton;
     private final Switch useAnimations, preventStandbyMode, offersOnlySwitch, closeMyOfferWhenTaken, notifyForPreRelease;
     private final ToggleGroup notificationsToggleGroup = new ToggleGroup();
@@ -185,6 +191,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         requiredTotalReputationScore = new MaterialTextField(Res.get("settings.preferences.trade.requiredTotalReputationScore"),
                 null, Res.get("settings.preferences.trade.requiredTotalReputationScore.help"));
         requiredTotalReputationScore.setMaxWidth(400);
+        requiredTotalReputationScore.setValidators(REPUTATION_SCORE_VALIDATOR);
 
         VBox tradeVBox = new VBox(10, requiredTotalReputationScore, offersOnlySwitch, closeMyOfferWhenTaken);
 
@@ -265,6 +272,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
 
         languageSelection.resetValidation();
         supportedLanguagesComboBox.resetValidation();
+        requiredTotalReputationScore.resetValidation();
     }
 
     private Region getLine() {
