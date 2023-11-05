@@ -37,8 +37,6 @@ import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -55,8 +53,6 @@ public class UserProfileController implements Controller {
     private final ProfileAgeService profileAgeService;
     private final BisqEasyService bisqEasyService;
     private Pin userProfilesPin, selectedUserProfilePin, reputationChangedPin;
-    private Subscription statementPin, termsPin;
-
 
     public UserProfileController(ServiceProvider serviceProvider) {
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
@@ -75,7 +71,6 @@ public class UserProfileController implements Controller {
 
         selectedUserProfilePin = FxBindings.subscribe(userIdentityService.getSelectedUserIdentityObservable(),
                 userIdentity -> {
-                    updateButtons();
                     if (userIdentity == null) {
                         return;
                     }
@@ -97,40 +92,6 @@ public class UserProfileController implements Controller {
                 }
         );
         reputationChangedPin = reputationService.getChangedUserProfileScore().addObserver(userProfileId -> UIThread.run(this::applyReputationScore));
-
-        statementPin = EasyBind.subscribe(model.getStatement(),
-                statement -> updateButtons());
-        termsPin = EasyBind.subscribe(model.getTerms(),
-                terms -> updateButtons());
-    }
-
-    private void updateButtons() {
-        updateSaveButtonState();
-        updateDeleteButtonState();
-    }
-
-    private void updateSaveButtonState() {
-        UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
-        if (userIdentity == null) {
-            model.getSaveButtonDisabled().set(false);
-            return;
-        }
-        UserProfile userProfile = userIdentity.getUserProfile();
-        String statement = model.getStatement().get();
-        String terms = model.getTerms().get();
-        model.getSaveButtonDisabled().set(statement.equals(userProfile.getStatement()) &&
-                terms.equals(userProfile.getTerms()));
-    }
-
-    private void updateDeleteButtonState() {
-        UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
-        if (userIdentity == null) {
-            return;
-        }
-
-        boolean cannotDelete = bisqEasyService.isDeleteUserIdentityProhibited(userIdentity);
-        model.getDeleteButtonDisabled().set(cannotDelete);
-        model.getUseDeleteTooltip().set(cannotDelete);
     }
 
     @Override
@@ -138,8 +99,6 @@ public class UserProfileController implements Controller {
         userProfilesPin.unbind();
         selectedUserProfilePin.unbind();
         reputationChangedPin.unbind();
-        statementPin.unsubscribe();
-        termsPin.unsubscribe();
         model.getSelectedUserIdentity().set(null);
     }
 
@@ -167,7 +126,6 @@ public class UserProfileController implements Controller {
                     UIThread.runOnNextRenderFrame(() -> {
                         UserIdentity value = userIdentityService.getSelectedUserIdentity();
                         model.getSelectedUserIdentity().set(value);
-                        updateButtons();
                     });
                 });
     }
@@ -186,7 +144,6 @@ public class UserProfileController implements Controller {
             new Popup().warning(Res.get("user.userProfile.deleteProfile.cannotDelete"))
                     .closeButtonText(Res.get("confirmation.ok"))
                     .show();
-            updateDeleteButtonState();
             return CompletableFuture.completedFuture(null);
         }
 
@@ -199,7 +156,6 @@ public class UserProfileController implements Controller {
                             UIThread.runOnNextRenderFrame(() -> {
                                 UserIdentity value = model.getUserIdentities().get(0);
                                 model.getSelectedUserIdentity().set(value);
-                                updateButtons();
                             });
                         }
                     }

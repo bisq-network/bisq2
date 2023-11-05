@@ -132,8 +132,6 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         statement.textProperty().bindBidirectional(model.getStatement());
         terms.textProperty().bindBidirectional(model.getTerms());
         roboIconImageView.imageProperty().bind(model.getRoboHash());
-        saveButton.disableProperty().bind(model.getSaveButtonDisabled());
-        deleteButton.disableProperty().bind(model.getDeleteButtonDisabled());
 
         useDeleteTooltipPin = EasyBind.subscribe(model.getUseDeleteTooltip(), useDeleteTooltip ->
                 deleteWrapper.setTooltip(useDeleteTooltip ? deleteTooltip : null));
