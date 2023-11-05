@@ -141,8 +141,16 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
             }
         });
 
-        deleteButton.setOnAction(e -> controller.onDeleteProfile());
-        saveButton.setOnAction(e -> controller.onSave());
+        deleteButton.setOnAction(e -> {
+            if (comboBox.validate()) {
+                controller.onDeleteProfile();
+            }
+        });
+        saveButton.setOnAction(e -> {
+            if (comboBox.validate()) {
+                controller.onSave();
+            }
+        });
         createNewProfileButton.setOnAction(e -> controller.onAddNewChatUser());
         comboBox.setOnChangeConfirmed(e -> {
             if (comboBox.getSelectionModel().getSelectedItem() == null) {

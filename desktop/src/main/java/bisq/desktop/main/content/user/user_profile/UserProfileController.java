@@ -113,6 +113,16 @@ public class UserProfileController implements Controller {
     }
 
     public void onSave() {
+        var userIdentity = userIdentityService.getSelectedUserIdentity();
+        if (userIdentity == null) {
+            // This should never happen as the combobox selection is validated before getting here
+            new Popup().invalid(Res.get("user.userProfile.save.popup.noSelectedProfile")).show();
+            return;
+        }
+        if (noNewChangesToBeSaved(userIdentity)) {
+            new Popup().invalid(Res.get("user.userProfile.save.popup.noChangesToBeSaved")).show();
+            return;
+        }
         if (model.getTerms().get().length() > UserProfile.MAX_LENGTH_TERMS) {
             new Popup().warning(Res.get("user.userProfile.terms.tooLong", UserProfile.MAX_LENGTH_TERMS)).show();
             return;
@@ -128,6 +138,13 @@ public class UserProfileController implements Controller {
                         model.getSelectedUserIdentity().set(value);
                     });
                 });
+    }
+
+    private boolean noNewChangesToBeSaved(UserIdentity userIdentity) {
+        var userProfile = userIdentity.getUserProfile();
+        var statement = model.getStatement().get();
+        var terms = model.getTerms().get();
+        return statement.equals(userProfile.getStatement()) && terms.equals(userProfile.getTerms());
     }
 
     public void onDeleteProfile() {
