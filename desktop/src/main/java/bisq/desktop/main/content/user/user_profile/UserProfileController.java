@@ -123,14 +123,6 @@ public class UserProfileController implements Controller {
             new Popup().invalid(Res.get("user.userProfile.save.popup.noChangesToBeSaved")).show();
             return;
         }
-        if (model.getTerms().get().length() > UserProfile.MAX_LENGTH_TERMS) {
-            new Popup().warning(Res.get("user.userProfile.terms.tooLong", UserProfile.MAX_LENGTH_TERMS)).show();
-            return;
-        }
-        if (model.getStatement().get().length() > UserProfile.MAX_LENGTH_STATEMENT) {
-            new Popup().warning(Res.get("user.userProfile.statement.tooLong", UserProfile.MAX_LENGTH_STATEMENT)).show();
-            return;
-        }
         userIdentityService.editUserProfile(model.getSelectedUserIdentity().get(), model.getTerms().get(), model.getStatement().get())
                 .thenAccept(result -> {
                     UIThread.runOnNextRenderFrame(() -> {

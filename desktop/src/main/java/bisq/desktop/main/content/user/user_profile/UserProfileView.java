@@ -1,4 +1,4 @@
-    /*
+/*
  * This file is part of Bisq.
  *
  * Bisq is free software: you can redistribute it and/or modify it
@@ -24,6 +24,8 @@ import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.controls.MaterialTextField;
+import bisq.desktop.components.controls.validator.TextMaxLengthValidator;
+import bisq.desktop.components.controls.validator.ValidatorBase;
 import bisq.i18n.Res;
 import bisq.user.identity.UserIdentity;
 import javafx.geometry.Insets;
@@ -43,8 +45,17 @@ import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
 
-@Slf4j
+import static bisq.user.profile.UserProfile.MAX_LENGTH_STATEMENT;
+import static bisq.user.profile.UserProfile.MAX_LENGTH_TERMS;
+
+    @Slf4j
 public class UserProfileView extends View<HBox, UserProfileModel, UserProfileController> {
+
+    private static final ValidatorBase TERMS_MAX_LENGTH_VALIDATOR =
+            new TextMaxLengthValidator(MAX_LENGTH_TERMS, Res.get("user.userProfile.terms.tooLong", MAX_LENGTH_TERMS));
+    private static final ValidatorBase STATEMENT_MAX_LENGTH_VALIDATOR =
+            new TextMaxLengthValidator(MAX_LENGTH_STATEMENT, Res.get("user.userProfile.statement.tooLong", MAX_LENGTH_STATEMENT));
+
     private final Button createNewProfileButton, deleteButton, saveButton;
     private final SplitPane deleteWrapper;
     private final MaterialTextField nymId, profileId, profileAge, reputationScoreField, statement;
@@ -105,11 +116,13 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         statement.setEditable(true);
         statement.showEditIcon();
         statement.getIconButton().setOpacity(0.3);
+        statement.setValidators(STATEMENT_MAX_LENGTH_VALIDATOR);
 
         terms = addTextArea(Res.get("user.userProfile.terms"), Res.get("user.userProfile.terms.prompt"));
         terms.setEditable(true);
         terms.showEditIcon();
         terms.getIconButton().setOpacity(0.3);
+        terms.setValidators(TERMS_MAX_LENGTH_VALIDATOR);
 
         saveButton = new Button(Res.get("action.save"));
         saveButton.setDefaultButton(true);
@@ -146,11 +159,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
                 controller.onDeleteProfile();
             }
         });
-        saveButton.setOnAction(e -> {
-            if (comboBox.validate()) {
-                controller.onSave();
-            }
-        });
+        saveButton.setOnAction(e -> onSaveButtonPressed());
         createNewProfileButton.setOnAction(e -> controller.onAddNewChatUser());
         comboBox.setOnChangeConfirmed(e -> {
             if (comboBox.getSelectionModel().getSelectedItem() == null) {
@@ -163,6 +172,19 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
 
         selectedChatUserIdentityPin = EasyBind.subscribe(model.getSelectedUserIdentity(),
                 userIdentity -> comboBox.getSelectionModel().select(userIdentity));
+    }
+
+    private void onSaveButtonPressed() {
+        if (runOnSaveValidations()) {
+            controller.onSave();
+        }
+    }
+
+    private boolean runOnSaveValidations() {
+        var validComboboxSelection = comboBox.validate();
+        var validStatement = statement.validate();
+        var validTerms = terms.validate();
+        return validComboboxSelection && validStatement && validTerms;
     }
 
     @Override
@@ -188,6 +210,8 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         comboBox.setOnChangeConfirmed(null);
 
         comboBox.resetValidation();
+        statement.resetValidation();
+        terms.resetValidation();
     }
 
     private MaterialTextField addField(String description) {
