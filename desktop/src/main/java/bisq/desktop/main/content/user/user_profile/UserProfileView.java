@@ -1,4 +1,4 @@
-/*
+    /*
  * This file is part of Bisq.
  *
  * Bisq is free software: you can redistribute it and/or modify it
@@ -66,7 +66,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         roboIconImageView.setFitHeight(125);
         root.getChildren().add(roboIconImageView);
 
-        formVBox = new VBox(20);
+        formVBox = new VBox(25);
         HBox.setHgrow(formVBox, Priority.ALWAYS);
         root.getChildren().add(formVBox);
 
@@ -153,6 +153,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
             }
             controller.onSelected(comboBox.getSelectionModel().getSelectedItem());
         });
+        comboBox.validateOnNoItemSelectedWithMessage(Res.get("user.bondedRoles.userProfile.select.invalid"));
 
         selectedChatUserIdentityPin = EasyBind.subscribe(model.getSelectedUserIdentity(),
                 userIdentity -> comboBox.getSelectionModel().select(userIdentity));
@@ -179,6 +180,8 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         saveButton.setOnAction(null);
         createNewProfileButton.setOnAction(null);
         comboBox.setOnChangeConfirmed(null);
+
+        comboBox.resetValidation();
     }
 
     private MaterialTextField addField(String description) {
