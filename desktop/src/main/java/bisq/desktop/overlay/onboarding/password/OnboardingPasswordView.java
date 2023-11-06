@@ -19,7 +19,6 @@ package bisq.desktop.overlay.onboarding.password;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.MaterialPasswordField;
-import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.validator.EqualTextsValidator;
 import bisq.desktop.components.controls.validator.RequiredFieldValidator;
 import bisq.desktop.components.controls.validator.TextMinLengthValidator;
@@ -34,12 +33,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.Subscription;
-
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.fxmisc.easybind.EasyBind.subscribe;
 
 @Slf4j
 public class OnboardingPasswordView extends View<VBox, OnboardingPasswordModel, OnboardingPasswordController> {
@@ -49,12 +42,6 @@ public class OnboardingPasswordView extends View<VBox, OnboardingPasswordModel, 
 
     private final MaterialPasswordField password, confirmedPassword;
     private final Button setPasswordButton, skipButton;
-
-    /* Used to prevent input validation from happening when the view first loads */
-    private final Map<MaterialTextField, Integer> focusChangedCounts = new HashMap<>();
-
-    private Subscription passwordFocusPin;
-    private Subscription confirmedPasswordFocusPin;
 
     public OnboardingPasswordView(OnboardingPasswordModel model, OnboardingPasswordController controller) {
         super(new VBox(20), model, controller);
@@ -98,30 +85,24 @@ public class OnboardingPasswordView extends View<VBox, OnboardingPasswordModel, 
 
     @Override
     protected void onViewAttached() {
+        resetValidations();
         password.passwordProperty().bindBidirectional(model.getPassword());
         password.isMaskedProperty().bindBidirectional(model.getPasswordIsMasked());
         password.isValidProperty().bindBidirectional(model.getPasswordIsValid());
         confirmedPassword.passwordProperty().bindBidirectional(model.getConfirmedPassword());
         confirmedPassword.isMaskedProperty().bindBidirectional(model.getConfirmedPasswordIsMasked());
         confirmedPassword.isValidProperty().bindBidirectional(model.getConfirmedPasswordIsValid());
-        focusChangedCounts.put(password, 0);
-        focusChangedCounts.put(confirmedPassword, 0);
         setPasswordButton.setOnAction(e -> {
             password.validate();
             confirmedPassword.validate();
             controller.onSetPassword();
         });
         skipButton.setOnAction(e -> controller.onSkip());
-        passwordFocusPin = subscribe(password.textInputFocusedProperty(),
-                focus -> validateWhenFocusOut(password));
-        confirmedPasswordFocusPin = subscribe(confirmedPassword.textInputFocusedProperty(),
-                focus -> validateWhenFocusOut(confirmedPassword));
     }
 
     @Override
     protected void onViewDetached() {
         resetValidations();
-        focusChangedCounts.clear();
         password.passwordProperty().unbindBidirectional(model.getPassword());
         password.isMaskedProperty().unbindBidirectional(model.getPasswordIsMasked());
         password.isValidProperty().unbindBidirectional(model.getPasswordIsValid());
@@ -130,22 +111,10 @@ public class OnboardingPasswordView extends View<VBox, OnboardingPasswordModel, 
         confirmedPassword.isValidProperty().unbindBidirectional(model.getConfirmedPasswordIsValid());
         setPasswordButton.setOnAction(null);
         skipButton.setOnAction(null);
-        passwordFocusPin.unsubscribe();
-        confirmedPasswordFocusPin.unsubscribe();
-        focusChangedCounts.clear();
     }
 
     public void resetValidations() {
         password.resetValidation();
         confirmedPassword.resetValidation();
-    }
-
-    private void validateWhenFocusOut(MaterialPasswordField source) {
-        if (!source.isFocused() && focusChangedCounts.get(source) >= 2) {
-            source.validate();
-        }
-        if (focusChangedCounts.get(source) < 2) {
-            focusChangedCounts.put(source, focusChangedCounts.get(source) + 1);
-        }
     }
 }

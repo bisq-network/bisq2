@@ -59,13 +59,11 @@ public class UtilsController implements Controller {
 
     @Override
     public void onActivate() {
-        model.getBackupButtonDisabled().bind(model.getBackupLocation().isEmpty());
         model.getBackupButtonDefault().bind(model.getBackupLocation().isEmpty().not());
     }
 
     @Override
     public void onDeactivate() {
-        model.getBackupButtonDisabled().unbind();
     }
 
     void onOpenLogFile() {

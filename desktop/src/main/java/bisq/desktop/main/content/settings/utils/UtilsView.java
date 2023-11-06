@@ -20,6 +20,8 @@ package bisq.desktop.main.content.settings.utils;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.MaterialTextField;
+import bisq.desktop.components.controls.validator.DirectoryPathValidator;
+import bisq.desktop.components.controls.validator.ValidatorBase;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -33,6 +35,9 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class UtilsView extends View<VBox, UtilsModel, UtilsController> {
+
+    private static final ValidatorBase DIRECTORY_PATH_VALIDATOR = new DirectoryPathValidator(Res.get("settings.utils.backup.location.invalid"));
+
     private final Button setBackupLocationButton, backupButton;
     private final MaterialTextField backupLocation;
     private final Hyperlink webpage, dao, sourceCode, community, contribute,
@@ -49,6 +54,7 @@ public class UtilsView extends View<VBox, UtilsModel, UtilsController> {
         backupLocation = new MaterialTextField(Res.get("settings.utils.backup.location"),
                 Res.get("settings.utils.backup.location.prompt"),
                 Res.get("settings.utils.backup.location.help"));
+        backupLocation.setValidators(DIRECTORY_PATH_VALIDATOR);
         setBackupLocationButton = new Button(Res.get("settings.utils.backup.setLocationButton"));
         backupButton = new Button(Res.get("settings.utils.backup.backupButton"));
         HBox backupButtons = new HBox(10, setBackupLocationButton, backupButton);
@@ -98,15 +104,15 @@ public class UtilsView extends View<VBox, UtilsModel, UtilsController> {
 
     @Override
     protected void onViewAttached() {
+        backupLocation.resetValidation();
         backupLocation.textProperty().bindBidirectional(model.getBackupLocation());
         setBackupLocationButton.defaultButtonProperty().bind(model.getBackupButtonDefault().not());
-        backupButton.disableProperty().bind(model.getBackupButtonDisabled());
         backupButton.defaultButtonProperty().bind(model.getBackupButtonDefault());
 
         openLogFileButton.setOnAction(e -> controller.onOpenLogFile());
         openDataDirButton.setOnAction(e -> controller.onOpenDataDir());
         setBackupLocationButton.setOnAction(e -> controller.onSetBackupLocation());
-        backupButton.setOnAction(e -> controller.onBackup());
+        backupButton.setOnAction(e -> onBackupButtonPressed());
         chatRules.setOnAction(e -> controller.onOpenChatRules());
         tradeGuide.setOnAction(e -> controller.onOpenTradeGuide());
         walletGuide.setOnAction(e -> controller.onOpenWalletGuide());
@@ -119,11 +125,18 @@ public class UtilsView extends View<VBox, UtilsModel, UtilsController> {
         contribute.setOnAction(e -> controller.onOpenContribute());
     }
 
+    private void onBackupButtonPressed() {
+        if(backupLocation.validate()) {
+            controller.onBackup();
+        }
+    }
+
     @Override
     protected void onViewDetached() {
+        backupLocation.setText("");
+        backupLocation.resetValidation();
         backupLocation.textProperty().unbindBidirectional(model.getBackupLocation());
         setBackupLocationButton.defaultButtonProperty().unbind();
-        backupButton.disableProperty().unbind();
         backupButton.defaultButtonProperty().unbind();
 
         openLogFileButton.setOnAction(null);

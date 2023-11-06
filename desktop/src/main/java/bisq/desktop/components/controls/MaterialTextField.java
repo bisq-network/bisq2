@@ -394,6 +394,7 @@ public class MaterialTextField extends Pane {
             Transitions.animateWidth(selectionLine, getWidth());
         } else {
             Transitions.fadeOut(selectionLine, 200);
+            validate();
         }
         onMouseExited();
         update();

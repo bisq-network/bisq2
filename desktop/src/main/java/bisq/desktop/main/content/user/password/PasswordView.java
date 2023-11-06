@@ -19,7 +19,6 @@ package bisq.desktop.main.content.user.password;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.MaterialPasswordField;
-import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.validator.EqualTextsValidator;
 import bisq.desktop.components.controls.validator.RequiredFieldValidator;
 import bisq.desktop.components.controls.validator.TextMinLengthValidator;
@@ -31,12 +30,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.Subscription;
-
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.fxmisc.easybind.EasyBind.subscribe;
 
 @Slf4j
 public class PasswordView extends View<VBox, PasswordModel, PasswordController> {
@@ -47,12 +40,6 @@ public class PasswordView extends View<VBox, PasswordModel, PasswordController> 
     private final MaterialPasswordField password, confirmedPassword;
     private final Button button;
     private final Label headline;
-
-    /* Used to prevent input validation from happening when the view first loads */
-    private final Map<MaterialTextField, Integer> focusChangedCounts;
-
-    private Subscription passwordFocusPin;
-    private Subscription confirmedPasswordFocusPin;
 
     public PasswordView(PasswordModel model, PasswordController controller) {
         super(new VBox(20), model, controller);
@@ -74,8 +61,6 @@ public class PasswordView extends View<VBox, PasswordModel, PasswordController> 
                 MIN_LENGTH_VALIDATOR,
                 new EqualTextsValidator(Res.get("validation.password.notMatching"), password.getTextInputControl()));
 
-        focusChangedCounts = new HashMap<>();
-
         button = new Button();
         button.setDefaultButton(true);
         VBox.setMargin(password, new Insets(0, 0, -10, 0));
@@ -84,6 +69,7 @@ public class PasswordView extends View<VBox, PasswordModel, PasswordController> 
 
     @Override
     protected void onViewAttached() {
+        resetValidations();
         headline.textProperty().bind(model.getHeadline());
         password.passwordProperty().bindBidirectional(model.getPassword());
         password.isMaskedProperty().bindBidirectional(model.getPasswordIsMasked());
@@ -99,18 +85,11 @@ public class PasswordView extends View<VBox, PasswordModel, PasswordController> 
             confirmedPassword.validate();
             controller.onButtonClicked();
         });
-        focusChangedCounts.put(password, 0);
-        focusChangedCounts.put(confirmedPassword, 0);
-        passwordFocusPin = subscribe(password.textInputFocusedProperty(),
-                focus -> validateWhenFocusOut(password));
-        confirmedPasswordFocusPin = subscribe(confirmedPassword.textInputFocusedProperty(),
-                focus -> validateWhenFocusOut(confirmedPassword));
     }
 
     @Override
     protected void onViewDetached() {
         resetValidations();
-        focusChangedCounts.clear();
         headline.textProperty().unbind();
         password.passwordProperty().unbindBidirectional(model.getPassword());
         password.isMaskedProperty().unbindBidirectional(model.getPasswordIsMasked());
@@ -122,21 +101,10 @@ public class PasswordView extends View<VBox, PasswordModel, PasswordController> 
         confirmedPassword.isValidProperty().unbindBidirectional(model.getConfirmedPasswordIsValid());
         button.textProperty().unbind();
         button.setOnAction(null);
-        passwordFocusPin.unsubscribe();
-        confirmedPasswordFocusPin.unsubscribe();
     }
 
     public void resetValidations() {
         password.resetValidation();
         confirmedPassword.resetValidation();
-    }
-
-    private void validateWhenFocusOut(MaterialPasswordField source) {
-        if (!source.isFocused() && focusChangedCounts.get(source) >= 2) {
-            source.validate();
-        }
-        if (focusChangedCounts.get(source) < 2) {
-            focusChangedCounts.put(source, focusChangedCounts.get(source) + 1);
-        }
     }
 }

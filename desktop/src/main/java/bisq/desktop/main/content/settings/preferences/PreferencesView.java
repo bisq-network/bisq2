@@ -24,6 +24,8 @@ import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.Switch;
+import bisq.desktop.components.controls.validator.NumberValidator;
+import bisq.desktop.components.controls.validator.ValidatorBase;
 import bisq.i18n.Res;
 import bisq.settings.ChatNotificationType;
 import javafx.beans.binding.Bindings;
@@ -31,8 +33,19 @@ import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.VPos;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
+import javafx.scene.control.RadioButton;
+import javafx.scene.control.Toggle;
+import javafx.scene.control.ToggleGroup;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 import javafx.util.converter.NumberStringConverter;
@@ -42,6 +55,10 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class PreferencesView extends View<VBox, PreferencesModel, PreferencesController> {
+
+    private static final ValidatorBase REPUTATION_SCORE_VALIDATOR =
+            new NumberValidator(Res.get("settings.preferences.trade.requiredTotalReputationScore.invalid"));
+
     private final Button resetDontShowAgain, addLanguageButton;
     private final Switch useAnimations, preventStandbyMode, offersOnlySwitch, closeMyOfferWhenTaken, notifyForPreRelease;
     private final ToggleGroup notificationsToggleGroup = new ToggleGroup();
@@ -49,7 +66,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
     private final ChangeListener<Toggle> notificationsToggleListener;
     private final AutoCompleteComboBox<String> languageSelection, supportedLanguagesComboBox;
     private final MaterialTextField requiredTotalReputationScore;
-    private Subscription selectedNotificationTypePin, getSelectedLSupportedLanguageCodePin, addLanguageButtonDisabledPin;
+    private Subscription selectedNotificationTypePin, getSelectedLSupportedLanguageCodePin;
 
     public PreferencesView(PreferencesModel model, PreferencesController controller) {
         super(new VBox(50), model, controller);
@@ -74,7 +91,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
                 return null;
             }
         });
-
+        languageSelection.validateOnNoItemSelectedWithMessage(Res.get("settings.preferences.language.select.invalid"));
 
         // Supported languages
         Label supportedLanguagesHeadline = new Label(Res.get("settings.preferences.language.supported.headline"));
@@ -108,6 +125,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
                 return null;
             }
         });
+        supportedLanguagesComboBox.validateOnNoItemSelectedWithMessage(Res.get("settings.preferences.language.supported.invalid"));
 
         addLanguageButton = BisqIconButton.createIconButton("arrow-right-sign",
                 Res.get("settings.preferences.language.supported.addButton.tooltip"));
@@ -173,6 +191,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         requiredTotalReputationScore = new MaterialTextField(Res.get("settings.preferences.trade.requiredTotalReputationScore"),
                 null, Res.get("settings.preferences.trade.requiredTotalReputationScore.help"));
         requiredTotalReputationScore.setMaxWidth(400);
+        requiredTotalReputationScore.setValidators(REPUTATION_SCORE_VALIDATOR);
 
         VBox tradeVBox = new VBox(10, requiredTotalReputationScore, offersOnlySwitch, closeMyOfferWhenTaken);
 
@@ -217,21 +236,19 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         supportedLanguagesComboBox.setOnChangeConfirmed(e -> {
             if (supportedLanguagesComboBox.getSelectionModel().getSelectedItem() == null) {
                 supportedLanguagesComboBox.getSelectionModel().select(model.getSelectedLSupportedLanguageCode().get());
-                return;
             }
             controller.onSelectSupportedLanguage(supportedLanguagesComboBox.getSelectionModel().getSelectedItem());
         });
-        addLanguageButtonDisabledPin = EasyBind.subscribe(model.getAddSupportedLanguageButtonDisabled(),
-                disabled -> {
-                    addLanguageButton.setOpacity(disabled ? 0.15 : 1);
-                    addLanguageButton.setMouseTransparent(disabled);
-                });
 
         getSelectedLSupportedLanguageCodePin = EasyBind.subscribe(model.getSelectedLSupportedLanguageCode(),
                 e -> supportedLanguagesComboBox.getSelectionModel().select(e));
 
         resetDontShowAgain.setOnAction(e -> controller.onResetDontShowAgain());
-        addLanguageButton.setOnAction(e -> controller.onAddSupportedLanguage());
+        addLanguageButton.setOnAction(e -> {
+            if(supportedLanguagesComboBox.validate()) {
+                controller.onAddSupportedLanguage();
+            }
+        });
     }
 
     @Override
@@ -247,12 +264,15 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         notificationsToggleGroup.selectedToggleProperty().removeListener(notificationsToggleListener);
         selectedNotificationTypePin.unsubscribe();
         getSelectedLSupportedLanguageCodePin.unsubscribe();
-        addLanguageButtonDisabledPin.unsubscribe();
 
         resetDontShowAgain.setOnAction(null);
         addLanguageButton.setOnAction(null);
         languageSelection.setOnChangeConfirmed(null);
         supportedLanguagesComboBox.setOnChangeConfirmed(null);
+
+        languageSelection.resetValidation();
+        supportedLanguagesComboBox.resetValidation();
+        requiredTotalReputationScore.resetValidation();
     }
 
     private Region getLine() {
