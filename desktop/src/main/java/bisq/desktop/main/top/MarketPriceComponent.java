@@ -36,6 +36,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Cursor;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.image.ImageView;
@@ -142,6 +143,7 @@ public class MarketPriceComponent {
             super(new HBox(7), model, controller);
 
             root.setAlignment(Pos.CENTER);
+            root.setCursor(Cursor.HAND);
 
             codes = new Label();
             codes.setMouseTransparent(true);
@@ -203,6 +205,8 @@ public class MarketPriceComponent {
                 private final HBox hBox;
 
                 {
+                    setCursor(Cursor.HAND);
+
                     codes = new Label();
                     codes.setMouseTransparent(true);
                     codes.getStyleClass().add("bisq-text-18");
