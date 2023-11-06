@@ -111,7 +111,7 @@ public class ImageUtil {
 
     /**
      * @param size
-     * @param cssStrokeColor E.g. -bisq-green
+     * @param cssStrokeColor E.g. -bisq2-green
      */
     public static StackPane addRingToNode(Node node, double size, double strokeWidth, String cssStrokeColor) {
         StackPane pane = new StackPane();

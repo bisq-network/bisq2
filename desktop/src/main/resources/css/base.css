@@ -37,16 +37,19 @@
     -fx-font-family: "IBM Plex Sans";
     -fx-font-size: 13;
 
-    /* Green logo color used in Bisq 1 is #25b135*/
-
     /* Colors */
-    -bisq-green: #56ae48; /* #56ae48 rgb(86,174,72) */
-    -bisq-turquoise: #2cacaf;
     -bisq-buy: #006600;
     -bisq-sell: #660000;
     -bisq-red: #d02c1f;
     -bisq-warning: #d0831f;
     -bisq-yellow: #e5a500;
+
+    /* Bisq 2 Colors */
+    -bisq-green-logo: #25b135;
+    -bisq2-green: #56ae48;
+    -bisq2-green-dim-10: #4d9c40;
+    -bisq2-green-dim-20: #448b39;
+    -bisq2-green-dim-30: #3c7932;
 
     /* Bisq Grey Palette */
     -bisq-black-dim: #050505;
@@ -77,18 +80,18 @@
 
 
     -fx-base: -bisq-content-bg-grey;
-    -fx-accent: -bisq-green;
+    -fx-accent: -bisq2-green;
     -fx-background: -bisq-content-bg-grey;
 
     -fx-color: -bisq-dark-grey-mid;
     -fx-body-color: -fx-color;
 
     -fx-box-border: transparent;
-    -fx-focus-color: -bisq-green;
-    -fx-faint-focus-color: -bisq-green;
-    -fx-default-button: derive(-bisq-green, -15%);
-    -bisq-green-hover: derive(-fx-default-button, 10%);
-    -bisq-green-pressed: derive(-fx-default-button, -5%);
+    -fx-focus-color: -bisq2-green;
+    -fx-faint-focus-color: -bisq2-green;
+    -fx-default-button: -bisq2-green-dim-20;
+    -bisq-green-hover: -bisq2-green-dim-10;
+    -bisq-green-pressed: -bisq2-green-dim-30;
 
     -fx-dark-text-color: -bisq-black-dim;
     -fx-mid-text-color: -bisq-medium-grey-mid;

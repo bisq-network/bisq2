@@ -251,7 +251,7 @@
 
 /* Custom style used in selection column for vertical green bar */
 #selection-marker {
-    -fx-background-color: -bisq-green !important;
+    -fx-background-color: -bisq2-green !important;
 }
 
 /* empty */
@@ -500,7 +500,7 @@
 }
 
 .tab-view-selection {
-    -fx-background-color: -bisq-green;
+    -fx-background-color: -bisq2-green;
 }
 
 /*******************************************************************************
@@ -537,7 +537,7 @@
 }
 
 .bisq-green-line {
-    -fx-background-color: -bisq-green;
+    -fx-background-color: -bisq2-green;
 }
 
 .bisq-white-bg {
@@ -630,7 +630,7 @@
 }
 
 .overlay-headline-information {
-    -fx-text-fill: -bisq-green;
+    -fx-text-fill: -bisq2-green;
 }
 
 .overlay-headline-warning {
@@ -642,7 +642,7 @@
 }
 
 .overlay-icon-information {
-    -fx-text-fill: -bisq-green;
+    -fx-text-fill: -bisq2-green;
 }
 
 .overlay-icon-warning {

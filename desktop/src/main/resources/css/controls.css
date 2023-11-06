@@ -136,10 +136,10 @@
 
 .outlined-button {
     -fx-background-color: transparent;
-    -fx-border-color: -bisq-green;
+    -fx-border-color: -bisq2-green;
     -fx-border-width: 1;
     -fx-border-radius: 4;
-    -fx-text-fill: -bisq-green;
+    -fx-text-fill: -bisq2-green;
     -fx-font-size: 1em;
     -fx-padding: 5 32 5 32;
 }
@@ -280,7 +280,7 @@
 .text-button {
     -fx-background-color: transparent;
     -fx-border-width: 0px;
-    -fx-text-fill: -bisq-green;
+    -fx-text-fill: -bisq2-green;
     -fx-font-size: 1em;
     -fx-padding: 5 16 5 16;
     -fx-cursor: hand;
@@ -569,20 +569,20 @@
 
 .card-button-border:default {
     -fx-background-color: transparent;
-    -fx-border-color: derive(-bisq-green, -20%);
-    -fx-text-fill: derive(-bisq-green, -20%);
+    -fx-border-color: derive(-bisq2-green, -20%);
+    -fx-text-fill: derive(-bisq2-green, -20%);
 }
 
 .card-button-border:default:hover {
     -fx-background-color: rgba(0, 0, 0, 0.15);
-    -fx-border-color: derive(-bisq-green, -5%);
-    -fx-text-fill: derive(-bisq-green, -5%);
+    -fx-border-color: derive(-bisq2-green, -5%);
+    -fx-text-fill: derive(-bisq2-green, -5%);
 }
 
 .card-button-border:default:pressed {
     -fx-background-color: rgba(0, 0, 0, 0.2);
-    -fx-border-color: derive(-bisq-green, -10%);
-    -fx-text-fill: derive(-bisq-green, -10%);
+    -fx-border-color: derive(-bisq2-green, -10%);
+    -fx-text-fill: derive(-bisq2-green, -10%);
 }
 
 
@@ -767,7 +767,7 @@
 
 .progress-bar > .bar,
 .progress-bar:indeterminate > .bar {
-    -fx-background-color: -bisq-green;
+    -fx-background-color: -bisq2-green;
     -fx-padding: 1.5;
 }
 
@@ -813,7 +813,7 @@
 }
 
 .slider .thumb {
-    -fx-background-color: -bisq-green;
+    -fx-background-color: -bisq2-green;
 }
 
 
