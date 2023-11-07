@@ -47,7 +47,11 @@ public class WaitingAnimation extends StackPane {
     public WaitingAnimation() {
         setAlignment(Pos.CENTER);
         ImageView spinningCircle = ImageUtil.getImageViewById("spinning-circle");
-        spinningCircle.setOpacity(0);
+
+        spinningCircle.setFitHeight(78);
+        spinningCircle.setFitWidth(78);
+        spinningCircle.setPreserveRatio(true);
+
         getChildren().add(spinningCircle);
 
         fadeTransition = new FadeTransition(Duration.millis(1000), spinningCircle);
@@ -97,8 +101,6 @@ public class WaitingAnimation extends StackPane {
 
         if (waitingState != null) {
             waitingStateIcon = ImageUtil.getImageViewById(getIconId(waitingState));
-            waitingStateIcon.setScaleX(0.85);
-            waitingStateIcon.setScaleY(0.85);
             getChildren().add(waitingStateIcon);
         }
     }
