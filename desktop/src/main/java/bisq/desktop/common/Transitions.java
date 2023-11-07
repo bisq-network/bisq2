@@ -402,10 +402,10 @@ public class Transitions {
         }
     }
 
-    public static void transitRightOut(Region nodeIn, Region nodeOut, int customDuration) {
+    public static void transitRightOut(Region nodeIn, Region nodeOut) {
         nodeIn.setOpacity(0);
         UIScheduler.run(() -> slideInLeft(nodeIn, () -> {
-        })).after(customDuration);
+        })).after(DEFAULT_DURATION / 4);
         slideOutRight(nodeOut, () -> {
             Parent parent = nodeOut.getParent();
             if (parent != null) {
@@ -417,14 +417,10 @@ public class Transitions {
         });
     }
 
-    public static void transitRightOut(Region nodeIn, Region nodeOut) {
-        transitRightOut(nodeIn, nodeOut, DEFAULT_DURATION / 4);
-    }
-
-    public static void transitLeftOut(Region nodeIn, Region nodeOut, int customDuration) {
+    public static void transitLeftOut(Region nodeIn, Region nodeOut) {
         nodeIn.setOpacity(0);
         UIScheduler.run(() -> slideInRight(nodeIn, () -> {
-        })).after(customDuration);
+        })).after(DEFAULT_DURATION / 4);
         slideOutLeft(nodeOut, () -> {
             Parent parent = nodeOut.getParent();
             if (parent != null) {
@@ -434,10 +430,6 @@ public class Transitions {
                 }
             }
         });
-    }
-
-    public static void transitLeftOut(Region nodeIn, Region nodeOut) {
-        transitLeftOut(nodeIn, nodeOut, DEFAULT_DURATION / 4);
     }
 
     public static void transitInNewTab(Region nodeIn) {
@@ -988,18 +980,6 @@ public class Transitions {
             node.setScaleY(targetScale);
         }
         return timeline;
-    }
-
-    public static void animateTabView(Region nodeIn, Region nodeOut, Region tabButtonNode, double targetX) {
-        double startX = tabButtonNode.getLayoutX();
-        int duration = getDuration(DEFAULT_DURATION / 10);
-        if (startX == 0) {
-            transitRightOut(nodeIn, nodeOut, duration);
-        } else if (startX > targetX) {
-            transitLeftOut(nodeIn, nodeOut, duration);
-        } else {
-            transitRightOut(nodeIn, nodeOut, duration);
-        }
     }
 
     public static boolean getUseAnimations() {
