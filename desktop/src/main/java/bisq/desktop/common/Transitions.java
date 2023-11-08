@@ -160,7 +160,7 @@ public class Transitions {
         }
 
 
-        int duration = DEFAULT_DURATION / 2;
+        int duration = DEFAULT_DURATION / 4;
         ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
         keyFrames.add(new KeyFrame(Duration.millis(0),
                 new KeyValue(node.opacityProperty(), 1, Interpolator.LINEAR),
@@ -449,7 +449,7 @@ public class Transitions {
                     ((TransitionedView) newView).onStartTransition();
                 }
                 fadeIn(nodeIn,
-                        DEFAULT_DURATION / 2,
+                        DEFAULT_DURATION / 4,
                         () -> {
                             if (newView instanceof TransitionedView) {
                                 ((TransitionedView) newView).onTransitionCompleted();
