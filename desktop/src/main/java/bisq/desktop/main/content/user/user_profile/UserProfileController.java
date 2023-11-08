@@ -105,6 +105,7 @@ public class UserProfileController implements Controller {
     public void onSelected(UserIdentity userIdentity) {
         if (userIdentity != null) {
             userIdentityService.selectChatUserIdentity(userIdentity);
+            applyReputationScore();
         }
     }
 
