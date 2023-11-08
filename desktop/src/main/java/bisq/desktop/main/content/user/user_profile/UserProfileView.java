@@ -27,6 +27,7 @@ import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.validator.TextMaxLengthValidator;
 import bisq.desktop.components.controls.validator.ValidatorBase;
+import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.user.identity.UserIdentity;
 import javafx.geometry.Insets;
@@ -158,11 +159,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
             }
         });
 
-        deleteButton.setOnAction(e -> {
-            if (comboBox.validate()) {
-                controller.onDeleteProfile();
-            }
-        });
+        deleteButton.setOnAction(e -> onDeleteButtonPressed());
         saveButton.setOnAction(e -> onSaveButtonPressed());
         createNewProfileButton.setOnAction(e -> controller.onAddNewChatUser());
         comboBox.setOnChangeConfirmed(e -> {
@@ -207,8 +204,17 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         }
     }
 
+    private void onDeleteButtonPressed() {
+        if(!comboBox.getIsValidSelection().get()) {
+            new Popup().invalid(Res.get("user.userProfile.popup.noSelectedProfile")).show();
+            return;
+        }
+        controller.onDeleteProfile();
+    }
+
     private boolean runOnSaveValidations() {
         if (!comboBox.getIsValidSelection().get()) {
+            new Popup().invalid(Res.get("user.userProfile.popup.noSelectedProfile")).show();
             return false;
         }
         var validComboboxSelection = comboBox.validate();

@@ -130,7 +130,7 @@ public class UserProfileController implements Controller {
         var userIdentity = userIdentityService.getSelectedUserIdentity();
         if (userIdentity == null) {
             // This should never happen as the combobox selection is validated before getting here
-            new Popup().invalid(Res.get("user.userProfile.save.popup.noSelectedProfile")).show();
+            new Popup().invalid(Res.get("user.userProfile.popup.noSelectedProfile")).show();
             return;
         }
         if (noNewChangesToBeSaved(userIdentity)) {
