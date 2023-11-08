@@ -49,13 +49,16 @@ import javax.annotation.Nullable;
 import static bisq.user.profile.UserProfile.MAX_LENGTH_STATEMENT;
 import static bisq.user.profile.UserProfile.MAX_LENGTH_TERMS;
 
-    @Slf4j
+@Slf4j
 public class UserProfileView extends View<HBox, UserProfileModel, UserProfileController> {
 
     private static final ValidatorBase TERMS_MAX_LENGTH_VALIDATOR =
             new TextMaxLengthValidator(MAX_LENGTH_TERMS, Res.get("user.userProfile.terms.tooLong", MAX_LENGTH_TERMS));
     private static final ValidatorBase STATEMENT_MAX_LENGTH_VALIDATOR =
             new TextMaxLengthValidator(MAX_LENGTH_STATEMENT, Res.get("user.userProfile.statement.tooLong", MAX_LENGTH_STATEMENT));
+
+    private static final String STATEMENT_PROMPT = Res.get("user.userProfile.statement.prompt");
+    private static final String TERMS_PROMPT = Res.get("user.userProfile.terms.prompt");
 
     private final Button createNewProfileButton, deleteButton, saveButton;
     private final SplitPane deleteWrapper;
@@ -113,13 +116,13 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
 
         reputationScoreField = addField(Res.get("user.userProfile.reputation"));
 
-        statement = addField(Res.get("user.userProfile.statement"), Res.get("user.userProfile.statement.prompt"));
+        statement = addField(Res.get("user.userProfile.statement"), STATEMENT_PROMPT);
         statement.setEditable(true);
         statement.showEditIcon();
         statement.getIconButton().setOpacity(0.3);
         statement.setValidators(STATEMENT_MAX_LENGTH_VALIDATOR);
 
-        terms = addTextArea(Res.get("user.userProfile.terms"), Res.get("user.userProfile.terms.prompt"));
+        terms = addTextArea(Res.get("user.userProfile.terms"), TERMS_PROMPT);
         terms.setEditable(true);
         terms.showEditIcon();
         terms.getIconButton().setOpacity(0.3);
@@ -176,15 +179,26 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
 
         isValidSelectionPin = EasyBind.subscribe(comboBox.getIsValidSelection(), isValidSelection -> UIThread.run(() -> {
             if (!isValidSelection) {
-                statement.setEditable(false);
-                terms.setEditable(false);
+                disableEditableTextBoxes();
                 controller.resetSelection();
-            }
-            else {
-                statement.setEditable(true);
-                terms.setEditable(true);
+            } else {
+                enableEditableTextBoxes();
             }
         }));
+    }
+
+    private void disableEditableTextBoxes() {
+        statement.setEditable(false);
+        statement.setPromptText("");
+        terms.setEditable(false);
+        terms.setPromptText("");
+    }
+
+    private void enableEditableTextBoxes() {
+        statement.setEditable(true);
+        statement.setPromptText(STATEMENT_PROMPT);
+        terms.setEditable(true);
+        terms.setPromptText(TERMS_PROMPT);
     }
 
     private void onSaveButtonPressed() {
