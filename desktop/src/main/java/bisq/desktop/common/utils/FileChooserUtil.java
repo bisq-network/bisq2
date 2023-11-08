@@ -50,9 +50,20 @@ public class FileChooserUtil {
         return file;
     }
 
-    public static File chooseDirectory(Scene scene, String path, String title) {
+    public static File chooseDirectory(Scene scene, String title) {
+        return chooseDirectory(scene, null, title);
+    }
+
+    public static File chooseDirectory(Scene scene, @Nullable String initialDirectory, String title) {
         DirectoryChooser directoryChooser = new DirectoryChooser();
-        directoryChooser.setInitialDirectory(new File(path));
+        if (initialDirectory == null) {
+            initialDirectory = SettingsService.getInstance().getCookie().asString(CookieKey.FILE_CHOOSER_DIR)
+                    .orElse(OsUtils.getDownloadOfHomeDir());
+        }
+        File initDir = new File(initialDirectory);
+        if (initDir.isDirectory()) {
+            directoryChooser.setInitialDirectory(initDir);
+        }
         directoryChooser.setTitle(title);
         return directoryChooser.showDialog(scene.getWindow());
     }

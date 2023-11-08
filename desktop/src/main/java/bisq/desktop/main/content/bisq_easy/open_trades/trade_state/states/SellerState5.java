@@ -21,15 +21,13 @@ import bisq.bonded_roles.explorer.ExplorerService;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeSelectionService;
-import bisq.common.encoding.Csv;
-import bisq.common.util.FileUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
-import bisq.desktop.common.utils.FileChooserUtil;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.WrappingText;
 import bisq.desktop.components.overlay.Popup;
+import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.OpenTradesUtils;
 import bisq.i18n.Res;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import de.jensd.fx.fontawesome.AwesomeIcon;
@@ -40,10 +38,6 @@ import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
 
 @Slf4j
 public class SellerState5 extends BaseState {
@@ -97,41 +91,14 @@ public class SellerState5 extends BaseState {
                     .onAction(() -> {
                         channelService.leaveChannel(model.getChannel());
                         bisqEasyTradeService.removeTrade(model.getBisqEasyTrade());
+                        selectionService.getSelectedChannel().set(null);
                     })
                     .closeButtonText(Res.get("confirmation.no"))
                     .show();
         }
 
-
         private void onExportTrade() {
-            List<List<String>> tradeData = List.of(
-                    List.of(
-                            "Trade ID",
-                            "BTC amount",
-                            model.getQuoteCode() + " amount",
-                            "Transaction ID",
-                            "Receiver address",
-                            "Payment method"
-                    ),
-                    List.of(
-                            model.getBisqEasyTrade().getId(),
-                            model.getFormattedBaseAmount(),
-                            model.getFormattedQuoteAmount(),
-                            model.getTxId(),
-                            model.getBisqEasyTrade().getBtcAddress().get(),
-                            model.getBisqEasyTrade().getContract().getQuoteSidePaymentMethodSpec().getDisplayString()
-                    )
-            );
-
-            String csv = Csv.toCsv(tradeData);
-            File file = FileChooserUtil.openFile(getView().getRoot().getScene(), "BisqEasyTrade.csv");
-            if (file != null) {
-                try {
-                    FileUtils.writeToFile(csv, file);
-                } catch (IOException e) {
-                    new Popup().error(e).show();
-                }
-            }
+            OpenTradesUtils.exportTrade(model.getBisqEasyTrade(), getView().getRoot().getScene());
         }
 
         private void openExplorer() {
