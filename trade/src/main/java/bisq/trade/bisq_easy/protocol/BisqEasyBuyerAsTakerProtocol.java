@@ -132,7 +132,7 @@ public class BisqEasyBuyerAsTakerProtocol extends BisqEasyProtocol {
                 .run(BisqEasyCancelTradeMessageHandler.class)
                 .to(CANCELLED);
 
-        // Peer canceled trade
+        // Peer cancelled trade
         addTransition()
                 .from(BUYER_RECEIVED_ACCOUNT_DATA)
                 .on(BisqEasyCancelTradeEvent.class)

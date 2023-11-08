@@ -18,6 +18,7 @@
 package bisq.trade.bisq_easy.protocol.messages;
 
 import bisq.common.fsm.Event;
+import bisq.contract.Role;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.protocol.events.TradeMessageHandler;
@@ -34,10 +35,15 @@ public class BisqEasyCancelTradeMessageHandler extends TradeMessageHandler<BisqE
     public void handle(Event event) {
         BisqEasyCancelTradeMessage message = (BisqEasyCancelTradeMessage) event;
         verifyMessage(message);
+        commitToModel();
     }
 
     @Override
     protected void verifyMessage(BisqEasyCancelTradeMessage message) {
         super.verifyMessage(message);
+    }
+
+    private void commitToModel() {
+        trade.getInterruptTradeInitiator().set(trade.isTaker() ? Role.MAKER : Role.TAKER);
     }
 }

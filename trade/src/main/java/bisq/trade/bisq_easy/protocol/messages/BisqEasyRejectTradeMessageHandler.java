@@ -18,13 +18,14 @@
 package bisq.trade.bisq_easy.protocol.messages;
 
 import bisq.common.fsm.Event;
+import bisq.contract.Role;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.protocol.events.TradeMessageHandler;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BisqEasyRejectTradeMessageHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyCancelTradeMessage> {
+public class BisqEasyRejectTradeMessageHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyRejectTradeMessage> {
 
     public BisqEasyRejectTradeMessageHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
@@ -32,12 +33,17 @@ public class BisqEasyRejectTradeMessageHandler extends TradeMessageHandler<BisqE
 
     @Override
     public void handle(Event event) {
-        BisqEasyCancelTradeMessage message = (BisqEasyCancelTradeMessage) event;
+        BisqEasyRejectTradeMessage message = (BisqEasyRejectTradeMessage) event;
         verifyMessage(message);
+        commitToModel();
     }
 
     @Override
-    protected void verifyMessage(BisqEasyCancelTradeMessage message) {
+    protected void verifyMessage(BisqEasyRejectTradeMessage message) {
         super.verifyMessage(message);
+    }
+
+    private void commitToModel() {
+        trade.getInterruptTradeInitiator().set(trade.isTaker() ? Role.MAKER : Role.TAKER);
     }
 }
