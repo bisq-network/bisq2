@@ -19,15 +19,15 @@ package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 
 import bisq.account.AccountService;
 import bisq.account.accounts.UserDefinedFiatAccount;
-import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannelService;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeSelectionService;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.main.content.bisq_easy.components.WaitingAnimation;
 import bisq.desktop.components.controls.WrappingText;
+import bisq.desktop.main.content.bisq_easy.components.WaitingAnimation;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.trade.bisq_easy.BisqEasyTrade;
@@ -52,8 +52,8 @@ public abstract class BaseState {
         protected final ChatService chatService;
         protected final AccountService accountService;
         protected final UserIdentityService userIdentityService;
-        private final MarketPriceService marketPriceService;
         protected final BisqEasyOpenTradeChannelService channelService;
+        protected final BisqEasyOpenTradeSelectionService selectionService;
 
         protected Controller(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
             chatService = serviceProvider.getChatService();
@@ -61,7 +61,7 @@ public abstract class BaseState {
             accountService = serviceProvider.getAccountService();
             userIdentityService = serviceProvider.getUserService().getUserIdentityService();
             channelService = serviceProvider.getChatService().getBisqEasyOpenTradeChannelService();
-            marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
+            selectionService = serviceProvider.getChatService().getBisqEasyOpenTradesChannelSelectionService();
 
             model = createModel(bisqEasyTrade, channel);
             view = createView();

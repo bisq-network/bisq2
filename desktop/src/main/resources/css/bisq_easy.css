@@ -19,6 +19,13 @@
     -fx-font-size: 1.8em;
 }
 
+.bisq-easy-trade-interrupted-headline {
+    -fx-fill: -bisq-yellow;
+    -fx-text-fill: -bisq-yellow;
+    -fx-font-size: 1.15em;
+    -fx-font-family: "IBM Plex Sans";
+}
+
 
 /*******************************************************************************
  * Trade guide                                                            *

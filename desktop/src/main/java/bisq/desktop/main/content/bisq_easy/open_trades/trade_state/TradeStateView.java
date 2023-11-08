@@ -17,11 +17,16 @@
 
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_state;
 
+import bisq.desktop.common.Icons;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
+import bisq.i18n.Res;
+import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -31,8 +36,9 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class TradeStateView extends View<VBox, TradeStateModel, TradeStateController> {
-    private final HBox phaseAndInfoHBox;
-    private final Button closeButton;
+    private final HBox phaseAndInfoHBox, tradeInterruptedHBox;
+    private final Button interruptTrade, closeTradeButton, exportButton, reportToMediatorButton;
+    private final Label tradeInterruptedInfo;
     private Subscription stateInfoVBoxPin;
 
     public TradeStateView(TradeStateModel model,
@@ -41,28 +47,55 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
                           HBox tradeDataHeader) {
         super(new VBox(0), model, controller);
 
-        closeButton = new Button();
-        closeButton.setMinWidth(160);
-        closeButton.getStyleClass().add("outlined-button");
+        interruptTrade = new Button();
+        interruptTrade.setMinWidth(160);
+        interruptTrade.getStyleClass().add("outlined-button");
 
-        tradeDataHeader.getChildren().addAll(Spacer.fillHBox(), closeButton);
+        tradeDataHeader.getChildren().addAll(Spacer.fillHBox(), interruptTrade);
+
+        Label tradeInterruptedIcon = Icons.getIcon(AwesomeIcon.WARNING_SIGN);
+        tradeInterruptedIcon.getStyleClass().add("bisq-text-yellow");
+        tradeInterruptedInfo = new Label();
+        tradeInterruptedInfo.getStyleClass().add("bisq-easy-trade-interrupted-headline");
+
+        exportButton = new Button(Res.get("bisqEasy.openTrades.exportTrade"));
+
+        reportToMediatorButton = new Button(Res.get("bisqEasy.openTrades.reportToMediator"));
+        reportToMediatorButton.getStyleClass().add("outlined-button");
+
+        closeTradeButton = new Button(Res.get("bisqEasy.openTrades.closeTrade"));
+        closeTradeButton.setMinWidth(160);
+        closeTradeButton.setDefaultButton(true);
+
+        tradeInterruptedHBox = new HBox(10, tradeInterruptedIcon, tradeInterruptedInfo, Spacer.fillHBox(),
+                reportToMediatorButton, exportButton, closeTradeButton);
+        tradeInterruptedHBox.setAlignment(Pos.CENTER_LEFT);
 
         HBox.setHgrow(tradePhaseBox, Priority.ALWAYS);
         phaseAndInfoHBox = new HBox(tradePhaseBox);
 
         VBox.setMargin(phaseAndInfoHBox, new Insets(0, 30, 15, 30));
-        VBox vBox = new VBox(tradeDataHeader, Layout.hLine(), phaseAndInfoHBox);
+        VBox.setMargin(tradeInterruptedHBox, new Insets(20, 30, 20, 30));
+        VBox vBox = new VBox(tradeDataHeader, Layout.hLine(), tradeInterruptedHBox, phaseAndInfoHBox);
         vBox.getStyleClass().add("bisq-easy-container");
-
 
         root.getChildren().add(vBox);
     }
 
     @Override
     protected void onViewAttached() {
-        closeButton.textProperty().bind(model.getCloseButtonText());
-        closeButton.visibleProperty().bind(model.getCloseButtonVisible());
-        closeButton.managedProperty().bind(model.getCloseButtonVisible());
+        reportToMediatorButton.visibleProperty().bind(model.getShowReportToMediatorButton());
+        reportToMediatorButton.managedProperty().bind(model.getShowReportToMediatorButton());
+        tradeInterruptedHBox.visibleProperty().bind(model.getTradeInterrupted());
+        tradeInterruptedHBox.managedProperty().bind(model.getTradeInterrupted());
+        phaseAndInfoHBox.visibleProperty().bind(model.getTradeInterrupted().not());
+        phaseAndInfoHBox.managedProperty().bind(model.getTradeInterrupted().not());
+
+        tradeInterruptedInfo.textProperty().bind(model.getTradeInterruptedInfo());
+
+        interruptTrade.textProperty().bind(model.getInterruptTradeButtonText());
+        interruptTrade.visibleProperty().bind(model.getInterruptTradeButtonVisible());
+        interruptTrade.managedProperty().bind(model.getInterruptTradeButtonVisible());
 
         stateInfoVBoxPin = EasyBind.subscribe(model.getStateInfoVBox(),
                 stateInfoVBox -> {
@@ -76,22 +109,37 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
                     }
                 });
 
-        closeButton.setOnAction(e -> controller.onCloseTrade());
+        interruptTrade.setOnAction(e -> controller.onInterruptTrade());
+        closeTradeButton.setOnAction(e -> controller.onCloseTrade());
+        exportButton.setOnAction(e -> controller.onExportTrade());
+        reportToMediatorButton.setOnAction(e -> controller.onReportToMediator());
     }
 
     @Override
     protected void onViewDetached() {
-        closeButton.textProperty().unbind();
-        closeButton.visibleProperty().unbind();
-        closeButton.managedProperty().unbind();
+        reportToMediatorButton.visibleProperty().unbind();
+        reportToMediatorButton.managedProperty().unbind();
+        tradeInterruptedHBox.visibleProperty().unbind();
+        tradeInterruptedHBox.managedProperty().unbind();
+        phaseAndInfoHBox.visibleProperty().unbind();
+        phaseAndInfoHBox.managedProperty().unbind();
+
+        tradeInterruptedInfo.textProperty().unbind();
+        ;
+
+        interruptTrade.textProperty().unbind();
+        interruptTrade.visibleProperty().unbind();
+        interruptTrade.managedProperty().unbind();
 
         stateInfoVBoxPin.unsubscribe();
 
-        closeButton.setOnAction(null);
+        interruptTrade.setOnAction(null);
+        closeTradeButton.setOnAction(null);
+        exportButton.setOnAction(null);
+        reportToMediatorButton.setOnAction(null);
 
         if (phaseAndInfoHBox.getChildren().size() == 2) {
             phaseAndInfoHBox.getChildren().remove(1);
         }
     }
-
 }

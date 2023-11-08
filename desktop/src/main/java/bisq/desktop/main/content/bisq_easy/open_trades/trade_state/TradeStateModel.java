@@ -40,15 +40,25 @@ public class TradeStateModel implements Model {
     private final ObjectProperty<BisqEasyOpenTradeChannel> channel = new SimpleObjectProperty<>();
     private final ObjectProperty<BisqEasyTrade> bisqEasyTrade = new SimpleObjectProperty<>();
     private final ObjectProperty<VBox> stateInfoVBox = new SimpleObjectProperty<>();
-    private final StringProperty closeButtonText = new SimpleStringProperty();
-    private final BooleanProperty closeButtonVisible = new SimpleBooleanProperty(true);
+    private final StringProperty interruptTradeButtonText = new SimpleStringProperty();
+    private final BooleanProperty interruptTradeButtonVisible = new SimpleBooleanProperty(true);
+    private final BooleanProperty tradeInterrupted = new SimpleBooleanProperty();
+    private final BooleanProperty showReportToMediatorButton = new SimpleBooleanProperty();
+    private final StringProperty tradeInterruptedInfo = new SimpleStringProperty();
+
+    void resetAll() {
+        reset();
+        channel.set(null);
+    }
 
     void reset() {
         tradeCloseType = null;
-        channel.set(null);
         bisqEasyTrade.set(null);
         stateInfoVBox.set(null);
-        closeButtonText.set(null);
-        closeButtonVisible.set(true);
+        interruptTradeButtonText.set(null);
+        interruptTradeButtonVisible.set(true);
+        tradeInterrupted.set(false);
+        showReportToMediatorButton.set(false);
+        tradeInterruptedInfo.set(null);
     }
 }
