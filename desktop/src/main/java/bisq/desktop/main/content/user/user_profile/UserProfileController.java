@@ -134,7 +134,7 @@ public class UserProfileController implements Controller {
             return;
         }
         if (noNewChangesToBeSaved(userIdentity)) {
-            new Popup().invalid(Res.get("user.userProfile.save.popup.noChangesToBeSaved")).show();
+            new Popup().warning(Res.get("user.userProfile.save.popup.noChangesToBeSaved")).show();
             return;
         }
         userIdentityService.editUserProfile(model.getSelectedUserIdentity().get(), model.getTerms().get(), model.getStatement().get())
