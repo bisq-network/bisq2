@@ -36,6 +36,7 @@ import bisq.oracle_node.timestamp.TimestampService;
 import bisq.persistence.PersistenceService;
 import bisq.security.DigestUtil;
 import bisq.security.KeyGeneration;
+import bisq.security.KeyPairService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -59,7 +60,6 @@ public class OracleNodeService implements Service {
         private final String bondUserName;
         private final String profileId;
         private final String signatureBase64;
-        private final String keyId;
         private final com.typesafe.config.Config bisq1Bridge;
         private final boolean staticPublicKeysProvided;
 
@@ -69,7 +69,6 @@ public class OracleNodeService implements Service {
                       String bondUserName,
                       String profileId,
                       String signatureBase64,
-                      String keyId,
                       boolean staticPublicKeysProvided,
                       com.typesafe.config.Config bisq1Bridge) {
             this.privateKey = privateKey;
@@ -78,7 +77,6 @@ public class OracleNodeService implements Service {
             this.bondUserName = bondUserName;
             this.profileId = profileId;
             this.signatureBase64 = signatureBase64;
-            this.keyId = keyId;
             this.staticPublicKeysProvided = staticPublicKeysProvided;
             this.bisq1Bridge = bisq1Bridge;
         }
@@ -90,12 +88,12 @@ public class OracleNodeService implements Service {
                     config.getString("bondUserName"),
                     config.getString("profileId"),
                     config.getString("signatureBase64"),
-                    config.getString("keyId"),
                     config.getBoolean("staticPublicKeysProvided"),
                     config.getConfig("bisq1Bridge"));
         }
     }
 
+    private final KeyPairService keyPairService;
     private final IdentityService identityService;
     private final NetworkService networkService;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
@@ -108,7 +106,6 @@ public class OracleNodeService implements Service {
     private final TimestampService timestampService;
     private final String bondUserName;
     private final String signatureBase64;
-    private final String keyId;
     private final String profileId;
     private final boolean staticPublicKeysProvided;
     private AuthorizedBondedRole authorizedBondedRole;
@@ -117,24 +114,24 @@ public class OracleNodeService implements Service {
     private Scheduler startupScheduler, scheduler;
 
     public OracleNodeService(Config config,
+                             KeyPairService keyPairService,
                              IdentityService identityService,
                              NetworkService networkService,
                              PersistenceService persistenceService,
                              AuthorizedBondedRolesService authorizedBondedRolesService) {
+        this.keyPairService = keyPairService;
         this.identityService = identityService;
         this.networkService = networkService;
         this.authorizedBondedRolesService = authorizedBondedRolesService;
 
         bondUserName = config.getBondUserName();
         signatureBase64 = config.getSignatureBase64();
-        keyId = config.getKeyId();
         staticPublicKeysProvided = config.isStaticPublicKeysProvided();
         profileId = config.getProfileId();
 
         boolean ignoreSecurityManager = config.isIgnoreSecurityManager();
         checkArgument(StringUtils.isNotEmpty(bondUserName));
         checkArgument(StringUtils.isNotEmpty(signatureBase64));
-        checkArgument(StringUtils.isNotEmpty(keyId));
         checkArgument(StringUtils.isNotEmpty(profileId));
 
         String privateKey = config.getPrivateKey();
@@ -169,6 +166,7 @@ public class OracleNodeService implements Service {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
+        String keyId = keyPairService.getDefaultPubKey().getKeyId();
         return identityService.createAndInitializeIdentity(keyId, Node.DEFAULT, IdentityService.DEFAULT)
                 .thenCompose(identity -> {
                     bisq1BridgeService.setIdentity(identity);
@@ -223,6 +221,13 @@ public class OracleNodeService implements Service {
 
                     return bisq1BridgeService.initialize()
                             .thenCompose(result -> timestampService.initialize());
+                })
+                .whenComplete((result, throwable) -> {
+                    if (throwable != null) {
+                        log.error("Initialisation failed", throwable);
+                    } else if (!result) {
+                        log.error("Initialisation failed");
+                    }
                 });
     }
 
