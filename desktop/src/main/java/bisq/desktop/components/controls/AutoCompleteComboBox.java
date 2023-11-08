@@ -84,7 +84,7 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
         super(items);
         this.description = description;
         this.prompt = prompt;
-        this.isValidSelection = new SimpleBooleanProperty();
+        this.isValidSelection = new SimpleBooleanProperty(true);
 
         createDefaultSkin();
 

@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.user.user_profile;
 
 import bisq.common.util.StringUtils;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
@@ -64,7 +65,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
     private final VBox formVBox;
     private final AutoCompleteComboBox<UserIdentity> comboBox;
     private final BisqTooltip deleteTooltip;
-    private Subscription reputationScorePin, useDeleteTooltipPin, selectedChatUserIdentityPin;
+    private Subscription reputationScorePin, useDeleteTooltipPin, selectedChatUserIdentityPin, isValidSelectionPin;
 
     public UserProfileView(UserProfileModel model, UserProfileController controller) {
         super(new HBox(20), model, controller);
@@ -172,6 +173,18 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
 
         selectedChatUserIdentityPin = EasyBind.subscribe(model.getSelectedUserIdentity(),
                 userIdentity -> comboBox.getSelectionModel().select(userIdentity));
+
+        isValidSelectionPin = EasyBind.subscribe(comboBox.getIsValidSelection(), isValidSelection -> UIThread.run(() -> {
+            if (!isValidSelection) {
+                statement.setEditable(false);
+                terms.setEditable(false);
+                controller.resetSelection();
+            }
+            else {
+                statement.setEditable(true);
+                terms.setEditable(true);
+            }
+        }));
     }
 
     private void onSaveButtonPressed() {
@@ -181,6 +194,9 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
     }
 
     private boolean runOnSaveValidations() {
+        if (!comboBox.getIsValidSelection().get()) {
+            return false;
+        }
         var validComboboxSelection = comboBox.validate();
         var validStatement = statement.validate();
         var validTerms = terms.validate();
@@ -203,11 +219,13 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         reputationScorePin.unsubscribe();
         useDeleteTooltipPin.unsubscribe();
         selectedChatUserIdentityPin.unsubscribe();
+        isValidSelectionPin.unsubscribe();
 
         deleteButton.setOnAction(null);
         saveButton.setOnAction(null);
         createNewProfileButton.setOnAction(null);
         comboBox.setOnChangeConfirmed(null);
+        comboBox.getIsValidSelection().set(true);
 
         comboBox.resetValidation();
         statement.resetValidation();

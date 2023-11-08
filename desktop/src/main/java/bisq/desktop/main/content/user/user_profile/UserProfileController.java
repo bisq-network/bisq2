@@ -108,6 +108,19 @@ public class UserProfileController implements Controller {
         }
     }
 
+    public void resetSelection() {
+        model.getSelectedUserIdentity().set(null);
+        model.getNickName().set("");
+        model.getNymId().set("");
+        model.getProfileId().set("");
+        model.getRoboHash().set(null);
+        model.getStatement().set("");
+        model.getTerms().set("");
+        model.getProfileAge().set("");
+        model.getReputationScore().set(null);
+        model.getReputationScoreValue().set(null);
+    }
+
     public void onAddNewChatUser() {
         Navigation.navigateTo(CREATE_PROFILE_STEP1);
     }
