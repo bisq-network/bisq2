@@ -102,12 +102,6 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    /**
-     * Use the default KeyId, default nodeId and default identityTag.
-     * This is used usually by network nodes like the seed node or oracle node, which do not have privacy concerns.
-     *
-     * @return A future with the identity
-     */
     public CompletableFuture<Identity> createAndInitializeIdentity(String keyId, String nodeId, String identityTag) {
         KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
         PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
