@@ -79,6 +79,7 @@ message BisqEasyTrade {
   optional string paymentAccountData = 1;
   optional string btcAddress = 2;
   optional string txId = 3;
+  optional contract.Role interruptTradeInitiator = 4;
 }
 
 message BisqEasyTradeStore {
