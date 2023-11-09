@@ -108,8 +108,9 @@ public class WaitingAnimation extends StackPane {
             case ACCOUNT_DATA:
                 return "account-data";
             case FIAT_PAYMENT:
-            case FIAT_PAYMENT_CONFIRMATION:
                 return "fiat-payment";
+            case FIAT_PAYMENT_CONFIRMATION:
+                return "fiat-payment-confirmation";
             case BITCOIN_ADDRESS:
                 return "bitcoin-address";
             case BITCOIN_PAYMENT:
