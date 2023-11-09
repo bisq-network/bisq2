@@ -37,8 +37,6 @@ import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -55,8 +53,6 @@ public class UserProfileController implements Controller {
     private final ProfileAgeService profileAgeService;
     private final BisqEasyService bisqEasyService;
     private Pin userProfilesPin, selectedUserProfilePin, reputationChangedPin;
-    private Subscription statementPin, termsPin;
-
 
     public UserProfileController(ServiceProvider serviceProvider) {
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
@@ -75,7 +71,6 @@ public class UserProfileController implements Controller {
 
         selectedUserProfilePin = FxBindings.subscribe(userIdentityService.getSelectedUserIdentityObservable(),
                 userIdentity -> {
-                    updateButtons();
                     if (userIdentity == null) {
                         return;
                     }
@@ -97,40 +92,6 @@ public class UserProfileController implements Controller {
                 }
         );
         reputationChangedPin = reputationService.getChangedUserProfileScore().addObserver(userProfileId -> UIThread.run(this::applyReputationScore));
-
-        statementPin = EasyBind.subscribe(model.getStatement(),
-                statement -> updateButtons());
-        termsPin = EasyBind.subscribe(model.getTerms(),
-                terms -> updateButtons());
-    }
-
-    private void updateButtons() {
-        updateSaveButtonState();
-        updateDeleteButtonState();
-    }
-
-    private void updateSaveButtonState() {
-        UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
-        if (userIdentity == null) {
-            model.getSaveButtonDisabled().set(false);
-            return;
-        }
-        UserProfile userProfile = userIdentity.getUserProfile();
-        String statement = model.getStatement().get();
-        String terms = model.getTerms().get();
-        model.getSaveButtonDisabled().set(statement.equals(userProfile.getStatement()) &&
-                terms.equals(userProfile.getTerms()));
-    }
-
-    private void updateDeleteButtonState() {
-        UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
-        if (userIdentity == null) {
-            return;
-        }
-
-        boolean cannotDelete = bisqEasyService.isDeleteUserIdentityProhibited(userIdentity);
-        model.getDeleteButtonDisabled().set(cannotDelete);
-        model.getUseDeleteTooltip().set(cannotDelete);
     }
 
     @Override
@@ -138,15 +99,27 @@ public class UserProfileController implements Controller {
         userProfilesPin.unbind();
         selectedUserProfilePin.unbind();
         reputationChangedPin.unbind();
-        statementPin.unsubscribe();
-        termsPin.unsubscribe();
         model.getSelectedUserIdentity().set(null);
     }
 
     public void onSelected(UserIdentity userIdentity) {
         if (userIdentity != null) {
             userIdentityService.selectChatUserIdentity(userIdentity);
+            applyReputationScore();
         }
+    }
+
+    public void resetSelection() {
+        model.getSelectedUserIdentity().set(null);
+        model.getNickName().set("");
+        model.getNymId().set("");
+        model.getProfileId().set("");
+        model.getRoboHash().set(null);
+        model.getStatement().set("");
+        model.getTerms().set("");
+        model.getProfileAge().set("");
+        model.getReputationScore().set(null);
+        model.getReputationScoreValue().set(null);
     }
 
     public void onAddNewChatUser() {
@@ -154,12 +127,14 @@ public class UserProfileController implements Controller {
     }
 
     public void onSave() {
-        if (model.getTerms().get().length() > UserProfile.MAX_LENGTH_TERMS) {
-            new Popup().warning(Res.get("user.userProfile.terms.tooLong", UserProfile.MAX_LENGTH_TERMS)).show();
+        var userIdentity = userIdentityService.getSelectedUserIdentity();
+        if (userIdentity == null) {
+            // This should never happen as the combobox selection is validated before getting here
+            new Popup().invalid(Res.get("user.userProfile.popup.noSelectedProfile")).show();
             return;
         }
-        if (model.getStatement().get().length() > UserProfile.MAX_LENGTH_STATEMENT) {
-            new Popup().warning(Res.get("user.userProfile.statement.tooLong", UserProfile.MAX_LENGTH_STATEMENT)).show();
+        if (noNewChangesToBeSaved(userIdentity)) {
+            new Popup().warning(Res.get("user.userProfile.save.popup.noChangesToBeSaved")).show();
             return;
         }
         userIdentityService.editUserProfile(model.getSelectedUserIdentity().get(), model.getTerms().get(), model.getStatement().get())
@@ -167,9 +142,15 @@ public class UserProfileController implements Controller {
                     UIThread.runOnNextRenderFrame(() -> {
                         UserIdentity value = userIdentityService.getSelectedUserIdentity();
                         model.getSelectedUserIdentity().set(value);
-                        updateButtons();
                     });
                 });
+    }
+
+    private boolean noNewChangesToBeSaved(UserIdentity userIdentity) {
+        var userProfile = userIdentity.getUserProfile();
+        var statement = model.getStatement().get();
+        var terms = model.getTerms().get();
+        return statement.equals(userProfile.getStatement()) && terms.equals(userProfile.getTerms());
     }
 
     public void onDeleteProfile() {
@@ -186,7 +167,6 @@ public class UserProfileController implements Controller {
             new Popup().warning(Res.get("user.userProfile.deleteProfile.cannotDelete"))
                     .closeButtonText(Res.get("confirmation.ok"))
                     .show();
-            updateDeleteButtonState();
             return CompletableFuture.completedFuture(null);
         }
 
@@ -199,7 +179,6 @@ public class UserProfileController implements Controller {
                             UIThread.runOnNextRenderFrame(() -> {
                                 UserIdentity value = model.getUserIdentities().get(0);
                                 model.getSelectedUserIdentity().set(value);
-                                updateButtons();
                             });
                         }
                     }

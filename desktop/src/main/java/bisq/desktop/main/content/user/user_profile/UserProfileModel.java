@@ -41,7 +41,5 @@ public class UserProfileModel implements Model {
     private final StringProperty reputationScoreValue = new SimpleStringProperty();
     private final ObjectProperty<ReputationScore> reputationScore = new SimpleObjectProperty<>();
     private final StringProperty profileAge = new SimpleStringProperty();
-    private final BooleanProperty saveButtonDisabled = new SimpleBooleanProperty();
-    private final BooleanProperty deleteButtonDisabled = new SimpleBooleanProperty();
     private final BooleanProperty useDeleteTooltip = new SimpleBooleanProperty();
 }

@@ -18,12 +18,16 @@
 package bisq.desktop.main.content.user.user_profile;
 
 import bisq.common.util.StringUtils;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.controls.MaterialTextField;
+import bisq.desktop.components.controls.validator.TextMaxLengthValidator;
+import bisq.desktop.components.controls.validator.ValidatorBase;
+import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.user.identity.UserIdentity;
 import javafx.geometry.Insets;
@@ -43,8 +47,20 @@ import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
 
+import static bisq.user.profile.UserProfile.MAX_LENGTH_STATEMENT;
+import static bisq.user.profile.UserProfile.MAX_LENGTH_TERMS;
+
 @Slf4j
 public class UserProfileView extends View<HBox, UserProfileModel, UserProfileController> {
+
+    private static final ValidatorBase TERMS_MAX_LENGTH_VALIDATOR =
+            new TextMaxLengthValidator(MAX_LENGTH_TERMS, Res.get("user.userProfile.terms.tooLong", MAX_LENGTH_TERMS));
+    private static final ValidatorBase STATEMENT_MAX_LENGTH_VALIDATOR =
+            new TextMaxLengthValidator(MAX_LENGTH_STATEMENT, Res.get("user.userProfile.statement.tooLong", MAX_LENGTH_STATEMENT));
+
+    private static final String STATEMENT_PROMPT = Res.get("user.userProfile.statement.prompt");
+    private static final String TERMS_PROMPT = Res.get("user.userProfile.terms.prompt");
+
     private final Button createNewProfileButton, deleteButton, saveButton;
     private final SplitPane deleteWrapper;
     private final MaterialTextField nymId, profileId, profileAge, reputationScoreField, statement;
@@ -53,7 +69,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
     private final VBox formVBox;
     private final AutoCompleteComboBox<UserIdentity> comboBox;
     private final BisqTooltip deleteTooltip;
-    private Subscription reputationScorePin, useDeleteTooltipPin, selectedChatUserIdentityPin;
+    private Subscription reputationScorePin, useDeleteTooltipPin, selectedChatUserIdentityPin, isValidSelectionPin;
 
     public UserProfileView(UserProfileModel model, UserProfileController controller) {
         super(new HBox(20), model, controller);
@@ -66,7 +82,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         roboIconImageView.setFitHeight(125);
         root.getChildren().add(roboIconImageView);
 
-        formVBox = new VBox(20);
+        formVBox = new VBox(25);
         HBox.setHgrow(formVBox, Priority.ALWAYS);
         root.getChildren().add(formVBox);
 
@@ -101,15 +117,17 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
 
         reputationScoreField = addField(Res.get("user.userProfile.reputation"));
 
-        statement = addField(Res.get("user.userProfile.statement"), Res.get("user.userProfile.statement.prompt"));
+        statement = addField(Res.get("user.userProfile.statement"), STATEMENT_PROMPT);
         statement.setEditable(true);
         statement.showEditIcon();
         statement.getIconButton().setOpacity(0.3);
+        statement.setValidators(STATEMENT_MAX_LENGTH_VALIDATOR);
 
-        terms = addTextArea(Res.get("user.userProfile.terms"), Res.get("user.userProfile.terms.prompt"));
+        terms = addTextArea(Res.get("user.userProfile.terms"), TERMS_PROMPT);
         terms.setEditable(true);
         terms.showEditIcon();
         terms.getIconButton().setOpacity(0.3);
+        terms.setValidators(TERMS_MAX_LENGTH_VALIDATOR);
 
         saveButton = new Button(Res.get("action.save"));
         saveButton.setDefaultButton(true);
@@ -132,8 +150,6 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         statement.textProperty().bindBidirectional(model.getStatement());
         terms.textProperty().bindBidirectional(model.getTerms());
         roboIconImageView.imageProperty().bind(model.getRoboHash());
-        saveButton.disableProperty().bind(model.getSaveButtonDisabled());
-        deleteButton.disableProperty().bind(model.getDeleteButtonDisabled());
 
         useDeleteTooltipPin = EasyBind.subscribe(model.getUseDeleteTooltip(), useDeleteTooltip ->
                 deleteWrapper.setTooltip(useDeleteTooltip ? deleteTooltip : null));
@@ -143,8 +159,8 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
             }
         });
 
-        deleteButton.setOnAction(e -> controller.onDeleteProfile());
-        saveButton.setOnAction(e -> controller.onSave());
+        deleteButton.setOnAction(e -> onDeleteButtonPressed());
+        saveButton.setOnAction(e -> onSaveButtonPressed());
         createNewProfileButton.setOnAction(e -> controller.onAddNewChatUser());
         comboBox.setOnChangeConfirmed(e -> {
             if (comboBox.getSelectionModel().getSelectedItem() == null) {
@@ -153,9 +169,58 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
             }
             controller.onSelected(comboBox.getSelectionModel().getSelectedItem());
         });
+        comboBox.validateOnNoItemSelectedWithMessage(Res.get("user.bondedRoles.userProfile.select.invalid"));
 
         selectedChatUserIdentityPin = EasyBind.subscribe(model.getSelectedUserIdentity(),
                 userIdentity -> comboBox.getSelectionModel().select(userIdentity));
+
+        isValidSelectionPin = EasyBind.subscribe(comboBox.getIsValidSelection(), isValidSelection -> UIThread.run(() -> {
+            if (!isValidSelection) {
+                disableEditableTextBoxes();
+                controller.resetSelection();
+            } else {
+                enableEditableTextBoxes();
+            }
+        }));
+    }
+
+    private void disableEditableTextBoxes() {
+        statement.setEditable(false);
+        statement.setPromptText("");
+        terms.setEditable(false);
+        terms.setPromptText("");
+    }
+
+    private void enableEditableTextBoxes() {
+        statement.setEditable(true);
+        statement.setPromptText(STATEMENT_PROMPT);
+        terms.setEditable(true);
+        terms.setPromptText(TERMS_PROMPT);
+    }
+
+    private void onSaveButtonPressed() {
+        if (runOnSaveValidations()) {
+            controller.onSave();
+        }
+    }
+
+    private void onDeleteButtonPressed() {
+        if(!comboBox.getIsValidSelection().get()) {
+            new Popup().invalid(Res.get("user.userProfile.popup.noSelectedProfile")).show();
+            return;
+        }
+        controller.onDeleteProfile();
+    }
+
+    private boolean runOnSaveValidations() {
+        if (!comboBox.getIsValidSelection().get()) {
+            new Popup().invalid(Res.get("user.userProfile.popup.noSelectedProfile")).show();
+            return false;
+        }
+        var validComboboxSelection = comboBox.validate();
+        var validStatement = statement.validate();
+        var validTerms = terms.validate();
+        return validComboboxSelection && validStatement && validTerms;
     }
 
     @Override
@@ -174,11 +239,17 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         reputationScorePin.unsubscribe();
         useDeleteTooltipPin.unsubscribe();
         selectedChatUserIdentityPin.unsubscribe();
+        isValidSelectionPin.unsubscribe();
 
         deleteButton.setOnAction(null);
         saveButton.setOnAction(null);
         createNewProfileButton.setOnAction(null);
         comboBox.setOnChangeConfirmed(null);
+        comboBox.getIsValidSelection().set(true);
+
+        comboBox.resetValidation();
+        statement.resetValidation();
+        terms.resetValidation();
     }
 
     private MaterialTextField addField(String description) {
