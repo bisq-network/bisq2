@@ -36,4 +36,9 @@ class MarketChannelItem {
     public String getMarketString() {
         return market.toString();
     }
+
+    @Override
+    public String toString() {
+        return market.toString();
+    }
 }

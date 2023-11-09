@@ -175,6 +175,9 @@ public class ComboBoxWithSearch<T> {
             }
         });
 
+        scene.setOnMousePressed(e -> close());
+        ownerRoot.setOnMousePressed(e -> close());
+
         stage.focusedProperty().addListener((observable, hadFocus, hasFocus) -> {
             if (!hasFocus) {
                 close();
