@@ -182,7 +182,9 @@ public class TakeOfferReviewController implements Controller {
                     model.getTakersBaseSideAmount(),
                     model.getTakersQuoteSideAmount(),
                     bisqEasyOffer.getBaseSidePaymentMethodSpecs().get(0),
-                    model.getFiatPaymentMethodSpec());
+                    model.getFiatPaymentMethodSpec(),
+                    model.getSellersPriceSpec(),
+                    model.getMarketPrice());
 
             model.setBisqEasyTrade(bisqEasyTrade);
 
@@ -245,9 +247,12 @@ public class TakeOfferReviewController implements Controller {
     }
 
     private void applyPriceDetails(PriceSpec priceSpec, Market market) {
-        Optional<PriceQuote> marketPriceQuote = marketPriceService.findMarketPrice(market)
-                .map(MarketPrice::getPriceQuote);
-        String marketPrice = marketPriceQuote
+        Optional<MarketPrice> marketPrice = marketPriceService.findMarketPrice(market);
+        if (marketPrice.isPresent()) {
+            model.setMarketPrice(marketPrice.get().getPriceQuote().getValue());
+        }
+        Optional<PriceQuote> marketPriceQuote = marketPrice.map(MarketPrice::getPriceQuote);
+        String marketPriceAsString = marketPriceQuote
                 .map(PriceFormatter::formatWithCode)
                 .orElse(Res.get("data.na"));
         Optional<Double> percentFromMarketPrice;
@@ -255,7 +260,7 @@ public class TakeOfferReviewController implements Controller {
         double percent = percentFromMarketPrice.orElse(0d);
         if ((priceSpec instanceof FloatPriceSpec || priceSpec instanceof MarketPriceSpec)
                 && percent == 0) {
-            model.setPriceDetails(Res.get("bisqEasy.tradeWizard.review.priceDetails.seller", marketPrice));
+            model.setPriceDetails(Res.get("bisqEasy.tradeWizard.review.priceDetails.seller", marketPriceAsString));
         } else {
             String aboveOrBelow = percent > 0 ?
                     Res.get("offer.price.above") :
@@ -264,13 +269,13 @@ public class TakeOfferReviewController implements Controller {
                     .orElse(Res.get("data.na"));
             if (priceSpec instanceof FloatPriceSpec) {
                 model.setPriceDetails(Res.get("bisqEasy.tradeWizard.review.priceDetails.seller.float",
-                        percentAsString, aboveOrBelow, marketPrice));
+                        percentAsString, aboveOrBelow, marketPriceAsString));
             } else {
                 if (percent == 0) {
-                    model.setPriceDetails(Res.get("bisqEasy.tradeWizard.review.priceDetails.seller.fix.atMarket", marketPrice));
+                    model.setPriceDetails(Res.get("bisqEasy.tradeWizard.review.priceDetails.seller.fix.atMarket", marketPriceAsString));
                 } else {
                     model.setPriceDetails(Res.get("bisqEasy.tradeWizard.review.priceDetails.seller.fix",
-                            percentAsString, aboveOrBelow, marketPrice));
+                            percentAsString, aboveOrBelow, marketPriceAsString));
                 }
             }
         }

@@ -404,7 +404,9 @@ public class TradeWizardReviewController implements Controller {
                     model.getFixBaseSideAmount(),
                     model.getFixQuoteSideAmount(),
                     bisqEasyOffer.getBaseSidePaymentMethodSpecs().get(0),
-                    paymentMethodSpec);
+                    paymentMethodSpec,
+                    model.getPriceSpec(),
+                    model.getMarketPrice());
 
             model.setBisqEasyTrade(bisqEasyTrade);
 
@@ -469,12 +471,16 @@ public class TradeWizardReviewController implements Controller {
     }
 
     private void applyPriceDetails(Direction direction, PriceSpec priceSpec, Market market) {
+        Optional<MarketPrice> marketPrice = marketPriceService.findMarketPrice(market);
+        if (marketPrice.isPresent()) {
+            model.setMarketPrice(marketPrice.get().getPriceQuote().getValue());
+        }
         if (model.isCreateOfferMode() && direction.isBuy()) {
             model.setPriceDetails(Res.get("bisqEasy.tradeWizard.review.priceDetails.buyer"));
         } else {
             Optional<PriceQuote> marketPriceQuote = marketPriceService.findMarketPrice(market)
                     .map(MarketPrice::getPriceQuote);
-            String marketPrice = marketPriceQuote
+            String marketPriceAsString = marketPriceQuote
                     .map(PriceFormatter::formatWithCode)
                     .orElse(Res.get("data.na"));
             Optional<Double> percentFromMarketPrice;
@@ -482,7 +488,7 @@ public class TradeWizardReviewController implements Controller {
             double percent = percentFromMarketPrice.orElse(0d);
             if ((priceSpec instanceof FloatPriceSpec || priceSpec instanceof MarketPriceSpec)
                     && percent == 0) {
-                model.setPriceDetails(Res.get("bisqEasy.tradeWizard.review.priceDetails.seller", marketPrice));
+                model.setPriceDetails(Res.get("bisqEasy.tradeWizard.review.priceDetails.seller", marketPriceAsString));
             } else {
                 String aboveOrBelow = percent > 0 ?
                         Res.get("offer.price.above") :
@@ -491,13 +497,13 @@ public class TradeWizardReviewController implements Controller {
                         .orElse(Res.get("data.na"));
                 if (priceSpec instanceof FloatPriceSpec) {
                     model.setPriceDetails(Res.get("bisqEasy.tradeWizard.review.priceDetails.seller.float",
-                            percentAsString, aboveOrBelow, marketPrice));
+                            percentAsString, aboveOrBelow, marketPriceAsString));
                 } else {
                     if (percent == 0) {
-                        model.setPriceDetails(Res.get("bisqEasy.tradeWizard.review.priceDetails.seller.fix.atMarket", marketPrice));
+                        model.setPriceDetails(Res.get("bisqEasy.tradeWizard.review.priceDetails.seller.fix.atMarket", marketPriceAsString));
                     } else {
                         model.setPriceDetails(Res.get("bisqEasy.tradeWizard.review.priceDetails.seller.fix",
-                                percentAsString, aboveOrBelow, marketPrice));
+                                percentAsString, aboveOrBelow, marketPriceAsString));
                     }
                 }
             }

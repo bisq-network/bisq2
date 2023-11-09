@@ -19,12 +19,14 @@ package bisq.trade.bisq_easy.protocol.messages;
 
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.common.fsm.Event;
+import bisq.common.monetary.Monetary;
 import bisq.common.util.StringUtils;
 import bisq.contract.ContractService;
 import bisq.contract.ContractSignatureData;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.offer.Offer;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.offer.price.PriceUtil;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.protocol.events.TradeMessageHandler;
@@ -101,18 +103,7 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
 
         checkArgument(message.getSender().equals(takersContract.getTaker().getNetworkId()));
 
-        // FIXME If there is no market price available we get a NP in the code below
-       /* Monetary baseSideMinAmount = OfferAmountUtil.findBaseSideMinOrFixedAmount(serviceProvider.getBondedRolesService().getMarketPriceService(), takersOffer).orElseThrow();
-        Monetary baseSideMaxAmount = OfferAmountUtil.findBaseSideMaxOrFixedAmount(serviceProvider.getBondedRolesService().getMarketPriceService(), takersOffer).orElseThrow();*/
-
-        //todo add tolerance as market price might be a bit off
-        // checkArgument(takersContract.getBaseSideAmount() >= baseSideMinAmount.getValue());
-        //  checkArgument(takersContract.getBaseSideAmount() <= baseSideMaxAmount.getValue());
-
-     /*   Monetary quoteSideMinAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(serviceProvider.getBondedRolesService().getMarketPriceService(), takersOffer).orElseThrow();
-        Monetary quoteSideMaxAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(serviceProvider.getBondedRolesService().getMarketPriceService(), takersOffer).orElseThrow();*/
-        //  checkArgument(takersContract.getQuoteSideAmount() >= quoteSideMinAmount.getValue());
-        //   checkArgument(takersContract.getQuoteSideAmount() <= quoteSideMaxAmount.getValue());
+        validateAmount(takersOffer, takersContract);
 
         checkArgument(takersOffer.getBaseSidePaymentMethodSpecs().contains(takersContract.getBaseSidePaymentMethodSpec()));
         checkArgument(takersOffer.getQuoteSidePaymentMethodSpecs().contains(takersContract.getQuoteSidePaymentMethodSpec()));
@@ -124,5 +115,27 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
     private void commitToModel(ContractSignatureData takersContractSignatureData, ContractSignatureData makersContractSignatureData) {
         trade.getTaker().getContractSignatureData().set(takersContractSignatureData);
         trade.getMaker().getContractSignatureData().set(makersContractSignatureData);
+    }
+
+    private void validateAmount(BisqEasyOffer takersOffer, BisqEasyContract takersContract) {
+        Optional<Monetary> amount = getAmount(takersOffer, takersContract);
+        checkArgument(amount.isPresent(), "No market price available for validation.");
+
+        double tolerancePercentage = 0.01;
+        long tolerance = (long) (amount.get().getValue() * tolerancePercentage);
+        long minAmountWithTolerance = amount.get().getValue() - tolerance;
+        long maxAmountWithTolerance = amount.get().getValue() + tolerance;
+
+        long takersAmount = takersContract.getBaseSideAmount();
+        String errorMsg = "Market price deviation is too big.";
+        checkArgument(takersAmount >= minAmountWithTolerance, errorMsg);
+        checkArgument(takersAmount <= maxAmountWithTolerance, errorMsg);
+    }
+
+    private Optional<Monetary> getAmount(BisqEasyOffer takersOffer, BisqEasyContract takersContract) {
+        return PriceUtil.findQuote(serviceProvider.getBondedRolesService().getMarketPriceService(),
+                    takersContract.getAgreedPriceSpec(), takersOffer.getMarket())
+                    .map(quote -> quote.toBaseSideMonetary(Monetary.from(takersContract.getQuoteSideAmount(),
+                            takersOffer.getMarket().getQuoteCurrencyCode())));
     }
 }

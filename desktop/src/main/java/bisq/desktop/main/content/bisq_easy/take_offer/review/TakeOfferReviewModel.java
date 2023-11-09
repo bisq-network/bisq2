@@ -61,4 +61,6 @@ class TakeOfferReviewModel implements Model {
     private String fee;
     @Setter
     private String feeDetails;
+    @Setter
+    private long marketPrice;
 }
