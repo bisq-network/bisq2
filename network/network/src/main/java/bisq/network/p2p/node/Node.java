@@ -23,7 +23,9 @@ import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.NetworkUtils;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
+import bisq.network.common.Address;
 import bisq.network.common.TransportConfig;
+import bisq.network.common.TransportType;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
@@ -31,9 +33,7 @@ import bisq.network.p2p.node.handshake.ConnectionHandshake;
 import bisq.network.p2p.node.network_load.NetworkLoadService;
 import bisq.network.p2p.node.transport.ServerSocketResult;
 import bisq.network.p2p.node.transport.TransportService;
-import bisq.network.common.TransportType;
 import bisq.network.p2p.services.peergroup.BanList;
-import bisq.network.common.Address;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import dev.failsafe.Failsafe;
 import dev.failsafe.RetryPolicy;
@@ -590,7 +590,7 @@ public class Node implements Connection.Handler {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private void handleException(Connection connection, Throwable exception) {
-        log.warn("Node {} got called handleException. connection={}, exception={}", this, connection, exception.getMessage());
+        log.debug("Node {} got called handleException. connection={}, exception={}", this, connection, exception.getMessage());
         if (isShutdown()) {
             return;
         }
