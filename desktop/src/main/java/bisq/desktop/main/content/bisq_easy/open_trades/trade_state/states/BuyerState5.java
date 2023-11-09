@@ -127,10 +127,11 @@ public class BuyerState5 extends BaseState {
             super(model, controller);
 
             WrappingText headline = FormUtils.getHeadline(Res.get("bisqEasy.tradeState.info.buyer.phase5.headline"));
+            HBox completeTradeInfo = createCompleteTradeInfo(headline);
 
             exportButton = new Button(Res.get("bisqEasy.tradeState.info.phase5.exportTrade"));
             leaveButton = new Button(Res.get("bisqEasy.tradeState.info.phase5.leaveChannel"));
-            leaveButton.getStyleClass().add("outlined-button");
+            leaveButton.setDefaultButton(true);
             quoteAmount = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.buyer.phase5.quoteAmount"), "", false);
             baseAmount = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.buyer.phase5.baseAmount"), "", false);
 
@@ -143,7 +144,7 @@ public class BuyerState5 extends BaseState {
             VBox.setMargin(headline, new Insets(0, 0, 5, 0));
             VBox.setMargin(buttons, new Insets(5, 0, 5, 0));
             root.getChildren().addAll(
-                    headline,
+                    completeTradeInfo,
                     quoteAmount,
                     baseAmount,
                     txId,

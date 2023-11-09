@@ -162,6 +162,10 @@
     -fx-image: url("/images/waitingstates/bitcoin-confirmation.png");
 }
 
+#complete-trade {
+    -fx-image: url("/images/waitingstates/complete-trade.png");
+}
+
 #video {
     -fx-image: url("/images/video.png");
 }

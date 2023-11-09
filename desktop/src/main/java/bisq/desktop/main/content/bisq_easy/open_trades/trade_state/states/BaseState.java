@@ -26,6 +26,7 @@ import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeSelectionService;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.WrappingText;
 import bisq.desktop.main.content.bisq_easy.components.WaitingAnimation;
 import bisq.offer.bisq_easy.BisqEasyOffer;
@@ -34,6 +35,7 @@ import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.user.identity.UserIdentityService;
 import javafx.geometry.Pos;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
@@ -143,6 +145,17 @@ public abstract class BaseState {
             HBox waitingInfo = new HBox(animation, text);
             waitingInfo.setSpacing(20);
             return waitingInfo;
+        }
+
+        protected HBox createCompleteTradeInfo(WrappingText headline) {
+            ImageView tradeCompletedIcon = ImageUtil.getImageViewById("complete-trade");
+            tradeCompletedIcon.setFitHeight(78);
+            tradeCompletedIcon.setFitWidth(78);
+            VBox text = new VBox(headline);
+            text.setAlignment(Pos.CENTER_LEFT);
+            HBox completeTradeInfo = new HBox(tradeCompletedIcon, text);
+            completeTradeInfo.setSpacing(20);
+            return completeTradeInfo;
         }
     }
 }
