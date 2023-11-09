@@ -101,7 +101,7 @@ public class PasswordController implements Controller {
     private void maybeHandleError(@Nullable Throwable throwable) {
         if (throwable != null) {
             UIThread.run(() -> {
-                new Popup().error(throwable).show();
+                new Popup().invalid(Res.get("user.password.removePassword.failed")).show();
                 doDeactivate();
                 doActivate();
             });
