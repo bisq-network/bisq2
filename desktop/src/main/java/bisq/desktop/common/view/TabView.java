@@ -104,16 +104,6 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
 
         viewListener = (observable, oldValue, newValue) -> {
             onChildView(oldValue, newValue);
-
-            if (newValue != null) {
-                Region childRoot = newValue.getRoot();
-                if (oldValue != null) {
-                    Transitions.animateTabView(childRoot, oldValue.getRoot(), selectionMarker,
-                            getSelectionMarkerX(model.getSelectedTabButton().get()));
-                } else {
-                    Transitions.fadeIn(childRoot);
-                }
-            }
         };
         model.getView().addListener(viewListener);
         onChildView(null, model.getView().get());
@@ -123,10 +113,22 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
 
     protected void onChildView(View<? extends Parent, ? extends Model, ? extends Controller> oldValue,
                                View<? extends Parent, ? extends Model, ? extends Controller> newValue) {
+        if (oldValue != null) {
+            Transitions.slideOutRight(oldValue.getRoot(), () -> setNewContent(newValue));
+        } else {
+            setNewContent(newValue);
+        }
+    }
+
+    private void setNewContent(View<? extends Parent, ? extends Model, ? extends Controller> newValue) {
         if (newValue != null) {
+            newValue.getRoot().setOpacity(0);
+
             scrollPane.setFitToHeight(useFitToHeight(newValue));
             scrollPane.setContent(newValue.getRoot());
             scrollPane.setVvalue(0);
+
+            Transitions.fadeIn(newValue.getRoot());
         } else {
             scrollPane.setContent(null);
         }
