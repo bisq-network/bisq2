@@ -25,8 +25,8 @@ import bisq.contract.ContractService;
 import bisq.contract.ContractSignatureData;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.offer.Offer;
-import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.offer.price.PriceUtil;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.protocol.events.TradeMessageHandler;
@@ -103,8 +103,7 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
 
         checkArgument(message.getSender().equals(takersContract.getTaker().getNetworkId()));
 
-        validateAmount(takersOffer, takersContract, true);
-        validateAmount(takersOffer, takersContract, false);
+        validateAmount(takersOffer, takersContract);
 
         checkArgument(takersOffer.getBaseSidePaymentMethodSpecs().contains(takersContract.getBaseSidePaymentMethodSpec()));
         checkArgument(takersOffer.getQuoteSidePaymentMethodSpecs().contains(takersContract.getQuoteSidePaymentMethodSpec()));
@@ -118,42 +117,25 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
         trade.getMaker().getContractSignatureData().set(makersContractSignatureData);
     }
 
-    private void validateAmount(BisqEasyOffer takersOffer, BisqEasyContract takersContract, boolean isBase) {
+    private void validateAmount(BisqEasyOffer takersOffer, BisqEasyContract takersContract) {
+        Optional<Monetary> amount = getAmount(takersOffer, takersContract);
+        checkArgument(amount.isPresent(), "No market price available for validation.");
+
         double tolerancePercentage = 0.01;
+        long tolerance = (long) (amount.get().getValue() * tolerancePercentage);
+        long minAmountWithTolerance = amount.get().getValue() - tolerance;
+        long maxAmountWithTolerance = amount.get().getValue() + tolerance;
 
-        Optional<Monetary> minAmount = getMinAmount(takersOffer, takersContract, isBase);
-        Optional<Monetary> maxAmount = getMaxAmount(takersOffer, takersContract, isBase);
-
-        checkArgument(minAmount.isPresent() && maxAmount.isPresent(), "No market price available for validation.");
-
-        long toleranceAmountForMin = (long) (minAmount.get().getValue() * tolerancePercentage);
-        long toleranceAmountForMax = (long) (maxAmount.get().getValue() * tolerancePercentage);
-        long minAmountWithTolerance = minAmount.get().getValue() - toleranceAmountForMin;
-        long maxAmountWithTolerance = maxAmount.get().getValue() + toleranceAmountForMax;
-
-        long amount = isBase ? takersContract.getBaseSideAmount() : takersContract.getQuoteSideAmount();
+        long takersAmount = takersContract.getBaseSideAmount();
         String errorMsg = "Market price deviation is too big.";
-        checkArgument(amount >= minAmountWithTolerance, errorMsg);
-        checkArgument(amount <= maxAmountWithTolerance, errorMsg);
+        checkArgument(takersAmount >= minAmountWithTolerance, errorMsg);
+        checkArgument(takersAmount <= maxAmountWithTolerance, errorMsg);
     }
 
-    private Optional<Monetary> getMinAmount(BisqEasyOffer takersOffer, BisqEasyContract takersContract, boolean isBase) {
-        return isBase
-                ? OfferAmountUtil.findBaseSideMinOrFixedAmount(
-                        serviceProvider.getBondedRolesService().getMarketPriceService(),
-                        takersOffer.getAmountSpec(), takersContract.getAgreedPriceSpec(), takersOffer.getMarket())
-                : OfferAmountUtil.findQuoteSideMinOrFixedAmount(
-                        serviceProvider.getBondedRolesService().getMarketPriceService(),
-                        takersOffer.getAmountSpec(), takersContract.getAgreedPriceSpec(), takersOffer.getMarket());
-    }
-
-    private Optional<Monetary> getMaxAmount(BisqEasyOffer takersOffer, BisqEasyContract takersContract, boolean isBase) {
-        return isBase
-                ? OfferAmountUtil.findBaseSideMaxOrFixedAmount(
-                        serviceProvider.getBondedRolesService().getMarketPriceService(),
-                        takersOffer.getAmountSpec(), takersContract.getAgreedPriceSpec(), takersOffer.getMarket())
-                : OfferAmountUtil.findQuoteSideMaxOrFixedAmount(
-                        serviceProvider.getBondedRolesService().getMarketPriceService(),
-                        takersOffer.getAmountSpec(), takersContract.getAgreedPriceSpec(), takersOffer.getMarket());
+    private Optional<Monetary> getAmount(BisqEasyOffer takersOffer, BisqEasyContract takersContract) {
+        return PriceUtil.findQuote(serviceProvider.getBondedRolesService().getMarketPriceService(),
+                    takersContract.getAgreedPriceSpec(), takersOffer.getMarket())
+                    .map(quote -> quote.toBaseSideMonetary(Monetary.from(takersContract.getQuoteSideAmount(),
+                            takersOffer.getMarket().getQuoteCurrencyCode())));
     }
 }
