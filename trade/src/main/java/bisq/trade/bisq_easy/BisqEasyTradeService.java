@@ -22,9 +22,9 @@ import bisq.common.monetary.Monetary;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.identity.Identity;
+import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.MessageListener;
-import bisq.network.identity.NetworkId;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
@@ -113,6 +113,10 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
                 onBisqEasyConfirmFiatReceiptMessage((BisqEasyConfirmFiatReceiptMessage) bisqEasyTradeMessage);
             } else if (bisqEasyTradeMessage instanceof BisqEasyConfirmBtcSentMessage) {
                 onBisqEasyConfirmBtcSentMessage((BisqEasyConfirmBtcSentMessage) bisqEasyTradeMessage);
+            } else if (bisqEasyTradeMessage instanceof BisqEasyRejectTradeMessage) {
+                onBisqEasyRejectTradeMessage((BisqEasyRejectTradeMessage) bisqEasyTradeMessage);
+            } else if (bisqEasyTradeMessage instanceof BisqEasyCancelTradeMessage) {
+                onBisqEasyCancelTradeMessage((BisqEasyCancelTradeMessage) bisqEasyTradeMessage);
             }
         }
     }
@@ -198,6 +202,24 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         }
     }
 
+    private void onBisqEasyRejectTradeMessage(BisqEasyRejectTradeMessage message) {
+        try {
+            getProtocol(message.getTradeId()).handle(message);
+            persist();
+        } catch (Exception e) {
+            log.error("Error at processing message " + message, e);
+        }
+    }
+
+    private void onBisqEasyCancelTradeMessage(BisqEasyCancelTradeMessage message) {
+        try {
+            getProtocol(message.getTradeId()).handle(message);
+            persist();
+        } catch (Exception e) {
+            log.error("Error at processing message " + message, e);
+        }
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Events
@@ -259,6 +281,16 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
 
     public void btcConfirmed(BisqEasyTrade trade) throws TradeException {
         getProtocol(trade.getId()).handle(new BisqEasyBtcConfirmedEvent());
+        persist();
+    }
+
+    public void rejectTrade(BisqEasyTrade trade) throws TradeException {
+        getProtocol(trade.getId()).handle(new BisqEasyRejectTradeEvent());
+        persist();
+    }
+
+    public void cancelTrade(BisqEasyTrade trade) throws TradeException {
+        getProtocol(trade.getId()).handle(new BisqEasyCancelTradeEvent());
         persist();
     }
 

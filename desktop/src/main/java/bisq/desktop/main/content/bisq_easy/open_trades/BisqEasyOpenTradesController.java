@@ -75,7 +75,7 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
 
     @Override
     public void createDependencies(ChatChannelDomain chatChannelDomain) {
-        tradeStateController = new TradeStateController(serviceProvider, this::handleTradeClosed);
+        tradeStateController = new TradeStateController(serviceProvider);
         openTradesWelcome = new OpenTradesWelcome();
         tradeDataHeader = new TradeDataHeader(serviceProvider, Res.get("bisqEasy.openTrades.chat.peer.description").toUpperCase());
     }
@@ -261,14 +261,6 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
             model.getChatWindow().get().hide();
         }
         model.getChatWindow().set(null);
-    }
-
-    private void handleTradeClosed(BisqEasyTrade trade, BisqEasyOpenTradeChannel channel) {
-        if (model.getSelectedChannel() != null) {
-            bisqEasyTradeService.removeTrade(trade);
-            channelService.leaveChannel(channel);
-            selectionService.getSelectedChannel().set(null);
-        }
     }
 
     private void onTradeAndChannelAdded(BisqEasyTrade trade, BisqEasyOpenTradeChannel channel) {

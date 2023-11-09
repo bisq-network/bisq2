@@ -62,9 +62,8 @@ public class NotificationPanelView extends View<BorderPane, NotificationPanelMod
 
         Label separator = new Label("|");
         separator.getStyleClass().add("notification-headline");
-        HBox notificationContent = new HBox(notificationHeadline, separator, goToOpenTradesButton);
+        HBox notificationContent = new HBox(10, notificationHeadline, separator, goToOpenTradesButton);
         notificationContent.setAlignment(Pos.CENTER);
-        notificationContent.setSpacing(10);
 
         HBox notificationHBox = new HBox(notificationContent, Spacer.fillHBox(), closeButton);
         notificationHBox.setPadding(new Insets(0, 10, 0, 15));

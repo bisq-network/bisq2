@@ -29,12 +29,10 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
-import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.support.mediation.MediationService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
-import bisq.user.profile.UserProfile;
 import javafx.beans.property.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -52,7 +50,6 @@ import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 class TradePhaseBox {
@@ -160,6 +157,10 @@ class TradePhaseBox {
                         case BTC_CONFIRMED:
                             model.getPhaseIndex().set(4);
                             break;
+
+                        case REJECTED:
+                        case CANCELLED:
+                            break;
                     }
                     int phaseIndex = model.getPhaseIndex().get();
                     model.getDisputeButtonVisible().set(phaseIndex == 2 || phaseIndex == 3);
@@ -198,27 +199,7 @@ class TradePhaseBox {
         }
 
         void onOpenDispute() {
-            BisqEasyOpenTradeChannel channel = model.getSelectedChannel();
-            Optional<UserProfile> mediator = channel.getMediator();
-            if (mediator.isPresent()) {
-                new Popup().headline(Res.get("bisqEasy.mediation.request.confirm.headline"))
-                        .information(Res.get("bisqEasy.mediation.request.confirm.msg"))
-                        .actionButtonText(Res.get("bisqEasy.mediation.request.confirm.openMediation"))
-                        .onAction(() -> {
-                            //String systemMessage = Res.get("bisqEasy.mediation.requester.systemMessage");
-                            // chatService.getBisqEasyPrivateTradeChatChannelService().sendSystemMessage(systemMessage, channel);
-
-                            channel.setIsInMediation(true);
-                            mediationService.requestMediation(channel);
-                            new Popup().headline(Res.get("bisqEasy.mediation.request.feedback.headline"))
-                                    .feedback(Res.get("bisqEasy.mediation.request.feedback.msg"))
-                                    .show();
-                        })
-                        .closeButtonText(Res.get("action.cancel"))
-                        .show();
-            } else {
-                new Popup().warning(Res.get("bisqEasy.mediation.request.feedback.noMediatorAvailable")).show();
-            }
+            OpenTradesUtils.openDispute(model.getSelectedChannel(), mediationService);
         }
     }
 

@@ -45,7 +45,10 @@ public enum BisqEasyTradeState implements State {
     SELLER_SENT_BTC_SENT_CONFIRMATION,
     BUYER_RECEIVED_BTC_SENT_CONFIRMATION,
 
-    BTC_CONFIRMED(true);
+    BTC_CONFIRMED(true),
+
+    REJECTED(true),
+    CANCELLED(true);
 
     private final boolean isFinalState;
 

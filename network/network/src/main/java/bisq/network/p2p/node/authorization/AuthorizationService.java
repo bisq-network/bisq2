@@ -130,11 +130,17 @@ public class AuthorizationService {
     private static boolean isInvalidDifficulty(double difficulty, ProofOfWork proofOfWork) {
         double difference = Math.abs(difficulty - proofOfWork.getDifficulty());
         if (difference > 0) {
-            log.warn("Calculated difficulty does not match difficulty from the proofOfWork object. \n" +
+            log.info("Calculated difficulty does not match difficulty from the proofOfWork object. \n" +
                             "difficulty={}; proofOfWork.getDifficulty()={}; difference={}",
                     difficulty, proofOfWork.getDifficulty(), difference);
         }
-        return difference > DIFFICULTY_TOLERANCE;
+        boolean isInvalid = difference > DIFFICULTY_TOLERANCE;
+        if (isInvalid) {
+            log.warn("Calculated difficulty outside of tolerated difficulty difference from the proofOfWork object. \n" +
+                            "difficulty={}; proofOfWork.getDifficulty()={}; difference={}",
+                    difficulty, proofOfWork.getDifficulty(), difference);
+        }
+        return isInvalid;
     }
 
     private byte[] getPayload(EnvelopePayloadMessage message) {

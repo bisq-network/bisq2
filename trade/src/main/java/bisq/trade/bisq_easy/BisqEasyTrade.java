@@ -20,6 +20,7 @@ package bisq.trade.bisq_easy;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.util.ProtobufUtils;
+import bisq.contract.Role;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.identity.Identity;
 import bisq.network.identity.NetworkId;
@@ -45,6 +46,10 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
     private final Observable<String> btcAddress = new Observable<>();
     @Getter
     private final Observable<String> txId = new Observable<>();
+
+    // The role who cancelled or rejected the trade
+    @Getter
+    private final Observable<Role> interruptTradeInitiator = new Observable<>();
 
     private final transient Observable<BisqEasyTradeState> tradeState = new Observable<>();
 
@@ -84,8 +89,8 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
         Optional.ofNullable(paymentAccountData.get()).ifPresent(builder::setPaymentAccountData);
         Optional.ofNullable(btcAddress.get()).ifPresent(builder::setBtcAddress);
         Optional.ofNullable(txId.get()).ifPresent(builder::setTxId);
-        return getTradeBuilder().setBisqEasyTrade(builder)
-                .build();
+        Optional.ofNullable(interruptTradeInitiator.get()).ifPresent(e -> builder.setInterruptTradeInitiator(e.toProto()));
+        return getTradeBuilder().setBisqEasyTrade(builder).build();
     }
 
     public static BisqEasyTrade fromProto(bisq.trade.protobuf.Trade proto) {
@@ -106,6 +111,9 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
         }
         if (bisqEasyTradeProto.hasTxId()) {
             bisqEasyTrade.getTxId().set(bisqEasyTradeProto.getTxId());
+        }
+        if (bisqEasyTradeProto.hasInterruptTradeInitiator()) {
+            bisqEasyTrade.getInterruptTradeInitiator().set(Role.fromProto(bisqEasyTradeProto.getInterruptTradeInitiator()));
         }
         return bisqEasyTrade;
     }

@@ -73,5 +73,75 @@ public class BisqEasyBuyerAsMakerProtocol extends BisqEasyProtocol {
                 .on(BisqEasyBtcConfirmedEvent.class)
                 .run(BisqEasyBtcConfirmedEventHandler.class)
                 .to(BTC_CONFIRMED);
+
+
+        // Reject trade
+        addTransition()
+                .from(MAKER_SENT_TAKE_OFFER_RESPONSE)
+                .on(BisqEasyRejectTradeEvent.class)
+                .run(BisqEasyRejectTradeEventHandler.class)
+                .to(REJECTED);
+
+        // Peer rejected trade
+        addTransition()
+                .from(MAKER_SENT_TAKE_OFFER_RESPONSE)
+                .on(BisqEasyRejectTradeMessage.class)
+                .run(BisqEasyRejectTradeMessageHandler.class)
+                .to(REJECTED);
+
+
+        // Cancel trade
+        addTransition()
+                .from(BUYER_RECEIVED_ACCOUNT_DATA)
+                .on(BisqEasyCancelTradeMessage.class)
+                .run(BisqEasyCancelTradeMessageHandler.class)
+                .to(CANCELLED);
+        addTransition()
+                .from(BUYER_SENT_FIAT_SENT_CONFIRMATION)
+                .on(BisqEasyCancelTradeMessage.class)
+                .run(BisqEasyCancelTradeMessageHandler.class)
+                .to(CANCELLED);
+        addTransition()
+                .from(BUYER_SENT_BTC_ADDRESS)
+                .on(BisqEasyCancelTradeMessage.class)
+                .run(BisqEasyCancelTradeMessageHandler.class)
+                .to(CANCELLED);
+        addTransition()
+                .from(BUYER_RECEIVED_SELLERS_FIAT_RECEIPT_CONFIRMATION)
+                .on(BisqEasyCancelTradeMessage.class)
+                .run(BisqEasyCancelTradeMessageHandler.class)
+                .to(CANCELLED);
+        addTransition()
+                .from(BUYER_RECEIVED_BTC_SENT_CONFIRMATION)
+                .on(BisqEasyCancelTradeMessage.class)
+                .run(BisqEasyCancelTradeMessageHandler.class)
+                .to(CANCELLED);
+
+        // Peer cancelled trade
+        addTransition()
+                .from(BUYER_RECEIVED_ACCOUNT_DATA)
+                .on(BisqEasyCancelTradeEvent.class)
+                .run(BisqEasyCancelTradeEventHandler.class)
+                .to(CANCELLED);
+        addTransition()
+                .from(BUYER_SENT_FIAT_SENT_CONFIRMATION)
+                .on(BisqEasyCancelTradeEvent.class)
+                .run(BisqEasyCancelTradeEventHandler.class)
+                .to(CANCELLED);
+        addTransition()
+                .from(BUYER_SENT_BTC_ADDRESS)
+                .on(BisqEasyCancelTradeEvent.class)
+                .run(BisqEasyCancelTradeEventHandler.class)
+                .to(CANCELLED);
+        addTransition()
+                .from(BUYER_RECEIVED_SELLERS_FIAT_RECEIPT_CONFIRMATION)
+                .on(BisqEasyCancelTradeEvent.class)
+                .run(BisqEasyCancelTradeEventHandler.class)
+                .to(CANCELLED);
+        addTransition()
+                .from(BUYER_RECEIVED_BTC_SENT_CONFIRMATION)
+                .on(BisqEasyCancelTradeEvent.class)
+                .run(BisqEasyCancelTradeEventHandler.class)
+                .to(CANCELLED);
     }
 }
