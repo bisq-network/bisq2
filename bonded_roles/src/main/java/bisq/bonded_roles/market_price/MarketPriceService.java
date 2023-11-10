@@ -83,6 +83,10 @@ public class MarketPriceService implements Service, PersistenceClient<MarketPric
         marketPriceByCurrencyMapPin = marketPriceRequestService.getMarketPriceByCurrencyMap().addObserver(() ->
                 applyNewMap(marketPriceRequestService.getMarketPriceByCurrencyMap()));
 
+        networkService.getDataService()
+                .ifPresent(dataService -> dataService.getAuthorizedData()
+                        .forEach(this::onAuthorizedDataAdded));
+
         return marketPriceRequestService.initialize();
     }
 
@@ -103,7 +107,10 @@ public class MarketPriceService implements Service, PersistenceClient<MarketPric
         AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
         if (data instanceof AuthorizedMarketPriceData) {
             AuthorizedMarketPriceData authorizedMarketPriceData = (AuthorizedMarketPriceData) data;
-            applyNewMap(authorizedMarketPriceData.getMarketPriceByCurrencyMap());
+            Map<Market, MarketPrice> map = authorizedMarketPriceData.getMarketPriceByCurrencyMap().entrySet().stream()
+                    .peek(e -> e.getValue().setSource(MarketPrice.Source.PROPAGATED_IN_NETWORK))
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            applyNewMap(map);
         }
     }
 

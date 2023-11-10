@@ -122,7 +122,7 @@ public class MarketPriceRequestService {
     private volatile boolean shutdownStarted;
     @Nullable
     private Scheduler scheduler;
-    private long initialDelay = 0;
+    private long initialDelay = 10;
 
     public MarketPriceRequestService(Config conf,
                                      Version version,
@@ -224,9 +224,11 @@ public class MarketPriceRequestService {
                     String baseCurrencyCode = isFiat ? "BTC" : currencyCode;
                     String quoteCurrencyCode = isFiat ? currencyCode : "BTC";
                     PriceQuote priceQuote = PriceQuote.fromPrice(price, baseCurrencyCode, quoteCurrencyCode);
-                    map.put(priceQuote.getMarket(), new MarketPrice(priceQuote,
+                    MarketPrice marketPrice = new MarketPrice(priceQuote,
                             timestamp,
-                            MarketPriceProvider.fromName(provider)));
+                            MarketPriceProvider.fromName(provider));
+                    marketPrice.setSource(MarketPrice.Source.REQUESTED_FROM_PRICE_NODE);
+                    map.put(priceQuote.getMarket(), marketPrice);
                 }
             } catch (Throwable t) {
                 // We do not fail the whole request if one entry would be invalid

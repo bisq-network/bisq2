@@ -23,6 +23,7 @@ import bisq.common.proto.Proto;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,9 +34,17 @@ import java.util.Optional;
 @ToString
 @EqualsAndHashCode
 public final class MarketPrice implements Proto {
+    public enum Source {
+        PERSISTED,
+        PROPAGATED_IN_NETWORK,
+        REQUESTED_FROM_PRICE_NODE
+    }
+
     private final PriceQuote priceQuote;
     private final long timestamp;
     private final MarketPriceProvider marketPriceProvider;
+    @Setter
+    private transient Source source;
 
     public MarketPrice(PriceQuote priceQuote, long timestamp, MarketPriceProvider marketPriceProvider) {
         this.priceQuote = priceQuote;

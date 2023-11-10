@@ -204,6 +204,7 @@ public class MarketPriceComponent {
                 ListItem item = model.selected.get();
                 tooltip.setText(Res.get("component.marketPrice.tooltip",
                         item.provider,
+                        item.source,
                         TimeFormatter.getAgeInSeconds(System.currentTimeMillis() - item.marketPrice.getTimestamp()),
                         item.date));
             });
@@ -253,6 +254,7 @@ public class MarketPriceComponent {
                         Tooltip.install(hBox, tooltip);
                         tooltip.setText(Res.get("component.marketPrice.tooltip",
                                 item.provider,
+                                item.source,
                                 TimeFormatter.getAgeInSeconds(System.currentTimeMillis() - item.marketPrice.getTimestamp()),
                                 item.date));
 
@@ -274,12 +276,14 @@ public class MarketPriceComponent {
         private final String codes;
         private final String provider;
         private final String date;
+        private final String source;
 
         private ListItem(MarketPrice marketPrice) {
             this.marketPrice = marketPrice;
             codes = marketPrice.getMarket().getMarketCodes();
             price = PriceFormatter.format(marketPrice.getPriceQuote(), true);
             provider = marketPrice.getProviderName();
+            source = Res.get("component.marketPrice.source." + marketPrice.getSource());
             date = DateFormatter.formatDateTime(marketPrice.getTimestamp());
         }
 

@@ -80,7 +80,10 @@ public final class MarketPriceStore implements PersistableStore<MarketPriceStore
     @Override
     public void applyPersisted(MarketPriceStore persisted) {
         marketPriceByCurrencyMap.clear();
-        marketPriceByCurrencyMap.putAll(persisted.getMarketPriceByCurrencyMap());
+        Map<Market, MarketPrice> map = persisted.getMarketPriceByCurrencyMap().entrySet().stream()
+                .peek(e -> e.getValue().setSource(MarketPrice.Source.PERSISTED))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        marketPriceByCurrencyMap.putAll(map);
         selectedMarket.set(persisted.getSelectedMarket().get());
     }
 
