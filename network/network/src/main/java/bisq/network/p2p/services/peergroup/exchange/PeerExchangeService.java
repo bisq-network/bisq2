@@ -19,12 +19,12 @@ package bisq.network.p2p.services.peergroup.exchange;
 
 import bisq.common.timer.Scheduler;
 import bisq.common.util.StringUtils;
+import bisq.network.common.Address;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.peergroup.Peer;
-import bisq.network.common.Address;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -179,9 +179,14 @@ public class PeerExchangeService implements Node.Listener {
             Connection connection = node.getConnection(peerAddress);
             connectionId = connection.getId();
             if (requestHandlerMap.containsKey(connectionId)) {
-                log.warn("Node {} : requestHandlerMap contains already {}. " +
-                        "We dispose the existing handler and start a new one.", node, peerAddress);
+                log.info("requestHandlerMap contains {}. " +
+                                "This can happen if the connection is still pending the response or the peer is not available " +
+                                "but the timeout has not triggered an exception yet. We consider the past request as failed. Connection={}",
+                        connectionId, connection);
+
                 requestHandlerMap.get(connectionId).dispose();
+                requestHandlerMap.remove(connectionId);
+                return false;
             }
 
             PeerExchangeRequestHandler handler = new PeerExchangeRequestHandler(node, connection);
