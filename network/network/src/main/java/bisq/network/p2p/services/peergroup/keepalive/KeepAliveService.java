@@ -86,9 +86,11 @@ public class KeepAliveService implements Node.Listener {
     public void sendPing(Connection connection) {
         String key = connection.getId();
         if (requestHandlerMap.containsKey(key)) {
-            log.warn("requestHandlerMap contains already {}. " +
-                    "We dispose the existing handler and start a new one. Connection={}", connection.getPeerAddress(), connection);
-            requestHandlerMap.get(key).dispose();
+            log.info("requestHandlerMap contains {}. " +
+                            "This is expected if the connection is still pending the response or the peer is not available " +
+                            "but the timeout has not triggered an exception yet. We skip that request. Connection={}",
+                    key, connection);
+            return;
         }
         KeepAliveHandler handler = new KeepAliveHandler(node, connection);
         requestHandlerMap.put(key, handler);
