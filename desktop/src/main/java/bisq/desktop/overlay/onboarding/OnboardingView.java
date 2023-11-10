@@ -46,8 +46,6 @@ public class OnboardingView extends NavigationView<VBox, OnboardingModel, Onboar
 
     @Override
     protected void onViewAttached() {
-        root.getScene().getWindow().setWidth(OverlayModel.WIDTH);
-        root.getScene().getWindow().setHeight(OverlayModel.HEIGHT);
     }
 
     @Override

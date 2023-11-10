@@ -324,9 +324,9 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
     @Getter
     @Slf4j
     public static class Skin<T> extends ComboBoxListViewSkin<T> {
-        protected final static double DEFAULT_ARROW_X_L = 22;
-        protected final static double DEFAULT_ARROW_X_M = 31.5;
-        protected final static double DEFAULT_ARROW_X_R = 41;
+        protected final static double DEFAULT_ARROW_X_L = 17;
+        protected final static double DEFAULT_ARROW_X_M = 26.5;
+        protected final static double DEFAULT_ARROW_X_R = 36;
         protected final MaterialTextField materialTextField;
         protected final ImageView arrow;
         protected final Polygon listBackground = new Polygon();
@@ -434,13 +434,13 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
             if (items.isEmpty()) {
                 listBackground.getPoints().clear();
             } else {
-                double x = 5;
+                double x = 0;
                 double listOffset = hideArrow ? -17.5 : 7.5;
-                double listWidthOffset = hideArrow ? 0 : 10;
+                double listWidthOffset = 0;
                 // relative to visible top-left point 
                 double height = Math.min(comboBox.getVisibleRowCount(), items.size()) * getRowHeight() + listOffset;
                 double width = comboBox.getWidth() - listWidthOffset;
-                double y = materialTextField.getHeight() - 25;
+                double y = materialTextField.getHeight() - 35;
                 double arrowY_m = y - 7.5;
                 if (hideArrow) {
                     listBackground.getPoints().setAll(

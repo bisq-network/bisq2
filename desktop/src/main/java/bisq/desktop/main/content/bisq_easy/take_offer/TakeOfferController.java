@@ -30,6 +30,7 @@ import bisq.i18n.Res;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
+import javafx.event.EventHandler;
 import javafx.scene.input.KeyEvent;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -74,6 +75,7 @@ public class TakeOfferController extends NavigationController implements InitWit
     private final TakeOfferAmountController takeOfferAmountController;
     private final TakeOfferPaymentController takeOfferPaymentController;
     private final TakeOfferReviewController takeOfferReviewController;
+    private final EventHandler<KeyEvent> onKeyPressedHandler = this::onKeyPressed;
     private Subscription tradePriceSpecPin, takersBaseSideAmountPin, takersQuoteSideAmountPin, methodNamePin;
 
     public TakeOfferController(ServiceProvider serviceProvider) {
@@ -128,7 +130,7 @@ public class TakeOfferController extends NavigationController implements InitWit
     public void onActivate() {
         overlayController.setUseEscapeKeyHandler(false);
         overlayController.setEnterKeyHandler(null);
-        overlayController.getApplicationRoot().setOnKeyPressed(this::onKeyPressed);
+        overlayController.getApplicationRoot().addEventHandler(KeyEvent.KEY_PRESSED, onKeyPressedHandler);
 
         model.getBackButtonText().set(Res.get("action.back"));
         model.getNextButtonVisible().set(true);
@@ -151,6 +153,7 @@ public class TakeOfferController extends NavigationController implements InitWit
     @Override
     public void onDeactivate() {
         overlayController.setUseEscapeKeyHandler(true);
+        overlayController.getApplicationRoot().removeEventHandler(KeyEvent.KEY_PRESSED, onKeyPressedHandler);
         tradePriceSpecPin.unsubscribe();
         takersQuoteSideAmountPin.unsubscribe();
         takersBaseSideAmountPin.unsubscribe();

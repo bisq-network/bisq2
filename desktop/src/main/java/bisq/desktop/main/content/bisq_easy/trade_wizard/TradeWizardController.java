@@ -32,6 +32,7 @@ import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
 import javafx.collections.ListChangeListener;
+import javafx.event.EventHandler;
 import javafx.scene.input.KeyEvent;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -69,7 +70,7 @@ public class TradeWizardController extends NavigationController implements InitW
     private final TradeWizardPaymentMethodController tradeWizardPaymentMethodController;
     private final TradeWizardSelectOfferController tradeWizardSelectOfferController;
     private final TradeWizardReviewController tradeWizardReviewController;
-
+    private final EventHandler<KeyEvent> onKeyPressedHandler = this::onKeyPressed;
     private final ListChangeListener<FiatPaymentMethod> paymentMethodsListener;
     private Subscription directionPin, marketPin, amountSpecPin,
             isMinAmountEnabledPin, priceSpecPin,
@@ -117,7 +118,7 @@ public class TradeWizardController extends NavigationController implements InitW
     public void onActivate() {
         overlayController.setUseEscapeKeyHandler(false);
         overlayController.setEnterKeyHandler(null);
-        overlayController.getApplicationRoot().setOnKeyPressed(this::onKeyPressed);
+        overlayController.getApplicationRoot().addEventHandler(KeyEvent.KEY_PRESSED, onKeyPressedHandler);
 
         model.getNextButtonDisabled().set(false);
         model.getChildTargets().clear();
@@ -177,6 +178,7 @@ public class TradeWizardController extends NavigationController implements InitW
     @Override
     public void onDeactivate() {
         overlayController.setUseEscapeKeyHandler(true);
+        overlayController.getApplicationRoot().removeEventHandler(KeyEvent.KEY_PRESSED, onKeyPressedHandler);
 
         directionPin.unsubscribe();
         marketPin.unsubscribe();

@@ -42,6 +42,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
+//todo Not used remove?
 @Slf4j
 public class OverlayWindow extends Pane {
     private final static double MARGIN = 66;

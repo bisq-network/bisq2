@@ -30,7 +30,8 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
 import lombok.extern.slf4j.Slf4j;
-//todo remove?
+
+//todo Not used remove?
 @Slf4j
 public class PopOver2 {
     private final Region owner;
