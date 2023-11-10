@@ -17,13 +17,13 @@
 
 package bisq.network.p2p.services.peergroup.validateaddress;
 
+import bisq.network.common.Address;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.InboundConnection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.peergroup.BanList;
-import bisq.network.common.Address;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
@@ -51,9 +51,11 @@ public class AddressValidationService implements Node.Listener {
         Address peerAddress = inboundConnection.getPeerAddress();
         String key = inboundConnection.getId();
         if (requestHandlerMap.containsKey(key)) {
-            log.warn("Node {} has already an entry in requestHandlerMap for {}. " +
-                    "This is expected if the past request has not been completed yet. We return.", node, peerAddress);
-            return CompletableFuture.completedFuture(true);
+            log.info("requestHandlerMap contains {}. " +
+                            "This is expected if the connection is still pending the response or the peer is not available " +
+                            "but the timeout has not triggered an exception yet. We skip that request. Connection={}",
+                    key, inboundConnection);
+            return CompletableFuture.completedFuture(false);
         } else {
             log.debug("Node {} adds a new AddressValidationHandler for {}", node, peerAddress);
         }
