@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.node.authorization;
 
+import bisq.common.application.DevMode;
 import bisq.common.util.ByteArrayUtils;
 import bisq.common.util.MathUtils;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
@@ -109,38 +110,89 @@ public class AuthorizationService {
         }
 
         // Verify difficulty
-        double difficulty = calculateDifficulty(message, currentNetworkLoad);
-        if (isInvalidDifficulty(difficulty, proofOfWork)) {
-            if (previousNetworkLoad == null) {
-                log.warn("Invalid difficulty using currentNetworkLoad. No previousNetworkLoad is provided.");
-                return false;
-            } else {
-                log.info("Invalid difficulty using currentNetworkLoad. " +
-                        "This can happen if the peer did not had the most recent networkLoad. We try again with the previous state.");
-                difficulty = calculateDifficulty(message, previousNetworkLoad);
-                if (isInvalidDifficulty(difficulty, proofOfWork)) {
-                    log.warn("Invalid difficulty using previousNetworkLoad");
-                    return false;
-                }
-            }
+        if (isDifficultyInvalid(message, proofOfWork.getDifficulty(), currentNetworkLoad, previousNetworkLoad)) {
+            return false;
         }
         return proofOfWorkService.verify(proofOfWork);
     }
 
-    private static boolean isInvalidDifficulty(double difficulty, ProofOfWork proofOfWork) {
-        double difference = Math.abs(difficulty - proofOfWork.getDifficulty());
-        if (difference > 0) {
-            log.info("Calculated difficulty does not match difficulty from the proofOfWork object. \n" +
-                            "difficulty={}; proofOfWork.getDifficulty()={}; difference={}",
-                    difficulty, proofOfWork.getDifficulty(), difference);
+    // We check the difficulty used for the proof of work if it matches the current network load or if available the
+    // previous network load. If the difference is inside a tolerance range we consider it still valid, but it should
+    // be investigated why that happens, thus we log those cases.
+    private boolean isDifficultyInvalid(EnvelopePayloadMessage message,
+                                        double proofOfWorkDifficulty,
+                                        NetworkLoad currentNetworkLoad,
+                                        NetworkLoad previousNetworkLoad) {
+        log.debug("isDifficultyInvalid/currentNetworkLoad: message.getCostFactor()={}, networkLoad.getValue()={}",
+                message.getCostFactor(), currentNetworkLoad.getValue());
+        double expectedDifficulty = calculateDifficulty(message, currentNetworkLoad);
+        if (proofOfWorkDifficulty >= expectedDifficulty) {
+
+            // We don't want to call calculateDifficulty with the previousNetworkLoad if we are not in dev mode.
+            if (DevMode.isDevMode() && proofOfWorkDifficulty > expectedDifficulty) {
+                // Might be that the difficulty was using the previous network load
+                double expectedPreviousDifficulty = calculateDifficulty(message, previousNetworkLoad);
+                if (proofOfWorkDifficulty != expectedPreviousDifficulty) {
+                    log.warn("Unexpected high difficulty provided. This might be a bug (but valid as provided difficulty is larger as expected): " +
+                                    "expectedDifficulty={}; expectedPreviousDifficulty={}; proofOfWorkDifficulty={}",
+                            expectedDifficulty, expectedPreviousDifficulty, proofOfWorkDifficulty);
+                }
+            }
+            return false;
         }
-        boolean isInvalid = difference > DIFFICULTY_TOLERANCE;
-        if (isInvalid) {
-            log.warn("Calculated difficulty outside of tolerated difficulty difference from the proofOfWork object. \n" +
-                            "difficulty={}; proofOfWork.getDifficulty()={}; difference={}",
-                    difficulty, proofOfWork.getDifficulty(), difference);
+
+        double missing = expectedDifficulty - proofOfWorkDifficulty;
+        double deviationToTolerance = MathUtils.roundDouble(missing / DIFFICULTY_TOLERANCE * 100, 2);
+        double deviationToExpectedDifficulty = MathUtils.roundDouble(missing / expectedDifficulty * 100, 2);
+        if (previousNetworkLoad == null) {
+            log.debug("No previous network load available");
+            if (missing <= DIFFICULTY_TOLERANCE) {
+                log.info("Difficulty of current network load deviates from the proofOfWork difficulty but is inside the tolerated range.\n" +
+                                "deviationToTolerance={}%; deviationToExpectedDifficulty={}%; expectedDifficulty={}; proofOfWorkDifficulty={}; DIFFICULTY_TOLERANCE={}",
+                        deviationToTolerance, deviationToExpectedDifficulty, expectedDifficulty, proofOfWorkDifficulty, DIFFICULTY_TOLERANCE);
+                return false;
+            }
+
+            log.warn("Difficulty of current network load deviates from the proofOfWork difficulty and is outside the tolerated range.\n" +
+                            "deviationToTolerance={}%; deviationToExpectedDifficulty={}%; expectedDifficulty={}; proofOfWorkDifficulty={}; DIFFICULTY_TOLERANCE={}",
+                    deviationToTolerance, deviationToExpectedDifficulty, expectedDifficulty, proofOfWorkDifficulty, DIFFICULTY_TOLERANCE);
+            return true;
         }
-        return isInvalid;
+
+        log.debug("isDifficultyInvalid/previousNetworkLoad: message.getCostFactor()={}, networkLoad.getValue()={}",
+                message.getCostFactor(), previousNetworkLoad.getValue());
+        double expectedPreviousDifficulty = calculateDifficulty(message, previousNetworkLoad);
+        if (proofOfWorkDifficulty >= expectedPreviousDifficulty) {
+            log.debug("Difficulty of previous network load is correct");
+            if (proofOfWorkDifficulty > expectedPreviousDifficulty) {
+                log.warn("Unexpected high difficulty provided. This might be a bug (but valid as provided difficulty is larger as expected): " +
+                                "expectedPreviousDifficulty={}; proofOfWorkDifficulty={}",
+                        expectedPreviousDifficulty, proofOfWorkDifficulty);
+            }
+            return false;
+        }
+
+        if (missing <= DIFFICULTY_TOLERANCE) {
+            log.info("Difficulty of current network load deviates from the proofOfWork difficulty but is inside the tolerated range.\n" +
+                            "deviationToTolerance={}%; deviationToExpectedDifficulty={}%; expectedDifficulty={}; proofOfWorkDifficulty={}; DIFFICULTY_TOLERANCE={}",
+                    deviationToTolerance, deviationToExpectedDifficulty, expectedDifficulty, proofOfWorkDifficulty, DIFFICULTY_TOLERANCE);
+            return false;
+        }
+
+        double missingUsingPrevious = expectedPreviousDifficulty - proofOfWorkDifficulty;
+        if (missingUsingPrevious <= DIFFICULTY_TOLERANCE) {
+            deviationToTolerance = MathUtils.roundDouble(missingUsingPrevious / DIFFICULTY_TOLERANCE * 100, 2);
+            deviationToExpectedDifficulty = MathUtils.roundDouble(missingUsingPrevious / expectedPreviousDifficulty * 100, 2);
+            log.info("Difficulty of previous network load deviates from the proofOfWork difficulty but is inside the tolerated range.\n" +
+                            "deviationToTolerance={}%; deviationToExpectedDifficulty={}%; expectedDifficulty={}; proofOfWorkDifficulty={}; DIFFICULTY_TOLERANCE={}",
+                    deviationToTolerance, deviationToExpectedDifficulty, expectedPreviousDifficulty, proofOfWorkDifficulty, DIFFICULTY_TOLERANCE);
+            return false;
+        }
+
+        log.warn("Difficulties of current and previous network load deviate from the proofOfWork difficulty and are outside the tolerated range.\n" +
+                        "deviationToTolerance={}%; deviationToExpectedDifficulty={}%; expectedDifficulty={}; proofOfWorkDifficulty={}; DIFFICULTY_TOLERANCE={}",
+                deviationToTolerance, deviationToExpectedDifficulty, expectedDifficulty, proofOfWorkDifficulty, DIFFICULTY_TOLERANCE);
+        return true;
     }
 
     private byte[] getPayload(EnvelopePayloadMessage message) {
