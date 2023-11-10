@@ -19,6 +19,7 @@ package bisq.common.currency;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -107,5 +108,17 @@ public class MarketRepository {
         list.addAll(getMajorFiatMarkets());
         list.addAll(getMinorFiatMarkets());
         return list.stream().distinct().collect(Collectors.toList());
+    }
+
+    public static Optional<Market> findAnyMarketByMarketCodes(String marketCodes) {
+        return MarketRepository.getAllMarkets().stream()
+                .filter(e -> e.getMarketCodes().equals(marketCodes))
+                .findAny();
+    }
+
+    public static Optional<Market> findAnyFiatMarketByMarketCodes(String marketCodes) {
+        return MarketRepository.getAllFiatMarkets().stream()
+                .filter(e -> e.getMarketCodes().equals(marketCodes))
+                .findAny();
     }
 }
