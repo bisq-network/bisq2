@@ -137,15 +137,13 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
 
     public CompletableFuture<Void> removePassword(CharSequence password) {
         return decryptDataStore(getAESSecretKey().orElseThrow())
-                .thenCompose(nil -> {
-                    persistableStore.clearEncryptedData();
-                    return persistableStore.removeKey(password)
-                            .whenComplete((nil2, throwable) -> {
-                                if (throwable == null) {
-                                    persist();
-                                }
-                            });
-                });
+                .thenCompose(nil -> persistableStore.removeKey(password)
+                        .whenComplete((nil2, throwable) -> {
+                            if (throwable == null) {
+                                persistableStore.clearEncryptedData();
+                                persist();
+                            }
+                        }));
     }
 
     public boolean isDataStoreEncrypted() {
