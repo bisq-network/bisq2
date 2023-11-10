@@ -43,6 +43,11 @@ public class TimeFormatter {
         }
     }
 
+    public static String getAgeInSeconds(long duration) {
+        long sec = duration / 1000;
+        return sec + " sec";
+    }
+
     public static long getAgeInDays(long date) {
         return (System.currentTimeMillis() - date) / DAY_AS_MS;
     }

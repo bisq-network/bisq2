@@ -24,10 +24,13 @@ import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.ProgressBarWithLabel;
 import bisq.desktop.components.overlay.ComboBoxWithSearch;
 import bisq.i18n.Res;
+import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.PriceFormatter;
+import bisq.presentation.formatters.TimeFormatter;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -39,6 +42,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -138,6 +142,7 @@ public class MarketPriceComponent {
         private final Label codes, price;
         private final ImageView arrow;
         private final ProgressBarWithLabel progressBarWithLabel;
+        private final Tooltip tooltip;
         private Subscription pricePin;
 
         private View(Model model, Controller controller) {
@@ -160,6 +165,10 @@ public class MarketPriceComponent {
             arrow.setMouseTransparent(true);
             arrow.setVisible(false);
             arrow.setManaged(false);
+
+            tooltip = new BisqTooltip();
+            Tooltip.install(root, tooltip);
+
             HBox.setMargin(progressBarWithLabel, new Insets(2.5, 0, 0, 0));
             HBox.setMargin(codes, new Insets(0, 5, 0, 0));
             root.getChildren().addAll(codes, price, arrow, progressBarWithLabel);
@@ -191,19 +200,29 @@ public class MarketPriceComponent {
                         250, 30, 20, 125)
                         .show();
             });
+            root.setOnMouseEntered(e -> {
+                ListItem item = model.selected.get();
+                tooltip.setText(Res.get("component.marketPrice.tooltip",
+                        item.provider,
+                        TimeFormatter.getAgeInSeconds(System.currentTimeMillis() - item.marketPrice.getTimestamp()),
+                        item.date));
+            });
         }
 
         @Override
         protected void onViewDetached() {
             codes.textProperty().unbind();
             pricePin.unsubscribe();
+            Tooltip.uninstall(root, tooltip);
             root.setOnMouseClicked(null);
+            root.setOnMouseEntered(null);
         }
 
         protected ListCell<ListItem> getListCell() {
             return new ListCell<>() {
                 private final Label price, codes;
                 private final HBox hBox;
+                private final Tooltip tooltip;
 
                 {
                     setCursor(Cursor.HAND);
@@ -219,6 +238,9 @@ public class MarketPriceComponent {
 
                     hBox = new HBox(12, codes, price);
                     hBox.setAlignment(Pos.CENTER_LEFT);
+                    setCursor(Cursor.HAND);
+
+                    tooltip = new BisqTooltip();
                 }
 
                 @Override
@@ -228,9 +250,15 @@ public class MarketPriceComponent {
                     if (item != null && !empty) {
                         price.setText(item.price);
                         codes.setText(item.codes);
+                        Tooltip.install(hBox, tooltip);
+                        tooltip.setText(Res.get("component.marketPrice.tooltip",
+                                item.provider,
+                                TimeFormatter.getAgeInSeconds(System.currentTimeMillis() - item.marketPrice.getTimestamp()),
+                                item.date));
 
                         setGraphic(hBox);
                     } else {
+                        Tooltip.uninstall(hBox, tooltip);
                         setGraphic(null);
                     }
                 }
@@ -238,16 +266,21 @@ public class MarketPriceComponent {
         }
     }
 
+    @Slf4j
     @EqualsAndHashCode
     private static class ListItem {
         private final MarketPrice marketPrice;
         private final String price;
         private final String codes;
+        private final String provider;
+        private final String date;
 
         private ListItem(MarketPrice marketPrice) {
             this.marketPrice = marketPrice;
             codes = marketPrice.getMarket().getMarketCodes();
             price = PriceFormatter.format(marketPrice.getPriceQuote(), true);
+            provider = marketPrice.getProviderName();
+            date = DateFormatter.formatDateTime(marketPrice.getTimestamp());
         }
 
         @Override

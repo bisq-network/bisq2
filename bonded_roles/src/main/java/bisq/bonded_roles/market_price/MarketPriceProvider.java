@@ -13,7 +13,7 @@ import javax.annotation.Nullable;
 @Slf4j
 @ToString
 public enum MarketPriceProvider implements ProtoEnum {
-    BISQAGGREGATE("Bisq"),
+    BISQAGGREGATE("Bisq price aggregator"),
     COINGECKO("CoinGecko"),
     POLO("Poloniex"),
     BITFINEX("Bitfinex"),

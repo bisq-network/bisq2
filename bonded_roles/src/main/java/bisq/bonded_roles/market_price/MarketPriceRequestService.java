@@ -217,15 +217,15 @@ public class MarketPriceRequestService {
 
                     double price = (Double) treeMap.get("price");
                     // json uses double for our timestamp long value...
-                    long timestampSec = MathUtils.doubleToLong((Double) treeMap.get("timestampSec"));
-
+                    // We get milliseconds not seconds
+                    long timestamp = MathUtils.doubleToLong((Double) treeMap.get("timestampSec"));
                     // We only get BTC based prices not fiat-fiat or altcoin-altcoin
                     boolean isFiat = TradeCurrency.isFiat(currencyCode);
                     String baseCurrencyCode = isFiat ? "BTC" : currencyCode;
                     String quoteCurrencyCode = isFiat ? currencyCode : "BTC";
                     PriceQuote priceQuote = PriceQuote.fromPrice(price, baseCurrencyCode, quoteCurrencyCode);
                     map.put(priceQuote.getMarket(), new MarketPrice(priceQuote,
-                            timestampSec * 1000,
+                            timestamp,
                             MarketPriceProvider.fromName(provider)));
                 }
             } catch (Throwable t) {
