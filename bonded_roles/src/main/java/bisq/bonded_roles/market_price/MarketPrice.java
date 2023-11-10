@@ -19,6 +19,7 @@ package bisq.bonded_roles.market_price;
 
 import bisq.common.currency.Market;
 import bisq.common.monetary.PriceQuote;
+import bisq.common.proto.Proto;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -26,7 +27,7 @@ import lombok.ToString;
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class MarketPrice {
+public final class MarketPrice implements Proto {
     private final PriceQuote priceQuote;
     private final String code;
     private final long timestamp;
@@ -37,6 +38,22 @@ public final class MarketPrice {
         this.code = code;
         this.timestamp = timestamp;
         this.provider = provider;
+    }
+
+    public bisq.bonded_roles.protobuf.MarketPrice toProto() {
+        return bisq.bonded_roles.protobuf.MarketPrice.newBuilder()
+                .setPriceQuote(priceQuote.toProto())
+                .setCode(code)
+                .setTimestamp(timestamp)
+                .setProvider(provider)
+                .build();
+    }
+
+    public static MarketPrice fromProto(bisq.bonded_roles.protobuf.MarketPrice proto) {
+        return new MarketPrice(PriceQuote.fromProto(proto.getPriceQuote()),
+                proto.getCode(),
+                proto.getTimestamp(),
+                proto.getProvider());
     }
 
     public Market getMarket() {

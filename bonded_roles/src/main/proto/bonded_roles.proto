@@ -80,3 +80,15 @@ message ReleaseNotification {
   string releaseManagerProfileId = 7;
   bool staticPublicKeysProvided = 8;
 }
+
+message MarketPrice {
+  common.PriceQuote priceQuote = 1;
+  string code = 2;
+  sint64 timestamp = 3;
+  string provider = 4;
+}
+
+message MarketPriceStore {
+  map<string, MarketPrice> marketPriceByCurrencyMap = 1;
+  common.Market selectedMarket = 2;
+}
