@@ -29,7 +29,9 @@ import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ObservableList;
+import javafx.event.EventHandler;
 import javafx.scene.Scene;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
@@ -51,6 +53,7 @@ public class OverlayView extends NavigationView<AnchorPane, OverlayModel, Overla
     private final ChangeListener<Number> positionListener;
     private final Scene scene;
     private UIScheduler centerTime;
+    private final EventHandler<KeyEvent> onKeyPressedHandler = controller::onKeyPressed;
 
     public OverlayView(OverlayModel model, OverlayController controller, Region owner) {
         super(new AnchorPane(), model, controller);
@@ -111,8 +114,8 @@ public class OverlayView extends NavigationView<AnchorPane, OverlayModel, Overla
     }
 
     private void show(double prefWidth, double prefHeight) {
-        scene.setOnKeyPressed(controller::onKeyPressed);
-        ownerScene.setOnKeyPressed(controller::onKeyPressed);
+        scene.addEventHandler(KeyEvent.KEY_PRESSED, onKeyPressedHandler);
+        ownerScene.addEventHandler(KeyEvent.KEY_PRESSED, onKeyPressedHandler);
 
         prefWidth = Math.min(prefWidth, owner.getWidth());
         prefHeight = Math.min(prefHeight, owner.getHeight());
@@ -137,8 +140,9 @@ public class OverlayView extends NavigationView<AnchorPane, OverlayModel, Overla
     }
 
     void hide() {
-        scene.setOnKeyPressed(null);
-        ownerScene.setOnKeyPressed(null);
+        scene.removeEventHandler(KeyEvent.KEY_PRESSED, onKeyPressedHandler);
+        ownerScene.removeEventHandler(KeyEvent.KEY_PRESSED, onKeyPressedHandler);
+
         Transitions.removeEffect(owner);
         animateHide(() -> {
             if (stage != null) {

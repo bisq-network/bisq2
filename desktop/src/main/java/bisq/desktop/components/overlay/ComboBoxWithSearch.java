@@ -229,6 +229,8 @@ public class ComboBoxWithSearch<T> {
         comboBox.getAutoCompleteComboBoxSkin().getListView().heightProperty().removeListener(heightListener);
         stage.setOnCloseRequest(null);
         scene.setOnKeyPressed(null);
+        scene.setOnMousePressed(null);
+        ownerRoot.setOnMousePressed(null);
     }
 
     protected void layoutListView() {

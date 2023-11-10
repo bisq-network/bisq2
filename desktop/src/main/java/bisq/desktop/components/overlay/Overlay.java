@@ -237,6 +237,10 @@ public abstract class Overlay<T extends Overlay<T>> {
         }
         isDisplayed = false;
         isHiddenProperty.set(true);
+
+        if (stage != null && stage.getScene() != null) {
+            stage.getScene().setOnKeyPressed(null);
+        }
     }
 
     protected void animateHide() {
