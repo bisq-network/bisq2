@@ -82,7 +82,7 @@ public class NetworkDataValidation {
 
     public static void validateByteArray(byte[] bytes, int maxLength) {
         checkArgument(bytes.length <= maxLength,
-                "Byte array must not be longer than " + maxLength);
+                "Byte array must not be longer than " + maxLength + ". bytes.length=" + bytes.length);
     }
 
     // Longest supported version is xxx.xxx.xxx

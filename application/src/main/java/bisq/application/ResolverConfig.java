@@ -19,6 +19,7 @@ package bisq.application;
 
 import bisq.bonded_roles.alert.AuthorizedAlertData;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
+import bisq.bonded_roles.market_price.AuthorizedMarketPriceData;
 import bisq.bonded_roles.oracle.AuthorizedOracleNode;
 import bisq.bonded_roles.registration.BondedRoleRegistrationRequest;
 import bisq.bonded_roles.release.ReleaseNotification;
@@ -73,6 +74,7 @@ public class ResolverConfig {
         DistributedDataResolver.addResolver("bonded_roles.AuthorizedBondedRole", AuthorizedBondedRole.getResolver());
         DistributedDataResolver.addResolver("bonded_roles.AuthorizedAlertData", AuthorizedAlertData.getResolver());
         DistributedDataResolver.addResolver("bonded_roles.ReleaseNotification", ReleaseNotification.getResolver());
+        DistributedDataResolver.addResolver("bonded_roles.AuthorizedMarketPriceData", AuthorizedMarketPriceData.getResolver());
         DistributedDataResolver.addResolver("user.AuthorizedProofOfBurnData", AuthorizedProofOfBurnData.getResolver());
         DistributedDataResolver.addResolver("user.AuthorizedBondedReputationData", AuthorizedBondedReputationData.getResolver());
         DistributedDataResolver.addResolver("user.AuthorizedAccountAgeData", AuthorizedAccountAgeData.getResolver());

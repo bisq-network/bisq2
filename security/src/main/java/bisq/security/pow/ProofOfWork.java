@@ -57,7 +57,8 @@ public final class ProofOfWork implements Proto {
         this.solution = solution;
         this.duration = duration;
 
-        NetworkDataValidation.validateByteArray(payload, 20_000);
+        // We have to allow a large size here as InventoryData can be large
+        NetworkDataValidation.validateByteArray(payload, 10_000_000);
         if (challenge != null) {
             NetworkDataValidation.validateByteArray(challenge, 32);
         }

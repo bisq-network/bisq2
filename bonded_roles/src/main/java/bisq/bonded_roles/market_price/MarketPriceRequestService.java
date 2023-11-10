@@ -18,6 +18,7 @@
 package bisq.bonded_roles.market_price;
 
 import bisq.common.currency.Market;
+import bisq.common.currency.MarketRepository;
 import bisq.common.currency.TradeCurrency;
 import bisq.common.data.Pair;
 import bisq.common.monetary.PriceQuote;
@@ -51,21 +52,22 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 public class MarketPriceRequestService {
     private static final ExecutorService POOL = ExecutorFactory.newFixedThreadPool("MarketPriceService.pool", 3);
-    private static final long INTERVAL = 180;
 
     @Getter
     @ToString
     public static final class Config {
-        public static Config from(List<? extends com.typesafe.config.Config> marketPriceServiceProviders) {
-            Set<Provider> marketPriceProviders = marketPriceServiceProviders.stream()
+        public static Config from(com.typesafe.config.Config marketPriceConfig) {
+            Set<Provider> marketPriceProviders = marketPriceConfig.getConfigList("providers").stream()
                     .map(config -> {
                         String url = config.getString("url");
                         String operator = config.getString("operator");
                         TransportType transportType = getTransportTypeFromUrl(url);
                         return new Provider(url, operator, transportType);
-                    }).collect(Collectors.toUnmodifiableSet());
+                    })
+                    .collect(Collectors.toUnmodifiableSet());
 
-            return new MarketPriceRequestService.Config(marketPriceProviders);
+            long interval = marketPriceConfig.getLong("interval");
+            return new MarketPriceRequestService.Config(marketPriceProviders, interval);
         }
 
         private static TransportType getTransportTypeFromUrl(String url) {
@@ -79,9 +81,11 @@ public class MarketPriceRequestService {
         }
 
         private final Set<Provider> providers;
+        private final long interval;
 
-        public Config(Set<Provider> providers) {
+        public Config(Set<Provider> providers, long interval) {
             this.providers = providers;
+            this.interval = interval;
         }
     }
 
@@ -107,6 +111,7 @@ public class MarketPriceRequestService {
     }
 
     private final List<Provider> providers;
+    private final long interval;
     private final NetworkService networkService;
     @Getter
     private final ObservableHashMap<Market, MarketPrice> marketPriceByCurrencyMap = new ObservableHashMap<>();
@@ -122,7 +127,8 @@ public class MarketPriceRequestService {
     public MarketPriceRequestService(Config conf,
                                      Version version,
                                      NetworkService networkService) {
-        providers = new ArrayList<>(conf.providers);
+        providers = new ArrayList<>(conf.getProviders());
+        interval = conf.getInterval();
         checkArgument(!providers.isEmpty(), "providers must not be empty");
         userAgent = "bisq-v2/" + version.toString();
         this.networkService = networkService;
@@ -161,7 +167,7 @@ public class MarketPriceRequestService {
                             }
                         });
             });
-        }).periodically(initialDelay, INTERVAL, TimeUnit.SECONDS);
+        }).periodically(initialDelay, interval, TimeUnit.SECONDS);
     }
 
     private CompletableFuture<Void> request(BaseHttpClient httpClient) {
@@ -179,8 +185,13 @@ public class MarketPriceRequestService {
                 log.info("Market price request from {} resulted in {} items took {} ms",
                         httpClient.getBaseUrl(), map.size(), now - ts);
 
+                // We only use those market prices for which we have a market in the repository
+                Map<Market, MarketPrice> filtered = map.entrySet().stream()
+                        .filter(e -> MarketRepository.findAnyMarketByMarketCodes(e.getKey().getMarketCodes()).isPresent())
+                        .collect(Collectors.toMap(e -> MarketRepository.findAnyMarketByMarketCodes(e.getKey().getMarketCodes()).orElseThrow(),
+                                Map.Entry::getValue));
                 marketPriceByCurrencyMap.clear();
-                marketPriceByCurrencyMap.putAll(map);
+                marketPriceByCurrencyMap.putAll(filtered);
             } catch (IOException e) {
                 if (!shutdownStarted) {
                     log.warn("Request to market price provider {} failed. Error={}", httpClient.getBaseUrl(), ExceptionUtil.print(e));
@@ -200,7 +211,10 @@ public class MarketPriceRequestService {
                 Map<?, ?> treeMap = (Map<?, ?>) obj;
                 String currencyCode = (String) treeMap.get("currencyCode");
                 if (!currencyCode.startsWith("NON_EXISTING_SYMBOL")) {
-                    String dataProvider = (String) treeMap.get("provider"); // Bisq-Aggregate or name of exchange of price feed
+                    String provider = (String) treeMap.get("provider"); // Bisq-Aggregate or name of exchange of price feed
+                    // Convert Bisq-Aggregate to BISQAGGREGATE
+                    provider = provider.replace("-", "").toUpperCase();
+
                     double price = (Double) treeMap.get("price");
                     // json uses double for our timestamp long value...
                     long timestampSec = MathUtils.doubleToLong((Double) treeMap.get("timestampSec"));
@@ -210,7 +224,9 @@ public class MarketPriceRequestService {
                     String baseCurrencyCode = isFiat ? "BTC" : currencyCode;
                     String quoteCurrencyCode = isFiat ? currencyCode : "BTC";
                     PriceQuote priceQuote = PriceQuote.fromPrice(price, baseCurrencyCode, quoteCurrencyCode);
-                    map.put(priceQuote.getMarket(), new MarketPrice(priceQuote, currencyCode, timestampSec * 1000, dataProvider));
+                    map.put(priceQuote.getMarket(), new MarketPrice(priceQuote,
+                            timestampSec * 1000,
+                            MarketPriceProvider.fromName(provider)));
                 }
             } catch (Throwable t) {
                 // We do not fail the whole request if one entry would be invalid

@@ -6,7 +6,6 @@ import "common.proto";
 import "network.proto";
 import "user.proto";
 
-
 message TimestampStore {
   repeated common.StringLongPair stringLongPairs = 1;
 }

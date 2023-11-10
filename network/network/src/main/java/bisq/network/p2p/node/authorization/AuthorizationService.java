@@ -97,8 +97,11 @@ public class AuthorizationService {
         receivedMessageCounters.add(messageCounter);
 
         // Verify payload
-        if (!Arrays.equals(getPayload(message), proofOfWork.getPayload())) {
-            log.warn("Invalid payload");
+        byte[] payload = getPayload(message);
+        if (!Arrays.equals(payload, proofOfWork.getPayload())) {
+            log.warn("Message payload not matching proof of work payload. getPayload(message).length={}; " +
+                            "proofOfWork.getPayload().length={}",
+                    payload.length, proofOfWork.getPayload().length);
             return false;
         }
 

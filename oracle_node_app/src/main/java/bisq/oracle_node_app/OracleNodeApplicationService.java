@@ -19,6 +19,7 @@ package bisq.oracle_node_app;
 
 import bisq.application.ApplicationService;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
+import bisq.bonded_roles.market_price.MarketPriceRequestService;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
@@ -62,13 +63,20 @@ public class OracleNodeApplicationService extends ApplicationService {
         com.typesafe.config.Config bondedRolesConfig = getConfig("bondedRoles");
         authorizedBondedRolesService = new AuthorizedBondedRolesService(networkService, bondedRolesConfig.getBoolean("ignoreSecurityManager"));
 
+        com.typesafe.config.Config marketPriceConfig = bondedRolesConfig.getConfig("marketPrice");
+        MarketPriceRequestService marketPriceRequestService = new MarketPriceRequestService(
+                MarketPriceRequestService.Config.from(marketPriceConfig),
+                config.getVersion(),
+                networkService);
+
         OracleNodeService.Config oracleNodeConfig = OracleNodeService.Config.from(getConfig("oracleNode"));
         oracleNodeService = new OracleNodeService(oracleNodeConfig,
                 securityService.getKeyPairService(),
                 identityService,
                 networkService,
                 persistenceService,
-                authorizedBondedRolesService);
+                authorizedBondedRolesService,
+                marketPriceRequestService);
     }
 
     @Override

@@ -21,6 +21,7 @@ import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.bonded_roles.bonded_role.BondedRole;
+import bisq.bonded_roles.market_price.MarketPriceRequestService;
 import bisq.bonded_roles.oracle.AuthorizedOracleNode;
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
@@ -32,6 +33,7 @@ import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.node.Node;
 import bisq.oracle_node.bisq1_bridge.Bisq1BridgeService;
+import bisq.oracle_node.market_price.MarketPricePropagationService;
 import bisq.oracle_node.timestamp.TimestampService;
 import bisq.persistence.PersistenceService;
 import bisq.security.DigestUtil;
@@ -97,6 +99,7 @@ public class OracleNodeService implements Service {
     private final IdentityService identityService;
     private final NetworkService networkService;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
+    private final MarketPricePropagationService marketPricePropagationService;
 
     private final PrivateKey authorizedPrivateKey;
     private final PublicKey authorizedPublicKey;
@@ -118,7 +121,8 @@ public class OracleNodeService implements Service {
                              IdentityService identityService,
                              NetworkService networkService,
                              PersistenceService persistenceService,
-                             AuthorizedBondedRolesService authorizedBondedRolesService) {
+                             AuthorizedBondedRolesService authorizedBondedRolesService,
+                             MarketPriceRequestService marketPriceRequestService) {
         this.keyPairService = keyPairService;
         this.identityService = identityService;
         this.networkService = networkService;
@@ -157,6 +161,12 @@ public class OracleNodeService implements Service {
                 authorizedPrivateKey,
                 authorizedPublicKey,
                 staticPublicKeysProvided);
+
+        marketPricePropagationService = new MarketPricePropagationService(networkService,
+                marketPriceRequestService,
+                authorizedPrivateKey,
+                authorizedPublicKey,
+                staticPublicKeysProvided);
     }
 
 
@@ -171,12 +181,12 @@ public class OracleNodeService implements Service {
                 .thenCompose(identity -> {
                     bisq1BridgeService.setIdentity(identity);
                     timestampService.setIdentity(identity);
+                    marketPricePropagationService.setIdentity(identity);
 
                     String publicKeyHash = Hex.encode(DigestUtil.hash(authorizedPublicKey.getEncoded()));
                     NetworkId networkId = identity.getNetworkId();
                     authorizedOracleNode = new AuthorizedOracleNode(networkId, bondUserName, signatureBase64, publicKeyHash, staticPublicKeysProvided);
                     bisq1BridgeService.setAuthorizedOracleNode(authorizedOracleNode);
-                    timestampService.setAuthorizedOracleNode(authorizedOracleNode);
 
                     Optional<AuthorizedOracleNode> oracleNode = staticPublicKeysProvided ? Optional.of(authorizedOracleNode) : Optional.empty();
                     authorizedBondedRole = new AuthorizedBondedRole(profileId,
@@ -220,7 +230,8 @@ public class OracleNodeService implements Service {
                     });
 
                     return bisq1BridgeService.initialize()
-                            .thenCompose(result -> timestampService.initialize());
+                            .thenCompose(result -> timestampService.initialize())
+                            .thenCompose(result -> marketPricePropagationService.initialize());
                 })
                 .whenComplete((result, throwable) -> {
                     if (throwable != null) {
@@ -240,7 +251,8 @@ public class OracleNodeService implements Service {
             startupScheduler.stop();
         }
         return bisq1BridgeService.shutdown()
-                .thenCompose(result -> timestampService.shutdown());
+                .thenCompose(result -> timestampService.shutdown())
+                .thenCompose(result -> marketPricePropagationService.shutdown());
     }
 
 
