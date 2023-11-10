@@ -80,3 +80,28 @@ message ReleaseNotification {
   string releaseManagerProfileId = 7;
   bool staticPublicKeysProvided = 8;
 }
+
+enum MarketPriceProvider {
+  MARKETPRICEPROVIDER_UNSPECIFIED = 0;
+  MARKETPRICEPROVIDER_BISQAGGREGATE = 1;
+  MARKETPRICEPROVIDER_COINGECKO = 2;
+  MARKETPRICEPROVIDER_POLO = 3;
+  MARKETPRICEPROVIDER_BITFINEX = 4;
+  MARKETPRICEPROVIDER_OTHER = 5;
+}
+
+message MarketPrice {
+  common.PriceQuote priceQuote = 1;
+  sint64 timestamp = 2;
+  MarketPriceProvider marketPriceProvider = 3;
+}
+
+message AuthorizedMarketPriceData {
+  map<string, MarketPrice> marketPriceByCurrencyMap = 1;
+  bool staticPublicKeysProvided = 2;
+}
+
+message MarketPriceStore {
+  map<string, MarketPrice> marketPriceByCurrencyMap = 1;
+  common.Market selectedMarket = 2;
+}

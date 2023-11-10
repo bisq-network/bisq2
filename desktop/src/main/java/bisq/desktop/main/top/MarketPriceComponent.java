@@ -22,12 +22,18 @@ import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.currency.MarketRepository;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
+import bisq.desktop.common.Icons;
+import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.ProgressBarWithLabel;
 import bisq.desktop.components.overlay.ComboBoxWithSearch;
 import bisq.i18n.Res;
+import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.PriceFormatter;
+import bisq.presentation.formatters.TimeFormatter;
+import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -39,6 +45,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -49,7 +56,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.List;
-import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -69,7 +76,7 @@ public class MarketPriceComponent {
         @Getter
         private final View view;
         private final MarketPriceService marketPriceService;
-        private Pin selectedMarketPin, getMarketPriceUpdateTimestampPin;
+        private Pin selectedMarketPin, marketPricePin;
 
         private Controller(MarketPriceService marketPriceService) {
             this.marketPriceService = marketPriceService;
@@ -80,17 +87,19 @@ public class MarketPriceComponent {
 
         @Override
         public void onActivate() {
-            getMarketPriceUpdateTimestampPin = marketPriceService.getMarketPriceUpdateTimestamp().addObserver(ts ->
+            marketPricePin = marketPriceService.getMarketPriceByCurrencyMap().addObserver(() ->
                     UIThread.run(() -> {
                         List<ListItem> list = MarketRepository.getAllFiatMarkets().stream()
-                                .map(market -> marketPriceService.getMarketPriceByCurrencyMap().get(market))
-                                .filter(Objects::nonNull)
+                                .flatMap(market -> marketPriceService.findMarketPrice(market).stream())
                                 .map(ListItem::new)
                                 .collect(Collectors.toList());
                         model.items.setAll(list);
 
                         // We use the model.items in the selectedMarket handler code, so we only start the observer 
                         // registration once we got the list.
+                        if (selectedMarketPin != null) {
+                            selectedMarketPin.unbind();
+                        }
                         selectedMarketPin = marketPriceService.getSelectedMarket().addObserver(selectedMarket ->
                                 UIThread.run(() -> {
                                     if (selectedMarket != null) {
@@ -109,7 +118,7 @@ public class MarketPriceComponent {
 
         @Override
         public void onDeactivate() {
-            getMarketPriceUpdateTimestampPin.unbind();
+            marketPricePin.unbind();
             if (selectedMarketPin != null) {
                 selectedMarketPin.unbind();
             }
@@ -117,7 +126,7 @@ public class MarketPriceComponent {
 
         private void onSelected(MarketPriceComponent.ListItem selectedItem) {
             if (selectedItem != null) {
-                marketPriceService.select(selectedItem.marketPrice.getMarket());
+                marketPriceService.setSelectedMarket(selectedItem.marketPrice.getMarket());
             }
         }
     }
@@ -137,7 +146,10 @@ public class MarketPriceComponent {
         private final Label codes, price;
         private final ImageView arrow;
         private final ProgressBarWithLabel progressBarWithLabel;
+        private final Tooltip tooltip;
+        private final Label staleIcon;
         private Subscription pricePin;
+        private UIScheduler updateScheduler;
 
         private View(Model model, Controller controller) {
             super(new HBox(7), model, controller);
@@ -159,9 +171,19 @@ public class MarketPriceComponent {
             arrow.setMouseTransparent(true);
             arrow.setVisible(false);
             arrow.setManaged(false);
+
+            tooltip = new BisqTooltip();
+            Tooltip.install(root, tooltip);
+
+            staleIcon = Icons.getIcon(AwesomeIcon.WARNING_SIGN, "14");
+            staleIcon.getStyleClass().add("bisq-text-yellow");
+            staleIcon.setManaged(false);
+            staleIcon.setVisible(false);
+
             HBox.setMargin(progressBarWithLabel, new Insets(2.5, 0, 0, 0));
             HBox.setMargin(codes, new Insets(0, 5, 0, 0));
-            root.getChildren().addAll(codes, price, arrow, progressBarWithLabel);
+            HBox.setMargin(staleIcon, new Insets(0, 3, 0, 0));
+            root.getChildren().addAll(staleIcon, codes, price, arrow, progressBarWithLabel);
         }
 
         @Override
@@ -190,19 +212,38 @@ public class MarketPriceComponent {
                         250, 30, 20, 125)
                         .show();
             });
+            updateScheduler = UIScheduler.run(() -> {
+                        ListItem item = model.selected.get();
+                        boolean isStale = item.isStale();
+                        staleIcon.setManaged(isStale);
+                        staleIcon.setVisible(isStale);
+                        String isStalePostFix = isStale ? Res.get("component.marketPrice.tooltip.isStale") : "";
+
+                        tooltip.setText(Res.get("component.marketPrice.tooltip",
+                                item.provider,
+                                item.source,
+                                item.getAgeInSeconds(),
+                                item.date,
+                                isStalePostFix));
+                    })
+                    .periodically(1000);
         }
 
         @Override
         protected void onViewDetached() {
             codes.textProperty().unbind();
             pricePin.unsubscribe();
+            Tooltip.uninstall(root, tooltip);
             root.setOnMouseClicked(null);
+            updateScheduler.stop();
         }
 
-        protected ListCell<ListItem> getListCell() {
+        private ListCell<ListItem> getListCell() {
             return new ListCell<>() {
                 private final Label price, codes;
                 private final HBox hBox;
+                private final Tooltip tooltip;
+                private final Label staleIcon;
 
                 {
                     setCursor(Cursor.HAND);
@@ -216,8 +257,16 @@ public class MarketPriceComponent {
                     price.setMouseTransparent(true);
                     price.setId("bisq-text-20");
 
-                    hBox = new HBox(12, codes, price);
+                    staleIcon = Icons.getIcon(AwesomeIcon.WARNING_SIGN, "12");
+                    staleIcon.getStyleClass().add("bisq-text-yellow");
+                    staleIcon.setManaged(false);
+                    staleIcon.setVisible(false);
+
+                    HBox.setMargin(staleIcon, new Insets(0, 6, 0, -8));
+                    hBox = new HBox(12, staleIcon, codes, price);
                     hBox.setAlignment(Pos.CENTER_LEFT);
+
+                    tooltip = new BisqTooltip();
                 }
 
                 @Override
@@ -228,8 +277,23 @@ public class MarketPriceComponent {
                         price.setText(item.price);
                         codes.setText(item.codes);
 
+                        boolean isStale = item.isStale();
+                        staleIcon.setManaged(isStale);
+                        staleIcon.setVisible(isStale);
+                        String isStalePostFix = isStale ? Res.get("component.marketPrice.tooltip.isStale") : "";
+
+                        Tooltip.install(hBox, tooltip);
+                        String tooltipText = Res.get("component.marketPrice.tooltip",
+                                item.provider,
+                                item.source,
+                                item.getAgeInSeconds(),
+                                item.date,
+                                isStalePostFix);
+                        tooltip.setText(tooltipText);
+
                         setGraphic(hBox);
                     } else {
+                        Tooltip.uninstall(hBox, tooltip);
                         setGraphic(null);
                     }
                 }
@@ -237,16 +301,33 @@ public class MarketPriceComponent {
         }
     }
 
+    @Slf4j
     @EqualsAndHashCode
     private static class ListItem {
+        private static final long STALE_AGE = TimeUnit.MINUTES.toMillis(5);
+
         private final MarketPrice marketPrice;
         private final String price;
         private final String codes;
+        private final String provider;
+        private final String date;
+        private final String source;
 
         private ListItem(MarketPrice marketPrice) {
             this.marketPrice = marketPrice;
             codes = marketPrice.getMarket().getMarketCodes();
             price = PriceFormatter.format(marketPrice.getPriceQuote(), true);
+            provider = marketPrice.getProviderName();
+            source = Res.get("component.marketPrice.source." + marketPrice.getSource());
+            date = DateFormatter.formatDateTime(marketPrice.getTimestamp());
+        }
+
+        public boolean isStale() {
+            return System.currentTimeMillis() - marketPrice.getTimestamp() > STALE_AGE;
+        }
+
+        public String getAgeInSeconds() {
+            return TimeFormatter.getAgeInSeconds(System.currentTimeMillis() - marketPrice.getTimestamp());
         }
 
         @Override

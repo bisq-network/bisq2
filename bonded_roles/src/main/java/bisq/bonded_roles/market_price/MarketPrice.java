@@ -19,27 +19,62 @@ package bisq.bonded_roles.market_price;
 
 import bisq.common.currency.Market;
 import bisq.common.monetary.PriceQuote;
+import bisq.common.proto.Proto;
+import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
+import java.util.Optional;
+
+@Slf4j
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class MarketPrice {
-    private final PriceQuote priceQuote;
-    private final String code;
-    private final long timestamp;
-    private final String provider;
+public final class MarketPrice implements Proto {
+    public enum Source {
+        PERSISTED,
+        PROPAGATED_IN_NETWORK,
+        REQUESTED_FROM_PRICE_NODE
+    }
 
-    public MarketPrice(PriceQuote priceQuote, String code, long timestamp, String provider) {
+    private final PriceQuote priceQuote;
+    private final long timestamp;
+    private final MarketPriceProvider marketPriceProvider;
+    @Setter
+    private transient Source source;
+
+    public MarketPrice(PriceQuote priceQuote, long timestamp, MarketPriceProvider marketPriceProvider) {
         this.priceQuote = priceQuote;
-        this.code = code;
         this.timestamp = timestamp;
-        this.provider = provider;
+        this.marketPriceProvider = marketPriceProvider;
+    }
+
+    public bisq.bonded_roles.protobuf.MarketPrice toProto() {
+        return bisq.bonded_roles.protobuf.MarketPrice.newBuilder()
+                .setPriceQuote(priceQuote.toProto())
+                .setTimestamp(timestamp)
+                .setMarketPriceProvider(marketPriceProvider.toProto())
+                .build();
+    }
+
+    public static MarketPrice fromProto(bisq.bonded_roles.protobuf.MarketPrice proto) {
+        return new MarketPrice(PriceQuote.fromProto(proto.getPriceQuote()),
+                proto.getTimestamp(),
+                MarketPriceProvider.fromProto(proto.getMarketPriceProvider()));
     }
 
     public Market getMarket() {
         return priceQuote.getMarket();
+    }
+
+    public String getProviderName() {
+        return Optional.ofNullable(marketPriceProvider.getDisplayName()).orElse(Res.get("data.na"));
+    }
+
+    public long getAge() {
+        return System.currentTimeMillis() - timestamp;
     }
 }

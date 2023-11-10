@@ -20,6 +20,8 @@ package bisq.common.observable.map;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
+import java.util.Map;
+
 /**
  * Simple Observer which notifies about any change of the source map.
  *
@@ -40,6 +42,11 @@ final class SimpleHashMapObserver<K, V> implements HashMapObserver<K, V> {
 
     @Override
     public void put(K key, V value) {
+        onChange();
+    }
+
+    @Override
+    public void putAll(Map<? extends K, ? extends V> map) {
         onChange();
     }
 
