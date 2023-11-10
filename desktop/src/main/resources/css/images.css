@@ -150,6 +150,10 @@
     -fx-image: url("/images/waitingstates/fiat-payment.png");
 }
 
+#fiat-payment-confirmation {
+    -fx-image: url("/images/waitingstates/fiat-payment-confirmation.png");
+}
+
 #bitcoin-address {
     -fx-image: url("/images/waitingstates/bitcoin-address.png");
 }
