@@ -22,6 +22,8 @@ import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.currency.MarketRepository;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
+import bisq.desktop.common.Icons;
+import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqTooltip;
@@ -31,6 +33,7 @@ import bisq.i18n.Res;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.presentation.formatters.TimeFormatter;
+import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -53,6 +56,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -143,7 +147,9 @@ public class MarketPriceComponent {
         private final ImageView arrow;
         private final ProgressBarWithLabel progressBarWithLabel;
         private final Tooltip tooltip;
+        private final Label staleIcon;
         private Subscription pricePin;
+        private UIScheduler updateScheduler;
 
         private View(Model model, Controller controller) {
             super(new HBox(7), model, controller);
@@ -169,9 +175,15 @@ public class MarketPriceComponent {
             tooltip = new BisqTooltip();
             Tooltip.install(root, tooltip);
 
+            staleIcon = Icons.getIcon(AwesomeIcon.WARNING_SIGN, "14");
+            staleIcon.getStyleClass().add("bisq-text-yellow");
+            staleIcon.setManaged(false);
+            staleIcon.setVisible(false);
+
             HBox.setMargin(progressBarWithLabel, new Insets(2.5, 0, 0, 0));
             HBox.setMargin(codes, new Insets(0, 5, 0, 0));
-            root.getChildren().addAll(codes, price, arrow, progressBarWithLabel);
+            HBox.setMargin(staleIcon, new Insets(0, 3, 0, 0));
+            root.getChildren().addAll(staleIcon, codes, price, arrow, progressBarWithLabel);
         }
 
         @Override
@@ -200,14 +212,21 @@ public class MarketPriceComponent {
                         250, 30, 20, 125)
                         .show();
             });
-            root.setOnMouseEntered(e -> {
-                ListItem item = model.selected.get();
-                tooltip.setText(Res.get("component.marketPrice.tooltip",
-                        item.provider,
-                        item.source,
-                        TimeFormatter.getAgeInSeconds(System.currentTimeMillis() - item.marketPrice.getTimestamp()),
-                        item.date));
-            });
+            updateScheduler = UIScheduler.run(() -> {
+                        ListItem item = model.selected.get();
+                        boolean isStale = item.isStale();
+                        staleIcon.setManaged(isStale);
+                        staleIcon.setVisible(isStale);
+                        String isStalePostFix = isStale ? Res.get("component.marketPrice.tooltip.isStale") : "";
+
+                        tooltip.setText(Res.get("component.marketPrice.tooltip",
+                                item.provider,
+                                item.source,
+                                item.getAgeInSeconds(),
+                                item.date,
+                                isStalePostFix));
+                    })
+                    .periodically(1000);
         }
 
         @Override
@@ -216,14 +235,15 @@ public class MarketPriceComponent {
             pricePin.unsubscribe();
             Tooltip.uninstall(root, tooltip);
             root.setOnMouseClicked(null);
-            root.setOnMouseEntered(null);
+            updateScheduler.stop();
         }
 
-        protected ListCell<ListItem> getListCell() {
+        private ListCell<ListItem> getListCell() {
             return new ListCell<>() {
                 private final Label price, codes;
                 private final HBox hBox;
                 private final Tooltip tooltip;
+                private final Label staleIcon;
 
                 {
                     setCursor(Cursor.HAND);
@@ -237,9 +257,14 @@ public class MarketPriceComponent {
                     price.setMouseTransparent(true);
                     price.setId("bisq-text-20");
 
-                    hBox = new HBox(12, codes, price);
+                    staleIcon = Icons.getIcon(AwesomeIcon.WARNING_SIGN, "12");
+                    staleIcon.getStyleClass().add("bisq-text-yellow");
+                    staleIcon.setManaged(false);
+                    staleIcon.setVisible(false);
+
+                    HBox.setMargin(staleIcon, new Insets(0, 6, 0, -8));
+                    hBox = new HBox(12, staleIcon, codes, price);
                     hBox.setAlignment(Pos.CENTER_LEFT);
-                    setCursor(Cursor.HAND);
 
                     tooltip = new BisqTooltip();
                 }
@@ -251,12 +276,20 @@ public class MarketPriceComponent {
                     if (item != null && !empty) {
                         price.setText(item.price);
                         codes.setText(item.codes);
+
+                        boolean isStale = item.isStale();
+                        staleIcon.setManaged(isStale);
+                        staleIcon.setVisible(isStale);
+                        String isStalePostFix = isStale ? Res.get("component.marketPrice.tooltip.isStale") : "";
+
                         Tooltip.install(hBox, tooltip);
-                        tooltip.setText(Res.get("component.marketPrice.tooltip",
+                        String tooltipText = Res.get("component.marketPrice.tooltip",
                                 item.provider,
                                 item.source,
-                                TimeFormatter.getAgeInSeconds(System.currentTimeMillis() - item.marketPrice.getTimestamp()),
-                                item.date));
+                                item.getAgeInSeconds(),
+                                item.date,
+                                isStalePostFix);
+                        tooltip.setText(tooltipText);
 
                         setGraphic(hBox);
                     } else {
@@ -271,6 +304,8 @@ public class MarketPriceComponent {
     @Slf4j
     @EqualsAndHashCode
     private static class ListItem {
+        private static final long STALE_AGE = TimeUnit.MINUTES.toMillis(5);
+
         private final MarketPrice marketPrice;
         private final String price;
         private final String codes;
@@ -285,6 +320,14 @@ public class MarketPriceComponent {
             provider = marketPrice.getProviderName();
             source = Res.get("component.marketPrice.source." + marketPrice.getSource());
             date = DateFormatter.formatDateTime(marketPrice.getTimestamp());
+        }
+
+        public boolean isStale() {
+            return System.currentTimeMillis() - marketPrice.getTimestamp() > STALE_AGE;
+        }
+
+        public String getAgeInSeconds() {
+            return TimeFormatter.getAgeInSeconds(System.currentTimeMillis() - marketPrice.getTimestamp());
         }
 
         @Override

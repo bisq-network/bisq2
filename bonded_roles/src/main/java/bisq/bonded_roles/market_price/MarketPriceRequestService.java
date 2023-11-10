@@ -122,7 +122,7 @@ public class MarketPriceRequestService {
     private volatile boolean shutdownStarted;
     @Nullable
     private Scheduler scheduler;
-    private long initialDelay = 10;
+    private long initialDelay = 0;
 
     public MarketPriceRequestService(Config conf,
                                      Version version,
