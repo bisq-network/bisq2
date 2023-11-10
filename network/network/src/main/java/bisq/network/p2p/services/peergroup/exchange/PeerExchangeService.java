@@ -174,23 +174,23 @@ public class PeerExchangeService implements Node.Listener {
     }
 
     private boolean doPeerExchange(Address peerAddress) {
-        String connectionId = null;
+        String key = null;
         try {
             Connection connection = node.getConnection(peerAddress);
-            connectionId = connection.getId();
-            if (requestHandlerMap.containsKey(connectionId)) {
+            key = connection.getId();
+            if (requestHandlerMap.containsKey(key)) {
                 log.info("requestHandlerMap contains {}. " +
                                 "This can happen if the connection is still pending the response or the peer is not available " +
                                 "but the timeout has not triggered an exception yet. We consider the past request as failed. Connection={}",
-                        connectionId, connection);
+                        key, connection);
 
-                requestHandlerMap.get(connectionId).dispose();
-                requestHandlerMap.remove(connectionId);
+                requestHandlerMap.get(key).dispose();
+                requestHandlerMap.remove(key);
                 return false;
             }
 
             PeerExchangeRequestHandler handler = new PeerExchangeRequestHandler(node, connection);
-            requestHandlerMap.put(connectionId, handler);
+            requestHandlerMap.put(key, handler);
             Set<Peer> myPeers = peerExchangeStrategy.getPeersForReporting(peerAddress);
 
             // We request and wait for response
@@ -198,13 +198,13 @@ public class PeerExchangeService implements Node.Listener {
             log.info("Node {} completed peer exchange with {} and received {} reportedPeers.",
                     node, peerAddress, reportedPeers.size());
             peerExchangeStrategy.addReportedPeers(reportedPeers, peerAddress);
-            requestHandlerMap.remove(connectionId);
+            requestHandlerMap.remove(key);
             return true;
         } catch (Throwable throwable) {
-            if (connectionId != null) {
-                if (requestHandlerMap.containsKey(connectionId)) {
-                    requestHandlerMap.get(connectionId).dispose();
-                    requestHandlerMap.remove(connectionId);
+            if (key != null) {
+                if (requestHandlerMap.containsKey(key)) {
+                    requestHandlerMap.get(key).dispose();
+                    requestHandlerMap.remove(key);
                 }
             }
             log.debug("Node {} failed to do a peer exchange with {}.",
