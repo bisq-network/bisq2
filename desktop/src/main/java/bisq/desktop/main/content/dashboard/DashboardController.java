@@ -18,7 +18,6 @@
 package bisq.desktop.main.content.dashboard;
 
 import bisq.bisq_easy.BisqEasyNotificationsService;
-import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
@@ -46,7 +45,7 @@ public class DashboardController implements Controller {
     private final UserProfileService userProfileService;
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
     private final BisqEasyNotificationsService bisqEasyNotificationsService;
-    private Pin selectedMarketPin, getMarketPriceUpdateTimestampPin, getNumUserProfilesPin;
+    private Pin selectedMarketPin, marketPricePin, getNumUserProfilesPin;
     private boolean allowUpdateOffersOnline;
     private Pin isNotificationVisiblePin;
 
@@ -63,7 +62,7 @@ public class DashboardController implements Controller {
     @Override
     public void onActivate() {
         selectedMarketPin = marketPriceService.getSelectedMarket().addObserver(selectedMarket -> updateMarketPrice());
-        getMarketPriceUpdateTimestampPin = marketPriceService.getMarketPriceUpdateTimestamp().addObserver(ts -> updateMarketPrice());
+        marketPricePin = marketPriceService.getMarketPriceByCurrencyMap().addObserver(this::updateMarketPrice);
 
         getNumUserProfilesPin = userProfileService.getNumUserProfiles().addObserver(numUserProfiles ->
                 UIThread.run(() -> model.getActiveUsers().set(String.valueOf(userProfileService.getUserProfiles().size()))));
@@ -84,7 +83,7 @@ public class DashboardController implements Controller {
     @Override
     public void onDeactivate() {
         selectedMarketPin.unbind();
-        getMarketPriceUpdateTimestampPin.unbind();
+        marketPricePin.unbind();
         getNumUserProfilesPin.unbind();
         isNotificationVisiblePin.unbind();
     }
@@ -104,11 +103,13 @@ public class DashboardController implements Controller {
     private void updateMarketPrice() {
         Market selectedMarket = marketPriceService.getSelectedMarket().get();
         if (selectedMarket != null) {
-            UIThread.run(() -> {
-                MarketPrice marketPrice = marketPriceService.getMarketPriceByCurrencyMap().get(selectedMarket);
-                model.getMarketPrice().set(PriceFormatter.format(marketPrice.getPriceQuote(), true));
-                model.getMarketCode().set(marketPrice.getMarket().getMarketCodes());
-            });
+            marketPriceService.findMarketPrice(selectedMarket)
+                    .ifPresent(marketPrice -> {
+                        UIThread.run(() -> {
+                            model.getMarketPrice().set(PriceFormatter.format(marketPrice.getPriceQuote(), true));
+                            model.getMarketCode().set(marketPrice.getMarket().getMarketCodes());
+                        });
+                    });
         }
     }
 

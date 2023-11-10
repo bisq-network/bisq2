@@ -95,7 +95,7 @@ public class PriceInput {
         private final View view;
         private final PriceValidator validator = new PriceValidator();
         private final MarketPriceService marketPriceService;
-        private Pin getMarketPriceUpdateTimestampPin;
+        private Pin marketPricePin;
         private Subscription quotePin, pricePin;
 
         private Controller(MarketPriceService marketPriceService) {
@@ -122,12 +122,10 @@ public class PriceInput {
         public void onActivate() {
             updateFromMarketPrice();
 
-            getMarketPriceUpdateTimestampPin = marketPriceService.getMarketPriceUpdateTimestamp().addObserver(ts -> {
-                UIThread.run(() -> {
-                    // We only set it initially
-                    if (model.priceQuote.get() != null) return;
-                    setQuoteFromMarketPrice();
-                });
+            marketPricePin = marketPriceService.getMarketPriceByCurrencyMap().addObserver(() -> {
+                // We only set it initially
+                if (model.priceQuote.get() != null) return;
+                UIThread.run(this::setQuoteFromMarketPrice);
             });
 
             pricePin = EasyBind.subscribe(model.priceString, this::onPriceInput);
@@ -136,7 +134,7 @@ public class PriceInput {
 
         @Override
         public void onDeactivate() {
-            getMarketPriceUpdateTimestampPin.unbind();
+            marketPricePin.unbind();
             pricePin.unsubscribe();
             quotePin.unsubscribe();
             model.description.set(null);

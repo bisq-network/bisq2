@@ -115,7 +115,10 @@ public class DesktopApplicationService extends bisq.application.ApplicationServi
                 securityService,
                 networkService);
 
-        bondedRolesService = new BondedRolesService(BondedRolesService.Config.from(getConfig("bondedRoles")), config.getVersion(), networkService);
+        bondedRolesService = new BondedRolesService(BondedRolesService.Config.from(getConfig("bondedRoles")),
+                config.getVersion(),
+                getPersistenceService(),
+                networkService);
 
         accountService = new AccountService(persistenceService);
 

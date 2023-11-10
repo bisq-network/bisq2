@@ -49,7 +49,6 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -69,7 +68,7 @@ public class MarketPriceComponent {
         @Getter
         private final View view;
         private final MarketPriceService marketPriceService;
-        private Pin selectedMarketPin, getMarketPriceUpdateTimestampPin;
+        private Pin selectedMarketPin, marketPricePin;
 
         private Controller(MarketPriceService marketPriceService) {
             this.marketPriceService = marketPriceService;
@@ -80,17 +79,19 @@ public class MarketPriceComponent {
 
         @Override
         public void onActivate() {
-            getMarketPriceUpdateTimestampPin = marketPriceService.getMarketPriceUpdateTimestamp().addObserver(ts ->
+            marketPricePin = marketPriceService.getMarketPriceByCurrencyMap().addObserver(() ->
                     UIThread.run(() -> {
                         List<ListItem> list = MarketRepository.getAllFiatMarkets().stream()
-                                .map(market -> marketPriceService.getMarketPriceByCurrencyMap().get(market))
-                                .filter(Objects::nonNull)
+                                .flatMap(market -> marketPriceService.findMarketPrice(market).stream())
                                 .map(ListItem::new)
                                 .collect(Collectors.toList());
                         model.items.setAll(list);
 
                         // We use the model.items in the selectedMarket handler code, so we only start the observer 
                         // registration once we got the list.
+                        if (selectedMarketPin != null) {
+                            selectedMarketPin.unbind();
+                        }
                         selectedMarketPin = marketPriceService.getSelectedMarket().addObserver(selectedMarket ->
                                 UIThread.run(() -> {
                                     if (selectedMarket != null) {
@@ -109,7 +110,7 @@ public class MarketPriceComponent {
 
         @Override
         public void onDeactivate() {
-            getMarketPriceUpdateTimestampPin.unbind();
+            marketPricePin.unbind();
             if (selectedMarketPin != null) {
                 selectedMarketPin.unbind();
             }
@@ -117,7 +118,7 @@ public class MarketPriceComponent {
 
         private void onSelected(MarketPriceComponent.ListItem selectedItem) {
             if (selectedItem != null) {
-                marketPriceService.select(selectedItem.marketPrice.getMarket());
+                marketPriceService.setSelectedMarket(selectedItem.marketPrice.getMarket());
             }
         }
     }

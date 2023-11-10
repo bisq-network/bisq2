@@ -26,6 +26,7 @@ import bisq.bonded_roles.release.ReleaseNotificationsService;
 import bisq.common.application.Service;
 import bisq.common.util.Version;
 import bisq.network.NetworkService;
+import bisq.persistence.PersistenceService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -63,12 +64,11 @@ public class BondedRolesService implements Service {
     private final AlertService alertService;
     private final ReleaseNotificationsService releaseNotificationsService;
 
-    public BondedRolesService(Config config, Version version, NetworkService networkService) {
+    public BondedRolesService(Config config, Version version, PersistenceService persistenceService, NetworkService networkService) {
         authorizedBondedRolesService = new AuthorizedBondedRolesService(networkService, config.isIgnoreSecurityManager());
         bondedRoleRegistrationService = new BondedRoleRegistrationService(networkService, authorizedBondedRolesService);
-        marketPriceService = new MarketPriceService(MarketPriceService.Config.from(config.getMarketPriceServiceProviders()),
-                networkService,
-                version);
+        List<? extends com.typesafe.config.Config> marketPriceServiceProviders = config.getMarketPriceServiceProviders();
+        marketPriceService = new MarketPriceService(marketPriceServiceProviders, version, persistenceService, networkService);
         explorerService = new ExplorerService(ExplorerService.Config.from(config.getBlockchainExplorer()),
                 networkService,
                 version);

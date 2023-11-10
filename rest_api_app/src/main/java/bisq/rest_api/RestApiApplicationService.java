@@ -117,7 +117,10 @@ public class RestApiApplicationService extends ApplicationService {
                 securityService,
                 networkService);
 
-        bondedRolesService = new BondedRolesService(BondedRolesService.Config.from(getConfig("bondedRoles")), config.getVersion(), networkService);
+        bondedRolesService = new BondedRolesService(BondedRolesService.Config.from(getConfig("bondedRoles")),
+                config.getVersion(),
+                persistenceService,
+                networkService);
 
         accountService = new AccountService(persistenceService);
 
