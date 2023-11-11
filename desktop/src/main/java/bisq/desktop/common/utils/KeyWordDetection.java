@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+// Not used but keep it for potential future use
 public class KeyWordDetection {
     public static StyleSpans<Collection<String>> getStyleSpans(String text, List<String> customTags) {
         StyleSpansBuilder<Collection<String>> spansBuilder = new StyleSpansBuilder<>();

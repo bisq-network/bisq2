@@ -25,7 +25,6 @@ import java.util.Optional;
 
 @Slf4j
 public class ClipboardUtil {
-
     public static void copyToClipboard(String content) {
         try {
             if (content != null && content.length() > 0) {
@@ -39,7 +38,6 @@ public class ClipboardUtil {
             e.printStackTrace();
         }
     }
-
 
     public static Optional<String> getClipboardString() {
         try {
