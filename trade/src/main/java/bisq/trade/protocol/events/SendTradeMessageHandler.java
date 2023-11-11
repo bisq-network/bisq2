@@ -17,7 +17,7 @@
 
 package bisq.trade.protocol.events;
 
-import bisq.network.NetworkService;
+import bisq.network.SendMessageResult;
 import bisq.trade.ServiceProvider;
 import bisq.trade.Trade;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTradeMessage;
@@ -32,7 +32,7 @@ public abstract class SendTradeMessageHandler<M extends Trade<?, ?, ?>> extends 
         super(serviceProvider, model);
     }
 
-    protected CompletableFuture<NetworkService.SendMessageResult> sendMessage(BisqEasyTradeMessage message) {
+    protected CompletableFuture<SendMessageResult> sendMessage(BisqEasyTradeMessage message) {
         return sendMessage(message, serviceProvider, trade);
     }
 }

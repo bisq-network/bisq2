@@ -21,8 +21,7 @@ package bisq.network.p2p;
 import bisq.common.data.Pair;
 import bisq.common.observable.Observable;
 import bisq.common.util.CompletableFutureUtils;
-import bisq.common.util.NetworkUtils;
-import bisq.network.NetworkService;
+import bisq.network.SendMessageResult;
 import bisq.network.common.Address;
 import bisq.network.common.AddressByTransportTypeMap;
 import bisq.network.common.TransportConfig;
@@ -40,11 +39,8 @@ import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatusService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.peergroup.PeerGroupManager;
-import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.security.KeyPairService;
-import bisq.security.PubKey;
 import bisq.security.pow.ProofOfWorkService;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.Getter;
@@ -59,9 +55,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static bisq.network.NetworkService.NETWORK_IO_POOL;
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static java.util.concurrent.CompletableFuture.runAsync;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 /**
@@ -178,11 +172,11 @@ public class ServiceNodesByTransport {
         });
     }
 
-    public NetworkService.SendMessageResult confidentialSend(EnvelopePayloadMessage envelopePayloadMessage,
-                                                             NetworkId receiverNetworkId,
-                                                             KeyPair senderKeyPair,
-                                                             NetworkId senderNetworkId) {
-        NetworkService.SendMessageResult sendMessageResult = new NetworkService.SendMessageResult();
+    public SendMessageResult confidentialSend(EnvelopePayloadMessage envelopePayloadMessage,
+                                              NetworkId receiverNetworkId,
+                                              KeyPair senderKeyPair,
+                                              NetworkId senderNetworkId) {
+        SendMessageResult sendMessageResult = new SendMessageResult();
         receiverNetworkId.getAddressByTransportTypeMap().forEach((transportType, address) -> {
             if (map.containsKey(transportType)) {
                 ServiceNode serviceNode = map.get(transportType);

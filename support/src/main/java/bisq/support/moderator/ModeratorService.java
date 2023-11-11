@@ -29,6 +29,7 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
+import bisq.network.SendMessageResult;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageListener;
 import bisq.network.p2p.services.data.DataService;
@@ -176,9 +177,9 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
         return networkService.removeAuthorizedData(data, keyPair);
     }
 
-    public CompletableFuture<NetworkService.SendMessageResult> contactUser(ChatChannelDomain chatChannelDomain,
-                                                                           UserProfile userProfile,
-                                                                           Optional<String> citationMessage) {
+    public CompletableFuture<SendMessageResult> contactUser(ChatChannelDomain chatChannelDomain,
+                                                            UserProfile userProfile,
+                                                            Optional<String> citationMessage) {
         if (!twoPartyPrivateChatChannelServices.containsKey(chatChannelDomain)) {
             return CompletableFuture.failedFuture(new RuntimeException("No twoPartyPrivateChatChannelService present for " + chatChannelDomain));
         }

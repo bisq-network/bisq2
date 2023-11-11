@@ -17,13 +17,13 @@
 
 package bisq.desktop.common.utils;
 
-import bisq.network.NetworkService;
+import bisq.network.SendMessageResult;
 
 import java.util.Optional;
 
 public class SendMessageResultUtil {
 
-    public static Optional<String> findAnyErrorMsg(NetworkService.SendMessageResult result) {
+    public static Optional<String> findAnyErrorMsg(SendMessageResult result) {
         return result.entrySet().stream()
                 .filter(e -> e.getValue().getErrorMsg().isPresent())
                 .map(e -> e.getKey().name() + ": " + e.getValue().getErrorMsg().get())

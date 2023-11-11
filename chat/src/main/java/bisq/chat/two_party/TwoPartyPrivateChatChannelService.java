@@ -24,6 +24,7 @@ import bisq.chat.priv.PrivateChatChannelService;
 import bisq.common.observable.collection.ObservableArray;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
+import bisq.network.SendMessageResult;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
@@ -97,9 +98,9 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
         super.leaveChannel(channel);
     }
 
-    public CompletableFuture<NetworkService.SendMessageResult> sendTextMessage(String text,
-                                                                               Optional<Citation> citation,
-                                                                               TwoPartyPrivateChatChannel channel) {
+    public CompletableFuture<SendMessageResult> sendTextMessage(String text,
+                                                                Optional<Citation> citation,
+                                                                TwoPartyPrivateChatChannel channel) {
         return sendMessage(StringUtils.createUid(),
                 text,
                 citation,

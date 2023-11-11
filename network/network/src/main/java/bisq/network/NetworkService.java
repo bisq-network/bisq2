@@ -23,6 +23,8 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.CompletableFutureUtils;
+import bisq.network.common.AddressByTransportTypeMap;
+import bisq.network.common.TransportType;
 import bisq.network.http.BaseHttpClient;
 import bisq.network.http.HttpClientRepository;
 import bisq.network.identity.NetworkId;
@@ -33,9 +35,7 @@ import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.network_load.NetworkLoadService;
 import bisq.network.p2p.node.transport.BootstrapInfo;
-import bisq.network.common.TransportType;
 import bisq.network.p2p.services.confidential.ConfidentialMessageListener;
-import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatusService;
@@ -47,7 +47,6 @@ import bisq.network.p2p.services.data.storage.auth.DefaultAuthenticatedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.network.p2p.services.monitor.MonitorService;
-import bisq.network.common.AddressByTransportTypeMap;
 import bisq.network.p2p.vo.NetworkIdWithKeyPair;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
@@ -65,7 +64,10 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
@@ -86,12 +88,6 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     public static final String NETWORK_DB_PATH = "db" + File.separator + "network";
     public static final ExecutorService NETWORK_IO_POOL = ExecutorFactory.newCachedThreadPool("NetworkService.network-IO-pool");
     public static final ExecutorService DISPATCHER = ExecutorFactory.newSingleThreadExecutor("NetworkService.dispatcher");
-
-    public static class SendMessageResult extends HashMap<TransportType, ConfidentialMessageService.Result> {
-        public SendMessageResult() {
-            super();
-        }
-    }
 
     @Getter
     private final NetworkServiceStore persistableStore = new NetworkServiceStore();
