@@ -20,7 +20,7 @@ package bisq.desktop.components.controls;
 import javafx.scene.control.Tooltip;
 import javafx.util.Duration;
 
-// Show delay from css is not 
+// Setting show delay by css does not work
 public class BisqTooltip extends Tooltip {
     public BisqTooltip() {
         setShowDelay(Duration.millis(100));

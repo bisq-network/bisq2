@@ -28,7 +28,6 @@ import javax.annotation.Nullable;
 import java.util.List;
 
 @Slf4j
-
 public abstract class TextList extends VBox {
     public TextList(String text, @Nullable String style, double gap, double vSpacing, String regex, @Nullable String mark) {
         setFillWidth(true);
