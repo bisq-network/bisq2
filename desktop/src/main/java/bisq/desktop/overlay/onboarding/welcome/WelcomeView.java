@@ -19,6 +19,7 @@ package bisq.desktop.overlay.onboarding.welcome;
 
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.WrappingText;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -60,8 +61,7 @@ public class WelcomeView extends View<VBox, WelcomeModel, WelcomeController> {
         hBox.setAlignment(Pos.CENTER);
         hBox.setPadding(new Insets(20));
 
-        VBox.setMargin(logo, new Insets(50, 0, -10, 0));
-        VBox.setMargin(hBox, new Insets(0, 0, 0, 0));
+        VBox.setMargin(logo, new Insets(50, 0, 0, 0));
         VBox.setMargin(nextButton, new Insets(30, 0, 30, 0));
         root.getChildren().addAll(logo,
                 headlineLabel,
@@ -84,15 +84,13 @@ public class WelcomeView extends View<VBox, WelcomeModel, WelcomeController> {
         ImageView icon = ImageUtil.getImageViewById(imageId);
 
         Label headlineLabel = new Label(headline);
-        headlineLabel.getStyleClass().addAll("bisq-text-headline-2");
+        headlineLabel.getStyleClass().addAll("bisq2-welcome-sub-headline");
 
-        Label contentLabel = new Label(content);
-        contentLabel.getStyleClass().addAll("bisq-text-3");
-        contentLabel.setWrapText(true);
+        WrappingText contentLabel = new WrappingText(content, "bisq2-welcome-content");
         contentLabel.setTextAlignment(TextAlignment.CENTER);
-        contentLabel.setAlignment(Pos.CENTER);
         contentLabel.setPrefWidth(350);
 
+        VBox.setMargin(contentLabel, new Insets(-8, 0, 0, 0));
         VBox vBox = new VBox(16, icon, headlineLabel, contentLabel);
         vBox.setAlignment(Pos.CENTER);
 
