@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.common.validation;
+package bisq.desktop.components.controls.validator.deprecated;
 
 
 import bisq.desktop.components.controls.validator.ValidatorBase;
