@@ -79,6 +79,7 @@ public class ImageUtil {
     }
 
     public static void addAppIcons(Stage stage) {
+        stage.getIcons().add(ImageUtil.getImageByPath("images/app_window/icon_512.png"));
         stage.getIcons().add(ImageUtil.getImageByPath("images/app_window/icon_256.png"));
         stage.getIcons().add(ImageUtil.getImageByPath("images/app_window/icon_128.png"));
         stage.getIcons().add(ImageUtil.getImageByPath("images/app_window/icon_64.png"));
