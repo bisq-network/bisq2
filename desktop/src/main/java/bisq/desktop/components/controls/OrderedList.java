@@ -22,10 +22,8 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 @Slf4j
-
 public class OrderedList extends TextList {
     private static final String REGEX = "\\d+\\.\\s+";
-    private static final String MARK = null;
 
     public OrderedList(String text, String style) {
         this(text, style, 7, 0);

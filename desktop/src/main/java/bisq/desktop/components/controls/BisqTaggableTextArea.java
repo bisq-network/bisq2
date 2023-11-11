@@ -22,6 +22,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.fxmisc.richtext.StyleClassedTextArea;
 
+// Not used but keep for potential use
 public class BisqTaggableTextArea extends StyleClassedTextArea {
     @Setter
     @Getter
