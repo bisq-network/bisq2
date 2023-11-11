@@ -41,6 +41,7 @@ import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatusService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.peergroup.PeerGroupManager;
+import bisq.network.utils.SendMessageResult;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -217,11 +218,11 @@ public class ServiceNodesByTransport implements PersistenceClient<ServiceNodesBy
         });
     }
 
-    public NetworkService.SendMessageResult confidentialSend(EnvelopePayloadMessage envelopePayloadMessage,
-                                                             NetworkId receiverNetworkId,
-                                                             KeyPair senderKeyPair,
-                                                             String senderNodeId) {
-        NetworkService.SendMessageResult sendMessageResult = new NetworkService.SendMessageResult();
+    public SendMessageResult confidentialSend(EnvelopePayloadMessage envelopePayloadMessage,
+                                              NetworkId receiverNetworkId,
+                                              KeyPair senderKeyPair,
+                                              String senderNodeId) {
+        SendMessageResult sendMessageResult = new SendMessageResult();
         receiverNetworkId.getAddressByTransportTypeMap().forEach((transportType, address) -> {
             if (map.containsKey(transportType)) {
                 ServiceNode serviceNode = map.get(transportType);

@@ -24,6 +24,7 @@ import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.vo.NetworkIdWithKeyPair;
+import bisq.network.utils.SendMessageResult;
 import bisq.persistence.PersistableStore;
 import bisq.security.pow.ProofOfWorkService;
 import bisq.user.UserService;
@@ -78,13 +79,13 @@ public abstract class PrivateChatChannelService<
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    protected CompletableFuture<NetworkService.SendMessageResult> sendMessage(String messageId,
-                                                                              @Nullable String text,
-                                                                              Optional<Citation> citation,
-                                                                              C channel,
-                                                                              UserProfile receiver,
-                                                                              ChatMessageType chatMessageType,
-                                                                              long date) {
+    protected CompletableFuture<SendMessageResult> sendMessage(String messageId,
+                                                               @Nullable String text,
+                                                               Optional<Citation> citation,
+                                                               C channel,
+                                                               UserProfile receiver,
+                                                               ChatMessageType chatMessageType,
+                                                               long date) {
         UserIdentity myUserIdentity = channel.getMyUserIdentity();
         if (bannedUserService.isUserProfileBanned(myUserIdentity.getUserProfile())) {
             return CompletableFuture.failedFuture(new RuntimeException());
@@ -120,7 +121,7 @@ public abstract class PrivateChatChannelService<
         persist();
     }
 
-    protected CompletableFuture<NetworkService.SendMessageResult> sendLeaveMessage(C channel, UserProfile receiver, long date) {
+    protected CompletableFuture<SendMessageResult> sendLeaveMessage(C channel, UserProfile receiver, long date) {
         return sendMessage(StringUtils.createUid(),
                 Res.get("chat.privateChannel.message.leave", channel.getMyUserIdentity().getUserProfile().getUserName()),
                 Optional.empty(),
