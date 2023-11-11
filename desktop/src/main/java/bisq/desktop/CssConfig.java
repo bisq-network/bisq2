@@ -15,15 +15,15 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.common.utils;
+package bisq.desktop;
 
 import javafx.scene.Scene;
 
 import static java.util.Objects.requireNonNull;
 
-public class SceneUtil {
-    public static void configCss(Scene scene) {
-        Class<? extends SceneUtil> aClass = SceneUtil.class;
+public class CssConfig {
+    public static void addAllCss(Scene scene) {
+        Class<? extends CssConfig> aClass = CssConfig.class;
         scene.getStylesheets().setAll(
                 requireNonNull(aClass.getResource("/css/base.css")).toExternalForm(),
                 requireNonNull(aClass.getResource("/css/text.css")).toExternalForm(),
