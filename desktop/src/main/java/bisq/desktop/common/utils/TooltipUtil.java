@@ -24,8 +24,8 @@ import javafx.scene.control.SkinBase;
 import javafx.scene.control.Tooltip;
 import javafx.scene.text.Text;
 
+// Not used but keep as potentially useful
 public class TooltipUtil {
-
     public static void showTooltipIfTruncated(SkinBase<? extends Control> skinBase, Labeled labeled) {
         for (Object node : skinBase.getChildren()) {
             if (node instanceof Text) {

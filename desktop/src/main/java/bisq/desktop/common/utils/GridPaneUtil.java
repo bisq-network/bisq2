@@ -16,9 +16,6 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * SLF4J implementation using Lombok.
- */
 @Slf4j
 public class GridPaneUtil {
     /**
