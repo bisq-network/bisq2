@@ -19,8 +19,8 @@ package bisq.desktop.main.content.wallet.send;
 
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.common.validation.MonetaryValidator;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.components.controls.validator.deprecated.MonetaryValidator;
 import bisq.desktop.components.overlay.Popup;
 import bisq.wallets.core.WalletService;
 import lombok.Getter;
