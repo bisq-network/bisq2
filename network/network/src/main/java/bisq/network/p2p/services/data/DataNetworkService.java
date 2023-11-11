@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data;
 
+import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
@@ -47,7 +48,7 @@ public class DataNetworkService implements PeerGroupManager.Listener, Node.Liste
     private final PeerGroupManager peerGroupManager;
 
     public interface Listener {
-        void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, String nodeId);
+        void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId);
 
         void onStateChanged(PeerGroupManager.State state, DataNetworkService dataNetworkService);
 
@@ -94,8 +95,8 @@ public class DataNetworkService implements PeerGroupManager.Listener, Node.Liste
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, String nodeId) {
-        listeners.forEach(listener -> listener.onMessage(envelopePayloadMessage, connection, nodeId));
+    public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
+        listeners.forEach(listener -> listener.onMessage(envelopePayloadMessage, connection, networkId));
     }
 
     @Override

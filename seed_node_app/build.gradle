@@ -21,6 +21,7 @@ dependencies {
     implementation project(':security')
     implementation project(':bonded_roles')
     implementation project(':application')
+    implementation project(':identity')
 
     implementation 'network:common'
     implementation 'network:network'

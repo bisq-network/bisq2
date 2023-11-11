@@ -24,6 +24,7 @@ dependencies {
     implementation project(':application')
 
     implementation 'network:common'
+    implementation 'network:network-identity'
     implementation 'network:network'
 
     implementation libs.google.gson

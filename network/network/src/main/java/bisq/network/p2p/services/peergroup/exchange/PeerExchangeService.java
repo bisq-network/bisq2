@@ -20,6 +20,7 @@ package bisq.network.p2p.services.peergroup.exchange;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.StringUtils;
 import bisq.network.common.Address;
+import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
@@ -65,7 +66,7 @@ public class PeerExchangeService implements Node.Listener {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, String nodeId) {
+    public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
         if (envelopePayloadMessage instanceof PeerExchangeRequest) {
             PeerExchangeRequest request = (PeerExchangeRequest) envelopePayloadMessage;
             //log.debug("Node {} received PeerExchangeRequest with myPeers {}", node, request.peers());

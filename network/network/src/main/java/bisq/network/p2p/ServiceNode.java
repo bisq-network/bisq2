@@ -23,7 +23,9 @@ import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.NetworkUtils;
 import bisq.network.NetworkService;
 import bisq.network.common.Address;
+import bisq.network.common.AddressByTransportTypeMap;
 import bisq.network.common.TransportType;
+import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
@@ -49,7 +51,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.security.KeyPair;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -106,19 +107,32 @@ public class ServiceNode {
         MONITOR
     }
 
+    private final Config config;
+    private final Node.Config nodeConfig;
+    private final PeerGroupManager.Config peerGroupServiceConfig;
+    private final Optional<DataService> dataService;
+    private final Optional<MessageDeliveryStatusService> messageDeliveryStatusService;
+    private final KeyPairService keyPairService;
+    private final PersistenceService persistenceService;
+    private final Set<Address> seedNodeAddresses;
+    private final TransportType transportType;
+    private final NetworkLoadService networkLoadService;
+
     @Getter
     private final NodesById nodesById;
     @Getter
     private final TransportService transportService;
+    private final BanList banList = new BanList();
+
     @Getter
-    private final Node defaultNode;
+    private Node defaultNode;
     private final int defaultNodePort;
     @Getter
-    private final Optional<ConfidentialMessageService> confidentialMessageService;
+    private Optional<ConfidentialMessageService> confidentialMessageService = Optional.empty();
     @Getter
-    private final Optional<PeerGroupManager> peerGroupService;
+    private Optional<PeerGroupManager> peerGroupService = Optional.empty();
     @Getter
-    private final Optional<DataNetworkService> dataServicePerTransport;
+    private Optional<DataNetworkService> dataServicePerTransport = Optional.empty();
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     @Getter
     public Observable<State> state = new Observable<>(State.NEW);
@@ -133,12 +147,24 @@ public class ServiceNode {
                        Set<Address> seedNodeAddresses,
                        TransportType transportType,
                        NetworkLoadService networkLoadService) {
-        BanList banList = new BanList();
+        this.config = config;
+        this.nodeConfig = nodeConfig;
+        this.peerGroupServiceConfig = peerGroupServiceConfig;
+        this.messageDeliveryStatusService = messageDeliveryStatusService;
+        this.dataService = dataService;
+        this.keyPairService = keyPairService;
+        this.persistenceService = persistenceService;
+        this.seedNodeAddresses = seedNodeAddresses;
+        this.transportType = transportType;
+        this.networkLoadService = networkLoadService;
 
         transportService = TransportService.create(transportType, nodeConfig.getTransportConfig());
         nodesById = new NodesById(banList, nodeConfig, transportService, networkLoadService);
-        defaultNode = nodesById.createAndConfigNode(Node.DEFAULT);
         defaultNodePort = nodeConfig.getTransportConfig().getDefaultNodePort();
+    }
+
+    public void createDefaultNode(NetworkId defaultNetworkId) {
+        defaultNode = nodesById.createAndConfigNode(defaultNetworkId);
 
         Set<Service> services = config.getServices();
         peerGroupService = services.contains(Service.PEER_GROUP) ?
@@ -159,27 +185,25 @@ public class ServiceNode {
         confidentialMessageService = services.contains(Service.CONFIDENTIAL) ?
                 Optional.of(new ConfidentialMessageService(nodesById, keyPairService, dataService, messageDeliveryStatusService)) :
                 Optional.empty();
+
+        initializeTransport();
+        initializeDefaultNode();
+        initializePeerGroup();
     }
 
-    void initializeTransport() {
+    private void initializeTransport() {
         setState(State.INITIALIZE_TRANSPORT);
         transportService.initialize();
         setState(State.TRANSPORT_INITIALIZED);
     }
 
-    void initializeDefaultNode(Optional<Integer> persistedDefaultNodePort) {
-        int port;
-        if (defaultNodePort > -1) {
-            port = defaultNodePort;
-        } else {
-            port = persistedDefaultNodePort.orElse(NetworkUtils.findFreeSystemPort());
-        }
+    private void initializeDefaultNode() {
         setState(State.INITIALIZE_DEFAULT_NODE);
-        defaultNode.initialize(port);
+        defaultNode.initialize();
         setState(State.DEFAULT_NODE_INITIALIZED);
     }
 
-    void initializePeerGroup() {
+    private void initializePeerGroup() {
         peerGroupService.ifPresent(peerGroupService -> {
             setState(State.INITIALIZE_PEER_GROUP);
             peerGroupService.initialize();
@@ -187,9 +211,8 @@ public class ServiceNode {
         });
     }
 
-    Node getInitializedNode(String nodeId, Optional<Integer> persistedNodePort) {
-        int port = persistedNodePort.orElse(NetworkUtils.findFreeSystemPort());
-        return nodesById.getInitializedNode(nodeId, port);
+    Node getInitializedNode(NetworkId networkId) {
+        return nodesById.getInitializedNode(networkId);
     }
 
     public CompletableFuture<Boolean> shutdown() {
@@ -212,8 +235,8 @@ public class ServiceNode {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-    public boolean isNodeInitialized(String nodeId) {
-        return nodesById.isNodeInitialized(nodeId);
+    public boolean isNodeInitialized(NetworkId networkId) {
+        return nodesById.isNodeInitialized(networkId);
     }
 
     public void addSeedNodeAddress(Address seedNodeAddress) {
@@ -228,20 +251,20 @@ public class ServiceNode {
                                                               Address address,
                                                               PubKey receiverPubKey,
                                                               KeyPair senderKeyPair,
-                                                              String senderNodeId) {
+                                                              NetworkId senderNetworkId) {
         checkArgument(confidentialMessageService.isPresent(), "ConfidentialMessageService not present at confidentialSend");
-        return confidentialMessageService.get().send(envelopePayloadMessage, address, receiverPubKey, senderKeyPair, senderNodeId);
+        return confidentialMessageService.get().send(envelopePayloadMessage, address, receiverPubKey, senderKeyPair, senderNetworkId);
     }
 
-    public Connection send(String senderNodeId, EnvelopePayloadMessage envelopePayloadMessage, Address address) {
-        return getNodesById().send(senderNodeId, envelopePayloadMessage, address);
+    public Connection send(NetworkId senderNetworkId, EnvelopePayloadMessage envelopePayloadMessage, Address address) {
+        return getNodesById().send(senderNetworkId, envelopePayloadMessage, address);
     }
 
     public void addMessageListener(MessageListener messageListener) {
         //todo rename NodeListener
         nodesById.addNodeListener(new Node.Listener() {
             @Override
-            public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, String nodeId) {
+            public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
                 messageListener.onMessage(envelopePayloadMessage);
             }
 
@@ -281,16 +304,8 @@ public class ServiceNode {
         return defaultNode.getSocksProxy();
     }
 
-    public Map<String, Address> getAddressesByNodeId() {
-        return nodesById.getAddressesByNodeId();
-    }
-
-    public Optional<Node> findNode(String nodeId) {
-        return nodesById.findNode(nodeId);
-    }
-
-    public Optional<Address> findMyAddress(String nodeId) {
-        return nodesById.findMyAddress(nodeId);
+    public Optional<Node> findNode(NetworkId networkId) {
+        return nodesById.findNode(networkId);
     }
 
     private void setState(State newState) {

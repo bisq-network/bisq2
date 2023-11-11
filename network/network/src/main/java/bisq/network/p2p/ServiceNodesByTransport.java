@@ -28,7 +28,6 @@ import bisq.network.common.AddressByTransportTypeMap;
 import bisq.network.common.TransportConfig;
 import bisq.network.common.TransportType;
 import bisq.network.identity.NetworkId;
-import bisq.network.identity.TorIdentity;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
@@ -70,12 +69,7 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
  */
 // TODO: if we change the supported transports we need to clean up the persisted networkIds.
 @Slf4j
-public class ServiceNodesByTransport implements PersistenceClient<ServiceNodesByTransportStore> {
-    @Getter
-    private final ServiceNodesByTransportStore persistableStore = new ServiceNodesByTransportStore();
-    private final KeyPairService keyPairService;
-    @Getter
-    private final Persistence<ServiceNodesByTransportStore> persistence;
+public class ServiceNodesByTransport {
     @Getter
     private final Map<TransportType, ServiceNode> map = new ConcurrentHashMap<>();
     private final Set<TransportType> supportedTransportTypes;
@@ -92,12 +86,6 @@ public class ServiceNodesByTransport implements PersistenceClient<ServiceNodesBy
                                    ProofOfWorkService proofOfWorkService,
                                    NetworkLoadService networkLoadService) {
         this.supportedTransportTypes = supportedTransportTypes;
-        this.keyPairService = keyPairService;
-
-        persistence = persistenceService.getOrCreatePersistence(this,
-                NetworkService.NETWORK_DB_PATH,
-                persistableStore.getClass().getSimpleName(),
-                persistableStore);
 
         supportedTransportTypes.forEach(transportType -> {
             TransportConfig transportConfig = configByTransportType.get(transportType);
@@ -122,8 +110,6 @@ public class ServiceNodesByTransport implements PersistenceClient<ServiceNodesBy
                     networkLoadService);
             map.put(transportType, serviceNode);
         });
-
-        setupDefaultNodeInitializeObserver();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -135,54 +121,29 @@ public class ServiceNodesByTransport implements PersistenceClient<ServiceNodesBy
      * successfully completed. In case all fail, we complete exceptionally.
      */
     public CompletableFuture<Boolean> initialize() {
-        // We initialize all service nodes per transport type in parallel. As soon one has completed we
-        // return a success state.
-        String defaultNodeId = Node.DEFAULT;
-        Optional<NetworkId> persistedDefaultNodeId = findPersistedNetworkId(defaultNodeId);
-        Stream<CompletableFuture<Void>> futures = map.entrySet().stream()
-                .map(entry -> runAsync(() -> {
-                    ServiceNode serviceNode = entry.getValue();
-                    serviceNode.initializeTransport();
-
-                    TransportType transportType = entry.getKey();
-                    Optional<Integer> persistedDefaultNodePort = persistedDefaultNodeId
-                            .map(e -> e.getAddressByTransportTypeMap().get(transportType).getPort());
-                    serviceNode.initializeDefaultNode(persistedDefaultNodePort);
-                    serviceNode.findNode(defaultNodeId)
-                            .ifPresent(node -> maybePersistNetworkId(transportType, node, keyPairService.getDefaultPubKey()));
-
-                    serviceNode.initializePeerGroup();
-                }, NETWORK_IO_POOL));
-        return CompletableFutureUtils.anyOf(futures).thenApply(nil -> true);
+        return CompletableFuture.completedFuture(true);
     }
 
-    public Map<TransportType, CompletableFuture<Node>> getInitializedNodeByTransport(String nodeId, PubKey pubKey) {
+    public Map<TransportType, CompletableFuture<Node>> getInitializedNodeByTransport(NetworkId networkId) {
         // We initialize all service nodes per transport type in parallel. As soon one has completed we
         // return a success state.
-        Optional<NetworkId> persistedNodeId = findPersistedNetworkId(nodeId, pubKey);
         return map.entrySet().stream()
                 .collect(Collectors.toMap(entry -> entry.getKey(),
                         entry -> supplyAsync(() -> {
                             ServiceNode serviceNode = entry.getValue();
-                            if (serviceNode.isNodeInitialized(nodeId)) {
-                                return serviceNode.findNode(nodeId).orElseThrow();
+                            if (serviceNode.isNodeInitialized(networkId)) {
+                                return serviceNode.findNode(networkId).orElseThrow();
                             } else {
-                                TransportType transportType = entry.getKey();
-                                Optional<Integer> persistedNodePort = persistedNodeId
-                                        .map(e -> e.getAddressByTransportTypeMap().get(transportType).getPort());
-                                Node node = serviceNode.getInitializedNode(nodeId, persistedNodePort);
-                                maybePersistNetworkId(transportType, node, pubKey);
-                                return node;
+                                return serviceNode.getInitializedNode(networkId);
                             }
                         }, NETWORK_IO_POOL)));
     }
 
-    public CompletableFuture<NetworkId> getNetworkIdOfInitializedNode(String nodeId, PubKey pubKey) {
-        Collection<CompletableFuture<Node>> futures = getInitializedNodeByTransport(nodeId, pubKey).values();
+    public CompletableFuture<List<Node>> getNetworkIdOfInitializedNode(NetworkId networkId) {
+        Collection<CompletableFuture<Node>> futures = getInitializedNodeByTransport(networkId).values();
         // As we persist networkIds after initialize, and we require all futures to be completed we can be sure that
         // the networkId is complete with all addresses of all our supported transports.
-        return CompletableFutureUtils.allOf(futures)
-                .thenApply(pairList -> getPersistedNetworkId(nodeId, pubKey));
+        return CompletableFutureUtils.allOf(futures);
     }
 
     public CompletableFuture<Boolean> shutdown() {
@@ -194,13 +155,13 @@ public class ServiceNodesByTransport implements PersistenceClient<ServiceNodesBy
                 });
     }
 
-    public boolean isNodeOnAllTransportsInitialized(String nodeId) {
+    public boolean isNodeOnAllTransportsInitialized(NetworkId networkId) {
         return map.values().stream()
-                .allMatch(serviceNode -> serviceNode.isNodeInitialized(nodeId));
+                .allMatch(serviceNode -> serviceNode.isNodeInitialized(networkId));
     }
 
-    public boolean isInitialized(TransportType transportType, String nodeId) {
-        return map.get(transportType).isNodeInitialized(nodeId);
+    public boolean isInitialized(TransportType transportType, NetworkId networkId) {
+        return map.get(transportType).isNodeInitialized(networkId);
     }
 
     public void addSeedNode(AddressByTransportTypeMap seedNode) {
@@ -220,7 +181,7 @@ public class ServiceNodesByTransport implements PersistenceClient<ServiceNodesBy
     public NetworkService.SendMessageResult confidentialSend(EnvelopePayloadMessage envelopePayloadMessage,
                                                              NetworkId receiverNetworkId,
                                                              KeyPair senderKeyPair,
-                                                             String senderNodeId) {
+                                                             NetworkId senderNetworkId) {
         NetworkService.SendMessageResult sendMessageResult = new NetworkService.SendMessageResult();
         receiverNetworkId.getAddressByTransportTypeMap().forEach((transportType, address) -> {
             if (map.containsKey(transportType)) {
@@ -229,20 +190,20 @@ public class ServiceNodesByTransport implements PersistenceClient<ServiceNodesBy
                         address,
                         receiverNetworkId.getPubKey(),
                         senderKeyPair,
-                        senderNodeId);
+                        senderNetworkId);
                 sendMessageResult.put(transportType, result);
             }
         });
         return sendMessageResult;
     }
 
-    public Map<TransportType, Connection> send(String senderNodeId,
+    public Map<TransportType, Connection> send(NetworkId senderNetworkId,
                                                EnvelopePayloadMessage envelopePayloadMessage,
                                                AddressByTransportTypeMap receiver) {
         return receiver.entrySet().stream().map(entry -> {
                     TransportType transportType = entry.getKey();
                     if (map.containsKey(transportType)) {
-                        return new Pair<>(transportType, map.get(transportType).send(senderNodeId, envelopePayloadMessage, entry.getValue()));
+                        return new Pair<>(transportType, map.get(transportType).send(senderNetworkId, envelopePayloadMessage, entry.getValue()));
                     } else {
                         return null;
                     }
@@ -303,75 +264,8 @@ public class ServiceNodesByTransport implements PersistenceClient<ServiceNodesBy
         return Optional.ofNullable(map.get(transport));
     }
 
-    public Optional<Node> findNode(TransportType transport, String nodeId) {
+    public Optional<Node> findNode(TransportType transport, NetworkId networkId) {
         return findServiceNode(transport)
-                .flatMap(serviceNode -> serviceNode.findNode(nodeId));
-    }
-
-    public Map<TransportType, Map<String, Address>> getAddressesByNodeIdMapByTransportType() {
-        return map.entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().getAddressesByNodeId()));
-    }
-
-    public Optional<Map<String, Address>> findAddressesByNodeId(TransportType transport) {
-        return Optional.ofNullable(getAddressesByNodeIdMapByTransportType().get(transport));
-    }
-
-    public Optional<Address> findAddress(TransportType transport, String nodeId) {
-        return findAddressesByNodeId(transport)
-                .flatMap(addressesByNodeId -> Optional.ofNullable(addressesByNodeId.get(nodeId)));
-    }
-
-    public Optional<NetworkId> findPersistedNetworkId(String nodeId) {
-        return Optional.ofNullable(persistableStore.getNetworkIdByNodeId().get(nodeId));
-    }
-
-    public Optional<NetworkId> findPersistedNetworkId(String nodeId, PubKey pubKey) {
-        return findPersistedNetworkId(nodeId).filter(networkId -> networkId.getPubKey().equals(pubKey));
-    }
-
-    public NetworkId getPersistedNetworkId(String nodeId, PubKey pubKey) {
-        Optional<NetworkId> networkId = findPersistedNetworkId(nodeId, pubKey)
-                .filter(e -> e.getAddressByTransportTypeMap().size() == supportedTransportTypes.size());
-        checkArgument(networkId.isPresent(),
-                "We expect that the NodeId has all addresses for all supported transport types");
-        return networkId.get();
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    private void maybePersistNetworkId(TransportType transportType, Node node, PubKey pubKey) {
-        node.findMyAddress().ifPresent(address -> {
-            String nodeId = node.getNodeId();
-            if (persistableStore.getNetworkIdByNodeId().containsKey(nodeId)) {
-                NetworkId networkId = persistableStore.getNetworkIdByNodeId().get(nodeId);
-                networkId.getAddressByTransportTypeMap().put(transportType, address);
-            } else {
-                AddressByTransportTypeMap addressByTransportTypeMap = new AddressByTransportTypeMap();
-                addressByTransportTypeMap.put(transportType, address);
-
-                int randomPort = NetworkUtils.selectRandomPort();
-                var torIdentity = TorIdentity.generate(randomPort);
-
-                NetworkId networkId = new NetworkId(addressByTransportTypeMap, pubKey, nodeId, torIdentity);
-                persistableStore.getNetworkIdByNodeId().put(nodeId, networkId);
-            }
-            persist();
-        });
-    }
-
-    private void setupDefaultNodeInitializeObserver() {
-        map.forEach((transportType, serviceNode) -> {
-            serviceNode.getState().addObserver(state -> {
-                // Once we have our default node initialize wer persist the address in the NetworkId
-                if (state == ServiceNode.State.DEFAULT_NODE_INITIALIZED) {
-                    Node defaultNode = serviceNode.getDefaultNode();
-                    maybePersistNetworkId(transportType, defaultNode, keyPairService.getDefaultPubKey());
-                }
-            });
-        });
+                .flatMap(serviceNode -> serviceNode.findNode(networkId));
     }
 }

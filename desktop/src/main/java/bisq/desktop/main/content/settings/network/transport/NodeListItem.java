@@ -23,6 +23,7 @@ import bisq.i18n.Res;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.common.Address;
+import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
@@ -55,13 +56,13 @@ public class NodeListItem implements TableItem {
 
     public NodeListItem(Node node, IdentityService identityService) {
         this.node = node;
-        nodeId = node.getNodeId();
-        type = identityService.findPooledIdentityByNodeId(node.getNodeId())
+        nodeId = node.getNetworkId().getNodeId();
+        type = identityService.findPooledIdentityByNodeId(node.getNetworkId().getNodeId())
                 .map(i -> Res.get("settings.network.nodes.type.pool"))
-                .or(() -> identityService.findActiveIdentityByNodeId(node.getNodeId()).map(i -> Res.get("settings.network.nodes.type.active")))
-                .or(() -> identityService.findRetiredIdentityByNodeId(node.getNodeId()).map(i -> Res.get("settings.network.nodes.type.retired")))
+                .or(() -> identityService.findActiveIdentityByNodeId(node.getNetworkId().getNodeId()).map(i -> Res.get("settings.network.nodes.type.active")))
+                .or(() -> identityService.findRetiredIdentityByNodeId(node.getNetworkId().getNodeId()).map(i -> Res.get("settings.network.nodes.type.retired")))
                 .orElseGet(() -> nodeId.equals(Node.DEFAULT) ? Res.get("settings.network.nodes.type.gossip") : Res.get("data.na"));
-        domainId = identityService.findAnyIdentityByNodeId(node.getNodeId()).map(Identity::getTag)
+        domainId = identityService.findAnyIdentityByNodeId(node.getNetworkId().getNodeId()).map(Identity::getTag)
                 .orElse(Res.get("data.na"));
         address = node.findMyAddress().map(Address::getFullAddress).orElse(Res.get("data.na"));
 
@@ -69,7 +70,7 @@ public class NodeListItem implements TableItem {
 
         listener = new Node.Listener() {
             @Override
-            public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, String nodeId) {
+            public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
             }
 
             @Override

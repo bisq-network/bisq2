@@ -19,6 +19,7 @@ package bisq.network.p2p.services.peergroup.keepalive;
 
 import bisq.common.timer.Scheduler;
 import bisq.network.NetworkService;
+import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
@@ -106,7 +107,7 @@ public class KeepAliveService implements Node.Listener {
     }
 
     @Override
-    public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, String nodeId) {
+    public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
         if (envelopePayloadMessage instanceof Ping) {
             Ping ping = (Ping) envelopePayloadMessage;
             log.debug("Node {} received Ping with nonce {} from {}", node, ping.getNonce(), connection.getPeerAddress());

@@ -74,7 +74,7 @@ public class Broadcaster {
 
     public CompletableFuture<BroadcastResult> doBroadcast(BroadcastMessage broadcastMessage, double distributionFactor) {
         if (!node.isInitialized()) {
-            throw new IllegalStateException("Node not initialized. node=" + node.getNodeId() + 
+            throw new IllegalStateException("Node not initialized. node=" + node.getNetworkId() +
                     "; transportType=" + node.getTransportType());
         }
 

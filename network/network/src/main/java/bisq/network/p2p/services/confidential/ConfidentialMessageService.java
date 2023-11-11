@@ -19,6 +19,7 @@ package bisq.network.p2p.services.confidential;
 
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.ExceptionUtil;
+import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
@@ -111,7 +112,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, String nodeId) {
+    public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
         if (envelopePayloadMessage instanceof ConfidentialMessage) {
             processConfidentialMessage((ConfidentialMessage) envelopePayloadMessage);
         }
@@ -164,13 +165,13 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                        Address address,
                        PubKey receiverPubKey,
                        KeyPair senderKeyPair,
-                       String senderNodeId) {
+                       NetworkId senderNetworkId) {
         try {
             log.debug("Send message to {}", address);
             // Node gets initialized at higher level services
-            nodesById.assertNodeIsInitialized(senderNodeId);
-            Connection connection = nodesById.getConnection(senderNodeId, address);
-            return send(envelopePayloadMessage, connection, receiverPubKey, senderKeyPair, senderNodeId);
+            nodesById.assertNodeIsInitialized(senderNetworkId);
+            Connection connection = nodesById.getConnection(senderNetworkId, address);
+            return send(envelopePayloadMessage, connection, receiverPubKey, senderKeyPair, senderNetworkId);
         } catch (Throwable throwable) {
             Result result;
             if (envelopePayloadMessage instanceof MailboxMessage) {
@@ -192,14 +193,14 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                         Connection connection,
                         PubKey receiverPubKey,
                         KeyPair senderKeyPair,
-                        String senderNodeId) {
+                        NetworkId senderNetworkId) {
         log.debug("Send message to {}", connection);
         ConfidentialMessage confidentialMessage = getConfidentialMessage(envelopePayloadMessage, receiverPubKey, senderKeyPair);
         Result result;
         try {
             // Node gets initialized at higher level services
-            nodesById.assertNodeIsInitialized(senderNodeId);
-            nodesById.send(senderNodeId, confidentialMessage, connection);
+            nodesById.assertNodeIsInitialized(senderNetworkId);
+            nodesById.send(senderNetworkId, confidentialMessage, connection);
             result = new Result(MessageDeliveryStatus.ARRIVED);
             onResult(envelopePayloadMessage, result);
             return result;

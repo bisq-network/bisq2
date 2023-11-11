@@ -29,11 +29,13 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
-@EqualsAndHashCode
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public final class NetworkId implements Proto {
     private final PubKey pubKey;
     private final String nodeId;
     private final AddressByTransportTypeMap addressByTransportTypeMap = new AddressByTransportTypeMap();
+
+    @EqualsAndHashCode.Include
     private final TorIdentity torIdentity;
 
     public NetworkId(AddressByTransportTypeMap addressByTransportTypeMap, PubKey pubKey, String nodeId, TorIdentity torIdentity) {

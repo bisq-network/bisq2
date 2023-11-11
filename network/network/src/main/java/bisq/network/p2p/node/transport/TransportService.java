@@ -20,6 +20,7 @@ package bisq.network.p2p.node.transport;
 import bisq.network.common.Address;
 import bisq.network.common.TransportConfig;
 import bisq.network.common.TransportType;
+import bisq.network.identity.NetworkId;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 
 import java.io.IOException;
@@ -46,7 +47,7 @@ public interface TransportService {
 
     CompletableFuture<Boolean> shutdown();
 
-    ServerSocketResult getServerSocket(int port, String nodeId);
+    ServerSocketResult getServerSocket(NetworkId networkId);
 
     Socket getSocket(Address address) throws IOException;
 
