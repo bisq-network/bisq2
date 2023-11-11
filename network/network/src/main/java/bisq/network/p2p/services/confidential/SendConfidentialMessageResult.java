@@ -1,7 +1,7 @@
 package bisq.network.p2p.services.confidential;
 
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
-import bisq.network.p2p.services.data.DataService;
+import bisq.network.p2p.services.data.BroadCastDataResult;
 import lombok.Getter;
 
 import java.util.Optional;
@@ -9,14 +9,14 @@ import java.util.Optional;
 @Getter
 public class SendConfidentialMessageResult {
     private final MessageDeliveryStatus messageDeliveryStatus;
-    private DataService.BroadCastDataResult mailboxFuture = new DataService.BroadCastDataResult();
+    private BroadCastDataResult mailboxFuture = new BroadCastDataResult();
     private Optional<String> errorMsg = Optional.empty();
 
     public SendConfidentialMessageResult(MessageDeliveryStatus messageDeliveryStatus) {
         this.messageDeliveryStatus = messageDeliveryStatus;
     }
 
-    public SendConfidentialMessageResult setMailboxFuture(DataService.BroadCastDataResult mailboxFuture) {
+    public SendConfidentialMessageResult setMailboxFuture(BroadCastDataResult mailboxFuture) {
         this.mailboxFuture = mailboxFuture;
         return this;
     }

@@ -40,6 +40,7 @@ import bisq.network.p2p.services.confidential.ConfidentialMessageListener;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatusService;
+import bisq.network.p2p.services.data.BroadCastDataResult;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.StorageService;
@@ -74,7 +75,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
 import static bisq.network.common.TransportType.TOR;
-import static bisq.network.p2p.services.data.DataService.BroadCastDataResult;
 import static bisq.network.p2p.services.data.DataService.Listener;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.CompletableFuture.completedFuture;

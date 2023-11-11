@@ -18,11 +18,10 @@
 package bisq.network.p2p.services.data;
 
 import bisq.common.timer.Scheduler;
+import bisq.network.common.TransportType;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
-import bisq.network.common.TransportType;
-import bisq.network.p2p.services.data.broadcast.BroadcastResult;
 import bisq.network.p2p.services.data.filter.DataFilter;
 import bisq.network.p2p.services.data.storage.DataStorageResult;
 import bisq.network.p2p.services.data.storage.StorageData;
@@ -44,7 +43,6 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -60,15 +58,6 @@ import java.util.stream.Stream;
  */
 @Slf4j
 public class DataService implements DataNetworkService.Listener {
-    public static class BroadCastDataResult extends HashMap<TransportType, CompletableFuture<BroadcastResult>> {
-        public BroadCastDataResult(Map<TransportType, CompletableFuture<BroadcastResult>> map) {
-            super(map);
-        }
-
-        public BroadCastDataResult() {
-            super();
-        }
-    }
 
     public interface Listener {
         default void onAuthorizedDataAdded(AuthorizedData authorizedData) {

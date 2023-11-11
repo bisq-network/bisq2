@@ -28,6 +28,7 @@ import bisq.network.p2p.node.NodesById;
 import bisq.network.p2p.services.confidential.ack.AckRequestingMessage;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatusService;
+import bisq.network.p2p.services.data.BroadCastDataResult;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
@@ -49,7 +50,6 @@ import static java.util.concurrent.CompletableFuture.*;
 
 @Slf4j
 public class ConfidentialMessageService implements Node.Listener, DataService.Listener {
-
     private final NodesById nodesById;
     private final KeyPairService keyPairService;
     private final Optional<DataService> dataService;
@@ -233,7 +233,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
         MailboxData mailboxData = new MailboxData(confidentialMessage, metaData);
         // We do not wait for the broadcast result as that can take a while. We pack the future into our result, 
         // so clients can react on it as they wish.
-        DataService.BroadCastDataResult mailboxFuture = dataService.get().addMailboxData(mailboxData,
+        BroadCastDataResult mailboxFuture = dataService.get().addMailboxData(mailboxData,
                         senderKeyPair,
                         receiverPubKey.getPublicKey())
                 .join();
