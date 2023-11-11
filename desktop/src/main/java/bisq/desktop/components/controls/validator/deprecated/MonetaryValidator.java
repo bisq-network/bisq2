@@ -15,16 +15,17 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.common.validation;
+package bisq.desktop.components.controls.validator.deprecated;
 
 import bisq.i18n.Res;
 import lombok.extern.slf4j.Slf4j;
 
 // todo better use another validation framework as in bisq 1
 @Slf4j
-public class PriceValidator extends InputValidator {
+@Deprecated
+public class MonetaryValidator extends InputValidator {
     public ValidationResult validate(String value) {
-       /* ValidationResult result = super.validate(value);
+      /*  ValidationResult result = super.validate(value);
         if (!result.isValid) {
             return result;
         }*/
@@ -32,6 +33,7 @@ public class PriceValidator extends InputValidator {
             return new ValidationResult(true);
         }
         try {
+            value = value.replace(",", ".");
             Double.parseDouble(value);
             return new ValidationResult(true);
         } catch (Throwable error) {

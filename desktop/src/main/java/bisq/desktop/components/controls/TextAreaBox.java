@@ -17,7 +17,7 @@
 
 package bisq.desktop.components.controls;
 
-import bisq.desktop.common.validation.InputValidator;
+import bisq.desktop.components.controls.validator.deprecated.InputValidator;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
