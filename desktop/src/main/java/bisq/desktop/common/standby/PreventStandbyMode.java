@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.common.utils.standby;
+package bisq.desktop.common.standby;
 
 interface PreventStandbyMode {
     void initialize();
