@@ -214,6 +214,9 @@ public class MarketPriceComponent {
             });
             updateScheduler = UIScheduler.run(() -> {
                         ListItem item = model.selected.get();
+                        if (item == null) {
+                            return;
+                        }
                         boolean isStale = item.isStale();
                         staleIcon.setManaged(isStale);
                         staleIcon.setVisible(isStale);
