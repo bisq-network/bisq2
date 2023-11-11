@@ -1,4 +1,4 @@
-package bisq.desktop.common.data;
+package bisq.security;
 
 import lombok.Getter;
 import lombok.ToString;
@@ -8,11 +8,11 @@ import java.util.Objects;
 
 @Getter
 @ToString
-public final class KeyPairAndId {
+public final class KeyIdKeyPairTuple {
     private final String keyId;
     private final KeyPair keyPair;
 
-    public KeyPairAndId(String keyId, KeyPair keyPair) {
+    public KeyIdKeyPairTuple(String keyId, KeyPair keyPair) {
         this.keyId = keyId;
         this.keyPair = keyPair;
     }
@@ -23,7 +23,7 @@ public final class KeyPairAndId {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        KeyPairAndId that = (KeyPairAndId) o;
+        KeyIdKeyPairTuple that = (KeyIdKeyPairTuple) o;
 
         if (!Objects.equals(keyId, that.keyId)) return false;
         return keyPair.getPublic().equals(that.keyPair.getPublic()) &&
