@@ -21,7 +21,6 @@ import bisq.desktop.common.Layout;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.utils.KeyHandlerUtil;
-import bisq.desktop.common.utils.SceneUtil;
 import bisq.desktop.common.view.NavigationView;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyEvent;
@@ -89,7 +88,7 @@ public class DesktopView extends NavigationView<AnchorPane, DesktopModel, Deskto
     }
 
     private void configCss() {
-        SceneUtil.configCss(scene);
+        CssConfig.addAllCss(scene);
     }
 
     private void configSizeAndPosition() {
