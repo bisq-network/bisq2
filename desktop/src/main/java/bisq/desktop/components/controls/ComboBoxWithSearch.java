@@ -15,11 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.components.overlay;
+package bisq.desktop.components.controls;
 
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.i18n.Res;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ObservableList;
