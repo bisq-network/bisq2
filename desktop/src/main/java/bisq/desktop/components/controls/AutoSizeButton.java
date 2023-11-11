@@ -31,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import static javafx.scene.control.ContentDisplay.LEFT;
 import static javafx.scene.control.ContentDisplay.RIGHT;
 
+// Not used but keep for potential use
 /**
  * Button which never truncates the label text.
  * It sets it's minWidth to the required width of the label text to not truncate.

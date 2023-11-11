@@ -39,6 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+// TODO Consider to implement a custom Badge as the design is somehow weird
 // Derived from JfxBadge
 @Slf4j
 @DefaultProperty(value = "control")
