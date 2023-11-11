@@ -37,7 +37,7 @@ public class LinuxNotifications implements NotificationsDelegate {
         command.add("notify-send");
 
         command.add("-i");
-        command.add(System.getProperty("java.home") + "/../Bisq_2.png");
+        command.add(System.getProperty("java.home") + "/../Bisq2.png");
 
         command.add("--app-name");
         command.add("Bisq");
