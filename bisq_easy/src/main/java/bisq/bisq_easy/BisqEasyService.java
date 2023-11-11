@@ -24,7 +24,7 @@ import bisq.common.application.Service;
 import bisq.contract.ContractService;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
-import bisq.network.p2p.services.data.DataService;
+import bisq.network.p2p.services.data.BroadCastDataResult;
 import bisq.offer.OfferService;
 import bisq.persistence.PersistenceService;
 import bisq.presentation.notifications.NotificationsService;
@@ -118,7 +118,7 @@ public class BisqEasyService implements Service {
                 !userIdentityService.hasMultipleUserIdentities();
     }
 
-    public CompletableFuture<DataService.BroadCastDataResult> deleteUserIdentity(UserIdentity userIdentity) {
+    public CompletableFuture<BroadCastDataResult> deleteUserIdentity(UserIdentity userIdentity) {
         if (isDeleteUserIdentityProhibited(userIdentity)) {
             return CompletableFuture.failedFuture(new RuntimeException("Deleting userProfile is not permitted"));
         }

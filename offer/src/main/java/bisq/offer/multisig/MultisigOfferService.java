@@ -23,7 +23,7 @@ import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.CompletableFutureUtils;
-import bisq.network.p2p.services.data.DataService;
+import bisq.network.p2p.services.data.BroadCastDataResult;
 import bisq.offer.Offer;
 import bisq.offer.OfferMessageService;
 import bisq.persistence.PersistenceService;
@@ -97,24 +97,24 @@ public class MultisigOfferService implements Service {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<DataService.BroadCastDataResult> publishOffer(String offerId) {
+    public CompletableFuture<BroadCastDataResult> publishOffer(String offerId) {
         return findOffer(offerId)
                 .map(this::publishOffer)
                 .orElse(CompletableFuture.failedFuture(new RuntimeException("Offer with not found. OfferID=" + offerId)));
     }
 
-    public CompletableFuture<DataService.BroadCastDataResult> publishOffer(MultisigOffer offer) {
+    public CompletableFuture<BroadCastDataResult> publishOffer(MultisigOffer offer) {
         myMultisigOffersService.add(offer);
         return offerMessageService.addToNetwork(offer);
     }
 
-    public CompletableFuture<DataService.BroadCastDataResult> removeOffer(String offerId) {
+    public CompletableFuture<BroadCastDataResult> removeOffer(String offerId) {
         return findOffer(offerId)
                 .map(this::removeOffer)
                 .orElse(CompletableFuture.failedFuture(new RuntimeException("Offer with not found. OfferID=" + offerId)));
     }
 
-    public CompletableFuture<DataService.BroadCastDataResult> removeOffer(MultisigOffer offer) {
+    public CompletableFuture<BroadCastDataResult> removeOffer(MultisigOffer offer) {
         myMultisigOffersService.remove(offer);
         return offerMessageService.removeFromNetwork(offer);
     }
