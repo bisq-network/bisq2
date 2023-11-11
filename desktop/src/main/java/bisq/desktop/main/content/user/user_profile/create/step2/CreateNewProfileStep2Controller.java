@@ -18,13 +18,13 @@
 package bisq.desktop.main.content.user.user_profile.create.step2;
 
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.common.data.KeyPairAndId;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
+import bisq.security.KeyIdKeyPairTuple;
 import bisq.security.pow.ProofOfWork;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
@@ -42,12 +42,12 @@ public class CreateNewProfileStep2Controller implements InitWithDataController<C
     @ToString
     @EqualsAndHashCode
     public static final class InitData {
-        private final Optional<KeyPairAndId> tempIdentity;
+        private final Optional<KeyIdKeyPairTuple> tempIdentity;
         private final ProofOfWork proofOfWork;
         private final String nickName;
         private final String nym;
 
-        public InitData(Optional<KeyPairAndId> tempIdentity,
+        public InitData(Optional<KeyIdKeyPairTuple> tempIdentity,
                         ProofOfWork proofOfWork,
                         String nickName,
                         String nym) {
@@ -130,11 +130,11 @@ public class CreateNewProfileStep2Controller implements InitWithDataController<C
             return;
         }
         if (model.getTempKeyPairAndId().isPresent()) {
-            KeyPairAndId keyPairAndId = model.getTempKeyPairAndId().get();
+            KeyIdKeyPairTuple keyIdKeyPairTuple = model.getTempKeyPairAndId().get();
             userIdentityService.createAndPublishNewUserProfile(
                             model.getNickName().get(),
-                            keyPairAndId.getKeyId(),
-                            keyPairAndId.getKeyPair(),
+                            keyIdKeyPairTuple.getKeyId(),
+                            keyIdKeyPairTuple.getKeyPair(),
                             proofOfWork,
                             model.getTerms().get(),
                             model.getStatement().get())
