@@ -59,6 +59,7 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
                             desktopController = new DesktopController(applicationService.getState(), applicationService.getServiceProvider(),
                                     applicationData,
                                     this::onApplicationLaunched);
+                            desktopController.init();
                         } catch (Throwable t) {
                             t.printStackTrace();
                         }

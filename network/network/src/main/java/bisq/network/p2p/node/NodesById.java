@@ -19,6 +19,7 @@ package bisq.network.p2p.node;
 
 
 import bisq.common.util.CompletableFutureUtils;
+import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.network_load.NetworkLoadService;
 import bisq.network.p2p.node.transport.TransportService;
@@ -33,7 +34,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -50,7 +50,7 @@ public class NodesById implements Node.Listener {
         }
     }
 
-    private final Map<String, Node> map = new ConcurrentHashMap<>();
+    private final Map<NetworkId, Node> map = new ConcurrentHashMap<>();
     private final BanList banList;
     private final Node.Config nodeConfig;
     private final TransportService transportService;
@@ -69,30 +69,30 @@ public class NodesById implements Node.Listener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public Node createAndConfigNode(String nodeId) {
-        Node node = new Node(banList, nodeConfig, nodeId, transportService, networkLoadService);
-        map.put(nodeId, node);
+    public Node createAndConfigNode(NetworkId networkId) {
+        Node node = new Node(banList, nodeConfig, networkId, transportService, networkLoadService);
+        map.put(networkId, node);
         node.addListener(this);
         listeners.forEach(listener -> listener.onNodeAdded(node));
         return node;
     }
 
-    public Node getInitializedNode(String nodeId, int serverPort) {
-        Node node = getOrCreateNode(nodeId);
-        node.initialize(serverPort);
+    public Node getInitializedNode(NetworkId networkId) {
+        Node node = getOrCreateNode(networkId);
+        node.initialize();
         return node;
     }
 
-    public Connection getConnection(String nodeId, Address address) {
-        return getOrCreateNode(nodeId).getConnection(address);
+    public Connection getConnection(NetworkId networkId, Address address) {
+        return getOrCreateNode(networkId).getConnection(address);
     }
 
-    public Connection send(String senderNodeId, EnvelopePayloadMessage envelopePayloadMessage, Address address) {
-        return getOrCreateNode(senderNodeId).send(envelopePayloadMessage, address);
+    public Connection send(NetworkId senderNetworkId, EnvelopePayloadMessage envelopePayloadMessage, Address address) {
+        return getOrCreateNode(senderNetworkId).send(envelopePayloadMessage, address);
     }
 
-    public Connection send(String senderNodeId, EnvelopePayloadMessage envelopePayloadMessage, Connection connection) {
-        return getOrCreateNode(senderNodeId).send(envelopePayloadMessage, connection);
+    public Connection send(NetworkId senderNetworkId, EnvelopePayloadMessage envelopePayloadMessage, Connection connection) {
+        return getOrCreateNode(senderNetworkId).send(envelopePayloadMessage, connection);
     }
 
     public CompletableFuture<Boolean> shutdown() {
@@ -107,37 +107,22 @@ public class NodesById implements Node.Listener {
                 });
     }
 
-    public boolean isNodeInitialized(String nodeId) {
-        return findNode(nodeId)
+    public boolean isNodeInitialized(NetworkId networkId) {
+        return findNode(networkId)
                 .map(Node::isInitialized)
                 .orElse(false);
     }
 
-    public void assertNodeIsInitialized(String nodeId) {
-        checkArgument(isNodeInitialized(nodeId), "Node must be present and initialized");
+    public void assertNodeIsInitialized(NetworkId networkId) {
+        checkArgument(isNodeInitialized(networkId), "Node must be present and initialized");
     }
 
-    public Optional<Address> findMyAddress(String nodeId) {
-        return findNode(nodeId).flatMap(Node::findMyAddress);
-    }
-
-    public Optional<Node> findNode(String nodeId) {
-        return Optional.ofNullable(map.get(nodeId));
+    public Optional<Node> findNode(NetworkId networkId) {
+        return Optional.ofNullable(map.get(networkId));
     }
 
     public Collection<Node> getAllNodes() {
         return map.values();
-    }
-
-    /**
-     * @return Addresses of nodes which have completed creating the server (e.g. hidden service is published).
-     * Before the server creation is complete we do not know our address.
-     */
-    public Map<String, Address> getAddressesByNodeId() {
-        //noinspection OptionalGetWithoutIsPresent
-        return map.entrySet().stream()
-                .filter(e -> e.getValue().findMyAddress().isPresent())
-                .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().findMyAddress().get()));
     }
 
     public void addNodeListener(Node.Listener listener) {
@@ -162,8 +147,8 @@ public class NodesById implements Node.Listener {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, String nodeId) {
-        nodeListeners.forEach(listener -> listener.onMessage(envelopePayloadMessage, connection, nodeId));
+    public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
+        nodeListeners.forEach(listener -> listener.onMessage(envelopePayloadMessage, connection, networkId));
     }
 
     @Override
@@ -176,7 +161,7 @@ public class NodesById implements Node.Listener {
 
     @Override
     public void onShutdown(Node node) {
-        map.remove(node.getNodeId());
+        map.remove(node.getNetworkId());
         node.removeListener(this);
         listeners.forEach(listener -> listener.onNodeRemoved(node));
     }
@@ -186,8 +171,8 @@ public class NodesById implements Node.Listener {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private Node getOrCreateNode(String nodeId) {
-        return findNode(nodeId)
-                .orElseGet(() -> createAndConfigNode(nodeId));
+    private Node getOrCreateNode(NetworkId networkId) {
+        return findNode(networkId)
+                .orElseGet(() -> createAndConfigNode(networkId));
     }
 }

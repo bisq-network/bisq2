@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.node;
 
+import bisq.network.identity.NetworkId;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.network.p2p.node.transport.ServerSocketResult;
@@ -43,7 +44,7 @@ import static java.util.concurrent.TimeUnit.MINUTES;
 public class PeerConnectionsManager {
 
     private final Node.Config config;
-    private final String nodeId;
+    private final NetworkId networkId;
     private final BanList banList;
     private final NetworkLoad myNetworkLoad;
     private final AuthorizationService authorizationService;
@@ -53,22 +54,22 @@ public class PeerConnectionsManager {
     private Optional<OutboundConnectionMultiplexer> outboundConnectionMultiplexer;
 
     public PeerConnectionsManager(Node.Config config,
-                                  String nodeId,
+                                  NetworkId networkId,
                                   BanList banList,
                                   NetworkLoad myNetworkLoad,
                                   AuthorizationService authorizationService,
                                   TransportService transportService) {
         this.config = config;
-        this.nodeId = nodeId;
+        this.networkId = networkId;
         this.banList = banList;
         this.myNetworkLoad = myNetworkLoad;
         this.authorizationService = authorizationService;
         this.transportService = transportService;
     }
 
-    public void start(Node node, int port) {
+    public void start(Node node) {
         try {
-            Capability myCapability = createServerAndListen(node, port);
+            Capability myCapability = createServerAndListen(node);
             createAndStartOutboundConnectionMultiplexer(myCapability, node);
         } catch (IOException e) {
             log.error("Couldn't start PeerConnectionsManager", e);
@@ -121,8 +122,8 @@ public class PeerConnectionsManager {
                 outboundConnectionMultiplexer.get().getAllOutboundConnections() : Collections.emptyList();
     }
 
-    private Capability createServerAndListen(Node node, int port) throws IOException {
-        ServerSocketResult serverSocketResult = transportService.getServerSocket(port, nodeId);
+    private Capability createServerAndListen(Node node) throws IOException {
+        ServerSocketResult serverSocketResult = transportService.getServerSocket(networkId);
         Capability serverCapability = new Capability(serverSocketResult.getAddress(), new ArrayList<>(config.getSupportedTransportTypes()));
         ServerChannel serverChannel = new ServerChannel(
                 serverCapability,

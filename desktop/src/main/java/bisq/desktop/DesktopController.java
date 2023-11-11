@@ -60,27 +60,34 @@ import static bisq.settings.DontShowAgainKey.WELCOME;
 @Slf4j
 public class DesktopController extends NavigationController {
     @Getter
-    protected final DesktopModel model;
+    protected DesktopModel model;
     @Getter
-    protected final DesktopView view;
+    protected DesktopView view;
     protected final SettingsService settingsService;
     protected final Runnable onActivatedHandler;
-    private final SplashController splashController;
+    private SplashController splashController;
     private final UserIdentityService userIdentityService;
     private final ServiceProvider serviceProvider;
-    private final PreventStandbyModeService preventStandbyModeService;
+    private PreventStandbyModeService preventStandbyModeService;
+
+    private final Observable<State> applicationServiceState;
+    private final JavaFxApplicationData applicationJavaFxApplicationData;
 
     public DesktopController(Observable<State> applicationServiceState,
                              ServiceProvider serviceProvider,
                              JavaFxApplicationData applicationJavaFxApplicationData,
                              Runnable onActivatedHandler) {
         super(NavigationTarget.PRIMARY_STAGE);
+        this.applicationServiceState = applicationServiceState;
+        this.applicationJavaFxApplicationData = applicationJavaFxApplicationData;
         this.serviceProvider = serviceProvider;
         this.onActivatedHandler = onActivatedHandler;
 
         settingsService = serviceProvider.getSettingsService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
+    }
 
+    public void init() {
         model = new DesktopModel(serviceProvider.getConfig().getAppName());
         setInitialScreenSize();
         view = new DesktopView(model, this, applicationJavaFxApplicationData.getStage());

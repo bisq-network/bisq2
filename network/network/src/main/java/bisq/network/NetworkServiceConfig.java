@@ -30,6 +30,7 @@ import bisq.network.p2p.services.peergroup.exchange.PeerExchangeStrategy;
 import bisq.network.p2p.services.peergroup.keepalive.KeepAliveService;
 import bisq.tor.TorTransportConfig;
 import com.typesafe.config.Config;
+import com.typesafe.config.ConfigObject;
 import lombok.Getter;
 
 import java.nio.file.Path;
@@ -99,18 +100,33 @@ public final class NetworkServiceConfig {
 
     private static Map<TransportType, Integer> createDefaultNodePortByTransportType(Config config) {
         Map<TransportType, Integer> map = new HashMap<>();
-        if (config.hasPath("defaultNodePortByTransportType")) {
-            Config portConfig = config.getConfig("defaultNodePortByTransportType");
-            if (portConfig.hasPath("tor")) {
-                map.put(TransportType.TOR, portConfig.getInt("tor"));
-            }
-            if (portConfig.hasPath("i2p")) {
-                map.put(TransportType.I2P, portConfig.getInt("i2p"));
-            }
-            if (portConfig.hasPath("clear")) {
-                map.put(TransportType.CLEAR, portConfig.getInt("clear"));
+
+        Config configByTransportType = config.getConfig("configByTransportType");
+        if (configByTransportType.hasPath("tor")) {
+            Config torConfig = configByTransportType.getConfig("tor");
+            if (torConfig.hasPath("defaultNodePort")) {
+                int port = configByTransportType.getConfig("tor")
+                        .getInt("defaultNodePort");
+                map.put(TransportType.TOR, port);
             }
         }
+        if (configByTransportType.hasPath("i2p")) {
+            Config i2pConfig = configByTransportType.getConfig("i2p");
+            if (i2pConfig.hasPath("defaultNodePort")) {
+                int port = configByTransportType.getConfig("i2p")
+                        .getInt("defaultNodePort");
+                map.put(TransportType.I2P, port);
+            }
+        }
+        if (configByTransportType.hasPath("clear")) {
+            Config clearConfig = configByTransportType.getConfig("clear");
+            if (clearConfig.hasPath("defaultNodePort")) {
+                int port = configByTransportType.getConfig("clear")
+                        .getInt("defaultNodePort");
+                map.put(TransportType.CLEAR, port);
+            }
+        }
+
         return map;
     }
 

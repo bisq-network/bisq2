@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.data.inventory;
 
 import bisq.network.NetworkService;
+import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
@@ -75,7 +76,7 @@ public class InventoryService implements Node.Listener {
     }
 
     @Override
-    public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, String nodeId) {
+    public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
         if (envelopePayloadMessage instanceof InventoryRequest) {
             InventoryRequest request = (InventoryRequest) envelopePayloadMessage;
             log.debug("Node {} received GetInventoryRequest with nonce {} from {}", node, request.getNonce(), connection.getPeerAddress());

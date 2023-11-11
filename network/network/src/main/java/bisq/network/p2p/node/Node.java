@@ -26,6 +26,7 @@ import bisq.network.NetworkService;
 import bisq.network.common.Address;
 import bisq.network.common.TransportConfig;
 import bisq.network.common.TransportType;
+import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
@@ -88,7 +89,7 @@ public class Node implements Connection.Handler {
     }
 
     public interface Listener {
-        void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, String nodeId);
+        void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId);
 
         void onConnection(Connection connection);
 
@@ -128,7 +129,7 @@ public class Node implements Connection.Handler {
     private final AuthorizationService authorizationService;
     private final Config config;
     @Getter
-    private final String nodeId;
+    private final NetworkId networkId;
     @Getter
     private final Map<Address, OutboundConnection> outboundConnectionsByAddress = new ConcurrentHashMap<>();
     @Getter
@@ -147,13 +148,13 @@ public class Node implements Connection.Handler {
     @Getter
     public final NetworkLoadService networkLoadService;
 
-    public Node(BanList banList, Config config, String nodeId, TransportService transportService, NetworkLoadService networkLoadService) {
+    public Node(BanList banList, Config config, NetworkId networkId, TransportService transportService, NetworkLoadService networkLoadService) {
         this.banList = banList;
         this.transportService = transportService;
         transportType = config.getTransportType();
         authorizationService = config.getAuthorizationService();
         this.config = config;
-        this.nodeId = nodeId;
+        this.networkId = networkId;
         this.networkLoadService = networkLoadService;
 
         retryPolicy = RetryPolicy.<Boolean>builder()
@@ -176,30 +177,30 @@ public class Node implements Connection.Handler {
     // Server
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public void initialize(int port) {
-        Failsafe.with(retryPolicy).run(() -> doInitialize(port));
+    public void initialize() {
+        Failsafe.with(retryPolicy).run(this::doInitialize);
     }
 
-    private void doInitialize(int port) {
+    private void doInitialize() {
         synchronized (state) {
             switch (state.get()) {
                 case NEW: {
                     setState(STARTING);
-                    createServerAndListen(port);
+                    createServerAndListen();
                     setState(State.RUNNING);
                     break;
                 }
                 case STARTING: {
-                    throw new IllegalStateException("Already starting. NodeId=" + nodeId + "; transportType=" + transportType);
+                    throw new IllegalStateException("Already starting. NetworkId=" + networkId + "; transportType=" + transportType);
                 }
                 case RUNNING: {
                     log.debug("Got called while already running. We ignore that call.");
                     break;
                 }
                 case STOPPING:
-                    throw new IllegalStateException("Already stopping. NodeId=" + nodeId + "; transportType=" + transportType);
+                    throw new IllegalStateException("Already stopping. NetworkId=" + networkId + "; transportType=" + transportType);
                 case TERMINATED:
-                    throw new IllegalStateException("Already terminated. NodeId=" + nodeId + "; transportType=" + transportType);
+                    throw new IllegalStateException("Already terminated. NetworkId=" + networkId + "; transportType=" + transportType);
                 default: {
                     throw new IllegalStateException("Unhandled state " + state.get());
                 }
@@ -207,8 +208,8 @@ public class Node implements Connection.Handler {
         }
     }
 
-    private void createServerAndListen(int port) {
-        ServerSocketResult serverSocketResult = transportService.getServerSocket(port, nodeId);
+    private void createServerAndListen() {
+        ServerSocketResult serverSocketResult = transportService.getServerSocket(networkId);
         myCapability = Optional.of(new Capability(serverSocketResult.getAddress(), new ArrayList<>(config.getSupportedTransportTypes())));
         server = Optional.of(new Server(serverSocketResult,
                 socket -> onClientSocket(socket, serverSocketResult, myCapability.get()),
@@ -334,11 +335,11 @@ public class Node implements Connection.Handler {
 
     private Connection createOutboundConnection(Address address) {
         return myCapability.map(capability -> createOutboundConnection(address, capability)).orElseGet(() -> {
-            int port = NetworkUtils.findFreeSystemPort();
+            int port = networkId.getAddressByTransportTypeMap().get(transportType).getPort();
             log.warn("We create an outbound connection but we have not initialized our server. " +
                     "We create a server on port {} now but clients better control node " +
                     "life cycle themselves.", port);
-            initialize(port);
+            initialize();
             checkArgument(myCapability.isPresent(), "myCapability must be present after initializeServer got called");
             return createOutboundConnection(address, myCapability.get());
         });
@@ -443,7 +444,7 @@ public class Node implements Connection.Handler {
             } else {
                 // We got called from Connection on the dispatcher thread, so no mapping needed here.
                 connection.notifyListeners(envelopePayloadMessage);
-                listeners.forEach(listener -> listener.onMessage(envelopePayloadMessage, connection, nodeId));
+                listeners.forEach(listener -> listener.onMessage(envelopePayloadMessage, connection, networkId));
             }
         } else {
             //todo handle
@@ -581,7 +582,7 @@ public class Node implements Connection.Handler {
     }
 
     public String getNodeInfo() {
-        return getNodeId() + " @ " + getTransportType().name();
+        return getNetworkId() + " @ " + getTransportType().name();
     }
 
 
@@ -620,10 +621,10 @@ public class Node implements Connection.Handler {
     }
 
     private void setState(State newState) {
-        log.info("Set new state {} for nodeId {}; transportType {}", newState, nodeId, transportType);
+        log.info("Set new state {} for networkId {}; transportType {}", newState, networkId, transportType);
         checkArgument(newState.ordinal() > state.get().ordinal(),
-                "New state %s must have a higher ordinal as the current state %s. nodeId={}",
-                newState, state.get(), nodeId);
+                "New state %s must have a higher ordinal as the current state %s. networkId={}",
+                newState, state.get(), networkId);
         state.set(newState);
         observableState.set(newState);
         listeners.forEach(listener -> listener.onStateChange(newState));

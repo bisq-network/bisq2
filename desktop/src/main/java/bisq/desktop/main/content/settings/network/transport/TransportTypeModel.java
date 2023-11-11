@@ -84,7 +84,7 @@ public class TransportTypeModel implements Model {
 
         defaultNodeListener = new Node.Listener() {
             @Override
-            public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, String nodeId) {
+            public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
             }
 
             @Override
@@ -127,7 +127,7 @@ public class TransportTypeModel implements Model {
     void updateLists() {
         allNodes = new ArrayList<>(serviceNode.getNodesById().getAllNodes());
         connectionListItems.setAll(allNodes.stream()
-                .flatMap(node -> node.getAllConnections().map(c -> new Pair<>(c, node.getNodeId())))
+                .flatMap(node -> node.getAllConnections().map(c -> new Pair<>(c, node.getNetworkId().getNodeId())))
                 .map(pair -> new ConnectionListItem(pair.getFirst(), pair.getSecond()))
                 .collect(Collectors.toList()));
         nodeListItems.setAll(allNodes
@@ -138,7 +138,7 @@ public class TransportTypeModel implements Model {
     }
 
     void cleanup() {
-        allNodes.forEach(node -> node.removeListener(nodeListenersByNodeId.get(node.getNodeId())));
+        allNodes.forEach(node -> node.removeListener(nodeListenersByNodeId.get(node.getNetworkId().getNodeId())));
         networkService.findServiceNode(transportType)
                 .map(ServiceNode::getNodesById)
                 .ifPresent(nodesById -> nodesById.removeListener(nodesByIdListener));
@@ -147,14 +147,14 @@ public class TransportTypeModel implements Model {
     private void addNodeListener(Node node) {
         Node.Listener listener = new Node.Listener() {
             @Override
-            public void onMessage(EnvelopePayloadMessage message, Connection connection, String nodeId) {
+            public void onMessage(EnvelopePayloadMessage message, Connection connection, NetworkId networkId) {
                 UIThread.run(() -> maybeUpdateMyAddress(node));
             }
 
             @Override
             public void onConnection(Connection connection) {
                 UIThread.run(() -> {
-                    ConnectionListItem connectionListItem = new ConnectionListItem(connection, node.getNodeId());
+                    ConnectionListItem connectionListItem = new ConnectionListItem(connection, node.getNetworkId().getNodeId());
                     if (!connectionListItems.contains(connectionListItem)) {
                         connectionListItems.add(connectionListItem);
                     }
@@ -165,7 +165,7 @@ public class TransportTypeModel implements Model {
             @Override
             public void onDisconnect(Connection connection, CloseReason closeReason) {
                 UIThread.run(() -> {
-                    ConnectionListItem connectionListItem = new ConnectionListItem(connection, node.getNodeId());
+                    ConnectionListItem connectionListItem = new ConnectionListItem(connection, node.getNetworkId().getNodeId());
                     connectionListItems.remove(connectionListItem);
                     maybeUpdateMyAddress(node);
                 });
@@ -184,11 +184,11 @@ public class TransportTypeModel implements Model {
             }
         };
         node.addListener(listener);
-        nodeListenersByNodeId.put(node.getNodeId(), listener);
+        nodeListenersByNodeId.put(node.getNetworkId().getNodeId(), listener);
     }
 
     private void maybeUpdateMyAddress(Node node) {
-        if (node.getNodeId().equals(defaultNode.getNodeId())) {
+        if (node.getNetworkId().getNodeId().equals(defaultNode.getNetworkId().getNodeId())) {
             defaultNode.findMyAddress().ifPresent(e -> myDefaultNodeAddress.set(e.getFullAddress()));
         }
     }

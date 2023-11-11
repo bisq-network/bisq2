@@ -19,6 +19,7 @@ package bisq.seed_node;
 
 import bisq.application.ApplicationService;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
+import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
 import bisq.security.SecurityService;
@@ -42,6 +43,7 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 @Slf4j
 public class SeedNodeApplicationService extends ApplicationService {
     protected final NetworkService networkService;
+    protected final IdentityService identityService;
     protected final SecurityService securityService;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
     private final SeedNodeService seedNodeService;
@@ -58,17 +60,23 @@ public class SeedNodeApplicationService extends ApplicationService {
                 securityService.getKeyPairService(),
                 securityService.getProofOfWorkService());
 
+        identityService = new IdentityService(IdentityService.Config.from(getConfig("identity")),
+                persistenceService,
+                securityService,
+                networkService);
+
         com.typesafe.config.Config bondedRolesConfig = getConfig("bondedRoles");
         authorizedBondedRolesService = new AuthorizedBondedRolesService(networkService, bondedRolesConfig.getBoolean("ignoreSecurityManager"));
 
         Optional<SeedNodeService.Config> seedNodeConfig = hasConfig("seedNode") ? Optional.of(SeedNodeService.Config.from(getConfig("seedNode"))) : Optional.empty();
-        seedNodeService = new SeedNodeService(seedNodeConfig, networkService, securityService.getKeyPairService());
+        seedNodeService = new SeedNodeService(seedNodeConfig, networkService, identityService, securityService.getKeyPairService());
     }
 
     @Override
     public CompletableFuture<Boolean> initialize() {
         return securityService.initialize()
                 .thenCompose(result -> networkService.initialize())
+                .thenCompose(result -> identityService.initialize())
                 .thenCompose(result -> authorizedBondedRolesService.initialize())
                 .thenCompose(result -> seedNodeService.initialize())
                 .orTimeout(5, TimeUnit.MINUTES)
@@ -86,6 +94,7 @@ public class SeedNodeApplicationService extends ApplicationService {
         // We shut down services in opposite order as they are initialized
         return supplyAsync(() -> seedNodeService.shutdown()
                 .thenCompose(result -> authorizedBondedRolesService.shutdown())
+                .thenCompose(result -> identityService.shutdown())
                 .thenCompose(result -> networkService.shutdown())
                 .thenCompose(result -> securityService.shutdown())
                 .orTimeout(10, TimeUnit.SECONDS)

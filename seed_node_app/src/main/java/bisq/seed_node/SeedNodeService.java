@@ -22,8 +22,9 @@ import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
 import bisq.common.timer.Scheduler;
+import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
-import bisq.network.p2p.node.Node;
+import bisq.network.identity.NetworkId;
 import bisq.security.KeyGeneration;
 import bisq.security.KeyPairService;
 import lombok.Getter;
@@ -76,13 +77,15 @@ public class SeedNodeService implements Service {
     }
 
     private final NetworkService networkService;
+    private final IdentityService identityService;
     private final KeyPairService keyPairService;
     private final Optional<Config> optionalConfig;
     private Scheduler startupScheduler, scheduler;
 
-    public SeedNodeService(Optional<Config> optionalConfig, NetworkService networkService, KeyPairService keyPairService) {
+    public SeedNodeService(Optional<Config> optionalConfig, NetworkService networkService, IdentityService identityService, KeyPairService keyPairService) {
         this.optionalConfig = optionalConfig;
         this.networkService = networkService;
+        this.identityService = identityService;
         this.keyPairService = keyPairService;
     }
 
@@ -93,13 +96,14 @@ public class SeedNodeService implements Service {
             PrivateKey authorizedPrivateKey = KeyGeneration.getPrivateKeyFromHex(privateKey);
             PublicKey authorizedPublicKey = KeyGeneration.getPublicKeyFromHex(config.getPublicKey());
 
+            NetworkId networkId = identityService.getOrCreateDefaultIdentity().getNetworkId();
             AuthorizedBondedRole authorizedBondedRole = new AuthorizedBondedRole(config.getProfileId(),
                     Hex.encode(authorizedPublicKey.getEncoded()),
                     BondedRoleType.SEED_NODE,
                     config.getBondUserName(),
                     config.getSignatureBase64(),
-                    networkService.getAddressByTransportTypeMap(Node.DEFAULT),
-                    networkService.findNetworkIdFromStore(Node.DEFAULT).orElseThrow(),
+                    networkId.getAddressByTransportTypeMap(),
+                    networkId,
                     Optional.empty(),
                     config.isStaticPublicKeysProvided());
             KeyPair keyPair = keyPairService.getOrCreateKeyPair(config.keyId);

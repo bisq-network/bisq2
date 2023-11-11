@@ -22,6 +22,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.network.NetworkService;
+import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
@@ -87,7 +88,7 @@ public class LeftNavModel implements Model {
                         Node defaultNode = serviceNode.getDefaultNode();
                         defaultNode.addListener(new Node.Listener() {
                             @Override
-                            public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, String nodeId) {
+                            public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
                             }
 
                             @Override
