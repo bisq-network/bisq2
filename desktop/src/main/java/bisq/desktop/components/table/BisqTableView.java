@@ -18,20 +18,19 @@
 package bisq.desktop.components.table;
 
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.common.utils.TableViewUtil;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 import javafx.geometry.Orientation;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.Node;
+import javafx.scene.control.*;
 import javafx.util.Callback;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
+
+import java.util.Optional;
 
 @Slf4j
 public class BisqTableView<S extends TableItem> extends TableView<S> {
@@ -117,7 +116,7 @@ public class BisqTableView<S extends TableItem> extends TableView<S> {
         if (numItems == 0) {
             return;
         }
-        double realScrollbarHeight = TableViewUtil.findScrollbar(BisqTableView.this, Orientation.HORIZONTAL)
+        double realScrollbarHeight = findScrollbar(BisqTableView.this, Orientation.HORIZONTAL)
                 .map(e -> scrollbarHeight)
                 .orElse(0d);
         double height = headerHeight + numItems * rowHeight + realScrollbarHeight;
@@ -154,5 +153,14 @@ public class BisqTableView<S extends TableItem> extends TableView<S> {
                 }
             }
         };
+    }
+
+    public static Optional<ScrollBar> findScrollbar(TableView<?> tableView, Orientation orientation) {
+        return tableView.lookupAll(".scroll-bar").stream()
+                .filter(node -> node instanceof ScrollBar)
+                .map(node -> (ScrollBar) node)
+                .filter(scrollBar -> scrollBar.getOrientation().equals(orientation))
+                .filter(Node::isVisible)
+                .findAny();
     }
 }
