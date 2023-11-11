@@ -36,8 +36,8 @@ import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.network_load.NetworkLoadService;
 import bisq.network.p2p.node.transport.BootstrapInfo;
 import bisq.network.p2p.services.confidential.ConfidentialMessageListener;
-import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.confidential.MessageListener;
+import bisq.network.p2p.services.confidential.SendConfidentialMessageResult;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatusService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.peergroup.PeerGroupManager;
@@ -226,7 +226,7 @@ public class ServiceNodesByTransport implements PersistenceClient<ServiceNodesBy
         receiverNetworkId.getAddressByTransportTypeMap().forEach((transportType, address) -> {
             if (map.containsKey(transportType)) {
                 ServiceNode serviceNode = map.get(transportType);
-                ConfidentialMessageService.Result result = serviceNode.confidentialSend(envelopePayloadMessage,
+                SendConfidentialMessageResult result = serviceNode.confidentialSend(envelopePayloadMessage,
                         address,
                         receiverNetworkId.getPubKey(),
                         senderKeyPair,
