@@ -23,7 +23,6 @@ import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.common.utils.SendMessageResultUtil;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.overlay.Popup;
@@ -32,6 +31,7 @@ import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.TableItem;
 import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.i18n.Res;
+import bisq.network.SendMessageResult;
 import bisq.support.moderator.ModeratorService;
 import bisq.support.moderator.ReportToModeratorMessage;
 import bisq.user.banned.BannedUserProfileData;
@@ -104,7 +104,7 @@ public class BannedUserProfileTable {
                     .whenComplete((result, throwable) -> {
                         UIThread.run(() -> {
                             if (throwable == null) {
-                                SendMessageResultUtil.findAnyErrorMsg(result)
+                                SendMessageResult.findAnyErrorMsg(result)
                                         .ifPresent(errorMsg -> new Popup().error(errorMsg).show());
                             } else {
                                 new Popup().error(throwable).show();
