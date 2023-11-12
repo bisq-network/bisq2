@@ -33,8 +33,6 @@ public class CreateProfileModel implements Model {
     @Setter
     private Optional<KeyPairAndId> keyPairAndId = Optional.empty();
     @Setter
-    private Optional<Identity> pooledIdentity = Optional.empty();
-    @Setter
     private Optional<ProofOfWork> proofOfWork = Optional.empty();
     @Setter
     private Optional<byte[]> pubKeyHash = Optional.empty();

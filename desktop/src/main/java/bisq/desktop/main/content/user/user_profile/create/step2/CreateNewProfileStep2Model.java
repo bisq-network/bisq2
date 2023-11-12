@@ -33,8 +33,6 @@ public class CreateNewProfileStep2Model implements Model {
     @Setter
     private Optional<KeyPairAndId> tempKeyPairAndId = Optional.empty();
     @Setter
-    private Optional<Identity> pooledIdentity = Optional.empty();
-    @Setter
     private Optional<ProofOfWork> proofOfWork = Optional.empty();
 
     private final StringProperty nickName = new SimpleStringProperty();

@@ -57,9 +57,8 @@ public class NodeListItem implements TableItem {
     public NodeListItem(Node node, IdentityService identityService) {
         this.node = node;
         nodeId = node.getNetworkId().getNodeId();
-        type = identityService.findPooledIdentityByNodeId(node.getNetworkId().getNodeId())
-                .map(i -> Res.get("settings.network.nodes.type.pool"))
-                .or(() -> identityService.findActiveIdentityByNodeId(node.getNetworkId().getNodeId()).map(i -> Res.get("settings.network.nodes.type.active")))
+        type = identityService.findActiveIdentityByNodeId(node.getNetworkId().getNodeId())
+                .map(i -> Res.get("settings.network.nodes.type.active"))
                 .or(() -> identityService.findRetiredIdentityByNodeId(node.getNetworkId().getNodeId()).map(i -> Res.get("settings.network.nodes.type.retired")))
                 .orElseGet(() -> nodeId.equals(Node.DEFAULT) ? Res.get("settings.network.nodes.type.gossip") : Res.get("data.na"));
         domainId = identityService.findAnyIdentityByNodeId(node.getNetworkId().getNodeId()).map(Identity::getTag)

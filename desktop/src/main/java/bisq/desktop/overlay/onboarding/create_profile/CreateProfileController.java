@@ -27,7 +27,6 @@ import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
-import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.security.DigestUtil;
 import bisq.security.KeyPairService;
@@ -42,13 +41,9 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.security.KeyPair;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
-
-import static java.util.concurrent.CompletableFuture.runAsync;
 
 @Slf4j
 public class CreateProfileController implements Controller {
@@ -62,8 +57,6 @@ public class CreateProfileController implements Controller {
     private final OverlayController overlayController;
     protected Optional<CompletableFuture<ProofOfWork>> mintNymProofOfWorkFuture = Optional.empty();
     protected Subscription nickNameSubscription;
-    protected final List<Identity> pooledIdentities = new ArrayList<>();
-    protected boolean pooledIdentitiesInitialized;
 
     public CreateProfileController(ServiceProvider serviceProvider) {
         keyPairService = serviceProvider.getSecurityService().getKeyPairService();
@@ -88,10 +81,6 @@ public class CreateProfileController implements Controller {
     public void onActivate() {
         overlayController.setEnterKeyHandler(this::onCreateUserProfile);
         overlayController.setUseEscapeKeyHandler(false);
-        if (!pooledIdentitiesInitialized) {
-            pooledIdentitiesInitialized = true;
-            pooledIdentities.addAll(identityService.getPool());
-        }
 
         nickNameSubscription = EasyBind.subscribe(model.getNickName(),
                 nickName -> model.getCreateProfileButtonDisabled().set(
@@ -148,10 +137,8 @@ public class CreateProfileController implements Controller {
                             new Popup().error(throwable).show();
                         }
                     }));
-        } else if (model.getPooledIdentity().isPresent()) {
-            Identity pooledIdentity = model.getPooledIdentity().get();
+        } else {
             userIdentityService.createAndPublishNewUserProfile(
-                    pooledIdentity,
                     model.getNickName().get().trim(),
                     proofOfWork);
             model.getCreateProfileProgress().set(0);
@@ -160,27 +147,7 @@ public class CreateProfileController implements Controller {
     }
 
     void onRegenerate() {
-        // We try first our pooled identities. If user has skipped all those we create new temporary keypair
-        if (!pooledIdentities.isEmpty()) {
-            Identity pooledIdentity = pooledIdentities.remove(0);
-            setPreGenerateState();
-
-            byte[] pubKeyHash = pooledIdentity.getPubKeyHash();
-            model.setPubKeyHash(Optional.of(pubKeyHash));
-            mintNymProofOfWorkFuture = Optional.of(createProofOfWork(pubKeyHash)
-                    .whenComplete((proofOfWork, t) ->
-                            UIThread.run(() -> model.setPooledIdentity(Optional.of(pooledIdentity)))));
-
-            runAsync(() -> createSimulatedDelay(0))
-                    .whenComplete((__, t) ->
-                            UIThread.run(() -> {
-                                model.setPooledIdentity(Optional.of(pooledIdentity));
-                                String nym = NymIdGenerator.fromHash(pooledIdentity.getPubKeyHash());
-                                applyIdentityData(pooledIdentity.getPubKeyHash(), nym);
-                            }));
-        } else {
-            generateNewKeyPair();
-        }
+        generateNewKeyPair();
     }
 
     void generateNewKeyPair() {

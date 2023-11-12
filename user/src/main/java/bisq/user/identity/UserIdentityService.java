@@ -154,23 +154,21 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         return persistableStore.getAESSecretKey();
     }
 
-    public UserIdentity createAndPublishNewUserProfile(Identity pooledIdentity,
-                                                       String nickName,
+    public UserIdentity createAndPublishNewUserProfile(String nickName,
                                                        ProofOfWork proofOfWork) {
         String tag = getTag(nickName, proofOfWork);
-        Identity identity = identityService.swapPooledIdentity(tag, pooledIdentity);
+        Identity identity = identityService.createAndInitializeNewActiveIdentity(tag);
         UserIdentity userIdentity = createUserIdentity(nickName, proofOfWork, "", "", identity);
         publishPublicUserProfile(userIdentity.getUserProfile(), userIdentity.getIdentity().getNodeIdAndKeyPair().getKeyPair());
         return userIdentity;
     }
 
-    public UserIdentity createAndPublishNewUserProfile(Identity pooledIdentity,
-                                                       String nickName,
+    public UserIdentity createAndPublishNewUserProfile(String nickName,
                                                        ProofOfWork proofOfWork,
                                                        String terms,
                                                        String statement) {
         String tag = getTag(nickName, proofOfWork);
-        Identity identity = identityService.swapPooledIdentity(tag, pooledIdentity);
+        Identity identity = identityService.createAndInitializeNewActiveIdentity(tag);
         UserIdentity userIdentity = createUserIdentity(nickName, proofOfWork, terms, statement, identity);
         publishPublicUserProfile(userIdentity.getUserProfile(), userIdentity.getIdentity().getNodeIdAndKeyPair().getKeyPair());
         return userIdentity;

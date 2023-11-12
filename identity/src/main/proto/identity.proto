@@ -31,6 +31,5 @@ message Identity {
 
 message IdentityStore {
   map<string, Identity> activeIdentityByDomainId = 1;
-  repeated Identity pool = 2;
-  repeated Identity retired = 3;
+  repeated Identity retired = 2;
 }

@@ -112,8 +112,7 @@ public class RestApiApplicationService extends ApplicationService {
                 securityService.getKeyPairService(),
                 securityService.getProofOfWorkService());
 
-        identityService = new IdentityService(IdentityService.Config.from(getConfig("identity")),
-                persistenceService,
+        identityService = new IdentityService(persistenceService,
                 securityService,
                 networkService);
 
