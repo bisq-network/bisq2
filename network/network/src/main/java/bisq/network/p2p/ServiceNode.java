@@ -20,10 +20,8 @@ package bisq.network.p2p;
 
 import bisq.common.observable.Observable;
 import bisq.common.util.CompletableFutureUtils;
-import bisq.common.util.NetworkUtils;
 import bisq.network.NetworkService;
 import bisq.network.common.Address;
-import bisq.network.common.AddressByTransportTypeMap;
 import bisq.network.common.TransportType;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
@@ -247,11 +245,11 @@ public class ServiceNode {
         peerGroupService.ifPresent(peerGroupService -> peerGroupService.removeSeedNodeAddress(seedNodeAddress));
     }
 
-    public ConfidentialMessageService.Result confidentialSend(EnvelopePayloadMessage envelopePayloadMessage,
-                                                              Address address,
-                                                              PubKey receiverPubKey,
-                                                              KeyPair senderKeyPair,
-                                                              NetworkId senderNetworkId) {
+    public ConfidentialMessageService.SendConfidentialMessageResult confidentialSend(EnvelopePayloadMessage envelopePayloadMessage,
+                                                                                     Address address,
+                                                                                     PubKey receiverPubKey,
+                                                                                     KeyPair senderKeyPair,
+                                                                                     NetworkId senderNetworkId) {
         checkArgument(confidentialMessageService.isPresent(), "ConfidentialMessageService not present at confidentialSend");
         return confidentialMessageService.get().send(envelopePayloadMessage, address, receiverPubKey, senderKeyPair, senderNetworkId);
     }
