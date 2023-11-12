@@ -27,7 +27,7 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
-import bisq.network.p2p.services.data.DataService;
+import bisq.network.p2p.services.data.BroadCastDataResult;
 import bisq.presentation.formatters.TimeFormatter;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
@@ -162,7 +162,7 @@ public class UserProfileController implements Controller {
                 .show();
     }
 
-    private CompletableFuture<DataService.BroadCastDataResult> doDeleteProfile() {
+    private CompletableFuture<BroadCastDataResult> doDeleteProfile() {
         if (bisqEasyService.isDeleteUserIdentityProhibited(userIdentityService.getSelectedUserIdentity())) {
             new Popup().warning(Res.get("user.userProfile.deleteProfile.cannotDelete"))
                     .closeButtonText(Res.get("confirmation.ok"))

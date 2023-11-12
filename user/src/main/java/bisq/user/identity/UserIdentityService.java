@@ -25,7 +25,7 @@ import bisq.common.timer.Scheduler;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
-import bisq.network.p2p.services.data.DataService;
+import bisq.network.p2p.services.data.BroadCastDataResult;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -194,7 +194,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         persist();
     }
 
-    public CompletableFuture<DataService.BroadCastDataResult> editUserProfile(UserIdentity oldUserIdentity, String terms, String statement) {
+    public CompletableFuture<BroadCastDataResult> editUserProfile(UserIdentity oldUserIdentity, String terms, String statement) {
         Identity oldIdentity = oldUserIdentity.getIdentity();
         UserProfile oldUserProfile = oldUserIdentity.getUserProfile();
         UserProfile newUserProfile = UserProfile.from(oldUserProfile, terms, statement);
@@ -212,7 +212,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     }
 
     // Unsafe to use if there are open private chats or messages from userIdentity
-    public CompletableFuture<DataService.BroadCastDataResult> deleteUserIdentity(UserIdentity userIdentity) {
+    public CompletableFuture<BroadCastDataResult> deleteUserIdentity(UserIdentity userIdentity) {
         if (getUserIdentities().size() <= 1) {
             return CompletableFuture.failedFuture(new RuntimeException("Deleting userProfile is not permitted if we only have one left."));
         }
@@ -293,7 +293,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         return userIdentity;
     }
 
-    private CompletableFuture<DataService.BroadCastDataResult> publishPublicUserProfile(UserProfile userProfile, KeyPair keyPair) {
+    private CompletableFuture<BroadCastDataResult> publishPublicUserProfile(UserProfile userProfile, KeyPair keyPair) {
         publishTimeByChatUserId.put(userProfile.getId(), System.currentTimeMillis());
         return networkService.publishAuthenticatedData(userProfile, keyPair);
     }

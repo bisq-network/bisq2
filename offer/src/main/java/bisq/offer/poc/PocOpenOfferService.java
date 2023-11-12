@@ -33,6 +33,7 @@ import bisq.common.util.StringUtils;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
+import bisq.network.p2p.services.data.BroadCastDataResult;
 import bisq.offer.Direction;
 import bisq.offer.options.OfferOption;
 import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
@@ -50,7 +51,6 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
-import static bisq.network.p2p.services.data.DataService.BroadCastDataResult;
 import static java.util.concurrent.CompletableFuture.runAsync;
 
 @Slf4j
