@@ -157,7 +157,7 @@ public class PeerExchangeService implements Node.Listener {
                                 scheduler.ifPresent(Scheduler::stop);
                                 scheduler = Optional.of(Scheduler.run(this::startInitialPeerExchange)
                                         .after(doInitialPeerExchangeDelaySec, TimeUnit.SECONDS)
-                                        .name("PeerExchangeService.scheduler-" + node));
+                                        .name("PeerExchangeService.scheduler-" + StringUtils.truncate(node.toString(), 10)));
                                 doInitialPeerExchangeDelaySec = Math.min(20, doInitialPeerExchangeDelaySec * 2);
                             } else {
                                 log.info("We have completed our peer exchange as we have sufficient connections established.");
