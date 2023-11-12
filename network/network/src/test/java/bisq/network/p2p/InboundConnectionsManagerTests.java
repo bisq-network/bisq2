@@ -250,7 +250,7 @@ public class InboundConnectionsManagerTests {
         supportedTransportTypes.add(TransportType.CLEAR);
         Capability peerCapability = new Capability(peerAddress, supportedTransportTypes);
 
-        ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, new NetworkLoad());
+        ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, null, new NetworkLoad());
         AuthorizationService authorizationService = createAuthorizationService();
         AuthorizationToken token = authorizationService.createToken(request,
                 new NetworkLoad(),

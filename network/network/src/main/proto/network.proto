@@ -49,7 +49,8 @@ message Peer {
 message ConnectionHandshake {
   message Request {
     Capability capability = 1;
-    NetworkLoad networkLoad = 2;
+    optional bytes addressOwnershipProof = 2;
+    NetworkLoad networkLoad = 3;
   }
   message Response {
     Capability capability = 1;

@@ -203,7 +203,7 @@ public class I2PTransportService implements TransportService {
             }
 
             log.debug("ServerSocket created. SessionId={}, destination={}", sessionId, destination);
-            return new ServerSocketResult(networkId.getNodeId(), serverSocket, address);
+            return new ServerSocketResult(networkId.getTorIdentity(), serverSocket, address);
         } catch (Exception exception) {
             exception.printStackTrace();
             throw new ConnectionException(exception);

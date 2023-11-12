@@ -18,6 +18,9 @@
 package bisq.network.p2p.node.handshake;
 
 import bisq.common.util.StringUtils;
+import bisq.network.common.Address;
+import bisq.network.identity.NetworkId;
+import bisq.network.identity.TorIdentity;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.Capability;
@@ -28,7 +31,7 @@ import bisq.network.p2p.node.envelope.NetworkEnvelopeSocket;
 import bisq.network.p2p.node.network_load.ConnectionMetrics;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.network.p2p.services.peergroup.BanList;
-import bisq.network.common.Address;
+import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -36,6 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.util.Arrays;
 
 /**
  * At initial connection we exchange capabilities and require a valid AuthorizationToken (e.g. PoW).
@@ -49,6 +53,7 @@ public final class ConnectionHandshake {
     private final BanList banList;
     private final Capability capability;
     private final AuthorizationService authorizationService;
+    private final NetworkId myNetworkId;
 
     private NetworkEnvelopeSocket networkEnvelopeSocket;
 
@@ -57,25 +62,36 @@ public final class ConnectionHandshake {
     @EqualsAndHashCode
     public static final class Request implements EnvelopePayloadMessage {
         private final Capability capability;
+        private final byte[] addressOwnershipProof;
         private final NetworkLoad networkLoad;
 
-        public Request(Capability capability, NetworkLoad networkLoad) {
+        public Request(Capability capability, byte[] addressOwnershipProof, NetworkLoad networkLoad) {
             this.capability = capability;
+            this.addressOwnershipProof = addressOwnershipProof;
             this.networkLoad = networkLoad;
         }
 
         @Override
         public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
-            return getNetworkMessageBuilder().setConnectionHandshakeRequest(
-                            bisq.network.protobuf.ConnectionHandshake.Request.newBuilder()
-                                    .setCapability(capability.toProto())
-                                    .setNetworkLoad(networkLoad.toProto()))
+            var builder = bisq.network.protobuf.ConnectionHandshake.Request.newBuilder()
+                    .setCapability(capability.toProto())
+                    .setNetworkLoad(networkLoad.toProto());
+
+            if (addressOwnershipProof != null) {
+                builder.setAddressOwnershipProof(ByteString.copyFrom(addressOwnershipProof));
+            }
+
+            return getNetworkMessageBuilder()
+                    .setConnectionHandshakeRequest(builder.build())
                     .build();
         }
 
         public static Request fromProto(bisq.network.protobuf.ConnectionHandshake.Request proto) {
+            ByteString addressOwnershipProofString = proto.getAddressOwnershipProof();
+            byte[] addressOwnershipProof = !addressOwnershipProofString.isEmpty() ?
+                    addressOwnershipProofString.toByteArray() : null;
             return new Request(Capability.fromProto(proto.getCapability()),
-                    NetworkLoad.fromProto(proto.getNetworkLoad()));
+                    addressOwnershipProof, NetworkLoad.fromProto(proto.getNetworkLoad()));
         }
 
         @Override
@@ -135,10 +151,11 @@ public final class ConnectionHandshake {
                                BanList banList,
                                int socketTimeout,
                                Capability capability,
-                               AuthorizationService authorizationService) {
+                               AuthorizationService authorizationService, NetworkId myNetworkId) {
         this.banList = banList;
         this.capability = capability;
         this.authorizationService = authorizationService;
+        this.myNetworkId = myNetworkId;
 
         try {
             // socket.setTcpNoDelay(true);
@@ -155,7 +172,16 @@ public final class ConnectionHandshake {
     public Result start(NetworkLoad myNetworkLoad, Address peerAddress) {
         try {
             ConnectionMetrics connectionMetrics = new ConnectionMetrics();
-            Request request = new Request(capability, myNetworkLoad);
+
+            Address myAddress = capability.getAddress();
+            byte[] addressOwnershipProof = null;
+            if (myAddress.isTorAddress()) {
+                String dataToSign = myAddress.getFullAddress() + "|" + peerAddress.getFullAddress();
+                TorIdentity torIdentity = myNetworkId.getTorIdentity();
+                addressOwnershipProof = torIdentity.signMessage(dataToSign.getBytes());
+            }
+
+            Request request = new Request(capability, addressOwnershipProof, myNetworkLoad);
             // As we do not know he peers load yet, we use the NetworkLoad.INITIAL_LOAD
             AuthorizationToken token = authorizationService.createToken(request,
                     NetworkLoad.INITIAL_LOAD,
@@ -185,12 +211,11 @@ public final class ConnectionHandshake {
                 throw new ConnectionException("Peers address is in quarantine. response=" + response);
             }
 
-            String myAddress = capability.getAddress().getFullAddress();
             boolean isAuthorized = authorizationService.isAuthorized(response,
                     responseNetworkEnvelope.getAuthorizationToken(),
                     myNetworkLoad,
                     StringUtils.createUid(),
-                    myAddress);
+                    myAddress.getFullAddress());
 
             if (!isAuthorized) {
                 throw new ConnectionException("Request authorization failed. request=" + request);
@@ -248,8 +273,22 @@ public final class ConnectionHandshake {
                     NetworkLoad.INITIAL_LOAD,
                     StringUtils.createUid(),
                     myAddress);
-            if (!isAuthorized) {
+            if (isAuthorized) {
+                log.info("Peer {} proofed ownership of its onion address successfully.", peerAddress.getFullAddress());
+            } else {
                 throw new ConnectionException("Request authorization failed. request=" + request);
+            }
+
+            if (peerAddress.isTorAddress()) {
+                String addressOwnershipMessage = peerAddress.getFullAddress() + "|" + myAddress;
+                byte[] addressOwnershipProof = request.getAddressOwnershipProof();
+                boolean isProofValid = TorIdentity.verifyMessage(peerAddress.getHost(),
+                        addressOwnershipMessage.getBytes(),
+                        addressOwnershipProof);
+                if (!isProofValid) {
+                    throw new ConnectionException("Peer couldn't proof its onion address: " + peerAddress.getFullAddress() +
+                            ", Proof: " + Arrays.toString(addressOwnershipProof));
+                }
             }
 
             log.debug("Clients capability {}, load={}", request.getCapability(), request.getNetworkLoad());

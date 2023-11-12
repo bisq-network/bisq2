@@ -18,6 +18,7 @@
 package bisq.network.p2p.node.transport;
 
 import bisq.network.common.Address;
+import bisq.network.identity.TorIdentity;
 import bisq.tor.onionservice.CreateOnionServiceResponse;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -29,17 +30,17 @@ import java.net.ServerSocket;
 @ToString
 @EqualsAndHashCode
 public final class ServerSocketResult {
-    private final String nodeId;
+    private final TorIdentity torIdentity;
     private final ServerSocket serverSocket;
     private final Address address;
 
-    public ServerSocketResult(String nodeId, ServerSocket serverSocket, Address address) {
-        this.nodeId = nodeId;
+    public ServerSocketResult(TorIdentity torIdentity, ServerSocket serverSocket, Address address) {
+        this.torIdentity = torIdentity;
         this.serverSocket = serverSocket;
         this.address = address;
     }
 
     public ServerSocketResult(CreateOnionServiceResponse response) {
-        this(response.getNodeId(), response.getServerSocket(), new Address(response.getOnionAddress().toString()));
+        this(response.getTorIdentity(), response.getServerSocket(), new Address(response.getOnionAddress().toString()));
     }
 }

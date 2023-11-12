@@ -94,7 +94,7 @@ public class NativeTorController implements BootstrapEventListener, HsDescUpload
     }
 
     public TorControlConnection.CreateHiddenServiceResult createHiddenService(
-            int hiddenServicePort, int localPort, Optional<String> privateKey) throws IOException {
+            int hiddenServicePort, int localPort, String privateKey) throws IOException {
         TorControlConnection controlConnection = torControlConnection.orElseThrow();
 
         controllerEventHandler.addHsDescUploadedListener(this);
@@ -104,7 +104,7 @@ public class NativeTorController implements BootstrapEventListener, HsDescUpload
         if (privateKey.isEmpty()) {
             result = controlConnection.createHiddenService(hiddenServicePort, localPort);
         } else {
-            result = controlConnection.createHiddenService(hiddenServicePort, localPort, privateKey.get());
+            result = controlConnection.createHiddenService(hiddenServicePort, localPort, privateKey);
         }
         hiddenServiceAddress.complete(result.serviceID);
 

@@ -103,7 +103,7 @@ public class ClearNetTransportService implements TransportService {
                 bootstrapInfo.getBootstrapDetails().set("Server created: " + address);
             }
 
-            return new ServerSocketResult(networkId.getNodeId(), serverSocket, address);
+            return new ServerSocketResult(networkId.getTorIdentity(), serverSocket, address);
         } catch (IOException e) {
             log.error("{}. Server port {}", e, port);
             throw new CompletionException(e);
