@@ -33,7 +33,7 @@ import bisq.common.util.StringUtils;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
-import bisq.network.p2p.services.data.BroadCastDataResult;
+import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.offer.Direction;
 import bisq.offer.options.OfferOption;
 import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
@@ -86,7 +86,7 @@ public class PocOpenOfferService implements PersistenceClient<PocOpenOfferStore>
     }
 
 
-    public CompletableFuture<List<BroadCastDataResult>> shutdown() {
+    public CompletableFuture<List<BroadcastResult>> shutdown() {
         log.info("shutdown");
         return CompletableFutureUtils.allOf(getOpenOffers().stream()
                         .map(openOffer -> removeFromNetwork(openOffer.getOffer())))
@@ -174,7 +174,7 @@ public class PocOpenOfferService implements PersistenceClient<PocOpenOfferStore>
         });
     }
 
-    public CompletableFuture<BroadCastDataResult> publishOffer(PocOffer offer) {
+    public CompletableFuture<BroadcastResult> publishOffer(PocOffer offer) {
         add(offer);
         return addToNetwork(offer);
     }
@@ -183,22 +183,22 @@ public class PocOpenOfferService implements PersistenceClient<PocOpenOfferStore>
         getOpenOffers().forEach(openOffer -> addToNetwork(openOffer.getOffer()));
     }
 
-    public CompletableFuture<BroadCastDataResult> removeMyOffer(PocOffer offer) {
+    public CompletableFuture<BroadcastResult> removeMyOffer(PocOffer offer) {
         remove(offer);
         return removeFromNetwork(offer);
     }
 
-    public CompletableFuture<BroadCastDataResult> addToNetwork(PocOffer offer) {
+    public CompletableFuture<BroadcastResult> addToNetwork(PocOffer offer) {
         return identityService.getOrCreateIdentity(offer.getId())
                 .thenCompose(identity -> networkService.publishAuthenticatedData(offer, identity.getNodeIdAndKeyPair().getKeyPair()));
     }
 
-    public CompletableFuture<BroadCastDataResult> removeFromNetwork(PocOffer offer) {
+    public CompletableFuture<BroadcastResult> removeFromNetwork(PocOffer offer) {
         // We do not retire the identity as it might be still used in the chat. For a mature implementation we would
         // need to check if there is any usage still for that identity and if not retire it.
         return identityService.findActiveIdentity(offer.getId())
                 .map(identity -> networkService.removeAuthenticatedData(offer, identity.getNodeIdAndKeyPair().getKeyPair()))
-                .orElse(CompletableFuture.completedFuture(new BroadCastDataResult()));
+                .orElse(CompletableFuture.completedFuture(new BroadcastResult()));
     }
 
     public void addListener(Listener listener) {

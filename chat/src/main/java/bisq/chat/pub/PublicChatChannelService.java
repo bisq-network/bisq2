@@ -19,7 +19,7 @@ package bisq.chat.pub;
 
 import bisq.chat.*;
 import bisq.network.NetworkService;
-import bisq.network.p2p.services.data.BroadCastDataResult;
+import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.vo.NetworkIdWithKeyPair;
 import bisq.persistence.PersistableStore;
@@ -73,16 +73,16 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<BroadCastDataResult> publishChatMessage(String text,
-                                                                     Optional<Citation> citation,
-                                                                     C publicChannel,
-                                                                     UserIdentity userIdentity) {
+    public CompletableFuture<BroadcastResult> publishChatMessage(String text,
+                                                                 Optional<Citation> citation,
+                                                                 C publicChannel,
+                                                                 UserIdentity userIdentity) {
         M chatMessage = createChatMessage(text, citation, publicChannel, userIdentity.getUserProfile());
         return publishChatMessage(chatMessage, userIdentity);
     }
 
-    public CompletableFuture<BroadCastDataResult> publishChatMessage(M message,
-                                                                     UserIdentity userIdentity) {
+    public CompletableFuture<BroadcastResult> publishChatMessage(M message,
+                                                                 UserIdentity userIdentity) {
         if (bannedUserService.isUserProfileBanned(message.getAuthorUserProfileId())) {
             return CompletableFuture.failedFuture(new RuntimeException());
         }
@@ -91,9 +91,9 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
                 .thenCompose(result -> networkService.publishAuthenticatedData(message, keyPair));
     }
 
-    public CompletableFuture<BroadCastDataResult> publishEditedChatMessage(M originalChatMessage,
-                                                                           String editedText,
-                                                                           UserIdentity userIdentity) {
+    public CompletableFuture<BroadcastResult> publishEditedChatMessage(M originalChatMessage,
+                                                                       String editedText,
+                                                                       UserIdentity userIdentity) {
         KeyPair ownerKeyPair = userIdentity.getNodeIdAndKeyPair().getKeyPair();
         return networkService.removeAuthenticatedData(originalChatMessage, ownerKeyPair)
                 .thenCompose(result -> {
@@ -102,7 +102,7 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
                 });
     }
 
-    public CompletableFuture<BroadCastDataResult> deleteChatMessage(M chatMessage, NetworkIdWithKeyPair nodeIdAndKeyPair) {
+    public CompletableFuture<BroadcastResult> deleteChatMessage(M chatMessage, NetworkIdWithKeyPair nodeIdAndKeyPair) {
         return networkService.removeAuthenticatedData(chatMessage, nodeIdAndKeyPair.getKeyPair());
     }
 

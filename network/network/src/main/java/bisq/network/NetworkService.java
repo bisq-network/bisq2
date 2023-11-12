@@ -39,7 +39,7 @@ import bisq.network.p2p.services.confidential.ConfidentialMessageListener;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatusService;
-import bisq.network.p2p.services.data.BroadCastDataResult;
+import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.StorageService;
@@ -257,27 +257,27 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     // Add/remove data
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<BroadCastDataResult> publishAuthenticatedData(DistributedData distributedData, KeyPair keyPair) {
+    public CompletableFuture<BroadcastResult> publishAuthenticatedData(DistributedData distributedData, KeyPair keyPair) {
         checkArgument(dataService.isPresent(), "DataService must be supported when addData is called.");
         DefaultAuthenticatedData authenticatedData = new DefaultAuthenticatedData(distributedData);
         return dataService.get().addAuthenticatedData(authenticatedData, keyPair);
     }
 
-    public CompletableFuture<BroadCastDataResult> removeAuthenticatedData(DistributedData distributedData, KeyPair ownerKeyPair) {
+    public CompletableFuture<BroadcastResult> removeAuthenticatedData(DistributedData distributedData, KeyPair ownerKeyPair) {
         checkArgument(dataService.isPresent(), "DataService must be supported when removeData is called.");
         DefaultAuthenticatedData authenticatedData = new DefaultAuthenticatedData(distributedData);
         return dataService.get().removeAuthenticatedData(authenticatedData, ownerKeyPair);
     }
 
-    public CompletableFuture<BroadCastDataResult> publishAuthorizedData(AuthorizedDistributedData authorizedDistributedData,
-                                                                        KeyPair keyPair) {
+    public CompletableFuture<BroadcastResult> publishAuthorizedData(AuthorizedDistributedData authorizedDistributedData,
+                                                                    KeyPair keyPair) {
         return publishAuthorizedData(authorizedDistributedData, keyPair, keyPair.getPrivate(), keyPair.getPublic());
     }
 
-    public CompletableFuture<BroadCastDataResult> publishAuthorizedData(AuthorizedDistributedData authorizedDistributedData,
-                                                                        KeyPair keyPair,
-                                                                        PrivateKey authorizedPrivateKey,
-                                                                        PublicKey authorizedPublicKey) {
+    public CompletableFuture<BroadcastResult> publishAuthorizedData(AuthorizedDistributedData authorizedDistributedData,
+                                                                    KeyPair keyPair,
+                                                                    PrivateKey authorizedPrivateKey,
+                                                                    PublicKey authorizedPublicKey) {
         checkArgument(dataService.isPresent(), "DataService must be supported when addData is called.");
         try {
             byte[] signature = SignatureUtil.sign(authorizedDistributedData.serialize(), authorizedPrivateKey);
@@ -289,21 +289,21 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         }
     }
 
-    public CompletableFuture<BroadCastDataResult> removeAuthorizedData(AuthorizedDistributedData authorizedDistributedData,
-                                                                       KeyPair keyPair) {
+    public CompletableFuture<BroadcastResult> removeAuthorizedData(AuthorizedDistributedData authorizedDistributedData,
+                                                                   KeyPair keyPair) {
         return removeAuthorizedData(authorizedDistributedData, keyPair, keyPair.getPublic());
     }
 
-    public CompletableFuture<BroadCastDataResult> removeAuthorizedData(AuthorizedDistributedData authorizedDistributedData,
-                                                                       KeyPair ownerKeyPair,
-                                                                       PublicKey authorizedPublicKey) {
+    public CompletableFuture<BroadcastResult> removeAuthorizedData(AuthorizedDistributedData authorizedDistributedData,
+                                                                   KeyPair ownerKeyPair,
+                                                                   PublicKey authorizedPublicKey) {
         checkArgument(dataService.isPresent(), "DataService must be supported when addData is called.");
         // When removing data the signature is not used.
         AuthorizedData authorizedData = new AuthorizedData(authorizedDistributedData, authorizedPublicKey);
         return dataService.get().removeAuthorizedData(authorizedData, ownerKeyPair);
     }
 
-    public CompletableFuture<BroadCastDataResult> publishAppendOnlyData(AppendOnlyData appendOnlyData) {
+    public CompletableFuture<BroadcastResult> publishAppendOnlyData(AppendOnlyData appendOnlyData) {
         checkArgument(dataService.isPresent(), "DataService must be supported when addData is called.");
         return dataService.get().addAppendOnlyData(appendOnlyData);
     }

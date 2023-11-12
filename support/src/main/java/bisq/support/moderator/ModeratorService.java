@@ -32,7 +32,7 @@ import bisq.network.NetworkService;
 import bisq.network.SendMessageResult;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageListener;
-import bisq.network.p2p.services.data.BroadCastDataResult;
+import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.network.p2p.vo.NetworkIdWithKeyPair;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
@@ -158,7 +158,7 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
         persist();
     }
 
-    public CompletableFuture<BroadCastDataResult> banReportedUser(ReportToModeratorMessage message) {
+    public CompletableFuture<BroadcastResult> banReportedUser(ReportToModeratorMessage message) {
         UserIdentity selectedUserIdentity = userIdentityService.getSelectedUserIdentity();
         if (selectedUserIdentity == null) {
             return CompletableFuture.failedFuture(new RuntimeException("selectedUserIdentity must not be null"));
@@ -168,7 +168,7 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
         return networkService.publishAuthorizedData(data, keyPair);
     }
 
-    public CompletableFuture<BroadCastDataResult> unBanReportedUser(BannedUserProfileData data) {
+    public CompletableFuture<BroadcastResult> unBanReportedUser(BannedUserProfileData data) {
         UserIdentity selectedUserIdentity = userIdentityService.getSelectedUserIdentity();
         if (selectedUserIdentity == null) {
             return CompletableFuture.failedFuture(new RuntimeException("selectedUserIdentity must not be null"));
