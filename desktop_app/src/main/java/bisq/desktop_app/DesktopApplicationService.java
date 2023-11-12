@@ -18,6 +18,8 @@
 package bisq.desktop_app;
 
 import bisq.account.AccountService;
+import bisq.application.ApplicationService;
+import bisq.application.ShutDownHandler;
 import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatService;
@@ -27,7 +29,6 @@ import bisq.common.util.CompletableFutureUtils;
 import bisq.contract.ContractService;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.State;
-import bisq.desktop.common.application.ShutDownHandler;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
@@ -61,8 +62,7 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
  */
 
 @Slf4j
-public class DesktopApplicationService extends bisq.application.ApplicationService {
-
+public class DesktopApplicationService extends ApplicationService {
     @Getter
     private final ServiceProvider serviceProvider;
     @Getter

@@ -17,6 +17,7 @@
 
 package bisq.desktop.components.overlay;
 
+import bisq.application.ShutDownHandler;
 import bisq.common.locale.LanguageRepository;
 import bisq.common.util.ExceptionUtil;
 import bisq.common.util.OsUtils;
@@ -25,7 +26,6 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.Icons;
 import bisq.desktop.common.Transitions;
-import bisq.desktop.common.application.ShutDownHandler;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.components.containers.BisqGridPane;

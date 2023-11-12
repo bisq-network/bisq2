@@ -17,8 +17,7 @@
 
 package bisq.desktop_app;
 
-import bisq.common.application.Executable;
-import bisq.common.application.JavaFXApplication;
+import bisq.application.Executable;
 import bisq.desktop.DesktopController;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.overlay.Popup;
@@ -94,5 +93,13 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
                 }
             });
         });
+    }
+
+    @Override
+    protected void exitJvm() {
+        log.info("Exiting JavaFX Platform");
+        Platform.exit();
+
+        super.exitJvm();
     }
 }

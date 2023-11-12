@@ -38,6 +38,7 @@ public abstract class RateLimitedPersistenceClient<T extends PersistableStore<T>
     private volatile boolean writeInProgress;
 
     public RateLimitedPersistenceClient() {
+        //todo
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             Thread.currentThread().setName("RateLimitedPersistenceClient-shutdownHook-" + getPersistence().getStorePath());
             persistOnShutdown();

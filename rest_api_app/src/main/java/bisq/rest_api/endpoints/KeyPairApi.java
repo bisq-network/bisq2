@@ -17,7 +17,8 @@
 
 package bisq.rest_api.endpoints;
 
-import bisq.rest_api.RestApiApp;
+import bisq.rest_api.JaxRsApplication;
+import bisq.rest_api.RestApiApplicationService;
 import bisq.rest_api.dto.KeyPairDto;
 import bisq.rest_api.error.StatusException;
 import bisq.security.KeyPairService;
@@ -49,7 +50,8 @@ public class KeyPairApi {
     private final KeyPairService keyPairService;
 
     public KeyPairApi(@Context Application application) {
-        keyPairService = ((RestApiApp) application).getApplicationService().getSecurityService().getKeyPairService();
+        RestApiApplicationService applicationService = ((JaxRsApplication) application).getApplicationService().get();
+        keyPairService = applicationService.getSecurityService().getKeyPairService();
     }
 
     /**

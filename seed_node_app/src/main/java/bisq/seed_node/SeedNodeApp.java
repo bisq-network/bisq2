@@ -17,9 +17,9 @@
 
 package bisq.seed_node;
 
+import bisq.application.Executable;
 import bisq.common.util.FileUtils;
 import bisq.network.common.AddressByTransportTypeMap;
-import bisq.network.p2p.node.Node;
 import com.google.gson.GsonBuilder;
 import lombok.extern.slf4j.Slf4j;
 
@@ -27,31 +27,30 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 @Slf4j
-public class SeedNodeApp {
+public class SeedNodeApp extends Executable<SeedNodeApplicationService> {
     public static void main(String[] args) {
-        SeedNodeApplicationService applicationService = new SeedNodeApplicationService(args);
-        applicationService.readAllPersisted()
-                .thenCompose(result -> applicationService.initialize())
-                .whenComplete((result, throwable) -> {
-                    AddressByTransportTypeMap addressByTransportTypeMap =
-                            applicationService.getIdentityService().getOrCreateDefaultIdentity().getNetworkId().getAddressByTransportTypeMap();
-                    String json = new GsonBuilder().setPrettyPrinting().create().toJson(addressByTransportTypeMap);
-                    Path path = applicationService.getConfig().getBaseDir().resolve("default_node_address.json");
-                    try {
-                        FileUtils.writeToFile(json, path.toFile());
-                    } catch (IOException e) {
-                        log.error("Error at write json", e);
-                    }
-                });
-
-        keepRunning();
+        new SeedNodeApp(args);
     }
 
-    private static void keepRunning() {
+    public SeedNodeApp(String[] args) {
+        super(args);
+    }
+
+    @Override
+    protected void onApplicationServiceInitialized(Boolean result, Throwable throwable) {
+        AddressByTransportTypeMap addressByTransportTypeMap =
+                applicationService.getIdentityService().getOrCreateDefaultIdentity().getNetworkId().getAddressByTransportTypeMap();
+        String json = new GsonBuilder().setPrettyPrinting().create().toJson(addressByTransportTypeMap);
+        Path path = applicationService.getConfig().getBaseDir().resolve("default_node_address.json");
         try {
-            // block and wait shut down signal, like CTRL+C
-            Thread.currentThread().join();
-        } catch (InterruptedException ignore) {
+            FileUtils.writeToFile(json, path.toFile());
+        } catch (IOException e) {
+            log.error("Error at write json", e);
         }
+    }
+
+    @Override
+    protected SeedNodeApplicationService createApplicationService(String[] args) {
+        return new SeedNodeApplicationService(args);
     }
 }
