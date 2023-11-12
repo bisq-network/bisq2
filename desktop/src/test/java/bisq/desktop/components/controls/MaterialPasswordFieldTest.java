@@ -25,7 +25,6 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -35,6 +34,13 @@ import org.testfx.framework.junit5.Start;
 
 import static org.mockito.Mockito.when;
 import static org.testfx.assertions.api.Assertions.assertThat;
+
+// Disable MaterialPasswordFieldTest as it requires extra setup in headless environment
+// (https://nofluffjuststuff.com/blog/andres_almiray/2016/02/running_testfx_tests_in_headless_mode,
+// https://wiki.openjdk.org/display/OpenJFX/Monocle).
+//
+//The UI test here can be considered more a POC for UI testing. If we use more automated UI testing we
+// need to update the installation requirements for headless environments so that the tests do not fail.
 
 @ExtendWith(ApplicationExtension.class)
 class MaterialPasswordFieldTest {
@@ -69,7 +75,7 @@ class MaterialPasswordFieldTest {
         closeable.close();
     }
 
-    @Test
+    // @Test
     void basicTest(FxRobot robot) {
         textIsPickedUpByPasswordField(robot);
         unmasksTextWhenIconIsClicked(robot);
