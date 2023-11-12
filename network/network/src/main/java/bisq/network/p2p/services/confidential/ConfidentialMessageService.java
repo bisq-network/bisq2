@@ -35,7 +35,6 @@ import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.security.*;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
@@ -51,33 +50,6 @@ import static java.util.concurrent.CompletableFuture.*;
 
 @Slf4j
 public class ConfidentialMessageService implements Node.Listener, DataService.Listener {
-
-    @Getter
-    public static class SendConfidentialMessageResult {
-        private final MessageDeliveryStatus messageDeliveryStatus;
-        private DataService.BroadCastDataResult mailboxFuture = new DataService.BroadCastDataResult();
-        private Optional<String> errorMsg = Optional.empty();
-
-        public SendConfidentialMessageResult(MessageDeliveryStatus messageDeliveryStatus) {
-            this.messageDeliveryStatus = messageDeliveryStatus;
-        }
-
-        public SendConfidentialMessageResult setMailboxFuture(DataService.BroadCastDataResult mailboxFuture) {
-            this.mailboxFuture = mailboxFuture;
-            return this;
-        }
-
-        public SendConfidentialMessageResult setErrorMsg(String errorMsg) {
-            this.errorMsg = Optional.of(errorMsg);
-            return this;
-        }
-
-        @Override
-        public String toString() {
-            return "[messageDeliveryStatus=" + messageDeliveryStatus + errorMsg.map(error -> ", errorMsg=" + error + "]").orElse("]");
-        }
-    }
-
     private final NodesById nodesById;
     private final KeyPairService keyPairService;
     private final Optional<DataService> dataService;

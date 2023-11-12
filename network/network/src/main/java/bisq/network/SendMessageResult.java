@@ -1,12 +1,12 @@
 package bisq.network;
 
 import bisq.network.common.TransportType;
-import bisq.network.p2p.services.confidential.ConfidentialMessageService;
+import bisq.network.p2p.services.confidential.SendConfidentialMessageResult;
 
 import java.util.HashMap;
 import java.util.Optional;
 
-public class SendMessageResult extends HashMap<TransportType, ConfidentialMessageService.SendConfidentialMessageResult> {
+public class SendMessageResult extends HashMap<TransportType, SendConfidentialMessageResult> {
     public SendMessageResult() {
         super();
     }
