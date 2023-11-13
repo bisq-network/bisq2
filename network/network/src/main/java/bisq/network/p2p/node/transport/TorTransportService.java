@@ -5,6 +5,7 @@ import bisq.network.common.Address;
 import bisq.network.common.TransportConfig;
 import bisq.network.common.TransportType;
 import bisq.network.identity.NetworkId;
+import bisq.network.identity.TorIdentity;
 import bisq.network.p2p.node.ConnectionException;
 import bisq.tor.TorService;
 import bisq.tor.TorTransportConfig;
@@ -75,7 +76,7 @@ public class TorTransportService implements TransportService {
     }
 
     @Override
-    public ServerSocketResult getServerSocket(NetworkId networkId) {
+    public ServerSocketResult getServerSocket(NetworkId networkId, TorIdentity torIdentity) {
         try {
             int port = networkId.getAddressByTransportTypeMap().get(TransportType.TOR).getPort();
             bootstrapInfo.getBootstrapState().set(BootstrapState.START_PUBLISH_SERVICE);
@@ -83,7 +84,7 @@ public class TorTransportService implements TransportService {
             bootstrapInfo.getBootstrapProgress().set(0.25);
             bootstrapInfo.getBootstrapDetails().set("Create Onion service for node ID '" + networkId + "'");
 
-            CreateOnionServiceResponse response = torService.createOnionService(port, networkId.getTorIdentity()).get(2, TimeUnit.MINUTES);
+            CreateOnionServiceResponse response = torService.createOnionService(port, torIdentity).get(2, TimeUnit.MINUTES);
 
             bootstrapInfo.getBootstrapState().set(BootstrapState.SERVICE_PUBLISHED);
             bootstrapInfo.getBootstrapProgress().set(0.5);

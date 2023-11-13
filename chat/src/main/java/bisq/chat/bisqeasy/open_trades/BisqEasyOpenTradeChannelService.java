@@ -146,7 +146,7 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
                             channel.getMediator(),
                             bisqEasyOffer);
                     addMessage(takeOfferMessage, channel);
-                    return networkService.confidentialSend(takeOfferMessage, maker.getNetworkId(), myUserIdentity.getNodeIdAndKeyPair());
+                    return networkService.confidentialSend(takeOfferMessage, maker.getNetworkId(), myUserIdentity.getNodeIdAndKeyPair(), myUserIdentity.getIdentity().getTorIdentity());
                 })
                 .orElse(CompletableFuture.failedFuture(new RuntimeException("makerUserProfile not found from message.authorUserProfileId")));
     }

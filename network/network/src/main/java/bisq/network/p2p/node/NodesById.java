@@ -19,12 +19,13 @@ package bisq.network.p2p.node;
 
 
 import bisq.common.util.CompletableFutureUtils;
+import bisq.network.common.Address;
 import bisq.network.identity.NetworkId;
+import bisq.network.identity.TorIdentity;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.network_load.NetworkLoadService;
 import bisq.network.p2p.node.transport.TransportService;
 import bisq.network.p2p.services.peergroup.BanList;
-import bisq.network.common.Address;
 
 import java.util.Collection;
 import java.util.Map;
@@ -69,30 +70,30 @@ public class NodesById implements Node.Listener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public Node createAndConfigNode(NetworkId networkId) {
-        Node node = new Node(banList, nodeConfig, networkId, transportService, networkLoadService);
+    public Node createAndConfigNode(NetworkId networkId, TorIdentity torIdentity) {
+        Node node = new Node(banList, nodeConfig, networkId, torIdentity, transportService, networkLoadService);
         map.put(networkId, node);
         node.addListener(this);
         listeners.forEach(listener -> listener.onNodeAdded(node));
         return node;
     }
 
-    public Node getInitializedNode(NetworkId networkId) {
-        Node node = getOrCreateNode(networkId);
+    public Node getInitializedNode(NetworkId networkId, TorIdentity torIdentity) {
+        Node node = getOrCreateNode(networkId, torIdentity);
         node.initialize();
         return node;
     }
 
-    public Connection getConnection(NetworkId networkId, Address address) {
-        return getOrCreateNode(networkId).getConnection(address);
+    public Connection getConnection(NetworkId networkId, Address address, TorIdentity torIdentity) {
+        return getOrCreateNode(networkId, torIdentity).getConnection(address);
     }
 
-    public Connection send(NetworkId senderNetworkId, EnvelopePayloadMessage envelopePayloadMessage, Address address) {
-        return getOrCreateNode(senderNetworkId).send(envelopePayloadMessage, address);
+    public Connection send(NetworkId senderNetworkId, EnvelopePayloadMessage envelopePayloadMessage, Address address, TorIdentity torIdentity) {
+        return getOrCreateNode(senderNetworkId, torIdentity).send(envelopePayloadMessage, address);
     }
 
-    public Connection send(NetworkId senderNetworkId, EnvelopePayloadMessage envelopePayloadMessage, Connection connection) {
-        return getOrCreateNode(senderNetworkId).send(envelopePayloadMessage, connection);
+    public Connection send(NetworkId senderNetworkId, EnvelopePayloadMessage envelopePayloadMessage, Connection connection, TorIdentity torIdentity) {
+        return getOrCreateNode(senderNetworkId, torIdentity).send(envelopePayloadMessage, connection);
     }
 
     public CompletableFuture<Boolean> shutdown() {
@@ -171,8 +172,8 @@ public class NodesById implements Node.Listener {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private Node getOrCreateNode(NetworkId networkId) {
+    private Node getOrCreateNode(NetworkId networkId, TorIdentity torIdentity) {
         return findNode(networkId)
-                .orElseGet(() -> createAndConfigNode(networkId));
+                .orElseGet(() -> createAndConfigNode(networkId, torIdentity));
     }
 }

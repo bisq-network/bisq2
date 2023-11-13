@@ -24,6 +24,7 @@ import bisq.network.NetworkService;
 import bisq.network.common.Address;
 import bisq.network.common.TransportType;
 import bisq.network.identity.NetworkId;
+import bisq.network.identity.TorIdentity;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
@@ -162,8 +163,8 @@ public class ServiceNode {
         defaultNodePort = nodeConfig.getTransportConfig().getDefaultNodePort();
     }
 
-    public void createDefaultNode(NetworkId defaultNetworkId) {
-        defaultNode = nodesById.createAndConfigNode(defaultNetworkId);
+    public void createDefaultNode(NetworkId defaultNetworkId, TorIdentity defaultTorIdentity) {
+        defaultNode = nodesById.createAndConfigNode(defaultNetworkId, defaultTorIdentity);
 
         Set<Service> services = config.getServices();
         peerGroupService = services.contains(Service.PEER_GROUP) ?
@@ -210,8 +211,8 @@ public class ServiceNode {
         });
     }
 
-    Node getInitializedNode(NetworkId networkId) {
-        return nodesById.getInitializedNode(networkId);
+    Node getInitializedNode(NetworkId networkId, TorIdentity torIdentity) {
+        return nodesById.getInitializedNode(networkId, torIdentity);
     }
 
     public CompletableFuture<Boolean> shutdown() {
@@ -250,13 +251,14 @@ public class ServiceNode {
                                                           Address address,
                                                           PubKey receiverPubKey,
                                                           KeyPair senderKeyPair,
-                                                          NetworkId senderNetworkId) {
+                                                          NetworkId senderNetworkId,
+                                                          TorIdentity senderTorIdentity) {
         checkArgument(confidentialMessageService.isPresent(), "ConfidentialMessageService not present at confidentialSend");
-        return confidentialMessageService.get().send(envelopePayloadMessage, address, receiverPubKey, senderKeyPair, senderNetworkId);
+        return confidentialMessageService.get().send(envelopePayloadMessage, address, receiverPubKey, senderKeyPair, senderNetworkId, senderTorIdentity);
     }
 
-    public Connection send(NetworkId senderNetworkId, EnvelopePayloadMessage envelopePayloadMessage, Address address) {
-        return getNodesById().send(senderNetworkId, envelopePayloadMessage, address);
+    public Connection send(NetworkId senderNetworkId, EnvelopePayloadMessage envelopePayloadMessage, Address address, TorIdentity torIdentity) {
+        return getNodesById().send(senderNetworkId, envelopePayloadMessage, address, torIdentity);
     }
 
     public void addMessageListener(MessageListener messageListener) {

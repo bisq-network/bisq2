@@ -28,6 +28,7 @@ import bisq.network.common.TransportType;
 import bisq.network.http.BaseHttpClient;
 import bisq.network.http.HttpClientRepository;
 import bisq.network.identity.NetworkId;
+import bisq.network.identity.TorIdentity;
 import bisq.network.p2p.ServiceNode;
 import bisq.network.p2p.ServiceNodesByTransport;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
@@ -107,6 +108,8 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     private final Map<TransportType, Integer> defaultNodePortByTransportType;
 
     private NetworkId defaultNetworkId;
+    @Getter
+    private TorIdentity defaultTorIdentity;
 
     public NetworkService(NetworkServiceConfig config,
                           PersistenceService persistenceService,
@@ -195,14 +198,14 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     // Initialize node
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public void createDefaultServiceNodes(NetworkId defaultNetworkId) {
+    public void createDefaultServiceNodes(NetworkId defaultNetworkId, TorIdentity defaultTorIdentity) {
         this.defaultNetworkId = defaultNetworkId;
         serviceNodesByTransport.getMap()
-                .forEach((transportType, serviceNode) -> serviceNode.createDefaultNode(defaultNetworkId));
+                .forEach((transportType, serviceNode) -> serviceNode.createDefaultNode(defaultNetworkId, defaultTorIdentity));
     }
 
-    public Map<TransportType, CompletableFuture<Node>> getInitializedNodeByTransport(NetworkId networkId, PubKey pubKey) {
-        return serviceNodesByTransport.getInitializedNodeByTransport(networkId);
+    public Map<TransportType, CompletableFuture<Node>> getInitializedNodeByTransport(NetworkId networkId, PubKey pubKey,  TorIdentity torIdentity) {
+        return serviceNodesByTransport.getInitializedNodeByTransport(networkId, torIdentity);
     }
 
     public boolean isNodeOnAllTransportsInitialized(NetworkId networkId) {
@@ -214,8 +217,8 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     /**
      * NetworkId of a fully initialized node (on all transports)
      */
-    public CompletableFuture<List<Node>> getNetworkIdOfInitializedNode(NetworkId networkId) {
-        return serviceNodesByTransport.getNetworkIdOfInitializedNode(networkId);
+    public CompletableFuture<List<Node>> getNetworkIdOfInitializedNode(NetworkId networkId, TorIdentity torIdentity) {
+        return serviceNodesByTransport.getNetworkIdOfInitializedNode(networkId, torIdentity);
     }
 
 
@@ -230,12 +233,14 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
      */
     public CompletableFuture<SendMessageResult> confidentialSend(EnvelopePayloadMessage envelopePayloadMessage,
                                                                  NetworkId receiverNetworkId,
-                                                                 NetworkIdWithKeyPair senderNetworkIdWithKeyPair) {
-        return getNetworkIdOfInitializedNode(senderNetworkIdWithKeyPair.getNetworkId())
+                                                                 NetworkIdWithKeyPair senderNetworkIdWithKeyPair,
+                                                                 TorIdentity senderTorIdentity) {
+        return getNetworkIdOfInitializedNode(senderNetworkIdWithKeyPair.getNetworkId(), senderTorIdentity)
                 .thenCompose(networkId -> supplyAsync(() -> serviceNodesByTransport.confidentialSend(envelopePayloadMessage,
                                 receiverNetworkId,
                                 senderNetworkIdWithKeyPair.getKeyPair(),
-                                senderNetworkIdWithKeyPair.getNetworkId()),
+                                senderNetworkIdWithKeyPair.getNetworkId(),
+                                senderTorIdentity),
                         NETWORK_IO_POOL));
     }
 
@@ -248,8 +253,9 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
      */
     public CompletableFuture<Map<TransportType, Connection>> send(NetworkId senderNetworkId,
                                                                   EnvelopePayloadMessage envelopePayloadMessage,
-                                                                  AddressByTransportTypeMap receiver) {
-        return supplyAsync(() -> serviceNodesByTransport.send(senderNetworkId, envelopePayloadMessage, receiver),
+                                                                  AddressByTransportTypeMap receiver,
+                                                                  TorIdentity senderTorIdentity) {
+        return supplyAsync(() -> serviceNodesByTransport.send(senderNetworkId, envelopePayloadMessage, receiver, senderTorIdentity),
                 NETWORK_IO_POOL);
     }
 

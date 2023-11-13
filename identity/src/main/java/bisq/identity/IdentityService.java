@@ -73,8 +73,8 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
 
-        NetworkId defaultNetworkIdentity = getOrCreateDefaultIdentity().getNetworkId();
-        networkService.createDefaultServiceNodes(defaultNetworkIdentity);
+        Identity defaultIdentity = getOrCreateDefaultIdentity();
+        networkService.createDefaultServiceNodes(defaultIdentity.getNetworkId(), defaultIdentity.getTorIdentity());
 
         initializeActiveIdentities();
         return CompletableFuture.completedFuture(true);
@@ -92,18 +92,31 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
 
     public CompletableFuture<Identity> createAndInitializeIdentity(String keyId, String identityTag) {
         Identity identity = createIdentity(keyId, false, identityTag);
-        return networkService.getNetworkIdOfInitializedNode(identity.getNetworkId())
+        return networkService.getNetworkIdOfInitializedNode(identity.getNetworkId(), identity.getTorIdentity())
                 .thenApply(nodes -> identity);
     }
 
     private Identity createIdentity(String keyId, boolean isForDefaultId, String identityTag) {
         KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
         PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
-        NetworkId networkId = createNetworkId(isForDefaultId, pubKey);
-        return new Identity(identityTag, networkId, keyPair);
+
+        TorIdentity torIdentity = createTorIdentity(isForDefaultId);
+        NetworkId networkId = createNetworkId(isForDefaultId, pubKey, torIdentity);
+
+        return new Identity(identityTag, networkId, torIdentity, keyPair);
     }
 
-    private NetworkId createNetworkId(boolean isForDefaultId, PubKey pubKey) {
+    private TorIdentity createTorIdentity(boolean isForDefaultId) {
+        Set<TransportType> supportedTransportTypes = networkService.getSupportedTransportTypes();
+        Map<TransportType, Integer> defaultPorts = networkService.getDefaultNodePortByTransportType();
+
+        boolean isTorSupported = supportedTransportTypes.contains(TransportType.TOR);
+        int torPort = isTorSupported && isForDefaultId ?
+                defaultPorts.getOrDefault(TransportType.TOR, NetworkUtils.selectRandomPort()) : NetworkUtils.selectRandomPort();
+        return TorIdentity.generate(torPort);
+    }
+
+    private NetworkId createNetworkId(boolean isForDefaultId, PubKey pubKey, TorIdentity torIdentity) {
         AddressByTransportTypeMap addressByTransportTypeMap = new AddressByTransportTypeMap();
         Set<TransportType> supportedTransportTypes = networkService.getSupportedTransportTypes();
         Map<TransportType, Integer> defaultPorts = networkService.getDefaultNodePortByTransportType();
@@ -111,7 +124,6 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         boolean isTorSupported = supportedTransportTypes.contains(TransportType.TOR);
         int torPort = isTorSupported && isForDefaultId ?
                 defaultPorts.getOrDefault(TransportType.TOR, NetworkUtils.selectRandomPort()) : NetworkUtils.selectRandomPort();
-        TorIdentity torIdentity = TorIdentity.generate(torPort);
 
         if (isForDefaultId) {
             if (supportedTransportTypes.contains(TransportType.CLEAR)) {
@@ -137,7 +149,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
             }
         }
 
-        return new NetworkId(addressByTransportTypeMap, pubKey, torIdentity);
+        return new NetworkId(addressByTransportTypeMap, pubKey);
     }
 
     /**
@@ -177,15 +189,16 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         keyPairService.persistKeyPair(keyId, keyPair);
         PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
 
-        NetworkId networkId = createNetworkId(false, pubKey);
-        Identity identity = new Identity(tag, networkId, keyPair);
+        TorIdentity torIdentity = createTorIdentity(false);
+        NetworkId networkId = createNetworkId(false, pubKey, torIdentity);
+        Identity identity = new Identity(tag, networkId, torIdentity, keyPair);
 
         synchronized (lock) {
             getActiveIdentityByTag().put(tag, identity);
         }
         persist();
 
-        return networkService.getNetworkIdOfInitializedNode(networkId)
+        return networkService.getNetworkIdOfInitializedNode(networkId, torIdentity)
                 .thenApply(nodes -> identity);
     }
 
@@ -251,7 +264,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         getActiveIdentityByTag().values().stream()
                 .filter(identity -> !identity.getTag().equals(Node.DEFAULT))
                 .forEach(identity ->
-                        networkService.getInitializedNodeByTransport(identity.getNetworkId(), identity.getPubKey()).values()
+                        networkService.getInitializedNodeByTransport(identity.getNetworkId(), identity.getPubKey(), identity.getTorIdentity()).values()
                                 .forEach(future -> future.whenComplete((node, throwable) -> {
                                             if (throwable == null) {
                                                 log.info("Network node for active identity {} initialized. NetworkId={}",
@@ -277,7 +290,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
 
     private Identity createAndInitializeNewIdentity(String tag) {
         Identity identity = createTemporaryIdentity(tag);
-        networkService.getNetworkIdOfInitializedNode(identity.getNetworkId());
+        networkService.getNetworkIdOfInitializedNode(identity.getNetworkId(), identity.getTorIdentity());
         return identity;
     }
 
@@ -286,7 +299,8 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
         PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
 
-        NetworkId networkId = createNetworkId(false, pubKey);
-        return new Identity(tag, networkId, keyPair);
+        TorIdentity torIdentity = createTorIdentity(false);
+        NetworkId networkId = createNetworkId(false, pubKey, torIdentity);
+        return new Identity(tag, networkId, torIdentity, keyPair);
     }
 }

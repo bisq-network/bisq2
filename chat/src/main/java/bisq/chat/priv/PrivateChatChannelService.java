@@ -23,6 +23,7 @@ import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.SendMessageResult;
 import bisq.network.identity.NetworkId;
+import bisq.network.identity.TorIdentity;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.vo.NetworkIdWithKeyPair;
 import bisq.persistence.PersistableStore;
@@ -106,7 +107,8 @@ public abstract class PrivateChatChannelService<
         addMessage(chatMessage, channel);
         NetworkId receiverNetworkId = receiver.getNetworkId();
         NetworkIdWithKeyPair senderNetworkIdWithKeyPair = myUserIdentity.getNodeIdAndKeyPair();
-        return networkService.confidentialSend(chatMessage, receiverNetworkId, senderNetworkIdWithKeyPair);
+        TorIdentity senderTorIdentity = myUserIdentity.getIdentity().getTorIdentity();
+        return networkService.confidentialSend(chatMessage, receiverNetworkId, senderNetworkIdWithKeyPair, senderTorIdentity);
     }
 
     protected boolean isPeerBanned(UserProfile userProfile) {

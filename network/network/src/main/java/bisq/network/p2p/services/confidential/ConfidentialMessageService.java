@@ -21,6 +21,7 @@ import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.ExceptionUtil;
 import bisq.network.common.Address;
 import bisq.network.identity.NetworkId;
+import bisq.network.identity.TorIdentity;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
@@ -138,13 +139,14 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                                               Address address,
                                               PubKey receiverPubKey,
                                               KeyPair senderKeyPair,
-                                              NetworkId senderNetworkId) {
+                                              NetworkId senderNetworkId,
+                                              TorIdentity senderTorIdentity) {
         try {
             log.debug("Send message to {}", address);
             // Node gets initialized at higher level services
             nodesById.assertNodeIsInitialized(senderNetworkId);
-            Connection connection = nodesById.getConnection(senderNetworkId, address);
-            return send(envelopePayloadMessage, connection, receiverPubKey, senderKeyPair, senderNetworkId);
+            Connection connection = nodesById.getConnection(senderNetworkId, address, senderTorIdentity);
+            return send(envelopePayloadMessage, connection, receiverPubKey, senderKeyPair, senderNetworkId, senderTorIdentity);
         } catch (Throwable throwable) {
             SendConfidentialMessageResult result;
             if (envelopePayloadMessage instanceof MailboxMessage) {
@@ -166,14 +168,15 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                                                Connection connection,
                                                PubKey receiverPubKey,
                                                KeyPair senderKeyPair,
-                                               NetworkId senderNetworkId) {
+                                               NetworkId senderNetworkId,
+                                               TorIdentity senderTorIdentity) {
         log.debug("Send message to {}", connection);
         ConfidentialMessage confidentialMessage = getConfidentialMessage(envelopePayloadMessage, receiverPubKey, senderKeyPair);
         SendConfidentialMessageResult result;
         try {
             // Node gets initialized at higher level services
             nodesById.assertNodeIsInitialized(senderNetworkId);
-            nodesById.send(senderNetworkId, confidentialMessage, connection);
+            nodesById.send(senderNetworkId, confidentialMessage, connection, senderTorIdentity);
             result = new SendConfidentialMessageResult(MessageDeliveryStatus.ARRIVED);
             onResult(envelopePayloadMessage, result);
             return result;

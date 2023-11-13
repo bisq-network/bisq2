@@ -9,6 +9,7 @@ import bisq.network.common.Address;
 import bisq.network.common.TransportConfig;
 import bisq.network.common.TransportType;
 import bisq.network.identity.NetworkId;
+import bisq.network.identity.TorIdentity;
 import bisq.network.p2p.node.ConnectionException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -168,7 +169,7 @@ public class I2PTransportService implements TransportService {
 
 
     @Override
-    public ServerSocketResult getServerSocket(NetworkId networkId) {
+    public ServerSocketResult getServerSocket(NetworkId networkId, TorIdentity torIdentity) {
         int port = networkId.getAddressByTransportTypeMap().get(TransportType.I2P).getPort();
         log.debug("Create serverSocket");
         try {
@@ -198,7 +199,7 @@ public class I2PTransportService implements TransportService {
             bootstrapInfo.getBootstrapDetails().set("My I2P destination: " + address);
 
             log.debug("ServerSocket created. SessionId={}, destination={}", sessionId, destination);
-            return new ServerSocketResult(networkId.getTorIdentity(), serverSocket, address);
+            return new ServerSocketResult(torIdentity, serverSocket, address);
         } catch (Exception exception) {
             exception.printStackTrace();
             throw new ConnectionException(exception);

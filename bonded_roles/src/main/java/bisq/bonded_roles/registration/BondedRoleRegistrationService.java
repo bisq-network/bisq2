@@ -26,6 +26,7 @@ import bisq.common.observable.collection.ObservableSet;
 import bisq.network.NetworkService;
 import bisq.network.common.AddressByTransportTypeMap;
 import bisq.network.identity.NetworkId;
+import bisq.network.identity.TorIdentity;
 import bisq.network.p2p.vo.NetworkIdWithKeyPair;
 import bisq.security.DigestUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -72,7 +73,8 @@ public class BondedRoleRegistrationService implements Service {
                                                  String signatureBase64,
                                                  AddressByTransportTypeMap addressByTransportTypeMap,
                                                  NetworkIdWithKeyPair senderNetworkIdWithKeyPair,
-                                                 boolean isCancellationRequest) {
+                                                 boolean isCancellationRequest,
+                                                 TorIdentity senderTorIdentity) {
         ObservableSet<AuthorizedOracleNode> authorizedOracleNodes = authorizedBondedRolesService.getAuthorizedOracleNodes();
         if (authorizedOracleNodes.isEmpty()) {
             log.warn("authorizedOracleNodes is empty");
@@ -91,7 +93,7 @@ public class BondedRoleRegistrationService implements Service {
                 networkId,
                 isCancellationRequest);
         authorizedOracleNodes.forEach(oracleNode ->
-                networkService.confidentialSend(request, oracleNode.getNetworkId(), senderNetworkIdWithKeyPair));
+                networkService.confidentialSend(request, oracleNode.getNetworkId(), senderNetworkIdWithKeyPair, senderTorIdentity));
         return true;
     }
 }

@@ -27,6 +27,7 @@ import bisq.network.common.AddressByTransportTypeMap;
 import bisq.network.common.TransportConfig;
 import bisq.network.common.TransportType;
 import bisq.network.identity.NetworkId;
+import bisq.network.identity.TorIdentity;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
@@ -118,7 +119,7 @@ public class ServiceNodesByTransport {
         return CompletableFuture.completedFuture(true);
     }
 
-    public Map<TransportType, CompletableFuture<Node>> getInitializedNodeByTransport(NetworkId networkId) {
+    public Map<TransportType, CompletableFuture<Node>> getInitializedNodeByTransport(NetworkId networkId, TorIdentity torIdentity) {
         // We initialize all service nodes per transport type in parallel. As soon one has completed we
         // return a success state.
         return map.entrySet().stream()
@@ -128,13 +129,13 @@ public class ServiceNodesByTransport {
                             if (serviceNode.isNodeInitialized(networkId)) {
                                 return serviceNode.findNode(networkId).orElseThrow();
                             } else {
-                                return serviceNode.getInitializedNode(networkId);
+                                return serviceNode.getInitializedNode(networkId, torIdentity);
                             }
                         }, NETWORK_IO_POOL)));
     }
 
-    public CompletableFuture<List<Node>> getNetworkIdOfInitializedNode(NetworkId networkId) {
-        Collection<CompletableFuture<Node>> futures = getInitializedNodeByTransport(networkId).values();
+    public CompletableFuture<List<Node>> getNetworkIdOfInitializedNode(NetworkId networkId, TorIdentity torIdentity) {
+        Collection<CompletableFuture<Node>> futures = getInitializedNodeByTransport(networkId, torIdentity).values();
         // As we persist networkIds after initialize, and we require all futures to be completed we can be sure that
         // the networkId is complete with all addresses of all our supported transports.
         return CompletableFutureUtils.allOf(futures);
@@ -175,7 +176,8 @@ public class ServiceNodesByTransport {
     public SendMessageResult confidentialSend(EnvelopePayloadMessage envelopePayloadMessage,
                                               NetworkId receiverNetworkId,
                                               KeyPair senderKeyPair,
-                                              NetworkId senderNetworkId) {
+                                              NetworkId senderNetworkId,
+                                              TorIdentity senderTorIdentity) {
         SendMessageResult sendMessageResult = new SendMessageResult();
         receiverNetworkId.getAddressByTransportTypeMap().forEach((transportType, address) -> {
             if (map.containsKey(transportType)) {
@@ -184,7 +186,8 @@ public class ServiceNodesByTransport {
                         address,
                         receiverNetworkId.getPubKey(),
                         senderKeyPair,
-                        senderNetworkId);
+                        senderNetworkId,
+                        senderTorIdentity);
                 sendMessageResult.put(transportType, result);
             }
         });
@@ -193,11 +196,12 @@ public class ServiceNodesByTransport {
 
     public Map<TransportType, Connection> send(NetworkId senderNetworkId,
                                                EnvelopePayloadMessage envelopePayloadMessage,
-                                               AddressByTransportTypeMap receiver) {
+                                               AddressByTransportTypeMap receiver,
+                                               TorIdentity senderTorIdentity) {
         return receiver.entrySet().stream().map(entry -> {
                     TransportType transportType = entry.getKey();
                     if (map.containsKey(transportType)) {
-                        return new Pair<>(transportType, map.get(transportType).send(senderNetworkId, envelopePayloadMessage, entry.getValue()));
+                        return new Pair<>(transportType, map.get(transportType).send(senderNetworkId, envelopePayloadMessage, entry.getValue(), senderTorIdentity));
                     } else {
                         return null;
                     }

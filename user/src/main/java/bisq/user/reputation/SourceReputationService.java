@@ -132,7 +132,7 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
             return false;
         }
         authorizedBondedRolesService.getAuthorizedOracleNodes().forEach(oracleNode ->
-                networkService.confidentialSend(request, oracleNode.getNetworkId(), userIdentity.getNodeIdAndKeyPair()));
+                networkService.confidentialSend(request, oracleNode.getNetworkId(), userIdentity.getNodeIdAndKeyPair(), userIdentity.getIdentity().getTorIdentity()));
         return true;
     }
 

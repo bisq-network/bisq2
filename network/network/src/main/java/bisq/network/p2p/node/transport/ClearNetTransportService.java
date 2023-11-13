@@ -5,6 +5,7 @@ import bisq.network.common.Address;
 import bisq.network.common.TransportConfig;
 import bisq.network.common.TransportType;
 import bisq.network.identity.NetworkId;
+import bisq.network.identity.TorIdentity;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -76,7 +77,7 @@ public class ClearNetTransportService implements TransportService {
     }
 
     @Override
-    public ServerSocketResult getServerSocket(NetworkId networkId) {
+    public ServerSocketResult getServerSocket(NetworkId networkId, TorIdentity torIdentity) {
         int port = networkId.getAddressByTransportTypeMap().get(TransportType.CLEAR).getPort();
         log.info("Create serverSocket at port {}", port);
 
@@ -97,7 +98,7 @@ public class ClearNetTransportService implements TransportService {
             bootstrapInfo.getBootstrapProgress().set(0.5);
             bootstrapInfo.getBootstrapDetails().set("Server created: " + address);
 
-            return new ServerSocketResult(networkId.getTorIdentity(), serverSocket, address);
+            return new ServerSocketResult(torIdentity, serverSocket, address);
         } catch (IOException e) {
             log.error("{}. Server port {}", e, port);
             throw new CompletionException(e);

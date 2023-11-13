@@ -13,5 +13,4 @@ message TorIdentity {
 message NetworkId {
   .network.common.AddressByTransportTypeMap addressByNetworkTypeMap = 1;
   security.PubKey pubKey = 2;
-  TorIdentity torIdentity = 3;
 }

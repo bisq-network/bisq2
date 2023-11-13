@@ -20,7 +20,6 @@ package bisq.network.identity;
 import bisq.common.proto.Proto;
 import bisq.network.common.AddressByTransportTypeMap;
 import bisq.security.PubKey;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,18 +27,12 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public final class NetworkId implements Proto {
     private final PubKey pubKey;
     private final AddressByTransportTypeMap addressByTransportTypeMap = new AddressByTransportTypeMap();
 
-    @EqualsAndHashCode.Include
-    private final TorIdentity torIdentity;
-
-    public NetworkId(AddressByTransportTypeMap addressByTransportTypeMap, PubKey pubKey, TorIdentity torIdentity) {
+    public NetworkId(AddressByTransportTypeMap addressByTransportTypeMap, PubKey pubKey) {
         this.pubKey = pubKey;
-        this.torIdentity = torIdentity;
-
         checkArgument(!addressByTransportTypeMap.isEmpty(),
                 "We require at least 1 addressByNetworkType for a valid NetworkId");
         this.addressByTransportTypeMap.putAll(addressByTransportTypeMap);
@@ -49,14 +42,12 @@ public final class NetworkId implements Proto {
         return bisq.network.identity.protobuf.NetworkId.newBuilder()
                 .setAddressByNetworkTypeMap(addressByTransportTypeMap.toProto())
                 .setPubKey(pubKey.toProto())
-                .setTorIdentity(torIdentity.toProto())
                 .build();
     }
 
     public static NetworkId fromProto(bisq.network.identity.protobuf.NetworkId proto) {
         return new NetworkId(AddressByTransportTypeMap.fromProto(proto.getAddressByNetworkTypeMap()),
-                PubKey.fromProto(proto.getPubKey()),
-                TorIdentity.fromProto(proto.getTorIdentity()));
+                PubKey.fromProto(proto.getPubKey()));
     }
 
     public String getId() {

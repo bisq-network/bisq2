@@ -137,7 +137,7 @@ public class MessageDeliveryStatusService implements PersistenceClient<MessageDe
                 .ifPresent(keyPair -> {
                     log.info("Received a {} with message ID {}", message.getClass().getSimpleName(), message.getId());
                     NetworkIdWithKeyPair networkIdWithKeyPair = new NetworkIdWithKeyPair(message.getReceiver(), keyPair);
-                    networkService.confidentialSend(ackMessage, message.getSender(), networkIdWithKeyPair);
+                    networkService.confidentialSend(ackMessage, message.getSender(), networkIdWithKeyPair, networkService.getDefaultTorIdentity());
                 });
     }
 }
