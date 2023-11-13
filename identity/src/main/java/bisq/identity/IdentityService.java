@@ -157,16 +157,15 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     }
 
     public Identity getOrCreateDefaultIdentity() {
-        return findActiveIdentity(Node.DEFAULT)
+        return persistableStore.getDefaultIdentity()
                 .orElseGet((Supplier<Identity>) () -> {
                     Identity identity = createIdentity(Node.DEFAULT, Node.DEFAULT, Node.DEFAULT);
                     synchronized (lock) {
-                        getActiveIdentityByTag().put(Node.DEFAULT, identity);
+                        persistableStore.setDefaultIdentity(Optional.of(identity));
                     }
                     persist();
                     return identity;
                 });
-
     }
 
     /**

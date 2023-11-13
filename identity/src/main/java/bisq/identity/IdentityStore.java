@@ -21,9 +21,12 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -31,30 +34,39 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public final class IdentityStore implements PersistableStore<IdentityStore> {
+    @Getter
+    @Setter
+    private Optional<Identity> defaultIdentity;
     private final Map<String, Identity> activeIdentityByTag = new ConcurrentHashMap<>();
     private final Set<Identity> retired = new CopyOnWriteArraySet<>();
 
     public IdentityStore() {
+        this.defaultIdentity = Optional.empty();
     }
 
-    private IdentityStore(Map<String, Identity> activeIdentityByTag,
+    private IdentityStore(Optional<Identity> defaultIdentity,
+                          Map<String, Identity> activeIdentityByTag,
                           Set<Identity> retired) {
+        this.defaultIdentity = defaultIdentity;
         this.activeIdentityByTag.putAll(activeIdentityByTag);
         this.retired.addAll(retired);
     }
 
     @Override
     public bisq.identity.protobuf.IdentityStore toProto() {
-        return bisq.identity.protobuf.IdentityStore.newBuilder()
+        var builder = bisq.identity.protobuf.IdentityStore.newBuilder()
                 .putAllActiveIdentityByDomainId(activeIdentityByTag.entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().toProto())))
-                .addAllRetired(retired.stream().map(Identity::toProto).collect(Collectors.toSet()))
-                .build();
+                .addAllRetired(retired.stream().map(Identity::toProto).collect(Collectors.toSet()));
+
+        defaultIdentity.ifPresent(identity -> builder.setDefaultIdentity(identity.toProto()));
+        return builder.build();
     }
 
     public static IdentityStore fromProto(bisq.identity.protobuf.IdentityStore proto) {
-        return new IdentityStore(proto.getActiveIdentityByDomainIdMap().entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, e -> Identity.fromProto(e.getValue()))),
+        return new IdentityStore(Optional.of(Identity.fromProto(proto.getDefaultIdentity())),
+                proto.getActiveIdentityByDomainIdMap().entrySet().stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey, e -> Identity.fromProto(e.getValue()))),
                 proto.getRetiredList().stream().map(Identity::fromProto).collect(Collectors.toSet()));
     }
 
@@ -71,11 +83,13 @@ public final class IdentityStore implements PersistableStore<IdentityStore> {
 
     @Override
     public IdentityStore getClone() {
-        return new IdentityStore(activeIdentityByTag, retired);
+        return new IdentityStore(defaultIdentity, activeIdentityByTag, retired);
     }
 
     @Override
     public void applyPersisted(IdentityStore persisted) {
+        defaultIdentity = persisted.defaultIdentity;
+
         activeIdentityByTag.clear();
         activeIdentityByTag.putAll(persisted.getActiveIdentityByTag());
 
