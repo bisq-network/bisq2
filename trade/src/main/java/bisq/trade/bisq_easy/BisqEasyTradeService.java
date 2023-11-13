@@ -131,7 +131,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         NetworkId sender = checkNotNull(message.getSender());
         BisqEasyContract bisqEasyContract = checkNotNull(message.getBisqEasyContract());
         boolean isBuyer = bisqEasyContract.getOffer().getMakersDirection().isBuy();
-        Identity myIdentity = serviceProvider.getIdentityService().findAnyIdentityByNodeId(bisqEasyContract.getOffer().getMakerNetworkId().getNodeId()).orElseThrow();
+        Identity myIdentity = serviceProvider.getIdentityService().findAnyIdentityByNetworkId(bisqEasyContract.getOffer().getMakerNetworkId()).orElseThrow();
         BisqEasyTrade bisqEasyTrade = new BisqEasyTrade(isBuyer, false, myIdentity, bisqEasyContract, sender);
 
         if (findProtocol(bisqEasyTrade.getId()).isPresent()) {

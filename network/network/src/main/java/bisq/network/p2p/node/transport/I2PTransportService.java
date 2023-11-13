@@ -10,7 +10,6 @@ import bisq.network.common.TransportConfig;
 import bisq.network.common.TransportType;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.node.ConnectionException;
-import bisq.network.p2p.node.Node;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -21,6 +20,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -172,19 +172,16 @@ public class I2PTransportService implements TransportService {
         int port = networkId.getAddressByTransportTypeMap().get(TransportType.I2P).getPort();
         log.debug("Create serverSocket");
         try {
-            boolean isDefaultNetworkId = networkId.getNodeId().equals(Node.DEFAULT);
-            if (isDefaultNetworkId) {
-                if (startBootstrapProgressUpdater != null) {
-                    startBootstrapProgressUpdater.stop();
-                    startBootstrapProgressUpdater = null;
-                }
-                bootstrapInfo.getBootstrapState().set(BootstrapState.START_PUBLISH_SERVICE);
-                // 25%-50% we attribute to the publishing of the hidden service. Takes usually 5-10 sec.
-                bootstrapInfo.getBootstrapProgress().set(0.25);
-                bootstrapInfo.getBootstrapDetails().set("Create I2P service for node ID '" + networkId + "'");
+            if (startBootstrapProgressUpdater != null) {
+                startBootstrapProgressUpdater.stop();
+                startBootstrapProgressUpdater = null;
             }
+            bootstrapInfo.getBootstrapState().set(BootstrapState.START_PUBLISH_SERVICE);
+            // 25%-50% we attribute to the publishing of the hidden service. Takes usually 5-10 sec.
+            bootstrapInfo.getBootstrapProgress().set(0.25);
+            bootstrapInfo.getBootstrapDetails().set("Create I2P service for node ID '" + networkId + "'");
 
-            sessionId = networkId.getNodeId();
+            sessionId = UUID.randomUUID().toString();
             //TODO: Investigate why not using port passed as parameter and if no port, find one?
             //Pass parameters to connect with Local instance
             int i2pPort = port;
@@ -196,11 +193,9 @@ public class I2PTransportService implements TransportService {
             // Port is irrelevant for I2P
             Address address = new Address(destination, port);
 
-            if (isDefaultNetworkId) {
-                bootstrapInfo.getBootstrapState().set(BootstrapState.SERVICE_PUBLISHED);
-                bootstrapInfo.getBootstrapProgress().set(0.5);
-                bootstrapInfo.getBootstrapDetails().set("My I2P destination: " + address);
-            }
+            bootstrapInfo.getBootstrapState().set(BootstrapState.SERVICE_PUBLISHED);
+            bootstrapInfo.getBootstrapProgress().set(0.5);
+            bootstrapInfo.getBootstrapDetails().set("My I2P destination: " + address);
 
             log.debug("ServerSocket created. SessionId={}, destination={}", sessionId, destination);
             return new ServerSocketResult(networkId.getTorIdentity(), serverSocket, address);

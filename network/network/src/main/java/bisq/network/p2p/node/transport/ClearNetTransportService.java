@@ -5,7 +5,6 @@ import bisq.network.common.Address;
 import bisq.network.common.TransportConfig;
 import bisq.network.common.TransportType;
 import bisq.network.identity.NetworkId;
-import bisq.network.p2p.node.Node;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -81,27 +80,22 @@ public class ClearNetTransportService implements TransportService {
         int port = networkId.getAddressByTransportTypeMap().get(TransportType.CLEAR).getPort();
         log.info("Create serverSocket at port {}", port);
 
-        boolean isDefaultNetworkId = networkId.getNodeId().equals(Node.DEFAULT);
-        if (isDefaultNetworkId) {
-            if (startBootstrapProgressUpdater != null) {
-                startBootstrapProgressUpdater.stop();
-                startBootstrapProgressUpdater = null;
-            }
-            bootstrapInfo.getBootstrapState().set(BootstrapState.START_PUBLISH_SERVICE);
-            bootstrapInfo.getBootstrapProgress().set(0.25);
-            bootstrapInfo.getBootstrapDetails().set("Start creating server");
+        if (startBootstrapProgressUpdater != null) {
+            startBootstrapProgressUpdater.stop();
+            startBootstrapProgressUpdater = null;
         }
+        bootstrapInfo.getBootstrapState().set(BootstrapState.START_PUBLISH_SERVICE);
+        bootstrapInfo.getBootstrapProgress().set(0.25);
+        bootstrapInfo.getBootstrapDetails().set("Start creating server");
 
         try {
             ServerSocket serverSocket = new ServerSocket(port);
             Address address = Address.localHost(port);
             log.debug("ServerSocket created at port {}", port);
 
-            if (isDefaultNetworkId) {
-                bootstrapInfo.getBootstrapState().set(BootstrapState.SERVICE_PUBLISHED);
-                bootstrapInfo.getBootstrapProgress().set(0.5);
-                bootstrapInfo.getBootstrapDetails().set("Server created: " + address);
-            }
+            bootstrapInfo.getBootstrapState().set(BootstrapState.SERVICE_PUBLISHED);
+            bootstrapInfo.getBootstrapProgress().set(0.5);
+            bootstrapInfo.getBootstrapDetails().set("Server created: " + address);
 
             return new ServerSocketResult(networkId.getTorIdentity(), serverSocket, address);
         } catch (IOException e) {

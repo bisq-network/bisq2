@@ -28,17 +28,16 @@ import bisq.common.encoding.Hex;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.StringUtils;
+import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
-import bisq.network.p2p.node.Node;
 import bisq.oracle_node.bisq1_bridge.Bisq1BridgeService;
 import bisq.oracle_node.market_price.MarketPricePropagationService;
 import bisq.oracle_node.timestamp.TimestampService;
 import bisq.persistence.PersistenceService;
 import bisq.security.DigestUtil;
 import bisq.security.KeyGeneration;
-import bisq.security.KeyPairService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -95,7 +94,6 @@ public class OracleNodeService implements Service {
         }
     }
 
-    private final KeyPairService keyPairService;
     private final IdentityService identityService;
     private final NetworkService networkService;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
@@ -117,13 +115,11 @@ public class OracleNodeService implements Service {
     private Scheduler startupScheduler, scheduler;
 
     public OracleNodeService(Config config,
-                             KeyPairService keyPairService,
                              IdentityService identityService,
                              NetworkService networkService,
                              PersistenceService persistenceService,
                              AuthorizedBondedRolesService authorizedBondedRolesService,
                              MarketPriceRequestService marketPriceRequestService) {
-        this.keyPairService = keyPairService;
         this.identityService = identityService;
         this.networkService = networkService;
         this.authorizedBondedRolesService = authorizedBondedRolesService;
@@ -176,63 +172,61 @@ public class OracleNodeService implements Service {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        String keyId = keyPairService.getDefaultPubKey().getKeyId();
-        return identityService.createAndInitializeIdentity(keyId, Node.DEFAULT, IdentityService.DEFAULT)
-                .thenCompose(identity -> {
-                    bisq1BridgeService.setIdentity(identity);
-                    timestampService.setIdentity(identity);
-                    marketPricePropagationService.setIdentity(identity);
+        Identity identity = identityService.getOrCreateDefaultIdentity();
 
-                    String publicKeyHash = Hex.encode(DigestUtil.hash(authorizedPublicKey.getEncoded()));
-                    NetworkId networkId = identity.getNetworkId();
-                    authorizedOracleNode = new AuthorizedOracleNode(networkId, bondUserName, signatureBase64, publicKeyHash, staticPublicKeysProvided);
-                    bisq1BridgeService.setAuthorizedOracleNode(authorizedOracleNode);
+        bisq1BridgeService.setIdentity(identity);
+        timestampService.setIdentity(identity);
+        marketPricePropagationService.setIdentity(identity);
 
-                    Optional<AuthorizedOracleNode> oracleNode = staticPublicKeysProvided ? Optional.of(authorizedOracleNode) : Optional.empty();
-                    authorizedBondedRole = new AuthorizedBondedRole(profileId,
-                            Hex.encode(authorizedPublicKey.getEncoded()),
-                            BondedRoleType.ORACLE_NODE,
-                            bondUserName,
-                            signatureBase64,
-                            identityService.getOrCreateDefaultIdentity().getNetworkId().getAddressByTransportTypeMap(),
-                            networkId,
-                            oracleNode,
-                            staticPublicKeysProvided);
+        String publicKeyHash = Hex.encode(DigestUtil.hash(authorizedPublicKey.getEncoded()));
+        NetworkId networkId = identity.getNetworkId();
+        authorizedOracleNode = new AuthorizedOracleNode(networkId, bondUserName, signatureBase64, publicKeyHash, staticPublicKeysProvided);
+        bisq1BridgeService.setAuthorizedOracleNode(authorizedOracleNode);
 
-                    KeyPair keyPair = identity.getNodeIdAndKeyPair().getKeyPair();
+        Optional<AuthorizedOracleNode> oracleNode = staticPublicKeysProvided ? Optional.of(authorizedOracleNode) : Optional.empty();
+        authorizedBondedRole = new AuthorizedBondedRole(profileId,
+                Hex.encode(authorizedPublicKey.getEncoded()),
+                BondedRoleType.ORACLE_NODE,
+                bondUserName,
+                signatureBase64,
+                identityService.getOrCreateDefaultIdentity().getNetworkId().getAddressByTransportTypeMap(),
+                networkId,
+                oracleNode,
+                staticPublicKeysProvided);
 
-                    // Repeat 3 times at startup to republish to ensure the data gets well distributed
-                    startupScheduler = Scheduler.run(() -> publishMyAuthorizedData(authorizedOracleNode, authorizedBondedRole, keyPair))
-                            .repeated(1, 10, TimeUnit.SECONDS, 3);
+        KeyPair keyPair = identity.getNodeIdAndKeyPair().getKeyPair();
 
-                    // We have 30 days TTL for the data, we republish after 25 days to ensure the data does not expire
-                    scheduler = Scheduler.run(() -> publishMyAuthorizedData(authorizedOracleNode, authorizedBondedRole, keyPair))
-                            .periodically(25, TimeUnit.DAYS);
+        // Repeat 3 times at startup to republish to ensure the data gets well distributed
+        startupScheduler = Scheduler.run(() -> publishMyAuthorizedData(authorizedOracleNode, authorizedBondedRole, keyPair))
+                .repeated(1, 10, TimeUnit.SECONDS, 3);
 
-                    authorizedBondedRolesService.getBondedRoles().addObserver(new CollectionObserver<>() {
-                        @Override
-                        public void add(BondedRole element) {
-                        }
+        // We have 30 days TTL for the data, we republish after 25 days to ensure the data does not expire
+        scheduler = Scheduler.run(() -> publishMyAuthorizedData(authorizedOracleNode, authorizedBondedRole, keyPair))
+                .periodically(25, TimeUnit.DAYS);
 
-                        @Override
-                        public void remove(Object element) {
-                            if (element instanceof BondedRole) {
-                                BondedRole bondedRole = (BondedRole) element;
-                                networkService.removeAuthorizedData(bondedRole.getAuthorizedBondedRole(),
-                                        keyPair,
-                                        authorizedPublicKey);
-                            }
-                        }
+        authorizedBondedRolesService.getBondedRoles().addObserver(new CollectionObserver<>() {
+            @Override
+            public void add(BondedRole element) {
+            }
 
-                        @Override
-                        public void clear() {
-                        }
-                    });
+            @Override
+            public void remove(Object element) {
+                if (element instanceof BondedRole) {
+                    BondedRole bondedRole = (BondedRole) element;
+                    networkService.removeAuthorizedData(bondedRole.getAuthorizedBondedRole(),
+                            keyPair,
+                            authorizedPublicKey);
+                }
+            }
 
-                    return bisq1BridgeService.initialize()
-                            .thenCompose(result -> timestampService.initialize())
-                            .thenCompose(result -> marketPricePropagationService.initialize());
-                })
+            @Override
+            public void clear() {
+            }
+        });
+
+        return bisq1BridgeService.initialize()
+                .thenCompose(result -> timestampService.initialize())
+                .thenCompose(result -> marketPricePropagationService.initialize())
                 .whenComplete((result, throwable) -> {
                     if (throwable != null) {
                         log.error("Initialisation failed", throwable);

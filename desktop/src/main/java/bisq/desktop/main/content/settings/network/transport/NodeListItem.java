@@ -56,12 +56,12 @@ public class NodeListItem implements TableItem {
 
     public NodeListItem(Node node, IdentityService identityService) {
         this.node = node;
-        nodeId = node.getNetworkId().getNodeId();
-        type = identityService.findActiveIdentityByNodeId(node.getNetworkId().getNodeId())
+        nodeId = node.getNetworkId().toString();
+        type = identityService.findActiveIdentityByNetworkId(node.getNetworkId())
                 .map(i -> Res.get("settings.network.nodes.type.active"))
-                .or(() -> identityService.findRetiredIdentityByNodeId(node.getNetworkId().getNodeId()).map(i -> Res.get("settings.network.nodes.type.retired")))
+                .or(() -> identityService.findRetiredIdentityByNetworkId(node.getNetworkId()).map(i -> Res.get("settings.network.nodes.type.retired")))
                 .orElseGet(() -> nodeId.equals(Node.DEFAULT) ? Res.get("settings.network.nodes.type.gossip") : Res.get("data.na"));
-        domainId = identityService.findAnyIdentityByNodeId(node.getNetworkId().getNodeId()).map(Identity::getTag)
+        domainId = identityService.findAnyIdentityByNetworkId(node.getNetworkId()).map(Identity::getTag)
                 .orElse(Res.get("data.na"));
         address = node.findMyAddress().map(Address::getFullAddress).orElse(Res.get("data.na"));
 

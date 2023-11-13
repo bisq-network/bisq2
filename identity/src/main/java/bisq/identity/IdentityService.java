@@ -90,30 +90,30 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<Identity> createAndInitializeIdentity(String keyId, String nodeId, String identityTag) {
-        Identity identity = createIdentity(keyId, nodeId, identityTag);
+    public CompletableFuture<Identity> createAndInitializeIdentity(String keyId, String identityTag) {
+        Identity identity = createIdentity(keyId, false, identityTag);
         return networkService.getNetworkIdOfInitializedNode(identity.getNetworkId())
                 .thenApply(nodes -> identity);
     }
 
-    private Identity createIdentity(String keyId, String nodeId, String identityTag) {
+    private Identity createIdentity(String keyId, boolean isForDefaultId, String identityTag) {
         KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
         PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
-        NetworkId networkId = createNetworkId(nodeId, pubKey);
+        NetworkId networkId = createNetworkId(isForDefaultId, pubKey);
         return new Identity(identityTag, networkId, keyPair);
     }
 
-    private NetworkId createNetworkId(String nodeId, PubKey pubKey) {
+    private NetworkId createNetworkId(boolean isForDefaultId, PubKey pubKey) {
         AddressByTransportTypeMap addressByTransportTypeMap = new AddressByTransportTypeMap();
         Set<TransportType> supportedTransportTypes = networkService.getSupportedTransportTypes();
         Map<TransportType, Integer> defaultPorts = networkService.getDefaultNodePortByTransportType();
 
         boolean isTorSupported = supportedTransportTypes.contains(TransportType.TOR);
-        int torPort = isTorSupported && nodeId.equals(Node.DEFAULT) ?
+        int torPort = isTorSupported && isForDefaultId ?
                 defaultPorts.getOrDefault(TransportType.TOR, NetworkUtils.selectRandomPort()) : NetworkUtils.selectRandomPort();
         TorIdentity torIdentity = TorIdentity.generate(torPort);
 
-        if (nodeId.equals(Node.DEFAULT)) {
+        if (isForDefaultId) {
             if (supportedTransportTypes.contains(TransportType.CLEAR)) {
                 int port = defaultPorts.getOrDefault(TransportType.CLEAR, NetworkUtils.findFreeSystemPort());
                 Address address = Address.localHost(port);
@@ -137,7 +137,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
             }
         }
 
-        return new NetworkId(addressByTransportTypeMap, pubKey, nodeId, torIdentity);
+        return new NetworkId(addressByTransportTypeMap, pubKey, torIdentity);
     }
 
     /**
@@ -159,7 +159,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     public Identity getOrCreateDefaultIdentity() {
         return persistableStore.getDefaultIdentity()
                 .orElseGet((Supplier<Identity>) () -> {
-                    Identity identity = createIdentity(Node.DEFAULT, Node.DEFAULT, Node.DEFAULT);
+                    Identity identity = createIdentity(Node.DEFAULT, true, Node.DEFAULT);
                     synchronized (lock) {
                         persistableStore.setDefaultIdentity(Optional.of(identity));
                     }
@@ -176,9 +176,8 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
                                                                KeyPair keyPair) {
         keyPairService.persistKeyPair(keyId, keyPair);
         PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
-        String nodeId = StringUtils.createUid();
 
-        NetworkId networkId = createNetworkId(nodeId, pubKey);
+        NetworkId networkId = createNetworkId(false, pubKey);
         Identity identity = new Identity(tag, networkId, keyPair);
 
         synchronized (lock) {
@@ -211,26 +210,26 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         }
     }
 
-    public Optional<Identity> findActiveIdentityByNodeId(String nodeId) {
+    public Optional<Identity> findActiveIdentityByNetworkId(NetworkId networkId) {
         synchronized (lock) {
             return getActiveIdentityByTag().values().stream()
-                    .filter(e -> e.getNetworkId().getNodeId().equals(nodeId))
+                    .filter(e -> e.getNetworkId().equals(networkId))
                     .findAny();
         }
     }
 
-    public Optional<Identity> findRetiredIdentityByNodeId(String nodeId) {
+    public Optional<Identity> findRetiredIdentityByNetworkId(NetworkId networkId) {
         synchronized (lock) {
             return getRetired().stream()
-                    .filter(e -> e.getNetworkId().getNodeId().equals(nodeId))
+                    .filter(e -> e.getNetworkId().equals(networkId))
                     .findAny();
         }
     }
 
-    public Optional<Identity> findAnyIdentityByNodeId(String nodeId) {
+    public Optional<Identity> findAnyIdentityByNetworkId(NetworkId networkId) {
         synchronized (lock) {
             return Streams.concat(getActiveIdentityByTag().values().stream(), getRetired().stream())
-                    .filter(e -> e.getNetworkId().getNodeId().equals(nodeId))
+                    .filter(e -> e.getNetworkId().equals(networkId))
                     .findAny();
         }
     }
@@ -286,13 +285,8 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         String keyId = StringUtils.createUid();
         KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
         PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
-        String nodeId = StringUtils.createUid();
 
-        NetworkId networkId = createNetworkId(nodeId, pubKey);
+        NetworkId networkId = createNetworkId(false, pubKey);
         return new Identity(tag, networkId, keyPair);
-    }
-
-    public Identity createTemporaryIdentity() {
-        return createTemporaryIdentity(StringUtils.createUid());
     }
 }

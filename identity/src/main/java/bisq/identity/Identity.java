@@ -66,10 +66,6 @@ public final class Identity implements Proto {
         return new NetworkIdWithKeyPair(networkId, keyPair);
     }
 
-    public String getNodeId() {
-        return networkId.getNodeId();
-    }
-
     public String getId() {
         return networkId.getPubKey().getId();
     }

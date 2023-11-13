@@ -13,6 +13,5 @@ message TorIdentity {
 message NetworkId {
   .network.common.AddressByTransportTypeMap addressByNetworkTypeMap = 1;
   security.PubKey pubKey = 2;
-  string nodeId = 3;
-  TorIdentity torIdentity = 4;
+  TorIdentity torIdentity = 3;
 }

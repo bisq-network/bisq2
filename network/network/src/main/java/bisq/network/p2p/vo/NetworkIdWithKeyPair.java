@@ -36,10 +36,6 @@ public final class NetworkIdWithKeyPair {
         this.keyPair = keyPair;
     }
 
-    public String getNodeId() {
-        return networkId.getNodeId();
-    }
-
     public PubKey getPubKey() {
         return networkId.getPubKey();
     }

@@ -6,7 +6,6 @@ import bisq.network.common.TransportConfig;
 import bisq.network.common.TransportType;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.node.ConnectionException;
-import bisq.network.p2p.node.Node;
 import bisq.tor.TorService;
 import bisq.tor.TorTransportConfig;
 import bisq.tor.onionservice.CreateOnionServiceResponse;
@@ -79,21 +78,16 @@ public class TorTransportService implements TransportService {
     public ServerSocketResult getServerSocket(NetworkId networkId) {
         try {
             int port = networkId.getAddressByTransportTypeMap().get(TransportType.TOR).getPort();
-            boolean isDefaultNetworkId = networkId.getNodeId().equals(Node.DEFAULT);
-            if (isDefaultNetworkId) {
-                bootstrapInfo.getBootstrapState().set(BootstrapState.START_PUBLISH_SERVICE);
-                // 25%-50% we attribute to the publishing of the hidden service. Takes usually 5-10 sec.
-                bootstrapInfo.getBootstrapProgress().set(0.25);
-                bootstrapInfo.getBootstrapDetails().set("Create Onion service for node ID '" + networkId + "'");
-            }
+            bootstrapInfo.getBootstrapState().set(BootstrapState.START_PUBLISH_SERVICE);
+            // 25%-50% we attribute to the publishing of the hidden service. Takes usually 5-10 sec.
+            bootstrapInfo.getBootstrapProgress().set(0.25);
+            bootstrapInfo.getBootstrapDetails().set("Create Onion service for node ID '" + networkId + "'");
 
             CreateOnionServiceResponse response = torService.createOnionService(port, networkId.getTorIdentity()).get(2, TimeUnit.MINUTES);
 
-            if (isDefaultNetworkId) {
-                bootstrapInfo.getBootstrapState().set(BootstrapState.SERVICE_PUBLISHED);
-                bootstrapInfo.getBootstrapProgress().set(0.5);
-                bootstrapInfo.getBootstrapDetails().set("My Onion service address: " + response.getOnionAddress().toString());
-            }
+            bootstrapInfo.getBootstrapState().set(BootstrapState.SERVICE_PUBLISHED);
+            bootstrapInfo.getBootstrapProgress().set(0.5);
+            bootstrapInfo.getBootstrapDetails().set("My Onion service address: " + response.getOnionAddress().toString());
 
             return new ServerSocketResult(response);
         } catch (InterruptedException | ExecutionException | TimeoutException e) {

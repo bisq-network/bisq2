@@ -24,14 +24,14 @@ import bisq.desktop.common.view.Model;
 import bisq.i18n.Res;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
+import bisq.network.common.TransportType;
+import bisq.network.identity.NetworkId;
 import bisq.network.p2p.ServiceNode;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.NodesById;
-import bisq.network.common.TransportType;
-import bisq.network.identity.NetworkId;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
@@ -127,7 +127,7 @@ public class TransportTypeModel implements Model {
     void updateLists() {
         allNodes = new ArrayList<>(serviceNode.getNodesById().getAllNodes());
         connectionListItems.setAll(allNodes.stream()
-                .flatMap(node -> node.getAllConnections().map(c -> new Pair<>(c, node.getNetworkId().getNodeId())))
+                .flatMap(node -> node.getAllConnections().map(c -> new Pair<>(c, node.getNetworkId().toString())))
                 .map(pair -> new ConnectionListItem(pair.getFirst(), pair.getSecond()))
                 .collect(Collectors.toList()));
         nodeListItems.setAll(allNodes
@@ -138,7 +138,7 @@ public class TransportTypeModel implements Model {
     }
 
     void cleanup() {
-        allNodes.forEach(node -> node.removeListener(nodeListenersByNodeId.get(node.getNetworkId().getNodeId())));
+        allNodes.forEach(node -> node.removeListener(nodeListenersByNodeId.get(node.getNetworkId().toString())));
         networkService.findServiceNode(transportType)
                 .map(ServiceNode::getNodesById)
                 .ifPresent(nodesById -> nodesById.removeListener(nodesByIdListener));
@@ -154,7 +154,7 @@ public class TransportTypeModel implements Model {
             @Override
             public void onConnection(Connection connection) {
                 UIThread.run(() -> {
-                    ConnectionListItem connectionListItem = new ConnectionListItem(connection, node.getNetworkId().getNodeId());
+                    ConnectionListItem connectionListItem = new ConnectionListItem(connection, node.getNetworkId().toString());
                     if (!connectionListItems.contains(connectionListItem)) {
                         connectionListItems.add(connectionListItem);
                     }
@@ -165,7 +165,7 @@ public class TransportTypeModel implements Model {
             @Override
             public void onDisconnect(Connection connection, CloseReason closeReason) {
                 UIThread.run(() -> {
-                    ConnectionListItem connectionListItem = new ConnectionListItem(connection, node.getNetworkId().getNodeId());
+                    ConnectionListItem connectionListItem = new ConnectionListItem(connection, node.getNetworkId().toString());
                     connectionListItems.remove(connectionListItem);
                     maybeUpdateMyAddress(node);
                 });
@@ -184,11 +184,11 @@ public class TransportTypeModel implements Model {
             }
         };
         node.addListener(listener);
-        nodeListenersByNodeId.put(node.getNetworkId().getNodeId(), listener);
+        nodeListenersByNodeId.put(node.getNetworkId().toString(), listener);
     }
 
     private void maybeUpdateMyAddress(Node node) {
-        if (node.getNetworkId().getNodeId().equals(defaultNode.getNetworkId().getNodeId())) {
+        if (node.getNetworkId().toString().equals(defaultNode.getNetworkId().toString())) {
             defaultNode.findMyAddress().ifPresent(e -> myDefaultNodeAddress.set(e.getFullAddress()));
         }
     }
