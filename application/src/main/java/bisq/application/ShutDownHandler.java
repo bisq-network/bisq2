@@ -15,21 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.application;
+package bisq.application;
 
-import bisq.desktop.common.application.JavaFxApplicationData;
-import javafx.application.Application;
-import javafx.stage.Stage;
-import lombok.extern.slf4j.Slf4j;
+public interface ShutDownHandler {
+    void shutdown();
 
-import java.util.concurrent.CompletableFuture;
-
-@Slf4j
-public class JavaFXApplication extends Application {
-    public static final CompletableFuture<JavaFxApplicationData> onApplicationLaunched = new CompletableFuture<>();
-
-    @Override
-    public void start(Stage stage) {
-        onApplicationLaunched.complete(new JavaFxApplicationData(stage, getParameters(), getHostServices()));
-    }
+    void addShutDownHook(Runnable shutDownHandler);
 }

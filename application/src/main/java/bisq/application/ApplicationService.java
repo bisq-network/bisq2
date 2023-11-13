@@ -18,6 +18,7 @@
 package bisq.application;
 
 import bisq.common.application.DevMode;
+import bisq.common.application.Service;
 import bisq.common.currency.FiatCurrencyRepository;
 import bisq.common.locale.CountryRepository;
 import bisq.common.locale.LanguageRepository;
@@ -47,7 +48,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public abstract class ApplicationService {
+public abstract class ApplicationService implements Service {
     @Getter
     @ToString
     @EqualsAndHashCode

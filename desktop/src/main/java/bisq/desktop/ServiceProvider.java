@@ -23,11 +23,11 @@ package bisq.desktop;
 
 import bisq.account.AccountService;
 import bisq.application.ApplicationService;
+import bisq.application.ShutDownHandler;
 import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.contract.ContractService;
-import bisq.desktop.common.application.ShutDownHandler;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.offer.OfferService;

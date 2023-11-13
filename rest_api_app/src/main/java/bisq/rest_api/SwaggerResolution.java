@@ -54,7 +54,7 @@ public class SwaggerResolution {
                                 .name("GNU Affero General Public License")
                                 .url("https://github.com/bisq-network/bisq2/blob/main/LICENSE"));
 
-                api.info(info).addServersItem(new Server().url(RestApiApp.BASE_URL));
+                api.info(info).addServersItem(new Server().url(JaxRsApplication.BASE_URL));
                 SwaggerConfiguration configuration = new SwaggerConfiguration().openAPI(api);
                 Reader reader = new Reader(configuration);
                 OpenAPI openAPI = reader.read(application.getClasses());

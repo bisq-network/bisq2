@@ -2,7 +2,7 @@ package bisq.rest_api.endpoints;
 
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatService;
-import bisq.rest_api.RestApiApp;
+import bisq.rest_api.JaxRsApplication;
 import bisq.rest_api.RestApiApplicationService;
 import bisq.rest_api.dto.BisqEasyPublicChatChannelDto;
 import bisq.rest_api.dto.CommonPublicChatChannelDto;
@@ -31,8 +31,8 @@ public class ChatApi {
     private final ChatService chatService;
 
     public ChatApi(@Context Application application) {
-        RestApiApplicationService appService = ((RestApiApp) application).getApplicationService();
-        chatService = appService.getChatService();
+        RestApiApplicationService applicationService = ((JaxRsApplication) application).getApplicationService().get();
+        chatService = applicationService.getChatService();
     }
 
     @GET
