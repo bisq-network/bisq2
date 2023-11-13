@@ -32,17 +32,14 @@ import java.util.stream.Collectors;
 @Slf4j
 public final class IdentityStore implements PersistableStore<IdentityStore> {
     private final Map<String, Identity> activeIdentityByTag = new ConcurrentHashMap<>();
-    private final Set<Identity> pool = new CopyOnWriteArraySet<>();
     private final Set<Identity> retired = new CopyOnWriteArraySet<>();
 
     public IdentityStore() {
     }
 
     private IdentityStore(Map<String, Identity> activeIdentityByTag,
-                          Set<Identity> pool,
                           Set<Identity> retired) {
         this.activeIdentityByTag.putAll(activeIdentityByTag);
-        this.pool.addAll(pool);
         this.retired.addAll(retired);
     }
 
@@ -51,7 +48,6 @@ public final class IdentityStore implements PersistableStore<IdentityStore> {
         return bisq.identity.protobuf.IdentityStore.newBuilder()
                 .putAllActiveIdentityByDomainId(activeIdentityByTag.entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().toProto())))
-                .addAllPool(pool.stream().map(Identity::toProto).collect(Collectors.toSet()))
                 .addAllRetired(retired.stream().map(Identity::toProto).collect(Collectors.toSet()))
                 .build();
     }
@@ -59,7 +55,6 @@ public final class IdentityStore implements PersistableStore<IdentityStore> {
     public static IdentityStore fromProto(bisq.identity.protobuf.IdentityStore proto) {
         return new IdentityStore(proto.getActiveIdentityByDomainIdMap().entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, e -> Identity.fromProto(e.getValue()))),
-                proto.getPoolList().stream().map(Identity::fromProto).collect(Collectors.toSet()),
                 proto.getRetiredList().stream().map(Identity::fromProto).collect(Collectors.toSet()));
     }
 
@@ -76,7 +71,7 @@ public final class IdentityStore implements PersistableStore<IdentityStore> {
 
     @Override
     public IdentityStore getClone() {
-        return new IdentityStore(activeIdentityByTag, pool, retired);
+        return new IdentityStore(activeIdentityByTag, retired);
     }
 
     @Override
@@ -84,19 +79,12 @@ public final class IdentityStore implements PersistableStore<IdentityStore> {
         activeIdentityByTag.clear();
         activeIdentityByTag.putAll(persisted.getActiveIdentityByTag());
 
-        pool.clear();
-        pool.addAll(persisted.getPool());
-
         retired.clear();
         retired.addAll(persisted.getRetired());
     }
 
     Map<String, Identity> getActiveIdentityByTag() {
         return activeIdentityByTag;
-    }
-
-    Set<Identity> getPool() {
-        return pool;
     }
 
     Set<Identity> getRetired() {

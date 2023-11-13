@@ -37,7 +37,6 @@ import bisq.security.SecurityService;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Streams;
 import lombok.Getter;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.KeyPair;
@@ -46,27 +45,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
-
 @Slf4j
 public class IdentityService implements PersistenceClient<IdentityStore>, Service {
-    public final static String POOL_PREFIX = "pool-";
     public final static String DEFAULT = "default";
-
-    @Getter
-    @ToString
-    public static final class Config {
-        private final int minPoolSize;
-
-        public Config(int minPoolSize) {
-            this.minPoolSize = minPoolSize;
-        }
-
-        public static Config from(com.typesafe.config.Config typeSafeConfig) {
-            return new Config(typeSafeConfig.getInt("minPoolSize"));
-        }
-    }
 
     @Getter
     private final IdentityStore persistableStore = new IdentityStore();
@@ -75,16 +56,13 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     private final KeyPairService keyPairService;
     private final NetworkService networkService;
     private final Object lock = new Object();
-    private final int minPoolSize;
 
-    public IdentityService(Config config,
-                           PersistenceService persistenceService,
+    public IdentityService(PersistenceService persistenceService,
                            SecurityService securityService,
                            NetworkService networkService) {
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
         keyPairService = securityService.getKeyPairService();
         this.networkService = networkService;
-        minPoolSize = config.minPoolSize;
     }
 
 
@@ -99,8 +77,6 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         networkService.createDefaultServiceNodes(defaultNetworkIdentity);
 
         initializeActiveIdentities();
-        initializePooledIdentities();
-        maybeFillUpPool();
         return CompletableFuture.completedFuture(true);
     }
 
@@ -177,8 +153,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
      */
     public CompletableFuture<Identity> getOrCreateIdentity(String tag) {
         return findActiveIdentity(tag).map(CompletableFuture::completedFuture)
-                .orElseGet(() -> swapAnyInitializedPooledIdentity(tag).map(CompletableFuture::completedFuture)
-                        .orElseGet(() -> createAndInitializeNewActiveIdentity(tag)));
+                .orElseGet(() -> CompletableFuture.completedFuture(createAndInitializeNewActiveIdentity(tag)));
     }
 
     public Identity getOrCreateDefaultIdentity() {
@@ -192,33 +167,6 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
                     return identity;
                 });
 
-    }
-
-    /**
-     * Takes a pooled identity and swaps it with the given tag
-     *
-     * @param tag            The new domain ID for the active identity
-     * @param pooledIdentity The pooled identity we want to swap.
-     * @return The new active identity which is a clone of the pooled identity with the new domain ID.
-     */
-    public Identity swapPooledIdentity(String tag, Identity pooledIdentity) {
-        checkArgument(!getActiveIdentityByTag().containsKey(tag),
-                "We got already an active identity with the newDomainId");
-        checkArgument(!getActiveIdentityByTag().containsKey(pooledIdentity.getTag()),
-                "We got already an active identity with the tag of the pooledIdentity");
-        Identity newIdentity = Identity.from(tag, pooledIdentity);
-        synchronized (lock) {
-            boolean existed = persistableStore.getPool().remove(pooledIdentity);
-            checkArgument(existed, "The pooledIdentity did not exist in our pool");
-            getActiveIdentityByTag().put(tag, newIdentity);
-        }
-        persist();
-
-        // Refill pool if needed
-        if (numMissingPooledIdentities() > 0) {
-            createAndInitializeNewPooledIdentity();
-        }
-        return checkNotNull(newIdentity);
     }
 
     /**
@@ -272,14 +220,6 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         }
     }
 
-    public Optional<Identity> findPooledIdentityByNodeId(String nodeId) {
-        synchronized (lock) {
-            return getPool().stream()
-                    .filter(e -> e.getNetworkId().getNodeId().equals(nodeId))
-                    .findAny();
-        }
-    }
-
     public Optional<Identity> findRetiredIdentityByNodeId(String nodeId) {
         synchronized (lock) {
             return getRetired().stream()
@@ -290,9 +230,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
 
     public Optional<Identity> findAnyIdentityByNodeId(String nodeId) {
         synchronized (lock) {
-            return Streams.concat(getActiveIdentityByTag().values().stream(),
-                            Streams.concat(getRetired().stream(),
-                                    getPool().stream()))
+            return Streams.concat(getActiveIdentityByTag().values().stream(), getRetired().stream())
                     .filter(e -> e.getNetworkId().getNodeId().equals(nodeId))
                     .findAny();
         }
@@ -300,10 +238,6 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
 
     public Map<String, Identity> getActiveIdentityByTag() {
         return persistableStore.getActiveIdentityByTag();
-    }
-
-    public Set<Identity> getPool() {
-        return persistableStore.getPool();
     }
 
     public Set<Identity> getRetired() {
@@ -315,111 +249,51 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    // If the pool is not empty we take an identity from the pool and clone it with the new tag.
-    // We search first for identities with initialized nodes, otherwise we take any.
-    private Optional<Identity> swapAnyInitializedPooledIdentity(String tag) {
-        synchronized (lock) {
-            return persistableStore.getPool().stream()
-                    .filter(identity -> networkService.isNodeOnAllTransportsInitialized(identity.getNetworkId()))
-                    .findAny()
-                    .or(() -> persistableStore.getPool().stream().findAny())
-                    .map(pooledIdentity -> swapPooledIdentity(tag, pooledIdentity));
-        }
-    }
-
-    private void maybeFillUpPool() {
-        for (int i = 0; i < numMissingPooledIdentities(); i++) {
-            createAndInitializeNewPooledIdentity();
-        }
-    }
-
-    private int numMissingPooledIdentities() {
-        synchronized (lock) {
-            return Math.max(0, minPoolSize - persistableStore.getPool().size());
-        }
-    }
-
     private void initializeActiveIdentities() {
         getActiveIdentityByTag().values().stream()
                 .filter(identity -> !identity.getTag().equals(Node.DEFAULT))
                 .forEach(identity ->
-                networkService.getInitializedNodeByTransport(identity.getNetworkId(), identity.getPubKey()).values()
-                        .forEach(future -> future.whenComplete((node, throwable) -> {
-                                    if (throwable == null) {
-                                        log.info("Network node for active identity {} initialized. NetworkId={}",
-                                                identity.getTag(), identity.getNetworkId());
-                                    } else {
-                                        log.error("Initializing network node for active identity {} failed. NetworkId={}",
-                                                identity.getTag(), identity.getNetworkId());
-                                    }
-                                })
-                        ));
+                        networkService.getInitializedNodeByTransport(identity.getNetworkId(), identity.getPubKey()).values()
+                                .forEach(future -> future.whenComplete((node, throwable) -> {
+                                            if (throwable == null) {
+                                                log.info("Network node for active identity {} initialized. NetworkId={}",
+                                                        identity.getTag(), identity.getNetworkId());
+                                            } else {
+                                                log.error("Initializing network node for active identity {} failed. NetworkId={}",
+                                                        identity.getTag(), identity.getNetworkId());
+                                            }
+                                        })
+                                ));
     }
 
-    private void initializePooledIdentities() {
-        persistableStore.getPool().forEach(identity ->
-                networkService.getInitializedNodeByTransport(identity.getNetworkId(), identity.getPubKey()).values()
-                        .forEach(future -> future.whenComplete((node, throwable) -> {
-                                    if (throwable == null) {
-                                        log.info("Network node for pooled identity {} initialized. NetworkId={}",
-                                                identity.getTag(), identity.getNetworkId());
-                                    } else {
-                                        log.error("Initializing network node for pooled identity {} failed. NetworkId={}",
-                                                identity.getTag(), identity.getNetworkId());
-                                    }
-                                })
-                        ));
+    public Identity createAndInitializeNewActiveIdentity(String tag) {
+        Identity identity = createAndInitializeNewIdentity(tag);
+
+        synchronized (lock) {
+            getActiveIdentityByTag().put(tag, identity);
+        }
+        persist();
+
+        return identity;
     }
 
-    private CompletableFuture<Identity> createAndInitializeNewPooledIdentity() {
-        String tag = POOL_PREFIX + StringUtils.createUid();
-        return createAndInitializeNewIdentity(tag)
-                .thenApply(identity -> {
-                    synchronized (lock) {
-                        persistableStore.getPool().add(identity);
-                    }
-                    persist();
-                    return identity;
-                }).whenComplete((identity, throwable) -> {
-                    if (throwable == null) {
-                        log.info("Network node for pooled identity {} created and initialized. NetworkId={}",
-                                identity.getTag(), identity.getNetworkId());
-                    } else {
-                        log.error("Creation and initializing network node for pooled identity {} failed. NetworkId={}",
-                                identity.getTag(), identity.getNetworkId());
-                    }
-                });
+    private Identity createAndInitializeNewIdentity(String tag) {
+        Identity identity = createTemporaryIdentity(tag);
+        networkService.getNetworkIdOfInitializedNode(identity.getNetworkId());
+        return identity;
     }
 
-    private CompletableFuture<Identity> createAndInitializeNewActiveIdentity(String tag) {
-        return createAndInitializeNewIdentity(tag)
-                .thenApply(identity -> {
-                    synchronized (lock) {
-                        getActiveIdentityByTag().put(tag, identity);
-                    }
-                    persist();
-                    return identity;
-                }).whenComplete((identity, throwable) -> {
-                    if (throwable == null) {
-                        log.info("Network node for active identity {} created and initialized. NetworkId={}",
-                                identity.getTag(), identity.getNetworkId());
-                    } else {
-                        log.error("Creation and initializing network node for active identity {} failed. NetworkId={}",
-                                identity.getTag(), identity.getNetworkId());
-                    }
-                });
-    }
-
-    private CompletableFuture<Identity> createAndInitializeNewIdentity(String tag) {
+    private Identity createTemporaryIdentity(String tag) {
         String keyId = StringUtils.createUid();
         KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
         PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
         String nodeId = StringUtils.createUid();
 
         NetworkId networkId = createNetworkId(nodeId, pubKey);
-        Identity identity = new Identity(tag, networkId, keyPair);
+        return new Identity(tag, networkId, keyPair);
+    }
 
-        return networkService.getNetworkIdOfInitializedNode(networkId)
-                .thenApply(nodes -> identity);
+    public Identity createTemporaryIdentity() {
+        return createTemporaryIdentity(StringUtils.createUid());
     }
 }

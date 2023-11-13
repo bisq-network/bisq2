@@ -25,7 +25,6 @@ import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
-import bisq.identity.Identity;
 import bisq.security.pow.ProofOfWork;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
@@ -44,18 +43,15 @@ public class CreateNewProfileStep2Controller implements InitWithDataController<C
     @EqualsAndHashCode
     public static final class InitData {
         private final Optional<KeyPairAndId> tempIdentity;
-        private final Optional<Identity> pooledIdentity;
         private final ProofOfWork proofOfWork;
         private final String nickName;
         private final String nym;
 
         public InitData(Optional<KeyPairAndId> tempIdentity,
-                        Optional<Identity> pooledIdentity,
                         ProofOfWork proofOfWork,
                         String nickName,
                         String nym) {
             this.tempIdentity = tempIdentity;
-            this.pooledIdentity = pooledIdentity;
             this.proofOfWork = proofOfWork;
             this.nickName = nickName;
             this.nym = nym;
@@ -87,15 +83,11 @@ public class CreateNewProfileStep2Controller implements InitWithDataController<C
     @Override
     public void initWithData(InitData data) {
         model.setTempKeyPairAndId(data.getTempIdentity());
-        model.setPooledIdentity(data.getPooledIdentity());
         model.setProofOfWork(Optional.of(data.getProofOfWork()));
         model.getNickName().set(data.getNickName());
         model.getNym().set(data.getNym());
         if (data.getTempIdentity().isPresent()) {
             model.getRoboHashImage().set(RoboHash.getImage(data.getProofOfWork().getPayload()));
-        } else if (data.getPooledIdentity().isPresent()) {
-            Identity pooledIdentity = data.getPooledIdentity().get();
-            model.getRoboHashImage().set(RoboHash.getImage(pooledIdentity.getPubKeyHash()));
         }
     }
 
@@ -154,16 +146,6 @@ public class CreateNewProfileStep2Controller implements InitWithDataController<C
                             //todo
                         }
                     }));
-        } else if (model.getPooledIdentity().isPresent()) {
-            Identity pooledIdentity = model.getPooledIdentity().get();
-            userIdentityService.createAndPublishNewUserProfile(
-                    pooledIdentity,
-                    model.getNickName().get(),
-                    proofOfWork,
-                    model.getTerms().get(),
-                    model.getStatement().get());
-            model.getCreateProfileProgress().set(0);
-            close();
         }
     }
 

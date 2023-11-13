@@ -54,7 +54,6 @@ public class CreateNewProfileStep1Controller extends CreateProfileController {
         }
         CreateNewProfileStep2Controller.InitData initData = new CreateNewProfileStep2Controller.InitData(
                 model.getKeyPairAndId(),
-                model.getPooledIdentity(),
                 model.getProofOfWork().get(),
                 model.getNickName().get(),
                 model.getNym().get());
