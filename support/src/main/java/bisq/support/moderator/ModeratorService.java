@@ -29,9 +29,10 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
+import bisq.network.SendMessageResult;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageListener;
-import bisq.network.p2p.services.data.DataService;
+import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.network.p2p.vo.NetworkIdWithKeyPair;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
@@ -157,7 +158,7 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
         persist();
     }
 
-    public CompletableFuture<DataService.BroadCastDataResult> banReportedUser(ReportToModeratorMessage message) {
+    public CompletableFuture<BroadcastResult> banReportedUser(ReportToModeratorMessage message) {
         UserIdentity selectedUserIdentity = userIdentityService.getSelectedUserIdentity();
         if (selectedUserIdentity == null) {
             return CompletableFuture.failedFuture(new RuntimeException("selectedUserIdentity must not be null"));
@@ -167,7 +168,7 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
         return networkService.publishAuthorizedData(data, keyPair);
     }
 
-    public CompletableFuture<DataService.BroadCastDataResult> unBanReportedUser(BannedUserProfileData data) {
+    public CompletableFuture<BroadcastResult> unBanReportedUser(BannedUserProfileData data) {
         UserIdentity selectedUserIdentity = userIdentityService.getSelectedUserIdentity();
         if (selectedUserIdentity == null) {
             return CompletableFuture.failedFuture(new RuntimeException("selectedUserIdentity must not be null"));
@@ -176,9 +177,9 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
         return networkService.removeAuthorizedData(data, keyPair);
     }
 
-    public CompletableFuture<NetworkService.SendMessageResult> contactUser(ChatChannelDomain chatChannelDomain,
-                                                                           UserProfile userProfile,
-                                                                           Optional<String> citationMessage) {
+    public CompletableFuture<SendMessageResult> contactUser(ChatChannelDomain chatChannelDomain,
+                                                            UserProfile userProfile,
+                                                            Optional<String> citationMessage) {
         if (!twoPartyPrivateChatChannelServices.containsKey(chatChannelDomain)) {
             return CompletableFuture.failedFuture(new RuntimeException("No twoPartyPrivateChatChannelService present for " + chatChannelDomain));
         }

@@ -18,12 +18,11 @@
 package bisq.network.p2p.services.data;
 
 import bisq.common.timer.Scheduler;
+import bisq.network.common.TransportType;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
-import bisq.network.common.TransportType;
-import bisq.network.p2p.services.data.broadcast.BroadcastResult;
 import bisq.network.p2p.services.data.filter.DataFilter;
 import bisq.network.p2p.services.data.storage.DataStorageResult;
 import bisq.network.p2p.services.data.storage.StorageData;
@@ -45,7 +44,6 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -61,16 +59,6 @@ import java.util.stream.Stream;
  */
 @Slf4j
 public class DataService implements DataNetworkService.Listener {
-    public static class BroadCastDataResult extends HashMap<TransportType, CompletableFuture<BroadcastResult>> {
-        public BroadCastDataResult(Map<TransportType, CompletableFuture<BroadcastResult>> map) {
-            super(map);
-        }
-
-        public BroadCastDataResult() {
-            super();
-        }
-    }
-
     public interface Listener {
         default void onAuthorizedDataAdded(AuthorizedData authorizedData) {
         }
@@ -196,7 +184,7 @@ public class DataService implements DataNetworkService.Listener {
     // Add data
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<BroadCastDataResult> addAuthenticatedData(AuthenticatedData authenticatedData, KeyPair keyPair) {
+    public CompletableFuture<BroadcastResult> addAuthenticatedData(AuthenticatedData authenticatedData, KeyPair keyPair) {
         return storageService.getOrCreateAuthenticatedDataStore(authenticatedData.getClassName())
                 .thenApply(store -> {
                     try {
@@ -208,10 +196,10 @@ public class DataService implements DataNetworkService.Listener {
                             } else {
                                 listeners.forEach(e -> e.onAuthenticatedDataAdded(authenticatedData));
                             }
-                            return new BroadCastDataResult(dataNetworkServiceByTransportType.entrySet().stream()
+                            return new BroadcastResult(dataNetworkServiceByTransportType.entrySet().stream()
                                     .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().broadcast(request))));
                         } else {
-                            return new BroadCastDataResult();
+                            return new BroadcastResult();
                         }
                     } catch (GeneralSecurityException e) {
                         e.printStackTrace();
@@ -220,28 +208,28 @@ public class DataService implements DataNetworkService.Listener {
                 });
     }
 
-    public CompletableFuture<BroadCastDataResult> addAuthorizedData(AuthorizedData authorizedData, KeyPair keyPair) {
+    public CompletableFuture<BroadcastResult> addAuthorizedData(AuthorizedData authorizedData, KeyPair keyPair) {
         return addAuthenticatedData(authorizedData, keyPair);
     }
 
-    public CompletableFuture<BroadCastDataResult> addAppendOnlyData(AppendOnlyData appendOnlyData) {
+    public CompletableFuture<BroadcastResult> addAppendOnlyData(AppendOnlyData appendOnlyData) {
         return storageService.getOrCreateAppendOnlyDataStore(appendOnlyData.getMetaData().getClassName())
                 .thenApply(store -> {
                     AddAppendOnlyDataRequest request = new AddAppendOnlyDataRequest(appendOnlyData);
                     DataStorageResult dataStorageResult = store.add(request);
                     if (dataStorageResult.isSuccess()) {
                         listeners.forEach(listener -> listener.onAppendOnlyDataAdded(appendOnlyData));
-                        return new BroadCastDataResult(dataNetworkServiceByTransportType.entrySet().stream()
+                        return new BroadcastResult(dataNetworkServiceByTransportType.entrySet().stream()
                                 .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().broadcast(request))));
                     } else {
-                        return new BroadCastDataResult();
+                        return new BroadcastResult();
                     }
                 });
     }
 
-    public CompletableFuture<BroadCastDataResult> addMailboxData(MailboxData mailboxData,
-                                                                 KeyPair senderKeyPair,
-                                                                 PublicKey receiverPublicKey) {
+    public CompletableFuture<BroadcastResult> addMailboxData(MailboxData mailboxData,
+                                                             KeyPair senderKeyPair,
+                                                             PublicKey receiverPublicKey) {
         return storageService.getOrCreateMailboxDataStore(mailboxData.getClassName())
                 .thenApply(store -> {
                     try {
@@ -249,10 +237,10 @@ public class DataService implements DataNetworkService.Listener {
                         DataStorageResult dataStorageResult = store.add(request);
                         if (dataStorageResult.isSuccess()) {
                             listeners.forEach(listener -> listener.onMailboxDataAdded(mailboxData));
-                            return new BroadCastDataResult(dataNetworkServiceByTransportType.entrySet().stream()
+                            return new BroadcastResult(dataNetworkServiceByTransportType.entrySet().stream()
                                     .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().broadcast(request))));
                         } else {
-                            return new BroadCastDataResult();
+                            return new BroadcastResult();
                         }
 
                     } catch (GeneralSecurityException e) {
@@ -267,7 +255,7 @@ public class DataService implements DataNetworkService.Listener {
     // Remove data
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<BroadCastDataResult> removeAuthenticatedData(AuthenticatedData authenticatedData, KeyPair keyPair) {
+    public CompletableFuture<BroadcastResult> removeAuthenticatedData(AuthenticatedData authenticatedData, KeyPair keyPair) {
         return storageService.getOrCreateAuthenticatedDataStore(authenticatedData.getClassName())
                 .thenApply(store -> {
                     try {
@@ -279,10 +267,10 @@ public class DataService implements DataNetworkService.Listener {
                             } else {
                                 listeners.forEach(e -> e.onAuthenticatedDataRemoved(authenticatedData));
                             }
-                            return new BroadCastDataResult(dataNetworkServiceByTransportType.entrySet().stream()
+                            return new BroadcastResult(dataNetworkServiceByTransportType.entrySet().stream()
                                     .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().broadcast(request))));
                         } else {
-                            return new BroadCastDataResult();
+                            return new BroadcastResult();
                         }
                     } catch (GeneralSecurityException e) {
                         e.printStackTrace();
@@ -291,11 +279,11 @@ public class DataService implements DataNetworkService.Listener {
                 });
     }
 
-    public CompletableFuture<BroadCastDataResult> removeAuthorizedData(AuthorizedData authorizedData, KeyPair keyPair) {
+    public CompletableFuture<BroadcastResult> removeAuthorizedData(AuthorizedData authorizedData, KeyPair keyPair) {
         return removeAuthenticatedData(authorizedData, keyPair);
     }
 
-    public CompletableFuture<BroadCastDataResult> removeMailboxData(MailboxData mailboxData, KeyPair keyPair) {
+    public CompletableFuture<BroadcastResult> removeMailboxData(MailboxData mailboxData, KeyPair keyPair) {
         return storageService.getOrCreateMailboxDataStore(mailboxData.getClassName())
                 .thenApply(store -> {
                     try {
@@ -303,10 +291,10 @@ public class DataService implements DataNetworkService.Listener {
                         DataStorageResult dataStorageResult = store.remove(request);
                         if (dataStorageResult.isSuccess()) {
                             listeners.forEach(listener -> listener.onMailboxDataRemoved(mailboxData));
-                            return new BroadCastDataResult(dataNetworkServiceByTransportType.entrySet().stream()
+                            return new BroadcastResult(dataNetworkServiceByTransportType.entrySet().stream()
                                     .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().broadcast(request))));
                         } else {
-                            return new BroadCastDataResult();
+                            return new BroadcastResult();
                         }
                     } catch (GeneralSecurityException e) {
                         e.printStackTrace();

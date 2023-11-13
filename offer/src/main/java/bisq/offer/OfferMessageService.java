@@ -22,6 +22,7 @@ import bisq.common.observable.collection.ObservableSet;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
+import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
@@ -91,13 +92,13 @@ public class OfferMessageService implements Service, DataService.Listener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<DataService.BroadCastDataResult> addToNetwork(Offer<?, ?> offer) {
+    public CompletableFuture<BroadcastResult> addToNetwork(Offer<?, ?> offer) {
         return identityService.findActiveIdentityByNodeId(offer.getMakerNetworkId().getNodeId())
                 .map(identity -> networkService.publishAuthenticatedData(new OfferMessage(offer), identity.getNodeIdAndKeyPair().getKeyPair()))
                 .orElse(CompletableFuture.failedFuture(new RuntimeException("No identity found for networkNodeId used in the offer")));
     }
 
-    public CompletableFuture<DataService.BroadCastDataResult> removeFromNetwork(Offer<?, ?> offer) {
+    public CompletableFuture<BroadcastResult> removeFromNetwork(Offer<?, ?> offer) {
         return findIdentity(offer)
                 .map(identity -> networkService.removeAuthenticatedData(new OfferMessage(offer), identity.getNodeIdAndKeyPair().getKeyPair()))
                 .orElse(CompletableFuture.failedFuture(new RuntimeException("No identity found for networkNodeId used in the offer")));

@@ -23,6 +23,8 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.CompletableFutureUtils;
+import bisq.network.common.AddressByTransportTypeMap;
+import bisq.network.common.TransportType;
 import bisq.network.http.BaseHttpClient;
 import bisq.network.http.HttpClientRepository;
 import bisq.network.identity.NetworkId;
@@ -33,12 +35,11 @@ import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.network_load.NetworkLoadService;
 import bisq.network.p2p.node.transport.BootstrapInfo;
-import bisq.network.common.TransportType;
 import bisq.network.p2p.services.confidential.ConfidentialMessageListener;
-import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatusService;
+import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.StorageService;
@@ -47,7 +48,6 @@ import bisq.network.p2p.services.data.storage.auth.DefaultAuthenticatedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.network.p2p.services.monitor.MonitorService;
-import bisq.network.common.AddressByTransportTypeMap;
 import bisq.network.p2p.vo.NetworkIdWithKeyPair;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
@@ -65,12 +65,14 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
 import static bisq.network.common.TransportType.TOR;
-import static bisq.network.p2p.services.data.DataService.BroadCastDataResult;
 import static bisq.network.p2p.services.data.DataService.Listener;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.CompletableFuture.completedFuture;
@@ -86,12 +88,6 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     public static final String NETWORK_DB_PATH = "db" + File.separator + "network";
     public static final ExecutorService NETWORK_IO_POOL = ExecutorFactory.newCachedThreadPool("NetworkService.network-IO-pool");
     public static final ExecutorService DISPATCHER = ExecutorFactory.newSingleThreadExecutor("NetworkService.dispatcher");
-
-    public static class SendMessageResult extends HashMap<TransportType, ConfidentialMessageService.Result> {
-        public SendMessageResult() {
-            super();
-        }
-    }
 
     @Getter
     private final NetworkServiceStore persistableStore = new NetworkServiceStore();
@@ -261,27 +257,27 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     // Add/remove data
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<BroadCastDataResult> publishAuthenticatedData(DistributedData distributedData, KeyPair keyPair) {
+    public CompletableFuture<BroadcastResult> publishAuthenticatedData(DistributedData distributedData, KeyPair keyPair) {
         checkArgument(dataService.isPresent(), "DataService must be supported when addData is called.");
         DefaultAuthenticatedData authenticatedData = new DefaultAuthenticatedData(distributedData);
         return dataService.get().addAuthenticatedData(authenticatedData, keyPair);
     }
 
-    public CompletableFuture<BroadCastDataResult> removeAuthenticatedData(DistributedData distributedData, KeyPair ownerKeyPair) {
+    public CompletableFuture<BroadcastResult> removeAuthenticatedData(DistributedData distributedData, KeyPair ownerKeyPair) {
         checkArgument(dataService.isPresent(), "DataService must be supported when removeData is called.");
         DefaultAuthenticatedData authenticatedData = new DefaultAuthenticatedData(distributedData);
         return dataService.get().removeAuthenticatedData(authenticatedData, ownerKeyPair);
     }
 
-    public CompletableFuture<BroadCastDataResult> publishAuthorizedData(AuthorizedDistributedData authorizedDistributedData,
-                                                                        KeyPair keyPair) {
+    public CompletableFuture<BroadcastResult> publishAuthorizedData(AuthorizedDistributedData authorizedDistributedData,
+                                                                    KeyPair keyPair) {
         return publishAuthorizedData(authorizedDistributedData, keyPair, keyPair.getPrivate(), keyPair.getPublic());
     }
 
-    public CompletableFuture<BroadCastDataResult> publishAuthorizedData(AuthorizedDistributedData authorizedDistributedData,
-                                                                        KeyPair keyPair,
-                                                                        PrivateKey authorizedPrivateKey,
-                                                                        PublicKey authorizedPublicKey) {
+    public CompletableFuture<BroadcastResult> publishAuthorizedData(AuthorizedDistributedData authorizedDistributedData,
+                                                                    KeyPair keyPair,
+                                                                    PrivateKey authorizedPrivateKey,
+                                                                    PublicKey authorizedPublicKey) {
         checkArgument(dataService.isPresent(), "DataService must be supported when addData is called.");
         try {
             byte[] signature = SignatureUtil.sign(authorizedDistributedData.serialize(), authorizedPrivateKey);
@@ -293,21 +289,21 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         }
     }
 
-    public CompletableFuture<BroadCastDataResult> removeAuthorizedData(AuthorizedDistributedData authorizedDistributedData,
-                                                                       KeyPair keyPair) {
+    public CompletableFuture<BroadcastResult> removeAuthorizedData(AuthorizedDistributedData authorizedDistributedData,
+                                                                   KeyPair keyPair) {
         return removeAuthorizedData(authorizedDistributedData, keyPair, keyPair.getPublic());
     }
 
-    public CompletableFuture<BroadCastDataResult> removeAuthorizedData(AuthorizedDistributedData authorizedDistributedData,
-                                                                       KeyPair ownerKeyPair,
-                                                                       PublicKey authorizedPublicKey) {
+    public CompletableFuture<BroadcastResult> removeAuthorizedData(AuthorizedDistributedData authorizedDistributedData,
+                                                                   KeyPair ownerKeyPair,
+                                                                   PublicKey authorizedPublicKey) {
         checkArgument(dataService.isPresent(), "DataService must be supported when addData is called.");
         // When removing data the signature is not used.
         AuthorizedData authorizedData = new AuthorizedData(authorizedDistributedData, authorizedPublicKey);
         return dataService.get().removeAuthorizedData(authorizedData, ownerKeyPair);
     }
 
-    public CompletableFuture<BroadCastDataResult> publishAppendOnlyData(AppendOnlyData appendOnlyData) {
+    public CompletableFuture<BroadcastResult> publishAppendOnlyData(AppendOnlyData appendOnlyData) {
         checkArgument(dataService.isPresent(), "DataService must be supported when addData is called.");
         return dataService.get().addAppendOnlyData(appendOnlyData);
     }

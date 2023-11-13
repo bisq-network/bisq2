@@ -25,6 +25,7 @@ import bisq.common.observable.collection.ObservableArray;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
+import bisq.network.SendMessageResult;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.persistence.Persistence;
@@ -119,17 +120,17 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
                 });
     }
 
-    public CompletableFuture<NetworkService.SendMessageResult> sendTakeOfferMessage(String tradeId,
-                                                                                    BisqEasyOffer bisqEasyOffer,
-                                                                                    Optional<UserProfile> mediator) {
+    public CompletableFuture<SendMessageResult> sendTakeOfferMessage(String tradeId,
+                                                                     BisqEasyOffer bisqEasyOffer,
+                                                                     Optional<UserProfile> mediator) {
         return userProfileService.findUserProfile(bisqEasyOffer.getMakersUserProfileId())
                 .map(makerUserProfile -> {
                     if (bannedUserService.isUserProfileBanned(makerUserProfile)) {
-                        return CompletableFuture.<NetworkService.SendMessageResult>failedFuture(new RuntimeException("Maker is banned"));
+                        return CompletableFuture.<SendMessageResult>failedFuture(new RuntimeException("Maker is banned"));
                     }
                     UserIdentity myUserIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
                     if (bannedUserService.isUserProfileBanned(myUserIdentity.getUserProfile())) {
-                        return CompletableFuture.<NetworkService.SendMessageResult>failedFuture(new RuntimeException());
+                        return CompletableFuture.<SendMessageResult>failedFuture(new RuntimeException());
                     }
                     BisqEasyOpenTradeChannel channel = traderFindOrCreatesChannel(tradeId,
                             bisqEasyOffer,
@@ -150,25 +151,25 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
                 .orElse(CompletableFuture.failedFuture(new RuntimeException("makerUserProfile not found from message.authorUserProfileId")));
     }
 
-    public CompletableFuture<NetworkService.SendMessageResult> sendSystemMessage(String text,
-                                                                                 BisqEasyOpenTradeChannel channel) {
+    public CompletableFuture<SendMessageResult> sendSystemMessage(String text,
+                                                                  BisqEasyOpenTradeChannel channel) {
         return sendMessage(text, Optional.empty(), ChatMessageType.SYSTEM_MESSAGE, channel);
     }
 
-    public CompletableFuture<NetworkService.SendMessageResult> sendTextMessage(String text,
-                                                                               Optional<Citation> citation,
-                                                                               BisqEasyOpenTradeChannel channel) {
+    public CompletableFuture<SendMessageResult> sendTextMessage(String text,
+                                                                Optional<Citation> citation,
+                                                                BisqEasyOpenTradeChannel channel) {
         return sendMessage(text, citation, ChatMessageType.TEXT, channel);
     }
 
-    private CompletableFuture<NetworkService.SendMessageResult> sendMessage(@Nullable String text,
-                                                                            Optional<Citation> citation,
-                                                                            ChatMessageType chatMessageType,
-                                                                            BisqEasyOpenTradeChannel channel) {
+    private CompletableFuture<SendMessageResult> sendMessage(@Nullable String text,
+                                                             Optional<Citation> citation,
+                                                             ChatMessageType chatMessageType,
+                                                             BisqEasyOpenTradeChannel channel) {
         String shortUid = StringUtils.createUid();
         long date = new Date().getTime();
         if (channel.isInMediation() && channel.getMediator().isPresent()) {
-            List<CompletableFuture<NetworkService.SendMessageResult>> futures = channel.getTraders().stream()
+            List<CompletableFuture<SendMessageResult>> futures = channel.getTraders().stream()
                     .map(peer -> sendMessage(shortUid, text, citation, channel, peer, chatMessageType, date))
                     .collect(Collectors.toList());
             channel.getMediator()
