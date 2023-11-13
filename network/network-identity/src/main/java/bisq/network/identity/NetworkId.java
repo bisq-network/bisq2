@@ -18,10 +18,8 @@
 package bisq.network.identity;
 
 import bisq.common.proto.Proto;
-import bisq.common.validation.NetworkDataValidation;
 import bisq.network.common.AddressByTransportTypeMap;
 import bisq.security.PubKey;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,41 +27,27 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public final class NetworkId implements Proto {
     private final PubKey pubKey;
-    private final String nodeId;
     private final AddressByTransportTypeMap addressByTransportTypeMap = new AddressByTransportTypeMap();
 
-    @EqualsAndHashCode.Include
-    private final TorIdentity torIdentity;
-
-    public NetworkId(AddressByTransportTypeMap addressByTransportTypeMap, PubKey pubKey, String nodeId, TorIdentity torIdentity) {
+    public NetworkId(AddressByTransportTypeMap addressByTransportTypeMap, PubKey pubKey) {
         this.pubKey = pubKey;
-        this.nodeId = nodeId;
-        this.torIdentity = torIdentity;
-
         checkArgument(!addressByTransportTypeMap.isEmpty(),
                 "We require at least 1 addressByNetworkType for a valid NetworkId");
         this.addressByTransportTypeMap.putAll(addressByTransportTypeMap);
-
-        NetworkDataValidation.validateId(nodeId);
     }
 
     public bisq.network.identity.protobuf.NetworkId toProto() {
         return bisq.network.identity.protobuf.NetworkId.newBuilder()
                 .setAddressByNetworkTypeMap(addressByTransportTypeMap.toProto())
                 .setPubKey(pubKey.toProto())
-                .setNodeId(nodeId)
-                .setTorIdentity(torIdentity.toProto())
                 .build();
     }
 
     public static NetworkId fromProto(bisq.network.identity.protobuf.NetworkId proto) {
         return new NetworkId(AddressByTransportTypeMap.fromProto(proto.getAddressByNetworkTypeMap()),
-                PubKey.fromProto(proto.getPubKey()),
-                proto.getNodeId(),
-                TorIdentity.fromProto(proto.getTorIdentity()));
+                PubKey.fromProto(proto.getPubKey()));
     }
 
     public String getId() {
@@ -73,8 +57,7 @@ public final class NetworkId implements Proto {
     @Override
     public String toString() {
         return "NetworkId(" +
-                "nodeId='" + nodeId + '\'' +
-                ", addressByTransportTypeMap=" + addressByTransportTypeMap +
+                "addressByTransportTypeMap=" + addressByTransportTypeMap +
                 ", pubKey=" + pubKey +
                 ")";
     }

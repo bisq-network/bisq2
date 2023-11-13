@@ -36,7 +36,8 @@ public interface TradeMessageSender<M extends Trade<?, ?, ?>> {
 
         return serviceProvider.getNetworkService().confidentialSend(message,
                         trade.getPeer().getNetworkId(),
-                        trade.getMyIdentity().getNodeIdAndKeyPair())
+                        trade.getMyIdentity().getNodeIdAndKeyPair(),
+                        trade.getMyIdentity().getTorIdentity())
                 .whenComplete((result, throwable) -> {
                     // System.out.println("sendMessage " + message + ". result=" + result);
                     //todo store info if message arrive or stored in mailbox

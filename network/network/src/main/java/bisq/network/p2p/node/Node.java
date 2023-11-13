@@ -26,6 +26,7 @@ import bisq.network.common.Address;
 import bisq.network.common.TransportConfig;
 import bisq.network.common.TransportType;
 import bisq.network.identity.NetworkId;
+import bisq.network.identity.TorIdentity;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
@@ -130,6 +131,8 @@ public class Node implements Connection.Handler {
     @Getter
     private final NetworkId networkId;
     @Getter
+    private final TorIdentity torIdentity;
+    @Getter
     private final Map<Address, OutboundConnection> outboundConnectionsByAddress = new ConcurrentHashMap<>();
     @Getter
     private final Map<Address, InboundConnection> inboundConnectionsByAddress = new ConcurrentHashMap<>();
@@ -147,13 +150,14 @@ public class Node implements Connection.Handler {
     @Getter
     public final NetworkLoadService networkLoadService;
 
-    public Node(BanList banList, Config config, NetworkId networkId, TransportService transportService, NetworkLoadService networkLoadService) {
+    public Node(BanList banList, Config config, NetworkId networkId, TorIdentity torIdentity, TransportService transportService, NetworkLoadService networkLoadService) {
         this.banList = banList;
         this.transportService = transportService;
         transportType = config.getTransportType();
         authorizationService = config.getAuthorizationService();
         this.config = config;
         this.networkId = networkId;
+        this.torIdentity = torIdentity;
         this.networkLoadService = networkLoadService;
 
         retryPolicy = RetryPolicy.<Boolean>builder()
@@ -208,7 +212,7 @@ public class Node implements Connection.Handler {
     }
 
     private void createServerAndListen() {
-        ServerSocketResult serverSocketResult = transportService.getServerSocket(networkId);
+        ServerSocketResult serverSocketResult = transportService.getServerSocket(networkId, torIdentity);
         myCapability = Optional.of(new Capability(serverSocketResult.getAddress(), new ArrayList<>(config.getSupportedTransportTypes())));
         server = Optional.of(new Server(serverSocketResult,
                 socket -> onClientSocket(socket, serverSocketResult, myCapability.get()),
@@ -224,7 +228,7 @@ public class Node implements Connection.Handler {
                 banList,
                 config.getSocketTimeout(),
                 myCapability,
-                authorizationService, networkId);
+                authorizationService, torIdentity);
         connectionHandshakes.put(connectionHandshake.getId(), connectionHandshake);
         log.debug("Inbound handshake request at: {}", myCapability.getAddress());
         try {
@@ -366,7 +370,7 @@ public class Node implements Connection.Handler {
             return outboundConnectionsByAddress.get(address);
         }
 
-        ConnectionHandshake connectionHandshake = new ConnectionHandshake(socket, banList, config.getSocketTimeout(), myCapability, authorizationService, networkId);
+        ConnectionHandshake connectionHandshake = new ConnectionHandshake(socket, banList, config.getSocketTimeout(), myCapability, authorizationService, torIdentity);
         connectionHandshakes.put(connectionHandshake.getId(), connectionHandshake);
         log.debug("Outbound handshake started: Initiated by {} to {}", myCapability.getAddress(), address);
         try {

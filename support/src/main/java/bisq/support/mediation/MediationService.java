@@ -28,6 +28,7 @@ import bisq.common.application.Service;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
+import bisq.network.identity.TorIdentity;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.vo.NetworkIdWithKeyPair;
@@ -121,7 +122,7 @@ public class MediationService implements Service, MessageListener {
                 myUserIdentity.getUserProfile(),
                 peer,
                 new ArrayList<>(bisqEasyOpenTradeChannel.getChatMessages()));
-        networkService.confidentialSend(networkMessage, mediator.getNetworkId(), myUserIdentity.getNodeIdAndKeyPair());
+        networkService.confidentialSend(networkMessage, mediator.getNetworkId(), myUserIdentity.getNodeIdAndKeyPair(), myUserIdentity.getIdentity().getTorIdentity());
     }
 
     public Optional<UserProfile> selectMediator(String makersUserProfileId, String takersUserProfileId) {
@@ -177,16 +178,19 @@ public class MediationService implements Service, MessageListener {
             mediationRequest.getChatMessages().forEach(chatMessage -> bisqEasyOpenTradeChannelService.addMessage(chatMessage, channel));
 
             NetworkIdWithKeyPair myNodeIdAndKeyPair = myUserIdentity.getNodeIdAndKeyPair();
+            TorIdentity myNodeTorIdentity = myUserIdentity.getIdentity().getTorIdentity();
             NetworkId receiverNetworkId = mediationRequest.getRequester().getNetworkId();
             networkService.confidentialSend(new MediationResponse(tradeId, bisqEasyOffer),
                     receiverNetworkId,
-                    myNodeIdAndKeyPair);
+                    myNodeIdAndKeyPair,
+                    myNodeTorIdentity);
             bisqEasyOpenTradeChannelService.addMediatorsResponseMessage(channel, Res.get("bisqEasy.mediation.message.toRequester"));
 
             receiverNetworkId = mediationRequest.getPeer().getNetworkId();
             networkService.confidentialSend(new MediationResponse(tradeId, bisqEasyOffer),
                     receiverNetworkId,
-                    myNodeIdAndKeyPair);
+                    myNodeIdAndKeyPair,
+                    myNodeTorIdentity);
             bisqEasyOpenTradeChannelService.addMediatorsResponseMessage(channel, Res.get("bisqEasy.mediation.message.toNonRequester"));
         });
     }

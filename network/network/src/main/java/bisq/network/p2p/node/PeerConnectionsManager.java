@@ -17,13 +17,13 @@
 
 package bisq.network.p2p.node;
 
+import bisq.network.common.Address;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.network.p2p.node.transport.ServerSocketResult;
 import bisq.network.p2p.node.transport.TransportService;
 import bisq.network.p2p.services.peergroup.BanList;
-import bisq.network.common.Address;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -123,7 +123,7 @@ public class PeerConnectionsManager {
     }
 
     private Capability createServerAndListen(Node node) throws IOException {
-        ServerSocketResult serverSocketResult = transportService.getServerSocket(networkId);
+        ServerSocketResult serverSocketResult = transportService.getServerSocket(networkId, node.getTorIdentity());
         Capability serverCapability = new Capability(serverSocketResult.getAddress(), new ArrayList<>(config.getSupportedTransportTypes()));
         ServerChannel serverChannel = new ServerChannel(
                 serverCapability,

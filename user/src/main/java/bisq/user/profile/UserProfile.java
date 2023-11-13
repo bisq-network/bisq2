@@ -142,10 +142,6 @@ public final class UserProfile implements DistributedData {
         return networkId.getPubKey().getId();
     }
 
-    public String getNodeId() {
-        return networkId.getNodeId();
-    }
-
     public String getNym() {
         if (nym == null) {
             nym = NymIdGenerator.fromHash(getPubKeyHash());

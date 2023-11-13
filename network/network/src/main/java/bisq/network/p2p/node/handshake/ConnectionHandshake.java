@@ -19,7 +19,6 @@ package bisq.network.p2p.node.handshake;
 
 import bisq.common.util.StringUtils;
 import bisq.network.common.Address;
-import bisq.network.identity.NetworkId;
 import bisq.network.identity.TorIdentity;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.NetworkEnvelope;
@@ -53,7 +52,7 @@ public final class ConnectionHandshake {
     private final BanList banList;
     private final Capability capability;
     private final AuthorizationService authorizationService;
-    private final NetworkId myNetworkId;
+    private final TorIdentity myTorIdentity;
 
     private NetworkEnvelopeSocket networkEnvelopeSocket;
 
@@ -151,11 +150,12 @@ public final class ConnectionHandshake {
                                BanList banList,
                                int socketTimeout,
                                Capability capability,
-                               AuthorizationService authorizationService, NetworkId myNetworkId) {
+                               AuthorizationService authorizationService,
+                               TorIdentity myTorIdentity) {
         this.banList = banList;
         this.capability = capability;
         this.authorizationService = authorizationService;
-        this.myNetworkId = myNetworkId;
+        this.myTorIdentity = myTorIdentity;
 
         try {
             // socket.setTcpNoDelay(true);
@@ -177,8 +177,7 @@ public final class ConnectionHandshake {
             byte[] addressOwnershipProof = null;
             if (myAddress.isTorAddress()) {
                 String dataToSign = myAddress.getFullAddress() + "|" + peerAddress.getFullAddress();
-                TorIdentity torIdentity = myNetworkId.getTorIdentity();
-                addressOwnershipProof = torIdentity.signMessage(dataToSign.getBytes());
+                addressOwnershipProof = myTorIdentity.signMessage(dataToSign.getBytes());
             }
 
             Request request = new Request(capability, addressOwnershipProof, myNetworkLoad);

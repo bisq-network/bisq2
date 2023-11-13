@@ -19,6 +19,7 @@ package bisq.identity;
 
 import bisq.common.proto.Proto;
 import bisq.network.identity.NetworkId;
+import bisq.network.identity.TorIdentity;
 import bisq.network.p2p.vo.NetworkIdWithKeyPair;
 import bisq.security.KeyPairProtoUtil;
 import bisq.security.PubKey;
@@ -33,17 +34,19 @@ import java.util.Objects;
 @ToString
 public final class Identity implements Proto {
     public static Identity from(String domainId, Identity identity) {
-        return new Identity(domainId, identity.getNetworkId(), identity.getKeyPair());
+        return new Identity(domainId, identity.getNetworkId(), identity.getTorIdentity(), identity.getKeyPair());
     }
 
     // Reference to usage (e.g. offerId)
     private final String tag;
     private final NetworkId networkId;
+    private final TorIdentity torIdentity;
     private final KeyPair keyPair;
 
-    public Identity(String tag, NetworkId networkId, KeyPair keyPair) {
+    public Identity(String tag, NetworkId networkId, TorIdentity torIdentity, KeyPair keyPair) {
         this.tag = tag;
         this.networkId = networkId;
+        this.torIdentity = torIdentity;
         this.keyPair = keyPair;
     }
 
@@ -52,6 +55,7 @@ public final class Identity implements Proto {
         return bisq.identity.protobuf.Identity.newBuilder()
                 .setDomainId(tag)
                 .setNetworkId(networkId.toProto())
+                .setTorIdentity(torIdentity.toProto())
                 .setKeyPair(KeyPairProtoUtil.toProto(keyPair))
                 .build();
     }
@@ -59,15 +63,11 @@ public final class Identity implements Proto {
     public static Identity fromProto(bisq.identity.protobuf.Identity proto) {
         return new Identity(proto.getDomainId(),
                 NetworkId.fromProto(proto.getNetworkId()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair()));
+                TorIdentity.fromProto(proto.getTorIdentity()), KeyPairProtoUtil.fromProto(proto.getKeyPair()));
     }
 
     public NetworkIdWithKeyPair getNodeIdAndKeyPair() {
         return new NetworkIdWithKeyPair(networkId, keyPair);
-    }
-
-    public String getNodeId() {
-        return networkId.getNodeId();
     }
 
     public String getId() {
