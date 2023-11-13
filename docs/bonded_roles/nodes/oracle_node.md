@@ -2,7 +2,8 @@
 
 ## Requirements:
 
-- Install the oracle node on a VPS with min. 8 GB RAM and min 4 vCPUs.
+- Install the oracle node on a VPS with min. 8 GB RAM, min 4 vCPUs and about 700 GB storage for the un-pruned, indexed
+  Bitcoin blockchain.
 - An oracle node operator need to make a DAO proposal for a bonded role (Bisq2 oracle node). After acceptance by DAO
   voting you need to lock up the BSQ bond (10 000 BSQ)
 - After the bond is locked, register your oracle node in the Bisq2 `User Options/Nodes` screen. Follow the instructions
