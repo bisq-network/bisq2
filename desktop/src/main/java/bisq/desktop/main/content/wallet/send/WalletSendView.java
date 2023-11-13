@@ -17,10 +17,10 @@
 
 package bisq.desktop.main.content.wallet.send;
 
-import bisq.desktop.common.validation.MonetaryValidator;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.MaterialPasswordField;
 import bisq.desktop.components.controls.MaterialTextField;
+import bisq.desktop.components.controls.validator.deprecated.MonetaryValidator;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;

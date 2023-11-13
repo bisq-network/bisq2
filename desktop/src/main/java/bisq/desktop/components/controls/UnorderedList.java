@@ -22,7 +22,6 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 @Slf4j
-
 public class UnorderedList extends TextList {
     public static final String REGEX = "- ";
     public static final String MARK = "\u2022"; // Unicode code for "•"

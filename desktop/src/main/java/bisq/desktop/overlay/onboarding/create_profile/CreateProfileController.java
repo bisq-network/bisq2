@@ -18,7 +18,6 @@
 package bisq.desktop.overlay.onboarding.create_profile;
 
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.common.data.KeyPairAndId;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
@@ -29,6 +28,7 @@ import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.identity.IdentityService;
 import bisq.security.DigestUtil;
+import bisq.security.KeyIdKeyPairTuple;
 import bisq.security.KeyPairService;
 import bisq.security.pow.ProofOfWork;
 import bisq.security.pow.ProofOfWorkService;
@@ -121,11 +121,11 @@ public class CreateProfileController implements Controller {
         }
 
         if (model.getKeyPairAndId().isPresent()) {
-            KeyPairAndId keyPairAndId = model.getKeyPairAndId().get();
+            KeyIdKeyPairTuple keyIdKeyPairTuple = model.getKeyPairAndId().get();
             userIdentityService.createAndPublishNewUserProfile(
                             model.getNickName().get().trim(),
-                            keyPairAndId.getKeyId(),
-                            keyPairAndId.getKeyPair(),
+                            keyIdKeyPairTuple.getKeyId(),
+                            keyIdKeyPairTuple.getKeyPair(),
                             proofOfWork,
                             "",
                             "")
@@ -159,8 +159,8 @@ public class CreateProfileController implements Controller {
         mintNymProofOfWorkFuture = Optional.of(createProofOfWork(pubKeyHash)
                 .whenComplete((proofOfWork, t) ->
                         UIThread.run(() -> {
-                            KeyPairAndId keyPairAndId = new KeyPairAndId(model.getNym().get(), keyPair);
-                            model.setKeyPairAndId(Optional.of(keyPairAndId));
+                            KeyIdKeyPairTuple keyIdKeyPairTuple = new KeyIdKeyPairTuple(model.getNym().get(), keyPair);
+                            model.setKeyPairAndId(Optional.of(keyIdKeyPairTuple));
                         })));
     }
 

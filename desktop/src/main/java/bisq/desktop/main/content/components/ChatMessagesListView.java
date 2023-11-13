@@ -48,12 +48,11 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.*;
 import bisq.desktop.components.list_view.NoSelectionModel;
 import bisq.desktop.components.overlay.Popup;
-import bisq.desktop.components.table.FilteredListItem;
 import bisq.desktop.main.content.bisq_easy.take_offer.TakeOfferController;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
-import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
 import bisq.network.identity.NetworkId;
+import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.settings.SettingsService;
@@ -1073,7 +1072,7 @@ public class ChatMessagesListView {
     @Slf4j
     @Getter
     @EqualsAndHashCode
-    public static class ChatMessageListItem<T extends ChatMessage> implements Comparable<ChatMessageListItem<T>>, FilteredListItem {
+    public static class ChatMessageListItem<T extends ChatMessage> implements Comparable<ChatMessageListItem<T>> {
         private final T chatMessage;
         private final String message;
         private final String date;
@@ -1177,7 +1176,6 @@ public class ChatMessagesListView {
             return Comparator.comparingLong(ChatMessage::getDate).compare(this.getChatMessage(), o.getChatMessage());
         }
 
-        @Override
         public boolean match(String filterString) {
             return filterString == null || filterString.isEmpty() || StringUtils.containsIgnoreCase(message, filterString) || StringUtils.containsIgnoreCase(nym, filterString) || StringUtils.containsIgnoreCase(nickName, filterString) || StringUtils.containsIgnoreCase(date, filterString);
         }

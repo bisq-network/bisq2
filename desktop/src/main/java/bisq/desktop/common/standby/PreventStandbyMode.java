@@ -15,15 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.components.containers;
+package bisq.desktop.common.standby;
 
-import bisq.desktop.common.utils.StageUtil;
-import javafx.scene.control.TextField;
-import javafx.stage.Stage;
+interface PreventStandbyMode {
+    void initialize();
 
-public class OverlayTextField extends TextField {
-    public OverlayTextField(String title, String text) {
-        setText(text);
-        Stage stage = StageUtil.addToOverlayStage(this, title);
-    }
+    void shutdown();
 }

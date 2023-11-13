@@ -32,6 +32,7 @@ import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+// Not used but keep for potential use
 public class InfoInputTextField extends AnchorPane {
 
     @Getter

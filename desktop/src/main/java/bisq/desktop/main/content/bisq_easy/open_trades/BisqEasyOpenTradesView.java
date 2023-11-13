@@ -21,10 +21,10 @@ import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.data.Triple;
 import bisq.contract.bisq_easy.BisqEasyContract;
+import bisq.desktop.CssConfig;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
-import bisq.desktop.common.utils.SceneUtil;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
 import bisq.desktop.components.controls.BisqTooltip;
@@ -282,7 +282,7 @@ public class BisqEasyOpenTradesView extends ChatView {
             windowRoot.getStyleClass().add("bisq-popup");
 
             Scene scene = new Scene(windowRoot);
-            SceneUtil.configCss(scene);
+            CssConfig.addAllCss(scene);
             chatWindow.setScene(scene);
 
             // Avoid flicker

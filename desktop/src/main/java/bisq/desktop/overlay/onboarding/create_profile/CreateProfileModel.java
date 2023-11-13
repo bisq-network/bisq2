@@ -17,9 +17,9 @@
 
 package bisq.desktop.overlay.onboarding.create_profile;
 
-import bisq.desktop.common.data.KeyPairAndId;
 import bisq.desktop.common.view.Model;
 import bisq.identity.Identity;
+import bisq.security.KeyIdKeyPairTuple;
 import bisq.security.pow.ProofOfWork;
 import javafx.beans.property.*;
 import javafx.scene.image.Image;
@@ -31,7 +31,7 @@ import java.util.Optional;
 @Getter
 public class CreateProfileModel implements Model {
     @Setter
-    private Optional<KeyPairAndId> keyPairAndId = Optional.empty();
+    private Optional<KeyIdKeyPairTuple> keyPairAndId = Optional.empty();
     @Setter
     private Optional<ProofOfWork> proofOfWork = Optional.empty();
     @Setter

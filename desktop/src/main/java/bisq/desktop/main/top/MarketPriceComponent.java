@@ -27,8 +27,8 @@ import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqTooltip;
+import bisq.desktop.components.controls.ComboBoxWithSearch;
 import bisq.desktop.components.controls.ProgressBarWithLabel;
-import bisq.desktop.components.overlay.ComboBoxWithSearch;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.PriceFormatter;
@@ -214,6 +214,9 @@ public class MarketPriceComponent {
             });
             updateScheduler = UIScheduler.run(() -> {
                         ListItem item = model.selected.get();
+                        if (item == null) {
+                            return;
+                        }
                         boolean isStale = item.isStale();
                         staleIcon.setManaged(isStale);
                         staleIcon.setVisible(isStale);
