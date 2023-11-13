@@ -19,8 +19,8 @@ package bisq.network.p2p.node;
 
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
-import bisq.network.p2p.node.transport.ServerSocketResult;
 import bisq.network.common.Address;
+import bisq.network.p2p.node.transport.ServerSocketResult;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -44,7 +44,7 @@ public final class Server {
         log.debug("Create server: {}", serverSocketResult);
         future = NetworkService.NETWORK_IO_POOL.submit(() -> {
             Thread.currentThread().setName("Server.listen-" +
-                    StringUtils.truncate(serverSocketResult.getNodeId()) + "-" +
+                    StringUtils.truncate(serverSocketResult.getTorIdentity().toString()) + "-" +
                     StringUtils.truncate(serverSocketResult.getAddress().toString()));
             try {
                 while (isNotStopped()) {

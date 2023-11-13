@@ -13,6 +13,7 @@ dependencies {
     implementation project(':i2p')
     implementation 'tor:tor'
 
+    implementation libs.bouncycastle
     implementation libs.failsafe
     implementation libs.google.guava
     implementation libs.typesafe.config

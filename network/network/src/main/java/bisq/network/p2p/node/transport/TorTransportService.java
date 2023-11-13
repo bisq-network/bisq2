@@ -87,7 +87,7 @@ public class TorTransportService implements TransportService {
                 bootstrapInfo.getBootstrapDetails().set("Create Onion service for node ID '" + networkId + "'");
             }
 
-            CreateOnionServiceResponse response = torService.createOnionService(port, networkId.getNodeId()).get(2, TimeUnit.MINUTES);
+            CreateOnionServiceResponse response = torService.createOnionService(port, networkId.getTorIdentity()).get(2, TimeUnit.MINUTES);
 
             if (isDefaultNetworkId) {
                 bootstrapInfo.getBootstrapState().set(BootstrapState.SERVICE_PUBLISHED);

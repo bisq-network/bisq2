@@ -126,17 +126,17 @@ public class TorService implements Service {
         }
     }
 
-    public CompletableFuture<CreateOnionServiceResponse> createOnionService(int port, String nodeId) {
-        log.info("Start hidden service with port {} and nodeId {}", port, nodeId);
+    public CompletableFuture<CreateOnionServiceResponse> createOnionService(int port, TorIdentity torIdentity) {
+        log.info("Start hidden service with port {} and nodeId {}", port, torIdentity);
         long ts = System.currentTimeMillis();
         try {
             @SuppressWarnings("resource") ServerSocket localServerSocket = new ServerSocket(RANDOM_PORT);
             int localPort = localServerSocket.getLocalPort();
-            return onionServicePublishService.publish(nodeId, port, localPort)
+            return onionServicePublishService.publish(torIdentity, port, localPort)
                     .thenApply(onionAddress -> {
                                 log.info("Tor hidden service Ready. Took {} ms. Onion address={}; nodeId={}",
-                                        System.currentTimeMillis() - ts, onionAddress, nodeId);
-                                return new CreateOnionServiceResponse(nodeId, localServerSocket, onionAddress);
+                                        System.currentTimeMillis() - ts, onionAddress, torIdentity);
+                                return new CreateOnionServiceResponse(torIdentity, localServerSocket, onionAddress);
                             }
                     );
 

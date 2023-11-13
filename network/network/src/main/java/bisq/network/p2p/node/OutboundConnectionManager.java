@@ -133,6 +133,7 @@ public class OutboundConnectionManager {
         if (outboundHandshakeChannels.contains(socketChannel)) {
             var handshakeInitiator = new ConnectionHandshakeInitiator(
                     myCapability,
+                    null,
                     authorizationService,
                     banList,
                     myNetworkLoad,

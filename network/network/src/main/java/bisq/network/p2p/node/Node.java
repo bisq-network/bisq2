@@ -20,7 +20,6 @@ package bisq.network.p2p.node;
 
 import bisq.common.observable.Observable;
 import bisq.common.util.CompletableFutureUtils;
-import bisq.common.util.NetworkUtils;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
 import bisq.network.common.Address;
@@ -225,7 +224,7 @@ public class Node implements Connection.Handler {
                 banList,
                 config.getSocketTimeout(),
                 myCapability,
-                authorizationService);
+                authorizationService, networkId);
         connectionHandshakes.put(connectionHandshake.getId(), connectionHandshake);
         log.debug("Inbound handshake request at: {}", myCapability.getAddress());
         try {
@@ -367,7 +366,7 @@ public class Node implements Connection.Handler {
             return outboundConnectionsByAddress.get(address);
         }
 
-        ConnectionHandshake connectionHandshake = new ConnectionHandshake(socket, banList, config.getSocketTimeout(), myCapability, authorizationService);
+        ConnectionHandshake connectionHandshake = new ConnectionHandshake(socket, banList, config.getSocketTimeout(), myCapability, authorizationService, networkId);
         connectionHandshakes.put(connectionHandshake.getId(), connectionHandshake);
         log.debug("Outbound handshake started: Initiated by {} to {}", myCapability.getAddress(), address);
         try {
