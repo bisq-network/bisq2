@@ -26,6 +26,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -48,5 +49,41 @@ public class IdentityServiceTest {
 
         Identity secondDefaultIdentity = identityService.getOrCreateDefaultIdentity();
         assertThat(firstDefaultIdentity).isSameAs(secondDefaultIdentity);
+    }
+
+    @Test
+    void createNewActiveIdentityPersistence(@TempDir Path tempDir) throws ExecutionException, InterruptedException {
+        var persistenceService = new PersistenceService(tempDir.toAbsolutePath().toString());
+        var keyPairService = new KeyPairService(persistenceService);
+
+        NetworkService networkService = mock(NetworkService.class);
+        when(networkService.getSupportedTransportTypes()).thenReturn(Set.of(TransportType.TOR));
+
+        var identityService = new IdentityService(persistenceService, keyPairService, networkService);
+
+        String myTag = "myTag";
+        Identity activeIdentity = identityService.createAndInitializeNewActiveIdentity(myTag);
+        Identity persistedActiveIdentity = identityService.getOrCreateIdentity(myTag).get();
+
+        assertThat(activeIdentity.getTag())
+                .isEqualTo(myTag);
+        assertThat(activeIdentity).isSameAs(persistedActiveIdentity);
+    }
+
+    @Test
+    void createNewIdentity(@TempDir Path tempDir) {
+        var persistenceService = new PersistenceService(tempDir.toAbsolutePath().toString());
+        var keyPairService = new KeyPairService(persistenceService);
+
+        NetworkService networkService = mock(NetworkService.class);
+        when(networkService.getSupportedTransportTypes()).thenReturn(Set.of(TransportType.TOR));
+
+        var identityService = new IdentityService(persistenceService, keyPairService, networkService);
+
+        String myTag = "myTag";
+        Identity activeIdentity = identityService.createAndInitializeNewActiveIdentity(myTag);
+        Identity anotherActiveIdentity = identityService.createAndInitializeNewActiveIdentity(myTag);
+
+        assertThat(activeIdentity).isNotSameAs(anotherActiveIdentity);
     }
 }

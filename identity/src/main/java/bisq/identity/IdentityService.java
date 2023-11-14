@@ -283,18 +283,8 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     }
 
     private Identity createAndInitializeNewIdentity(String tag) {
-        Identity identity = createTemporaryIdentity(tag);
+        Identity identity = createIdentity(StringUtils.createUid(), tag);
         networkService.getNetworkIdOfInitializedNode(identity.getNetworkId(), identity.getTorIdentity());
         return identity;
-    }
-
-    private Identity createTemporaryIdentity(String tag) {
-        String keyId = StringUtils.createUid();
-        KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
-        PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
-
-        TorIdentity torIdentity = createTorIdentity(false);
-        NetworkId networkId = createNetworkId(false, pubKey, torIdentity);
-        return new Identity(tag, networkId, torIdentity, keyPair);
     }
 }
