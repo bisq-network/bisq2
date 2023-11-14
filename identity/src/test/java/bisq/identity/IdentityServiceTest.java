@@ -26,6 +26,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
 import java.security.KeyPair;
+import java.util.Optional;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -110,5 +111,35 @@ public class IdentityServiceTest {
         Identity anotherActiveIdentity = identityService.createAndInitializeNewActiveIdentity(myTag);
 
         assertThat(activeIdentity).isNotSameAs(anotherActiveIdentity);
+    }
+
+    @Test
+    void retireInvalidIdentity(@TempDir Path tempDir) {
+        var persistenceService = new PersistenceService(tempDir.toAbsolutePath().toString());
+        var keyPairService = new KeyPairService(persistenceService);
+        NetworkService networkService = mock(NetworkService.class);
+
+        var identityService = new IdentityService(persistenceService, keyPairService, networkService);
+        boolean isRemoved = identityService.retireActiveIdentity("tag");
+        assertThat(isRemoved).isFalse();
+    }
+
+    @Test
+    void retireActiveIdentity(@TempDir Path tempDir) {
+        var persistenceService = new PersistenceService(tempDir.toAbsolutePath().toString());
+        var keyPairService = new KeyPairService(persistenceService);
+
+        NetworkService networkService = mock(NetworkService.class);
+        when(networkService.getSupportedTransportTypes()).thenReturn(Set.of(TransportType.TOR));
+
+        var identityService = new IdentityService(persistenceService, keyPairService, networkService);
+        String myTag = "myTag";
+        identityService.getOrCreateIdentity(myTag);
+
+        boolean isRemoved = identityService.retireActiveIdentity(myTag);
+        assertThat(isRemoved).isTrue();
+
+        Optional<Identity> activeIdentity = identityService.findActiveIdentity(myTag);
+        assertThat(activeIdentity).isEmpty();
     }
 }
