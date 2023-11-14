@@ -42,6 +42,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Stream;
 
 @Slf4j
 public class IdentityService implements PersistenceClient<IdentityStore>, Service {
@@ -171,7 +172,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
 
     public Optional<Identity> findAnyIdentityByNetworkId(NetworkId networkId) {
         synchronized (lock) {
-            return Streams.concat(getActiveIdentityByTag().values().stream(), getRetired().stream())
+            return Streams.concat(Stream.of(getOrCreateDefaultIdentity()), getActiveIdentityByTag().values().stream(), getRetired().stream())
                     .filter(e -> e.getNetworkId().equals(networkId))
                     .findAny();
         }
