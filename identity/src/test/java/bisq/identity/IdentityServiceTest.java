@@ -147,8 +147,12 @@ public class IdentityServiceTest {
         Optional<Identity> activeIdentity = identityService.findActiveIdentity(myTag);
         assertThat(activeIdentity).isEmpty();
 
-        Set<Identity> retiredIdentities = identityService.getRetired();
-        assertThat(retiredIdentities).contains(identity);
+        Identity defaultIdentity = identityService.getOrCreateDefaultIdentity();
+        assertThat(identity).isNotEqualTo(defaultIdentity);
+
+        Optional<Identity> identityByNetworkId = identityService
+                .findAnyIdentityByNetworkId(identity.getNetworkId());
+        assertThat(identityByNetworkId).hasValue(identity);
     }
 
     @Test
