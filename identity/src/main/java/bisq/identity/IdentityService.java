@@ -117,7 +117,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
                     synchronized (lock) {
                         persistableStore.setDefaultIdentity(Optional.of(identity));
                     }
-                    persist();
+                    persist().join();
                     return identity;
                 });
     }
@@ -128,7 +128,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         synchronized (lock) {
             getActiveIdentityByTag().put(tag, identity);
         }
-        persist();
+        persist().join();
 
         return identity;
     }
@@ -143,7 +143,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
             }
         }
         if (wasRemoved) {
-            persist();
+            persist().join();
         }
         return wasRemoved;
     }
@@ -178,15 +178,6 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         }
     }
 
-    public Map<String, Identity> getActiveIdentityByTag() {
-        return persistableStore.getActiveIdentityByTag();
-    }
-
-    public Set<Identity> getRetired() {
-        return persistableStore.getRetired();
-    }
-
-
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -214,7 +205,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         synchronized (lock) {
             getActiveIdentityByTag().put(tag, identity);
         }
-        persist();
+        persist().join();
 
         return identity;
     }
@@ -291,5 +282,13 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         }
 
         return new NetworkId(addressByTransportTypeMap, pubKey);
+    }
+
+    private Map<String, Identity> getActiveIdentityByTag() {
+        return persistableStore.getActiveIdentityByTag();
+    }
+
+    private Set<Identity> getRetired() {
+        return persistableStore.getRetired();
     }
 }
