@@ -30,6 +30,7 @@ import bisq.common.observable.collection.ObservableSet;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.StringUtils;
+import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
@@ -130,48 +131,47 @@ public class PocOpenOfferService implements PersistenceClient<PocOpenOfferStore>
                                                    List<BitcoinPaymentRail> selectedBaseSidePaymentPaymentRails,
                                                    List<FiatPaymentRail> selectedQuoteSidePaymentPaymentRails) {
         String offerId = StringUtils.createUid();
-        return identityService.getOrCreateIdentity(offerId).thenApply(identity -> {
-            NetworkId makerNetworkId = identity.getNetworkId();
-            List<TradeProtocolType> protocolTypes = new ArrayList<>(List.of(selectedProtocolTyp));
+        Identity identity = identityService.getOrCreateIdentity(offerId);
+        NetworkId makerNetworkId = identity.getNetworkId();
+        List<TradeProtocolType> protocolTypes = new ArrayList<>(List.of(selectedProtocolTyp));
 
-            FixPriceSpec priceSpec = new FixPriceSpec(fixPrice);
+        FixPriceSpec priceSpec = new FixPriceSpec(fixPrice);
 
-            List<BitcoinPaymentMethodSpec> baseSidePaymentMethodSpecs;
-            if (!selectedBaseSideAccounts.isEmpty()) {
-                baseSidePaymentMethodSpecs = selectedBaseSideAccounts.stream()
-                        .map(e -> new BitcoinPaymentMethodSpec(e.getPaymentMethod(), Optional.of(e.getAccountName())))
-                        .collect(Collectors.toList());
-            } else {
-                baseSidePaymentMethodSpecs = selectedBaseSidePaymentPaymentRails.stream()
-                        .map(e -> new BitcoinPaymentMethodSpec(BitcoinPaymentMethod.fromPaymentRail(e), Optional.empty()))
-                        .collect(Collectors.toList());
-            }
-            List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs;
-            if (!selectedBaseSideAccounts.isEmpty()) {
-                quoteSidePaymentMethodSpecs = selectedQuoteSideAccounts.stream()
-                        .map(e -> new FiatPaymentMethodSpec(e.getPaymentMethod(), Optional.of(e.getAccountName())))
-                        .collect(Collectors.toList());
-            } else {
-                quoteSidePaymentMethodSpecs = selectedQuoteSidePaymentPaymentRails.stream()
-                        .map(e -> new FiatPaymentMethodSpec(FiatPaymentMethod.fromPaymentRail(e), Optional.empty()))
-                        .collect(Collectors.toList());
-            }
+        List<BitcoinPaymentMethodSpec> baseSidePaymentMethodSpecs;
+        if (!selectedBaseSideAccounts.isEmpty()) {
+            baseSidePaymentMethodSpecs = selectedBaseSideAccounts.stream()
+                    .map(e -> new BitcoinPaymentMethodSpec(e.getPaymentMethod(), Optional.of(e.getAccountName())))
+                    .collect(Collectors.toList());
+        } else {
+            baseSidePaymentMethodSpecs = selectedBaseSidePaymentPaymentRails.stream()
+                    .map(e -> new BitcoinPaymentMethodSpec(BitcoinPaymentMethod.fromPaymentRail(e), Optional.empty()))
+                    .collect(Collectors.toList());
+        }
+        List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs;
+        if (!selectedBaseSideAccounts.isEmpty()) {
+            quoteSidePaymentMethodSpecs = selectedQuoteSideAccounts.stream()
+                    .map(e -> new FiatPaymentMethodSpec(e.getPaymentMethod(), Optional.of(e.getAccountName())))
+                    .collect(Collectors.toList());
+        } else {
+            quoteSidePaymentMethodSpecs = selectedQuoteSidePaymentPaymentRails.stream()
+                    .map(e -> new FiatPaymentMethodSpec(FiatPaymentMethod.fromPaymentRail(e), Optional.empty()))
+                    .collect(Collectors.toList());
+        }
 
-            List<OfferOption> offerOptions = new ArrayList<>();
+        List<OfferOption> offerOptions = new ArrayList<>();
 
-            return new PocOffer(offerId,
-                    new Date().getTime(),
-                    makerNetworkId,
-                    selectedMarket,
-                    direction,
-                    baseSideAmount.getValue(),
-                    priceSpec,
-                    protocolTypes,
-                    baseSidePaymentMethodSpecs,
-                    quoteSidePaymentMethodSpecs,
-                    offerOptions
-            );
-        });
+        return CompletableFuture.completedFuture(new PocOffer(offerId,
+                new Date().getTime(),
+                makerNetworkId,
+                selectedMarket,
+                direction,
+                baseSideAmount.getValue(),
+                priceSpec,
+                protocolTypes,
+                baseSidePaymentMethodSpecs,
+                quoteSidePaymentMethodSpecs,
+                offerOptions
+        ));
     }
 
     public CompletableFuture<BroadcastResult> publishOffer(PocOffer offer) {
@@ -189,8 +189,8 @@ public class PocOpenOfferService implements PersistenceClient<PocOpenOfferStore>
     }
 
     public CompletableFuture<BroadcastResult> addToNetwork(PocOffer offer) {
-        return identityService.getOrCreateIdentity(offer.getId())
-                .thenCompose(identity -> networkService.publishAuthenticatedData(offer, identity.getNodeIdAndKeyPair().getKeyPair()));
+        Identity identity = identityService.getOrCreateIdentity(offer.getId());
+        return networkService.publishAuthenticatedData(offer, identity.getNodeIdAndKeyPair().getKeyPair());
     }
 
     public CompletableFuture<BroadcastResult> removeFromNetwork(PocOffer offer) {

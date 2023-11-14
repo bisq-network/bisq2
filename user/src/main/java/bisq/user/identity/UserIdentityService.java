@@ -181,12 +181,10 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
                                                                           String terms,
                                                                           String statement) {
         String tag = getTag(nickName, proofOfWork);
-        return identityService.createNewActiveIdentity(tag, keyId, keyPair)
-                .thenApply(identity -> createUserIdentity(nickName, proofOfWork, terms, statement, identity))
-                .thenApply(userIdentity -> {
-                    publishPublicUserProfile(userIdentity.getUserProfile(), userIdentity.getIdentity().getNodeIdAndKeyPair().getKeyPair());
-                    return userIdentity;
-                });
+        Identity identity = identityService.getOrCreateIdentity(tag, keyId, keyPair);
+        UserIdentity userIdentity = createUserIdentity(nickName, proofOfWork, terms, statement, identity);
+        return publishPublicUserProfile(userIdentity.getUserProfile(), userIdentity.getIdentity().getNodeIdAndKeyPair().getKeyPair())
+                .thenApply(broadcastResult -> userIdentity);
     }
 
     public void selectChatUserIdentity(UserIdentity userIdentity) {
