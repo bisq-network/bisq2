@@ -89,12 +89,6 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<Identity> createAndInitializeIdentity(String keyId, String identityTag) {
-        Identity identity = createIdentity(keyId, identityTag);
-        return networkService.getNetworkIdOfInitializedNode(identity.getNetworkId(), identity.getTorIdentity())
-                .thenApply(nodes -> identity);
-    }
-
     private Identity createIdentity(String keyId, String identityTag) {
         KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
         PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
