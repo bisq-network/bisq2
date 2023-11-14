@@ -33,7 +33,6 @@ import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.security.KeyPairService;
 import bisq.security.PubKey;
-import bisq.security.SecurityService;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Streams;
 import lombok.Getter;
@@ -47,7 +46,7 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class IdentityService implements PersistenceClient<IdentityStore>, Service {
-    public final static String DEFAULT = "default";
+    public static final String DEFAULT_IDENTITY_TAG = "default";
 
     @Getter
     private final IdentityStore persistableStore = new IdentityStore();
@@ -58,10 +57,10 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     private final Object lock = new Object();
 
     public IdentityService(PersistenceService persistenceService,
-                           SecurityService securityService,
+                           KeyPairService keyPairService,
                            NetworkService networkService) {
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
-        keyPairService = securityService.getKeyPairService();
+        this.keyPairService = keyPairService;
         this.networkService = networkService;
     }
 
@@ -91,17 +90,18 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<Identity> createAndInitializeIdentity(String keyId, String identityTag) {
-        Identity identity = createIdentity(keyId, false, identityTag);
+        Identity identity = createIdentity(keyId, identityTag);
         return networkService.getNetworkIdOfInitializedNode(identity.getNetworkId(), identity.getTorIdentity())
                 .thenApply(nodes -> identity);
     }
 
-    private Identity createIdentity(String keyId, boolean isForDefaultId, String identityTag) {
+    private Identity createIdentity(String keyId, String identityTag) {
         KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
         PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
 
-        TorIdentity torIdentity = createTorIdentity(isForDefaultId);
-        NetworkId networkId = createNetworkId(isForDefaultId, pubKey, torIdentity);
+        boolean isDefaultIdentity = identityTag.equals(DEFAULT_IDENTITY_TAG);
+        TorIdentity torIdentity = createTorIdentity(isDefaultIdentity);
+        NetworkId networkId = createNetworkId(isDefaultIdentity, pubKey, torIdentity);
 
         return new Identity(identityTag, networkId, torIdentity, keyPair);
     }
@@ -171,7 +171,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     public Identity getOrCreateDefaultIdentity() {
         return persistableStore.getDefaultIdentity()
                 .orElseGet((Supplier<Identity>) () -> {
-                    Identity identity = createIdentity(Node.DEFAULT, true, Node.DEFAULT);
+                    Identity identity = createIdentity(DEFAULT_IDENTITY_TAG, DEFAULT_IDENTITY_TAG);
                     synchronized (lock) {
                         persistableStore.setDefaultIdentity(Optional.of(identity));
                     }

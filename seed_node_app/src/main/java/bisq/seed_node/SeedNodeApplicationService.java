@@ -61,7 +61,7 @@ public class SeedNodeApplicationService extends ApplicationService {
                 securityService.getProofOfWorkService());
 
         identityService = new IdentityService(persistenceService,
-                securityService,
+                securityService.getKeyPairService(),
                 networkService);
 
         com.typesafe.config.Config bondedRolesConfig = getConfig("bondedRoles");
