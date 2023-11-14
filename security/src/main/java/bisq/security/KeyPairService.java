@@ -84,7 +84,7 @@ public class KeyPairService implements PersistenceClient<KeyPairStore> {
         synchronized (persistableStore) {
             persistableStore.put(keyId, keyPair);
         }
-        persist().join();
+        persist();
     }
 
     public CompletableFuture<KeyPair> getOrCreateKeyPairAsync(String keyId) {
@@ -95,7 +95,7 @@ public class KeyPairService implements PersistenceClient<KeyPairStore> {
                         synchronized (persistableStore) {
                             persistableStore.put(keyId, keyPair);
                         }
-                        persist().join();
+                        persist();
                         return keyPair;
                     } catch (GeneralSecurityException e) {
                         e.printStackTrace();

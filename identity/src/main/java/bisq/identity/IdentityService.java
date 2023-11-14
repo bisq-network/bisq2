@@ -117,7 +117,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
                     synchronized (lock) {
                         persistableStore.setDefaultIdentity(Optional.of(identity));
                     }
-                    persist().join();
+                    persist();
                     return identity;
                 });
     }
@@ -128,7 +128,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         synchronized (lock) {
             getActiveIdentityByTag().put(tag, identity);
         }
-        persist().join();
+        persist();
 
         return identity;
     }
@@ -143,7 +143,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
             }
         }
         if (wasRemoved) {
-            persist().join();
+            persist();
         }
         return wasRemoved;
     }
@@ -205,7 +205,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         synchronized (lock) {
             getActiveIdentityByTag().put(tag, identity);
         }
-        persist().join();
+        persist();
 
         return identity;
     }

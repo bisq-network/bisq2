@@ -25,6 +25,8 @@ import bisq.network.identity.NetworkId;
 import bisq.persistence.PersistenceService;
 import bisq.security.KeyPairService;
 import bisq.security.PubKey;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -39,16 +41,29 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class IdentityServiceTest {
-    @Test
-    void getOrCreateIdentityTest(@TempDir Path tempDir) {
-        var persistenceService = new PersistenceService(tempDir.toAbsolutePath().toString());
-        var keyPairService = new KeyPairService(persistenceService);
+    @TempDir
+    private Path tempDir;
+    private KeyPairService keyPairService;
+    private IdentityService identityService;
 
+    @BeforeEach
+    void setUp() {
+        PersistenceService persistenceService = new PersistenceService(tempDir.toAbsolutePath().toString());
         NetworkService networkService = mock(NetworkService.class);
         when(networkService.getSupportedTransportTypes()).thenReturn(Set.of(TransportType.TOR));
 
-        var identityService = new IdentityService(persistenceService, keyPairService, networkService);
+        keyPairService = new KeyPairService(persistenceService);
+        identityService = new IdentityService(persistenceService, keyPairService, networkService);
+    }
 
+    @AfterEach
+    void tearDown() {
+        keyPairService.getPersistence().flush().join();
+        identityService.getPersistence().flush().join();
+    }
+
+    @Test
+    void getOrCreateIdentityTest() {
         String myTag = "myTag";
         Identity activeIdentity = identityService.getOrCreateIdentity(myTag);
         Identity persistedActiveIdentity = identityService.getOrCreateIdentity(myTag);
@@ -59,15 +74,7 @@ public class IdentityServiceTest {
     }
 
     @Test
-    void getOrCreateIdentityWithAllArguments(@TempDir Path tempDir) {
-        var persistenceService = new PersistenceService(tempDir.toAbsolutePath().toString());
-        var keyPairService = new KeyPairService(persistenceService);
-
-        NetworkService networkService = mock(NetworkService.class);
-        when(networkService.getSupportedTransportTypes()).thenReturn(Set.of(TransportType.TOR));
-
-        var identityService = new IdentityService(persistenceService, keyPairService, networkService);
-
+    void getOrCreateIdentityWithAllArguments() {
         String myTag = "myTag";
         KeyPair keyPair = keyPairService.getOrCreateKeyPair(myTag);
         Identity activeIdentity = identityService.getOrCreateIdentity(myTag, myTag, keyPair);
@@ -84,15 +91,7 @@ public class IdentityServiceTest {
     }
 
     @Test
-    void getOrCreateDefaultIdentityTest(@TempDir Path tempDir) {
-        var persistenceService = new PersistenceService(tempDir.toAbsolutePath().toString());
-        var keyPairService = new KeyPairService(persistenceService);
-
-        NetworkService networkService = mock(NetworkService.class);
-        when(networkService.getSupportedTransportTypes()).thenReturn(Set.of(TransportType.TOR));
-
-        var identityService = new IdentityService(persistenceService, keyPairService, networkService);
-
+    void getOrCreateDefaultIdentityTest() {
         Identity firstDefaultIdentity = identityService.getOrCreateDefaultIdentity();
         assertThat(firstDefaultIdentity.getTag())
                 .isEqualTo(IdentityService.DEFAULT_IDENTITY_TAG);
@@ -102,15 +101,7 @@ public class IdentityServiceTest {
     }
 
     @Test
-    void createNewIdentity(@TempDir Path tempDir) {
-        var persistenceService = new PersistenceService(tempDir.toAbsolutePath().toString());
-        var keyPairService = new KeyPairService(persistenceService);
-
-        NetworkService networkService = mock(NetworkService.class);
-        when(networkService.getSupportedTransportTypes()).thenReturn(Set.of(TransportType.TOR));
-
-        var identityService = new IdentityService(persistenceService, keyPairService, networkService);
-
+    void createNewIdentity() {
         String myTag = "myTag";
         Identity activeIdentity = identityService.createAndInitializeNewActiveIdentity(myTag);
         Identity anotherActiveIdentity = identityService.createAndInitializeNewActiveIdentity(myTag);
@@ -119,25 +110,13 @@ public class IdentityServiceTest {
     }
 
     @Test
-    void retireInvalidIdentity(@TempDir Path tempDir) {
-        var persistenceService = new PersistenceService(tempDir.toAbsolutePath().toString());
-        var keyPairService = new KeyPairService(persistenceService);
-        NetworkService networkService = mock(NetworkService.class);
-
-        var identityService = new IdentityService(persistenceService, keyPairService, networkService);
+    void retireInvalidIdentity() {
         boolean isRemoved = identityService.retireActiveIdentity("tag");
         assertThat(isRemoved).isFalse();
     }
 
     @Test
-    void retireActiveIdentity(@TempDir Path tempDir) {
-        var persistenceService = new PersistenceService(tempDir.toAbsolutePath().toString());
-        var keyPairService = new KeyPairService(persistenceService);
-
-        NetworkService networkService = mock(NetworkService.class);
-        when(networkService.getSupportedTransportTypes()).thenReturn(Set.of(TransportType.TOR));
-
-        var identityService = new IdentityService(persistenceService, keyPairService, networkService);
+    void retireActiveIdentity() {
         String myTag = "myTag";
         Identity identity = identityService.getOrCreateIdentity(myTag);
 
@@ -156,26 +135,13 @@ public class IdentityServiceTest {
     }
 
     @Test
-    void findInvalidIdentity(@TempDir Path tempDir) {
-        var persistenceService = new PersistenceService(tempDir.toAbsolutePath().toString());
-        var keyPairService = new KeyPairService(persistenceService);
-
-        NetworkService networkService = mock(NetworkService.class);
-        when(networkService.getSupportedTransportTypes()).thenReturn(Set.of(TransportType.TOR));
-
-        var identityService = new IdentityService(persistenceService, keyPairService, networkService);
+    void findInvalidIdentity() {
         Optional<Identity> activeIdentity = identityService.findActiveIdentity("tag");
         assertThat(activeIdentity).isEmpty();
     }
 
     @Test
-    void findInvalidIdentityByNetworkId(@TempDir Path tempDir) {
-        var persistenceService = new PersistenceService(tempDir.toAbsolutePath().toString());
-        var keyPairService = new KeyPairService(persistenceService);
-
-        NetworkService networkService = mock(NetworkService.class);
-        when(networkService.getSupportedTransportTypes()).thenReturn(Set.of(TransportType.TOR));
-
+    void findInvalidIdentityByNetworkId() {
         AddressByTransportTypeMap addressByTransportTypeMap = new AddressByTransportTypeMap(
                 Map.of(TransportType.CLEAR, Address.localHost(1234)));
 
@@ -183,20 +149,12 @@ public class IdentityServiceTest {
         var pubKey = new PubKey(keyPair.getPublic(), "keyId");
         var networkId = new NetworkId(addressByTransportTypeMap, pubKey);
 
-        var identityService = new IdentityService(persistenceService, keyPairService, networkService);
         Optional<Identity> activeIdentity = identityService.findActiveIdentityByNetworkId(networkId);
         assertThat(activeIdentity).isEmpty();
     }
 
     @Test
-    void findActiveIdentity(@TempDir Path tempDir) {
-        var persistenceService = new PersistenceService(tempDir.toAbsolutePath().toString());
-        var keyPairService = new KeyPairService(persistenceService);
-
-        NetworkService networkService = mock(NetworkService.class);
-        when(networkService.getSupportedTransportTypes()).thenReturn(Set.of(TransportType.TOR));
-
-        var identityService = new IdentityService(persistenceService, keyPairService, networkService);
+    void findActiveIdentity() {
         String myTag = "myTag";
         Identity identity = identityService.getOrCreateIdentity(myTag);
 
@@ -205,14 +163,7 @@ public class IdentityServiceTest {
     }
 
     @Test
-    void findActiveIdentityByNetworkId(@TempDir Path tempDir) {
-        var persistenceService = new PersistenceService(tempDir.toAbsolutePath().toString());
-        var keyPairService = new KeyPairService(persistenceService);
-
-        NetworkService networkService = mock(NetworkService.class);
-        when(networkService.getSupportedTransportTypes()).thenReturn(Set.of(TransportType.TOR));
-
-        var identityService = new IdentityService(persistenceService, keyPairService, networkService);
+    void findActiveIdentityByNetworkId() {
         String myTag = "myTag";
         Identity identity = identityService.getOrCreateIdentity(myTag);
 
@@ -221,15 +172,7 @@ public class IdentityServiceTest {
     }
 
     @Test
-    void findInvalidRetiredIdentity(@TempDir Path tempDir) {
-        var persistenceService = new PersistenceService(tempDir.toAbsolutePath().toString());
-        var keyPairService = new KeyPairService(persistenceService);
-
-        NetworkService networkService = mock(NetworkService.class);
-        when(networkService.getSupportedTransportTypes()).thenReturn(Set.of(TransportType.TOR));
-
-        var identityService = new IdentityService(persistenceService, keyPairService, networkService);
-
+    void findInvalidRetiredIdentity() {
         AddressByTransportTypeMap addressByTransportTypeMap = new AddressByTransportTypeMap(
                 Map.of(TransportType.CLEAR, Address.localHost(1234)));
 
@@ -242,14 +185,7 @@ public class IdentityServiceTest {
     }
 
     @Test
-    void findRetiredIdentity(@TempDir Path tempDir) {
-        var persistenceService = new PersistenceService(tempDir.toAbsolutePath().toString());
-        var keyPairService = new KeyPairService(persistenceService);
-
-        NetworkService networkService = mock(NetworkService.class);
-        when(networkService.getSupportedTransportTypes()).thenReturn(Set.of(TransportType.TOR));
-
-        var identityService = new IdentityService(persistenceService, keyPairService, networkService);
+    void findRetiredIdentity() {
         Identity identity = identityService.getOrCreateIdentity("tag");
         identityService.retireActiveIdentity("tag");
 
@@ -258,30 +194,15 @@ public class IdentityServiceTest {
     }
 
     @Test
-    void findDefaultIdentityInFindAnyIdentity(@TempDir Path tempDir) {
-        var persistenceService = new PersistenceService(tempDir.toAbsolutePath().toString());
-        var keyPairService = new KeyPairService(persistenceService);
-
-        NetworkService networkService = mock(NetworkService.class);
-        when(networkService.getSupportedTransportTypes()).thenReturn(Set.of(TransportType.TOR));
-
-        var identityService = new IdentityService(persistenceService, keyPairService, networkService);
+    void findDefaultIdentityInFindAnyIdentity() {
         Identity defaultIdentity = identityService.getOrCreateDefaultIdentity();
-
         Optional<Identity> identityByNetworkId = identityService
                 .findAnyIdentityByNetworkId(defaultIdentity.getNetworkId());
         assertThat(identityByNetworkId).hasValue(defaultIdentity);
     }
 
     @Test
-    void findActiveIdentityInFindAnyIdentity(@TempDir Path tempDir) {
-        var persistenceService = new PersistenceService(tempDir.toAbsolutePath().toString());
-        var keyPairService = new KeyPairService(persistenceService);
-
-        NetworkService networkService = mock(NetworkService.class);
-        when(networkService.getSupportedTransportTypes()).thenReturn(Set.of(TransportType.TOR));
-
-        var identityService = new IdentityService(persistenceService, keyPairService, networkService);
+    void findActiveIdentityInFindAnyIdentity() {
         String myTag = "myTag";
         Identity identity = identityService.getOrCreateIdentity(myTag);
 
@@ -291,14 +212,7 @@ public class IdentityServiceTest {
     }
 
     @Test
-    void findRetiredIdentityInFindAnyIdentity(@TempDir Path tempDir) {
-        var persistenceService = new PersistenceService(tempDir.toAbsolutePath().toString());
-        var keyPairService = new KeyPairService(persistenceService);
-
-        NetworkService networkService = mock(NetworkService.class);
-        when(networkService.getSupportedTransportTypes()).thenReturn(Set.of(TransportType.TOR));
-
-        var identityService = new IdentityService(persistenceService, keyPairService, networkService);
+    void findRetiredIdentityInFindAnyIdentity() {
         Identity identity = identityService.getOrCreateIdentity("tag");
         identityService.retireActiveIdentity("tag");
 

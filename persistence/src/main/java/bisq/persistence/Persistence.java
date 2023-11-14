@@ -61,6 +61,10 @@ public class Persistence<T extends PersistableStore<T>> {
         }, executorService);
     }
 
+    public CompletableFuture<Void> flush() {
+        return CompletableFuture.runAsync(() -> Thread.currentThread().setName("Flush-Persistence.persist-" + storePath), executorService);
+    }
+
     protected void persist(T persistableStore) {
         persistableStoreReaderWriter.write(persistableStore);
     }
