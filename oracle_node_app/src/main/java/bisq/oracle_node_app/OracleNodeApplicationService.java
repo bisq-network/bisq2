@@ -55,7 +55,7 @@ public class OracleNodeApplicationService extends ApplicationService {
                 securityService.getProofOfWorkService());
 
         identityService = new IdentityService(persistenceService,
-                securityService,
+                securityService.getKeyPairService(),
                 networkService
         );
 

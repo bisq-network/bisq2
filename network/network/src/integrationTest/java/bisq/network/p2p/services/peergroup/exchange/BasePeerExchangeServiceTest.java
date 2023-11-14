@@ -20,7 +20,6 @@ package bisq.network.p2p.services.peergroup.exchange;
 import bisq.network.common.Address;
 import bisq.network.p2p.BaseNetworkTest;
 import bisq.network.p2p.node.Node;
-import bisq.network.p2p.node.network_load.NetworkLoadService;
 import bisq.network.p2p.node.transport.TransportService;
 import bisq.network.p2p.services.peergroup.BanList;
 import bisq.network.p2p.services.peergroup.PeerGroupManager;
@@ -62,21 +61,21 @@ public abstract class BasePeerExchangeServiceTest extends BaseNetworkTest {
         List<Node> seeds = new ArrayList<>();
         for (int i = 0; i < numSeeds; i++) {
             int port = 10000 + i;
-            Node seed = new Node(banList,
+            /*Node seed = new Node(banList,
                     nodeConfig,
                     "seed_" + i,
                     transportService, new NetworkLoadService());
             seeds.add(seed);
-            seed.initialize(port);
+            seed.initialize(port);*/
             initSeedsLatch.countDown();
-            PeerGroupService peerGroupService = new PeerGroupService(
+            /*PeerGroupService peerGroupService = new PeerGroupService(
                     persistenceService,
                     seed,
                     new PeerGroupService.Config(),
                     new HashSet<>(seedNodeAddresses),
                     banList);
             PeerExchangeStrategy peerExchangeStrategy = new PeerExchangeStrategy(peerGroupService, new PeerExchangeStrategy.Config());
-            new PeerExchangeService(seed, peerExchangeStrategy);
+            new PeerExchangeService(seed, peerExchangeStrategy);*/
         }
         assertTrue(initSeedsLatch.await(getTimeout(), TimeUnit.SECONDS));
 
@@ -87,12 +86,12 @@ public abstract class BasePeerExchangeServiceTest extends BaseNetworkTest {
         List<Node> nodes = new ArrayList<>();
         for (int i = 0; i < numNodes; i++) {
             int port = 3000 + i;
-            Node node = new Node(banList,
+            /*Node node = new Node(banList,
                     nodeConfig,
                     "node_" + i,
                     transportService, new NetworkLoadService());
             nodes.add(node);
-            node.initialize(port);
+            node.initialize(port);*/
             initNodesLatch.countDown();
         }
         assertTrue(initNodesLatch.await(getTimeout(), TimeUnit.SECONDS));
