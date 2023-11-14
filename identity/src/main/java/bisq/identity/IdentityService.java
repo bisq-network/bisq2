@@ -33,7 +33,6 @@ import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.security.KeyPairService;
 import bisq.security.PubKey;
-import com.google.common.base.Supplier;
 import com.google.common.collect.Streams;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -89,63 +88,6 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private Identity createIdentity(String keyId, String identityTag) {
-        KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
-        PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
-
-        boolean isDefaultIdentity = identityTag.equals(DEFAULT_IDENTITY_TAG);
-        TorIdentity torIdentity = createTorIdentity(isDefaultIdentity);
-        NetworkId networkId = createNetworkId(isDefaultIdentity, pubKey, torIdentity);
-
-        return new Identity(identityTag, networkId, torIdentity, keyPair);
-    }
-
-    private TorIdentity createTorIdentity(boolean isForDefaultId) {
-        Set<TransportType> supportedTransportTypes = networkService.getSupportedTransportTypes();
-        Map<TransportType, Integer> defaultPorts = networkService.getDefaultNodePortByTransportType();
-
-        boolean isTorSupported = supportedTransportTypes.contains(TransportType.TOR);
-        int torPort = isTorSupported && isForDefaultId ?
-                defaultPorts.getOrDefault(TransportType.TOR, NetworkUtils.selectRandomPort()) : NetworkUtils.selectRandomPort();
-        return TorIdentity.generate(torPort);
-    }
-
-    private NetworkId createNetworkId(boolean isForDefaultId, PubKey pubKey, TorIdentity torIdentity) {
-        AddressByTransportTypeMap addressByTransportTypeMap = new AddressByTransportTypeMap();
-        Set<TransportType> supportedTransportTypes = networkService.getSupportedTransportTypes();
-        Map<TransportType, Integer> defaultPorts = networkService.getDefaultNodePortByTransportType();
-
-        boolean isTorSupported = supportedTransportTypes.contains(TransportType.TOR);
-        int torPort = isTorSupported && isForDefaultId ?
-                defaultPorts.getOrDefault(TransportType.TOR, NetworkUtils.selectRandomPort()) : NetworkUtils.selectRandomPort();
-
-        if (isForDefaultId) {
-            if (supportedTransportTypes.contains(TransportType.CLEAR)) {
-                int port = defaultPorts.getOrDefault(TransportType.CLEAR, NetworkUtils.findFreeSystemPort());
-                Address address = Address.localHost(port);
-                addressByTransportTypeMap.put(TransportType.CLEAR, address);
-            }
-
-            if (isTorSupported) {
-                Address address = new Address(torIdentity.getOnionAddress(), torPort);
-                addressByTransportTypeMap.put(TransportType.TOR, address);
-            }
-        } else {
-            if (supportedTransportTypes.contains(TransportType.CLEAR)) {
-                int port = NetworkUtils.findFreeSystemPort();
-                Address address = Address.localHost(port);
-                addressByTransportTypeMap.put(TransportType.CLEAR, address);
-            }
-
-            if (isTorSupported) {
-                Address address = new Address(torIdentity.getOnionAddress(), torPort);
-                addressByTransportTypeMap.put(TransportType.TOR, address);
-            }
-        }
-
-        return new NetworkId(addressByTransportTypeMap, pubKey);
-    }
-
     /**
      * We first look up if we find an identity in the active identities map, if not we take one from the pool and
      * clone it with the new tag. If none present we create a fresh identity and initialize it.
@@ -157,14 +99,19 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
      * @param tag The id used to map the identity to some domain aspect (e.g. offerId)
      * @return A future which completes when the node associated with that identity is initialized.
      */
-    public CompletableFuture<Identity> getOrCreateIdentity(String tag) {
-        return findActiveIdentity(tag).map(CompletableFuture::completedFuture)
-                .orElseGet(() -> CompletableFuture.completedFuture(createAndInitializeNewActiveIdentity(tag)));
+    public Identity getOrCreateIdentity(String tag) {
+        return findActiveIdentity(tag)
+                .orElseGet(() -> createAndInitializeNewActiveIdentity(tag));
+    }
+
+    public Identity getOrCreateIdentity(String tag, String keyId, KeyPair keyPair) {
+        return findActiveIdentity(tag)
+                .orElseGet(() -> createAndInitializeNewActiveIdentity(tag, keyId, keyPair));
     }
 
     public Identity getOrCreateDefaultIdentity() {
         return persistableStore.getDefaultIdentity()
-                .orElseGet((Supplier<Identity>) () -> {
+                .orElseGet(() -> {
                     Identity identity = createIdentity(DEFAULT_IDENTITY_TAG, DEFAULT_IDENTITY_TAG);
                     synchronized (lock) {
                         persistableStore.setDefaultIdentity(Optional.of(identity));
@@ -174,26 +121,15 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
                 });
     }
 
-    /**
-     * Creates new identity based on given parameters.
-     */
-    public CompletableFuture<Identity> createNewActiveIdentity(String tag,
-                                                               String keyId,
-                                                               KeyPair keyPair) {
-        keyPairService.persistKeyPair(keyId, keyPair);
-        PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
-
-        TorIdentity torIdentity = createTorIdentity(false);
-        NetworkId networkId = createNetworkId(false, pubKey, torIdentity);
-        Identity identity = new Identity(tag, networkId, torIdentity, keyPair);
+    public Identity createAndInitializeNewActiveIdentity(String tag) {
+        Identity identity = createAndInitializeNewIdentity(tag);
 
         synchronized (lock) {
             getActiveIdentityByTag().put(tag, identity);
         }
         persist();
 
-        return networkService.getNetworkIdOfInitializedNode(networkId, torIdentity)
-                .thenApply(nodes -> identity);
+        return identity;
     }
 
     public boolean retireActiveIdentity(String tag) {
@@ -271,8 +207,8 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
                                 ));
     }
 
-    public Identity createAndInitializeNewActiveIdentity(String tag) {
-        Identity identity = createAndInitializeNewIdentity(tag);
+    private Identity createAndInitializeNewActiveIdentity(String tag, String keyId, KeyPair keyPair) {
+        Identity identity = createAndInitializeNewIdentity(tag, keyId, keyPair);
 
         synchronized (lock) {
             getActiveIdentityByTag().put(tag, identity);
@@ -283,8 +219,76 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     }
 
     private Identity createAndInitializeNewIdentity(String tag) {
-        Identity identity = createIdentity(StringUtils.createUid(), tag);
+        String keyId = StringUtils.createUid();
+        KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
+        return createAndInitializeNewIdentity(tag, keyId, keyPair);
+    }
+
+    private Identity createAndInitializeNewIdentity(String tag, String keyId, KeyPair keyPair) {
+        Identity identity = createIdentity(keyId, tag, keyPair);
         networkService.getNetworkIdOfInitializedNode(identity.getNetworkId(), identity.getTorIdentity());
         return identity;
+    }
+
+    private Identity createIdentity(String keyId, String identityTag) {
+        KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
+        return createIdentity(keyId, identityTag, keyPair);
+    }
+
+
+    private Identity createIdentity(String keyId, String identityTag, KeyPair keyPair) {
+        PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
+
+        boolean isDefaultIdentity = identityTag.equals(DEFAULT_IDENTITY_TAG);
+        TorIdentity torIdentity = createTorIdentity(isDefaultIdentity);
+        NetworkId networkId = createNetworkId(isDefaultIdentity, pubKey, torIdentity);
+
+        return new Identity(identityTag, networkId, torIdentity, keyPair);
+    }
+
+    private TorIdentity createTorIdentity(boolean isForDefaultId) {
+        Set<TransportType> supportedTransportTypes = networkService.getSupportedTransportTypes();
+        Map<TransportType, Integer> defaultPorts = networkService.getDefaultNodePortByTransportType();
+
+        boolean isTorSupported = supportedTransportTypes.contains(TransportType.TOR);
+        int torPort = isTorSupported && isForDefaultId ?
+                defaultPorts.getOrDefault(TransportType.TOR, NetworkUtils.selectRandomPort()) : NetworkUtils.selectRandomPort();
+        return TorIdentity.generate(torPort);
+    }
+
+    private NetworkId createNetworkId(boolean isForDefaultId, PubKey pubKey, TorIdentity torIdentity) {
+        AddressByTransportTypeMap addressByTransportTypeMap = new AddressByTransportTypeMap();
+        Set<TransportType> supportedTransportTypes = networkService.getSupportedTransportTypes();
+        Map<TransportType, Integer> defaultPorts = networkService.getDefaultNodePortByTransportType();
+
+        boolean isTorSupported = supportedTransportTypes.contains(TransportType.TOR);
+        int torPort = isTorSupported && isForDefaultId ?
+                defaultPorts.getOrDefault(TransportType.TOR, NetworkUtils.selectRandomPort()) : NetworkUtils.selectRandomPort();
+
+        if (isForDefaultId) {
+            if (supportedTransportTypes.contains(TransportType.CLEAR)) {
+                int port = defaultPorts.getOrDefault(TransportType.CLEAR, NetworkUtils.findFreeSystemPort());
+                Address address = Address.localHost(port);
+                addressByTransportTypeMap.put(TransportType.CLEAR, address);
+            }
+
+            if (isTorSupported) {
+                Address address = new Address(torIdentity.getOnionAddress(), torPort);
+                addressByTransportTypeMap.put(TransportType.TOR, address);
+            }
+        } else {
+            if (supportedTransportTypes.contains(TransportType.CLEAR)) {
+                int port = NetworkUtils.findFreeSystemPort();
+                Address address = Address.localHost(port);
+                addressByTransportTypeMap.put(TransportType.CLEAR, address);
+            }
+
+            if (isTorSupported) {
+                Address address = new Address(torIdentity.getOnionAddress(), torPort);
+                addressByTransportTypeMap.put(TransportType.TOR, address);
+            }
+        }
+
+        return new NetworkId(addressByTransportTypeMap, pubKey);
     }
 }
