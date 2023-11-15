@@ -1,7 +1,8 @@
 # Bonded roles
 
 All important roles and network nodes require a BSQ bond to secure the roles.
-The Seed nodes and oracle nodes require at least 1 node which is available by default as otherwise it would be a chicken
+For Seed nodes and oracle nodes we require at least 1 node which is available by default as otherwise it would be a
+chicken
 and egg problem.
 The oracle node manages the registration and verification of the other nodes.
 
@@ -20,16 +21,16 @@ To register different roles and nodes it requires to run those nodes in that ord
 Please read the descriptions in the oracle node document for more details about the setup of the oracle node and
 daonode.
 
-1. Make the dao proposals for the bonded roles one wants to register.
-2. After the voting cycle is over follow the instructions how to register the roles and nodes.
-3. Once a role is successfully registered the left navigation shows an additional Authorized role menu item. Inside that
+1. Make a dao proposal for the bonded role you want to register (including a Github issue)
+2. After accepted by DAO voting follow the instructions in Bisq 2 how to register the role or node.
+3. Once a role is successfully registered the left navigation shows an additional `Authorized role` menu item. At that
    screen there are tabs for each registered role in case the selected user profile has multiple roles. Nodes do not
-   have a management UI.
+   appear in that screen as there is nothing to manage.
 4. Use the management screens for exploring the role's use cases.
 
-> _Note: The mediator screen is not implemented yet._
+> _Note: It is recommended for role owners to run a development node to try
+out the features and fully understand what the role can do and how it interacts with users._
 
-Registered roles are listed with details for verification.
+Registered roles are listed with the relevant details for verification.
 <img src="img/list.png" width="1200"/>
-
 
