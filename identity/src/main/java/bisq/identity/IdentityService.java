@@ -122,6 +122,28 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
                 });
     }
 
+    /**
+     * Creates new identity based on given parameters.
+     */
+    public CompletableFuture<Identity> createNewActiveIdentity(String tag,
+                                                               String keyId,
+                                                               KeyPair keyPair) {
+        keyPairService.persistKeyPair(keyId, keyPair);
+        PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
+
+        TorIdentity torIdentity = createTorIdentity(false);
+        NetworkId networkId = createNetworkId(false, pubKey, torIdentity);
+        Identity identity = new Identity(tag, networkId, torIdentity, keyPair);
+
+        synchronized (lock) {
+            getActiveIdentityByTag().put(tag, identity);
+        }
+        persist();
+
+        return networkService.getNetworkIdOfInitializedNode(networkId, torIdentity)
+                .thenApply(nodes -> identity);
+    }
+
     public Identity createAndInitializeNewActiveIdentity(String tag) {
         Identity identity = createAndInitializeNewIdentity(tag);
 
