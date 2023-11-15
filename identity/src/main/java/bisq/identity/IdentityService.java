@@ -218,7 +218,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
 
     private Identity createAndInitializeNewIdentity(String tag, String keyId, KeyPair keyPair) {
         Identity identity = createIdentity(keyId, tag, keyPair);
-        networkService.getNetworkIdOfInitializedNode(identity.getNetworkId(), identity.getTorIdentity());
+        networkService.getNetworkIdOfInitializedNode(identity.getNetworkId(), identity.getTorIdentity()).join();
         return identity;
     }
 

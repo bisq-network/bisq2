@@ -22,6 +22,7 @@ import bisq.network.common.Address;
 import bisq.network.common.AddressByTransportTypeMap;
 import bisq.network.common.TransportType;
 import bisq.network.identity.NetworkId;
+import bisq.network.p2p.node.Node;
 import bisq.persistence.PersistenceService;
 import bisq.security.KeyPairService;
 import bisq.security.PubKey;
@@ -32,13 +33,11 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
 import java.security.KeyPair;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class IdentityServiceTest {
     @TempDir
@@ -49,8 +48,13 @@ public class IdentityServiceTest {
     @BeforeEach
     void setUp() {
         PersistenceService persistenceService = new PersistenceService(tempDir.toAbsolutePath().toString());
+
         NetworkService networkService = mock(NetworkService.class);
         when(networkService.getSupportedTransportTypes()).thenReturn(Set.of(TransportType.TOR));
+
+        List<Node> initializedNodes = Collections.emptyList();
+        doReturn(CompletableFuture.completedFuture(initializedNodes))
+                .when(networkService).getNetworkIdOfInitializedNode(any(), any());
 
         keyPairService = new KeyPairService(persistenceService);
         identityService = new IdentityService(persistenceService, keyPairService, networkService);
