@@ -82,8 +82,8 @@ public class DesktopView extends NavigationView<AnchorPane, DesktopModel, Deskto
 
     void showStage() {
         long ts = System.currentTimeMillis();
-        stage.show();
         stage.setScene(scene); // Here we trigger onViewAttached in controller
+        stage.show(); // Scene must be set before show, otherwise render scale is not working properly on all OS.
         log.info("Attaching view to stage took {} ms", System.currentTimeMillis() - ts);
     }
 
