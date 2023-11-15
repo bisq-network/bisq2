@@ -5,13 +5,13 @@
 - Install the oracle node on a VPS with min. 8 GB RAM, min 4 vCPUs and about 700 GB storage for the un-pruned, indexed
   Bitcoin blockchain.
 - An oracle node operator need to make a DAO proposal for a bonded role (Bisq2 oracle node). After acceptance by DAO
-  voting you need to lock up the BSQ bond (10 000 BSQ)
-- After the bond is locked, register your oracle node in the Bisq2 `User Options/Nodes` screen. Follow the instructions
-  there.
+  voting they need to lock up the BSQ bond (10 000 BSQ)
+- After the bond is locked up, register your oracle node in the Bisq2 `User Options/Nodes` screen. Follow the
+  instructions in the UI.
 - Currently, we only support Tor. Once I2P is supported all oracle node operators need to run both networks.
 
 For running a local oracle node you do not need the above described process. You can find the technical details below
-how to run an oracle node.
+how to run a dev oracle node.
 
 ## Install and run a Bisq 2 Oracle node
 
@@ -86,14 +86,15 @@ For running a localhost dev oracle node use following JVM arguments:
   -Dapplication.oracleNode.staticPublicKeysProvided=true
 ```
 
-In the `bisq.common.application.DevMode` class are some dev key pairs set up. If the app is running in dev mode the dev
-pub key is used for verification.
+In the `bisq.common.application.DevMode` class is dev keypair. If the app is running in dev mode the dev pub key is used
+for verification.
 
 Dev
 pubKey: `3056301006072a8648ce3d020106052b8104000a034200043dd1f2f56593e62670282c245cb71d50b43985b308dd1c977632c3cde155427e4fad0899d7e7af110584182f7e55547d6e1469705567124a02ae2e8afa8e8091`
 
 Dev
 privKey: `30818d020100301006072a8648ce3d020106052b8104000a0476307402010104205b4479d165652fe5410419b1d03c937956be0e1c4f46e9fbe86c66776529d81ca00706052b8104000aa144034200043dd1f2f56593e62670282c245cb71d50b43985b308dd1c977632c3cde155427e4fad0899d7e7af110584182f7e55547d6e1469705567124a02ae2e8afa8e8091`
+
 
 ### Check out and build the Bisq-daonode project
 
@@ -149,10 +150,10 @@ cd bisq-daonode
     `tail -100 [USER]/.local/share/daonode/bisq.log`
 
 > _Note: The Rest API is not needed to be accessible from the public network. To avoid ddos risks it is recommended to
-restrict to localhost access for the oracle node. <br><br>
+restrict access to localhost (accessed by the oracle node on the same local network). <br><br>
 > Initial sync will take quite some time as it will perform a full DAO sync._
 
-### Install and sync Bitcoin core in non pruned mode
+### Install and sync Bitcoin core in non-pruned mode
 
 Add the `bitcoin.conf` file to the data directory:
 
@@ -181,12 +182,12 @@ echo $1 | nc -w 1 127.0.0.1 5120
 
 ## Register as oracle node operator
 
-Follow the instructions in the `User options/Nodes/Oracle Node` screen:
+Follow the instructions in the `User options/Nodes/Oracle Node` UI:
 
 <img src="img/oracle1.png" width="900"/>
 
-After the oracle node has been started up once it writes a json file to the data directory which contains the node
-address data. Copy that and paste it into the input field.
+After the oracle node has been started up, it writes a json file to the data directory which contains the node address
+data. Copy that and paste it into the input field.
 
 <img src="img/oracle2.png" width="900"/>
 
@@ -194,30 +195,30 @@ After the data has been sent to the already running oracle node(s) those oracle 
 DaoNode REST API and if the data was valid they publish the new oracle operator data to the Bisq2 network.
 
 > _Note: The user profile data gets published to the network but has a TTL of only about 2 weeks. Thus, the user profile
-used as oracle node operator should be republished before those 2 weeks are over, otherwise the operators username in
-the table shows `N/A` and the profile ID is not available (which is required for verification). Oracle node operators
-are expected to run their application with the user profile used for registration before the profile gets removed from
-the network._
+used as oracle node operator should be republished before the TTL expire, otherwise the operators username in the table
+shows `N/A` and the profile ID is not available (which is required for verification). Oracle node operators are expected
+to run their application with the user profile used for registration before the profile gets removed from the network._
 
-After a node has been published to the network it appears in the network nodes table. Anyone can verify the operator by
-following the instructions below the table:
+After a node has been published to the network it appears in the network `Nodes' table. Anyone can verify the operator
+by following the instructions below the table:
 
 <img src="img/verify.png" width="700"/>
 
 ## Root oracle nodes
 
-As at least one oracle node (and seed node) is required for the registration process we need to use hard coded public
-keys to allow those nodes to be used even there is no registration data available.
+As at least one oracle node is required for the registration process we need to provide hard coded public keys used fore
+verification as no registration data is available (and after registration the oracle node itself authorizes itself, thus
+it would not have any value).
 
-There will be only a minimum number of those nodes (2 oracle nodes, 2 oracle nodes) and we refer to them as root nodes.
+There will be only a minimum number of those nodes (2 oracle nodes) and we refer to them as `root nodes`.
 
-For those who operate such a root node there are a few extra steps:
+For those who operate such a `root node` there are a few extra steps:
 
 1. Select the user profile you want to use for the registration.
 2. Click the `Show key pair` button below the input fields. This will add 2 fields, one for the public and one for the
    private key which has been created for that user profile.
 3. Copy the public key. Open `bisq.bonded_roles.AuthorizedPubKeys` class and add your pub key to the list of authorized
-   keys and make a pull request.
+   keys and make a Github pull request.
 4. Use that key pair for the JVM arguments running the oracle node.
 5. Set the `application.oracleNode.staticPublicKeysProvided` value to true
 
