@@ -20,6 +20,7 @@ package bisq.network.identity;
 import bisq.common.proto.Proto;
 import bisq.network.common.AddressByTransportTypeMap;
 import bisq.security.PubKey;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -27,6 +28,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
+@EqualsAndHashCode
 public final class NetworkId implements Proto {
     private final PubKey pubKey;
     private final AddressByTransportTypeMap addressByTransportTypeMap = new AddressByTransportTypeMap();
