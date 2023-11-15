@@ -17,7 +17,6 @@
 
 package bisq.desktop.overlay;
 
-import bisq.common.util.OsUtils;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
@@ -30,6 +29,8 @@ import javafx.animation.Timeline;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
+import javafx.geometry.Bounds;
+import javafx.geometry.Point2D;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
@@ -187,11 +188,10 @@ public class OverlayView extends NavigationView<AnchorPane, OverlayModel, Overla
     }
 
     private void layout() {
-        double titleBarHeight = window.getHeight() - ownerScene.getHeight();
-
-        if (OsUtils.isWindows()) {
-            titleBarHeight -= 9;
-        }
+        Bounds ownerBoundsInLocal = owner.getBoundsInLocal();
+        Point2D ownerInLocalTopLeft = new Point2D(ownerBoundsInLocal.getMinX(), ownerBoundsInLocal.getMinY());
+        Point2D ownerToScreenTopLeft = owner.localToScreen(ownerInLocalTopLeft);
+        double titleBarHeight = ownerToScreenTopLeft.getY() - ownerScene.getWindow().getY();
         stage.setX(Math.round(window.getX() + (owner.getWidth() - stage.getWidth()) / 2));
         stage.setY(Math.round(window.getY() + titleBarHeight + (owner.getHeight() - stage.getHeight()) / 2));
     }
