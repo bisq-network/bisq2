@@ -19,6 +19,7 @@ package bisq.identity;
 
 
 import bisq.common.application.Service;
+import bisq.common.encoding.Hex;
 import bisq.common.util.FileUtils;
 import bisq.common.util.NetworkUtils;
 import bisq.common.util.StringUtils;
@@ -93,7 +94,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
 
     @Override
     public CompletableFuture<Boolean> persist() {
-        persistDefaultTorIdentityToTorDir();
+        maybePersistTorIdentityToTorDir();
         return getPersistence().persistAsync(getPersistableStore().getClone())
                 .handle((nil, throwable) -> throwable == null);
     }
@@ -277,10 +278,17 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     private TorIdentity createTorIdentity(boolean isForDefaultId) {
         Set<TransportType> supportedTransportTypes = networkService.getSupportedTransportTypes();
         Map<TransportType, Integer> defaultPorts = networkService.getDefaultNodePortByTransportType();
-
         boolean isTorSupported = supportedTransportTypes.contains(TransportType.TOR);
-        int torPort = isTorSupported && isForDefaultId ?
-                defaultPorts.getOrDefault(TransportType.TOR, NetworkUtils.selectRandomPort()) : NetworkUtils.selectRandomPort();
+        int torPort;
+        if (isTorSupported && isForDefaultId) {
+            torPort = defaultPorts.getOrDefault(TransportType.TOR, NetworkUtils.selectRandomPort());
+            Optional<TorIdentity> persistedTorIdentity = findPersistedTorIdentityFromTorDir("default");
+            if (persistedTorIdentity.isPresent()) {
+                return persistedTorIdentity.get();
+            }
+        } else {
+            torPort = NetworkUtils.selectRandomPort();
+        }
         return TorIdentity.generate(torPort);
     }
 
@@ -291,7 +299,8 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
 
         boolean isTorSupported = supportedTransportTypes.contains(TransportType.TOR);
         int torPort = isTorSupported && isForDefaultId ?
-                defaultPorts.getOrDefault(TransportType.TOR, NetworkUtils.selectRandomPort()) : NetworkUtils.selectRandomPort();
+                defaultPorts.getOrDefault(TransportType.TOR, NetworkUtils.selectRandomPort()) :
+                NetworkUtils.selectRandomPort();
 
         if (isForDefaultId) {
             if (supportedTransportTypes.contains(TransportType.CLEAR)) {
@@ -328,20 +337,52 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         return persistableStore.getRetired();
     }
 
-    private void persistDefaultTorIdentityToTorDir() {
+    private void maybePersistTorIdentityToTorDir() {
         persistableStore.getDefaultIdentity().ifPresent(defaultIdentity -> {
-            TorIdentity torIdentity = defaultIdentity.getTorIdentity();
-            String directory = Path.of(baseDir, "tor", "hiddenservice", "default").toString();
-            try {
-                FileUtils.makeDirs(directory);
-                File privateKeyFile = Path.of(directory, "private_key").toFile();
-                if (!privateKeyFile.exists()) {
-                    FileUtils.writeToFile(torIdentity.getTorOnionKey(), privateKeyFile);
-                    FileUtils.writeToFile(torIdentity.getOnionAddress(), Path.of(directory, "hostname").toFile());
+            Set<TransportType> supportedTransportTypes = networkService.getSupportedTransportTypes();
+            if (supportedTransportTypes.contains(TransportType.TOR) &&
+                    defaultIdentity.getNetworkId().getAddressByTransportTypeMap().containsKey(TransportType.TOR)) {
+                TorIdentity torIdentity = defaultIdentity.getTorIdentity();
+                String directory = getTorHiddenServiceDirectory("default");
+                try {
+                    FileUtils.makeDirs(directory);
+                    File privateKeyFile = Path.of(directory, "private_key").toFile();
+                    if (!privateKeyFile.exists()) {
+                        byte[] privateKey = torIdentity.getPrivateKey();
+                        String privateKeyAsHex = Hex.encode(privateKey);
+                        FileUtils.writeToFile(privateKeyAsHex, Path.of(directory, "private_key_hex").toFile());
+                        FileUtils.writeToFile(torIdentity.getTorOnionKey(), privateKeyFile);
+                        FileUtils.writeToFile(torIdentity.getOnionAddress(), Path.of(directory, "hostname").toFile());
+                        FileUtils.writeToFile(String.valueOf(torIdentity.getPort()), Path.of(directory, "port").toFile());
+                        log.info("We persisted the default tor identity {} to {}.", torIdentity, directory);
+                    }
+                } catch (IOException e) {
+                    log.error("Could not persist torIdentity", e);
                 }
-            } catch (IOException e) {
-                log.error("Could not persist torIdentity", e);
             }
         });
+    }
+
+    private Optional<TorIdentity> findPersistedTorIdentityFromTorDir(String nodeId) {
+        String directory = getTorHiddenServiceDirectory(nodeId);
+        if (!new File(directory).exists()) {
+            return Optional.empty();
+        }
+
+        try {
+            String privateKeyAsHex = FileUtils.readStringFromFile(Path.of(directory, "private_key_hex").toFile());
+            byte[] privateKey = Hex.decode(privateKeyAsHex);
+            int port = Integer.parseInt(FileUtils.readStringFromFile(Path.of(directory, "port").toFile()));
+            TorIdentity torIdentity = TorIdentity.from(privateKey, port);
+            log.info("We found an existing tor identity {} at {} and use that for node ID {}.", torIdentity, directory, nodeId);
+            return Optional.of(torIdentity);
+        } catch (IOException e) {
+            log.warn("Could not read private_key_hex or port", e);
+            return Optional.empty();
+        }
+    }
+
+    private String getTorHiddenServiceDirectory(String nodeId) {
+        return Path.of(baseDir, "tor", "hiddenservice", nodeId).toString();
     }
 }

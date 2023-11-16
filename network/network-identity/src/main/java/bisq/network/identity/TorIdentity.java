@@ -40,6 +40,9 @@ import java.util.Arrays;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString
 public class TorIdentity implements Proto {
+    public static TorIdentity from(byte[] privateKey, int port) {
+        return new TorIdentity(privateKey, port, computeOnionAddressFromPrivateKey(privateKey));
+    }
 
     @ToString.Exclude
     private final byte[] privateKey;
