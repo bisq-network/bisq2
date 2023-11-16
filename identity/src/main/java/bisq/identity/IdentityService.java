@@ -19,6 +19,7 @@ package bisq.identity;
 
 
 import bisq.common.application.Service;
+import bisq.common.util.FileUtils;
 import bisq.common.util.NetworkUtils;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
@@ -37,6 +38,9 @@ import com.google.common.collect.Streams;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.security.KeyPair;
 import java.util.Map;
 import java.util.Optional;
@@ -55,6 +59,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     private final KeyPairService keyPairService;
     private final NetworkService networkService;
     private final Object lock = new Object();
+    private final String baseDir;
 
     public IdentityService(PersistenceService persistenceService,
                            KeyPairService keyPairService,
@@ -62,6 +67,8 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
         this.keyPairService = keyPairService;
         this.networkService = networkService;
+
+        baseDir = persistenceService.getBaseDir();
     }
 
 
@@ -82,6 +89,13 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
         return CompletableFuture.completedFuture(true);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> persist() {
+        persistDefaultTorIdentityToTorDir();
+        return getPersistence().persistAsync(getPersistableStore().getClone())
+                .handle((nil, throwable) -> throwable == null);
     }
 
 
@@ -312,5 +326,22 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
 
     private Set<Identity> getRetired() {
         return persistableStore.getRetired();
+    }
+
+    private void persistDefaultTorIdentityToTorDir() {
+        persistableStore.getDefaultIdentity().ifPresent(defaultIdentity -> {
+            TorIdentity torIdentity = defaultIdentity.getTorIdentity();
+            String directory = Path.of(baseDir, "tor", "hiddenservice", "default").toString();
+            try {
+                FileUtils.makeDirs(directory);
+                File privateKeyFile = Path.of(directory, "private_key").toFile();
+                if (!privateKeyFile.exists()) {
+                    FileUtils.writeToFile(torIdentity.getTorOnionKey(), privateKeyFile);
+                    FileUtils.writeToFile(torIdentity.getOnionAddress(), Path.of(directory, "hostname").toFile());
+                }
+            } catch (IOException e) {
+                log.error("Could not persist torIdentity", e);
+            }
+        });
     }
 }
