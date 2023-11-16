@@ -156,7 +156,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
 
     public UserIdentity createAndPublishNewUserProfile(String nickName,
                                                        ProofOfWork proofOfWork) {
-        String tag = getTag(nickName, proofOfWork);
+        String tag = getIdentityTag(nickName, proofOfWork);
         Identity identity = identityService.createAndInitializeNewActiveIdentity(tag);
         UserIdentity userIdentity = createUserIdentity(nickName, proofOfWork, "", "", identity);
         publishPublicUserProfile(userIdentity.getUserProfile(), userIdentity.getIdentity().getNodeIdAndKeyPair().getKeyPair());
@@ -167,7 +167,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
                                                        ProofOfWork proofOfWork,
                                                        String terms,
                                                        String statement) {
-        String tag = getTag(nickName, proofOfWork);
+        String tag = getIdentityTag(nickName, proofOfWork);
         Identity identity = identityService.createAndInitializeNewActiveIdentity(tag);
         UserIdentity userIdentity = createUserIdentity(nickName, proofOfWork, terms, statement, identity);
         publishPublicUserProfile(userIdentity.getUserProfile(), userIdentity.getIdentity().getNodeIdAndKeyPair().getKeyPair());
@@ -180,8 +180,8 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
                                                                           ProofOfWork proofOfWork,
                                                                           String terms,
                                                                           String statement) {
-        String tag = getTag(nickName, proofOfWork);
-        return identityService.createNewActiveIdentity(tag, keyId, keyPair)
+        String identityTag = getIdentityTag(nickName, proofOfWork);
+        return identityService.createNewActiveIdentity(identityTag, keyId, keyPair)
                 .thenApply(identity -> createUserIdentity(nickName, proofOfWork, terms, statement, identity))
                 .thenApply(userIdentity -> {
                     publishPublicUserProfile(userIdentity.getUserProfile(), userIdentity.getIdentity().getNodeIdAndKeyPair().getKeyPair());
@@ -298,7 +298,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         return networkService.publishAuthenticatedData(userProfile, keyPair);
     }
 
-    private String getTag(String nickName, ProofOfWork proofOfWork) {
+    private String getIdentityTag(String nickName, ProofOfWork proofOfWork) {
         return nickName + "-" + Hex.encode(proofOfWork.getPayload());
     }
 }
