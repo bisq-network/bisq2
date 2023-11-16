@@ -79,12 +79,13 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
+        return CompletableFuture.supplyAsync(() -> {
+            Identity defaultIdentity = getOrCreateDefaultIdentity();
+            networkService.createDefaultServiceNodes(defaultIdentity.getNetworkId(), defaultIdentity.getTorIdentity());
 
-        Identity defaultIdentity = getOrCreateDefaultIdentity();
-        networkService.createDefaultServiceNodes(defaultIdentity.getNetworkId(), defaultIdentity.getTorIdentity());
-
-        initializeActiveIdentities();
-        return CompletableFuture.completedFuture(true);
+            initializeActiveIdentities();
+            return true;
+        });
     }
 
     public CompletableFuture<Boolean> shutdown() {
