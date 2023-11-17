@@ -585,7 +585,7 @@ public class Node implements Connection.Handler {
     }
 
     public String getNodeInfo() {
-        return getNetworkId() + " @ " + getTransportType().name();
+        return getNetworkId().getInfo() + " @ " + getTransportType().name();
     }
 
 
