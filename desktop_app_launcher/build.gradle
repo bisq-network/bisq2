@@ -3,6 +3,7 @@ plugins {
     id 'bisq.gradle.desktop.regtest.BisqDesktopRegtestPlugin'
     id 'application'
     /* id 'distribution'*/ //todo as long we dont need a jar we leave that out, speeds up build
+    id 'bisq.gradle.packaging.PackagingPlugin'
     alias(libs.plugins.openjfx)
     alias(libs.plugins.jpackage)
     alias(libs.plugins.shadow)
