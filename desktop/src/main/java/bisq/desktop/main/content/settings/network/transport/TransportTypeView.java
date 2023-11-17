@@ -52,6 +52,7 @@ public class TransportTypeView extends View<GridPane, TransportTypeModel, Transp
         connectionsTableView = new BisqTableView<>(model.getSortedConnectionListItems());
         connectionsTableView.setPadding(new Insets(-15, 0, 0, 0));
         connectionsTableView.setMinHeight(150);
+        connectionsTableView.setPrefHeight(250);
         configConnectionsTableView();
 
         VBox vBoxConnections = new VBox(16, connectionsTableView);
@@ -70,6 +71,7 @@ public class TransportTypeView extends View<GridPane, TransportTypeModel, Transp
         nodesTableView = new BisqTableView<>(model.getSortedNodeListItems());
         nodesTableView.setPadding(new Insets(-15, 0, 0, 0));
         nodesTableView.setMinHeight(100);
+        nodesTableView.setPrefHeight(200);
         configNodesTableView();
 
         VBox vBoxNodes = new VBox(16, nodesTableView);
