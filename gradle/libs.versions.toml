@@ -13,6 +13,8 @@ apache-httpcomponents-httpclient-lib = { strictly = '4.5.13' }
 assertj-core-lib = { strictly = '3.22.0' }
 bouncycastle-lib = { strictly = '1.69' } # Oldest version without known CVEs
 
+commons-codec = { strictly = '1.13' }
+
 chimp-jsocks-lib = { strictly = '567e1cd6' }
 chimp-jtorctl-lib = { strictly = '9b5ba203' }
 
@@ -72,6 +74,8 @@ annotations = { module = 'org.jetbrains:annotations', version.ref = 'annotations
 
 bouncycastle = { module = 'org.bouncycastle:bcprov-jdk15on', version.ref = 'bouncycastle-lib' }
 bouncycastle-pg = { module = 'org.bouncycastle:bcpg-jdk15on', version.ref = 'bouncycastle-lib' }
+
+commons-codec = { module = "commons-codec:commons-codec", version.ref = "commons-codec" }
 
 chimp-jsocks = { module = 'com.github.chimp1984:jsocks', version.ref = 'chimp-jsocks-lib'  }
 chimp-jtorctl = { module = 'com.github.chimp1984:jtorctl', version.ref = 'chimp-jtorctl-lib' }
