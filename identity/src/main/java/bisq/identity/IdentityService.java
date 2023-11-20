@@ -129,7 +129,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     public Identity getOrCreateDefaultIdentity() {
         return persistableStore.getDefaultIdentity()
                 .orElseGet(() -> {
-                    Identity identity = createIdentity(DEFAULT_IDENTITY_TAG, DEFAULT_IDENTITY_TAG);
+                    Identity identity = createIdentity(keyPairService.getDefaultKeyId(), DEFAULT_IDENTITY_TAG);
                     synchronized (lock) {
                         persistableStore.setDefaultIdentity(Optional.of(identity));
                     }
