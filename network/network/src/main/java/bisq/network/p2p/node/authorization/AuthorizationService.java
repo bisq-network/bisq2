@@ -100,8 +100,10 @@ public class AuthorizationService {
         // Verify payload
         byte[] payload = getPayload(message);
         if (!Arrays.equals(payload, proofOfWork.getPayload())) {
-            log.warn("Message payload not matching proof of work payload. getPayload(message).length={}; " +
-                            "proofOfWork.getPayload().length={}",
+            log.warn("Message payload not matching proof of work payload. " +
+                            "getPayload(message)={}; proofOfWork.getPayload()={}; " +
+                            "getPayload(message).length={}; proofOfWork.getPayload().length={}",
+                    payload.getClass().getSimpleName(), proofOfWork.getPayload().getClass().getSimpleName(),
                     payload.length, proofOfWork.getPayload().length);
             return false;
         }

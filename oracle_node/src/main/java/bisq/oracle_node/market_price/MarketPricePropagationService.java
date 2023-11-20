@@ -4,6 +4,7 @@ import bisq.bonded_roles.market_price.AuthorizedMarketPriceData;
 import bisq.bonded_roles.market_price.MarketPriceRequestService;
 import bisq.common.application.Service;
 import bisq.common.observable.Pin;
+import bisq.common.util.StringUtils;
 import bisq.identity.Identity;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
@@ -63,7 +64,7 @@ public class MarketPricePropagationService implements Service {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private CompletableFuture<Boolean> publishAuthorizedData(AuthorizedDistributedData data) {
-        log.info("publish {}", data);
+        log.info("publish {}", StringUtils.truncate(data.toString()));
         return networkService.publishAuthorizedData(data,
                         identity.getNodeIdAndKeyPair().getKeyPair(),
                         authorizedPrivateKey,
