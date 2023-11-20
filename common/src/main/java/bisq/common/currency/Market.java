@@ -21,10 +21,11 @@ import bisq.common.proto.Proto;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import org.jetbrains.annotations.NotNull;
 
 @Getter
 @EqualsAndHashCode
-public final class Market implements Proto {
+public final class Market implements Proto, Comparable<Market> {
     public final static int MAX_NAME_LENGTH = 50;
     private static final String QUOTE_SEPARATOR = "/";
 
@@ -84,5 +85,10 @@ public final class Market implements Proto {
     @Override
     public String toString() {
         return getNonBitcoinCurrency() + " (" + getMarketCodes() + ")";
+    }
+
+    @Override
+    public int compareTo(@NotNull Market o) {
+        return this.getMarketCodes().compareTo(o.getMarketCodes());
     }
 }
