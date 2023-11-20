@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -45,7 +46,7 @@ public class MarketPricePropagationService implements Service {
             if (marketPriceRequestService.getMarketPriceByCurrencyMap().isEmpty()) {
                 return;
             }
-            publishAuthorizedData(new AuthorizedMarketPriceData(marketPriceRequestService.getMarketPriceByCurrencyMap(),
+            publishAuthorizedData(new AuthorizedMarketPriceData(new TreeMap<>(marketPriceRequestService.getMarketPriceByCurrencyMap()),
                     staticPublicKeysProvided));
         });
 
