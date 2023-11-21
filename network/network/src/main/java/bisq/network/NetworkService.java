@@ -172,15 +172,8 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         // Add persisted seed nodes to serviceNodesByTransport
         persistableStore.getSeedNodes().forEach(serviceNodesByTransport::addSeedNode);
 
-        return serviceNodesByTransport.initialize()
-                .whenComplete((result, throwable) -> {
-                    if (throwable == null) {
-                        messageDeliveryStatusService.ifPresent(MessageDeliveryStatusService::initialize);
-                        monitorService.ifPresent(MonitorService::initialize);
-                    } else {
-                        log.error("Initialize serviceNodesByTransport failed", throwable);
-                    }
-                });
+        // We do not have the default node created yet.
+        return serviceNodesByTransport.initialize();
     }
 
     public CompletableFuture<Boolean> shutdown() {
@@ -202,6 +195,9 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         this.defaultNetworkId = defaultNetworkId;
         serviceNodesByTransport.getMap()
                 .forEach((transportType, serviceNode) -> serviceNode.createDefaultNode(defaultNetworkId, defaultTorIdentity));
+
+        messageDeliveryStatusService.ifPresent(MessageDeliveryStatusService::initialize);
+        monitorService.ifPresent(MonitorService::initialize);
     }
 
     public Map<TransportType, CompletableFuture<Node>> getInitializedNodeByTransport(NetworkId networkId, PubKey pubKey,  TorIdentity torIdentity) {
