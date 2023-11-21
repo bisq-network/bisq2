@@ -27,7 +27,6 @@ import bisq.tor.controller.events.events.BootstrapEvent;
 import bisq.tor.installer.TorInstallationFiles;
 import bisq.tor.installer.TorInstaller;
 import bisq.tor.onionservice.CreateOnionServiceResponse;
-import bisq.tor.onionservice.OnionAddress;
 import bisq.tor.onionservice.OnionServicePublishService;
 import bisq.tor.process.NativeTorProcess;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
@@ -127,14 +126,14 @@ public class TorService implements Service {
     }
 
     public CompletableFuture<CreateOnionServiceResponse> createOnionService(int port, TorIdentity torIdentity) {
-        log.info("Start hidden service with port {} and nodeId {}", port, torIdentity);
+        log.info("Start hidden service with port {} and torIdentity {}", port, torIdentity);
         long ts = System.currentTimeMillis();
         try {
             @SuppressWarnings("resource") ServerSocket localServerSocket = new ServerSocket(RANDOM_PORT);
             int localPort = localServerSocket.getLocalPort();
             return onionServicePublishService.publish(torIdentity, port, localPort)
                     .thenApply(onionAddress -> {
-                                log.info("Tor hidden service Ready. Took {} ms. Onion address={}; nodeId={}",
+                        log.info("Tor hidden service Ready. Took {} ms. Onion address={}; torIdentity={}",
                                         System.currentTimeMillis() - ts, onionAddress, torIdentity);
                                 return new CreateOnionServiceResponse(torIdentity, localServerSocket, onionAddress);
                             }
@@ -168,10 +167,6 @@ public class TorService implements Service {
 
     public boolean isOnionServiceOnline(String onionUrl) {
         return nativeTorController.isHiddenServiceAvailable(onionUrl);
-    }
-
-    public Optional<OnionAddress> getOnionAddressForNode(String nodeId) {
-        return onionServicePublishService.getOnionAddressForNode(nodeId);
     }
 
     public Socket getSocket(String streamId) throws IOException {

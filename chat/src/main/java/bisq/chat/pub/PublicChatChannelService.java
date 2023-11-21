@@ -102,8 +102,8 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
                 });
     }
 
-    public CompletableFuture<BroadcastResult> deleteChatMessage(M chatMessage, NetworkIdWithKeyPair nodeIdAndKeyPair) {
-        return networkService.removeAuthenticatedData(chatMessage, nodeIdAndKeyPair.getKeyPair());
+    public CompletableFuture<BroadcastResult> deleteChatMessage(M chatMessage, NetworkIdWithKeyPair networkIdWithKeyPair) {
+        return networkService.removeAuthenticatedData(chatMessage, networkIdWithKeyPair.getKeyPair());
     }
 
     public Collection<C> getMentionableChannels() {
