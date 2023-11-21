@@ -18,6 +18,7 @@
 package bisq.network.p2p.node.authorization;
 
 import bisq.common.application.DevMode;
+import bisq.common.encoding.Hex;
 import bisq.common.util.ByteArrayUtils;
 import bisq.common.util.MathUtils;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
@@ -100,8 +101,10 @@ public class AuthorizationService {
         // Verify payload
         byte[] payload = getPayload(message);
         if (!Arrays.equals(payload, proofOfWork.getPayload())) {
-            log.warn("Message payload not matching proof of work payload. getPayload(message).length={}; " +
-                            "proofOfWork.getPayload().length={}",
+            log.warn("Message payload not matching proof of work payload. " +
+                            "getPayload(message)={}; proofOfWork.getPayload()={}; " +
+                            "getPayload(message).length={}; proofOfWork.getPayload().length={}",
+                    Hex.encode(payload), Hex.encode(proofOfWork.getPayload()),
                     payload.length, proofOfWork.getPayload().length);
             return false;
         }

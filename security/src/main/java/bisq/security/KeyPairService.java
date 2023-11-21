@@ -41,6 +41,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Slf4j
 public class KeyPairService implements PersistenceClient<KeyPairStore> {
     @Getter
@@ -66,7 +68,7 @@ public class KeyPairService implements PersistenceClient<KeyPairStore> {
         try {
             return getOrCreateKeyPairAsync(keyId).get();
         } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
+            log.error("Error at getOrCreateKeyPair", e);
             throw new RuntimeException(e);
         }
     }
@@ -81,6 +83,7 @@ public class KeyPairService implements PersistenceClient<KeyPairStore> {
     }
 
     public void persistKeyPair(String keyId, KeyPair keyPair) {
+        checkArgument(!keyId.equals("default"), "Key ID must be unique and must not be `default`.");
         synchronized (persistableStore) {
             persistableStore.put(keyId, keyPair);
         }
@@ -88,6 +91,7 @@ public class KeyPairService implements PersistenceClient<KeyPairStore> {
     }
 
     public CompletableFuture<KeyPair> getOrCreateKeyPairAsync(String keyId) {
+        checkArgument(!keyId.equals("default"), "Key ID must be unique and must not be `default`.");
         return findKeyPair(keyId).map(CompletableFuture::completedFuture)
                 .orElseGet(() -> CompletableFuture.supplyAsync(() -> {
                     try {
@@ -98,7 +102,7 @@ public class KeyPairService implements PersistenceClient<KeyPairStore> {
                         persist();
                         return keyPair;
                     } catch (GeneralSecurityException e) {
-                        e.printStackTrace();
+                        log.error("Error at getOrCreateKeyPairAsync", e);
                         throw new CompletionException(e);
                     }
                 }));
@@ -108,6 +112,10 @@ public class KeyPairService implements PersistenceClient<KeyPairStore> {
         String keyId = persistableStore.getDefaultKeyId();
         PublicKey publicKey = getOrCreateKeyPair(keyId).getPublic();
         return new PubKey(publicKey, keyId);
+    }
+
+    public String getDefaultKeyId() {
+        return persistableStore.getDefaultKeyId();
     }
 
     public static KeyPair loadDsaKey(String privateKeyPath) throws GeneralSecurityException, IOException {
