@@ -28,7 +28,6 @@ import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.identity.IdentityService;
 import bisq.security.DigestUtil;
-import bisq.security.KeyIdKeyPairTuple;
 import bisq.security.KeyPairService;
 import bisq.security.pow.ProofOfWork;
 import bisq.security.pow.ProofOfWorkService;
@@ -106,44 +105,32 @@ public class CreateProfileController implements Controller {
         if (model.getCreateProfileButtonDisabled().get()) {
             return;
         }
-        if (model.getProofOfWork().isEmpty()) {
-            log.error("proofOfWork is not present");
-            return;
-        }
+
         model.getCreateProfileProgress().set(-1);
         model.getCreateProfileButtonDisabled().set(true);
         model.getReGenerateButtonDisabled().set(true);
-        ProofOfWork proofOfWork = model.getProofOfWork().get();
 
-        if (model.getNickName().get().length() > UserProfile.MAX_LENGTH_NICK_NAME) {
+        String nickName = model.getNickName().get().trim();
+        if (nickName.length() > UserProfile.MAX_LENGTH_NICK_NAME) {
             new Popup().warning(Res.get("onboarding.createProfile.nickName.tooLong", UserProfile.MAX_LENGTH_NICK_NAME)).show();
             return;
         }
 
-        if (model.getKeyPairAndId().isPresent()) {
-            KeyIdKeyPairTuple keyIdKeyPairTuple = model.getKeyPairAndId().get();
-            userIdentityService.createAndPublishNewUserProfile(
-                            model.getNickName().get().trim(),
-                            keyIdKeyPairTuple.getKeyId(),
-                            keyIdKeyPairTuple.getKeyPair(),
-                            proofOfWork,
-                            "",
-                            "")
-                    .whenComplete((chatUserIdentity, throwable) -> UIThread.run(() -> {
-                        if (throwable == null) {
-                            model.getCreateProfileProgress().set(0);
-                            next();
-                        } else {
-                            new Popup().error(throwable).show();
-                        }
-                    }));
-        } else {
-            userIdentityService.createAndPublishNewUserProfile(
-                    model.getNickName().get().trim(),
-                    proofOfWork);
-            model.getCreateProfileProgress().set(0);
-            next();
-        }
+        userIdentityService.createAndPublishNewUserProfile(
+                        nickName,
+                        model.getKeyPair().orElseThrow(),
+                        model.getPubKeyHash().orElseThrow(),
+                        model.getProofOfWork().orElseThrow(),
+                        "",
+                        "")
+                .whenComplete((chatUserIdentity, throwable) -> UIThread.run(() -> {
+                    if (throwable == null) {
+                        model.getCreateProfileProgress().set(0);
+                        next();
+                    } else {
+                        new Popup().error(throwable).show();
+                    }
+                }));
     }
 
     void onRegenerate() {
@@ -153,15 +140,11 @@ public class CreateProfileController implements Controller {
     void generateNewKeyPair() {
         setPreGenerateState();
         KeyPair keyPair = keyPairService.generateKeyPair();
+        model.setKeyPair(Optional.of(keyPair));
         byte[] pubKeyHash = DigestUtil.hash(keyPair.getPublic().getEncoded());
         model.setPubKeyHash(Optional.of(pubKeyHash));
         // mintNymProofOfWork is executed on a ForkJoinPool thread
-        mintNymProofOfWorkFuture = Optional.of(createProofOfWork(pubKeyHash)
-                .whenComplete((proofOfWork, t) ->
-                        UIThread.run(() -> {
-                            KeyIdKeyPairTuple keyIdKeyPairTuple = new KeyIdKeyPairTuple(model.getNym().get(), keyPair);
-                            model.setKeyPairAndId(Optional.of(keyIdKeyPairTuple));
-                        })));
+        mintNymProofOfWorkFuture = Optional.of(createProofOfWork(pubKeyHash));
     }
 
     private CompletableFuture<ProofOfWork> createProofOfWork(byte[] pubKeyHash) {

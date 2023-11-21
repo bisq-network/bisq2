@@ -32,31 +32,34 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public final class KeyPairStore implements PersistableStore<KeyPairStore> {
-    private String defaultKeyId = "default_" + StringUtils.createUid();
+    // Secret uid used for deriving keyIds
+    // As the keyID is public in the mailbox message we do not want to leak any information of the user identity
+    // to the network.
+    private String secretUid = StringUtils.createUid();
     private final Map<String, KeyPair> keyPairsById = new ConcurrentHashMap<>();
 
     public KeyPairStore() {
     }
 
-    private KeyPairStore(String defaultKeyId, Map<String, KeyPair> map) {
-        this.defaultKeyId = defaultKeyId;
+    private KeyPairStore(String secretUid, Map<String, KeyPair> map) {
+        this.secretUid = secretUid;
         this.keyPairsById.putAll(map);
     }
 
     @Override
     public KeyPairStore getClone() {
-        return new KeyPairStore(defaultKeyId, keyPairsById);
+        return new KeyPairStore(secretUid, keyPairsById);
     }
 
     @Override
     public bisq.security.protobuf.KeyPairStore toProto() {
-        return bisq.security.protobuf.KeyPairStore.newBuilder().setDefaultKeyId(defaultKeyId).putAllKeyPairsById(keyPairsById.entrySet().stream()
+        return bisq.security.protobuf.KeyPairStore.newBuilder().setSecretUid(secretUid).putAllKeyPairsById(keyPairsById.entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey, entry -> KeyPairProtoUtil.toProto(entry.getValue()))))
                 .build();
     }
 
     public static KeyPairStore fromProto(bisq.security.protobuf.KeyPairStore proto) {
-        return new KeyPairStore(proto.getDefaultKeyId(),
+        return new KeyPairStore(proto.getSecretUid(),
                 proto.getKeyPairsByIdMap().entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey, e -> KeyPairProtoUtil.fromProto(e.getValue()))));
     }
@@ -74,7 +77,7 @@ public final class KeyPairStore implements PersistableStore<KeyPairStore> {
 
     @Override
     public void applyPersisted(KeyPairStore persisted) {
-        defaultKeyId = persisted.defaultKeyId;
+        secretUid = persisted.secretUid;
         keyPairsById.clear();
         keyPairsById.putAll(persisted.keyPairsById);
     }
@@ -87,12 +90,7 @@ public final class KeyPairStore implements PersistableStore<KeyPairStore> {
         keyPairsById.put(keyId, keyPair);
     }
 
-    String getDefaultKeyId() {
-        return defaultKeyId;
+    String getSecretUid() {
+        return secretUid;
     }
-
-    Map<String, KeyPair> getKeyPairsById() {
-        return keyPairsById;
-    }
-
 }

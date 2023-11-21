@@ -79,18 +79,18 @@ public class IdentityServiceTest {
 
     @Test
     void getOrCreateIdentityWithAllArguments() {
-        String myTag = "myTag";
-        KeyPair keyPair = keyPairService.getOrCreateKeyPair(myTag);
-        Identity activeIdentity = identityService.getOrCreateIdentity(myTag, myTag, keyPair);
+        String identityTag = "myTag1";
+        String keyId = keyPairService.getKeyIdFromTag(identityTag);
+        KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
+        Identity activeIdentity = identityService.findActiveIdentity(identityTag)
+                .orElseGet(() -> identityService.createAndInitializeNewActiveIdentity(identityTag, keyId, keyPair));
 
-        assertThat(activeIdentity.getTag())
-                .isEqualTo(myTag);
-        assertThat(activeIdentity.getNetworkId().getPubKey().getKeyId())
-                .isEqualTo(myTag);
-        assertThat(activeIdentity.getKeyPair())
-                .isEqualTo(keyPair);
+        assertThat(activeIdentity.getTag()).isEqualTo(identityTag);
+        assertThat(activeIdentity.getNetworkId().getPubKey().getKeyId()).isEqualTo(keyId);
+        assertThat(activeIdentity.getKeyPair()).isEqualTo(keyPair);
 
-        Identity persistedActiveIdentity = identityService.getOrCreateIdentity(myTag, myTag, keyPair);
+        Identity persistedActiveIdentity = identityService.findActiveIdentity(identityTag)
+                .orElseGet(() -> identityService.createAndInitializeNewActiveIdentity(identityTag, keyId, keyPair));
         assertThat(activeIdentity).isSameAs(persistedActiveIdentity);
     }
 
@@ -149,8 +149,9 @@ public class IdentityServiceTest {
         AddressByTransportTypeMap addressByTransportTypeMap = new AddressByTransportTypeMap(
                 Map.of(TransportType.CLEAR, Address.localHost(1234)));
 
-        KeyPair keyPair = keyPairService.getOrCreateKeyPair("keyId");
-        var pubKey = new PubKey(keyPair.getPublic(), "keyId");
+        String keyId = keyPairService.getKeyIdFromTag("myTag2");
+        KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
+        var pubKey = new PubKey(keyPair.getPublic(), keyId);
         var networkId = new NetworkId(addressByTransportTypeMap, pubKey);
 
         Optional<Identity> activeIdentity = identityService.findActiveIdentityByNetworkId(networkId);
@@ -179,9 +180,9 @@ public class IdentityServiceTest {
     void findInvalidRetiredIdentity() {
         AddressByTransportTypeMap addressByTransportTypeMap = new AddressByTransportTypeMap(
                 Map.of(TransportType.CLEAR, Address.localHost(1234)));
-
-        KeyPair keyPair = keyPairService.getOrCreateKeyPair("keyId");
-        var pubKey = new PubKey(keyPair.getPublic(), "keyId");
+        String keyId = keyPairService.getKeyIdFromTag("myTag3");
+        KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
+        var pubKey = new PubKey(keyPair.getPublic(), keyId);
         var networkId = new NetworkId(addressByTransportTypeMap, pubKey);
 
         Optional<Identity> retiredIdentity = identityService.findRetiredIdentityByNetworkId(networkId);

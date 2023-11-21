@@ -18,20 +18,19 @@
 package bisq.desktop.overlay.onboarding.create_profile;
 
 import bisq.desktop.common.view.Model;
-import bisq.identity.Identity;
-import bisq.security.KeyIdKeyPairTuple;
 import bisq.security.pow.ProofOfWork;
 import javafx.beans.property.*;
 import javafx.scene.image.Image;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.security.KeyPair;
 import java.util.Optional;
 
 @Getter
 public class CreateProfileModel implements Model {
     @Setter
-    private Optional<KeyIdKeyPairTuple> keyPairAndId = Optional.empty();
+    private Optional<KeyPair> keyPair = Optional.empty();
     @Setter
     private Optional<ProofOfWork> proofOfWork = Optional.empty();
     @Setter

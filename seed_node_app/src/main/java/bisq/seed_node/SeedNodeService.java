@@ -46,7 +46,6 @@ public class SeedNodeService implements Service {
         private final String bondUserName;
         private final String profileId;
         private final String signatureBase64;
-        private final String keyId;
         private final boolean staticPublicKeysProvided;
 
         public Config(String privateKey,
@@ -54,14 +53,12 @@ public class SeedNodeService implements Service {
                       String bondUserName,
                       String profileId,
                       String signatureBase64,
-                      String keyId,
                       boolean staticPublicKeysProvided) {
             this.privateKey = privateKey;
             this.publicKey = publicKey;
             this.bondUserName = bondUserName;
             this.profileId = profileId;
             this.signatureBase64 = signatureBase64;
-            this.keyId = keyId;
             this.staticPublicKeysProvided = staticPublicKeysProvided;
         }
 
@@ -71,7 +68,6 @@ public class SeedNodeService implements Service {
                     config.getString("bondUserName"),
                     config.getString("profileId"),
                     config.getString("signatureBase64"),
-                    config.getString("keyId"),
                     config.getBoolean("staticPublicKeysProvided"));
         }
     }
@@ -106,7 +102,8 @@ public class SeedNodeService implements Service {
                     networkId,
                     Optional.empty(),
                     config.isStaticPublicKeysProvided());
-            KeyPair keyPair = keyPairService.getOrCreateKeyPair(config.keyId);
+            String keyId = keyPairService.getDefaultKeyId();
+            KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
 
             // Repeat 3 times at startup to republish to ensure the data gets well distributed
             startupScheduler = Scheduler.run(() -> publishMyBondedRole(authorizedBondedRole, keyPair, authorizedPrivateKey, authorizedPublicKey))

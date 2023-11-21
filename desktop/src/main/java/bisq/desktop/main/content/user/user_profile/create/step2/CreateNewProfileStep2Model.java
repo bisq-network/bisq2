@@ -18,23 +18,22 @@
 package bisq.desktop.main.content.user.user_profile.create.step2;
 
 import bisq.desktop.common.view.Model;
-import bisq.identity.Identity;
-import bisq.security.KeyIdKeyPairTuple;
 import bisq.security.pow.ProofOfWork;
 import javafx.beans.property.*;
 import javafx.scene.image.Image;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.Optional;
+import java.security.KeyPair;
 
 @Getter
 public class CreateNewProfileStep2Model implements Model {
     @Setter
-    private Optional<KeyIdKeyPairTuple> tempKeyPairAndId = Optional.empty();
+    private KeyPair keyPair;
     @Setter
-    private Optional<ProofOfWork> proofOfWork = Optional.empty();
-
+    private byte[] pubKeyHash;
+    @Setter
+    private ProofOfWork proofOfWork;
     private final StringProperty nickName = new SimpleStringProperty();
     private final StringProperty nym = new SimpleStringProperty();
     private final StringProperty terms = new SimpleStringProperty();

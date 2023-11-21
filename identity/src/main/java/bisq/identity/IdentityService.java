@@ -22,19 +22,18 @@ import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
 import bisq.common.util.FileUtils;
 import bisq.common.util.NetworkUtils;
-import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
 import bisq.network.common.Address;
 import bisq.network.common.AddressByTransportTypeMap;
 import bisq.network.common.TransportType;
 import bisq.network.identity.NetworkId;
 import bisq.network.identity.TorIdentity;
-import bisq.network.p2p.node.Node;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.security.KeyPairService;
 import bisq.security.PubKey;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Streams;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -121,15 +120,10 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
                 .orElseGet(() -> createAndInitializeNewActiveIdentity(identityTag));
     }
 
-    public Identity getOrCreateIdentity(String identityTag, String keyId, KeyPair keyPair) {
-        return findActiveIdentity(identityTag)
-                .orElseGet(() -> createAndInitializeNewActiveIdentity(identityTag, keyId, keyPair));
-    }
-
     public Identity getOrCreateDefaultIdentity() {
         return persistableStore.getDefaultIdentity()
                 .orElseGet(() -> {
-                    Identity identity = createIdentity(keyPairService.getDefaultKeyId(), DEFAULT_IDENTITY_TAG);
+                    Identity identity = createIdentity(DEFAULT_IDENTITY_TAG);
                     synchronized (lock) {
                         persistableStore.setDefaultIdentity(Optional.of(identity));
                     }
@@ -141,12 +135,10 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     /**
      * Creates new identity based on given parameters.
      */
-    public CompletableFuture<Identity> createNewActiveIdentity(String identityTag,
-                                                               String keyId,
-                                                               KeyPair keyPair) {
+    public CompletableFuture<Identity> createNewActiveIdentity(String identityTag, KeyPair keyPair) {
+        String keyId = keyPairService.getKeyIdFromTag(identityTag);
         keyPairService.persistKeyPair(keyId, keyPair);
         PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
-
         TorIdentity torIdentity = findOrCreateTorIdentity(identityTag);
         NetworkId networkId = createNetworkId(false, pubKey, torIdentity);
         Identity identity = new Identity(identityTag, networkId, torIdentity, keyPair);
@@ -222,7 +214,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
 
     private void initializeActiveIdentities() {
         getActiveIdentityByTag().values().stream()
-                .filter(identity -> !identity.getTag().equals(Node.DEFAULT))
+                .filter(identity -> !identity.getTag().equals(IdentityService.DEFAULT_IDENTITY_TAG))
                 .forEach(identity ->
                         networkService.getInitializedNodeByTransport(identity.getNetworkId(), identity.getPubKey(), identity.getTorIdentity()).values()
                                 .forEach(future -> future.whenComplete((node, throwable) -> {
@@ -237,7 +229,8 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
                                 ));
     }
 
-    private Identity createAndInitializeNewActiveIdentity(String identityTag, String keyId, KeyPair keyPair) {
+    @VisibleForTesting
+    Identity createAndInitializeNewActiveIdentity(String identityTag, String keyId, KeyPair keyPair) {
         Identity identity = createAndInitializeNewIdentity(identityTag, keyId, keyPair);
 
         synchronized (lock) {
@@ -249,9 +242,9 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     }
 
     private Identity createAndInitializeNewIdentity(String identityTag) {
-        String keyId = StringUtils.createUid();
-        KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
-        return createAndInitializeNewIdentity(identityTag, keyId, keyPair);
+        Identity identity = createIdentity(identityTag);
+        networkService.getNetworkIdOfInitializedNode(identity.getNetworkId(), identity.getTorIdentity()).join();
+        return identity;
     }
 
     private Identity createAndInitializeNewIdentity(String identityTag, String keyId, KeyPair keyPair) {
@@ -260,7 +253,8 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         return identity;
     }
 
-    private Identity createIdentity(String keyId, String identityTag) {
+    private Identity createIdentity(String identityTag) {
+        String keyId = keyPairService.getKeyIdFromTag(identityTag);
         KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
         return createIdentity(keyId, identityTag, keyPair);
     }
