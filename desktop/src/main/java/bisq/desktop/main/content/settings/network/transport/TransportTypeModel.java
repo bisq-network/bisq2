@@ -56,7 +56,7 @@ public class TransportTypeModel implements Model {
     private final FilteredList<NodeListItem> filteredNodeListItems = new FilteredList<>(nodeListItems);
     private final SortedList<NodeListItem> sortedNodeListItems = new SortedList<>(filteredNodeListItems);
     private final StringProperty myDefaultNodeAddress = new SimpleStringProperty(Res.get("data.na"));
-    private final StringProperty nodeIdString = new SimpleStringProperty();
+    private final StringProperty keyId = new SimpleStringProperty();
     private final StringProperty messageReceiver = new SimpleStringProperty();
     private final StringProperty receivedMessages = new SimpleStringProperty("");
     private final IdentityService identityService;
@@ -65,7 +65,7 @@ public class TransportTypeModel implements Model {
     private ServiceNode serviceNode;
     private Node defaultNode;
     private final Optional<NetworkId> selectedNetworkId = Optional.empty();
-    private final Map<String, Node.Listener> nodeListenersByNodeId = new HashMap<>();
+    private final Map<String, Node.Listener> nodeListenersByKeyId = new HashMap<>();
     private Collection<Node> allNodes = new ArrayList<>();
 
     //todo move behaviour code to controller
@@ -127,7 +127,7 @@ public class TransportTypeModel implements Model {
     void updateLists() {
         allNodes = new ArrayList<>(serviceNode.getNodesById().getAllNodes());
         connectionListItems.setAll(allNodes.stream()
-                .flatMap(node -> node.getAllConnections().map(c -> new Pair<>(c, node.getNetworkId().toString())))
+                .flatMap(node -> node.getAllConnections().map(c -> new Pair<>(c, node.getNetworkId().getId())))
                 .map(pair -> new ConnectionListItem(pair.getFirst(), pair.getSecond()))
                 .collect(Collectors.toList()));
         nodeListItems.setAll(allNodes
@@ -138,7 +138,7 @@ public class TransportTypeModel implements Model {
     }
 
     void cleanup() {
-        allNodes.forEach(node -> node.removeListener(nodeListenersByNodeId.get(node.getNetworkId().toString())));
+        allNodes.forEach(node -> node.removeListener(nodeListenersByKeyId.get(node.getNetworkId().getId())));
         networkService.findServiceNode(transportType)
                 .map(ServiceNode::getNodesById)
                 .ifPresent(nodesById -> nodesById.removeListener(nodesByIdListener));
@@ -154,7 +154,7 @@ public class TransportTypeModel implements Model {
             @Override
             public void onConnection(Connection connection) {
                 UIThread.run(() -> {
-                    ConnectionListItem connectionListItem = new ConnectionListItem(connection, node.getNetworkId().toString());
+                    ConnectionListItem connectionListItem = new ConnectionListItem(connection, node.getNetworkId().getId());
                     if (!connectionListItems.contains(connectionListItem)) {
                         connectionListItems.add(connectionListItem);
                     }
@@ -165,7 +165,7 @@ public class TransportTypeModel implements Model {
             @Override
             public void onDisconnect(Connection connection, CloseReason closeReason) {
                 UIThread.run(() -> {
-                    ConnectionListItem connectionListItem = new ConnectionListItem(connection, node.getNetworkId().toString());
+                    ConnectionListItem connectionListItem = new ConnectionListItem(connection, node.getNetworkId().getId());
                     connectionListItems.remove(connectionListItem);
                     maybeUpdateMyAddress(node);
                 });
@@ -184,13 +184,12 @@ public class TransportTypeModel implements Model {
             }
         };
         node.addListener(listener);
-        nodeListenersByNodeId.put(node.getNetworkId().toString(), listener);
+        nodeListenersByKeyId.put(node.getNetworkId().getId(), listener);
     }
 
     private void maybeUpdateMyAddress(Node node) {
-        if (node.getNetworkId().toString().equals(defaultNode.getNetworkId().toString())) {
+        if (node.getNetworkId().equals(defaultNode.getNetworkId())) {
             defaultNode.findMyAddress().ifPresent(e -> myDefaultNodeAddress.set(e.getFullAddress()));
         }
     }
-
 }

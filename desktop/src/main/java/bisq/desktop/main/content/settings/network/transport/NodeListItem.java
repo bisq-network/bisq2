@@ -45,7 +45,7 @@ public class NodeListItem implements TableItem {
     private final String address;
     @EqualsAndHashCode.Include
     @Getter
-    private final String nodeId;
+    private final String keyId;
     @Getter
     private final String type;
     @Getter
@@ -56,11 +56,13 @@ public class NodeListItem implements TableItem {
 
     public NodeListItem(Node node, IdentityService identityService) {
         this.node = node;
-        nodeId = node.getNetworkId().toString();
+        keyId = node.getNetworkId().getId();
         type = identityService.findActiveIdentityByNetworkId(node.getNetworkId())
                 .map(i -> Res.get("settings.network.nodes.type.active"))
                 .or(() -> identityService.findRetiredIdentityByNetworkId(node.getNetworkId()).map(i -> Res.get("settings.network.nodes.type.retired")))
-                .orElseGet(() -> nodeId.equals(Node.DEFAULT) ? Res.get("settings.network.nodes.type.gossip") : Res.get("data.na"));
+                .orElseGet(() -> identityService.isDefaultIdentity(node.getNetworkId().getId()) ?
+                        Res.get("settings.network.nodes.type.default") :
+                        Res.get("data.na"));
         domainId = identityService.findAnyIdentityByNetworkId(node.getNetworkId()).map(Identity::getTag)
                 .orElse(Res.get("data.na"));
         address = node.findMyAddress().map(Address::getFullAddress).orElse(Res.get("data.na"));
@@ -92,8 +94,8 @@ public class NodeListItem implements TableItem {
         return address.compareTo(other.getAddress());
     }
 
-    public int compareNodeId(NodeListItem other) {
-        return nodeId.compareTo(other.getNodeId());
+    public int compareKeyId(NodeListItem other) {
+        return keyId.compareTo(other.getKeyId());
     }
 
     public int compareType(NodeListItem other) {
