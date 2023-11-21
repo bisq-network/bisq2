@@ -21,19 +21,17 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.main.content.user.user_profile.create.step2.CreateNewProfileStep2Controller;
-import bisq.desktop.overlay.OverlayController;
 import bisq.desktop.overlay.onboarding.create_profile.CreateProfileController;
 import bisq.desktop.overlay.onboarding.create_profile.CreateProfileModel;
 import bisq.desktop.overlay.onboarding.create_profile.CreateProfileView;
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Slf4j
 public class CreateNewProfileStep1Controller extends CreateProfileController {
-    private final ServiceProvider serviceProvider;
-
     public CreateNewProfileStep1Controller(ServiceProvider serviceProvider) {
         super(serviceProvider);
-        this.serviceProvider = serviceProvider;
     }
 
     @Override
@@ -48,23 +46,16 @@ public class CreateNewProfileStep1Controller extends CreateProfileController {
 
     @Override
     protected void onCreateUserProfile() {
-        if (model.getProofOfWork().isEmpty()) {
-            log.error("proofOfWork is not present");
-            return;
-        }
+        checkArgument(model.getKeyPair().isPresent());
+        checkArgument(model.getPubKeyHash().isPresent());
+        checkArgument(model.getProofOfWork().isPresent());
+
         CreateNewProfileStep2Controller.InitData initData = new CreateNewProfileStep2Controller.InitData(
-                model.getKeyPair(),
+                model.getKeyPair().get(),
+                model.getPubKeyHash().get(),
                 model.getProofOfWork().get(),
                 model.getNickName().get(),
                 model.getNym().get());
         Navigation.navigateTo(NavigationTarget.CREATE_PROFILE_STEP2, initData);
-    }
-
-    void onCancel() {
-        OverlayController.hide();
-    }
-
-    void onQuit() {
-         serviceProvider.getShutDownHandler().shutdown();
     }
 }

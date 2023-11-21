@@ -105,10 +105,6 @@ public class CreateProfileController implements Controller {
         if (model.getCreateProfileButtonDisabled().get()) {
             return;
         }
-        if (model.getProofOfWork().isEmpty() || model.getKeyPair().isEmpty()) {
-            log.error("proofOfWork or key pair not present");
-            return;
-        }
 
         model.getCreateProfileProgress().set(-1);
         model.getCreateProfileButtonDisabled().set(true);
@@ -122,8 +118,9 @@ public class CreateProfileController implements Controller {
 
         userIdentityService.createAndPublishNewUserProfile(
                         nickName,
-                        model.getKeyPair().get(),
-                        model.getProofOfWork().get(),
+                        model.getKeyPair().orElseThrow(),
+                        model.getPubKeyHash().orElseThrow(),
+                        model.getProofOfWork().orElseThrow(),
                         "",
                         "")
                 .whenComplete((chatUserIdentity, throwable) -> UIThread.run(() -> {

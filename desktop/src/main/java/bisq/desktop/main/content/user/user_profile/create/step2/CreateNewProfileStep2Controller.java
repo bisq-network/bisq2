@@ -33,25 +33,28 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.KeyPair;
-import java.util.Optional;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class CreateNewProfileStep2Controller implements InitWithDataController<CreateNewProfileStep2Controller.InitData> {
-
     @Getter
     @ToString
     @EqualsAndHashCode
     public static final class InitData {
-        private final Optional<KeyPair> tempKeyPair;
+        private final KeyPair keyPair;
+        private final byte[] pubKeyHash;
         private final ProofOfWork proofOfWork;
         private final String nickName;
         private final String nym;
 
-        public InitData(Optional<KeyPair> tempKeyPair,
+        public InitData(KeyPair keyPair,
+                        byte[] pubKeyHash,
                         ProofOfWork proofOfWork,
                         String nickName,
                         String nym) {
-            this.tempKeyPair = tempKeyPair;
+            this.keyPair = keyPair;
+            this.pubKeyHash = pubKeyHash;
             this.proofOfWork = proofOfWork;
             this.nickName = nickName;
             this.nym = nym;
@@ -82,13 +85,12 @@ public class CreateNewProfileStep2Controller implements InitWithDataController<C
 
     @Override
     public void initWithData(InitData data) {
-        model.setTempKeyPair(data.getTempKeyPair());
-        model.setProofOfWork(Optional.of(data.getProofOfWork()));
+        model.setKeyPair(data.getKeyPair());
+        model.setPubKeyHash(data.getPubKeyHash());
+        model.setProofOfWork(data.getProofOfWork());
         model.getNickName().set(data.getNickName());
         model.getNym().set(data.getNym());
-        if (data.getTempKeyPair().isPresent()) {
-            model.getRoboHashImage().set(RoboHash.getImage(data.getProofOfWork().getPayload()));
-        }
+        model.getRoboHashImage().set(RoboHash.getImage(data.getPubKeyHash()));
     }
 
     @Override
@@ -105,18 +107,13 @@ public class CreateNewProfileStep2Controller implements InitWithDataController<C
         OverlayController.hide();
     }
 
-    void onQuit() {
-        serviceProvider.getShutDownHandler().shutdown();
-    }
-
     protected void onSave() {
-        if (model.getProofOfWork().isEmpty()) {
-            log.error("proofOfWork is not present");
-            return;
-        }
+        checkNotNull(model.getKeyPair());
+        checkNotNull(model.getProofOfWork());
+        checkNotNull(model.getPubKeyHash());
+
         model.getCreateProfileProgress().set(-1);
         model.getCreateProfileButtonDisabled().set(true);
-        ProofOfWork proofOfWork = model.getProofOfWork().get();
         String nickName = model.getNickName().get();
         if (nickName.length() > UserProfile.MAX_LENGTH_NICK_NAME) {
             new Popup().warning(Res.get("onboarding.createProfile.nickName.tooLong", UserProfile.MAX_LENGTH_NICK_NAME)).show();
@@ -130,23 +127,22 @@ public class CreateNewProfileStep2Controller implements InitWithDataController<C
             new Popup().warning(Res.get("user.userProfile.statement.tooLong", UserProfile.MAX_LENGTH_STATEMENT)).show();
             return;
         }
-        if (model.getTempKeyPair().isPresent()) {
-            KeyPair keyPair = model.getTempKeyPair().get();
-            userIdentityService.createAndPublishNewUserProfile(
-                            nickName,
-                            keyPair,
-                            proofOfWork,
-                            model.getTerms().get(),
-                            model.getStatement().get())
-                    .whenComplete((chatUserIdentity, throwable) -> UIThread.run(() -> {
-                        if (throwable == null) {
-                            model.getCreateProfileProgress().set(0);
-                            close();
-                        } else {
-                            //todo
-                        }
-                    }));
-        }
+
+        userIdentityService.createAndPublishNewUserProfile(
+                        nickName,
+                        model.getKeyPair(),
+                        model.getPubKeyHash(),
+                        model.getProofOfWork(),
+                        model.getTerms().get(),
+                        model.getStatement().get())
+                .whenComplete((chatUserIdentity, throwable) -> UIThread.run(() -> {
+                    if (throwable == null) {
+                        model.getCreateProfileProgress().set(0);
+                        close();
+                    } else {
+                        new Popup().error(throwable).show();
+                    }
+                }));
     }
 
     protected void close() {

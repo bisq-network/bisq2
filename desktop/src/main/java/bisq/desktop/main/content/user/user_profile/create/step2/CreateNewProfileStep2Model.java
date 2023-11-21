@@ -25,15 +25,15 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.security.KeyPair;
-import java.util.Optional;
 
 @Getter
 public class CreateNewProfileStep2Model implements Model {
     @Setter
-    private Optional<KeyPair> tempKeyPair = Optional.empty();
+    private KeyPair keyPair;
     @Setter
-    private Optional<ProofOfWork> proofOfWork = Optional.empty();
-
+    private byte[] pubKeyHash;
+    @Setter
+    private ProofOfWork proofOfWork;
     private final StringProperty nickName = new SimpleStringProperty();
     private final StringProperty nym = new SimpleStringProperty();
     private final StringProperty terms = new SimpleStringProperty();
