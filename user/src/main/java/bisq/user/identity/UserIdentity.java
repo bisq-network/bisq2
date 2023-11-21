@@ -73,8 +73,8 @@ public final class UserIdentity implements Proto {
         return userProfile.getNickName();
     }
 
-    public NetworkIdWithKeyPair getNodeIdAndKeyPair() {
-        return identity.getNodeIdAndKeyPair();
+    public NetworkIdWithKeyPair getNetworkIdWithKeyPair() {
+        return identity.getNetworkIdWithKeyPair();
     }
 
     public String getUserName() {

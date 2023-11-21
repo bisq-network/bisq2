@@ -120,9 +120,4 @@ public class TorTransportService implements TransportService {
     public Optional<Socks5Proxy> getSocksProxy() throws IOException {
         return Optional.of(torService.getSocks5Proxy(null));
     }
-
-    @Override
-    public Optional<Address> getServerAddress(String nodeId) {
-        return torService.getOnionAddressForNode(nodeId).map(onionAddress -> new Address(onionAddress.getHost(), TorTransportService.DEFAULT_PORT));
-    }
 }

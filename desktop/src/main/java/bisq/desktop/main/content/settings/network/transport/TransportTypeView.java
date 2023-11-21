@@ -32,11 +32,13 @@ import javafx.scene.layout.VBox;
 public class TransportTypeView extends View<GridPane, TransportTypeModel, TransportTypeController> {
     private final BisqTableView<ConnectionListItem> connectionsTableView;
     private final BisqTableView<NodeListItem> nodesTableView;
+    private final MaterialTextField myAddress;
 
     public TransportTypeView(TransportTypeModel model, TransportTypeController controller) {
         super(GridPaneUtil.getGridPane(5, 20, new Insets(0)), model, controller);
 
-        MaterialTextField myAddress = new MaterialTextField(Res.get("settings.network.nodeInfo.myAddress"), "", "", model.getMyDefaultNodeAddress().get());
+
+        myAddress = new MaterialTextField(Res.get("settings.network.nodeInfo.myAddress"));
         myAddress.setEditable(false);
         myAddress.showCopyIcon();
         root.add(myAddress, 0, root.getRowCount(), 2, 1);
@@ -53,6 +55,8 @@ public class TransportTypeView extends View<GridPane, TransportTypeModel, Transp
         connectionsTableView.setPadding(new Insets(-15, 0, 0, 0));
         connectionsTableView.setMinHeight(150);
         connectionsTableView.setPrefHeight(250);
+        // Fill available width
+        connectionsTableView.setPrefWidth(2000);
         configConnectionsTableView();
 
         VBox vBoxConnections = new VBox(16, connectionsTableView);
@@ -79,11 +83,20 @@ public class TransportTypeView extends View<GridPane, TransportTypeModel, Transp
         vBoxNodes.setPadding(new Insets(20, 0, 0, 0));
         vBoxNodes.setAlignment(Pos.TOP_LEFT);
         root.add(vBoxNodes, 0, root.getRowCount(), 2, 1);
+    }
 
+    @Override
+    protected void onViewAttached() {
+        myAddress.textProperty().bind(model.getMyDefaultNodeAddress());
+    }
+
+    @Override
+    protected void onViewDetached() {
+        myAddress.textProperty().unbind();
     }
 
     private void configConnectionsTableView() {
-        var dateColumn = new BisqTableColumn.Builder<ConnectionListItem>()
+        BisqTableColumn<ConnectionListItem> dateColumn = new BisqTableColumn.Builder<ConnectionListItem>()
                 .title(Res.get("settings.network.connections.header.established"))
                 .minWidth(180)
                 .maxWidth(180)
@@ -101,10 +114,10 @@ public class TransportTypeView extends View<GridPane, TransportTypeModel, Transp
                 .comparator(ConnectionListItem::compareAddress)
                 .build());
         connectionsTableView.getColumns().add(new BisqTableColumn.Builder<ConnectionListItem>()
-                .title(Res.get("settings.network.connections.header.nodeId"))
+                .title(Res.get("settings.network.connections.header.keyId"))
                 .minWidth(220)
-                .valueSupplier(ConnectionListItem::getNodeId)
-                .comparator(ConnectionListItem::compareNodeId)
+                .valueSupplier(ConnectionListItem::getKeyId)
+                .comparator(ConnectionListItem::compareKeyId)
                 .build());
         connectionsTableView.getColumns().add(new BisqTableColumn.Builder<ConnectionListItem>()
                 .title(Res.get("settings.network.connections.header.connectionDirection"))
@@ -141,16 +154,16 @@ public class TransportTypeView extends View<GridPane, TransportTypeModel, Transp
                 .comparator(NodeListItem::compareType)
                 .build());
         nodesTableView.getColumns().add(new BisqTableColumn.Builder<NodeListItem>()
-                .title(Res.get("settings.network.nodes.header.domainId"))
+                .title(Res.get("settings.network.nodes.header.identityTag"))
                 .minWidth(100)
-                .valueSupplier(NodeListItem::getDomainId)
-                .comparator(NodeListItem::compareDomainId)
+                .valueSupplier(NodeListItem::getIdentityTag)
+                .comparator(NodeListItem::compareIdentityTag)
                 .build());
         nodesTableView.getColumns().add(new BisqTableColumn.Builder<NodeListItem>()
-                .title(Res.get("settings.network.nodes.header.nodeId"))
+                .title(Res.get("settings.network.nodes.header.keyId"))
                 .minWidth(250)
-                .valueSupplier(NodeListItem::getNodeId)
-                .comparator(NodeListItem::compareNodeId)
+                .valueSupplier(NodeListItem::getKeyId)
+                .comparator(NodeListItem::compareKeyId)
                 .build());
         nodesTableView.getColumns().add(new BisqTableColumn.Builder<NodeListItem>()
                 .title(Res.get("settings.network.nodes.header.address"))
@@ -158,19 +171,13 @@ public class TransportTypeView extends View<GridPane, TransportTypeModel, Transp
                 .valueSupplier(NodeListItem::getAddress)
                 .comparator(NodeListItem::compareAddress)
                 .build());
-        nodesTableView.getColumns().add(new BisqTableColumn.Builder<NodeListItem>()
+        BisqTableColumn<NodeListItem> numConnections = new BisqTableColumn.Builder<NodeListItem>()
                 .title(Res.get("settings.network.nodes.header.numConnections"))
-                .minWidth(120)
+                .minWidth(130)
                 .valuePropertySupplier(NodeListItem::getNumConnections)
                 .comparator(NodeListItem::compareNumConnections)
-                .build());
-    }
-
-    @Override
-    protected void onViewAttached() {
-    }
-
-    @Override
-    protected void onViewDetached() {
+                .build();
+        nodesTableView.getColumns().add(numConnections);
+        nodesTableView.getSortOrder().add(numConnections);
     }
 }

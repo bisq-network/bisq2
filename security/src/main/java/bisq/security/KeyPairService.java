@@ -116,6 +116,10 @@ public class KeyPairService implements PersistenceClient<KeyPairStore> {
         return getKeyIdFromTag("default");
     }
 
+    public boolean isDefaultKeyId(String keyId) {
+        return getDefaultKeyId().equals(keyId);
+    }
+
     public static KeyPair loadDsaKey(String privateKeyPath) throws GeneralSecurityException, IOException {
         KeyFactory keyFactory = KeyFactory.getInstance("DSA");
         File filePrivateKey = new File(privateKeyPath);

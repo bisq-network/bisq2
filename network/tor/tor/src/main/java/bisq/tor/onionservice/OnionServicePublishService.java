@@ -33,20 +33,19 @@ import java.util.concurrent.ExecutionException;
 @Slf4j
 public class OnionServicePublishService {
     private final NativeTorController nativeTorController;
-    private final Map<TorIdentity, CompletableFuture<OnionAddress>> onionAddressByNodeId = new HashMap<>();
+    private final Map<TorIdentity, CompletableFuture<OnionAddress>> onionAddressByTorIdentity = new HashMap<>();
 
     public OnionServicePublishService(NativeTorController nativeTorController, Path torDirPath) {
         this.nativeTorController = nativeTorController;
     }
 
     public synchronized CompletableFuture<OnionAddress> publish(TorIdentity torIdentity, int onionServicePort, int localPort) {
-        boolean isNodeIdAlreadyPublished = onionAddressByNodeId.containsKey(torIdentity);
-        if (isNodeIdAlreadyPublished) {
-            return onionAddressByNodeId.get(torIdentity);
+        if (onionAddressByTorIdentity.containsKey(torIdentity)) {
+            return onionAddressByTorIdentity.get(torIdentity);
         }
 
         CompletableFuture<OnionAddress> completableFuture = new CompletableFuture<>();
-        onionAddressByNodeId.put(torIdentity, completableFuture);
+        onionAddressByTorIdentity.put(torIdentity, completableFuture);
 
         try {
             String privateKey = torIdentity.getTorOnionKey();
@@ -57,7 +56,7 @@ public class OnionServicePublishService {
             completableFuture.complete(onionAddress);
 
         } catch (IOException e) {
-            log.error("Couldn't initialize nodeId {}", torIdentity);
+            log.error("Couldn't initialize torIdentity {}", torIdentity);
             completableFuture.completeExceptionally(e);
         }
 
@@ -76,9 +75,9 @@ public class OnionServicePublishService {
         }
     }
 
-    public synchronized Optional<OnionAddress> getOnionAddressForNode(String nodeId) {
+    public synchronized Optional<OnionAddress> findOnionAddress(TorIdentity torIdentity) {
         try {
-            CompletableFuture<OnionAddress> completableFuture = onionAddressByNodeId.get(nodeId);
+            CompletableFuture<OnionAddress> completableFuture = onionAddressByTorIdentity.get(torIdentity);
             if (completableFuture == null) {
                 return Optional.empty();
             }

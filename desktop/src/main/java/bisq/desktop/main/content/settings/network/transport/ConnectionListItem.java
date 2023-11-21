@@ -47,7 +47,7 @@ public class ConnectionListItem implements TableItem {
     private final String address;
 
     @Getter
-    private final String nodeId;
+    private final String keyId;
     @Getter
     private final String direction;
     @Getter
@@ -59,9 +59,9 @@ public class ConnectionListItem implements TableItem {
     @EqualsAndHashCode.Include
     private final String connectionId;
 
-    public ConnectionListItem(Connection connection, String nodeId) {
+    public ConnectionListItem(Connection connection, String keyId) {
         this.connection = connection;
-        this.nodeId = nodeId;
+        this.keyId = keyId;
         connectionId = connection.getId();
         connectionMetrics = connection.getConnectionMetrics();
 
@@ -119,8 +119,8 @@ public class ConnectionListItem implements TableItem {
         return address.compareTo(other.getAddress());
     }
 
-    public int compareNodeId(ConnectionListItem other) {
-        return nodeId.compareTo(other.getNodeId());
+    public int compareKeyId(ConnectionListItem other) {
+        return keyId.compareTo(other.getKeyId());
     }
 
     public int compareDirection(ConnectionListItem other) {

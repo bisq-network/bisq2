@@ -293,10 +293,6 @@ message NetworkServiceStore {
   repeated network.common.AddressByTransportTypeMap seedNodes = 1;
 }
 
-message ServiceNodesByTransportStore {
-  map<string, network.identity.NetworkId> networkIdByNodeId = 1;
-}
-
 message MessageDeliveryStatusStore {
   map<string, MessageDeliveryStatus> messageDeliveryStatusByMessageId = 1;
 }

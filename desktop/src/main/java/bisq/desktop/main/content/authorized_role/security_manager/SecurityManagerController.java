@@ -154,7 +154,7 @@ public class SecurityManagerController implements Controller {
 
     void onRemoveAlert(AuthorizedAlertData authorizedAlertData) {
         UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
-        securityManagerService.removeAlert(authorizedAlertData, userIdentity.getNodeIdAndKeyPair().getKeyPair());
+        securityManagerService.removeAlert(authorizedAlertData, userIdentity.getNetworkIdWithKeyPair().getKeyPair());
     }
 
     String getBondedRoleShortDisplayString(BondedRole bondedRole) {

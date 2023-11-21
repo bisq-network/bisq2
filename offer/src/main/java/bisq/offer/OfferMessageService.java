@@ -94,13 +94,13 @@ public class OfferMessageService implements Service, DataService.Listener {
 
     public CompletableFuture<BroadcastResult> addToNetwork(Offer<?, ?> offer) {
         return identityService.findActiveIdentityByNetworkId(offer.getMakerNetworkId())
-                .map(identity -> networkService.publishAuthenticatedData(new OfferMessage(offer), identity.getNodeIdAndKeyPair().getKeyPair()))
+                .map(identity -> networkService.publishAuthenticatedData(new OfferMessage(offer), identity.getNetworkIdWithKeyPair().getKeyPair()))
                 .orElse(CompletableFuture.failedFuture(new RuntimeException("No identity found for networkNodeId used in the offer")));
     }
 
     public CompletableFuture<BroadcastResult> removeFromNetwork(Offer<?, ?> offer) {
         return findIdentity(offer)
-                .map(identity -> networkService.removeAuthenticatedData(new OfferMessage(offer), identity.getNodeIdAndKeyPair().getKeyPair()))
+                .map(identity -> networkService.removeAuthenticatedData(new OfferMessage(offer), identity.getNetworkIdWithKeyPair().getKeyPair()))
                 .orElse(CompletableFuture.failedFuture(new RuntimeException("No identity found for networkNodeId used in the offer")));
     }
 

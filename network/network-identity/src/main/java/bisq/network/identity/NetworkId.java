@@ -57,6 +57,10 @@ public final class NetworkId implements Proto {
         return pubKey.getId();
     }
 
+    public String getKeyId() {
+        return pubKey.getKeyId();
+    }
+
     public String getInfo() {
         return StringUtils.truncate(getId(), 20) + " " +
                 StringUtils.truncate(addressByTransportTypeMap.values().toString()).replace("[", "");

@@ -100,7 +100,7 @@ public class ReleaseManagerController implements Controller {
 
     void onRemoveReleaseNotification(ReleaseNotification releaseNotification) {
         UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
-        releaseManagerService.removeReleaseNotification(releaseNotification, userIdentity.getNodeIdAndKeyPair().getKeyPair());
+        releaseManagerService.removeReleaseNotification(releaseNotification, userIdentity.getNetworkIdWithKeyPair().getKeyPair());
     }
 
     boolean isRemoveButtonVisible(ReleaseNotification releaseNotification) {

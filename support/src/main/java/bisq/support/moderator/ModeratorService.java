@@ -143,7 +143,7 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
         }
         checkArgument(!bannedUserService.isUserProfileBanned(myUserIdentity.getUserProfile()));
 
-        NetworkIdWithKeyPair senderNetworkIdWithKeyPair = myUserIdentity.getNodeIdAndKeyPair();
+        NetworkIdWithKeyPair senderNetworkIdWithKeyPair = myUserIdentity.getNetworkIdWithKeyPair();
         TorIdentity senderTorIdentity = myUserIdentity.getIdentity().getTorIdentity();
         long date = System.currentTimeMillis();
         authorizedBondedRolesService.getAuthorizedBondedRoleStream().filter(e -> e.getBondedRoleType() == BondedRoleType.MODERATOR)
@@ -164,7 +164,7 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
         if (selectedUserIdentity == null) {
             return CompletableFuture.failedFuture(new RuntimeException("selectedUserIdentity must not be null"));
         }
-        KeyPair keyPair = selectedUserIdentity.getNodeIdAndKeyPair().getKeyPair();
+        KeyPair keyPair = selectedUserIdentity.getNetworkIdWithKeyPair().getKeyPair();
         BannedUserProfileData data = new BannedUserProfileData(message.getAccusedUserProfile(), staticPublicKeysProvided);
         return networkService.publishAuthorizedData(data, keyPair);
     }
@@ -174,7 +174,7 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
         if (selectedUserIdentity == null) {
             return CompletableFuture.failedFuture(new RuntimeException("selectedUserIdentity must not be null"));
         }
-        KeyPair keyPair = selectedUserIdentity.getNodeIdAndKeyPair().getKeyPair();
+        KeyPair keyPair = selectedUserIdentity.getNetworkIdWithKeyPair().getKeyPair();
         return networkService.removeAuthorizedData(data, keyPair);
     }
 

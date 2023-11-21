@@ -382,7 +382,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         }
     }
 
-    private String getTorHiddenServiceDirectory(String nodeId) {
-        return Path.of(baseDir, "tor", "hiddenservice", nodeId).toString();
+    private String getTorHiddenServiceDirectory(String identityTag) {
+        return Path.of(baseDir, "tor", "hiddenservice", identityTag).toString();
     }
 }

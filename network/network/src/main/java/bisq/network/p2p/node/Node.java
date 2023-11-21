@@ -78,8 +78,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  */
 @Slf4j
 public class Node implements Connection.Handler {
-    public static final String DEFAULT = "default";
-
     public enum State {
         NEW,
         STARTING,
@@ -474,7 +472,6 @@ public class Node implements Connection.Handler {
             } else {
                 // We got called from Connection on the dispatcher thread, so no mapping needed here.
                 connection.notifyListeners(envelopePayloadMessage);
-                // listeners.forEach(listener -> listener.onMessage(networkMessage, connection, nodeId));
             }
         } else {
             //todo handle

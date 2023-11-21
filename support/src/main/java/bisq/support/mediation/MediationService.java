@@ -122,7 +122,7 @@ public class MediationService implements Service, MessageListener {
                 myUserIdentity.getUserProfile(),
                 peer,
                 new ArrayList<>(bisqEasyOpenTradeChannel.getChatMessages()));
-        networkService.confidentialSend(networkMessage, mediator.getNetworkId(), myUserIdentity.getNodeIdAndKeyPair(), myUserIdentity.getIdentity().getTorIdentity());
+        networkService.confidentialSend(networkMessage, mediator.getNetworkId(), myUserIdentity.getNetworkIdWithKeyPair(), myUserIdentity.getIdentity().getTorIdentity());
     }
 
     public Optional<UserProfile> selectMediator(String makersUserProfileId, String takersUserProfileId) {
@@ -177,19 +177,19 @@ public class MediationService implements Service, MessageListener {
 
             mediationRequest.getChatMessages().forEach(chatMessage -> bisqEasyOpenTradeChannelService.addMessage(chatMessage, channel));
 
-            NetworkIdWithKeyPair myNodeIdAndKeyPair = myUserIdentity.getNodeIdAndKeyPair();
+            NetworkIdWithKeyPair networkIdWithKeyPair = myUserIdentity.getNetworkIdWithKeyPair();
             TorIdentity myNodeTorIdentity = myUserIdentity.getIdentity().getTorIdentity();
             NetworkId receiverNetworkId = mediationRequest.getRequester().getNetworkId();
             networkService.confidentialSend(new MediationResponse(tradeId, bisqEasyOffer),
                     receiverNetworkId,
-                    myNodeIdAndKeyPair,
+                    networkIdWithKeyPair,
                     myNodeTorIdentity);
             bisqEasyOpenTradeChannelService.addMediatorsResponseMessage(channel, Res.get("bisqEasy.mediation.message.toRequester"));
 
             receiverNetworkId = mediationRequest.getPeer().getNetworkId();
             networkService.confidentialSend(new MediationResponse(tradeId, bisqEasyOffer),
                     receiverNetworkId,
-                    myNodeIdAndKeyPair,
+                    networkIdWithKeyPair,
                     myNodeTorIdentity);
             bisqEasyOpenTradeChannelService.addMediatorsResponseMessage(channel, Res.get("bisqEasy.mediation.message.toNonRequester"));
         });
