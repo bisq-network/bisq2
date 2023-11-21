@@ -255,7 +255,6 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
     }
 
     private CompletableFuture<Boolean> processConfidentialMessage(ConfidentialMessage confidentialMessage) {
-        log.debug("Try to process confidentialMessage");
         return keyPairService.findKeyPair(confidentialMessage.getReceiverKeyId())
                 .map(receiversKeyPair -> supplyAsync(() -> {
                     try {
