@@ -83,7 +83,7 @@ public class TransportTypeView extends View<GridPane, TransportTypeModel, Transp
     }
 
     private void configConnectionsTableView() {
-        var dateColumn = new BisqTableColumn.Builder<ConnectionListItem>()
+        BisqTableColumn<ConnectionListItem> dateColumn = new BisqTableColumn.Builder<ConnectionListItem>()
                 .title(Res.get("settings.network.connections.header.established"))
                 .minWidth(180)
                 .maxWidth(180)
@@ -141,10 +141,10 @@ public class TransportTypeView extends View<GridPane, TransportTypeModel, Transp
                 .comparator(NodeListItem::compareType)
                 .build());
         nodesTableView.getColumns().add(new BisqTableColumn.Builder<NodeListItem>()
-                .title(Res.get("settings.network.nodes.header.domainId"))
+                .title(Res.get("settings.network.nodes.header.identityTag"))
                 .minWidth(100)
-                .valueSupplier(NodeListItem::getDomainId)
-                .comparator(NodeListItem::compareDomainId)
+                .valueSupplier(NodeListItem::getIdentityTag)
+                .comparator(NodeListItem::compareIdentityTag)
                 .build());
         nodesTableView.getColumns().add(new BisqTableColumn.Builder<NodeListItem>()
                 .title(Res.get("settings.network.nodes.header.keyId"))
@@ -158,12 +158,14 @@ public class TransportTypeView extends View<GridPane, TransportTypeModel, Transp
                 .valueSupplier(NodeListItem::getAddress)
                 .comparator(NodeListItem::compareAddress)
                 .build());
-        nodesTableView.getColumns().add(new BisqTableColumn.Builder<NodeListItem>()
+        BisqTableColumn<NodeListItem> numConnections = new BisqTableColumn.Builder<NodeListItem>()
                 .title(Res.get("settings.network.nodes.header.numConnections"))
-                .minWidth(120)
+                .minWidth(130)
                 .valuePropertySupplier(NodeListItem::getNumConnections)
                 .comparator(NodeListItem::compareNumConnections)
-                .build());
+                .build();
+        nodesTableView.getColumns().add(numConnections);
+        nodesTableView.getSortOrder().add(numConnections);
     }
 
     @Override

@@ -28,6 +28,7 @@ import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
+import bisq.security.KeyPairService;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import lombok.EqualsAndHashCode;
@@ -49,21 +50,23 @@ public class NodeListItem implements TableItem {
     @Getter
     private final String type;
     @Getter
-    private final String domainId;
+    private final String identityTag;
     @Getter
     private final StringProperty numConnections = new SimpleStringProperty();
     private final Node.Listener listener;
 
-    public NodeListItem(Node node, IdentityService identityService) {
+    public NodeListItem(Node node, KeyPairService keyPairService, IdentityService identityService) {
         this.node = node;
-        keyId = node.getNetworkId().getId();
+        keyId = node.getNetworkId().getKeyId();
         type = identityService.findActiveIdentityByNetworkId(node.getNetworkId())
                 .map(i -> Res.get("settings.network.nodes.type.active"))
-                .or(() -> identityService.findRetiredIdentityByNetworkId(node.getNetworkId()).map(i -> Res.get("settings.network.nodes.type.retired")))
-                .orElseGet(() -> identityService.isDefaultIdentity(node.getNetworkId().getId()) ?
+                .or(() -> identityService.findRetiredIdentityByNetworkId(node.getNetworkId())
+                        .map(i -> Res.get("settings.network.nodes.type.retired")))
+                .orElseGet(() -> keyPairService.isDefaultKeyId(node.getNetworkId().getKeyId()) ?
                         Res.get("settings.network.nodes.type.default") :
                         Res.get("data.na"));
-        domainId = identityService.findAnyIdentityByNetworkId(node.getNetworkId()).map(Identity::getTag)
+        identityTag = identityService.findAnyIdentityByNetworkId(node.getNetworkId())
+                .map(Identity::getTag)
                 .orElse(Res.get("data.na"));
         address = node.findMyAddress().map(Address::getFullAddress).orElse(Res.get("data.na"));
 
@@ -102,12 +105,12 @@ public class NodeListItem implements TableItem {
         return type.compareTo(other.getType());
     }
 
-    public int compareDomainId(NodeListItem other) {
-        return domainId.compareTo(other.getDomainId());
+    public int compareIdentityTag(NodeListItem other) {
+        return identityTag.compareTo(other.getIdentityTag());
     }
 
     public int compareNumConnections(NodeListItem other) {
-        return Long.compare(node.getAllConnections().count(), other.getNode().getAllConnections().count());
+        return Long.compare(other.getNode().getAllConnections().count(), node.getAllConnections().count());
     }
 
     @Override

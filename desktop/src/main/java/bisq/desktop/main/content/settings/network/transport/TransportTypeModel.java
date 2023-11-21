@@ -32,6 +32,7 @@ import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.NodesById;
+import bisq.security.KeyPairService;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
@@ -60,6 +61,7 @@ public class TransportTypeModel implements Model {
     private final StringProperty messageReceiver = new SimpleStringProperty();
     private final StringProperty receivedMessages = new SimpleStringProperty("");
     private final IdentityService identityService;
+    private final KeyPairService keyPairService;
     private Node.Listener defaultNodeListener;
     private NodesById.Listener nodesByIdListener;
     private ServiceNode serviceNode;
@@ -71,6 +73,7 @@ public class TransportTypeModel implements Model {
     //todo move behaviour code to controller
     public TransportTypeModel(ServiceProvider serviceProvider, TransportType transportType) {
         networkService = serviceProvider.getNetworkService();
+        keyPairService = serviceProvider.getSecurityService().getKeyPairService();
         identityService = serviceProvider.getIdentityService();
         this.transportType = transportType;
 
@@ -127,18 +130,18 @@ public class TransportTypeModel implements Model {
     void updateLists() {
         allNodes = new ArrayList<>(serviceNode.getNodesById().getAllNodes());
         connectionListItems.setAll(allNodes.stream()
-                .flatMap(node -> node.getAllConnections().map(c -> new Pair<>(c, node.getNetworkId().getId())))
+                .flatMap(node -> node.getAllConnections().map(c -> new Pair<>(c, node.getNetworkId().getKeyId())))
                 .map(pair -> new ConnectionListItem(pair.getFirst(), pair.getSecond()))
                 .collect(Collectors.toList()));
         nodeListItems.setAll(allNodes
                 .stream()
                 .filter(node -> node.getState().get() == Node.State.RUNNING)
-                .map(node -> new NodeListItem(node, identityService))
+                .map(node -> new NodeListItem(node, keyPairService, identityService))
                 .collect(Collectors.toList()));
     }
 
     void cleanup() {
-        allNodes.forEach(node -> node.removeListener(nodeListenersByKeyId.get(node.getNetworkId().getId())));
+        allNodes.forEach(node -> node.removeListener(nodeListenersByKeyId.get(node.getNetworkId().getKeyId())));
         networkService.findServiceNode(transportType)
                 .map(ServiceNode::getNodesById)
                 .ifPresent(nodesById -> nodesById.removeListener(nodesByIdListener));
@@ -154,7 +157,7 @@ public class TransportTypeModel implements Model {
             @Override
             public void onConnection(Connection connection) {
                 UIThread.run(() -> {
-                    ConnectionListItem connectionListItem = new ConnectionListItem(connection, node.getNetworkId().getId());
+                    ConnectionListItem connectionListItem = new ConnectionListItem(connection, node.getNetworkId().getKeyId());
                     if (!connectionListItems.contains(connectionListItem)) {
                         connectionListItems.add(connectionListItem);
                     }
@@ -165,7 +168,7 @@ public class TransportTypeModel implements Model {
             @Override
             public void onDisconnect(Connection connection, CloseReason closeReason) {
                 UIThread.run(() -> {
-                    ConnectionListItem connectionListItem = new ConnectionListItem(connection, node.getNetworkId().getId());
+                    ConnectionListItem connectionListItem = new ConnectionListItem(connection, node.getNetworkId().getKeyId());
                     connectionListItems.remove(connectionListItem);
                     maybeUpdateMyAddress(node);
                 });
@@ -175,7 +178,7 @@ public class TransportTypeModel implements Model {
             public void onStateChange(Node.State state) {
                 UIThread.run(() -> {
                     if (state == Node.State.RUNNING) {
-                        NodeListItem nodeListItem = new NodeListItem(node, identityService);
+                        NodeListItem nodeListItem = new NodeListItem(node, keyPairService, identityService);
                         if (!nodeListItems.contains(nodeListItem)) {
                             nodeListItems.add(nodeListItem);
                         }
@@ -184,7 +187,7 @@ public class TransportTypeModel implements Model {
             }
         };
         node.addListener(listener);
-        nodeListenersByKeyId.put(node.getNetworkId().getId(), listener);
+        nodeListenersByKeyId.put(node.getNetworkId().getKeyId(), listener);
     }
 
     private void maybeUpdateMyAddress(Node node) {

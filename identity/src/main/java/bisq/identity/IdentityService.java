@@ -259,10 +259,6 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         return createIdentity(keyId, identityTag, keyPair);
     }
 
-    public boolean isDefaultIdentity(String keyId) {
-        return keyPairService.isDefaultKeyId(keyId);
-    }
-
     private Identity createIdentity(String keyId, String identityTag, KeyPair keyPair) {
         PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
         boolean isDefaultIdentity = identityTag.equals(DEFAULT_IDENTITY_TAG);
