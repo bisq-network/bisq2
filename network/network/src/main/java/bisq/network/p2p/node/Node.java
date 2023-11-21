@@ -78,8 +78,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  */
 @Slf4j
 public class Node implements Connection.Handler {
-    public static final String DEFAULT = "default";
-
     public enum State {
         NEW,
         STARTING,
