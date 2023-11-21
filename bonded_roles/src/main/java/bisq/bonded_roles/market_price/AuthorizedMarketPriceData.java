@@ -33,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -44,10 +45,11 @@ import static com.google.common.base.Preconditions.checkArgument;
 public final class AuthorizedMarketPriceData implements AuthorizedDistributedData {
     public static final long TTL = TimeUnit.MINUTES.toMillis(10);
     private final MetaData metaData = new MetaData(TTL, getClass().getSimpleName());
-    private final Map<Market, MarketPrice> marketPriceByCurrencyMap;
+    // We need deterministic sorting or the map, so we use a treemap
+    private final TreeMap<Market, MarketPrice> marketPriceByCurrencyMap;
     private final boolean staticPublicKeysProvided;
 
-    public AuthorizedMarketPriceData(Map<Market, MarketPrice> marketPriceByCurrencyMap, boolean staticPublicKeysProvided) {
+    public AuthorizedMarketPriceData(TreeMap<Market, MarketPrice> marketPriceByCurrencyMap, boolean staticPublicKeysProvided) {
         this.marketPriceByCurrencyMap = marketPriceByCurrencyMap;
         this.staticPublicKeysProvided = staticPublicKeysProvided;
 
@@ -71,7 +73,7 @@ public final class AuthorizedMarketPriceData implements AuthorizedDistributedDat
                 .filter(e -> MarketRepository.findAnyMarketByMarketCodes(e.getKey()).isPresent())
                 .collect(Collectors.toMap(e -> MarketRepository.findAnyMarketByMarketCodes(e.getKey()).orElseThrow(),
                         e -> MarketPrice.fromProto(e.getValue())));
-        return new AuthorizedMarketPriceData(map, proto.getStaticPublicKeysProvided());
+        return new AuthorizedMarketPriceData(new TreeMap<>(map), proto.getStaticPublicKeysProvided());
     }
 
     public static ProtoResolver<DistributedData> getResolver() {
