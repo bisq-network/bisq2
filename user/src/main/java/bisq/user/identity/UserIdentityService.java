@@ -30,7 +30,6 @@ import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.security.AesSecretKey;
-import bisq.security.DigestUtil;
 import bisq.security.EncryptedData;
 import bisq.security.pow.ProofOfWork;
 import bisq.user.profile.UserProfile;
@@ -157,12 +156,12 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
 
     public CompletableFuture<UserIdentity> createAndPublishNewUserProfile(String nickName,
                                                                           KeyPair keyPair,
+                                                                          byte[] pubKeyHash,
                                                                           ProofOfWork proofOfWork,
                                                                           String terms,
                                                                           String statement) {
-        String identityTag = getIdentityTag(nickName, proofOfWork);
-        String keyId = Hex.encode(DigestUtil.hash(keyPair.getPublic().getEncoded()));
-        return identityService.createNewActiveIdentity(identityTag, keyId, keyPair)
+        String identityTag = nickName + "-" + Hex.encode(pubKeyHash);
+        return identityService.createNewActiveIdentity(identityTag, keyPair)
                 .thenApply(identity -> createUserIdentity(nickName, proofOfWork, terms, statement, identity))
                 .thenApply(userIdentity -> {
                     publishPublicUserProfile(userIdentity.getUserProfile(), userIdentity.getIdentity().getNodeIdAndKeyPair().getKeyPair());
@@ -277,9 +276,5 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     private CompletableFuture<BroadcastResult> publishPublicUserProfile(UserProfile userProfile, KeyPair keyPair) {
         publishTimeByChatUserId.put(userProfile.getId(), System.currentTimeMillis());
         return networkService.publishAuthenticatedData(userProfile, keyPair);
-    }
-
-    private String getIdentityTag(String nickName, ProofOfWork proofOfWork) {
-        return nickName + "-" + Hex.encode(proofOfWork.getPayload());
     }
 }

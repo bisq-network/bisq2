@@ -17,6 +17,7 @@
 
 package bisq.security;
 
+import bisq.common.encoding.Hex;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -27,6 +28,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
 import java.security.KeyPair;
@@ -55,10 +57,11 @@ public class KeyPairService implements PersistenceClient<KeyPairStore> {
     }
 
     public CompletableFuture<Boolean> initialize() {
-        return getOrCreateKeyPairAsync(persistableStore.getDefaultKeyId()).thenApply(r -> true);
+        return getOrCreateKeyPairAsync(getDefaultKeyId()).thenApply(r -> true);
     }
 
     public Optional<KeyPair> findKeyPair(String keyId) {
+        checkArgument(keyId.length() == 40, "Key ID is expected to be a 20 byte hash");
         synchronized (persistableStore) {
             return persistableStore.findKeyPair(keyId);
         }
@@ -77,29 +80,25 @@ public class KeyPairService implements PersistenceClient<KeyPairStore> {
         try {
             return KeyGeneration.generateKeyPair();
         } catch (GeneralSecurityException e) {
-            e.printStackTrace();
+            log.error("Error at generateKeyPair", e);
             throw new RuntimeException(e);
         }
     }
 
     public void persistKeyPair(String keyId, KeyPair keyPair) {
-        checkArgument(!keyId.equals("default"), "Key ID must be unique and must not be `default`.");
+        checkArgument(keyId.length() == 40, "Key ID is expected to be a 20 byte hash");
         synchronized (persistableStore) {
             persistableStore.put(keyId, keyPair);
         }
         persist();
     }
 
-    public CompletableFuture<KeyPair> getOrCreateKeyPairAsync(String keyId) {
-        checkArgument(!keyId.equals("default"), "Key ID must be unique and must not be `default`.");
+    private CompletableFuture<KeyPair> getOrCreateKeyPairAsync(String keyId) {
         return findKeyPair(keyId).map(CompletableFuture::completedFuture)
                 .orElseGet(() -> CompletableFuture.supplyAsync(() -> {
                     try {
                         KeyPair keyPair = KeyGeneration.generateKeyPair();
-                        synchronized (persistableStore) {
-                            persistableStore.put(keyId, keyPair);
-                        }
-                        persist();
+                        persistKeyPair(keyId, keyPair);
                         return keyPair;
                     } catch (GeneralSecurityException e) {
                         log.error("Error at getOrCreateKeyPairAsync", e);
@@ -108,14 +107,13 @@ public class KeyPairService implements PersistenceClient<KeyPairStore> {
                 }));
     }
 
-    public PubKey getDefaultPubKey() {
-        String keyId = persistableStore.getDefaultKeyId();
-        PublicKey publicKey = getOrCreateKeyPair(keyId).getPublic();
-        return new PubKey(publicKey, keyId);
+    public String getKeyIdFromTag(String tag) {
+        String combined = persistableStore.getSecretUid() + tag;
+        return Hex.encode(DigestUtil.hash(combined.getBytes(StandardCharsets.UTF_8)));
     }
 
     public String getDefaultKeyId() {
-        return persistableStore.getDefaultKeyId();
+        return getKeyIdFromTag("default");
     }
 
     public static KeyPair loadDsaKey(String privateKeyPath) throws GeneralSecurityException, IOException {
