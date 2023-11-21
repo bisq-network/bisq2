@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Path;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -228,17 +227,5 @@ public class I2PTransportService implements TransportService {
     @Override
     public boolean isPeerOnline(Address address) {
         throw new UnsupportedOperationException("isPeerOnline needs to be implemented for I2P.");
-    }
-
-    @Override
-    public Optional<Address> getServerAddress(String serverId) {
-        try {
-            //todo
-            String myDestination = i2pClient.getMyDestination(sessionId);
-            return Optional.of(new Address(myDestination, -1));
-        } catch (IOException exception) {
-            log.error(exception.toString(), exception);
-            return Optional.empty();
-        }
     }
 }

@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Path;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
@@ -116,11 +115,6 @@ public class ClearNetTransportService implements TransportService {
         bootstrapInfo.getBootstrapDetails().set("Connected to " + numSocketsCreated + " peers");
 
         return socket;
-    }
-
-    @Override
-    public Optional<Address> getServerAddress(String serverId) {
-        return Optional.empty();
     }
 
     @Override

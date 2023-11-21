@@ -58,8 +58,6 @@ public interface TransportService {
 
     BootstrapInfo getBootstrapInfo();
 
-    Optional<Address> getServerAddress(String serverId);
-
     boolean isPeerOnline(Address address);
 
     default void updateStartBootstrapProgress(BootstrapInfo bootstrapInfo) {
