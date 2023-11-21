@@ -28,7 +28,6 @@ import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.identity.IdentityService;
 import bisq.security.DigestUtil;
-import bisq.security.KeyIdKeyPairTuple;
 import bisq.security.KeyPairService;
 import bisq.security.pow.ProofOfWork;
 import bisq.security.pow.ProofOfWorkService;
@@ -120,12 +119,11 @@ public class CreateProfileController implements Controller {
             return;
         }
 
-        if (model.getKeyPairAndId().isPresent()) {
-            KeyIdKeyPairTuple keyIdKeyPairTuple = model.getKeyPairAndId().get();
+        if (model.getKeyPair().isPresent()) {
+            KeyPair keyPair = model.getKeyPair().get();
             userIdentityService.createAndPublishNewUserProfile(
                             model.getNickName().get().trim(),
-                            keyIdKeyPairTuple.getKeyId(),
-                            keyIdKeyPairTuple.getKeyPair(),
+                            keyPair,
                             proofOfWork,
                             "",
                             "")
@@ -153,15 +151,11 @@ public class CreateProfileController implements Controller {
     void generateNewKeyPair() {
         setPreGenerateState();
         KeyPair keyPair = keyPairService.generateKeyPair();
+        model.setKeyPair(Optional.of(keyPair));
         byte[] pubKeyHash = DigestUtil.hash(keyPair.getPublic().getEncoded());
         model.setPubKeyHash(Optional.of(pubKeyHash));
         // mintNymProofOfWork is executed on a ForkJoinPool thread
-        mintNymProofOfWorkFuture = Optional.of(createProofOfWork(pubKeyHash)
-                .whenComplete((proofOfWork, t) ->
-                        UIThread.run(() -> {
-                            KeyIdKeyPairTuple keyIdKeyPairTuple = new KeyIdKeyPairTuple(model.getNym().get(), keyPair);
-                            model.setKeyPairAndId(Optional.of(keyIdKeyPairTuple));
-                        })));
+        mintNymProofOfWorkFuture = Optional.of(createProofOfWork(pubKeyHash));
     }
 
     private CompletableFuture<ProofOfWork> createProofOfWork(byte[] pubKeyHash) {

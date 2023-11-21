@@ -30,6 +30,7 @@ import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.security.AesSecretKey;
+import bisq.security.DigestUtil;
 import bisq.security.EncryptedData;
 import bisq.security.pow.ProofOfWork;
 import bisq.user.profile.UserProfile;
@@ -175,12 +176,12 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     }
 
     public CompletableFuture<UserIdentity> createAndPublishNewUserProfile(String nickName,
-                                                                          String keyId,
                                                                           KeyPair keyPair,
                                                                           ProofOfWork proofOfWork,
                                                                           String terms,
                                                                           String statement) {
         String identityTag = getIdentityTag(nickName, proofOfWork);
+        String keyId = Hex.encode(DigestUtil.hash(keyPair.getPublic().getEncoded()));
         return identityService.createNewActiveIdentity(identityTag, keyId, keyPair)
                 .thenApply(identity -> createUserIdentity(nickName, proofOfWork, terms, statement, identity))
                 .thenApply(userIdentity -> {
