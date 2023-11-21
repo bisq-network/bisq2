@@ -177,19 +177,19 @@ public class MediationService implements Service, MessageListener {
 
             mediationRequest.getChatMessages().forEach(chatMessage -> bisqEasyOpenTradeChannelService.addMessage(chatMessage, channel));
 
-            NetworkIdWithKeyPair myNodeIdAndKeyPair = myUserIdentity.getNodeIdAndKeyPair();
+            NetworkIdWithKeyPair networkIdWithKeyPair = myUserIdentity.getNodeIdAndKeyPair();
             TorIdentity myNodeTorIdentity = myUserIdentity.getIdentity().getTorIdentity();
             NetworkId receiverNetworkId = mediationRequest.getRequester().getNetworkId();
             networkService.confidentialSend(new MediationResponse(tradeId, bisqEasyOffer),
                     receiverNetworkId,
-                    myNodeIdAndKeyPair,
+                    networkIdWithKeyPair,
                     myNodeTorIdentity);
             bisqEasyOpenTradeChannelService.addMediatorsResponseMessage(channel, Res.get("bisqEasy.mediation.message.toRequester"));
 
             receiverNetworkId = mediationRequest.getPeer().getNetworkId();
             networkService.confidentialSend(new MediationResponse(tradeId, bisqEasyOffer),
                     receiverNetworkId,
-                    myNodeIdAndKeyPair,
+                    networkIdWithKeyPair,
                     myNodeTorIdentity);
             bisqEasyOpenTradeChannelService.addMediatorsResponseMessage(channel, Res.get("bisqEasy.mediation.message.toNonRequester"));
         });
