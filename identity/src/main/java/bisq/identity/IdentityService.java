@@ -28,7 +28,6 @@ import bisq.network.common.AddressByTransportTypeMap;
 import bisq.network.common.TransportType;
 import bisq.network.identity.NetworkId;
 import bisq.network.identity.TorIdentity;
-import bisq.network.p2p.node.Node;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -215,7 +214,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
 
     private void initializeActiveIdentities() {
         getActiveIdentityByTag().values().stream()
-                .filter(identity -> !identity.getTag().equals(Node.DEFAULT))
+                .filter(identity -> !identity.getTag().equals(IdentityService.DEFAULT_IDENTITY_TAG))
                 .forEach(identity ->
                         networkService.getInitializedNodeByTransport(identity.getNetworkId(), identity.getPubKey(), identity.getTorIdentity()).values()
                                 .forEach(future -> future.whenComplete((node, throwable) -> {
