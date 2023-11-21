@@ -32,7 +32,7 @@ import bisq.network.NetworkService;
 import bisq.network.SendMessageResult;
 import bisq.network.identity.TorIdentity;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
-import bisq.network.p2p.services.confidential.ConfidentialMessageListener;
+import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.network.p2p.vo.NetworkIdWithKeyPair;
 import bisq.persistence.Persistence;
@@ -48,7 +48,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.KeyPair;
-import java.security.PublicKey;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -56,7 +55,7 @@ import java.util.concurrent.CompletableFuture;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class ModeratorService implements PersistenceClient<ModeratorStore>, Service, ConfidentialMessageListener {
+public class ModeratorService implements PersistenceClient<ModeratorStore>, Service, MessageListener {
     @Getter
     public static class Config {
         private final boolean staticPublicKeysProvided;
@@ -106,23 +105,23 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        networkService.addConfidentialMessageListener(this);
+        networkService.addMessageListener(this);
         return CompletableFuture.completedFuture(true);
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        networkService.removeConfidentialMessageListener(this);
+        networkService.removeMessageListener(this);
         return CompletableFuture.completedFuture(true);
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // ConfidentialMessageListener
+    // MessageListener
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, PublicKey senderPublicKey) {
+    public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
         if (envelopePayloadMessage instanceof ReportToModeratorMessage) {
             processReportToModeratorMessage((ReportToModeratorMessage) envelopePayloadMessage);
         }
