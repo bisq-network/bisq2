@@ -105,43 +105,35 @@ public class CreateProfileController implements Controller {
         if (model.getCreateProfileButtonDisabled().get()) {
             return;
         }
-        if (model.getProofOfWork().isEmpty()) {
-            log.error("proofOfWork is not present");
+        if (model.getProofOfWork().isEmpty() || model.getKeyPair().isEmpty()) {
+            log.error("proofOfWork or key pair not present");
             return;
         }
+
         model.getCreateProfileProgress().set(-1);
         model.getCreateProfileButtonDisabled().set(true);
         model.getReGenerateButtonDisabled().set(true);
-        ProofOfWork proofOfWork = model.getProofOfWork().get();
 
-        if (model.getNickName().get().length() > UserProfile.MAX_LENGTH_NICK_NAME) {
+        String nickName = model.getNickName().get().trim();
+        if (nickName.length() > UserProfile.MAX_LENGTH_NICK_NAME) {
             new Popup().warning(Res.get("onboarding.createProfile.nickName.tooLong", UserProfile.MAX_LENGTH_NICK_NAME)).show();
             return;
         }
 
-        if (model.getKeyPair().isPresent()) {
-            KeyPair keyPair = model.getKeyPair().get();
-            userIdentityService.createAndPublishNewUserProfile(
-                            model.getNickName().get().trim(),
-                            keyPair,
-                            proofOfWork,
-                            "",
-                            "")
-                    .whenComplete((chatUserIdentity, throwable) -> UIThread.run(() -> {
-                        if (throwable == null) {
-                            model.getCreateProfileProgress().set(0);
-                            next();
-                        } else {
-                            new Popup().error(throwable).show();
-                        }
-                    }));
-        } else {
-            userIdentityService.createAndPublishNewUserProfile(
-                    model.getNickName().get().trim(),
-                    proofOfWork);
-            model.getCreateProfileProgress().set(0);
-            next();
-        }
+        userIdentityService.createAndPublishNewUserProfile(
+                        nickName,
+                        model.getKeyPair().get(),
+                        model.getProofOfWork().get(),
+                        "",
+                        "")
+                .whenComplete((chatUserIdentity, throwable) -> UIThread.run(() -> {
+                    if (throwable == null) {
+                        model.getCreateProfileProgress().set(0);
+                        next();
+                    } else {
+                        new Popup().error(throwable).show();
+                    }
+                }));
     }
 
     void onRegenerate() {

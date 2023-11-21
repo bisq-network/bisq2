@@ -155,15 +155,6 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         return persistableStore.getAESSecretKey();
     }
 
-    public UserIdentity createAndPublishNewUserProfile(String nickName,
-                                                       ProofOfWork proofOfWork) {
-        String tag = getIdentityTag(nickName, proofOfWork);
-        Identity identity = identityService.createAndInitializeNewActiveIdentity(tag);
-        UserIdentity userIdentity = createUserIdentity(nickName, proofOfWork, "", "", identity);
-        publishPublicUserProfile(userIdentity.getUserProfile(), userIdentity.getIdentity().getNodeIdAndKeyPair().getKeyPair());
-        return userIdentity;
-    }
-
     public CompletableFuture<UserIdentity> createAndPublishNewUserProfile(String nickName,
                                                                           KeyPair keyPair,
                                                                           ProofOfWork proofOfWork,
