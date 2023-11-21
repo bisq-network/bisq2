@@ -259,6 +259,10 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         return createIdentity(keyId, identityTag, keyPair);
     }
 
+    public boolean isDefaultIdentity(String keyId) {
+        return keyPairService.isDefaultKeyId(keyId);
+    }
+
     private Identity createIdentity(String keyId, String identityTag, KeyPair keyPair) {
         PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
         boolean isDefaultIdentity = identityTag.equals(DEFAULT_IDENTITY_TAG);
@@ -382,7 +386,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         }
     }
 
-    private String getTorHiddenServiceDirectory(String nodeId) {
-        return Path.of(baseDir, "tor", "hiddenservice", nodeId).toString();
+    private String getTorHiddenServiceDirectory(String identityTag) {
+        return Path.of(baseDir, "tor", "hiddenservice", identityTag).toString();
     }
 }
