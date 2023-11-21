@@ -38,6 +38,7 @@ import java.util.stream.Collectors;
 
 import static bisq.network.NetworkService.NETWORK_IO_POOL;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
+import static java.util.concurrent.TimeUnit.MINUTES;
 
 /**
  * Responsible for executing the peer exchange protocol with set of peers.
@@ -92,11 +93,11 @@ public class PeerExchangeService implements Node.Listener {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<Void> startInitialPeerExchange() {
-        return doPeerExchange(peerExchangeStrategy.getAddressesForInitialPeerExchange());
+        return doPeerExchange(peerExchangeStrategy.getAddressesForInitialPeerExchange()).orTimeout(2, MINUTES);
     }
 
     public void startFurtherPeerExchange() {
-        doPeerExchange(peerExchangeStrategy.getAddressesForFurtherPeerExchange());
+        doPeerExchange(peerExchangeStrategy.getAddressesForFurtherPeerExchange()).orTimeout(2, MINUTES);
     }
 
     /**

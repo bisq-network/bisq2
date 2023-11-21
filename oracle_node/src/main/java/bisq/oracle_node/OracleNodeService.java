@@ -172,6 +172,7 @@ public class OracleNodeService implements Service {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
+        log.info("initialize");
         Identity identity = identityService.getOrCreateDefaultIdentity();
 
         bisq1BridgeService.setIdentity(identity);

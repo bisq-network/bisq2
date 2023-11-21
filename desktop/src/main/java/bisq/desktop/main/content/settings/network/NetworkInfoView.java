@@ -54,15 +54,14 @@ public class NetworkInfoView extends View<VBox, NetworkInfoModel, NetworkInfoCon
         tor.ifPresent(childRoot -> accordion.getPanes().add(new TitledPane(Res.get("settings.network.tor"), childRoot)));
         i2p.ifPresent(childRoot -> accordion.getPanes().add(new TitledPane(Res.get("settings.network.i2p"), childRoot)));
 
-        if (!accordion.getPanes().isEmpty()) {
-            UIThread.runOnNextRenderFrame(() -> accordion.getPanes().get(0).setExpanded(true));
-        }
-
         root.getChildren().add(accordion);
     }
 
     @Override
     protected void onViewAttached() {
+        if (!accordion.getPanes().isEmpty()) {
+            UIThread.runOnNextRenderFrame(() -> accordion.getPanes().get(0).setExpanded(true));
+        }
     }
 
     @Override

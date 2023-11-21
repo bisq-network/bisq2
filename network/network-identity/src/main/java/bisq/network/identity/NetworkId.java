@@ -18,6 +18,7 @@
 package bisq.network.identity;
 
 import bisq.common.proto.Proto;
+import bisq.common.util.StringUtils;
 import bisq.network.common.AddressByTransportTypeMap;
 import bisq.security.PubKey;
 import lombok.EqualsAndHashCode;
@@ -54,6 +55,11 @@ public final class NetworkId implements Proto {
 
     public String getId() {
         return pubKey.getId();
+    }
+
+    public String getInfo() {
+        return StringUtils.truncate(getId(), 20) + " " +
+                StringUtils.truncate(addressByTransportTypeMap.values().toString()).replace("[", "");
     }
 
     @Override

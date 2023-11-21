@@ -39,6 +39,7 @@ public class MarketPricePropagationService implements Service {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
+        log.info("initialize");
         marketPriceByCurrencyMapPin = marketPriceRequestService.getMarketPriceByCurrencyMap().addObserver(() -> {
             if (marketPriceRequestService.getMarketPriceByCurrencyMap().isEmpty()) {
                 return;
@@ -62,6 +63,7 @@ public class MarketPricePropagationService implements Service {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private CompletableFuture<Boolean> publishAuthorizedData(AuthorizedDistributedData data) {
+        log.info("publish {}", data);
         return networkService.publishAuthorizedData(data,
                         identity.getNodeIdAndKeyPair().getKeyPair(),
                         authorizedPrivateKey,
