@@ -93,7 +93,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
 
         // We delay publishing to be better bootstrapped 
         Scheduler.run(() -> getUserIdentities().forEach(userProfile ->
-                        maybePublicUserProfile(userProfile.getUserProfile(), userProfile.getNodeIdAndKeyPair().getKeyPair())))
+                        maybePublicUserProfile(userProfile.getUserProfile(), userProfile.getNetworkIdWithKeyPair().getKeyPair())))
                 .after(5, TimeUnit.SECONDS);
         return CompletableFuture.completedFuture(true);
     }
@@ -164,7 +164,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         return identityService.createNewActiveIdentity(identityTag, keyPair)
                 .thenApply(identity -> createUserIdentity(nickName, proofOfWork, terms, statement, identity))
                 .thenApply(userIdentity -> {
-                    publishPublicUserProfile(userIdentity.getUserProfile(), userIdentity.getIdentity().getNodeIdAndKeyPair().getKeyPair());
+                    publishPublicUserProfile(userIdentity.getUserProfile(), userIdentity.getIdentity().getNetworkIdWithKeyPair().getKeyPair());
                     return userIdentity;
                 });
     }
@@ -187,8 +187,8 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         }
         persist();
 
-        return networkService.removeAuthenticatedData(oldUserProfile, oldIdentity.getNodeIdAndKeyPair().getKeyPair())
-                .thenCompose(result -> networkService.publishAuthenticatedData(newUserProfile, oldIdentity.getNodeIdAndKeyPair().getKeyPair()));
+        return networkService.removeAuthenticatedData(oldUserProfile, oldIdentity.getNetworkIdWithKeyPair().getKeyPair())
+                .thenCompose(result -> networkService.publishAuthenticatedData(newUserProfile, oldIdentity.getNetworkIdWithKeyPair().getKeyPair()));
     }
 
     // Unsafe to use if there are open private chats or messages from userIdentity
@@ -206,7 +206,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         persist();
         identityService.retireActiveIdentity(userIdentity.getIdentity().getTag());
         return networkService.removeAuthenticatedData(userIdentity.getUserProfile(),
-                userIdentity.getIdentity().getNodeIdAndKeyPair().getKeyPair());
+                userIdentity.getIdentity().getNetworkIdWithKeyPair().getKeyPair());
     }
 
     public CompletableFuture<Boolean> maybePublicUserProfile(UserProfile userProfile, KeyPair keyPair) {
@@ -261,7 +261,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
                                             Identity identity) {
         checkArgument(nickName.equals(nickName.trim()) && !nickName.isEmpty(),
                 "Nickname must not have leading or trailing spaces and must not be empty.");
-        UserProfile userProfile = new UserProfile(nickName, proofOfWork, identity.getNodeIdAndKeyPair().getNetworkId(), terms, statement);
+        UserProfile userProfile = new UserProfile(nickName, proofOfWork, identity.getNetworkIdWithKeyPair().getNetworkId(), terms, statement);
         UserIdentity userIdentity = new UserIdentity(identity, userProfile);
 
         synchronized (lock) {

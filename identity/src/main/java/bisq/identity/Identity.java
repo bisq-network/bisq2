@@ -66,7 +66,7 @@ public final class Identity implements Proto {
                 TorIdentity.fromProto(proto.getTorIdentity()), KeyPairProtoUtil.fromProto(proto.getKeyPair()));
     }
 
-    public NetworkIdWithKeyPair getNodeIdAndKeyPair() {
+    public NetworkIdWithKeyPair getNetworkIdWithKeyPair() {
         return new NetworkIdWithKeyPair(networkId, keyPair);
     }
 

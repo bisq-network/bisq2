@@ -106,7 +106,7 @@ public abstract class PrivateChatChannelService<
                 chatMessageType);
         addMessage(chatMessage, channel);
         NetworkId receiverNetworkId = receiver.getNetworkId();
-        NetworkIdWithKeyPair senderNetworkIdWithKeyPair = myUserIdentity.getNodeIdAndKeyPair();
+        NetworkIdWithKeyPair senderNetworkIdWithKeyPair = myUserIdentity.getNetworkIdWithKeyPair();
         TorIdentity senderTorIdentity = myUserIdentity.getIdentity().getTorIdentity();
         return networkService.confidentialSend(chatMessage, receiverNetworkId, senderNetworkIdWithKeyPair, senderTorIdentity);
     }

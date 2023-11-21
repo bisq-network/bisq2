@@ -243,7 +243,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageListener,
     private CompletableFuture<Boolean> publishAuthorizedData(AuthorizedDistributedData data) {
         log.info("publishAuthorizedData {}", data);
         return networkService.publishAuthorizedData(data,
-                        identity.getNodeIdAndKeyPair().getKeyPair(),
+                        identity.getNetworkIdWithKeyPair().getKeyPair(),
                         authorizedPrivateKey,
                         authorizedPublicKey)
                 .thenApply(broadCastDataResult -> true);
@@ -251,7 +251,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageListener,
 
     private CompletableFuture<Boolean> removeAuthorizedData(AuthorizedDistributedData authorizedDistributedData) {
         return networkService.removeAuthorizedData(authorizedDistributedData,
-                        identity.getNodeIdAndKeyPair().getKeyPair(),
+                        identity.getNetworkIdWithKeyPair().getKeyPair(),
                         authorizedPublicKey)
                 .thenApply(broadCastDataResult -> true);
     }

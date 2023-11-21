@@ -86,7 +86,7 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
         if (bannedUserService.isUserProfileBanned(message.getAuthorUserProfileId())) {
             return CompletableFuture.failedFuture(new RuntimeException());
         }
-        KeyPair keyPair = userIdentity.getNodeIdAndKeyPair().getKeyPair();
+        KeyPair keyPair = userIdentity.getNetworkIdWithKeyPair().getKeyPair();
         return userIdentityService.maybePublicUserProfile(userIdentity.getUserProfile(), keyPair)
                 .thenCompose(result -> networkService.publishAuthenticatedData(message, keyPair));
     }
@@ -94,7 +94,7 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
     public CompletableFuture<BroadcastResult> publishEditedChatMessage(M originalChatMessage,
                                                                        String editedText,
                                                                        UserIdentity userIdentity) {
-        KeyPair ownerKeyPair = userIdentity.getNodeIdAndKeyPair().getKeyPair();
+        KeyPair ownerKeyPair = userIdentity.getNetworkIdWithKeyPair().getKeyPair();
         return networkService.removeAuthenticatedData(originalChatMessage, ownerKeyPair)
                 .thenCompose(result -> {
                     M chatMessage = createEditedChatMessage(originalChatMessage, editedText, userIdentity.getUserProfile());

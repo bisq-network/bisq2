@@ -154,7 +154,7 @@ public abstract class BondedRolesRegistrationController implements Controller {
                 model.getBondUserName().get(),
                 model.getSignature().get(),
                 model.getAddressByNetworkType(),
-                checkNotNull(userIdentityService.getSelectedUserIdentity()).getNodeIdAndKeyPair(),
+                checkNotNull(userIdentityService.getSelectedUserIdentity()).getNetworkIdWithKeyPair(),
                 isCancellationRequest,
                 checkNotNull(userIdentityService.getSelectedUserIdentity()).getIdentity().getTorIdentity());
         if (success) {

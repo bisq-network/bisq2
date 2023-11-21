@@ -126,7 +126,7 @@ public class TimestampService implements Service, PersistenceClient<TimestampSto
 
     private CompletableFuture<Boolean> publishAuthorizedData(AuthorizedDistributedData data) {
         return networkService.publishAuthorizedData(data,
-                        identity.getNodeIdAndKeyPair().getKeyPair(),
+                        identity.getNetworkIdWithKeyPair().getKeyPair(),
                         authorizedPrivateKey,
                         authorizedPublicKey)
                 .thenApply(broadCastDataResult -> true);

@@ -190,14 +190,14 @@ public class PocOpenOfferService implements PersistenceClient<PocOpenOfferStore>
 
     public CompletableFuture<BroadcastResult> addToNetwork(PocOffer offer) {
         Identity identity = identityService.getOrCreateIdentity(offer.getId());
-        return networkService.publishAuthenticatedData(offer, identity.getNodeIdAndKeyPair().getKeyPair());
+        return networkService.publishAuthenticatedData(offer, identity.getNetworkIdWithKeyPair().getKeyPair());
     }
 
     public CompletableFuture<BroadcastResult> removeFromNetwork(PocOffer offer) {
         // We do not retire the identity as it might be still used in the chat. For a mature implementation we would
         // need to check if there is any usage still for that identity and if not retire it.
         return identityService.findActiveIdentity(offer.getId())
-                .map(identity -> networkService.removeAuthenticatedData(offer, identity.getNodeIdAndKeyPair().getKeyPair()))
+                .map(identity -> networkService.removeAuthenticatedData(offer, identity.getNetworkIdWithKeyPair().getKeyPair()))
                 .orElse(CompletableFuture.completedFuture(new BroadcastResult()));
     }
 

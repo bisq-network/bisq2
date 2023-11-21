@@ -195,7 +195,7 @@ public class OracleNodeService implements Service {
                 oracleNode,
                 staticPublicKeysProvided);
 
-        KeyPair keyPair = identity.getNodeIdAndKeyPair().getKeyPair();
+        KeyPair keyPair = identity.getNetworkIdWithKeyPair().getKeyPair();
 
         // Repeat 3 times at startup to republish to ensure the data gets well distributed
         startupScheduler = Scheduler.run(() -> publishMyAuthorizedData(authorizedOracleNode, authorizedBondedRole, keyPair))

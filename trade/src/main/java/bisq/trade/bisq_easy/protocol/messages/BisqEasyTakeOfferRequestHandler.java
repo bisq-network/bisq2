@@ -71,7 +71,7 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
             if (serviceProvider.getSettingsService().getCloseMyOfferWhenTaken().get()) {
                 BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService = serviceProvider.getChatService().getBisqEasyOfferbookChannelService();
                 bisqEasyOfferbookChannelService.findMessageByOffer(trade.getOffer())
-                        .ifPresent(chatMessage -> bisqEasyOfferbookChannelService.deleteChatMessage(chatMessage, trade.getMyIdentity().getNodeIdAndKeyPair())
+                        .ifPresent(chatMessage -> bisqEasyOfferbookChannelService.deleteChatMessage(chatMessage, trade.getMyIdentity().getNetworkIdWithKeyPair())
                                 .whenComplete((deleteChatMessageResult, throwable) -> {
                                     if (throwable == null) {
                                         log.error("Offer with ID {} removed", chatMessage.getBisqEasyOffer().map(Offer::getId).orElse("N/A"));

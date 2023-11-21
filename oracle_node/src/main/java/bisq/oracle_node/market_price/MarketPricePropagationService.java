@@ -67,7 +67,7 @@ public class MarketPricePropagationService implements Service {
     private CompletableFuture<Boolean> publishAuthorizedData(AuthorizedDistributedData data) {
         log.info("publish {}", StringUtils.truncate(data.toString()));
         return networkService.publishAuthorizedData(data,
-                        identity.getNodeIdAndKeyPair().getKeyPair(),
+                        identity.getNetworkIdWithKeyPair().getKeyPair(),
                         authorizedPrivateKey,
                         authorizedPublicKey)
                 .thenApply(broadCastDataResult -> true);
