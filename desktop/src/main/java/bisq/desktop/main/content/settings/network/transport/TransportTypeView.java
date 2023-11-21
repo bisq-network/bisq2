@@ -32,11 +32,13 @@ import javafx.scene.layout.VBox;
 public class TransportTypeView extends View<GridPane, TransportTypeModel, TransportTypeController> {
     private final BisqTableView<ConnectionListItem> connectionsTableView;
     private final BisqTableView<NodeListItem> nodesTableView;
+    private final MaterialTextField myAddress;
 
     public TransportTypeView(TransportTypeModel model, TransportTypeController controller) {
         super(GridPaneUtil.getGridPane(5, 20, new Insets(0)), model, controller);
 
-        MaterialTextField myAddress = new MaterialTextField(Res.get("settings.network.nodeInfo.myAddress"), "", "", model.getMyDefaultNodeAddress().get());
+
+        myAddress = new MaterialTextField(Res.get("settings.network.nodeInfo.myAddress"));
         myAddress.setEditable(false);
         myAddress.showCopyIcon();
         root.add(myAddress, 0, root.getRowCount(), 2, 1);
@@ -53,6 +55,8 @@ public class TransportTypeView extends View<GridPane, TransportTypeModel, Transp
         connectionsTableView.setPadding(new Insets(-15, 0, 0, 0));
         connectionsTableView.setMinHeight(150);
         connectionsTableView.setPrefHeight(250);
+        // Fill available width
+        connectionsTableView.setPrefWidth(2000);
         configConnectionsTableView();
 
         VBox vBoxConnections = new VBox(16, connectionsTableView);
@@ -79,7 +83,16 @@ public class TransportTypeView extends View<GridPane, TransportTypeModel, Transp
         vBoxNodes.setPadding(new Insets(20, 0, 0, 0));
         vBoxNodes.setAlignment(Pos.TOP_LEFT);
         root.add(vBoxNodes, 0, root.getRowCount(), 2, 1);
+    }
 
+    @Override
+    protected void onViewAttached() {
+        myAddress.textProperty().bind(model.getMyDefaultNodeAddress());
+    }
+
+    @Override
+    protected void onViewDetached() {
+        myAddress.textProperty().unbind();
     }
 
     private void configConnectionsTableView() {
@@ -166,13 +179,5 @@ public class TransportTypeView extends View<GridPane, TransportTypeModel, Transp
                 .build();
         nodesTableView.getColumns().add(numConnections);
         nodesTableView.getSortOrder().add(numConnections);
-    }
-
-    @Override
-    protected void onViewAttached() {
-    }
-
-    @Override
-    protected void onViewDetached() {
     }
 }

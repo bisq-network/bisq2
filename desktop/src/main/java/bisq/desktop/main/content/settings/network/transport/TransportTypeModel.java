@@ -17,22 +17,12 @@
 
 package bisq.desktop.main.content.settings.network.transport;
 
-import bisq.common.data.Pair;
-import bisq.desktop.ServiceProvider;
-import bisq.desktop.common.threading.UIThread;
+import bisq.common.observable.collection.ObservableSet;
 import bisq.desktop.common.view.Model;
-import bisq.i18n.Res;
-import bisq.identity.IdentityService;
-import bisq.network.NetworkService;
 import bisq.network.common.TransportType;
-import bisq.network.identity.NetworkId;
 import bisq.network.p2p.ServiceNode;
-import bisq.network.p2p.message.EnvelopePayloadMessage;
-import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
-import bisq.network.p2p.node.NodesById;
-import bisq.security.KeyPairService;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
@@ -42,157 +32,28 @@ import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
-import java.util.stream.Collectors;
-
 @Slf4j
 @Getter
 public class TransportTypeModel implements Model {
-    private final NetworkService networkService;
     private final TransportType transportType;
-    private final ObservableList<ConnectionListItem> connectionListItems = FXCollections.observableArrayList();
-    private final FilteredList<ConnectionListItem> filteredConnectionListItems = new FilteredList<>(connectionListItems);
-    private final SortedList<ConnectionListItem> sortedConnectionListItems = new SortedList<>(filteredConnectionListItems);
+    private final ServiceNode serviceNode;
+    private final Node defaultNode;
+
+    private final ObservableSet<Node> nodes = new ObservableSet<>();
     private final ObservableList<NodeListItem> nodeListItems = FXCollections.observableArrayList();
     private final FilteredList<NodeListItem> filteredNodeListItems = new FilteredList<>(nodeListItems);
     private final SortedList<NodeListItem> sortedNodeListItems = new SortedList<>(filteredNodeListItems);
-    private final StringProperty myDefaultNodeAddress = new SimpleStringProperty(Res.get("data.na"));
-    private final StringProperty keyId = new SimpleStringProperty();
-    private final StringProperty messageReceiver = new SimpleStringProperty();
-    private final StringProperty receivedMessages = new SimpleStringProperty("");
-    private final IdentityService identityService;
-    private final KeyPairService keyPairService;
-    private Node.Listener defaultNodeListener;
-    private NodesById.Listener nodesByIdListener;
-    private ServiceNode serviceNode;
-    private Node defaultNode;
-    private final Optional<NetworkId> selectedNetworkId = Optional.empty();
-    private final Map<String, Node.Listener> nodeListenersByKeyId = new HashMap<>();
-    private Collection<Node> allNodes = new ArrayList<>();
 
-    //todo move behaviour code to controller
-    public TransportTypeModel(ServiceProvider serviceProvider, TransportType transportType) {
-        networkService = serviceProvider.getNetworkService();
-        keyPairService = serviceProvider.getSecurityService().getKeyPairService();
-        identityService = serviceProvider.getIdentityService();
+    private final ObservableSet<Connection> connections = new ObservableSet<>();
+    private final ObservableList<ConnectionListItem> connectionListItems = FXCollections.observableArrayList();
+    private final FilteredList<ConnectionListItem> filteredConnectionListItems = new FilteredList<>(connectionListItems);
+    private final SortedList<ConnectionListItem> sortedConnectionListItems = new SortedList<>(filteredConnectionListItems);
+
+    private final StringProperty myDefaultNodeAddress = new SimpleStringProperty();
+
+    public TransportTypeModel(TransportType transportType, ServiceNode serviceNode, Node defaultNode) {
         this.transportType = transportType;
-
-        Optional<ServiceNode> optionalServiceNode = networkService.findServiceNode(transportType);
-        if (optionalServiceNode.isEmpty()) {
-            return;
-        }
-        serviceNode = optionalServiceNode.get();
-        defaultNode = serviceNode.getDefaultNode();
-        defaultNode.findMyAddress().ifPresent(e -> myDefaultNodeAddress.set(e.getFullAddress()));
-
-        defaultNodeListener = new Node.Listener() {
-            @Override
-            public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
-            }
-
-            @Override
-            public void onConnection(Connection connection) {
-            }
-
-            @Override
-            public void onDisconnect(Connection connection, CloseReason closeReason) {
-            }
-
-            @Override
-            public void onStateChange(Node.State state) {
-                if (state == Node.State.RUNNING) {
-                    UIThread.run(() -> {
-                        updateLists();
-                        networkService.findDefaultNode(transportType)
-                                .filter(node -> node.getState().get() != Node.State.RUNNING)
-                                .ifPresent(node -> node.removeListener(defaultNodeListener));
-                    });
-                }
-            }
-        };
-        networkService.findDefaultNode(transportType)
-                .filter(node -> node.getState().get() != Node.State.RUNNING)
-                .ifPresent(node -> node.addListener(defaultNodeListener));
-
-        nodesByIdListener = node -> UIThread.run(() -> {
-            addNodeListener(node);
-            updateLists();
-        });
-
-        networkService.findServiceNode(transportType)
-                .map(ServiceNode::getNodesById)
-                .ifPresent(nodesById -> nodesById.addListener(nodesByIdListener));
-
-        updateLists();
-        allNodes.forEach(this::addNodeListener);
-    }
-
-    void updateLists() {
-        allNodes = new ArrayList<>(serviceNode.getNodesById().getAllNodes());
-        connectionListItems.setAll(allNodes.stream()
-                .flatMap(node -> node.getAllConnections().map(c -> new Pair<>(c, node.getNetworkId().getKeyId())))
-                .map(pair -> new ConnectionListItem(pair.getFirst(), pair.getSecond()))
-                .collect(Collectors.toList()));
-        nodeListItems.setAll(allNodes
-                .stream()
-                .filter(node -> node.getState().get() == Node.State.RUNNING)
-                .map(node -> new NodeListItem(node, keyPairService, identityService))
-                .collect(Collectors.toList()));
-    }
-
-    void cleanup() {
-        allNodes.forEach(node -> node.removeListener(nodeListenersByKeyId.get(node.getNetworkId().getKeyId())));
-        networkService.findServiceNode(transportType)
-                .map(ServiceNode::getNodesById)
-                .ifPresent(nodesById -> nodesById.removeListener(nodesByIdListener));
-    }
-
-    private void addNodeListener(Node node) {
-        Node.Listener listener = new Node.Listener() {
-            @Override
-            public void onMessage(EnvelopePayloadMessage message, Connection connection, NetworkId networkId) {
-                UIThread.run(() -> maybeUpdateMyAddress(node));
-            }
-
-            @Override
-            public void onConnection(Connection connection) {
-                UIThread.run(() -> {
-                    ConnectionListItem connectionListItem = new ConnectionListItem(connection, node.getNetworkId().getKeyId());
-                    if (!connectionListItems.contains(connectionListItem)) {
-                        connectionListItems.add(connectionListItem);
-                    }
-                    maybeUpdateMyAddress(node);
-                });
-            }
-
-            @Override
-            public void onDisconnect(Connection connection, CloseReason closeReason) {
-                UIThread.run(() -> {
-                    ConnectionListItem connectionListItem = new ConnectionListItem(connection, node.getNetworkId().getKeyId());
-                    connectionListItems.remove(connectionListItem);
-                    maybeUpdateMyAddress(node);
-                });
-            }
-
-            @Override
-            public void onStateChange(Node.State state) {
-                UIThread.run(() -> {
-                    if (state == Node.State.RUNNING) {
-                        NodeListItem nodeListItem = new NodeListItem(node, keyPairService, identityService);
-                        if (!nodeListItems.contains(nodeListItem)) {
-                            nodeListItems.add(nodeListItem);
-                        }
-                    }
-                });
-            }
-        };
-        node.addListener(listener);
-        nodeListenersByKeyId.put(node.getNetworkId().getKeyId(), listener);
-    }
-
-    private void maybeUpdateMyAddress(Node node) {
-        if (node.getNetworkId().equals(defaultNode.getNetworkId())) {
-            defaultNode.findMyAddress().ifPresent(e -> myDefaultNodeAddress.set(e.getFullAddress()));
-        }
+        this.serviceNode = serviceNode;
+        this.defaultNode = defaultNode;
     }
 }
