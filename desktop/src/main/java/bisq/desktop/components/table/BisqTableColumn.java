@@ -17,6 +17,7 @@
 
 package bisq.desktop.components.table;
 
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.controlsfx.control.PopOver;
 import bisq.desktop.components.overlay.PopOverWrapper;
 import de.jensd.fx.fontawesome.AwesomeDude;
@@ -50,7 +51,9 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
     private final Label titleLabel = new Label();
     private Optional<Function<S, Boolean>> isVisibleFunction = Optional.empty();
     private Optional<Function<S, String>> valueSupplier = Optional.empty();
+    private Optional<Function<S, String>> tooltipSupplier = Optional.empty();
     private Optional<Function<S, StringProperty>> valuePropertySupplier = Optional.empty();
+    private Optional<Function<S, StringProperty>> tooltipPropertySupplier = Optional.empty();
     private Optional<Function<S, StringProperty>> valuePropertyBiDirBindingSupplier = Optional.empty();
     private Optional<String> value = Optional.empty();
     private Consumer<S> onActionHandler = item -> {
@@ -72,7 +75,9 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
         private Optional<Integer> maxWidth = Optional.empty();
         private Optional<String> value = Optional.empty();
         private Optional<Function<S, String>> valueSupplier = Optional.empty();
+        private Optional<Function<S, String>> tooltipSupplier = Optional.empty();
         private Optional<Function<S, StringProperty>> valuePropertySupplier = Optional.empty();
+        private Optional<Function<S, StringProperty>> tooltipPropertySupplier = Optional.empty();
         private Optional<Function<S, StringProperty>> valuePropertyBiDirBindingSupplier = Optional.empty();
         private Optional<Comparator<S>> comparator = Optional.empty();
         private boolean isSortable = true;
@@ -101,7 +106,9 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
             maxWidth.ifPresent(tableColumn::setMaxWidth);
             tableColumn.value = value;
             tableColumn.valueSupplier = valueSupplier;
+            tableColumn.tooltipSupplier = tooltipSupplier;
             tableColumn.valuePropertySupplier = valuePropertySupplier;
+            tableColumn.tooltipPropertySupplier = tooltipPropertySupplier;
             tableColumn.valuePropertyBiDirBindingSupplier = valuePropertyBiDirBindingSupplier;
             tableColumn.onActionHandler = onActionHandler;
             tableColumn.onToggleHandler = onToggleHandler;
@@ -161,6 +168,11 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
             return this;
         }
 
+        public Builder<S> tooltipPropertySupplier(Function<S, StringProperty> tooltipPropertySupplier) {
+            this.tooltipPropertySupplier = Optional.of(tooltipPropertySupplier);
+            return this;
+        }
+
         public Builder<S> valuePropertySupplier(Function<S, StringProperty> valuePropertySupplier) {
             this.valuePropertySupplier = Optional.of(valuePropertySupplier);
             return this;
@@ -168,6 +180,11 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
 
         public Builder<S> valuePropertyBiDirBindingSupplier(Function<S, StringProperty> stringProperty) {
             this.valuePropertyBiDirBindingSupplier = Optional.of(stringProperty);
+            return this;
+        }
+
+        public Builder<S> tooltipSupplier(Function<S, String> tooltipSupplier) {
+            this.tooltipSupplier = Optional.of(tooltipSupplier);
             return this;
         }
 
@@ -335,6 +352,15 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                                     } else if (valuePropertyBiDirBindingSupplier.isPresent()) {
                                         valuePropertyBiDirBindingSupplier.ifPresent(supplier ->
                                                 textProperty().bindBidirectional(supplier.apply(item)));
+                                    }
+
+                                    if (tooltipSupplier.isPresent()) {
+                                        setTooltip(new BisqTooltip(tooltipSupplier.get().apply(item), true));
+                                    } else if (tooltipPropertySupplier.isPresent()) {
+                                        BisqTooltip tooltip = new BisqTooltip(true);
+                                        tooltipPropertySupplier.ifPresent(supplier ->
+                                                tooltip.textProperty().bind(supplier.apply(item)));
+                                        setTooltip(tooltip);
                                     }
                                 } else {
                                     if (previousItem != null) {
