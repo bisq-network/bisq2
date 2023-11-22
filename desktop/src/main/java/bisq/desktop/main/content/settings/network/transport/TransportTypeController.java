@@ -83,9 +83,11 @@ public class TransportTypeController implements Controller {
             @Override
             public void add(Node node) {
                 UIThread.run(() -> {
-                    model.getConnectionListItems().addAll(node.getAllConnections()
+                    Set<ConnectionListItem> uniqueConnections = node.getAllConnections()
                             .map(connection -> new ConnectionListItem(connection, node.getNetworkId().getKeyId()))
-                            .collect(Collectors.toSet()));
+                            .collect(Collectors.toSet());
+                    uniqueConnections.addAll(model.getConnectionListItems());
+                    model.getConnectionListItems().setAll(uniqueConnections);
                 });
             }
 
@@ -94,7 +96,8 @@ public class TransportTypeController implements Controller {
                 UIThread.run(() -> {
                     if (element instanceof Node) {
                         Node node = (Node) element;
-                        Set<ConnectionListItem> toRemove = model.getConnectionListItems().stream().filter(item -> item.getKeyId().equals(node.getNetworkId().getKeyId()))
+                        Set<ConnectionListItem> toRemove = model.getConnectionListItems().stream()
+                                .filter(item -> item.getKeyId().equals(node.getNetworkId().getKeyId()))
                                 .collect(Collectors.toSet());
                         model.getConnectionListItems().removeAll(toRemove);
                     }
