@@ -39,7 +39,6 @@ public class TransportTypeModel implements Model {
     private final ServiceNode serviceNode;
     private final Node defaultNode;
 
-    private final ObservableSet<Node> nodes = new ObservableSet<>();
     private final ObservableList<NodeListItem> nodeListItems = FXCollections.observableArrayList();
     private final FilteredList<NodeListItem> filteredNodeListItems = new FilteredList<>(nodeListItems);
     private final SortedList<NodeListItem> sortedNodeListItems = new SortedList<>(filteredNodeListItems);

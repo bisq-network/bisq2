@@ -161,10 +161,12 @@ public class NodesById implements Node.Listener {
 
     @Override
     public void onConnection(Connection connection) {
+        nodeListeners.forEach(listener -> listener.onConnection(connection));
     }
 
     @Override
     public void onDisconnect(Connection connection, CloseReason closeReason) {
+        nodeListeners.forEach(listener -> listener.onDisconnect(connection, closeReason));
     }
 
     @Override
@@ -172,6 +174,7 @@ public class NodesById implements Node.Listener {
         map.remove(node.getNetworkId());
         node.removeListener(this);
         listeners.forEach(listener -> listener.onNodeRemoved(node));
+        nodeListeners.forEach(listener -> listener.onShutdown(node));
     }
 
 

@@ -43,16 +43,12 @@ public class ConnectionListItem implements TableItem {
     @EqualsAndHashCode.Include
     private final String connectionId;
     private final Connection connection;
-    private final Connection.Listener listener;
     private final ConnectionMetrics connectionMetrics;
-    private final String date;
-    private final String address;
-    private final String keyId;
-    private final String direction;
+    private final String date, address, keyId, direction, nodeTagTooltip, nodeTag;
     private final StringProperty sent = new SimpleStringProperty();
     private final StringProperty received = new SimpleStringProperty();
     private final StringProperty rtt = new SimpleStringProperty("-");
-    private final String nodeTag;
+    private final Connection.Listener listener;
 
     public ConnectionListItem(Connection connection, Node node, IdentityService identityService) {
         this.connection = connection;
@@ -64,20 +60,14 @@ public class ConnectionListItem implements TableItem {
         address = connection.getPeerAddress().getFullAddress();
 
         direction = connection.isOutboundConnection() ?
-                Res.get("settings.network.connections.value.outbound") :
-                Res.get("settings.network.connections.value.inbound");
+                Res.get("settings.network.connections.outbound") :
+                Res.get("settings.network.connections.inbound");
 
-        nodeTag = identityService.findAnyIdentityByNetworkId(node.getNetworkId())
+        String identityTag = identityService.findAnyIdentityByNetworkId(node.getNetworkId())
                 .map(Identity::getTag)
-                .map(tag -> {
-                    if (tag.contains("-")) {
-                        String[] tokens = tag.split("-");
-                        return tokens[0];
-                    } else {
-                        return tag;
-                    }
-                })
                 .orElse(Res.get("data.na"));
+        nodeTagTooltip = Res.get("settings.network.header.nodeTag.tooltip", identityTag);
+        nodeTag = identityTag.contains("-") ? identityTag.split("-")[0] : identityTag;
 
         updateSent();
         updateReceived();
@@ -107,13 +97,13 @@ public class ConnectionListItem implements TableItem {
     }
 
     private void updateSent() {
-        sent.set(Res.get("settings.network.connections.value.ioData",
+        sent.set(Res.get("settings.network.connections.ioData",
                 StringUtils.fromBytes(connectionMetrics.getSentBytes()),
                 connectionMetrics.getNumMessagesSent()));
     }
 
     private void updateReceived() {
-        received.set(Res.get("settings.network.connections.value.ioData",
+        received.set(Res.get("settings.network.connections.ioData",
                 StringUtils.fromBytes(connectionMetrics.getReceivedBytes()),
                 connectionMetrics.getNumMessagesReceived()));
     }
