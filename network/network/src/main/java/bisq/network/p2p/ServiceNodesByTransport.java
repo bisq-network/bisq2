@@ -122,7 +122,7 @@ public class ServiceNodesByTransport {
         // We initialize all service nodes per transport type in parallel. As soon one has completed we
         // return a success state.
         return map.entrySet().stream()
-                .collect(Collectors.toMap(entry -> entry.getKey(),
+                .collect(Collectors.toMap(Map.Entry::getKey,
                         entry -> supplyAsync(() -> {
                             ServiceNode serviceNode = entry.getValue();
                             if (serviceNode.isNodeInitialized(networkId)) {
@@ -133,7 +133,7 @@ public class ServiceNodesByTransport {
                         }, NETWORK_IO_POOL)));
     }
 
-    public CompletableFuture<List<Node>> getNetworkIdOfInitializedNode(NetworkId networkId, TorIdentity torIdentity) {
+    public CompletableFuture<List<Node>> getAllInitializedNodes(NetworkId networkId, TorIdentity torIdentity) {
         Collection<CompletableFuture<Node>> futures = getInitializedNodeByTransport(networkId, torIdentity).values();
         // As we persist networkIds after initialize, and we require all futures to be completed we can be sure that
         // the networkId is complete with all addresses of all our supported transports.
@@ -264,5 +264,11 @@ public class ServiceNodesByTransport {
     public Optional<Node> findNode(TransportType transport, NetworkId networkId) {
         return findServiceNode(transport)
                 .flatMap(serviceNode -> serviceNode.findNode(networkId));
+    }
+
+    public Set<Node> findNodesOfAllTransports(NetworkId networkId) {
+        return map.values().stream()
+                .flatMap(serviceNode -> serviceNode.findNode(networkId).stream())
+                .collect(Collectors.toSet());
     }
 }

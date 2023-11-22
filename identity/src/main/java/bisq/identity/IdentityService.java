@@ -148,7 +148,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         }
         persist();
 
-        return networkService.getNetworkIdOfInitializedNode(networkId, torIdentity)
+        return networkService.getAllInitializedNodes(networkId, torIdentity)
                 .thenApply(nodes -> identity);
     }
 
@@ -216,7 +216,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         getActiveIdentityByTag().values().stream()
                 .filter(identity -> !identity.getTag().equals(IdentityService.DEFAULT_IDENTITY_TAG))
                 .forEach(identity ->
-                        networkService.getInitializedNodeByTransport(identity.getNetworkId(), identity.getPubKey(), identity.getTorIdentity()).values()
+                        networkService.getInitializedNodeByTransport(identity.getNetworkId(), identity.getTorIdentity()).values()
                                 .forEach(future -> future.whenComplete((node, throwable) -> {
                                             if (throwable == null) {
                                                 log.info("Network node for active identity {} initialized. NetworkId={}",
@@ -243,13 +243,13 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
 
     private Identity createAndInitializeNewIdentity(String identityTag) {
         Identity identity = createIdentity(identityTag);
-        networkService.getNetworkIdOfInitializedNode(identity.getNetworkId(), identity.getTorIdentity()).join();
+        networkService.getAllInitializedNodes(identity.getNetworkId(), identity.getTorIdentity()).join();
         return identity;
     }
 
     private Identity createAndInitializeNewIdentity(String identityTag, String keyId, KeyPair keyPair) {
         Identity identity = createIdentity(keyId, identityTag, keyPair);
-        networkService.getNetworkIdOfInitializedNode(identity.getNetworkId(), identity.getTorIdentity()).join();
+        networkService.getAllInitializedNodes(identity.getNetworkId(), identity.getTorIdentity()).join();
         return identity;
     }
 

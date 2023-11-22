@@ -3,6 +3,7 @@ package bisq.network.p2p.services.confidential.ack;
 import bisq.common.observable.Observable;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.network.NetworkService;
+import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.vo.NetworkIdWithKeyPair;
@@ -133,11 +134,13 @@ public class MessageDeliveryStatusService implements PersistenceClient<MessageDe
 
     private void processAckRequestingMessage(AckRequestingMessage message) {
         AckMessage ackMessage = new AckMessage(message.getId());
-        keyPairService.findKeyPair(message.getReceiver().getPubKey().getKeyId())
+        NetworkId networkId = message.getReceiver();
+        keyPairService.findKeyPair(networkId.getPubKey().getKeyId())
                 .ifPresent(keyPair -> {
                     log.info("Received a {} with message ID {}", message.getClass().getSimpleName(), message.getId());
-                    NetworkIdWithKeyPair networkIdWithKeyPair = new NetworkIdWithKeyPair(message.getReceiver(), keyPair);
-                    networkService.confidentialSend(ackMessage, message.getSender(), networkIdWithKeyPair, networkService.getDefaultTorIdentity());
+                    NetworkIdWithKeyPair networkIdWithKeyPair = new NetworkIdWithKeyPair(networkId, keyPair);
+                    networkService.findTorIdentity(networkId).ifPresent(torIdentity ->
+                            networkService.confidentialSend(ackMessage, message.getSender(), networkIdWithKeyPair, torIdentity));
                 });
     }
 }

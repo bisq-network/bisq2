@@ -125,6 +125,8 @@ public class Node implements Connection.Handler {
     private final TransportService transportService;
     private final AuthorizationService authorizationService;
     private final Config config;
+    @Getter
+    private final boolean isDefaultNode;
     @EqualsAndHashCode.Include
     @Getter
     private final TransportType transportType;
@@ -149,13 +151,15 @@ public class Node implements Connection.Handler {
     @Getter
     public final NetworkLoadService networkLoadService;
 
-    public Node(BanList banList,
-                Config config,
-                NetworkId networkId,
+    public Node(NetworkId networkId,
                 TorIdentity torIdentity,
+                boolean isDefaultNode,
+                Config config,
+                BanList banList,
                 TransportService transportService,
                 NetworkLoadService networkLoadService,
                 AuthorizationService authorizationService) {
+        this.isDefaultNode = isDefaultNode;
         transportType = config.getTransportType();
         this.networkId = networkId;
         this.torIdentity = torIdentity;
@@ -233,7 +237,8 @@ public class Node implements Connection.Handler {
                 banList,
                 config.getSocketTimeout(),
                 myCapability,
-                authorizationService, torIdentity);
+                authorizationService,
+                torIdentity);
         connectionHandshakes.put(connectionHandshake.getId(), connectionHandshake);
         log.debug("Inbound handshake request at: {}", myCapability.getAddress());
         try {
