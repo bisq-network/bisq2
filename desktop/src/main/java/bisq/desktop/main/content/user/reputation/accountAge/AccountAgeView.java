@@ -41,7 +41,7 @@ public class AccountAgeView extends TabView<AccountAgeModel, AccountAgeControlle
         double width = DesktopModel.MIN_WIDTH - 20;
         root.setMinWidth(width);
         root.setMaxWidth(width);
-        double height = DesktopModel.MIN_HEIGHT - 40;
+        double height = DesktopModel.MIN_HEIGHT - 80;
         root.setMinHeight(height);
         root.setMaxHeight(height);
 

@@ -93,7 +93,6 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
 
         learnMore = new Hyperlink(Res.get("user.userProfile.learnMore"));
 
-        VBox.setMargin(learnMore, new Insets(0, -4, 0, 0));
         VBox buttons = new VBox(5, createNewProfileButton, learnMore);
         buttons.setAlignment(Pos.TOP_RIGHT);
 
