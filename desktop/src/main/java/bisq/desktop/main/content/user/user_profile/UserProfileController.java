@@ -20,6 +20,7 @@ package bisq.desktop.main.content.user.user_profile;
 import bisq.bisq_easy.BisqEasyService;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.Browser;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
@@ -122,11 +123,15 @@ public class UserProfileController implements Controller {
         model.getReputationScoreValue().set(null);
     }
 
-    public void onAddNewChatUser() {
+    void onAddNewChatUser() {
         Navigation.navigateTo(CREATE_PROFILE_STEP1);
     }
 
-    public void onSave() {
+    void onLearnMore() {
+        Browser.open("https://bisq.wiki/Identity");
+    }
+
+    void onSave() {
         var userIdentity = userIdentityService.getSelectedUserIdentity();
         if (userIdentity == null) {
             // This should never happen as the combobox selection is validated before getting here
