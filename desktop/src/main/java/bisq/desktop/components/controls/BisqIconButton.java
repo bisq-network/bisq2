@@ -32,27 +32,21 @@ public class BisqIconButton extends Button {
     public static Button createCopyIconButton() {
         Button button = AwesomeDude.createIconButton(AwesomeIcon.COPY);
         button.getStyleClass().add("icon-button");
-        BisqTooltip tooltip = new BisqTooltip(Res.get("action.copyToClipboard"));
-        tooltip.getStyleClass().add("dark-tooltip");
-        button.setTooltip(tooltip);
+        button.setTooltip(new BisqTooltip(Res.get("action.copyToClipboard"), true));
         return button;
     }
 
     public static Button createDeleteIconButton() {
         Button button = AwesomeDude.createIconButton(AwesomeIcon.REMOVE_SIGN);
         button.getStyleClass().add("icon-button");
-        BisqTooltip tooltip = new BisqTooltip(Res.get("action.delete"));
-        tooltip.getStyleClass().add("dark-tooltip");
-        button.setTooltip(tooltip);
+        button.setTooltip(new BisqTooltip(Res.get("action.delete"), true));
         return button;
     }
 
     public static Button createInfoIconButton(String tooltipText) {
         Button button = AwesomeDude.createIconButton(AwesomeIcon.INFO_SIGN);
         button.getStyleClass().add("icon-button");
-        BisqTooltip tooltip = new BisqTooltip(tooltipText);
-        tooltip.getStyleClass().add("dark-tooltip");
-        button.setTooltip(tooltip);
+        button.setTooltip(new BisqTooltip(tooltipText, true));
         return button;
     }
 

@@ -26,7 +26,10 @@ import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -82,12 +85,11 @@ public abstract class BondedRolesView<M extends BondedRolesModel, C extends Bond
             private final Label userName = new Label();
             private final UserProfileIcon userProfileIcon = new UserProfileIcon(30);
             private final HBox hBox = new HBox(10, userProfileIcon, userName);
-            private final BisqTooltip tooltip = new BisqTooltip(Res.get("user.bondedRoles.table.columns.userProfile.defaultNode"));
+            private final BisqTooltip tooltip = new BisqTooltip(Res.get("user.bondedRoles.table.columns.userProfile.defaultNode"), true);
 
             {
                 userName.setId("chat-user-name");
                 hBox.setAlignment(Pos.CENTER_LEFT);
-                tooltip.getStyleClass().add("dark-tooltip");
             }
 
             @Override
@@ -131,14 +133,10 @@ public abstract class BondedRolesView<M extends BondedRolesModel, C extends Bond
 
                 if (item != null && !empty) {
                     userProfileId.setText(item.getUserProfileId());
-                    Tooltip tooltip = new BisqTooltip(item.getUserProfileId());
-                    tooltip.getStyleClass().add("dark-tooltip");
-                    userProfileId.setTooltip(tooltip);
+                    userProfileId.setTooltip(new BisqTooltip(item.getUserProfileId(), true));
 
                     icon.setOnAction(e -> controller.onCopyPublicKeyAsHex(item.getUserProfileId()));
-                    Tooltip tooltip2 = new BisqTooltip(Res.get("action.copyToClipboard"));
-                    tooltip2.getStyleClass().add("dark-tooltip");
-                    icon.setTooltip(tooltip2);
+                    icon.setTooltip(new BisqTooltip(Res.get("action.copyToClipboard"), true));
                     setGraphic(hBox);
                 } else {
                     icon.setOnAction(null);
@@ -167,9 +165,7 @@ public abstract class BondedRolesView<M extends BondedRolesModel, C extends Bond
 
                 if (item != null && !empty) {
                     signature.setText(item.getSignature());
-                    Tooltip tooltip = new BisqTooltip(item.getSignature());
-                    tooltip.getStyleClass().add("dark-tooltip");
-                    signature.setTooltip(tooltip);
+                    signature.setTooltip(new BisqTooltip(item.getSignature(), true));
 
                     icon.setOnAction(e -> controller.onCopyPublicKeyAsHex(item.getSignature()));
                     setGraphic(hBox);

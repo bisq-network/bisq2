@@ -23,13 +23,23 @@ import javafx.util.Duration;
 // Setting show delay by css does not work
 public class BisqTooltip extends Tooltip {
     public BisqTooltip() {
-        setShowDelay(Duration.millis(100));
-        setHideDelay(Duration.millis(100));
+        this(null, false);
     }
 
     public BisqTooltip(String text) {
+        this(text, false);
+    }
+
+    public BisqTooltip(boolean useDarkStyle) {
+        this(null, useDarkStyle);
+    }
+
+    public BisqTooltip(String text, boolean useDarkStyle) {
         super(text);
         setShowDelay(Duration.millis(100));
         setHideDelay(Duration.millis(100));
+        if (useDarkStyle) {
+            getStyleClass().add("dark-tooltip");
+        }
     }
 }

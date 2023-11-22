@@ -622,9 +622,7 @@ public class ChatMessagesListView {
 
                             deliveryState = new Label();
                             deliveryState.setCursor(Cursor.HAND);
-                            BisqTooltip tooltip = new BisqTooltip();
-                            tooltip.getStyleClass().add("dark-tooltip");
-                            deliveryState.setTooltip(tooltip);
+                            deliveryState.setTooltip(new BisqTooltip(true));
 
                             dateTime = new Label();
                             dateTime.getStyleClass().addAll("text-fill-grey-dimmed", "font-size-09", "font-light");
@@ -1060,9 +1058,7 @@ public class ChatMessagesListView {
                 private Label getIconWithToolTip(AwesomeIcon icon, String tooltipString) {
                     Label iconLabel = Icons.getIcon(icon);
                     iconLabel.setCursor(Cursor.HAND);
-                    Tooltip tooltip = new BisqTooltip(tooltipString);
-                    tooltip.getStyleClass().add("dark-tooltip");
-                    iconLabel.setTooltip(tooltip);
+                    iconLabel.setTooltip(new BisqTooltip(tooltipString, true));
                     return iconLabel;
                 }
             };

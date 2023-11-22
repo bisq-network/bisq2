@@ -26,7 +26,10 @@ import bisq.desktop.main.content.user.bonded_roles.BondedRolesView;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -126,9 +129,7 @@ public class NodesView extends BondedRolesView<NodesModel, NodesController> {
                 if (item != null && !empty) {
                     String addressString = item.getAddress();
                     address.setText(addressString);
-                    Tooltip tooltip = new BisqTooltip(addressString);
-                    tooltip.getStyleClass().add("dark-tooltip");
-                    address.setTooltip(tooltip);
+                    address.setTooltip(new BisqTooltip(addressString, true));
                     icon.setOnAction(e -> new Popup()
                             .headline(Res.get("user.bondedRoles.table.columns.node.address.popup.headline"))
                             .message(item.getAddressInfoJson())

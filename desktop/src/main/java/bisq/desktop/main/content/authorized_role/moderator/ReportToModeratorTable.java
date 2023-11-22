@@ -46,7 +46,10 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
@@ -327,9 +330,7 @@ public class ReportToModeratorTable {
                     if (item != null && !empty) {
                         message.setText(item.getMessage());
                         message.setMaxHeight(30);
-                        Tooltip tooltip = new BisqTooltip(item.getMessage());
-                        tooltip.getStyleClass().add("dark-tooltip");
-                        message.setTooltip(tooltip);
+                        message.setTooltip(new BisqTooltip(item.getMessage(), true));
 
                         icon.setOnAction(e -> ClipboardUtil.copyToClipboard(item.getMessage()));
                         setGraphic(hBox);

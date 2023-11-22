@@ -527,9 +527,7 @@ public class ChatMessagesComponent {
             sendButton.setPadding(new Insets(5));
             sendButton.setMinWidth(31);
             sendButton.setMaxWidth(31);
-            BisqTooltip tooltip = new BisqTooltip(Res.get("chat.message.input.send"));
-            tooltip.getStyleClass().add("dark-tooltip");
-            sendButton.setTooltip(tooltip);
+            sendButton.setTooltip(new BisqTooltip(Res.get("chat.message.input.send"), true));
 
             StackPane.setAlignment(inputField, Pos.CENTER_LEFT);
             StackPane.setAlignment(sendButton, Pos.CENTER_RIGHT);
