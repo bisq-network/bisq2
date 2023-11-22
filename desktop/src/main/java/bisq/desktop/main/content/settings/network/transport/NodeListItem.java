@@ -50,7 +50,7 @@ public class NodeListItem implements TableItem {
     @Getter
     private final String type;
     @Getter
-    private final String identityTag;
+    private final String nodeTag;
     @Getter
     private final StringProperty numConnections = new SimpleStringProperty();
     private final Node.Listener listener;
@@ -65,8 +65,16 @@ public class NodeListItem implements TableItem {
                 .orElseGet(() -> keyPairService.isDefaultKeyId(node.getNetworkId().getKeyId()) ?
                         Res.get("settings.network.nodes.type.default") :
                         Res.get("data.na"));
-        identityTag = identityService.findAnyIdentityByNetworkId(node.getNetworkId())
+        nodeTag = identityService.findAnyIdentityByNetworkId(node.getNetworkId())
                 .map(Identity::getTag)
+                .map(tag -> {
+                    if (tag.contains("-")) {
+                        String[] tokens = tag.split("-");
+                        return tokens[0];
+                    } else {
+                        return tag;
+                    }
+                })
                 .orElse(Res.get("data.na"));
         address = node.findMyAddress().map(Address::getFullAddress).orElse(Res.get("data.na"));
 
@@ -105,8 +113,8 @@ public class NodeListItem implements TableItem {
         return type.compareTo(other.getType());
     }
 
-    public int compareIdentityTag(NodeListItem other) {
-        return identityTag.compareTo(other.getIdentityTag());
+    public int compareNodeTag(NodeListItem other) {
+        return nodeTag.compareTo(other.getNodeTag());
     }
 
     public int compareNumConnections(NodeListItem other) {

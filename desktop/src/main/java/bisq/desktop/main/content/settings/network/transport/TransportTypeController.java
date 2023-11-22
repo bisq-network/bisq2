@@ -84,7 +84,7 @@ public class TransportTypeController implements Controller {
             public void add(Node node) {
                 UIThread.run(() -> {
                     Set<ConnectionListItem> uniqueConnections = node.getAllConnections()
-                            .map(connection -> new ConnectionListItem(connection, node.getNetworkId().getKeyId()))
+                            .map(connection -> new ConnectionListItem(connection, node, identityService))
                             .collect(Collectors.toSet());
                     uniqueConnections.addAll(model.getConnectionListItems());
                     model.getConnectionListItems().setAll(uniqueConnections);

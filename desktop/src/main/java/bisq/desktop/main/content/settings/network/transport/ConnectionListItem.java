@@ -21,9 +21,12 @@ import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.table.TableItem;
 import bisq.i18n.Res;
+import bisq.identity.Identity;
+import bisq.identity.IdentityService;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
+import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.network_load.ConnectionMetrics;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.TimeFormatter;
@@ -35,33 +38,25 @@ import lombok.extern.slf4j.Slf4j;
 
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Slf4j
+@Getter
 public class ConnectionListItem implements TableItem {
-    @Getter
-    private final Connection connection;
-    private final Connection.Listener listener;
-
-    private final ConnectionMetrics connectionMetrics;
-    @Getter
-    private final String date;
-    @Getter
-    private final String address;
-
-    @Getter
-    private final String keyId;
-    @Getter
-    private final String direction;
-    @Getter
-    private final StringProperty sent = new SimpleStringProperty();
-    @Getter
-    private final StringProperty received = new SimpleStringProperty();
-    @Getter
-    private final StringProperty rtt = new SimpleStringProperty("-");
     @EqualsAndHashCode.Include
     private final String connectionId;
+    private final Connection connection;
+    private final Connection.Listener listener;
+    private final ConnectionMetrics connectionMetrics;
+    private final String date;
+    private final String address;
+    private final String keyId;
+    private final String direction;
+    private final StringProperty sent = new SimpleStringProperty();
+    private final StringProperty received = new SimpleStringProperty();
+    private final StringProperty rtt = new SimpleStringProperty("-");
+    private final String nodeTag;
 
-    public ConnectionListItem(Connection connection, String keyId) {
+    public ConnectionListItem(Connection connection, Node node, IdentityService identityService) {
         this.connection = connection;
-        this.keyId = keyId;
+        this.keyId = node.getNetworkId().getKeyId();
         connectionId = connection.getId();
         connectionMetrics = connection.getConnectionMetrics();
 
@@ -71,6 +66,18 @@ public class ConnectionListItem implements TableItem {
         direction = connection.isOutboundConnection() ?
                 Res.get("settings.network.connections.value.outbound") :
                 Res.get("settings.network.connections.value.inbound");
+
+        nodeTag = identityService.findAnyIdentityByNetworkId(node.getNetworkId())
+                .map(Identity::getTag)
+                .map(tag -> {
+                    if (tag.contains("-")) {
+                        String[] tokens = tag.split("-");
+                        return tokens[0];
+                    } else {
+                        return tag;
+                    }
+                })
+                .orElse(Res.get("data.na"));
 
         updateSent();
         updateReceived();
@@ -121,6 +128,10 @@ public class ConnectionListItem implements TableItem {
 
     public int compareKeyId(ConnectionListItem other) {
         return keyId.compareTo(other.getKeyId());
+    }
+
+    public int compareNodeTag(ConnectionListItem other) {
+        return nodeTag.compareTo(other.getNodeTag());
     }
 
     public int compareDirection(ConnectionListItem other) {

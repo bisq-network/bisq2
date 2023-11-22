@@ -114,10 +114,10 @@ public class TransportTypeView extends View<GridPane, TransportTypeModel, Transp
                 .comparator(ConnectionListItem::compareAddress)
                 .build());
         connectionsTableView.getColumns().add(new BisqTableColumn.Builder<ConnectionListItem>()
-                .title(Res.get("settings.network.connections.header.keyId"))
+                .title(Res.get("settings.network.connections.header.nodeTag"))
                 .minWidth(220)
-                .valueSupplier(ConnectionListItem::getKeyId)
-                .comparator(ConnectionListItem::compareKeyId)
+                .valueSupplier(ConnectionListItem::getNodeTag)
+                .comparator(ConnectionListItem::compareNodeTag)
                 .build());
         connectionsTableView.getColumns().add(new BisqTableColumn.Builder<ConnectionListItem>()
                 .title(Res.get("settings.network.connections.header.connectionDirection"))
@@ -154,10 +154,10 @@ public class TransportTypeView extends View<GridPane, TransportTypeModel, Transp
                 .comparator(NodeListItem::compareType)
                 .build());
         nodesTableView.getColumns().add(new BisqTableColumn.Builder<NodeListItem>()
-                .title(Res.get("settings.network.nodes.header.identityTag"))
+                .title(Res.get("settings.network.nodes.header.nodeTag"))
                 .minWidth(100)
-                .valueSupplier(NodeListItem::getIdentityTag)
-                .comparator(NodeListItem::compareIdentityTag)
+                .valueSupplier(NodeListItem::getNodeTag)
+                .comparator(NodeListItem::compareNodeTag)
                 .build());
         nodesTableView.getColumns().add(new BisqTableColumn.Builder<NodeListItem>()
                 .title(Res.get("settings.network.nodes.header.keyId"))
