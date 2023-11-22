@@ -52,6 +52,6 @@ public class BisqEasyGuideProcessController implements Controller {
     }
 
     void onLearnMore() {
-        Browser.open("https://bisq.wiki/bisqeasy");
+        Browser.open("https://bisq.wiki/Bisq_Easy");
     }
 }

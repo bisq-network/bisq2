@@ -44,7 +44,7 @@ public class AccountAgeTab1Controller implements Controller {
     }
 
     void onLearnMore() {
-        Browser.open("https://bisq.wiki/reputation/accountAge");
+        Browser.open("https://bisq.wiki/Reputation");
     }
 
     void onNext() {

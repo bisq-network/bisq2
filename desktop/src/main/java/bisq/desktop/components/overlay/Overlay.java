@@ -435,7 +435,7 @@ public abstract class Overlay<T extends Overlay<T>> {
 
     public T useReportBugButton() {
         this.closeButtonText = Res.get("popup.reportBug");
-        this.closeHandlerOptional = Optional.of(() -> Browser.open("https://bisq.network/source/bisq/issues"));
+        this.closeHandlerOptional = Optional.of(() -> Browser.open("https://bisq.network/source/bisq2/issues"));
         return cast();
     }
 

@@ -57,22 +57,22 @@ public class TradeAppsController extends ContentTabController<TradeAppsModel> {
             case BISQ_EASY_INFO: {
                 return Optional.of(new ProtocolRoadmapController(TradeProtocolType.BISQ_EASY,
                         "protocol-multisig",
-                        "https://bisq.network/"));
+                        "https://bisq.wiki/Trade_Protocols#Bisq_Easy"));
             }
             case MULTISIG: {
                 return Optional.of(new ProtocolRoadmapController(TradeProtocolType.MULTISIG,
                         "protocol-multisig",
-                        "https://bisq.network/"));
+                        "https://bisq.wiki/Trade_Protocols#Bisq_Multisig"));
             }
             case SUBMARINE: {
                 return Optional.of(new ProtocolRoadmapController(TradeProtocolType.SUBMARINE,
                         "protocol-submarine",
-                        "https://docs.lightning.engineering/the-lightning-network/multihop-payments/understanding-submarine-swaps"));
+                        "https://bisq.wiki/Trade_Protocols#Submarine_Swaps"));
             }
             case BISQ_LIGHTNING: {
                 return Optional.of(new ProtocolRoadmapController(TradeProtocolType.BISQ_LIGHTNING,
                         "protocol-bisq-lightning",
-                        "https://bisq.wiki/ln-liquid"));
+                        "https://bisq.wiki/Trade_Protocols#Bisq_Lightning"));
             }
             case MORE_TRADE_PROTOCOLS: {
                 return Optional.of(new MoreProtocolsController());

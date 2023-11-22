@@ -96,7 +96,7 @@ public class ReputationController implements Controller {
     }
 
     public void onLearnMore() {
-        Browser.open("https://bisq.wiki/reputation");
+        Browser.open("https://bisq.wiki/Reputation");
     }
 
     public void onShowDetails(ReputationView.ListItem item) {

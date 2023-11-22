@@ -44,7 +44,7 @@ public class BurnBsqTab1Controller implements Controller {
     }
 
     void onLearnMore() {
-        Browser.open("https://bisq.wiki/reputation/burnBsq");
+        Browser.open("https://bisq.wiki/Reputation");
     }
 
     void onNext() {
