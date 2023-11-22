@@ -30,6 +30,7 @@ import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.NodesById;
+import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.network_load.NetworkLoadService;
 import bisq.network.p2p.node.transport.TransportService;
 import bisq.network.p2p.services.confidential.ConfidentialMessageListener;
@@ -144,6 +145,7 @@ public class ServiceNode {
                        Optional<MessageDeliveryStatusService> messageDeliveryStatusService,
                        KeyPairService keyPairService,
                        PersistenceService persistenceService,
+                       AuthorizationService authorizationService,
                        Set<Address> seedNodeAddresses,
                        TransportType transportType,
                        NetworkLoadService networkLoadService) {
@@ -159,7 +161,7 @@ public class ServiceNode {
         this.networkLoadService = networkLoadService;
 
         transportService = TransportService.create(transportType, nodeConfig.getTransportConfig());
-        nodesById = new NodesById(banList, nodeConfig, transportService, networkLoadService);
+        nodesById = new NodesById(banList, nodeConfig, transportService, networkLoadService, authorizationService);
         defaultNodePort = nodeConfig.getTransportConfig().getDefaultNodePort();
     }
 

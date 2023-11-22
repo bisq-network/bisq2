@@ -23,6 +23,7 @@ import bisq.network.common.Address;
 import bisq.network.identity.NetworkId;
 import bisq.network.identity.TorIdentity;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
+import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.network_load.NetworkLoadService;
 import bisq.network.p2p.node.transport.TransportService;
 import bisq.network.p2p.services.peergroup.BanList;
@@ -56,14 +57,20 @@ public class NodesById implements Node.Listener {
     private final Node.Config nodeConfig;
     private final TransportService transportService;
     private final NetworkLoadService networkLoadService;
+    private final AuthorizationService authorizationService;
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     private final Set<Node.Listener> nodeListeners = new CopyOnWriteArraySet<>();
 
-    public NodesById(BanList banList, Node.Config nodeConfig, TransportService transportService, NetworkLoadService networkLoadService) {
+    public NodesById(BanList banList,
+                     Node.Config nodeConfig,
+                     TransportService transportService,
+                     NetworkLoadService networkLoadService,
+                     AuthorizationService authorizationService) {
         this.banList = banList;
         this.nodeConfig = nodeConfig;
         this.transportService = transportService;
         this.networkLoadService = networkLoadService;
+        this.authorizationService = authorizationService;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -71,7 +78,7 @@ public class NodesById implements Node.Listener {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public Node createAndConfigNode(NetworkId networkId, TorIdentity torIdentity) {
-        Node node = new Node(banList, nodeConfig, networkId, torIdentity, transportService, networkLoadService);
+        Node node = new Node(banList, nodeConfig, networkId, torIdentity, transportService, networkLoadService, authorizationService);
         map.put(networkId, node);
         node.addListener(this);
         listeners.forEach(listener -> listener.onNodeAdded(node));
