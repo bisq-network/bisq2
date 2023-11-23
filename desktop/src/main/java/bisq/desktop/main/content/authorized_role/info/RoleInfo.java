@@ -97,7 +97,7 @@ public class RoleInfo {
                         model.setBondedRoleType(authorizedBondedRole.getBondedRoleType().getDisplayString());
                         model.setBondUserName(authorizedBondedRole.getBondUserName());
                         model.setSignature(authorizedBondedRole.getSignatureBase64());
-                        model.setAuthorizedOracleNode(authorizedBondedRole.getAuthorizedOracleNode().map(AuthorizedOracleNode::getPublicKeyHash).orElse(Res.get("data.na")));
+                        model.setAuthorizingOracleNodeProfileId(authorizedBondedRole.getAuthorizingOracleNode().map(AuthorizedOracleNode::getProfileId).orElse(Res.get("data.na")));
                         model.setStaticPublicKeysProvided(BooleanFormatter.toYesNo(authorizedBondedRole.isStaticPublicKeysProvided()));
                         model.setAuthorizedPublicKeys(Joiner.on(", ").join(authorizedBondedRole.getAuthorizedPublicKeys()));
                     });
@@ -114,7 +114,7 @@ public class RoleInfo {
         private String bondUserName;
         private String signature;
         private String addressByNetworkType;
-        private String authorizedOracleNode;
+        private String authorizingOracleNodeProfileId;
         private String staticPublicKeysProvided;
         private String authorizedPublicKeys;
         private String isBanned;
@@ -124,7 +124,7 @@ public class RoleInfo {
     @Slf4j
     private static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final MaterialTextField profileId, authorizedPublicKey, bondedRoleType, bondUserName, signature,
-                addressByNetworkType, authorizedOracleNode, staticPublicKeysProvided, isBanned;
+                addressByNetworkType, authorizingOracleNodeProfileId, staticPublicKeysProvided, isBanned;
         private final MaterialTextArea authorizedPublicKeys;
 
 
@@ -145,7 +145,7 @@ public class RoleInfo {
             addressByNetworkType = addFields("authorizedRole.roleInfo.addressByNetworkType", true);
             isBanned = addFields("authorizedRole.roleInfo.isBanned", false);
             authorizedPublicKey = addFields("authorizedRole.roleInfo.authorizedPublicKey", true);
-            authorizedOracleNode = addFields("authorizedRole.roleInfo.authorizedOracleNode", true);
+            authorizingOracleNodeProfileId = addFields("authorizedRole.roleInfo.authorizingOracleNodeProfileId", true);
             staticPublicKeysProvided = addFields("authorizedRole.roleInfo.staticPublicKeysProvided", false);
 
             authorizedPublicKeys = new MaterialTextArea(Res.get("authorizedRole.roleInfo.authorizedPublicKeys"));
@@ -171,7 +171,7 @@ public class RoleInfo {
             bondUserName.setText(model.getBondUserName());
             signature.setText(model.getSignature());
             addressByNetworkType.setText(model.getAddressByNetworkType());
-            authorizedOracleNode.setText(model.getAuthorizedOracleNode());
+            authorizingOracleNodeProfileId.setText(model.getAuthorizingOracleNodeProfileId());
             staticPublicKeysProvided.setText(model.getStaticPublicKeysProvided());
             authorizedPublicKeys.setText(model.getAuthorizedPublicKeys());
             isBanned.setText(model.getIsBanned());

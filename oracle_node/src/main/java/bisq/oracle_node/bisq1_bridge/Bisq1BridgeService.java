@@ -263,9 +263,11 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageListener,
                             AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
                             if (data instanceof AuthorizedBondedRole) {
                                 AuthorizedBondedRole authorizedBondedRole = (AuthorizedBondedRole) data;
-                                if (authorizedBondedRole.getAuthorizedOracleNode().equals(authorizedOracleNode)) {
-                                    publishAuthorizedData(authorizedBondedRole);
-                                }
+                                authorizedBondedRole.getAuthorizingOracleNode().ifPresent(authorizingOracleNode -> {
+                                    if (authorizingOracleNode.equals(authorizedOracleNode)) {
+                                        publishAuthorizedData(authorizedBondedRole);
+                                    }
+                                });
                             }
                         }));
     }

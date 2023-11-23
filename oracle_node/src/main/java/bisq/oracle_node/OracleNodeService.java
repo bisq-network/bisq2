@@ -36,7 +36,6 @@ import bisq.oracle_node.bisq1_bridge.Bisq1BridgeService;
 import bisq.oracle_node.market_price.MarketPricePropagationService;
 import bisq.oracle_node.timestamp.TimestampService;
 import bisq.persistence.PersistenceService;
-import bisq.security.DigestUtil;
 import bisq.security.KeyGeneration;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -180,14 +179,20 @@ public class OracleNodeService implements Service {
 
         NetworkId networkId = identity.getNetworkId();
         KeyPair keyPair = identity.getNetworkIdWithKeyPair().getKeyPair();
-        String authorizedPublicKeyHash = Hex.encode(DigestUtil.hash(authorizedPublicKey.getEncoded()));
-        authorizedOracleNode = new AuthorizedOracleNode(networkId, bondUserName, signatureBase64, authorizedPublicKeyHash, staticPublicKeysProvided);
+        byte[] authorizedPublicKeyEncoded = authorizedPublicKey.getEncoded();
+        String authorizedPublicKeyAsHex = Hex.encode(authorizedPublicKeyEncoded);
+        authorizedOracleNode = new AuthorizedOracleNode(networkId,
+                profileId,
+                authorizedPublicKeyAsHex,
+                bondUserName,
+                signatureBase64,
+                staticPublicKeysProvided);
         bisq1BridgeService.setAuthorizedOracleNode(authorizedOracleNode);
 
         // We only self-publish if we are a root oracle
         if (staticPublicKeysProvided) {
             AuthorizedBondedRole authorizedBondedRole = new AuthorizedBondedRole(profileId,
-                    Hex.encode(authorizedPublicKey.getEncoded()),
+                    authorizedPublicKeyAsHex,
                     BondedRoleType.ORACLE_NODE,
                     bondUserName,
                     signatureBase64,
