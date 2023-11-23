@@ -21,9 +21,9 @@ Program Arguments (Alt+R)
 
 VM Options (Alt+V)
 ```
--Dapplication.network.defaultNodePortByTransportType.clear=8000 
--Dapplication.network.defaultNodePortByTransportType.tor=1000 
--Dapplication.network.defaultNodePortByTransportType.i2p=5000 
+-Dapplication.network.configByTransportType.clear.defaultNodePort=8000 
+-Dapplication.network.configByTransportType.tor.defaultNodePort=1000 
+-Dapplication.network.configByTransportType.i2p.defaultNodePort=5000 
 -Dapplication.network.supportedTransportTypes.0=TOR 
 -Dapplication.network.supportedTransportTypes.1=I2P 
 -Dapplication.network.supportedTransportTypes.2=CLEAR 
@@ -37,9 +37,9 @@ Copy the `Seed_1` run configuration, rename it to `Seed_2` and change:
 - Program Arguments to `--appName=bisq2_seed2`
 - VM Options: adjust the ports in the following lines to
 ```
--Dapplication.network.defaultNodePortByTransportType.clear=8001 
--Dapplication.network.defaultNodePortByTransportType.tor=1001 
--Dapplication.network.defaultNodePortByTransportType.i2p=5001 
+-Dapplication.network.configByTransportType.clear.defaultNodePort=8001 
+-Dapplication.network.configByTransportType.tor.defaultNodePort=1001 
+-Dapplication.network.configByTransportType.i2p.defaultNodePort=5001 
 ```
 
 
@@ -113,7 +113,7 @@ For example, to start two local seeds, `bisq2_seed1` and `bisq2_seed2`, reachabl
 # Seed 1
 ./gradlew seed:run \
     -Dapplication.appName=bisq2_seed1 \
-    -Dapplication.network.defaultNodePortByTransportType.clear=8000 \
+    -Dapplication.network.configByTransportType.clear.defaultNodePort=8000 \
     -Dapplication.network.supportedTransportTypes.0=CLEAR \
     -Dapplication.network.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
     -Dapplication.network.seedAddressByTransportType.clear.1=127.0.0.1:8001
@@ -121,7 +121,7 @@ For example, to start two local seeds, `bisq2_seed1` and `bisq2_seed2`, reachabl
 # Seed 2
 ./gradlew seed:run \
     -Dapplication.appName=bisq2_seed2 \
-    -Dapplication.network.defaultNodePortByTransportType.clear=8001 \
+    -Dapplication.network.configByTransportType.clear.defaultNodePort=8001 \
     -Dapplication.network.supportedTransportTypes.0=CLEAR \
     -Dapplication.network.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
     -Dapplication.network.seedAddressByTransportType.clear.1=127.0.0.1:8001

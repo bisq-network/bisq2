@@ -75,7 +75,7 @@ For running a localhost dev oracle node use following JVM arguments:
 ```
   -Dapplication.appName=bisq2_local_oracle
   -Dapplication.devMode=true \
-  -Dapplication.network.defaultNodePortByTransportType.clear=9000
+  -Dapplication.network.configByTransportType.clear.defaultNodePort=9000
   -Dapplication.network.supportedTransportTypes.0=CLEAR
   -Dapplication.oracleNode.privateKey=[YOUR PRIV KEY] \
   -Dapplication.oracleNode.publicKey=[YOUR PUB KEY] \

@@ -30,7 +30,6 @@ import bisq.network.p2p.services.peergroup.exchange.PeerExchangeStrategy;
 import bisq.network.p2p.services.peergroup.keepalive.KeepAliveService;
 import bisq.tor.TorTransportConfig;
 import com.typesafe.config.Config;
-import com.typesafe.config.ConfigObject;
 import lombok.Getter;
 
 import java.nio.file.Path;
@@ -70,23 +69,7 @@ public final class NetworkServiceConfig {
         );
 
         Map<TransportType, Integer> defaultNodePortByTransportType = createDefaultNodePortByTransportType(config);
-       /* Map<Transport.Type, Integer> defaultNodePortByTransportType = new HashMap<>();
-        if (config.hasPath("defaultNodePortByTransportType")) {
-            Config portConfig = config.getConfig("defaultNodePortByTransportType");
-            if (portConfig.hasPath("tor")) {
-                defaultNodePortByTransportType.put(Transport.Type.TOR, portConfig.getInt("tor"));
-            }
-            if (portConfig.hasPath("i2p")) {
-                defaultNodePortByTransportType.put(Transport.Type.I2P, portConfig.getInt("i2p"));
-            }
-            if (portConfig.hasPath("clear")) {
-                defaultNodePortByTransportType.put(Transport.Type.CLEAR, portConfig.getInt("clear"));
-            }
-        }*/
-
-
         Map<TransportType, TransportConfig> configByTransportType = createConfigByTransportType(config, baseDir);
-
 
         return new NetworkServiceConfig(baseDir.toAbsolutePath().toString(),
                 supportedTransportTypes,
