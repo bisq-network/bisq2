@@ -31,17 +31,20 @@ public class ClearNetTransportService implements TransportService {
 
             return new Config(dataDir,
                     config.hasPath("defaultNodePort") ? config.getInt("defaultNodePort") : -1,
-                    (int) TimeUnit.SECONDS.toMillis(config.getInt("socketTimeout")));
+                    (int) TimeUnit.SECONDS.toMillis(config.getInt("defaultNodeSocketTimeout")),
+                    (int) TimeUnit.SECONDS.toMillis(config.getInt("userNodeSocketTimeout")));
         }
 
         private final int defaultNodePort;
-        private final int socketTimeout;
+        private final int defaultNodeSocketTimeout;
+        private final int userNodeSocketTimeout;
         private final Path dataDir;
 
-        public Config(Path dataDir, int defaultNodePort, int socketTimeout) {
+        public Config(Path dataDir, int defaultNodePort, int defaultNodeSocketTimeout, int userNodeSocketTimeout) {
             this.dataDir = dataDir;
             this.defaultNodePort = defaultNodePort;
-            this.socketTimeout = socketTimeout;
+            this.defaultNodeSocketTimeout = defaultNodeSocketTimeout;
+            this.userNodeSocketTimeout = userNodeSocketTimeout;
         }
     }
 
