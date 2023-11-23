@@ -18,9 +18,7 @@
 package bisq.network.p2p.services.data.storage;
 
 import lombok.Getter;
-import lombok.ToString;
 
-@ToString
 @Getter
 public class DataStorageResult {
     private final boolean success;
@@ -99,5 +97,26 @@ public class DataStorageResult {
     public DataStorageResult removedData(StorageData removedData) {
         this.removedData = removedData;
         return this;
+    }
+
+    @Override
+    public String toString() {
+        return "DataStorageResult{" +
+                "success=" + success +
+                ", requestAlreadyReceived=" + requestAlreadyReceived +
+                ", payloadAlreadyStored=" + payloadAlreadyStored +
+                ", publicKeyHashInvalid=" + publicKeyHashInvalid +
+                ", sequenceNrInvalid=" + sequenceNrInvalid +
+                ", signatureInvalid=" + signatureInvalid +
+                ", dataInvalid=" + dataInvalid +
+                ", isNotAuthorized=" + isNotAuthorized +
+                ", expired=" + expired +
+                ", noEntry=" + noEntry +
+                ", alreadyRemoved=" + alreadyRemoved +
+                ", maxMapSizeReached=" + maxMapSizeReached +
+                ", isSevereFailure=" + isSevereFailure +
+                ", metaDataInvalid=" + metaDataInvalid +
+                ", removedData=" + removedData +
+                '}';
     }
 }

@@ -22,10 +22,10 @@ import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
+import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
-import bisq.network.identity.NetworkId;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -45,7 +45,7 @@ public final class AuthorizedOracleNode implements AuthorizedDistributedData {
     private final NetworkId networkId;
     private final String bondUserName;                // username from DAO proposal
     private final String signatureBase64;             // signature created by bond with username as message
-    private final String publicKeyHash;
+    private final String publicKeyHash;               // authorizedPublicKeyHash
     private final boolean staticPublicKeysProvided;
 
     public AuthorizedOracleNode(NetworkId networkId,

@@ -25,10 +25,10 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.common.AddressByTransportTypeMap;
+import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
-import bisq.network.identity.NetworkId;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -52,6 +52,7 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
     private final String signatureBase64;
     private final AddressByTransportTypeMap addressByTransportTypeMap;
     private final NetworkId networkId;
+    // The oracle node which did the validation and publishing
     private final Optional<AuthorizedOracleNode> authorizedOracleNode;
     private final boolean staticPublicKeysProvided;
 
