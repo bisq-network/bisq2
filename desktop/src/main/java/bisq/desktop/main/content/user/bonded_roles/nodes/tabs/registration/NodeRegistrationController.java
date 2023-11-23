@@ -44,6 +44,7 @@ import java.lang.reflect.Type;
 import java.nio.file.Path;
 import java.security.KeyPair;
 import java.util.HashMap;
+import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -125,9 +126,9 @@ public class NodeRegistrationController extends BondedRolesRegistrationControlle
         try {
             Type type = new TypeToken<HashMap<TransportType, Address>>() {
             }.getType();
-            AddressByTransportTypeMap map = new Gson().fromJson(json, type);
+            Map<TransportType, Address> map = new Gson().fromJson(json, type);
             getNodesRegistrationModel().getJsonValid().set(true);
-            return map;
+            return new AddressByTransportTypeMap(map);
         } catch (Exception e) {
             log.error(ExceptionUtil.print(e));
             getNodesRegistrationModel().getJsonValid().set(false);
