@@ -53,7 +53,7 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
     private final AddressByTransportTypeMap addressByTransportTypeMap;
     private final NetworkId networkId;
     // The oracle node which did the validation and publishing
-    private final Optional<AuthorizedOracleNode> authorizedOracleNode;
+    private final Optional<AuthorizedOracleNode> authorizingOracleNode;
     private final boolean staticPublicKeysProvided;
 
     public AuthorizedBondedRole(String profileId,
@@ -63,7 +63,7 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
                                 String signatureBase64,
                                 AddressByTransportTypeMap addressByTransportTypeMap,
                                 NetworkId networkId,
-                                Optional<AuthorizedOracleNode> authorizedOracleNode,
+                                Optional<AuthorizedOracleNode> authorizingOracleNode,
                                 boolean staticPublicKeysProvided) {
         this.profileId = profileId;
         this.authorizedPublicKey = authorizedPublicKey;
@@ -72,7 +72,7 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
         this.signatureBase64 = signatureBase64;
         this.addressByTransportTypeMap = addressByTransportTypeMap;
         this.networkId = networkId;
-        this.authorizedOracleNode = authorizedOracleNode;
+        this.authorizingOracleNode = authorizingOracleNode;
         this.staticPublicKeysProvided = staticPublicKeysProvided;
 
         NetworkDataValidation.validateProfileId(profileId);
@@ -94,7 +94,7 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
                 .setNetworkId(networkId.toProto())
                 .setAddressByTransportTypeMap(addressByTransportTypeMap.toProto())
                 .setStaticPublicKeysProvided(staticPublicKeysProvided);
-        authorizedOracleNode.ifPresent(oracleNode -> builder.setAuthorizedOracleNode(oracleNode.toProto()));
+        authorizingOracleNode.ifPresent(oracleNode -> builder.setAuthorizingOracleNode(oracleNode.toProto()));
         return builder.build();
     }
 
@@ -106,7 +106,7 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
                 proto.getSignatureBase64(),
                 AddressByTransportTypeMap.fromProto(proto.getAddressByTransportTypeMap()),
                 NetworkId.fromProto(proto.getNetworkId()),
-                proto.hasAuthorizedOracleNode() ? Optional.of(AuthorizedOracleNode.fromProto(proto.getAuthorizedOracleNode())) : Optional.empty(),
+                proto.hasAuthorizingOracleNode() ? Optional.of(AuthorizedOracleNode.fromProto(proto.getAuthorizingOracleNode())) : Optional.empty(),
                 proto.getStaticPublicKeysProvided());
     }
 
@@ -155,7 +155,7 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
                 ",\r\n                    signature='" + signatureBase64 + '\'' +
                 ",\r\n                    networkId=" + networkId +
                 ",\r\n                    addressByTransportTypeMap=" + addressByTransportTypeMap +
-                ",\r\n                    authorizedOracleNode=" + authorizedOracleNode +
+                ",\r\n                    authorizedOracleNode=" + authorizingOracleNode +
                 ",\r\n                    staticPublicKeysProvided=" + staticPublicKeysProvided +
                 ",\r\n                    authorizedPublicKeys=" + getAuthorizedPublicKeys() +
                 "\r\n}";
