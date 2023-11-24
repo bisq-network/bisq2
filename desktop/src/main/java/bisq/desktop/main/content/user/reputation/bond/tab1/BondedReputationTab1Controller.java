@@ -44,7 +44,7 @@ public class BondedReputationTab1Controller implements Controller {
     }
 
     void onLearnMore() {
-        Browser.open("https://bisq.wiki/reputation/bondedBsq");
+        Browser.open("https://bisq.wiki/Reputation");
     }
 
     void onNext() {

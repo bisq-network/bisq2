@@ -44,7 +44,7 @@ public class BisqEasyGuideSecurityController implements Controller {
     }
 
     void onLearnMore() {
-        Browser.open("https://bisq.wiki/bisqeasy");
+        Browser.open("https://bisq.wiki/Bisq_Easy");
     }
 
     void onBack() {

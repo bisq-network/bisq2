@@ -73,7 +73,7 @@ public class BurnBsqTab3Controller implements Controller {
     }
 
     void onLearnMore() {
-        Browser.open("https://bisq.wiki/reputation/burnBsq");
+        Browser.open("https://bisq.wiki/Reputation");
     }
 
     void onCopyToClipboard(String pubKeyHash) {

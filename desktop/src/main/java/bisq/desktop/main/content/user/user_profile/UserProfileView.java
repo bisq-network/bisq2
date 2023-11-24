@@ -33,6 +33,7 @@ import bisq.user.identity.UserIdentity;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.SplitPane;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
@@ -69,6 +70,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
     private final VBox formVBox;
     private final AutoCompleteComboBox<UserIdentity> comboBox;
     private final BisqTooltip deleteTooltip;
+    private final Hyperlink learnMore;
     private Subscription reputationScorePin, useDeleteTooltipPin, selectedChatUserIdentityPin, isValidSelectionPin;
 
     public UserProfileView(UserProfileModel model, UserProfileController controller) {
@@ -89,6 +91,12 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         createNewProfileButton = new Button(Res.get("user.userProfile.createNewProfile"));
         createNewProfileButton.getStyleClass().addAll("outlined-button");
 
+        learnMore = new Hyperlink(Res.get("user.userProfile.learnMore"));
+
+        VBox.setMargin(learnMore, new Insets(0, -4, 0, 0));
+        VBox buttons = new VBox(5, createNewProfileButton, learnMore);
+        buttons.setAlignment(Pos.TOP_RIGHT);
+
         comboBox = new AutoCompleteComboBox<>(model.getUserIdentities(), Res.get("user.bondedRoles.userProfile.select"));
         comboBox.setPrefWidth(300);
         comboBox.setConverter(new StringConverter<>() {
@@ -103,7 +111,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
             }
         });
 
-        HBox selectionButtonHBox = new HBox(20, comboBox, Spacer.fillHBox(), createNewProfileButton);
+        HBox selectionButtonHBox = new HBox(20, comboBox, Spacer.fillHBox(), buttons);
         formVBox.getChildren().add(selectionButtonHBox);
 
         nymId = addField(Res.get("user.userProfile.nymId"));
@@ -162,6 +170,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         deleteButton.setOnAction(e -> onDeleteButtonPressed());
         saveButton.setOnAction(e -> onSaveButtonPressed());
         createNewProfileButton.setOnAction(e -> controller.onAddNewChatUser());
+        learnMore.setOnAction(e -> controller.onLearnMore());
         comboBox.setOnChangeConfirmed(e -> {
             if (comboBox.getSelectionModel().getSelectedItem() == null) {
                 comboBox.getSelectionModel().select(model.getSelectedUserIdentity().get());
@@ -244,6 +253,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         deleteButton.setOnAction(null);
         saveButton.setOnAction(null);
         createNewProfileButton.setOnAction(null);
+        learnMore.setOnAction(null);
         comboBox.setOnChangeConfirmed(null);
         comboBox.getIsValidSelection().set(true);
 

@@ -84,7 +84,7 @@ public class SignedWitnessTab3Controller implements Controller {
     }
 
     void onLearnMore() {
-        Browser.open("https://bisq.wiki/reputation/signedAccount");
+        Browser.open("https://bisq.wiki/Reputation");
     }
 
     void onCopyToClipboard(String pubKeyHash) {

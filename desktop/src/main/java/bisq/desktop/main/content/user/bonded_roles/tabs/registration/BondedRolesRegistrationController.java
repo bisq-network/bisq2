@@ -107,7 +107,7 @@ public abstract class BondedRolesRegistrationController implements Controller {
     }
 
     public void onLearnMore() {
-        Browser.open("https://bisq.wiki/bisq2/roles/" + model.getBondedRoleType().name().toLowerCase());
+        Browser.open("https://bisq.wiki/Bisq_2_Roles");
     }
 
     public void onCopyToClipboard() {

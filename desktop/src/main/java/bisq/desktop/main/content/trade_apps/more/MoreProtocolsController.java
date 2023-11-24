@@ -56,13 +56,13 @@ public class MoreProtocolsController implements InitWithDataController<MoreProto
             case LIQUID_MULTISIG: {
                 return Optional.of(new ProtocolRoadmapController(TradeProtocolType.LIQUID_MULTISIG,
                         "protocol-liquid-multisig",
-                        "https://bisq.wiki/liquid-multisig"));
+                        "https://bisq.wiki/Trade_Protocols#Liquid_Multisig"));
             }
 
             case LIQUID_SWAP: {
                 return Optional.of(new ProtocolRoadmapController(TradeProtocolType.LIQUID_SWAP,
                         "protocol-liquid-multisig",
-                        "https://www.blockstream.com/liquid/"));
+                        "https://bisq.wiki/Trade_Protocols#Liquid_Swaps"));
             }
             case BSQ_SWAP: {
                 return Optional.of(new ProtocolRoadmapController(TradeProtocolType.BSQ_SWAP,
@@ -77,7 +77,7 @@ public class MoreProtocolsController implements InitWithDataController<MoreProto
             case MONERO_SWAP: {
                 return Optional.of(new ProtocolRoadmapController(TradeProtocolType.MONERO_SWAP,
                         "protocol-monero-swap",
-                        "https://www.monerooutreach.org/stories/monero-atomic-swaps.html"));
+                        "https://bisq.wiki/Trade_Protocols#Monero_Swaps"));
             }
             default: {
                 return Optional.empty();
