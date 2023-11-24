@@ -2,7 +2,6 @@ plugins {
     id 'bisq.java-library'
     id 'application'
     alias(libs.plugins.shadow)
-  /*  alias(libs.plugins.jpackage)*/
 }
 
 application {
