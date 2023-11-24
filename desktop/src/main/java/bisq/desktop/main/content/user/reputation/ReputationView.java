@@ -28,14 +28,9 @@ import bisq.presentation.formatters.TimeFormatter;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
-import java.util.Comparator;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
-import javafx.scene.control.Hyperlink;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
+import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -46,6 +41,8 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
+
+import java.util.Comparator;
 
 @Slf4j
 public class ReputationView extends View<VBox, ReputationModel, ReputationController> {
@@ -87,10 +84,10 @@ public class ReputationView extends View<VBox, ReputationModel, ReputationContro
         HBox buttons = new HBox(20, burnBsqButton, bsqBondButton, accountAgeButton, signedAccountButton);
 
         VBox.setMargin(headlineLabel, new Insets(-10, 0, 0, 0));
-        VBox.setMargin(learnMore, new Insets(0, 0, 10, 0));
-        VBox vBox = new VBox(16, headlineLabel, info, learnMore, buttons);
+        VBox.setMargin(buttons, new Insets(10, 0, 0, 0));
+        VBox vBox = new VBox(10, headlineLabel, info, buttons, learnMore);
         vBox.getStyleClass().add("bisq-box-2");
-        vBox.setPadding(new Insets(30));
+        vBox.setPadding(new Insets(30, 30, 20, 30));
         vBox.setAlignment(Pos.TOP_LEFT);
 
         Label tableHeadline = new Label(Res.get("user.reputation.table.headline"));

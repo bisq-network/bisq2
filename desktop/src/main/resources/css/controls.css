@@ -594,7 +594,7 @@
 
 
 .hyperlink {
-    -fx-padding: 0.166667em 0.25em 0.166667em 0.25em; /* 2 3 2 3 */
+    -fx-padding: 0.166667em 0 0.166667em 0; /* 2 0 2 0 */
     -fx-cursor: hand;
     -fx-content-display: LEFT;
     -fx-border-color: transparent;
