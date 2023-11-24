@@ -22,9 +22,10 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 
-@EqualsAndHashCode
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class BondedRole {
     @Getter
+    @EqualsAndHashCode.Include
     private final AuthorizedBondedRole authorizedBondedRole;
     private final Observable<Boolean> isBannedObservable = new Observable<>(false);
 

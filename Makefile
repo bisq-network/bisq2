@@ -120,13 +120,13 @@ clean:
 	# Seed 1
 	screen -S localtests -X screen -t ${seed1-title} ./gradlew --console=plain seed_node_app:run \
 		-Dapplication.appName=${seed1-appName} \
-		-Dapplication.network.defaultNodePortByTransportType.clear=8000 \
+		-Dapplication.network.configByTransportType.clear.defaultNodePort=8000 \
 		-Dapplication.network.supportedTransportTypes.0=CLEAR \
 		-Dapplication.network.seedAddressByTransportType.clear.1=127.0.0.1:8001
 	# Seed 2
 	screen -S localtests -X screen -t ${seed2-title} ./gradlew --console=plain seed_node_app:run \
 		-Dapplication.appName=${seed2-appName} \
-		-Dapplication.network.defaultNodePortByTransportType.clear=8001 \
+		-Dapplication.network.configByTransportType.clear.defaultNodePort=8001 \
 		-Dapplication.network.supportedTransportTypes.0=CLEAR \
 		-Dapplication.network.seedAddressByTransportType.clear.0=127.0.0.1:8000
 
@@ -177,8 +177,8 @@ seed2-tor-hostname:
 	# Seed 1
 	screen -S localtests -X screen -t ${seed1-title} ./gradlew --console=plain seed_node_app:run \
 		-Dapplication.appName=${seed1-appName} \
-		-Dapplication.network.defaultNodePortByTransportType.clear=8000 \
-		-Dapplication.network.defaultNodePortByTransportType.tor=1000 \
+		-Dapplication.network.configByTransportType.clear.defaultNodePort=8000 \
+		-Dapplication.network.configByTransportType.tor.defaultNodePort=1000 \
 		-Dapplication.network.supportedTransportTypes.0=CLEAR \
 		-Dapplication.network.supportedTransportTypes.1=TOR \
 		-Dapplication.network.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
@@ -186,8 +186,8 @@ seed2-tor-hostname:
 	# Seed 2
 	screen -S localtests -X screen -t ${seed2-title} ./gradlew --console=plain seed_node_app:run \
 		-Dapplication.appName=${seed2-appName} \
-		-Dapplication.network.defaultNodePortByTransportType.clear=8001 \
-		-Dapplication.network.defaultNodePortByTransportType.tor=1001 \
+		-Dapplication.network.configByTransportType.clear.defaultNodePort=8001 \
+		-Dapplication.network.configByTransportType.tor.defaultNodePort=1001 \
 		-Dapplication.network.supportedTransportTypes.0=CLEAR \
 		-Dapplication.network.supportedTransportTypes.1=TOR \
 		-Dapplication.network.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
@@ -221,19 +221,19 @@ seed2-i2p-destination:
 	# Seed 1
 	screen -S localtests -X screen -t ${seed1-title} ./gradlew --console=plain seed_node_app:run \
 		-Dapplication.application.appName=${seed1-appName} \
-		-Dapplication.network.defaultNodePortByTransportType.i2p=5000 \
+		-Dapplication.network.configByTransportType.i2p.defaultNodePort=5000 \
 		-Dapplication.network.supportedTransportTypes.0=I2P \
 		-Dapplication.network.supportedTransportTypes.1=CLEAR \
-		-Dapplication.network.defaultNodePortByTransportType.clear=8000 \
+		-Dapplication.network.configByTransportType.clear.defaultNodePort=8000 \
 		-Dapplication.network.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
 		-Dapplication.network.seedAddressByTransportType.clear.1=127.0.0.1:8001
 	# Seed 2
 	screen -S localtests -X screen -t ${seed2-title} ./gradlew --console=plain seed_node_app:run \
 		-Dapplication.appName=${seed2-appName} \
-		-Dapplication.network.defaultNodePortByTransportType.i2p=5001 \
+		-Dapplication.network.configByTransportType.i2p.defaultNodePort=5001 \
 		-Dapplication.network.supportedTransportTypes.0=I2P \
 		-Dapplication.network.supportedTransportTypes.1=CLEAR \
-		-Dapplication.network.defaultNodePortByTransportType.clear=8001 \
+		-Dapplication.network.configByTransportType.clear.defaultNodePort=8001 \
 		-Dapplication.network.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
 		-Dapplication.network.seedAddressByTransportType.clear.1=127.0.0.1:8001
 

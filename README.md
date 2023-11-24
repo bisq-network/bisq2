@@ -116,13 +116,13 @@ Please note that the I2P integration is not very stable yet.
 To start 2 seed nodes on ports 8000 and 8001 connecting to each other use those JVM arguments.
 ```
 -Dapplication.appName=bisq2_seed1 
--Dapplication.network.defaultNodePortByTransportType.clear=8000 
+-Dapplication.network.configByTransportType.clear.defaultNodePort=8000 
 -Dapplication.network.supportedTransportTypes.0=CLEAR 
 -Dapplication.network.seedAddressByTransportType.clear.0=127.0.0.1:8000 
 -Dapplication.network.seedAddressByTransportType.clear.1=127.0.0.1:8001 
 
 -Dapplication.appName=bisq2_seed2 
--Dapplication.network.defaultNodePortByTransportType.clear=8001 
+-Dapplication.network.configByTransportType.clear.defaultNodePort=8001 
 -Dapplication.network.supportedTransportTypes.0=CLEAR 
 -Dapplication.network.seedAddressByTransportType.clear.0=127.0.0.1:8000 
 -Dapplication.network.seedAddressByTransportType.clear.1=127.0.0.1:8001 

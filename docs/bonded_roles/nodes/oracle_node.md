@@ -36,11 +36,13 @@ cd bisq2
 	-Dapplication.oracleNode.bondUserName=[YOUR BISQ1 BOND USER NAME] \
 	-Dapplication.oracleNode.signatureBase64=[SIG] \
 	-Dapplication.oracleNode.staticPublicKeysProvided=[true | false] \
+    -Dapplication.devMode=[true | false] \
 	-jar [PATH TO bisq2]/oracle_node_app/build/libs/oracle_node_app-2.0.0-all.jar
   ```
 
 > _Noe:Only if you run a root node and your pub key is already added to releases as hard coded pub key you can set
-the `application.oracleNode.staticPublicKeysProvided` value to `true`._
+the `application.oracleNode.staticPublicKeysProvided` value to `true`. Set devMode to `true` in case you use the dev
+keys._
 
 - Set correct permissions: `sudo chmod +x /root/run_oracle.sh`
 
@@ -75,7 +77,7 @@ For running a localhost dev oracle node use following JVM arguments:
 ```
   -Dapplication.appName=bisq2_local_oracle
   -Dapplication.devMode=true \
-  -Dapplication.network.defaultNodePortByTransportType.clear=9000
+  -Dapplication.network.configByTransportType.clear.defaultNodePort=9000
   -Dapplication.network.supportedTransportTypes.0=CLEAR
   -Dapplication.oracleNode.privateKey=[YOUR PRIV KEY] \
   -Dapplication.oracleNode.publicKey=[YOUR PUB KEY] \
@@ -83,11 +85,12 @@ For running a localhost dev oracle node use following JVM arguments:
   -Dapplication.oracleNode.profileId=[YOUR PROFILE ID] \
   -Dapplication.oracleNode.bondUserName=[YOUR BISQ1 BOND USER NAME] \
   -Dapplication.oracleNode.signatureBase64=[SIG] \
+  -Dapplication.devMode=[true | false] \
   -Dapplication.oracleNode.staticPublicKeysProvided=true
 ```
 
 In the `bisq.common.application.DevMode` class is dev keypair. If the app is running in dev mode the dev pub key is used
-for verification.
+for verification. Set devMode to `true` in case you use the dev keys
 
 Dev
 pubKey: `3056301006072a8648ce3d020106052b8104000a034200043dd1f2f56593e62670282c245cb71d50b43985b308dd1c977632c3cde155427e4fad0899d7e7af110584182f7e55547d6e1469705567124a02ae2e8afa8e8091`

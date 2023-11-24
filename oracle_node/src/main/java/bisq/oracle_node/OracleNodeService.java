@@ -36,7 +36,6 @@ import bisq.oracle_node.bisq1_bridge.Bisq1BridgeService;
 import bisq.oracle_node.market_price.MarketPricePropagationService;
 import bisq.oracle_node.timestamp.TimestampService;
 import bisq.persistence.PersistenceService;
-import bisq.security.DigestUtil;
 import bisq.security.KeyGeneration;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -109,7 +108,6 @@ public class OracleNodeService implements Service {
     private final String signatureBase64;
     private final String profileId;
     private final boolean staticPublicKeysProvided;
-    private AuthorizedBondedRole authorizedBondedRole;
     private AuthorizedOracleNode authorizedOracleNode;
     @Nullable
     private Scheduler startupScheduler, scheduler;
@@ -179,31 +177,38 @@ public class OracleNodeService implements Service {
         timestampService.setIdentity(identity);
         marketPricePropagationService.setIdentity(identity);
 
-        String publicKeyHash = Hex.encode(DigestUtil.hash(authorizedPublicKey.getEncoded()));
         NetworkId networkId = identity.getNetworkId();
-        authorizedOracleNode = new AuthorizedOracleNode(networkId, bondUserName, signatureBase64, publicKeyHash, staticPublicKeysProvided);
-        bisq1BridgeService.setAuthorizedOracleNode(authorizedOracleNode);
-
-        Optional<AuthorizedOracleNode> oracleNode = staticPublicKeysProvided ? Optional.of(authorizedOracleNode) : Optional.empty();
-        authorizedBondedRole = new AuthorizedBondedRole(profileId,
-                Hex.encode(authorizedPublicKey.getEncoded()),
-                BondedRoleType.ORACLE_NODE,
+        KeyPair keyPair = identity.getNetworkIdWithKeyPair().getKeyPair();
+        byte[] authorizedPublicKeyEncoded = authorizedPublicKey.getEncoded();
+        String authorizedPublicKeyAsHex = Hex.encode(authorizedPublicKeyEncoded);
+        authorizedOracleNode = new AuthorizedOracleNode(networkId,
+                profileId,
+                authorizedPublicKeyAsHex,
                 bondUserName,
                 signatureBase64,
-                identityService.getOrCreateDefaultIdentity().getNetworkId().getAddressByTransportTypeMap(),
-                networkId,
-                oracleNode,
                 staticPublicKeysProvided);
+        bisq1BridgeService.setAuthorizedOracleNode(authorizedOracleNode);
 
-        KeyPair keyPair = identity.getNetworkIdWithKeyPair().getKeyPair();
+        // We only self-publish if we are a root oracle
+        if (staticPublicKeysProvided) {
+            AuthorizedBondedRole authorizedBondedRole = new AuthorizedBondedRole(profileId,
+                    authorizedPublicKeyAsHex,
+                    BondedRoleType.ORACLE_NODE,
+                    bondUserName,
+                    signatureBase64,
+                    identityService.getOrCreateDefaultIdentity().getNetworkId().getAddressByTransportTypeMap(),
+                    networkId,
+                    Optional.of(authorizedOracleNode),
+                    staticPublicKeysProvided);
 
-        // Repeat 3 times at startup to republish to ensure the data gets well distributed
-        startupScheduler = Scheduler.run(() -> publishMyAuthorizedData(authorizedOracleNode, authorizedBondedRole, keyPair))
-                .repeated(1, 10, TimeUnit.SECONDS, 3);
+            // Repeat 3 times at startup to republish to ensure the data gets well distributed
+            startupScheduler = Scheduler.run(() -> publishMyAuthorizedData(authorizedOracleNode, authorizedBondedRole, keyPair))
+                    .repeated(1, 10, TimeUnit.SECONDS, 3);
 
-        // We have 30 days TTL for the data, we republish after 25 days to ensure the data does not expire
-        scheduler = Scheduler.run(() -> publishMyAuthorizedData(authorizedOracleNode, authorizedBondedRole, keyPair))
-                .periodically(25, TimeUnit.DAYS);
+            // We have 30 days TTL for the data, we republish after 25 days to ensure the data does not expire
+            scheduler = Scheduler.run(() -> publishMyAuthorizedData(authorizedOracleNode, authorizedBondedRole, keyPair))
+                    .periodically(25, TimeUnit.DAYS);
+        }
 
         authorizedBondedRolesService.getBondedRoles().addObserver(new CollectionObserver<>() {
             @Override

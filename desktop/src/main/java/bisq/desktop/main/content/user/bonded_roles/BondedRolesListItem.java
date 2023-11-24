@@ -63,8 +63,6 @@ public class BondedRolesListItem implements TableItem {
         bondUserName = authorizedBondedRoleData.getBondUserName();
         signature = authorizedBondedRoleData.getSignatureBase64();
         bondedRoleType = authorizedBondedRoleData.getBondedRoleType();
-        roleTypeString = bondedRoleType.getDisplayString();
-
         AddressByTransportTypeMap addressByTransportTypeMap = authorizedBondedRoleData.getAddressByTransportTypeMap();
         List<String> list = addressByTransportTypeMap.entrySet().stream()
                 .map(e -> e.getKey().name() + ": " + e.getValue().getFullAddress())
@@ -72,6 +70,9 @@ public class BondedRolesListItem implements TableItem {
         address = Joiner.on("\n").join(list);
         addressInfoJson = new GsonBuilder().setPrettyPrinting().create().toJson(addressByTransportTypeMap);
         staticPublicKeysProvided = authorizedBondedRoleData.staticPublicKeysProvided();
+        roleTypeString = staticPublicKeysProvided ?
+                bondedRoleType.getDisplayString() + " (root)" :
+                bondedRoleType.getDisplayString();
         // oracleNodePublicKeyHash = authorizedBondedRoleData.getAuthorizedOracleNode().map(AuthorizedOracleNode::getPublicKeyHash).orElseGet(() -> Res.get("data.na"));
     }
 }

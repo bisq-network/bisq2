@@ -19,6 +19,7 @@ package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.data.ByteArray;
 import bisq.common.timer.Scheduler;
+import bisq.common.util.StringUtils;
 import bisq.network.p2p.services.data.storage.DataStorageResult;
 import bisq.network.p2p.services.data.storage.DataStorageService;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
@@ -96,7 +97,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             if (authenticatedData instanceof AuthorizedData) {
                 AuthorizedData authorizedData = (AuthorizedData) authenticatedData;
                 if (authorizedData.isNotAuthorized()) {
-                    log.warn("AuthorizedData is not authorized. request={}", request);
+                    log.warn("AuthorizedData is not authorized. request={}", StringUtils.truncate(request.toString(), 500));
                     return new DataStorageResult(false).isNotAuthorized();
                 }
             }
