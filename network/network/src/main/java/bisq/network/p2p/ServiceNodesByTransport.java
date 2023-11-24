@@ -81,13 +81,11 @@ public class ServiceNodesByTransport {
                                    ProofOfWorkService proofOfWorkService,
                                    NetworkLoadService networkLoadService) {
         this.supportedTransportTypes = supportedTransportTypes;
-
+        AuthorizationService authorizationService = new AuthorizationService(proofOfWorkService);
         supportedTransportTypes.forEach(transportType -> {
             TransportConfig transportConfig = configByTransportType.get(transportType);
-
             Node.Config nodeConfig = new Node.Config(transportType,
                     supportedTransportTypes,
-                    new AuthorizationService(proofOfWorkService),
                     transportConfig,
                     transportConfig.getSocketTimeout());
             Set<Address> seedAddresses = seedAddressesByTransport.get(transportType);
@@ -100,6 +98,7 @@ public class ServiceNodesByTransport {
                     messageDeliveryStatusService,
                     keyPairService,
                     persistenceService,
+                    authorizationService,
                     seedAddresses,
                     transportType,
                     networkLoadService);

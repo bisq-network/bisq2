@@ -38,13 +38,13 @@ import lombok.extern.slf4j.Slf4j;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Slf4j
 public class NodeListItem implements TableItem {
+    @EqualsAndHashCode.Include
     @Getter
     private final Node node;
     @Getter
     private final StringProperty date = new SimpleStringProperty();
     @Getter
     private final String address;
-    @EqualsAndHashCode.Include
     @Getter
     private final String keyId;
     @Getter

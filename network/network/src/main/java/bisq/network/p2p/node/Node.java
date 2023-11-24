@@ -38,6 +38,7 @@ import bisq.network.p2p.services.peergroup.BanList;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import dev.failsafe.Failsafe;
 import dev.failsafe.RetryPolicy;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
@@ -77,6 +78,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  * - Notifies MessageListeners when a new proto has been received.
  */
 @Slf4j
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Node implements Connection.Handler {
     public enum State {
         NEW,
@@ -105,18 +107,15 @@ public class Node implements Connection.Handler {
     public static final class Config {
         private final TransportType transportType;
         private final Set<TransportType> supportedTransportTypes;
-        private final AuthorizationService authorizationService;
         private final TransportConfig transportConfig;
         private final int socketTimeout;
 
         public Config(TransportType transportType,
                       Set<TransportType> supportedTransportTypes,
-                      AuthorizationService authorizationService,
                       TransportConfig transportConfig,
                       int socketTimeout) {
             this.transportType = transportType;
             this.supportedTransportTypes = supportedTransportTypes;
-            this.authorizationService = authorizationService;
             this.transportConfig = transportConfig;
             this.socketTimeout = socketTimeout;
         }
@@ -126,6 +125,10 @@ public class Node implements Connection.Handler {
     private final TransportService transportService;
     private final AuthorizationService authorizationService;
     private final Config config;
+    @EqualsAndHashCode.Include
+    @Getter
+    private final TransportType transportType;
+    @EqualsAndHashCode.Include
     @Getter
     private final NetworkId networkId;
     @Getter
@@ -134,8 +137,6 @@ public class Node implements Connection.Handler {
     private final Map<Address, OutboundConnection> outboundConnectionsByAddress = new ConcurrentHashMap<>();
     @Getter
     private final Map<Address, InboundConnection> inboundConnectionsByAddress = new ConcurrentHashMap<>();
-    @Getter
-    private final TransportType transportType;
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     private final Map<String, ConnectionHandshake> connectionHandshakes = new ConcurrentHashMap<>();
     private final RetryPolicy<Boolean> retryPolicy;
@@ -148,14 +149,20 @@ public class Node implements Connection.Handler {
     @Getter
     public final NetworkLoadService networkLoadService;
 
-    public Node(BanList banList, Config config, NetworkId networkId, TorIdentity torIdentity, TransportService transportService, NetworkLoadService networkLoadService) {
-        this.banList = banList;
-        this.transportService = transportService;
+    public Node(BanList banList,
+                Config config,
+                NetworkId networkId,
+                TorIdentity torIdentity,
+                TransportService transportService,
+                NetworkLoadService networkLoadService,
+                AuthorizationService authorizationService) {
         transportType = config.getTransportType();
-        authorizationService = config.getAuthorizationService();
-        this.config = config;
         this.networkId = networkId;
         this.torIdentity = torIdentity;
+        this.config = config;
+        this.banList = banList;
+        this.transportService = transportService;
+        this.authorizationService = authorizationService;
         this.networkLoadService = networkLoadService;
 
         retryPolicy = RetryPolicy.<Boolean>builder()
