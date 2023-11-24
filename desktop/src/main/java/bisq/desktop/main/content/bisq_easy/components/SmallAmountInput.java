@@ -65,8 +65,7 @@ public class SmallAmountInput extends AmountInput {
             iconButton.setScaleX(ICON_SCALE);
             iconButton.setScaleY(ICON_SCALE);
             iconButton.setOpacity(ICON_OPACITY);
-            tooltip = new BisqTooltip();
-            tooltip.getStyleClass().add("dark-tooltip");
+            tooltip = new BisqTooltip(true);
             iconButton.setTooltip(tooltip);
             return iconButton;
         }

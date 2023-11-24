@@ -109,15 +109,17 @@ public class TransportTypeView extends View<GridPane, TransportTypeModel, Transp
 
         connectionsTableView.getColumns().add(new BisqTableColumn.Builder<ConnectionListItem>()
                 .title(Res.get("settings.network.connections.header.address"))
-                .minWidth(250)
+                .minWidth(130)
                 .valueSupplier(ConnectionListItem::getAddress)
+                .tooltipSupplier(ConnectionListItem::getAddress)
                 .comparator(ConnectionListItem::compareAddress)
                 .build());
         connectionsTableView.getColumns().add(new BisqTableColumn.Builder<ConnectionListItem>()
-                .title(Res.get("settings.network.connections.header.keyId"))
-                .minWidth(220)
-                .valueSupplier(ConnectionListItem::getKeyId)
-                .comparator(ConnectionListItem::compareKeyId)
+                .title(Res.get("settings.network.header.nodeTag"))
+                .minWidth(100)
+                .valueSupplier(ConnectionListItem::getNodeTag)
+                .tooltipSupplier(ConnectionListItem::getNodeTagTooltip)
+                .comparator(ConnectionListItem::compareNodeTag)
                 .build());
         connectionsTableView.getColumns().add(new BisqTableColumn.Builder<ConnectionListItem>()
                 .title(Res.get("settings.network.connections.header.connectionDirection"))
@@ -127,14 +129,16 @@ public class TransportTypeView extends View<GridPane, TransportTypeModel, Transp
                 .build());
         connectionsTableView.getColumns().add(new BisqTableColumn.Builder<ConnectionListItem>()
                 .title(Res.get("settings.network.connections.header.sentHeader"))
-                .minWidth(120)
+                .minWidth(160)
                 .valuePropertySupplier(ConnectionListItem::getSent)
+                .tooltipPropertySupplier(ConnectionListItem::getSent)
                 .comparator(ConnectionListItem::compareSent)
                 .build());
         connectionsTableView.getColumns().add(new BisqTableColumn.Builder<ConnectionListItem>()
                 .title(Res.get("settings.network.connections.header.receivedHeader"))
-                .minWidth(120)
+                .minWidth(160)
                 .valuePropertySupplier(ConnectionListItem::getReceived)
+                .tooltipPropertySupplier(ConnectionListItem::getReceived)
                 .comparator(ConnectionListItem::compareReceived)
                 .build());
         connectionsTableView.getColumns().add(new BisqTableColumn.Builder<ConnectionListItem>()
@@ -148,36 +152,39 @@ public class TransportTypeView extends View<GridPane, TransportTypeModel, Transp
     private void configNodesTableView() {
         nodesTableView.getColumns().add(new BisqTableColumn.Builder<NodeListItem>()
                 .title(Res.get("settings.network.nodes.header.type"))
-                .minWidth(100)
+                .minWidth(70)
                 .left()
                 .valueSupplier(NodeListItem::getType)
                 .comparator(NodeListItem::compareType)
                 .build());
         nodesTableView.getColumns().add(new BisqTableColumn.Builder<NodeListItem>()
-                .title(Res.get("settings.network.nodes.header.identityTag"))
+                .title(Res.get("settings.network.header.nodeTag"))
                 .minWidth(100)
-                .valueSupplier(NodeListItem::getIdentityTag)
-                .comparator(NodeListItem::compareIdentityTag)
-                .build());
-        nodesTableView.getColumns().add(new BisqTableColumn.Builder<NodeListItem>()
-                .title(Res.get("settings.network.nodes.header.keyId"))
-                .minWidth(250)
-                .valueSupplier(NodeListItem::getKeyId)
-                .comparator(NodeListItem::compareKeyId)
+                .valueSupplier(NodeListItem::getNodeTag)
+                .tooltipSupplier(NodeListItem::getNodeTagTooltip)
+                .comparator(NodeListItem::compareNodeTag)
                 .build());
         nodesTableView.getColumns().add(new BisqTableColumn.Builder<NodeListItem>()
                 .title(Res.get("settings.network.nodes.header.address"))
-                .minWidth(220)
+                .minWidth(130)
                 .valueSupplier(NodeListItem::getAddress)
+                .tooltipSupplier(NodeListItem::getAddress)
                 .comparator(NodeListItem::compareAddress)
                 .build());
         BisqTableColumn<NodeListItem> numConnections = new BisqTableColumn.Builder<NodeListItem>()
                 .title(Res.get("settings.network.nodes.header.numConnections"))
-                .minWidth(130)
+                .minWidth(170)
                 .valuePropertySupplier(NodeListItem::getNumConnections)
                 .comparator(NodeListItem::compareNumConnections)
                 .build();
         nodesTableView.getColumns().add(numConnections);
         nodesTableView.getSortOrder().add(numConnections);
+        nodesTableView.getColumns().add(new BisqTableColumn.Builder<NodeListItem>()
+                .title(Res.get("settings.network.nodes.header.keyId"))
+                .minWidth(100)
+                .valueSupplier(NodeListItem::getKeyId)
+                .tooltipSupplier(NodeListItem::getKeyId)
+                .comparator(NodeListItem::compareKeyId)
+                .build());
     }
 }

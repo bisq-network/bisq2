@@ -54,7 +54,6 @@ import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.security.KeyPairService;
-import bisq.security.PubKey;
 import bisq.security.SignatureUtil;
 import bisq.security.pow.ProofOfWorkService;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
@@ -106,10 +105,6 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     private final Optional<MonitorService> monitorService;
     @Getter
     private final Map<TransportType, Integer> defaultNodePortByTransportType;
-
-    private NetworkId defaultNetworkId;
-    @Getter
-    private TorIdentity defaultTorIdentity;
 
     public NetworkService(NetworkServiceConfig config,
                           PersistenceService persistenceService,
@@ -192,7 +187,6 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public void createDefaultServiceNodes(NetworkId defaultNetworkId, TorIdentity defaultTorIdentity) {
-        this.defaultNetworkId = defaultNetworkId;
         serviceNodesByTransport.getMap()
                 .forEach((transportType, serviceNode) -> serviceNode.createDefaultNode(defaultNetworkId, defaultTorIdentity));
 
@@ -200,7 +194,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         monitorService.ifPresent(MonitorService::initialize);
     }
 
-    public Map<TransportType, CompletableFuture<Node>> getInitializedNodeByTransport(NetworkId networkId, PubKey pubKey,  TorIdentity torIdentity) {
+    public Map<TransportType, CompletableFuture<Node>> getInitializedNodeByTransport(NetworkId networkId, TorIdentity torIdentity) {
         return serviceNodesByTransport.getInitializedNodeByTransport(networkId, torIdentity);
     }
 
@@ -213,8 +207,8 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     /**
      * NetworkId of a fully initialized node (on all transports)
      */
-    public CompletableFuture<List<Node>> getNetworkIdOfInitializedNode(NetworkId networkId, TorIdentity torIdentity) {
-        return serviceNodesByTransport.getNetworkIdOfInitializedNode(networkId, torIdentity);
+    public CompletableFuture<List<Node>> getAllInitializedNodes(NetworkId networkId, TorIdentity torIdentity) {
+        return serviceNodesByTransport.getAllInitializedNodes(networkId, torIdentity);
     }
 
 
@@ -231,7 +225,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                                                                  NetworkId receiverNetworkId,
                                                                  NetworkIdWithKeyPair senderNetworkIdWithKeyPair,
                                                                  TorIdentity senderTorIdentity) {
-        return getNetworkIdOfInitializedNode(senderNetworkIdWithKeyPair.getNetworkId(), senderTorIdentity)
+        return getAllInitializedNodes(senderNetworkIdWithKeyPair.getNetworkId(), senderTorIdentity)
                 .thenCompose(networkId -> supplyAsync(() -> serviceNodesByTransport.confidentialSend(envelopePayloadMessage,
                                 receiverNetworkId,
                                 senderNetworkIdWithKeyPair.getKeyPair(),
@@ -385,11 +379,21 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     }
 
     public Optional<Node> findDefaultNode(TransportType transport) {
-        return findNode(transport, defaultNetworkId);
+        return serviceNodesByTransport.findServiceNode(transport).map(ServiceNode::getDefaultNode);
     }
 
     public Optional<Node> findNode(TransportType transport, NetworkId networkId) {
         return serviceNodesByTransport.findNode(transport, networkId);
+    }
+
+    public Set<Node> findNodesOfAllTransports(NetworkId networkId) {
+        return serviceNodesByTransport.findNodesOfAllTransports(networkId);
+    }
+
+    public Optional<TorIdentity> findTorIdentity(NetworkId networkId) {
+        // We get all nodes for all transports, but we only want to find the torIdentity which is the same at all nodes
+        // for the given networkId, so we use Stream.findAny to get any node.
+        return findNodesOfAllTransports(networkId).stream().findAny().map(Node::getTorIdentity);
     }
 
 

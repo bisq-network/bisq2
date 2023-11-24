@@ -54,7 +54,7 @@ public class IdentityServiceTest {
 
         List<Node> initializedNodes = Collections.emptyList();
         doReturn(CompletableFuture.completedFuture(initializedNodes))
-                .when(networkService).getNetworkIdOfInitializedNode(any(), any());
+                .when(networkService).getAllInitializedNodes(any(), any());
 
         keyPairService = new KeyPairService(persistenceService);
         identityService = new IdentityService(persistenceService, keyPairService, networkService);

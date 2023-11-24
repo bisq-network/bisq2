@@ -79,9 +79,7 @@ public class BisqEasyOfferbookView extends ChatView {
         marketSelectorIcon = Icons.getIcon(AwesomeIcon.CHEVRON_DOWN, "12");
         marketSelectorIcon.setCursor(Cursor.HAND);
         marketSelectorIcon.setPadding(new Insets(7, 10, 7, 10));
-        Tooltip tooltip = new BisqTooltip(Res.get("bisqEasy.offerbook.selectMarket"));
-        tooltip.getStyleClass().add("dark-tooltip");
-        marketSelectorIcon.setTooltip(tooltip);
+        marketSelectorIcon.setTooltip(new BisqTooltip(Res.get("bisqEasy.offerbook.selectMarket"), true));
 
         channelTitle.setId("chat-messages-headline");
         channelTitle.setCursor(Cursor.HAND);

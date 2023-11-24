@@ -127,7 +127,6 @@ public class ServiceNode {
 
     @Getter
     private Node defaultNode;
-    private final int defaultNodePort;
     @Getter
     private Optional<ConfidentialMessageService> confidentialMessageService = Optional.empty();
     @Getter
@@ -162,11 +161,10 @@ public class ServiceNode {
 
         transportService = TransportService.create(transportType, nodeConfig.getTransportConfig());
         nodesById = new NodesById(banList, nodeConfig, transportService, networkLoadService, authorizationService);
-        defaultNodePort = nodeConfig.getTransportConfig().getDefaultNodePort();
     }
 
     public void createDefaultNode(NetworkId defaultNetworkId, TorIdentity defaultTorIdentity) {
-        defaultNode = nodesById.createAndConfigNode(defaultNetworkId, defaultTorIdentity);
+        defaultNode = nodesById.createAndConfigNode(defaultNetworkId, defaultTorIdentity, true);
 
         Set<Service> services = config.getServices();
         peerGroupService = services.contains(Service.PEER_GROUP) ?

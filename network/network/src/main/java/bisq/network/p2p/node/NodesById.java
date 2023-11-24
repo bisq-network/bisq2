@@ -77,8 +77,8 @@ public class NodesById implements Node.Listener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public Node createAndConfigNode(NetworkId networkId, TorIdentity torIdentity) {
-        Node node = new Node(banList, nodeConfig, networkId, torIdentity, transportService, networkLoadService, authorizationService);
+    public Node createAndConfigNode(NetworkId networkId, TorIdentity torIdentity, boolean isDefaultNode) {
+        Node node = new Node(networkId, torIdentity, isDefaultNode, nodeConfig, banList, transportService, networkLoadService, authorizationService);
         map.put(networkId, node);
         node.addListener(this);
         listeners.forEach(listener -> listener.onNodeAdded(node));
@@ -161,10 +161,12 @@ public class NodesById implements Node.Listener {
 
     @Override
     public void onConnection(Connection connection) {
+        nodeListeners.forEach(listener -> listener.onConnection(connection));
     }
 
     @Override
     public void onDisconnect(Connection connection, CloseReason closeReason) {
+        nodeListeners.forEach(listener -> listener.onDisconnect(connection, closeReason));
     }
 
     @Override
@@ -172,6 +174,7 @@ public class NodesById implements Node.Listener {
         map.remove(node.getNetworkId());
         node.removeListener(this);
         listeners.forEach(listener -> listener.onNodeRemoved(node));
+        nodeListeners.forEach(listener -> listener.onShutdown(node));
     }
 
 
@@ -181,6 +184,6 @@ public class NodesById implements Node.Listener {
 
     private Node getOrCreateNode(NetworkId networkId, TorIdentity torIdentity) {
         return findNode(networkId)
-                .orElseGet(() -> createAndConfigNode(networkId, torIdentity));
+                .orElseGet(() -> createAndConfigNode(networkId, torIdentity, false));
     }
 }

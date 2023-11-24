@@ -17,25 +17,27 @@
 
 package bisq.desktop.main.content.settings.network.transport;
 
-import bisq.common.observable.Pin;
-import bisq.common.observable.collection.CollectionObserver;
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.i18n.Res;
 import bisq.identity.IdentityService;
 import bisq.network.common.Address;
 import bisq.network.common.TransportType;
+import bisq.network.identity.NetworkId;
 import bisq.network.p2p.ServiceNode;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
+import bisq.network.p2p.node.CloseReason;
+import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.NodesById;
 import bisq.security.KeyPairService;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
+@Slf4j
 public class TransportTypeController implements Controller {
     private final KeyPairService keyPairService;
     private final IdentityService identityService;
@@ -43,8 +45,8 @@ public class TransportTypeController implements Controller {
     @Getter
     private final TransportTypeView view;
 
+    private final Node.Listener nodeListener;
     private final NodesById.Listener nodesByIdListener;
-    private Pin nodeListItemsPin, connectionListItemsPin;
 
     public TransportTypeController(ServiceProvider serviceProvider, TransportType transportType) {
         keyPairService = serviceProvider.getSecurityService().getKeyPairService();
@@ -59,12 +61,28 @@ public class TransportTypeController implements Controller {
         nodesByIdListener = new NodesById.Listener() {
             @Override
             public void onNodeAdded(Node node) {
-                UIThread.run(() -> model.getNodes().add(node));
+                UIThread.run(() -> addNode(node));
             }
 
             @Override
             public void onNodeRemoved(Node node) {
-                UIThread.run(() -> model.getNodes().remove(node));
+                UIThread.run(() -> removeNode(node));
+            }
+        };
+
+        nodeListener = new Node.Listener() {
+            @Override
+            public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
+            }
+
+            @Override
+            public void onConnection(Connection connection) {
+                UIThread.run(() -> findNodeListItem(connection).ifPresent(nodeListItem -> addConnection(connection, nodeListItem.getNode())));
+            }
+
+            @Override
+            public void onDisconnect(Connection connection, CloseReason closeReason) {
+                UIThread.run(() -> removeConnection(connection));
             }
         };
     }
@@ -75,51 +93,55 @@ public class TransportTypeController implements Controller {
                 .map(Address::getFullAddress)
                 .orElseGet(() -> Res.get("data.na")));
 
-        nodeListItemsPin = FxBindings.<Node, NodeListItem>bind(model.getNodeListItems())
-                .map(node -> new NodeListItem(node, keyPairService, identityService))
-                .to(model.getNodes());
-
-        connectionListItemsPin = model.getNodes().addObserver(new CollectionObserver<>() {
-            @Override
-            public void add(Node node) {
-                UIThread.run(() -> {
-                    Set<ConnectionListItem> uniqueConnections = node.getAllConnections()
-                            .map(connection -> new ConnectionListItem(connection, node.getNetworkId().getKeyId()))
-                            .collect(Collectors.toSet());
-                    uniqueConnections.addAll(model.getConnectionListItems());
-                    model.getConnectionListItems().setAll(uniqueConnections);
-                });
-            }
-
-            @Override
-            public void remove(Object element) {
-                UIThread.run(() -> {
-                    if (element instanceof Node) {
-                        Node node = (Node) element;
-                        Set<ConnectionListItem> toRemove = model.getConnectionListItems().stream()
-                                .filter(item -> item.getKeyId().equals(node.getNetworkId().getKeyId()))
-                                .collect(Collectors.toSet());
-                        model.getConnectionListItems().removeAll(toRemove);
-                    }
-                });
-            }
-
-            @Override
-            public void clear() {
-                UIThread.run(() -> model.getConnections().clear());
-            }
-        });
+        model.getServiceNode().getNodesById().getAllNodes().forEach(this::addNode);
 
         model.getServiceNode().getNodesById().addListener(nodesByIdListener);
-        model.getServiceNode().getNodesById().getAllNodes().forEach(node -> model.getNodes().add(node));
+        model.getServiceNode().getNodesById().addNodeListener(nodeListener);
     }
 
     @Override
     public void onDeactivate() {
-        nodeListItemsPin.unbind();
-        connectionListItemsPin.unbind();
-        model.getServiceNode().getNodesById().addListener(nodesByIdListener);
+        model.getServiceNode().getNodesById().removeListener(nodesByIdListener);
+        model.getServiceNode().getNodesById().removeNodeListener(nodeListener);
         model.getNodeListItems().forEach(NodeListItem::deactivate);
-        model.getSortedConnectionListItems().forEach(ConnectionListItem::deactivate);
+        model.getConnectionListItems().forEach(ConnectionListItem::deactivate);
+        model.getNodeListItems().clear();
+        model.getConnectionListItems().clear();
+    }
+
+    private void addNode(Node node) {
+        NodeListItem nodeListItem = new NodeListItem(node, keyPairService, identityService);
+        if (!model.getNodeListItems().contains(nodeListItem)) {
+            model.getNodeListItems().add(nodeListItem);
+        }
+
+        node.getAllConnections().forEach(connection -> addConnection(connection, node));
+    }
+
+    private void removeNode(Node node) {
+        model.getNodeListItems().remove(new NodeListItem(node, keyPairService, identityService));
+
+        node.getAllConnections().forEach(this::removeConnection);
+    }
+
+    private void addConnection(Connection connection, Node node) {
+        ConnectionListItem item = new ConnectionListItem(connection, node, identityService);
+        if (!model.getConnectionListItems().contains(item)) {
+            model.getConnectionListItems().add(item);
+        }
+    }
+
+    private void removeConnection(Connection connection) {
+        Optional<ConnectionListItem> toRemove = model.getConnectionListItems().stream()
+                .filter(item -> item.getConnection().getId().equals(connection.getId()))
+                .findAny();
+        toRemove.ifPresent(c -> model.getConnectionListItems().removeAll(c));
+    }
+
+    private Optional<NodeListItem> findNodeListItem(Connection connection) {
+        return model.getNodeListItems().stream()
+                .filter(item -> item.getNode().getAllConnections()
+                        .anyMatch(c -> c.getId().equals(connection.getId())))
+                .findAny();
     }
 }
