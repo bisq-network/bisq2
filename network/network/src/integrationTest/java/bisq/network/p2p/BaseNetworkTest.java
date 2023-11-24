@@ -21,8 +21,6 @@ import bisq.common.util.OsUtils;
 import bisq.network.common.TransportConfig;
 import bisq.network.common.TransportType;
 import bisq.network.p2p.node.Node;
-import bisq.network.p2p.node.authorization.AuthorizationService;
-import bisq.security.pow.HashCashService;
 
 import java.nio.file.Path;
 import java.util.Set;
@@ -36,8 +34,8 @@ public abstract class BaseNetworkTest {
     protected Node.Config getConfig(TransportType transportType, Set<TransportType> supportedTransportTypes) {
         return new Node.Config(transportType,
                 supportedTransportTypes,
-                new AuthorizationService(new HashCashService()),
                 getTransportConfig(getBaseDir()),
+                (int) TimeUnit.SECONDS.toMillis(120),
                 (int) TimeUnit.SECONDS.toMillis(120));
     }
 
@@ -55,7 +53,12 @@ public abstract class BaseNetworkTest {
             }
 
             @Override
-            public int getSocketTimeout() {
+            public int getDefaultNodeSocketTimeout() {
+                return 600;
+            }
+
+            @Override
+            public int getUserNodeSocketTimeout() {
                 return 600;
             }
         };

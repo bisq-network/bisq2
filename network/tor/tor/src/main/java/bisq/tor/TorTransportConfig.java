@@ -41,7 +41,8 @@ public class TorTransportConfig implements TransportConfig {
         return new TorTransportConfig(
                 dataDir,
                 config.hasPath("defaultNodePort") ? config.getInt("defaultNodePort") : -1,
-                (int) TimeUnit.SECONDS.toMillis(config.getInt("socketTimeout")),
+                (int) TimeUnit.SECONDS.toMillis(config.getInt("defaultNodeSocketTimeout")),
+                (int) TimeUnit.SECONDS.toMillis(config.getInt("userNodeSocketTimeout")),
                 config.getBoolean("testNetwork"),
                 parseDirectoryAuthorities(config.getList("directoryAuthorities")),
                 parseTorrcOverrideConfig(config.getConfig("torrcOverrides"))
@@ -82,23 +83,25 @@ public class TorTransportConfig implements TransportConfig {
     }
 
     private final Path dataDir;
-    private final int socketTimeout;
-
     private final int defaultNodePort;
+    private final int defaultNodeSocketTimeout;
+    private final int userNodeSocketTimeout;
     private final boolean isTestNetwork;
     private final Set<DirectoryAuthority> directoryAuthorities;
     private final Map<String, String> torrcOverrides;
 
     public TorTransportConfig(Path dataDir,
                               int defaultNodePort,
-                              int socketTimeout,
+                              int defaultNodeSocketTimeout,
+                              int userNodeSocketTimeout,
                               boolean isTestNetwork,
                               Set<DirectoryAuthority> directoryAuthorities,
                               Map<String, String> torrcOverrides) {
-        this.defaultNodePort = defaultNodePort;
-        this.isTestNetwork = isTestNetwork;
         this.dataDir = dataDir;
-        this.socketTimeout = socketTimeout;
+        this.defaultNodePort = defaultNodePort;
+        this.defaultNodeSocketTimeout = defaultNodeSocketTimeout;
+        this.userNodeSocketTimeout = userNodeSocketTimeout;
+        this.isTestNetwork = isTestNetwork;
         this.directoryAuthorities = directoryAuthorities;
         this.torrcOverrides = torrcOverrides;
     }

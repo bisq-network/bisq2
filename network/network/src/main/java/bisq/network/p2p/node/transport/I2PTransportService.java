@@ -33,7 +33,8 @@ public class I2PTransportService implements TransportService {
         public static Config from(Path dataDir, com.typesafe.config.Config config) {
             return new Config(dataDir,
                     config.hasPath("defaultNodePort") ? config.getInt("defaultNodePort") : -1,
-                    (int) TimeUnit.SECONDS.toMillis(config.getInt("socketTimeout")),
+                    (int) TimeUnit.SECONDS.toMillis(config.getInt("defaultNodeSocketTimeout")),
+                    (int) TimeUnit.SECONDS.toMillis(config.getInt("userNodeSocketTimeout")),
                     config.getInt("inboundKBytesPerSecond"),
                     config.getInt("outboundKBytesPerSecond"),
                     config.getInt("bandwidthSharePercentage"),
@@ -44,7 +45,8 @@ public class I2PTransportService implements TransportService {
         }
 
         private final int defaultNodePort;
-        private final int socketTimeout;
+        private final int defaultNodeSocketTimeout;
+        private final int userNodeSocketTimeout;
         private final int inboundKBytesPerSecond;
         private final int outboundKBytesPerSecond;
         private final int bandwidthSharePercentage;
@@ -56,7 +58,8 @@ public class I2PTransportService implements TransportService {
 
         public Config(Path dataDir,
                       int defaultNodePort,
-                      int socketTimeout,
+                      int defaultNodeSocketTimeout,
+                      int userNodeSocketTimeout,
                       int inboundKBytesPerSecond,
                       int outboundKBytesPerSecond,
                       int bandwidthSharePercentage,
@@ -66,7 +69,8 @@ public class I2PTransportService implements TransportService {
                       boolean extendedI2pLogging) {
             this.dataDir = dataDir;
             this.defaultNodePort = defaultNodePort;
-            this.socketTimeout = socketTimeout;
+            this.defaultNodeSocketTimeout = defaultNodeSocketTimeout;
+            this.userNodeSocketTimeout = userNodeSocketTimeout;
             this.inboundKBytesPerSecond = inboundKBytesPerSecond;
             this.outboundKBytesPerSecond = outboundKBytesPerSecond;
             this.bandwidthSharePercentage = bandwidthSharePercentage;
@@ -162,7 +166,7 @@ public class I2PTransportService implements TransportService {
         return I2pClient.getI2pClient(i2pDirPath,
                 config.getI2cpHost(),
                 config.getI2cpPort(),
-                config.getSocketTimeout(),
+                config.getDefaultNodeSocketTimeout(),
                 isEmbeddedRouter);
     }
 

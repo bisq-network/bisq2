@@ -19,11 +19,11 @@ package bisq.network.p2p.services.peergroup;
 
 import bisq.common.util.MathUtils;
 import bisq.network.NetworkService;
+import bisq.network.common.Address;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.InboundConnection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.OutboundConnection;
-import bisq.network.common.Address;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -92,7 +92,7 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
 
         persistence = persistenceService.getOrCreatePersistence(this,
                 NetworkService.NETWORK_DB_PATH,
-                node.getTransportType().name().toLowerCase() + "_" + persistableStore.getClass().getSimpleName(),
+                node.getTransportType().name().toLowerCase() + persistableStore.getClass().getSimpleName(),
                 persistableStore);
     }
 

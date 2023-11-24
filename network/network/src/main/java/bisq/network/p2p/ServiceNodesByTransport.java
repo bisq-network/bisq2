@@ -87,7 +87,8 @@ public class ServiceNodesByTransport {
             Node.Config nodeConfig = new Node.Config(transportType,
                     supportedTransportTypes,
                     transportConfig,
-                    transportConfig.getSocketTimeout());
+                    transportConfig.getDefaultNodeSocketTimeout(),
+                    transportConfig.getUserNodeSocketTimeout());
             Set<Address> seedAddresses = seedAddressesByTransport.get(transportType);
             checkNotNull(seedAddresses, "Seed nodes must be setup for %s", transportType);
             PeerGroupManager.Config peerGroupServiceConfig = peerGroupServiceConfigByTransport.get(transportType);

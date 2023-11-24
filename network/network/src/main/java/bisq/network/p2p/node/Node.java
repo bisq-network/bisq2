@@ -108,23 +108,27 @@ public class Node implements Connection.Handler {
         private final TransportType transportType;
         private final Set<TransportType> supportedTransportTypes;
         private final TransportConfig transportConfig;
-        private final int socketTimeout;
+        private final int defaultNodeSocketTimeout;
+        private final int userNodeSocketTimeout;
 
         public Config(TransportType transportType,
                       Set<TransportType> supportedTransportTypes,
                       TransportConfig transportConfig,
-                      int socketTimeout) {
+                      int defaultNodeSocketTimeout,
+                      int userNodeSocketTimeout) {
             this.transportType = transportType;
             this.supportedTransportTypes = supportedTransportTypes;
             this.transportConfig = transportConfig;
-            this.socketTimeout = socketTimeout;
+            this.defaultNodeSocketTimeout = defaultNodeSocketTimeout;
+            this.userNodeSocketTimeout = userNodeSocketTimeout;
         }
     }
 
     private final BanList banList;
     private final TransportService transportService;
     private final AuthorizationService authorizationService;
-    private final Config config;
+    private final int socketTimeout;
+    private final Set<TransportType> supportedTransportTypes;
     @Getter
     private final boolean isDefaultNode;
     @EqualsAndHashCode.Include
@@ -159,11 +163,12 @@ public class Node implements Connection.Handler {
                 TransportService transportService,
                 NetworkLoadService networkLoadService,
                 AuthorizationService authorizationService) {
-        this.isDefaultNode = isDefaultNode;
-        transportType = config.getTransportType();
         this.networkId = networkId;
         this.torIdentity = torIdentity;
-        this.config = config;
+        this.isDefaultNode = isDefaultNode;
+        transportType = config.getTransportType();
+        supportedTransportTypes = config.getSupportedTransportTypes();
+        socketTimeout = isDefaultNode ? config.getDefaultNodeSocketTimeout() : config.getUserNodeSocketTimeout();
         this.banList = banList;
         this.transportService = transportService;
         this.authorizationService = authorizationService;
@@ -222,7 +227,7 @@ public class Node implements Connection.Handler {
 
     private void createServerAndListen() {
         ServerSocketResult serverSocketResult = transportService.getServerSocket(networkId, torIdentity);
-        myCapability = Optional.of(new Capability(serverSocketResult.getAddress(), new ArrayList<>(config.getSupportedTransportTypes())));
+        myCapability = Optional.of(new Capability(serverSocketResult.getAddress(), new ArrayList<>(supportedTransportTypes)));
         server = Optional.of(new Server(serverSocketResult,
                 socket -> onClientSocket(socket, serverSocketResult, myCapability.get()),
                 exception -> {
@@ -235,7 +240,7 @@ public class Node implements Connection.Handler {
     private void onClientSocket(Socket socket, ServerSocketResult serverSocketResult, Capability myCapability) {
         ConnectionHandshake connectionHandshake = new ConnectionHandshake(socket,
                 banList,
-                config.getSocketTimeout(),
+                socketTimeout,
                 myCapability,
                 authorizationService,
                 torIdentity);
@@ -380,7 +385,7 @@ public class Node implements Connection.Handler {
             return outboundConnectionsByAddress.get(address);
         }
 
-        ConnectionHandshake connectionHandshake = new ConnectionHandshake(socket, banList, config.getSocketTimeout(), myCapability, authorizationService, torIdentity);
+        ConnectionHandshake connectionHandshake = new ConnectionHandshake(socket, banList, socketTimeout, myCapability, authorizationService, torIdentity);
         connectionHandshakes.put(connectionHandshake.getId(), connectionHandshake);
         log.debug("Outbound handshake started: Initiated by {} to {}", myCapability.getAddress(), address);
         try {
@@ -403,6 +408,10 @@ public class Node implements Connection.Handler {
                 } catch (IOException ignore) {
                 }
                 return outboundConnectionsByAddress.get(address);
+            }
+
+            if (!isDefaultNode) {
+                log.info("We create an outbound connection to {} from a user node. node={}", address, getNodeInfo());
             }
 
             OutboundConnection connection = new OutboundConnection(socket,
