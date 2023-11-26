@@ -337,7 +337,7 @@ public class TradeWizardReviewController implements Controller {
             } else {
                 model.setPriceDescription(Res.get("bisqEasy.tradeWizard.review.priceDescription.maker.buyer"));
                 toSendAmountDescription = Res.get("bisqEasy.tradeWizard.review.toPay");
-                toReceiveAmountDescription = Res.get("bisqEasy.tradeWizard.review.toReceive");
+                toReceiveAmountDescription = Res.get("bisqEasy.tradeWizard.review.btcAtMarketPrice");
             }
         } else {
             model.setHeadline(Res.get("bisqEasy.tradeWizard.review.headline.taker"));
