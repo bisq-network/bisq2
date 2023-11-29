@@ -480,7 +480,6 @@ public class BisqEasyOpenTradesView extends ChatView {
 
             BisqEasyContract contract = trade.getContract();
             date = contract.getTakeOfferDate();
-            ;
             dateString = DateFormatter.formatDate(date);
             timeString = DateFormatter.formatTime(date);
             market = trade.getOffer().getMarket().toString();
