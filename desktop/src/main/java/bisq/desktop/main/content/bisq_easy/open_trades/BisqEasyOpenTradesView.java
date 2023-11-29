@@ -148,7 +148,6 @@ public class BisqEasyOpenTradesView extends ChatView {
         containerHBox.getChildren().addAll(centerVBox, sideBar);
         containerHBox.setPadding(new Insets(0, 40, 0, 40));
 
-        Layout.pinToAnchorPane(containerHBox, 30, 0, 0, 0);
         root.setContent(containerHBox);
     }
 
