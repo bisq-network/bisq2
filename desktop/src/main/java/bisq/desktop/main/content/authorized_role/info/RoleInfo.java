@@ -118,7 +118,6 @@ public class RoleInfo {
         private String staticPublicKeysProvided;
         private String authorizedPublicKeys;
         private String isBanned;
-
     }
 
     @Slf4j

@@ -80,6 +80,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
         private Optional<Function<S, StringProperty>> tooltipPropertySupplier = Optional.empty();
         private Optional<Function<S, StringProperty>> valuePropertyBiDirBindingSupplier = Optional.empty();
         private Optional<Comparator<S>> comparator = Optional.empty();
+        private Optional<TableColumn.SortType> sortType = Optional.empty();
         private boolean isSortable = true;
         private DefaultCellFactory defaultCellFactory = DefaultCellFactory.TEXT;
         private Consumer<S> onActionHandler = item -> {
@@ -124,6 +125,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
 
             tableColumn.setSortable(isSortable);
             if (isSortable) {
+                sortType.ifPresent(tableColumn::setSortType);
 
                 if (comparator.isPresent()) {
                     tableColumn.setComparator(comparator.get());
@@ -195,6 +197,11 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
 
         public Builder<S> comparator(Comparator<S> comparator) {
             this.comparator = Optional.of(comparator);
+            return this;
+        }
+
+        public Builder<S> sortType(TableColumn.SortType sortType) {
+            this.sortType = Optional.of(sortType);
             return this;
         }
 

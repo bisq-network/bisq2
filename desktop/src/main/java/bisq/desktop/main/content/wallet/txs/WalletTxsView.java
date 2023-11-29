@@ -70,29 +70,26 @@ public class WalletTxsView extends View<VBox, WalletTxsModel, WalletTxsControlle
         tableView.getColumns().add(new BisqTableColumn.Builder<WalletTransactionListItem>()
                 .title(Res.get("wallet.txs.txId"))
                 .minWidth(200)
+                .left()
                 .valueSupplier(WalletTransactionListItem::getTxId)
                 .isSortable(true)
                 .build());
 
-        column = new BisqTableColumn.Builder<WalletTransactionListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<WalletTransactionListItem>()
                 .title(Res.get("wallet.txs.amount"))
                 .minWidth(120)
                 .valueSupplier(WalletTransactionListItem::getAmountAsString)
-                .isSortable(true)
-                .build();
-        column.setComparator(Comparator.comparing(WalletTransactionListItem::getAmount));
-        column.setSortType(TableColumn.SortType.DESCENDING);
-        tableView.getColumns().add(column);
+                .comparator(Comparator.comparing(WalletTransactionListItem::getAmount))
+                .sortType(TableColumn.SortType.DESCENDING)
+                .build());
 
-        column = new BisqTableColumn.Builder<WalletTransactionListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<WalletTransactionListItem>()
                 .title(Res.get("wallet.txs.confirmations"))
                 .minWidth(120)
                 .valueSupplier(WalletTransactionListItem::getConfirmationsAsString)
-                .isSortable(true)
+                .comparator(Comparator.comparing(WalletTransactionListItem::getConfirmations))
+                .sortType(TableColumn.SortType.DESCENDING)
                 .right()
-                .build();
-        column.setComparator(Comparator.comparing(WalletTransactionListItem::getConfirmations));
-        column.setSortType(TableColumn.SortType.DESCENDING);
-        tableView.getColumns().add(column);
+                .build());
     }
 }

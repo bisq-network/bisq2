@@ -187,7 +187,8 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
                 .title(Res.get("bisqEasy.createOffer.review.table.reputation"))
                 .minWidth(120)
                 .setCellFactory(getReputationCellFactory())
-                .comparator(Comparator.comparing(ListItem::getReputationScore).reversed())
+                .comparator(Comparator.comparing(ListItem::getReputationScore))
+                .sortType(TableColumn.SortType.DESCENDING)
                 .build();
         tableView.getColumns().add(reputationColumn);
         tableView.getSortOrder().add(reputationColumn);

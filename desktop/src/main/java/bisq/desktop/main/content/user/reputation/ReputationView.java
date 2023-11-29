@@ -147,7 +147,8 @@ public class ReputationView extends View<VBox, ReputationModel, ReputationContro
                 .build());
         BisqTableColumn<ListItem> scoreColumn = new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("user.reputation.table.columns.reputationScore"))
-                .comparator(Comparator.comparing(ListItem::getTotalScore).reversed())
+                .comparator(Comparator.comparing(ListItem::getTotalScore))
+                .sortType(TableColumn.SortType.DESCENDING)
                 .valueSupplier(ListItem::getTotalScoreString)
                 .build();
         tableView.getColumns().add(scoreColumn);
@@ -155,7 +156,8 @@ public class ReputationView extends View<VBox, ReputationModel, ReputationContro
 
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("user.reputation.table.columns.reputation"))
-                .comparator(Comparator.comparing(ListItem::getTotalScore).reversed())
+                .comparator(Comparator.comparing(ListItem::getTotalScore))
+                .sortType(TableColumn.SortType.DESCENDING)
                 .setCellFactory(getStarsCellFactory())
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
