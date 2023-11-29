@@ -22,8 +22,9 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.table.BisqTableColumn;
+import bisq.desktop.components.table.BisqTableColumns;
 import bisq.desktop.components.table.BisqTableView;
-import bisq.desktop.components.table.TableItem;
+import bisq.desktop.components.table.DateTableItem;
 import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
@@ -136,15 +137,7 @@ public class ReputationDetailsPopup extends VBox {
     }
 
     private void configTableView() {
-        BisqTableColumn<ListItem> dateColumn = new BisqTableColumn.Builder<ListItem>()
-                .title(Res.get("temporal.date"))
-                .left()
-                .minWidth(110)
-                .comparator(Comparator.comparing(ListItem::getDate))
-                .valueSupplier(ListItem::getDateString)
-                .build();
-        tableView.getColumns().add(dateColumn);
-        tableView.getSortOrder().add(dateColumn);
+        tableView.getColumns().add(BisqTableColumns.getDateColumn(tableView.getSortOrder()));
 
         tableView.getColumns().add(new BisqTableColumn.Builder<ReputationDetailsPopup.ListItem>()
                 .title(Res.get("user.reputation.details.table.columns.source"))
@@ -176,20 +169,10 @@ public class ReputationDetailsPopup extends VBox {
 
     @EqualsAndHashCode
     @Getter
-    static class ListItem implements TableItem {
+    static class ListItem implements DateTableItem {
         private final ReputationSource reputationSource;
-        private final long date;
-        private final long age;
-        private final long amount;
-        private final long score;
-        private final long lockTime;
-
-        private final String dateString;
-        private final String sourceString;
-        private final String ageString;
-        private final String amountString;
-        private final String scoreString;
-        private final String lockTimeString;
+        private final long date, age, amount, score, lockTime;
+        private final String dateString, timeString, sourceString, ageString, amountString, scoreString, lockTimeString;
 
         public ListItem(ReputationSource reputationSource, long date, long score) {
             this(reputationSource, date, score, Optional.empty(), Optional.empty());
@@ -202,12 +185,12 @@ public class ReputationDetailsPopup extends VBox {
         public ListItem(ReputationSource reputationSource, long date, long score, Optional<Long> optionalAmount, Optional<Long> optionalLockTime) {
             this.reputationSource = reputationSource;
             this.date = date;
+            dateString = DateFormatter.formatDate(date);
+            timeString = DateFormatter.formatTime(date);
             this.amount = optionalAmount.orElse(0L);
             this.score = score;
             this.lockTime = optionalLockTime.orElse(0L);
             age = TimeFormatter.getAgeInDays(date);
-
-            dateString = DateFormatter.formatDateTime(date);
             sourceString = Res.get("user.reputation.source." + reputationSource.name());
             ageString = TimeFormatter.formatAgeInDays(date);
             amountString = optionalAmount.map(amount -> AmountFormatter.formatAmountWithCode(Coin.fromValue(amount, "BSQ"))).orElse("-");

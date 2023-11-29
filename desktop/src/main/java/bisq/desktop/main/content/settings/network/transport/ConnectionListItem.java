@@ -19,7 +19,7 @@ package bisq.desktop.main.content.settings.network.transport;
 
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.components.table.TableItem;
+import bisq.desktop.components.table.DateTableItem;
 import bisq.i18n.Res;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
@@ -39,12 +39,13 @@ import lombok.extern.slf4j.Slf4j;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Slf4j
 @Getter
-public class ConnectionListItem implements TableItem {
+public class ConnectionListItem implements DateTableItem {
     @EqualsAndHashCode.Include
     private final String connectionId;
     private final Connection connection;
     private final ConnectionMetrics connectionMetrics;
-    private final String date, address, keyId, direction, nodeTagTooltip, nodeTag;
+    private final long date;
+    private final String dateString, timeString, address, keyId, direction, nodeTagTooltip, nodeTag;
     private final StringProperty sent = new SimpleStringProperty();
     private final StringProperty received = new SimpleStringProperty();
     private final StringProperty rtt = new SimpleStringProperty("-");
@@ -55,8 +56,9 @@ public class ConnectionListItem implements TableItem {
         this.keyId = node.getNetworkId().getKeyId();
         connectionId = connection.getId();
         connectionMetrics = connection.getConnectionMetrics();
-
-        date = DateFormatter.formatDateTime(connectionMetrics.getCreationDate());
+        date = connectionMetrics.getCreationDate().getTime();
+        dateString = DateFormatter.formatDate(date);
+        timeString = DateFormatter.formatTime(date);
         address = connection.getPeerAddress().getFullAddress();
 
         direction = connection.isOutboundConnection() ?
@@ -138,15 +140,5 @@ public class ConnectionListItem implements TableItem {
 
     public int compareRtt(ConnectionListItem other) {
         return 0;//todo
-    }
-
-    @Override
-    public void activate() {
-        connection.addListener(listener);
-    }
-
-    @Override
-    public void deactivate() {
-        connection.removeListener(listener);
     }
 }

@@ -19,6 +19,7 @@ package bisq.desktop.main.content.wallet.txs;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.table.BisqTableColumn;
+import bisq.desktop.components.table.BisqTableColumns;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
@@ -55,17 +56,7 @@ public class WalletTxsView extends View<VBox, WalletTxsModel, WalletTxsControlle
     }
 
     private void configTableView() {
-        BisqTableColumn<WalletTransactionListItem> column = new BisqTableColumn.Builder<WalletTransactionListItem>()
-                .title(Res.get("temporal.date"))
-                .minWidth(200)
-                .valueSupplier(WalletTransactionListItem::getDateAsString)
-                .isSortable(true)
-                .left()
-                .build();
-        column.setComparator(Comparator.comparing(WalletTransactionListItem::getDateAsString));
-        column.setSortType(TableColumn.SortType.DESCENDING);
-        tableView.getSortOrder().add(column);
-        tableView.getColumns().add(column);
+        tableView.getColumns().add(BisqTableColumns.getDateColumn(tableView.getSortOrder()));
 
         tableView.getColumns().add(new BisqTableColumn.Builder<WalletTransactionListItem>()
                 .title(Res.get("wallet.txs.txId"))

@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.wallet.txs;
 
 import bisq.common.monetary.Coin;
-import bisq.desktop.components.table.TableItem;
+import bisq.desktop.components.table.DateTableItem;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.wallets.core.model.Transaction;
@@ -31,9 +31,9 @@ import java.util.Date;
 @Slf4j
 @Getter
 @EqualsAndHashCode
-public class WalletTransactionListItem implements TableItem {
-    private final Date date;
-    private final String dateAsString;
+public class WalletTransactionListItem implements DateTableItem {
+    private final long date;
+    private final String dateString, timeString;
     private final String txId;
     private final String amountAsString;
     private final String confirmationsAsString;
@@ -41,8 +41,9 @@ public class WalletTransactionListItem implements TableItem {
     private final int confirmations;
 
     public WalletTransactionListItem(Transaction transaction) {
-        date = transaction.getDate().orElseGet(Date::new);
-        dateAsString = DateFormatter.formatDateTime(date);
+        date = transaction.getDate().orElseGet(Date::new).getTime();
+        dateString = DateFormatter.formatDate(date);
+        timeString = DateFormatter.formatTime(date);
         txId = transaction.getTxId();
         amount = transaction.getAmount();
         amountAsString = AmountFormatter.formatAmount(amount);

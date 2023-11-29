@@ -32,8 +32,9 @@ import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.components.table.BisqTableColumn;
+import bisq.desktop.components.table.BisqTableColumns;
 import bisq.desktop.components.table.BisqTableView;
-import bisq.desktop.components.table.TableItem;
+import bisq.desktop.components.table.DateTableItem;
 import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.i18n.Res;
 import bisq.network.SendMessageResult;
@@ -190,15 +191,8 @@ public class ReportToModeratorTable {
         ///////////////////////////////////////////////////////////////////////////////////////////////////
 
         private void configTableView() {
-            BisqTableColumn<ReportListItem> date = new BisqTableColumn.Builder<ReportListItem>()
-                    .title(Res.get("authorizedRole.moderator.table.date"))
-                    .fixWidth(180)
-                    .left()
-                    .comparator(Comparator.comparing(ReportListItem::getDate).reversed())
-                    .valueSupplier(ReportListItem::getDateString)
-                    .build();
-            tableView.getColumns().add(date);
-            tableView.getSortOrder().add(date);
+            tableView.getColumns().add(BisqTableColumns.getDateColumn(tableView.getSortOrder()));
+
             tableView.getColumns().add(new BisqTableColumn.Builder<ReportListItem>()
                     .title(Res.get("authorizedRole.moderator.table.reporter"))
                     .minWidth(250)
@@ -387,11 +381,11 @@ public class ReportToModeratorTable {
 
         @Getter
         @EqualsAndHashCode
-        private static class ReportListItem implements TableItem {
+        private static class ReportListItem implements DateTableItem {
             private final ReportToModeratorMessage reportToModeratorMessage;
             private final long date;
+            private final String dateString, timeString, message, reporterUserName, accusedUserName, chatChannelDomain;
             private final Optional<UserProfile> reporterUserProfile;
-            private final String dateString, message, reporterUserName, accusedUserName, chatChannelDomain;
             private final UserProfile accusedUserProfile;
 
             private ReportListItem(ReportToModeratorMessage reportToModeratorMessage, ServiceProvider serviceProvider) {
@@ -407,7 +401,8 @@ public class ReportToModeratorTable {
 
                 chatChannelDomain = Res.get("chat.channelDomain." + reportToModeratorMessage.getChatChannelDomain().name());
                 date = reportToModeratorMessage.getDate();
-                dateString = DateFormatter.formatDateTime(date);
+                dateString = DateFormatter.formatDate(date);
+                timeString = DateFormatter.formatTime(date);
                 message = reportToModeratorMessage.getMessage();
             }
         }
