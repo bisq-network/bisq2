@@ -27,11 +27,13 @@ public class SecurityAcademyView extends AcademyBaseView<SecurityAcademyModel, S
     public SecurityAcademyView(SecurityAcademyModel model, SecurityAcademyController controller) {
         super(model, controller);
 
-        Label introContent = addContentLabel("introContent");
-        Label securingYourKeysHeadline = addHeadlineLabel("securingYourKeysHeadline");
-        addContentLabel("securingYourKeysContent");
-        Label avoidScamsHeadline = addHeadlineLabel("avoidScamsHeadline");
-        Label avoidScamsContent = addContentLabel("avoidScamsContent");
+        addSubHeadlineLabel("academy.security.subHeadline");
+
+        Label introContent = addContentLabel("academy.security.introContent");
+        Label securingYourKeysHeadline = addHeadlineLabel("academy.security.securingYourKeysHeadline");
+        addContentLabel("academy.security.securingYourKeysContent");
+        Label avoidScamsHeadline = addHeadlineLabel("academy.security.avoidScamsHeadline");
+        Label avoidScamsContent = addContentLabel("academy.security.avoidScamsContent");
         addLearnMoreHyperlink();
 
         setHeadlineMargin(introContent);

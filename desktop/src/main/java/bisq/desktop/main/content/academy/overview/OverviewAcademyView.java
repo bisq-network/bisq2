@@ -48,13 +48,16 @@ public class OverviewAcademyView extends View<GridPane, OverviewAcademyModel, Ov
         addHeaderBox();
 
         addSmallBox("learn-bisq", "learn-bitcoin",
-                "bisq", "bitcoin",
+                "academy.overview.bisq", "academy.overview.bisq.content",
+                "academy.overview.bitcoin", "academy.overview.bitcoin.content",
                 NavigationTarget.BISQ_ACADEMY, NavigationTarget.BITCOIN_ACADEMY);
         addSmallBox("learn-wallets", "learn-security",
-                "wallets", "security",
+                "academy.overview.wallets", "academy.overview.wallets.content",
+                "academy.overview.security", "academy.overview.security.content",
                 NavigationTarget.WALLETS_ACADEMY, NavigationTarget.SECURITY_ACADEMY);
         addSmallBox("learn-privacy", "learn-openSource",
-                "privacy", "foss",
+                "academy.overview.privacy", "academy.overview.privacy.content",
+                "academy.overview.foss", "academy.overview.foss.content",
                 NavigationTarget.PRIVACY_ACADEMY, NavigationTarget.FOSS_ACADEMY);
     }
 
@@ -86,7 +89,9 @@ public class OverviewAcademyView extends View<GridPane, OverviewAcademyModel, Ov
     private void addSmallBox(String leftIconId,
                              String rightIconId,
                              String leftTopic,
+                             String leftTopicContent,
                              String rightTopic,
+                             String rightTopicContent,
                              NavigationTarget leftNavigationTarget,
                              NavigationTarget rightNavigationTarget) {
 
@@ -109,12 +114,12 @@ public class OverviewAcademyView extends View<GridPane, OverviewAcademyModel, Ov
                 leftBoxButton,
                 "",
                 buttonInsets,
-                Res.get("academy.overview." + leftTopic),
+                Res.get(leftTopic),
                 "bisq-text-headline-2",
                 leftIconId,
                 10d,
                 headlineInsets,
-                Res.get("academy.overview." + leftTopic + ".content"),
+                Res.get(leftTopicContent),
                 "bisq-text-3",
                 infoInsets,
                 1d,
@@ -131,12 +136,12 @@ public class OverviewAcademyView extends View<GridPane, OverviewAcademyModel, Ov
                 rightBoxButton,
                 "",
                 buttonInsets,
-                Res.get("academy.overview." + rightTopic),
+                Res.get(rightTopic),
                 "bisq-text-headline-2",
                 rightIconId,
                 10d,
                 headlineInsets,
-                Res.get("academy.overview." + rightTopic + ".content"),
+                Res.get(rightTopicContent),
                 "bisq-text-3",
                 infoInsets,
                 1d,
