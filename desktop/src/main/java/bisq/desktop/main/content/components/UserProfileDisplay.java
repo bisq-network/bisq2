@@ -34,6 +34,7 @@ import javax.annotation.Nullable;
 @Slf4j
 public class UserProfileDisplay extends HBox {
     public static final double DEFAULT_ICON_SIZE = 30;
+    @Getter
     private final BisqTooltip tooltip;
     private final UserProfileIcon userProfileIcon;
     private final ReputationScoreDisplay reputationScoreDisplay;
@@ -86,13 +87,17 @@ public class UserProfileDisplay extends HBox {
     }
 
     private void applyTooltip() {
+        tooltip.setText(getTooltipText());
+    }
+
+    public String getTooltipText() {
         String userProfileTooltip = userProfile != null
                 ? userProfile.getTooltipString() :
                 "";
         String reputationTooltip = reputationScoreDisplay != null ?
                 "\n" + reputationScoreDisplay.getTooltipString() :
                 "";
-        tooltip.setText(userProfileTooltip + reputationTooltip);
+        return userProfileTooltip + reputationTooltip;
     }
 
     public void setReputationScoreScale(double scale) {
