@@ -51,7 +51,6 @@ message Trade {
   contract.Contract contract = 5;
   TradeParty taker = 6;
   TradeParty maker = 7;
-  sint64 date = 8;
 
   oneof message {
     BisqEasyTrade bisqEasyTrade = 20;
