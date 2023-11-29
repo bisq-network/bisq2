@@ -20,9 +20,9 @@ package bisq.trade.submarine;
 import bisq.common.application.Service;
 import bisq.contract.submarine.SubmarineContract;
 import bisq.identity.Identity;
+import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.MessageListener;
-import bisq.network.identity.NetworkId;
 import bisq.offer.submarine.SubmarineOffer;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
@@ -97,7 +97,8 @@ public class SubmarineTradeService implements PersistenceClient<SubmarineTradeSt
     public SubmarineTrade onTakeOffer(Identity takerIdentity,
                                       SubmarineOffer submarineOffer) throws TradeException {
         NetworkId takerNetworkId = takerIdentity.getNetworkId();
-        SubmarineContract contract = new SubmarineContract(submarineOffer,
+        SubmarineContract contract = new SubmarineContract(System.currentTimeMillis(),
+                submarineOffer,
                 takerNetworkId);
         boolean isBuyer = submarineOffer.getTakersDirection().isBuy();
         SubmarineTrade tradeModel = new SubmarineTrade(isBuyer, true, takerIdentity, contract, takerNetworkId);

@@ -22,8 +22,8 @@ public abstract class MultiPartyContract<T extends Offer<?, ?>> extends TwoParty
 
     private final List<Party> parties;
 
-    public MultiPartyContract(T listing, TradeProtocolType protocolType, List<Party> parties) {
-        super(listing, protocolType, resolveTaker(parties));
+    public MultiPartyContract(long takeOfferDate, T offer, TradeProtocolType protocolType, List<Party> parties) {
+        super(takeOfferDate, offer, protocolType, resolveTaker(parties));
         this.parties = new ArrayList<>(parties);
         this.parties.sort(Comparator.comparingInt(Party::hashCode));
     }

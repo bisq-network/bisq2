@@ -237,7 +237,9 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         Optional<UserProfile> mediator = serviceProvider.getSupportService().getMediationService()
                 .selectMediator(bisqEasyOffer.getMakersUserProfileId(), takerIdentity.getId());
         NetworkId takerNetworkId = takerIdentity.getNetworkId();
-        BisqEasyContract contract = new BisqEasyContract(bisqEasyOffer,
+        BisqEasyContract contract = new BisqEasyContract(
+                System.currentTimeMillis(),
+                bisqEasyOffer,
                 takerNetworkId,
                 baseSideAmount.getValue(),
                 quoteSideAmount.getValue(),

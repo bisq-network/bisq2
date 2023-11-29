@@ -45,8 +45,10 @@ public class BisqEasyContract extends TwoPartyContract<BisqEasyOffer> {
     private final Optional<UserProfile> mediator;
     private final PriceSpec agreedPriceSpec;
     private final long marketPrice;
+    private final long takeOfferDate;
 
-    public BisqEasyContract(BisqEasyOffer offer,
+    public BisqEasyContract(long takeOfferDate,
+                            BisqEasyOffer offer,
                             NetworkId takerNetworkId,
                             long baseSideAmount,
                             long quoteSideAmount,
@@ -55,7 +57,8 @@ public class BisqEasyContract extends TwoPartyContract<BisqEasyOffer> {
                             Optional<UserProfile> mediator,
                             PriceSpec agreedPriceSpec,
                             long marketPrice) {
-        this(offer,
+        this(takeOfferDate,
+                offer,
                 TradeProtocolType.BISQ_EASY,
                 new Party(Role.TAKER, takerNetworkId),
                 baseSideAmount,
@@ -67,7 +70,8 @@ public class BisqEasyContract extends TwoPartyContract<BisqEasyOffer> {
                 marketPrice);
     }
 
-    private BisqEasyContract(BisqEasyOffer offer,
+    private BisqEasyContract(long takeOfferDate,
+                             BisqEasyOffer offer,
                              TradeProtocolType protocolType,
                              Party taker,
                              long baseSideAmount,
@@ -77,7 +81,7 @@ public class BisqEasyContract extends TwoPartyContract<BisqEasyOffer> {
                              Optional<UserProfile> mediator,
                              PriceSpec agreedPriceSpec,
                              long marketPrice) {
-        super(offer, protocolType, taker);
+        super(takeOfferDate, offer, protocolType, taker);
         this.baseSideAmount = baseSideAmount;
         this.quoteSideAmount = quoteSideAmount;
         this.baseSidePaymentMethodSpec = baseSidePaymentMethodSpec;
@@ -85,6 +89,7 @@ public class BisqEasyContract extends TwoPartyContract<BisqEasyOffer> {
         this.mediator = mediator;
         this.agreedPriceSpec = agreedPriceSpec;
         this.marketPrice = marketPrice;
+        this.takeOfferDate = takeOfferDate;
     }
 
     @Override
@@ -104,7 +109,8 @@ public class BisqEasyContract extends TwoPartyContract<BisqEasyOffer> {
     public static BisqEasyContract fromProto(bisq.contract.protobuf.Contract proto) {
         bisq.contract.protobuf.TwoPartyContract twoPartyContractProto = proto.getTwoPartyContract();
         bisq.contract.protobuf.BisqEasyContract bisqEasyContractProto = twoPartyContractProto.getBisqEasyContract();
-        return new BisqEasyContract(BisqEasyOffer.fromProto(proto.getOffer()),
+        return new BisqEasyContract(proto.getTakeOfferDate(),
+                BisqEasyOffer.fromProto(proto.getOffer()),
                 TradeProtocolType.fromProto(proto.getTradeProtocolType()),
                 Party.fromProto(twoPartyContractProto.getTaker()),
                 bisqEasyContractProto.getBaseSideAmount(),

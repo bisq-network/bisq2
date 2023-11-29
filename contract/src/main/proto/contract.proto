@@ -38,8 +38,9 @@ message Party {
   network.identity.NetworkId networkId = 2;
 }
 message Contract {
-  offer.Offer offer = 1;
-  account.TradeProtocolType tradeProtocolType = 2;
+  uint64 takeOfferDate = 1;
+  offer.Offer offer = 2;
+  account.TradeProtocolType tradeProtocolType = 3;
   oneof message {
     TwoPartyContract twoPartyContract = 10;
     MultiPartyContract multiPartyContract = 12;
