@@ -23,7 +23,6 @@ import bisq.desktop.common.Layout;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
-import bisq.desktop.components.table.TableItem;
 import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
 import bisq.desktop.main.content.chat.ChatView;
 import bisq.desktop.main.content.components.UserProfileDisplay;
@@ -279,7 +278,7 @@ public class BisqEasyPrivateChatsView extends ChatView {
     @Getter
     @ToString
     @EqualsAndHashCode
-    static class ListItem implements TableItem {
+    static class ListItem {
         private final TwoPartyPrivateChatChannel channel;
         private final String peersUserName, myUserName;
         private final long totalReputationScore, profileAge;

@@ -33,11 +33,11 @@ import org.fxmisc.easybind.Subscription;
 import java.util.Optional;
 
 @Slf4j
-public class BisqTableView<S extends TableItem> extends TableView<S> {
+public class BisqTableView<T> extends TableView<T> {
     private final static double TABLE_HEADER_HEIGHT = 36;
     private final static double TABLE_ROW_HEIGHT = 54;
     private final static double TABLE_SCROLLBAR_HEIGHT = 16;
-    private ListChangeListener<S> listChangeListener;
+    private ListChangeListener<T> listChangeListener;
     private ChangeListener<Number> widthChangeListener;
 
     public BisqTableView() {
@@ -46,11 +46,11 @@ public class BisqTableView<S extends TableItem> extends TableView<S> {
         setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
     }
 
-    public BisqTableView(ObservableList<S> list) {
+    public BisqTableView(ObservableList<T> list) {
         this(new SortedList<>(list));
     }
 
-    public BisqTableView(SortedList<S> sortedList) {
+    public BisqTableView(SortedList<T> sortedList) {
         super(sortedList);
 
         sortedList.comparatorProperty().bind(comparatorProperty());
@@ -123,21 +123,21 @@ public class BisqTableView<S extends TableItem> extends TableView<S> {
         setFixHeight(height);
     }
 
-    public BisqTableColumn<S> getSelectionMarkerColumn() {
-        return new BisqTableColumn.Builder<S>()
+    public BisqTableColumn<T> getSelectionMarkerColumn() {
+        return new BisqTableColumn.Builder<T>()
                 .fixWidth(3)
                 .setCellFactory(getSelectionMarkerCellFactory())
                 .isSortable(false)
                 .build();
     }
 
-    public Callback<TableColumn<S, S>, TableCell<S, S>> getSelectionMarkerCellFactory
+    public Callback<TableColumn<T, T>, TableCell<T, T>> getSelectionMarkerCellFactory
             () {
         return column -> new TableCell<>() {
             private Subscription selectedPin;
 
             @Override
-            public void updateItem(final S item, boolean empty) {
+            public void updateItem(final T item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {

@@ -17,8 +17,7 @@
 
 package bisq.desktop.components.table;
 
-public interface DateTableItem extends TableItem {
-
+public interface DateTableItem {
     String getDateString();
 
     String getTimeString();

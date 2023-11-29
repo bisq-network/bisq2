@@ -19,6 +19,7 @@ package bisq.desktop.main.content.settings.network.transport;
 
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.components.table.ActivatableTableItem;
 import bisq.desktop.components.table.DateTableItem;
 import bisq.i18n.Res;
 import bisq.identity.Identity;
@@ -39,7 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Slf4j
 @Getter
-public class ConnectionListItem implements DateTableItem {
+public class ConnectionListItem implements ActivatableTableItem, DateTableItem {
     @EqualsAndHashCode.Include
     private final String connectionId;
     private final Connection connection;
@@ -89,6 +90,16 @@ public class ConnectionListItem implements DateTableItem {
             public void onConnectionClosed(CloseReason closeReason) {
             }
         };
+    }
+
+    @Override
+    public void onActivate() {
+        connection.addListener(listener);
+    }
+
+    @Override
+    public void onDeactivate() {
+        connection.removeListener(listener);
     }
 
     private void updateRtt() {

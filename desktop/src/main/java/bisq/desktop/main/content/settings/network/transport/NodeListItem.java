@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.settings.network.transport;
 
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.components.table.TableItem;
+import bisq.desktop.components.table.ActivatableTableItem;
 import bisq.i18n.Res;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
@@ -37,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Slf4j
-public class NodeListItem implements TableItem {
+public class NodeListItem implements ActivatableTableItem {
     @EqualsAndHashCode.Include
     @Getter
     private final Node node;
@@ -91,6 +91,16 @@ public class NodeListItem implements TableItem {
         };
     }
 
+    @Override
+    public void onActivate() {
+        node.addListener(listener);
+    }
+
+    @Override
+    public void onDeactivate() {
+        node.removeListener(listener);
+    }
+
     public int compareAddress(NodeListItem other) {
         return address.compareTo(other.getAddress());
     }
@@ -109,15 +119,5 @@ public class NodeListItem implements TableItem {
 
     public int compareNumConnections(NodeListItem other) {
         return Long.compare(other.getNode().getAllConnections().count(), node.getAllConnections().count());
-    }
-
-    @Override
-    public void activate() {
-        node.addListener(listener);
-    }
-
-    @Override
-    public void deactivate() {
-        node.removeListener(listener);
     }
 }

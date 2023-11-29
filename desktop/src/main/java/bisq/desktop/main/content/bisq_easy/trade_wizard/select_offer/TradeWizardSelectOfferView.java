@@ -27,7 +27,6 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
-import bisq.desktop.components.table.TableItem;
 import bisq.desktop.main.content.components.ReputationScoreDisplay;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
@@ -375,7 +374,7 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
     @ToString
     @EqualsAndHashCode
     @Getter
-    static class ListItem implements TableItem {
+    static class ListItem {
         private final Optional<UserProfile> authorUserProfile;
         private final String makerUserName, baseAmountDisplayString, priceDisplayString;
         private final long priceAsLong, baseAmountAsLong;

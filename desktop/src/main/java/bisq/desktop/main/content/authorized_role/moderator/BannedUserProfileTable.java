@@ -28,7 +28,6 @@ import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
-import bisq.desktop.components.table.TableItem;
 import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.i18n.Res;
 import bisq.network.SendMessageResult;
@@ -268,7 +267,7 @@ public class BannedUserProfileTable {
 
         @Getter
         @EqualsAndHashCode
-        private static class ListItem implements TableItem {
+        private static class ListItem {
             private final BannedUserProfileData bannedUserProfileData;
             private final UserProfile userProfile;
             private final String userName;

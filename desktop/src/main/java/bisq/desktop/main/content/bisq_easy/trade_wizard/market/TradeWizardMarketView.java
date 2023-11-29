@@ -26,7 +26,6 @@ import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.SearchBox;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
-import bisq.desktop.components.table.TableItem;
 import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
@@ -171,7 +170,7 @@ public class TradeWizardMarketView extends View<VBox, TradeWizardMarketModel, Tr
 
     @EqualsAndHashCode
     @Getter
-    static class MarketListItem implements TableItem {
+    static class MarketListItem {
         private final Market market;
         private final String quoteCurrencyName;
         private final int numOffersAsInteger;

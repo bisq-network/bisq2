@@ -20,7 +20,6 @@ package bisq.desktop.main.content.user.bonded_roles;
 import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.bonded_role.BondedRole;
-import bisq.desktop.components.table.TableItem;
 import bisq.i18n.Res;
 import bisq.network.common.AddressByTransportTypeMap;
 import bisq.user.UserService;
@@ -40,7 +39,7 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode
 @Getter
 @ToString
-public class BondedRolesListItem implements TableItem {
+public class BondedRolesListItem {
     private final Optional<UserProfile> userProfile;
     private final String roleTypeString;
     private final String bondUserName;

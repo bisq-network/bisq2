@@ -22,7 +22,6 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
-import bisq.desktop.components.table.TableItem;
 import bisq.desktop.overlay.OverlayModel;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.PercentageFormatter;
@@ -267,7 +266,7 @@ public class UpdaterView extends View<VBox, UpdaterModel, UpdaterController> {
 
     @Getter
     @EqualsAndHashCode
-    static class ListItem implements TableItem {
+    static class ListItem {
         private final String fileName;
         private final DownloadItem downloadItem;
         private final DoubleProperty progress = new SimpleDoubleProperty();

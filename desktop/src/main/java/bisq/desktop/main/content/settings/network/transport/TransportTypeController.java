@@ -103,8 +103,8 @@ public class TransportTypeController implements Controller {
     public void onDeactivate() {
         model.getServiceNode().getNodesById().removeListener(nodesByIdListener);
         model.getServiceNode().getNodesById().removeNodeListener(nodeListener);
-        model.getNodeListItems().forEach(NodeListItem::deactivate);
-        model.getConnectionListItems().forEach(ConnectionListItem::deactivate);
+        model.getNodeListItems().forEach(NodeListItem::onDeactivate);
+        model.getConnectionListItems().forEach(ConnectionListItem::onDeactivate);
         model.getNodeListItems().clear();
         model.getConnectionListItems().clear();
     }

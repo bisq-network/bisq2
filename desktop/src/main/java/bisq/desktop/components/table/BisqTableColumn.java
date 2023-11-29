@@ -336,19 +336,12 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                     @Override
                     public TableCell<S, S> call(TableColumn<S, S> column) {
                         return new TableCell<>() {
-                            S previousItem;
 
                             @Override
                             public void updateItem(final S item, boolean empty) {
                                 super.updateItem(item, empty);
+
                                 if (item != null && !empty) {
-                                    if (previousItem instanceof TableItem) {
-                                        ((TableItem) previousItem).deactivate();
-                                    }
-                                    previousItem = item;
-                                    if (item instanceof TableItem) {
-                                        ((TableItem) item).activate();
-                                    }
                                     if (value.isPresent()) {
                                         setText(value.get());
                                     } else if (valueSupplier.isPresent()) {
@@ -370,12 +363,6 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                                         setTooltip(tooltip);
                                     }
                                 } else {
-                                    if (previousItem != null) {
-                                        if (previousItem instanceof TableItem) {
-                                            ((TableItem) previousItem).deactivate();
-                                        }
-                                        previousItem = null;
-                                    }
                                     valuePropertySupplier.ifPresent(supplier -> textProperty().unbind());
                                     valuePropertyBiDirBindingSupplier.ifPresent(supplier -> textProperty().unbindBidirectional(supplier));
 
@@ -394,7 +381,6 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                     public TableCell<S, S> call(TableColumn<S,
                             S> column) {
                         return new TableCell<>() {
-                            S previousItem;
 
                             private final TextField textField = new TextField();
 
@@ -407,14 +393,6 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                                     isVisibleFunction.ifPresent(function -> textField.setVisible(function.apply(item)));
                                     setGraphic(textField);
 
-                                    if (previousItem instanceof TableItem) {
-                                        ((TableItem) previousItem).deactivate();
-                                    }
-                                    previousItem = item;
-
-                                    if (item instanceof TableItem) {
-                                        ((TableItem) item).activate();
-                                    }
                                     if (value.isPresent()) {
                                         textField.setText(value.get());
                                     } else if (valueSupplier.isPresent()) {
@@ -427,12 +405,6 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                                                 textField.textProperty().bindBidirectional(supplier.apply(item)));
                                     }
                                 } else {
-                                    if (previousItem != null) {
-                                        if (previousItem instanceof TableItem) {
-                                            ((TableItem) previousItem).deactivate();
-                                        }
-                                        previousItem = null;
-                                    }
                                     valuePropertySupplier.ifPresent(supplier -> textProperty().unbind());
                                     valuePropertyBiDirBindingSupplier.ifPresent(supplier -> textProperty().unbindBidirectional(supplier));
 
@@ -451,8 +423,6 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                     public TableCell<S, S> call(TableColumn<S,
                             S> column) {
                         return new TableCell<>() {
-                            S previousItem;
-
                             private ButtonBase button;
 
                             {
@@ -473,14 +443,6 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                                     isVisibleFunction.ifPresent(function -> button.setVisible(function.apply(item)));
                                     setGraphic(button);
 
-                                    if (previousItem instanceof TableItem) {
-                                        ((TableItem) previousItem).deactivate();
-                                    }
-                                    previousItem = item;
-
-                                    if (item instanceof TableItem) {
-                                        ((TableItem) item).activate();
-                                    }
                                     if (value.isPresent()) {
                                         button.setText(value.get());
                                     } else if (valueSupplier.isPresent()) {
@@ -493,12 +455,6 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                                                 button.textProperty().bindBidirectional(supplier.apply(item)));
                                     }
                                 } else {
-                                    if (previousItem != null) {
-                                        if (previousItem instanceof TableItem) {
-                                            ((TableItem) previousItem).deactivate();
-                                        }
-                                        previousItem = null;
-                                    }
                                     valuePropertySupplier.ifPresent(supplier -> textProperty().unbind());
                                     valuePropertyBiDirBindingSupplier.ifPresent(supplier -> textProperty().unbindBidirectional(supplier));
 
@@ -518,7 +474,6 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                     public TableCell<S, S> call(TableColumn<S,
                             S> column) {
                         return new TableCell<>() {
-                            S previousItem;
                             private final CheckBox checkBox = new CheckBox();
 
                             @Override
@@ -528,14 +483,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                                     checkBox.setOnAction(event -> onToggleHandler.accept(item, checkBox.isSelected()));
                                     isVisibleFunction.ifPresent(function -> checkBox.setVisible(function.apply(item)));
                                     setGraphic(checkBox);
-                                    if (previousItem instanceof TableItem) {
-                                        ((TableItem) previousItem).deactivate();
-                                    }
-                                    previousItem = item;
 
-                                    if (item instanceof TableItem) {
-                                        ((TableItem) item).activate();
-                                    }
                                     if (value.isPresent()) {
                                         checkBox.setText(value.get());
                                     } else if (valueSupplier.isPresent()) {
@@ -548,12 +496,6 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                                                 checkBox.textProperty().bindBidirectional(supplier.apply(item)));
                                     }
                                 } else {
-                                    if (previousItem != null) {
-                                        if (previousItem instanceof TableItem) {
-                                            ((TableItem) previousItem).deactivate();
-                                        }
-                                        previousItem = null;
-                                    }
                                     valuePropertySupplier.ifPresent(supplier -> textProperty().unbind());
                                     valuePropertyBiDirBindingSupplier.ifPresent(supplier -> textProperty().unbindBidirectional(supplier));
 
