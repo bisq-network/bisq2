@@ -23,7 +23,6 @@ import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.network.protobuf.ExternalNetworkMessage;
-import bisq.offer.bisq_easy.BisqEasyOffer;
 import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
@@ -37,14 +36,12 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class MediationResponse implements MailboxMessage {
+public final class MediatorsResponse implements MailboxMessage {
     private final MetaData metaData = new MetaData(TTL_10_DAYS, getClass().getSimpleName());
-    private final BisqEasyOffer bisqEasyOffer;
     private final String tradeId;
 
-    public MediationResponse(String tradeId, BisqEasyOffer bisqEasyOffer) {
+    public MediatorsResponse(String tradeId) {
         this.tradeId = tradeId;
-        this.bisqEasyOffer = bisqEasyOffer;
 
         // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize()); //425
     }
@@ -57,22 +54,21 @@ public final class MediationResponse implements MailboxMessage {
                 .build();
     }
 
-    private bisq.support.protobuf.MediationResponse toMediationResponseProto() {
-        return bisq.support.protobuf.MediationResponse.newBuilder()
+    private bisq.support.protobuf.MediatorsResponse toMediationResponseProto() {
+        return bisq.support.protobuf.MediatorsResponse.newBuilder()
                 .setTradeId(tradeId)
-                .setBisqEasyOffer(bisqEasyOffer.toProto())
                 .build();
     }
 
-    public static MediationResponse fromProto(bisq.support.protobuf.MediationResponse proto) {
-        return new MediationResponse(proto.getTradeId(), BisqEasyOffer.fromProto(proto.getBisqEasyOffer()));
+    public static MediatorsResponse fromProto(bisq.support.protobuf.MediatorsResponse proto) {
+        return new MediatorsResponse(proto.getTradeId());
     }
 
     public static ProtoResolver<EnvelopePayloadMessage> getNetworkMessageResolver() {
         return any -> {
             try {
-                bisq.support.protobuf.MediationResponse proto = any.unpack(bisq.support.protobuf.MediationResponse.class);
-                return MediationResponse.fromProto(proto);
+                bisq.support.protobuf.MediatorsResponse proto = any.unpack(bisq.support.protobuf.MediatorsResponse.class);
+                return MediatorsResponse.fromProto(proto);
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }

@@ -30,7 +30,7 @@ import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
 import bisq.i18n.Res;
-import bisq.support.mediation.MediationService;
+import bisq.support.mediation.MediationRequestService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
 import javafx.beans.property.*;
@@ -79,11 +79,11 @@ class TradePhaseBox {
         private final Model model;
         @Getter
         private final View view;
-        private final MediationService mediationService;
+        private final MediationRequestService mediationRequestService;
         private Pin bisqEasyTradeStatePin, isInMediationPin;
 
         private Controller(ServiceProvider serviceProvider) {
-            mediationService = serviceProvider.getSupportService().getMediationService();
+            mediationRequestService = serviceProvider.getSupportService().getMediationRequestService();
 
             model = new Model();
             view = new View(model, this);
@@ -199,7 +199,9 @@ class TradePhaseBox {
         }
 
         void onOpenDispute() {
-            OpenTradesUtils.openDispute(model.getSelectedChannel(), mediationService);
+            OpenTradesUtils.openDispute(model.getSelectedChannel(),
+                    model.getBisqEasyTrade().getContract(),
+                    mediationRequestService);
         }
     }
 

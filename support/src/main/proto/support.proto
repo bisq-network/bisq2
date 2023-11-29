@@ -5,14 +5,27 @@ option java_multiple_files = true;
 import "user.proto";
 import "chat.proto";
 import "offer.proto";
+import "contract.proto";
 import "network.proto";
 
 message MediationRequest {
   string tradeId = 1;
-  offer.Offer bisqEasyOffer = 2;
+  contract.Contract contract = 2;
   user.UserProfile requester = 3;
   user.UserProfile peer = 4;
   repeated chat.ChatMessage chatMessages = 5;
+}
+message MediatorsResponse {
+  string tradeId = 1;
+}
+
+message MediationCase {
+  MediationRequest mediationRequest = 1;
+  sint64 requestDate = 2;
+  bool isClosed = 3;
+}
+message MediatorStore {
+  repeated MediationCase mediationCases = 1;
 }
 
 message ReportToModeratorMessage {
@@ -22,11 +35,6 @@ message ReportToModeratorMessage {
   string message = 4;
   chat.ChatChannelDomain chatChannelDomain = 5;
 }
-message MediationResponse {
-  string tradeId = 1;
-  offer.Offer bisqEasyOffer = 2;
-}
-
 message ModeratorStore {
   repeated ReportToModeratorMessage reportToModeratorMessages = 1;
 }

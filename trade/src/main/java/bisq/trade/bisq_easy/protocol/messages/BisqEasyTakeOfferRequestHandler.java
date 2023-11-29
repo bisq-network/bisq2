@@ -108,7 +108,7 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
         checkArgument(takersOffer.getBaseSidePaymentMethodSpecs().contains(takersContract.getBaseSidePaymentMethodSpec()));
         checkArgument(takersOffer.getQuoteSidePaymentMethodSpecs().contains(takersContract.getQuoteSidePaymentMethodSpec()));
 
-        Optional<UserProfile> mediator = serviceProvider.getSupportService().getMediationService()
+        Optional<UserProfile> mediator = serviceProvider.getSupportService().getMediationRequestService()
                 .selectMediator(takersOffer.getMakersUserProfileId(), trade.getTaker().getNetworkId().getId());
         checkArgument(mediator.equals(takersContract.getMediator()), "Mediators do not match");
     }

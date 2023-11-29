@@ -22,7 +22,8 @@ import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.network.NetworkService;
 import bisq.persistence.PersistenceService;
-import bisq.support.mediation.MediationService;
+import bisq.support.mediation.MediationRequestService;
+import bisq.support.mediation.MediatorService;
 import bisq.support.moderator.ModeratorService;
 import bisq.support.release_manager.ReleaseManagerService;
 import bisq.support.security_manager.SecurityManagerService;
@@ -36,10 +37,11 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 @Getter
 public class SupportService implements Service {
-    private final MediationService mediationService;
+    private final MediationRequestService mediationRequestService;
     private final SecurityManagerService securityManagerService;
     private final ModeratorService moderatorService;
     private final ReleaseManagerService releaseManagerService;
+    private final MediatorService mediatorService;
 
     @Getter
     @ToString
@@ -69,7 +71,15 @@ public class SupportService implements Service {
                           ChatService chatService,
                           UserService userService,
                           BondedRolesService bondedRolesService) {
-        mediationService = new MediationService(networkService, chatService, userService, bondedRolesService);
+        mediationRequestService = new MediationRequestService(networkService,
+                chatService,
+                userService,
+                bondedRolesService);
+        mediatorService = new MediatorService(persistenceService,
+                networkService,
+                chatService,
+                userService,
+                bondedRolesService);
         securityManagerService = new SecurityManagerService(SecurityManagerService.Config.from(config.getSecurityManagerConfig()),
                 networkService,
                 userService,
@@ -94,7 +104,8 @@ public class SupportService implements Service {
     @Override
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        return mediationService.initialize()
+        return mediationRequestService.initialize()
+                .thenCompose(result -> mediatorService.initialize())
                 .thenCompose(result -> moderatorService.initialize())
                 .thenCompose(result -> releaseManagerService.initialize())
                 .thenCompose(result -> securityManagerService.initialize());
@@ -103,7 +114,8 @@ public class SupportService implements Service {
     @Override
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
-        return mediationService.shutdown()
+        return mediationRequestService.shutdown()
+                .thenCompose(result -> mediatorService.shutdown())
                 .thenCompose(result -> moderatorService.shutdown())
                 .thenCompose(result -> releaseManagerService.shutdown())
                 .thenCompose(result -> securityManagerService.shutdown());
