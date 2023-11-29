@@ -66,8 +66,7 @@ public class BisqEasyTradeFormatter {
     }
 
     public static String getDirection(Direction direction) {
-        return direction.isBuy() ? Res.get("bisqEasy.openTrades.table.direction.buyer") :
-                Res.get("bisqEasy.openTrades.table.direction.seller");
+        return direction.getDisplayStringForTraderPair();
     }
 
     public static String getMakerTakerRole(BisqEasyTrade trade) {
