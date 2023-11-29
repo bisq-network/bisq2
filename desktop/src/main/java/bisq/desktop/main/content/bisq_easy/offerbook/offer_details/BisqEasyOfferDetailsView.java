@@ -65,12 +65,12 @@ public class BisqEasyOfferDetailsView extends View<ScrollPane, BisqEasyOfferDeta
         vBox.setAlignment(Pos.TOP_LEFT);
         root.setContent(vBox);
 
-        Label mainHeadline = new Label(Res.get("bisqEasy.offerDetails.headline"));
-        mainHeadline.getStyleClass().add("bisq-text-headline-2");
+        Label headline = new Label(Res.get("bisqEasy.offerDetails.headline"));
+        headline.getStyleClass().add("large-thin-headline");
 
         VBox mainFields = new VBox(20);
 
-        offerType = getField(Res.get("bisqEasy.offerDetails.offerType"));
+        offerType = getField(Res.get("bisqEasy.offerDetails.direction"));
         mainFields.getChildren().add(offerType);
 
         quoteSideAmount = getField("");
@@ -84,9 +84,6 @@ public class BisqEasyOfferDetailsView extends View<ScrollPane, BisqEasyOfferDeta
 
         paymentMethods = getField(Res.get("bisqEasy.offerDetails.paymentMethods"));
         mainFields.getChildren().add(paymentMethods);
-
-        Label detailHeadline = new Label(Res.get("bisqEasy.offerDetails.details"));
-        detailHeadline.getStyleClass().add("bisq-text-headline-2");
 
         VBox detailFields = new VBox(20);
 
@@ -107,10 +104,9 @@ public class BisqEasyOfferDetailsView extends View<ScrollPane, BisqEasyOfferDeta
 
         closeButton = new Button(Res.get("action.close"));
         closeButton.setDefaultButton(true);
-        HBox buttonBox = new HBox(/*Spacer.fillHBox(),*/ closeButton);
+        HBox buttonBox = new HBox(closeButton);
         buttonBox.setAlignment(Pos.CENTER_RIGHT);
-        VBox.setMargin(detailHeadline, new Insets(20, 0, 0, 0));
-        vBox.getChildren().addAll(mainHeadline, mainFields, detailHeadline, detailFields, buttonBox);
+        vBox.getChildren().addAll(headline, mainFields, detailFields, buttonBox);
     }
 
     @Override
@@ -146,7 +142,7 @@ public class BisqEasyOfferDetailsView extends View<ScrollPane, BisqEasyOfferDeta
 
         closeButton.setOnAction(e -> controller.onClose());
 
-        UIThread.runOnNextRenderFrame(closeButton::requestFocus);
+        UIThread.runOnNextRenderFrame(root::requestFocus);
     }
 
     @Override
