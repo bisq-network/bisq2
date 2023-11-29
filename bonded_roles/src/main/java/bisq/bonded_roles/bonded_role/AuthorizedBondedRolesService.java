@@ -58,9 +58,18 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
 
     @Override
     public CompletableFuture<Boolean> initialize() {
+        log.info("initialize");
         networkService.getDataService()
-                .ifPresent(dataService -> dataService.getAuthorizedData()
-                        .forEach(this::onAuthorizedDataAdded));
+                .ifPresent(dataService -> {
+                    dataService.getAuthorizedData()
+                            .filter(e -> e.getAuthorizedDistributedData() instanceof AuthorizedBondedRole)
+                            .sorted((o1, o2) -> {
+                                // We want to process oracle nodes first, as otherwise validation would fail
+                                AuthorizedBondedRole authorizedBondedRole = (AuthorizedBondedRole) o1.getAuthorizedDistributedData();
+                                return authorizedBondedRole.getBondedRoleType() == BondedRoleType.ORACLE_NODE ? -1 : 1;
+                            })
+                            .forEach(this::onAuthorizedDataAdded);
+                });
         networkService.addDataServiceListener(this);
         return CompletableFuture.completedFuture(true);
     }
