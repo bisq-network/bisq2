@@ -196,6 +196,8 @@ public class BisqEasyPrivateChatsView extends ChatView {
         tableViewSelectionPin.unsubscribe();
         noOpenChatsPin.unsubscribe();
         peersUserProfilePin.unsubscribe();
+
+        leaveChatButton.setOnAction(null);
     }
 
     private void configTableView() {

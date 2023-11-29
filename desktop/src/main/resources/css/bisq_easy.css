@@ -659,3 +659,24 @@
 .bisq-easy-private-chats-table-view {
     -fx-background-color: -bisq-dark-grey-dim;
 }
+
+/*******************************************************************************
+ *                                                                             *
+ * Mediator view                                                              *
+ *                                                                             *
+ ******************************************************************************/
+
+.mediator-table-requester {
+    -fx-background-color: transparent;
+    -fx-border-color: -bisq2-green;
+    -fx-border-width: 0 0 2 0;
+    -fx-border-radius: 0;
+    -fx-border-insets: 0;
+}
+.mediator-header-requester {
+    -fx-background-color: transparent;
+    -fx-border-color: -bisq2-green;
+    -fx-border-width: 0 0 2 0;
+    -fx-border-radius: 0;
+    -fx-border-insets: 0 0 -7.5 0;
+}

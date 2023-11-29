@@ -110,7 +110,9 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
 
         Optional<UserProfile> mediator = serviceProvider.getSupportService().getMediationRequestService()
                 .selectMediator(takersOffer.getMakersUserProfileId(), trade.getTaker().getNetworkId().getId());
-        checkArgument(mediator.equals(takersContract.getMediator()), "Mediators do not match");
+        checkArgument(mediator.equals(takersContract.getMediator()), "Mediators do not match. " +
+                        "mediator={}, takersContract.getMediator()={}",
+                mediator, takersContract.getMediator());
     }
 
     private void commitToModel(ContractSignatureData takersContractSignatureData, ContractSignatureData makersContractSignatureData) {
@@ -135,8 +137,8 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
 
     private Optional<Monetary> getAmount(BisqEasyOffer takersOffer, BisqEasyContract takersContract) {
         return PriceUtil.findQuote(serviceProvider.getBondedRolesService().getMarketPriceService(),
-                    takersContract.getAgreedPriceSpec(), takersOffer.getMarket())
-                    .map(quote -> quote.toBaseSideMonetary(Monetary.from(takersContract.getQuoteSideAmount(),
-                            takersOffer.getMarket().getQuoteCurrencyCode())));
+                        takersContract.getAgreedPriceSpec(), takersOffer.getMarket())
+                .map(quote -> quote.toBaseSideMonetary(Monetary.from(takersContract.getQuoteSideAmount(),
+                        takersOffer.getMarket().getQuoteCurrencyCode())));
     }
 }
