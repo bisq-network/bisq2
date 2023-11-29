@@ -196,7 +196,7 @@ public class MediationService implements Service, MessageListener {
     }
 
     private void processMediationResponse(MediationResponse mediationResponse) {
-        bisqEasyOpenTradeChannelService.findChannel(mediationResponse.getTradeId())
+        bisqEasyOpenTradeChannelService.findChannelByTradeId(mediationResponse.getTradeId())
                 .ifPresent(channel -> {
                     // Requester had it activated at request time
                     if (channel.isInMediation()) {
