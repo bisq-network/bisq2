@@ -18,28 +18,38 @@
 package bisq.bisq_easy;
 
 import bisq.chat.ChatChannelDomain;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.presentation.notifications.NotificationsService;
+import bisq.support.mediation.MediatorService;
+import bisq.user.identity.UserIdentity;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Slf4j
 public class BisqEasyNotificationsService implements Service {
     private final NotificationsService notificationsService;
+    private final MediatorService mediatorService;
+    private final BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService;
 
     @Getter
     private final Observable<Boolean> isNotificationPanelVisible = new Observable<>();
     @Getter
     private final ObservableSet<String> tradeIdsOfNotifications = new ObservableSet<>();
 
-    public BisqEasyNotificationsService(NotificationsService notificationsService) {
+    public BisqEasyNotificationsService(NotificationsService notificationsService,
+                                        MediatorService mediatorService,
+                                        BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService) {
         this.notificationsService = notificationsService;
+        this.mediatorService = mediatorService;
+        this.bisqEasyOpenTradeChannelService = bisqEasyOpenTradeChannelService;
     }
 
 
@@ -70,6 +80,15 @@ public class BisqEasyNotificationsService implements Service {
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
         return CompletableFuture.completedFuture(true);
+    }
+
+    public boolean isNotificationForMediator(String notificationId) {
+        ChatChannelDomain chatChannelDomain = ChatNotificationService.getChatChannelDomain(notificationId);
+        String channelId = ChatNotificationService.getChatChannelId(notificationId);
+        Optional<UserIdentity> myMediatorUserIdentity = bisqEasyOpenTradeChannelService.findChannel(channelId)
+                .flatMap(channel -> mediatorService.findMyMediatorUserIdentity(channel.getMediator()));
+        return myMediatorUserIdentity.isPresent() &&
+                chatChannelDomain == ChatChannelDomain.BISQ_EASY_OPEN_TRADES;
     }
 
     private void updateNotificationVisibilityState() {

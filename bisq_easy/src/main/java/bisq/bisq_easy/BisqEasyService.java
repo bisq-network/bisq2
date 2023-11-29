@@ -95,7 +95,9 @@ public class BisqEasyService implements Service {
         this.tradeService = tradeService;
         userIdentityService = userService.getUserIdentityService();
 
-        bisqEasyNotificationsService = new BisqEasyNotificationsService(notificationsService);
+        bisqEasyNotificationsService = new BisqEasyNotificationsService(notificationsService,
+                supportService.getMediatorService(),
+                chatService.getBisqEasyOpenTradeChannelService());
     }
 
 
