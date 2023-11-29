@@ -62,10 +62,11 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
     public SecurityManagerView(SecurityManagerModel model, SecurityManagerController controller, Pane roleInfo) {
         super(new VBox(10), model, controller);
 
-        this.root.setAlignment(Pos.TOP_LEFT);
+        root.setPadding(new Insets(0, 40, 40, 40));
+        root.setAlignment(Pos.TOP_LEFT);
 
         Label headline = new Label(Res.get("authorizedRole.securityManager.alert.headline"));
-        headline.getStyleClass().add("bisq-text-headline-2");
+        headline.getStyleClass().add("large-thin-headline");
 
         alertTypeSelection = new AutoCompleteComboBox<>(model.getAlertTypes(), Res.get("authorizedRole.securityManager.selectAlertType"));
         alertTypeSelection.setPrefWidth(300);
@@ -111,17 +112,18 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
         actionButton.setAlignment(Pos.BOTTOM_RIGHT);
 
         Label tableHeadline = new Label(Res.get("authorizedRole.securityManager.alert.table.headline"));
-        tableHeadline.getStyleClass().add("bisq-text-headline-2");
+        tableHeadline.getStyleClass().add("large-thin-headline");
 
         tableView = new BisqTableView<>(model.getSortedAlertListItems());
         tableView.setMinHeight(200);
         tableView.getStyleClass().add("user-bonded-roles-table-view");
         configTableView();
 
-        VBox.setMargin(headline, new Insets(30, 0, 10, 0));
+        roleInfo.setPadding(new Insets(0));
+
         VBox.setMargin(actionButton, new Insets(10, 0, 0, 0));
         VBox.setMargin(haltTradingCheckBox, new Insets(10, 0, 0, 0));
-        VBox.setMargin(tableHeadline, new Insets(30, 0, 10, 0));
+        VBox.setMargin(tableHeadline, new Insets(30, 0, -5, 0));
         VBox.setMargin(roleInfo, new Insets(20, 0, 0, 0));
         this.root.getChildren().addAll(headline,
                 alertTypeSelection, message,

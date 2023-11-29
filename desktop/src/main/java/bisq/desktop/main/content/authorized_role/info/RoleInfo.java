@@ -131,11 +131,11 @@ public class RoleInfo {
         private View(Model model, Controller controller) {
             super(new VBox(10), model, controller);
 
+            root.setPadding(new Insets(0, 40, 40, 40));
             root.setAlignment(Pos.TOP_LEFT);
-            root.setPadding(new Insets(20, 0, 0, 0));
 
             Label headline = new Label(Res.get("authorizedRole.roleInfo.headline"));
-            headline.getStyleClass().add("bisq-text-headline-2");
+            headline.getStyleClass().add("large-thin-headline");
             root.getChildren().add(headline);
 
             bondedRoleType = addFields("authorizedRole.roleInfo.bondedRoleType", false);

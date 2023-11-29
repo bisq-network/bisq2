@@ -18,12 +18,12 @@
 package bisq.desktop.main.content.authorized_role;
 
 import bisq.bonded_roles.BondedRoleType;
-import bisq.desktop.common.view.Navigation;
-import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabButton;
+import bisq.desktop.common.view.*;
 import bisq.desktop.main.content.ContentTabView;
+import bisq.desktop.main.content.authorized_role.mediator.MediatorView;
 import bisq.i18n.Res;
 import javafx.collections.ListChangeListener;
+import javafx.scene.Parent;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
@@ -80,5 +80,10 @@ public class AuthorizedRoleView extends ContentTabView<AuthorizedRoleModel, Auth
             }
         }
         Navigation.navigateTo(model.getSelectedTabButton().get().getNavigationTarget());
+    }
+
+    @Override
+    protected boolean useFitToHeight(View<? extends Parent, ? extends Model, ? extends Controller> childView) {
+        return childView instanceof MediatorView;
     }
 }
