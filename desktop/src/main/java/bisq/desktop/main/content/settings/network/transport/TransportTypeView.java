@@ -52,7 +52,7 @@ public class TransportTypeView extends View<GridPane, TransportTypeModel, Transp
         GridPane.setMargin(connectionsLabel, new Insets(0, 0, -15, 10));
         root.add(connectionsLabel, 0, root.getRowCount());
 
-        connectionsTableView = new BisqTableView<>(model.getSortedConnectionListItems());
+        connectionsTableView = new BisqTableView<>(model.getConnectionListItems().getSortedList());
         connectionsTableView.setPadding(new Insets(-15, 0, 0, 0));
         connectionsTableView.setMinHeight(150);
         connectionsTableView.setPrefHeight(250);
@@ -73,7 +73,7 @@ public class TransportTypeView extends View<GridPane, TransportTypeModel, Transp
         GridPane.setMargin(nodesLabel, new Insets(0, 0, -15, 10));
         root.add(nodesLabel, 0, root.getRowCount());
 
-        nodesTableView = new BisqTableView<>(model.getSortedNodeListItems());
+        nodesTableView = new BisqTableView<>(model.getNodeListItems().getSortedList());
         nodesTableView.setPadding(new Insets(-15, 0, 0, 0));
         nodesTableView.setMinHeight(100);
         nodesTableView.setPrefHeight(200);

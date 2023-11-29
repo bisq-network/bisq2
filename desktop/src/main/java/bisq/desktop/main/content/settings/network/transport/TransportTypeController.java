@@ -89,6 +89,9 @@ public class TransportTypeController implements Controller {
 
     @Override
     public void onActivate() {
+        model.getNodeListItems().onActivate();
+        model.getConnectionListItems().onActivate();
+
         model.getMyDefaultNodeAddress().set(model.getDefaultNode().findMyAddress()
                 .map(Address::getFullAddress)
                 .orElseGet(() -> Res.get("data.na")));
@@ -103,10 +106,9 @@ public class TransportTypeController implements Controller {
     public void onDeactivate() {
         model.getServiceNode().getNodesById().removeListener(nodesByIdListener);
         model.getServiceNode().getNodesById().removeNodeListener(nodeListener);
-        model.getNodeListItems().forEach(NodeListItem::onDeactivate);
-        model.getConnectionListItems().forEach(ConnectionListItem::onDeactivate);
-        model.getNodeListItems().clear();
-        model.getConnectionListItems().clear();
+
+        model.getNodeListItems().onDeactivate();
+        model.getConnectionListItems().onDeactivate();
     }
 
     private void addNode(Node node) {

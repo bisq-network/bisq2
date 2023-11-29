@@ -19,16 +19,13 @@ package bisq.desktop.main.content.settings.network.transport;
 
 import bisq.common.observable.collection.ObservableSet;
 import bisq.desktop.common.view.Model;
+import bisq.desktop.components.table.TableList;
 import bisq.network.common.TransportType;
 import bisq.network.p2p.ServiceNode;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.collections.transformation.FilteredList;
-import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -38,16 +35,9 @@ public class TransportTypeModel implements Model {
     private final TransportType transportType;
     private final ServiceNode serviceNode;
     private final Node defaultNode;
-
-    private final ObservableList<NodeListItem> nodeListItems = FXCollections.observableArrayList();
-    private final FilteredList<NodeListItem> filteredNodeListItems = new FilteredList<>(nodeListItems);
-    private final SortedList<NodeListItem> sortedNodeListItems = new SortedList<>(filteredNodeListItems);
-
     private final ObservableSet<Connection> connections = new ObservableSet<>();
-    private final ObservableList<ConnectionListItem> connectionListItems = FXCollections.observableArrayList();
-    private final FilteredList<ConnectionListItem> filteredConnectionListItems = new FilteredList<>(connectionListItems);
-    private final SortedList<ConnectionListItem> sortedConnectionListItems = new SortedList<>(filteredConnectionListItems);
-
+    private final TableList<NodeListItem> nodeListItems = new TableList<>();
+    private final TableList<ConnectionListItem> connectionListItems = new TableList<>();
     private final StringProperty myDefaultNodeAddress = new SimpleStringProperty();
 
     public TransportTypeModel(TransportType transportType, ServiceNode serviceNode, Node defaultNode) {
