@@ -31,6 +31,7 @@ import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -131,6 +132,11 @@ public class FxBindings {
                 @Override
                 public void put(K key, V value) {
                     UIThread.run(() -> observableMap.put(key, value));
+                }
+
+                @Override
+                public void putAll(Map<? extends K, ? extends V> map) {
+                    UIThread.run(() -> observableMap.putAll(map));
                 }
 
                 @Override

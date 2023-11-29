@@ -1160,6 +1160,11 @@ public class ChatMessagesListView {
                 }
 
                 @Override
+                public void putAll(Map<? extends String, ? extends Observable<MessageDeliveryStatus>> map) {
+                    map.forEach(this::put);
+                }
+
+                @Override
                 public void remove(Object key) {
                 }
 
