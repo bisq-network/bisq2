@@ -40,7 +40,7 @@ public class NotificationPanelController implements Controller {
     private final NotificationPanelModel model;
     private final NotificationsService notificationsService;
     private final BisqEasyNotificationsService bisqEasyNotificationsService;
-    private Pin isNotificationVisiblePin, tradeIdsOfNotificationsPin;
+    private Pin isNotificationVisiblePin;
 
     public NotificationPanelController(ServiceProvider serviceProvider) {
         notificationsService = serviceProvider.getNotificationsService();
@@ -52,34 +52,51 @@ public class NotificationPanelController implements Controller {
 
     @Override
     public void onActivate() {
-        tradeIdsOfNotificationsPin = bisqEasyNotificationsService.getTradeIdsOfNotifications().addObserver(() -> {
-            UIThread.run(() -> {
-                Set<String> tradeIdsOfNotifications = bisqEasyNotificationsService.getTradeIdsOfNotifications();
-                if (tradeIdsOfNotifications.size() == 1) {
-                    String tradeId = tradeIdsOfNotifications.iterator().next();
-                    model.getHeadline().set(Res.get("notificationPanel.headline.single", tradeId));
-                } else if (tradeIdsOfNotifications.size() > 1) {
-                    String tradeIds = Joiner.on(", ").join(tradeIdsOfNotifications);
-                    model.getHeadline().set(Res.get("notificationPanel.headline.multiple", tradeIds));
-                }
-            });
-        });
-
+        notificationsService.subscribe(this::updateNumNotifications);
         isNotificationVisiblePin = FxBindings.bind(model.getIsNotificationVisible())
                 .to(bisqEasyNotificationsService.getIsNotificationPanelVisible());
     }
 
     @Override
     public void onDeactivate() {
+        notificationsService.unsubscribe(this::updateNumNotifications);
         isNotificationVisiblePin.unbind();
-        tradeIdsOfNotificationsPin.unbind();
     }
 
     void onClose() {
         notificationsService.getIsNotificationPanelDismissed().set(true);
     }
 
-    void onGoToOpenTrades() {
-        Navigation.navigateTo(NavigationTarget.BISQ_EASY_OPEN_TRADES);
+    void onNavigateToTarget() {
+        Navigation.navigateTo(model.isMediationNotification() ?
+                NavigationTarget.MEDIATOR :
+                NavigationTarget.BISQ_EASY_OPEN_TRADES);
+    }
+
+    private void updateNumNotifications(String notificationId) {
+        UIThread.run(() -> {
+            boolean notificationForMediator = bisqEasyNotificationsService.isNotificationForMediator(notificationId);
+            model.setMediationNotification(notificationForMediator);
+            Set<String> tradeIdsOfNotifications = bisqEasyNotificationsService.getTradeIdsOfNotifications();
+            if (tradeIdsOfNotifications.size() == 1) {
+                String tradeId = tradeIdsOfNotifications.iterator().next();
+                if (notificationForMediator) {
+                    model.getHeadline().set(Res.get("notificationPanel.mediationCases.headline.single", tradeId));
+                    model.getButtonText().set(Res.get("notificationPanel.mediationCases.button"));
+                } else {
+                    model.getHeadline().set(Res.get("notificationPanel.trades.headline.single", tradeId));
+                    model.getButtonText().set(Res.get("notificationPanel.trades.button"));
+                }
+            } else if (tradeIdsOfNotifications.size() > 1) {
+                String tradeIds = Joiner.on(", ").join(tradeIdsOfNotifications);
+                if (notificationForMediator) {
+                    model.getHeadline().set(Res.get("notificationPanel.mediationCases.headline.multiple", tradeIds));
+                    model.getButtonText().set(Res.get("notificationPanel.mediationCases.button"));
+                } else {
+                    model.getHeadline().set(Res.get("notificationPanel.trades.headline.multiple", tradeIds));
+                    model.getButtonText().set(Res.get("notificationPanel.trades.button"));
+                }
+            }
+        });
     }
 }

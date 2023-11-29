@@ -24,11 +24,15 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 public class NotificationPanelModel implements Model {
-    private final BooleanProperty isNotificationVisible  = new SimpleBooleanProperty();
+    private final BooleanProperty isNotificationVisible = new SimpleBooleanProperty();
     private final StringProperty headline = new SimpleStringProperty();
+    private final StringProperty buttonText = new SimpleStringProperty();
+    @Setter
+    private boolean isMediationNotification;
 
     public NotificationPanelModel() {
     }
