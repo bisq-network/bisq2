@@ -235,7 +235,7 @@ public class ChatService implements Service {
         return (BisqEasyOfferbookSelectionService) getChatChannelSelectionServices().get(ChatChannelDomain.BISQ_EASY_OFFERBOOK);
     }
 
-    public BisqEasyOpenTradeSelectionService getBisqEasyOpenTradesChannelSelectionService() {
+    public BisqEasyOpenTradeSelectionService getBisqEasyOpenTradesSelectionService() {
         return (BisqEasyOpenTradeSelectionService) getChatChannelSelectionServices().get(ChatChannelDomain.BISQ_EASY_OPEN_TRADES);
     }
 

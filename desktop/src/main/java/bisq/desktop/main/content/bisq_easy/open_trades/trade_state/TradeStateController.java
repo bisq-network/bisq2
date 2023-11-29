@@ -66,7 +66,7 @@ public class TradeStateController implements Controller {
         bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
         ChatService chatService = serviceProvider.getChatService();
         channelService = chatService.getBisqEasyOpenTradeChannelService();
-        selectionService = chatService.getBisqEasyOpenTradesChannelSelectionService();
+        selectionService = chatService.getBisqEasyOpenTradesSelectionService();
         mediationService = serviceProvider.getSupportService().getMediationService();
 
         tradePhaseBox = new TradePhaseBox(serviceProvider);

@@ -61,7 +61,7 @@ public abstract class BaseState {
             accountService = serviceProvider.getAccountService();
             userIdentityService = serviceProvider.getUserService().getUserIdentityService();
             channelService = serviceProvider.getChatService().getBisqEasyOpenTradeChannelService();
-            selectionService = serviceProvider.getChatService().getBisqEasyOpenTradesChannelSelectionService();
+            selectionService = serviceProvider.getChatService().getBisqEasyOpenTradesSelectionService();
 
             model = createModel(bisqEasyTrade, channel);
             view = createView();

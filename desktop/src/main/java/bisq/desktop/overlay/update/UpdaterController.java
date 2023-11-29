@@ -106,7 +106,7 @@ public class UpdaterController implements Controller {
         model.getHeadline().set(Res.get("updater.downloadAndVerify.headline"));
         try {
             updaterService.downloadAndVerify()
-                    .whenComplete((__, throwable) -> {
+                    .whenComplete((nil, throwable) -> {
                         if (throwable == null) {
                             UIThread.run(() -> model.getDownloadAndVerifyCompleted().set(true));
                         } else if (!(throwable instanceof CancellationException)) {
