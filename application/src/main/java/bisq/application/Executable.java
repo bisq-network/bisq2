@@ -69,7 +69,7 @@ public abstract class Executable<T extends ApplicationService> implements ShutDo
 
     protected void setDefaultUncaughtExceptionHandler() {
         Thread.setDefaultUncaughtExceptionHandler((thread, throwable) ->
-                log.error("Uncaught exception", throwable));
+                log.error("Uncaught exception:", throwable));
     }
 
     protected void keepRunning() {
