@@ -84,7 +84,7 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
     @Override
     protected void setDefaultUncaughtExceptionHandler() {
         Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
-            log.error("Uncaught exception", throwable);
+            log.error("Uncaught exception:", throwable);
             UIThread.run(() -> {
                 if (desktopController != null) {
                     desktopController.onUncaughtException(thread, throwable);

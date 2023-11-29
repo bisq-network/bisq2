@@ -69,7 +69,7 @@ public abstract class View<R extends Region, M extends Model, C extends Controll
             if (!controller.useCaching()) {
                 // If we do not use caching we do not expect to get added again to stage without creating a 
                 // new instance of the view, so we remove our sceneChangeListener.
-                UIThread.runOnNextRenderFrame(() -> root.sceneProperty().removeListener(View.this.sceneChangeListener));
+                UIThread.runOnNextRenderFrame(() -> root.sceneProperty().removeListener(sceneChangeListener));
                 if (oldValue.getWindow() != null && windowChangeListener != null) {
                     UIThread.runOnNextRenderFrame(() -> oldValue.windowProperty().removeListener(windowChangeListener));
                 }

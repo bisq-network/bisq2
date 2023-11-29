@@ -178,7 +178,7 @@ public class DesktopController extends NavigationController {
 
     public void onUncaughtException(Thread thread, Throwable throwable) {
         log.error("Uncaught exception from thread {}", thread);
-        log.error("Uncaught exception", throwable);
+        log.error("Uncaught exception:", throwable);
         UIThread.run(() -> new Popup().error(throwable).show());
     }
 
