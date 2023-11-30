@@ -33,7 +33,7 @@ import bisq.network.p2p.message.NetworkMessageResolver;
 import bisq.network.p2p.services.data.storage.DistributedDataResolver;
 import bisq.offer.OfferMessage;
 import bisq.support.mediation.MediationRequest;
-import bisq.support.mediation.MediationResponse;
+import bisq.support.mediation.MediatorsResponse;
 import bisq.support.moderator.ReportToModeratorMessage;
 import bisq.trade.bisq_easy.protocol.messages.*;
 import bisq.trade.protocol.messages.TradeMessage;
@@ -94,7 +94,7 @@ public class ResolverConfig {
         NetworkMessageResolver.addResolver("user.AuthorizeTimestampRequest", AuthorizeTimestampRequest.getNetworkMessageResolver());
         NetworkMessageResolver.addResolver("bonded_roles.BondedRoleRegistrationRequest", BondedRoleRegistrationRequest.getNetworkMessageResolver());
         NetworkMessageResolver.addResolver("support.MediationRequest", MediationRequest.getNetworkMessageResolver());
-        NetworkMessageResolver.addResolver("support.MediationResponse", MediationResponse.getNetworkMessageResolver());
+        NetworkMessageResolver.addResolver("support.MediatorsResponse", MediatorsResponse.getNetworkMessageResolver());
         NetworkMessageResolver.addResolver("support.ReportToModeratorMessage", ReportToModeratorMessage.getNetworkMessageResolver());
     }
 }

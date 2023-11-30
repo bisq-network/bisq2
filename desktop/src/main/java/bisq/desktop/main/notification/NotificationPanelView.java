@@ -21,7 +21,6 @@ import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
-import bisq.i18n.Res;
 import javafx.animation.Timeline;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -39,7 +38,7 @@ public class NotificationPanelView extends View<BorderPane, NotificationPanelMod
     public static final int DURATION = Transitions.DEFAULT_DURATION / 2;
     private final Label notificationHeadline;
     private final Button closeButton;
-    private final Hyperlink goToOpenTradesButton;
+    private final Hyperlink hyperlink;
     private Timeline slideInRightTimeline, slideOutTopTimeline;
     private Subscription isVisiblePin;
 
@@ -55,14 +54,14 @@ public class NotificationPanelView extends View<BorderPane, NotificationPanelMod
 
         closeButton = BisqIconButton.createIconButton("close-black");
 
-        goToOpenTradesButton = new Hyperlink(Res.get("notificationPanel.button"));
-        goToOpenTradesButton.getStyleClass().add("notification-hyperlink");
+        hyperlink = new Hyperlink();
+        hyperlink.getStyleClass().add("notification-hyperlink");
 
-        HBox.setMargin(goToOpenTradesButton, new Insets(5, 0, 5, 0));
+        HBox.setMargin(hyperlink, new Insets(5, 0, 5, 0));
 
         Label separator = new Label("|");
         separator.getStyleClass().add("notification-headline");
-        HBox notificationContent = new HBox(10, notificationHeadline, separator, goToOpenTradesButton);
+        HBox notificationContent = new HBox(10, notificationHeadline, separator, hyperlink);
         notificationContent.setAlignment(Pos.CENTER);
 
         HBox notificationHBox = new HBox(notificationContent, Spacer.fillHBox(), closeButton);
@@ -77,6 +76,7 @@ public class NotificationPanelView extends View<BorderPane, NotificationPanelMod
     @Override
     protected void onViewAttached() {
         notificationHeadline.textProperty().bind(model.getHeadline());
+        hyperlink.textProperty().bind(model.getButtonText());
 
         isVisiblePin = EasyBind.subscribe(model.getIsNotificationVisible(), isVisible -> {
             if (slideInRightTimeline != null) {
@@ -110,16 +110,17 @@ public class NotificationPanelView extends View<BorderPane, NotificationPanelMod
         });
 
         closeButton.setOnAction(e -> controller.onClose());
-        goToOpenTradesButton.setOnAction(e -> controller.onGoToOpenTrades());
+        hyperlink.setOnAction(e -> controller.onNavigateToTarget());
     }
 
     @Override
     protected void onViewDetached() {
         notificationHeadline.textProperty().unbind();
+        hyperlink.textProperty().unbind();
 
         isVisiblePin.unsubscribe();
 
         closeButton.setOnAction(null);
-        goToOpenTradesButton.setOnAction(null);
+        hyperlink.setOnAction(null);
     }
 }

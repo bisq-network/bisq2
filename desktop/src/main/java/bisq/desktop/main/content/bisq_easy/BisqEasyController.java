@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy;
 
+import bisq.bisq_easy.BisqEasyNotificationsService;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.desktop.ServiceProvider;
@@ -41,12 +42,14 @@ public class BisqEasyController extends ContentTabController<BisqEasyModel> {
     private final BisqEasyView view;
     private final NotificationsService notificationsService;
     private final ChatNotificationService chatNotificationService;
+    private final BisqEasyNotificationsService bisqEasyNotificationsService;
 
     public BisqEasyController(ServiceProvider serviceProvider) {
         super(new BisqEasyModel(), NavigationTarget.BISQ_EASY, serviceProvider);
 
         notificationsService = serviceProvider.getNotificationsService();
         chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
+        bisqEasyNotificationsService = serviceProvider.getBisqEasyService().getBisqEasyNotificationsService();
 
         view = new BisqEasyView(model, this);
     }
@@ -88,9 +91,11 @@ public class BisqEasyController extends ContentTabController<BisqEasyModel> {
 
     private void updateNumNotifications(String notificationId) {
         UIThread.run(() -> {
-            ChatChannelDomain chatChannelDomain = ChatNotificationService.getChatChannelDomain(notificationId);
-            findTab(chatChannelDomain).ifPresent(tabButton ->
-                    tabButton.setNumNotifications(chatNotificationService.getNumNotificationsByDomain(chatChannelDomain)));
+            if (!bisqEasyNotificationsService.isNotificationForMediator(notificationId)) {
+                ChatChannelDomain chatChannelDomain = ChatNotificationService.getChatChannelDomain(notificationId);
+                findTab(chatChannelDomain).ifPresent(tabButton ->
+                        tabButton.setNumNotifications(chatNotificationService.getNumNotificationsByDomain(chatChannelDomain)));
+            }
         });
     }
 

@@ -20,11 +20,11 @@ package bisq.support.mediation;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeMessage;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.network.protobuf.ExternalNetworkMessage;
-import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.user.profile.UserProfile;
 import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -42,22 +42,24 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 @Slf4j
 @Getter
 @ToString
-@EqualsAndHashCode
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public final class MediationRequest implements MailboxMessage {
     private final MetaData metaData = new MetaData(TTL_10_DAYS, getClass().getSimpleName());
-    private final BisqEasyOffer bisqEasyOffer;
+    @EqualsAndHashCode.Include
+    private final BisqEasyContract contract;
+    @EqualsAndHashCode.Include
     private final String tradeId;
     private final UserProfile requester;
     private final UserProfile peer;
     private final List<BisqEasyOpenTradeMessage> chatMessages;
 
     public MediationRequest(String tradeId,
-                            BisqEasyOffer bisqEasyOffer,
+                            BisqEasyContract contract,
                             UserProfile requester,
                             UserProfile peer,
                             List<BisqEasyOpenTradeMessage> chatMessages) {
         this.tradeId = tradeId;
-        this.bisqEasyOffer = bisqEasyOffer;
+        this.contract = contract;
         this.requester = requester;
         this.peer = peer;
         this.chatMessages = maybePrune(chatMessages);
@@ -76,10 +78,10 @@ public final class MediationRequest implements MailboxMessage {
                 .build();
     }
 
-    private bisq.support.protobuf.MediationRequest toMediationRequestProto() {
+    public bisq.support.protobuf.MediationRequest toMediationRequestProto() {
         return bisq.support.protobuf.MediationRequest.newBuilder()
                 .setTradeId(tradeId)
-                .setBisqEasyOffer(bisqEasyOffer.toProto())
+                .setContract(contract.toProto())
                 .setRequester(requester.toProto())
                 .setPeer(peer.toProto())
                 .addAllChatMessages(chatMessages.stream()
@@ -90,7 +92,7 @@ public final class MediationRequest implements MailboxMessage {
 
     public static MediationRequest fromProto(bisq.support.protobuf.MediationRequest proto) {
         return new MediationRequest(proto.getTradeId(),
-                BisqEasyOffer.fromProto(proto.getBisqEasyOffer()),
+                BisqEasyContract.fromProto(proto.getContract()),
                 UserProfile.fromProto(proto.getRequester()),
                 UserProfile.fromProto(proto.getPeer()),
                 proto.getChatMessagesList().stream()

@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.left;
 
+import bisq.bisq_easy.BisqEasyNotificationsService;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.notifications.ChatNotificationService;
@@ -48,6 +49,7 @@ public class LeftNavController implements Controller {
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
     private final UserIdentityService userIdentityService;
     private final UpdaterService updaterService;
+    private final BisqEasyNotificationsService bisqEasyNotificationsService;
     private Pin bondedRolesPin, selectedUserIdentityPin, releaseNotificationPin;
     private boolean notificationSubscriptionDone;
 
@@ -57,6 +59,7 @@ public class LeftNavController implements Controller {
         authorizedBondedRolesService = serviceProvider.getBondedRolesService().getAuthorizedBondedRolesService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         updaterService = serviceProvider.getUpdaterService();
+        bisqEasyNotificationsService = serviceProvider.getBisqEasyService().getBisqEasyNotificationsService();
         model = new LeftNavModel(serviceProvider);
         model.setVersion("v" + serviceProvider.getConfig().getVersion().toString());
         view = new LeftNavView(model, this);
@@ -154,29 +157,50 @@ public class LeftNavController implements Controller {
 
     private void updateNumNotifications(String notificationId) {
         UIThread.run(() -> {
-            ChatChannelDomain chatChannelDomain = ChatNotificationService.getChatChannelDomain(notificationId);
-            findLeftNavButton(chatChannelDomain).ifPresent(leftNavButton -> {
-                leftNavButton.setNumNotifications(chatNotificationService.getNumNotificationsMyDomainOrParentDomain(chatChannelDomain));
-                switch (chatChannelDomain) {
-                    case BISQ_EASY_OFFERBOOK:
-                    case BISQ_EASY_OPEN_TRADES:
-                    case BISQ_EASY_PRIVATE_CHAT:
-                        Set<String> tradeIdSet = notificationsService.getNotConsumedNotificationIds().stream()
-                                .filter(id -> ChatNotificationService.getChatChannelDomain(id) == ChatChannelDomain.BISQ_EASY_OPEN_TRADES)
-                                .flatMap(id -> ChatNotificationService.findTradeId(id).stream())
-                                .collect(Collectors.toSet());
-                        if (!tradeIdSet.isEmpty()) {
-                            leftNavButton.getNumMessagesBadge().getStyleClass().add("open-trades-badge");
-                        } else {
-                            leftNavButton.getNumMessagesBadge().getStyleClass().remove("open-trades-badge");
-                        }
-                        break;
-                    case DISCUSSION:
-                    case EVENTS:
-                    case SUPPORT:
-                        break;
+            Optional<LeftNavButton> authorizedRoleButton = findNavButton(NavigationTarget.AUTHORIZED_ROLE);
+            if (bisqEasyNotificationsService.isNotificationForMediator(notificationId) && authorizedRoleButton.isPresent()) {
+                LeftNavButton button = authorizedRoleButton.get();
+                button.setNumNotifications(chatNotificationService.getNumNotificationsByDomain(ChatChannelDomain.BISQ_EASY_OPEN_TRADES));
+                Set<String> tradeIdSet = notificationsService.getNotConsumedNotificationIds().stream()
+                        .filter(id -> ChatNotificationService.getChatChannelDomain(id) == ChatChannelDomain.BISQ_EASY_OPEN_TRADES)
+                        .flatMap(id -> ChatNotificationService.findTradeId(id).stream())
+                        .collect(Collectors.toSet());
+                if (!tradeIdSet.isEmpty()) {
+                    button.getNumMessagesBadge().getStyleClass().add("open-trades-badge");
+                } else {
+                    button.getNumMessagesBadge().getStyleClass().remove("open-trades-badge");
                 }
-            });
+            } else {
+                ChatChannelDomain chatChannelDomain = ChatNotificationService.getChatChannelDomain(notificationId);
+                findLeftNavButton(chatChannelDomain).ifPresent(leftNavButton -> {
+                    int numNotifications = chatNotificationService.getNumNotificationsMyDomainOrParentDomain(chatChannelDomain);
+                    if ((chatChannelDomain == ChatChannelDomain.BISQ_EASY_OFFERBOOK ||
+                            chatChannelDomain == ChatChannelDomain.BISQ_EASY_PRIVATE_CHAT) &&
+                            bisqEasyNotificationsService.isNotificationForMediator(notificationId)) {
+                        numNotifications -= 1;
+                    }
+                    leftNavButton.setNumNotifications(numNotifications);
+                    switch (chatChannelDomain) {
+                        case BISQ_EASY_OFFERBOOK:
+                        case BISQ_EASY_OPEN_TRADES:
+                        case BISQ_EASY_PRIVATE_CHAT:
+                            Set<String> tradeIdSet = notificationsService.getNotConsumedNotificationIds().stream()
+                                    .filter(id -> ChatNotificationService.getChatChannelDomain(id) == ChatChannelDomain.BISQ_EASY_OPEN_TRADES)
+                                    .flatMap(id -> ChatNotificationService.findTradeId(id).stream())
+                                    .collect(Collectors.toSet());
+                            if (!tradeIdSet.isEmpty()) {
+                                leftNavButton.getNumMessagesBadge().getStyleClass().add("open-trades-badge");
+                            } else {
+                                leftNavButton.getNumMessagesBadge().getStyleClass().remove("open-trades-badge");
+                            }
+                            break;
+                        case DISCUSSION:
+                        case EVENTS:
+                        case SUPPORT:
+                            break;
+                    }
+                });
+            }
         });
     }
 

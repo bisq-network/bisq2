@@ -10,7 +10,7 @@ import bisq.desktop.common.utils.FileChooserUtil;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
-import bisq.support.mediation.MediationService;
+import bisq.support.mediation.MediationRequestService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.user.profile.UserProfile;
 import javafx.scene.Scene;
@@ -65,7 +65,7 @@ public class OpenTradesUtils {
         }
     }
 
-    public static void openDispute(BisqEasyOpenTradeChannel channel, MediationService mediationService) {
+    public static void openDispute(BisqEasyOpenTradeChannel channel, BisqEasyContract contract, MediationRequestService mediationRequestService) {
         Optional<UserProfile> mediator = channel.getMediator();
         if (mediator.isPresent()) {
             new Popup().headline(Res.get("bisqEasy.mediation.request.confirm.headline"))
@@ -76,7 +76,7 @@ public class OpenTradesUtils {
                         // chatService.getBisqEasyPrivateTradeChatChannelService().sendSystemMessage(systemMessage, channel);
 
                         channel.setIsInMediation(true);
-                        mediationService.requestMediation(channel);
+                        mediationRequestService.requestMediation(channel, contract);
                         new Popup().headline(Res.get("bisqEasy.mediation.request.feedback.headline"))
                                 .feedback(Res.get("bisqEasy.mediation.request.feedback.msg"))
                                 .show();

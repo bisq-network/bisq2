@@ -41,6 +41,25 @@ public class AuthorizedRoleView extends ContentTabView<AuthorizedRoleModel, Auth
             String name = bondedRoleType.name();
             TabButton tabButton = addTab(Res.get("authorizedRole." + name), NavigationTarget.valueOf(name));
             tabButtonByBondedRoleType.put(bondedRoleType, tabButton);
+            switch (bondedRoleType) {
+                case MEDIATOR:
+                case ARBITRATOR:
+                case MODERATOR:
+                    tabButton.getNumMessagesBadge().getStyleClass().add("open-trades-badge");
+                    break;
+                case SECURITY_MANAGER:
+                    break;
+                case RELEASE_MANAGER:
+                    break;
+                case SEED_NODE:
+                    break;
+                case ORACLE_NODE:
+                    break;
+                case EXPLORER_NODE:
+                    break;
+                case MARKET_PRICE_NODE:
+                    break;
+            }
         });
 
         listener = c -> updateVisibility();

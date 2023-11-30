@@ -234,7 +234,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
                                      FiatPaymentMethodSpec fiatPaymentMethodSpec,
                                      PriceSpec agreedPriceSpec,
                                      long marketPrice) throws TradeException {
-        Optional<UserProfile> mediator = serviceProvider.getSupportService().getMediationService()
+        Optional<UserProfile> mediator = serviceProvider.getSupportService().getMediationRequestService()
                 .selectMediator(bisqEasyOffer.getMakersUserProfileId(), takerIdentity.getId());
         NetworkId takerNetworkId = takerIdentity.getNetworkId();
         BisqEasyContract contract = new BisqEasyContract(

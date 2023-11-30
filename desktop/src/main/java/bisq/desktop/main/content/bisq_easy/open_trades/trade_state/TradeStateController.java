@@ -31,7 +31,7 @@ import bisq.desktop.main.content.bisq_easy.BisqEasyServiceUtil;
 import bisq.desktop.main.content.bisq_easy.components.TradeDataHeader;
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.*;
 import bisq.i18n.Res;
-import bisq.support.mediation.MediationService;
+import bisq.support.mediation.MediationRequestService;
 import bisq.trade.TradeException;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
@@ -57,7 +57,7 @@ public class TradeStateController implements Controller {
     private final BisqEasyTradeService bisqEasyTradeService;
     private final BisqEasyOpenTradeChannelService channelService;
     private final BisqEasyOpenTradeSelectionService selectionService;
-    private final MediationService mediationService;
+    private final MediationRequestService mediationRequestService;
     private Pin bisqEasyTradeStatePin;
     private Subscription channelPin;
 
@@ -67,7 +67,7 @@ public class TradeStateController implements Controller {
         ChatService chatService = serviceProvider.getChatService();
         channelService = chatService.getBisqEasyOpenTradeChannelService();
         selectionService = chatService.getBisqEasyOpenTradesSelectionService();
-        mediationService = serviceProvider.getSupportService().getMediationService();
+        mediationRequestService = serviceProvider.getSupportService().getMediationRequestService();
 
         tradePhaseBox = new TradePhaseBox(serviceProvider);
         tradeDataHeader = new TradeDataHeader(serviceProvider, Res.get("bisqEasy.tradeState.header.peer").toUpperCase());
@@ -199,7 +199,9 @@ public class TradeStateController implements Controller {
     }
 
     void onReportToMediator() {
-        OpenTradesUtils.openDispute(model.getChannel().get(), mediationService);
+        OpenTradesUtils.openDispute(model.getChannel().get(),
+                model.getBisqEasyTrade().get().getContract(),
+                mediationRequestService);
     }
 
     private void applyStateInfoVBox(@Nullable BisqEasyTradeState state) {

@@ -137,6 +137,7 @@ public class BisqEasyPrivateChatsController extends ChatController<BisqEasyPriva
     }
 
     void onLeaveChat() {
+        //todo add popup
         if (model.getSelectedChannel() != null) {
             channelService.leaveChannel(model.getSelectedChannel().getId());
             selectionService.getSelectedChannel().set(null);
