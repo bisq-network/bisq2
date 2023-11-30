@@ -80,7 +80,7 @@ public class NetworkLoadExchangeService implements Node.Listener {
         requestHandlerMap.put(key, handler);
         handler.request()
                 .orTimeout(TIMEOUT_SEC, TimeUnit.SECONDS)
-                .whenComplete((__, throwable) -> requestHandlerMap.remove(key));
+                .whenComplete((nil, throwable) -> requestHandlerMap.remove(key));
     }
 
     public void shutdown() {

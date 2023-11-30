@@ -65,7 +65,7 @@ public class InventoryService implements Node.Listener {
                     requestHandlerMap.put(key, handler);
                     return handler.request(dataFilter)
                             .orTimeout(TIMEOUT, TimeUnit.SECONDS)
-                            .whenComplete((__, throwable) -> requestHandlerMap.remove(key));
+                            .whenComplete((inventory, throwable) -> requestHandlerMap.remove(key));
                 })
                 .collect(Collectors.toList());
     }

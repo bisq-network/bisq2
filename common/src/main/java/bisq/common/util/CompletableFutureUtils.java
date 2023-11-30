@@ -114,7 +114,7 @@ public class CompletableFutureUtils {
     // Borrowed from https://4comprehension.com/be-careful-with-completablefuture-applytoeither/
     public static <T> CompletableFuture<T> either(CompletableFuture<T> f1, CompletableFuture<T> f2) {
         CompletableFuture<T> result = new CompletableFuture<>();
-        CompletableFuture.allOf(f1, f2).whenComplete((__, throwable) -> {
+        CompletableFuture.allOf(f1, f2).whenComplete((nil, throwable) -> {
             if (f1.isCompletedExceptionally() && f2.isCompletedExceptionally()) {
                 result.completeExceptionally(throwable);
             }

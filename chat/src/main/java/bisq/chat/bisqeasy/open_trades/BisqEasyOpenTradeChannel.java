@@ -48,7 +48,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Getter
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public final class BisqEasyOpenTradeChannel extends PrivateGroupChatChannel<BisqEasyOpenTradeMessage> {
-    public static String createChannelId(String tradeId) {
+    public static String createId(String tradeId) {
         return ChatChannelDomain.BISQ_EASY_OPEN_TRADES.name().toLowerCase() + "." + tradeId;
     }
 
@@ -88,7 +88,7 @@ public final class BisqEasyOpenTradeChannel extends PrivateGroupChatChannel<Bisq
                                      UserIdentity myUserIdentity,
                                      UserProfile peer,
                                      Optional<UserProfile> mediator) {
-        this(createChannelId(tradeId),
+        this(createId(tradeId),
                 tradeId,
                 bisqEasyOffer,
                 myUserIdentity,
@@ -105,7 +105,7 @@ public final class BisqEasyOpenTradeChannel extends PrivateGroupChatChannel<Bisq
                                      UserIdentity myUserIdentity,
                                      UserProfile requestingTrader,
                                      UserProfile nonRequestingTrader) {
-        this(createChannelId(tradeId),
+        this(createId(tradeId),
                 tradeId,
                 bisqEasyOffer,
                 myUserIdentity,

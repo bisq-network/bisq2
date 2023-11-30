@@ -61,7 +61,7 @@ public class BuyerState5 extends BaseState {
 
             explorerService = serviceProvider.getBondedRolesService().getExplorerService();
             bisqEasyOpenTradeChannelService = serviceProvider.getChatService().getBisqEasyOpenTradeChannelService();
-            bisqEasyOpenTradeSelectionService = serviceProvider.getChatService().getBisqEasyOpenTradesChannelSelectionService();
+            bisqEasyOpenTradeSelectionService = serviceProvider.getChatService().getBisqEasyOpenTradesSelectionService();
         }
 
         @Override

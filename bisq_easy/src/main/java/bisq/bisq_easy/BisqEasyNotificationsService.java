@@ -50,7 +50,7 @@ public class BisqEasyNotificationsService implements Service {
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
 
-        notificationsService.subscribe(changed -> {
+        notificationsService.subscribe(notificationId -> {
             tradeIdsOfNotifications.setAll(notificationsService.getNotConsumedNotificationIds().stream()
                     .filter(id -> ChatNotificationService.getChatChannelDomain(id) == ChatChannelDomain.BISQ_EASY_OPEN_TRADES)
                     .flatMap(id -> ChatNotificationService.findTradeId(id).stream())

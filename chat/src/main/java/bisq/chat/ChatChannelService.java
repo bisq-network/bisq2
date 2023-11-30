@@ -114,9 +114,9 @@ public abstract class ChatChannelService<M extends ChatMessage, C extends ChatCh
         }
     }
 
-    public Optional<C> findChannel(String id) {
+    public Optional<C> findChannel(String channelId) {
         return getChannels().stream()
-                .filter(channel -> channel.getId().equals(id))
+                .filter(channel -> channel.getId().equals(channelId))
                 .findAny();
     }
 

@@ -65,7 +65,7 @@ public class BisqEasyOpenTradesController extends ChatController<BisqEasyOpenTra
         super(serviceProvider, ChatChannelDomain.BISQ_EASY_OPEN_TRADES, NavigationTarget.BISQ_EASY_OPEN_TRADES);
 
         channelService = chatService.getBisqEasyOpenTradeChannelService();
-        selectionService = chatService.getBisqEasyOpenTradesChannelSelectionService();
+        selectionService = chatService.getBisqEasyOpenTradesSelectionService();
         bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
         settingsService = serviceProvider.getSettingsService();
         reputationService = serviceProvider.getUserService().getReputationService();

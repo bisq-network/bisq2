@@ -35,11 +35,11 @@ import java.util.stream.Stream;
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public final class TwoPartyPrivateChatChannel extends PrivateChatChannel<TwoPartyPrivateChatMessage> {
     // Channel id must be deterministic, so we sort both userIds and use that order for the concatenated string.
-    public static String createId(ChatChannelDomain ChatChannelDomain, String userProfileId1, String userProfileId2) {
+    public static String createId(ChatChannelDomain chatChannelDomain, String userProfileId1, String userProfileId2) {
         List<String> userIds = Stream.of(userProfileId1, userProfileId2)
                 .sorted()
                 .collect(Collectors.toList());
-        return ChatChannelDomain.name().toLowerCase() + "." + userIds.get(0) + "-" + userIds.get(1);
+        return chatChannelDomain.name().toLowerCase() + "." + userIds.get(0) + "-" + userIds.get(1);
     }
 
     @Getter
