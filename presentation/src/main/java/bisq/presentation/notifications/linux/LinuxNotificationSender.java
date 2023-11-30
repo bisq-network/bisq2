@@ -16,13 +16,13 @@
  */
 package bisq.presentation.notifications.linux;
 
-import bisq.presentation.notifications.NotificationsDelegate;
+import bisq.presentation.notifications.NotificationSender;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class LinuxNotifications implements NotificationsDelegate {
+public class LinuxNotificationSender implements NotificationSender {
     public static boolean isSupported() {
         try {
             return Runtime.getRuntime().exec("notify-send --help > nil").waitFor() == 0;

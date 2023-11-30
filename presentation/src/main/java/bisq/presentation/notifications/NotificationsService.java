@@ -25,8 +25,8 @@ import bisq.common.util.OsUtils;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
-import bisq.presentation.notifications.linux.LinuxNotifications;
-import bisq.presentation.notifications.osx.OsxNotifications;
+import bisq.presentation.notifications.linux.LinuxNotificationSender;
+import bisq.presentation.notifications.osx.OsxNotificationSender;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -49,7 +49,7 @@ public class NotificationsService implements PersistenceClient<NotificationsStor
     private final NotificationsStore persistableStore = new NotificationsStore();
     @Getter
     private final Persistence<NotificationsStore> persistence;
-    private NotificationsDelegate delegate;
+    private NotificationSender delegate;
     private final Set<Subscriber> subscribers = new HashSet<>();
 
     // We do not persist the state of a closed notification panel as we prefer to show the panel again at restart.
@@ -149,16 +149,16 @@ public class NotificationsService implements PersistenceClient<NotificationsStor
         return getNotificationIdMap().keySet();
     }
 
-    private NotificationsDelegate getNotificationsDelegate() {
+    private NotificationSender getNotificationsDelegate() {
         if (delegate == null) {
             if (OsUtils.getOperatingSystem() == OperatingSystem.LINUX &&
-                    LinuxNotifications.isSupported()) {
-                delegate = new LinuxNotifications();
+                    LinuxNotificationSender.isSupported()) {
+                delegate = new LinuxNotificationSender();
             } else if (OsUtils.getOperatingSystem() == OperatingSystem.MAC &&
-                    OsxNotifications.isSupported()) {
-                delegate = new OsxNotifications();
+                    OsxNotificationSender.isSupported()) {
+                delegate = new OsxNotificationSender();
             } else {
-                delegate = new AwtNotifications();
+                delegate = new AwtNotificationSender();
             }
         }
         return delegate;

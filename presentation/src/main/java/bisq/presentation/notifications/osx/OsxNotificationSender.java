@@ -17,13 +17,13 @@
 package bisq.presentation.notifications.osx;
 
 import bisq.common.util.OsUtils;
-import bisq.presentation.notifications.NotificationsDelegate;
+import bisq.presentation.notifications.NotificationSender;
 import bisq.presentation.notifications.osx.foundation.Foundation;
 import bisq.presentation.notifications.osx.foundation.ID;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class OsxNotifications implements NotificationsDelegate {
+public class OsxNotificationSender implements NotificationSender {
     public static boolean isSupported() {
         try {
             // Requires at least Mountain Lion

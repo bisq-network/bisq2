@@ -22,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.awt.*;
 
 @Slf4j
-public class AwtNotifications implements NotificationsDelegate {
+public class AwtNotificationSender implements NotificationSender {
 
     public void sendNotification(String title, String message) {
         SystemTray systemTray = SystemTray.getSystemTray();
