@@ -110,9 +110,9 @@ public class BondedRolesService implements Service {
                 };
                 dataService.addListener(authorizedDataListener);
                 try {
-                    latch.await(5, TimeUnit.SECONDS);
+                    latch.await(1, TimeUnit.SECONDS);
                     dataService.removeListener(authorizedDataListener);
-                    Thread.sleep(2000);
+                    Thread.sleep(200);
                     future.complete(null);
                 } catch (InterruptedException ignore) {
                 }
@@ -122,7 +122,7 @@ public class BondedRolesService implements Service {
         }
 
         return future
-                .orTimeout(5, TimeUnit.SECONDS)
+                .orTimeout(1, TimeUnit.SECONDS)
                 .handle((nil, throwable) -> {
                     if (throwable != null) {
                         log.error("Listening for inventory failed.", throwable);
