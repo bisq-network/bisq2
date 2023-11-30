@@ -38,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class BisqEasyVideoView extends View<VBox, BisqEasyVideoModel, BisqEasyVideoController> {
-    public static final double VIDEO_WIDTH = 1920;
+    public static final double VIDEO_WIDTH = 1728; //1920;
     public static final double VIDEO_HEIGHT = 1080;
     public static final double MENU_HEIGHT = 51;
     public static final double PADDING = 50;
