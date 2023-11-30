@@ -31,6 +31,7 @@ import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -92,9 +93,15 @@ public class FxBindings {
         // In case there is no map function provided we require that target type is the same as the source type. 
         @SuppressWarnings("unchecked")
         private Function<S, T> mapFunction = e -> (T) e;
+        private Function<S, Boolean> filterFunction = e -> true;
 
         private ObservableListBindings(ObservableList<T> observableList) {
             this.observableList = observableList;
+        }
+
+        public ObservableListBindings<S, T> filter(Function<S, Boolean> filterFunction) {
+            this.filterFunction = filterFunction;
+            return this;
         }
 
         public ObservableListBindings<S, T> map(Function<S, T> mapFunction) {
@@ -104,11 +111,11 @@ public class FxBindings {
 
         // We support currently only JavaFX ObservableList even if the source is a set.
         public Pin to(ObservableSet<S> observable) {
-            return observable.addCollectionChangeMapper(observableList, mapFunction, UIThread::run);
+            return observable.addCollectionChangeMapper(observableList, filterFunction, mapFunction, UIThread::run);
         }
 
         public Pin to(ObservableArray<S> observable) {
-            return observable.addCollectionChangeMapper(observableList, mapFunction, UIThread::run);
+            return observable.addCollectionChangeMapper(observableList, filterFunction, mapFunction, UIThread::run);
         }
     }
 
@@ -125,6 +132,11 @@ public class FxBindings {
                 @Override
                 public void put(K key, V value) {
                     UIThread.run(() -> observableMap.put(key, value));
+                }
+
+                @Override
+                public void putAll(Map<? extends K, ? extends V> map) {
+                    UIThread.run(() -> observableMap.putAll(map));
                 }
 
                 @Override

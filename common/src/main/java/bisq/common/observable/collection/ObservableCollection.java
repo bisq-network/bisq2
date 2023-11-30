@@ -55,8 +55,11 @@ public abstract class ObservableCollection<S> implements Collection<S> {
         return () -> observers.remove(simpleCollectionObserver);
     }
 
-    public <T> Pin addCollectionChangeMapper(Collection<T> collection, Function<S, T> mapFunction, Consumer<Runnable> executor) {
-        CollectionChangeMapper<S, T> collectionChangeMapper = new CollectionChangeMapper<>(collection, mapFunction, executor);
+    public <T> Pin addCollectionChangeMapper(Collection<T> collection,
+                                             Function<S, Boolean> filterFunction,
+                                             Function<S, T> mapFunction,
+                                             Consumer<Runnable> executor) {
+        CollectionChangeMapper<S, T> collectionChangeMapper = new CollectionChangeMapper<>(collection, filterFunction, mapFunction, executor);
         collectionChangeMapper.clear();
         collectionChangeMapper.addAll(this);
         observers.add(collectionChangeMapper);

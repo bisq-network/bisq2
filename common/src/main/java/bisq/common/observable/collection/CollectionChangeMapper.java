@@ -39,31 +39,37 @@ import java.util.stream.Collectors;
 @ToString
 final class CollectionChangeMapper<S, T> implements CollectionObserver<S> {
     private final Collection<T> targetCollection;
+    private final Function<S, Boolean> filterFunction;
     private final Function<S, T> mapFunction;
     private final Consumer<Runnable> executor;
 
     CollectionChangeMapper(Collection<T> targetCollection,
+                           Function<S, Boolean> filterFunction,
                            Function<S, T> mapFunction,
                            Consumer<Runnable> executor) {
         this.targetCollection = targetCollection;
+        this.filterFunction = filterFunction;
         this.mapFunction = mapFunction;
         this.executor = executor;
     }
 
     @Override
-    public void add(S element) {
+    public void add(S sourceItem) {
         executor.accept(() -> {
-            T item = mapFunction.apply(element);
-            if (!targetCollection.contains(item)) {
-                targetCollection.add(item);
+            if (filterFunction.apply(sourceItem)) {
+                T item = mapFunction.apply(sourceItem);
+                if (!targetCollection.contains(item)) {
+                    targetCollection.add(item);
+                }
             }
         });
     }
 
     @Override
-    public void addAll(Collection<? extends S> values) {
+    public void addAll(Collection<? extends S> sourceItems) {
         executor.accept(() -> {
-            targetCollection.addAll(values.stream()
+            targetCollection.addAll(sourceItems.stream()
+                    .filter(filterFunction::apply)
                     .map(mapFunction)
                     .filter(item -> !targetCollection.contains(item))
                     .collect(Collectors.toList()));
@@ -71,26 +77,36 @@ final class CollectionChangeMapper<S, T> implements CollectionObserver<S> {
     }
 
     @Override
-    public void setAll(Collection<? extends S> values) {
+    public void setAll(Collection<? extends S> sourceItems) {
         executor.accept(() -> {
             targetCollection.clear();
-            targetCollection.addAll(values.stream()
+            targetCollection.addAll(sourceItems.stream()
+                    .filter(filterFunction::apply)
                     .map(mapFunction)
                     .collect(Collectors.toList()));
         });
     }
 
     @Override
-    public void remove(Object element) {
-        //noinspection unchecked
-        executor.accept(() -> targetCollection.remove(mapFunction.apply((S) element)));
+    public void remove(Object sourceItem) {
+        executor.accept(() -> {
+            //noinspection unchecked
+            S sourceItemCasted = (S) sourceItem;
+            // We do not apply the filter at remove as the remove action could have impact on the filter
+            // predicate (e.g. if we close an item and set a flag used in the filter)
+            T item = mapFunction.apply(sourceItemCasted);
+            targetCollection.remove(item);
+        });
     }
 
     @Override
-    public void removeAll(Collection<?> values) {
-        //noinspection unchecked
-        executor.accept(() -> targetCollection.removeAll(values.stream()
-                .map(element -> mapFunction.apply((S) element))
+    public void removeAll(Collection<?> sourceItems) {
+        executor.accept(() -> targetCollection.removeAll(sourceItems.stream()
+                .map(element -> {
+                    //noinspection unchecked
+                    return (S) element;
+                })
+                .map(mapFunction)
                 .collect(Collectors.toSet())));
     }
 
