@@ -193,7 +193,7 @@ public class TakeOfferReviewController implements Controller {
             bisqEasyOpenTradeChannelService.sendTakeOfferMessage(tradeId, bisqEasyOffer, contract.getMediator())
                     .thenAccept(result -> UIThread.run(() -> {
                         ChatChannelSelectionService chatChannelSelectionService = chatService.getChatChannelSelectionService(ChatChannelDomain.BISQ_EASY_OFFERBOOK);
-                        bisqEasyOpenTradeChannelService.findChannel(tradeId)
+                        bisqEasyOpenTradeChannelService.findChannelByTradeId(tradeId)
                                 .ifPresent(chatChannelSelectionService::selectChannel);
                         model.getShowTakeOfferSuccess().set(true);
                         mainButtonsVisibleHandler.accept(false);

@@ -27,13 +27,17 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ModeratorView extends View<VBox, ModeratorModel, ModeratorController> {
 
-    public ModeratorView(ModeratorModel model, ModeratorController controller, Pane reportToModeratorTable, Pane bannedUserProfileTable, Pane roleInfo) {
+    public ModeratorView(ModeratorModel model,
+                         ModeratorController controller,
+                         Pane reportToModeratorTable,
+                         Pane bannedUserProfileTable,
+                         Pane roleInfo) {
         super(new VBox(30), model, controller);
 
+        root.setPadding(new Insets(0, 40, 40, 40));
         root.setAlignment(Pos.TOP_LEFT);
-        root.setPadding(new Insets(20, 0, 0, 0));
 
-        VBox.setMargin(roleInfo, new Insets(-20, 0, 0, 0));
+        roleInfo.setPadding(new Insets(0));
         root.getChildren().addAll(reportToModeratorTable, bannedUserProfileTable, roleInfo);
     }
 

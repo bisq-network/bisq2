@@ -17,13 +17,19 @@
 
 package bisq.trade.bisq_easy;
 
+import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.i18n.Res;
+import bisq.offer.Direction;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.PriceFormatter;
 
 public class BisqEasyTradeFormatter {
     public static String formatBaseSideAmount(BisqEasyTrade trade) {
-        return AmountFormatter.formatAmount(BisqEasyTradeUtils.getBaseSideMonetary(trade), false);
+        return formatBaseSideAmount(trade.getContract());
+    }
+
+    public static String formatBaseSideAmount(BisqEasyContract contract) {
+        return AmountFormatter.formatAmount(BisqEasyTradeUtils.getBaseSideMonetary(contract), false);
     }
 
     public static String formatQuoteSideAmount(BisqEasyTrade trade) {
@@ -31,24 +37,36 @@ public class BisqEasyTradeFormatter {
     }
 
     public static String formatQuoteSideAmountWithCode(BisqEasyTrade trade) {
-        return AmountFormatter.formatAmountWithCode(BisqEasyTradeUtils.getQuoteSideMonetary(trade), true);
+        return formatQuoteSideAmountWithCode(trade.getContract());
+    }
+
+    public static String formatQuoteSideAmountWithCode(BisqEasyContract contract) {
+        return AmountFormatter.formatAmountWithCode(BisqEasyTradeUtils.getQuoteSideMonetary(contract), true);
     }
 
     public static String formatPriceWithCode(BisqEasyTrade trade) {
-        return PriceFormatter.formatWithCode(BisqEasyTradeUtils.getPriceQuote(trade));
+        return formatPriceWithCode(trade.getContract());
+    }
+
+    public static String formatPriceWithCode(BisqEasyContract contract) {
+        return PriceFormatter.formatWithCode(BisqEasyTradeUtils.getPriceQuote(contract));
     }
 
     public static String getDirection(BisqEasyTrade trade) {
         switch (trade.getTradeRole()) {
             case BUYER_AS_TAKER:
             case BUYER_AS_MAKER:
-                return Res.get("bisqEasy.openTrades.table.direction.buyer");
+                return getDirection(Direction.BUY);
             case SELLER_AS_TAKER:
             case SELLER_AS_MAKER:
-                return Res.get("bisqEasy.openTrades.table.direction.seller");
+                return getDirection(Direction.SELL);
             default:
                 throw new RuntimeException("Invalid trade role");
         }
+    }
+
+    public static String getDirection(Direction direction) {
+        return direction.getDisplayStringForTraderPair();
     }
 
     public static String getMakerTakerRole(BisqEasyTrade trade) {

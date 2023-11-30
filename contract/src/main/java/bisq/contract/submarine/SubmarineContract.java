@@ -32,17 +32,20 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 public class SubmarineContract extends TwoPartyContract<SubmarineOffer> {
 
-    public SubmarineContract(SubmarineOffer offer,
+    public SubmarineContract(long takeOfferDate,
+                             SubmarineOffer offer,
                              NetworkId takerNetworkId) {
-        this(offer,
+        this(takeOfferDate,
+                offer,
                 TradeProtocolType.SUBMARINE,
                 new Party(Role.TAKER, takerNetworkId));
     }
 
-    private SubmarineContract(SubmarineOffer offer,
+    private SubmarineContract(long takeOfferDate,
+                              SubmarineOffer offer,
                               TradeProtocolType protocolType,
                               Party taker) {
-        super(offer, protocolType, taker);
+        super(takeOfferDate, offer, protocolType, taker);
     }
 
     @Override
@@ -54,8 +57,8 @@ public class SubmarineContract extends TwoPartyContract<SubmarineOffer> {
 
     public static SubmarineContract fromProto(bisq.contract.protobuf.Contract proto) {
         bisq.contract.protobuf.TwoPartyContract twoPartyContractProto = proto.getTwoPartyContract();
-        bisq.contract.protobuf.SubmarineContract bisqEasyContractProto = twoPartyContractProto.getSubmarineContract();
-        return new SubmarineContract(SubmarineOffer.fromProto(proto.getOffer()),
+        return new SubmarineContract(proto.getTakeOfferDate(),
+                SubmarineOffer.fromProto(proto.getOffer()),
                 TradeProtocolType.fromProto(proto.getTradeProtocolType()),
                 Party.fromProto(twoPartyContractProto.getTaker()));
     }

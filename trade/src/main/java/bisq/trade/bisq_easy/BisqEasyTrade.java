@@ -64,8 +64,7 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
                 myIdentity,
                 contract,
                 new BisqEasyTradeParty(takerNetworkId),
-                new BisqEasyTradeParty(contract.getMaker().getNetworkId()),
-                System.currentTimeMillis());
+                new BisqEasyTradeParty(contract.getMaker().getNetworkId()));
 
         stateObservable().addObserver(s -> tradeState.set((BisqEasyTradeState) s));
     }
@@ -76,9 +75,8 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
                           Identity myIdentity,
                           BisqEasyContract contract,
                           BisqEasyTradeParty taker,
-                          BisqEasyTradeParty maker,
-                          long date) {
-        super(state, id, tradeRole, myIdentity, contract, taker, maker, date);
+                          BisqEasyTradeParty maker) {
+        super(state, id, tradeRole, myIdentity, contract, taker, maker);
 
         stateObservable().addObserver(s -> tradeState.set((BisqEasyTradeState) s));
     }
@@ -100,8 +98,7 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
                 Identity.fromProto(proto.getMyIdentity()),
                 BisqEasyContract.fromProto(proto.getContract()),
                 TradeParty.protoToBisqEasyTradeParty(proto.getTaker()),
-                TradeParty.protoToBisqEasyTradeParty(proto.getMaker()),
-                proto.getDate());
+                TradeParty.protoToBisqEasyTradeParty(proto.getMaker()));
         bisq.trade.protobuf.BisqEasyTrade bisqEasyTradeProto = proto.getBisqEasyTrade();
         if (bisqEasyTradeProto.hasPaymentAccountData()) {
             bisqEasyTrade.getPaymentAccountData().set(bisqEasyTradeProto.getPaymentAccountData());

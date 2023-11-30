@@ -40,11 +40,13 @@ public final class CommonPublicChatChannel extends PublicChatChannel<CommonPubli
 
     private final Optional<String> channelAdminId;
     private final List<String> channelModeratorIds;
+    private final String channelTitle;
     private transient final String description;
 
     public CommonPublicChatChannel(ChatChannelDomain chatChannelDomain, String channelTitle) {
         this(createId(chatChannelDomain, channelTitle),
                 chatChannelDomain,
+                channelTitle,
                 Optional.empty(),
                 new ArrayList<>(),
                 ChatChannelNotificationType.GLOBAL_DEFAULT);
@@ -52,11 +54,13 @@ public final class CommonPublicChatChannel extends PublicChatChannel<CommonPubli
 
     private CommonPublicChatChannel(String id,
                                     ChatChannelDomain chatChannelDomain,
+                                    String channelTitle,
                                     Optional<String> channelAdminId,
                                     List<String> channelModeratorIds,
                                     ChatChannelNotificationType chatChannelNotificationType) {
         super(id, chatChannelDomain, chatChannelNotificationType);
 
+        this.channelTitle = channelTitle;
         this.channelAdminId = channelAdminId;
         this.channelModeratorIds = channelModeratorIds;
         // We need to sort deterministically as the data is used in the proof of work check
@@ -66,6 +70,7 @@ public final class CommonPublicChatChannel extends PublicChatChannel<CommonPubli
 
     public bisq.chat.protobuf.ChatChannel toProto() {
         bisq.chat.protobuf.CommonPublicChatChannel.Builder builder = bisq.chat.protobuf.CommonPublicChatChannel.newBuilder()
+                .setChannelTitle(channelTitle)
                 .addAllChannelModeratorIds(channelModeratorIds);
         channelAdminId.ifPresent(builder::setChannelAdminId);
         return getChatChannelBuilder()
@@ -77,6 +82,7 @@ public final class CommonPublicChatChannel extends PublicChatChannel<CommonPubli
         return new CommonPublicChatChannel(
                 baseProto.getId(),
                 ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
+                proto.getChannelTitle(),
                 proto.hasChannelAdminId() ? Optional.of(proto.getChannelAdminId()) : Optional.empty(),
                 new ArrayList<>(proto.getChannelModeratorIdsList()),
                 ChatChannelNotificationType.fromProto(baseProto.getChatChannelNotificationType()));
@@ -84,6 +90,6 @@ public final class CommonPublicChatChannel extends PublicChatChannel<CommonPubli
 
     @Override
     public String getDisplayString() {
-        return Res.get(id + ".title");
+        return Res.get(chatChannelDomain.name().toLowerCase() + "." + channelTitle + ".title");
     }
 }

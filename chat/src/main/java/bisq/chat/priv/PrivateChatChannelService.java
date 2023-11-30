@@ -123,6 +123,11 @@ public abstract class PrivateChatChannelService<
         persist();
     }
 
+    @Override
+    public Optional<C> getDefaultChannel() {
+        return Optional.empty();
+    }
+
     protected CompletableFuture<SendMessageResult> sendLeaveMessage(C channel, UserProfile receiver, long date) {
         return sendMessage(StringUtils.createUid(),
                 Res.get("chat.privateChannel.message.leave", channel.getMyUserIdentity().getUserProfile().getUserName()),

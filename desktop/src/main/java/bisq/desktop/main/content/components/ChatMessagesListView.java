@@ -1082,7 +1082,8 @@ public class ChatMessagesListView {
         @EqualsAndHashCode.Exclude
         private final ObjectProperty<AwesomeIcon> messageDeliveryStatusIcon = new SimpleObjectProperty<>();
         @EqualsAndHashCode.Exclude
-        private final Set<Pin> pins = new HashSet<>();
+        private final Set<Pin> mapPins = new HashSet<>();
+        private final Set<Pin> statusPins = new HashSet<>();
 
         public ChatMessageListItem(T chatMessage,
                                    UserProfileService userProfileService,
@@ -1122,14 +1123,15 @@ public class ChatMessagesListView {
                 canTakeOffer = false;
             }
 
-            pins.add(networkService.getMessageDeliveryStatusByMessageId().addObserver(new HashMapObserver<>() {
+            mapPins.add(networkService.getMessageDeliveryStatusByMessageId().addObserver(new HashMapObserver<>() {
                 @Override
                 public void put(String key, Observable<MessageDeliveryStatus> value) {
                     if (key.equals(chatMessage.getId())) {
-                        pins.add(value.addObserver(status -> {
-                            UIThread.run(() -> {
-                                if (status != null) {
-                                    UIThread.run(() -> {
+                        // Delay to avoid ConcurrentModificationException
+                        UIThread.runOnNextRenderFrame(() -> {
+                            statusPins.add(value.addObserver(status -> {
+                                UIThread.run(() -> {
+                                    if (status != null) {
                                         messageDeliveryStatusTooltip.set(Res.get("chat.message.deliveryState." + status.name()));
                                         switch (status) {
                                             case SENT:
@@ -1148,10 +1150,10 @@ public class ChatMessagesListView {
                                                 messageDeliveryStatusIcon.set(AwesomeIcon.EXCLAMATION_SIGN);
                                                 break;
                                         }
-                                    });
-                                }
-                            });
-                        }));
+                                    }
+                                });
+                            }));
+                        });
                     }
                 }
 
@@ -1175,7 +1177,8 @@ public class ChatMessagesListView {
         }
 
         public void dispose() {
-            pins.forEach(Pin::unbind);
+            mapPins.forEach(Pin::unbind);
+            statusPins.forEach(Pin::unbind);
         }
     }
 }

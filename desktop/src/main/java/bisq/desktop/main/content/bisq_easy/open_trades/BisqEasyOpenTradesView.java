@@ -479,9 +479,9 @@ public class BisqEasyOpenTradesView extends ChatView {
             shortTradeId = trade.getShortId();
 
             BisqEasyContract contract = trade.getContract();
-            date = trade.getDate();
-            dateString = DateFormatter.formatDate(trade.getDate());
-            timeString = DateFormatter.formatTime(trade.getDate());
+            date = contract.getTakeOfferDate();
+            dateString = DateFormatter.formatDate(date);
+            timeString = DateFormatter.formatTime(date);
             market = trade.getOffer().getMarket().toString();
             price = BisqEasyTradeUtils.getPriceQuote(trade).getValue();
             priceString = BisqEasyTradeFormatter.formatPriceWithCode(trade);

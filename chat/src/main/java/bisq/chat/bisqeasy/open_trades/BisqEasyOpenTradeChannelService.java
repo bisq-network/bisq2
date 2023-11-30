@@ -87,7 +87,7 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
                                                                UserIdentity myUserIdentity,
                                                                UserProfile peer,
                                                                Optional<UserProfile> mediator) {
-        return findChannel(tradeId)
+        return findChannelByTradeId(tradeId)
                 .orElseGet(() -> traderCreatesChannel(tradeId, bisqEasyOffer, myUserIdentity, peer, mediator));
     }
 
@@ -107,7 +107,7 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
                                                                  UserIdentity myUserIdentity,
                                                                  UserProfile requestingTrader,
                                                                  UserProfile nonRequestingTrader) {
-        return findChannel(tradeId)
+        return findChannelByTradeId(tradeId)
                 .orElseGet(() -> {
                     BisqEasyOpenTradeChannel channel = BisqEasyOpenTradeChannel.createByMediator(tradeId,
                             bisqEasyOffer,

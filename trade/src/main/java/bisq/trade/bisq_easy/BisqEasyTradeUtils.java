@@ -19,17 +19,31 @@ package bisq.trade.bisq_easy;
 
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
+import bisq.contract.bisq_easy.BisqEasyContract;
 
 public class BisqEasyTradeUtils {
     public static Monetary getBaseSideMonetary(BisqEasyTrade trade) {
-        return Monetary.from(trade.getContract().getBaseSideAmount(), trade.getOffer().getMarket().getBaseCurrencyCode());
+        return getBaseSideMonetary(trade.getContract());
+    }
+
+    public static Monetary getBaseSideMonetary(BisqEasyContract contract) {
+        return Monetary.from(contract.getBaseSideAmount(), contract.getOffer().getMarket().getBaseCurrencyCode());
     }
 
     public static Monetary getQuoteSideMonetary(BisqEasyTrade trade) {
-        return Monetary.from(trade.getContract().getQuoteSideAmount(), trade.getOffer().getMarket().getQuoteCurrencyCode());
+        BisqEasyContract contract = trade.getContract();
+        return Monetary.from(contract.getQuoteSideAmount(), contract.getOffer().getMarket().getQuoteCurrencyCode());
+    }
+
+    public static Monetary getQuoteSideMonetary(BisqEasyContract contract) {
+        return Monetary.from(contract.getQuoteSideAmount(), contract.getOffer().getMarket().getQuoteCurrencyCode());
     }
 
     public static PriceQuote getPriceQuote(BisqEasyTrade trade) {
         return PriceQuote.from(getBaseSideMonetary(trade), getQuoteSideMonetary(trade));
+    }
+
+    public static PriceQuote getPriceQuote(BisqEasyContract contract) {
+        return PriceQuote.from(getBaseSideMonetary(contract), getQuoteSideMonetary(contract));
     }
 }

@@ -20,9 +20,9 @@ package bisq.trade.multisig;
 import bisq.common.application.Service;
 import bisq.contract.multisig.MultisigContract;
 import bisq.identity.Identity;
+import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.MessageListener;
-import bisq.network.identity.NetworkId;
 import bisq.offer.multisig.MultisigOffer;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
@@ -97,7 +97,8 @@ public class MultisigTradeService implements PersistenceClient<MultisigTradeStor
     public MultisigTrade onTakeOffer(Identity takerIdentity,
                                      MultisigOffer multisigOffer) throws TradeException {
         NetworkId takerNetworkId = takerIdentity.getNetworkId();
-        MultisigContract contract = new MultisigContract(multisigOffer,
+        MultisigContract contract = new MultisigContract(System.currentTimeMillis(),
+                multisigOffer,
                 takerNetworkId);
         boolean isBuyer = multisigOffer.getTakersDirection().isBuy();
         MultisigTrade tradeModel = new MultisigTrade(isBuyer, true, takerIdentity, contract, takerNetworkId);

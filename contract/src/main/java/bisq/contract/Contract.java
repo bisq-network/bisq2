@@ -32,12 +32,14 @@ import lombok.ToString;
 @Getter
 @EqualsAndHashCode
 public abstract class Contract<T extends Offer<?, ?>> implements Proto {
+    protected final long takeOfferDate;
     protected final T offer;
     protected final TradeProtocolType protocolType;
 
     protected transient final Party maker;
 
-    public Contract(T offer, TradeProtocolType protocolType) {
+    public Contract(long takeOfferDate, T offer, TradeProtocolType protocolType) {
+        this.takeOfferDate = takeOfferDate;
         this.offer = offer;
         this.protocolType = protocolType;
         this.maker = new Party(Role.MAKER, offer.getMakerNetworkId());
@@ -48,6 +50,7 @@ public abstract class Contract<T extends Offer<?, ?>> implements Proto {
 
     protected bisq.contract.protobuf.Contract.Builder getContractBuilder() {
         return bisq.contract.protobuf.Contract.newBuilder()
+                .setTakeOfferDate(takeOfferDate)
                 .setOffer(offer.toProto())
                 .setTradeProtocolType(protocolType.toProto());
     }

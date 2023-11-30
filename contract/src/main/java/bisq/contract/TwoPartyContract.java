@@ -31,8 +31,8 @@ import lombok.ToString;
 public abstract class TwoPartyContract<T extends Offer<?, ?>> extends Contract<T> {
     protected final Party taker;
 
-    public TwoPartyContract(T swapOffer, TradeProtocolType protocolType, Party taker) {
-        super(swapOffer, protocolType);
+    public TwoPartyContract(long takeOfferDate, T offer, TradeProtocolType protocolType, Party taker) {
+        super(takeOfferDate, offer, protocolType);
         this.taker = taker;
     }
 

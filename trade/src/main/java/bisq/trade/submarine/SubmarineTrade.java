@@ -49,8 +49,7 @@ public final class SubmarineTrade extends Trade<SubmarineOffer, SubmarineContrac
                 myIdentity,
                 contract,
                 new SubmarineTradeParty(takerNetworkId),
-                new SubmarineTradeParty(contract.getMaker().getNetworkId()),
-                System.currentTimeMillis());
+                new SubmarineTradeParty(contract.getMaker().getNetworkId()));
 
         stateObservable().addObserver(s -> tradeState.set((SubmarineTradeState) s));
     }
@@ -61,9 +60,8 @@ public final class SubmarineTrade extends Trade<SubmarineOffer, SubmarineContrac
                            Identity myIdentity,
                            SubmarineContract contract,
                            SubmarineTradeParty taker,
-                           SubmarineTradeParty maker,
-                           long date) {
-        super(state, id, tradeRole, myIdentity, contract, taker, maker, date);
+                           SubmarineTradeParty maker) {
+        super(state, id, tradeRole, myIdentity, contract, taker, maker);
 
         stateObservable().addObserver(s -> tradeState.set((SubmarineTradeState) s));
     }
@@ -81,8 +79,7 @@ public final class SubmarineTrade extends Trade<SubmarineOffer, SubmarineContrac
                 Identity.fromProto(proto.getMyIdentity()),
                 SubmarineContract.fromProto(proto.getContract()),
                 TradeParty.protoToSubmarineTradeParty(proto.getTaker()),
-                TradeParty.protoToSubmarineTradeParty(proto.getMaker()),
-                proto.getDate());
+                TradeParty.protoToSubmarineTradeParty(proto.getMaker()));
     }
 
     public SubmarineTradeState getTradeState() {

@@ -61,7 +61,6 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
     private final C contract;
     private final P taker;
     private final P maker;
-    private final long date;
     private transient final TradeRole tradeRole;
 
     public Trade(State state,
@@ -70,16 +69,14 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
                  Identity myIdentity,
                  C contract,
                  P taker,
-                 P maker,
-                 long date) {
+                 P maker) {
         this(state,
                 createId(contract.getOffer().getId(), taker.getNetworkId().getId()),
                 createRole(isBuyer, isTaker),
                 myIdentity,
                 contract,
                 taker,
-                maker,
-                date);
+                maker);
     }
 
     protected Trade(State state,
@@ -88,8 +85,7 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
                     Identity myIdentity,
                     C contract,
                     P taker,
-                    P maker,
-                    long date) {
+                    P maker) {
         super(state);
 
         this.id = id;
@@ -98,7 +94,6 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
         this.contract = contract;
         this.taker = taker;
         this.maker = maker;
-        this.date = date;
     }
 
     protected bisq.trade.protobuf.Trade.Builder getTradeBuilder() {
@@ -109,8 +104,7 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
                 .setContract(contract.toProto())
                 .setTaker(taker.toProto())
                 .setMaker(maker.toProto())
-                .setState(getState().name())
-                .setDate(date);
+                .setState(getState().name());
     }
 
     public static BisqEasyTrade protoToBisqEasyTrade(bisq.trade.protobuf.Trade proto) {

@@ -32,17 +32,20 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 public class MultisigContract extends TwoPartyContract<MultisigOffer> {
 
-    public MultisigContract(MultisigOffer offer,
+    public MultisigContract(long takeOfferDate,
+                            MultisigOffer offer,
                             NetworkId takerNetworkId) {
-        this(offer,
+        this(takeOfferDate,
+                offer,
                 TradeProtocolType.MULTISIG,
                 new Party(Role.TAKER, takerNetworkId));
     }
 
-    private MultisigContract(MultisigOffer offer,
+    private MultisigContract(long takeOfferDate,
+                             MultisigOffer offer,
                              TradeProtocolType protocolType,
                              Party taker) {
-        super(offer, protocolType, taker);
+        super(takeOfferDate, offer, protocolType, taker);
     }
 
     @Override
@@ -54,8 +57,8 @@ public class MultisigContract extends TwoPartyContract<MultisigOffer> {
 
     public static MultisigContract fromProto(bisq.contract.protobuf.Contract proto) {
         bisq.contract.protobuf.TwoPartyContract twoPartyContractProto = proto.getTwoPartyContract();
-        bisq.contract.protobuf.MultisigContract bisqEasyContractProto = twoPartyContractProto.getMultisigContract();
-        return new MultisigContract(MultisigOffer.fromProto(proto.getOffer()),
+        return new MultisigContract(proto.getTakeOfferDate(),
+                MultisigOffer.fromProto(proto.getOffer()),
                 TradeProtocolType.fromProto(proto.getTradeProtocolType()),
                 Party.fromProto(twoPartyContractProto.getTaker()));
     }

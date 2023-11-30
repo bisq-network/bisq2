@@ -161,12 +161,12 @@ public class ReportToModeratorTable {
         private final BisqTableView<ReportListItem> tableView;
 
         private View(Model model, Controller controller) {
-            super(new VBox(10), model, controller);
+            super(new VBox(5), model, controller);
 
             root.setAlignment(Pos.TOP_LEFT);
 
             Label headline = new Label(Res.get("authorizedRole.moderator.reportToModerator.table.headline"));
-            headline.getStyleClass().add("bisq-text-headline-2");
+            headline.getStyleClass().add("large-thin-headline");
 
             tableView = new BisqTableView<>(model.getListItems());
             tableView.setMinHeight(200);

@@ -49,8 +49,7 @@ public final class MultisigTrade extends Trade<MultisigOffer, MultisigContract, 
                 myIdentity,
                 contract,
                 new MultisigTradeParty(takerNetworkId),
-                new MultisigTradeParty(contract.getMaker().getNetworkId()),
-                System.currentTimeMillis());
+                new MultisigTradeParty(contract.getMaker().getNetworkId()));
 
         stateObservable().addObserver(s -> tradeState.set((MultisigTradeState) s));
     }
@@ -61,9 +60,8 @@ public final class MultisigTrade extends Trade<MultisigOffer, MultisigContract, 
                           Identity myIdentity,
                           MultisigContract contract,
                           MultisigTradeParty taker,
-                          MultisigTradeParty maker,
-                          long date) {
-        super(state, id, tradeRole, myIdentity, contract, taker, maker, date);
+                          MultisigTradeParty maker) {
+        super(state, id, tradeRole, myIdentity, contract, taker, maker);
 
         stateObservable().addObserver(s -> tradeState.set((MultisigTradeState) s));
     }
@@ -81,8 +79,7 @@ public final class MultisigTrade extends Trade<MultisigOffer, MultisigContract, 
                 Identity.fromProto(proto.getMyIdentity()),
                 MultisigContract.fromProto(proto.getContract()),
                 TradeParty.protoToMultisigTradeParty(proto.getTaker()),
-                TradeParty.protoToMultisigTradeParty(proto.getMaker()),
-                proto.getDate());
+                TradeParty.protoToMultisigTradeParty(proto.getMaker()));
     }
 
     public MultisigTradeState getTradeState() {

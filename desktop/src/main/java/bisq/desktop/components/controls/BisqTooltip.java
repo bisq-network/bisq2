@@ -38,6 +38,10 @@ public class BisqTooltip extends Tooltip {
         super(text);
         setShowDelay(Duration.millis(100));
         setHideDelay(Duration.millis(100));
+        useDarkStyle(useDarkStyle);
+    }
+
+    public void useDarkStyle(boolean useDarkStyle) {
         if (useDarkStyle) {
             getStyleClass().add("dark-tooltip");
         }

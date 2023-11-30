@@ -107,9 +107,10 @@ message CommonPublicChatMessage {
 }
 
 message CommonPublicChatChannel {
-  optional string channelAdminId = 1;
-  repeated string channelModeratorIds = 2;
-  bool isVisible = 3;
+  string channelTitle = 1;
+  optional string channelAdminId = 2;
+  repeated string channelModeratorIds = 3;
+  bool isVisible = 4;
 }
 message CommonPublicChatChannelStore {
   repeated ChatChannel channels = 1;

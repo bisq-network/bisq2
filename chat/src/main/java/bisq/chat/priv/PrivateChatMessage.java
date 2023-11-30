@@ -22,9 +22,9 @@ import bisq.chat.ChatMessage;
 import bisq.chat.ChatMessageType;
 import bisq.chat.Citation;
 import bisq.common.validation.NetworkDataValidation;
+import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.confidential.ack.AckRequestingMessage;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
-import bisq.network.identity.NetworkId;
 import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -45,6 +45,7 @@ public abstract class PrivateChatMessage extends ChatMessage implements MailboxM
     @EqualsAndHashCode.Exclude
     protected final String receiverUserProfileId;
     protected final UserProfile senderUserProfile;
+    @EqualsAndHashCode.Exclude
     protected final NetworkId receiverNetworkId;
 
     protected PrivateChatMessage(String messageId,

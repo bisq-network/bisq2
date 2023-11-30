@@ -34,7 +34,6 @@ import java.util.stream.Stream;
 @Slf4j
 @Getter
 public class BisqEasyPrivateChatChannelSelectionService extends ChatChannelSelectionService {
-
     private final TwoPartyPrivateChatChannelService channelService;
     private final UserIdentityService userIdentityService;
 
