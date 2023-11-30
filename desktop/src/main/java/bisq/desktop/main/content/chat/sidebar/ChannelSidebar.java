@@ -45,6 +45,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import javafx.util.Callback;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -233,8 +235,9 @@ public class ChannelSidebar {
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final ListView<ChannelSidebarUserProfile> participants;
-        private final Label headline, descriptionLabel;
+        private final Label headline;
         private final Button closeButton;
+        private final Text description;
 
         private View(Model model, Controller controller, Pane notificationsSidebar) {
             super(new VBox(), model, controller);
@@ -252,9 +255,9 @@ public class ChannelSidebar {
             HBox.setMargin(closeButton, new Insets(10, 10, 0, 0));
             HBox topHBox = new HBox(headline, Spacer.fillHBox(), closeButton);
 
-            descriptionLabel = new Label();
-            descriptionLabel.setWrapText(true);
-            descriptionLabel.setId("chat-sidebar-text");
+            description = new Text();
+            TextFlow descriptionTextFlow = new TextFlow(description);
+            description.setId("chat-sidebar-text");
 
             Label participantsLabel = new Label(Res.get("chat.sideBar.channelInfo.participants"));
             participantsLabel.setId("chat-sidebar-title");
@@ -265,24 +268,24 @@ public class ChannelSidebar {
 
             VBox.setMargin(topHBox, new Insets(0, -20, 0, 0));
             VBox.setMargin(notificationsSidebar, new Insets(20, 0, 20, 0));
-            root.getChildren().addAll(topHBox, descriptionLabel, notificationsSidebar, participantsLabel, participants);
+            root.getChildren().addAll(topHBox, descriptionTextFlow, notificationsSidebar, participantsLabel, participants);
         }
 
         @Override
         protected void onViewAttached() {
             headline.textProperty().bind(model.channelTitle);
-            descriptionLabel.textProperty().bind(model.description);
-            descriptionLabel.visibleProperty().bind(model.descriptionVisible);
-            descriptionLabel.managedProperty().bind(model.descriptionVisible);
+            description.textProperty().bind(model.description);
+            description.visibleProperty().bind(model.descriptionVisible);
+            description.managedProperty().bind(model.descriptionVisible);
             closeButton.setOnAction(e -> controller.onClose());
         }
 
         @Override
         protected void onViewDetached() {
             headline.textProperty().unbind();
-            descriptionLabel.textProperty().unbind();
-            descriptionLabel.visibleProperty().unbind();
-            descriptionLabel.managedProperty().unbind();
+            description.textProperty().unbind();
+            description.visibleProperty().unbind();
+            description.managedProperty().unbind();
             closeButton.setOnAction(null);
         }
 
@@ -299,7 +302,7 @@ public class ChannelSidebar {
                         {
                             hBox.setAlignment(Pos.CENTER_LEFT);
                             hBox.setFillHeight(true);
-                            hBox.setPadding(new Insets(10, 10, 0, -10));
+                            hBox.setPadding(new Insets(0, 10, 0, 0));
                             hBox.setCursor(Cursor.HAND);
                         }
 
