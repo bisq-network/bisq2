@@ -27,6 +27,7 @@ import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.presentation.notifications.linux.LinuxNotificationSender;
 import bisq.presentation.notifications.osx.OsxNotificationSender;
+import bisq.presentation.notifications.other.AwtNotificationSender;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
