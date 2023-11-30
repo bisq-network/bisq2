@@ -29,8 +29,9 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.table.BisqTableColumn;
+import bisq.desktop.components.table.BisqTableColumns;
 import bisq.desktop.components.table.BisqTableView;
-import bisq.desktop.components.table.TableItem;
+import bisq.desktop.components.table.DateTableItem;
 import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
 import bisq.desktop.main.content.chat.ChatView;
 import bisq.desktop.main.content.components.UserProfileDisplay;
@@ -147,7 +148,6 @@ public class BisqEasyOpenTradesView extends ChatView {
         containerHBox.getChildren().addAll(centerVBox, sideBar);
         containerHBox.setPadding(new Insets(0, 40, 0, 40));
 
-        Layout.pinToAnchorPane(containerHBox, 30, 0, 0, 0);
         root.setContent(containerHBox);
     }
 
@@ -315,14 +315,8 @@ public class BisqEasyOpenTradesView extends ChatView {
                 .comparator(Comparator.comparing(ListItem::getPeersUserName))
                 .setCellFactory(getTradePeerCellFactory())
                 .build());
-        BisqTableColumn<ListItem> dateColumn = new BisqTableColumn.Builder<ListItem>()
-                .title(Res.get("temporal.date"))
-                .fixWidth(85)
-                .comparator(Comparator.comparing(ListItem::getDate).reversed())
-                .setCellFactory(getDateCellFactory())
-                .build();
-        tableView.getColumns().add(dateColumn);
-        tableView.getSortOrder().add(dateColumn);
+
+        tableView.getColumns().add(BisqTableColumns.getDateColumn(tableView.getSortOrder()));
 
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.tradeId"))
@@ -361,29 +355,6 @@ public class BisqEasyOpenTradesView extends ChatView {
                 .comparator(Comparator.comparing(ListItem::getMyRole))
                 .valueSupplier(ListItem::getMyRole)
                 .build());
-    }
-
-    private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getDateCellFactory() {
-        return column -> new TableCell<>() {
-
-            @Override
-            public void updateItem(final ListItem item, boolean empty) {
-                super.updateItem(item, empty);
-
-                if (item != null && !empty) {
-                    Label date = new Label(item.getDateString());
-                    date.getStyleClass().add("table-view-date-column-date");
-                    Label time = new Label(item.getTimeString());
-                    time.getStyleClass().add("table-view-date-column-time");
-                    VBox vBox = new VBox(3, date, time);
-                    vBox.setAlignment(Pos.CENTER);
-                    setAlignment(Pos.CENTER);
-                    setGraphic(vBox);
-                } else {
-                    setGraphic(null);
-                }
-            }
-        };
     }
 
     private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getMyUserCellFactory() {
@@ -448,7 +419,7 @@ public class BisqEasyOpenTradesView extends ChatView {
 
     @Getter
     @EqualsAndHashCode
-    static class ListItem implements TableItem {
+    static class ListItem implements DateTableItem {
         private final BisqEasyOpenTradeChannel channel;
         private final BisqEasyTrade trade;
         private final String offerId, tradeId, shortTradeId, myUserName, direction, peersUserName, dateString, timeString,

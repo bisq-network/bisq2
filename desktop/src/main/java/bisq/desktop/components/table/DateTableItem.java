@@ -17,10 +17,10 @@
 
 package bisq.desktop.components.table;
 
-public interface TableItem {
-    default void activate() {
-    }
+public interface DateTableItem {
+    String getDateString();
 
-    default void deactivate() {
-    }
+    String getTimeString();
+
+    long getDate();
 }

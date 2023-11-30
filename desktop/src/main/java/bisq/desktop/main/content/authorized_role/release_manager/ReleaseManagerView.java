@@ -22,8 +22,9 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.table.BisqTableColumn;
+import bisq.desktop.components.table.BisqTableColumns;
 import bisq.desktop.components.table.BisqTableView;
-import bisq.desktop.components.table.TableItem;
+import bisq.desktop.components.table.DateTableItem;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.BooleanFormatter;
 import bisq.presentation.formatters.DateFormatter;
@@ -114,15 +115,7 @@ public class ReleaseManagerView extends View<VBox, ReleaseManagerModel, ReleaseM
     }
 
     protected void configTableView() {
-        BisqTableColumn<ReleaseNotificationListItem> date = new BisqTableColumn.Builder<ReleaseNotificationListItem>()
-                .title(Res.get("authorizedRole.releaseManager.table.date"))
-                .left()
-                .minWidth(180)
-                .comparator(Comparator.comparing(ReleaseNotificationListItem::getDate).reversed())
-                .valueSupplier(ReleaseNotificationListItem::getDateString)
-                .build();
-        tableView.getColumns().add(date);
-        tableView.getSortOrder().add(date);
+        tableView.getColumns().add(BisqTableColumns.getDateColumn(tableView.getSortOrder()));
 
         tableView.getColumns().add(new BisqTableColumn.Builder<ReleaseNotificationListItem>()
                 .title(Res.get("authorizedRole.releaseManager.table.releaseNotes"))
@@ -184,15 +177,16 @@ public class ReleaseManagerView extends View<VBox, ReleaseManagerModel, ReleaseM
     @EqualsAndHashCode
     @Getter
     @ToString
-    public static class ReleaseNotificationListItem implements TableItem {
+    public static class ReleaseNotificationListItem implements DateTableItem {
         private final ReleaseNotification releaseNotification;
-        private final String dateString, isLauncherUpdate, releaseNotes, version, isPreRelease, releaseManagerProfileId;
+        private final String dateString, timeString, isLauncherUpdate, releaseNotes, version, isPreRelease, releaseManagerProfileId;
         private final long date;
 
         public ReleaseNotificationListItem(ReleaseNotification releaseNotification) {
             this.releaseNotification = releaseNotification;
             date = releaseNotification.getDate();
-            dateString = DateFormatter.formatDateTime(date);
+            dateString = DateFormatter.formatDate(date);
+            timeString = DateFormatter.formatTime(date);
             isPreRelease = BooleanFormatter.toYesNo(releaseNotification.isPreRelease());
             isLauncherUpdate = BooleanFormatter.toYesNo(releaseNotification.isLauncherUpdate());
             releaseNotes = releaseNotification.getReleaseNotes();

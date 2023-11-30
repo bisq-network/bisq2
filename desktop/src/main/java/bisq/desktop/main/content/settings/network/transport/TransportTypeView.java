@@ -21,6 +21,7 @@ import bisq.desktop.common.utils.GridPaneUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.table.BisqTableColumn;
+import bisq.desktop.components.table.BisqTableColumns;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
@@ -51,7 +52,7 @@ public class TransportTypeView extends View<GridPane, TransportTypeModel, Transp
         GridPane.setMargin(connectionsLabel, new Insets(0, 0, -15, 10));
         root.add(connectionsLabel, 0, root.getRowCount());
 
-        connectionsTableView = new BisqTableView<>(model.getSortedConnectionListItems());
+        connectionsTableView = new BisqTableView<>(model.getConnectionListItems().getSortedList());
         connectionsTableView.setPadding(new Insets(-15, 0, 0, 0));
         connectionsTableView.setMinHeight(150);
         connectionsTableView.setPrefHeight(250);
@@ -72,7 +73,7 @@ public class TransportTypeView extends View<GridPane, TransportTypeModel, Transp
         GridPane.setMargin(nodesLabel, new Insets(0, 0, -15, 10));
         root.add(nodesLabel, 0, root.getRowCount());
 
-        nodesTableView = new BisqTableView<>(model.getSortedNodeListItems());
+        nodesTableView = new BisqTableView<>(model.getNodeListItems().getSortedList());
         nodesTableView.setPadding(new Insets(-15, 0, 0, 0));
         nodesTableView.setMinHeight(100);
         nodesTableView.setPrefHeight(200);
@@ -96,16 +97,9 @@ public class TransportTypeView extends View<GridPane, TransportTypeModel, Transp
     }
 
     private void configConnectionsTableView() {
-        BisqTableColumn<ConnectionListItem> dateColumn = new BisqTableColumn.Builder<ConnectionListItem>()
-                .title(Res.get("settings.network.connections.header.established"))
-                .minWidth(180)
-                .maxWidth(180)
-                .left()
-                .valueSupplier(ConnectionListItem::getDate)
-                .comparator(ConnectionListItem::compareDate)
-                .build();
-        connectionsTableView.getColumns().add(dateColumn);
-        connectionsTableView.getSortOrder().add(dateColumn);
+        connectionsTableView.getColumns().add(BisqTableColumns.getDateColumn(
+                Res.get("settings.network.connections.header.established"),
+                connectionsTableView.getSortOrder()));
 
         connectionsTableView.getColumns().add(new BisqTableColumn.Builder<ConnectionListItem>()
                 .title(Res.get("settings.network.connections.header.address"))

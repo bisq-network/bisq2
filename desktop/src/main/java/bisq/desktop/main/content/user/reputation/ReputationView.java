@@ -20,7 +20,6 @@ package bisq.desktop.main.content.user.reputation;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
-import bisq.desktop.components.table.TableItem;
 import bisq.desktop.main.content.components.ReputationScoreDisplay;
 import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.i18n.Res;
@@ -147,7 +146,8 @@ public class ReputationView extends View<VBox, ReputationModel, ReputationContro
                 .build());
         BisqTableColumn<ListItem> scoreColumn = new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("user.reputation.table.columns.reputationScore"))
-                .comparator(Comparator.comparing(ListItem::getTotalScore).reversed())
+                .comparator(Comparator.comparing(ListItem::getTotalScore))
+                .sortType(TableColumn.SortType.DESCENDING)
                 .valueSupplier(ListItem::getTotalScoreString)
                 .build();
         tableView.getColumns().add(scoreColumn);
@@ -155,7 +155,8 @@ public class ReputationView extends View<VBox, ReputationModel, ReputationContro
 
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("user.reputation.table.columns.reputation"))
-                .comparator(Comparator.comparing(ListItem::getTotalScore).reversed())
+                .comparator(Comparator.comparing(ListItem::getTotalScore))
+                .sortType(TableColumn.SortType.DESCENDING)
                 .setCellFactory(getStarsCellFactory())
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
@@ -231,7 +232,7 @@ public class ReputationView extends View<VBox, ReputationModel, ReputationContro
     @EqualsAndHashCode
     @Getter
     @ToString
-    static class ListItem implements TableItem {
+    static class ListItem {
         private final ReputationService reputationService;
         private final UserProfile userProfile;
         private ReputationScore reputationScore;

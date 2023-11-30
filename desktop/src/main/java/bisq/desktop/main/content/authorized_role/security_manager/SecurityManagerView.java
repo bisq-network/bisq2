@@ -25,8 +25,9 @@ import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.table.BisqTableColumn;
+import bisq.desktop.components.table.BisqTableColumns;
 import bisq.desktop.components.table.BisqTableView;
-import bisq.desktop.components.table.TableItem;
+import bisq.desktop.components.table.DateTableItem;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.BooleanFormatter;
 import bisq.presentation.formatters.DateFormatter;
@@ -209,15 +210,7 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
     }
 
     protected void configTableView() {
-        BisqTableColumn<AlertListItem> date = new BisqTableColumn.Builder<AlertListItem>()
-                .title(Res.get("authorizedRole.securityManager.alert.table.date"))
-                .left()
-                .minWidth(180)
-                .comparator(Comparator.comparing(AlertListItem::getDate).reversed())
-                .valueSupplier(AlertListItem::getDateString)
-                .build();
-        tableView.getColumns().add(date);
-        tableView.getSortOrder().add(date);
+        tableView.getColumns().add(BisqTableColumns.getDateColumn(tableView.getSortOrder()));
 
         tableView.getColumns().add(new BisqTableColumn.Builder<AlertListItem>()
                 .title(Res.get("authorizedRole.securityManager.alert.table.alertType"))
@@ -285,21 +278,16 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
     @EqualsAndHashCode
     @Getter
     @ToString
-    public static class AlertListItem implements TableItem {
+    public static class AlertListItem implements DateTableItem {
         private final AuthorizedAlertData authorizedAlertData;
-        private final String dateString;
-        private final String alertType;
-        private final String message;
-        private final String haltTrading;
-        private final String requireVersionForTrading;
-        private final String minVersion;
         private final long date;
-        private final String bondedRoleDisplayString;
+        private final String dateString, timeString, alertType, message, haltTrading, requireVersionForTrading, minVersion, bondedRoleDisplayString;
 
         public AlertListItem(AuthorizedAlertData authorizedAlertData, SecurityManagerController controller) {
             this.authorizedAlertData = authorizedAlertData;
             date = this.authorizedAlertData.getDate();
-            dateString = DateFormatter.formatDateTime(date);
+            dateString = DateFormatter.formatDate(date);
+            timeString = DateFormatter.formatTime(date);
             alertType = Res.get("authorizedRole.securityManager.alertType." + this.authorizedAlertData.getAlertType().name());
             message = this.authorizedAlertData.getMessage().orElse("");
             minVersion = this.authorizedAlertData.getMinVersion().orElse("");

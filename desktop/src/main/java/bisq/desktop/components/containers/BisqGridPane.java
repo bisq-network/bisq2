@@ -23,7 +23,6 @@ import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.components.controls.BisqTextFieldWithCopyIcon;
 import bisq.desktop.components.table.BisqTableView;
-import bisq.desktop.components.table.TableItem;
 import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -187,7 +186,7 @@ public class BisqGridPane extends GridPane {
         return pair;
     }
 
-    public void addTableView(BisqTableView<? extends TableItem> tableView) {
+    public void addTableView(BisqTableView<?> tableView) {
         GridPane.setRowIndex(tableView, getRowCount());
         GridPane.setColumnIndex(tableView, 0);
         int columnCount = getColumnCount();

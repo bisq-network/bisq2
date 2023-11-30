@@ -23,7 +23,6 @@ import bisq.desktop.common.Layout;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
-import bisq.desktop.components.table.TableItem;
 import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
 import bisq.desktop.main.content.chat.ChatView;
 import bisq.desktop.main.content.components.UserProfileDisplay;
@@ -140,8 +139,6 @@ public class BisqEasyPrivateChatsView extends ChatView {
         containerHBox.getChildren().addAll(centerVBox, sideBar);
         containerHBox.setPadding(new Insets(0, 40, 0, 40));
 
-        Layout.pinToAnchorPane(containerHBox, 30, 0, 0, 0);
-        VBox.setVgrow(containerHBox, Priority.ALWAYS);
         root.setContent(containerHBox);
     }
 
@@ -279,7 +276,7 @@ public class BisqEasyPrivateChatsView extends ChatView {
     @Getter
     @ToString
     @EqualsAndHashCode
-    static class ListItem implements TableItem {
+    static class ListItem {
         private final TwoPartyPrivateChatChannel channel;
         private final String peersUserName, myUserName;
         private final long totalReputationScore, profileAge;

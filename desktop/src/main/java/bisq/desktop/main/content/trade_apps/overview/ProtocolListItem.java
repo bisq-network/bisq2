@@ -21,7 +21,6 @@ import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.data.Pair;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.components.table.TableItem;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -30,8 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Getter
 @EqualsAndHashCode
-public class ProtocolListItem implements TableItem {
-
+public class ProtocolListItem {
     private final TradeAppsAttributes.Type tradeAppsAttributesType;
     private final NavigationTarget navigationTarget;
     private final TradeProtocolType tradeProtocolType;
@@ -64,13 +62,5 @@ public class ProtocolListItem implements TableItem {
         this.releaseDate = releaseDate;
 
         this.iconId = "protocol-" + StringUtils.snakeCaseToKebapCase(name.toLowerCase());
-    }
-
-    @Override
-    public void activate() {
-    }
-
-    @Override
-    public void deactivate() {
     }
 }
