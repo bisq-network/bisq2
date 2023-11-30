@@ -39,11 +39,13 @@ public final class BisqEasyOfferbookChannel extends PublicChatChannel<BisqEasyOf
     private final Market market;
 
     public BisqEasyOfferbookChannel(Market market) {
-        this(createId(market), market);
+        this(createId(market), ChatChannelNotificationType.ALL, market);
     }
 
-    private BisqEasyOfferbookChannel(String id, Market market) {
-        super(id, ChatChannelDomain.BISQ_EASY_OFFERBOOK, ChatChannelNotificationType.ALL);
+    private BisqEasyOfferbookChannel(String id,
+                                     ChatChannelNotificationType chatChannelNotificationType,
+                                     Market market) {
+        super(id, ChatChannelDomain.BISQ_EASY_OFFERBOOK, chatChannelNotificationType);
 
         this.market = market;
     }
@@ -59,6 +61,7 @@ public final class BisqEasyOfferbookChannel extends PublicChatChannel<BisqEasyOf
                                                      bisq.chat.protobuf.BisqEasyOfferbookChannel proto) {
         return new BisqEasyOfferbookChannel(
                 baseProto.getId(),
+                ChatChannelNotificationType.fromProto(baseProto.getChatChannelNotificationType()),
                 Market.fromProto(proto.getMarket()));
     }
 
