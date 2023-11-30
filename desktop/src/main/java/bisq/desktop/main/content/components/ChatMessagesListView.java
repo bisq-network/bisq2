@@ -575,7 +575,6 @@ public class ChatMessagesListView {
             root.getChildren().add(listView);
 
             messagesListener = c -> {
-                UIThread.runOnNextRenderFrame(this::scrollDown);
                 if (scrollDelay != null) {
                     scrollDelay.stop();
                 }
@@ -586,7 +585,6 @@ public class ChatMessagesListView {
         @Override
         protected void onViewAttached() {
             model.getChatMessages().addListener(messagesListener);
-            scrollDown();
         }
 
         @Override
