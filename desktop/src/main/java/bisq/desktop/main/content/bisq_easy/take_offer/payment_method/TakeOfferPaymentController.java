@@ -58,8 +58,8 @@ public class TakeOfferPaymentController implements Controller {
         }
 
         model.setHeadline(bisqEasyOffer.getTakersDirection().isBuy() ?
-                Res.get("bisqEasy.takeOffer.method.headline.buyer", bisqEasyOffer.getMarket().getQuoteCurrencyCode()) :
-                Res.get("bisqEasy.takeOffer.method.headline.seller", bisqEasyOffer.getMarket().getQuoteCurrencyCode()));
+                Res.get("bisqEasy.takeOffer.paymentMethod.headline.buyer", bisqEasyOffer.getMarket().getQuoteCurrencyCode()) :
+                Res.get("bisqEasy.takeOffer.paymentMethod.headline.seller", bisqEasyOffer.getMarket().getQuoteCurrencyCode()));
     }
 
     /**
