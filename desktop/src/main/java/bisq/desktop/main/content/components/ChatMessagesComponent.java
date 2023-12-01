@@ -404,7 +404,7 @@ public class ChatMessagesComponent {
             if (chatChannel instanceof BisqEasyOfferbookChannel) {
                 String dontShowAgainId = "sendMsgOfferOnlyWarn";
                 if (settingsService.getOffersOnly().get()) {
-                    new Popup().information(Res.get("chat.message.send..offerOnly.warn"))
+                    new Popup().information(Res.get("chat.message.send.offerOnly.warn"))
                             .actionButtonText(Res.get("confirmation.yes"))
                             .onAction(() -> settingsService.setOffersOnly(false))
                             .closeButtonText(Res.get("confirmation.no"))
