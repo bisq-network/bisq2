@@ -30,7 +30,7 @@ import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
 import bisq.offer.OfferService;
-import bisq.presentation.notifications.NotificationsService;
+import bisq.presentation.notifications.SendNotificationService;
 import bisq.security.KeyPairService;
 import bisq.security.SecurityService;
 import bisq.settings.SettingsService;
@@ -82,7 +82,7 @@ public class RestApiApplicationService extends ApplicationService {
     private final ChatService chatService;
     private final SettingsService settingsService;
     private final SupportService supportService;
-    private final NotificationsService notificationsService;
+    private final SendNotificationService sendNotificationService;
     private final TradeService tradeService;
     private final BisqEasyService bisqEasyService;
 
@@ -134,7 +134,7 @@ public class RestApiApplicationService extends ApplicationService {
 
         settingsService = new SettingsService(persistenceService);
 
-        notificationsService = new NotificationsService(persistenceService);
+        sendNotificationService = new SendNotificationService();
 
         offerService = new OfferService(networkService, identityService, persistenceService);
 
@@ -143,7 +143,7 @@ public class RestApiApplicationService extends ApplicationService {
                 networkService,
                 userService,
                 settingsService,
-                notificationsService);
+                sendNotificationService);
 
         supportService = new SupportService(SupportService.Config.from(getConfig("support")),
                 persistenceService, networkService, chatService, userService, bondedRolesService);
@@ -164,7 +164,7 @@ public class RestApiApplicationService extends ApplicationService {
                 chatService,
                 settingsService,
                 supportService,
-                notificationsService,
+                sendNotificationService,
                 tradeService);
 
     }
@@ -204,7 +204,7 @@ public class RestApiApplicationService extends ApplicationService {
                 .thenCompose(result -> contractService.initialize())
                 .thenCompose(result -> userService.initialize())
                 .thenCompose(result -> settingsService.initialize())
-                .thenCompose(result -> notificationsService.initialize())
+                .thenCompose(result -> sendNotificationService.initialize())
                 .thenCompose(result -> offerService.initialize())
                 .thenCompose(result -> chatService.initialize())
                 .thenCompose(result -> supportService.initialize())
@@ -235,7 +235,7 @@ public class RestApiApplicationService extends ApplicationService {
                 .thenCompose(result -> supportService.shutdown())
                 .thenCompose(result -> chatService.shutdown())
                 .thenCompose(result -> offerService.shutdown())
-                .thenCompose(result -> notificationsService.shutdown())
+                .thenCompose(result -> sendNotificationService.shutdown())
                 .thenCompose(result -> settingsService.shutdown())
                 .thenCompose(result -> userService.shutdown())
                 .thenCompose(result -> contractService.shutdown())

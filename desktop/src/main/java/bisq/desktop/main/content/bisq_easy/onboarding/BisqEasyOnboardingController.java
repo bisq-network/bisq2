@@ -17,10 +17,10 @@
 
 package bisq.desktop.main.content.bisq_easy.onboarding;
 
+import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardController;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;

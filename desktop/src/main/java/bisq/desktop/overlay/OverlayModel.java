@@ -17,10 +17,10 @@
 
 package bisq.desktop.overlay;
 
+import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.NavigationModel;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.settings.SettingsService;
 import lombok.Getter;
 import lombok.Setter;

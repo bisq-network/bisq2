@@ -86,7 +86,7 @@ public abstract class PublicChannelSelectionMenu<C extends PublicChatChannel<?>,
                 final HBox hBox = new HBox();
                 final Badge numMessagesBadge = new Badge();
                 @Nullable
-                MapChangeListener<String, Integer> channelIdWithNumUnseenMessagesMapListener;
+                MapChangeListener<String, Long> channelIdWithNumUnseenMessagesMapListener;
 
                 {
                     setCursor(Cursor.HAND);

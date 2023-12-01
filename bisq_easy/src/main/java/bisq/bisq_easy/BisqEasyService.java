@@ -27,7 +27,7 @@ import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.offer.OfferService;
 import bisq.persistence.PersistenceService;
-import bisq.presentation.notifications.NotificationsService;
+import bisq.presentation.notifications.SendNotificationService;
 import bisq.security.SecurityService;
 import bisq.settings.SettingsService;
 import bisq.support.SupportService;
@@ -58,7 +58,7 @@ public class BisqEasyService implements Service {
     private final ChatService chatService;
     private final SettingsService settingsService;
     private final SupportService supportService;
-    private final NotificationsService notificationsService;
+    private final SendNotificationService sendNotificationService;
     private final TradeService tradeService;
     private final UserIdentityService userIdentityService;
     private final BisqEasyNotificationsService bisqEasyNotificationsService;
@@ -76,7 +76,7 @@ public class BisqEasyService implements Service {
                            ChatService chatService,
                            SettingsService settingsService,
                            SupportService supportService,
-                           NotificationsService notificationsService,
+                           SendNotificationService sendNotificationService,
                            TradeService tradeService) {
         this.persistenceService = persistenceService;
         this.securityService = securityService;
@@ -91,13 +91,12 @@ public class BisqEasyService implements Service {
         this.chatService = chatService;
         this.settingsService = settingsService;
         this.supportService = supportService;
-        this.notificationsService = notificationsService;
+        this.sendNotificationService = sendNotificationService;
         this.tradeService = tradeService;
         userIdentityService = userService.getUserIdentityService();
 
-        bisqEasyNotificationsService = new BisqEasyNotificationsService(notificationsService,
-                supportService.getMediatorService(),
-                chatService.getBisqEasyOpenTradeChannelService());
+        bisqEasyNotificationsService = new BisqEasyNotificationsService(chatService.getChatNotificationService(),
+                supportService.getMediatorService());
     }
 
 

@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy;
 
-import bisq.desktop.common.view.NavigationTarget;
+import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.common.view.TabButton;
 import bisq.desktop.main.content.ContentTabView;
 import bisq.i18n.Res;

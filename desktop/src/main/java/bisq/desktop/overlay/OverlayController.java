@@ -17,12 +17,12 @@
 
 package bisq.desktop.overlay;
 
+import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.main.content.bisq_easy.offerbook.offer_details.BisqEasyOfferDetailsController;
 import bisq.desktop.main.content.bisq_easy.onboarding.video.BisqEasyVideoController;
 import bisq.desktop.main.content.bisq_easy.take_offer.TakeOfferController;

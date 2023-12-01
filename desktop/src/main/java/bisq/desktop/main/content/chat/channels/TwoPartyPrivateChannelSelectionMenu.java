@@ -127,7 +127,7 @@ public class TwoPartyPrivateChannelSelectionMenu extends PrivateChannelSelection
                 @Nullable
                 private Subscription widthSubscription;
                 @Nullable
-                MapChangeListener<String, Integer> channelIdWithNumUnseenMessagesMapListener;
+                MapChangeListener<String, Long> channelIdWithNumUnseenMessagesMapListener;
 
                 {
                     setCursor(Cursor.HAND);

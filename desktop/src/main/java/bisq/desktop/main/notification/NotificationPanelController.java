@@ -18,32 +18,35 @@
 package bisq.desktop.main.notification;
 
 import bisq.bisq_easy.BisqEasyNotificationsService;
+import bisq.bisq_easy.NavigationTarget;
+import bisq.chat.notifications.ChatNotification;
+import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.observable.Pin;
+import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.i18n.Res;
-import bisq.presentation.notifications.NotificationsService;
 import com.google.common.base.Joiner;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Set;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class NotificationPanelController implements Controller {
     @Getter
     private final NotificationPanelView view;
     private final NotificationPanelModel model;
-    private final NotificationsService notificationsService;
     private final BisqEasyNotificationsService bisqEasyNotificationsService;
-    private Pin isNotificationVisiblePin;
+    private final ChatNotificationService chatNotificationService;
+    private Pin changedChatNotificationPin, isNotificationVisiblePin;
 
     public NotificationPanelController(ServiceProvider serviceProvider) {
-        notificationsService = serviceProvider.getNotificationsService();
+        chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
         bisqEasyNotificationsService = serviceProvider.getBisqEasyService().getBisqEasyNotificationsService();
 
         model = new NotificationPanelModel();
@@ -52,19 +55,21 @@ public class NotificationPanelController implements Controller {
 
     @Override
     public void onActivate() {
-        notificationsService.subscribe(this::updateNumNotifications);
+        chatNotificationService.getNotConsumedNotifications().forEach(this::handleNotification);
+        changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(this::handleNotification);
+
         isNotificationVisiblePin = FxBindings.bind(model.getIsNotificationVisible())
                 .to(bisqEasyNotificationsService.getIsNotificationPanelVisible());
     }
 
     @Override
     public void onDeactivate() {
-        notificationsService.unsubscribe(this::updateNumNotifications);
+        changedChatNotificationPin.unbind();
         isNotificationVisiblePin.unbind();
     }
 
     void onClose() {
-        notificationsService.getIsNotificationPanelDismissed().set(true);
+        bisqEasyNotificationsService.getIsNotificationPanelDismissed().set(true);
     }
 
     void onNavigateToTarget() {
@@ -73,14 +78,19 @@ public class NotificationPanelController implements Controller {
                 NavigationTarget.BISQ_EASY_OPEN_TRADES);
     }
 
-    private void updateNumNotifications(String notificationId) {
+    private void handleNotification(ChatNotification notification) {
+        if (notification == null) {
+            return;
+        }
+
         UIThread.run(() -> {
-            boolean notificationForMediator = bisqEasyNotificationsService.isNotificationForMediator(notificationId);
-            model.setMediationNotification(notificationForMediator);
-            Set<String> tradeIdsOfNotifications = bisqEasyNotificationsService.getTradeIdsOfNotifications();
+            boolean hasMediatorNotConsumedNotifications = bisqEasyNotificationsService.hasMediatorNotConsumedNotifications();
+            model.setMediationNotification(hasMediatorNotConsumedNotifications);
+            List<String> tradeIdsOfNotifications = bisqEasyNotificationsService.getTradeIdsOfNotifications().stream()
+                    .map(e -> e.substring(0, 8)).collect(Collectors.toList());
             if (tradeIdsOfNotifications.size() == 1) {
-                String tradeId = tradeIdsOfNotifications.iterator().next();
-                if (notificationForMediator) {
+                String tradeId = tradeIdsOfNotifications.get(0);
+                if (hasMediatorNotConsumedNotifications) {
                     model.getHeadline().set(Res.get("notificationPanel.mediationCases.headline.single", tradeId));
                     model.getButtonText().set(Res.get("notificationPanel.mediationCases.button"));
                 } else {
@@ -88,8 +98,8 @@ public class NotificationPanelController implements Controller {
                     model.getButtonText().set(Res.get("notificationPanel.trades.button"));
                 }
             } else if (tradeIdsOfNotifications.size() > 1) {
-                String tradeIds = Joiner.on(", ").join(tradeIdsOfNotifications);
-                if (notificationForMediator) {
+                String tradeIds = StringUtils.truncate(Joiner.on(", ").join(tradeIdsOfNotifications));
+                if (hasMediatorNotConsumedNotifications) {
                     model.getHeadline().set(Res.get("notificationPanel.mediationCases.headline.multiple", tradeIds));
                     model.getButtonText().set(Res.get("notificationPanel.mediationCases.button"));
                 } else {

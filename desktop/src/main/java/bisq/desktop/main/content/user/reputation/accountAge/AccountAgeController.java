@@ -17,9 +17,9 @@
 
 package bisq.desktop.main.content.user.reputation.accountAge;
 
+import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
 import bisq.desktop.main.content.user.reputation.accountAge.tab1.AccountAgeTab1Controller;
 import bisq.desktop.main.content.user.reputation.accountAge.tab2.AccountAgeTab2Controller;

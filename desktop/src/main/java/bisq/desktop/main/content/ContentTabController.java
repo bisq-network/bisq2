@@ -18,10 +18,10 @@
 package bisq.desktop.main.content;
 
 import bisq.bisq_easy.BisqEasyNotificationsService;
+import bisq.bisq_easy.NavigationTarget;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
 import lombok.extern.slf4j.Slf4j;
 

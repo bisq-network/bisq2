@@ -17,8 +17,8 @@
 
 package bisq.desktop.main.content.user.bonded_roles.nodes.tabs;
 
+import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.common.Styles;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.main.content.user.bonded_roles.tabs.BondedRolesTabView;
 import bisq.i18n.Res;
 import lombok.extern.slf4j.Slf4j;

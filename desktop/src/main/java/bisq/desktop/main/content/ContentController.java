@@ -17,11 +17,11 @@
 
 package bisq.desktop.main.content;
 
+import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatChannelDomain;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.main.content.academy.AcademyController;
 import bisq.desktop.main.content.authorized_role.AuthorizedRoleController;
 import bisq.desktop.main.content.bisq_easy.BisqEasyController;

@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.common_chat;
 
+import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatChannelSelectionService;
@@ -30,7 +31,6 @@ import bisq.common.observable.collection.ObservableArray;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.main.content.chat.ChatController;
 import bisq.desktop.main.content.chat.channels.CommonPublicChannelSelectionMenu;

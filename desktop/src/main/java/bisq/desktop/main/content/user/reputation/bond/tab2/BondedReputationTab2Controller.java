@@ -17,11 +17,11 @@
 
 package bisq.desktop.main.content.user.reputation.bond.tab2;
 
+import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
-import bisq.desktop.common.view.NavigationTarget;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

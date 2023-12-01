@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.components;
 
+import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.*;
 import bisq.chat.bisqeasy.BisqEasyOfferMessage;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
@@ -43,7 +44,6 @@ import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.view.Navigation;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.*;
 import bisq.desktop.components.list_view.NoSelectionModel;
@@ -216,14 +216,14 @@ public class ChatMessagesListView {
                         focusSubscription = EasyBind.subscribe(window.focusedProperty(),
                                 focused -> {
                                     if (focused && model.getSelectedChannel().get() != null) {
-                                        chatNotificationService.consumeNotificationId(model.getSelectedChannel().get());
+                                        chatNotificationService.consume(model.getSelectedChannel().get().getId());
                                     }
                                 });
 
                         selectedChannelSubscription = EasyBind.subscribe(model.selectedChannel,
                                 selectedChannel -> {
                                     if (selectedChannel != null) {
-                                        chatNotificationService.consumeNotificationId(model.getSelectedChannel().get());
+                                        chatNotificationService.consume(model.getSelectedChannel().get().getId());
                                     }
                                 });
                     }

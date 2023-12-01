@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.user.reputation.accountAge.tab3;
 
+import bisq.bisq_easy.NavigationTarget;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
@@ -27,7 +28,6 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.overlay.Overlay;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.components.UserProfileSelection;

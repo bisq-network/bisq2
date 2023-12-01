@@ -17,9 +17,9 @@
 
 package bisq.desktop.main.content.bisq_easy.trade_wizard.direction;
 
+import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.offer.Direction;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.reputation.ReputationScore;

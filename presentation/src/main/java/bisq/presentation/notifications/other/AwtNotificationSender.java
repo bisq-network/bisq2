@@ -24,8 +24,7 @@ import java.awt.*;
 
 @Slf4j
 public class AwtNotificationSender implements NotificationSender {
-
-    public void sendNotification(String title, String message) {
+    public void send(String title, String message) {
         SystemTray systemTray = SystemTray.getSystemTray();
         Image awtImage = Toolkit.getDefaultToolkit().createImage(getClass().getClassLoader().getResource("images/app_window/icon_128.png"));
         TrayIcon trayIcon = new TrayIcon(awtImage, "Bisq");
@@ -37,12 +36,10 @@ public class AwtNotificationSender implements NotificationSender {
             // With MessageType.NONE the line for the application (would be likely Bisq.exe in binary) 
             // should not be displayed on windows
             trayIcon.displayMessage(title, message, TrayIcon.MessageType.NONE);
-            // Trayicon does not remove itself in all cases for Linux
+            // Tray icon does not remove itself in all cases for Linux
             trayIcon.addActionListener(l -> systemTray.remove(trayIcon));
         } catch (AWTException e) {
             throw new RuntimeException(e);
         }
-
-
     }
 }

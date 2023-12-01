@@ -125,10 +125,10 @@ public class MediatorService implements PersistenceClient<MediatorStore>, Servic
         return persistableStore.getMediationCases();
     }
 
-    public Optional<UserIdentity> findMyMediatorUserIdentity(Optional<UserProfile> mediatorFromContract) {
+    public Optional<UserIdentity> findMyMediatorUserIdentity(Optional<UserProfile> mediator) {
         return findMyMediatorUserIdentities()
-                .filter(e -> mediatorFromContract.isPresent())
-                .filter(userIdentity -> userIdentity.getUserProfile().getId().equals(mediatorFromContract.orElseThrow().getId()))
+                .filter(e -> mediator.isPresent())
+                .filter(userIdentity -> userIdentity.getUserProfile().getId().equals(mediator.orElseThrow().getId()))
                 .findAny();
     }
 

@@ -17,6 +17,7 @@
 
 package bisq.desktop;
 
+import bisq.bisq_easy.NavigationTarget;
 import bisq.common.observable.Observable;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.Transitions;
@@ -26,7 +27,6 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.overlay.Overlay;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.MainController;

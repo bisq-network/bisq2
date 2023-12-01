@@ -56,7 +56,7 @@ public class MediationCaseHeader {
         return controller.view.getRoot();
     }
 
-    public void setMediationCaseListItem(MediationCaseListItem item) {
+    public void setMediationCaseListItem(MediatorView.ListItem item) {
         controller.setMediationCaseListItem(item);
     }
 
@@ -87,7 +87,7 @@ public class MediationCaseHeader {
             view = new View(model, this);
         }
 
-        private void setMediationCaseListItem(MediationCaseListItem item) {
+        private void setMediationCaseListItem(MediatorView.ListItem item) {
             model.getMediationCaseListItem().set(item);
         }
 
@@ -124,18 +124,18 @@ public class MediationCaseHeader {
         }
 
         private void doClose() {
-            MediationCaseListItem mediationCaseListItem = model.getMediationCaseListItem().get();
+            MediatorView.ListItem listItem = model.getMediationCaseListItem().get();
             channelService.sendSystemMessage(Res.get("authorizedRole.mediator.close.systemMessage"),
-                    mediationCaseListItem.getChannel());
-            mediatorService.closeMediationCase(mediationCaseListItem.getMediationCase());
+                    listItem.getChannel());
+            mediatorService.closeMediationCase(listItem.getMediationCase());
             onCloseHandler.run();
         }
 
         private void doReOpen() {
-            MediationCaseListItem mediationCaseListItem = model.getMediationCaseListItem().get();
+            MediatorView.ListItem listItem = model.getMediationCaseListItem().get();
             channelService.sendSystemMessage(Res.get("authorizedRole.mediator"),
-                    mediationCaseListItem.getChannel());
-            mediatorService.reOpenMediationCase(mediationCaseListItem.getMediationCase());
+                    listItem.getChannel());
+            mediatorService.reOpenMediationCase(listItem.getMediationCase());
             onReOpenHandler.run();
         }
     }
@@ -143,7 +143,7 @@ public class MediationCaseHeader {
     @Slf4j
     @Getter
     private static class Model implements bisq.desktop.common.view.Model {
-        private final ObjectProperty<MediationCaseListItem> mediationCaseListItem = new SimpleObjectProperty<>();
+        private final ObjectProperty<MediatorView.ListItem> mediationCaseListItem = new SimpleObjectProperty<>();
         private final BooleanProperty showClosedCases = new SimpleBooleanProperty();
     }
 

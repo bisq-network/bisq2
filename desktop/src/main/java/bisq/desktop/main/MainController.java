@@ -18,6 +18,7 @@
 package bisq.desktop.main;
 
 import bisq.application.ApplicationService;
+import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.alert.AlertService;
 import bisq.bonded_roles.alert.AuthorizedAlertData;
 import bisq.common.observable.collection.CollectionObserver;
@@ -26,7 +27,6 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.ContentController;
 import bisq.desktop.main.left.LeftNavController;

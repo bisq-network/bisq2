@@ -18,9 +18,9 @@
 package bisq.desktop.main.content.trade_apps.overview;
 
 import bisq.account.protocol_type.TradeProtocolType;
+import bisq.bisq_easy.NavigationTarget;
 import bisq.common.data.Pair;
 import bisq.common.util.StringUtils;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

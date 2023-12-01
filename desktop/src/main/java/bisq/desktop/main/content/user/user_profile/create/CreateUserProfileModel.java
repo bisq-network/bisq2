@@ -17,8 +17,8 @@
 
 package bisq.desktop.main.content.user.user_profile.create;
 
+import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.common.view.NavigationModel;
-import bisq.desktop.common.view.NavigationTarget;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

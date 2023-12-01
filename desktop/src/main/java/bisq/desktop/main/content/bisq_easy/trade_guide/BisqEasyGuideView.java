@@ -17,8 +17,8 @@
 
 package bisq.desktop.main.content.bisq_easy.trade_guide;
 
+import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.common.Styles;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabView;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;

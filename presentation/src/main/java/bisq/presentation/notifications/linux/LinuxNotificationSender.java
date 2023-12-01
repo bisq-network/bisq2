@@ -32,7 +32,7 @@ public class LinuxNotificationSender implements NotificationSender {
     }
 
     @Override
-    public void sendNotification(String title, String message) {
+    public void send(String title, String message) {
         List<String> command = new ArrayList<>();
         command.add("notify-send");
 

@@ -17,6 +17,7 @@
 
 package bisq.desktop.common.view;
 
+import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.Styles;
 import bisq.desktop.common.threading.UIThread;
@@ -115,7 +116,7 @@ public class TabButton extends Pane implements Toggle {
         }
     }
 
-    public void setNumNotifications(int numNotifications) {
+    public void setNumNotifications(long numNotifications) {
         if (numNotifications == 0) {
             numMessagesBadge.setText("");
             return;

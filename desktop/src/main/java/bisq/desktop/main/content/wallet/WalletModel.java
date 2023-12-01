@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.wallet;
 
-import bisq.desktop.common.view.NavigationTarget;
+import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.main.content.ContentTabModel;
 
 public class WalletModel extends ContentTabModel {

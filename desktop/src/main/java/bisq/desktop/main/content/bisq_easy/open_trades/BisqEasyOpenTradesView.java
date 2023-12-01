@@ -20,6 +20,7 @@ package bisq.desktop.main.content.bisq_easy.open_trades;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.data.Triple;
+import bisq.common.observable.Pin;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.desktop.CssConfig;
 import bisq.desktop.common.Layout;
@@ -38,7 +39,6 @@ import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.DateFormatter;
-import bisq.presentation.notifications.NotificationsService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeFormatter;
 import bisq.trade.bisq_easy.BisqEasyTradeUtils;
@@ -425,21 +425,19 @@ public class BisqEasyOpenTradesView extends ChatView {
                 market, priceString, baseAmountString, quoteAmountString, paymentMethod, myRole;
         private final long date, price, baseAmount, quoteAmount;
         private final UserProfile peersUserProfile;
-        private final NotificationsService notificationsService;
         private final ChatNotificationService chatNotificationService;
         private final ReputationScore reputationScore;
         private final StringProperty numTradeNotification = new SimpleStringProperty();
+        private final Pin changedChatNotificationPin;
 
         public ListItem(BisqEasyOpenTradeChannel channel,
                         BisqEasyTrade trade,
                         ReputationService reputationService,
-                        NotificationsService notificationsService,
                         ChatNotificationService chatNotificationService) {
             this.channel = channel;
             this.trade = trade;
 
             peersUserProfile = channel.getPeer();
-            this.notificationsService = notificationsService;
             this.chatNotificationService = chatNotificationService;
             peersUserName = peersUserProfile.getUserName();
             myUserName = channel.getMyUserIdentity().getUserName();
@@ -463,21 +461,22 @@ public class BisqEasyOpenTradesView extends ChatView {
             myRole = BisqEasyTradeFormatter.getMakerTakerRole(trade);
             reputationScore = reputationService.getReputationScore(peersUserProfile);
 
-            notificationsService.subscribe(this::updateNumNotifications);
-        }
-
-        public void dispose() {
-            notificationsService.unsubscribe(this::updateNumNotifications);
-        }
-
-        private void updateNumNotifications(String notificationId) {
-            UIThread.run(() -> {
-                int numNotifications = chatNotificationService.getNumNotificationsByChannel(channel);
-                numTradeNotification.set(numNotifications > 0 ?
-                        String.valueOf(numNotifications) :
-                        "");
+            changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(notification -> {
+                if (notification == null ||
+                        !notification.getChatChannelId().equals(channel.getId())) {
+                    return;
+                }
+                UIThread.run(() -> {
+                    long numNotifications = chatNotificationService.getNumNotifications(channel.getId());
+                    numTradeNotification.set(numNotifications > 0 ?
+                            String.valueOf(numNotifications) :
+                            "");
+                });
             });
         }
 
+        public void dispose() {
+            changedChatNotificationPin.unbind();
+        }
     }
 }

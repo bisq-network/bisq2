@@ -18,49 +18,135 @@
 package bisq.chat.notifications;
 
 import bisq.chat.ChatChannel;
+import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessage;
-import bisq.chat.priv.PrivateChatMessage;
-import bisq.i18n.Res;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.common.proto.Proto;
+import bisq.presentation.notifications.Notification;
 import bisq.user.profile.UserProfile;
-import bisq.user.profile.UserProfileService;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Date;
 import java.util.Optional;
 
 @Slf4j
+@ToString
 @Getter
 @EqualsAndHashCode
-public class ChatNotification<T extends ChatMessage> implements Comparable<ChatNotification<T>> {
-    private final String notificationId;
-    private final ChatChannel<? extends ChatMessage> chatChannel;
-    private final T chatMessage;
+public class ChatNotification implements Notification, Proto {
+    public static String createId(String channelId, String messageId) {
+        return channelId + "." + messageId;
+    }
+
+    private final String id;
+    private final String title;
     private final String message;
+    private final long date;
+    private final String chatChannelId;
+    private final ChatChannelDomain chatChannelDomain;
+    private final String chatMessageId;
+    private final Optional<String> tradeId;
+    private final Optional<UserProfile> mediator;
     private final Optional<UserProfile> senderUserProfile;
-    private final String userName;
 
-    public ChatNotification(UserProfileService userProfileService,
-                            String notificationId,
+    // Mutable field
+    @EqualsAndHashCode.Exclude
+    private boolean isConsumed;
+
+    public ChatNotification(String id,
+                            String title,
+                            String message,
                             ChatChannel<? extends ChatMessage> chatChannel,
-                            T chatMessage) {
-        this.notificationId = notificationId;
-        this.chatChannel = chatChannel;
-        this.chatMessage = chatMessage;
+                            ChatMessage chatMessage,
+                            Optional<UserProfile> senderUserProfile) {
+        this(id,
+                title,
+                message,
+                chatMessage.getDate(),
+                chatChannel.getId(),
+                chatChannel.getChatChannelDomain(),
+                chatMessage.getId(),
+                findTradeId(chatChannel),
+                senderUserProfile,
+                findMediator(chatChannel));
+    }
 
-        if (chatMessage instanceof PrivateChatMessage) {
-            senderUserProfile = Optional.of(((PrivateChatMessage) chatMessage).getSenderUserProfile());
-        } else {
-            senderUserProfile = userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId());
-        }
-        message = chatMessage.getText();
-
-        userName = senderUserProfile.map(UserProfile::getUserName).orElse(Res.get("data.na"));
+    private ChatNotification(String id,
+                             String title,
+                             String message,
+                             long date,
+                             String chatChannelId,
+                             ChatChannelDomain chatChannelDomain,
+                             String chatMessageId,
+                             Optional<String> tradeId,
+                             Optional<UserProfile> senderUserProfile,
+                             Optional<UserProfile> mediator
+    ) {
+        this.id = id;
+        this.title = title;
+        this.message = message;
+        this.date = date;
+        this.chatChannelId = chatChannelId;
+        this.chatChannelDomain = chatChannelDomain;
+        this.chatMessageId = chatMessageId;
+        this.tradeId = tradeId;
+        this.senderUserProfile = senderUserProfile;
+        this.mediator = mediator;
     }
 
     @Override
-    public int compareTo(ChatNotification o) {
-        return new Date(chatMessage.getDate()).compareTo(new Date(o.getChatMessage().getDate()));
+    public bisq.chat.protobuf.ChatNotification toProto() {
+        bisq.chat.protobuf.ChatNotification.Builder builder = bisq.chat.protobuf.ChatNotification.newBuilder()
+                .setId(id)
+                .setTitle(title)
+                .setMessage(message)
+                .setDate(date)
+                .setChatChannelId(chatChannelId)
+                .setChatChannelDomain(chatChannelDomain.toProto())
+                .setChatMessageId(chatMessageId)
+                .setIsConsumed(isConsumed);
+        tradeId.ifPresent(builder::setTradeId);
+        senderUserProfile.ifPresent(e -> builder.setSenderUserProfile(e.toProto()));
+        mediator.ifPresent(e -> builder.setMediator(e.toProto()));
+        return builder.build();
+    }
+
+    public static ChatNotification fromProto(bisq.chat.protobuf.ChatNotification proto) {
+        ChatNotification chatNotification = new ChatNotification(
+                proto.getId(),
+                proto.getTitle(),
+                proto.getMessage(),
+                proto.getDate(),
+                proto.getChatChannelId(),
+                ChatChannelDomain.fromProto(proto.getChatChannelDomain()),
+                proto.getChatMessageId(),
+                proto.hasTradeId() ? Optional.of(proto.getTradeId()) : Optional.empty(),
+                proto.hasSenderUserProfile() ? Optional.of(UserProfile.fromProto(proto.getSenderUserProfile())) : Optional.empty(),
+                proto.hasMediator() ? Optional.of(UserProfile.fromProto(proto.getMediator())) : Optional.empty()
+        );
+        chatNotification.setConsumed(proto.getIsConsumed());
+        return chatNotification;
+    }
+
+    private static Optional<String> findTradeId(ChatChannel<? extends ChatMessage> chatChannel) {
+        return chatChannel instanceof BisqEasyOpenTradeChannel ?
+                Optional.of(((BisqEasyOpenTradeChannel) chatChannel).getTradeId()) :
+                Optional.empty();
+    }
+
+    private static Optional<UserProfile> findMediator(ChatChannel<? extends ChatMessage> chatChannel) {
+        return chatChannel instanceof BisqEasyOpenTradeChannel ?
+                ((BisqEasyOpenTradeChannel) chatChannel).getMediator() :
+                Optional.empty();
+    }
+
+    public void setConsumed(boolean consumed) {
+        isConsumed = consumed;
+    }
+
+    public boolean isNotConsumed() {
+        return !isConsumed;
     }
 }

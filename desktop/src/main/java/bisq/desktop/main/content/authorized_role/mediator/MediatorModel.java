@@ -39,8 +39,8 @@ public class MediatorModel implements Model {
     private final BooleanProperty showClosedCases = new SimpleBooleanProperty();
     private final BooleanProperty noOpenCases = new SimpleBooleanProperty();
     private final StringProperty chatWindowTitle = new SimpleStringProperty();
-    private final TableList<MediationCaseListItem> listItems = new TableList<>();
-    private final ObjectProperty<MediationCaseListItem> selectedItem = new SimpleObjectProperty<>();
+    private final TableList<MediatorView.ListItem> listItems = new TableList<>();
+    private final ObjectProperty<MediatorView.ListItem> selectedItem = new SimpleObjectProperty<>();
     private final ObjectProperty<Stage> chatWindow = new SimpleObjectProperty<>();
 
     public MediatorModel() {

@@ -17,9 +17,9 @@
 
 package bisq.desktop.main.content.user;
 
+import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.main.content.ContentTabController;
 import bisq.desktop.main.content.user.accounts.PaymentAccountsController;
 import bisq.desktop.main.content.user.bonded_roles.nodes.NodesController;
