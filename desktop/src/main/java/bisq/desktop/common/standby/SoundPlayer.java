@@ -59,9 +59,7 @@ class SoundPlayer implements PreventStandbyMode {
             String fileName = "prevent-app-nap-silent-sound.aiff";
             File soundFile = Path.of(baseDir, fileName).toFile();
             if (!soundFile.exists()) {
-                File fromResources = new File(fileName);
-                FileUtils.resourceToFile(fromResources);
-                FileUtils.copyFile(fromResources, soundFile);
+                FileUtils.resourceToFile(fileName, soundFile);
             }
             AudioInputStream audioInputStream = null;
             SourceDataLine sourceDataLine = null;

@@ -215,20 +215,20 @@ public class FileUtils {
         return sb.toString();
     }
 
-    public static InputStream getResourceAsStream(String fileName) throws IOException {
-        InputStream resource = FileUtils.class.getClassLoader().getResourceAsStream(fileName);
+    public static InputStream getResourceAsStream(String resourceName) throws IOException {
+        InputStream resource = FileUtils.class.getClassLoader().getResourceAsStream(resourceName);
         if (resource == null) {
-            throw new IOException("Could not load " + fileName);
+            throw new IOException("Could not load " + resourceName);
         }
         return resource;
     }
 
-    public static void resourceToFile(File file) throws IOException {
-        try (InputStream resource = getResourceAsStream(file.getName())) {
-            if (file.exists() && !file.delete()) {
-                throw new IOException("Could not remove existing file " + file.getName());
+    public static void resourceToFile(String resourceName, File outputFile) throws IOException {
+        try (InputStream resource = getResourceAsStream(resourceName)) {
+            if (outputFile.exists() && !outputFile.delete()) {
+                throw new IOException("Could not remove existing outputFile " + outputFile.getPath());
             }
-            OutputStream out = new FileOutputStream(file);
+            OutputStream out = new FileOutputStream(outputFile);
             copy(resource, out);
         }
     }
