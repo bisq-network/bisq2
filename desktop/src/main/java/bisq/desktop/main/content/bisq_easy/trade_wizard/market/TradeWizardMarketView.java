@@ -58,7 +58,7 @@ public class TradeWizardMarketView extends View<VBox, TradeWizardMarketModel, Tr
         headlineLabel = new Label();
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
 
-        Label subtitleLabel = new Label(Res.get("bisqEasy.createOffer.market.subTitle"));
+        Label subtitleLabel = new Label(Res.get("bisqEasy.tradeWizard.market.subTitle"));
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
         subtitleLabel.setAlignment(Pos.CENTER);
         subtitleLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
@@ -109,20 +109,20 @@ public class TradeWizardMarketView extends View<VBox, TradeWizardMarketModel, Tr
 
     private void configTableView() {
         tableView.getColumns().add(new BisqTableColumn.Builder<MarketListItem>()
-                .title(Res.get("bisqEasy.createOffer.market.columns.name"))
+                .title(Res.get("bisqEasy.tradeWizard.market.columns.name"))
                 .left()
                 .minWidth(150)
                 .comparator(Comparator.comparing(MarketListItem::getQuoteCurrencyName))
                 .setCellFactory(getNameCellFactory())
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<MarketListItem>()
-                .title(Res.get("bisqEasy.createOffer.market.columns.numOffers"))
+                .title(Res.get("bisqEasy.tradeWizard.market.columns.numOffers"))
                 .minWidth(60)
                 .valueSupplier(MarketListItem::getNumOffers)
                 .comparator(Comparator.comparing(MarketListItem::getNumOffersAsInteger))
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<MarketListItem>()
-                .title(Res.get("bisqEasy.createOffer.market.columns.numPeers"))
+                .title(Res.get("bisqEasy.tradeWizard.market.columns.numPeers"))
                 .minWidth(60)
                 .valueSupplier(MarketListItem::getNumUsers)
                 .comparator(Comparator.comparing(MarketListItem::getNumUsersAsInteger))

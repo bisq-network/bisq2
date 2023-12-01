@@ -85,7 +85,7 @@ public class TradeWizardAmountController implements Controller {
         model = new TradeWizardAmountModel();
 
         minAmountComponent = new AmountComponent(serviceProvider, true);
-        minAmountComponent.setDescription(Res.get("bisqEasy.createOffer.amount.description.minAmount"));
+        minAmountComponent.setDescription(Res.get("bisqEasy.tradeWizard.amount.description.minAmount"));
         maxOrFixAmountComponent = new AmountComponent(serviceProvider, true);
 
         view = new TradeWizardAmountView(model, this,
@@ -166,8 +166,8 @@ public class TradeWizardAmountController implements Controller {
     @Override
     public void onActivate() {
         model.setHeadline(model.getDirection().isBuy() ?
-                Res.get("bisqEasy.createOffer.amount.headline.buyer") :
-                Res.get("bisqEasy.createOffer.amount.headline.seller"));
+                Res.get("bisqEasy.tradeWizard.amount.headline.buyer") :
+                Res.get("bisqEasy.tradeWizard.amount.headline.seller"));
 
         Boolean cookieValue = settingsService.getCookie().asBoolean(CookieKey.CREATE_BISQ_EASY_OFFER_IS_MIN_AMOUNT_ENABLED).orElse(false);
         model.getIsMinAmountEnabled().set(cookieValue && model.getShowRangeAmounts().get());
@@ -215,12 +215,12 @@ public class TradeWizardAmountController implements Controller {
 
         isMinAmountEnabledPin = EasyBind.subscribe(model.getIsMinAmountEnabled(), isMinAmountEnabled -> {
             model.getToggleButtonText().set(isMinAmountEnabled ?
-                    Res.get("bisqEasy.createOffer.amount.removeMinAmountOption") :
-                    Res.get("bisqEasy.createOffer.amount.addMinAmountOption"));
+                    Res.get("bisqEasy.tradeWizard.amount.removeMinAmountOption") :
+                    Res.get("bisqEasy.tradeWizard.amount.addMinAmountOption"));
 
             maxOrFixAmountComponent.setDescription(isMinAmountEnabled ?
-                    Res.get("bisqEasy.createOffer.amount.description.maxAmount") :
-                    Res.get("bisqEasy.createOffer.amount.description.fixAmount"));
+                    Res.get("bisqEasy.tradeWizard.amount.description.maxAmount") :
+                    Res.get("bisqEasy.tradeWizard.amount.description.fixAmount"));
 
             applyAmountSpec();
         });

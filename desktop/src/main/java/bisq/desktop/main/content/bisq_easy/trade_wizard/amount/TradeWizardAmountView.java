@@ -47,7 +47,7 @@ public class TradeWizardAmountView extends View<VBox, TradeWizardAmountModel, Tr
         HBox amountBox = new HBox(30, minAmountRoot, maxOrFixAmountComponent.getView().getRoot());
         amountBox.setAlignment(Pos.CENTER);
 
-        toggleButton = new Button(Res.get("bisqEasy.createOffer.amount.addMinAmountOption"));
+        toggleButton = new Button(Res.get("bisqEasy.tradeWizard.amount.addMinAmountOption"));
         toggleButton.getStyleClass().add("outlined-button");
         toggleButton.setMinWidth(AmountComponent.View.AMOUNT_BOX_WIDTH);
 

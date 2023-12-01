@@ -61,7 +61,7 @@ public class TradeWizardPaymentMethodController implements Controller {
 
     public boolean validateSelectedPaymentMethods() {
         if(model.getSelectedFiatPaymentMethods().isEmpty()) {
-            new Popup().invalid(Res.get("bisqEasy.createOffer.paymentMethod.warn.noPaymentMethodSelected"))
+            new Popup().invalid(Res.get("bisqEasy.tradeWizard.paymentMethod.warn.noPaymentMethodSelected"))
                     .owner((Region) view.getRoot().getParent().getParent())
                     .show();
             return false;
@@ -108,8 +108,8 @@ public class TradeWizardPaymentMethodController implements Controller {
     @Override
     public void onActivate() {
         model.setHeadline(model.getDirection().isBuy() ?
-                Res.get("bisqEasy.createOffer.paymentMethod.headline.buyer", model.getMarket().get().getQuoteCurrencyCode()) :
-                Res.get("bisqEasy.createOffer.paymentMethod.headline.seller", model.getMarket().get().getQuoteCurrencyCode()));
+                Res.get("bisqEasy.tradeWizard.paymentMethod.headline.buyer", model.getMarket().get().getQuoteCurrencyCode()) :
+                Res.get("bisqEasy.tradeWizard.paymentMethod.headline.seller", model.getMarket().get().getQuoteCurrencyCode()));
         model.getCustomFiatPaymentMethodName().set("");
         model.getSortedFiatPaymentMethods().setComparator(Comparator.comparing(PaymentMethod::getShortDisplayString));
         settingsService.getCookie().asString(CookieKey.CREATE_OFFER_METHODS, getCookieSubKey())
@@ -139,7 +139,7 @@ public class TradeWizardPaymentMethodController implements Controller {
     boolean onTogglePaymentMethod(FiatPaymentMethod fiatPaymentMethod, boolean isSelected) {
         if (isSelected) {
             if (model.getSelectedFiatPaymentMethods().size() >= 4) {
-                new Popup().warning(Res.get("bisqEasy.createOffer.paymentMethod.warn.maxMethodsReached")).show();
+                new Popup().warning(Res.get("bisqEasy.tradeWizard.paymentMethod.warn.maxMethodsReached")).show();
                 return false;
             }
             maybeAddFiatPaymentMethod(fiatPaymentMethod);
@@ -156,7 +156,7 @@ public class TradeWizardPaymentMethodController implements Controller {
 
     private boolean doAddCustomMethod() {
         if (model.getSelectedFiatPaymentMethods().size() >= 4) {
-            new Popup().warning(Res.get("bisqEasy.createOffer.paymentMethod.warn.maxMethodsReached")).show();
+            new Popup().warning(Res.get("bisqEasy.tradeWizard.paymentMethod.warn.maxMethodsReached")).show();
             return false;
         }
         String customName = model.getCustomFiatPaymentMethodName().get();
@@ -164,7 +164,7 @@ public class TradeWizardPaymentMethodController implements Controller {
             return false;
         }
         if (customName.length() > 20) {
-            new Popup().warning(Res.get("bisqEasy.createOffer.paymentMethod.warn.tooLong")).show();
+            new Popup().warning(Res.get("bisqEasy.tradeWizard.paymentMethod.warn.tooLong")).show();
             return false;
         }
         maybeAddCustomFiatPaymentMethod(FiatPaymentMethod.fromCustomName(customName));
@@ -186,7 +186,7 @@ public class TradeWizardPaymentMethodController implements Controller {
             if (!model.getAddedCustomFiatPaymentMethods().contains(fiatPaymentMethod)) {
                 String customName = fiatPaymentMethod.getName().toUpperCase().strip();
                 if (isPredefinedPaymentMethodsContainName(customName)) {
-                    new Popup().warning(Res.get("bisqEasy.createOffer.paymentMethod.warn.customNameMatchesPredefinedMethod")).show();
+                    new Popup().warning(Res.get("bisqEasy.tradeWizard.paymentMethod.warn.customNameMatchesPredefinedMethod")).show();
                     model.getCustomFiatPaymentMethodName().set("");
                     return;
                 }

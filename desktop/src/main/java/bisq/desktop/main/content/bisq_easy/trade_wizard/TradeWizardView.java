@@ -199,15 +199,15 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
     }
 
     private Triple<HBox, Button, List<Label>> getProgressItems() {
-        Label direction = createAndGetProgressLabel(Res.get("bisqEasy.createOffer.progress.direction"));
-        Label market = createAndGetProgressLabel(Res.get("bisqEasy.createOffer.progress.market"));
-        priceProgressItemLabel = createAndGetProgressLabel(Res.get("bisqEasy.createOffer.progress.price"));
+        Label direction = createAndGetProgressLabel(Res.get("bisqEasy.tradeWizard.progress.direction"));
+        Label market = createAndGetProgressLabel(Res.get("bisqEasy.tradeWizard.progress.market"));
+        priceProgressItemLabel = createAndGetProgressLabel(Res.get("bisqEasy.tradeWizard.progress.price"));
         priceProgressItemLine = getHLine();
-        Label amount = createAndGetProgressLabel(Res.get("bisqEasy.createOffer.progress.amount"));
-        Label method = createAndGetProgressLabel(Res.get("bisqEasy.createOffer.progress.method"));
+        Label amount = createAndGetProgressLabel(Res.get("bisqEasy.tradeWizard.progress.amount"));
+        Label method = createAndGetProgressLabel(Res.get("bisqEasy.tradeWizard.progress.method"));
         takeOfferProgressItem = createAndGetProgressLabel(Res.get("bisqEasy.tradeWizard.progress.takeOffer"));
         takeOfferProgressLine = getHLine();
-        Label review = createAndGetProgressLabel(Res.get("bisqEasy.createOffer.progress.review"));
+        Label review = createAndGetProgressLabel(Res.get("bisqEasy.tradeWizard.progress.review"));
 
         Button closeButton = BisqIconButton.createIconButton("close");
 

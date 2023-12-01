@@ -53,7 +53,7 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         Label headline = new Label(Res.get("bisqEasy.price.headline"));
         headline.getStyleClass().add("bisq-text-headline-2");
 
-        Label subtitleLabel = new Label(Res.get("bisqEasy.createOffer.price.subtitle"));
+        Label subtitleLabel = new Label(Res.get("bisqEasy.tradeWizard.price.subtitle"));
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
         subtitleLabel.setAlignment(Pos.CENTER);
         subtitleLabel.getStyleClass().add("bisq-text-3");
