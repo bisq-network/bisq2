@@ -42,7 +42,6 @@ public class OsxNotificationSender implements NotificationSender {
 
     @Override
     public void send(String title, String message) {
-        // TODO Check with binary build if Bisq icon and Bisq as app name is shown
         ID notification = Foundation.invoke(Foundation.getObjcClass("NSUserNotification"), "new");
         Foundation.invoke(notification, "setTitle:",
                 Foundation.nsString(title));

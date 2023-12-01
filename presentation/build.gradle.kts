@@ -6,6 +6,7 @@ plugins {
 dependencies {
     implementation(project(":persistence"))
     implementation(project(":i18n"))
+    implementation(project(":settings"))
 
     implementation(libs.google.guava)
     implementation("net.java.dev.jna:jna:5.13.0")

@@ -24,18 +24,26 @@ import bisq.common.util.OsUtils;
 import bisq.presentation.notifications.linux.LinuxNotificationSender;
 import bisq.presentation.notifications.osx.OsxNotificationSender;
 import bisq.presentation.notifications.other.AwtNotificationSender;
+import bisq.settings.SettingsService;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class SendNotificationService implements Service {
+    private final Path baseDir;
+    private final SettingsService settingsService;
     private NotificationSender sender;
+    private boolean isInitialize;
 
-    public SendNotificationService() {
+    public SendNotificationService(Path baseDir, SettingsService settingsService) {
+        this.baseDir = baseDir;
+        this.settingsService = settingsService;
     }
 
     public CompletableFuture<Boolean> initialize() {
+        isInitialize = true;
         log.info("initialize");
         return CompletableFuture.completedFuture(true);
     }
@@ -47,14 +55,16 @@ public class SendNotificationService implements Service {
 
 
     public void send(Notification notification) {
-        getSender().send(notification.getTitle(), notification.getMessage());
+        if (isInitialize) {
+            getSender().send(notification.getTitle(), notification.getMessage());
+        }
     }
 
     private NotificationSender getSender() {
         if (sender == null) {
             if (OsUtils.getOperatingSystem() == OperatingSystem.LINUX &&
                     LinuxNotificationSender.isSupported()) {
-                sender = new LinuxNotificationSender();
+                sender = new LinuxNotificationSender(baseDir, settingsService);
             } else if (OsUtils.getOperatingSystem() == OperatingSystem.MAC &&
                     OsxNotificationSender.isSupported()) {
                 sender = new OsxNotificationSender();

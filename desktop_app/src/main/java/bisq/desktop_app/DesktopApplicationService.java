@@ -132,7 +132,7 @@ public class DesktopApplicationService extends ApplicationService {
 
         settingsService = new SettingsService(persistenceService);
 
-        sendNotificationService = new SendNotificationService();
+        sendNotificationService = new SendNotificationService(config.getBaseDir(), settingsService);
 
         offerService = new OfferService(networkService, identityService, persistenceService);
 
@@ -228,9 +228,9 @@ public class DesktopApplicationService extends ApplicationService {
                 .thenCompose(result -> contractService.initialize())
                 .thenCompose(result -> userService.initialize())
                 .thenCompose(result -> settingsService.initialize())
-                .thenCompose(result -> sendNotificationService.initialize())
                 .thenCompose(result -> offerService.initialize())
                 .thenCompose(result -> chatService.initialize())
+                .thenCompose(result -> sendNotificationService.initialize()) // We initialize after chatService to avoid flooding the notification center
                 .thenCompose(result -> supportService.initialize())
                 .thenCompose(result -> tradeService.initialize())
                 .thenCompose(result -> updaterService.initialize())

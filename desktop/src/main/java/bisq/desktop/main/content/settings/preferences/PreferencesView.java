@@ -33,19 +33,8 @@ import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.VPos;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.ListView;
-import javafx.scene.control.RadioButton;
-import javafx.scene.control.Toggle;
-import javafx.scene.control.ToggleGroup;
-import javafx.scene.layout.ColumnConstraints;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.VBox;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 import javafx.util.converter.NumberStringConverter;
@@ -60,7 +49,8 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
             new NumberValidator(Res.get("settings.preferences.trade.requiredTotalReputationScore.invalid"));
 
     private final Button resetDontShowAgain, addLanguageButton;
-    private final Switch useAnimations, preventStandbyMode, offersOnlySwitch, closeMyOfferWhenTaken, notifyForPreRelease;
+    private final Switch useAnimations, preventStandbyMode, offersOnlySwitch, closeMyOfferWhenTaken, notifyForPreRelease,
+            useTransientNotifications;
     private final ToggleGroup notificationsToggleGroup = new ToggleGroup();
     private final RadioButton all, mention, off;
     private final ChangeListener<Toggle> notificationsToggleListener;
@@ -163,10 +153,15 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         off = new RadioButton(Res.get("settings.preferences.notification.option.off"));
         off.setToggleGroup(notificationsToggleGroup);
         off.setUserData(ChatNotificationType.OFF);
+
         notifyForPreRelease = new Switch(Res.get("settings.preferences.notification.notifyForPreRelease"));
 
+        useTransientNotifications = new Switch(Res.get("settings.preferences.notification.useTransientNotifications"));
+
         VBox.setMargin(notifyForPreRelease, new Insets(10, 0, 0, 0));
-        VBox notificationsVBox = new VBox(10, all, mention, off, notifyForPreRelease);
+        VBox notificationsVBox = new VBox(10, all, mention, off,
+                notifyForPreRelease,
+                useTransientNotifications);
 
 
         // Display
@@ -216,6 +211,9 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         selectedNotificationTypePin = EasyBind.subscribe(model.getChatNotificationType(), selected -> applyChatNotificationType());
 
         notifyForPreRelease.selectedProperty().bindBidirectional(model.getNotifyForPreRelease());
+        useTransientNotifications.selectedProperty().bindBidirectional(model.getUseTransientNotifications());
+        useTransientNotifications.setVisible(model.isUseTransientNotificationsVisible());
+        useTransientNotifications.setManaged(model.isUseTransientNotificationsVisible());
         useAnimations.selectedProperty().bindBidirectional(model.getUseAnimations());
         preventStandbyMode.selectedProperty().bindBidirectional(model.getPreventStandbyMode());
         offersOnlySwitch.selectedProperty().bindBidirectional(model.getOfferOnly());
@@ -245,7 +243,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
 
         resetDontShowAgain.setOnAction(e -> controller.onResetDontShowAgain());
         addLanguageButton.setOnAction(e -> {
-            if(supportedLanguagesComboBox.validate()) {
+            if (supportedLanguagesComboBox.validate()) {
                 controller.onAddSupportedLanguage();
             }
         });
@@ -254,6 +252,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
     @Override
     protected void onViewDetached() {
         notifyForPreRelease.selectedProperty().unbindBidirectional(model.getNotifyForPreRelease());
+        useTransientNotifications.selectedProperty().unbindBidirectional(model.getUseTransientNotifications());
         useAnimations.selectedProperty().unbindBidirectional(model.getUseAnimations());
         preventStandbyMode.selectedProperty().unbindBidirectional(model.getPreventStandbyMode());
         offersOnlySwitch.selectedProperty().unbindBidirectional(model.getOfferOnly());

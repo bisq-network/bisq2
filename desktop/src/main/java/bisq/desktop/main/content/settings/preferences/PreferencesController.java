@@ -19,6 +19,7 @@ package bisq.desktop.main.content.settings.preferences;
 
 import bisq.common.locale.LanguageRepository;
 import bisq.common.observable.Pin;
+import bisq.common.util.OsUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
@@ -41,7 +42,7 @@ public class PreferencesController implements Controller {
     private final PreferencesModel model;
     private Pin chatNotificationTypePin, useAnimationsPin, getPreventStandbyModePin, offerOnlyPin,
             closeMyOfferWhenTakenPin, getSupportedLanguageCodesPin, requiredTotalReputationScorePin;
-    private Subscription notifyForPreReleasePin;
+    private Subscription notifyForPreReleasePin, getUseTransientNotificationsPin;
 
     public PreferencesController(ServiceProvider serviceProvider) {
         settingsService = serviceProvider.getSettingsService();
@@ -72,7 +73,15 @@ public class PreferencesController implements Controller {
 
         model.getNotifyForPreRelease().set(settingsService.getCookie().asBoolean(CookieKey.NOTIFY_FOR_PRE_RELEASE).orElse(false));
         notifyForPreReleasePin = EasyBind.subscribe(model.getNotifyForPreRelease(),
-                notifyForPreRelease -> settingsService.setCookie(CookieKey.NOTIFY_FOR_PRE_RELEASE, notifyForPreRelease));
+                value -> settingsService.setCookie(CookieKey.NOTIFY_FOR_PRE_RELEASE, value));
+
+        // Currently we support transient notifications only for Linux
+        if (OsUtils.isLinux()) {
+            model.setUseTransientNotificationsVisible(true);
+            model.getUseTransientNotifications().set(settingsService.getCookie().asBoolean(CookieKey.USE_TRANSIENT_NOTIFICATIONS).orElse(true));
+            getUseTransientNotificationsPin = EasyBind.subscribe(model.getUseTransientNotifications(),
+                    value -> settingsService.setCookie(CookieKey.USE_TRANSIENT_NOTIFICATIONS, value));
+        }
 
         model.getSupportedLanguageCodeFilteredList().setPredicate(e -> !model.getSelectedSupportedLanguageCodes().contains(e));
     }
@@ -87,6 +96,9 @@ public class PreferencesController implements Controller {
         getPreventStandbyModePin.unbind();
         getSupportedLanguageCodesPin.unbind();
         notifyForPreReleasePin.unsubscribe();
+        if (getUseTransientNotificationsPin != null) {
+            getUseTransientNotificationsPin.unsubscribe();
+        }
     }
 
     void onSelectLanguage(String languageCode) {

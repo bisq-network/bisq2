@@ -134,7 +134,7 @@ public class RestApiApplicationService extends ApplicationService {
 
         settingsService = new SettingsService(persistenceService);
 
-        sendNotificationService = new SendNotificationService();
+        sendNotificationService = new SendNotificationService(config.getBaseDir(), settingsService);
 
         offerService = new OfferService(networkService, identityService, persistenceService);
 
