@@ -43,6 +43,7 @@ public class TradeStateModel implements Model {
     private final StringProperty interruptTradeButtonText = new SimpleStringProperty();
     private final BooleanProperty interruptTradeButtonVisible = new SimpleBooleanProperty(true);
     private final BooleanProperty tradeInterrupted = new SimpleBooleanProperty();
+    private final BooleanProperty isInMediation = new SimpleBooleanProperty();
     private final BooleanProperty showReportToMediatorButton = new SimpleBooleanProperty();
     private final StringProperty tradeInterruptedInfo = new SimpleStringProperty();
 
