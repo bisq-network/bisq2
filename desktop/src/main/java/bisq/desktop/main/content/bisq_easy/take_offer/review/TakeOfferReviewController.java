@@ -23,6 +23,7 @@ import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatChannelSelectionService;
 import bisq.chat.ChatService;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
@@ -76,6 +77,7 @@ public class TakeOfferReviewController implements Controller {
     private final BisqEasyTradeService bisqEasyTradeService;
     private final BannedUserService bannedUserService;
     private final ReviewDataDisplay reviewDataDisplay;
+    private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
 
     public TakeOfferReviewController(ServiceProvider serviceProvider,
                                      Consumer<Boolean> mainButtonsVisibleHandler,
@@ -84,6 +86,7 @@ public class TakeOfferReviewController implements Controller {
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         chatService = serviceProvider.getChatService();
         this.closeAndNavigateToHandler = closeAndNavigateToHandler;
+        bisqEasyOfferbookChannelService = chatService.getBisqEasyOfferbookChannelService();
         bisqEasyOpenTradeChannelService = chatService.getBisqEasyOpenTradeChannelService();
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
@@ -192,9 +195,12 @@ public class TakeOfferReviewController implements Controller {
             String tradeId = bisqEasyTrade.getId();
             bisqEasyOpenTradeChannelService.sendTakeOfferMessage(tradeId, bisqEasyOffer, contract.getMediator())
                     .thenAccept(result -> UIThread.run(() -> {
+
+                        // In case the user has switched to another market we want to select that market in the offer book
                         ChatChannelSelectionService chatChannelSelectionService = chatService.getChatChannelSelectionService(ChatChannelDomain.BISQ_EASY_OFFERBOOK);
-                        bisqEasyOpenTradeChannelService.findChannelByTradeId(tradeId)
+                        bisqEasyOfferbookChannelService.findChannel(contract.getOffer().getMarket())
                                 .ifPresent(chatChannelSelectionService::selectChannel);
+
                         model.getShowTakeOfferSuccess().set(true);
                         mainButtonsVisibleHandler.accept(false);
                     }));
