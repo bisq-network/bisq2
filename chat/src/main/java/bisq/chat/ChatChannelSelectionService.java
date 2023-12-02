@@ -64,7 +64,7 @@ public abstract class ChatChannelSelectionService implements PersistenceClient<C
         persistableStore.setSelectedChannelId(chatChannel != null ? chatChannel.getId() : null);
         persist();
 
-        applySelectedChannel();
+        selectedChannel.set(chatChannel);
     }
 
     protected void applySelectedChannel() {

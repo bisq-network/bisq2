@@ -49,12 +49,21 @@ public class BisqEasyOfferbookSelectionService extends ChatChannelSelectionServi
     public void selectChannel(ChatChannel<? extends ChatMessage> chatChannel) {
         if (chatChannel instanceof BisqEasyOfferbookChannel) {
             channelService.removeExpiredMessages(chatChannel);
+            boolean hasChanged;
             if (selectedChannel.get() != null) {
-                channelService.leaveChannel(selectedChannel.get().getId());
+                hasChanged = !selectedChannel.get().getId().equals(chatChannel.getId());
+                if (hasChanged) {
+                    channelService.leaveChannel(selectedChannel.get().getId());
+                }
+            } else {
+                hasChanged = true;
             }
-            channelService.joinChannel((BisqEasyOfferbookChannel) chatChannel);
+            if (hasChanged) {
+                channelService.joinChannel((BisqEasyOfferbookChannel) chatChannel);
+            }
+
+            super.selectChannel(chatChannel);
         }
-        super.selectChannel(chatChannel);
     }
 
     @Override
