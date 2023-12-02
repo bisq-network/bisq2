@@ -53,7 +53,10 @@ public class CommonChannelSelectionService extends ChatChannelSelectionService {
     }
 
     public CompletableFuture<Boolean> initialize() {
-        publicChatChannelService.getDefaultChannel().ifPresent(this::selectChannel);
+        if (selectedChannel.get() == null) {
+            publicChatChannelService.getDefaultChannel().ifPresent(this::selectChannel);
+        }
+
         return super.initialize();
     }
 

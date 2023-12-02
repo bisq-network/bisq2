@@ -41,7 +41,10 @@ public class BisqEasyOfferbookSelectionService extends ChatChannelSelectionServi
     }
 
     public CompletableFuture<Boolean> initialize() {
-        channelService.getDefaultChannel().ifPresent(this::selectChannel);
+        if (selectedChannel.get() == null) {
+            channelService.getDefaultChannel().ifPresent(this::selectChannel);
+        }
+
         return super.initialize();
     }
 
