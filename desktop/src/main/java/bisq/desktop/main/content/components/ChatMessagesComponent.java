@@ -26,6 +26,7 @@ import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.common.CommonPublicChatChannel;
 import bisq.chat.priv.PrivateChatChannel;
+import bisq.chat.priv.PrivateChatChannelService;
 import bisq.chat.pub.PublicChatChannel;
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.common.observable.Pin;
@@ -347,12 +348,14 @@ public class ChatMessagesComponent {
             if (!(chatChannel instanceof PrivateChatChannel))
                 return;
 
-            chatService.findChatChannelService(chatChannel).ifPresent(
-                    service -> {
+            chatService.findChatChannelService(chatChannel)
+                    .filter(service -> service instanceof PrivateChatChannelService)
+                    .map(service -> (PrivateChatChannelService<?, ?, ?>) service).stream()
+                    .findAny()
+                    .ifPresent(service -> {
                         service.leaveChannel(chatChannel.getId());
                         chatService.getChatChannelSelectionServices().get(model.getChatChannelDomain()).maybeSelectFirstChannel();
-                    }
-            );
+                    });
         }
 
         private void onSendMessage(String text) {

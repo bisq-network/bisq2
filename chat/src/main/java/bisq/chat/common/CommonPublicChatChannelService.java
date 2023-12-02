@@ -91,14 +91,6 @@ public final class CommonPublicChatChannelService extends PublicChatChannelServi
         return persistableStore.getChannels();
     }
 
-    @Override
-    public void leaveChannel(CommonPublicChatChannel channel) {
-        // Currently, we do not support leaving a CommonPublicChatChannel.
-        // We could support it in futures similar as in BisqEasyPublicChatChannelService.
-        // Would require a UI element to add channels again.
-        throw new RuntimeException("Leave channel in CommonPublicChatChannelService is not supported");
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Protected 

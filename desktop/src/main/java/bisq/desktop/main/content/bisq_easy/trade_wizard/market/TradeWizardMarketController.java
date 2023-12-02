@@ -83,7 +83,6 @@ public class TradeWizardMarketController implements Controller {
             Optional.ofNullable(bisqEasyOfferbookSelectionService.getSelectedChannel().get())
                     .filter(channel -> channel instanceof BisqEasyOfferbookChannel)
                     .map(channel -> (BisqEasyOfferbookChannel) channel)
-                    .or(() -> bisqEasyOfferbookChannelService.getVisibleChannels().stream().findFirst())
                     .map(BisqEasyOfferbookChannel::getMarket)
                     .ifPresent(market -> model.getSelectedMarket().set(market));
         }

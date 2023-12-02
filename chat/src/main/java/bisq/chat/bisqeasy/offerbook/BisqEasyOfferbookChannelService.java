@@ -24,7 +24,6 @@ import bisq.chat.pub.PublicChatChannelService;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.common.observable.collection.ObservableArray;
-import bisq.common.observable.collection.ObservableSet;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
@@ -36,8 +35,10 @@ import bisq.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 public class BisqEasyOfferbookChannelService extends PublicChatChannelService<BisqEasyOfferbookMessage, BisqEasyOfferbookChannel, BisqEasyOfferbookChannelStore> {
@@ -51,37 +52,6 @@ public class BisqEasyOfferbookChannelService extends PublicChatChannelService<Bi
                                            UserService userService) {
         super(networkService, userService, ChatChannelDomain.BISQ_EASY_OFFERBOOK);
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
-    }
-
-    @Override
-    public void onPersistedApplied(BisqEasyOfferbookChannelStore persisted) {
-    }
-
-    //todo not useful anymore. consider to remove it
-    public void joinChannel(BisqEasyOfferbookChannel channel) {
-        getVisibleChannelIds().add(channel.getId());
-        persist();
-    }
-
-    @Override
-    public void leaveChannel(BisqEasyOfferbookChannel channel) {
-        getVisibleChannelIds().remove(channel.getId());
-        persist();
-    }
-
-    //todo not useful anymore. consider to remove it
-    public boolean isVisible(BisqEasyOfferbookChannel channel) {
-        return getVisibleChannelIds().contains(channel.getId());
-    }
-
-    //todo not useful anymore. consider to remove it
-    public ObservableSet<String> getVisibleChannelIds() {
-        return persistableStore.getVisibleChannelIds();
-    }
-
-    //todo not useful anymore. consider to remove it
-    public Set<BisqEasyOfferbookChannel> getVisibleChannels() {
-        return getChannels().stream().filter(channel -> getVisibleChannelIds().contains(channel.getId())).collect(Collectors.toSet());
     }
 
 
@@ -123,7 +93,6 @@ public class BisqEasyOfferbookChannelService extends PublicChatChannelService<Bi
     public Optional<BisqEasyOfferbookChannel> getDefaultChannel() {
         Market defaultMarket = MarketRepository.getDefault();
         return getChannels().stream()
-                .filter(this::isVisible)
                 .filter(channel -> defaultMarket.equals(channel.getMarket()))
                 .findAny()
                 .or(super::getDefaultChannel);
@@ -173,7 +142,6 @@ public class BisqEasyOfferbookChannelService extends PublicChatChannelService<Bi
     protected void maybeAddDefaultChannels() {
         if (getChannels().isEmpty()) {
             BisqEasyOfferbookChannel defaultChannel = new BisqEasyOfferbookChannel(MarketRepository.getDefault());
-            joinChannel(defaultChannel);
             maybeAddPublicTradeChannel(defaultChannel);
 
             List<Market> allMarkets = MarketRepository.getAllFiatMarkets();
