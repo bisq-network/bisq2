@@ -65,13 +65,16 @@ public class OpenTradesUtils {
         }
     }
 
-    public static void openDispute(BisqEasyOpenTradeChannel channel, BisqEasyContract contract, MediationRequestService mediationRequestService) {
+    public static void openDispute(BisqEasyOpenTradeChannel channel,
+                                   BisqEasyContract contract,
+                                   MediationRequestService mediationRequestService) {
         Optional<UserProfile> mediator = channel.getMediator();
         if (mediator.isPresent()) {
             new Popup().headline(Res.get("bisqEasy.mediation.request.confirm.headline"))
                     .information(Res.get("bisqEasy.mediation.request.confirm.msg"))
                     .actionButtonText(Res.get("bisqEasy.mediation.request.confirm.openMediation"))
                     .onAction(() -> {
+                        //todo
                         //String systemMessage = Res.get("bisqEasy.mediation.requester.systemMessage");
                         // chatService.getBisqEasyPrivateTradeChatChannelService().sendSystemMessage(systemMessage, channel);
 
