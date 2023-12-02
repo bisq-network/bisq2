@@ -199,7 +199,7 @@ public class TradeStateController implements Controller {
     }
 
     void onReportToMediator() {
-        OpenTradesUtils.openDispute(model.getChannel().get(),
+        OpenTradesUtils.reportToMediator(model.getChannel().get(),
                 model.getBisqEasyTrade().get().getContract(),
                 mediationRequestService);
     }

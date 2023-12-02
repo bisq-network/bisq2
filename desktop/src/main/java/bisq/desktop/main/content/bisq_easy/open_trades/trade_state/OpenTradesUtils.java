@@ -65,9 +65,19 @@ public class OpenTradesUtils {
         }
     }
 
-    public static void openDispute(BisqEasyOpenTradeChannel channel,
-                                   BisqEasyContract contract,
-                                   MediationRequestService mediationRequestService) {
+    public static void reportToMediator(BisqEasyOpenTradeChannel channel,
+                                        BisqEasyContract contract,
+                                        MediationRequestService mediationRequestService) {
+        openDispute(channel, contract, mediationRequestService);
+    }
+
+    public static void requestMediation(BisqEasyOpenTradeChannel channel,
+                                        BisqEasyContract contract,
+                                        MediationRequestService mediationRequestService) {
+        openDispute(channel, contract, mediationRequestService);
+    }
+
+    private static void openDispute(BisqEasyOpenTradeChannel channel, BisqEasyContract contract, MediationRequestService mediationRequestService) {
         Optional<UserProfile> mediator = channel.getMediator();
         if (mediator.isPresent()) {
             new Popup().headline(Res.get("bisqEasy.mediation.request.confirm.headline"))
@@ -90,4 +100,5 @@ public class OpenTradesUtils {
             new Popup().warning(Res.get("bisqEasy.mediation.request.feedback.noMediatorAvailable")).show();
         }
     }
+
 }

@@ -599,12 +599,12 @@
     -fx-image: url("/images/icons/icon-wallet.png");
 }
 
-#icon-offer {
-    -fx-image: url("/images/icons/icon-offer.png");
+#icon-report {
+    -fx-image: url("/images/icons/icon-report.png");
 }
 
-#icon-offer-white {
-    -fx-image: url("/images/icons/icon-offer-white.png");
+#icon-report-white {
+    -fx-image: url("/images/icons/icon-report-white.png");
 }
 
 #star-green {

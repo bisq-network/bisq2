@@ -64,7 +64,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 ChatNotificationType.MENTION,
                 false,
                 new HashSet<>(),
-                false,
+                true,
                 LanguageRepository.getDefaultLanguage(),
                 true,
                 Set.of(LanguageRepository.getDefaultLanguage()));
