@@ -39,7 +39,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class BondedReputationService extends SourceReputationService<AuthorizedBondedReputationData> {
     public static final long WEIGHT = 100;
     public static final double MAX_AGE = 100;
-    public static final long MAX_DAYS_AGE_SCORE = 365;
+    public static final double MAX_DAYS_AGE_SCORE = 1000;
+    public static final long MIN_LOCK_TIME = 10_000;
+    public static final long MAX_LOCK_TIME = 100_000;
 
     public BondedReputationService(NetworkService networkService,
                                    UserIdentityService userIdentityService,
@@ -72,21 +74,22 @@ public class BondedReputationService extends SourceReputationService<AuthorizedB
     }
 
     public static long doCalculateScore(long amount, long lockTime, long ageInDays) {
-        long score = calculateScore(amount, ageInDays, lockTime);
-        long ageScore = calculateAgeScore(amount, ageInDays);
-        return score + ageScore;
+        long score = calculateScore(amount, lockTime);
+        double decayFactor = Math.max(0, MAX_AGE - ageInDays) / MAX_AGE;
+        long decayedScore = MathUtils.roundDoubleToLong(score * decayFactor);
+        long ageScore = calculateAgeScore(score, ageInDays);
+        return decayedScore + ageScore;
     }
 
-    private static long calculateScore(long amount, long ageInDays, long lockTime) {
-        double decayFactor = Math.max(0, MAX_AGE - ageInDays) / MAX_AGE;
-        checkArgument(lockTime >= 10_000);
-        checkArgument(lockTime <= 100_000);
-        return MathUtils.roundDoubleToLong(amount / 100d * lockTime / 10000d * decayFactor * WEIGHT);
+    private static long calculateScore(long amount, long lockTime) {
+        checkArgument(lockTime >= MIN_LOCK_TIME);
+        lockTime = Math.min(MAX_LOCK_TIME, lockTime);
+        return MathUtils.roundDoubleToLong(amount / 100d * lockTime / 10000d * WEIGHT);
     }
 
     private static long calculateAgeScore(long score, long ageInDays) {
-        long boundedAgeInDays = Math.min(MAX_DAYS_AGE_SCORE, ageInDays);
-        return MathUtils.roundDoubleToLong(score * boundedAgeInDays / 100d);
+        double boundedAgeInDays = Math.min(MAX_DAYS_AGE_SCORE, ageInDays);
+        return MathUtils.roundDoubleToLong(score * boundedAgeInDays / MAX_DAYS_AGE_SCORE);
     }
     
   /*  @Override

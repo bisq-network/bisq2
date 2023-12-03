@@ -110,7 +110,7 @@ public class AccountAgeScoreSimulation {
             Label simHeadline = new Label(Res.get("user.reputation.sim.headline"));
             simHeadline.getStyleClass().addAll("bisq-text-1");
             ageField = getInputField("user.reputation.sim.age");
-            simAgeSlider = new AgeSlider(0, 400, 0);
+            simAgeSlider = new AgeSlider(0, 1000, 0);
             simScore = getField(Res.get("user.reputation.sim.score"));
             VBox.setMargin(simAgeSlider.getView().getRoot(), new Insets(15, 0, 0, 0));
             root.getChildren().addAll(simHeadline,
