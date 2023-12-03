@@ -48,7 +48,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
     private static final ValidatorBase REPUTATION_SCORE_VALIDATOR =
             new NumberValidator(Res.get("settings.preferences.trade.requiredTotalReputationScore.invalid"));
 
-    private final Button resetDontShowAgain, addLanguageButton;
+    private final Button resetDontShowAgain, clearNotifications, addLanguageButton;
     private final Switch useAnimations, preventStandbyMode, offersOnlySwitch, closeMyOfferWhenTaken, notifyForPreRelease,
             useTransientNotifications;
     private final ToggleGroup notificationsToggleGroup = new ToggleGroup();
@@ -158,10 +158,13 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
 
         useTransientNotifications = new Switch(Res.get("settings.preferences.notification.useTransientNotifications"));
 
+        clearNotifications = new Button(Res.get("settings.preferences.notification.clearNotifications"));
+        clearNotifications.getStyleClass().add("grey-transparent-outlined-button");
+
         VBox.setMargin(notifyForPreRelease, new Insets(10, 0, 0, 0));
+        VBox.setMargin(clearNotifications, new Insets(10, 0, 0, 0));
         VBox notificationsVBox = new VBox(10, all, mention, off,
-                notifyForPreRelease,
-                useTransientNotifications);
+                notifyForPreRelease, useTransientNotifications, clearNotifications);
 
 
         // Display
@@ -242,6 +245,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
                 e -> supportedLanguagesComboBox.getSelectionModel().select(e));
 
         resetDontShowAgain.setOnAction(e -> controller.onResetDontShowAgain());
+        clearNotifications.setOnAction(e -> controller.onClearNotifications());
         addLanguageButton.setOnAction(e -> {
             if (supportedLanguagesComboBox.validate()) {
                 controller.onAddSupportedLanguage();
@@ -265,6 +269,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         getSelectedLSupportedLanguageCodePin.unsubscribe();
 
         resetDontShowAgain.setOnAction(null);
+        clearNotifications.setOnAction(null);
         addLanguageButton.setOnAction(null);
         languageSelection.setOnChangeConfirmed(null);
         supportedLanguagesComboBox.setOnChangeConfirmed(null);
