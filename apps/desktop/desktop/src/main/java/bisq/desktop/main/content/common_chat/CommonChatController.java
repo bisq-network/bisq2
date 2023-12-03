@@ -52,8 +52,8 @@ public class CommonChatController extends ChatController<CommonChatView, CommonC
     private Pin selectedChannelPin, twoPartyPrivateChatChannelsPin;
     private Subscription searchTextPin;
 
-    public CommonChatController(ServiceProvider serviceProvider, ChatChannelDomain chatChannelDomain) {
-        super(serviceProvider, chatChannelDomain, NavigationTarget.NONE);
+    public CommonChatController(ServiceProvider serviceProvider, ChatChannelDomain chatChannelDomain, NavigationTarget navigationTarget) {
+        super(serviceProvider, chatChannelDomain, navigationTarget);
     }
 
     @Override
@@ -91,17 +91,18 @@ public class CommonChatController extends ChatController<CommonChatView, CommonC
             }
         });
 
-        ObservableArray<TwoPartyPrivateChatChannel> twoPartyPrivateChatChannels = chatService.getTwoPartyPrivateChatChannelServices().get(model.getChatChannelDomain()).getChannels();
-        twoPartyPrivateChatChannelsPin = twoPartyPrivateChatChannels.addObserver(() ->
-                model.getIsTwoPartyPrivateChatChannelSelectionVisible().set(!twoPartyPrivateChatChannels.isEmpty()));
+        //ObservableArray<TwoPartyPrivateChatChannel> twoPartyPrivateChatChannels = chatService.getTwoPartyPrivateChatChannelServices().get(model.getChatChannelDomain()).getChannels();
+        //twoPartyPrivateChatChannelsPin = twoPartyPrivateChatChannels.addObserver(() ->
+        //        model.getIsTwoPartyPrivateChatChannelSelectionVisible().set(!twoPartyPrivateChatChannels.isEmpty()));
 
+        selectedChannelChanged(chatChannelSelectionService.getSelectedChannel().get());
         selectedChannelPin = chatChannelSelectionService.getSelectedChannel().addObserver(this::selectedChannelChanged);
     }
 
     @Override
     public void onDeactivate() {
         searchTextPin.unsubscribe();
-        twoPartyPrivateChatChannelsPin.unbind();
+        //twoPartyPrivateChatChannelsPin.unbind();
         selectedChannelPin.unbind();
     }
 
@@ -109,18 +110,13 @@ public class CommonChatController extends ChatController<CommonChatView, CommonC
     protected void selectedChannelChanged(ChatChannel<? extends ChatMessage> chatChannel) {
         super.selectedChannelChanged(chatChannel);
 
-        UIThread.run(() -> {
-            model.getSearchText().set("");
-            if (chatChannel != null) {
-                if (chatChannel instanceof TwoPartyPrivateChatChannel) {
-                    applyPeersIcon((PrivateChatChannel<?>) chatChannel);
-                    publicChatChannelSelection.deSelectChannel();
-                } else {
-                    applyDefaultPublicChannelIcon((PublicChatChannel<?>) chatChannel);
-                    twoPartyPrivateChannelSelectionMenu.deSelectChannel();
-                }
-            }
-        });
+//        UIThread.run(() -> {
+//            model.getSearchText().set("");
+//            if (chatChannel != null) {
+//                applyPeersIcon((PrivateChatChannel<?>) chatChannel);
+//                publicChatChannelSelection.deSelectChannel();
+//            }
+//        });
     }
 
     @Override

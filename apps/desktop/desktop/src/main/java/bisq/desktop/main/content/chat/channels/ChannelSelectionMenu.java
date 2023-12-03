@@ -182,7 +182,7 @@ public abstract class ChannelSelectionMenu<
             model.filteredChannels.setPredicate(item -> true);
         }
 
-        protected void onSelected(ChannelSelectionMenu.View.ChannelItem channelItem) {
+        protected void onSelected(View.ChannelItem channelItem) {
             if (channelItem == null) {
                 chatChannelSelectionService.selectChannel(null);
             } else {
@@ -190,7 +190,7 @@ public abstract class ChannelSelectionMenu<
             }
         }
 
-        protected ChannelSelectionMenu.View.ChannelItem findOrCreateChannelItem(ChatChannel<? extends ChatMessage> chatChannel) {
+        protected View.ChannelItem findOrCreateChannelItem(ChatChannel<? extends ChatMessage> chatChannel) {
             return model.channels.stream()
                     .filter(Objects::nonNull)
                     .filter(item -> item.getChatChannel().getId().equals(chatChannel.getId()))

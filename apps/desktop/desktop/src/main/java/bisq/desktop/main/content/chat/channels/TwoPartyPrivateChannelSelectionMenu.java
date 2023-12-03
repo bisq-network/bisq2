@@ -41,8 +41,8 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.Tooltip;
 import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -130,6 +130,7 @@ public class TwoPartyPrivateChannelSelectionMenu extends PrivateChannelSelection
                 MapChangeListener<String, Long> channelIdWithNumUnseenMessagesMapListener;
 
                 {
+                    setBackground(new Background(new BackgroundFill(Color.PINK, CornerRadii.EMPTY, Insets.EMPTY)));
                     setCursor(Cursor.HAND);
                     setPrefHeight(40);
                     setPadding(new Insets(0, 0, -20, 0));

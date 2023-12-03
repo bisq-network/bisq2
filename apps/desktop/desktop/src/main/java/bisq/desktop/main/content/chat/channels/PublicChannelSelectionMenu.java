@@ -78,7 +78,7 @@ public abstract class PublicChannelSelectionMenu<C extends PublicChatChannel<?>,
             return Res.get("chat.channelSelection.public.headline");
         }
 
-        protected ListCell<ChannelItem> getListCell() {
+        protected ListCell<ChannelSelectionMenu.View.ChannelItem> getListCell() {
             return new ListCell<>() {
                 private Subscription widthSubscription;
                 final Label label = new Label();

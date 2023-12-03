@@ -22,6 +22,11 @@ import bisq.chat.ChatChannelSelectionService;
 import bisq.chat.common.CommonPublicChatChannel;
 import bisq.chat.common.CommonPublicChatChannelService;
 import bisq.desktop.ServiceProvider;
+import javafx.geometry.Insets;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
+import javafx.scene.layout.CornerRadii;
+import javafx.scene.paint.Color;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -82,6 +87,8 @@ public class CommonPublicChannelSelectionMenu extends PublicChannelSelectionMenu
     protected static class View extends PublicChannelSelectionMenu.View<Model, Controller> {
         protected View(Model model, Controller controller) {
             super(model, controller);
+
+            root.setBackground(new Background(new BackgroundFill(Color.AQUA, CornerRadii.EMPTY, Insets.EMPTY)));
         }
     }
 }
