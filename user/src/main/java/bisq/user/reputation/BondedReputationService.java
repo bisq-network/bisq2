@@ -32,6 +32,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Getter
 @Slf4j
 public class BondedReputationService extends SourceReputationService<AuthorizedBondedReputationData> {
@@ -77,6 +79,8 @@ public class BondedReputationService extends SourceReputationService<AuthorizedB
 
     private static long calculateScore(long amount, long ageInDays, long lockTime) {
         double decayFactor = Math.max(0, MAX_AGE - ageInDays) / MAX_AGE;
+        checkArgument(lockTime >= 10_000);
+        checkArgument(lockTime <= 100_000);
         return MathUtils.roundDoubleToLong(amount / 100d * lockTime / 10000d * decayFactor * WEIGHT);
     }
 

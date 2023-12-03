@@ -89,9 +89,10 @@ public class BondScoreSimulation {
         private String calculateSimScore(String amount, String lockTime, Number age) {
             try {
                 // amountAsLong is the smallest unit of BSQ (100 = 1 BSQ)
-                long amountAsLong = MathUtils.roundDoubleToLong(Double.parseDouble(amount) * 100);
+                long amountAsLong = Math.max(0, MathUtils.roundDoubleToLong(Double.parseDouble(amount) * 100));
                 long lockTimeAsLong = Long.parseLong(lockTime);
-                long ageInDays = age.intValue();
+                lockTimeAsLong = Math.min(100_000, Math.max(10_000, lockTimeAsLong));
+                long ageInDays = Math.max(0, age.intValue());
                 long totalScore = BondedReputationService.doCalculateScore(amountAsLong, lockTimeAsLong, ageInDays);
                 return String.valueOf(totalScore);
             } catch (Exception e) {

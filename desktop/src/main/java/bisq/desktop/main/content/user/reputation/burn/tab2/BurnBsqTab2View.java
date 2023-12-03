@@ -82,6 +82,8 @@ public class BurnBsqTab2View extends View<VBox, BurnBsqTab2Model, BurnBsqTab2Con
         backButton.setOnAction(e -> controller.onBack());
         nextButton.setOnAction(e -> controller.onNext());
         learnMore.setOnAction(e -> controller.onLearnMore());
+
+        UIThread.runOnNextRenderFrame(root::requestFocus);
     }
 
     @Override
