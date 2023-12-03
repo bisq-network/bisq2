@@ -43,7 +43,7 @@ message SettingsStore {
   bool useAnimations = 3;
   repeated common.Market markets = 4;
   common.Market selectedMarket = 5;
-  sint64 requiredTotalReputationScore = 6;
+  sint64 minRequiredReputationScore = 6;
   bool offersOnly = 7;
   bool tradeRulesConfirmed = 8;
   ChatNotificationType chatNotificationType = 9;

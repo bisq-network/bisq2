@@ -17,6 +17,7 @@
 
 package bisq.settings;
 
+import bisq.common.application.DevMode;
 import bisq.common.application.Service;
 import bisq.common.currency.Market;
 import bisq.common.locale.LanguageRepository;
@@ -36,6 +37,8 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class SettingsService implements PersistenceClient<SettingsStore>, Service {
+    public final static long DEFAULT_MIN_REQUIRED_REPUTATION_SCORE = 100_000;
+
     @Getter
     private static SettingsService instance;
 
@@ -62,9 +65,21 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         getChatNotificationType().addObserver(value -> persist());
         getUseAnimations().addObserver(value -> persist());
         getPreventStandbyMode().addObserver(value -> persist());
+        getMinRequiredReputationScore().addObserver(value -> persist());
         getCloseMyOfferWhenTaken().addObserver(value -> persist());
         getSupportedLanguageCodes().addObserver(this::persist);
+        getMarkets().addObserver(this::persist);
+        getSelectedMarket().addObserver(value -> persist());
+        getTradeRulesConfirmed().addObserver(value -> persist());
+        getSupportedLanguageCodes().addObserver(this::persist);
         isInitialized = true;
+
+        if (DevMode.isDevMode() &&
+                getMinRequiredReputationScore().get() == DEFAULT_MIN_REQUIRED_REPUTATION_SCORE) {
+            getMinRequiredReputationScore().set(0L);
+            log.info("In dev mode we set getMinRequiredReputationScore to 0 if it was the default value of {}",
+                    DEFAULT_MIN_REQUIRED_REPUTATION_SCORE);
+        }
         return CompletableFuture.completedFuture(true);
     }
 
@@ -99,8 +114,8 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         return persistableStore.markets;
     }
 
-    public Market getSelectedMarket() {
-        return persistableStore.selectedMarket.get();
+    public Observable<Market> getSelectedMarket() {
+        return persistableStore.selectedMarket;
     }
 
     public Cookie getCookie() {
@@ -115,8 +130,8 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         return persistableStore.useAnimations;
     }
 
-    public Observable<Long> getRequiredTotalReputationScore() {
-        return persistableStore.requiredTotalReputationScore;
+    public Observable<Long> getMinRequiredReputationScore() {
+        return persistableStore.minRequiredReputationScore;
     }
 
     public Observable<Boolean> getOffersOnly() {

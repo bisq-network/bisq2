@@ -202,7 +202,7 @@ public class TradeWizardSelectOfferController implements Controller {
                 priceSpec,
                 new ArrayList<>(model.getFiatPaymentMethods()),
                 userIdentity.getUserProfile().getTerms(),
-                settingsService.getRequiredTotalReputationScore().get(),
+                settingsService.getMinRequiredReputationScore().get(),
                 new ArrayList<>(settingsService.getSupportedLanguageCodes()));
         model.setBisqEasyOffer(bisqEasyOffer);
 
@@ -365,7 +365,7 @@ public class TradeWizardSelectOfferController implements Controller {
 
                 if (bisqEasyOffer.getDirection().mirror().isBuy()) {
                     long makersScore = reputationService.getReputationScore(makerUserProfile).getTotalScore();
-                    long myRequiredReputationScore = settingsService.getRequiredTotalReputationScore().get();
+                    long myRequiredReputationScore = settingsService.getMinRequiredReputationScore().get();
                     // Makers score must be > than my required score (as buyer)
                     if (makersScore < myRequiredReputationScore) {
                         return false;
