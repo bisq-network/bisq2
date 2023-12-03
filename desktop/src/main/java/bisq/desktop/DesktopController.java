@@ -94,7 +94,7 @@ public class DesktopController extends NavigationController {
 
         splashController = new SplashController(applicationServiceState, serviceProvider);
 
-        Browser.setHostServices(applicationJavaFxApplicationData.getHostServices());
+        Browser.initialize(applicationJavaFxApplicationData.getHostServices(), serviceProvider.getSettingsService());
         Transitions.setSettingsService(settingsService);
         AnchorPane viewRoot = view.getRoot();
         preventStandbyModeService = new PreventStandbyModeService(serviceProvider);
