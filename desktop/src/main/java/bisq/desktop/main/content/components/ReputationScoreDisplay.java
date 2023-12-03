@@ -28,7 +28,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.util.List;
-import java.util.Random;
 
 @Slf4j
 public class ReputationScoreDisplay extends HBox {
@@ -86,8 +85,6 @@ public class ReputationScoreDisplay extends HBox {
     private void applyReputationScore() {
         double relativeScore = reputationScore != null ? reputationScore.getRelativeScore() : 0;
         int target = (int) Math.floor(stars.size() * relativeScore);
-        // todo for design testing, remove later
-        target = 1 + new Random().nextInt(4);
         for (int i = 0; i < stars.size(); i++) {
             ImageView imageView = stars.get(i);
             if (i < target) {
