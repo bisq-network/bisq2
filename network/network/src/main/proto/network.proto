@@ -162,8 +162,9 @@ message EnvelopePayloadMessage {
 
 message MetaData {
   sint64 ttl = 1;
-  sint32 maxMapSize = 2;
-  string className = 3;
+  sint32 priority = 2;
+  sint32 maxMapSize = 3;
+  string className = 4;
 }
 message AuthorizedData {
   optional bytes signature = 1;

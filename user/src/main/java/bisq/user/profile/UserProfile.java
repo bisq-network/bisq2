@@ -38,8 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
-import static bisq.network.p2p.services.data.storage.MetaData.MAX_MAP_SIZE_10_000;
-import static bisq.network.p2p.services.data.storage.MetaData.TTL_15_DAYS;
+import static bisq.network.p2p.services.data.storage.MetaData.*;
 
 /**
  * Publicly shared user profile (from other peers or mine).
@@ -57,7 +56,7 @@ public final class UserProfile implements DistributedData {
     }
 
     // We give a bit longer TTL than the chat messages to ensure the chat user is available as long the messages are 
-    private final MetaData metaData = new MetaData(TTL_15_DAYS, getClass().getSimpleName(), MAX_MAP_SIZE_10_000);
+    private final MetaData metaData = new MetaData(TTL_15_DAYS, DEFAULT_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_10_000);
     private final String nickName;
     // We need the proofOfWork for verification of the nym and robohash icon
     private final ProofOfWork proofOfWork;

@@ -26,6 +26,7 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 
 @Slf4j
@@ -33,7 +34,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public abstract class BisqEasyTradeMessage extends TradeMessage {
-    protected final MetaData metaData = new MetaData(TTL_10_DAYS, getClass().getSimpleName());
+    protected final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
 
     protected BisqEasyTradeMessage(String id, String tradeId, NetworkId sender, NetworkId receiver) {
         super(id, tradeId, sender, receiver);

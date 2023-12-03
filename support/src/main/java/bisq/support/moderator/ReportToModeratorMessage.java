@@ -33,6 +33,7 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 
 @Slf4j
@@ -42,7 +43,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 public final class ReportToModeratorMessage implements MailboxMessage {
     public final static int MAX_MESSAGE_LENGTH = 1000;
 
-    private final MetaData metaData = new MetaData(TTL_10_DAYS, getClass().getSimpleName());
+    private final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
     private final long date;
     private final String reporterUserProfileId;
     private final UserProfile accusedUserProfile;
