@@ -114,7 +114,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         Set<ServiceNode.SupportedService> supportedServices = config.getServiceNodeConfig().getSupportedServices();
 
         dataService = supportedServices.contains(ServiceNode.SupportedService.DATA) ?
-                Optional.of(new DataService(persistenceService, config.getInventoryServiceConfig())) :
+                Optional.of(new DataService(config.getInventoryServiceConfig(), persistenceService)) :
                 Optional.empty();
 
         messageDeliveryStatusService = supportedServices.contains(ServiceNode.SupportedService.ACK) && supportedServices.contains(ServiceNode.SupportedService.CONFIDENTIAL) ?

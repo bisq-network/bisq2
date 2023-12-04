@@ -84,15 +84,15 @@ public class DataService implements DataNetworkService.Listener {
         }
     }
 
+    private final InventoryService.Config inventoryServiceConfig;
     @Getter
     private final StorageService storageService;
-    private final InventoryService.Config inventoryServiceConfig;
     private final Set<DataService.Listener> listeners = new CopyOnWriteArraySet<>();
     private final Map<TransportType, DataNetworkService> dataNetworkServiceByTransportType = new ConcurrentHashMap<>();
 
-    public DataService(PersistenceService persistenceService, InventoryService.Config inventoryServiceConfig) {
-        this.storageService = new StorageService(persistenceService);
+    public DataService(InventoryService.Config inventoryServiceConfig, PersistenceService persistenceService) {
         this.inventoryServiceConfig = inventoryServiceConfig;
+        this.storageService = new StorageService(persistenceService);
 
         storageService.addListener(new StorageService.Listener() {
             @Override
