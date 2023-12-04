@@ -174,7 +174,7 @@ public class TradeWizardReviewController implements Controller {
                 priceSpec,
                 new ArrayList<>(fiatPaymentMethods),
                 userIdentity.getUserProfile().getTerms(),
-                settingsService.getRequiredTotalReputationScore().get(),
+                settingsService.getMinRequiredReputationScore().get(),
                 new ArrayList<>(settingsService.getSupportedLanguageCodes()));
         model.setBisqEasyOffer(bisqEasyOffer);
 

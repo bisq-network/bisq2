@@ -34,14 +34,12 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public final class SettingsStore implements PersistableStore<SettingsStore> {
-    public final static long DEFAULT_REQUIRED_TOTAL_REPUTATION_SCORE = 0;
-
     final Cookie cookie;
     final Map<String, Boolean> dontShowAgainMap = new ConcurrentHashMap<>();
     final Observable<Boolean> useAnimations = new Observable<>();
     final ObservableSet<Market> markets = new ObservableSet<>();
     final Observable<Market> selectedMarket = new Observable<>();
-    final Observable<Long> requiredTotalReputationScore = new Observable<>();
+    final Observable<Long> minRequiredReputationScore = new Observable<>();
     final Observable<Boolean> offersOnly = new Observable<>();
     final Observable<Boolean> tradeRulesConfirmed = new Observable<>();
     final Observable<ChatNotificationType> chatNotificationType = new Observable<>(ChatNotificationType.MENTION);
@@ -58,7 +56,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 true,
                 new HashSet<>(MarketRepository.getAllFiatMarkets()),
                 MarketRepository.getDefault(),
-                DEFAULT_REQUIRED_TOTAL_REPUTATION_SCORE,
+                SettingsService.DEFAULT_MIN_REQUIRED_REPUTATION_SCORE,
                 false,
                 false,
                 ChatNotificationType.MENTION,
@@ -90,7 +88,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
         this.useAnimations.set(useAnimations);
         this.markets.setAll(markets);
         this.selectedMarket.set(selectedMarket);
-        this.requiredTotalReputationScore.set(requiredTotalReputationScore);
+        this.minRequiredReputationScore.set(requiredTotalReputationScore);
         this.offersOnly.set(offersOnly);
         this.tradeRulesConfirmed.set(tradeRulesConfirmed);
         this.chatNotificationType.set(chatNotificationType);
@@ -110,7 +108,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 .setUseAnimations(useAnimations.get())
                 .addAllMarkets(markets.stream().map(Market::toProto).collect(Collectors.toList()))
                 .setSelectedMarket(selectedMarket.get().toProto())
-                .setRequiredTotalReputationScore(requiredTotalReputationScore.get())
+                .setMinRequiredReputationScore(minRequiredReputationScore.get())
                 .setOffersOnly(offersOnly.get())
                 .setTradeRulesConfirmed(tradeRulesConfirmed.get())
                 .setChatNotificationType(chatNotificationType.get().toProto())
@@ -130,7 +128,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 proto.getUseAnimations(),
                 new ObservableSet<>(proto.getMarketsList().stream().map(Market::fromProto).collect(Collectors.toList())),
                 Market.fromProto(proto.getSelectedMarket()),
-                proto.getRequiredTotalReputationScore(),
+                proto.getMinRequiredReputationScore(),
                 proto.getOffersOnly(),
                 proto.getTradeRulesConfirmed(),
                 ChatNotificationType.fromProto(proto.getChatNotificationType()),
@@ -160,7 +158,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 useAnimations.get(),
                 markets,
                 selectedMarket.get(),
-                requiredTotalReputationScore.get(),
+                minRequiredReputationScore.get(),
                 offersOnly.get(),
                 tradeRulesConfirmed.get(),
                 chatNotificationType.get(),
@@ -181,7 +179,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
             markets.clear();
             markets.addAll(persisted.markets);
             selectedMarket.set(persisted.selectedMarket.get());
-            requiredTotalReputationScore.set(persisted.requiredTotalReputationScore.get());
+            minRequiredReputationScore.set(persisted.minRequiredReputationScore.get());
             offersOnly.set(persisted.offersOnly.get());
             tradeRulesConfirmed.set(persisted.tradeRulesConfirmed.get());
             chatNotificationType.set(persisted.chatNotificationType.get());

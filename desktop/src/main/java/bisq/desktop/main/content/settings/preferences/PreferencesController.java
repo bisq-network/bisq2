@@ -63,7 +63,7 @@ public class PreferencesController implements Controller {
         getPreventStandbyModePin = FxBindings.bindBiDir(model.getPreventStandbyMode())
                 .to(settingsService.getPreventStandbyMode());
         requiredTotalReputationScorePin = FxBindings.bindBiDir(model.getRequiredTotalReputationScore())
-                .to(settingsService.getRequiredTotalReputationScore());
+                .to(settingsService.getMinRequiredReputationScore());
         offerOnlyPin = FxBindings.bindBiDir(model.getOfferOnly())
                 .to(settingsService.getOffersOnly());
         closeMyOfferWhenTakenPin = FxBindings.bindBiDir(model.getCloseMyOfferWhenTaken())
