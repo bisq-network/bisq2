@@ -17,8 +17,8 @@
 
 package bisq.desktop.main;
 
+import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.common.view.NavigationModel;
-import bisq.desktop.common.view.NavigationTarget;
 import lombok.Getter;
 
 @Getter

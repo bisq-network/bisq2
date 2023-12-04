@@ -17,13 +17,13 @@
 package bisq.presentation.notifications.osx;
 
 import bisq.common.util.OsUtils;
-import bisq.presentation.notifications.NotificationsDelegate;
+import bisq.presentation.notifications.NotificationSender;
 import bisq.presentation.notifications.osx.foundation.Foundation;
 import bisq.presentation.notifications.osx.foundation.ID;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class OsxNotifications implements NotificationsDelegate {
+public class OsxNotificationSender implements NotificationSender {
     public static boolean isSupported() {
         try {
             // Requires at least Mountain Lion
@@ -41,8 +41,7 @@ public class OsxNotifications implements NotificationsDelegate {
     }
 
     @Override
-    public void sendNotification(String title, String message) {
-        // TODO Check with binary build if Bisq icon and Bisq as app name is shown
+    public void send(String title, String message) {
         ID notification = Foundation.invoke(Foundation.getObjcClass("NSUserNotification"), "new");
         Foundation.invoke(notification, "setTitle:",
                 Foundation.nsString(title));

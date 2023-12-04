@@ -18,16 +18,16 @@
 package bisq.desktop.main.content.authorized_role;
 
 import bisq.bisq_easy.BisqEasyNotificationsService;
+import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
-import bisq.chat.ChatChannelDomain;
+import bisq.chat.notifications.ChatNotification;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabButton;
 import bisq.desktop.main.content.ContentTabController;
 import bisq.desktop.main.content.authorized_role.info.RoleInfo;
@@ -35,7 +35,6 @@ import bisq.desktop.main.content.authorized_role.mediator.MediatorController;
 import bisq.desktop.main.content.authorized_role.moderator.ModeratorController;
 import bisq.desktop.main.content.authorized_role.release_manager.ReleaseManagerController;
 import bisq.desktop.main.content.authorized_role.security_manager.SecurityManagerController;
-import bisq.presentation.notifications.NotificationsService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import lombok.Getter;
@@ -53,15 +52,13 @@ public class AuthorizedRoleController extends ContentTabController<AuthorizedRol
     private final UserIdentityService userIdentityService;
     private final BisqEasyNotificationsService bisqEasyNotificationsService;
     private final ChatNotificationService chatNotificationService;
-    private final NotificationsService notificationsService;
-    private Pin bondedRolesPin, selectedUserIdentityPin;
+    private Pin changedChatNotificationPin, bondedRolesPin, selectedUserIdentityPin;
 
     public AuthorizedRoleController(ServiceProvider serviceProvider) {
         super(new AuthorizedRoleModel(List.of(BondedRoleType.values())), NavigationTarget.AUTHORIZED_ROLE, serviceProvider);
 
         authorizedBondedRolesService = serviceProvider.getBondedRolesService().getAuthorizedBondedRolesService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
-        notificationsService = serviceProvider.getNotificationsService();
         chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
         bisqEasyNotificationsService = serviceProvider.getBisqEasyService().getBisqEasyNotificationsService();
 
@@ -74,7 +71,9 @@ public class AuthorizedRoleController extends ContentTabController<AuthorizedRol
     public void onActivate() {
         super.onActivate();
 
-        notificationsService.subscribe(this::updateNumNotifications);
+        chatNotificationService.getNotConsumedNotifications().forEach(this::handleNotifications);
+        changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(this::handleNotifications);
+
         bondedRolesPin = authorizedBondedRolesService.getBondedRoles().addObserver(this::onBondedRolesChanged);
         selectedUserIdentityPin = userIdentityService.getSelectedUserIdentityObservable().addObserver(e -> onBondedRolesChanged());
     }
@@ -83,7 +82,7 @@ public class AuthorizedRoleController extends ContentTabController<AuthorizedRol
     public void onDeactivate() {
         super.onDeactivate();
 
-        notificationsService.unsubscribe(this::updateNumNotifications);
+        changedChatNotificationPin.unbind();
         bondedRolesPin.unbind();
         selectedUserIdentityPin.unbind();
     }
@@ -118,19 +117,18 @@ public class AuthorizedRoleController extends ContentTabController<AuthorizedRol
         });
     }
 
-    private void updateNumNotifications(String notificationId) {
+    private void handleNotifications(ChatNotification notification) {
         UIThread.run(() -> {
-            if (bisqEasyNotificationsService.isNotificationForMediator(notificationId)) {
-                ChatChannelDomain chatChannelDomain = ChatNotificationService.getChatChannelDomain(notificationId);
-                if (chatChannelDomain == ChatChannelDomain.BISQ_EASY_OPEN_TRADES) {
-                    findTabButton(NavigationTarget.MEDIATOR).ifPresent(tabButton ->
-                            tabButton.setNumNotifications(chatNotificationService.getNumNotificationsByDomain(chatChannelDomain)));
-                }
-            }
+            long numNotifications = notification != null && bisqEasyNotificationsService.isMediatorsNotification(notification) ?
+                    chatNotificationService.getNumNotifications(notification.getChatChannelId()) :
+                    0;
+
+            findTabButton(NavigationTarget.MEDIATOR).ifPresent(tabButton ->
+                    tabButton.setNumNotifications(numNotifications));
         });
     }
 
-    Optional<TabButton> findTabButton(NavigationTarget navigationTarget) {
+    private Optional<TabButton> findTabButton(NavigationTarget navigationTarget) {
         return model.getTabButtons().stream()
                 .filter(tabButton -> navigationTarget == tabButton.getNavigationTarget())
                 .findAny();

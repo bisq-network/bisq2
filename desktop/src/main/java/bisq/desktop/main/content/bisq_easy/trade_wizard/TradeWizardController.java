@@ -18,9 +18,13 @@
 package bisq.desktop.main.content.bisq_easy.trade_wizard;
 
 import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.utils.KeyHandlerUtil;
-import bisq.desktop.common.view.*;
+import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.InitWithDataController;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.amount.TradeWizardAmountController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.direction.TradeWizardDirectionController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.market.TradeWizardMarketController;

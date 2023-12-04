@@ -17,8 +17,8 @@
 
 package bisq.desktop.main.content.bisq_easy.take_offer;
 
+import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.common.view.NavigationModel;
-import bisq.desktop.common.view.NavigationTarget;
 import javafx.beans.property.*;
 import lombok.Getter;
 import lombok.Setter;

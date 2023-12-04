@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.wallet;
 
-import bisq.desktop.common.view.NavigationTarget;
+import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.main.content.ContentTabView;
 import bisq.i18n.Res;
 

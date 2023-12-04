@@ -17,9 +17,9 @@
 
 package bisq.desktop.main.content.bisq_easy.wallet_guide;
 
+import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
 import bisq.desktop.main.content.bisq_easy.wallet_guide.create_wallet.WalletGuideCreateWalletController;
 import bisq.desktop.main.content.bisq_easy.wallet_guide.download.WalletGuideDownloadController;

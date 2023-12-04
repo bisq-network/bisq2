@@ -17,6 +17,6 @@
 
 package bisq.presentation.notifications;
 
-public interface NotificationsDelegate {
-   void sendNotification(String title, String message);
+public interface NotificationSender {
+   void send(String title, String message);
 }

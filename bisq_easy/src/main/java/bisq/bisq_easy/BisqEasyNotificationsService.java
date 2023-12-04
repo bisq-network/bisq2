@@ -18,38 +18,39 @@
 package bisq.bisq_easy;
 
 import bisq.chat.ChatChannelDomain;
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannelService;
+import bisq.chat.notifications.ChatNotification;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
-import bisq.presentation.notifications.NotificationsService;
 import bisq.support.mediation.MediatorService;
 import bisq.user.identity.UserIdentity;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 public class BisqEasyNotificationsService implements Service {
-    private final NotificationsService notificationsService;
+    private final ChatNotificationService chatNotificationService;
     private final MediatorService mediatorService;
-    private final BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService;
 
     @Getter
     private final Observable<Boolean> isNotificationPanelVisible = new Observable<>();
     @Getter
     private final ObservableSet<String> tradeIdsOfNotifications = new ObservableSet<>();
+    // We do not persist the state of a closed notification panel as we prefer to show the panel again at restart.
+    // If any new notification gets added the panel will also be shown again.
+    @Getter
+    private final Observable<Boolean> isNotificationPanelDismissed = new Observable<>(false);
 
-    public BisqEasyNotificationsService(NotificationsService notificationsService,
-                                        MediatorService mediatorService,
-                                        BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService) {
-        this.notificationsService = notificationsService;
+    public BisqEasyNotificationsService(ChatNotificationService chatNotificationService,
+                                        MediatorService mediatorService) {
+        this.chatNotificationService = chatNotificationService;
         this.mediatorService = mediatorService;
-        this.bisqEasyOpenTradeChannelService = bisqEasyOpenTradeChannelService;
     }
 
 
@@ -60,21 +61,24 @@ public class BisqEasyNotificationsService implements Service {
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
 
-        notificationsService.subscribe(notificationId -> {
-            tradeIdsOfNotifications.setAll(notificationsService.getNotConsumedNotificationIds().stream()
-                    .filter(id -> ChatNotificationService.getChatChannelDomain(id) == ChatChannelDomain.BISQ_EASY_OPEN_TRADES)
-                    .flatMap(id -> ChatNotificationService.findTradeId(id).stream())
-                    .collect(Collectors.toSet()));
-            // Reset dismissed state if we get a new notification
-            if (!tradeIdsOfNotifications.isEmpty()) {
-                notificationsService.getIsNotificationPanelDismissed().set(false);
-            }
-            updateNotificationVisibilityState();
-        });
+        chatNotificationService.getNotConsumedNotifications().forEach(this::handleNotifications);
+        chatNotificationService.getChangedNotification().addObserver(this::handleNotifications);
 
-        notificationsService.getIsNotificationPanelDismissed().addObserver(isNotificationPanelDismissed -> updateNotificationVisibilityState());
+        isNotificationPanelDismissed.addObserver(isNotificationPanelDismissed -> updateNotificationVisibilityState());
 
         return CompletableFuture.completedFuture(true);
+    }
+
+    private void handleNotifications(ChatNotification notification) {
+        if (notification == null) {
+            return;
+        }
+        tradeIdsOfNotifications.setAll(chatNotificationService.getTradeIdsOfNotConsumedNotifications());
+        // Reset dismissed state if we get a new notification
+        if (!tradeIdsOfNotifications.isEmpty()) {
+            isNotificationPanelDismissed.set(false);
+        }
+        updateNotificationVisibilityState();
     }
 
     public CompletableFuture<Boolean> shutdown() {
@@ -82,17 +86,47 @@ public class BisqEasyNotificationsService implements Service {
         return CompletableFuture.completedFuture(true);
     }
 
-    public boolean isNotificationForMediator(String notificationId) {
-        ChatChannelDomain chatChannelDomain = ChatNotificationService.getChatChannelDomain(notificationId);
-        String channelId = ChatNotificationService.getChatChannelId(notificationId);
-        Optional<UserIdentity> myMediatorUserIdentity = bisqEasyOpenTradeChannelService.findChannel(channelId)
-                .flatMap(channel -> mediatorService.findMyMediatorUserIdentity(channel.getMediator()));
-        return myMediatorUserIdentity.isPresent() &&
-                chatChannelDomain == ChatChannelDomain.BISQ_EASY_OPEN_TRADES;
+    public boolean isMediatorsNotification(ChatNotification notification) {
+        if (notification != null && notification.getChatChannelDomain() == ChatChannelDomain.BISQ_EASY_OPEN_TRADES) {
+            Optional<UserIdentity> myMediatorUserIdentity = mediatorService.findMyMediatorUserIdentity(notification.getMediator());
+            return myMediatorUserIdentity.isPresent();
+        } else {
+            return false;
+        }
+    }
+
+    public Stream<ChatNotification> getMediatorsNotConsumedNotifications() {
+        return chatNotificationService.getNotConsumedNotifications().filter(this::isMediatorsNotification);
+    }
+
+    public boolean hasMediatorNotConsumedNotifications() {
+        return getMediatorsNotConsumedNotifications().findAny().isPresent();
+    }
+
+    public boolean hasTradeIdsOfNotConsumedNotifications() {
+        return getTradeIdsOfNotConsumedNotifications().findAny().isPresent();
+    }
+
+    public Stream<String> getTradeIdsOfNotConsumedNotifications() {
+        return chatNotificationService.getNotConsumedNotifications(ChatChannelDomain.BISQ_EASY_OPEN_TRADES)
+                .filter(n -> !isMediatorsNotification(n))
+                .flatMap(chatNotification -> chatNotification.getTradeId().stream());
+    }
+
+    public long getNumNotifications(NavigationTarget navigationTarget) {
+        return ChatChannelDomainNavigationTargetMapper.fromNavigationTarget(navigationTarget).stream()
+                .flatMap(chatNotificationService::getNotConsumedNotifications)
+                .count();
+    }
+
+    public long getNumNotificationsForDomains(Set<ChatChannelDomain> domains) {
+        return chatNotificationService.getNotConsumedNotifications()
+                .filter(n -> domains.contains(n.getChatChannelDomain()))
+                .count();
     }
 
     private void updateNotificationVisibilityState() {
-        isNotificationPanelVisible.set(!notificationsService.getIsNotificationPanelDismissed().get() &&
+        isNotificationPanelVisible.set(!isNotificationPanelDismissed.get() &&
                 !tradeIdsOfNotifications.isEmpty());
     }
 }

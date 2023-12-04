@@ -18,16 +18,17 @@
 package bisq.desktop.main.left;
 
 import bisq.bisq_easy.BisqEasyNotificationsService;
+import bisq.bisq_easy.ChatChannelDomainNavigationTargetMapper;
+import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.chat.ChatChannelDomain;
+import bisq.chat.notifications.ChatNotification;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
-import bisq.desktop.common.view.NavigationTarget;
-import bisq.presentation.notifications.NotificationsService;
 import bisq.settings.CookieKey;
 import bisq.updater.UpdaterService;
 import bisq.user.identity.UserIdentity;
@@ -37,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
 public class LeftNavController implements Controller {
@@ -45,17 +46,15 @@ public class LeftNavController implements Controller {
     @Getter
     private final LeftNavView view;
     private final ChatNotificationService chatNotificationService;
-    private final NotificationsService notificationsService;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
     private final UserIdentityService userIdentityService;
     private final UpdaterService updaterService;
     private final BisqEasyNotificationsService bisqEasyNotificationsService;
     private Pin bondedRolesPin, selectedUserIdentityPin, releaseNotificationPin;
-    private boolean notificationSubscriptionDone;
+    private Pin changedChatNotificationPin;
 
     public LeftNavController(ServiceProvider serviceProvider) {
         chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
-        notificationsService = serviceProvider.getNotificationsService();
         authorizedBondedRolesService = serviceProvider.getBondedRolesService().getAuthorizedBondedRolesService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         updaterService = serviceProvider.getUpdaterService();
@@ -81,17 +80,15 @@ public class LeftNavController implements Controller {
         bondedRolesPin.unbind();
         selectedUserIdentityPin.unbind();
         releaseNotificationPin.unbind();
-        if (notificationSubscriptionDone) {
-            notificationsService.unsubscribe(this::updateNumNotifications);
-        }
-        notificationSubscriptionDone = false;
+        changedChatNotificationPin.unbind();
     }
 
     public void setNavigationTarget(NavigationTarget navigationTarget) {
         // We subscribe once we get the content target
-        if (!notificationSubscriptionDone && navigationTarget == NavigationTarget.CONTENT) {
-            notificationsService.subscribe(this::updateNumNotifications);
-            notificationSubscriptionDone = true;
+        if (changedChatNotificationPin == null && navigationTarget == NavigationTarget.CONTENT) {
+            chatNotificationService.getNotConsumedNotifications().forEach(this::handleNotifications);
+            changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(this::handleNotifications);
+
         }
 
         NavigationTarget supportedNavigationTarget;
@@ -112,6 +109,50 @@ public class LeftNavController implements Controller {
         findNavButton(supportedNavigationTarget)
                 .ifPresent(leftNavButton -> model.getSelectedNavigationButton().set(leftNavButton));
         model.getSelectedNavigationTarget().set(supportedNavigationTarget);
+    }
+
+    private void handleNotifications(ChatNotification notification) {
+        if (notification == null) {
+            return;
+        }
+
+        UIThread.run(() -> {
+            // todo add moderators notification support
+            AtomicLong numMediatorsNotConsumedNotifications = new AtomicLong();
+            findNavButton(NavigationTarget.AUTHORIZED_ROLE).ifPresent(authorizedRoleButton -> {
+                numMediatorsNotConsumedNotifications.set(bisqEasyNotificationsService.getMediatorsNotConsumedNotifications().count());
+                authorizedRoleButton.setNumNotifications(numMediatorsNotConsumedNotifications.get());
+                if (!authorizedRoleButton.getNumMessagesBadge().getStyleClass().contains("open-trades-badge")) {
+                    authorizedRoleButton.getNumMessagesBadge().getStyleClass().add("open-trades-badge");
+                }
+            });
+
+            findLeftNavButton(notification.getChatChannelDomain()).ifPresent(leftNavButton -> {
+                // Mediator handles as well ChatChannelDomain.BISQ_EASY_OPEN_TRADES notifications, but the
+                // findLeftNavButton does only return the normal chat menu items
+                NavigationTarget navigationTarget = leftNavButton.getNavigationTarget();
+                // In case we are a mediator we get the mediation notifications provided in the getNumNotifications call
+                // as the notifications use the BISQ_EASY_OPEN_TRADES channel domain. We need to subtract the
+                // numMediatorsNotConsumedNotifications to have the correct number.
+                long numNotifications = bisqEasyNotificationsService.getNumNotifications(navigationTarget)
+                        - numMediatorsNotConsumedNotifications.get();
+                leftNavButton.setNumNotifications(numNotifications);
+                leftNavButton.getNumMessagesBadge().getStyleClass().remove("open-trades-badge");
+                switch (notification.getChatChannelDomain()) {
+                    case BISQ_EASY_OFFERBOOK:
+                    case BISQ_EASY_OPEN_TRADES:
+                    case BISQ_EASY_PRIVATE_CHAT:
+                        if (bisqEasyNotificationsService.hasTradeIdsOfNotConsumedNotifications()) {
+                            leftNavButton.getNumMessagesBadge().getStyleClass().add("open-trades-badge");
+                        }
+                        break;
+                    case DISCUSSION:
+                    case EVENTS:
+                    case SUPPORT:
+                        break;
+                }
+            });
+        });
     }
 
     void onNavigationTargetSelected(NavigationTarget navigationTarget) {
@@ -155,74 +196,9 @@ public class LeftNavController implements Controller {
         });
     }
 
-    private void updateNumNotifications(String notificationId) {
-        UIThread.run(() -> {
-            Optional<LeftNavButton> authorizedRoleButton = findNavButton(NavigationTarget.AUTHORIZED_ROLE);
-            if (bisqEasyNotificationsService.isNotificationForMediator(notificationId) && authorizedRoleButton.isPresent()) {
-                LeftNavButton button = authorizedRoleButton.get();
-                button.setNumNotifications(chatNotificationService.getNumNotificationsByDomain(ChatChannelDomain.BISQ_EASY_OPEN_TRADES));
-                Set<String> tradeIdSet = notificationsService.getNotConsumedNotificationIds().stream()
-                        .filter(id -> ChatNotificationService.getChatChannelDomain(id) == ChatChannelDomain.BISQ_EASY_OPEN_TRADES)
-                        .flatMap(id -> ChatNotificationService.findTradeId(id).stream())
-                        .collect(Collectors.toSet());
-                if (!tradeIdSet.isEmpty()) {
-                    button.getNumMessagesBadge().getStyleClass().add("open-trades-badge");
-                } else {
-                    button.getNumMessagesBadge().getStyleClass().remove("open-trades-badge");
-                }
-            } else {
-                ChatChannelDomain chatChannelDomain = ChatNotificationService.getChatChannelDomain(notificationId);
-                findLeftNavButton(chatChannelDomain).ifPresent(leftNavButton -> {
-                    int numNotifications = chatNotificationService.getNumNotificationsMyDomainOrParentDomain(chatChannelDomain);
-                    if ((chatChannelDomain == ChatChannelDomain.BISQ_EASY_OFFERBOOK ||
-                            chatChannelDomain == ChatChannelDomain.BISQ_EASY_PRIVATE_CHAT) &&
-                            bisqEasyNotificationsService.isNotificationForMediator(notificationId)) {
-                        numNotifications -= 1;
-                    }
-                    leftNavButton.setNumNotifications(numNotifications);
-                    switch (chatChannelDomain) {
-                        case BISQ_EASY_OFFERBOOK:
-                        case BISQ_EASY_OPEN_TRADES:
-                        case BISQ_EASY_PRIVATE_CHAT:
-                            Set<String> tradeIdSet = notificationsService.getNotConsumedNotificationIds().stream()
-                                    .filter(id -> ChatNotificationService.getChatChannelDomain(id) == ChatChannelDomain.BISQ_EASY_OPEN_TRADES)
-                                    .flatMap(id -> ChatNotificationService.findTradeId(id).stream())
-                                    .collect(Collectors.toSet());
-                            if (!tradeIdSet.isEmpty()) {
-                                leftNavButton.getNumMessagesBadge().getStyleClass().add("open-trades-badge");
-                            } else {
-                                leftNavButton.getNumMessagesBadge().getStyleClass().remove("open-trades-badge");
-                            }
-                            break;
-                        case DISCUSSION:
-                        case EVENTS:
-                        case SUPPORT:
-                            break;
-                    }
-                });
-            }
-        });
-    }
 
     private Optional<LeftNavButton> findLeftNavButton(ChatChannelDomain chatChannelDomain) {
-        return findNavigationTarget(chatChannelDomain)
+        return ChatChannelDomainNavigationTargetMapper.fromChatChannelDomain(chatChannelDomain)
                 .flatMap(this::findNavButton);
-    }
-
-    private Optional<NavigationTarget> findNavigationTarget(ChatChannelDomain chatChannelDomain) {
-        switch (chatChannelDomain) {
-            case BISQ_EASY_OFFERBOOK:
-            case BISQ_EASY_OPEN_TRADES:
-            case BISQ_EASY_PRIVATE_CHAT:
-                return Optional.of(NavigationTarget.BISQ_EASY);
-            case DISCUSSION:
-                return Optional.of(NavigationTarget.DISCUSSION);
-            case EVENTS:
-                return Optional.of(NavigationTarget.EVENTS);
-            case SUPPORT:
-                return Optional.of(NavigationTarget.SUPPORT);
-            default:
-                return Optional.empty();
-        }
     }
 }

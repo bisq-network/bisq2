@@ -41,7 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.CompletableFuture;
 
-import static bisq.desktop.common.view.NavigationTarget.CREATE_PROFILE_STEP1;
+import static bisq.bisq_easy.NavigationTarget.CREATE_PROFILE_STEP1;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j

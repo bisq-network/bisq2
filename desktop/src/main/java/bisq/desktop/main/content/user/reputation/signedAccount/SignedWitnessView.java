@@ -17,9 +17,13 @@
 
 package bisq.desktop.main.content.user.reputation.signedAccount;
 
+import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.DesktopModel;
 import bisq.desktop.common.Styles;
-import bisq.desktop.common.view.*;
+import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Model;
+import bisq.desktop.common.view.TabView;
+import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.i18n.Res;

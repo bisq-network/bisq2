@@ -9,7 +9,6 @@ import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
-import bisq.presentation.notifications.NotificationsService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfileService;
 import javafx.beans.InvalidationListener;
@@ -78,17 +77,15 @@ public abstract class ChannelSelectionMenu<
         protected final V view;
         protected final S chatChannelService;
         protected final E chatChannelSelectionService;
-        private final NotificationsService notificationsService;
         private final ChatNotificationService chatNotificationService;
 
         protected Pin channelsPin, selectedChannelPin;
-        private final Map<String, NotificationsService.Subscriber> listenerByChannelId = new HashMap<>();
+        private final Map<String, Pin> pinByChannelId = new HashMap<>();
 
         protected Controller(ServiceProvider serviceProvider, ChatChannelDomain chatChannelDomain) {
             chatService = serviceProvider.getChatService();
             userIdentityService = serviceProvider.getUserService().getUserIdentityService();
             userProfileService = serviceProvider.getUserService().getUserProfileService();
-            notificationsService = serviceProvider.getNotificationsService();
             chatNotificationService = chatService.getChatNotificationService();
 
             chatChannelService = createAndGetChatChannelService(chatChannelDomain);
@@ -127,22 +124,34 @@ public abstract class ChannelSelectionMenu<
         }
 
         protected void addNotificationsListenerForChannel(C channel) {
-            NotificationsService.Subscriber subscriber = notificationId -> updateNumNotifications(channel);
-            listenerByChannelId.put(channel.getId(), subscriber);
-            notificationsService.subscribe(subscriber);
+            String channelId = channel.getId();
+            Pin pin = pinByChannelId.get(channelId);
+            if (pin != null) {
+                pin.unbind();
+            }
+            pin = chatNotificationService.getChangedNotification().addObserver(notification -> {
+                if (notification == null ||
+                        !notification.getChatChannelId().equals(channelId)) {
+                    return;
+                }
+                UIThread.run(() -> model.channelIdWithNumUnseenMessagesMap.put(channelId,
+                        chatNotificationService.getNumNotifications(channelId)));
+            });
+
+            pinByChannelId.put(channelId, pin);
         }
 
         protected void removeNotificationsListenerForChannel(String channelId) {
-            NotificationsService.Subscriber subscriber = listenerByChannelId.get(channelId);
-            if (subscriber != null) {
-                notificationsService.unsubscribe(subscriber);
-                listenerByChannelId.remove(channelId);
+            Pin pin = pinByChannelId.get(channelId);
+            if (pin != null) {
+                pin.unbind();
+                pinByChannelId.remove(channelId);
             }
         }
 
         protected void removeAllNotificationsListeners() {
-            listenerByChannelId.values().forEach(notificationsService::unsubscribe);
-            listenerByChannelId.clear();
+            pinByChannelId.values().forEach(Pin::unbind);
+            pinByChannelId.clear();
         }
 
         protected void handleSelectedChannelChange(ChatChannel<? extends ChatMessage> chatChannel) {
@@ -193,11 +202,6 @@ public abstract class ChannelSelectionMenu<
                     .findAny()
                     .orElseGet(() -> new View.ChannelItem(chatChannel, chatService.findChatChannelService(chatChannel)));
         }
-
-        protected void updateNumNotifications(C chatChannel) {
-            UIThread.run(() -> model.channelIdWithNumUnseenMessagesMap.put(chatChannel.getId(),
-                    chatNotificationService.getNumNotificationsByChannel(chatChannel)));
-        }
     }
 
     @Getter
@@ -207,7 +211,7 @@ public abstract class ChannelSelectionMenu<
         ObservableList<View.ChannelItem> channels = FXCollections.observableArrayList();
         FilteredList<View.ChannelItem> filteredChannels = new FilteredList<>(channels);
         SortedList<View.ChannelItem> sortedChannels = new SortedList<>(filteredChannels);
-        ObservableMap<String, Integer> channelIdWithNumUnseenMessagesMap = FXCollections.observableHashMap();
+        ObservableMap<String, Long> channelIdWithNumUnseenMessagesMap = FXCollections.observableHashMap();
         View.ChannelItem previousSelectedChannelItem;
 
         public Model(ChatChannelDomain chatChannelDomain) {
@@ -334,7 +338,7 @@ public abstract class ChannelSelectionMenu<
 
         protected void onUnseenMessagesChanged(ChannelItem item, String channelId, Badge numMessagesBadge) {
             if (channelId.equals(item.getChatChannel().getId())) {
-                int numUnseenMessages = model.channelIdWithNumUnseenMessagesMap.get(channelId);
+                long numUnseenMessages = model.channelIdWithNumUnseenMessagesMap.get(channelId);
                 if (numUnseenMessages > 99) {
                     numMessagesBadge.setText("*");
                 } else if (numUnseenMessages > 0) {

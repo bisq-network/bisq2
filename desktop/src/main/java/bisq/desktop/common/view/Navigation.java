@@ -17,6 +17,7 @@
 
 package bisq.desktop.common.view;
 
+import bisq.bisq_easy.NavigationTarget;
 import bisq.common.observable.Observable;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;

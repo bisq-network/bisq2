@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.private_chats;
 
+import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessage;
@@ -28,7 +29,6 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.main.content.chat.ChatController;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationService;

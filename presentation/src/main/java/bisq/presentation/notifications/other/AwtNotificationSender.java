@@ -15,16 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.presentation.notifications;
+package bisq.presentation.notifications.other;
 
+import bisq.presentation.notifications.NotificationSender;
 import lombok.extern.slf4j.Slf4j;
 
 import java.awt.*;
 
 @Slf4j
-public class AwtNotifications implements NotificationsDelegate {
-
-    public void sendNotification(String title, String message) {
+public class AwtNotificationSender implements NotificationSender {
+    public void send(String title, String message) {
         SystemTray systemTray = SystemTray.getSystemTray();
         Image awtImage = Toolkit.getDefaultToolkit().createImage(getClass().getClassLoader().getResource("images/app_window/icon_128.png"));
         TrayIcon trayIcon = new TrayIcon(awtImage, "Bisq");
@@ -36,12 +36,10 @@ public class AwtNotifications implements NotificationsDelegate {
             // With MessageType.NONE the line for the application (would be likely Bisq.exe in binary) 
             // should not be displayed on windows
             trayIcon.displayMessage(title, message, TrayIcon.MessageType.NONE);
-            // Trayicon does not remove itself in all cases for Linux
+            // Tray icon does not remove itself in all cases for Linux
             trayIcon.addActionListener(l -> systemTray.remove(trayIcon));
         } catch (AWTException e) {
             throw new RuntimeException(e);
         }
-
-
     }
 }

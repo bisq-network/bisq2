@@ -18,19 +18,20 @@
 package bisq.desktop.main.content.bisq_easy;
 
 import bisq.bisq_easy.BisqEasyNotificationsService;
+import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatChannelDomain;
+import bisq.chat.notifications.ChatNotification;
 import bisq.chat.notifications.ChatNotificationService;
+import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabButton;
 import bisq.desktop.main.content.ContentTabController;
 import bisq.desktop.main.content.bisq_easy.offerbook.BisqEasyOfferbookController;
 import bisq.desktop.main.content.bisq_easy.onboarding.BisqEasyOnboardingController;
 import bisq.desktop.main.content.bisq_easy.open_trades.BisqEasyOpenTradesController;
 import bisq.desktop.main.content.bisq_easy.private_chats.BisqEasyPrivateChatsController;
-import bisq.presentation.notifications.NotificationsService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -40,14 +41,13 @@ import java.util.Optional;
 public class BisqEasyController extends ContentTabController<BisqEasyModel> {
     @Getter
     private final BisqEasyView view;
-    private final NotificationsService notificationsService;
     private final ChatNotificationService chatNotificationService;
     private final BisqEasyNotificationsService bisqEasyNotificationsService;
+    private Pin changedChatNotificationPin;
 
     public BisqEasyController(ServiceProvider serviceProvider) {
         super(new BisqEasyModel(), NavigationTarget.BISQ_EASY, serviceProvider);
 
-        notificationsService = serviceProvider.getNotificationsService();
         chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
         bisqEasyNotificationsService = serviceProvider.getBisqEasyService().getBisqEasyNotificationsService();
 
@@ -58,14 +58,15 @@ public class BisqEasyController extends ContentTabController<BisqEasyModel> {
     public void onActivate() {
         super.onActivate();
 
-        notificationsService.subscribe(this::updateNumNotifications);
+        chatNotificationService.getNotConsumedNotifications().forEach(this::handleNotification);
+        changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(this::handleNotification);
     }
 
     @Override
     public void onDeactivate() {
         super.onDeactivate();
 
-        notificationsService.unsubscribe(this::updateNumNotifications);
+        changedChatNotificationPin.unbind();
     }
 
     @Override
@@ -89,13 +90,22 @@ public class BisqEasyController extends ContentTabController<BisqEasyModel> {
         }
     }
 
-    private void updateNumNotifications(String notificationId) {
+    private void handleNotification(ChatNotification notification) {
+        if (notification == null) {
+            return;
+        }
+
         UIThread.run(() -> {
-            if (!bisqEasyNotificationsService.isNotificationForMediator(notificationId)) {
-                ChatChannelDomain chatChannelDomain = ChatNotificationService.getChatChannelDomain(notificationId);
-                findTab(chatChannelDomain).ifPresent(tabButton ->
-                        tabButton.setNumNotifications(chatNotificationService.getNumNotificationsByDomain(chatChannelDomain)));
-            }
+            ChatChannelDomain domain = notification.getChatChannelDomain();
+            findTab(domain).ifPresent(tabButton -> {
+                // If we are a mediator, and we are dealing with a BISQ_EASY_OPEN_TRADES domain we do not show the notifications
+                if (domain == ChatChannelDomain.BISQ_EASY_OPEN_TRADES &&
+                        bisqEasyNotificationsService.isMediatorsNotification(notification)) {
+                    tabButton.setNumNotifications(0);
+                } else {
+                    tabButton.setNumNotifications(chatNotificationService.getNumNotifications(domain));
+                }
+            });
         });
     }
 
@@ -104,7 +114,7 @@ public class BisqEasyController extends ContentTabController<BisqEasyModel> {
                 .flatMap(this::findTabButton);
     }
 
-    Optional<TabButton> findTabButton(NavigationTarget navigationTarget) {
+    private Optional<TabButton> findTabButton(NavigationTarget navigationTarget) {
         return model.getTabButtons().stream()
                 .filter(tabButton -> navigationTarget == tabButton.getNavigationTarget())
                 .findAny();

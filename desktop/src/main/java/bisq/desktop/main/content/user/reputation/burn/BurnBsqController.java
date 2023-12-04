@@ -17,9 +17,9 @@
 
 package bisq.desktop.main.content.user.reputation.burn;
 
+import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
 import bisq.desktop.main.content.user.reputation.burn.tab1.BurnBsqTab1Controller;
 import bisq.desktop.main.content.user.reputation.burn.tab2.BurnBsqTab2Controller;

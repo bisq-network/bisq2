@@ -17,6 +17,7 @@
 
 package bisq.desktop.common.view;
 
+import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.common.Styles;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
@@ -28,16 +29,13 @@ import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.ToggleGroup;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.VBox;
-import javax.annotation.Nullable;
+import javafx.scene.layout.*;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
+
+import javax.annotation.Nullable;
 
 
 

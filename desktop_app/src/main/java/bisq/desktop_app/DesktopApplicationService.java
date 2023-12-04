@@ -33,7 +33,7 @@ import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
 import bisq.offer.OfferService;
-import bisq.presentation.notifications.NotificationsService;
+import bisq.presentation.notifications.SendNotificationService;
 import bisq.security.SecurityService;
 import bisq.settings.SettingsService;
 import bisq.support.SupportService;
@@ -80,7 +80,7 @@ public class DesktopApplicationService extends ApplicationService {
     private final ChatService chatService;
     private final SettingsService settingsService;
     private final SupportService supportService;
-    private final NotificationsService notificationsService;
+    private final SendNotificationService sendNotificationService;
     private final TradeService tradeService;
     private final UpdaterService updaterService;
     private final BisqEasyService bisqEasyService;
@@ -132,7 +132,7 @@ public class DesktopApplicationService extends ApplicationService {
 
         settingsService = new SettingsService(persistenceService);
 
-        notificationsService = new NotificationsService(persistenceService);
+        sendNotificationService = new SendNotificationService(config.getBaseDir(), settingsService);
 
         offerService = new OfferService(networkService, identityService, persistenceService);
 
@@ -141,7 +141,7 @@ public class DesktopApplicationService extends ApplicationService {
                 networkService,
                 userService,
                 settingsService,
-                notificationsService);
+                sendNotificationService);
 
         supportService = new SupportService(SupportService.Config.from(getConfig("support")),
                 persistenceService,
@@ -168,7 +168,7 @@ public class DesktopApplicationService extends ApplicationService {
                 chatService,
                 settingsService,
                 supportService,
-                notificationsService,
+                sendNotificationService,
                 tradeService);
 
         // TODO: Not sure if ServiceProvider is still needed as added BisqEasyService which exposes most of the services.
@@ -187,7 +187,7 @@ public class DesktopApplicationService extends ApplicationService {
                 chatService,
                 settingsService,
                 supportService,
-                notificationsService,
+                sendNotificationService,
                 tradeService,
                 updaterService,
                 bisqEasyService);
@@ -228,9 +228,9 @@ public class DesktopApplicationService extends ApplicationService {
                 .thenCompose(result -> contractService.initialize())
                 .thenCompose(result -> userService.initialize())
                 .thenCompose(result -> settingsService.initialize())
-                .thenCompose(result -> notificationsService.initialize())
                 .thenCompose(result -> offerService.initialize())
                 .thenCompose(result -> chatService.initialize())
+                .thenCompose(result -> sendNotificationService.initialize()) // We initialize after chatService to avoid flooding the notification center
                 .thenCompose(result -> supportService.initialize())
                 .thenCompose(result -> tradeService.initialize())
                 .thenCompose(result -> updaterService.initialize())
@@ -262,7 +262,7 @@ public class DesktopApplicationService extends ApplicationService {
                 .thenCompose(result -> supportService.shutdown())
                 .thenCompose(result -> chatService.shutdown())
                 .thenCompose(result -> offerService.shutdown())
-                .thenCompose(result -> notificationsService.shutdown())
+                .thenCompose(result -> sendNotificationService.shutdown())
                 .thenCompose(result -> settingsService.shutdown())
                 .thenCompose(result -> userService.shutdown())
                 .thenCompose(result -> contractService.shutdown())

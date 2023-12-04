@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.authorized_role.moderator;
 
+import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.bonded_role.BondedRole;
 import bisq.chat.ChatChannelDomain;
 import bisq.common.observable.Pin;
@@ -26,7 +27,6 @@ import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.view.Navigation;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqTooltip;

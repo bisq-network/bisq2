@@ -17,8 +17,8 @@
 
 package bisq.desktop.main.content.bisq_easy.private_chats;
 
+import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatChannelDomain;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.main.content.chat.ChatModel;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationScore;

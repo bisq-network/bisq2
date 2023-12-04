@@ -17,9 +17,9 @@
 
 package bisq.desktop.main.left;
 
+import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.Transitions;
-import bisq.desktop.common.view.NavigationTarget;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.Tooltip;
 import lombok.Getter;

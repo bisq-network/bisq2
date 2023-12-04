@@ -17,10 +17,10 @@
 
 package bisq.desktop.main.content.bisq_easy.trade_guide.welcome;
 
+import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.settings.SettingsService;
 import lombok.Getter;

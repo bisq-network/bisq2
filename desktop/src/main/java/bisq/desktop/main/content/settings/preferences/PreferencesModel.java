@@ -32,6 +32,9 @@ import lombok.extern.slf4j.Slf4j;
 public class PreferencesModel implements Model {
     private final ObjectProperty<ChatNotificationType> chatNotificationType = new SimpleObjectProperty<>(ChatNotificationType.MENTION);
     private final BooleanProperty notifyForPreRelease = new SimpleBooleanProperty();
+    private final BooleanProperty useTransientNotifications = new SimpleBooleanProperty();
+    @Setter
+    private boolean isUseTransientNotificationsVisible;
     private final BooleanProperty useAnimations = new SimpleBooleanProperty();
     private final BooleanProperty preventStandbyMode = new SimpleBooleanProperty();
     private final LongProperty requiredTotalReputationScore = new SimpleLongProperty();

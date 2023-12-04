@@ -17,9 +17,9 @@
 
 package bisq.desktop.main.content.user.reputation.signedAccount;
 
+import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
 import bisq.desktop.main.content.user.reputation.signedAccount.tab1.SignedWitnessTab1Controller;
 import bisq.desktop.main.content.user.reputation.signedAccount.tab2.SignedWitnessTab2Controller;

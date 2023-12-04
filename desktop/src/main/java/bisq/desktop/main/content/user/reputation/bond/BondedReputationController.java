@@ -17,9 +17,9 @@
 
 package bisq.desktop.main.content.user.reputation.bond;
 
+import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
 import bisq.desktop.main.content.user.reputation.bond.tab1.BondedReputationTab1Controller;
 import bisq.desktop.main.content.user.reputation.bond.tab2.BondedReputationTab2Controller;

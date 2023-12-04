@@ -35,7 +35,7 @@ import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
 
-import static bisq.desktop.common.view.NavigationTarget.CREATE_BISQ_EASY_PAYMENT_ACCOUNT;
+import static bisq.bisq_easy.NavigationTarget.CREATE_BISQ_EASY_PAYMENT_ACCOUNT;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 

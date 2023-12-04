@@ -17,9 +17,9 @@
 
 package bisq.desktop.main.content.user.user_profile.create.step1;
 
+import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Navigation;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.main.content.user.user_profile.create.step2.CreateNewProfileStep2Controller;
 import bisq.desktop.overlay.onboarding.create_profile.CreateProfileController;
 import bisq.desktop.overlay.onboarding.create_profile.CreateProfileModel;

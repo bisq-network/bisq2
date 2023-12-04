@@ -17,9 +17,9 @@
 
 package bisq.desktop.main.content.academy;
 
+import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.main.content.ContentTabController;
 import bisq.desktop.main.content.academy.bisq.BisqAcademyController;
 import bisq.desktop.main.content.academy.bitcoin.BitcoinAcademyController;

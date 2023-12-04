@@ -153,3 +153,21 @@ message BisqEasyOfferbookChannelStore {
 message ChatChannelSelectionStore {
   optional string selectedChannelId = 1;
 }
+
+message ChatNotification {
+  string id = 1;
+  string title = 2;
+  string message = 3;
+  sint64 date = 4;
+  string chatChannelId = 5;
+  ChatChannelDomain chatChannelDomain = 6;
+  string chatMessageId = 7;
+  optional string tradeId = 8;
+  optional user.UserProfile senderUserProfile = 9;
+  optional user.UserProfile mediator = 10;
+  bool isConsumed = 11;
+}
+
+message ChatNotificationsStore {
+  repeated ChatNotification chatNotifications = 1;
+}

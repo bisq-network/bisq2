@@ -17,10 +17,10 @@
 
 package bisq.desktop.main.left;
 
+import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.utils.ImageUtil;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.controls.Badge;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqTooltip;
@@ -260,7 +260,7 @@ class LeftNavButton extends Pane implements Toggle {
         verticalExpandCollapseIcon.setOpacity(highlighted ? 1 : 0.4);
     }
 
-    void setNumNotifications(int numNotifications) {
+    void setNumNotifications(long numNotifications) {
         if (numNotifications == 0) {
             numMessagesBadge.setText("");
             return;

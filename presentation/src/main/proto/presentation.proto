@@ -20,11 +20,3 @@ syntax = "proto3";
 package presentation;
 option java_package = "bisq.presentation.protobuf";
 option java_multiple_files = true;
-
-message DateAndConsumedFlag {
-  sint64 date = 1;
-  bool consumed = 2;
-}
-message NotificationsStore {
-  map<string, DateAndConsumedFlag> notificationIdMap = 1;
-}

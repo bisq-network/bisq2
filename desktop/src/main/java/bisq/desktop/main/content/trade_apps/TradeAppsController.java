@@ -18,9 +18,9 @@
 package bisq.desktop.main.content.trade_apps;
 
 import bisq.account.protocol_type.TradeProtocolType;
+import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.main.content.ContentTabController;
 import bisq.desktop.main.content.trade_apps.more.MoreProtocolsController;
 import bisq.desktop.main.content.trade_apps.overview.TradeOverviewController;

@@ -17,9 +17,9 @@
 
 package bisq.desktop.main.content.bisq_easy.trade_guide;
 
+import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
 import bisq.desktop.main.content.bisq_easy.trade_guide.process.BisqEasyGuideProcessController;
 import bisq.desktop.main.content.bisq_easy.trade_guide.rules.BisqEasyGuideRulesController;

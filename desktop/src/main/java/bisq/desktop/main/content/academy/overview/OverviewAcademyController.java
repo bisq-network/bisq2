@@ -17,10 +17,10 @@
 
 package bisq.desktop.main.content.academy.overview;
 
+import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
-import bisq.desktop.common.view.NavigationTarget;
 import lombok.Getter;
 
 public class OverviewAcademyController implements Controller {

@@ -90,7 +90,7 @@ public class MediatorController implements Controller {
         model.getListItems().onActivate();
         applyFilteredListPredicate(model.getShowClosedCases().get());
 
-        mediationCaseListItemPin = FxBindings.<MediationCase, MediationCaseListItem>bind(model.getListItems())
+        mediationCaseListItemPin = FxBindings.<MediationCase, MediatorView.ListItem>bind(model.getListItems())
                 .filter(mediationCase -> {
                     MediationRequest mediationRequest = mediationCase.getMediationRequest();
                     BisqEasyContract contract = mediationRequest.getContract();
@@ -123,7 +123,7 @@ public class MediatorController implements Controller {
                     MediationRequest mediationRequest = mediationCase.getMediationRequest();
                     UserIdentity myUserIdentity = mediatorService.findMyMediatorUserIdentity(mediationRequest.getContract().getMediator()).orElseThrow();
                     BisqEasyOpenTradeChannel channel = findOrCreateChannel(mediationRequest, myUserIdentity);
-                    return new MediationCaseListItem(serviceProvider, mediationCase, channel);
+                    return new MediatorView.ListItem(serviceProvider, mediationCase, channel);
                 })
                 .to(mediatorService.getMediationCases());
 
@@ -163,7 +163,7 @@ public class MediatorController implements Controller {
         selectedChannelPin.unbind();
     }
 
-    void onSelectItem(MediationCaseListItem item) {
+    void onSelectItem(MediatorView.ListItem item) {
         if (item == null) {
             selectionService.selectChannel(null);
         } else if (!item.getChannel().equals(selectionService.getSelectedChannel().get())) {
@@ -187,7 +187,7 @@ public class MediatorController implements Controller {
     }
 
     private void update() {
-        FilteredList<MediationCaseListItem> filteredList = model.getListItems().getFilteredList();
+        FilteredList<MediatorView.ListItem> filteredList = model.getListItems().getFilteredList();
         boolean isEmpty = filteredList.isEmpty();
         model.getNoOpenCases().set(isEmpty);
         if (selectionService.getSelectedChannel().get() == null &&

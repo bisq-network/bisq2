@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.settings.utils;
 
+import bisq.bisq_easy.NavigationTarget;
 import bisq.common.util.FileUtils;
 import bisq.common.util.OsUtils;
 import bisq.common.util.StringUtils;
@@ -25,7 +26,6 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.FileChooserUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.persistence.PersistenceService;

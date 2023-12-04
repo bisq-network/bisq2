@@ -17,11 +17,11 @@
 
 package bisq.desktop.overlay.onboarding;
 
+import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import bisq.desktop.overlay.onboarding.create_profile.CreateProfileController;
 import bisq.desktop.overlay.onboarding.password.OnboardingPasswordController;
