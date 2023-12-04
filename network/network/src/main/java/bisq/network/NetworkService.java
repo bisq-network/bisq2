@@ -43,7 +43,6 @@ import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatusService;
 import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.DistributedData;
-import bisq.network.p2p.services.data.storage.StorageService;
 import bisq.network.p2p.services.data.storage.append.AppendOnlyData;
 import bisq.network.p2p.services.data.storage.auth.DefaultAuthenticatedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
@@ -115,7 +114,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         Set<ServiceNode.SupportedService> supportedServices = config.getServiceNodeConfig().getSupportedServices();
 
         dataService = supportedServices.contains(ServiceNode.SupportedService.DATA) ?
-                Optional.of(new DataService(new StorageService(persistenceService), config.getInventoryServiceConfig())) :
+                Optional.of(new DataService(persistenceService, config.getInventoryServiceConfig())) :
                 Optional.empty();
 
         messageDeliveryStatusService = supportedServices.contains(ServiceNode.SupportedService.ACK) && supportedServices.contains(ServiceNode.SupportedService.CONFIDENTIAL) ?

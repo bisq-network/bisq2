@@ -38,6 +38,7 @@ import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxData;
 import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
 import bisq.network.p2p.services.peergroup.PeerGroupManager;
+import bisq.persistence.PersistenceService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -89,8 +90,8 @@ public class DataService implements DataNetworkService.Listener {
     private final Set<DataService.Listener> listeners = new CopyOnWriteArraySet<>();
     private final Map<TransportType, DataNetworkService> dataNetworkServiceByTransportType = new ConcurrentHashMap<>();
 
-    public DataService(StorageService storageService, InventoryService.Config inventoryServiceConfig) {
-        this.storageService = storageService;
+    public DataService(PersistenceService persistenceService, InventoryService.Config inventoryServiceConfig) {
+        this.storageService = new StorageService(persistenceService);
         this.inventoryServiceConfig = inventoryServiceConfig;
 
         storageService.addListener(new StorageService.Listener() {
