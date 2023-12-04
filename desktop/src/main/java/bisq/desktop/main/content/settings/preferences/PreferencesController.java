@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.settings.preferences;
 
+import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.locale.LanguageRepository;
 import bisq.common.observable.Pin;
 import bisq.common.util.OsUtils;
@@ -38,14 +39,17 @@ import org.fxmisc.easybind.Subscription;
 public class PreferencesController implements Controller {
     @Getter
     private final PreferencesView view;
-    private final SettingsService settingsService;
     private final PreferencesModel model;
+    private final SettingsService settingsService;
+    private final ChatNotificationService chatNotificationService;
+
     private Pin chatNotificationTypePin, useAnimationsPin, getPreventStandbyModePin, offerOnlyPin,
             closeMyOfferWhenTakenPin, getSupportedLanguageCodesPin, requiredTotalReputationScorePin;
     private Subscription notifyForPreReleasePin, getUseTransientNotificationsPin;
 
     public PreferencesController(ServiceProvider serviceProvider) {
         settingsService = serviceProvider.getSettingsService();
+        chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
         model = new PreferencesModel();
         view = new PreferencesView(model, this);
     }
@@ -109,6 +113,10 @@ public class PreferencesController implements Controller {
 
     void onResetDontShowAgain() {
         DontShowAgainService.resetDontShowAgain();
+    }
+
+    void onClearNotifications() {
+        chatNotificationService.consumeAllNotifications();
     }
 
     void onSetChatNotificationType(ChatNotificationType type) {

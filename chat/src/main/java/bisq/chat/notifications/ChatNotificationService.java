@@ -138,6 +138,11 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
                 .forEach(this::consumeNotification);
     }
 
+    public void consumeAllNotifications() {
+        getNotConsumedNotifications()
+                .forEach(this::consumeNotification);
+    }
+
     public Stream<ChatNotification> getNotConsumedNotifications() {
         synchronized (persistableStore) {
             return persistableStore.getNotConsumedNotifications();
