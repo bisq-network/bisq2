@@ -26,7 +26,7 @@ import bisq.common.util.CompletableFutureUtils;
 import bisq.network.common.AddressByTransportTypeMap;
 import bisq.network.common.TransportType;
 import bisq.network.http.BaseHttpClient;
-import bisq.network.http.HttpClientRepository;
+import bisq.network.http.HttpClientsByTransport;
 import bisq.network.identity.NetworkId;
 import bisq.network.identity.TorIdentity;
 import bisq.network.p2p.ServiceNode;
@@ -93,7 +93,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     private final NetworkServiceStore persistableStore = new NetworkServiceStore();
     @Getter
     private final Persistence<NetworkServiceStore> persistence;
-    private final HttpClientRepository httpClientRepository;
+    private final HttpClientsByTransport httpClientsByTransport;
     private final Optional<String> socks5ProxyAddress; // Optional proxy address of external tor instance
     @Getter
     private final Set<TransportType> supportedTransportTypes;
@@ -110,7 +110,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                           PersistenceService persistenceService,
                           KeyPairService keyPairService,
                           ProofOfWorkService proofOfWorkService) {
-        httpClientRepository = new HttpClientRepository();
+        httpClientsByTransport = new HttpClientsByTransport();
 
         Set<ServiceNode.SupportedService> supportedServices = config.getServiceNodeConfig().getSupportedServices();
 
@@ -349,7 +349,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     public BaseHttpClient getHttpClient(String url, String userAgent, TransportType transportType) {
         // socksProxy only supported for TOR
         Optional<Socks5Proxy> socksProxy = transportType == TOR ? serviceNodesByTransport.getSocksProxy() : Optional.empty();
-        return httpClientRepository.getHttpClient(url, userAgent, transportType, socksProxy, socks5ProxyAddress);
+        return httpClientsByTransport.getHttpClient(url, userAgent, transportType, socksProxy, socks5ProxyAddress);
     }
 
     public Map<TransportType, Observable<Node.State>> getNodeStateByTransportType() {
