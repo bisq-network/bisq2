@@ -82,7 +82,7 @@ public class SignedWitnessScoreSimulation {
 
         private String calculateSimScore(Number age) {
             try {
-                long ageInDays = age.intValue();
+                long ageInDays = Math.max(0, age.intValue());
                 long totalScore = SignedWitnessService.doCalculateScore(ageInDays);
                 return String.valueOf(totalScore);
             } catch (Exception e) {

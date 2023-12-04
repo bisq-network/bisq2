@@ -60,7 +60,7 @@ public final class AuthorizedBondedReputationData implements AuthorizedDistribut
         NetworkDataValidation.validateHash(hash);
         checkArgument(amount > 0);
         checkArgument(lockTime >= 10_000);
-
+        checkArgument(lockTime <= 100_000);
 
         // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize());//38
     }
