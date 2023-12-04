@@ -33,26 +33,6 @@ dependencies {
     implementation("wallets:electrum")
     implementation("wallets:bitcoind")
 
-
-    /*
- 
-     implementation project(':common')
-     implementation project(':persistence')
-     implementation project(':security')
-     implementation project(':identity')
-     implementation project(':account')
-     implementation project(':offer')
-     implementation project(':contract')
-     implementation project(':trade')
-     implementation project(':bonded_roles')
-     implementation project(':settings')
-     implementation project(':user')
-     implementation project(':chat')
-     implementation project(':presentation')
-     implementation project(':application')
- 
-     implementation 'network:network'*/
-
     implementation libs.typesafe.config
     implementation libs.bundles.glassfish.jersey
     implementation libs.bundles.jackson
