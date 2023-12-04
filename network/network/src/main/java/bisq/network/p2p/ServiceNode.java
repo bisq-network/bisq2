@@ -70,13 +70,13 @@ public class ServiceNode {
     @Getter
     public static final class Config {
         public static Config from(com.typesafe.config.Config config) {
-            return new Config(new HashSet<>(config.getEnumList(Service.class, "p2pServiceNode")));
+            return new Config(new HashSet<>(config.getEnumList(ServiceType.class, "p2pServiceNode")));
         }
 
-        private final Set<Service> services;
+        private final Set<ServiceType> serviceTypes;
 
-        public Config(Set<Service> services) {
-            this.services = services;
+        public Config(Set<ServiceType> serviceTypes) {
+            this.serviceTypes = serviceTypes;
         }
     }
 
@@ -100,7 +100,7 @@ public class ServiceNode {
         TERMINATED
     }
 
-    public enum Service {
+    public enum ServiceType {
         PEER_GROUP,
         DATA,
         CONFIDENTIAL,
@@ -166,8 +166,8 @@ public class ServiceNode {
     public void createDefaultNode(NetworkId defaultNetworkId, TorIdentity defaultTorIdentity) {
         defaultNode = nodesById.createAndConfigNode(defaultNetworkId, defaultTorIdentity, true);
 
-        Set<Service> services = config.getServices();
-        peerGroupService = services.contains(Service.PEER_GROUP) ?
+        Set<ServiceType> serviceTypes = config.getServiceTypes();
+        peerGroupService = serviceTypes.contains(ServiceType.PEER_GROUP) ?
                 Optional.of(new PeerGroupManager(persistenceService,
                         defaultNode,
                         banList,
@@ -175,14 +175,14 @@ public class ServiceNode {
                         seedNodeAddresses)) :
                 Optional.empty();
 
-        boolean dataServiceEnabled = services.contains(Service.PEER_GROUP) && services.contains(Service.DATA);
+        boolean dataServiceEnabled = serviceTypes.contains(ServiceType.PEER_GROUP) && serviceTypes.contains(ServiceType.DATA);
         dataServicePerTransport = dataServiceEnabled ?
                 Optional.of(dataService.orElseThrow().getDataServicePerTransport(transportType,
                         defaultNode,
                         peerGroupService.orElseThrow())) :
                 Optional.empty();
 
-        confidentialMessageService = services.contains(Service.CONFIDENTIAL) ?
+        confidentialMessageService = serviceTypes.contains(ServiceType.CONFIDENTIAL) ?
                 Optional.of(new ConfidentialMessageService(nodesById, keyPairService, dataService, messageDeliveryStatusService)) :
                 Optional.empty();
 

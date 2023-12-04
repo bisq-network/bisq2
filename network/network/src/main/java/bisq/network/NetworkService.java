@@ -112,13 +112,13 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                           ProofOfWorkService proofOfWorkService) {
         httpClientRepository = new HttpClientRepository();
 
-        Set<ServiceNode.Service> services = config.getServiceNodeConfig().getServices();
+        Set<ServiceNode.ServiceType> serviceTypes = config.getServiceNodeConfig().getServiceTypes();
 
-        dataService = services.contains(ServiceNode.Service.DATA) ?
+        dataService = serviceTypes.contains(ServiceNode.ServiceType.DATA) ?
                 Optional.of(new DataService(new StorageService(persistenceService), config.getInventoryServiceConfig())) :
                 Optional.empty();
 
-        messageDeliveryStatusService = services.contains(ServiceNode.Service.ACK) && services.contains(ServiceNode.Service.CONFIDENTIAL) ?
+        messageDeliveryStatusService = serviceTypes.contains(ServiceNode.ServiceType.ACK) && serviceTypes.contains(ServiceNode.ServiceType.CONFIDENTIAL) ?
                 Optional.of(new MessageDeliveryStatusService(persistenceService, keyPairService, this)) :
                 Optional.empty();
 
@@ -138,9 +138,9 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                 proofOfWorkService,
                 networkLoadService);
 
-        monitorService = services.contains(ServiceNode.Service.DATA) &&
-                services.contains(ServiceNode.Service.PEER_GROUP) &&
-                services.contains(ServiceNode.Service.MONITOR) ?
+        monitorService = serviceTypes.contains(ServiceNode.ServiceType.DATA) &&
+                serviceTypes.contains(ServiceNode.ServiceType.PEER_GROUP) &&
+                serviceTypes.contains(ServiceNode.ServiceType.MONITOR) ?
                 Optional.of(new MonitorService(serviceNodesByTransport, dataService.orElseThrow(), networkLoadService)) :
                 Optional.empty();
 
