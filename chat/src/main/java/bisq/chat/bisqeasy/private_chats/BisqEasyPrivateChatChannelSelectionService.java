@@ -47,7 +47,9 @@ public class BisqEasyPrivateChatChannelSelectionService extends ChatChannelSelec
     }
 
     public CompletableFuture<Boolean> initialize() {
-        channelService.getDefaultChannel().ifPresent(this::selectChannel);
+        if (selectedChannel.get() == null) {
+            channelService.getDefaultChannel().ifPresent(this::selectChannel);
+        }
         return super.initialize();
     }
 
