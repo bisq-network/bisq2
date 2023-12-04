@@ -21,11 +21,6 @@ toolchainManagement {
 
 rootProject.name = "bisq"
 
-include("platforms:cli-platform")
-include("platforms:common-platform")
-include("platforms:network-platform")
-include("platforms:test-platform")
-
 include("account")
 include("application")
 include("bisq_easy")
@@ -43,6 +38,7 @@ include("offer")
 include("oracle_node")
 include("oracle_node_app")
 include("persistence")
+include("platform")
 include("presentation")
 include("trade")
 include("rest_api_app")
