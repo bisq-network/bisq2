@@ -112,13 +112,13 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                           ProofOfWorkService proofOfWorkService) {
         httpClientRepository = new HttpClientRepository();
 
-        Set<ServiceNode.ServiceType> serviceTypes = config.getServiceNodeConfig().getServiceTypes();
+        Set<ServiceNode.SupportedService> supportedServices = config.getServiceNodeConfig().getSupportedServices();
 
-        dataService = serviceTypes.contains(ServiceNode.ServiceType.DATA) ?
+        dataService = supportedServices.contains(ServiceNode.SupportedService.DATA) ?
                 Optional.of(new DataService(new StorageService(persistenceService), config.getInventoryServiceConfig())) :
                 Optional.empty();
 
-        messageDeliveryStatusService = serviceTypes.contains(ServiceNode.ServiceType.ACK) && serviceTypes.contains(ServiceNode.ServiceType.CONFIDENTIAL) ?
+        messageDeliveryStatusService = supportedServices.contains(ServiceNode.SupportedService.ACK) && supportedServices.contains(ServiceNode.SupportedService.CONFIDENTIAL) ?
                 Optional.of(new MessageDeliveryStatusService(persistenceService, keyPairService, this)) :
                 Optional.empty();
 
@@ -138,9 +138,9 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                 proofOfWorkService,
                 networkLoadService);
 
-        monitorService = serviceTypes.contains(ServiceNode.ServiceType.DATA) &&
-                serviceTypes.contains(ServiceNode.ServiceType.PEER_GROUP) &&
-                serviceTypes.contains(ServiceNode.ServiceType.MONITOR) ?
+        monitorService = supportedServices.contains(ServiceNode.SupportedService.DATA) &&
+                supportedServices.contains(ServiceNode.SupportedService.PEER_GROUP) &&
+                supportedServices.contains(ServiceNode.SupportedService.MONITOR) ?
                 Optional.of(new MonitorService(serviceNodesByTransport, dataService.orElseThrow(), networkLoadService)) :
                 Optional.empty();
 
