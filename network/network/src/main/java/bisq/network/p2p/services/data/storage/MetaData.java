@@ -83,13 +83,14 @@ public final class MetaData implements Proto {
     public bisq.network.protobuf.MetaData toProto() {
         return bisq.network.protobuf.MetaData.newBuilder()
                 .setTtl(ttl)
+                .setPriority(priority)
                 .setClassName(className)
                 .setMaxMapSize(maxMapSize)
                 .build();
     }
 
     public static MetaData fromProto(bisq.network.protobuf.MetaData proto) {
-        return new MetaData(proto.getTtl(), proto.getClassName(), proto.getMaxMapSize());
+        return new MetaData(proto.getTtl(), proto.getPriority(), proto.getClassName(), proto.getMaxMapSize());
     }
 
     public double getCostFactor() {

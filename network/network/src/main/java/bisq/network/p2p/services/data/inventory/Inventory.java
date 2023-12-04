@@ -37,11 +37,11 @@ import java.util.stream.Collectors;
 @Slf4j
 public final class Inventory implements Proto {
     private final List<? extends DataRequest> entries;
-    private final int peersNumEntries;
+    private final boolean maxSizeReached;
 
-    public Inventory(Collection<? extends DataRequest> entries, int peersNumEntries) {
+    public Inventory(Collection<? extends DataRequest> entries, boolean maxSizeReached) {
         this.entries = new ArrayList<>(entries);
-        this.peersNumEntries = peersNumEntries;
+        this.maxSizeReached = maxSizeReached;
 
         // We need to sort deterministically as the data is used in the proof of work check
         // todo find cheaper solution or cache serialized result to avoid that its done repeatedly 
@@ -51,7 +51,7 @@ public final class Inventory implements Proto {
     public bisq.network.protobuf.Inventory toProto() {
         return bisq.network.protobuf.Inventory.newBuilder()
                 .addAllEntries(entries.stream().map(e -> e.toProto().getDataRequest()).collect(Collectors.toList()))
-                .setPeersNumEntries(peersNumEntries)
+                .setMaxSizeReached(maxSizeReached)
                 .build();
     }
 
@@ -60,6 +60,6 @@ public final class Inventory implements Proto {
         List<DataRequest> entries = entriesList.stream()
                 .map(DataRequest::fromProto)
                 .collect(Collectors.toList());
-        return new Inventory(entries, proto.getPeersNumEntries());
+        return new Inventory(entries, proto.getMaxSizeReached());
     }
 }

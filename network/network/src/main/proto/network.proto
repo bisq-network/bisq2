@@ -32,7 +32,7 @@ message DataFilter {
 
 message Inventory {
   repeated DataRequest entries = 1;
-  sint32 peersNumEntries = 2;
+  bool maxSizeReached = 2;
 }
 
 message Peer {

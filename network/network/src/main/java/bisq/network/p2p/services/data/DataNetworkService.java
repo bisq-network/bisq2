@@ -27,6 +27,7 @@ import bisq.network.p2p.services.data.broadcast.BroadcastResult;
 import bisq.network.p2p.services.data.broadcast.Broadcaster;
 import bisq.network.p2p.services.data.filter.DataFilter;
 import bisq.network.p2p.services.data.inventory.Inventory;
+import bisq.network.p2p.services.data.inventory.InventoryProvider;
 import bisq.network.p2p.services.data.inventory.InventoryService;
 import bisq.network.p2p.services.peergroup.PeerGroupManager;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
@@ -36,7 +37,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.function.Function;
 
 /**
  * Responsible for broadcast and inventory service. One instance per transport type.
@@ -62,13 +62,14 @@ public class DataNetworkService implements PeerGroupManager.Listener, Node.Liste
 
     public DataNetworkService(Node node,
                               PeerGroupManager peerGroupManager,
-                              Function<DataFilter, Inventory> inventoryProvider) {
+                              InventoryProvider inventoryProvider,
+                              InventoryService.Config inventoryServiceConfig) {
         this.node = node;
         peerGroupService = peerGroupManager.getPeerGroupService();
         this.peerGroupManager = peerGroupManager;
         peerGroupManager.addListener(this);
         broadcaster = new Broadcaster(node, peerGroupService);
-        inventoryService = new InventoryService(node, peerGroupService, inventoryProvider);
+        inventoryService = new InventoryService(inventoryServiceConfig, node, peerGroupService, inventoryProvider);
         node.addListener(this);
     }
 

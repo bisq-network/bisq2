@@ -25,7 +25,6 @@ import bisq.network.p2p.node.network_load.ConnectionMetrics;
 import bisq.network.p2p.node.network_load.NetworkLoadService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.filter.DataFilter;
-import bisq.network.p2p.services.data.inventory.Inventory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -70,9 +69,10 @@ public class MonitorService {
 
         // Provide an empty filter so that we get all persisted network data
         DataFilter emptyFilter = new DataFilter(new ArrayList<>());
-        Inventory inventory = dataService.getStorageService().getInventoryOfAllStores(emptyFilter);
+        //todo
+        // Inventory inventory = dataService.getStorageService().getInventoryOfAllStores(emptyFilter);
 
-        networkLoadService.updateMyLoad(allConnectionMetrics, inventory);
+        // networkLoadService.updateMyLoad(allConnectionMetrics, inventory);
     }
 
     // All connections of all nodes on all transports
