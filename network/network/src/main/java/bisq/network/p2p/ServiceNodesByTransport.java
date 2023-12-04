@@ -68,20 +68,23 @@ public class ServiceNodesByTransport {
     @Getter
     private final Map<TransportType, ServiceNode> map = new ConcurrentHashMap<>();
     private final Set<TransportType> supportedTransportTypes;
+    private final AuthorizationService authorizationService;
 
     public ServiceNodesByTransport(Map<TransportType, TransportConfig> configByTransportType,
-                                   Set<TransportType> supportedTransportTypes,
                                    ServiceNode.Config serviceNodeConfig,
                                    Map<TransportType, PeerGroupManager.Config> peerGroupServiceConfigByTransport,
                                    Map<TransportType, Set<Address>> seedAddressesByTransport,
-                                   Optional<DataService> dataService,
-                                   Optional<MessageDeliveryStatusService> messageDeliveryStatusService,
+                                   Set<TransportType> supportedTransportTypes,
                                    KeyPairService keyPairService,
                                    PersistenceService persistenceService,
                                    ProofOfWorkService proofOfWorkService,
+                                   Optional<DataService> dataService,
+                                   Optional<MessageDeliveryStatusService> messageDeliveryStatusService,
                                    NetworkLoadService networkLoadService) {
         this.supportedTransportTypes = supportedTransportTypes;
-        AuthorizationService authorizationService = new AuthorizationService(proofOfWorkService);
+
+        authorizationService = new AuthorizationService(proofOfWorkService);
+
         supportedTransportTypes.forEach(transportType -> {
             TransportConfig transportConfig = configByTransportType.get(transportType);
             Node.Config nodeConfig = new Node.Config(transportType,

@@ -90,25 +90,30 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
 
     @Getter
     private final NetworkServiceStore persistableStore = new NetworkServiceStore();
-    @Getter
-    private final Persistence<NetworkServiceStore> persistence;
-    private final HttpClientsByTransport httpClientsByTransport;
     private final Optional<String> socks5ProxyAddress; // Optional proxy address of external tor instance
     @Getter
     private final Set<TransportType> supportedTransportTypes;
     @Getter
-    private final ServiceNodesByTransport serviceNodesByTransport;
-    private final Optional<MessageDeliveryStatusService> messageDeliveryStatusService;
+    private final Map<TransportType, Integer> defaultNodePortByTransportType;
+    private final HttpClientsByTransport httpClientsByTransport;
     @Getter
     private final Optional<DataService> dataService;
+    private final NetworkLoadService networkLoadService;
+    @Getter
+    private final ServiceNodesByTransport serviceNodesByTransport;
+    private final Optional<MessageDeliveryStatusService> messageDeliveryStatusService;
     private final Optional<MonitorService> monitorService;
     @Getter
-    private final Map<TransportType, Integer> defaultNodePortByTransportType;
+    private final Persistence<NetworkServiceStore> persistence;
 
     public NetworkService(NetworkServiceConfig config,
                           PersistenceService persistenceService,
                           KeyPairService keyPairService,
                           ProofOfWorkService proofOfWorkService) {
+        socks5ProxyAddress = config.getSocks5ProxyAddress();
+        supportedTransportTypes = config.getSupportedTransportTypes();
+        defaultNodePortByTransportType = config.getDefaultNodePortByTransportType();
+
         httpClientsByTransport = new HttpClientsByTransport();
 
         Set<ServiceNode.SupportedService> supportedServices = config.getServiceNodeConfig().getSupportedServices();
@@ -117,24 +122,23 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                 Optional.of(new DataService(config.getInventoryServiceConfig(), persistenceService)) :
                 Optional.empty();
 
-        messageDeliveryStatusService = supportedServices.contains(ServiceNode.SupportedService.ACK) && supportedServices.contains(ServiceNode.SupportedService.CONFIDENTIAL) ?
+        messageDeliveryStatusService = supportedServices.contains(ServiceNode.SupportedService.ACK) &&
+                supportedServices.contains(ServiceNode.SupportedService.CONFIDENTIAL) ?
                 Optional.of(new MessageDeliveryStatusService(persistenceService, keyPairService, this)) :
                 Optional.empty();
 
-        NetworkLoadService networkLoadService = new NetworkLoadService();
+        networkLoadService = new NetworkLoadService();
 
-        socks5ProxyAddress = config.getSocks5ProxyAddress();
-        supportedTransportTypes = config.getSupportedTransportTypes();
         serviceNodesByTransport = new ServiceNodesByTransport(config.getConfigByTransportType(),
-                supportedTransportTypes,
                 config.getServiceNodeConfig(),
                 config.getPeerGroupServiceConfigByTransport(),
                 config.getSeedAddressesByTransport(),
-                dataService,
-                messageDeliveryStatusService,
+                supportedTransportTypes,
                 keyPairService,
                 persistenceService,
                 proofOfWorkService,
+                dataService,
+                messageDeliveryStatusService,
                 networkLoadService);
 
         monitorService = supportedServices.contains(ServiceNode.SupportedService.DATA) &&
@@ -147,8 +151,6 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                 NetworkService.NETWORK_DB_PATH,
                 persistableStore.getClass().getSimpleName(),
                 persistableStore);
-
-        defaultNodePortByTransportType = config.getDefaultNodePortByTransportType();
     }
 
 
