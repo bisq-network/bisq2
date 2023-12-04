@@ -356,7 +356,7 @@ public abstract class ChannelSelectionMenu<
         //todo create ChannelItems specific to channels
         @EqualsAndHashCode(onlyExplicitlyIncluded = true)
         @Getter
-        static class ChannelItem {
+        public static class ChannelItem {
             @EqualsAndHashCode.Include
             private final String channelId;
             private final ChatChannelDomain chatChannelDomain;

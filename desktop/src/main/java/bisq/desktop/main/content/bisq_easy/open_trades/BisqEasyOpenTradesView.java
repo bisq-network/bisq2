@@ -388,7 +388,6 @@ public class BisqEasyOpenTradesView extends ChatView {
                 if (item != null && !empty) {
                     UserProfileDisplay userProfileDisplay = new UserProfileDisplay(item.getChannel().getPeer());
                     userProfileDisplay.setReputationScore(item.getReputationScore());
-                    setGraphic(userProfileDisplay);
 
                     badge = new Badge(userProfileDisplay);
                     badge.getStyleClass().add("open-trades-badge");

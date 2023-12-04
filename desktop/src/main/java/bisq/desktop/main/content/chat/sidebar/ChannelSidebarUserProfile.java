@@ -124,9 +124,8 @@ public class ChannelSidebarUserProfile implements Comparable<ChannelSidebarUserP
         private Subscription roboHashNodeSubscription;
 
         private View(Model model, Controller controller) {
-            super(new HBox(), model, controller);
+            super(new HBox(10), model, controller);
 
-            root.setSpacing(10);
             root.setAlignment(Pos.CENTER_LEFT);
 
             boolean isUserProfileBanned = controller.isUserProfileBanned();
@@ -158,9 +157,6 @@ public class ChannelSidebarUserProfile implements Comparable<ChannelSidebarUserP
                 roboIcon.setClip(new Circle(18.75, 18.75, 18.75));
                 roboIcon.setEffect(blush);*/
             }
-
-            HBox hBox = new HBox(15, roboIcon, userName);
-            hBox.setAlignment(Pos.CENTER_LEFT);
 
             root.getChildren().addAll(roboIcon, userName);
         }

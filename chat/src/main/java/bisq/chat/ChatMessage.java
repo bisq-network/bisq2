@@ -181,6 +181,12 @@ public abstract class ChatMessage implements Proto, Comparable<ChatMessage> {
         return getText().contains("@" + userIdentity.getUserName());
     }
 
+    public boolean wasCited(UserIdentity userIdentity) {
+        return citation.map(Citation::getAuthorUserProfileId)
+                .map(userProfileId -> userProfileId.equals(userIdentity.getId()))
+                .orElse(false);
+    }
+
     public boolean isExpired() {
         return (System.currentTimeMillis() - getDate() > getMetaData().getTtl());
     }
