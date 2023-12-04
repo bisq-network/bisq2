@@ -18,45 +18,37 @@
 package bisq.chat.bisqeasy.offerbook;
 
 import bisq.common.observable.collection.ObservableArray;
-import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Getter
 public class BisqEasyOfferbookChannelStore implements PersistableStore<BisqEasyOfferbookChannelStore> {
     private final ObservableArray<BisqEasyOfferbookChannel> channels = new ObservableArray<>();
-    //todo not useful anymore. consider to remove it
-    private final ObservableSet<String> visibleChannelIds = new ObservableSet<>();
 
     public BisqEasyOfferbookChannelStore() {
     }
 
-    private BisqEasyOfferbookChannelStore(List<BisqEasyOfferbookChannel> privateTradeChannels,
-                                          Set<String> visibleChannelIds) {
-        setAll(privateTradeChannels, visibleChannelIds);
+    private BisqEasyOfferbookChannelStore(List<BisqEasyOfferbookChannel> channels) {
+        this.channels.setAll(channels);
     }
 
     @Override
     public bisq.chat.protobuf.BisqEasyOfferbookChannelStore toProto() {
-        bisq.chat.protobuf.BisqEasyOfferbookChannelStore.Builder builder = bisq.chat.protobuf.BisqEasyOfferbookChannelStore.newBuilder()
+        return bisq.chat.protobuf.BisqEasyOfferbookChannelStore.newBuilder()
                 .addAllChannels(channels.stream().map(BisqEasyOfferbookChannel::toProto).collect(Collectors.toList()))
-                .addAllVisibleChannelIds(visibleChannelIds);
-        return builder.build();
+                .build();
     }
 
     public static BisqEasyOfferbookChannelStore fromProto(bisq.chat.protobuf.BisqEasyOfferbookChannelStore proto) {
-        List<BisqEasyOfferbookChannel> privateTradeChannels = proto.getChannelsList().stream()
+        return new BisqEasyOfferbookChannelStore(proto.getChannelsList().stream()
                 .map(e -> (BisqEasyOfferbookChannel) BisqEasyOfferbookChannel.fromProto(e))
-                .collect(Collectors.toList());
-        return new BisqEasyOfferbookChannelStore(privateTradeChannels, new HashSet<>(proto.getVisibleChannelIdsList()));
+                .collect(Collectors.toList()));
     }
 
     @Override
@@ -71,18 +63,12 @@ public class BisqEasyOfferbookChannelStore implements PersistableStore<BisqEasyO
     }
 
     @Override
-    public void applyPersisted(BisqEasyOfferbookChannelStore chatStore) {
-        setAll(chatStore.getChannels(), chatStore.getVisibleChannelIds());
+    public void applyPersisted(BisqEasyOfferbookChannelStore persisted) {
+        channels.setAll(persisted.getChannels());
     }
 
     @Override
     public BisqEasyOfferbookChannelStore getClone() {
-        return new BisqEasyOfferbookChannelStore(channels, visibleChannelIds);
-    }
-
-    public void setAll(List<BisqEasyOfferbookChannel> privateTradeChannels, Set<String> visibleChannelIds) {
-        this.channels.setAll(privateTradeChannels);
-        this.visibleChannelIds.clear();
-        this.visibleChannelIds.addAll(visibleChannelIds);
+        return new BisqEasyOfferbookChannelStore(channels);
     }
 }

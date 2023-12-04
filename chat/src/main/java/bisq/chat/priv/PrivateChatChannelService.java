@@ -115,7 +115,10 @@ public abstract class PrivateChatChannelService<
         return bannedUserService.isUserProfileBanned(userProfile);
     }
 
-    @Override
+    public void leaveChannel(String id) {
+        findChannel(id).ifPresent(this::leaveChannel);
+    }
+
     public void leaveChannel(C channel) {
         synchronized (this) {
             getChannels().remove(channel);

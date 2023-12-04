@@ -109,6 +109,11 @@ public abstract class PrivateChannelSelectionMenu<
                         });
             }
         }
+
+        protected void doLeaveChannel(C chatChannel) {
+            chatChannelService.leaveChannel(chatChannel);
+            chatChannelSelectionService.maybeSelectFirstChannel();
+        }
     }
 
     protected abstract static class View<

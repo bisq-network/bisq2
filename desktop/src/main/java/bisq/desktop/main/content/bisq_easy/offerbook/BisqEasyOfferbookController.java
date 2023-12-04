@@ -195,13 +195,7 @@ public class BisqEasyOfferbookController extends ChatController<BisqEasyOfferboo
     void onSwitchMarketChannel(MarketChannelItem marketChannelItem) {
         if (marketChannelItem != null) {
             bisqEasyOfferbookChannelService.findChannel(marketChannelItem.getMarket())
-                    .ifPresent(channel -> {
-                        if (bisqEasyOfferbookSelectionService.getSelectedChannel().get() != null) {
-                            bisqEasyOfferbookChannelService.leaveChannel(bisqEasyOfferbookSelectionService.getSelectedChannel().get().getId());
-                        }
-                        bisqEasyOfferbookChannelService.joinChannel(channel);
-                        bisqEasyOfferbookSelectionService.selectChannel(channel);
-                    });
+                    .ifPresent(bisqEasyOfferbookSelectionService::selectChannel);
             updateMarketItemsPredicate();
         }
     }
@@ -216,7 +210,7 @@ public class BisqEasyOfferbookController extends ChatController<BisqEasyOfferboo
     }
 
     private void updateMarketItemsPredicate() {
-        model.getFilteredMarketChannelItems().setPredicate(item -> !bisqEasyOfferbookChannelService.isVisible(item.getChannel()));
+        //model.getFilteredMarketChannelItems().setPredicate(item -> !bisqEasyOfferbookChannelService.isVisible(item.getChannel()));
     }
 
     private boolean isMaker(BisqEasyOffer bisqEasyOffer) {

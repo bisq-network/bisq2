@@ -190,11 +190,6 @@ public abstract class ChannelSelectionMenu<
             }
         }
 
-        protected void doLeaveChannel(C chatChannel) {
-            chatChannelService.leaveChannel(chatChannel);
-            chatChannelSelectionService.maybeSelectFirstChannel();
-        }
-
         protected ChannelSelectionMenu.View.ChannelItem findOrCreateChannelItem(ChatChannel<? extends ChatMessage> chatChannel) {
             return model.channels.stream()
                     .filter(Objects::nonNull)
