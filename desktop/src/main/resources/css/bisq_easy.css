@@ -26,6 +26,19 @@
     -fx-font-family: "IBM Plex Sans";
 }
 
+.bisq-easy-trade-isInMediation-headline {
+    -fx-fill: -bisq-dark-grey-lit;
+    -fx-text-fill: -bisq-dark-grey-lit;
+    -fx-font-size: 1.15em;
+    -fx-font-family: "IBM Plex Sans";
+}
+
+.bisq-easy-trade-isInMediation-bg {
+    -fx-background-color: -bisq-yellow;
+    -fx-background-radius: 8;
+    -fx-border-color: transparent;
+}
+
 
 /*******************************************************************************
  * Trade guide                                                            *

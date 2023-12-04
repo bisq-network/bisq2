@@ -24,6 +24,7 @@ import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeSelectionService;
 import bisq.common.observable.Pin;
 import bisq.contract.Role;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
@@ -58,7 +59,7 @@ public class TradeStateController implements Controller {
     private final BisqEasyOpenTradeChannelService channelService;
     private final BisqEasyOpenTradeSelectionService selectionService;
     private final MediationRequestService mediationRequestService;
-    private Pin bisqEasyTradeStatePin;
+    private Pin bisqEasyTradeStatePin, isInMediationPin;
     private Subscription channelPin;
 
     public TradeStateController(ServiceProvider serviceProvider) {
@@ -104,6 +105,11 @@ public class TradeStateController implements Controller {
 
             model.reset();
 
+            if (isInMediationPin != null) {
+                isInMediationPin.unbind();
+            }
+            isInMediationPin = FxBindings.bind(model.getIsInMediation()).to(channel.isInMediationObservable());
+
             BisqEasyTrade bisqEasyTrade = optionalBisqEasyTrade.get();
             model.getBisqEasyTrade().set(bisqEasyTrade);
 
@@ -117,10 +123,15 @@ public class TradeStateController implements Controller {
     @Override
     public void onDeactivate() {
         channelPin.unsubscribe();
+        if (isInMediationPin != null) {
+            isInMediationPin.unbind();
+            isInMediationPin = null;
+        }
         if (bisqEasyTradeStatePin != null) {
             bisqEasyTradeStatePin.unbind();
             bisqEasyTradeStatePin = null;
         }
+
         model.resetAll();
     }
 
@@ -199,7 +210,7 @@ public class TradeStateController implements Controller {
     }
 
     void onReportToMediator() {
-        OpenTradesUtils.openDispute(model.getChannel().get(),
+        OpenTradesUtils.reportToMediator(model.getChannel().get(),
                 model.getBisqEasyTrade().get().getContract(),
                 mediationRequestService);
     }

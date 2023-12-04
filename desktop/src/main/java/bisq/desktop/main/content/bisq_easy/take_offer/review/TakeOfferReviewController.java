@@ -48,12 +48,14 @@ import bisq.offer.price.spec.PriceSpec;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.PercentageFormatter;
 import bisq.presentation.formatters.PriceFormatter;
+import bisq.support.mediation.MediationRequestService;
 import bisq.trade.TradeException;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
+import bisq.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -62,6 +64,7 @@ import java.util.function.Consumer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+// TODO Consider to use a base class to avoid code duplication with TradeWizardReviewController
 @Slf4j
 public class TakeOfferReviewController implements Controller {
     private final TakeOfferReviewModel model;
@@ -78,6 +81,7 @@ public class TakeOfferReviewController implements Controller {
     private final BannedUserService bannedUserService;
     private final ReviewDataDisplay reviewDataDisplay;
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
+    private final MediationRequestService mediationRequestService;
 
     public TakeOfferReviewController(ServiceProvider serviceProvider,
                                      Consumer<Boolean> mainButtonsVisibleHandler,
@@ -91,6 +95,7 @@ public class TakeOfferReviewController implements Controller {
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
         bannedUserService = serviceProvider.getUserService().getBannedUserService();
+        mediationRequestService = serviceProvider.getSupportService().getMediationRequestService();
 
         priceInput = new PriceInput(serviceProvider.getBondedRolesService().getMarketPriceService());
         reviewDataDisplay = new ReviewDataDisplay();
@@ -172,22 +177,48 @@ public class TakeOfferReviewController implements Controller {
         }
     }
 
-    public void doTakeOffer() {
+    public void takeOffer(Runnable onCancelHandler) {
+        BisqEasyOffer bisqEasyOffer = model.getBisqEasyOffer();
+        if (bannedUserService.isNetworkIdBanned(bisqEasyOffer.getMakerNetworkId())) {
+            new Popup().warning(Res.get("bisqEasy.takeOffer.makerBanned.warning")).show();
+            onCancelHandler.run();
+            return;
+        }
+        UserIdentity takerIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
+        if (bannedUserService.isUserProfileBanned(takerIdentity.getUserProfile())) {
+            // If taker is banned we don't need to show them a popup
+            onCancelHandler.run();
+            return;
+        }
+        Optional<UserProfile> mediator = mediationRequestService.selectMediator(bisqEasyOffer.getMakersUserProfileId(), takerIdentity.getId());
+        if (mediator.isEmpty()) {
+            new Popup().warning(Res.get("bisqEasy.takeOffer.noMediatorAvailable.warning"))
+                    .closeButtonText(Res.get("confirmation.no"))
+                    .onClose(onCancelHandler)
+                    .actionButtonText(Res.get("confirmation.yes"))
+                    .onAction(() -> doTakeOffer(bisqEasyOffer, takerIdentity, mediator))
+                    .show();
+        } else {
+            doTakeOffer(bisqEasyOffer, takerIdentity, mediator);
+        }
+    }
+
+    private void doTakeOffer(BisqEasyOffer bisqEasyOffer, UserIdentity takerIdentity, Optional<UserProfile> mediator) {
+        Monetary takersBaseSideAmount = model.getTakersBaseSideAmount();
+        Monetary takersQuoteSideAmount = model.getTakersQuoteSideAmount();
+        FiatPaymentMethodSpec fiatPaymentMethodSpec = model.getFiatPaymentMethodSpec();
+        PriceSpec sellersPriceSpec = model.getSellersPriceSpec();
+        long marketPrice = model.getMarketPrice();
         try {
-            UserIdentity myUserIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
-            if (bannedUserService.isNetworkIdBanned(model.getBisqEasyOffer().getMakerNetworkId()) ||
-                    bannedUserService.isUserProfileBanned(myUserIdentity.getUserProfile())) {
-                return;
-            }
-            BisqEasyOffer bisqEasyOffer = model.getBisqEasyOffer();
-            BisqEasyTrade bisqEasyTrade = bisqEasyTradeService.onTakeOffer(myUserIdentity.getIdentity(),
+            BisqEasyTrade bisqEasyTrade = bisqEasyTradeService.onTakeOffer(takerIdentity.getIdentity(),
                     bisqEasyOffer,
-                    model.getTakersBaseSideAmount(),
-                    model.getTakersQuoteSideAmount(),
+                    takersBaseSideAmount,
+                    takersQuoteSideAmount,
                     bisqEasyOffer.getBaseSidePaymentMethodSpecs().get(0),
-                    model.getFiatPaymentMethodSpec(),
-                    model.getSellersPriceSpec(),
-                    model.getMarketPrice());
+                    fiatPaymentMethodSpec,
+                    mediator,
+                    sellersPriceSpec,
+                    marketPrice);
 
             model.setBisqEasyTrade(bisqEasyTrade);
 
@@ -205,6 +236,7 @@ public class TakeOfferReviewController implements Controller {
                         mainButtonsVisibleHandler.accept(false);
                     }));
         } catch (TradeException e) {
+            //todo add better error handling
             new Popup().error(e).show();
         }
     }

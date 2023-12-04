@@ -599,25 +599,19 @@
     -fx-content-display: LEFT;
     -fx-border-color: transparent;
     -fx-border-width: 1px;
-    -fx-text-fill: -fx-text-background-color;
+    -fx-text-fill: -fx-mid-text-color;
     -fx-underline: true;
 }
 .hyperlink:hover,
 .hyperlink:hover:visited {
-    -fx-text-fill: -fx-accent;
+    -fx-text-fill: -fx-light-text-color;
 }
 .hyperlink:visited {
     -fx-text-fill: -fx-mid-text-color;
 }
 
-.hyperlink:hover,
-.hyperlink:visited,
-.hyperlink:hover:visited {
-    -fx-underline: true;
-}
 .hyperlink:focused {
-    -fx-border-color: -fx-focus-color;
-    -fx-border-width: 0px;
+    -fx-border-color: transparent;
 }
 
 /* Fix for RT-37971 */

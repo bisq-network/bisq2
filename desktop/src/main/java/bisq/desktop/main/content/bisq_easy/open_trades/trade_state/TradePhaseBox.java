@@ -134,6 +134,8 @@ class TradePhaseBox {
                         case MAKER_SENT_TAKE_OFFER_RESPONSE:
                         case TAKER_RECEIVED_TAKE_OFFER_RESPONSE:
                             model.getPhaseIndex().set(0);
+                            model.getRequestMediationButtonVisible().set(false);
+                            model.getReportToMediatorButtonVisible().set(true);
                             break;
 
                         case SELLER_SENT_ACCOUNT_DATA:
@@ -141,29 +143,37 @@ class TradePhaseBox {
                         case BUYER_SENT_FIAT_SENT_CONFIRMATION:
                         case SELLER_RECEIVED_FIAT_SENT_CONFIRMATION:
                             model.getPhaseIndex().set(1);
+                            model.getRequestMediationButtonVisible().set(false);
+                            model.getReportToMediatorButtonVisible().set(true);
                             break;
                         case BUYER_SENT_BTC_ADDRESS:
                         case SELLER_RECEIVED_BTC_ADDRESS:
                         case SELLER_CONFIRMED_FIAT_RECEIPT:
                         case BUYER_RECEIVED_SELLERS_FIAT_RECEIPT_CONFIRMATION:
                             model.getPhaseIndex().set(2);
+                            model.getRequestMediationButtonVisible().set(true);
+                            model.getReportToMediatorButtonVisible().set(false);
                             break;
 
                         case SELLER_SENT_BTC_SENT_CONFIRMATION:
                         case BUYER_RECEIVED_BTC_SENT_CONFIRMATION:
                             model.getPhaseIndex().set(3);
+                            model.getRequestMediationButtonVisible().set(true);
+                            model.getReportToMediatorButtonVisible().set(false);
                             break;
 
                         case BTC_CONFIRMED:
                             model.getPhaseIndex().set(4);
+                            model.getRequestMediationButtonVisible().set(false);
+                            model.getReportToMediatorButtonVisible().set(true);
                             break;
 
                         case REJECTED:
                         case CANCELLED:
+                            model.getRequestMediationButtonVisible().set(false);
+                            model.getReportToMediatorButtonVisible().set(true);
                             break;
                     }
-                    int phaseIndex = model.getPhaseIndex().get();
-                    model.getDisputeButtonVisible().set(phaseIndex == 2 || phaseIndex == 3);
 
                     if (state.ordinal() >= BisqEasyTradeState.BUYER_SENT_FIAT_SENT_CONFIRMATION.ordinal()) {
                         model.getPhase2Info().set(isBuyer ?
@@ -198,11 +208,18 @@ class TradePhaseBox {
             Navigation.navigateTo(NavigationTarget.WALLET_GUIDE);
         }
 
-        void onOpenDispute() {
-            OpenTradesUtils.openDispute(model.getSelectedChannel(),
+        void onReportToMediator() {
+            OpenTradesUtils.reportToMediator(model.getSelectedChannel(),
                     model.getBisqEasyTrade().getContract(),
                     mediationRequestService);
         }
+
+        void onRequestMediation() {
+            OpenTradesUtils.requestMediation(model.getSelectedChannel(),
+                    model.getBisqEasyTrade().getContract(),
+                    mediationRequestService);
+        }
+
     }
 
     @Getter
@@ -211,7 +228,8 @@ class TradePhaseBox {
         private BisqEasyOpenTradeChannel selectedChannel;
         @Setter
         private BisqEasyTrade bisqEasyTrade;
-        private final BooleanProperty disputeButtonVisible = new SimpleBooleanProperty();
+        private final BooleanProperty requestMediationButtonVisible = new SimpleBooleanProperty();
+        private final BooleanProperty reportToMediatorButtonVisible = new SimpleBooleanProperty();
         private final BooleanProperty isInMediation = new SimpleBooleanProperty();
         private final IntegerProperty phaseIndex = new SimpleIntegerProperty();
         private final StringProperty phase1Info = new SimpleStringProperty();
@@ -223,7 +241,7 @@ class TradePhaseBox {
         void reset() {
             selectedChannel = null;
             bisqEasyTrade = null;
-            disputeButtonVisible.set(false);
+            requestMediationButtonVisible.set(false);
             isInMediation.set(false);
             phaseIndex.set(0);
             phase1Info.set(null);
@@ -236,8 +254,8 @@ class TradePhaseBox {
 
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final Label phase1Label, phase2Label, phase3Label, phase4Label, phase5Label;
-        private final Button disputeButton;
-        private final Hyperlink openTradeGuide, walletHelp;
+        private final Button requestMediationButton;
+        private final Hyperlink openTradeGuide, walletHelp, reportToMediator;
         private final List<Triple<HBox, Label, Badge>> phaseItems;
         private Subscription phaseIndexPin;
 
@@ -269,19 +287,21 @@ class TradePhaseBox {
 
             walletHelp = new Hyperlink(Res.get("bisqEasy.walletGuide.open"), ImageUtil.getImageViewById("icon-wallet"));
             walletHelp.setGraphicTextGap(5);
-            walletHelp.getStyleClass().add("text-fill-grey-dimmed");
 
             openTradeGuide = new Hyperlink(Res.get("bisqEasy.tradeGuide.open"), ImageUtil.getImageViewById("icon-help"));
             openTradeGuide.setGraphicTextGap(5);
-            openTradeGuide.getStyleClass().add("text-fill-grey-dimmed");
 
-            disputeButton = new Button(Res.get("bisqEasy.tradeState.openDispute"));
-            disputeButton.getStyleClass().add("outlined-button");
+            reportToMediator = new Hyperlink(Res.get("bisqEasy.tradeState.reportToMediator"), ImageUtil.getImageViewById("icon-report"));
+            reportToMediator.setGraphicTextGap(5);
+
+            requestMediationButton = new Button(Res.get("bisqEasy.tradeState.requestMediation"));
+            requestMediationButton.getStyleClass().add("outlined-button");
 
             VBox.setMargin(phase1HBox, new Insets(25, 0, 0, 0));
-            VBox.setMargin(disputeButton, new Insets(15, 0, 0, 0));
-            VBox.setMargin(walletHelp, new Insets(30, 0, 0, 2));
-            VBox.setMargin(openTradeGuide, new Insets(0, 0, 0, 2));
+            VBox.setMargin(requestMediationButton, new Insets(15, 0, 0, 0));
+            VBox.setMargin(walletHelp, new Insets(30, 0, 0, 3));
+            VBox.setMargin(openTradeGuide, new Insets(0, 0, 0, 3));
+            VBox.setMargin(reportToMediator, new Insets(0, 0, 0, 3));
 
             root.getChildren().addAll(
                     phase1HBox,
@@ -296,7 +316,8 @@ class TradePhaseBox {
                     Spacer.fillVBox(),
                     walletHelp,
                     openTradeGuide,
-                    disputeButton);
+                    reportToMediator,
+                    requestMediationButton);
         }
 
         @Override
@@ -306,11 +327,14 @@ class TradePhaseBox {
             phase3Label.textProperty().bind(model.getPhase3Info());
             phase4Label.textProperty().bind(model.getPhase4Info());
             phase5Label.textProperty().bind(model.getPhase5Info());
-            disputeButton.visibleProperty().bind(model.getDisputeButtonVisible());
-            disputeButton.managedProperty().bind(model.getDisputeButtonVisible());
-            disputeButton.disableProperty().bind(model.getIsInMediation());
+            reportToMediator.visibleProperty().bind(model.getReportToMediatorButtonVisible().and(model.getIsInMediation().not()));
+            reportToMediator.managedProperty().bind(reportToMediator.visibleProperty());
+            requestMediationButton.visibleProperty().bind(model.getRequestMediationButtonVisible());
+            requestMediationButton.managedProperty().bind(model.getRequestMediationButtonVisible());
+            requestMediationButton.disableProperty().bind(model.getIsInMediation());
 
-            disputeButton.setOnAction(e -> controller.onOpenDispute());
+            requestMediationButton.setOnAction(e -> controller.onRequestMediation());
+            reportToMediator.setOnAction(e -> controller.onReportToMediator());
             openTradeGuide.setOnAction(e -> controller.onOpenTradeGuide());
             walletHelp.setOnAction(e -> controller.onOpenWalletHelp());
             phaseIndexPin = EasyBind.subscribe(model.getPhaseIndex(), this::phaseIndexChanged);
@@ -323,11 +347,14 @@ class TradePhaseBox {
             phase3Label.textProperty().unbind();
             phase4Label.textProperty().unbind();
             phase5Label.textProperty().unbind();
-            disputeButton.visibleProperty().unbind();
-            disputeButton.managedProperty().unbind();
-            disputeButton.disableProperty().unbind();
+            reportToMediator.visibleProperty().unbind();
+            reportToMediator.managedProperty().unbind();
+            requestMediationButton.visibleProperty().unbind();
+            requestMediationButton.managedProperty().unbind();
+            requestMediationButton.disableProperty().unbind();
 
-            disputeButton.setOnAction(null);
+            requestMediationButton.setOnAction(null);
+            reportToMediator.setOnAction(null);
             walletHelp.setOnAction(null);
             openTradeGuide.setOnAction(null);
 
