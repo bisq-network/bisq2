@@ -14,7 +14,6 @@ compileJava {
 
 application {
     project.mainClassName = 'bisq.desktop_app_launcher.DesktopAppLauncher'
-    applicationDefaultJvmArgs = []
 }
 
 run {
