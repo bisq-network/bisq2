@@ -19,8 +19,13 @@ package bisq.desktop.common;
 
 import bisq.common.util.ExceptionUtil;
 import bisq.common.util.OsUtils;
+import bisq.desktop.common.utils.ClipboardUtil;
+import bisq.desktop.components.overlay.Popup;
+import bisq.i18n.Res;
+import bisq.settings.CookieKey;
+import bisq.settings.DontShowAgainService;
+import bisq.settings.SettingsService;
 import javafx.application.HostServices;
-import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -29,20 +34,46 @@ import javax.annotation.Nullable;
 public class Browser {
     @Nullable
     private static HostServices hostServices;
+    private static SettingsService settingsService;
 
-    public static void setHostServices(@NonNull HostServices hostServices) {
+    public static void initialize(HostServices hostServices, SettingsService settingsService) {
         Browser.hostServices = hostServices;
+        Browser.settingsService = settingsService;
     }
 
-    public static void open(String uri) {
+    public static void open(String url) {
+        String id = "hyperlinks.openInBrowser";
+        if (DontShowAgainService.showAgain(id)) {
+            new Popup().attention(Res.get("hyperlinks.openInBrowser.attention", url))
+                    .closeButtonText(Res.get("hyperlinks.openInBrowser.no"))
+                    .onClose(() -> {
+                        settingsService.setCookie(CookieKey.PERMIT_OPENING_BROWSER, false);
+                        ClipboardUtil.copyToClipboard(url);
+                    })
+                    .actionButtonText(Res.get("confirmation.yes"))
+                    .onAction(() -> {
+                        settingsService.setCookie(CookieKey.PERMIT_OPENING_BROWSER, true);
+                        doOpen(url);
+                    })
+                    .dontShowAgainId(id)
+                    .show();
+        } else if (settingsService.getCookie().asBoolean(CookieKey.PERMIT_OPENING_BROWSER).orElse(false)) {
+            doOpen(url);
+        } else {
+            ClipboardUtil.copyToClipboard(url);
+        }
+    }
+
+    private static void doOpen(String url) {
         if (hostServices == null) {
             throw new IllegalArgumentException("hostServices must be set before open is called");
         }
         try {
-            hostServices.showDocument(uri);
+            hostServices.showDocument(url);
         } catch (Exception e) {
-            log.error("Error at opening URL with hostServices.showDocument. We try to open it via OsUtils.browse. Error={}; URL={}", ExceptionUtil.print(e), uri);
-            OsUtils.browse(uri);
+            log.error("Error at opening URL with hostServices.showDocument. We try to open it via OsUtils.browse. Error={}; URL={}",
+                    ExceptionUtil.print(e), url);
+            OsUtils.browse(url);
         }
     }
 }
