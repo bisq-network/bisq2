@@ -119,7 +119,7 @@ public class BurnScoreSimulation {
             simHeadline.getStyleClass().addAll("bisq-text-1");
             amount = getInputField("user.reputation.sim.burnAmount");
             age = getInputField("user.reputation.sim.age");
-            ageSlider = new AgeSlider(0, 400, 0);
+            ageSlider = new AgeSlider(0, 1000, 0);
             score = getField(Res.get("user.reputation.sim.score"));
             VBox.setMargin(ageSlider.getView().getRoot(), new Insets(15, 0, 0, 0));
             root.getChildren().addAll(simHeadline,

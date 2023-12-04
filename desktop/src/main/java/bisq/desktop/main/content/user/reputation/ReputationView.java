@@ -70,17 +70,17 @@ public class ReputationView extends View<VBox, ReputationModel, ReputationContro
         bsqBondButton.getStyleClass().add("button-reduced-padding");
         bsqBondButton.setPrefWidth(130);
 
-        accountAgeButton = new Button(Res.get("user.reputation.accountAge"));
-        accountAgeButton.getStyleClass().add("button-reduced-padding");
-        accountAgeButton.setPrefWidth(140);
-
         signedAccountButton = new Button(Res.get("user.reputation.signedWitness"));
         signedAccountButton.getStyleClass().add("button-reduced-padding");
         signedAccountButton.setPrefWidth(230);
 
+        accountAgeButton = new Button(Res.get("user.reputation.accountAge"));
+        accountAgeButton.getStyleClass().add("button-reduced-padding");
+        accountAgeButton.setPrefWidth(140);
+
         learnMore = new Hyperlink(Res.get("action.learnMore"));
 
-        HBox buttons = new HBox(20, burnBsqButton, bsqBondButton, accountAgeButton, signedAccountButton);
+        HBox buttons = new HBox(20, burnBsqButton, bsqBondButton, signedAccountButton, accountAgeButton);
 
         VBox.setMargin(headlineLabel, new Insets(-10, 0, 0, 0));
         VBox.setMargin(buttons, new Insets(10, 0, 0, 0));
@@ -109,8 +109,8 @@ public class ReputationView extends View<VBox, ReputationModel, ReputationContro
     protected void onViewAttached() {
         burnBsqButton.setOnAction(e -> controller.onBurnBsq());
         bsqBondButton.setOnAction(e -> controller.onBsqBond());
-        accountAgeButton.setOnAction(e -> controller.onAccountAge());
         signedAccountButton.setOnAction(e -> controller.onSignedAccount());
+        accountAgeButton.setOnAction(e -> controller.onAccountAge());
         learnMore.setOnAction(e -> controller.onLearnMore());
 
         userProfileIdOfScoreUpdatePin = EasyBind.subscribe(model.getUserProfileIdOfScoreUpdate(), profileId -> {
@@ -124,8 +124,8 @@ public class ReputationView extends View<VBox, ReputationModel, ReputationContro
     protected void onViewDetached() {
         burnBsqButton.setOnAction(null);
         bsqBondButton.setOnAction(null);
-        accountAgeButton.setOnAction(null);
         signedAccountButton.setOnAction(null);
+        accountAgeButton.setOnAction(null);
         learnMore.setOnAction(null);
 
         userProfileIdOfScoreUpdatePin.unsubscribe();

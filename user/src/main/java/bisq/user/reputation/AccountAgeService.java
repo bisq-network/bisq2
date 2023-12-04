@@ -52,8 +52,8 @@ import java.util.concurrent.TimeUnit;
 @Getter
 @Slf4j
 public class AccountAgeService extends SourceReputationService<AuthorizedAccountAgeData> implements PersistenceClient<AccountAgeStore> {
-    public static final long WEIGHT = 10;
-    public static final long MAX_DAYS_AGE_SCORE = 365;
+    public static final long WEIGHT = 25;
+    public static final long MAX_DAYS_AGE_SCORE = 1000;
 
     // Has to be in sync with Bisq1 class
     @Getter

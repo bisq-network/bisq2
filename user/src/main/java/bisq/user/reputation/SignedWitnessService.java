@@ -52,7 +52,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class SignedWitnessService extends SourceReputationService<AuthorizedSignedWitnessData> implements PersistenceClient<SignedWitnessStore> {
     public static final long WEIGHT = 50;
-    public static final long MAX_DAYS_AGE_SCORE = 365;
+    public static final long MAX_DAYS_AGE_SCORE = 1000;
 
     // Has to be in sync with Bisq1 class
     @Getter
