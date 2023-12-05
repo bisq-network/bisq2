@@ -67,7 +67,6 @@ public class DataNetworkService implements PeerGroupManager.Listener, Node.Liste
     public CompletableFuture<Boolean> shutdown() {
         node.removeListener(this);
         peerGroupManager.removeListener(this);
-        broadcaster.shutdown();
         return CompletableFuture.completedFuture(true);
     }
 
@@ -120,9 +119,5 @@ public class DataNetworkService implements PeerGroupManager.Listener, Node.Liste
 
     void removeListener(DataNetworkService.Listener listener) {
         listeners.remove(listener);
-    }
-
-    public boolean isNodeInitialized() {
-        return node.isInitialized();
     }
 }

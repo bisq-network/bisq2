@@ -143,14 +143,6 @@ public class StorageService {
         appendOnlyDataStores.values().forEach(DataStorageService::shutdown);
     }
 
-    public void addListener(StorageService.Listener listener) {
-        listeners.add(listener);
-    }
-
-    public void removeListener(StorageService.Listener listener) {
-        listeners.remove(listener);
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Get AuthenticatedData
@@ -412,5 +404,18 @@ public class StorageService {
                     return Path.of(directory, storageFileName).toFile().exists();
                 })
                 .collect(Collectors.toSet());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Listeners
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public void addListener(StorageService.Listener listener) {
+        listeners.add(listener);
+    }
+
+    public void removeListener(StorageService.Listener listener) {
+        listeners.remove(listener);
     }
 }

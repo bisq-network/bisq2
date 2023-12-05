@@ -98,7 +98,6 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     private final HttpClientsByTransport httpClientsByTransport;
     @Getter
     private final Optional<DataService> dataService;
-    private final NetworkLoadService networkLoadService;
     @Getter
     private final ServiceNodesByTransport serviceNodesByTransport;
     private final Optional<MessageDeliveryStatusService> messageDeliveryStatusService;
@@ -127,7 +126,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                 Optional.of(new MessageDeliveryStatusService(persistenceService, keyPairService, this)) :
                 Optional.empty();
 
-        networkLoadService = new NetworkLoadService();
+        NetworkLoadService networkLoadService = new NetworkLoadService();
 
         serviceNodesByTransport = new ServiceNodesByTransport(config.getConfigByTransportType(),
                 config.getServiceNodeConfig(),
@@ -164,10 +163,6 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     // Service
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    /**
-     * Initialize default node and initialize peerGroupService.
-     * We require at least one successful bootstrap from the available transports.
-     */
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
         return CompletableFuture.completedFuture(true);

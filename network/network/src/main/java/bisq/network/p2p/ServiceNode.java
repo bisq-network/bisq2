@@ -110,7 +110,6 @@ public class ServiceNode {
     }
 
     private final Config config;
-    private final Node.Config nodeConfig;
     private final PeerGroupManager.Config peerGroupServiceConfig;
     private final Optional<DataService> dataService;
     private final InventoryService.Config inventoryServiceConfig;
@@ -119,7 +118,6 @@ public class ServiceNode {
     private final PersistenceService persistenceService;
     private final Set<Address> seedNodeAddresses;
     private final TransportType transportType;
-    private final NetworkLoadService networkLoadService;
 
     @Getter
     private final NodesById nodesById;
@@ -154,7 +152,6 @@ public class ServiceNode {
                        TransportType transportType,
                        NetworkLoadService networkLoadService) {
         this.config = config;
-        this.nodeConfig = nodeConfig;
         this.peerGroupServiceConfig = peerGroupServiceConfig;
         this.inventoryServiceConfig = inventoryServiceConfig;
         this.messageDeliveryStatusService = messageDeliveryStatusService;
@@ -163,7 +160,6 @@ public class ServiceNode {
         this.persistenceService = persistenceService;
         this.seedNodeAddresses = seedNodeAddresses;
         this.transportType = transportType;
-        this.networkLoadService = networkLoadService;
 
         transportService = TransportService.create(transportType, nodeConfig.getTransportConfig());
         nodesById = new NodesById(banList, nodeConfig, transportService, networkLoadService, authorizationService);
@@ -181,7 +177,9 @@ public class ServiceNode {
                         seedNodeAddresses)) :
                 Optional.empty();
 
-        boolean dataServiceEnabled = supportedServices.contains(SupportedService.PEER_GROUP) && supportedServices.contains(SupportedService.DATA);
+        boolean dataServiceEnabled = supportedServices.contains(SupportedService.PEER_GROUP) &&
+                supportedServices.contains(SupportedService.DATA);
+
         dataNetworkService = dataServiceEnabled ?
                 Optional.of(dataService.orElseThrow().getDataServicePerTransport(transportType,
                         defaultNode,
