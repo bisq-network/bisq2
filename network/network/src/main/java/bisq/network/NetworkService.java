@@ -199,12 +199,20 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         return serviceNodesByTransport.getInitializedNode(transportType, networkId, torIdentity);
     }
 
-    public CompletableFuture<List<Node>> getAllInitializedNodes(NetworkId networkId, TorIdentity torIdentity) {
-        return serviceNodesByTransport.getAllInitializedNodes(networkId, torIdentity);
-    }
-
+    /**
+     * Returns a future of the first initialized node on any transport
+     */
     public CompletableFuture<Node> getAnyInitializedNode(NetworkId networkId, TorIdentity torIdentity) {
         return serviceNodesByTransport.getAnyInitializedNode(networkId, torIdentity);
+    }
+
+    /**
+     * Returns a future of a list of all initialized nodes on all transports
+     * A slow transport would delay the result. A failing transport would let the result future fail.
+     * In most cases we do not want to be that strict.
+     */
+    public CompletableFuture<List<Node>> getAllInitializedNodes(NetworkId networkId, TorIdentity torIdentity) {
+        return serviceNodesByTransport.getAllInitializedNodes(networkId, torIdentity);
     }
 
 

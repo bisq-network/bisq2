@@ -33,7 +33,9 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
 import java.security.KeyPair;
-import java.util.*;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -52,9 +54,6 @@ public class IdentityServiceTest {
         NetworkService networkService = mock(NetworkService.class);
         when(networkService.getSupportedTransportTypes()).thenReturn(Set.of(TransportType.TOR));
 
-        List<Node> initializedNodes = Collections.emptyList();
-        doReturn(CompletableFuture.completedFuture(initializedNodes))
-                .when(networkService).getAllInitializedNodes(any(), any());
         doReturn(CompletableFuture.completedFuture(mock(Node.class)))
                 .when(networkService).getAnyInitializedNode(any(), any());
 
