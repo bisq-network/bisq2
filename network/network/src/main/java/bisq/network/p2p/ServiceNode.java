@@ -117,7 +117,6 @@ public class ServiceNode {
     private final KeyPairService keyPairService;
     private final PersistenceService persistenceService;
     private final Set<Address> seedNodeAddresses;
-    private final TransportType transportType;
 
     @Getter
     private final NodesById nodesById;
@@ -159,7 +158,6 @@ public class ServiceNode {
         this.keyPairService = keyPairService;
         this.persistenceService = persistenceService;
         this.seedNodeAddresses = seedNodeAddresses;
-        this.transportType = transportType;
 
         transportService = TransportService.create(transportType, nodeConfig.getTransportConfig());
         nodesById = new NodesById(banList, nodeConfig, transportService, networkLoadService, authorizationService);
@@ -181,9 +179,7 @@ public class ServiceNode {
                 supportedServices.contains(SupportedService.DATA);
 
         dataNetworkService = dataServiceEnabled ?
-                Optional.of(dataService.orElseThrow().getDataServicePerTransport(transportType,
-                        defaultNode,
-                        peerGroupManager.orElseThrow())) :
+                Optional.of(new DataNetworkService(defaultNode, peerGroupManager.orElseThrow(), dataService.orElseThrow())) :
                 Optional.empty();
 
         inventoryService = dataServiceEnabled ?
