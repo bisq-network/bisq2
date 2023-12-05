@@ -129,6 +129,14 @@ public class ServiceNodesByTransport {
         return CompletableFutureUtils.allOf(futures).whenComplete((list, throwable) -> map.clear());
     }
 
+    public CompletableFuture<List<Node>> getAllInitializedNodes(NetworkId networkId, TorIdentity torIdentity) {
+        return CompletableFutureUtils.allOf(getInitializedNodeByTransport(networkId, torIdentity).values());
+    }
+
+    public CompletableFuture<Node> getAnyInitializedNode(NetworkId networkId, TorIdentity torIdentity) {
+        return CompletableFutureUtils.anyOf(getInitializedNodeByTransport(networkId, torIdentity).values());
+    }
+
     public Map<TransportType, CompletableFuture<Node>> getInitializedNodeByTransport(NetworkId networkId, TorIdentity torIdentity) {
         return map.entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey,

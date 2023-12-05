@@ -131,7 +131,7 @@ public class PocOpenOfferService implements PersistenceClient<PocOpenOfferStore>
                                                    List<BitcoinPaymentRail> selectedBaseSidePaymentPaymentRails,
                                                    List<FiatPaymentRail> selectedQuoteSidePaymentPaymentRails) {
         String offerId = StringUtils.createUid();
-        Identity identity = identityService.getOrCreateIdentity(offerId);
+        Identity identity = identityService.findActiveIdentity(offerId).orElseThrow();
         NetworkId makerNetworkId = identity.getNetworkId();
         List<TradeProtocolType> protocolTypes = new ArrayList<>(List.of(selectedProtocolTyp));
 
@@ -189,7 +189,7 @@ public class PocOpenOfferService implements PersistenceClient<PocOpenOfferStore>
     }
 
     public CompletableFuture<BroadcastResult> addToNetwork(PocOffer offer) {
-        Identity identity = identityService.getOrCreateIdentity(offer.getId());
+        Identity identity = identityService.findActiveIdentity(offer.getId()).orElseThrow();
         return networkService.publishAuthenticatedData(offer, identity.getNetworkIdWithKeyPair().getKeyPair());
     }
 

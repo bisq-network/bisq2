@@ -199,17 +199,12 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         return serviceNodesByTransport.getInitializedNode(transportType, networkId, torIdentity);
     }
 
-    public boolean isNodeOnAllTransportsInitialized(NetworkId networkId) {
-        return serviceNodesByTransport.isNodeOnAllTransportsInitialized(networkId);
-    }
-
-    // TODO: This might be too restrictive as any failing transport would result in a failed completableFuture
-
-    /**
-     * NetworkId of a fully initialized node (on all transports)
-     */
     public CompletableFuture<List<Node>> getAllInitializedNodes(NetworkId networkId, TorIdentity torIdentity) {
         return serviceNodesByTransport.getAllInitializedNodes(networkId, torIdentity);
+    }
+
+    public CompletableFuture<Node> getAnyInitializedNode(NetworkId networkId, TorIdentity torIdentity) {
+        return serviceNodesByTransport.getAnyInitializedNode(networkId, torIdentity);
     }
 
 
@@ -221,12 +216,13 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
      * Send message via given senderNetworkIdWithKeyPair to the receiverNetworkId as encrypted message.
      * If peer is offline and if message is of type mailBoxMessage it will not be stored as mailbox message in the
      * network.
+     * We send if at least one node on any transport was initialized
      */
     public CompletableFuture<SendMessageResult> confidentialSend(EnvelopePayloadMessage envelopePayloadMessage,
                                                                  NetworkId receiverNetworkId,
                                                                  NetworkIdWithKeyPair senderNetworkIdWithKeyPair,
                                                                  TorIdentity senderTorIdentity) {
-        return getAllInitializedNodes(senderNetworkIdWithKeyPair.getNetworkId(), senderTorIdentity)
+        return getAnyInitializedNode(senderNetworkIdWithKeyPair.getNetworkId(), senderTorIdentity)
                 .thenCompose(networkId -> supplyAsync(() -> serviceNodesByTransport.confidentialSend(envelopePayloadMessage,
                                 receiverNetworkId,
                                 senderNetworkIdWithKeyPair.getKeyPair(),

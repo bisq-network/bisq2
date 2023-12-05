@@ -83,14 +83,14 @@ public class IdentityServiceTest {
         String keyId = keyPairService.getKeyIdFromTag(identityTag);
         KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
         Identity activeIdentity = identityService.findActiveIdentity(identityTag)
-                .orElseGet(() -> identityService.createAndInitializeNewActiveIdentity(identityTag, keyId, keyPair));
+                .orElseGet(() -> identityService.createAndInitializeNewActiveIdentity(identityTag, keyId, keyPair).join());
 
         assertThat(activeIdentity.getTag()).isEqualTo(identityTag);
         assertThat(activeIdentity.getNetworkId().getPubKey().getKeyId()).isEqualTo(keyId);
         assertThat(activeIdentity.getKeyPair()).isEqualTo(keyPair);
 
         Identity persistedActiveIdentity = identityService.findActiveIdentity(identityTag)
-                .orElseGet(() -> identityService.createAndInitializeNewActiveIdentity(identityTag, keyId, keyPair));
+                .orElseGet(() -> identityService.createAndInitializeNewActiveIdentity(identityTag, keyId, keyPair).join());
         assertThat(activeIdentity).isSameAs(persistedActiveIdentity);
     }
 
@@ -107,8 +107,8 @@ public class IdentityServiceTest {
     @Test
     void createNewIdentity() {
         String myTag = "myTag";
-        Identity activeIdentity = identityService.createAndInitializeNewActiveIdentity(myTag);
-        Identity anotherActiveIdentity = identityService.createAndInitializeNewActiveIdentity(myTag);
+        Identity activeIdentity = identityService.createAndInitializeNewActiveIdentity(myTag).join();
+        Identity anotherActiveIdentity = identityService.createAndInitializeNewActiveIdentity(myTag).join();
 
         assertThat(activeIdentity).isNotSameAs(anotherActiveIdentity);
     }
@@ -154,7 +154,7 @@ public class IdentityServiceTest {
         var pubKey = new PubKey(keyPair.getPublic(), keyId);
         var networkId = new NetworkId(addressByTransportTypeMap, pubKey);
 
-        Optional<Identity> activeIdentity = identityService.findActiveIdentityByNetworkId(networkId);
+        Optional<Identity> activeIdentity = identityService.findActiveIdentity(networkId);
         assertThat(activeIdentity).isEmpty();
     }
 
@@ -172,7 +172,7 @@ public class IdentityServiceTest {
         String myTag = "myTag";
         Identity identity = identityService.getOrCreateIdentity(myTag);
 
-        Optional<Identity> activeIdentity = identityService.findActiveIdentityByNetworkId(identity.getNetworkId());
+        Optional<Identity> activeIdentity = identityService.findActiveIdentity(identity.getNetworkId());
         assertThat(activeIdentity).hasValue(identity);
     }
 
