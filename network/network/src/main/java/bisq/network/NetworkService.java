@@ -119,7 +119,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         Set<ServiceNode.SupportedService> supportedServices = config.getServiceNodeConfig().getSupportedServices();
 
         dataService = supportedServices.contains(ServiceNode.SupportedService.DATA) ?
-                Optional.of(new DataService(config.getInventoryServiceConfig(), persistenceService)) :
+                Optional.of(new DataService(persistenceService)) :
                 Optional.empty();
 
         messageDeliveryStatusService = supportedServices.contains(ServiceNode.SupportedService.ACK) &&
@@ -133,6 +133,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                 config.getServiceNodeConfig(),
                 config.getPeerGroupServiceConfigByTransport(),
                 config.getSeedAddressesByTransport(),
+                config.getInventoryServiceConfig(),
                 supportedTransportTypes,
                 keyPairService,
                 persistenceService,

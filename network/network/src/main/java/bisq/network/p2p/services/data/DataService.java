@@ -17,14 +17,11 @@
 
 package bisq.network.p2p.services.data;
 
-import bisq.common.timer.Scheduler;
 import bisq.network.common.TransportType;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
-import bisq.network.p2p.services.data.inventory.DataFilter;
-import bisq.network.p2p.services.data.inventory.InventoryService;
 import bisq.network.p2p.services.data.storage.DataStorageResult;
 import bisq.network.p2p.services.data.storage.StorageData;
 import bisq.network.p2p.services.data.storage.StorageService;
@@ -45,7 +42,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -84,14 +80,12 @@ public class DataService implements DataNetworkService.Listener {
         }
     }
 
-    private final InventoryService.Config inventoryServiceConfig;
     @Getter
     private final StorageService storageService;
     private final Set<DataService.Listener> listeners = new CopyOnWriteArraySet<>();
     private final Map<TransportType, DataNetworkService> dataNetworkServiceByTransportType = new ConcurrentHashMap<>();
 
-    public DataService(InventoryService.Config inventoryServiceConfig, PersistenceService persistenceService) {
-        this.inventoryServiceConfig = inventoryServiceConfig;
+    public DataService(PersistenceService persistenceService) {
         this.storageService = new StorageService(persistenceService);
 
         storageService.addListener(new StorageService.Listener() {
@@ -123,7 +117,7 @@ public class DataService implements DataNetworkService.Listener {
 
     // todo a bit of a hack that way...
     public DataNetworkService getDataServicePerTransport(TransportType transportType, Node defaultNode, PeerGroupManager peerGroupManager) {
-        DataNetworkService dataNetworkService = new DataNetworkService(defaultNode, peerGroupManager, storageService, inventoryServiceConfig);
+        DataNetworkService dataNetworkService = new DataNetworkService(defaultNode, peerGroupManager);
         dataNetworkServiceByTransportType.put(transportType, dataNetworkService);
         dataNetworkService.addListener(this);
         return dataNetworkService;
@@ -152,16 +146,10 @@ public class DataService implements DataNetworkService.Listener {
 
     @Override
     public void onStateChanged(PeerGroupManager.State state, DataNetworkService dataNetworkService) {
-        if (state == PeerGroupManager.State.RUNNING) {
-            log.info("PeerGroupService initialized. We start the inventory request after a short delay.");
-            Scheduler.run(() -> doRequestInventory(dataNetworkService)).after(500);
-        }
     }
 
     @Override
     public void onSufficientlyConnected(int numConnections, DataNetworkService dataNetworkService) {
-        log.info("We are sufficiently connected to start the inventory request. numConnections={}", numConnections);
-        doRequestInventory(dataNetworkService);
     }
 
 
@@ -309,26 +297,6 @@ public class DataService implements DataNetworkService.Listener {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Inventory
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    //todo
-    public void requestInventory(DataFilter dataFilter, DataNetworkService dataNetworkService) {
-        dataNetworkService.requestInventory(dataFilter).forEach(future -> {
-            future.whenComplete(((inventory, throwable) -> {
-                inventory.getEntries().forEach(dataRequest -> {
-                    if (dataRequest instanceof AddDataRequest) {
-                        processAddDataRequest((AddDataRequest) dataRequest, false);
-                    } else if (dataRequest instanceof RemoveDataRequest) {
-                        processRemoveDataRequest((RemoveDataRequest) dataRequest, false);
-                    }
-                });
-            }));
-        });
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Listener
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -345,7 +313,7 @@ public class DataService implements DataNetworkService.Listener {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private void processAddDataRequest(AddDataRequest addDataRequest, boolean allowReBroadcast) {
+    public void processAddDataRequest(AddDataRequest addDataRequest, boolean allowReBroadcast) {
         storageService.onAddDataRequest(addDataRequest)
                 .whenComplete((optionalData, throwable) -> {
                     optionalData.ifPresent(storageData -> {
@@ -368,7 +336,7 @@ public class DataService implements DataNetworkService.Listener {
                 });
     }
 
-    private void processRemoveDataRequest(RemoveDataRequest removeDataRequest, boolean allowReBroadcast) {
+    public void processRemoveDataRequest(RemoveDataRequest removeDataRequest, boolean allowReBroadcast) {
         storageService.onRemoveDataRequest(removeDataRequest)
                 .whenComplete((optionalData, throwable) -> {
                     optionalData.ifPresent(storageData -> {
@@ -384,9 +352,5 @@ public class DataService implements DataNetworkService.Listener {
                         }
                     });
                 });
-    }
-
-    private void doRequestInventory(DataNetworkService dataNetworkService) {
-        requestInventory(new DataFilter(new ArrayList<>(storageService.getFilterEntries(StorageService.StoreType.ALL))), dataNetworkService);
     }
 }

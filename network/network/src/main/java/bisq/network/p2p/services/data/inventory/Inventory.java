@@ -62,4 +62,8 @@ public final class Inventory implements Proto {
                 .collect(Collectors.toList());
         return new Inventory(entries, proto.getMaxSizeReached());
     }
+
+    public boolean noDataMissing() {
+        return !maxSizeReached;
+    }
 }

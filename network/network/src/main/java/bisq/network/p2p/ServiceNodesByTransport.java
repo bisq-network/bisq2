@@ -39,6 +39,7 @@ import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.services.confidential.SendConfidentialMessageResult;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatusService;
 import bisq.network.p2p.services.data.DataService;
+import bisq.network.p2p.services.data.inventory.InventoryService;
 import bisq.network.p2p.services.peergroup.PeerGroupManager;
 import bisq.persistence.PersistenceService;
 import bisq.security.KeyPairService;
@@ -74,6 +75,7 @@ public class ServiceNodesByTransport {
                                    ServiceNode.Config serviceNodeConfig,
                                    Map<TransportType, PeerGroupManager.Config> peerGroupServiceConfigByTransport,
                                    Map<TransportType, Set<Address>> seedAddressesByTransport,
+                                   InventoryService.Config inventoryServiceConfig,
                                    Set<TransportType> supportedTransportTypes,
                                    KeyPairService keyPairService,
                                    PersistenceService persistenceService,
@@ -98,6 +100,7 @@ public class ServiceNodesByTransport {
             ServiceNode serviceNode = new ServiceNode(serviceNodeConfig,
                     nodeConfig,
                     peerGroupServiceConfig,
+                    inventoryServiceConfig,
                     dataService,
                     messageDeliveryStatusService,
                     keyPairService,

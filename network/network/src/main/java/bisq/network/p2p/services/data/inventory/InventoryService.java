@@ -17,20 +17,30 @@
 
 package bisq.network.p2p.services.data.inventory;
 
+import bisq.common.data.ByteArray;
 import bisq.common.util.ByteUnit;
+import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkService;
+import bisq.network.common.Address;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
+import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.network.p2p.services.data.DataRequest;
+import bisq.network.p2p.services.data.DataService;
+import bisq.network.p2p.services.data.RemoveDataRequest;
+import bisq.network.p2p.services.data.storage.StorageService;
+import bisq.network.p2p.services.data.storage.append.AddAppendOnlyDataRequest;
 import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxRequest;
 import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
+import bisq.network.p2p.services.peergroup.Peer;
+import bisq.network.p2p.services.peergroup.PeerGroupManager;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -45,8 +55,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+/**
+ * Manages Inventory data requests and response and apply it to the data service.
+ * We have InventoryServices for each supported transport. The data service though is a single instance getting services
+ * by all transport specific services.
+ */
 @Slf4j
-public class InventoryService implements Node.Listener {
+public class InventoryService implements Node.Listener, PeerGroupManager.Listener {
     private static final long TIMEOUT = TimeUnit.SECONDS.toMillis(30);
 
     @Getter
@@ -62,41 +77,41 @@ public class InventoryService implements Node.Listener {
         }
     }
 
-    private final Node node;
-    private final PeerGroupService peerGroupService;
-    private final InventoryProvider inventoryProvider;
     private final int maxSize;
+    private final Node node;
+    private final PeerGroupManager peerGroupManager;
+    private final PeerGroupService peerGroupService;
+    private final StorageService storageService;
+    private final DataService dataService;
     private final Map<String, InventoryHandler> requestHandlerMap = new ConcurrentHashMap<>();
+    private boolean requestsPending;
 
-    public InventoryService(Config config, Node node, PeerGroupService peerGroupService, InventoryProvider inventoryProvider) {
-        this.node = node;
-        this.peerGroupService = peerGroupService;
-        this.inventoryProvider = inventoryProvider;
+    public InventoryService(Config config,
+                            Node node,
+                            PeerGroupManager peerGroupManager,
+                            DataService dataService) {
         maxSize = (int) Math.round(ByteUnit.KB.toBytes(config.getMaxSizeInKb()));
+        this.node = node;
+        this.peerGroupManager = peerGroupManager;
+        peerGroupService = peerGroupManager.getPeerGroupService();
+        this.dataService = dataService;
+        storageService = dataService.getStorageService();
 
         node.addListener(this);
-    }
-
-    public List<CompletableFuture<Inventory>> request(DataFilter dataFilter) {
-        int maxRequests = 400;
-        return peerGroupService.getAllConnections()
-                .filter(connection -> !requestHandlerMap.containsKey(connection.getId()))
-                .limit(maxRequests)
-                .map(connection -> {
-                    String key = connection.getId();
-                    InventoryHandler handler = new InventoryHandler(node, connection);
-                    requestHandlerMap.put(key, handler);
-                    return handler.request(dataFilter)
-                            .orTimeout(TIMEOUT, TimeUnit.SECONDS)
-                            .whenComplete((inventory, throwable) -> requestHandlerMap.remove(key));
-                })
-                .collect(Collectors.toList());
+        peerGroupManager.addListener(this);
     }
 
     public void shutdown() {
+        node.removeListener(this);
+        peerGroupManager.removeListener(this);
         requestHandlerMap.values().forEach(InventoryHandler::dispose);
         requestHandlerMap.clear();
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Node.Listener
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
@@ -113,6 +128,11 @@ public class InventoryService implements Node.Listener {
 
     @Override
     public void onConnection(Connection connection) {
+        if (sufficientConnections()) {
+            log.info("We are sufficiently connected to start the inventory request. numConnections={}",
+                    peerGroupService.getNumConnections());
+            doRequest();
+        }
     }
 
     @Override
@@ -124,7 +144,106 @@ public class InventoryService implements Node.Listener {
         }
     }
 
-    public Inventory getInventory(DataFilter dataFilter) {
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // PeerGroupManager.Listener
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onStateChanged(PeerGroupManager.State state) {
+        if (state == PeerGroupManager.State.RUNNING) {
+            log.info("PeerGroupManager is ready. We start the inventory request.");
+            doRequest();
+        }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Request inventory
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private void doRequest() {
+        if (!requestsPending && peerGroupManager.getState().get() == PeerGroupManager.State.RUNNING) {
+            requestsPending = true;
+            DataFilter dataFilter = new DataFilter(storageService.getAllDataRequestMapEntries()
+                    .map(this::toFilterEntry)
+                    .collect(Collectors.toList()));
+            CompletableFutureUtils.allOf(request(dataFilter))
+                    .whenComplete((list, throwable) -> {
+                        if (list != null) {
+                            // Repeat requests until we have received all data
+                            if (list.stream().noneMatch(Inventory::noDataMissing)) {
+                                requestsPending = false;
+                                doRequest();
+                            }
+                        }
+                    });
+        }
+    }
+
+    private List<CompletableFuture<Inventory>> request(DataFilter dataFilter) {
+        int maxSeeds = 2;
+        int maxCandidates = 4;
+        List<Address> candidates = peerGroupService.getAllConnectedPeers()
+                .filter(peerGroupService::isSeed)
+                .limit(maxSeeds)
+                .map(Peer::getAddress)
+                .collect(Collectors.toList());
+        candidates.addAll(peerGroupService.getAllConnectedPeers()
+                .filter(peerGroupService::notASeed)
+                .map(Peer::getAddress)
+                .collect(Collectors.toList()));
+
+        return peerGroupService.getAllConnections()
+                .filter(connection -> !requestHandlerMap.containsKey(connection.getId()))
+                .filter(connection -> candidates.contains(connection.getPeerAddress()))
+                .limit(maxCandidates)
+                .map(connection -> {
+                    String key = connection.getId();
+                    InventoryHandler handler = new InventoryHandler(node, connection);
+                    requestHandlerMap.put(key, handler);
+                    return handler.request(dataFilter)
+                            .orTimeout(TIMEOUT, TimeUnit.SECONDS)
+                            .whenComplete((inventory, throwable) -> {
+                                requestHandlerMap.remove(key);
+
+                                if (inventory != null) {
+                                    inventory.getEntries().forEach(dataRequest -> {
+                                        if (dataRequest instanceof AddDataRequest) {
+                                            dataService.processAddDataRequest((AddDataRequest) dataRequest, false);
+                                        } else if (dataRequest instanceof RemoveDataRequest) {
+                                            dataService.processRemoveDataRequest((RemoveDataRequest) dataRequest, false);
+                                        }
+                                    });
+                                }
+                            });
+                })
+                .collect(Collectors.toList());
+    }
+
+    private boolean sufficientConnections() {
+        return peerGroupService.getNumConnections() > peerGroupService.getTargetNumConnectedPeers() / 2;
+    }
+
+    private FilterEntry toFilterEntry(Map.Entry<ByteArray, ? extends DataRequest> mapEntry) {
+        DataRequest dataRequest = mapEntry.getValue();
+        int sequenceNumber = 0;
+        byte[] hash = mapEntry.getKey().getBytes();
+        if (dataRequest instanceof AddAppendOnlyDataRequest) {
+            // AddAppendOnlyDataRequest does not use a seq nr.
+            return new FilterEntry(hash, 0);
+        } else if (dataRequest instanceof AddAuthenticatedDataRequest) {
+            // AddMailboxRequest extends AddAuthenticatedDataRequest so its covered here as well
+            sequenceNumber = ((AddAuthenticatedDataRequest) dataRequest).getAuthenticatedSequentialData().getSequenceNumber();
+        } else if (dataRequest instanceof RemoveAuthenticatedDataRequest) {
+            // RemoveMailboxRequest extends RemoveAuthenticatedDataRequest so its covered here as well
+            sequenceNumber = ((RemoveAuthenticatedDataRequest) dataRequest).getSequenceNumber();
+        }
+        return new FilterEntry(hash, sequenceNumber);
+    }
+
+
+    private Inventory getInventory(DataFilter dataFilter) {
         final AtomicInteger accumulatedSize = new AtomicInteger();
         final AtomicBoolean maxSizeReached = new AtomicBoolean();
         List<DataRequest> dataRequests = getAuthenticatedDataRequests(dataFilter, accumulatedSize, maxSizeReached);
@@ -147,9 +266,9 @@ public class InventoryService implements Node.Listener {
                                                            AtomicBoolean maxSizeReached) {
         List<AddAuthenticatedDataRequest> addRequests = new ArrayList<>();
         List<RemoveAuthenticatedDataRequest> removeRequests = new ArrayList<>();
-        inventoryProvider.getAuthenticatedDataStoreMaps().flatMap(map -> map.entrySet().stream())
+        storageService.getAuthenticatedDataStoreMaps().flatMap(map -> map.entrySet().stream())
                 .forEach(mapEntry -> {
-                    if (!dataFilter.getFilterEntries().contains(inventoryProvider.getFilterEntry(mapEntry))) {
+                    if (!dataFilter.getFilterEntries().contains(toFilterEntry(mapEntry))) {
                         AuthenticatedDataRequest dataRequest = mapEntry.getValue();
                         if (dataRequest instanceof AddAuthenticatedDataRequest) {
                             addRequests.add((AddAuthenticatedDataRequest) dataRequest);
@@ -191,9 +310,9 @@ public class InventoryService implements Node.Listener {
                                                  AtomicBoolean maxSizeReached) {
         List<AddMailboxRequest> addRequests = new ArrayList<>();
         List<RemoveMailboxRequest> removeRequests = new ArrayList<>();
-        inventoryProvider.getMailboxStoreMaps().flatMap(map -> map.entrySet().stream())
+        storageService.getMailboxStoreMaps().flatMap(map -> map.entrySet().stream())
                 .forEach(mapEntry -> {
-                    if (!dataFilter.getFilterEntries().contains(inventoryProvider.getFilterEntry(mapEntry))) {
+                    if (!dataFilter.getFilterEntries().contains(toFilterEntry(mapEntry))) {
                         MailboxRequest dataRequest = mapEntry.getValue();
                         if (dataRequest instanceof AddMailboxRequest) {
                             addRequests.add((AddMailboxRequest) dataRequest);
@@ -230,8 +349,8 @@ public class InventoryService implements Node.Listener {
     private List<DataRequest> getAppendOnlyDataRequests(DataFilter dataFilter,
                                                         AtomicInteger accumulatedSize,
                                                         AtomicBoolean maxSizeReached) {
-        return inventoryProvider.getAddAppendOnlyDataStoreMaps().flatMap(map -> map.entrySet().stream())
-                .filter(mapEntry -> dataFilter.getFilterEntries().contains(inventoryProvider.getFilterEntry(mapEntry)))
+        return storageService.getAddAppendOnlyDataStoreMaps().flatMap(map -> map.entrySet().stream())
+                .filter(mapEntry -> dataFilter.getFilterEntries().contains(toFilterEntry(mapEntry)))
                 .map(Map.Entry::getValue)
                 .sorted((o1, o2) -> Integer.compare(o2.getAppendOnlyData().getMetaData().getPriority(),
                         o1.getAppendOnlyData().getMetaData().getPriority()))

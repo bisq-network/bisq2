@@ -25,15 +25,10 @@ import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.data.broadcast.BroadcastMessage;
 import bisq.network.p2p.services.data.broadcast.BroadcastResult;
 import bisq.network.p2p.services.data.broadcast.Broadcaster;
-import bisq.network.p2p.services.data.inventory.DataFilter;
-import bisq.network.p2p.services.data.inventory.Inventory;
-import bisq.network.p2p.services.data.inventory.InventoryProvider;
-import bisq.network.p2p.services.data.inventory.InventoryService;
 import bisq.network.p2p.services.peergroup.PeerGroupManager;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -57,19 +52,15 @@ public class DataNetworkService implements PeerGroupManager.Listener, Node.Liste
 
     private final Node node;
     private final Broadcaster broadcaster;
-    private final InventoryService inventoryService;
     private final Set<DataNetworkService.Listener> listeners = new CopyOnWriteArraySet<>();
 
     public DataNetworkService(Node node,
-                              PeerGroupManager peerGroupManager,
-                              InventoryProvider inventoryProvider,
-                              InventoryService.Config inventoryServiceConfig) {
+                              PeerGroupManager peerGroupManager) {
         this.node = node;
         peerGroupService = peerGroupManager.getPeerGroupService();
         this.peerGroupManager = peerGroupManager;
         peerGroupManager.addListener(this);
         broadcaster = new Broadcaster(node, peerGroupService);
-        inventoryService = new InventoryService(inventoryServiceConfig, node, peerGroupService, inventoryProvider);
         node.addListener(this);
     }
 
@@ -121,10 +112,6 @@ public class DataNetworkService implements PeerGroupManager.Listener, Node.Liste
 
     CompletableFuture<BroadcastResult> reBroadcast(BroadcastMessage broadcastMessage) {
         return broadcaster.reBroadcast(broadcastMessage);
-    }
-
-    List<CompletableFuture<Inventory>> requestInventory(DataFilter dataFilter) {
-        return inventoryService.request(dataFilter);
     }
 
     void addListener(DataNetworkService.Listener listener) {

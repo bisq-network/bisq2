@@ -40,6 +40,7 @@ import bisq.network.p2p.services.confidential.SendConfidentialMessageResult;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatusService;
 import bisq.network.p2p.services.data.DataNetworkService;
 import bisq.network.p2p.services.data.DataService;
+import bisq.network.p2p.services.data.inventory.InventoryService;
 import bisq.network.p2p.services.peergroup.BanList;
 import bisq.network.p2p.services.peergroup.PeerGroupManager;
 import bisq.persistence.PersistenceService;
@@ -112,6 +113,7 @@ public class ServiceNode {
     private final Node.Config nodeConfig;
     private final PeerGroupManager.Config peerGroupServiceConfig;
     private final Optional<DataService> dataService;
+    private final InventoryService.Config inventoryServiceConfig;
     private final Optional<MessageDeliveryStatusService> messageDeliveryStatusService;
     private final KeyPairService keyPairService;
     private final PersistenceService persistenceService;
@@ -132,6 +134,8 @@ public class ServiceNode {
     @Getter
     private Optional<PeerGroupManager> peerGroupService = Optional.empty();
     @Getter
+    private Optional<InventoryService> inventoryService = Optional.empty();
+    @Getter
     private Optional<DataNetworkService> dataServicePerTransport = Optional.empty();
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     @Getter
@@ -140,6 +144,7 @@ public class ServiceNode {
     public ServiceNode(Config config,
                        Node.Config nodeConfig,
                        PeerGroupManager.Config peerGroupServiceConfig,
+                       InventoryService.Config inventoryServiceConfig,
                        Optional<DataService> dataService,
                        Optional<MessageDeliveryStatusService> messageDeliveryStatusService,
                        KeyPairService keyPairService,
@@ -151,6 +156,7 @@ public class ServiceNode {
         this.config = config;
         this.nodeConfig = nodeConfig;
         this.peerGroupServiceConfig = peerGroupServiceConfig;
+        this.inventoryServiceConfig = inventoryServiceConfig;
         this.messageDeliveryStatusService = messageDeliveryStatusService;
         this.dataService = dataService;
         this.keyPairService = keyPairService;
@@ -180,6 +186,13 @@ public class ServiceNode {
                 Optional.of(dataService.orElseThrow().getDataServicePerTransport(transportType,
                         defaultNode,
                         peerGroupService.orElseThrow())) :
+                Optional.empty();
+
+        inventoryService = dataServiceEnabled ?
+                Optional.of(new InventoryService(inventoryServiceConfig,
+                        defaultNode,
+                        peerGroupService.orElseThrow(),
+                        dataService.orElseThrow())) :
                 Optional.empty();
 
         confidentialMessageService = supportedServices.contains(SupportedService.CONFIDENTIAL) ?
