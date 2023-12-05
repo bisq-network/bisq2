@@ -170,9 +170,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
      */
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-
-        // We do not have the default node created yet.
-        return serviceNodesByTransport.initialize();
+        return CompletableFuture.completedFuture(true);
     }
 
     public CompletableFuture<Boolean> shutdown() {

@@ -118,14 +118,6 @@ public class ServiceNodesByTransport {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    /**
-     * @return A CompletableFuture with the success state if at least one of the service node initialisations was
-     * successfully completed. In case all fail, we complete exceptionally.
-     */
-    public CompletableFuture<Boolean> initialize() {
-        return CompletableFuture.completedFuture(true);
-    }
-
     public Map<TransportType, CompletableFuture<Node>> getInitializedNodeByTransport(NetworkId networkId, TorIdentity torIdentity) {
         // We initialize all service nodes per transport type in parallel. As soon one has completed we
         // return a success state.
