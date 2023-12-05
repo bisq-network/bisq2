@@ -45,7 +45,6 @@ import bisq.persistence.PersistenceService;
 import bisq.security.KeyPairService;
 import bisq.security.pow.ProofOfWorkService;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -66,7 +65,6 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 // TODO: if we change the supported transports we need to clean up the persisted networkIds.
 @Slf4j
 public class ServiceNodesByTransport {
-    @Getter
     private final Map<TransportType, ServiceNode> map = new ConcurrentHashMap<>();
     private final Set<TransportType> supportedTransportTypes;
     private final AuthorizationService authorizationService;
@@ -114,15 +112,19 @@ public class ServiceNodesByTransport {
         });
     }
 
-    public CompletableFuture<List<Boolean>> shutdown() {
-        Stream<CompletableFuture<Boolean>> futures = map.values().stream().map(ServiceNode::shutdown);
-        return CompletableFutureUtils.allOf(futures).whenComplete((list, throwable) -> map.clear());
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public void initialize(NetworkId defaultNetworkId, TorIdentity defaultTorIdentity) {
+        map.forEach((transportType, serviceNode) -> serviceNode.initialize(defaultNetworkId, defaultTorIdentity));
+    }
+
+    public CompletableFuture<List<Boolean>> shutdown() {
+        Stream<CompletableFuture<Boolean>> futures = map.values().stream().map(ServiceNode::shutdown);
+        return CompletableFutureUtils.allOf(futures).whenComplete((list, throwable) -> map.clear());
+    }
 
     public Map<TransportType, CompletableFuture<Node>> getInitializedNodeByTransport(NetworkId networkId, TorIdentity torIdentity) {
         // We initialize all service nodes per transport type in parallel. As soon one has completed we
@@ -274,5 +276,9 @@ public class ServiceNodesByTransport {
         return map.values().stream()
                 .flatMap(serviceNode -> serviceNode.findNode(networkId).stream())
                 .collect(Collectors.toSet());
+    }
+
+    public Collection<ServiceNode> getAllServices() {
+        return map.values();
     }
 }

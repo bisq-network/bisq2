@@ -62,7 +62,7 @@ public class MonitorService {
 
     // All connections of all nodes on all transports
     public Stream<Connection> getAllConnections() {
-        return serviceNodesByTransport.getMap().values().stream()
+        return serviceNodesByTransport.getAllServices().stream()
                 .flatMap(serviceNode -> serviceNode.getNodesById().getAllNodes().stream())
                 .flatMap(Node::getAllConnections);
     }

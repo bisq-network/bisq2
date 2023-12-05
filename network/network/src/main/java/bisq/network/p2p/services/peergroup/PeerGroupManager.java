@@ -162,8 +162,8 @@ public class PeerGroupManager {
                 .build();
     }
 
-
     public void initialize() {
+        // blocking
         Failsafe.with(retryPolicy).run(this::doInitialize);
     }
 
@@ -184,6 +184,7 @@ public class PeerGroupManager {
         switch (state) {
             case NEW:
                 setState(PeerGroupManager.State.STARTING);
+                // blocking
                 peerExchangeService.startInitialPeerExchange().join();
                 log.info("{} completed doInitialPeerExchange. Start periodic tasks with interval: {} ms",
                         nodeInfo, config.getInterval());
