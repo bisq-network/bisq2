@@ -2,7 +2,6 @@ package bisq.network.p2p.services.data.inventory;
 
 import bisq.common.data.ByteArray;
 import bisq.network.p2p.services.data.DataRequest;
-import bisq.network.p2p.services.data.filter.FilterEntry;
 import bisq.network.p2p.services.data.storage.append.AddAppendOnlyDataRequest;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxRequest;

@@ -25,7 +25,7 @@ import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.data.broadcast.BroadcastMessage;
 import bisq.network.p2p.services.data.broadcast.BroadcastResult;
 import bisq.network.p2p.services.data.broadcast.Broadcaster;
-import bisq.network.p2p.services.data.filter.DataFilter;
+import bisq.network.p2p.services.data.inventory.DataFilter;
 import bisq.network.p2p.services.data.inventory.Inventory;
 import bisq.network.p2p.services.data.inventory.InventoryProvider;
 import bisq.network.p2p.services.data.inventory.InventoryService;

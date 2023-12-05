@@ -18,7 +18,6 @@
 package bisq.network.p2p.services.data.inventory;
 
 import bisq.network.p2p.services.data.broadcast.BroadcastMessage;
-import bisq.network.p2p.services.data.filter.DataFilter;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;

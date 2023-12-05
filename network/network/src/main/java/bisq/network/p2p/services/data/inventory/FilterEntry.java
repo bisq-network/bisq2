@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.services.data.filter;
+package bisq.network.p2p.services.data.inventory;
 
 import bisq.common.proto.Proto;
 import bisq.common.validation.NetworkDataValidation;
