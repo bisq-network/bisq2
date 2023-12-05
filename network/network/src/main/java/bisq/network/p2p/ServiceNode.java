@@ -86,14 +86,8 @@ public class ServiceNode {
     public enum State {
         NEW,
 
-        INITIALIZE_TRANSPORT,
-        TRANSPORT_INITIALIZED,
-
-        INITIALIZE_DEFAULT_NODE,
-        DEFAULT_NODE_INITIALIZED,
-
-        INITIALIZE_PEER_GROUP,
-        PEER_GROUP_INITIALIZED,
+        INITIALIZING,
+        INITIALIZED,
 
         STOPPING,
         TERMINATED
@@ -196,21 +190,14 @@ public class ServiceNode {
                 Optional.of(new ConfidentialMessageService(nodesById, keyPairService, dataService, messageDeliveryStatusService)) :
                 Optional.empty();
 
-        // blocking
-        setState(State.INITIALIZE_TRANSPORT);
-        transportService.initialize();
-        setState(State.TRANSPORT_INITIALIZED);
-
-        setState(State.INITIALIZE_DEFAULT_NODE);
-        defaultNode.initialize();
-        setState(State.DEFAULT_NODE_INITIALIZED);
-
-        peerGroupManager.ifPresent(peerGroupService -> {
-            setState(State.INITIALIZE_PEER_GROUP);
-            // blocking
-            peerGroupService.initialize();
-            setState(State.PEER_GROUP_INITIALIZED);
-        });
+        setState(State.INITIALIZING);
+        transportService.initialize();// blocking
+        defaultNode.initialize();// blocking
+        peerGroupManager.ifPresentOrElse(peerGroupService -> {
+                    peerGroupService.initialize();// blocking
+                    setState(State.INITIALIZED);
+                },
+                () -> setState(State.INITIALIZED));
     }
 
     CompletableFuture<Boolean> shutdown() {

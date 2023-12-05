@@ -181,7 +181,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public void createDefaultServiceNodes(NetworkId defaultNetworkId, TorIdentity defaultTorIdentity) {
-        serviceNodesByTransport.initialize(defaultNetworkId, defaultTorIdentity);
+        serviceNodesByTransport.initialize(defaultNetworkId, defaultTorIdentity); // blocking
         messageDeliveryStatusService.ifPresent(MessageDeliveryStatusService::initialize);
         monitorService.ifPresent(MonitorService::initialize);
     }
