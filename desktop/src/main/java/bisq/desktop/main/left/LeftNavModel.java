@@ -74,14 +74,14 @@ public class LeftNavModel implements Model {
 
         networkService.getSupportedTransportTypes().forEach(type ->
                 networkService.getServiceNodesByTransport().findServiceNode(type).ifPresent(serviceNode -> {
-                    serviceNode.getPeerGroupService().ifPresent(peerGroupService -> {
-                        PeerGroupService peerGroup = peerGroupService.getPeerGroupService();
+                    serviceNode.getPeerGroupManager().ifPresent(peerGroupManager -> {
+                        PeerGroupService peerGroupService = peerGroupManager.getPeerGroupService();
                         switch (type) {
                             case TOR:
-                                torNumTargetConnections.set(String.valueOf(peerGroup.getTargetNumConnectedPeers()));
+                                torNumTargetConnections.set(String.valueOf(peerGroupService.getTargetNumConnectedPeers()));
                                 break;
                             case I2P:
-                                i2pNumTargetConnections.set(String.valueOf(peerGroup.getTargetNumConnectedPeers()));
+                                i2pNumTargetConnections.set(String.valueOf(peerGroupService.getTargetNumConnectedPeers()));
                                 break;
                         }
 
@@ -93,12 +93,12 @@ public class LeftNavModel implements Model {
 
                             @Override
                             public void onConnection(Connection connection) {
-                                onNumConnectionsChanged(type, peerGroup);
+                                onNumConnectionsChanged(type, peerGroupService);
                             }
 
                             @Override
                             public void onDisconnect(Connection connection, CloseReason closeReason) {
-                                onNumConnectionsChanged(type, peerGroup);
+                                onNumConnectionsChanged(type, peerGroupService);
                             }
                         });
                     });

@@ -132,11 +132,11 @@ public class ServiceNode {
     @Getter
     private Optional<ConfidentialMessageService> confidentialMessageService = Optional.empty();
     @Getter
-    private Optional<PeerGroupManager> peerGroupService = Optional.empty();
+    private Optional<PeerGroupManager> peerGroupManager = Optional.empty();
     @Getter
     private Optional<InventoryService> inventoryService = Optional.empty();
     @Getter
-    private Optional<DataNetworkService> dataServicePerTransport = Optional.empty();
+    private Optional<DataNetworkService> dataNetworkService = Optional.empty();
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     @Getter
     public Observable<State> state = new Observable<>(State.NEW);
@@ -173,7 +173,7 @@ public class ServiceNode {
         defaultNode = nodesById.createAndConfigNode(defaultNetworkId, defaultTorIdentity, true);
 
         Set<SupportedService> supportedServices = config.getSupportedServices();
-        peerGroupService = supportedServices.contains(SupportedService.PEER_GROUP) ?
+        peerGroupManager = supportedServices.contains(SupportedService.PEER_GROUP) ?
                 Optional.of(new PeerGroupManager(persistenceService,
                         defaultNode,
                         banList,
@@ -182,16 +182,16 @@ public class ServiceNode {
                 Optional.empty();
 
         boolean dataServiceEnabled = supportedServices.contains(SupportedService.PEER_GROUP) && supportedServices.contains(SupportedService.DATA);
-        dataServicePerTransport = dataServiceEnabled ?
+        dataNetworkService = dataServiceEnabled ?
                 Optional.of(dataService.orElseThrow().getDataServicePerTransport(transportType,
                         defaultNode,
-                        peerGroupService.orElseThrow())) :
+                        peerGroupManager.orElseThrow())) :
                 Optional.empty();
 
         inventoryService = dataServiceEnabled ?
                 Optional.of(new InventoryService(inventoryServiceConfig,
                         defaultNode,
-                        peerGroupService.orElseThrow(),
+                        peerGroupManager.orElseThrow(),
                         dataService.orElseThrow())) :
                 Optional.empty();
 
@@ -217,7 +217,7 @@ public class ServiceNode {
     }
 
     private void initializePeerGroup() {
-        peerGroupService.ifPresent(peerGroupService -> {
+        peerGroupManager.ifPresent(peerGroupService -> {
             setState(State.INITIALIZE_PEER_GROUP);
             peerGroupService.initialize();
             setState(State.PEER_GROUP_INITIALIZED);
@@ -232,8 +232,8 @@ public class ServiceNode {
         setState(State.STOPPING);
         return CompletableFutureUtils.allOf(
                         confidentialMessageService.map(ConfidentialMessageService::shutdown).orElse(completedFuture(true)),
-                        peerGroupService.map(PeerGroupManager::shutdown).orElse(completedFuture(true)),
-                        dataServicePerTransport.map(DataNetworkService::shutdown).orElse(completedFuture(true)),
+                        peerGroupManager.map(PeerGroupManager::shutdown).orElse(completedFuture(true)),
+                        dataNetworkService.map(DataNetworkService::shutdown).orElse(completedFuture(true)),
                         nodesById.shutdown()
                 )
                 .orTimeout(10, TimeUnit.SECONDS)
@@ -253,11 +253,11 @@ public class ServiceNode {
     }
 
     public void addSeedNodeAddress(Address seedNodeAddress) {
-        peerGroupService.ifPresent(peerGroupService -> peerGroupService.addSeedNodeAddress(seedNodeAddress));
+        peerGroupManager.ifPresent(peerGroupService -> peerGroupService.addSeedNodeAddress(seedNodeAddress));
     }
 
     public void removeSeedNodeAddress(Address seedNodeAddress) {
-        peerGroupService.ifPresent(peerGroupService -> peerGroupService.removeSeedNodeAddress(seedNodeAddress));
+        peerGroupManager.ifPresent(peerGroupService -> peerGroupService.removeSeedNodeAddress(seedNodeAddress));
     }
 
     public SendConfidentialMessageResult confidentialSend(EnvelopePayloadMessage envelopePayloadMessage,

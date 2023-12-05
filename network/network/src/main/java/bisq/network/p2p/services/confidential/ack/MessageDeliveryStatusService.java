@@ -44,6 +44,7 @@ public class MessageDeliveryStatusService implements PersistenceClient<MessageDe
     }
 
     public void initialize() {
+        //todo
         networkService.addMessageListener(this);
     }
 

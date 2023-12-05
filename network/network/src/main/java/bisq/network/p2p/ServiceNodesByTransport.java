@@ -97,6 +97,7 @@ public class ServiceNodesByTransport {
             Set<Address> seedAddresses = seedAddressesByTransport.get(transportType);
             checkNotNull(seedAddresses, "Seed nodes must be setup for %s", transportType);
             PeerGroupManager.Config peerGroupServiceConfig = peerGroupServiceConfigByTransport.get(transportType);
+
             ServiceNode serviceNode = new ServiceNode(serviceNodeConfig,
                     nodeConfig,
                     peerGroupServiceConfig,
