@@ -117,8 +117,11 @@ public class ServiceNodesByTransport {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public void initialize(NetworkId defaultNetworkId, TorIdentity defaultTorIdentity) {
-        map.forEach((transportType, serviceNode) -> serviceNode.initialize(defaultNetworkId, defaultTorIdentity));
+    public Map<TransportType, CompletableFuture<Node>> getInitializedDefaultNodeByTransport(NetworkId defaultNetworkId, TorIdentity defaultTorIdentity) {
+        return map.entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey,
+                        entry -> supplyAsync(() -> entry.getValue().getInitializedDefaultNode(defaultNetworkId, defaultTorIdentity),
+                                NETWORK_IO_POOL)));
     }
 
     public CompletableFuture<List<Boolean>> shutdown() {

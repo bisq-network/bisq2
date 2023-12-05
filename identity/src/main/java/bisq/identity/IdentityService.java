@@ -20,6 +20,7 @@ package bisq.identity;
 
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
+import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.FileUtils;
 import bisq.common.util.NetworkUtils;
 import bisq.network.NetworkService;
@@ -43,6 +44,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.security.KeyPair;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -78,13 +80,20 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        return CompletableFuture.supplyAsync(() -> {
-            Identity defaultIdentity = getOrCreateDefaultIdentity();
-            networkService.createDefaultServiceNodes(defaultIdentity.getNetworkId(), defaultIdentity.getTorIdentity());
+        Identity defaultIdentity = getOrCreateDefaultIdentity();
+        var initializedDefaultNodeByTransport = networkService.getInitializedDefaultNodeByTransport(defaultIdentity.getNetworkId(),
+                defaultIdentity.getTorIdentity());
+        //todo call initializeActiveIdentities by transport to avoid that we wait on a slow transport
+        CompletableFutureUtils.allOf(initializedDefaultNodeByTransport.values())
+                .whenComplete((list, throwable) -> {
+                    if (throwable == null && list != null && !list.isEmpty()) {
+                        initializeActiveIdentities();
+                    }
+                });
 
-            initializeActiveIdentities();
-            return true;
-        });
+        // We return as soon at least one default node was successfully initialized
+        return CompletableFutureUtils.anyOf(initializedDefaultNodeByTransport.values())
+                .thenApply(Objects::nonNull);
     }
 
     public CompletableFuture<Boolean> shutdown() {

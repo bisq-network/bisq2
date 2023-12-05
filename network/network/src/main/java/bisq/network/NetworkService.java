@@ -22,6 +22,7 @@ import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.threading.ExecutorFactory;
+import bisq.common.util.CompletableFutureUtils;
 import bisq.network.common.AddressByTransportTypeMap;
 import bisq.network.common.TransportType;
 import bisq.network.http.BaseHttpClient;
@@ -180,10 +181,18 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     // Initialize node
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public void createDefaultServiceNodes(NetworkId defaultNetworkId, TorIdentity defaultTorIdentity) {
-        serviceNodesByTransport.initialize(defaultNetworkId, defaultTorIdentity); // blocking
-        messageDeliveryStatusService.ifPresent(MessageDeliveryStatusService::initialize);
-        monitorService.ifPresent(MonitorService::initialize);
+    public Map<TransportType, CompletableFuture<Node>> getInitializedDefaultNodeByTransport(NetworkId defaultNetworkId, TorIdentity defaultTorIdentity) {
+        var map = serviceNodesByTransport.getInitializedDefaultNodeByTransport(defaultNetworkId, defaultTorIdentity);
+
+        // We use anyOf to initialize the sub services as soon as we got on one transport initialized a node
+        CompletableFutureUtils.anyOf(map.values())
+                .whenComplete((node, throwable) -> {
+                    if (throwable == null && node != null) {
+                        messageDeliveryStatusService.ifPresent(MessageDeliveryStatusService::initialize);
+                        monitorService.ifPresent(MonitorService::initialize);
+                    }
+                });
+        return map;
     }
 
     public Map<TransportType, CompletableFuture<Node>> getInitializedNodeByTransport(NetworkId networkId, TorIdentity torIdentity) {
