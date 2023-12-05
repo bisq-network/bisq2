@@ -55,6 +55,8 @@ public class IdentityServiceTest {
         List<Node> initializedNodes = Collections.emptyList();
         doReturn(CompletableFuture.completedFuture(initializedNodes))
                 .when(networkService).getAllInitializedNodes(any(), any());
+        doReturn(CompletableFuture.completedFuture(mock(Node.class)))
+                .when(networkService).getAnyInitializedNode(any(), any());
 
         keyPairService = new KeyPairService(persistenceService);
         identityService = new IdentityService(persistenceService, keyPairService, networkService);
