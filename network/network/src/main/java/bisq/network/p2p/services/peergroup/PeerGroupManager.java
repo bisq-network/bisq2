@@ -167,6 +167,16 @@ public class PeerGroupManager {
         Failsafe.with(retryPolicy).run(this::doInitialize);
     }
 
+    public void shutdown() {
+        setState(State.STOPPING);
+        peerExchangeService.shutdown();
+        addressValidationService.shutdown();
+        keepAliveService.shutdown();
+        networkLoadExchangeService.shutdown();
+        scheduler.ifPresent(Scheduler::stop);
+        setState(State.TERMINATED);
+    }
+
     private void doInitialize() {
         log.info("Node {} called initialize", node);
         String nodeInfo = node.getNodeInfo();
@@ -191,17 +201,6 @@ public class PeerGroupManager {
                 log.warn("Got called at an invalid state. We ignore that call. State={}", state);
                 break;
         }
-    }
-
-    public CompletableFuture<Boolean> shutdown() {
-        setState(State.STOPPING);
-        peerExchangeService.shutdown();
-        addressValidationService.shutdown();
-        keepAliveService.shutdown();
-        networkLoadExchangeService.shutdown();
-        scheduler.ifPresent(Scheduler::stop);
-        setState(State.TERMINATED);
-        return CompletableFuture.completedFuture(true);
     }
 
 

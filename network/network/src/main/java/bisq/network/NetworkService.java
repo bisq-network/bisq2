@@ -22,7 +22,6 @@ import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.threading.ExecutorFactory;
-import bisq.common.util.CompletableFutureUtils;
 import bisq.network.common.AddressByTransportTypeMap;
 import bisq.network.common.TransportType;
 import bisq.network.http.BaseHttpClient;
@@ -74,7 +73,6 @@ import java.util.concurrent.ExecutorService;
 import static bisq.network.common.TransportType.TOR;
 import static bisq.network.p2p.services.data.DataService.Listener;
 import static com.google.common.base.Preconditions.checkArgument;
-import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 /**
@@ -172,10 +170,9 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         log.info("shutdown");
         messageDeliveryStatusService.ifPresent(MessageDeliveryStatusService::shutdown);
         monitorService.ifPresent(MonitorService::shutdown);
-        return CompletableFutureUtils.allOf(
-                        dataService.map(DataService::shutdown).orElse(completedFuture(true)),
-                        serviceNodesByTransport.shutdown())
-                .thenApply(list -> list.stream().filter(e -> e).count() == 3);
+        dataService.ifPresent(DataService::shutdown);
+        return serviceNodesByTransport.shutdown()
+                .thenApply(list -> list.stream().filter(e -> e).count() == supportedTransportTypes.size());
     }
 
 
@@ -186,7 +183,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     public void createDefaultServiceNodes(NetworkId defaultNetworkId, TorIdentity defaultTorIdentity) {
         serviceNodesByTransport.getMap()
                 .forEach((transportType, serviceNode) -> serviceNode.createDefaultNode(defaultNetworkId, defaultTorIdentity));
-
+        // todo rename to onDefaultNodesCreated
         messageDeliveryStatusService.ifPresent(MessageDeliveryStatusService::initialize);
         monitorService.ifPresent(MonitorService::initialize);
     }

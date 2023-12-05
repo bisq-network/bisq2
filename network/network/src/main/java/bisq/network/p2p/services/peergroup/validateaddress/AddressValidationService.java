@@ -48,6 +48,11 @@ public class AddressValidationService implements Node.Listener {
         this.node.addListener(this);
     }
 
+    public void shutdown() {
+        requestHandlerMap.values().forEach(AddressValidationHandler::dispose);
+        requestHandlerMap.clear();
+    }
+
     public CompletableFuture<Boolean> startAddressValidationProtocol(InboundConnection inboundConnection) {
         Address peerAddress = inboundConnection.getPeerAddress();
         String key = inboundConnection.getId();
@@ -91,11 +96,6 @@ public class AddressValidationService implements Node.Listener {
 
     public boolean isInProgress(Connection connection) {
         return requestHandlerMap.containsKey(connection.getId()) && !requesters.contains(connection.getId());
-    }
-
-    public void shutdown() {
-        requestHandlerMap.values().forEach(AddressValidationHandler::dispose);
-        requestHandlerMap.clear();
     }
 
     @Override

@@ -114,6 +114,12 @@ public class ServiceNodesByTransport {
         });
     }
 
+    public CompletableFuture<List<Boolean>> shutdown() {
+        Stream<CompletableFuture<Boolean>> futures = map.values().stream().map(ServiceNode::shutdown);
+        return CompletableFutureUtils.allOf(futures).whenComplete((list, throwable) -> map.clear());
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -138,15 +144,6 @@ public class ServiceNodesByTransport {
         // As we persist networkIds after initialize, and we require all futures to be completed we can be sure that
         // the networkId is complete with all addresses of all our supported transports.
         return CompletableFutureUtils.allOf(futures);
-    }
-
-    public CompletableFuture<Boolean> shutdown() {
-        Stream<CompletableFuture<Boolean>> futures = map.values().stream().map(ServiceNode::shutdown);
-        return CompletableFutureUtils.allOf(futures)
-                .handle((list, throwable) -> {
-                    map.clear();
-                    return throwable == null && list.stream().allMatch(e -> e);
-                });
     }
 
     public boolean isNodeOnAllTransportsInitialized(NetworkId networkId) {

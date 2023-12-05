@@ -82,13 +82,12 @@ public class DataService implements StorageService.Listener {
         storageService.addListener(this);
     }
 
-    public CompletableFuture<Boolean> shutdown() {
+    public void shutdown() {
         log.info("shutdown");
         storageService.removeListener(this);
         listeners.clear();
         broadcasters.clear();
         storageService.shutdown();
-        return CompletableFuture.completedFuture(true);
     }
 
 

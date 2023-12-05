@@ -61,6 +61,13 @@ public class PeerExchangeService implements Node.Listener {
         this.node.addListener(this);
     }
 
+    public void shutdown() {
+        isStopped = true;
+        scheduler.ifPresent(Scheduler::stop);
+        requestHandlerMap.values().forEach(PeerExchangeRequestHandler::dispose);
+        requestHandlerMap.clear();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Node.Listener implementation
@@ -213,14 +220,5 @@ public class PeerExchangeService implements Node.Listener {
                     node, peerAddress, throwable);
             return false;
         }
-    }
-
-    public void shutdown() {
-        isStopped = true;
-        scheduler.ifPresent(Scheduler::stop);
-        scheduler = Optional.empty();
-        requestHandlerMap.values().forEach(PeerExchangeRequestHandler::dispose);
-        requestHandlerMap.clear();
-        peerExchangeStrategy.shutdown();
     }
 }

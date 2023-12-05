@@ -26,8 +26,6 @@ import bisq.network.p2p.services.data.broadcast.Broadcaster;
 import bisq.network.p2p.services.peergroup.PeerGroupManager;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.concurrent.CompletableFuture;
-
 /**
  * The network service for each transport used for the dataService to delegate received messages from any transport
  * and to add the Broadcaster for any transport to the data service.
@@ -46,11 +44,9 @@ public class DataNetworkService implements Node.Listener {
         dataService.addBroadcaster(broadcaster);
     }
 
-    public CompletableFuture<Boolean> shutdown() {
-        log.info("shutdown");
+    public void shutdown() {
         node.removeListener(this);
         dataService.removeBroadcaster(broadcaster);
-        return CompletableFuture.completedFuture(true);
     }
 
 

@@ -19,7 +19,6 @@ package bisq.network.p2p;
 
 
 import bisq.common.observable.Observable;
-import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkService;
 import bisq.network.common.Address;
 import bisq.network.common.TransportType;
@@ -60,7 +59,6 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.concurrent.CompletableFuture.runAsync;
 
 /**
@@ -163,6 +161,19 @@ public class ServiceNode {
         nodesById = new NodesById(banList, nodeConfig, transportService, networkLoadService, authorizationService);
     }
 
+    public CompletableFuture<Boolean> shutdown() {
+        setState(State.STOPPING);
+        peerGroupManager.ifPresent(PeerGroupManager::shutdown);
+        dataNetworkService.ifPresent(DataNetworkService::shutdown);
+        inventoryService.ifPresent(InventoryService::shutdown);
+        confidentialMessageService.ifPresent(ConfidentialMessageService::shutdown);
+        return nodesById.shutdown()
+                .orTimeout(10, TimeUnit.SECONDS)
+                .handle((result, throwable) -> throwable == null && result)
+                .thenCompose(result -> transportService.shutdown())
+                .whenComplete((result, throwable) -> setState(State.TERMINATED));
+    }
+
     public void createDefaultNode(NetworkId defaultNetworkId, TorIdentity defaultTorIdentity) {
         defaultNode = nodesById.createAndConfigNode(defaultNetworkId, defaultTorIdentity, true);
 
@@ -220,20 +231,6 @@ public class ServiceNode {
 
     Node getInitializedNode(NetworkId networkId, TorIdentity torIdentity) {
         return nodesById.getInitializedNode(networkId, torIdentity);
-    }
-
-    public CompletableFuture<Boolean> shutdown() {
-        setState(State.STOPPING);
-        return CompletableFutureUtils.allOf(
-                        confidentialMessageService.map(ConfidentialMessageService::shutdown).orElse(completedFuture(true)),
-                        peerGroupManager.map(PeerGroupManager::shutdown).orElse(completedFuture(true)),
-                        dataNetworkService.map(DataNetworkService::shutdown).orElse(completedFuture(true)),
-                        nodesById.shutdown()
-                )
-                .orTimeout(10, TimeUnit.SECONDS)
-                .handle((list, throwable) -> throwable == null && list.stream().allMatch(e -> e))
-                .thenCompose(result -> transportService.shutdown())
-                .whenComplete((result, throwable) -> setState(State.TERMINATED));
     }
 
 

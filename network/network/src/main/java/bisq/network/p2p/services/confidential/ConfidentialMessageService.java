@@ -48,7 +48,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import static bisq.network.NetworkService.DISPATCHER;
-import static java.util.concurrent.CompletableFuture.*;
+import static java.util.concurrent.CompletableFuture.runAsync;
+import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 @Slf4j
 public class ConfidentialMessageService implements Node.Listener, DataService.Listener {
@@ -72,12 +73,11 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
         dataService.ifPresent(service -> service.addListener(this));
     }
 
-    public CompletableFuture<Boolean> shutdown() {
+    public void shutdown() {
         nodesById.removeNodeListener(this);
         dataService.ifPresent(service -> service.removeListener(this));
         listeners.clear();
         confidentialMessageListeners.clear();
-        return completedFuture(true);
     }
 
 
