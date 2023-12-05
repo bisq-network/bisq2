@@ -252,11 +252,20 @@ public class ServiceNode {
         return nodesById.isNodeInitialized(networkId);
     }
 
+    public void addSeedNodeAddresses(Set<Address> seedNodeAddresses) {
+        this.seedNodeAddresses.addAll(seedNodeAddresses);
+        peerGroupManager.ifPresent(peerGroupService -> peerGroupService.addSeedNodeAddresses(seedNodeAddresses));
+    }
+
     public void addSeedNodeAddress(Address seedNodeAddress) {
+        // In case we would get called before peerGroupManager is created we add the seedNodeAddress to the
+        // seedNodeAddresses field
+        seedNodeAddresses.add(seedNodeAddress);
         peerGroupManager.ifPresent(peerGroupService -> peerGroupService.addSeedNodeAddress(seedNodeAddress));
     }
 
     public void removeSeedNodeAddress(Address seedNodeAddress) {
+        seedNodeAddresses.remove(seedNodeAddress);
         peerGroupManager.ifPresent(peerGroupService -> peerGroupService.removeSeedNodeAddress(seedNodeAddress));
     }
 

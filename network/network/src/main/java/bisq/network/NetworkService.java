@@ -166,8 +166,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
 
-        // Add persisted seed nodes to serviceNodesByTransport
-        persistableStore.getSeedNodes().forEach(serviceNodesByTransport::addSeedNode);
+        serviceNodesByTransport.addAddressByTransportTypeMaps(persistableStore.getSeedNodes());
 
         // We do not have the default node created yet.
         return serviceNodesByTransport.initialize();
@@ -404,7 +403,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public void addSeedNodeAddressByTransport(AddressByTransportTypeMap seedNodeAddressesByTransport) {
-        serviceNodesByTransport.addSeedNode(seedNodeAddressesByTransport);
+        serviceNodesByTransport.addAddressByTransportTypeMap(seedNodeAddressesByTransport);
         persistableStore.getSeedNodes().add(seedNodeAddressesByTransport);
         persist();
     }

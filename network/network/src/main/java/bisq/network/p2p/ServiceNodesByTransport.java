@@ -166,11 +166,18 @@ public class ServiceNodesByTransport {
         return map.get(transportType).isNodeInitialized(networkId);
     }
 
-    public void addSeedNode(AddressByTransportTypeMap seedNode) {
+    public void addAddressByTransportTypeMaps(Set<AddressByTransportTypeMap> seedNodeMaps) {
         supportedTransportTypes.forEach(transportType -> {
-            Address seedNodeAddress = seedNode.get(transportType);
-            map.get(transportType).addSeedNodeAddress(seedNodeAddress);
+            Set<Address> seeds = seedNodeMaps.stream()
+                    .map(map -> map.get(transportType))
+                    .collect(Collectors.toSet());
+            map.get(transportType).addSeedNodeAddresses(seeds);
         });
+    }
+
+    public void addAddressByTransportTypeMap(AddressByTransportTypeMap seedNodeMap) {
+        supportedTransportTypes.forEach(transportType ->
+                map.get(transportType).addSeedNodeAddress(seedNodeMap.get(transportType)));
     }
 
     public void removeSeedNode(AddressByTransportTypeMap seedNode) {

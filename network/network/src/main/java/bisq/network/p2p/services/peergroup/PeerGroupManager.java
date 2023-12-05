@@ -19,6 +19,7 @@ package bisq.network.p2p.services.peergroup;
 
 import bisq.common.timer.Scheduler;
 import bisq.network.NetworkService;
+import bisq.network.common.Address;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
@@ -27,7 +28,6 @@ import bisq.network.p2p.services.peergroup.exchange.PeerExchangeStrategy;
 import bisq.network.p2p.services.peergroup.keepalive.KeepAliveService;
 import bisq.network.p2p.services.peergroup.network_load.NetworkLoadExchangeService;
 import bisq.network.p2p.services.peergroup.validateaddress.AddressValidationService;
-import bisq.network.common.Address;
 import bisq.persistence.PersistenceService;
 import dev.failsafe.Failsafe;
 import dev.failsafe.RetryPolicy;
@@ -208,6 +208,10 @@ public class PeerGroupManager {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Seed nodes
     ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public void addSeedNodeAddresses(Set<Address> seedNodeAddresses) {
+        seedNodeAddresses.forEach(peerGroupService::addSeedNodeAddress);
+    }
 
     public void addSeedNodeAddress(Address seedNodeAddress) {
         peerGroupService.addSeedNodeAddress(seedNodeAddress);
