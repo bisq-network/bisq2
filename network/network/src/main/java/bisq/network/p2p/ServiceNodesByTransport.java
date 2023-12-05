@@ -130,34 +130,20 @@ public class ServiceNodesByTransport {
     }
 
     public Map<TransportType, CompletableFuture<Node>> getInitializedNodeByTransport(NetworkId networkId, TorIdentity torIdentity) {
-        // We initialize all service nodes per transport type in parallel. As soon one has completed we
-        // return a success state.
         return map.entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey,
-                        entry -> supplyAsync(() -> {
-                            ServiceNode serviceNode = entry.getValue();
-                            if (serviceNode.isNodeInitialized(networkId)) {
-                                return serviceNode.findNode(networkId).orElseThrow();
-                            } else {
-                                return serviceNode.getInitializedNode(networkId, torIdentity);
-                            }
-                        }, NETWORK_IO_POOL)));
+                        entry -> getInitializedNode(entry.getKey(), networkId, torIdentity)));
     }
 
-    public CompletableFuture<List<Node>> getAllInitializedNodes(NetworkId networkId, TorIdentity torIdentity) {
-        Collection<CompletableFuture<Node>> futures = getInitializedNodeByTransport(networkId, torIdentity).values();
-        // As we persist networkIds after initialize, and we require all futures to be completed we can be sure that
-        // the networkId is complete with all addresses of all our supported transports.
-        return CompletableFutureUtils.allOf(futures);
-    }
-
-    public boolean isNodeOnAllTransportsInitialized(NetworkId networkId) {
-        return map.values().stream()
-                .allMatch(serviceNode -> serviceNode.isNodeInitialized(networkId));
-    }
-
-    public boolean isInitialized(TransportType transportType, NetworkId networkId) {
-        return map.get(transportType).isNodeInitialized(networkId);
+    public CompletableFuture<Node> getInitializedNode(TransportType transportType, NetworkId networkId, TorIdentity torIdentity) {
+        return supplyAsync(() -> {
+            ServiceNode serviceNode = map.get(transportType);
+            if (serviceNode.isNodeInitialized(networkId)) {
+                return serviceNode.findNode(networkId).orElseThrow();
+            } else {
+                return serviceNode.getInitializedNode(networkId, torIdentity);
+            }
+        }, NETWORK_IO_POOL);
     }
 
     public void addAddressByTransportTypeMaps(Set<AddressByTransportTypeMap> seedNodeMaps) {

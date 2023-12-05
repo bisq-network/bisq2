@@ -195,8 +195,8 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         return map;
     }
 
-    public Map<TransportType, CompletableFuture<Node>> getInitializedNodeByTransport(NetworkId networkId, TorIdentity torIdentity) {
-        return serviceNodesByTransport.getInitializedNodeByTransport(networkId, torIdentity);
+    public CompletableFuture<Node> getInitializedNode(TransportType transportType, NetworkId networkId, TorIdentity torIdentity) {
+        return serviceNodesByTransport.getInitializedNode(transportType, networkId, torIdentity);
     }
 
     public boolean isNodeOnAllTransportsInitialized(NetworkId networkId) {

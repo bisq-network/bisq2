@@ -20,7 +20,6 @@ package bisq.identity;
 
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
-import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.FileUtils;
 import bisq.common.util.NetworkUtils;
 import bisq.network.NetworkService;
@@ -29,6 +28,7 @@ import bisq.network.common.AddressByTransportTypeMap;
 import bisq.network.common.TransportType;
 import bisq.network.identity.NetworkId;
 import bisq.network.identity.TorIdentity;
+import bisq.network.p2p.node.Node;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -44,10 +44,10 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.security.KeyPair;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 @Slf4j
@@ -80,20 +80,28 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
+        CompletableFuture<Boolean> result = new CompletableFuture<>();
+        AtomicInteger failures = new AtomicInteger();
         Identity defaultIdentity = getOrCreateDefaultIdentity();
-        var initializedDefaultNodeByTransport = networkService.getInitializedDefaultNodeByTransport(defaultIdentity.getNetworkId(),
-                defaultIdentity.getTorIdentity());
-        //todo call initializeActiveIdentities by transport to avoid that we wait on a slow transport
-        CompletableFutureUtils.allOf(initializedDefaultNodeByTransport.values())
-                .whenComplete((list, throwable) -> {
-                    if (throwable == null && list != null && !list.isEmpty()) {
-                        initializeActiveIdentities();
+        Map<TransportType, CompletableFuture<Node>> map = networkService.getInitializedDefaultNodeByTransport(defaultIdentity.getNetworkId(), defaultIdentity.getTorIdentity());
+        map.forEach((transportType, future) -> {
+            future.whenComplete((node, throwable) -> {
+                if (throwable == null && node != null) {
+                    // After each successful initialisation of the default node on a transport we start to
+                    // initialize the active identities for that transport
+                    initializeActiveIdentities(transportType);
+                    if (!result.isDone()) {
+                        result.complete(true);
                     }
-                });
-
-        // We return as soon at least one default node was successfully initialized
-        return CompletableFutureUtils.anyOf(initializedDefaultNodeByTransport.values())
-                .thenApply(Objects::nonNull);
+                } else if (!result.isDone()) {
+                    if (failures.incrementAndGet() == map.size()) {
+                        // All failed
+                        result.completeExceptionally(new RuntimeException("Default node initialization on all transports failed"));
+                    }
+                }
+            });
+        });
+        return result;
     }
 
     public CompletableFuture<Boolean> shutdown() {
@@ -221,21 +229,10 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private void initializeActiveIdentities() {
+    private void initializeActiveIdentities(TransportType transportType) {
         getActiveIdentityByTag().values().stream()
                 .filter(identity -> !identity.getTag().equals(IdentityService.DEFAULT_IDENTITY_TAG))
-                .forEach(identity ->
-                        networkService.getInitializedNodeByTransport(identity.getNetworkId(), identity.getTorIdentity()).values()
-                                .forEach(future -> future.whenComplete((node, throwable) -> {
-                                            if (throwable == null) {
-                                                log.info("Network node for active identity {} initialized. NetworkId={}",
-                                                        identity.getTag(), identity.getNetworkId());
-                                            } else {
-                                                log.error("Initializing network node for active identity {} failed. NetworkId={}",
-                                                        identity.getTag(), identity.getNetworkId());
-                                            }
-                                        })
-                                ));
+                .forEach(identity -> networkService.getInitializedNode(transportType, identity.getNetworkId(), identity.getTorIdentity()));
     }
 
     @VisibleForTesting
