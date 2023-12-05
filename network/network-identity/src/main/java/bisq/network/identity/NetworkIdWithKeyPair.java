@@ -15,9 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.vo;
+package bisq.network.identity;
 
-import bisq.network.identity.NetworkId;
 import bisq.security.PubKey;
 import lombok.Getter;
 import lombok.ToString;

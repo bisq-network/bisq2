@@ -19,9 +19,9 @@ package bisq.chat.pub;
 
 import bisq.chat.*;
 import bisq.network.NetworkService;
+import bisq.network.identity.NetworkIdWithKeyPair;
 import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.network.p2p.services.data.DataService;
-import bisq.network.p2p.vo.NetworkIdWithKeyPair;
 import bisq.persistence.PersistableStore;
 import bisq.user.UserService;
 import bisq.user.identity.UserIdentity;
