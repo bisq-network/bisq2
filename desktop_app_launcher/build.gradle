@@ -12,12 +12,6 @@ application {
     project.mainClassName = 'bisq.desktop_app_launcher.DesktopAppLauncher'
 }
 
-distributions {
-    main {
-        distributionBaseName = 'jfx-dist'
-    }
-}
-
 tasks.named('jar') {
     manifest {
         attributes('Implementation-Title': project.name,
