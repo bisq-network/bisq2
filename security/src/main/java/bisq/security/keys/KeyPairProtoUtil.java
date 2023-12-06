@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.security;
+package bisq.security.keys;
 
 import com.google.protobuf.ByteString;
 

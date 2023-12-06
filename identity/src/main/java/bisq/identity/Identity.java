@@ -21,8 +21,8 @@ import bisq.common.proto.Proto;
 import bisq.network.identity.NetworkId;
 import bisq.network.identity.NetworkIdWithKeyPair;
 import bisq.network.identity.TorIdentity;
-import bisq.security.KeyPairProtoUtil;
-import bisq.security.PubKey;
+import bisq.security.keys.KeyPairProtoUtil;
+import bisq.security.keys.PubKey;
 import lombok.Getter;
 import lombok.ToString;
 
