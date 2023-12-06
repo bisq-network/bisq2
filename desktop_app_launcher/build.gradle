@@ -34,6 +34,3 @@ dependencies {
 
 distZip.enabled = false
 distTar.enabled = false
-shadowDistZip.enabled = false
-shadowDistTar.enabled = false
-shadowJar.enabled = false
