@@ -228,4 +228,12 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
     public boolean isSeed(Address address) {
         return seedNodeAddresses.stream().anyMatch(seedAddress -> seedAddress.equals(address));
     }
+
+    public boolean isSeed(Peer peer) {
+        return isSeed(peer.getAddress());
+    }
+
+    public boolean notASeed(Peer peer) {
+        return !isSeed(peer);
+    }
 }

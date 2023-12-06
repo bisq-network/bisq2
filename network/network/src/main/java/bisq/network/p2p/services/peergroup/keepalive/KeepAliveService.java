@@ -78,10 +78,10 @@ public class KeepAliveService implements Node.Listener {
                 .name("KeepAliveService.scheduler-" + node.getNodeInfo()));
     }
 
-    private void sendPingIfRequired() {
-        peerGroupService.getAllConnections()
-                .filter(this::isRequired)
-                .forEach(this::sendPing);
+    public void shutdown() {
+        scheduler.ifPresent(Scheduler::stop);
+        requestHandlerMap.values().forEach(KeepAliveHandler::dispose);
+        requestHandlerMap.clear();
     }
 
     public void sendPing(Connection connection) {
@@ -98,12 +98,6 @@ public class KeepAliveService implements Node.Listener {
         handler.request()
                 .orTimeout(TIMEOUT_SEC, TimeUnit.SECONDS)
                 .whenComplete((nil, throwable) -> requestHandlerMap.remove(key));
-    }
-
-    public void shutdown() {
-        scheduler.ifPresent(Scheduler::stop);
-        requestHandlerMap.values().forEach(KeepAliveHandler::dispose);
-        requestHandlerMap.clear();
     }
 
     @Override
@@ -127,6 +121,12 @@ public class KeepAliveService implements Node.Listener {
             requestHandlerMap.get(key).dispose();
             requestHandlerMap.remove(key);
         }
+    }
+
+    private void sendPingIfRequired() {
+        peerGroupService.getAllConnections()
+                .filter(this::isRequired)
+                .forEach(this::sendPing);
     }
 
     private boolean isRequired(Connection connection) {

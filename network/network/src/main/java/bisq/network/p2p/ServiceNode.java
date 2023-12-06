@@ -19,7 +19,6 @@ package bisq.network.p2p;
 
 
 import bisq.common.observable.Observable;
-import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkService;
 import bisq.network.common.Address;
 import bisq.network.common.TransportType;
@@ -40,6 +39,7 @@ import bisq.network.p2p.services.confidential.SendConfidentialMessageResult;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatusService;
 import bisq.network.p2p.services.data.DataNetworkService;
 import bisq.network.p2p.services.data.DataService;
+import bisq.network.p2p.services.data.inventory.InventoryService;
 import bisq.network.p2p.services.peergroup.BanList;
 import bisq.network.p2p.services.peergroup.PeerGroupManager;
 import bisq.persistence.PersistenceService;
@@ -59,7 +59,6 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.concurrent.CompletableFuture.runAsync;
 
 /**
@@ -87,14 +86,8 @@ public class ServiceNode {
     public enum State {
         NEW,
 
-        INITIALIZE_TRANSPORT,
-        TRANSPORT_INITIALIZED,
-
-        INITIALIZE_DEFAULT_NODE,
-        DEFAULT_NODE_INITIALIZED,
-
-        INITIALIZE_PEER_GROUP,
-        PEER_GROUP_INITIALIZED,
+        INITIALIZING,
+        INITIALIZED,
 
         STOPPING,
         TERMINATED
@@ -109,15 +102,13 @@ public class ServiceNode {
     }
 
     private final Config config;
-    private final Node.Config nodeConfig;
     private final PeerGroupManager.Config peerGroupServiceConfig;
     private final Optional<DataService> dataService;
+    private final InventoryService.Config inventoryServiceConfig;
     private final Optional<MessageDeliveryStatusService> messageDeliveryStatusService;
     private final KeyPairService keyPairService;
     private final PersistenceService persistenceService;
     private final Set<Address> seedNodeAddresses;
-    private final TransportType transportType;
-    private final NetworkLoadService networkLoadService;
 
     @Getter
     private final NodesById nodesById;
@@ -130,103 +121,38 @@ public class ServiceNode {
     @Getter
     private Optional<ConfidentialMessageService> confidentialMessageService = Optional.empty();
     @Getter
-    private Optional<PeerGroupManager> peerGroupService = Optional.empty();
+    private Optional<PeerGroupManager> peerGroupManager = Optional.empty();
     @Getter
-    private Optional<DataNetworkService> dataServicePerTransport = Optional.empty();
+    private Optional<InventoryService> inventoryService = Optional.empty();
+    @Getter
+    private Optional<DataNetworkService> dataNetworkService = Optional.empty();
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     @Getter
     public Observable<State> state = new Observable<>(State.NEW);
 
-    public ServiceNode(Config config,
-                       Node.Config nodeConfig,
-                       PeerGroupManager.Config peerGroupServiceConfig,
-                       Optional<DataService> dataService,
-                       Optional<MessageDeliveryStatusService> messageDeliveryStatusService,
-                       KeyPairService keyPairService,
-                       PersistenceService persistenceService,
-                       AuthorizationService authorizationService,
-                       Set<Address> seedNodeAddresses,
-                       TransportType transportType,
-                       NetworkLoadService networkLoadService) {
+    ServiceNode(Config config,
+                Node.Config nodeConfig,
+                PeerGroupManager.Config peerGroupServiceConfig,
+                InventoryService.Config inventoryServiceConfig,
+                Optional<DataService> dataService,
+                Optional<MessageDeliveryStatusService> messageDeliveryStatusService,
+                KeyPairService keyPairService,
+                PersistenceService persistenceService,
+                AuthorizationService authorizationService,
+                Set<Address> seedNodeAddresses,
+                TransportType transportType,
+                NetworkLoadService networkLoadService) {
         this.config = config;
-        this.nodeConfig = nodeConfig;
         this.peerGroupServiceConfig = peerGroupServiceConfig;
+        this.inventoryServiceConfig = inventoryServiceConfig;
         this.messageDeliveryStatusService = messageDeliveryStatusService;
         this.dataService = dataService;
         this.keyPairService = keyPairService;
         this.persistenceService = persistenceService;
         this.seedNodeAddresses = seedNodeAddresses;
-        this.transportType = transportType;
-        this.networkLoadService = networkLoadService;
 
         transportService = TransportService.create(transportType, nodeConfig.getTransportConfig());
         nodesById = new NodesById(banList, nodeConfig, transportService, networkLoadService, authorizationService);
-    }
-
-    public void createDefaultNode(NetworkId defaultNetworkId, TorIdentity defaultTorIdentity) {
-        defaultNode = nodesById.createAndConfigNode(defaultNetworkId, defaultTorIdentity, true);
-
-        Set<SupportedService> supportedServices = config.getSupportedServices();
-        peerGroupService = supportedServices.contains(SupportedService.PEER_GROUP) ?
-                Optional.of(new PeerGroupManager(persistenceService,
-                        defaultNode,
-                        banList,
-                        peerGroupServiceConfig,
-                        seedNodeAddresses)) :
-                Optional.empty();
-
-        boolean dataServiceEnabled = supportedServices.contains(SupportedService.PEER_GROUP) && supportedServices.contains(SupportedService.DATA);
-        dataServicePerTransport = dataServiceEnabled ?
-                Optional.of(dataService.orElseThrow().getDataServicePerTransport(transportType,
-                        defaultNode,
-                        peerGroupService.orElseThrow())) :
-                Optional.empty();
-
-        confidentialMessageService = supportedServices.contains(SupportedService.CONFIDENTIAL) ?
-                Optional.of(new ConfidentialMessageService(nodesById, keyPairService, dataService, messageDeliveryStatusService)) :
-                Optional.empty();
-
-        initializeTransport();
-        initializeDefaultNode();
-        initializePeerGroup();
-    }
-
-    private void initializeTransport() {
-        setState(State.INITIALIZE_TRANSPORT);
-        transportService.initialize();
-        setState(State.TRANSPORT_INITIALIZED);
-    }
-
-    private void initializeDefaultNode() {
-        setState(State.INITIALIZE_DEFAULT_NODE);
-        defaultNode.initialize();
-        setState(State.DEFAULT_NODE_INITIALIZED);
-    }
-
-    private void initializePeerGroup() {
-        peerGroupService.ifPresent(peerGroupService -> {
-            setState(State.INITIALIZE_PEER_GROUP);
-            peerGroupService.initialize();
-            setState(State.PEER_GROUP_INITIALIZED);
-        });
-    }
-
-    Node getInitializedNode(NetworkId networkId, TorIdentity torIdentity) {
-        return nodesById.getInitializedNode(networkId, torIdentity);
-    }
-
-    public CompletableFuture<Boolean> shutdown() {
-        setState(State.STOPPING);
-        return CompletableFutureUtils.allOf(
-                        confidentialMessageService.map(ConfidentialMessageService::shutdown).orElse(completedFuture(true)),
-                        peerGroupService.map(PeerGroupManager::shutdown).orElse(completedFuture(true)),
-                        dataServicePerTransport.map(DataNetworkService::shutdown).orElse(completedFuture(true)),
-                        nodesById.shutdown()
-                )
-                .orTimeout(10, TimeUnit.SECONDS)
-                .handle((list, throwable) -> throwable == null && list.stream().allMatch(e -> e))
-                .thenCompose(result -> transportService.shutdown())
-                .whenComplete((result, throwable) -> setState(State.TERMINATED));
     }
 
 
@@ -234,35 +160,102 @@ public class ServiceNode {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+    void initialize(NetworkId defaultNetworkId, TorIdentity defaultTorIdentity) {
+        defaultNode = nodesById.createAndConfigNode(defaultNetworkId, defaultTorIdentity, true);
 
-    public boolean isNodeInitialized(NetworkId networkId) {
+        Set<SupportedService> supportedServices = config.getSupportedServices();
+        peerGroupManager = supportedServices.contains(SupportedService.PEER_GROUP) ?
+                Optional.of(new PeerGroupManager(persistenceService,
+                        defaultNode,
+                        banList,
+                        peerGroupServiceConfig,
+                        seedNodeAddresses)) :
+                Optional.empty();
+
+        boolean dataServiceEnabled = supportedServices.contains(SupportedService.PEER_GROUP) &&
+                supportedServices.contains(SupportedService.DATA);
+
+        dataNetworkService = dataServiceEnabled ?
+                Optional.of(new DataNetworkService(defaultNode, peerGroupManager.orElseThrow(), dataService.orElseThrow())) :
+                Optional.empty();
+
+        inventoryService = dataServiceEnabled ?
+                Optional.of(new InventoryService(inventoryServiceConfig,
+                        defaultNode,
+                        peerGroupManager.orElseThrow(),
+                        dataService.orElseThrow())) :
+                Optional.empty();
+
+        confidentialMessageService = supportedServices.contains(SupportedService.CONFIDENTIAL) ?
+                Optional.of(new ConfidentialMessageService(nodesById, keyPairService, dataService, messageDeliveryStatusService)) :
+                Optional.empty();
+
+        setState(State.INITIALIZING);
+        transportService.initialize();// blocking
+        defaultNode.initialize();// blocking
+        peerGroupManager.ifPresentOrElse(peerGroupService -> {
+                    peerGroupService.initialize();// blocking
+                    setState(State.INITIALIZED);
+                },
+                () -> setState(State.INITIALIZED));
+    }
+
+    CompletableFuture<Boolean> shutdown() {
+        setState(State.STOPPING);
+        peerGroupManager.ifPresent(PeerGroupManager::shutdown);
+        dataNetworkService.ifPresent(DataNetworkService::shutdown);
+        inventoryService.ifPresent(InventoryService::shutdown);
+        confidentialMessageService.ifPresent(ConfidentialMessageService::shutdown);
+        return nodesById.shutdown()
+                .orTimeout(10, TimeUnit.SECONDS)
+                .handle((result, throwable) -> throwable == null && result)
+                .thenCompose(result -> transportService.shutdown())
+                .whenComplete((result, throwable) -> setState(State.TERMINATED));
+    }
+
+
+    Node getInitializedNode(NetworkId networkId, TorIdentity torIdentity) {
+        return nodesById.getInitializedNode(networkId, torIdentity);
+    }
+
+    boolean isNodeInitialized(NetworkId networkId) {
         return nodesById.isNodeInitialized(networkId);
     }
 
-    public void addSeedNodeAddress(Address seedNodeAddress) {
-        peerGroupService.ifPresent(peerGroupService -> peerGroupService.addSeedNodeAddress(seedNodeAddress));
+    void addSeedNodeAddresses(Set<Address> seedNodeAddresses) {
+        this.seedNodeAddresses.addAll(seedNodeAddresses);
+        peerGroupManager.ifPresent(peerGroupService -> peerGroupService.addSeedNodeAddresses(seedNodeAddresses));
     }
 
-    public void removeSeedNodeAddress(Address seedNodeAddress) {
-        peerGroupService.ifPresent(peerGroupService -> peerGroupService.removeSeedNodeAddress(seedNodeAddress));
+    void addSeedNodeAddress(Address seedNodeAddress) {
+        // In case we would get called before peerGroupManager is created we add the seedNodeAddress to the
+        // seedNodeAddresses field
+        seedNodeAddresses.add(seedNodeAddress);
+        peerGroupManager.ifPresent(peerGroupService -> peerGroupService.addSeedNodeAddress(seedNodeAddress));
     }
 
-    public SendConfidentialMessageResult confidentialSend(EnvelopePayloadMessage envelopePayloadMessage,
-                                                          Address address,
-                                                          PubKey receiverPubKey,
-                                                          KeyPair senderKeyPair,
-                                                          NetworkId senderNetworkId,
-                                                          TorIdentity senderTorIdentity) {
+    void removeSeedNodeAddress(Address seedNodeAddress) {
+        seedNodeAddresses.remove(seedNodeAddress);
+        peerGroupManager.ifPresent(peerGroupService -> peerGroupService.removeSeedNodeAddress(seedNodeAddress));
+    }
+
+    SendConfidentialMessageResult confidentialSend(EnvelopePayloadMessage envelopePayloadMessage,
+                                                   Address address,
+                                                   PubKey receiverPubKey,
+                                                   KeyPair senderKeyPair,
+                                                   NetworkId senderNetworkId,
+                                                   TorIdentity senderTorIdentity) {
         checkArgument(confidentialMessageService.isPresent(), "ConfidentialMessageService not present at confidentialSend");
         return confidentialMessageService.get().send(envelopePayloadMessage, address, receiverPubKey, senderKeyPair, senderNetworkId, senderTorIdentity);
     }
 
-    public Connection send(NetworkId senderNetworkId, EnvelopePayloadMessage envelopePayloadMessage, Address address, TorIdentity torIdentity) {
+    Connection send(NetworkId senderNetworkId, EnvelopePayloadMessage envelopePayloadMessage, Address address, TorIdentity torIdentity) {
         return getNodesById().send(senderNetworkId, envelopePayloadMessage, address, torIdentity);
     }
 
-    public void addMessageListener(MessageListener messageListener) {
+    void addMessageListener(MessageListener messageListener) {
         //todo rename NodeListener
+
         nodesById.addNodeListener(new Node.Listener() {
             @Override
             public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
@@ -280,32 +273,32 @@ public class ServiceNode {
         confidentialMessageService.ifPresent(service -> service.addMessageListener(messageListener));
     }
 
-    public void removeMessageListener(MessageListener messageListener) {
+    void removeMessageListener(MessageListener messageListener) {
         //todo missing nodesById.removeNodeListener ?
         confidentialMessageService.ifPresent(service -> service.removeMessageListener(messageListener));
     }
 
-    public void addConfidentialMessageListener(ConfidentialMessageListener listener) {
+    void addConfidentialMessageListener(ConfidentialMessageListener listener) {
         confidentialMessageService.ifPresent(service -> service.addConfidentialMessageListener(listener));
     }
 
-    public void removeConfidentialMessageListener(ConfidentialMessageListener listener) {
+    void removeConfidentialMessageListener(ConfidentialMessageListener listener) {
         confidentialMessageService.ifPresent(service -> service.removeConfidentialMessageListener(listener));
     }
 
-    public void addListener(Listener listener) {
+    void addListener(Listener listener) {
         listeners.add(listener);
     }
 
-    public void removeListener(Listener listener) {
+    void removeListener(Listener listener) {
         listeners.remove(listener);
     }
 
-    public Optional<Socks5Proxy> getSocksProxy() throws IOException {
+    Optional<Socks5Proxy> getSocksProxy() throws IOException {
         return defaultNode.getSocksProxy();
     }
 
-    public Optional<Node> findNode(NetworkId networkId) {
+    Optional<Node> findNode(NetworkId networkId) {
         return nodesById.findNode(networkId);
     }
 

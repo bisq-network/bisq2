@@ -29,7 +29,6 @@ import bisq.network.p2p.services.data.inventory.DataFilter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -57,9 +56,15 @@ public class MonitorService {
                 .name("NetworkLoadExchangeService.updateNetworkLoadScheduler"));
     }
 
-    public CompletableFuture<Boolean> shutdown() {
+    public void shutdown() {
         updateNetworkLoadScheduler.ifPresent(Scheduler::stop);
-        return CompletableFuture.completedFuture(true);
+    }
+
+    // All connections of all nodes on all transports
+    public Stream<Connection> getAllConnections() {
+        return serviceNodesByTransport.getAllServices().stream()
+                .flatMap(serviceNode -> serviceNode.getNodesById().getAllNodes().stream())
+                .flatMap(Node::getAllConnections);
     }
 
     private void updateNetworkLoad() {
@@ -73,13 +78,6 @@ public class MonitorService {
         // Inventory inventory = dataService.getStorageService().getInventoryOfAllStores(emptyFilter);
 
         // networkLoadService.updateMyLoad(allConnectionMetrics, inventory);
-    }
-
-    // All connections of all nodes on all transports
-    public Stream<Connection> getAllConnections() {
-        return serviceNodesByTransport.getMap().values().stream()
-                .flatMap(serviceNode -> serviceNode.getNodesById().getAllNodes().stream())
-                .flatMap(Node::getAllConnections);
     }
 
 

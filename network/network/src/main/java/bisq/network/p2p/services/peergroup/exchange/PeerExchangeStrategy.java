@@ -17,9 +17,9 @@
 
 package bisq.network.p2p.services.peergroup.exchange;
 
+import bisq.network.common.Address;
 import bisq.network.p2p.services.peergroup.Peer;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
-import bisq.network.common.Address;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -67,10 +67,6 @@ public class PeerExchangeStrategy {
     public PeerExchangeStrategy(PeerGroupService peerGroupService, Config config) {
         this.peerGroupService = peerGroupService;
         this.config = config;
-    }
-
-    void shutdown() {
-        usedAddresses.clear();
     }
 
 

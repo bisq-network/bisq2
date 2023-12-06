@@ -39,12 +39,12 @@ import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.services.confidential.SendConfidentialMessageResult;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatusService;
 import bisq.network.p2p.services.data.DataService;
+import bisq.network.p2p.services.data.inventory.InventoryService;
 import bisq.network.p2p.services.peergroup.PeerGroupManager;
 import bisq.persistence.PersistenceService;
 import bisq.security.KeyPairService;
 import bisq.security.pow.ProofOfWorkService;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -65,7 +65,6 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 // TODO: if we change the supported transports we need to clean up the persisted networkIds.
 @Slf4j
 public class ServiceNodesByTransport {
-    @Getter
     private final Map<TransportType, ServiceNode> map = new ConcurrentHashMap<>();
     private final Set<TransportType> supportedTransportTypes;
     private final AuthorizationService authorizationService;
@@ -74,6 +73,7 @@ public class ServiceNodesByTransport {
                                    ServiceNode.Config serviceNodeConfig,
                                    Map<TransportType, PeerGroupManager.Config> peerGroupServiceConfigByTransport,
                                    Map<TransportType, Set<Address>> seedAddressesByTransport,
+                                   InventoryService.Config inventoryServiceConfig,
                                    Set<TransportType> supportedTransportTypes,
                                    KeyPairService keyPairService,
                                    PersistenceService persistenceService,
@@ -95,9 +95,11 @@ public class ServiceNodesByTransport {
             Set<Address> seedAddresses = seedAddressesByTransport.get(transportType);
             checkNotNull(seedAddresses, "Seed nodes must be setup for %s", transportType);
             PeerGroupManager.Config peerGroupServiceConfig = peerGroupServiceConfigByTransport.get(transportType);
+
             ServiceNode serviceNode = new ServiceNode(serviceNodeConfig,
                     nodeConfig,
                     peerGroupServiceConfig,
+                    inventoryServiceConfig,
                     dataService,
                     messageDeliveryStatusService,
                     keyPairService,
@@ -110,16 +112,18 @@ public class ServiceNodesByTransport {
         });
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    /**
-     * @return A CompletableFuture with the success state if at least one of the service node initialisations was
-     * successfully completed. In case all fail, we complete exceptionally.
-     */
-    public CompletableFuture<Boolean> initialize() {
-        return CompletableFuture.completedFuture(true);
+    public void initialize(NetworkId defaultNetworkId, TorIdentity defaultTorIdentity) {
+        map.forEach((transportType, serviceNode) -> serviceNode.initialize(defaultNetworkId, defaultTorIdentity));
+    }
+
+    public CompletableFuture<List<Boolean>> shutdown() {
+        Stream<CompletableFuture<Boolean>> futures = map.values().stream().map(ServiceNode::shutdown);
+        return CompletableFutureUtils.allOf(futures).whenComplete((list, throwable) -> map.clear());
     }
 
     public Map<TransportType, CompletableFuture<Node>> getInitializedNodeByTransport(NetworkId networkId, TorIdentity torIdentity) {
@@ -144,15 +148,6 @@ public class ServiceNodesByTransport {
         return CompletableFutureUtils.allOf(futures);
     }
 
-    public CompletableFuture<Boolean> shutdown() {
-        Stream<CompletableFuture<Boolean>> futures = map.values().stream().map(ServiceNode::shutdown);
-        return CompletableFutureUtils.allOf(futures)
-                .handle((list, throwable) -> {
-                    map.clear();
-                    return throwable == null && list.stream().allMatch(e -> e);
-                });
-    }
-
     public boolean isNodeOnAllTransportsInitialized(NetworkId networkId) {
         return map.values().stream()
                 .allMatch(serviceNode -> serviceNode.isNodeInitialized(networkId));
@@ -162,11 +157,18 @@ public class ServiceNodesByTransport {
         return map.get(transportType).isNodeInitialized(networkId);
     }
 
-    public void addSeedNode(AddressByTransportTypeMap seedNode) {
+    public void addAddressByTransportTypeMaps(Set<AddressByTransportTypeMap> seedNodeMaps) {
         supportedTransportTypes.forEach(transportType -> {
-            Address seedNodeAddress = seedNode.get(transportType);
-            map.get(transportType).addSeedNodeAddress(seedNodeAddress);
+            Set<Address> seeds = seedNodeMaps.stream()
+                    .map(map -> map.get(transportType))
+                    .collect(Collectors.toSet());
+            map.get(transportType).addSeedNodeAddresses(seeds);
         });
+    }
+
+    public void addAddressByTransportTypeMap(AddressByTransportTypeMap seedNodeMap) {
+        supportedTransportTypes.forEach(transportType ->
+                map.get(transportType).addSeedNodeAddress(seedNodeMap.get(transportType)));
     }
 
     public void removeSeedNode(AddressByTransportTypeMap seedNode) {
@@ -274,5 +276,9 @@ public class ServiceNodesByTransport {
         return map.values().stream()
                 .flatMap(serviceNode -> serviceNode.findNode(networkId).stream())
                 .collect(Collectors.toSet());
+    }
+
+    public Collection<ServiceNode> getAllServices() {
+        return map.values();
     }
 }

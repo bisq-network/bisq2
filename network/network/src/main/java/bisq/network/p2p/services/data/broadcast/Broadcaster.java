@@ -17,12 +17,10 @@
 
 package bisq.network.p2p.services.data.broadcast;
 
-import bisq.common.util.CollectionUtil;
 import bisq.network.NetworkService;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
-import bisq.network.common.Address;
 import dev.failsafe.Failsafe;
 import dev.failsafe.RetryPolicy;
 import lombok.extern.slf4j.Slf4j;
@@ -108,12 +106,5 @@ public class Broadcaster {
                     });
         });
         return future;
-    }
-
-    public Address getPeerAddressesForInventoryRequest() {
-        return CollectionUtil.getRandomElement(peerGroupService.getAllConnectedPeerAddresses().collect(Collectors.toSet()));
-    }
-
-    public void shutdown() {
     }
 }

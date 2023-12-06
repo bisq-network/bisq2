@@ -52,12 +52,12 @@ public class NodesById implements Node.Listener {
         }
     }
 
-    private final Map<NetworkId, Node> map = new ConcurrentHashMap<>();
     private final BanList banList;
     private final Node.Config nodeConfig;
     private final TransportService transportService;
     private final NetworkLoadService networkLoadService;
     private final AuthorizationService authorizationService;
+    private final Map<NetworkId, Node> map = new ConcurrentHashMap<>();
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     private final Set<Node.Listener> nodeListeners = new CopyOnWriteArraySet<>();
 

@@ -22,7 +22,6 @@ import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.threading.ExecutorFactory;
-import bisq.common.util.CompletableFutureUtils;
 import bisq.network.common.AddressByTransportTypeMap;
 import bisq.network.common.TransportType;
 import bisq.network.http.BaseHttpClient;
@@ -74,7 +73,6 @@ import java.util.concurrent.ExecutorService;
 import static bisq.network.common.TransportType.TOR;
 import static bisq.network.p2p.services.data.DataService.Listener;
 import static com.google.common.base.Preconditions.checkArgument;
-import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 /**
@@ -98,7 +96,6 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     private final HttpClientsByTransport httpClientsByTransport;
     @Getter
     private final Optional<DataService> dataService;
-    private final NetworkLoadService networkLoadService;
     @Getter
     private final ServiceNodesByTransport serviceNodesByTransport;
     private final Optional<MessageDeliveryStatusService> messageDeliveryStatusService;
@@ -119,7 +116,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         Set<ServiceNode.SupportedService> supportedServices = config.getServiceNodeConfig().getSupportedServices();
 
         dataService = supportedServices.contains(ServiceNode.SupportedService.DATA) ?
-                Optional.of(new DataService(config.getInventoryServiceConfig(), persistenceService)) :
+                Optional.of(new DataService(persistenceService)) :
                 Optional.empty();
 
         messageDeliveryStatusService = supportedServices.contains(ServiceNode.SupportedService.ACK) &&
@@ -127,12 +124,13 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                 Optional.of(new MessageDeliveryStatusService(persistenceService, keyPairService, this)) :
                 Optional.empty();
 
-        networkLoadService = new NetworkLoadService();
+        NetworkLoadService networkLoadService = new NetworkLoadService();
 
         serviceNodesByTransport = new ServiceNodesByTransport(config.getConfigByTransportType(),
                 config.getServiceNodeConfig(),
                 config.getPeerGroupServiceConfigByTransport(),
                 config.getSeedAddressesByTransport(),
+                config.getInventoryServiceConfig(),
                 supportedTransportTypes,
                 keyPairService,
                 persistenceService,
@@ -153,33 +151,28 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                 persistableStore);
     }
 
+    @Override
+    public void onPersistedApplied(NetworkServiceStore persisted) {
+        serviceNodesByTransport.addAddressByTransportTypeMaps(persistableStore.getSeedNodes());
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Service
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    /**
-     * Initialize default node and initialize peerGroupService.
-     * We require at least one successful bootstrap from the available transports.
-     */
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-
-        // Add persisted seed nodes to serviceNodesByTransport
-        persistableStore.getSeedNodes().forEach(serviceNodesByTransport::addSeedNode);
-
-        // We do not have the default node created yet.
-        return serviceNodesByTransport.initialize();
+        return CompletableFuture.completedFuture(true);
     }
 
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
         messageDeliveryStatusService.ifPresent(MessageDeliveryStatusService::shutdown);
         monitorService.ifPresent(MonitorService::shutdown);
-        return CompletableFutureUtils.allOf(
-                        dataService.map(DataService::shutdown).orElse(completedFuture(true)),
-                        serviceNodesByTransport.shutdown())
-                .thenApply(list -> list.stream().filter(e -> e).count() == 3);
+        dataService.ifPresent(DataService::shutdown);
+        return serviceNodesByTransport.shutdown()
+                .thenApply(list -> list.stream().filter(e -> e).count() == supportedTransportTypes.size());
     }
 
 
@@ -188,9 +181,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public void createDefaultServiceNodes(NetworkId defaultNetworkId, TorIdentity defaultTorIdentity) {
-        serviceNodesByTransport.getMap()
-                .forEach((transportType, serviceNode) -> serviceNode.createDefaultNode(defaultNetworkId, defaultTorIdentity));
-
+        serviceNodesByTransport.initialize(defaultNetworkId, defaultTorIdentity); // blocking
         messageDeliveryStatusService.ifPresent(MessageDeliveryStatusService::initialize);
         monitorService.ifPresent(MonitorService::initialize);
     }
@@ -403,7 +394,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public void addSeedNodeAddressByTransport(AddressByTransportTypeMap seedNodeAddressesByTransport) {
-        serviceNodesByTransport.addSeedNode(seedNodeAddressesByTransport);
+        serviceNodesByTransport.addAddressByTransportTypeMap(seedNodeAddressesByTransport);
         persistableStore.getSeedNodes().add(seedNodeAddressesByTransport);
         persist();
     }

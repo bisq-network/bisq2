@@ -70,7 +70,7 @@ public class I2pClient {
 
     private I2pClient(String dirPath, String host, int port, long socketTimeout, boolean isEmbeddedRouter) {
         this.embeddedRouter = isEmbeddedRouter;
-        if(isEmbeddedRouter) {
+        if (isEmbeddedRouter) {
             this.i2pRouter = I2pEmbeddedRouter.getInitializedI2pEmbeddedRouter();
         }
 
@@ -109,7 +109,7 @@ public class I2pClient {
     }
 
     public ServerSocket getServerSocket(String sessionId, String host, int port) throws IOException {
-        return maybeCreateServerSession(sessionId, host,  port).getStandardServerSocket();
+        return maybeCreateServerSession(sessionId, host, port).getStandardServerSocket();
     }
 
     public String getMyDestination(String sessionId) throws IOException {
@@ -150,8 +150,6 @@ public class I2pClient {
 
         return sessionMap.get(sessionId);
     }
-
-
 
     @SuppressWarnings("SpellCheckingInspection")
     private I2PSocketManager maybeCreateServerSession(String sessionId, String host, int port) throws IOException {

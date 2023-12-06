@@ -61,6 +61,13 @@ public class NetworkLoadExchangeService implements Node.Listener {
                 .name("NetworkLoadExchangeService.scheduler-" + node.getNodeInfo()));
     }
 
+    public void shutdown() {
+        scheduler.ifPresent(Scheduler::stop);
+        requestHandlerMap.values().forEach(NetworkLoadExchangeHandler::dispose);
+        requestHandlerMap.clear();
+    }
+
+
     private void requestFromAll() {
         peerGroupService.getAllConnections()
                 .filter(this::needsUpdate)
@@ -81,12 +88,6 @@ public class NetworkLoadExchangeService implements Node.Listener {
         handler.request()
                 .orTimeout(TIMEOUT_SEC, TimeUnit.SECONDS)
                 .whenComplete((nil, throwable) -> requestHandlerMap.remove(key));
-    }
-
-    public void shutdown() {
-        scheduler.ifPresent(Scheduler::stop);
-        requestHandlerMap.values().forEach(NetworkLoadExchangeHandler::dispose);
-        requestHandlerMap.clear();
     }
 
     @Override

@@ -25,8 +25,6 @@ import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.network.p2p.services.data.DataRequest;
 import bisq.network.p2p.services.data.RemoveDataRequest;
-import bisq.network.p2p.services.data.inventory.FilterEntry;
-import bisq.network.p2p.services.data.inventory.InventoryProvider;
 import bisq.network.p2p.services.data.storage.append.AddAppendOnlyDataRequest;
 import bisq.network.p2p.services.data.storage.append.AppendOnlyData;
 import bisq.network.p2p.services.data.storage.append.AppendOnlyDataStorageService;
@@ -49,7 +47,7 @@ import java.util.stream.Stream;
 import static bisq.network.p2p.services.data.storage.StorageService.StoreType.*;
 
 @Slf4j
-public class StorageService implements InventoryProvider {
+public class StorageService {
     public enum StoreType {
         ALL(""),
         AUTHENTICATED_DATA_STORE("authenticated"),
@@ -145,17 +143,9 @@ public class StorageService implements InventoryProvider {
         appendOnlyDataStores.values().forEach(DataStorageService::shutdown);
     }
 
-    public void addListener(StorageService.Listener listener) {
-        listeners.add(listener);
-    }
-
-    public void removeListener(StorageService.Listener listener) {
-        listeners.remove(listener);
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Get data
+    // Get AuthenticatedData
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public Stream<AuthenticatedData> getAuthenticatedData() {
@@ -291,11 +281,6 @@ public class StorageService implements InventoryProvider {
                 });
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Inventory
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
     public Stream<Map<ByteArray, AuthenticatedDataRequest>> getAuthenticatedDataStoreMaps() {
         return authenticatedDataStores.values().stream().map(store -> store.getPersistableStore().getClone().getMap());
     }
@@ -308,36 +293,8 @@ public class StorageService implements InventoryProvider {
         return appendOnlyDataStores.values().stream().map(store -> store.getPersistableStore().getClone().getMap());
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Hashes for Filter
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    public Set<FilterEntry> getFilterEntries(StoreType storeType) {
-        return getFilterEntries(getStoresByStoreType(storeType));
-    }
-
-    private Set<FilterEntry> getFilterEntries(Stream<DataStorageService<? extends DataRequest>> stores) {
-        return stores.flatMap(store -> new HashMap<>(store.getPersistableStore().getMap()).entrySet().stream())
-                .map(this::getFilterEntry)
-                .collect(Collectors.toSet());
-    }
-
-    public FilterEntry getFilterEntry(Map.Entry<ByteArray, ? extends DataRequest> mapEntry) {
-        DataRequest dataRequest = mapEntry.getValue();
-        int sequenceNumber = 0;
-        byte[] hash = mapEntry.getKey().getBytes();
-        if (dataRequest instanceof AddAppendOnlyDataRequest) {
-            // AddAppendOnlyDataRequest does not use a seq nr.
-            return new FilterEntry(hash, 0);
-        } else if (dataRequest instanceof AddAuthenticatedDataRequest) {
-            // AddMailboxRequest extends AddAuthenticatedDataRequest so its covered here as well
-            sequenceNumber = ((AddAuthenticatedDataRequest) dataRequest).getAuthenticatedSequentialData().getSequenceNumber();
-        } else if (dataRequest instanceof RemoveAuthenticatedDataRequest) {
-            // RemoveMailboxRequest extends RemoveAuthenticatedDataRequest so its covered here as well
-            sequenceNumber = ((RemoveAuthenticatedDataRequest) dataRequest).getSequenceNumber();
-        }
-        return new FilterEntry(hash, sequenceNumber);
+    public Stream<Map.Entry<ByteArray, ? extends DataRequest>> getAllDataRequestMapEntries() {
+        return getStoresByStoreType(ALL).flatMap(store -> new HashMap<>(store.getPersistableStore().getMap()).entrySet().stream());
     }
 
 
@@ -447,5 +404,18 @@ public class StorageService implements InventoryProvider {
                     return Path.of(directory, storageFileName).toFile().exists();
                 })
                 .collect(Collectors.toSet());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Listeners
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public void addListener(StorageService.Listener listener) {
+        listeners.add(listener);
+    }
+
+    public void removeListener(StorageService.Listener listener) {
+        listeners.remove(listener);
     }
 }
