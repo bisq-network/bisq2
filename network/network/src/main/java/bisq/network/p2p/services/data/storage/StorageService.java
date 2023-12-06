@@ -25,7 +25,7 @@ import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.network.p2p.services.data.DataRequest;
 import bisq.network.p2p.services.data.RemoveDataRequest;
-import bisq.network.p2p.services.data.filter.FilterEntry;
+import bisq.network.p2p.services.data.inventory.FilterEntry;
 import bisq.network.p2p.services.data.inventory.InventoryProvider;
 import bisq.network.p2p.services.data.storage.append.AddAppendOnlyDataRequest;
 import bisq.network.p2p.services.data.storage.append.AppendOnlyData;

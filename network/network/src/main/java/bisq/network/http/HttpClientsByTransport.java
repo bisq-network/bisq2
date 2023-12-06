@@ -17,16 +17,16 @@
 
 package bisq.network.http;
 
-import bisq.network.http.utils.Socks5ProxyProvider;
 import bisq.network.common.TransportType;
+import bisq.network.http.utils.Socks5ProxyProvider;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.util.Optional;
 
-public class HttpClientRepository {
-    public HttpClientRepository() {
+public class HttpClientsByTransport {
+    public HttpClientsByTransport() {
     }
 
     public BaseHttpClient getHttpClient(String url,

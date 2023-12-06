@@ -24,7 +24,7 @@ import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.network_load.ConnectionMetrics;
 import bisq.network.p2p.node.network_load.NetworkLoadService;
 import bisq.network.p2p.services.data.DataService;
-import bisq.network.p2p.services.data.filter.DataFilter;
+import bisq.network.p2p.services.data.inventory.DataFilter;
 
 import java.util.ArrayList;
 import java.util.List;

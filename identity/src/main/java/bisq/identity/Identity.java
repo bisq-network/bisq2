@@ -19,8 +19,8 @@ package bisq.identity;
 
 import bisq.common.proto.Proto;
 import bisq.network.identity.NetworkId;
+import bisq.network.identity.NetworkIdWithKeyPair;
 import bisq.network.identity.TorIdentity;
-import bisq.network.p2p.vo.NetworkIdWithKeyPair;
 import bisq.security.KeyPairProtoUtil;
 import bisq.security.PubKey;
 import lombok.Getter;

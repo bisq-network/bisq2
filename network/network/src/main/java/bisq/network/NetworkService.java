@@ -26,8 +26,9 @@ import bisq.common.util.CompletableFutureUtils;
 import bisq.network.common.AddressByTransportTypeMap;
 import bisq.network.common.TransportType;
 import bisq.network.http.BaseHttpClient;
-import bisq.network.http.HttpClientRepository;
+import bisq.network.http.HttpClientsByTransport;
 import bisq.network.identity.NetworkId;
+import bisq.network.identity.NetworkIdWithKeyPair;
 import bisq.network.identity.TorIdentity;
 import bisq.network.p2p.ServiceNode;
 import bisq.network.p2p.ServiceNodesByTransport;
@@ -43,13 +44,11 @@ import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatusService;
 import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.DistributedData;
-import bisq.network.p2p.services.data.storage.StorageService;
 import bisq.network.p2p.services.data.storage.append.AppendOnlyData;
 import bisq.network.p2p.services.data.storage.auth.DefaultAuthenticatedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.network.p2p.services.monitor.MonitorService;
-import bisq.network.p2p.vo.NetworkIdWithKeyPair;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -91,51 +90,55 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
 
     @Getter
     private final NetworkServiceStore persistableStore = new NetworkServiceStore();
-    @Getter
-    private final Persistence<NetworkServiceStore> persistence;
-    private final HttpClientRepository httpClientRepository;
     private final Optional<String> socks5ProxyAddress; // Optional proxy address of external tor instance
     @Getter
     private final Set<TransportType> supportedTransportTypes;
     @Getter
-    private final ServiceNodesByTransport serviceNodesByTransport;
-    private final Optional<MessageDeliveryStatusService> messageDeliveryStatusService;
+    private final Map<TransportType, Integer> defaultNodePortByTransportType;
+    private final HttpClientsByTransport httpClientsByTransport;
     @Getter
     private final Optional<DataService> dataService;
+    private final NetworkLoadService networkLoadService;
+    @Getter
+    private final ServiceNodesByTransport serviceNodesByTransport;
+    private final Optional<MessageDeliveryStatusService> messageDeliveryStatusService;
     private final Optional<MonitorService> monitorService;
     @Getter
-    private final Map<TransportType, Integer> defaultNodePortByTransportType;
+    private final Persistence<NetworkServiceStore> persistence;
 
     public NetworkService(NetworkServiceConfig config,
                           PersistenceService persistenceService,
                           KeyPairService keyPairService,
                           ProofOfWorkService proofOfWorkService) {
-        httpClientRepository = new HttpClientRepository();
+        socks5ProxyAddress = config.getSocks5ProxyAddress();
+        supportedTransportTypes = config.getSupportedTransportTypes();
+        defaultNodePortByTransportType = config.getDefaultNodePortByTransportType();
+
+        httpClientsByTransport = new HttpClientsByTransport();
 
         Set<ServiceNode.SupportedService> supportedServices = config.getServiceNodeConfig().getSupportedServices();
 
         dataService = supportedServices.contains(ServiceNode.SupportedService.DATA) ?
-                Optional.of(new DataService(new StorageService(persistenceService), config.getInventoryServiceConfig())) :
+                Optional.of(new DataService(config.getInventoryServiceConfig(), persistenceService)) :
                 Optional.empty();
 
-        messageDeliveryStatusService = supportedServices.contains(ServiceNode.SupportedService.ACK) && supportedServices.contains(ServiceNode.SupportedService.CONFIDENTIAL) ?
+        messageDeliveryStatusService = supportedServices.contains(ServiceNode.SupportedService.ACK) &&
+                supportedServices.contains(ServiceNode.SupportedService.CONFIDENTIAL) ?
                 Optional.of(new MessageDeliveryStatusService(persistenceService, keyPairService, this)) :
                 Optional.empty();
 
-        NetworkLoadService networkLoadService = new NetworkLoadService();
+        networkLoadService = new NetworkLoadService();
 
-        socks5ProxyAddress = config.getSocks5ProxyAddress();
-        supportedTransportTypes = config.getSupportedTransportTypes();
         serviceNodesByTransport = new ServiceNodesByTransport(config.getConfigByTransportType(),
-                supportedTransportTypes,
                 config.getServiceNodeConfig(),
                 config.getPeerGroupServiceConfigByTransport(),
                 config.getSeedAddressesByTransport(),
-                dataService,
-                messageDeliveryStatusService,
+                supportedTransportTypes,
                 keyPairService,
                 persistenceService,
                 proofOfWorkService,
+                dataService,
+                messageDeliveryStatusService,
                 networkLoadService);
 
         monitorService = supportedServices.contains(ServiceNode.SupportedService.DATA) &&
@@ -148,8 +151,6 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                 NetworkService.NETWORK_DB_PATH,
                 persistableStore.getClass().getSimpleName(),
                 persistableStore);
-
-        defaultNodePortByTransportType = config.getDefaultNodePortByTransportType();
     }
 
 
@@ -349,7 +350,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     public BaseHttpClient getHttpClient(String url, String userAgent, TransportType transportType) {
         // socksProxy only supported for TOR
         Optional<Socks5Proxy> socksProxy = transportType == TOR ? serviceNodesByTransport.getSocksProxy() : Optional.empty();
-        return httpClientRepository.getHttpClient(url, userAgent, transportType, socksProxy, socks5ProxyAddress);
+        return httpClientsByTransport.getHttpClient(url, userAgent, transportType, socksProxy, socks5ProxyAddress);
     }
 
     public Map<TransportType, Observable<Node.State>> getNodeStateByTransportType() {

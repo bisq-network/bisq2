@@ -23,7 +23,7 @@ import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
-import bisq.network.p2p.services.data.filter.DataFilter;
+import bisq.network.p2p.services.data.inventory.DataFilter;
 import bisq.network.p2p.services.data.inventory.InventoryService;
 import bisq.network.p2p.services.data.storage.DataStorageResult;
 import bisq.network.p2p.services.data.storage.StorageData;
@@ -38,6 +38,7 @@ import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxData;
 import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
 import bisq.network.p2p.services.peergroup.PeerGroupManager;
+import bisq.persistence.PersistenceService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -83,15 +84,15 @@ public class DataService implements DataNetworkService.Listener {
         }
     }
 
+    private final InventoryService.Config inventoryServiceConfig;
     @Getter
     private final StorageService storageService;
-    private final InventoryService.Config inventoryServiceConfig;
     private final Set<DataService.Listener> listeners = new CopyOnWriteArraySet<>();
     private final Map<TransportType, DataNetworkService> dataNetworkServiceByTransportType = new ConcurrentHashMap<>();
 
-    public DataService(StorageService storageService, InventoryService.Config inventoryServiceConfig) {
-        this.storageService = storageService;
+    public DataService(InventoryService.Config inventoryServiceConfig, PersistenceService persistenceService) {
         this.inventoryServiceConfig = inventoryServiceConfig;
+        this.storageService = new StorageService(persistenceService);
 
         storageService.addListener(new StorageService.Listener() {
             @Override
