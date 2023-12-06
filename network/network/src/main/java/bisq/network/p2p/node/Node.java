@@ -195,7 +195,7 @@ public class Node implements Connection.Handler {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public void initialize() {
-        Failsafe.with(retryPolicy).run(this::doInitialize);
+        Failsafe.with(retryPolicy).run(this::doInitialize);  // blocking
     }
 
     private void doInitialize() {

@@ -52,7 +52,7 @@ public class NodeListItem implements ActivatableTableItem {
     public NodeListItem(Node node, KeyPairService keyPairService, IdentityService identityService) {
         this.node = node;
         keyId = node.getNetworkId().getKeyId();
-        type = identityService.findActiveIdentityByNetworkId(node.getNetworkId())
+        type = identityService.findActiveIdentity(node.getNetworkId())
                 .map(i -> Res.get("settings.network.nodes.type.active"))
                 .or(() -> identityService.findRetiredIdentityByNetworkId(node.getNetworkId())
                         .map(i -> Res.get("settings.network.nodes.type.retired")))

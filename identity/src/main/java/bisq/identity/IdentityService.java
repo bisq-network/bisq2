@@ -28,6 +28,7 @@ import bisq.network.common.AddressByTransportTypeMap;
 import bisq.network.common.TransportType;
 import bisq.network.identity.NetworkId;
 import bisq.network.identity.TorIdentity;
+import bisq.network.p2p.node.Node;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -46,6 +47,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 @Slf4j
@@ -76,17 +78,39 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     // Service
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+    /**
+     * Creates and initialized the default identity. This includes initialisation of the associated network node
+     * on at least one transport.
+     */
+    // TODO Would be good to decouple that dependency on network node initialisation
+    @Override
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        return CompletableFuture.supplyAsync(() -> {
-            Identity defaultIdentity = getOrCreateDefaultIdentity();
-            networkService.createDefaultServiceNodes(defaultIdentity.getNetworkId(), defaultIdentity.getTorIdentity());
-
-            initializeActiveIdentities();
-            return true;
+        CompletableFuture<Boolean> result = new CompletableFuture<>();
+        AtomicInteger failures = new AtomicInteger();
+        Identity defaultIdentity = getOrCreateDefaultIdentity();
+        Map<TransportType, CompletableFuture<Node>> map = networkService.getInitializedDefaultNodeByTransport(defaultIdentity.getNetworkId(), defaultIdentity.getTorIdentity());
+        map.forEach((transportType, future) -> {
+            future.whenComplete((node, throwable) -> {
+                if (throwable == null && node != null) {
+                    // After each successful initialisation of the default node on a transport we start to
+                    // initialize the active identities for that transport
+                    initializeActiveIdentities(transportType);
+                    if (!result.isDone()) {
+                        result.complete(true);
+                    }
+                } else if (!result.isDone()) {
+                    if (failures.incrementAndGet() == map.size()) {
+                        // All failed
+                        result.completeExceptionally(new RuntimeException("Default node initialization on all transports failed"));
+                    }
+                }
+            });
         });
+        return result;
     }
 
+    @Override
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
         return CompletableFuture.completedFuture(true);
@@ -103,22 +127,6 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    /**
-     * We first look up if we find an identity in the active identities map, if not we take one from the pool and
-     * clone it with the new identityTag. If none present we create a fresh identity and initialize it.
-     * The active and pooled identities get initialized at start-up, so it can be expected that they are already
-     * initialized, but there is no guarantee for that.
-     * Client code has to deal with the async nature of the node initialisation which takes a few seconds usually,
-     * but user experience should in most cases not suffer from an additional delay.
-     *
-     * @param identityTag The id used to map the identity to some domain aspect (e.g. offerId)
-     * @return A future which completes when the node associated with that identity is initialized.
-     */
-    public Identity getOrCreateIdentity(String identityTag) {
-        return findActiveIdentity(identityTag)
-                .orElseGet(() -> createAndInitializeNewActiveIdentity(identityTag));
-    }
 
     public Identity getOrCreateDefaultIdentity() {
         return persistableStore.getDefaultIdentity()
@@ -147,20 +155,9 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
             getActiveIdentityByTag().put(identityTag, identity);
         }
         persist();
-
-        return networkService.getAllInitializedNodes(networkId, torIdentity)
+        // We return the identity if at least one transport node got initialized
+        return networkService.getAnyInitializedNode(networkId, torIdentity)
                 .thenApply(nodes -> identity);
-    }
-
-    public Identity createAndInitializeNewActiveIdentity(String identityTag) {
-        Identity identity = createAndInitializeNewIdentity(identityTag);
-
-        synchronized (lock) {
-            getActiveIdentityByTag().put(identityTag, identity);
-        }
-        persist();
-
-        return identity;
     }
 
     public boolean retireActiveIdentity(String identityTag) {
@@ -184,7 +181,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         }
     }
 
-    public Optional<Identity> findActiveIdentityByNetworkId(NetworkId networkId) {
+    public Optional<Identity> findActiveIdentity(NetworkId networkId) {
         synchronized (lock) {
             return getActiveIdentityByTag().values().stream()
                     .filter(e -> e.getNetworkId().equals(networkId))
@@ -208,49 +205,40 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         }
     }
 
+    @VisibleForTesting
+    CompletableFuture<Identity> createAndInitializeNewActiveIdentity(String identityTag) {
+        return createAndInitializeNewActiveIdentity(identityTag, createIdentity(identityTag));
+    }
+
+    @VisibleForTesting
+    CompletableFuture<Identity> createAndInitializeNewActiveIdentity(String identityTag, String keyId, KeyPair keyPair) {
+        return createAndInitializeNewActiveIdentity(identityTag, createIdentity(keyId, identityTag, keyPair));
+    }
+
+    @VisibleForTesting
+    Identity getOrCreateIdentity(String identityTag) {
+        return findActiveIdentity(identityTag)
+                .orElseGet(() -> createAndInitializeNewActiveIdentity(identityTag).join());
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private void initializeActiveIdentities() {
+    private void initializeActiveIdentities(TransportType transportType) {
         getActiveIdentityByTag().values().stream()
                 .filter(identity -> !identity.getTag().equals(IdentityService.DEFAULT_IDENTITY_TAG))
-                .forEach(identity ->
-                        networkService.getInitializedNodeByTransport(identity.getNetworkId(), identity.getTorIdentity()).values()
-                                .forEach(future -> future.whenComplete((node, throwable) -> {
-                                            if (throwable == null) {
-                                                log.info("Network node for active identity {} initialized. NetworkId={}",
-                                                        identity.getTag(), identity.getNetworkId());
-                                            } else {
-                                                log.error("Initializing network node for active identity {} failed. NetworkId={}",
-                                                        identity.getTag(), identity.getNetworkId());
-                                            }
-                                        })
-                                ));
+                .forEach(identity -> networkService.getInitializedNode(transportType, identity.getNetworkId(), identity.getTorIdentity()));
     }
 
-    @VisibleForTesting
-    Identity createAndInitializeNewActiveIdentity(String identityTag, String keyId, KeyPair keyPair) {
-        Identity identity = createAndInitializeNewIdentity(identityTag, keyId, keyPair);
-
+    private CompletableFuture<Identity> createAndInitializeNewActiveIdentity(String identityTag, Identity identity) {
         synchronized (lock) {
             getActiveIdentityByTag().put(identityTag, identity);
         }
         persist();
 
-        return identity;
-    }
-
-    private Identity createAndInitializeNewIdentity(String identityTag) {
-        Identity identity = createIdentity(identityTag);
-        networkService.getAllInitializedNodes(identity.getNetworkId(), identity.getTorIdentity()).join();
-        return identity;
-    }
-
-    private Identity createAndInitializeNewIdentity(String identityTag, String keyId, KeyPair keyPair) {
-        Identity identity = createIdentity(keyId, identityTag, keyPair);
-        networkService.getAllInitializedNodes(identity.getNetworkId(), identity.getTorIdentity()).join();
-        return identity;
+        return networkService.getAnyInitializedNode(identity.getNetworkId(), identity.getTorIdentity())
+                .thenApply(node -> identity);
     }
 
     private Identity createIdentity(String identityTag) {

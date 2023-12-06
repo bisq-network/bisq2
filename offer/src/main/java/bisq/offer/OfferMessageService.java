@@ -93,7 +93,7 @@ public class OfferMessageService implements Service, DataService.Listener {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<BroadcastResult> addToNetwork(Offer<?, ?> offer) {
-        return identityService.findActiveIdentityByNetworkId(offer.getMakerNetworkId())
+        return identityService.findActiveIdentity(offer.getMakerNetworkId())
                 .map(identity -> networkService.publishAuthenticatedData(new OfferMessage(offer), identity.getNetworkIdWithKeyPair().getKeyPair()))
                 .orElse(CompletableFuture.failedFuture(new RuntimeException("No identity found for networkNodeId used in the offer")));
     }
@@ -118,6 +118,6 @@ public class OfferMessageService implements Service, DataService.Listener {
     }
 
     private Optional<Identity> findIdentity(Offer<?, ?> offer) {
-        return identityService.findActiveIdentityByNetworkId(offer.getMakerNetworkId());
+        return identityService.findActiveIdentity(offer.getMakerNetworkId());
     }
 }

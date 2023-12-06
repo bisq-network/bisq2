@@ -22,6 +22,7 @@ import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.threading.ExecutorFactory;
+import bisq.common.util.CompletableFutureUtils;
 import bisq.network.common.AddressByTransportTypeMap;
 import bisq.network.common.TransportType;
 import bisq.network.http.BaseHttpClient;
@@ -180,24 +181,35 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     // Initialize node
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public void createDefaultServiceNodes(NetworkId defaultNetworkId, TorIdentity defaultTorIdentity) {
-        serviceNodesByTransport.initialize(defaultNetworkId, defaultTorIdentity); // blocking
-        messageDeliveryStatusService.ifPresent(MessageDeliveryStatusService::initialize);
-        monitorService.ifPresent(MonitorService::initialize);
+    public Map<TransportType, CompletableFuture<Node>> getInitializedDefaultNodeByTransport(NetworkId defaultNetworkId, TorIdentity defaultTorIdentity) {
+        var map = serviceNodesByTransport.getInitializedDefaultNodeByTransport(defaultNetworkId, defaultTorIdentity);
+
+        // We use anyOf to initialize the sub services as soon as we got on one transport initialized a node
+        CompletableFutureUtils.anyOf(map.values())
+                .whenComplete((node, throwable) -> {
+                    if (throwable == null && node != null) {
+                        messageDeliveryStatusService.ifPresent(MessageDeliveryStatusService::initialize);
+                        monitorService.ifPresent(MonitorService::initialize);
+                    }
+                });
+        return map;
     }
 
-    public Map<TransportType, CompletableFuture<Node>> getInitializedNodeByTransport(NetworkId networkId, TorIdentity torIdentity) {
-        return serviceNodesByTransport.getInitializedNodeByTransport(networkId, torIdentity);
+    public CompletableFuture<Node> getInitializedNode(TransportType transportType, NetworkId networkId, TorIdentity torIdentity) {
+        return serviceNodesByTransport.getInitializedNode(transportType, networkId, torIdentity);
     }
-
-    public boolean isNodeOnAllTransportsInitialized(NetworkId networkId) {
-        return serviceNodesByTransport.isNodeOnAllTransportsInitialized(networkId);
-    }
-
-    // TODO: This might be too restrictive as any failing transport would result in a failed completableFuture
 
     /**
-     * NetworkId of a fully initialized node (on all transports)
+     * Returns a future of the first initialized node on any transport
+     */
+    public CompletableFuture<Node> getAnyInitializedNode(NetworkId networkId, TorIdentity torIdentity) {
+        return serviceNodesByTransport.getAnyInitializedNode(networkId, torIdentity);
+    }
+
+    /**
+     * Returns a future of a list of all initialized nodes on all transports
+     * A slow transport would delay the result. A failing transport would let the result future fail.
+     * In most cases we do not want to be that strict.
      */
     public CompletableFuture<List<Node>> getAllInitializedNodes(NetworkId networkId, TorIdentity torIdentity) {
         return serviceNodesByTransport.getAllInitializedNodes(networkId, torIdentity);
@@ -212,12 +224,13 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
      * Send message via given senderNetworkIdWithKeyPair to the receiverNetworkId as encrypted message.
      * If peer is offline and if message is of type mailBoxMessage it will not be stored as mailbox message in the
      * network.
+     * We send if at least one node on any transport was initialized
      */
     public CompletableFuture<SendMessageResult> confidentialSend(EnvelopePayloadMessage envelopePayloadMessage,
                                                                  NetworkId receiverNetworkId,
                                                                  NetworkIdWithKeyPair senderNetworkIdWithKeyPair,
                                                                  TorIdentity senderTorIdentity) {
-        return getAllInitializedNodes(senderNetworkIdWithKeyPair.getNetworkId(), senderTorIdentity)
+        return getAnyInitializedNode(senderNetworkIdWithKeyPair.getNetworkId(), senderTorIdentity)
                 .thenCompose(networkId -> supplyAsync(() -> serviceNodesByTransport.confidentialSend(envelopePayloadMessage,
                                 receiverNetworkId,
                                 senderNetworkIdWithKeyPair.getKeyPair(),

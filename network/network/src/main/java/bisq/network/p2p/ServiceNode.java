@@ -160,7 +160,7 @@ public class ServiceNode {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    void initialize(NetworkId defaultNetworkId, TorIdentity defaultTorIdentity) {
+    Node getInitializedDefaultNode(NetworkId defaultNetworkId, TorIdentity defaultTorIdentity) {
         defaultNode = nodesById.createAndConfigNode(defaultNetworkId, defaultTorIdentity, true);
 
         Set<SupportedService> supportedServices = config.getSupportedServices();
@@ -198,6 +198,8 @@ public class ServiceNode {
                     setState(State.INITIALIZED);
                 },
                 () -> setState(State.INITIALIZED));
+
+        return defaultNode;
     }
 
     CompletableFuture<Boolean> shutdown() {
