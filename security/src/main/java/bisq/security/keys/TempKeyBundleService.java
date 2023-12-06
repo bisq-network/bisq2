@@ -52,7 +52,7 @@ public class TempKeyBundleService implements PersistenceClient<KeyBundleStore> {
 
     public CompletableFuture<Boolean> initialize() {
         String defaultKeyId = getDefaultKeyId();
-        return getOrCreateKeyBundle(defaultKeyId)
+        return getOrCreateKeyBundleAsync(defaultKeyId)
                 .thenApply(Objects::nonNull);
     }
 
@@ -76,13 +76,18 @@ public class TempKeyBundleService implements PersistenceClient<KeyBundleStore> {
         return keyBundle;
     }
 
-    public CompletableFuture<KeyBundle> getOrCreateKeyBundle(String keyId) {
+    public CompletableFuture<KeyBundle> getOrCreateKeyBundleAsync(String keyId) {
         return findKeyBundle(keyId).map(CompletableFuture::completedFuture)
-                .orElseGet(() -> createKeyBundle(keyId)
-                        .thenApply(keyBundle -> {
-                            persistKeyBundle(keyId, keyBundle);
-                            return keyBundle;
-                        }));
+                .orElseGet(() -> CompletableFuture.supplyAsync(() -> getOrCreateKeyBundle(keyId)));
+    }
+
+    public KeyBundle getOrCreateKeyBundle(String keyId) {
+        return findKeyBundle(keyId)
+                .orElseGet(() -> {
+                    KeyBundle keyBundle = createKeyBundle(keyId);
+                    persistKeyBundle(keyId, keyBundle);
+                    return keyBundle;
+                });
     }
 
     public Optional<KeyBundle> findKeyBundle(String keyId) {
@@ -90,19 +95,21 @@ public class TempKeyBundleService implements PersistenceClient<KeyBundleStore> {
         return persistableStore.findKeyBundle(keyId);
     }
 
-    public CompletableFuture<KeyBundle> createKeyBundle(String keyId) {
+    public Optional<KeyPair> findKeyPair(String keyId) {
+        return findKeyBundle(keyId).map(KeyBundle::getKeyPair);
+    }
+
+    public KeyBundle createKeyBundle(String keyId) {
         checkArgument(keyId.length() == 40, "Key ID is expected to be a 20 byte hash");
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                KeyPair keyPair = KeyGeneration.generateKeyPair();
-                TorKeyPair torKeyPair = TorKeyGeneration.generateKeyPair();
-                // I2pKeyPair i2PKeyPair = I2pKeyGeneration.generateKeyPair();
-                return new KeyBundle(keyPair, torKeyPair/*, i2PKeyPair*/);
-            } catch (GeneralSecurityException e) {
-                log.error("Error at generateKeyPair", e);
-                throw new RuntimeException(e);
-            }
-        });
+        try {
+            KeyPair keyPair = KeyGeneration.generateKeyPair();
+            TorKeyPair torKeyPair = TorKeyGeneration.generateKeyPair();
+            // I2pKeyPair i2PKeyPair = I2pKeyGeneration.generateKeyPair();
+            return new KeyBundle(keyPair, torKeyPair/*, i2PKeyPair*/);
+        } catch (GeneralSecurityException e) {
+            log.error("Error at generateKeyPair", e);
+            throw new RuntimeException(e);
+        }
     }
 
     public String getKeyIdFromTag(String tag) {

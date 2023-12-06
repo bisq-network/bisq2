@@ -48,13 +48,12 @@ public class KeyBundleService {
         return tempKeyBundleService.findKeyBundle(keyId);
     }
 
-    public KeyPair getOrCreateKeyPair(String keyId) {
-        return tempKeyBundleService.getOrCreateKeyBundle(keyId).join().getKeyPair();
-    }
-
     public KeyBundle getOrCreateKeyBundle(String keyId) {
-        return tempKeyBundleService.getOrCreateKeyBundle(keyId).join();
+        return tempKeyBundleService.getOrCreateKeyBundle(keyId);
     }
+   /* public CompletableFuture<KeyBundle> getOrCreateKeyBundleAsync(String keyId) {
+        return tempKeyBundleService.getOrCreateKeyBundleAsync(keyId);
+    }*/
 
     public KeyPair generateKeyPair() {
         return tempKeyBundleService.generateKeyPair();
@@ -72,7 +71,6 @@ public class KeyBundleService {
     public String getDefaultKeyId() {
         return tempKeyBundleService.getDefaultKeyId();
     }
-
     public boolean isDefaultKeyId(String keyId) {
         return tempKeyBundleService.isDefaultKeyId(keyId);
     }

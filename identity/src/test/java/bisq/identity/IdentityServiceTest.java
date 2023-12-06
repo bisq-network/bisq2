@@ -82,7 +82,7 @@ public class IdentityServiceTest {
     void getOrCreateIdentityWithAllArguments() {
         String identityTag = "myTag1";
         String keyId = keyBundleService.getKeyIdFromTag(identityTag);
-        KeyPair keyPair = keyBundleService.getOrCreateKeyPair(keyId);
+        KeyPair keyPair = keyBundleService.getOrCreateKeyBundle(keyId).getKeyPair();
         Identity activeIdentity = identityService.findActiveIdentity(identityTag)
                 .orElseGet(() -> identityService.createAndInitializeNewActiveIdentity(identityTag, keyId, keyPair).join());
 
@@ -151,7 +151,7 @@ public class IdentityServiceTest {
                 Map.of(TransportType.CLEAR, Address.localHost(1234)));
 
         String keyId = keyBundleService.getKeyIdFromTag("myTag2");
-        KeyPair keyPair = keyBundleService.getOrCreateKeyPair(keyId);
+        KeyPair keyPair = keyBundleService.getOrCreateKeyBundle(keyId).getKeyPair();
         var pubKey = new PubKey(keyPair.getPublic(), keyId);
         var networkId = new NetworkId(addressByTransportTypeMap, pubKey);
 
@@ -182,7 +182,7 @@ public class IdentityServiceTest {
         AddressByTransportTypeMap addressByTransportTypeMap = new AddressByTransportTypeMap(
                 Map.of(TransportType.CLEAR, Address.localHost(1234)));
         String keyId = keyBundleService.getKeyIdFromTag("myTag3");
-        KeyPair keyPair = keyBundleService.getOrCreateKeyPair(keyId);
+        KeyPair keyPair = keyBundleService.getOrCreateKeyBundle(keyId).getKeyPair();
         var pubKey = new PubKey(keyPair.getPublic(), keyId);
         var networkId = new NetworkId(addressByTransportTypeMap, pubKey);
 

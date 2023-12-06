@@ -102,8 +102,8 @@ public class SeedNodeService implements Service {
                     networkId,
                     Optional.empty(),
                     config.isStaticPublicKeysProvided());
-            String keyId = keyBundleService.getDefaultKeyId();
-            KeyPair keyPair = keyBundleService.getOrCreateKeyPair(keyId);
+            String defaultKeyId = keyBundleService.getDefaultKeyId();
+            KeyPair keyPair = keyBundleService.getOrCreateKeyBundle(defaultKeyId).getKeyPair();
 
             // Repeat 3 times at startup to republish to ensure the data gets well distributed
             startupScheduler = Scheduler.run(() -> publishMyBondedRole(authorizedBondedRole, keyPair, authorizedPrivateKey, authorizedPublicKey))

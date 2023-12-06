@@ -243,7 +243,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
 
     private Identity createIdentity(String identityTag) {
         String keyId = keyBundleService.getKeyIdFromTag(identityTag);
-        KeyPair keyPair = keyBundleService.getOrCreateKeyPair(keyId);
+        KeyPair keyPair = keyBundleService.getOrCreateKeyBundle(keyId).getKeyPair();
         return createIdentity(keyId, identityTag, keyPair);
     }
 
