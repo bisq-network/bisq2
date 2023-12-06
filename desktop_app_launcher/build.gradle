@@ -4,8 +4,6 @@ plugins {
     id 'application'
     id 'bisq.gradle.packaging.PackagingPlugin'
     alias(libs.plugins.openjfx)
-    alias(libs.plugins.jpackage)
-    alias(libs.plugins.shadow)
 }
 
 application {
