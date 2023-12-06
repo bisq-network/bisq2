@@ -44,8 +44,16 @@ public class KeyBundleService {
         return tempKeyBundleService.findKeyBundle(keyId).map(KeyBundle::getKeyPair);
     }
 
+    public Optional<KeyBundle> findKeyBundle(String keyId) {
+        return tempKeyBundleService.findKeyBundle(keyId);
+    }
+
     public KeyPair getOrCreateKeyPair(String keyId) {
         return tempKeyBundleService.getOrCreateKeyBundle(keyId).join().getKeyPair();
+    }
+
+    public KeyBundle getOrCreateKeyBundle(String keyId) {
+        return tempKeyBundleService.getOrCreateKeyBundle(keyId).join();
     }
 
     public KeyPair generateKeyPair() {
