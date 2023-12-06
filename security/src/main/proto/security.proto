@@ -43,12 +43,24 @@ message KeyPair {
   bytes privateKey = 1;
   bytes publicKey = 2;
 }
-
+message TorKeyPair {
+  bytes privateKey = 1;
+  bytes publicKey = 2;
+  string onionAddress = 3;
+}
+message I2PKeyPair {
+  bytes privateKey = 1;
+  bytes publicKey = 2;
+  string destination = 3;
+}
+message KeyBundle {
+  KeyPair keyPair = 1;
+  TorKeyPair torKeyPair = 2;
+  I2PKeyPair i2PKeyPair = 3;
+}
 message KeyBundleStore {
   string secretUid = 1;
-  map<string, KeyPair > keyPairsById = 2;
-}
-message ProofOfWorkStore {
+  map<string, KeyBundle > keyBundleById = 2;
 }
 
 message ProofOfWork {

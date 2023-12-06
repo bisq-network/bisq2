@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.security;
+package bisq.security.keys;
 
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -24,7 +24,6 @@ import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 
-import java.security.KeyPair;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -35,33 +34,39 @@ public final class KeyBundleStore implements PersistableStore<KeyBundleStore> {
     // Secret uid used for deriving keyIds
     // As the keyID is public in the mailbox message we do not want to leak any information of the user identity
     // to the network.
+    // Once we have persisted the stores we use the secretUid from the persisted data
     private String secretUid = StringUtils.createUid();
-    private final Map<String, KeyPair> keyPairsById = new ConcurrentHashMap<>();
+    private final Map<String, KeyBundle> keyBundleById = new ConcurrentHashMap<>();
 
     public KeyBundleStore() {
     }
 
-    private KeyBundleStore(String secretUid, Map<String, KeyPair> map) {
+    private KeyBundleStore(String secretUid,
+                           Map<String, KeyBundle> keyBundleById) {
         this.secretUid = secretUid;
-        this.keyPairsById.putAll(map);
+        this.keyBundleById.putAll(keyBundleById);
     }
 
     @Override
     public KeyBundleStore getClone() {
-        return new KeyBundleStore(secretUid, keyPairsById);
+        return new KeyBundleStore(secretUid, keyBundleById);
     }
 
     @Override
     public bisq.security.protobuf.KeyBundleStore toProto() {
-        return bisq.security.protobuf.KeyBundleStore.newBuilder().setSecretUid(secretUid).putAllKeyPairsById(keyPairsById.entrySet().stream()
-                        .collect(Collectors.toMap(Map.Entry::getKey, entry -> KeyPairProtoUtil.toProto(entry.getValue()))))
+        return bisq.security.protobuf.KeyBundleStore.newBuilder()
+                .setSecretUid(secretUid)
+                .putAllKeyBundleById(keyBundleById.entrySet().stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey,
+                                entry -> entry.getValue().toProto())))
                 .build();
     }
 
     public static KeyBundleStore fromProto(bisq.security.protobuf.KeyBundleStore proto) {
         return new KeyBundleStore(proto.getSecretUid(),
-                proto.getKeyPairsByIdMap().entrySet().stream()
-                        .collect(Collectors.toMap(Map.Entry::getKey, e -> KeyPairProtoUtil.fromProto(e.getValue()))));
+                proto.getKeyBundleByIdMap().entrySet().stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey,
+                                e -> KeyBundle.fromProto(e.getValue()))));
     }
 
     @Override
@@ -78,16 +83,22 @@ public final class KeyBundleStore implements PersistableStore<KeyBundleStore> {
     @Override
     public void applyPersisted(KeyBundleStore persisted) {
         secretUid = persisted.secretUid;
-        keyPairsById.clear();
-        keyPairsById.putAll(persisted.keyPairsById);
+        keyBundleById.clear();
+        keyBundleById.putAll(persisted.keyBundleById);
     }
 
-    public Optional<KeyPair> findKeyPair(String keyId) {
-        return Optional.ofNullable(keyPairsById.get(keyId));
+    public Optional<KeyBundle> findKeyBundle(String keyId) {
+        synchronized (keyBundleById) {
+            return Optional.ofNullable(keyBundleById.get(keyId));
+        }
     }
 
-    public void put(String keyId, KeyPair keyPair) {
-        keyPairsById.put(keyId, keyPair);
+    public void putKeyBundle(String keyId, KeyBundle keyBundle) {
+        synchronized (keyBundleById) {
+            if (keyBundleById.put(keyId, keyBundle) != null) {
+                log.warn("We had already an entry for key ID {}", keyId);
+            }
+        }
     }
 
     String getSecretUid() {
