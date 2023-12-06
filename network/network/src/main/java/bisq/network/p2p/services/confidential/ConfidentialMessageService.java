@@ -54,18 +54,18 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 @Slf4j
 public class ConfidentialMessageService implements Node.Listener, DataService.Listener {
     private final NodesById nodesById;
-    private final KeyPairService keyPairService;
+    private final KeyBundleService keyBundleService;
     private final Optional<DataService> dataService;
     private final Optional<MessageDeliveryStatusService> messageDeliveryStatusService;
     private final Set<MessageListener> listeners = new CopyOnWriteArraySet<>();
     private final Set<ConfidentialMessageListener> confidentialMessageListeners = new CopyOnWriteArraySet<>();
 
     public ConfidentialMessageService(NodesById nodesById,
-                                      KeyPairService keyPairService,
+                                      KeyBundleService keyBundleService,
                                       Optional<DataService> dataService,
                                       Optional<MessageDeliveryStatusService> messageDeliveryStatusService) {
         this.nodesById = nodesById;
-        this.keyPairService = keyPairService;
+        this.keyBundleService = keyBundleService;
         this.dataService = dataService;
         this.messageDeliveryStatusService = messageDeliveryStatusService;
 
@@ -118,7 +118,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                         if (result) {
                             dataService.ifPresent(service -> {
                                 // If we are successful the msg must be for us, so we have the key
-                                KeyPair myKeyPair = keyPairService.findKeyPair(confidentialMessage.getReceiverKeyId()).orElseThrow();
+                                KeyPair myKeyPair = keyBundleService.findKeyPair(confidentialMessage.getReceiverKeyId()).orElseThrow();
                                 service.removeMailboxData(mailboxData, myKeyPair);
                             });
                         } else {
@@ -255,7 +255,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
     }
 
     private CompletableFuture<Boolean> processConfidentialMessage(ConfidentialMessage confidentialMessage) {
-        return keyPairService.findKeyPair(confidentialMessage.getReceiverKeyId())
+        return keyBundleService.findKeyPair(confidentialMessage.getReceiverKeyId())
                 .map(receiversKeyPair -> supplyAsync(() -> {
                     try {
                         log.info("Found a matching key for processing confidentialMessage");

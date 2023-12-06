@@ -52,7 +52,7 @@ import bisq.network.p2p.services.monitor.MonitorService;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
-import bisq.security.KeyPairService;
+import bisq.security.KeyBundleService;
 import bisq.security.SignatureUtil;
 import bisq.security.pow.ProofOfWorkService;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
@@ -106,7 +106,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
 
     public NetworkService(NetworkServiceConfig config,
                           PersistenceService persistenceService,
-                          KeyPairService keyPairService,
+                          KeyBundleService keyBundleService,
                           ProofOfWorkService proofOfWorkService) {
         socks5ProxyAddress = config.getSocks5ProxyAddress();
         supportedTransportTypes = config.getSupportedTransportTypes();
@@ -122,7 +122,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
 
         messageDeliveryStatusService = supportedServices.contains(ServiceNode.SupportedService.ACK) &&
                 supportedServices.contains(ServiceNode.SupportedService.CONFIDENTIAL) ?
-                Optional.of(new MessageDeliveryStatusService(persistenceService, keyPairService, this)) :
+                Optional.of(new MessageDeliveryStatusService(persistenceService, keyBundleService, this)) :
                 Optional.empty();
 
         NetworkLoadService networkLoadService = new NetworkLoadService();
@@ -133,7 +133,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                 config.getSeedAddressesByTransport(),
                 config.getInventoryServiceConfig(),
                 supportedTransportTypes,
-                keyPairService,
+                keyBundleService,
                 persistenceService,
                 proofOfWorkService,
                 dataService,

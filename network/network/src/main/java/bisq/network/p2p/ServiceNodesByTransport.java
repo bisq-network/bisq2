@@ -42,7 +42,7 @@ import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.inventory.InventoryService;
 import bisq.network.p2p.services.peergroup.PeerGroupManager;
 import bisq.persistence.PersistenceService;
-import bisq.security.KeyPairService;
+import bisq.security.KeyBundleService;
 import bisq.security.pow.ProofOfWorkService;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.extern.slf4j.Slf4j;
@@ -75,7 +75,7 @@ public class ServiceNodesByTransport {
                                    Map<TransportType, Set<Address>> seedAddressesByTransport,
                                    InventoryService.Config inventoryServiceConfig,
                                    Set<TransportType> supportedTransportTypes,
-                                   KeyPairService keyPairService,
+                                   KeyBundleService keyBundleService,
                                    PersistenceService persistenceService,
                                    ProofOfWorkService proofOfWorkService,
                                    Optional<DataService> dataService,
@@ -102,7 +102,7 @@ public class ServiceNodesByTransport {
                     inventoryServiceConfig,
                     dataService,
                     messageDeliveryStatusService,
-                    keyPairService,
+                    keyBundleService,
                     persistenceService,
                     authorizationService,
                     seedAddresses,

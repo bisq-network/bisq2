@@ -46,13 +46,13 @@ import java.util.concurrent.ExecutionException;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class KeyPairService implements PersistenceClient<KeyPairStore> {
+public class KeyBundleService implements PersistenceClient<KeyBundleStore> {
     @Getter
-    private final KeyPairStore persistableStore = new KeyPairStore();
+    private final KeyBundleStore persistableStore = new KeyBundleStore();
     @Getter
-    private final Persistence<KeyPairStore> persistence;
+    private final Persistence<KeyBundleStore> persistence;
 
-    public KeyPairService(PersistenceService persistenceService) {
+    public KeyBundleService(PersistenceService persistenceService) {
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 

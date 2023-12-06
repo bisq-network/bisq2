@@ -24,7 +24,7 @@ import bisq.network.common.TransportType;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.node.Node;
 import bisq.persistence.PersistenceService;
-import bisq.security.KeyPairService;
+import bisq.security.KeyBundleService;
 import bisq.security.PubKey;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,7 +44,7 @@ import static org.mockito.Mockito.*;
 public class IdentityServiceTest {
     @TempDir
     private Path tempDir;
-    private KeyPairService keyPairService;
+    private KeyBundleService keyBundleService;
     private IdentityService identityService;
 
     @BeforeEach
@@ -57,13 +57,13 @@ public class IdentityServiceTest {
         doReturn(CompletableFuture.completedFuture(mock(Node.class)))
                 .when(networkService).getAnyInitializedNode(any(), any());
 
-        keyPairService = new KeyPairService(persistenceService);
-        identityService = new IdentityService(persistenceService, keyPairService, networkService);
+        keyBundleService = new KeyBundleService(persistenceService);
+        identityService = new IdentityService(persistenceService, keyBundleService, networkService);
     }
 
     @AfterEach
     void tearDown() {
-        keyPairService.getPersistence().flush().join();
+        keyBundleService.getPersistence().flush().join();
         identityService.getPersistence().flush().join();
     }
 
@@ -81,8 +81,8 @@ public class IdentityServiceTest {
     @Test
     void getOrCreateIdentityWithAllArguments() {
         String identityTag = "myTag1";
-        String keyId = keyPairService.getKeyIdFromTag(identityTag);
-        KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
+        String keyId = keyBundleService.getKeyIdFromTag(identityTag);
+        KeyPair keyPair = keyBundleService.getOrCreateKeyPair(keyId);
         Identity activeIdentity = identityService.findActiveIdentity(identityTag)
                 .orElseGet(() -> identityService.createAndInitializeNewActiveIdentity(identityTag, keyId, keyPair).join());
 
@@ -150,8 +150,8 @@ public class IdentityServiceTest {
         AddressByTransportTypeMap addressByTransportTypeMap = new AddressByTransportTypeMap(
                 Map.of(TransportType.CLEAR, Address.localHost(1234)));
 
-        String keyId = keyPairService.getKeyIdFromTag("myTag2");
-        KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
+        String keyId = keyBundleService.getKeyIdFromTag("myTag2");
+        KeyPair keyPair = keyBundleService.getOrCreateKeyPair(keyId);
         var pubKey = new PubKey(keyPair.getPublic(), keyId);
         var networkId = new NetworkId(addressByTransportTypeMap, pubKey);
 
@@ -181,8 +181,8 @@ public class IdentityServiceTest {
     void findInvalidRetiredIdentity() {
         AddressByTransportTypeMap addressByTransportTypeMap = new AddressByTransportTypeMap(
                 Map.of(TransportType.CLEAR, Address.localHost(1234)));
-        String keyId = keyPairService.getKeyIdFromTag("myTag3");
-        KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
+        String keyId = keyBundleService.getKeyIdFromTag("myTag3");
+        KeyPair keyPair = keyBundleService.getOrCreateKeyPair(keyId);
         var pubKey = new PubKey(keyPair.getPublic(), keyId);
         var networkId = new NetworkId(addressByTransportTypeMap, pubKey);
 

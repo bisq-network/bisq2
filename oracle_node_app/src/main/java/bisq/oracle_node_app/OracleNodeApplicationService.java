@@ -51,11 +51,11 @@ public class OracleNodeApplicationService extends ApplicationService {
                 getConfig("network"));
         networkService = new NetworkService(networkServiceConfig,
                 persistenceService,
-                securityService.getKeyPairService(),
+                securityService.getKeyBundleService(),
                 securityService.getProofOfWorkService());
 
         identityService = new IdentityService(persistenceService,
-                securityService.getKeyPairService(),
+                securityService.getKeyBundleService(),
                 networkService
         );
 

@@ -57,18 +57,18 @@ public class SeedNodeApplicationService extends ApplicationService {
                 getConfig("network"));
         networkService = new NetworkService(networkServiceConfig,
                 persistenceService,
-                securityService.getKeyPairService(),
+                securityService.getKeyBundleService(),
                 securityService.getProofOfWorkService());
 
         identityService = new IdentityService(persistenceService,
-                securityService.getKeyPairService(),
+                securityService.getKeyBundleService(),
                 networkService);
 
         com.typesafe.config.Config bondedRolesConfig = getConfig("bondedRoles");
         authorizedBondedRolesService = new AuthorizedBondedRolesService(networkService, bondedRolesConfig.getBoolean("ignoreSecurityManager"));
 
         Optional<SeedNodeService.Config> seedNodeConfig = hasConfig("seedNode") ? Optional.of(SeedNodeService.Config.from(getConfig("seedNode"))) : Optional.empty();
-        seedNodeService = new SeedNodeService(seedNodeConfig, networkService, identityService, securityService.getKeyPairService());
+        seedNodeService = new SeedNodeService(seedNodeConfig, networkService, identityService, securityService.getKeyBundleService());
     }
 
     @Override
