@@ -19,6 +19,7 @@ package bisq.security;
 
 import bisq.common.application.Service;
 import bisq.persistence.PersistenceService;
+import bisq.security.keys.KeyBundleService;
 import bisq.security.pow.HashCashService;
 import bisq.security.pow.ProofOfWorkService;
 import lombok.Getter;

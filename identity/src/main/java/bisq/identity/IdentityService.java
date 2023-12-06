@@ -32,8 +32,9 @@ import bisq.network.p2p.node.Node;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
-import bisq.security.KeyBundleService;
 import bisq.security.PubKey;
+import bisq.security.keys.KeyBundle;
+import bisq.security.keys.KeyBundleService;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Streams;
 import lombok.Getter;
@@ -145,7 +146,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
      */
     public CompletableFuture<Identity> createNewActiveIdentity(String identityTag, KeyPair keyPair) {
         String keyId = keyBundleService.getKeyIdFromTag(identityTag);
-        keyBundleService.persistKeyPair(keyId, keyPair);
+        KeyBundle keyBundle = keyBundleService.createAndPersistKeyBundle(keyId, keyPair);
         PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
         TorIdentity torIdentity = findOrCreateTorIdentity(identityTag);
         NetworkId networkId = createNetworkId(false, pubKey, torIdentity);
