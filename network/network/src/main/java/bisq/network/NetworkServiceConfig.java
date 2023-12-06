@@ -24,6 +24,7 @@ import bisq.network.common.TransportType;
 import bisq.network.p2p.ServiceNode;
 import bisq.network.p2p.node.transport.ClearNetTransportService;
 import bisq.network.p2p.node.transport.I2PTransportService;
+import bisq.network.p2p.services.data.inventory.InventoryService;
 import bisq.network.p2p.services.peergroup.PeerGroupManager;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
 import bisq.network.p2p.services.peergroup.exchange.PeerExchangeStrategy;
@@ -42,6 +43,7 @@ import static java.util.stream.Collectors.toMap;
 public final class NetworkServiceConfig {
     public static NetworkServiceConfig from(Path baseDir, Config config) {
         ServiceNode.Config serviceNodeConfig = ServiceNode.Config.from(config.getConfig("serviceNode"));
+        InventoryService.Config inventoryServiceConfig = InventoryService.Config.from(config.getConfig("inventory"));
         Config seedConfig = config.getConfig("seedAddressByTransportType");
         // Only read seed addresses for explicitly supported address types
         Set<TransportType> supportedTransportTypes = new HashSet<>(config.getEnumList(TransportType.class, "supportedTransportTypes"));
@@ -75,6 +77,7 @@ public final class NetworkServiceConfig {
                 supportedTransportTypes,
                 configByTransportType,
                 serviceNodeConfig,
+                inventoryServiceConfig,
                 peerGroupServiceConfigByTransport,
                 defaultNodePortByTransportType,
                 seedAddressesByTransport,
@@ -164,6 +167,7 @@ public final class NetworkServiceConfig {
 
     private final String baseDir;
     private final Set<TransportType> supportedTransportTypes;
+    private final InventoryService.Config inventoryServiceConfig;
     private final Map<TransportType, TransportConfig> configByTransportType;
     private final ServiceNode.Config serviceNodeConfig;
     private final Map<TransportType, PeerGroupManager.Config> peerGroupServiceConfigByTransport;
@@ -175,12 +179,14 @@ public final class NetworkServiceConfig {
                                 Set<TransportType> supportedTransportTypes,
                                 Map<TransportType, TransportConfig> configByTransportType,
                                 ServiceNode.Config serviceNodeConfig,
+                                InventoryService.Config inventoryServiceConfig,
                                 Map<TransportType, PeerGroupManager.Config> peerGroupServiceConfigByTransport,
                                 Map<TransportType, Integer> defaultNodePortByTransportType,
                                 Map<TransportType, Set<Address>> seedAddressesByTransport,
                                 Optional<String> socks5ProxyAddress) {
         this.baseDir = baseDir;
         this.supportedTransportTypes = supportedTransportTypes;
+        this.inventoryServiceConfig = inventoryServiceConfig;
         this.configByTransportType = filterMap(supportedTransportTypes, configByTransportType);
         this.serviceNodeConfig = serviceNodeConfig;
         this.peerGroupServiceConfigByTransport = filterMap(supportedTransportTypes, peerGroupServiceConfigByTransport);

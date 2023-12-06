@@ -7,8 +7,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-import static bisq.network.p2p.services.data.storage.MetaData.MAX_MAP_SIZE_100;
-import static bisq.network.p2p.services.data.storage.MetaData.TTL_2_DAYS;
+import static bisq.network.p2p.services.data.storage.MetaData.*;
 
 /**
  * Acknowledge message sent back to the sender of an AckRequestingMessage as notification that the message has been
@@ -18,7 +17,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_2_DAYS;
 @EqualsAndHashCode
 @ToString
 public final class AckMessage implements MailboxMessage {
-    private final MetaData metaData = new MetaData(TTL_2_DAYS, getClass().getSimpleName(), MAX_MAP_SIZE_100);
+    private final MetaData metaData = new MetaData(TTL_2_DAYS, LOW_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_100);
 
     private final String id;
 

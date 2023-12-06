@@ -25,20 +25,13 @@ import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.network.p2p.services.data.DataRequest;
 import bisq.network.p2p.services.data.RemoveDataRequest;
-import bisq.network.p2p.services.data.filter.DataFilter;
 import bisq.network.p2p.services.data.filter.FilterEntry;
-import bisq.network.p2p.services.data.inventory.Inventory;
+import bisq.network.p2p.services.data.inventory.InventoryProvider;
 import bisq.network.p2p.services.data.storage.append.AddAppendOnlyDataRequest;
 import bisq.network.p2p.services.data.storage.append.AppendOnlyData;
 import bisq.network.p2p.services.data.storage.append.AppendOnlyDataStorageService;
-import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataStorageService;
-import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
-import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
-import bisq.network.p2p.services.data.storage.mailbox.MailboxData;
-import bisq.network.p2p.services.data.storage.mailbox.MailboxDataStorageService;
-import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
+import bisq.network.p2p.services.data.storage.auth.*;
+import bisq.network.p2p.services.data.storage.mailbox.*;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
 import lombok.Getter;
@@ -56,7 +49,7 @@ import java.util.stream.Stream;
 import static bisq.network.p2p.services.data.storage.StorageService.StoreType.*;
 
 @Slf4j
-public class StorageService {
+public class StorageService implements InventoryProvider {
     public enum StoreType {
         ALL(""),
         AUTHENTICATED_DATA_STORE("authenticated"),
@@ -303,22 +296,16 @@ public class StorageService {
     // Inventory
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public Inventory getInventoryOfAllStores(DataFilter dataFilter) {
-        return getInventory(dataFilter, getAllStores()
-                .flatMap(store -> store.getPersistableStore().getClone().getMap().entrySet().stream()).collect(Collectors.toSet()));
+    public Stream<Map<ByteArray, AuthenticatedDataRequest>> getAuthenticatedDataStoreMaps() {
+        return authenticatedDataStores.values().stream().map(store -> store.getPersistableStore().getClone().getMap());
     }
 
-    public Inventory getInventoryFromStore(DataFilter dataFilter, DataStorageService<? extends DataRequest> store) {
-        return getInventory(dataFilter, store.getPersistableStore().getClone().getMap().entrySet());
+    public Stream<Map<ByteArray, MailboxRequest>> getMailboxStoreMaps() {
+        return mailboxStores.values().stream().map(store -> store.getPersistableStore().getClone().getMap());
     }
 
-    private Inventory getInventory(DataFilter dataFilter,
-                                   Set<? extends Map.Entry<ByteArray, ? extends DataRequest>> entrySet) {
-        Set<? extends DataRequest> result = entrySet.stream()
-                .filter(mapEntry -> !dataFilter.getFilterEntries().contains(getFilterEntry(mapEntry)))
-                .map(Map.Entry::getValue)
-                .collect(Collectors.toSet());
-        return new Inventory(result, entrySet.size());
+    public Stream<Map<ByteArray, AddAppendOnlyDataRequest>> getAddAppendOnlyDataStoreMaps() {
+        return appendOnlyDataStores.values().stream().map(store -> store.getPersistableStore().getClone().getMap());
     }
 
 
@@ -330,17 +317,13 @@ public class StorageService {
         return getFilterEntries(getStoresByStoreType(storeType));
     }
 
-    public Set<FilterEntry> getFilterEntries(String storeKey) {
-        return getFilterEntries(getStoreByFileName(storeKey));
-    }
-
     private Set<FilterEntry> getFilterEntries(Stream<DataStorageService<? extends DataRequest>> stores) {
         return stores.flatMap(store -> new HashMap<>(store.getPersistableStore().getMap()).entrySet().stream())
                 .map(this::getFilterEntry)
                 .collect(Collectors.toSet());
     }
 
-    private FilterEntry getFilterEntry(Map.Entry<ByteArray, ? extends DataRequest> mapEntry) {
+    public FilterEntry getFilterEntry(Map.Entry<ByteArray, ? extends DataRequest> mapEntry) {
         DataRequest dataRequest = mapEntry.getValue();
         int sequenceNumber = 0;
         byte[] hash = mapEntry.getKey().getBytes();

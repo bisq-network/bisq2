@@ -112,13 +112,13 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                           ProofOfWorkService proofOfWorkService) {
         httpClientRepository = new HttpClientRepository();
 
-        Set<ServiceNode.Service> services = config.getServiceNodeConfig().getServices();
+        Set<ServiceNode.SupportedService> supportedServices = config.getServiceNodeConfig().getSupportedServices();
 
-        dataService = services.contains(ServiceNode.Service.DATA) ?
-                Optional.of(new DataService(new StorageService(persistenceService))) :
+        dataService = supportedServices.contains(ServiceNode.SupportedService.DATA) ?
+                Optional.of(new DataService(new StorageService(persistenceService), config.getInventoryServiceConfig())) :
                 Optional.empty();
 
-        messageDeliveryStatusService = services.contains(ServiceNode.Service.ACK) && services.contains(ServiceNode.Service.CONFIDENTIAL) ?
+        messageDeliveryStatusService = supportedServices.contains(ServiceNode.SupportedService.ACK) && supportedServices.contains(ServiceNode.SupportedService.CONFIDENTIAL) ?
                 Optional.of(new MessageDeliveryStatusService(persistenceService, keyPairService, this)) :
                 Optional.empty();
 
@@ -138,9 +138,9 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                 proofOfWorkService,
                 networkLoadService);
 
-        monitorService = services.contains(ServiceNode.Service.DATA) &&
-                services.contains(ServiceNode.Service.PEER_GROUP) &&
-                services.contains(ServiceNode.Service.MONITOR) ?
+        monitorService = supportedServices.contains(ServiceNode.SupportedService.DATA) &&
+                supportedServices.contains(ServiceNode.SupportedService.PEER_GROUP) &&
+                supportedServices.contains(ServiceNode.SupportedService.MONITOR) ?
                 Optional.of(new MonitorService(serviceNodesByTransport, dataService.orElseThrow(), networkLoadService)) :
                 Optional.empty();
 

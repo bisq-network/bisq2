@@ -45,7 +45,13 @@ public final class MetaData implements Proto {
     public static final int MAX_MAP_SIZE_1000 = 1000;
     public static final int MAX_MAP_SIZE_10_000 = 10_000;
 
+    public static final int LOW_PRIORITY = -1;
+    public static final int DEFAULT_PRIORITY = 0;
+    public static final int HIGH_PRIORITY = 1;
+    public static final int HIGHEST_PRIORITY = 2;
+
     private final long ttl;
+    private final int priority;
     private final String className;
     private final int maxMapSize;
 
@@ -57,8 +63,17 @@ public final class MetaData implements Proto {
         this(ttl, className, MAX_MAP_SIZE_1000);
     }
 
+    public MetaData(long ttl, int priority, String className) {
+        this(ttl, priority, className, MAX_MAP_SIZE_1000);
+    }
+
     public MetaData(long ttl, String className, int maxMapSize) {
+        this(ttl, DEFAULT_PRIORITY, className, maxMapSize);
+    }
+
+    public MetaData(long ttl, int priority, String className, int maxMapSize) {
         this.ttl = ttl;
+        this.priority = priority;
         this.className = className;
         this.maxMapSize = maxMapSize;
 
@@ -68,13 +83,14 @@ public final class MetaData implements Proto {
     public bisq.network.protobuf.MetaData toProto() {
         return bisq.network.protobuf.MetaData.newBuilder()
                 .setTtl(ttl)
+                .setPriority(priority)
                 .setClassName(className)
                 .setMaxMapSize(maxMapSize)
                 .build();
     }
 
     public static MetaData fromProto(bisq.network.protobuf.MetaData proto) {
-        return new MetaData(proto.getTtl(), proto.getClassName(), proto.getMaxMapSize());
+        return new MetaData(proto.getTtl(), proto.getPriority(), proto.getClassName(), proto.getMaxMapSize());
     }
 
     public double getCostFactor() {
