@@ -27,10 +27,12 @@ public class BitcoinAcademyView extends AcademyBaseView<BitcoinAcademyModel, Bit
     public BitcoinAcademyView(BitcoinAcademyModel model, BitcoinAcademyController controller) {
         super(model, controller);
 
-        Label whatIsBitcoinHeadline = addHeadlineLabel("whatIsBitcoinHeadline");
-        addContentLabel("whatIsBitcoinContent");
-        Label whyUseBitcoinHeadline = addHeadlineLabel("whyUseBitcoinHeadline");
-        Label whyUseBitcoinContent = addContentLabel("whyUseBitcoinContent");
+        addSubHeadlineLabel("academy.bitcoin.subHeadline");
+
+        Label whatIsBitcoinHeadline = addHeadlineLabel("academy.bitcoin.whatIsBitcoinHeadline");
+        addContentLabel("academy.bitcoin.whatIsBitcoinContent");
+        Label whyUseBitcoinHeadline = addHeadlineLabel("academy.bitcoin.whyUseBitcoinHeadline");
+        Label whyUseBitcoinContent = addContentLabel("academy.bitcoin.whyUseBitcoinContent");
         addLearnMoreHyperlink();
 
         setHeadlineMargin(whatIsBitcoinHeadline);

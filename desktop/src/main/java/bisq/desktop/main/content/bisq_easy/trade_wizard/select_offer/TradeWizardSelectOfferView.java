@@ -183,7 +183,7 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
 
         // Reputation
         BisqTableColumn<ListItem> reputationColumn = new BisqTableColumn.Builder<ListItem>()
-                .title(Res.get("bisqEasy.createOffer.review.table.reputation"))
+                .title(Res.get("bisqEasy.tradeWizard.review.table.reputation"))
                 .minWidth(120)
                 .setCellFactory(getReputationCellFactory())
                 .comparator(Comparator.comparing(ListItem::getReputationScore))
@@ -195,7 +195,7 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
         // Price
         if (model.getDirection().isBuy()) {
             tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
-                    .title(Res.get("bisqEasy.createOffer.review.table.price", model.getMarket().getMarketCodes()))
+                    .title(Res.get("bisqEasy.tradeWizard.review.table.price", model.getMarket().getMarketCodes()))
                     .minWidth(160)
                     .valueSupplier(ListItem::getPriceDisplayString)
                     .comparator(Comparator.comparing(ListItem::getPriceAsLong))
@@ -204,8 +204,8 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
 
         // BTC amount
         String baseAmountTitle = model.getDirection().isBuy() ?
-                Res.get("bisqEasy.createOffer.review.table.baseAmount.buyer") :
-                Res.get("bisqEasy.createOffer.review.table.baseAmount.seller");
+                Res.get("bisqEasy.tradeWizard.review.table.baseAmount.buyer") :
+                Res.get("bisqEasy.tradeWizard.review.table.baseAmount.seller");
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(baseAmountTitle)
                 .minWidth(160)

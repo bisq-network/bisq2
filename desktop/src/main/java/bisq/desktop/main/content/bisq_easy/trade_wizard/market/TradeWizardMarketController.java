@@ -75,7 +75,7 @@ public class TradeWizardMarketController implements Controller {
 
     @Override
     public void onActivate() {
-        model.setHeadline(model.getDirection().isBuy() ? Res.get("bisqEasy.createOffer.market.headline.buyer") : Res.get("bisqEasy.createOffer.market.headline.seller"));
+        model.setHeadline(model.getDirection().isBuy() ? Res.get("bisqEasy.tradeWizard.market.headline.buyer") : Res.get("bisqEasy.tradeWizard.market.headline.seller"));
         model.getSearchText().set("");
         if (model.getSelectedMarket().get() == null) {
             // Use selected public channel or if private channel is selected we use any of the public channels for 

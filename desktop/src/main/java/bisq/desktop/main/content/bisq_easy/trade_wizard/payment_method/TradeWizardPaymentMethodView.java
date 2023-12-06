@@ -56,14 +56,14 @@ public class TradeWizardPaymentMethodView extends View<VBox, TradeWizardPaymentM
         headlineLabel = new Label();
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
 
-        Label subtitleLabel = new Label(Res.get("bisqEasy.createOffer.paymentMethod.subTitle"));
+        Label subtitleLabel = new Label(Res.get("bisqEasy.tradeWizard.paymentMethod.subTitle"));
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
         subtitleLabel.setAlignment(Pos.CENTER);
         subtitleLabel.getStyleClass().add("bisq-text-3");
         subtitleLabel.setWrapText(true);
         subtitleLabel.setMaxWidth(600);
 
-        nonFoundLabel = new Label(Res.get("bisqEasy.createOffer.paymentMethod.noneFound"));
+        nonFoundLabel = new Label(Res.get("bisqEasy.tradeWizard.paymentMethod.noneFound"));
         nonFoundLabel.getStyleClass().add("bisq-text-6");
         nonFoundLabel.setAlignment(Pos.CENTER);
 
@@ -72,8 +72,8 @@ public class TradeWizardPaymentMethodView extends View<VBox, TradeWizardPaymentM
         flowPane.setVgap(20);
         flowPane.setHgap(20);
 
-        custom = new MaterialTextField(Res.get("bisqEasy.createOffer.paymentMethod.customMethod"),
-                Res.get("bisqEasy.createOffer.paymentMethod.customMethod.prompt"));
+        custom = new MaterialTextField(Res.get("bisqEasy.tradeWizard.paymentMethod.customMethod"),
+                Res.get("bisqEasy.tradeWizard.paymentMethod.customMethod.prompt"));
         custom.setPrefWidth(300);
         custom.setIcon("add-white");
         addButton = custom.getIconButton();

@@ -27,13 +27,15 @@ public class PrivacyAcademyView extends AcademyBaseView<PrivacyAcademyModel, Pri
     public PrivacyAcademyView(PrivacyAcademyModel model, PrivacyAcademyController controller) {
         super(model, controller);
 
-        Label introContent = addContentLabel("introContent");
-        Label whyPrivacyHeadline = addHeadlineLabel("whyPrivacyHeadline");
-        addContentLabel("whyPrivacyContent");
-        Label giveUpPrivacyHeadline = addHeadlineLabel("giveUpPrivacyHeadline");
-        addContentLabel("giveUpPrivacyContent");
-        Label bisqProtectsPrivacyHeadline = addHeadlineLabel("bisqProtectsPrivacyHeadline");
-        Label bisqProtectsPrivacyContent = addContentLabel("bisqProtectsPrivacyContent");
+        addSubHeadlineLabel("academy.privacy.subHeadline");
+
+        Label introContent = addContentLabel("academy.privacy.introContent");
+        Label whyPrivacyHeadline = addHeadlineLabel("academy.privacy.whyPrivacyHeadline");
+        addContentLabel("academy.privacy.whyPrivacyContent");
+        Label giveUpPrivacyHeadline = addHeadlineLabel("academy.privacy.giveUpPrivacyHeadline");
+        addContentLabel("academy.privacy.giveUpPrivacyContent");
+        Label bisqProtectsPrivacyHeadline = addHeadlineLabel("academy.privacy.bisqProtectsPrivacyHeadline");
+        Label bisqProtectsPrivacyContent = addContentLabel("academy.privacy.bisqProtectsPrivacyContent");
         addLearnMoreHyperlink();
 
         setHeadlineMargin(introContent);

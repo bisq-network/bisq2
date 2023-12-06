@@ -31,7 +31,7 @@ import javafx.scene.layout.VBox;
 import static com.google.common.base.Preconditions.checkArgument;
 
 public abstract class AcademyBaseView<M extends Model, C extends Controller> extends View<VBox, M, C> {
-    protected final Label headline, subHeadline;
+    protected final Label headline;
     protected final Hyperlink learnMore;
 
     public AcademyBaseView(M model, C controller) {
@@ -44,32 +44,35 @@ public abstract class AcademyBaseView<M extends Model, C extends Controller> ext
         headline.setGraphicTextGap(10);
         headline.setWrapText(true);
 
-        subHeadline = new Label(Res.get("academy." + key + ".subHeadline"));
-        subHeadline.getStyleClass().addAll("font-size-14", "font-light", "text-fill-grey-dimmed");
-        subHeadline.setWrapText(true);
-
         learnMore = new Hyperlink(Res.get("action.learnMore"));
         learnMore.getStyleClass().addAll("font-size-12", "text-fill-green");
         VBox.setMargin(learnMore, new Insets(25, 0, 0,0));
 
         VBox.setMargin(headline, new Insets(0, 0, 0, 0));
-        root.getChildren().addAll(headline, subHeadline);
+        root.getChildren().add(headline);
         root.setPadding(new Insets(0, 40, 40, 40));
     }
 
     protected Label addHeadlineLabel(String headlineKey) {
-        Label label = new Label(Res.get("academy." + getKey() + "." + headlineKey));
+        Label label = new Label(Res.get(headlineKey));
         label.getStyleClass().addAll("font-size-16", "font-light");
         label.setWrapText(true);
         root.getChildren().add(label);
         return label;
     }
 
+    protected void addSubHeadlineLabel(String subheadlineKey) {
+        Label label = new Label(Res.get(subheadlineKey));
+        label.getStyleClass().addAll("font-size-14", "font-light", "text-fill-grey-dimmed");
+        label.setWrapText(true);
+        root.getChildren().add(label);
+    }
+
     protected Label addContentLabel(String contentKey) {
-        Label label = new Label(Res.get("academy." + getKey() + "." + contentKey));
+        Label label = new Label(Res.get(contentKey));
         label.getStyleClass().addAll("font-size-12", "font-light", "bisq-line-spacing-01");
         label.setWrapText(true);
-        VBox.setMargin(label, new Insets(25, 0, 0,0));
+        VBox.setMargin(label, new Insets(25, 0, 0, 0));
         root.getChildren().add(label);
         return label;
     }

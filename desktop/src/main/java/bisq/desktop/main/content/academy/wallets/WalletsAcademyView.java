@@ -27,10 +27,12 @@ public class WalletsAcademyView extends AcademyBaseView<WalletsAcademyModel, Wal
     public WalletsAcademyView(WalletsAcademyModel model, WalletsAcademyController controller) {
         super(model, controller);
 
-        Label whatIsAWalletHeadline = addHeadlineLabel("whatIsAWalletHeadline");
-        addContentLabel("whatIsAWalletContent");
-        Label howToPickHeadline = addHeadlineLabel("howToPickHeadline");
-        Label howToPickContent = addContentLabel("howToPickContent");
+        addSubHeadlineLabel("academy.wallets.subHeadline");
+
+        Label whatIsAWalletHeadline = addHeadlineLabel("academy.wallets.whatIsAWalletHeadline");
+        addContentLabel("academy.wallets.whatIsAWalletContent");
+        Label howToPickHeadline = addHeadlineLabel("academy.wallets.howToPickHeadline");
+        Label howToPickContent = addContentLabel("academy.wallets.howToPickContent");
         addLearnMoreHyperlink();
 
         setHeadlineMargin(whatIsAWalletHeadline);

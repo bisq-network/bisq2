@@ -27,12 +27,14 @@ public class BisqAcademyView extends AcademyBaseView<BisqAcademyModel, BisqAcade
     public BisqAcademyView(BisqAcademyModel model, BisqAcademyController controller) {
         super(model, controller);
 
-        Label exchangeDecentralizedHeadline = addHeadlineLabel("exchangeDecentralizedHeadline");
-        addContentLabel("exchangeDecentralizedContent");
-        Label whyBisqHeadline = addHeadlineLabel("whyBisqHeadline");
-        addContentLabel("whyBisqContent");
-        Label tradeSafelyHeadline = addHeadlineLabel("tradeSafelyHeadline");
-        Label tradeSafelyContent = addContentLabel("tradeSafelyContent");
+        addSubHeadlineLabel("academy.bisq.subHeadline");
+
+        Label exchangeDecentralizedHeadline = addHeadlineLabel("academy.bisq.exchangeDecentralizedHeadline");
+        addContentLabel("academy.bisq.exchangeDecentralizedContent");
+        Label whyBisqHeadline = addHeadlineLabel("academy.bisq.whyBisqHeadline");
+        addContentLabel("academy.bisq.whyBisqContent");
+        Label tradeSafelyHeadline = addHeadlineLabel("academy.bisq.tradeSafelyHeadline");
+        Label tradeSafelyContent = addContentLabel("academy.bisq.tradeSafelyContent");
         addLearnMoreHyperlink();
 
         setHeadlineMargin(exchangeDecentralizedHeadline);

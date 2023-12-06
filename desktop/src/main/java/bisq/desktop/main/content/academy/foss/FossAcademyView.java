@@ -27,10 +27,12 @@ public class FossAcademyView extends AcademyBaseView<FossAcademyModel, FossAcade
     public FossAcademyView(FossAcademyModel model, FossAcademyController controller) {
         super(model, controller);
 
-        Label bitcoinAndFossHeadline = addHeadlineLabel("bitcoinAndFossHeadline");
-        addContentLabel("bitcoinAndFossContent");
-        Label openSourceBenefitsHeadline = addHeadlineLabel("openSourceBenefitsHeadline");
-        Label openSourceBenefitsContent = addContentLabel("openSourceBenefitsContent");
+        addSubHeadlineLabel("academy.foss.subHeadline");
+
+        Label bitcoinAndFossHeadline = addHeadlineLabel("academy.foss.bitcoinAndFossHeadline");
+        addContentLabel("academy.foss.bitcoinAndFossContent");
+        Label openSourceBenefitsHeadline = addHeadlineLabel("academy.foss.openSourceBenefitsHeadline");
+        Label openSourceBenefitsContent = addContentLabel("academy.foss.openSourceBenefitsContent");
         addLearnMoreHyperlink();
 
         setHeadlineMargin(bitcoinAndFossHeadline);

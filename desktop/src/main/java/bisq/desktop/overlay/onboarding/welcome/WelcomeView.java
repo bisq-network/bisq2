@@ -49,13 +49,13 @@ public class WelcomeView extends View<VBox, WelcomeModel, WelcomeController> {
         nextButton = new Button(Res.get("action.next"));
         nextButton.setDefaultButton(true);
 
-        HBox hBox = new HBox(23, getWidgetBox(Res.get("onboarding.bisq2.headline1"),
+        HBox hBox = new HBox(23, getWidgetBox(Res.get("onboarding.bisq2.teaserHeadline1"),
                 Res.get("onboarding.bisq2.line1"),
                 "bisq-easy"),
-                getWidgetBox(Res.get("onboarding.bisq2.headline2"),
+                getWidgetBox(Res.get("onboarding.bisq2.teaserHeadline2"),
                         Res.get("onboarding.bisq2.line2"),
                         "learn"),
-                getWidgetBox(Res.get("onboarding.bisq2.headline3"),
+                getWidgetBox(Res.get("onboarding.bisq2.teaserHeadline3"),
                         Res.get("onboarding.bisq2.line3"),
                         "fiat-btc"));
         hBox.setAlignment(Pos.CENTER);

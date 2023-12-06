@@ -48,7 +48,7 @@ public class TakeOfferPaymentView extends View<VBox, TakeOfferPaymentModel, Take
         headlineLabel = new Label();
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
 
-        Label subtitleLabel = new Label(Res.get("bisqEasy.takeOffer.method.subtitle"));
+        Label subtitleLabel = new Label(Res.get("bisqEasy.takeOffer.paymentMethod.subtitle"));
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
         subtitleLabel.setAlignment(Pos.CENTER);
         subtitleLabel.getStyleClass().addAll("bisq-text-3");
