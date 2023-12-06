@@ -272,7 +272,8 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         int torPort = isTorSupported && identityTag.equals(DEFAULT_IDENTITY_TAG) ?
                 defaultPorts.getOrDefault(TransportType.TOR, NetworkUtils.selectRandomPort()) :
                 NetworkUtils.selectRandomPort();
-        return TorIdentity.generate(torPort);
+        byte[] privateKey = keyBundleService.findKeyBundle(DEFAULT_IDENTITY_TAG).orElseThrow().getTorKeyPair().getPrivateKey();
+        return TorIdentity.from(privateKey, torPort);
     }
 
     private NetworkId createNetworkId(boolean isForDefaultId, PubKey pubKey, TorIdentity torIdentity) {

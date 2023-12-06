@@ -33,7 +33,6 @@ import org.bouncycastle.math.ec.rfc8032.Ed25519;
 import org.bouncycastle.util.encoders.Base32;
 
 import java.nio.ByteBuffer;
-import java.security.SecureRandom;
 import java.util.Arrays;
 
 @Getter
@@ -59,12 +58,6 @@ public class TorIdentity implements Proto {
         this.privateKey = privateKey;
         this.port = port;
         this.onionAddress = onionAddress;
-    }
-
-    public static TorIdentity generate(int port) {
-        byte[] privateKey = new byte[32];
-        Ed25519.generatePrivateKey(new SecureRandom(), privateKey);
-        return new TorIdentity(privateKey, port, computeOnionAddressFromPrivateKey(privateKey));
     }
 
     @Override
