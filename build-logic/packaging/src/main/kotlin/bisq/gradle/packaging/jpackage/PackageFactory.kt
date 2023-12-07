@@ -32,7 +32,7 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
             mutableListOf(
                     "--dest", jPackageConfig.outputDirPath.toAbsolutePath().toString(),
 
-                    "--name", "Bisq",
+                    "--name", "Bisq 2",
                     "--description", "A decentralized bitcoin exchange network.",
                     "--copyright", "Copyright © 2013-${Year.now()} - The Bisq developers",
                     "--vendor", "Bisq",

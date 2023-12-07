@@ -9,7 +9,7 @@ application {
 }
 
 dependencies {
-    implementation(project(":common"))
+    implementation(project(":tor-common"))
     implementation(libs.chimp.jtorctl)
     testImplementation(libs.mockito)
 }

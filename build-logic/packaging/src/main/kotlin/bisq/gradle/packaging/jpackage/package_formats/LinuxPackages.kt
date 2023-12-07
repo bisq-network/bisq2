@@ -11,7 +11,7 @@ class LinuxPackages(private val resourcesPath: Path) : JPackagePackageFormatConf
                 resourcesPath.resolve("icon.png")
                         .toAbsolutePath().toString(),
 
-                "--linux-package-name", "bisq",
+                "--linux-package-name", "bisq2",
                 "--linux-app-release", "1",
 
                 "--linux-menu-group", "Network",
