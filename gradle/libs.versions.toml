@@ -36,7 +36,6 @@ google-guava-lib = { strictly = '31.1-jre' }
 i2p-lib = { strictly = '1.8.0' }
 jackson-lib = { strictly = '2.13.3' }
 jeromq-lib = { strictly = '0.5.2' }
-jpackage-plugin = { strictly = '1.3.1' }
 junit-jupiter-lib = { strictly = '5.8.2' }
 kotlindsl-plugin = { strictly = '2.1.7' }
 logback-lib = { strictly = '1.2.11' }
@@ -150,6 +149,5 @@ springfox-libs = ['springfox-boot-starter', 'springfox-swagger2', 'springfox-swa
 # `alias(libs.plugins.protobuf)` mechanism, there is no risk of loading multiple versions.
 [plugins]
 kotlindsl = { id = 'org.gradle.kotlin.kotlin-dsl', version.ref = 'kotlindsl-plugin' }
-jpackage = { id = 'org.panteleyev.jpackageplugin', version.ref = 'jpackage-plugin' }
 openjfx = { id = 'org.openjfx.javafxplugin', version.ref = 'openjfx-plugin' }
 shadow = { id = 'com.github.johnrengelman.shadow', version.ref = 'shadow-plugin' }
