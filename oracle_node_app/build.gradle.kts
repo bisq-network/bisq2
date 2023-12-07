@@ -16,7 +16,7 @@ dependencies {
     implementation(project(":oracle_node"))
     implementation(project(":application"))
 
-    implementation("network:common")
+    implementation("network:network-common")
     implementation("network:network-identity")
     implementation("network:network")
 

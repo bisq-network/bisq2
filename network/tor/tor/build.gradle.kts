@@ -19,7 +19,7 @@ sourceSets {
 dependencies {
     implementation(project(":common"))
 
-    implementation("network:common")
+    implementation("network:network-common")
     implementation("network:network-identity")
     implementation("network:socks5-socket-channel")
 

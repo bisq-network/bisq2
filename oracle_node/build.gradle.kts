@@ -16,7 +16,7 @@ dependencies {
     implementation(project(":bonded_roles"))
     implementation(project(":user"))
 
-    implementation("network:common")
+    implementation("network:network-common")
     implementation("network:network")
     implementation("network:network-identity")
 

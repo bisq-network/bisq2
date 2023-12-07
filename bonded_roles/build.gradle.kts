@@ -15,7 +15,7 @@ dependencies {
     implementation(project(":i18n"))
     implementation(project(":identity"))
 
-    implementation("network:common")
+    implementation("network:network-common")
     implementation("network:network-identity")
     implementation("network:network")
 

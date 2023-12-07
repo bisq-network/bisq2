@@ -4,7 +4,7 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":common"))
+    implementation(project(":network-common"))
     implementation("bisq:security")
 
     implementation(libs.bouncycastle)

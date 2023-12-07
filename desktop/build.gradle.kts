@@ -26,7 +26,7 @@ dependencies {
     implementation(project(":bisq_easy"))
     implementation(project(":application"))
 
-    implementation("network:common")
+    implementation("network:network-common")
     implementation("network:network")
     implementation("network:network-identity")
 
