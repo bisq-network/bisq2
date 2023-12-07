@@ -106,7 +106,7 @@
  ******************************************************************************/
 
 .market-selection {
-    -fx-text-fill: -fx-light-text-color!important;
+    -fx-text-fill: -fx-light-text-color !important;
 }
 
 
@@ -120,6 +120,7 @@
 .open-trades-badge.bisq-badge .badge-pane {
     -fx-background-color: -bisq-yellow;
 }
+
 .open-trades-badge.bisq-badge .badge-pane .label {
     -fx-font-size: 0.85em !important;
     -fx-text-fill: black !important;
@@ -686,6 +687,7 @@
     -fx-border-radius: 0;
     -fx-border-insets: 0;
 }
+
 .mediator-header-requester {
     -fx-background-color: transparent;
     -fx-border-color: -bisq2-green;

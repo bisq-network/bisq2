@@ -91,9 +91,16 @@ public class BisqIconButton extends Button {
     }
 
     public static Button createIconButton(ImageView imageView) {
+        return createIconButton(imageView, null);
+    }
+
+    public static Button createIconButton(ImageView imageView, @Nullable String tooltip) {
         Button button = new Button();
         button.setGraphic(imageView);
         button.getStyleClass().add("icon-button");
+        if (tooltip != null) {
+            button.setTooltip(new BisqTooltip(tooltip));
+        }
         return button;
     }
 

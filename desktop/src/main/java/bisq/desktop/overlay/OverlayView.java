@@ -17,10 +17,12 @@
 
 package bisq.desktop.overlay;
 
+import bisq.common.data.Pair;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.view.FillStageView;
 import bisq.desktop.common.view.NavigationView;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
@@ -42,6 +44,9 @@ import javafx.stage.StageStyle;
 import javafx.stage.Window;
 import javafx.util.Duration;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
+import org.fxmisc.easybind.monadic.MonadicBinding;
 
 @Slf4j
 public class OverlayView extends NavigationView<AnchorPane, OverlayModel, OverlayController> {
@@ -53,6 +58,7 @@ public class OverlayView extends NavigationView<AnchorPane, OverlayModel, Overla
     private final Window window;
     private final ChangeListener<Number> positionListener;
     private final Scene scene;
+    private Subscription childViewSizePin;
     private UIScheduler centerTime;
     private final EventHandler<KeyEvent> onKeyPressedHandler = controller::onKeyPressed;
 
@@ -98,8 +104,19 @@ public class OverlayView extends NavigationView<AnchorPane, OverlayModel, Overla
                 Region childRoot = newValue.getRoot();
                 Layout.pinToAnchorPane(childRoot, 0, 0, 0, 0);
                 root.getChildren().setAll(childRoot);
-                show(childRoot.getPrefWidth(), childRoot.getPrefHeight());
+                resizeStage(childRoot.getPrefWidth(), childRoot.getPrefHeight());
+                show();
                 Transitions.transitContentViews(oldValue, newValue);
+                if (childViewSizePin != null) {
+                    childViewSizePin.unsubscribe();
+                }
+                if (newValue instanceof FillStageView) {
+                    MonadicBinding<Pair<Number, Number>> binding = EasyBind.combine(childRoot.prefWidthProperty(),
+                            childRoot.prefHeightProperty(), Pair::new);
+                    childViewSizePin = EasyBind.subscribe(binding,
+                            size -> resizeStage(size.getFirst().doubleValue(),
+                                    size.getSecond().doubleValue()));
+                }
             } else {
                 hide();
             }
@@ -112,19 +129,20 @@ public class OverlayView extends NavigationView<AnchorPane, OverlayModel, Overla
 
     @Override
     protected void onViewDetached() {
+        if (childViewSizePin != null) {
+            childViewSizePin.unsubscribe();
+        }
     }
 
-    private void show(double prefWidth, double prefHeight) {
+    private void resizeStage(double prefWidth, double prefHeight) {
+        stage.setWidth(Math.min(prefWidth, owner.getWidth()));
+        stage.setHeight(Math.min(prefHeight, owner.getHeight()));
+        layout();
+    }
+
+    private void show() {
         scene.addEventHandler(KeyEvent.KEY_PRESSED, onKeyPressedHandler);
         ownerScene.addEventHandler(KeyEvent.KEY_PRESSED, onKeyPressedHandler);
-
-        prefWidth = Math.min(prefWidth, owner.getWidth());
-        prefHeight = Math.min(prefHeight, owner.getHeight());
-
-        root.setMinWidth(prefWidth);
-        root.setMinHeight(prefHeight);
-        root.setMaxWidth(prefWidth);
-        root.setMaxHeight(prefHeight);
 
         window.xProperty().addListener(positionListener);
         window.yProperty().addListener(positionListener);

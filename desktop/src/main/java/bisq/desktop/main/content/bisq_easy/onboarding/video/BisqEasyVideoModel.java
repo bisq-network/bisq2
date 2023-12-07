@@ -19,7 +19,12 @@ package bisq.desktop.main.content.bisq_easy.onboarding.video;
 
 import bisq.desktop.common.view.Model;
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 public class BisqEasyVideoModel implements Model {
+    @Setter
+    private boolean mediaPlayerPausedBySeek;
+    @Setter
+    private double lastPositionBeforeClose;
 }
