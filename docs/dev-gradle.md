@@ -30,8 +30,7 @@ The **platform**[^6] applies dependency constraints[^4] on the dependency graph,
 resolution process. This affects both direct and transitive dependencies. Similar to the version catalog, the priority
 of a version declaration can be influenced using various keywords[^5].
 
-The platform dependency constraints are maintained in `platforms/common-platform/build.gradle`. There are several other
-platforms defined under `platforms/`.
+The platform dependency constraints are maintained in `platform/build.gradle.kts`.
 
 
 ### Usage

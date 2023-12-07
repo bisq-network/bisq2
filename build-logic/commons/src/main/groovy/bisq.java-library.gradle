@@ -3,6 +3,6 @@ plugins {
 }
 
 dependencies {
-    api platform('bisq.platforms:common-platform')
+    api platform('bisq:platform')
     implementation 'bisq:common'
 }
