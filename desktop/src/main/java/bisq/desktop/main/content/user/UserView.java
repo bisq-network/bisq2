@@ -26,7 +26,8 @@ public class UserView extends ContentTabView<UserModel, UserController> {
         super(model, controller);
 
         addTab(Res.get("user.userProfile"), NavigationTarget.USER_PROFILE);
-        addTab(Res.get("user.password"), NavigationTarget.PASSWORD);
+        // We wait for supporting a password protection until there is a wallet integrated
+        //addTab(Res.get("user.password"), NavigationTarget.PASSWORD);
         addTab(Res.get("user.paymentAccounts"), NavigationTarget.BISQ_EASY_PAYMENT_ACCOUNTS);
         addTab(Res.get("user.reputation"), NavigationTarget.REPUTATION);
         addTab(Res.get("user.roles"), NavigationTarget.ROLES);
