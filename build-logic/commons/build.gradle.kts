@@ -1,5 +1,5 @@
 plugins {
-    `groovy-gradle-plugin`
+    `kotlin-dsl`
 }
 
 repositories {
