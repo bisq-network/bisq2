@@ -57,7 +57,7 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
 
             runtimeImageDirectory.set(
                 if (getOS() == OS.MAC_OS) getJPackageJdkDirectory()
-                else getProjectJdkDirectory(project)
+                else getJPackageJdkDirectory()
             )
 
             outputDirectory.set(project.layout.buildDirectory.dir("packaging/jpackage/packages"))
