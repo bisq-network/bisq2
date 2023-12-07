@@ -8,10 +8,6 @@ plugins {
     alias(libs.plugins.shadow)
 }
 
-compileJava {
-    options.release = 11
-}
-
 application {
     project.mainClassName = 'bisq.desktop_app_launcher.DesktopAppLauncher'
 }

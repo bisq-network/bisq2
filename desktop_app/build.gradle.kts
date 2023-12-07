@@ -49,10 +49,6 @@ dependencies {
 }
 
 tasks {
-    compileJava {
-        options.release.set(11)
-    }
-
     named<Jar>("jar") {
         manifest {
             attributes(
