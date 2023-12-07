@@ -50,6 +50,7 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
             mainClassName.set(javaApplicationExtension.mainClass)
             jvmArgs.set(javaApplicationExtension.applicationDefaultJvmArgs)
 
+            licenseFile.set(File(project.projectDir.parentFile, "LICENSE"))
             appVersion.set(APP_VERSION)
 
             val packageResourcesDirFile = File(project.projectDir, "package")

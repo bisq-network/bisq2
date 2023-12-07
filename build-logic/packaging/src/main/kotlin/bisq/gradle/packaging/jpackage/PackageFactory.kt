@@ -36,6 +36,7 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
                     "--description", "A decentralized bitcoin exchange network.",
                     "--copyright", "Copyright © 2013-${Year.now()} - The Bisq developers",
                     "--vendor", "Bisq",
+                    "--license-file", appConfig.licenceFilePath,
 
                     "--app-version", appConfig.appVersion,
 
