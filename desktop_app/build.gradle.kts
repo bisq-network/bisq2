@@ -4,7 +4,6 @@ plugins {
     application
     id("bisq.gradle.packaging.PackagingPlugin")
     alias(libs.plugins.openjfx)
-    alias(libs.plugins.shadow)
 }
 
 application {
@@ -61,18 +60,6 @@ tasks {
     }
 
     distTar {
-        enabled = false
-    }
-
-    shadowDistZip {
-        enabled = false
-    }
-
-    shadowDistTar {
-        enabled = false
-    }
-
-    shadowJar {
         enabled = false
     }
 }
