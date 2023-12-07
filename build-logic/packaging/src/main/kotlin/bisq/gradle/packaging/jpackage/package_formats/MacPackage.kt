@@ -8,5 +8,6 @@ class MacPackage(private val resourcesPath: Path) : JPackagePackageFormatConfigs
     override fun createArgumentsForJPackage(packageFormat: PackageFormat): List<String> =
             mutableListOf(
                     "--resource-dir", resourcesPath.toAbsolutePath().toString(),
+                    "--mac-package-name", "Bisq 2"
             )
 }
