@@ -10,12 +10,6 @@ application {
     mainClass.set("bisq.desktop_app.DesktopApp")
 }
 
-distributions {
-    main {
-        distributionBaseName.set("jfx-dist")
-    }
-}
-
 javafx {
     version = "17.0.1"
     modules = listOf("javafx.controls")
