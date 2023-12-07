@@ -15,7 +15,7 @@ dependencyResolutionManagement {
 
 includeBuild("../..")
 
-include("common")
+include("tor-common")
 include("tor")
 include("tor-local-network")
 

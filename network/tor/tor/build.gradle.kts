@@ -17,7 +17,7 @@ sourceSets {
 }
 
 dependencies {
-    implementation(project(":common"))
+    implementation(project(":tor-common"))
 
     implementation("network:network-common")
     implementation("network:network-identity")
