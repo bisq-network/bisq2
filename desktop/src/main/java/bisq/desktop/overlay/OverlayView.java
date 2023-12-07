@@ -135,8 +135,12 @@ public class OverlayView extends NavigationView<AnchorPane, OverlayModel, Overla
     }
 
     private void resizeStage(double prefWidth, double prefHeight) {
-        stage.setWidth(Math.min(prefWidth, owner.getWidth()));
-        stage.setHeight(Math.min(prefHeight, owner.getHeight()));
+        double width = Math.min(prefWidth, owner.getWidth());
+        double height = Math.min(prefHeight, owner.getHeight());
+        stage.setWidth(width);
+        stage.setHeight(height);
+        root.setPrefWidth(width);
+        root.setPrefHeight(height);
         layout();
     }
 
