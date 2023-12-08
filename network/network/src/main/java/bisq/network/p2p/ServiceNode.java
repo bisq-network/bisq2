@@ -152,7 +152,7 @@ public class ServiceNode {
         this.seedNodeAddresses = seedNodeAddresses;
 
         transportService = TransportService.create(transportType, nodeConfig.getTransportConfig());
-        nodesById = new NodesById(banList, nodeConfig, transportService, networkLoadService, authorizationService);
+        nodesById = new NodesById(banList, nodeConfig, keyBundleService, transportService, networkLoadService, authorizationService);
     }
 
 

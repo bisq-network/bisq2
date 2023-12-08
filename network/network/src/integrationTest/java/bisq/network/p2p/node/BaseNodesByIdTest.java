@@ -26,6 +26,8 @@ import bisq.network.p2p.node.transport.TransportService;
 import bisq.network.p2p.services.peergroup.BanList;
 import bisq.network.p2p.services.peergroup.keepalive.Ping;
 import bisq.network.p2p.services.peergroup.keepalive.Pong;
+import bisq.persistence.PersistenceService;
+import bisq.security.keys.KeyBundleService;
 import bisq.security.pow.HashCashService;
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,7 +43,10 @@ public abstract class BaseNodesByIdTest extends BaseNetworkTest {
     void test_messageRoundTrip(Node.Config nodeConfig) throws InterruptedException {
         BanList banList = new BanList();
         TransportService transportService = TransportService.create(nodeConfig.getTransportType(), nodeConfig.getTransportConfig());
-        NodesById nodesById = new NodesById(banList, nodeConfig, transportService, new NetworkLoadService(), new AuthorizationService(new HashCashService()));
+        PersistenceService persistenceService = new PersistenceService("");
+        KeyBundleService keyBundleService = new KeyBundleService(persistenceService);
+
+        NodesById nodesById = new NodesById(banList, nodeConfig, keyBundleService, transportService, new NetworkLoadService(), new AuthorizationService(new HashCashService()));
         long ts = System.currentTimeMillis();
         numNodes = 5;
         int numRepeats = 1;
@@ -129,7 +134,9 @@ public abstract class BaseNodesByIdTest extends BaseNetworkTest {
     void test_initializeServer(Node.Config nodeConfig) {
         BanList banList = new BanList();
         TransportService transportService = TransportService.create(nodeConfig.getTransportType(), nodeConfig.getTransportConfig());
-        NodesById nodesById = new NodesById(banList, nodeConfig, transportService, new NetworkLoadService(), new AuthorizationService(new HashCashService()));
+        PersistenceService persistenceService = new PersistenceService("");
+        KeyBundleService keyBundleService = new KeyBundleService(persistenceService);
+        NodesById nodesById = new NodesById(banList, nodeConfig, keyBundleService, transportService, new NetworkLoadService(), new AuthorizationService(new HashCashService()));
         initializeServers(2, nodesById);
         nodesById.shutdown().join();
     }
