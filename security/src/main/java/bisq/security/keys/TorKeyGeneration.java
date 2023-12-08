@@ -120,5 +120,27 @@ public class TorKeyGeneration {
 
         return secretScalar;
     }
+
+
+    //todo support loading tor private key from tor dir
+/*    private TorIdentity findOrCreateTorIdentity(String identityTag) {
+        Set<TransportType> supportedTransportTypes = networkService.getSupportedTransportTypes();
+        boolean isTorSupported = supportedTransportTypes.contains(TransportType.TOR);
+        if (isTorSupported) {
+            // If we find a persisted tor private_key in the tor hiddenservice directory for the given identityTag
+            // we use that, otherwise we create a new one.
+            Optional<TorIdentity> persistedTorIdentity = findPersistedTorIdentityFromTorDir(identityTag);
+            if (persistedTorIdentity.isPresent()) {
+                return persistedTorIdentity.get();
+            }
+        }
+
+        Map<TransportType, Integer> defaultPorts = networkService.getDefaultNodePortByTransportType();
+        int torPort = isTorSupported && identityTag.equals(DEFAULT_IDENTITY_TAG) ?
+                defaultPorts.getOrDefault(TransportType.TOR, NetworkUtils.selectRandomPort()) :
+                NetworkUtils.selectRandomPort();
+        byte[] privateKey = keyBundleService.findKeyBundle(keyBundleService.getKeyIdFromTag(identityTag)).orElseThrow().getTorKeyPair().getPrivateKey();
+        return TorIdentity.from(privateKey, torPort);
+    }*/
 }
 

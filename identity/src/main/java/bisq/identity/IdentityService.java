@@ -149,8 +149,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         String keyId = keyBundleService.getKeyIdFromTag(identityTag);
         KeyBundle keyBundle = keyBundleService.createAndPersistKeyBundle(keyId, keyPair);
         PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
-        TorIdentity torIdentity = findOrCreateTorIdentity(identityTag);
-        NetworkId networkId = createNetworkId(false, pubKey, torIdentity);
+        NetworkId networkId = createNetworkId(false, pubKey, keyBundle);
         Identity identity = new Identity(identityTag, networkId, keyBundle);
 
         synchronized (lock) {
@@ -158,7 +157,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         }
         persist();
         // We return the identity if at least one transport node got initialized
-        return networkService.getAnyInitializedNode(networkId, torIdentity)
+        return networkService.getAnyInitializedNode(networkId, identity.getTorIdentity())
                 .thenApply(nodes -> identity);
     }
 
@@ -252,33 +251,12 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     private Identity createIdentity(String keyId, String identityTag, KeyPair keyPair) {
         PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
         boolean isDefaultIdentity = identityTag.equals(DEFAULT_IDENTITY_TAG);
-        TorIdentity torIdentity = findOrCreateTorIdentity(identityTag);
-        NetworkId networkId = createNetworkId(isDefaultIdentity, pubKey, torIdentity);
         KeyBundle keyBundle = keyBundleService.createAndPersistKeyBundle(keyId, keyPair);
+        NetworkId networkId = createNetworkId(isDefaultIdentity, pubKey, keyBundle);
         return new Identity(identityTag, networkId, keyBundle);
     }
 
-    private TorIdentity findOrCreateTorIdentity(String identityTag) {
-        Set<TransportType> supportedTransportTypes = networkService.getSupportedTransportTypes();
-        boolean isTorSupported = supportedTransportTypes.contains(TransportType.TOR);
-        if (isTorSupported) {
-            // If we find a persisted tor private_key in the tor hiddenservice directory for the given identityTag
-            // we use that, otherwise we create a new one.
-            Optional<TorIdentity> persistedTorIdentity = findPersistedTorIdentityFromTorDir(identityTag);
-            if (persistedTorIdentity.isPresent()) {
-                return persistedTorIdentity.get();
-            }
-        }
-
-        Map<TransportType, Integer> defaultPorts = networkService.getDefaultNodePortByTransportType();
-        int torPort = isTorSupported && identityTag.equals(DEFAULT_IDENTITY_TAG) ?
-                defaultPorts.getOrDefault(TransportType.TOR, NetworkUtils.selectRandomPort()) :
-                NetworkUtils.selectRandomPort();
-        byte[] privateKey = keyBundleService.findKeyBundle(keyBundleService.getKeyIdFromTag(identityTag)).orElseThrow().getTorKeyPair().getPrivateKey();
-        return TorIdentity.from(privateKey, torPort);
-    }
-
-    private NetworkId createNetworkId(boolean isForDefaultId, PubKey pubKey, TorIdentity torIdentity) {
+    private NetworkId createNetworkId(boolean isForDefaultId, PubKey pubKey, KeyBundle keyBundle) {
         AddressByTransportTypeMap addressByTransportTypeMap = new AddressByTransportTypeMap();
         Set<TransportType> supportedTransportTypes = networkService.getSupportedTransportTypes();
         Map<TransportType, Integer> defaultPorts = networkService.getDefaultNodePortByTransportType();
@@ -296,7 +274,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
             }
 
             if (isTorSupported) {
-                Address address = new Address(torIdentity.getOnionAddress(), torPort);
+                Address address = new Address(keyBundle.getTorKeyPair().getOnionAddress(), torPort);
                 addressByTransportTypeMap.put(TransportType.TOR, address);
             }
         } else {
@@ -307,7 +285,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
             }
 
             if (isTorSupported) {
-                Address address = new Address(torIdentity.getOnionAddress(), torPort);
+                Address address = new Address(keyBundle.getTorKeyPair().getOnionAddress(), torPort);
                 addressByTransportTypeMap.put(TransportType.TOR, address);
             }
         }
