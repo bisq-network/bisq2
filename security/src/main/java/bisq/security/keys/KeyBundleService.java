@@ -41,12 +41,15 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore> {
     private final KeyBundleStore persistableStore;
     @Getter
     private final Persistence<KeyBundleStore> persistence;
+    private final String baseDir;
 
     public KeyBundleService(PersistenceService persistenceService) {
         persistableStore = new KeyBundleStore();
         persistence = persistenceService.getOrCreatePersistence(this,
                 "db" + File.separator + "private",
                 persistableStore);
+
+        baseDir = persistenceService.getBaseDir();
     }
 
     public CompletableFuture<Boolean> initialize() {
@@ -67,11 +70,13 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore> {
     }
 
     // For the above described use case we get a chosen keyPair to create out bundle and persist it
-    public KeyBundle createAndPersistKeyBundle(String keyId, KeyPair keyPair, Optional<byte[]> torPrivateKeyFromTorDir) {
-        TorKeyPair torKeyPair = torPrivateKeyFromTorDir.map(TorKeyGeneration::generateKeyPair)
+    public KeyBundle createAndPersistKeyBundle(String identityTag, KeyPair keyPair) {
+        String keyId = getKeyIdFromTag(identityTag);
+        TorKeyPair torKeyPair = TorPrivateKeyUtils.findPrivateKey(baseDir, identityTag)
+                .map(TorKeyGeneration::generateKeyPair)
                 .orElse(TorKeyGeneration.generateKeyPair());
         // I2pKeyPair i2PKeyPair = I2pKeyGeneration.generateKeyPair();
-        KeyBundle keyBundle = new KeyBundle(keyPair, torKeyPair/*, i2PKeyPair*/);
+        KeyBundle keyBundle = new KeyBundle(keyId, keyPair, torKeyPair/*, i2PKeyPair*/);
         persistKeyBundle(keyId, keyBundle);
         return keyBundle;
     }
@@ -105,7 +110,7 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore> {
             KeyPair keyPair = KeyGeneration.generateKeyPair();
             TorKeyPair torKeyPair = TorKeyGeneration.generateKeyPair();
             // I2pKeyPair i2PKeyPair = I2pKeyGeneration.generateKeyPair();
-            return new KeyBundle(keyPair, torKeyPair/*, i2PKeyPair*/);
+            return new KeyBundle(keyId, keyPair, torKeyPair/*, i2PKeyPair*/);
         } catch (GeneralSecurityException e) {
             log.error("Error at generateKeyPair", e);
             throw new RuntimeException(e);
@@ -129,5 +134,7 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore> {
         checkArgument(keyId.length() == 40, "Key ID is expected to be a 20 byte hash. keyId=" + keyId);
         persistableStore.putKeyBundle(keyId, keyBundle);
         persist();
+
+        TorPrivateKeyUtils.writePrivateKey(keyBundle.getTorKeyPair(), baseDir, keyId);
     }
 }

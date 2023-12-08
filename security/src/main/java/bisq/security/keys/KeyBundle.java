@@ -15,12 +15,14 @@ public class KeyBundle implements Proto {
     @ToString.Exclude
     private final KeyPair keyPair;
     private final TorKeyPair torKeyPair;
+    private final String keyId;
     @ToString.Exclude
     private transient final byte[] encodedPrivateKey;
     private transient final byte[] encodedPublicKey;
     // private final I2pKeyPair i2PKeyPair;
 
-    public KeyBundle(KeyPair keyPair, TorKeyPair torKeyPair/*, I2pKeyPair i2PKeyPair*/) {
+    public KeyBundle(String keyId, KeyPair keyPair, TorKeyPair torKeyPair/*, I2pKeyPair i2PKeyPair*/) {
+        this.keyId = keyId;
         encodedPrivateKey = keyPair.getPrivate().getEncoded();
         encodedPublicKey = keyPair.getPublic().getEncoded();
         this.keyPair = keyPair;
@@ -31,6 +33,7 @@ public class KeyBundle implements Proto {
     @Override
     public bisq.security.protobuf.KeyBundle toProto() {
         return bisq.security.protobuf.KeyBundle.newBuilder()
+                .setKeyId(keyId)
                 .setKeyPair(KeyPairProtoUtil.toProto(getKeyPair()))
                 .setTorKeyPair(torKeyPair.toProto())
                 /* .setI2PKeyPair(i2PKeyPair.toProto())*/
@@ -38,7 +41,8 @@ public class KeyBundle implements Proto {
     }
 
     public static KeyBundle fromProto(bisq.security.protobuf.KeyBundle proto) {
-        return new KeyBundle(KeyPairProtoUtil.fromProto(proto.getKeyPair()),
+        return new KeyBundle(proto.getKeyId(),
+                KeyPairProtoUtil.fromProto(proto.getKeyPair()),
                 TorKeyPair.fromProto(proto.getTorKeyPair())/*,
                 I2pKeyPair.fromProto(proto.getI2PKeyPair())*/);
     }

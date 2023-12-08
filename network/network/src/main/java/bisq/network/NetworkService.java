@@ -52,7 +52,9 @@ import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.security.SignatureUtil;
+import bisq.security.keys.KeyBundle;
 import bisq.security.keys.KeyBundleService;
+import bisq.security.keys.PubKey;
 import bisq.security.pow.ProofOfWorkService;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.Getter;
@@ -63,10 +65,7 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
@@ -93,6 +92,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     private final Set<TransportType> supportedTransportTypes;
     @Getter
     private final Map<TransportType, Integer> defaultNodePortByTransportType;
+    private final KeyBundleService keyBundleService;
     private final HttpClientsByTransport httpClientsByTransport;
     @Getter
     private final Optional<DataService> dataService;
@@ -102,6 +102,10 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     private final Optional<MonitorService> monitorService;
     @Getter
     private final Persistence<NetworkServiceStore> persistence;
+    @Getter
+    private Optional<NetworkId> defaultNetworkId = Optional.empty();
+    @Getter
+    private final Map<TransportType, CompletableFuture<Node>> initializedDefaultNodeByTransport = new HashMap<>();
 
     public NetworkService(NetworkServiceConfig config,
                           PersistenceService persistenceService,
@@ -110,6 +114,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         socks5ProxyAddress = config.getSocks5ProxyAddress();
         supportedTransportTypes = config.getSupportedTransportTypes();
         defaultNodePortByTransportType = config.getDefaultNodePortByTransportType();
+        this.keyBundleService = keyBundleService;
 
         httpClientsByTransport = new HttpClientsByTransport();
 
@@ -156,14 +161,30 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         serviceNodesByTransport.addAddressByTransportTypeMaps(persistableStore.getSeedNodes());
     }
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Service
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        return CompletableFuture.completedFuture(true);
+
+        String keyId = keyBundleService.getDefaultKeyId();
+        // keyBundleService creates the defaultKeyBundle at initialize, and is called before we get initialized
+        KeyBundle keyBundle = keyBundleService.findKeyBundle(keyId).orElseThrow();
+        defaultNetworkId = Optional.of(createNetworkId(keyBundle));
+        initializedDefaultNodeByTransport.putAll(serviceNodesByTransport.getInitializedDefaultNodeByTransport(defaultNetworkId.get()));
+
+        // We use anyOf to complete as soon as we got at least one transport node initialized
+        return CompletableFutureUtils.anyOf(initializedDefaultNodeByTransport.values())
+                .thenApply(node -> {
+                    if (node != null) {
+                        messageDeliveryStatusService.ifPresent(MessageDeliveryStatusService::initialize);
+                        monitorService.ifPresent(MonitorService::initialize);
+                        return true;
+                    } else {
+                        return false;
+                    }
+                });
     }
 
     public CompletableFuture<Boolean> shutdown() {
@@ -177,22 +198,8 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Initialize node
+    // Initialized nodes
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    public Map<TransportType, CompletableFuture<Node>> getInitializedDefaultNodeByTransport(NetworkId defaultNetworkId) {
-        var map = serviceNodesByTransport.getInitializedDefaultNodeByTransport(defaultNetworkId);
-
-        // We use anyOf to initialize the sub services as soon as we got on one transport initialized a node
-        CompletableFutureUtils.anyOf(map.values())
-                .whenComplete((node, throwable) -> {
-                    if (throwable == null && node != null) {
-                        messageDeliveryStatusService.ifPresent(MessageDeliveryStatusService::initialize);
-                        monitorService.ifPresent(MonitorService::initialize);
-                    }
-                });
-        return map;
-    }
 
     public CompletableFuture<Node> getInitializedNode(TransportType transportType, NetworkId networkId) {
         return serviceNodesByTransport.getInitializedNode(transportType, networkId);
@@ -406,5 +413,18 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         serviceNodesByTransport.removeSeedNode(seedNodeAddressesByTransport);
         persistableStore.getSeedNodes().remove(seedNodeAddressesByTransport);
         persist();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // NetworkId
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    public NetworkId createNetworkId(KeyBundle keyBundle) {
+        KeyPair keyPair = keyBundle.getKeyPair();
+        AddressByTransportTypeMap addressByTransportTypeMap = AddressByTransportTypeMap.from(getSupportedTransportTypes(),
+                getDefaultNodePortByTransportType(),
+                true,
+                keyBundle.getTorKeyPair().getOnionAddress());
+        PubKey pubKey = new PubKey(keyPair.getPublic(), keyBundle.getKeyId());
+        return new NetworkId(addressByTransportTypeMap, pubKey);
     }
 }
