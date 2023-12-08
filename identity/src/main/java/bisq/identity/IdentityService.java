@@ -90,7 +90,8 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         CompletableFuture<Boolean> result = new CompletableFuture<>();
         AtomicInteger failures = new AtomicInteger();
         Identity defaultIdentity = getOrCreateDefaultIdentity();
-        Map<TransportType, CompletableFuture<Node>> map = networkService.getInitializedDefaultNodeByTransport(defaultIdentity.getNetworkId(), defaultIdentity.getTorIdentity());
+        Map<TransportType, CompletableFuture<Node>> map = networkService.getInitializedDefaultNodeByTransport(defaultIdentity.getNetworkId(),
+                defaultIdentity.getTorIdentity());
         map.forEach((transportType, future) -> {
             future.whenComplete((node, throwable) -> {
                 if (throwable == null && node != null) {
@@ -150,7 +151,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
         TorIdentity torIdentity = findOrCreateTorIdentity(identityTag);
         NetworkId networkId = createNetworkId(false, pubKey, torIdentity);
-        Identity identity = new Identity(identityTag, networkId, torIdentity, keyPair, keyBundle);
+        Identity identity = new Identity(identityTag, networkId, keyBundle);
 
         synchronized (lock) {
             getActiveIdentityByTag().put(identityTag, identity);
@@ -254,7 +255,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         TorIdentity torIdentity = findOrCreateTorIdentity(identityTag);
         NetworkId networkId = createNetworkId(isDefaultIdentity, pubKey, torIdentity);
         KeyBundle keyBundle = keyBundleService.createAndPersistKeyBundle(keyId, keyPair);
-        return new Identity(identityTag, networkId, torIdentity, keyPair, keyBundle);
+        return new Identity(identityTag, networkId, keyBundle);
     }
 
     private TorIdentity findOrCreateTorIdentity(String identityTag) {
