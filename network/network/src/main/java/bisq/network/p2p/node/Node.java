@@ -35,6 +35,7 @@ import bisq.network.p2p.node.network_load.NetworkLoadService;
 import bisq.network.p2p.node.transport.ServerSocketResult;
 import bisq.network.p2p.node.transport.TransportService;
 import bisq.network.p2p.services.peergroup.BanList;
+import bisq.security.keys.KeyBundle;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import dev.failsafe.Failsafe;
 import dev.failsafe.RetryPolicy;
@@ -140,6 +141,8 @@ public class Node implements Connection.Handler {
     @Getter
     private final TorIdentity torIdentity;
     @Getter
+    private final KeyBundle myKeyBundle = null; //todo
+    @Getter
     private final Map<Address, OutboundConnection> outboundConnectionsByAddress = new ConcurrentHashMap<>();
     @Getter
     private final Map<Address, InboundConnection> inboundConnectionsByAddress = new ConcurrentHashMap<>();
@@ -243,7 +246,7 @@ public class Node implements Connection.Handler {
                 socketTimeout,
                 myCapability,
                 authorizationService,
-                torIdentity);
+                myKeyBundle);
         connectionHandshakes.put(connectionHandshake.getId(), connectionHandshake);
         log.debug("Inbound handshake request at: {}", myCapability.getAddress());
         try {
@@ -385,7 +388,7 @@ public class Node implements Connection.Handler {
             return outboundConnectionsByAddress.get(address);
         }
 
-        ConnectionHandshake connectionHandshake = new ConnectionHandshake(socket, banList, socketTimeout, myCapability, authorizationService, torIdentity);
+        ConnectionHandshake connectionHandshake = new ConnectionHandshake(socket, banList, socketTimeout, myCapability, authorizationService, myKeyBundle);
         connectionHandshakes.put(connectionHandshake.getId(), connectionHandshake);
         log.debug("Outbound handshake started: Initiated by {} to {}", myCapability.getAddress(), address);
         try {
