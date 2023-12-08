@@ -48,6 +48,7 @@ public final class Identity implements Proto {
         return bisq.identity.protobuf.Identity.newBuilder()
                 .setDomainId(tag)
                 .setNetworkId(networkId.toProto())
+                .setKeyBundle(keyBundle.toProto())
                 .build();
     }
 
