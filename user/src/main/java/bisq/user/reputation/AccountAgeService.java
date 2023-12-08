@@ -44,6 +44,8 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 /**
  * We persist our json request data and do the authorisation request again at each start if the age of the last request
  * exceeds the half of the TTL of the AuthorizedAccountAgeData. That way the network does not keep inactive data for
@@ -52,8 +54,8 @@ import java.util.concurrent.TimeUnit;
 @Getter
 @Slf4j
 public class AccountAgeService extends SourceReputationService<AuthorizedAccountAgeData> implements PersistenceClient<AccountAgeStore> {
-    public static final long WEIGHT = 25;
-    public static final long MAX_DAYS_AGE_SCORE = 1000;
+    public static final long WEIGHT = 2;
+    public static final long MAX_DAYS_AGE_SCORE = 2000;
 
     // Has to be in sync with Bisq1 class
     @Getter
@@ -153,6 +155,7 @@ public class AccountAgeService extends SourceReputationService<AuthorizedAccount
     }
 
     public static long doCalculateScore(long ageInDays) {
+        checkArgument(ageInDays >= 0);
         long boundedAgeInDays = Math.min(MAX_DAYS_AGE_SCORE, ageInDays);
         return MathUtils.roundDoubleToLong(boundedAgeInDays * WEIGHT);
     }

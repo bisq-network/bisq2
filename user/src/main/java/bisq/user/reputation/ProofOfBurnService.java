@@ -32,12 +32,12 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Getter
 @Slf4j
 public class ProofOfBurnService extends SourceReputationService<AuthorizedProofOfBurnData> {
-    public static final double MAX_AGE = 100;
-    public static final long WEIGHT = 2000;
-    public static final double MAX_DAYS_AGE_SCORE = 1000;
+    public static final long WEIGHT = 100;
 
     public ProofOfBurnService(NetworkService networkService,
                               UserIdentityService userIdentityService,
@@ -66,23 +66,11 @@ public class ProofOfBurnService extends SourceReputationService<AuthorizedProofO
 
     @Override
     public long calculateScore(AuthorizedProofOfBurnData data) {
-        return doCalculateScore(data.getAmount(), getAgeInDays(data.getTime()));
+        return doCalculateScore(data.getAmount());
     }
 
-    public static long doCalculateScore(long amount, long ageInDays) {
-        long score = calculateScore(amount);
-        double decayFactor = Math.max(0, MAX_AGE - ageInDays) / MAX_AGE;
-        long decayedScore = MathUtils.roundDoubleToLong(score * decayFactor);
-        long ageScore = calculateAgeScore(score, ageInDays);
-        return decayedScore + ageScore;
-    }
-
-    private static long calculateScore(long amount) {
+    public static long doCalculateScore(long amount) {
+        checkArgument(amount >= 0);
         return MathUtils.roundDoubleToLong(amount / 100d * WEIGHT);
-    }
-
-    private static long calculateAgeScore(long score, long ageInDays) {
-        double boundedAgeInDays = Math.min(MAX_DAYS_AGE_SCORE, ageInDays);
-        return MathUtils.roundDoubleToLong(score * boundedAgeInDays / MAX_DAYS_AGE_SCORE);
     }
 }
