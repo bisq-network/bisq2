@@ -18,7 +18,9 @@
 package bisq.desktop.main.content.bisq_easy.onboarding;
 
 import bisq.bisq_easy.NavigationTarget;
+import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardController;
@@ -33,6 +35,7 @@ public class BisqEasyOnboardingController implements Controller {
     private final BisqEasyOnboardingView view;
     private final BisqEasyOnboardingModel model;
     private final SettingsService settingsService;
+    private Pin cookieChangedPin;
 
     public BisqEasyOnboardingController(ServiceProvider serviceProvider) {
         settingsService = serviceProvider.getSettingsService();
@@ -42,11 +45,13 @@ public class BisqEasyOnboardingController implements Controller {
 
     @Override
     public void onActivate() {
-        model.getVideoSeen().set(settingsService.getCookie().asBoolean(CookieKey.BISQ_EASY_VIDEO_OPENED).orElse(false));
+        cookieChangedPin = settingsService.getCookieChanged().addObserver(c -> UIThread.run(() ->
+                model.getVideoSeen().set(settingsService.getCookie().asBoolean(CookieKey.BISQ_EASY_VIDEO_OPENED).orElse(false))));
     }
 
     @Override
     public void onDeactivate() {
+        cookieChangedPin.unbind();
     }
 
     void onOpenOfferbook() {

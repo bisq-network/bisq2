@@ -31,7 +31,6 @@ public class BisqEasyVideoController implements Controller {
     @Getter
     private final BisqEasyVideoView view;
     private final SettingsService settingsService;
-    private Runnable completeHandler;
 
     public BisqEasyVideoController(ServiceProvider serviceProvider) {
         settingsService = serviceProvider.getSettingsService();

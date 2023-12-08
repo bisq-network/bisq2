@@ -937,5 +937,42 @@
     -fx-image: url("/images/wallet_guide/blue-wallet-qr.png");
 }
 
+/* video controls */
+#bisq-easy-video-start-image {
+    -fx-image: url("/images/video/bisq-easy-video-start-image.png");
+}
+
+#bisq-easy-video-end-image {
+    -fx-image: url("/images/video/bisq-easy-video-end-image.png");
+}
+
+#play {
+    -fx-image: url("/images/video/play.png");
+}
+
+#pause {
+    -fx-image: url("/images/video/pause.png");
+}
+
+#large-play {
+    -fx-image: url("/images/video/large-play.png");
+}
+
+#large-pause {
+    -fx-image: url("/images/video/large-pause.png");
+}
+
+#large-replay {
+    -fx-image: url("/images/video/large-replay.png");
+}
+
+#sound {
+    -fx-image: url("/images/video/sound.png");
+}
+
+#sound-off {
+    -fx-image: url("/images/video/sound_off.png");
+}
+
 
 

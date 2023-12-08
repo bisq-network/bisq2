@@ -181,3 +181,63 @@
     -fx-font-size: 1.1em;
     -fx-font-family: "IBM Plex Sans Light";
 }
+
+
+/*******************************************************************************
+ * Video                                                           *
+ ******************************************************************************/
+
+.video-bg {
+    -fx-background-color: -bisq-black-dim;
+}
+
+.video-control-bg {
+    -fx-background-color: rgba(0, 0, 0, 0.5);
+    -fx-background-radius: 0 0 8 8;
+}
+
+.video-progress-bar > .track {
+    -fx-background-color: rgba(255, 255, 255, 0.2);
+    -fx-pref-height: 2.5px;
+}
+
+.video-progress-bar > .bar,
+.video-progress-bar:indeterminate > .bar {
+    -fx-background-color: -you-tube-red;
+}
+
+.video-position-slider .track {
+    -fx-background-color: transparent;
+    -fx-pref-height: 2.5px;
+    -fx-border-width: 0;
+    -fx-background-radius: 0;
+}
+
+.video-position-slider .thumb {
+    -fx-background-color: -you-tube-red;
+    -fx-border-width: 0;
+    -fx-pref-width: 12;
+    -fx-pref-height: 12;
+    -fx-cursor: hand;
+}
+
+.video-volume-slider .track {
+    -fx-background-color: white;
+    -fx-pref-height: 2.5px;
+    -fx-border-width: 0;
+    -fx-background-radius: 0;
+}
+
+.video-volume-slider .thumb {
+    -fx-background-color: white;
+    -fx-border-width: 0;
+    -fx-pref-width: 12;
+    -fx-pref-height: 12;
+}
+
+.video-time-info {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 1em;
+    -fx-font-family: "IBM Plex Sans";
+}

@@ -46,6 +46,8 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
     private final SettingsStore persistableStore = new SettingsStore();
     @Getter
     private final Persistence<SettingsStore> persistence;
+    @Getter
+    private final Observable<Boolean> cookieChanged = new Observable<>(false);
     private boolean isInitialized;
 
     public SettingsService(PersistenceService persistenceService) {
@@ -188,6 +190,7 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
     public void setCookie(CookieKey key, boolean value) {
         getCookie().putAsBoolean(key, value);
         persist();
+        updateCookieChangedFlag();
     }
 
     public void setCookie(CookieKey key, String subKey, boolean value) {
@@ -198,6 +201,7 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
     public void setCookie(CookieKey key, double value) {
         getCookie().putAsDouble(key, value);
         persist();
+        updateCookieChangedFlag();
     }
 
     public void setCookie(CookieKey key, String subKey, double value) {
@@ -208,6 +212,7 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
     public void setCookie(CookieKey key, String value) {
         getCookie().putAsString(key, value);
         persist();
+        updateCookieChangedFlag();
     }
 
     public void removeCookie(CookieKey key) {
@@ -218,6 +223,7 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         key.setSubKey(subKey);
         getCookie().remove(key);
         persist();
+        updateCookieChangedFlag();
     }
 
     public void setCookie(CookieKey key, String subKey, String value) {
@@ -233,5 +239,9 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
     public void setTradeRulesConfirmed(boolean value) {
         persistableStore.tradeRulesConfirmed.set(value);
         persist();
+    }
+
+    private void updateCookieChangedFlag() {
+        cookieChanged.set(!cookieChanged.get());
     }
 }
