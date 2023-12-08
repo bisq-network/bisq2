@@ -67,8 +67,9 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore> {
     }
 
     // For the above described use case we get a chosen keyPair to create out bundle and persist it
-    public KeyBundle createAndPersistKeyBundle(String keyId, KeyPair keyPair) {
-        TorKeyPair torKeyPair = TorKeyGeneration.generateKeyPair();
+    public KeyBundle createAndPersistKeyBundle(String keyId, KeyPair keyPair, Optional<byte[]> torPrivateKeyFromTorDir) {
+        TorKeyPair torKeyPair = torPrivateKeyFromTorDir.map(TorKeyGeneration::generateKeyPair)
+                .orElse(TorKeyGeneration.generateKeyPair());
         // I2pKeyPair i2PKeyPair = I2pKeyGeneration.generateKeyPair();
         KeyBundle keyBundle = new KeyBundle(keyPair, torKeyPair/*, i2PKeyPair*/);
         persistKeyBundle(keyId, keyBundle);
