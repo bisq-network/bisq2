@@ -1,5 +1,8 @@
 package bisq.gradle.packaging.jpackage
 
+import java.io.File
+import java.io.IOException
+import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Year
 import java.util.concurrent.TimeUnit
@@ -8,7 +11,10 @@ import java.util.concurrent.TimeUnit
 class PackageFactory(private val jPackagePath: Path, private val jPackageConfig: JPackageConfig) {
 
     fun createPackages() {
-        val jPackageCommonArgs: List<String> = createCommonArguments(jPackageConfig.appConfig)
+        val jPackageTempPath = jPackageConfig.outputDirPath.parent.resolve("temp")
+        deleteFileOrDirectory(jPackageTempPath.toFile())
+
+        val jPackageCommonArgs: List<String> = createCommonArguments(jPackageConfig.appConfig, jPackageTempPath)
 
         val packageFormatConfigs = jPackageConfig.packageFormatConfigs
         val perPackageCommand = packageFormatConfigs.packageFormats
@@ -28,7 +34,7 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
         }
     }
 
-    private fun createCommonArguments(appConfig: JPackageAppConfig): List<String> =
+    private fun createCommonArguments(appConfig: JPackageAppConfig, tempDir: Path): List<String> =
             mutableListOf(
                     "--dest", jPackageConfig.outputDirPath.toAbsolutePath().toString(),
 
@@ -36,9 +42,10 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
                     "--description", "A decentralized bitcoin exchange network.",
                     "--copyright", "Copyright © 2013-${Year.now()} - The Bisq developers",
                     "--vendor", "Bisq",
-
+                    "--license-file", appConfig.licenceFilePath,
                     "--app-version", appConfig.appVersion,
 
+                    "--temp", tempDir.toAbsolutePath().toString(),
                     "--input", jPackageConfig.inputDirPath.toAbsolutePath().toString(),
                     "--main-jar", appConfig.mainJarFileName,
 
@@ -47,4 +54,16 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
 
                     "--runtime-image", jPackageConfig.runtimeImageDirPath.toAbsolutePath().toString()
             )
+
+    private fun deleteFileOrDirectory(dir: File) {
+        val files = dir.listFiles()
+        if (files != null) {
+            for (file in files) {
+                deleteFileOrDirectory(file)
+            }
+        }
+        if (dir.exists()) {
+            Files.delete(dir.toPath())
+        }
+    }
 }

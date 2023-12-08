@@ -1,7 +1,6 @@
 plugins {
     id("bisq.java-library")
-    `application`
-    alias(libs.plugins.shadow)
+    application
 }
 
 application {
@@ -30,18 +29,6 @@ tasks {
     }
 
     distTar {
-        enabled = false
-    }
-
-    shadowDistZip {
-        enabled = false
-    }
-
-    shadowDistTar {
-        enabled = false
-    }
-
-    shadowJar {
         enabled = false
     }
 }

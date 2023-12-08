@@ -5,4 +5,5 @@ data class JPackageAppConfig(
         val mainJarFileName: String,
         val mainClassName: String,
         val jvmArgs: Set<String>,
+        val licenceFilePath: String
 )
