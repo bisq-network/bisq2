@@ -18,12 +18,10 @@
 package bisq.desktop.main.content.user.reputation.signedAccount.tab2;
 
 import bisq.bisq_easy.NavigationTarget;
-import bisq.common.util.MathUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
-import bisq.user.reputation.ProofOfBurnService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -44,18 +42,6 @@ public class SignedWitnessTab2Controller implements Controller {
 
     @Override
     public void onDeactivate() {
-    }
-
-    private static String calculateSimScore(String amount, Number age) {
-        try {
-            // amountAsLong is the smallest unit of BSQ (100 = 1 BSQ)
-            long amountAsLong = MathUtils.roundDoubleToLong(Double.parseDouble(amount) * 100);
-            long ageInDays = age.intValue();
-            long totalScore = ProofOfBurnService.doCalculateScore(amountAsLong, ageInDays);
-            return String.valueOf(totalScore);
-        } catch (Exception e) {
-            return "";
-        }
     }
 
     void onBack() {

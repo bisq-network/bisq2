@@ -37,11 +37,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Getter
 @Slf4j
 public class BondedReputationService extends SourceReputationService<AuthorizedBondedReputationData> {
-    public static final long WEIGHT = 100;
-    public static final double MAX_AGE = 100;
-    public static final double MAX_DAYS_AGE_SCORE = 1000;
-    public static final long MIN_LOCK_TIME = 10_000;
-    public static final long MAX_LOCK_TIME = 100_000;
+    public static final long WEIGHT = 10;
+    public static final long LOCK_TIME = 50_000;
 
     public BondedReputationService(NetworkService networkService,
                                    UserIdentityService userIdentityService,
@@ -70,43 +67,12 @@ public class BondedReputationService extends SourceReputationService<AuthorizedB
 
     @Override
     public long calculateScore(AuthorizedBondedReputationData data) {
-        return doCalculateScore(data.getAmount(), data.getLockTime(), getAgeInDays(data.getTime()));
+        checkArgument(data.getLockTime() >= LOCK_TIME);
+        return doCalculateScore(data.getAmount());
     }
 
-    public static long doCalculateScore(long amount, long lockTime, long ageInDays) {
-        long score = calculateScore(amount, lockTime);
-        double decayFactor = Math.max(0, MAX_AGE - ageInDays) / MAX_AGE;
-        long decayedScore = MathUtils.roundDoubleToLong(score * decayFactor);
-        long ageScore = calculateAgeScore(score, ageInDays);
-        return decayedScore + ageScore;
+    public static long doCalculateScore(long amount) {
+        checkArgument(amount >= 0);
+        return MathUtils.roundDoubleToLong(amount / 100d * WEIGHT);
     }
-
-    private static long calculateScore(long amount, long lockTime) {
-        checkArgument(lockTime >= MIN_LOCK_TIME);
-        lockTime = Math.min(MAX_LOCK_TIME, lockTime);
-        return MathUtils.roundDoubleToLong(amount / 100d * lockTime / 10000d * WEIGHT);
-    }
-
-    private static long calculateAgeScore(long score, long ageInDays) {
-        double boundedAgeInDays = Math.min(MAX_DAYS_AGE_SCORE, ageInDays);
-        return MathUtils.roundDoubleToLong(score * boundedAgeInDays / MAX_DAYS_AGE_SCORE);
-    }
-    
-  /*  @Override
-    public long calculateScore(AuthorizedBondedReputationData data) {
-        long score = calculateScore(data.getAmount(), data.getLockTime());
-        long ageScore = calculateAgeScore(score, data.getTime());
-        return score * WEIGHT + ageScore * AGE_WEIGHT;
-    }
-    
-    private static long calculateScore(long amount, long lockTime) {
-        return Math.round(amount / 100d * lockTime / 10000d);
-    }
-
-    private static long calculateAgeScore(long score, long time) {
-        return score * getAgeInDays(time);
-    }
-    */
-
-
 }

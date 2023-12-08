@@ -37,7 +37,7 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class SettingsService implements PersistenceClient<SettingsStore>, Service {
-    public final static long DEFAULT_MIN_REQUIRED_REPUTATION_SCORE = 100_000;
+    public final static long DEFAULT_MIN_REQUIRED_REPUTATION_SCORE = 30_000;
 
     @Getter
     private static SettingsService instance;
