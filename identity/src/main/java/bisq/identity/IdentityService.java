@@ -52,7 +52,6 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     private final KeyBundleService keyBundleService;
     private final NetworkService networkService;
     private final Object lock = new Object();
-    private final String baseDir;
 
     public IdentityService(PersistenceService persistenceService,
                            KeyBundleService keyBundleService,
@@ -60,8 +59,6 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
         this.keyBundleService = keyBundleService;
         this.networkService = networkService;
-
-        baseDir = persistenceService.getBaseDir();
     }
 
 
