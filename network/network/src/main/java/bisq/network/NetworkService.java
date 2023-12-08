@@ -171,7 +171,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         String keyId = keyBundleService.getDefaultKeyId();
         // keyBundleService creates the defaultKeyBundle at initialize, and is called before we get initialized
         KeyBundle keyBundle = keyBundleService.findKeyBundle(keyId).orElseThrow();
-        defaultNetworkId = Optional.of(createNetworkId(keyBundle));
+        defaultNetworkId = Optional.of(createAndGetNetworkId(keyBundle));
         initializedDefaultNodeByTransport.putAll(serviceNodesByTransport.getInitializedDefaultNodeByTransport(defaultNetworkId.get()));
 
         // We use anyOf to complete as soon as we got at least one transport node initialized
@@ -422,7 +422,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // NetworkId
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    public NetworkId createNetworkId(KeyBundle keyBundle) {
+    public NetworkId createAndGetNetworkId(KeyBundle keyBundle) {
         KeyPair keyPair = keyBundle.getKeyPair();
         AddressByTransportTypeMap addressByTransportTypeMap = AddressByTransportTypeMap.from(getSupportedTransportTypes(),
                 getDefaultNodePortByTransportType(),
