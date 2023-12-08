@@ -5,9 +5,9 @@ import bisq.network.common.Address;
 import bisq.network.common.TransportConfig;
 import bisq.network.common.TransportType;
 import bisq.network.identity.NetworkId;
-import bisq.network.identity.TorIdentity;
 import bisq.network.p2p.node.ConnectionException;
 import bisq.security.keys.KeyBundle;
+import bisq.security.keys.TorKeyGeneration;
 import bisq.tor.TorService;
 import bisq.tor.TorTransportConfig;
 import bisq.tor.onionservice.CreateOnionServiceResponse;
@@ -85,8 +85,8 @@ public class TorTransportService implements TransportService {
             bootstrapInfo.getBootstrapProgress().set(0.25);
             bootstrapInfo.getBootstrapDetails().set("Create Onion service for node ID '" + networkId + "'");
 
-            TorIdentity torIdentity = TorIdentity.from(keyBundle.getTorKeyPair().getPrivateKey(), port);
-            CreateOnionServiceResponse response = torService.createOnionService(port, torIdentity).get(2, TimeUnit.MINUTES);
+            String privateOpenSshKey = TorKeyGeneration.getPrivateKeyInOpenSshFormat(keyBundle.getTorKeyPair().getPrivateKey());
+            CreateOnionServiceResponse response = torService.createOnionService(port, privateOpenSshKey, keyBundle.getTorKeyPair().getOnionAddress()).get(2, TimeUnit.MINUTES);
 
             bootstrapInfo.getBootstrapState().set(BootstrapState.SERVICE_PUBLISHED);
             bootstrapInfo.getBootstrapProgress().set(0.5);
