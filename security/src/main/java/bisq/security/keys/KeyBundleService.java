@@ -90,7 +90,7 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore> {
     }
 
     public Optional<KeyBundle> findKeyBundle(String keyId) {
-        checkArgument(keyId.length() == 40, "Key ID is expected to be a 20 byte hash");
+        checkArgument(keyId.length() == 40, "Key ID is expected to be a 20 byte hash. keyId=" + keyId);
         return persistableStore.findKeyBundle(keyId);
     }
 
@@ -99,7 +99,7 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore> {
     }
 
     public KeyBundle createKeyBundle(String keyId) {
-        checkArgument(keyId.length() == 40, "Key ID is expected to be a 20 byte hash");
+        checkArgument(keyId.length() == 40, "Key ID is expected to be a 20 byte hash. keyId=" + keyId);
         try {
             KeyPair keyPair = KeyGeneration.generateKeyPair();
             TorKeyPair torKeyPair = TorKeyGeneration.generateKeyPair();

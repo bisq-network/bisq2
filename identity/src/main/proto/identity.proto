@@ -26,8 +26,10 @@ import "security.proto";
 message Identity {
   string domainId = 1;
   network.identity.NetworkId networkId = 2;
-  network.identity.TorIdentity torIdentity = 3;
-  security.KeyPair keyPair = 4;
+  security.KeyBundle keyBundle = 3;
+  //todo
+  network.identity.TorIdentity torIdentity = 4;
+  security.KeyPair keyPair = 5;
 }
 
 message IdentityStore {

@@ -21,6 +21,7 @@ import bisq.common.proto.Proto;
 import bisq.network.identity.NetworkId;
 import bisq.network.identity.NetworkIdWithKeyPair;
 import bisq.network.identity.TorIdentity;
+import bisq.security.keys.KeyBundle;
 import bisq.security.keys.KeyPairProtoUtil;
 import bisq.security.keys.PubKey;
 import lombok.Getter;
@@ -33,21 +34,23 @@ import java.util.Objects;
 @Getter
 @ToString
 public final class Identity implements Proto {
-    public static Identity from(String domainId, Identity identity) {
-        return new Identity(domainId, identity.getNetworkId(), identity.getTorIdentity(), identity.getKeyPair());
-    }
+  /*  public static Identity from(String domainId, Identity identity) {
+        return new Identity(domainId, identity.getNetworkId(), identity.getTorIdentity(), identity.getKeyPair(), null);
+    }*/
 
     // Reference to usage (e.g. offerId)
     private final String tag;
     private final NetworkId networkId;
     private final TorIdentity torIdentity;
     private final KeyPair keyPair;
+    private final KeyBundle keyBundle;
 
-    public Identity(String tag, NetworkId networkId, TorIdentity torIdentity, KeyPair keyPair) {
+    public Identity(String tag, NetworkId networkId, TorIdentity torIdentity, KeyPair keyPair, KeyBundle keyBundle) {
         this.tag = tag;
         this.networkId = networkId;
         this.torIdentity = torIdentity;
         this.keyPair = keyPair;
+        this.keyBundle = keyBundle;
     }
 
     @Override
@@ -63,7 +66,8 @@ public final class Identity implements Proto {
     public static Identity fromProto(bisq.identity.protobuf.Identity proto) {
         return new Identity(proto.getDomainId(),
                 NetworkId.fromProto(proto.getNetworkId()),
-                TorIdentity.fromProto(proto.getTorIdentity()), KeyPairProtoUtil.fromProto(proto.getKeyPair()));
+                TorIdentity.fromProto(proto.getTorIdentity()), KeyPairProtoUtil.fromProto(proto.getKeyPair()),
+                KeyBundle.fromProto(proto.getKeyBundle()));
     }
 
     public NetworkIdWithKeyPair getNetworkIdWithKeyPair() {
