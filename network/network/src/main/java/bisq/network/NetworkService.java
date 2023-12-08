@@ -198,18 +198,22 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Initialized nodes
+    // Initialize nodes or return initialized node
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<Node> getInitializedNode(TransportType transportType, NetworkId networkId) {
-        return serviceNodesByTransport.getInitializedNode(transportType, networkId);
+    /**
+     * Returns an initialized node for the given transport. If the node was not yet initialized we do the initialization,
+     * otherwise the future returns the already initialized node.
+     */
+    public CompletableFuture<Node> supplyInitializedNode(TransportType transportType, NetworkId networkId) {
+        return serviceNodesByTransport.supplyInitializedNode(transportType, networkId);
     }
 
     /**
      * Returns a future of the first initialized node on any transport
      */
-    public CompletableFuture<Node> getAnyInitializedNode(NetworkId networkId) {
-        return serviceNodesByTransport.getAnyInitializedNode(networkId);
+    public CompletableFuture<Node> anySuppliedInitializedNode(NetworkId networkId) {
+        return serviceNodesByTransport.anySuppliedInitializedNode(networkId);
     }
 
     /**
@@ -217,8 +221,8 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
      * A slow transport would delay the result. A failing transport would let the result future fail.
      * In most cases we do not want to be that strict.
      */
-    public CompletableFuture<List<Node>> getAllInitializedNodes(NetworkId networkId) {
-        return serviceNodesByTransport.getAllInitializedNodes(networkId);
+    public CompletableFuture<List<Node>> allSuppliedInitializedNode(NetworkId networkId) {
+        return serviceNodesByTransport.allSuppliedInitializedNode(networkId);
     }
 
 
@@ -235,7 +239,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     public CompletableFuture<SendMessageResult> confidentialSend(EnvelopePayloadMessage envelopePayloadMessage,
                                                                  NetworkId receiverNetworkId,
                                                                  NetworkIdWithKeyPair senderNetworkIdWithKeyPair) {
-        return getAnyInitializedNode(senderNetworkIdWithKeyPair.getNetworkId())
+        return anySuppliedInitializedNode(senderNetworkIdWithKeyPair.getNetworkId())
                 .thenCompose(networkId -> supplyAsync(() -> serviceNodesByTransport.confidentialSend(envelopePayloadMessage,
                                 receiverNetworkId,
                                 senderNetworkIdWithKeyPair.getKeyPair(),

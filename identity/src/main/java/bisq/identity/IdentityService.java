@@ -143,7 +143,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         }
         persist();
         // We return the identity if at least one transport node got initialized
-        return networkService.getAnyInitializedNode(networkId)
+        return networkService.anySuppliedInitializedNode(networkId)
                 .thenApply(nodes -> identity);
     }
 
@@ -200,7 +200,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     private void initializeActiveIdentities(TransportType transportType) {
         getActiveIdentityByTag().values().stream()
                 .filter(identity -> !identity.getTag().equals(IdentityService.DEFAULT_IDENTITY_TAG))
-                .forEach(identity -> networkService.getInitializedNode(transportType, identity.getNetworkId()));
+                .forEach(identity -> networkService.supplyInitializedNode(transportType, identity.getNetworkId()));
     }
 
     private CompletableFuture<Identity> createAndInitializeNewActiveIdentity(String identityTag, Identity identity) {
@@ -209,7 +209,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         }
         persist();
 
-        return networkService.getAnyInitializedNode(identity.getNetworkId())
+        return networkService.anySuppliedInitializedNode(identity.getNetworkId())
                 .thenApply(node -> identity);
     }
 

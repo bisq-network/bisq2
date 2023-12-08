@@ -128,27 +128,27 @@ public class ServiceNodesByTransport {
         return CompletableFutureUtils.allOf(futures).whenComplete((list, throwable) -> map.clear());
     }
 
-    public CompletableFuture<List<Node>> getAllInitializedNodes(NetworkId networkId) {
-        return CompletableFutureUtils.allOf(getInitializedNodeByTransport(networkId).values());
+    public CompletableFuture<List<Node>> allSuppliedInitializedNode(NetworkId networkId) {
+        return CompletableFutureUtils.allOf(suppliedInitializedNodeByTransport(networkId).values());
     }
 
-    public CompletableFuture<Node> getAnyInitializedNode(NetworkId networkId) {
-        return CompletableFutureUtils.anyOf(getInitializedNodeByTransport(networkId).values());
+    public CompletableFuture<Node> anySuppliedInitializedNode(NetworkId networkId) {
+        return CompletableFutureUtils.anyOf(suppliedInitializedNodeByTransport(networkId).values());
     }
 
-    public Map<TransportType, CompletableFuture<Node>> getInitializedNodeByTransport(NetworkId networkId) {
+    public Map<TransportType, CompletableFuture<Node>> suppliedInitializedNodeByTransport(NetworkId networkId) {
         return map.entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey,
-                        entry -> getInitializedNode(entry.getKey(), networkId)));
+                        entry -> supplyInitializedNode(entry.getKey(), networkId)));
     }
 
-    public CompletableFuture<Node> getInitializedNode(TransportType transportType, NetworkId networkId) {
+    public CompletableFuture<Node> supplyInitializedNode(TransportType transportType, NetworkId networkId) {
         return supplyAsync(() -> {
             ServiceNode serviceNode = map.get(transportType);
             if (serviceNode.isNodeInitialized(networkId)) {
                 return serviceNode.findNode(networkId).orElseThrow();
             } else {
-                return serviceNode.getInitializedNode(networkId);
+                return serviceNode.initializeNode(networkId);
             }
         }, NETWORK_IO_POOL);
     }
