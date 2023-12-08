@@ -55,7 +55,7 @@ public class IdentityServiceTest {
         when(networkService.getSupportedTransportTypes()).thenReturn(Set.of(TransportType.TOR));
 
         doReturn(CompletableFuture.completedFuture(mock(Node.class)))
-                .when(networkService).getAnyInitializedNode(any(), any());
+                .when(networkService).getAnyInitializedNode(any());
 
         keyBundleService = new KeyBundleService(persistenceService);
         identityService = new IdentityService(persistenceService, keyBundleService, networkService);

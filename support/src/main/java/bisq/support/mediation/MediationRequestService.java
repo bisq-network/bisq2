@@ -120,8 +120,7 @@ public class MediationRequestService implements Service, MessageListener {
                 new ArrayList<>(channel.getChatMessages()));
         networkService.confidentialSend(networkMessage,
                 mediator.getNetworkId(),
-                myUserIdentity.getNetworkIdWithKeyPair(),
-                myUserIdentity.getIdentity().getTorIdentity());
+                myUserIdentity.getNetworkIdWithKeyPair());
     }
 
     public Optional<UserProfile> selectMediator(String makersUserProfileId, String takersUserProfileId) {

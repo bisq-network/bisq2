@@ -90,8 +90,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         CompletableFuture<Boolean> result = new CompletableFuture<>();
         AtomicInteger failures = new AtomicInteger();
         Identity defaultIdentity = getOrCreateDefaultIdentity();
-        Map<TransportType, CompletableFuture<Node>> map = networkService.getInitializedDefaultNodeByTransport(defaultIdentity.getNetworkId(),
-                defaultIdentity.getTorIdentity());
+        Map<TransportType, CompletableFuture<Node>> map = networkService.getInitializedDefaultNodeByTransport(defaultIdentity.getNetworkId());
         map.forEach((transportType, future) -> {
             future.whenComplete((node, throwable) -> {
                 if (throwable == null && node != null) {
@@ -158,7 +157,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         }
         persist();
         // We return the identity if at least one transport node got initialized
-        return networkService.getAnyInitializedNode(networkId, identity.getTorIdentity())
+        return networkService.getAnyInitializedNode(networkId)
                 .thenApply(nodes -> identity);
     }
 
@@ -230,7 +229,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     private void initializeActiveIdentities(TransportType transportType) {
         getActiveIdentityByTag().values().stream()
                 .filter(identity -> !identity.getTag().equals(IdentityService.DEFAULT_IDENTITY_TAG))
-                .forEach(identity -> networkService.getInitializedNode(transportType, identity.getNetworkId(), identity.getTorIdentity()));
+                .forEach(identity -> networkService.getInitializedNode(transportType, identity.getNetworkId()));
     }
 
     private CompletableFuture<Identity> createAndInitializeNewActiveIdentity(String identityTag, Identity identity) {
@@ -239,7 +238,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         }
         persist();
 
-        return networkService.getAnyInitializedNode(identity.getNetworkId(), identity.getTorIdentity())
+        return networkService.getAnyInitializedNode(identity.getNetworkId())
                 .thenApply(node -> identity);
     }
 
