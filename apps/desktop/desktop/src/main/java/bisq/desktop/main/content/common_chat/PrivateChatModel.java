@@ -31,10 +31,13 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class CommonChatModel extends ChatModel {
+public class PrivateChatModel extends ChatModel {
+    @Setter
+    private TwoPartyPrivateChatChannel selectPrivateTwoPartyChannel;
     private final StringProperty searchText = new SimpleStringProperty();
+    private final BooleanProperty isTwoPartyPrivateChatChannelSelectionVisible = new SimpleBooleanProperty();
 
-    public CommonChatModel(ChatChannelDomain chatChannelDomain) {
+    public PrivateChatModel(ChatChannelDomain chatChannelDomain) {
         super(chatChannelDomain);
     }
 

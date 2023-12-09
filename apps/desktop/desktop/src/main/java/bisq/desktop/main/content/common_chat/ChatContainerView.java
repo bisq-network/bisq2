@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.common_chat;
 
 import bisq.bisq_easy.NavigationTarget;
+import bisq.chat.ChatChannelDomain;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.View;
@@ -31,13 +32,23 @@ public class ChatContainerView extends ContentTabView<ChatContainerModel, ChatCo
         super(model, controller);
 
         model.getChannels().values().stream().sorted().forEach(channel -> addTab(channel.getChannelTitle(), channel.getNavigationTarget()));
-        addTab("Private chats", NavigationTarget.DISCUSSION_PRIVATECHATS); // TODO: needs to pass the correct one depending on domain
+        addTab("Private chats", getPrivateChatsNavigationTarget());
+    }
+
+    private NavigationTarget getPrivateChatsNavigationTarget() {
+        // TODO: Use inheritance. Here and in the controller
+        if (model.getChatChannelDomain() == ChatChannelDomain.DISCUSSION) {
+            return NavigationTarget.DISCUSSION_PRIVATECHATS;
+        } else if (model.getChatChannelDomain() == ChatChannelDomain.EVENTS) {
+            return NavigationTarget.EVENTS_PRIVATECHATS;
+        }
+        return NavigationTarget.SUPPORT_PRIVATECHATS;
     }
 
     @Override
     protected void onChildView(View<? extends Parent, ? extends Model, ? extends Controller> oldValue,
                                View<? extends Parent, ? extends Model, ? extends Controller> newValue) {
         super.onChildView(oldValue, newValue);
-        controller.onSelected(this.model.getNavigationTarget());
+        controller.onSelected(model.getNavigationTarget());
     }
 }

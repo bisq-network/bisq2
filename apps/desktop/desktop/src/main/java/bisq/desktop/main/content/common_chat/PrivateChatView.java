@@ -29,18 +29,35 @@ import javafx.scene.layout.*;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class CommonChatView extends ChatView {
+public class PrivateChatView extends ChatView {
     private VBox left;
+    private final Region twoPartyPrivateChatChannelSelection;
     private SearchBox searchBox;
-    private final CommonChatModel commonChatModel;
+    private final PrivateChatModel commonChatModel;
 
-    public CommonChatView(CommonChatModel model,
-                          CommonChatController controller,
-                          Pane chatMessagesComponent,
-                          Pane channelInfo) {
-        super(model, controller, chatMessagesComponent, channelInfo);
+    public PrivateChatView(PrivateChatModel model,
+                           PrivateChatController controller,
+                           Region publicChannelSelection,
+                           Region twoPartyPrivateChatChannelSelection,
+                           Pane chatMessagesComponent,
+                           Pane channelInfo) {
+        super(model,
+                controller,
+                chatMessagesComponent,
+                channelInfo);
 
         commonChatModel = model;
+        this.twoPartyPrivateChatChannelSelection = twoPartyPrivateChatChannelSelection;
+
+        left.getChildren().addAll(
+                publicChannelSelection,
+                Layout.hLine(),
+                twoPartyPrivateChatChannelSelection,
+                Spacer.fillVBox());
+        left.setPrefWidth(210);
+        left.setMinWidth(210);
+        left.setFillWidth(true);
+        left.getStyleClass().add("bisq-grey-2-bg");
     }
 
 
@@ -104,5 +121,7 @@ public class CommonChatView extends ChatView {
     protected void onViewDetached() {
         super.onViewDetached();
         searchBox.textProperty().unbindBidirectional(commonChatModel.getSearchText());
+        twoPartyPrivateChatChannelSelection.visibleProperty().unbind();
+        twoPartyPrivateChatChannelSelection.managedProperty().unbind();
     }
 }

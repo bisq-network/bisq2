@@ -161,14 +161,23 @@ public class ChatContainerController extends ContentTabController<ChatContainerM
             case DISCUSSION_BITCOIN:
             case DISCUSSION_MARKETS:
             case DISCUSSION_ECONOMY:
-            case DISCUSSION_OFFTOPIC: {
+            case DISCUSSION_OFFTOPIC:
+            case EVENTS_CONFERENCES:
+            case EVENTS_MEETUPS:
+            case EVENTS_PODCASTS:
+            case EVENTS_NOKYC:
+            case EVENTS_NODES:
+            case EVENTS_TRADEEVENTS:
+            case SUPPORT_SUPPORT:
+            case SUPPORT_QUESTIONS:
+            case SUPPORT_REPORTS:{
                 return Optional.of(new CommonChatController(serviceProvider, channelDomain, navigationTarget));
             }
-//            case DISCUSSION_PRIVATECHATS: {
-//                onSelected(navigationTarget);
-//                // TODO: Make new class for private chats
-//                return Optional.of(new CommonChatController(serviceProvider, channelDomain, navigationTarget));
-//            }
+            case DISCUSSION_PRIVATECHATS:
+            case EVENTS_PRIVATECHATS:
+            case SUPPORT_PRIVATECHATS: {
+                //return Optional.empty(); TODO: Make new class for private chats
+            }
             default: {
                 return Optional.empty();
             }
