@@ -21,6 +21,7 @@ import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.*;
 import bisq.chat.common.CommonPublicChatChannel;
 import bisq.chat.common.CommonPublicChatChannelService;
+import bisq.chat.notifications.ChatNotification;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
@@ -31,8 +32,6 @@ import bisq.desktop.main.content.ContentTabController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -46,17 +45,14 @@ public class ChatContainerController extends ContentTabController<ChatContainerM
     private final CommonPublicChatChannelService chatChannelService;
     private final ChatChannelSelectionService chatChannelSelectionService;
     private Pin selectedChannelPin;
-    private final Map<String, Pin> pinByChannelId = new HashMap<>();
-    private final Map<Channel, Pin> channelNumNotificationsPin = new HashMap<>();
+    private Pin changedChatNotificationPin;
 
     public ChatContainerController(ServiceProvider serviceProvider, ChatChannelDomain chatChannelDomain, NavigationTarget navigationTarget) {
         super(new ChatContainerModel(chatChannelDomain), navigationTarget, serviceProvider);
 
         chatService = serviceProvider.getChatService();
-        //notificationsService = serviceProvider.
         chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
         channelDomain = chatChannelDomain;
-        // chatChannel
         chatChannelService = chatService.getCommonPublicChatChannelServices().get(chatChannelDomain);
                 //chatService.getTwoPartyPrivateChatChannelServices().get(chatChannelDomain);
         chatChannelSelectionService = chatService.getChatChannelSelectionServices().get(chatChannelDomain);
@@ -69,7 +65,7 @@ public class ChatContainerController extends ContentTabController<ChatContainerM
         chatChannelService.getChannels().forEach(commonPublicChatChannel -> {
             Channel channel = findOrCreateChannelItem(commonPublicChatChannel);
             if (channel != null) {
-                model.channels.add(channel);
+                model.channels.put(channel.getChannelId(), channel);
             }
         });
     }
@@ -77,16 +73,15 @@ public class ChatContainerController extends ContentTabController<ChatContainerM
     private Channel findOrCreateChannelItem(ChatChannel<? extends ChatMessage> chatChannel) {
         if (chatChannel instanceof CommonPublicChatChannel) {
             CommonPublicChatChannel commonChannel = (CommonPublicChatChannel) chatChannel;
-            String targetName = channelDomain.toString() + "_" + commonChannel.getChannelTitle().toUpperCase();
-            try {
-                NavigationTarget navigationTarget = NavigationTarget.valueOf(targetName);
-                return model.channels.stream()
-                        .filter(Objects::nonNull)
-                        .filter(item -> item.getChatChannel().getId().equals(commonChannel.getId()))
-                        .findAny()
-                        .orElseGet(() -> new Channel(commonChannel, chatChannelService, navigationTarget, chatNotificationService));
-            } catch (IllegalArgumentException e) {
-                // Log or handle the navigation target not found case
+            if (model.channels.containsKey(chatChannel.getId())) {
+                return model.channels.get(chatChannel.getId());
+            } else {
+                String targetName = channelDomain.toString() + "_" + commonChannel.getChannelTitle().toUpperCase();
+                try {
+                    return new Channel(commonChannel, chatChannelService, NavigationTarget.valueOf(targetName));
+                } catch (IllegalArgumentException e) {
+                    log.info("Couldn't find navigation target " + targetName + " in channel domain " + channelDomain);
+                }
             }
         }
         return null;
@@ -99,19 +94,29 @@ public class ChatContainerController extends ContentTabController<ChatContainerM
 
         selectedChannelPin = FxBindings.subscribe(chatChannelSelectionService.getSelectedChannel(),
                 channel -> UIThread.run(() -> handleSelectedChannelChange(channel)));
-
-        model.getChannels().forEach(channel -> {
-            //channel.updateNumNotifications(chatNotificationService.getChangedNotification().get());
-            Pin pin = channel.getNumNotifications().addObserver(newCount -> {
-                if (newCount != null) {
-                    updateTabButtonNotifications(channel, newCount);
-                }
-            });
-            channelNumNotificationsPin.put(channel, pin);
-        });
+        chatNotificationService.getNotConsumedNotifications().forEach(this::handleNotification);
+        changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(this::handleNotification);
     }
 
-    private void updateTabButtonNotifications(Channel channel, long newCount) {
+    private void handleNotification(ChatNotification notification) {
+        if (notification == null || notification.getChatChannelDomain() != channelDomain
+                || !model.channels.containsKey(notification.getChatChannelId())) {
+            return;
+        }
+
+        UIThread.run(() ->
+            updateTabButtonNotifications(
+                    notification.getChatChannelId(),
+                    chatNotificationService.getNumNotifications(notification.getChatChannelId()))
+        );
+    }
+
+    private void updateTabButtonNotifications(String channelId, long newCount) {
+        if (!model.channels.containsKey(channelId)) {
+            return;
+        }
+
+        Channel channel = model.channels.get(channelId);
         model.getTabButtons().stream()
                 .filter(tabButton -> channel.getNavigationTarget() == tabButton.getNavigationTarget())
                 .findAny()
@@ -123,9 +128,7 @@ public class ChatContainerController extends ContentTabController<ChatContainerM
         super.onDeactivate();
 
         selectedChannelPin.unbind();
-        channelNumNotificationsPin.values().forEach(Pin::unbind);
-        channelNumNotificationsPin.clear();
-        model.channels.forEach(Channel::dispose);
+        changedChatNotificationPin.unbind();
     }
 
     protected void handleSelectedChannelChange(ChatChannel<? extends ChatMessage> chatChannel) {
@@ -143,7 +146,7 @@ public class ChatContainerController extends ContentTabController<ChatContainerM
     }
 
     protected void onSelected(NavigationTarget navigationTarget) {
-        Optional<Channel> channel = model.channels.stream()
+        Optional<Channel> channel = model.channels.values().stream()
                 .filter(Objects::nonNull)
                 .filter(item -> item.getNavigationTarget().equals(navigationTarget))
                 .findFirst();

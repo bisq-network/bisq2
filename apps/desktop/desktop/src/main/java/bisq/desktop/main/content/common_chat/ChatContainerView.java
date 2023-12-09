@@ -30,7 +30,7 @@ public class ChatContainerView extends ContentTabView<ChatContainerModel, ChatCo
     public ChatContainerView(ChatContainerModel model, ChatContainerController controller) {
         super(model, controller);
 
-        model.getChannels().forEach(channel -> addTab(channel.getChannelTitle(), channel.getNavigationTarget()));
+        model.getChannels().values().stream().sorted().forEach(channel -> addTab(channel.getChannelTitle(), channel.getNavigationTarget()));
         addTab("Private chats", NavigationTarget.DISCUSSION_PRIVATECHATS); // TODO: needs to pass the correct one depending on domain
     }
 

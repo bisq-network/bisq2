@@ -26,11 +26,14 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
 import lombok.Getter;
+import lombok.Setter;
+
+import java.util.HashMap;
 
 @Getter
 public class ChatContainerModel extends ContentTabModel {
     private final ChatChannelDomain chatChannelDomain;
-    ObservableList<Channel> channels = FXCollections.observableArrayList();
+    final ObservableMap<String, Channel> channels = FXCollections.observableMap(new HashMap<>());
     ObjectProperty<Channel> selectedChannel = new SimpleObjectProperty<>();
     Channel previousSelectedChannel;
 
@@ -42,6 +45,6 @@ public class ChatContainerModel extends ContentTabModel {
     public NavigationTarget getDefaultNavigationTarget() {
         return channels.isEmpty()
                 ? NavigationTarget.NONE
-                : channels.get(0).getNavigationTarget();
+                : channels.values().stream().findFirst().get().getNavigationTarget();
     }
 }
