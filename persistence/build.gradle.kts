@@ -5,5 +5,4 @@ plugins {
 
 dependencies {
     implementation(libs.google.guava)
-    testImplementation(libs.mockito)
 }
