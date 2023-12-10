@@ -35,7 +35,7 @@ import java.util.Optional;
 public abstract class CommonChatController<V extends CommonChatView, M extends CommonChatModel>
         extends ChatController<V, M> implements Controller {
     private final ChatSearchService chatSearchService;
-    private ChatChannelSelectionService chatChannelSelectionService;
+    protected ChatChannelSelectionService chatChannelSelectionService;
     private Subscription searchTextPin;
 
     public CommonChatController(ServiceProvider serviceProvider, ChatChannelDomain chatChannelDomain, NavigationTarget navigationTarget) {

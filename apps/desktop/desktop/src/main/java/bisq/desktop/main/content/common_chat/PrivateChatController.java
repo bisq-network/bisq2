@@ -18,40 +18,28 @@
 package bisq.desktop.main.content.common_chat;
 
 import bisq.bisq_easy.NavigationTarget;
-import bisq.chat.ChatChannel;
 import bisq.chat.ChatChannelDomain;
-import bisq.chat.ChatChannelSelectionService;
-import bisq.chat.ChatMessage;
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.ObservableArray;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.main.content.chat.ChatController;
 import bisq.desktop.main.content.chat.channels.TwoPartyPrivateChannelSelectionMenu;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
-
-import java.util.Optional;
 
 @Slf4j
-public class PrivateChatController extends ChatController<PrivateChatView, PrivateChatModel> implements Controller {
-    private final ChatSearchService chatSearchService;
-    private ChatChannelSelectionService chatChannelSelectionService;
+public class PrivateChatController extends CommonChatController<PrivateChatView, PrivateChatModel> implements Controller {
     private TwoPartyPrivateChannelSelectionMenu twoPartyPrivateChannelSelectionMenu;
     private Pin selectedChannelPin;
-    private Subscription searchTextPin;
 
     public PrivateChatController(ServiceProvider serviceProvider, ChatChannelDomain chatChannelDomain, NavigationTarget navigationTarget) {
         super(serviceProvider, chatChannelDomain, navigationTarget);
-
-        chatSearchService = serviceProvider.getChatSearchService();
     }
 
     @Override
     public void createDependencies(ChatChannelDomain chatChannelDomain) {
-        chatChannelSelectionService = chatService.getChatChannelSelectionServices().get(chatChannelDomain);
+        super.createDependencies(chatChannelDomain);
+
         twoPartyPrivateChannelSelectionMenu = new TwoPartyPrivateChannelSelectionMenu(serviceProvider, chatChannelDomain);
     }
 
@@ -71,33 +59,20 @@ public class PrivateChatController extends ChatController<PrivateChatView, Priva
 
     @Override
     public void onActivate() {
+        super.onActivate();
+
         ObservableArray<TwoPartyPrivateChatChannel> twoPartyPrivateChatChannels =
                 chatService.getTwoPartyPrivateChatChannelServices().get(model.getChatChannelDomain()).getChannels();
         chatChannelSelectionService.selectChannel(twoPartyPrivateChatChannels.stream().findFirst().orElse(null));
-        selectedChannelChanged(chatChannelSelectionService.getSelectedChannel().get());
         selectedChannelPin = chatChannelSelectionService.getSelectedChannel().addObserver(this::selectedChannelChanged);
 
-        searchTextPin = EasyBind.subscribe(chatSearchService.getSearchText(), searchText ->
-                chatMessagesComponent.setSearchPredicate(item ->
-                        searchText == null || searchText.isEmpty() || item.match(searchText)));
-        chatSearchService.setOnHelpRequested(this::onOpenHelp);
-        chatSearchService.setOnInfoRequested(this::onToggleChannelInfo);
     }
 
     @Override
     public void onDeactivate() {
-        searchTextPin.unsubscribe();
+        super.onDeactivate();
+
         selectedChannelChanged(null);
         selectedChannelPin.unbind();
-    }
-
-    @Override
-    protected void selectedChannelChanged(ChatChannel<? extends ChatMessage> chatChannel) {
-        super.selectedChannelChanged(chatChannel);
-    }
-
-    @Override
-    protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
-        return Optional.empty();
     }
 }

@@ -17,31 +17,19 @@
 
 package bisq.desktop.main.content.common_chat;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
-import bisq.desktop.main.content.chat.ChatModel;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class PrivateChatModel extends ChatModel {
+public class PrivateChatModel extends CommonChatModel {
     @Setter
     private TwoPartyPrivateChatChannel selectPrivateTwoPartyChannel;
-    private final StringProperty searchText = new SimpleStringProperty();
 
     public PrivateChatModel(ChatChannelDomain chatChannelDomain) {
         super(chatChannelDomain);
-    }
-
-    @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.NONE;
     }
 }

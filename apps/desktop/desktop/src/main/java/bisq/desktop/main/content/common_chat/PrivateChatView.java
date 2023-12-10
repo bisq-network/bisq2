@@ -19,13 +19,11 @@ package bisq.desktop.main.content.common_chat;
 
 import bisq.desktop.common.Layout;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.main.content.chat.ChatView;
-import javafx.geometry.Pos;
 import javafx.scene.layout.*;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class PrivateChatView extends ChatView {
+public class PrivateChatView extends CommonChatView {
     private VBox left;
 
     public PrivateChatView(PrivateChatModel model,
@@ -40,23 +38,6 @@ public class PrivateChatView extends ChatView {
         left.setMinWidth(210);
         left.setFillWidth(true);
         left.getStyleClass().add("bisq-grey-2-bg");
-    }
-
-    protected void configTitleHBox() {
-    }
-
-    protected void configCenterVBox() {
-        VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
-        chatMessagesComponent.setMinWidth(700);
-        centerVBox.getChildren().addAll(chatMessagesComponent);
-        centerVBox.setFillWidth(true);
-    }
-
-    protected void configSideBarVBox() {
-        sideBar.getChildren().add(channelSidebar);
-        sideBar.getStyleClass().add("bisq-grey-2-bg");
-        sideBar.setAlignment(Pos.TOP_RIGHT);
-        sideBar.setFillWidth(true);
     }
 
     protected void configContainerHBox() {
