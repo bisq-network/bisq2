@@ -29,6 +29,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.TabButton;
 import bisq.desktop.main.content.ContentTabController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -65,6 +66,13 @@ public class ChatContainerController extends ContentTabController<ChatContainerM
 
         createChannels();
         view = new ChatContainerView(model, this);
+
+        model.getSelectedTabButton().addListener(observable -> {
+            TabButton tabButton = model.getSelectedTabButton().get();
+            boolean noSelectedChannel = tabButton.getNavigationTarget() == model.getPrivateChatsNavigationTarget()
+                    && twoPartyPrivateChatChannelService.getChannels().isEmpty();
+            model.getHasSelectedChannel().set(!noSelectedChannel);
+        });
     }
 
     private void createChannels() {
@@ -93,17 +101,25 @@ public class ChatContainerController extends ContentTabController<ChatContainerM
         return null;
     }
 
-
     @Override
     public void onActivate() {
         super.onActivate();
 
         selectedChannelPin = FxBindings.subscribe(chatChannelSelectionService.getSelectedChannel(),
-                channel -> UIThread.run(() -> handleSelectedChannelChange(channel)));
+                channel -> UIThread.run(() -> handleSelectedChannelChanged(channel)));
         chatNotificationService.getNotConsumedNotifications().forEach(this::handleNotification);
         changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(this::handleNotification);
         chatSearchService.getSearchText().set("");
         model.getSearchText().bindBidirectional(chatSearchService.getSearchText());
+    }
+
+    @Override
+    public void onDeactivate() {
+        super.onDeactivate();
+
+        selectedChannelPin.unbind();
+        changedChatNotificationPin.unbind();
+        model.getSearchText().unbindBidirectional(chatSearchService.getSearchText());
     }
 
     private void handleNotification(ChatNotification notification) {
@@ -140,23 +156,14 @@ public class ChatContainerController extends ContentTabController<ChatContainerM
         twoPartyPrivateChatChannelService.getChannels().forEach(channel ->
                 count.addAndGet(chatNotificationService.getNotConsumedNotifications(channel.getId()).count()));
         UIThread.run(() ->
-            model.getTabButtons().stream()
-                    .filter(tabButton -> model.getPrivateChatsNavigationTarget() == tabButton.getNavigationTarget())
-                    .findAny()
-                    .ifPresent(tabButton -> tabButton.setNumNotifications(count.get()))
+                model.getTabButtons().stream()
+                        .filter(tabButton -> model.getPrivateChatsNavigationTarget() == tabButton.getNavigationTarget())
+                        .findAny()
+                        .ifPresent(tabButton -> tabButton.setNumNotifications(count.get()))
         );
     }
 
-    @Override
-    public void onDeactivate() {
-        super.onDeactivate();
-
-        selectedChannelPin.unbind();
-        changedChatNotificationPin.unbind();
-        model.getSearchText().unbindBidirectional(chatSearchService.getSearchText());
-    }
-
-    protected void handleSelectedChannelChange(ChatChannel<? extends ChatMessage> chatChannel) {
+    protected void handleSelectedChannelChanged(ChatChannel<? extends ChatMessage> chatChannel) {
         chatSearchService.getSearchText().set("");
 
         Channel channel = findOrCreateChannelItem(chatChannel);

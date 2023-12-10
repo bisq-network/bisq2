@@ -38,6 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ChatContainerView extends ContentTabView<ChatContainerModel, ChatContainerController> {
     private SearchBox searchBox;
+    private Button infoButton;
 
     public ChatContainerView(ChatContainerModel model, ChatContainerController controller) {
         super(model, controller);
@@ -59,7 +60,7 @@ public class ChatContainerView extends ContentTabView<ChatContainerModel, ChatCo
         Button helpButton = BisqIconButton.createIconButton("icon-help", Res.get("chat.topMenu.chatRules.tooltip"));
         helpButton.setOnAction(e -> controller.getChatSearchService().triggerHelpRequested());
 
-        Button infoButton = BisqIconButton.createIconButton("icon-info", Res.get("chat.topMenu.channelInfoIcon.tooltip"));
+        infoButton = BisqIconButton.createIconButton("icon-info", Res.get("chat.topMenu.channelInfoIcon.tooltip"));
         infoButton.setOnAction(e -> controller.getChatSearchService().triggerInfoRequested());
 
         HBox searchInfo = new HBox(searchBox, helpButton, infoButton);
@@ -119,12 +120,18 @@ public class ChatContainerView extends ContentTabView<ChatContainerModel, ChatCo
     @Override
     protected void onViewAttached() {
         super.onViewAttached();
+
         searchBox.textProperty().bindBidirectional(model.getSearchText());
+        infoButton.visibleProperty().bind(model.getHasSelectedChannel());
+        infoButton.managedProperty().bind(model.getHasSelectedChannel());
     }
 
     @Override
     protected void onViewDetached() {
         super.onViewDetached();
+
         searchBox.textProperty().unbindBidirectional(model.getSearchText());
+        infoButton.visibleProperty().unbind();
+        infoButton.managedProperty().unbind();
     }
 }
