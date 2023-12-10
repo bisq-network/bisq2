@@ -32,7 +32,8 @@ import org.fxmisc.easybind.Subscription;
 import java.util.Optional;
 
 @Slf4j
-public class CommonChatController extends ChatController<CommonChatView, CommonChatModel> implements Controller {
+public abstract class CommonChatController<V extends CommonChatView, M extends CommonChatModel>
+        extends ChatController<V, M> implements Controller {
     private final ChatSearchService chatSearchService;
     private ChatChannelSelectionService chatChannelSelectionService;
     private Subscription searchTextPin;
@@ -46,16 +47,6 @@ public class CommonChatController extends ChatController<CommonChatView, CommonC
     @Override
     public void createDependencies(ChatChannelDomain chatChannelDomain) {
         chatChannelSelectionService = chatService.getChatChannelSelectionServices().get(chatChannelDomain);
-    }
-
-    @Override
-    public CommonChatModel createAndGetModel(ChatChannelDomain chatChannelDomain) {
-        return new CommonChatModel(chatChannelDomain);
-    }
-
-    @Override
-    public CommonChatView createAndGetView() {
-        return new CommonChatView(model, this, chatMessagesComponent.getRoot(), channelSidebar.getRoot());
     }
 
     @Override
