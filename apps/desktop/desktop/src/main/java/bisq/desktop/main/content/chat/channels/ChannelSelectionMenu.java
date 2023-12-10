@@ -12,7 +12,9 @@ import bisq.desktop.components.controls.Badge;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfileService;
 import javafx.beans.InvalidationListener;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -25,10 +27,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -114,6 +113,8 @@ public abstract class ChannelSelectionMenu<
                     channel -> UIThread.run(() -> handleSelectedChannelChange(channel)));
 
             chatChannelService.getChannels().forEach(this::addNotificationsListenerForChannel);
+
+            model.getHasNoOpenConversations().set(model.channels.isEmpty());
         }
 
         @Override
@@ -183,11 +184,7 @@ public abstract class ChannelSelectionMenu<
         }
 
         protected void onSelected(View.ChannelItem channelItem) {
-            if (channelItem == null) {
-                chatChannelSelectionService.selectChannel(null);
-            } else {
-                chatChannelSelectionService.selectChannel(channelItem.getChatChannel());
-            }
+            chatChannelSelectionService.selectChannel(channelItem == null ? null : channelItem.getChatChannel());
         }
 
         protected View.ChannelItem findOrCreateChannelItem(ChatChannel<? extends ChatMessage> chatChannel) {
@@ -208,6 +205,7 @@ public abstract class ChannelSelectionMenu<
         SortedList<View.ChannelItem> sortedChannels = new SortedList<>(filteredChannels);
         ObservableMap<String, Long> channelIdWithNumUnseenMessagesMap = FXCollections.observableHashMap();
         View.ChannelItem previousSelectedChannelItem;
+        private final BooleanProperty hasNoOpenConversations = new SimpleBooleanProperty();
 
         public Model(ChatChannelDomain chatChannelDomain) {
             this.chatChannelDomain = chatChannelDomain;
@@ -271,6 +269,9 @@ public abstract class ChannelSelectionMenu<
 
             adjustHeightCounter = 0;
             adjustHeight();
+
+            headerBox.visibleProperty().bind(model.getHasNoOpenConversations());
+            headerBox.managedProperty().bind(model.getHasNoOpenConversations());
         }
 
         @Override
@@ -278,6 +279,8 @@ public abstract class ChannelSelectionMenu<
             listViewSelectedChannelSubscription.unsubscribe();
             modelSelectedChannelSubscription.unsubscribe();
             model.filteredChannels.removeListener(filteredListChangedListener);
+            headerBox.visibleProperty().unbind();
+            headerBox.managedProperty().unbind();
         }
 
         protected abstract ListCell<ChannelItem> getListCell();

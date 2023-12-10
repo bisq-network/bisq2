@@ -35,7 +35,6 @@ public class PrivateChatModel extends ChatModel {
     @Setter
     private TwoPartyPrivateChatChannel selectPrivateTwoPartyChannel;
     private final StringProperty searchText = new SimpleStringProperty();
-    private final BooleanProperty isTwoPartyPrivateChatChannelSelectionVisible = new SimpleBooleanProperty();
 
     public PrivateChatModel(ChatChannelDomain chatChannelDomain) {
         super(chatChannelDomain);

@@ -27,8 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class PrivateChatView extends ChatView {
     private VBox left;
-    private final Region twoPartyPrivateChatChannelSelection;
-    private final PrivateChatModel privateChatModel;
 
     public PrivateChatView(PrivateChatModel model,
                            PrivateChatController controller,
@@ -37,8 +35,6 @@ public class PrivateChatView extends ChatView {
                            Pane channelInfo) {
         super(model, controller, chatMessagesComponent, channelInfo);
 
-        privateChatModel = model;
-        this.twoPartyPrivateChatChannelSelection = twoPartyPrivateChatChannelSelection;
         left.getChildren().addAll(twoPartyPrivateChatChannelSelection, Spacer.fillVBox());
         left.setPrefWidth(210);
         left.setMinWidth(210);
@@ -73,19 +69,5 @@ public class PrivateChatView extends ChatView {
         HBox.setHgrow(centerVBox, Priority.ALWAYS);
         HBox.setHgrow(sideBar, Priority.NEVER);
         containerHBox.getChildren().addAll(left, centerVBox, sideBar);
-    }
-
-    @Override
-    protected void onViewAttached() {
-        super.onViewAttached();
-        twoPartyPrivateChatChannelSelection.visibleProperty().bind(privateChatModel.getIsTwoPartyPrivateChatChannelSelectionVisible());
-        twoPartyPrivateChatChannelSelection.managedProperty().bind(privateChatModel.getIsTwoPartyPrivateChatChannelSelectionVisible());
-    }
-
-    @Override
-    protected void onViewDetached() {
-        super.onViewDetached();
-        twoPartyPrivateChatChannelSelection.visibleProperty().unbind();
-        twoPartyPrivateChatChannelSelection.managedProperty().unbind();
     }
 }

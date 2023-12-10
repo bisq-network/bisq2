@@ -40,7 +40,7 @@ public class PrivateChatController extends ChatController<PrivateChatView, Priva
     private final ChatSearchService chatSearchService;
     private ChatChannelSelectionService chatChannelSelectionService;
     private TwoPartyPrivateChannelSelectionMenu twoPartyPrivateChannelSelectionMenu;
-    private Pin selectedChannelPin, twoPartyPrivateChatChannelsPin;
+    private Pin selectedChannelPin;
     private Subscription searchTextPin;
 
     public PrivateChatController(ServiceProvider serviceProvider, ChatChannelDomain chatChannelDomain, NavigationTarget navigationTarget) {
@@ -71,10 +71,8 @@ public class PrivateChatController extends ChatController<PrivateChatView, Priva
 
     @Override
     public void onActivate() {
-        ObservableArray<TwoPartyPrivateChatChannel> twoPartyPrivateChatChannels = chatService.getTwoPartyPrivateChatChannelServices().get(model.getChatChannelDomain()).getChannels();
-        twoPartyPrivateChatChannelsPin = twoPartyPrivateChatChannels.addObserver(() ->
-                model.getIsTwoPartyPrivateChatChannelSelectionVisible().set(!twoPartyPrivateChatChannels.isEmpty()));
-
+        ObservableArray<TwoPartyPrivateChatChannel> twoPartyPrivateChatChannels =
+                chatService.getTwoPartyPrivateChatChannelServices().get(model.getChatChannelDomain()).getChannels();
         chatChannelSelectionService.selectChannel(twoPartyPrivateChatChannels.stream().findFirst().orElse(null));
         selectedChannelChanged(chatChannelSelectionService.getSelectedChannel().get());
         selectedChannelPin = chatChannelSelectionService.getSelectedChannel().addObserver(this::selectedChannelChanged);
@@ -91,7 +89,6 @@ public class PrivateChatController extends ChatController<PrivateChatView, Priva
         searchTextPin.unsubscribe();
         selectedChannelChanged(null);
         selectedChannelPin.unbind();
-        twoPartyPrivateChatChannelsPin.unbind();
     }
 
     @Override
