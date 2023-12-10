@@ -8,6 +8,4 @@ dependencies {
     implementation(project(":i18n"))
 
     implementation("network:network")
-
-    implementation(libs.google.guava)
 }

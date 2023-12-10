@@ -15,7 +15,6 @@ dependencies {
 
     implementation(libs.bouncycastle)
     implementation(libs.failsafe)
-    implementation(libs.google.guava)
     implementation(libs.typesafe.config)
 
     implementation(libs.apache.httpcomponents.httpclient)

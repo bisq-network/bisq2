@@ -20,8 +20,6 @@ dependencies {
     implementation(project(":security"))
     implementation(project(":application"))
     implementation(project(":desktop_app"))
-
-    implementation(libs.google.guava)
 }
 
 tasks {

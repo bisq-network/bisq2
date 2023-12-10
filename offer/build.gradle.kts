@@ -16,6 +16,5 @@ dependencies {
     implementation("network:network-identity")
 
     implementation(libs.google.gson)
-    implementation(libs.google.guava)
     implementation(libs.chimp.jsocks)
 }

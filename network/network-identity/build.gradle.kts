@@ -8,5 +8,4 @@ dependencies {
     implementation("bisq:security")
 
     implementation(libs.bouncycastle)
-    implementation(libs.google.guava)
 }

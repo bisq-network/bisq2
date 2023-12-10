@@ -8,6 +8,5 @@ dependencies {
     implementation(project(":i18n"))
     implementation(project(":settings"))
 
-    implementation(libs.google.guava)
     implementation(libs.java.dev.jna)
 }

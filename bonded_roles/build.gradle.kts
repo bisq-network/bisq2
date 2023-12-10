@@ -20,7 +20,6 @@ dependencies {
     implementation("network:network")
 
     implementation(libs.google.gson)
-    implementation(libs.google.guava)
     implementation(libs.typesafe.config)
     implementation(libs.bundles.jackson)
 }

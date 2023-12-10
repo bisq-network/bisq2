@@ -16,7 +16,6 @@ dependencies {
 
     implementation("network:network")
 
-    implementation(libs.google.guava)
     implementation(libs.typesafe.config)
     implementation(libs.bouncycastle.pg)
 }

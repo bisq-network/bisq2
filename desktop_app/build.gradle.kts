@@ -38,7 +38,6 @@ dependencies {
     implementation("wallets:electrum")
     implementation("wallets:bitcoind")
 
-    implementation(libs.google.guava)
     implementation(libs.typesafe.config)
 }
 
