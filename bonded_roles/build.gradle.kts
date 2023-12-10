@@ -3,12 +3,6 @@ plugins {
     id("bisq.protobuf")
 }
 
-repositories {
-    maven {
-        url = uri("https://jitpack.io")
-    }
-}
-
 dependencies {
     implementation(project(":persistence"))
     implementation(project(":security"))
