@@ -21,6 +21,18 @@ jobs:
       name: Bisq
       build-root-dir: .
 
+  build_apps_module:
+    name: Build apps module on ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, macOS-latest, windows-latest ]
+
+    uses: ./.github/workflows/build_bisq_module.yml
+    with:
+      os: ${{ matrix.os }}
+      name: apps module
+      build-root-dir: apps
+
   build_network_module:
     name: Build network module on ${{ matrix.os }}
     strategy:

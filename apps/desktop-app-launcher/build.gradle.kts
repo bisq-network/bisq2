@@ -16,9 +16,10 @@ javafx {
 }
 
 dependencies {
-    implementation(project(":common"))
-    implementation(project(":security"))
-    implementation(project(":application"))
+    implementation("bisq:common")
+    implementation("bisq:security")
+    implementation("bisq:application")
+
     implementation(project(":desktop-app"))
 }
 

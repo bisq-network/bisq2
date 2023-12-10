@@ -10,11 +10,11 @@ repositories {
 }
 
 dependencies {
-    implementation(project(":persistence"))
-    implementation(project(":security"))
-    implementation(project(":identity"))
-    implementation(project(":bonded-roles"))
-    implementation(project(":user"))
+    implementation("bisq:persistence")
+    implementation("bisq:security")
+    implementation("bisq:identity")
+    implementation("bisq:bonded-roles")
+    implementation("bisq:user")
 
     implementation("network:network-common")
     implementation("network:network")

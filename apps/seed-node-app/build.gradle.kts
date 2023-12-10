@@ -8,11 +8,11 @@ application {
 }
 
 dependencies {
-    implementation(project(":persistence"))
-    implementation(project(":security"))
-    implementation(project(":bonded-roles"))
-    implementation(project(":application"))
-    implementation(project(":identity"))
+    implementation("bisq:persistence")
+    implementation("bisq:security")
+    implementation("bisq:bonded-roles")
+    implementation("bisq:application")
+    implementation("bisq:identity")
 
     implementation("network:network-common")
     implementation("network:network")
