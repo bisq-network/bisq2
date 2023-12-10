@@ -19,12 +19,15 @@ package bisq.desktop.main.content.common_chat;
 
 import bisq.desktop.common.Layout;
 import bisq.desktop.main.content.chat.ChatView;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.layout.*;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class CommonChatView extends ChatView {
+    public static final double SIDE_PADDING = 40;
+
     public CommonChatView(CommonChatModel model,
                           CommonChatController controller,
                           Pane chatMessagesComponent,
@@ -52,7 +55,12 @@ public class CommonChatView extends ChatView {
     protected void configContainerHBox() {
         containerHBox.setFillHeight(true);
         Layout.pinToAnchorPane(containerHBox, 0, 0, 0, 0);
-        root.setContent(containerHBox);
+
+        AnchorPane wrapper = new AnchorPane();
+        wrapper.setPadding(new Insets(0, SIDE_PADDING, 0, SIDE_PADDING));
+        wrapper.getChildren().add(containerHBox);
+
+        root.setContent(wrapper);
 
         HBox.setHgrow(centerVBox, Priority.ALWAYS);
         HBox.setHgrow(sideBar, Priority.NEVER);

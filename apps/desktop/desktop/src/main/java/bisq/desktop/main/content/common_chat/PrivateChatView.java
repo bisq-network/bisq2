@@ -19,6 +19,7 @@ package bisq.desktop.main.content.common_chat;
 
 import bisq.desktop.common.Layout;
 import bisq.desktop.components.containers.Spacer;
+import javafx.geometry.Insets;
 import javafx.scene.layout.*;
 import lombok.extern.slf4j.Slf4j;
 
@@ -43,7 +44,12 @@ public class PrivateChatView extends CommonChatView {
     protected void configContainerHBox() {
         containerHBox.setFillHeight(true);
         Layout.pinToAnchorPane(containerHBox, 0, 0, 0, 0);
-        root.setContent(containerHBox);
+
+        AnchorPane wrapper = new AnchorPane();
+        wrapper.setPadding(new Insets(0, SIDE_PADDING, 0, SIDE_PADDING));
+        wrapper.getChildren().add(containerHBox);
+
+        root.setContent(wrapper);
 
         left = new VBox();
         HBox.setHgrow(left, Priority.NEVER);

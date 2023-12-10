@@ -301,7 +301,7 @@
 }
 
 .channel-selection-list-view .list-cell:selected {
-    -fx-background-color: -bisq-dark-grey-mid;
+    -fx-background-color: -bisq-dark-grey-dim;
     -fx-fill: -fx-dark-text-color;
     -fx-text-fill: -fx-dark-text-color;
 }
