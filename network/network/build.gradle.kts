@@ -20,11 +20,5 @@ dependencies {
     implementation(libs.apache.httpcomponents.httpclient)
     implementation(libs.chimp.jsocks)
 
-    integrationTestCompileOnly(libs.lombok)
-    integrationTestAnnotationProcessor(libs.lombok)
-
     integrationTestImplementation(libs.mockito)
-    integrationTestImplementation(libs.logback.core)
-    integrationTestImplementation(libs.logback.classic)
-    integrationTestImplementation(libs.slf4j.api)
 }
