@@ -10,7 +10,7 @@ dependencies {
     implementation(project(":user"))
     implementation(project(":chat"))
     implementation(project(":support"))
-    implementation(project(":bonded_roles"))
+    implementation(project(":bonded-roles"))
     implementation(project(":offer"))
     implementation(project(":trade"))
 

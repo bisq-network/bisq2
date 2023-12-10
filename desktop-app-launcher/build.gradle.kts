@@ -19,7 +19,7 @@ dependencies {
     implementation(project(":common"))
     implementation(project(":security"))
     implementation(project(":application"))
-    implementation(project(":desktop_app"))
+    implementation(project(":desktop-app"))
 }
 
 tasks {

@@ -16,7 +16,7 @@ dependencies {
     implementation(project(":chat"))
     implementation(project(":settings"))
     implementation(project(":presentation"))
-    implementation(project(":bonded_roles"))
+    implementation(project(":bonded-roles"))
 
     implementation("network:network")
     implementation("network:network-identity")
