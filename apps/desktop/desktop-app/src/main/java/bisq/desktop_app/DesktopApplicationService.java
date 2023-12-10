@@ -29,6 +29,7 @@ import bisq.common.util.CompletableFutureUtils;
 import bisq.contract.ContractService;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.State;
+import bisq.desktop.main.content.common_chat.ChatSearchService;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
@@ -190,7 +191,8 @@ public class DesktopApplicationService extends ApplicationService {
                 sendNotificationService,
                 tradeService,
                 updaterService,
-                bisqEasyService);
+                bisqEasyService,
+                new ChatSearchService());
     }
 
     @Override

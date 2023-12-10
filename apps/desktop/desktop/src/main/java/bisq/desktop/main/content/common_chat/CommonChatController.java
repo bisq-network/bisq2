@@ -22,20 +22,11 @@ import bisq.chat.ChatChannel;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatChannelSelectionService;
 import bisq.chat.ChatMessage;
-import bisq.chat.common.CommonPublicChatChannelService;
-import bisq.chat.priv.PrivateChatChannel;
 import bisq.chat.pub.PublicChatChannel;
-import bisq.chat.two_party.TwoPartyPrivateChatChannel;
-import bisq.common.observable.Pin;
-import bisq.common.observable.collection.ObservableArray;
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.main.content.chat.ChatController;
-import bisq.desktop.main.content.chat.channels.CommonPublicChannelSelectionMenu;
-import bisq.desktop.main.content.chat.channels.PublicChannelSelectionMenu;
-import bisq.desktop.main.content.chat.channels.TwoPartyPrivateChannelSelectionMenu;
 import javafx.scene.control.Button;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -45,11 +36,14 @@ import java.util.Optional;
 
 @Slf4j
 public class CommonChatController extends ChatController<CommonChatView, CommonChatModel> implements Controller {
+    private final ChatSearchService chatSearchService;
     private ChatChannelSelectionService chatChannelSelectionService;
     private Subscription searchTextPin;
 
     public CommonChatController(ServiceProvider serviceProvider, ChatChannelDomain chatChannelDomain, NavigationTarget navigationTarget) {
         super(serviceProvider, chatChannelDomain, navigationTarget);
+
+        chatSearchService = serviceProvider.getChatSearchService();
     }
 
     @Override
@@ -69,16 +63,12 @@ public class CommonChatController extends ChatController<CommonChatView, CommonC
 
     @Override
     public void onActivate() {
-        model.getSearchText().set("");
-
-        searchTextPin = EasyBind.subscribe(model.getSearchText(), searchText -> {
-            if (searchText == null || searchText.isEmpty()) {
-                chatMessagesComponent.setSearchPredicate(item -> true);
-            } else {
-                chatMessagesComponent.setSearchPredicate(item -> item.match(searchText));
-            }
-        });
         selectedChannelChanged(chatChannelSelectionService.getSelectedChannel().get());
+        searchTextPin = EasyBind.subscribe(chatSearchService.getSearchText(), searchText ->
+                chatMessagesComponent.setSearchPredicate(item ->
+                    searchText == null || searchText.isEmpty() || item.match(searchText)));
+        chatSearchService.setOnHelpRequested(this::onOpenHelp);
+        chatSearchService.setOnInfoRequested(this::onToggleChannelInfo);
     }
 
     @Override
@@ -89,14 +79,6 @@ public class CommonChatController extends ChatController<CommonChatView, CommonC
     @Override
     protected void selectedChannelChanged(ChatChannel<? extends ChatMessage> chatChannel) {
         super.selectedChannelChanged(chatChannel);
-
-//        UIThread.run(() -> {
-//            model.getSearchText().set("");
-//            if (chatChannel != null) {
-//                applyPeersIcon((PrivateChatChannel<?>) chatChannel);
-//                publicChatChannelSelection.deSelectChannel();
-//            }
-//        });
     }
 
     @Override

@@ -44,6 +44,8 @@ public class ChatContainerController extends ContentTabController<ChatContainerM
     protected final ChatChannelDomain channelDomain;
     private final CommonPublicChatChannelService chatChannelService;
     private final ChatChannelSelectionService chatChannelSelectionService;
+    @Getter
+    private final ChatSearchService chatSearchService;
     private Pin selectedChannelPin;
     private Pin changedChatNotificationPin;
 
@@ -56,6 +58,7 @@ public class ChatContainerController extends ContentTabController<ChatContainerM
         chatChannelService = chatService.getCommonPublicChatChannelServices().get(chatChannelDomain);
                 //chatService.getTwoPartyPrivateChatChannelServices().get(chatChannelDomain);
         chatChannelSelectionService = chatService.getChatChannelSelectionServices().get(chatChannelDomain);
+        chatSearchService = serviceProvider.getChatSearchService();
 
         createChannels();
         view = new ChatContainerView(model, this);
@@ -96,6 +99,8 @@ public class ChatContainerController extends ContentTabController<ChatContainerM
                 channel -> UIThread.run(() -> handleSelectedChannelChange(channel)));
         chatNotificationService.getNotConsumedNotifications().forEach(this::handleNotification);
         changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(this::handleNotification);
+        chatSearchService.getSearchText().set("");
+        model.getSearchText().bindBidirectional(chatSearchService.getSearchText());
     }
 
     private void handleNotification(ChatNotification notification) {
@@ -129,9 +134,12 @@ public class ChatContainerController extends ContentTabController<ChatContainerM
 
         selectedChannelPin.unbind();
         changedChatNotificationPin.unbind();
+        model.getSearchText().unbindBidirectional(chatSearchService.getSearchText());
     }
 
     protected void handleSelectedChannelChange(ChatChannel<? extends ChatMessage> chatChannel) {
+        chatSearchService.getSearchText().set("");
+
         Channel channel = findOrCreateChannelItem(chatChannel);
         if (channel != null) {
             model.selectedChannel.set(channel);

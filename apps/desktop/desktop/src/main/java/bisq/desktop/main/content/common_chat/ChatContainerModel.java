@@ -22,11 +22,11 @@ import bisq.chat.ChatChannelDomain;
 import bisq.desktop.main.content.ContentTabModel;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.util.HashMap;
 
@@ -36,6 +36,7 @@ public class ChatContainerModel extends ContentTabModel {
     final ObservableMap<String, Channel> channels = FXCollections.observableMap(new HashMap<>());
     ObjectProperty<Channel> selectedChannel = new SimpleObjectProperty<>();
     Channel previousSelectedChannel;
+    private final StringProperty searchText = new SimpleStringProperty();
 
     public ChatContainerModel(ChatChannelDomain chatChannelDomain) {
         this.chatChannelDomain = chatChannelDomain;

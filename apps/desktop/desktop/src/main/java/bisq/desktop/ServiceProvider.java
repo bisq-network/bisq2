@@ -28,6 +28,7 @@ import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.contract.ContractService;
+import bisq.desktop.main.content.common_chat.ChatSearchService;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.offer.OfferService;
@@ -67,6 +68,7 @@ public class ServiceProvider {
     private final TradeService tradeService;
     private final UpdaterService updaterService;
     private final BisqEasyService bisqEasyService;
+    private final ChatSearchService chatSearchService;
 
     public ServiceProvider(ShutDownHandler shutDownHandler,
                            ApplicationService.Config config,
@@ -86,7 +88,8 @@ public class ServiceProvider {
                            SendNotificationService sendNotificationService,
                            TradeService tradeService,
                            UpdaterService updaterService,
-                           BisqEasyService bisqEasyService) {
+                           BisqEasyService bisqEasyService,
+                           ChatSearchService chatSearchService) {
         this.shutDownHandler = shutDownHandler;
         this.config = config;
         this.persistenceService = persistenceService;
@@ -106,5 +109,6 @@ public class ServiceProvider {
         this.tradeService = tradeService;
         this.updaterService = updaterService;
         this.bisqEasyService = bisqEasyService;
+        this.chatSearchService = chatSearchService;
     }
 }

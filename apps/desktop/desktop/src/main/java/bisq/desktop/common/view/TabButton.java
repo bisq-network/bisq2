@@ -88,6 +88,10 @@ public class TabButton extends Pane implements Toggle {
         numMessagesBadge = new Badge();
         numMessagesBadge.setLayoutY(7.5);
 
+        label.widthProperty().addListener((observable, oldValue, newValue) -> {
+            numMessagesBadge.setLayoutX(label.getWidth() + BADGE_PADDING);
+        });
+
         getChildren().addAll(label, numMessagesBadge);
 
         hoverProperty().addListener(new WeakReference<>((ChangeListener<Boolean>) (ov, wasHovered, isHovered) -> {
