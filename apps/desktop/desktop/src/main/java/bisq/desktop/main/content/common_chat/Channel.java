@@ -34,9 +34,6 @@ public class Channel implements Comparable<Channel> {
     private final ChatChannelDomain chatChannelDomain;
     private final ChatChannel<?> chatChannel;
     private final String channelTitle;
-    private final String iconId;
-    private final String iconIdHover;
-    private final String iconIdSelected;
     private final NavigationTarget navigationTarget;
     @Setter
     private boolean isSelected;
@@ -47,10 +44,6 @@ public class Channel implements Comparable<Channel> {
         chatChannelDomain = chatChannel.getChatChannelDomain();
         channelId = chatChannel.getId();
         channelTitle = chatChannelService.getChannelTitle(chatChannel);
-        String styleToken = channelId.replace(".", "-");
-        iconIdSelected = "channels-" + styleToken;
-        iconIdHover = "channels-" + styleToken + "-white";
-        iconId = "channels-" + styleToken + "-grey";
         this.navigationTarget = navigationTarget;
     }
 

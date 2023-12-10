@@ -18,7 +18,6 @@
 package bisq.desktop.main.content.common_chat;
 
 import bisq.bisq_easy.NavigationTarget;
-import bisq.chat.ChatChannelDomain;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.TabButton;
@@ -44,17 +43,7 @@ public class ChatContainerView extends ContentTabView<ChatContainerModel, ChatCo
         super(model, controller);
 
         model.getChannels().values().stream().sorted().forEach(channel -> addTab(channel.getChannelTitle(), channel.getNavigationTarget()));
-        addTab("Private chats", getPrivateChatsNavigationTarget());
-    }
-
-    private NavigationTarget getPrivateChatsNavigationTarget() {
-        // TODO: Use inheritance. Here and in the controller
-        if (model.getChatChannelDomain() == ChatChannelDomain.DISCUSSION) {
-            return NavigationTarget.DISCUSSION_PRIVATECHATS;
-        } else if (model.getChatChannelDomain() == ChatChannelDomain.EVENTS) {
-            return NavigationTarget.EVENTS_PRIVATECHATS;
-        }
-        return NavigationTarget.SUPPORT_PRIVATECHATS;
+        addTab("Private chats", model.getPrivateChatsNavigationTarget());
     }
 
     @Override
@@ -83,6 +72,7 @@ public class ChatContainerView extends ContentTabView<ChatContainerModel, ChatCo
         VBox.setMargin(tabs, new Insets(0, 0, 12, 0));
 
         topBox = new VBox(12, searchInfo, tabs);
+        topBox.setMinHeight(123);
         topBox.setPadding(DEFAULT_TOP_PANE_PADDING);
 
         double thresholdWidth = 900;

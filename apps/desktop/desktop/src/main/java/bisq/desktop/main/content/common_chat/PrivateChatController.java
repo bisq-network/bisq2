@@ -22,17 +22,13 @@ import bisq.chat.ChatChannel;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatChannelSelectionService;
 import bisq.chat.ChatMessage;
-import bisq.chat.common.CommonPublicChatChannelService;
-import bisq.chat.pub.PublicChatChannel;
+import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.common.observable.Pin;
+import bisq.common.observable.collection.ObservableArray;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.main.content.chat.ChatController;
-import bisq.desktop.main.content.chat.channels.CommonPublicChannelSelectionMenu;
-import bisq.desktop.main.content.chat.channels.PublicChannelSelectionMenu;
 import bisq.desktop.main.content.chat.channels.TwoPartyPrivateChannelSelectionMenu;
-import javafx.scene.control.Button;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -41,22 +37,21 @@ import java.util.Optional;
 
 @Slf4j
 public class PrivateChatController extends ChatController<PrivateChatView, PrivateChatModel> implements Controller {
+    private final ChatSearchService chatSearchService;
     private ChatChannelSelectionService chatChannelSelectionService;
-    private CommonPublicChatChannelService commonPublicChatChannelService;
-    private PublicChannelSelectionMenu<?, ?, ?> publicChatChannelSelection;
     private TwoPartyPrivateChannelSelectionMenu twoPartyPrivateChannelSelectionMenu;
     private Pin selectedChannelPin, twoPartyPrivateChatChannelsPin;
     private Subscription searchTextPin;
 
     public PrivateChatController(ServiceProvider serviceProvider, ChatChannelDomain chatChannelDomain, NavigationTarget navigationTarget) {
         super(serviceProvider, chatChannelDomain, navigationTarget);
+
+        chatSearchService = serviceProvider.getChatSearchService();
     }
 
     @Override
     public void createDependencies(ChatChannelDomain chatChannelDomain) {
-        commonPublicChatChannelService = chatService.getCommonPublicChatChannelServices().get(chatChannelDomain);
         chatChannelSelectionService = chatService.getChatChannelSelectionServices().get(chatChannelDomain);
-        publicChatChannelSelection = new CommonPublicChannelSelectionMenu(serviceProvider, chatChannelDomain);
         twoPartyPrivateChannelSelectionMenu = new TwoPartyPrivateChannelSelectionMenu(serviceProvider, chatChannelDomain);
     }
 
@@ -69,7 +64,6 @@ public class PrivateChatController extends ChatController<PrivateChatView, Priva
     public PrivateChatView createAndGetView() {
         return new PrivateChatView(model,
                 this,
-                publicChatChannelSelection.getRoot(),
                 twoPartyPrivateChannelSelectionMenu.getRoot(),
                 chatMessagesComponent.getRoot(),
                 channelSidebar.getRoot());
@@ -77,55 +71,36 @@ public class PrivateChatController extends ChatController<PrivateChatView, Priva
 
     @Override
     public void onActivate() {
-        model.getSearchText().set("");
+        ObservableArray<TwoPartyPrivateChatChannel> twoPartyPrivateChatChannels = chatService.getTwoPartyPrivateChatChannelServices().get(model.getChatChannelDomain()).getChannels();
+        twoPartyPrivateChatChannelsPin = twoPartyPrivateChatChannels.addObserver(() ->
+                model.getIsTwoPartyPrivateChatChannelSelectionVisible().set(!twoPartyPrivateChatChannels.isEmpty()));
 
-        searchTextPin = EasyBind.subscribe(model.getSearchText(), searchText -> {
-            if (searchText == null || searchText.isEmpty()) {
-                chatMessagesComponent.setSearchPredicate(item -> true);
-            } else {
-                chatMessagesComponent.setSearchPredicate(item -> item.match(searchText));
-            }
-        });
-
-        //ObservableArray<TwoPartyPrivateChatChannel> twoPartyPrivateChatChannels = chatService.getTwoPartyPrivateChatChannelServices().get(model.getChatChannelDomain()).getChannels();
-        //twoPartyPrivateChatChannelsPin = twoPartyPrivateChatChannels.addObserver(() ->
-        //        model.getIsTwoPartyPrivateChatChannelSelectionVisible().set(!twoPartyPrivateChatChannels.isEmpty()));
-
+        chatChannelSelectionService.selectChannel(twoPartyPrivateChatChannels.stream().findFirst().orElse(null));
         selectedChannelChanged(chatChannelSelectionService.getSelectedChannel().get());
         selectedChannelPin = chatChannelSelectionService.getSelectedChannel().addObserver(this::selectedChannelChanged);
+
+        searchTextPin = EasyBind.subscribe(chatSearchService.getSearchText(), searchText ->
+                chatMessagesComponent.setSearchPredicate(item ->
+                        searchText == null || searchText.isEmpty() || item.match(searchText)));
+        chatSearchService.setOnHelpRequested(this::onOpenHelp);
+        chatSearchService.setOnInfoRequested(this::onToggleChannelInfo);
     }
 
     @Override
     public void onDeactivate() {
         searchTextPin.unsubscribe();
-        //twoPartyPrivateChatChannelsPin.unbind();
+        selectedChannelChanged(null);
         selectedChannelPin.unbind();
+        twoPartyPrivateChatChannelsPin.unbind();
     }
 
     @Override
     protected void selectedChannelChanged(ChatChannel<? extends ChatMessage> chatChannel) {
         super.selectedChannelChanged(chatChannel);
-
-//        UIThread.run(() -> {
-//            model.getSearchText().set("");
-//            if (chatChannel != null) {
-//                applyPeersIcon((PrivateChatChannel<?>) chatChannel);
-//                publicChatChannelSelection.deSelectChannel();
-//            }
-//        });
     }
 
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         return Optional.empty();
-    }
-
-    private void applyDefaultPublicChannelIcon(PublicChatChannel<?> channel) {
-        String iconId = "channels-" + channel.getId().replace(".", "-");
-        Button iconButton = BisqIconButton.createIconButton(iconId);
-        //todo get larger icons and dont use scaling
-        iconButton.setScaleX(1.25);
-        iconButton.setScaleY(1.25);
-        model.getChannelIconNode().set(iconButton);
     }
 }

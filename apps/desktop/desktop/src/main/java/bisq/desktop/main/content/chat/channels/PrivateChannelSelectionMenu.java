@@ -127,6 +127,6 @@ public abstract class PrivateChannelSelectionMenu<
         @Override
         protected String getHeadlineText() {
             return Res.get("chat.channelSelection.private.headline");
-        }
+        } //TODO: Remove this title
     }
 }

@@ -48,4 +48,13 @@ public class ChatContainerModel extends ContentTabModel {
                 ? NavigationTarget.NONE
                 : channels.values().stream().findFirst().get().getNavigationTarget();
     }
+
+    public NavigationTarget getPrivateChatsNavigationTarget() {
+        if (chatChannelDomain == ChatChannelDomain.DISCUSSION) {
+            return NavigationTarget.DISCUSSION_PRIVATECHATS;
+        } else if (chatChannelDomain == ChatChannelDomain.EVENTS) {
+            return NavigationTarget.EVENTS_PRIVATECHATS;
+        }
+        return NavigationTarget.SUPPORT_PRIVATECHATS;
+    }
 }
