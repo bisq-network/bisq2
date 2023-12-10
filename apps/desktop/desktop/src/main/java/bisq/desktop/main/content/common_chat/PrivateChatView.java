@@ -59,8 +59,7 @@ public class PrivateChatView extends ChatView {
         left.setFillWidth(true);
         left.getStyleClass().add("bisq-grey-2-bg");
     }
-
-
+    
     protected void configTitleHBox() {
         channelTitle.setId("chat-messages-headline");
         HBox.setMargin(channelTitle, new Insets(0, 0, 0, 0));

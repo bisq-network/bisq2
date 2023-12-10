@@ -22,12 +22,9 @@ import bisq.chat.ChatChannel;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatChannelSelectionService;
 import bisq.chat.ChatMessage;
-import bisq.chat.pub.PublicChatChannel;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.main.content.chat.ChatController;
-import javafx.scene.control.Button;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -84,14 +81,5 @@ public class CommonChatController extends ChatController<CommonChatView, CommonC
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         return Optional.empty();
-    }
-
-    private void applyDefaultPublicChannelIcon(PublicChatChannel<?> channel) {
-        String iconId = "channels-" + channel.getId().replace(".", "-");
-        Button iconButton = BisqIconButton.createIconButton(iconId);
-        //todo get larger icons and dont use scaling
-        iconButton.setScaleX(1.25);
-        iconButton.setScaleY(1.25);
-        model.getChannelIconNode().set(iconButton);
     }
 }
