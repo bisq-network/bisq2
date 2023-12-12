@@ -11,5 +11,4 @@ application {
 dependencies {
     implementation(project(":tor-common"))
     implementation(libs.chimp.jtorctl)
-    testImplementation(libs.mockito)
 }

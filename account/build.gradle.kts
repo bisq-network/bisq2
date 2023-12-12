@@ -10,5 +10,4 @@ dependencies {
     implementation(project(":identity"))
 
     implementation("network:network")
-    implementation(libs.google.guava)
 }

@@ -11,7 +11,6 @@ dependencies {
     implementation(project(":json-rpc"))
 
     implementation(libs.typesafe.config)
-    implementation(libs.google.guava)
     implementation(libs.jeromq)
 
     integrationTestImplementation(project(":regtest"))

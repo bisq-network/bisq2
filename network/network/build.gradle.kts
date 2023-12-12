@@ -15,19 +15,10 @@ dependencies {
 
     implementation(libs.bouncycastle)
     implementation(libs.failsafe)
-    implementation(libs.google.guava)
     implementation(libs.typesafe.config)
 
     implementation(libs.apache.httpcomponents.httpclient)
     implementation(libs.chimp.jsocks)
 
-    testImplementation(libs.mockito)
-
-    integrationTestCompileOnly(libs.lombok)
-    integrationTestAnnotationProcessor(libs.lombok)
-
     integrationTestImplementation(libs.mockito)
-    integrationTestImplementation(libs.logback.core)
-    integrationTestImplementation(libs.logback.classic)
-    integrationTestImplementation(libs.slf4j.api)
 }

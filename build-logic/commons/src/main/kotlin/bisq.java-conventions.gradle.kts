@@ -28,6 +28,10 @@ tasks {
 
 val versionCatalog = extensions.getByType<VersionCatalogsExtension>().named("libs")
 dependencies {
+    versionCatalog.findLibrary("google-guava").ifPresent {
+        implementation(it)
+    }
+
     versionCatalog.findLibrary("lombok").ifPresent {
         compileOnly(it)
         annotationProcessor(it)

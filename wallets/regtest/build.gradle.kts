@@ -10,8 +10,6 @@ dependencies {
 
     api(project(":process"))
 
-    implementation(libs.google.guava)
-
     implementation(libs.assertj.core)
     implementation(libs.junit.jupiter)
 }

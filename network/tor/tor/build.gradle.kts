@@ -23,7 +23,6 @@ dependencies {
     implementation("network:network-identity")
     implementation("network:socks5-socket-channel")
 
-    implementation(libs.google.guava)
     implementation(libs.failsafe)
     implementation(libs.tukaani)
     implementation(libs.typesafe.config)

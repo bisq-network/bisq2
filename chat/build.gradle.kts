@@ -25,6 +25,5 @@ dependencies {
 
     implementation(libs.chimp.jsocks)
     implementation(libs.google.gson)
-    implementation(libs.google.guava)
     implementation(libs.typesafe.config)
 }

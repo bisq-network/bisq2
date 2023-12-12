@@ -33,7 +33,6 @@ dependencies {
     implementation("wallets:electrum")
     implementation("wallets:bitcoind")
 
-    implementation(libs.google.guava)
     implementation(libs.google.gson)
     implementation(libs.bundles.fontawesomefx)
     implementation(libs.bundles.fxmisc.libs)

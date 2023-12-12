@@ -22,7 +22,6 @@ dependencies {
     implementation("wallets:electrum")
     implementation("wallets:bitcoind")
 
-    implementation(libs.google.guava)
     implementation(libs.google.gson)
     implementation(libs.typesafe.config)
 

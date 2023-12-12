@@ -21,6 +21,5 @@ dependencies {
     implementation("network:network")
     implementation("network:network-identity")
 
-    implementation(libs.google.guava)
     implementation(libs.typesafe.config)
 }
