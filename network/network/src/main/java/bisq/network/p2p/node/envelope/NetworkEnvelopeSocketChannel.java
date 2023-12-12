@@ -18,6 +18,8 @@
 package bisq.network.p2p.node.envelope;
 
 import bisq.network.p2p.message.NetworkEnvelope;
+import bisq.network.p2p.node.envelope.parser.nio.NetworkEnvelopeDeserializer;
+import bisq.network.p2p.node.envelope.parser.nio.ProtoBufMessageLengthWriter;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

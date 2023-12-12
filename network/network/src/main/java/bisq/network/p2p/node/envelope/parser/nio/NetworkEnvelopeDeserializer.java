@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.node.envelope;
+package bisq.network.p2p.node.envelope.parser.nio;
 
 import bisq.network.protobuf.NetworkEnvelope;
 import com.google.protobuf.InvalidProtocolBufferException;
