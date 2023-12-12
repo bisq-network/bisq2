@@ -8,12 +8,13 @@ application {
 }
 
 dependencies {
-    implementation(project(":persistence"))
-    implementation(project(":security"))
-    implementation(project(":identity"))
-    implementation(project(":bonded-roles"))
+    implementation("bisq:persistence")
+    implementation("bisq:security")
+    implementation("bisq:identity")
+    implementation("bisq:bonded-roles")
+    implementation("bisq:application")
+
     implementation(project(":oracle-node"))
-    implementation(project(":application"))
 
     implementation("network:network-common")
     implementation("network:network-identity")
