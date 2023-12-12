@@ -33,18 +33,25 @@ public class Channel implements Comparable<Channel> {
     private final String channelId;
     private final ChatChannelDomain chatChannelDomain;
     private final ChatChannel<?> chatChannel;
-    private final String channelTitle;
     private final NavigationTarget navigationTarget;
+    private final String channelTitle;
+    private final String iconId;
+//    private final String iconIdHover;
+//    private final String iconIdSelected;
     @Setter
     private boolean isSelected;
 
     public Channel(CommonPublicChatChannel chatChannel, CommonPublicChatChannelService chatChannelService,
                    NavigationTarget navigationTarget) {
         this.chatChannel = chatChannel;
+        this.navigationTarget = navigationTarget;
         chatChannelDomain = chatChannel.getChatChannelDomain();
         channelId = chatChannel.getId();
         channelTitle = chatChannelService.getChannelTitle(chatChannel);
-        this.navigationTarget = navigationTarget;
+        String styleToken = channelId.replace(".", "-");
+//        iconIdSelected = "channels-" + styleToken;
+//        iconIdHover = "channels-" + styleToken + "-white";
+        iconId = "channels-" + styleToken;
     }
 
     @Override

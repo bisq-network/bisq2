@@ -194,13 +194,10 @@ public class ChatContainerController extends ContentTabController<ChatContainerM
             case DISCUSSION_BISQ:
             case DISCUSSION_BITCOIN:
             case DISCUSSION_MARKETS:
-            case DISCUSSION_ECONOMY:
             case DISCUSSION_OFFTOPIC:
             case EVENTS_CONFERENCES:
             case EVENTS_MEETUPS:
             case EVENTS_PODCASTS:
-            case EVENTS_NOKYC:
-            case EVENTS_NODES:
             case EVENTS_TRADEEVENTS:
             case SUPPORT_SUPPORT:
             case SUPPORT_QUESTIONS:

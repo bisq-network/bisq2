@@ -66,9 +66,9 @@ public class TabButton extends Pane implements Toggle {
         this.styles = styles;
 
         if (iconId != null) {
-            this.icon = ImageUtil.getImageViewById(iconId);
-            this.iconSelected = ImageUtil.getImageViewById(iconId + "-active");
-            this.iconHover = ImageUtil.getImageViewById(iconId + "-hover");
+            this.icon = ImageUtil.getImageViewById(iconId + "-grey");
+            this.iconSelected = ImageUtil.getImageViewById(iconId);
+            this.iconHover = ImageUtil.getImageViewById(iconId + "-white");
         }
 
         setCursor(Cursor.HAND);

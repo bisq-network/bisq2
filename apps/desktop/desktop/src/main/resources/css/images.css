@@ -747,19 +747,6 @@
 }
 
 
-#channels-discussion-economy {
-    -fx-image: url("/images/channels/discussion/economy/economy.png");
-}
-
-#channels-discussion-economy-white {
-    -fx-image: url("/images/channels/discussion/economy/economy-white.png");
-}
-
-#channels-discussion-economy-grey {
-    -fx-image: url("/images/channels/discussion/economy/economy-grey.png");
-}
-
-
 #channels-discussion-markets {
     -fx-image: url("/images/channels/discussion/markets/markets.png");
 }
@@ -773,18 +760,6 @@
 }
 
 
-#channels-discussion-monero {
-    -fx-image: url("/images/channels/discussion/monero/monero.png");
-}
-
-#channels-discussion-monero-white {
-    -fx-image: url("/images/channels/discussion/monero/monero-white.png");
-}
-
-#channels-discussion-monero-grey {
-    -fx-image: url("/images/channels/discussion/monero/monero-grey.png");
-}
-
 #channels-discussion-offTopic {
     -fx-image: url("/images/channels/discussion/offTopic/offTopic.png");
 }
@@ -797,8 +772,8 @@
     -fx-image: url("/images/channels/discussion/offTopic/offTopic-grey.png");
 }
 
-/* channels-events */
 
+/* channels-events */
 
 #channels-events-conferences {
     -fx-image: url("/images/channels/events/conferences/conferences.png");
@@ -823,32 +798,6 @@
 
 #channels-events-meetups-grey {
     -fx-image: url("/images/channels/events/meetups/meetups-grey.png");
-}
-
-
-#channels-events-nodes {
-    -fx-image: url("/images/channels/events/nodes/nodes.png");
-}
-
-#channels-events-nodes-white {
-    -fx-image: url("/images/channels/events/nodes/nodes-white.png");
-}
-
-#channels-events-nodes-grey {
-    -fx-image: url("/images/channels/events/nodes/nodes-grey.png");
-}
-
-
-#channels-events-noKyc {
-    -fx-image: url("/images/channels/events/noKyc/noKyc.png");
-}
-
-#channels-events-noKyc-white {
-    -fx-image: url("/images/channels/events/noKyc/noKyc-white.png");
-}
-
-#channels-events-noKyc-grey {
-    -fx-image: url("/images/channels/events/noKyc/noKyc-grey.png");
 }
 
 
@@ -878,7 +827,7 @@
 }
 
 
-/* channels-events */
+/* channels-support */
 
 #channels-support-questions {
     -fx-image: url("/images/channels/support/questions/questions.png");

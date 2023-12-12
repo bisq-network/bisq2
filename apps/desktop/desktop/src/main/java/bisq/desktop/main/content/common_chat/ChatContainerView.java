@@ -43,7 +43,9 @@ public class ChatContainerView extends ContentTabView<ChatContainerModel, ChatCo
     public ChatContainerView(ChatContainerModel model, ChatContainerController controller) {
         super(model, controller);
 
-        model.getChannels().values().stream().sorted().forEach(channel -> addTab(channel.getChannelTitle(), channel.getNavigationTarget()));
+        model.getChannels().values().stream().sorted().forEach(channel ->
+                addTab(channel.getChannelTitle(), channel.getNavigationTarget(), channel.getIconId())
+        );
         addTab("Private chats", model.getPrivateChatsNavigationTarget());
     }
 
@@ -70,51 +72,43 @@ public class ChatContainerView extends ContentTabView<ChatContainerModel, ChatCo
 
         tabs.setFillHeight(true);
         tabs.setSpacing(46);
-        VBox.setMargin(tabs, new Insets(0, 0, 12, 0));
+        VBox.setMargin(tabs, new Insets(0, 0, 11, 0));
 
         topBox = new VBox(12, searchInfo, tabs);
-        topBox.setMinHeight(123);
+        //topBox.setMinHeight(123);
         topBox.setPadding(DEFAULT_TOP_PANE_PADDING);
 
-        double thresholdWidth = 900;
-        topBox.widthProperty().addListener((observable, oldValue, newValue) -> {
-            double newWidth = newValue.doubleValue();
-            for (Node child : tabs.getChildren()) {
-                if (child instanceof TabButton) {
-                    TabButton tabButton = (TabButton) child;
-                    tabButton.getNumMessagesBadge().setLayoutY(22);
-
-                    Label label = tabButton.getLabel();
-                    label.setAlignment(Pos.BOTTOM_LEFT);
-                    label.setPadding(new Insets(0));
-                    label.setMinHeight(40);
-                    label.setMaxHeight(40);
-
-                    if (newWidth < thresholdWidth) {
-                        if (tabButton.getNavigationTarget() == NavigationTarget.EVENTS_NOKYC) {
-                            label.setWrapText(true);
-                            label.setMaxWidth(55);
-                        }
-                        if (tabButton.getNavigationTarget() == NavigationTarget.EVENTS_NODES) {
-                            label.setWrapText(true);
-                            label.setMaxWidth(58);
-                        }
-                        if (tabButton.getNavigationTarget() == NavigationTarget.EVENTS_TRADEEVENTS) {
-                            label.setWrapText(true);
-                            label.setMaxWidth(44);
-                        }
-                        if (tabButton.getNavigationTarget() == NavigationTarget.EVENTS_PRIVATECHATS) {
-                            label.setWrapText(true);
-                            label.setMaxWidth(50);
-                        }
-                    } else {
-                        label.setWrapText(false);
-                        label.setMaxWidth(Region.USE_COMPUTED_SIZE);
-                        label.setMaxHeight(Region.USE_PREF_SIZE);
-                    }
-                }
-            }
-        });
+//        double thresholdWidth = 900;
+//        topBox.widthProperty().addListener((observable, oldValue, newValue) -> {
+//            double newWidth = newValue.doubleValue();
+//            for (Node child : tabs.getChildren()) {
+//                if (child instanceof TabButton) {
+//                    TabButton tabButton = (TabButton) child;
+//                    tabButton.getNumMessagesBadge().setLayoutY(22);
+//
+//                    Label label = tabButton.getLabel();
+//                    label.setAlignment(Pos.BOTTOM_LEFT);
+//                    label.setPadding(new Insets(0));
+//                    label.setMinHeight(40);
+//                    label.setMaxHeight(40);
+//
+//                    if (newWidth < thresholdWidth) {
+//                        if (tabButton.getNavigationTarget() == NavigationTarget.EVENTS_TRADEEVENTS) {
+//                            label.setWrapText(true);
+//                            label.setMaxWidth(44);
+//                        }
+//                        if (tabButton.getNavigationTarget() == NavigationTarget.EVENTS_PRIVATECHATS) {
+//                            label.setWrapText(true);
+//                            label.setMaxWidth(50);
+//                        }
+//                    } else {
+//                        label.setWrapText(false);
+//                        label.setMaxWidth(Region.USE_COMPUTED_SIZE);
+//                        label.setMaxHeight(Region.USE_PREF_SIZE);
+//                    }
+//                }
+//            }
+//        });
     }
 
     @Override

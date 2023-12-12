@@ -116,7 +116,6 @@ public class ChatService implements Service {
                 List.of(new CommonPublicChatChannel(ChatChannelDomain.DISCUSSION, "bisq"),
                         new CommonPublicChatChannel(ChatChannelDomain.DISCUSSION, "bitcoin"),
                         new CommonPublicChatChannel(ChatChannelDomain.DISCUSSION, "markets"),
-                        new CommonPublicChatChannel(ChatChannelDomain.DISCUSSION, "economy"),
                         new CommonPublicChatChannel(ChatChannelDomain.DISCUSSION, "offTopic")));
         addToTwoPartyPrivateChatChannelServices(ChatChannelDomain.DISCUSSION);
         addToChatChannelSelectionServices(ChatChannelDomain.DISCUSSION);
@@ -126,8 +125,6 @@ public class ChatService implements Service {
                 List.of(new CommonPublicChatChannel(ChatChannelDomain.EVENTS, "conferences"),
                         new CommonPublicChatChannel(ChatChannelDomain.EVENTS, "meetups"),
                         new CommonPublicChatChannel(ChatChannelDomain.EVENTS, "podcasts"),
-                        new CommonPublicChatChannel(ChatChannelDomain.EVENTS, "noKyc"),
-                        new CommonPublicChatChannel(ChatChannelDomain.EVENTS, "nodes"),
                         new CommonPublicChatChannel(ChatChannelDomain.EVENTS, "tradeEvents")));
         addToTwoPartyPrivateChatChannelServices(ChatChannelDomain.EVENTS);
         addToChatChannelSelectionServices(ChatChannelDomain.EVENTS);
