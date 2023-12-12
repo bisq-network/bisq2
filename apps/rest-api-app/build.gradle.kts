@@ -7,10 +7,6 @@ application {
     mainClass.set("bisq.rest_api.RestApiApp")
 }
 
-repositories {
-    mavenCentral()
-}
-
 dependencies {
     implementation("bisq:persistence")
     implementation("bisq:i18n")
