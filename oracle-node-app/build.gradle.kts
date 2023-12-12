@@ -4,22 +4,23 @@ plugins {
 }
 
 application {
-    mainClass.set("bisq.seed_node.SeedNodeApp")
+    mainClass.set("bisq.oracle_node_app.OracleNodeApp")
 }
 
 dependencies {
     implementation(project(":persistence"))
     implementation(project(":security"))
-    implementation(project(":bonded_roles"))
-    implementation(project(":application"))
     implementation(project(":identity"))
+    implementation(project(":bonded-roles"))
+    implementation(project(":oracle-node"))
+    implementation(project(":application"))
 
     implementation("network:network-common")
-    implementation("network:network")
     implementation("network:network-identity")
+    implementation("network:network")
 
-    implementation(libs.typesafe.config)
     implementation(libs.google.gson)
+    implementation(libs.typesafe.config)
 }
 
 tasks {

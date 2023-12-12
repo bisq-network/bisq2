@@ -10,7 +10,7 @@ dependencies {
     implementation(project(":identity"))
     implementation(project(":account"))
     implementation(project(":presentation"))
-    implementation(project(":bonded_roles"))
+    implementation(project(":bonded-roles"))
 
     implementation("network:network")
     implementation("network:network-identity")

@@ -1,26 +1,33 @@
 plugins {
     id("bisq.java-library")
-    id("bisq.protobuf")
+    application
 }
 
-repositories {
-    maven {
-        url = uri("https://jitpack.io")
-    }
+application {
+    mainClass.set("bisq.seed_node.SeedNodeApp")
 }
 
 dependencies {
     implementation(project(":persistence"))
     implementation(project(":security"))
+    implementation(project(":bonded-roles"))
+    implementation(project(":application"))
     implementation(project(":identity"))
-    implementation(project(":bonded_roles"))
-    implementation(project(":user"))
 
     implementation("network:network-common")
     implementation("network:network")
     implementation("network:network-identity")
 
-    implementation(libs.google.gson)
     implementation(libs.typesafe.config)
-    implementation(libs.bundles.jackson)
+    implementation(libs.google.gson)
+}
+
+tasks {
+    distZip {
+        enabled = false
+    }
+
+    distTar {
+        enabled = false
+    }
 }
