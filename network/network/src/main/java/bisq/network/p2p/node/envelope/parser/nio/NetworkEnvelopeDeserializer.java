@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.node.envelope.parser.nio;
 
+import bisq.network.p2p.node.envelope.parser.ProtoBufMessageLengthParser;
 import bisq.network.protobuf.NetworkEnvelope;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
@@ -38,7 +39,8 @@ public class NetworkEnvelopeDeserializer {
 
     public NetworkEnvelopeDeserializer(ByteBuffer byteBuffer) {
         this.byteBuffer = byteBuffer;
-        this.messageLengthParser = new ProtoBufMessageLengthParser(byteBuffer);
+        var protoBufInputStream = new NioProtoBufInputStream(byteBuffer);
+        this.messageLengthParser = new ProtoBufMessageLengthParser(protoBufInputStream);
     }
 
     public void readFromByteBuffer() {

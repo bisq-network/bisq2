@@ -15,23 +15,21 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.node.envelope.parser.nio;
-
-import java.nio.ByteBuffer;
+package bisq.network.p2p.node.envelope.parser;
 
 public class ProtoBufMessageLengthParser {
     public static final int STILL_PARSING_MESSAGE_LENGTH = -1;
-    private final ByteBuffer byteBuffer;
+    private final ProtoBufInputStream protoBufInputStream;
 
     private int readLengthBytes = 0;
     private long currentMessageLength = 0;
 
-    public ProtoBufMessageLengthParser(ByteBuffer byteBuffer) {
-        this.byteBuffer = byteBuffer;
+    public ProtoBufMessageLengthParser(ProtoBufInputStream protoBufInputStream) {
+        this.protoBufInputStream = protoBufInputStream;
     }
 
     public long parseMessageLength() {
-        byte readByte = byteBuffer.get();
+        byte readByte = protoBufInputStream.read();
         long thisNumber = (readByte & 0x7f);
 
         int bitsToShift = readLengthBytes * 7;
