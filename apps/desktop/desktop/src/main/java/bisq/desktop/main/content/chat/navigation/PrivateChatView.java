@@ -15,10 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.common_chat;
+package bisq.desktop.main.content.chat.navigation;
 
 import bisq.desktop.common.Layout;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.main.content.common_chat.CommonChatView;
 import javafx.geometry.Insets;
 import javafx.scene.layout.*;
 import lombok.extern.slf4j.Slf4j;

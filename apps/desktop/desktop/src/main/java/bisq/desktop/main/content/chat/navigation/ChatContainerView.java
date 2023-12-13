@@ -15,12 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.common_chat;
+package bisq.desktop.main.content.chat.navigation;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Model;
-import bisq.desktop.common.view.TabButton;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.SearchBox;
@@ -28,10 +26,8 @@ import bisq.desktop.main.content.ContentTabView;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.layout.*;
 import lombok.extern.slf4j.Slf4j;
 
@@ -46,7 +42,7 @@ public class ChatContainerView extends ContentTabView<ChatContainerModel, ChatCo
         model.getChannels().values().stream().sorted().forEach(channel ->
                 addTab(channel.getChannelTitle(), channel.getNavigationTarget(), channel.getIconId())
         );
-        addTab("Private chats", model.getPrivateChatsNavigationTarget());
+        addTab(Res.get("chat.private.title"), model.getPrivateChatsNavigationTarget());
     }
 
     @Override

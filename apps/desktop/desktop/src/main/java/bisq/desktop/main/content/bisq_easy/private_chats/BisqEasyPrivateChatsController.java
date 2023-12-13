@@ -33,6 +33,8 @@ import bisq.desktop.main.content.chat.ChatController;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationService;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import java.util.Optional;
 
@@ -43,6 +45,7 @@ public class BisqEasyPrivateChatsController extends ChatController<BisqEasyPriva
     private final ReputationService reputationService;
 
     private Pin channelItemPin, selectedChannelPin, channelsPin;
+    private Subscription openPrivateChatsPin;
 
     public BisqEasyPrivateChatsController(ServiceProvider serviceProvider) {
         super(serviceProvider, ChatChannelDomain.BISQ_EASY_PRIVATE_CHAT, NavigationTarget.BISQ_EASY_PRIVATE_CHAT);
@@ -92,6 +95,9 @@ public class BisqEasyPrivateChatsController extends ChatController<BisqEasyPriva
 
         selectedChannelPin = selectionService.getSelectedChannel().addObserver(this::selectedChannelChanged);
 
+        openPrivateChatsPin = EasyBind.subscribe(model.getNoOpenChats(),
+                noOpenChats -> chatMessagesComponent.enableChatDialog(!noOpenChats));
+
         maybeSelectFirst();
     }
 
@@ -102,6 +108,7 @@ public class BisqEasyPrivateChatsController extends ChatController<BisqEasyPriva
         selectedChannelPin.unbind();
         model.getListItems().clear();
         resetSelectedChildTarget();
+        openPrivateChatsPin.unsubscribe();
     }
 
     @Override
@@ -120,6 +127,8 @@ public class BisqEasyPrivateChatsController extends ChatController<BisqEasyPriva
                 UserProfile peer = channel.getPeer();
                 model.setPeersReputationScore(reputationService.getReputationScore(peer));
                 model.getPeersUserProfile().set(peer);
+                UserProfile myProfile = channel.getMyUserIdentity().getUserProfile();
+                model.getMyUserProfile().set(myProfile);
                 model.getListItems().stream()
                         .filter(item -> item.getChannel().equals(channel))
                         .findAny()

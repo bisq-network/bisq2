@@ -55,8 +55,10 @@ import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 import javafx.util.StringConverter;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -107,6 +109,10 @@ public class ChatMessagesComponent {
 
     public void refreshMessages() {
         controller.chatMessagesListView.refreshMessages();
+    }
+
+    public void enableChatDialog(boolean isEnabled) {
+        controller.enableChatDialog(isEnabled);
     }
 
     private static class Controller implements bisq.desktop.common.view.Controller {
@@ -453,6 +459,10 @@ public class ChatMessagesComponent {
                     .distinct()
                     .collect(Collectors.toList());
         }
+
+        private void enableChatDialog(boolean isEnabled) {
+            model.getChatDialogEnabled().set(isEnabled);
+        }
     }
 
     @Getter
@@ -463,6 +473,7 @@ public class ChatMessagesComponent {
         private final BooleanProperty sendBtcAddressButtonVisible = new SimpleBooleanProperty();
         private final BooleanProperty sendPaymentAccountButtonVisible = new SimpleBooleanProperty();
         private final BooleanProperty paymentAccountSelectionVisible = new SimpleBooleanProperty();
+        private final BooleanProperty chatDialogEnabled = new SimpleBooleanProperty(true);
         private final ObservableList<Account<?, ? extends PaymentMethod<?>>> paymentAccounts = FXCollections.observableArrayList();
         private final ObjectProperty<Account<?, ? extends PaymentMethod<?>>> selectedAccount = new SimpleObjectProperty<>();
 
@@ -511,8 +522,9 @@ public class ChatMessagesComponent {
 
         private final ChatMentionPopupMenu<UserProfile> userMentionPopup;
         private final ChatMentionPopupMenu<ChatChannel<?>> channelMentionPopup;
-        private final Pane userProfileSelectionRoot;
+        private final Pane userProfileSelectionRoot, messagesListView;
         private final Button leaveChannelButton;
+        private final VBox emptyMessageList;
 
         private View(Model model,
                      Controller controller,
@@ -520,6 +532,8 @@ public class ChatMessagesComponent {
                      Pane quotedMessageBlock,
                      UserProfileSelection userProfileSelection) {
             super(new VBox(), model, controller);
+
+            this.messagesListView = messagesListView;
 
             inputField = new BisqTextArea();
             inputField.setId("chat-input-field");
@@ -562,13 +576,19 @@ public class ChatMessagesComponent {
             leaveChannelButton = createAndGetChatButton(Res.get("chat.leave"), 120);
             leaveChannelButton.getStyleClass().add("outlined-button");
 
+            Label noChatsLabel = new Label(Res.get("chat.private.messagebox.noChats"));
+            noChatsLabel.getStyleClass().add("chat-container-placeholder-text");
+            emptyMessageList = new VBox(noChatsLabel);
+            emptyMessageList.setAlignment(Pos.CENTER);
+            VBox.setVgrow(emptyMessageList, Priority.ALWAYS);
+
             bottomHBox.getChildren().addAll(userProfileSelectionRoot, bottomBoxStackPane, leaveChannelButton);
             bottomHBox.getStyleClass().add("bg-grey-5");
             bottomHBox.setAlignment(Pos.CENTER);
             bottomHBox.setPadding(new Insets(14, 25, 14, 25));
 
             VBox.setVgrow(messagesListView, Priority.ALWAYS);
-            root.getChildren().addAll(messagesListView, quotedMessageBlock, bottomHBox);
+            root.getChildren().addAll(emptyMessageList, messagesListView, quotedMessageBlock, bottomHBox);
 
             userMentionPopup = new ChatMentionPopupMenu<>(inputField);
             userMentionPopup.setItemDisplayConverter(UserProfile::getUserName);
@@ -614,6 +634,8 @@ public class ChatMessagesComponent {
 
             userMentionPopup.setItems(model.mentionableUsers);
             channelMentionPopup.setItems(model.mentionableChatChannels);
+
+            createChatDialogEnabledSubscription();
         }
 
         @Override
@@ -625,10 +647,29 @@ public class ChatMessagesComponent {
             inputField.textProperty().unbindBidirectional(model.getTextInput());
             userMentionPopup.filterProperty().unbind();
             channelMentionPopup.filterProperty().unbind();
+            removeChatDialogEnabledSubscription();
 
             inputField.setOnKeyPressed(null);
             sendButton.setOnAction(null);
             leaveChannelButton.setOnAction(null);
+        }
+
+        private void createChatDialogEnabledSubscription() {
+            inputField.disableProperty().bind(model.getChatDialogEnabled().not());
+            sendButton.disableProperty().bind(model.getChatDialogEnabled().not());
+            emptyMessageList.visibleProperty().bind(model.getChatDialogEnabled().not());
+            emptyMessageList.managedProperty().bind(model.getChatDialogEnabled().not());
+            messagesListView.visibleProperty().bind(model.getChatDialogEnabled());
+            messagesListView.managedProperty().bind(model.getChatDialogEnabled());
+        }
+
+        private void removeChatDialogEnabledSubscription() {
+            inputField.disableProperty().unbind();
+            sendButton.disableProperty().unbind();
+            emptyMessageList.visibleProperty().unbind();
+            emptyMessageList.managedProperty().unbind();
+            messagesListView.visibleProperty().unbind();
+            messagesListView.managedProperty().unbind();
         }
     }
 

@@ -43,6 +43,7 @@ public class BisqEasyPrivateChatsModel extends ChatModel {
     private final SortedList<BisqEasyPrivateChatsView.ListItem> sortedList = new SortedList<>(filteredList);
     private final ObjectProperty<BisqEasyPrivateChatsView.ListItem> selectedItem = new SimpleObjectProperty<>();
     private final ObjectProperty<UserProfile> peersUserProfile = new SimpleObjectProperty<>();
+    private final ObjectProperty<UserProfile> myUserProfile = new SimpleObjectProperty<>();
     private final ObjectProperty<Stage> chatWindow = new SimpleObjectProperty<>();
     @Setter
     private ReputationScore peersReputationScore;

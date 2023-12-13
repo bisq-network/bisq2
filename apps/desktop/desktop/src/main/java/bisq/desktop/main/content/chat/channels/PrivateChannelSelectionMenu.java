@@ -126,7 +126,7 @@ public abstract class PrivateChannelSelectionMenu<
 
         @Override
         protected String getHeadlineText() {
-            return Res.get("chat.channelSelection.private.noChats");
+            return Res.get("chat.private.openChatsList.headline");
         }
     }
 }

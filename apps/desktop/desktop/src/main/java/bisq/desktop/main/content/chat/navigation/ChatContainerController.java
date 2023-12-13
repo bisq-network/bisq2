@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.common_chat;
+package bisq.desktop.main.content.chat.navigation;
 
 import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.*;
@@ -31,6 +31,8 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.TabButton;
 import bisq.desktop.main.content.ContentTabController;
+import bisq.desktop.main.content.common_chat.Channel;
+import bisq.desktop.main.content.common_chat.ChatSearchService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
