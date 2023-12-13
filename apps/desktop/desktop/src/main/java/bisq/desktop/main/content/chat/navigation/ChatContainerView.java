@@ -42,7 +42,7 @@ public class ChatContainerView extends ContentTabView<ChatContainerModel, ChatCo
         model.getChannels().values().stream().sorted().forEach(channel ->
                 addTab(channel.getChannelTitle(), channel.getNavigationTarget(), channel.getIconId())
         );
-        addTab(Res.get("chat.private.title"), model.getPrivateChatsNavigationTarget());
+        addTab(Res.get("chat.private.title"), model.getPrivateChatsNavigationTarget(), "channels-private-chats");
     }
 
     @Override

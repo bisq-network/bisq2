@@ -868,6 +868,21 @@
 }
 
 
+/* channels-private-chats */
+
+#channels-private-chats {
+    -fx-image: url("/images/channels/private_chats/privatechat.png");
+}
+
+#channels-private-chats-white {
+    -fx-image: url("/images/channels/private_chats/privatechat-white.png");
+}
+
+#channels-private-chats-grey {
+    -fx-image: url("/images/channels/private_chats/privatechat-grey.png");
+}
+
+
 /* wallet-guide */
 
 #blue-wallet-download {
