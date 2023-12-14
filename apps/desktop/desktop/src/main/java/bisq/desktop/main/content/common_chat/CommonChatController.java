@@ -24,6 +24,7 @@ import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.chat.ChatController;
+import bisq.desktop.main.content.chat.navigation.ChatToolbox;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -33,15 +34,18 @@ import java.util.Optional;
 @Slf4j
 public abstract class CommonChatController<V extends CommonChatView<V, M>, M extends CommonChatModel>
         extends ChatController<V, M> implements Controller {
-    private final ChatSearchService chatSearchService;
+    private final Optional<ChatToolbox> toolbox;
     protected ChatChannelSelectionService selectionService;
     private Subscription searchTextPin;
     private Pin selectedChannelPin;
 
-    public CommonChatController(ServiceProvider serviceProvider, ChatChannelDomain chatChannelDomain, NavigationTarget navigationTarget) {
+    public CommonChatController(ServiceProvider serviceProvider,
+                                ChatChannelDomain chatChannelDomain,
+                                NavigationTarget navigationTarget,
+                                Optional<ChatToolbox> toolbox) {
         super(serviceProvider, chatChannelDomain, navigationTarget);
 
-        chatSearchService = serviceProvider.getChatSearchService();
+        this.toolbox = toolbox;
     }
 
     @Override
@@ -52,17 +56,23 @@ public abstract class CommonChatController<V extends CommonChatView<V, M>, M ext
     @Override
     public void onActivate() {
         selectedChannelPin = selectionService.getSelectedChannel().addObserver(this::selectedChannelChanged);
-        searchTextPin = EasyBind.subscribe(chatSearchService.getSearchText(), searchText ->
-                chatMessagesComponent.setSearchPredicate(item ->
-                    searchText == null || searchText.isEmpty() || item.match(searchText)));
-        chatSearchService.setOnHelpRequested(this::onOpenHelp);
-        chatSearchService.setOnInfoRequested(this::onToggleChannelInfo);
+
+        toolbox.ifPresent(chatToolbox -> {
+            searchTextPin = EasyBind.subscribe(chatToolbox.searchTextProperty(), searchText ->
+                    chatMessagesComponent.setSearchPredicate(item ->
+                            searchText == null || searchText.isEmpty() || item.match(searchText)));
+
+            chatToolbox.setOnOpenHelpHandler(this::onOpenHelp);
+            chatToolbox.setOnToggleChannelInfoHandler(this::onToggleChannelInfo);
+        });
     }
 
     @Override
     public void onDeactivate() {
         selectedChannelPin.unbind();
-        searchTextPin.unsubscribe();
+        if (searchTextPin != null) {
+            searchTextPin.unsubscribe();
+        }
     }
 
     @Override

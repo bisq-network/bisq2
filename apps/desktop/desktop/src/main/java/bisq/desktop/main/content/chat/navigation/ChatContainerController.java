@@ -34,7 +34,6 @@ import bisq.desktop.main.content.ContentTabController;
 import bisq.desktop.main.content.chat.chats.PrivateChatsController;
 import bisq.desktop.main.content.chat.chats.PublicChatController;
 import bisq.desktop.main.content.common_chat.Channel;
-import bisq.desktop.main.content.common_chat.ChatSearchService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -52,8 +51,7 @@ public class ChatContainerController extends ContentTabController<ChatContainerM
     private final CommonPublicChatChannelService commonPublicChatChannelService;
     private final TwoPartyPrivateChatChannelService twoPartyPrivateChatChannelService;
     private final ChatChannelSelectionService chatChannelSelectionService;
-    @Getter
-    private final ChatSearchService chatSearchService;
+    private final ChatToolbox chatToolbox;
     private Pin selectedChannelPin;
     private Pin changedChatNotificationPin;
 
@@ -66,10 +64,11 @@ public class ChatContainerController extends ContentTabController<ChatContainerM
         commonPublicChatChannelService = chatService.getCommonPublicChatChannelServices().get(chatChannelDomain);
         twoPartyPrivateChatChannelService = chatService.getTwoPartyPrivateChatChannelServices().get(chatChannelDomain);
         chatChannelSelectionService = chatService.getChatChannelSelectionServices().get(chatChannelDomain);
-        chatSearchService = serviceProvider.getChatSearchService();
 
         createChannels();
-        view = new ChatContainerView(model, this);
+
+        chatToolbox = new ChatToolbox();
+        view = new ChatContainerView(model, this, chatToolbox.getRoot());
 
         model.getSelectedTabButton().addListener(observable -> {
             TabButton tabButton = model.getSelectedTabButton().get();
@@ -113,8 +112,6 @@ public class ChatContainerController extends ContentTabController<ChatContainerM
                 channel -> UIThread.run(() -> handleSelectedChannelChanged(channel)));
         chatNotificationService.getNotConsumedNotifications().forEach(this::handleNotification);
         changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(this::handleNotification);
-        chatSearchService.getSearchText().set("");
-        model.getSearchText().bindBidirectional(chatSearchService.getSearchText());
     }
 
     @Override
@@ -123,7 +120,6 @@ public class ChatContainerController extends ContentTabController<ChatContainerM
 
         selectedChannelPin.unbind();
         changedChatNotificationPin.unbind();
-        model.getSearchText().unbindBidirectional(chatSearchService.getSearchText());
     }
 
     private void handleNotification(ChatNotification notification) {
@@ -168,7 +164,7 @@ public class ChatContainerController extends ContentTabController<ChatContainerM
     }
 
     protected void handleSelectedChannelChanged(ChatChannel<? extends ChatMessage> chatChannel) {
-        chatSearchService.getSearchText().set("");
+        chatToolbox.resetSearchText();
 
         Channel channel = findOrCreateChannelItem(chatChannel);
         if (channel != null) {
@@ -205,13 +201,13 @@ public class ChatContainerController extends ContentTabController<ChatContainerM
             case EVENTS_TRADEEVENTS:
             case SUPPORT_SUPPORT:
             case SUPPORT_QUESTIONS:
-            case SUPPORT_REPORTS:{
-                return Optional.of(new PublicChatController(serviceProvider, channelDomain, navigationTarget));
+            case SUPPORT_REPORTS: {
+                return Optional.of(new PublicChatController(serviceProvider, channelDomain, navigationTarget, Optional.of(chatToolbox)));
             }
             case DISCUSSION_PRIVATECHATS:
             case EVENTS_PRIVATECHATS:
             case SUPPORT_PRIVATECHATS: {
-                return Optional.of(new PrivateChatsController(serviceProvider, channelDomain, navigationTarget));
+                return Optional.of(new PrivateChatsController(serviceProvider, channelDomain, navigationTarget, Optional.of(chatToolbox)));
             }
             default: {
                 return Optional.empty();

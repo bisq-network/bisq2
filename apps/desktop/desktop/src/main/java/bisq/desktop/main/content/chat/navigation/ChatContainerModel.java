@@ -21,7 +21,10 @@ import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatChannelDomain;
 import bisq.desktop.main.content.ContentTabModel;
 import bisq.desktop.main.content.common_chat.Channel;
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableMap;
 import lombok.Getter;
@@ -35,7 +38,6 @@ public class ChatContainerModel extends ContentTabModel {
     ObjectProperty<Channel> selectedChannel = new SimpleObjectProperty<>();
     private final BooleanProperty hasSelectedChannel = new SimpleBooleanProperty();
     Channel previousSelectedChannel;
-    private final StringProperty searchText = new SimpleStringProperty();
 
     public ChatContainerModel(ChatChannelDomain chatChannelDomain) {
         this.chatChannelDomain = chatChannelDomain;
