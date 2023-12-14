@@ -71,18 +71,15 @@ public class ContentController extends NavigationController {
             }
             case DISCUSSION: {
                 return Optional.of(new ChatContainerController(serviceProvider, ChatChannelDomain.DISCUSSION, NavigationTarget.DISCUSSION));
-                //return Optional.of(new CommonChatController(serviceProvider, ChatChannelDomain.DISCUSSION));
             }
             case ACADEMY: {
                 return Optional.of(new AcademyController(serviceProvider));
             }
             case EVENTS: {
                 return Optional.of(new ChatContainerController(serviceProvider, ChatChannelDomain.EVENTS, NavigationTarget.EVENTS));
-                //return Optional.of(new CommonChatController(serviceProvider, ChatChannelDomain.EVENTS));
             }
             case SUPPORT: {
                 return Optional.of(new ChatContainerController(serviceProvider, ChatChannelDomain.SUPPORT, NavigationTarget.SUPPORT));
-                //return Optional.of(new CommonChatController(serviceProvider, ChatChannelDomain.SUPPORT));
             }
             case TRADE_PROTOCOLS: {
                 return Optional.of(new TradeAppsController(serviceProvider));
