@@ -209,7 +209,7 @@ public class ChatContainerController extends ContentTabController<ChatContainerM
             case DISCUSSION_PRIVATECHATS:
             case EVENTS_PRIVATECHATS:
             case SUPPORT_PRIVATECHATS: {
-                return Optional.of(new PrivateChatController(serviceProvider, channelDomain, navigationTarget));
+                return Optional.of(new PrivateChatsController(serviceProvider, channelDomain, navigationTarget));
             }
             default: {
                 return Optional.empty();

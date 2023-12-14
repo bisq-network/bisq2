@@ -15,66 +15,55 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.private_chats;
+package bisq.desktop.main.content.chat.navigation;
 
 import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessage;
-import bisq.chat.bisqeasy.private_chats.BisqEasyPrivateChatChannelSelectionService;
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.chat.two_party.TwoPartyPrivateChatChannelService;
 import bisq.common.observable.Pin;
+import bisq.common.observable.collection.ObservableArray;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.main.content.chat.ChatController;
+import bisq.desktop.main.content.bisq_easy.private_chats.BisqEasyPrivateChatsView;
+import bisq.desktop.main.content.common_chat.CommonChatController;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationService;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.Optional;
-
 @Slf4j
-public class BisqEasyPrivateChatsController extends ChatController<BisqEasyPrivateChatsView, BisqEasyPrivateChatsModel> {
+public class PrivateChatsController extends CommonChatController<PrivateChatsView, PrivateChatsModel> implements Controller {
     private final TwoPartyPrivateChatChannelService channelService;
-    private final BisqEasyPrivateChatChannelSelectionService selectionService; // got it
     private final ReputationService reputationService;
-    private Pin channelItemPin, selectedChannelPin, channelsPin;
+    private Pin channelItemPin, channelsPin;
     private Subscription openPrivateChatsPin;
 
-    public BisqEasyPrivateChatsController(ServiceProvider serviceProvider) {
-        super(serviceProvider, ChatChannelDomain.BISQ_EASY_PRIVATE_CHAT, NavigationTarget.BISQ_EASY_PRIVATE_CHAT);
+    public PrivateChatsController(ServiceProvider serviceProvider, ChatChannelDomain chatChannelDomain, NavigationTarget navigationTarget) {
+        super(serviceProvider, chatChannelDomain, navigationTarget);
 
-        channelService = chatService.getTwoPartyPrivateChatChannelServices().get(ChatChannelDomain.BISQ_EASY_PRIVATE_CHAT);
-        selectionService = chatService.getBisqEasyPrivateChatChannelSelectionService();
+        channelService = chatService.getTwoPartyPrivateChatChannelServices().get(chatChannelDomain);
         reputationService = serviceProvider.getUserService().getReputationService();
     }
 
     @Override
     public void createDependencies(ChatChannelDomain chatChannelDomain) {
+        super.createDependencies(chatChannelDomain);
     }
 
     @Override
-    protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
-        switch (navigationTarget) {
-            default: {
-                return Optional.empty();
-            }
-        }
+    public PrivateChatsModel createAndGetModel(ChatChannelDomain chatChannelDomain) {
+        return new PrivateChatsModel(chatChannelDomain);
     }
 
     @Override
-    public BisqEasyPrivateChatsModel createAndGetModel(ChatChannelDomain chatChannelDomain) {
-        return new BisqEasyPrivateChatsModel(chatChannelDomain);
-    }
-
-    @Override
-    public BisqEasyPrivateChatsView createAndGetView() {
-        return new BisqEasyPrivateChatsView(model,
+    public PrivateChatsView createAndGetView() {
+        return new PrivateChatsView(model,
                 this,
                 chatMessagesComponent.getRoot(),
                 channelSidebar.getRoot());
@@ -82,17 +71,17 @@ public class BisqEasyPrivateChatsController extends ChatController<BisqEasyPriva
 
     @Override
     public void onActivate() {
-        channelItemPin = FxBindings.<TwoPartyPrivateChatChannel, BisqEasyPrivateChatsView.ListItem>bind(model.getListItems())
+        super.onActivate();
+
+        channelItemPin = FxBindings.<TwoPartyPrivateChatChannel, PrivateChatsView.ListItem>bind(model.getListItems())
                 .map(channel -> {
                     // We call maybeSelectFirst one render frame after we applied the item to the model list.
                     UIThread.runOnNextRenderFrame(this::maybeSelectFirst);
-                    return new BisqEasyPrivateChatsView.ListItem(channel, reputationService);
+                    return new PrivateChatsView.ListItem(channel, reputationService);
                 })
                 .to(channelService.getChannels());
 
         channelsPin = channelService.getChannels().addObserver(this::channelsChanged);
-
-        selectedChannelPin = selectionService.getSelectedChannel().addObserver(this::selectedChannelChanged);
 
         openPrivateChatsPin = EasyBind.subscribe(model.getNoOpenChats(),
                 noOpenChats -> chatMessagesComponent.enableChatDialog(!noOpenChats));
@@ -102,9 +91,10 @@ public class BisqEasyPrivateChatsController extends ChatController<BisqEasyPriva
 
     @Override
     public void onDeactivate() {
+        super.onDeactivate();
+
         channelItemPin.unbind();
         channelsPin.unbind();
-        selectedChannelPin.unbind();
         model.getListItems().clear();
         resetSelectedChildTarget();
         openPrivateChatsPin.unsubscribe();
@@ -136,7 +126,7 @@ public class BisqEasyPrivateChatsController extends ChatController<BisqEasyPriva
         });
     }
 
-    void onSelectItem(BisqEasyPrivateChatsView.ListItem item) {
+    void onSelectItem(PrivateChatsView.ListItem item) {
         if (item == null) {
             selectionService.selectChannel(null);
         } else if (!item.getChannel().equals(selectionService.getSelectedChannel().get())) {

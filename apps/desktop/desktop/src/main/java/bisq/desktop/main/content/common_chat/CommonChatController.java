@@ -18,10 +18,9 @@
 package bisq.desktop.main.content.common_chat;
 
 import bisq.bisq_easy.NavigationTarget;
-import bisq.chat.ChatChannel;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatChannelSelectionService;
-import bisq.chat.ChatMessage;
+import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.chat.ChatController;
@@ -35,8 +34,9 @@ import java.util.Optional;
 public abstract class CommonChatController<V extends CommonChatView, M extends CommonChatModel>
         extends ChatController<V, M> implements Controller {
     private final ChatSearchService chatSearchService;
-    protected ChatChannelSelectionService chatChannelSelectionService;
+    protected ChatChannelSelectionService selectionService;
     private Subscription searchTextPin;
+    private Pin selectedChannelPin;
 
     public CommonChatController(ServiceProvider serviceProvider, ChatChannelDomain chatChannelDomain, NavigationTarget navigationTarget) {
         super(serviceProvider, chatChannelDomain, navigationTarget);
@@ -46,12 +46,12 @@ public abstract class CommonChatController<V extends CommonChatView, M extends C
 
     @Override
     public void createDependencies(ChatChannelDomain chatChannelDomain) {
-        chatChannelSelectionService = chatService.getChatChannelSelectionServices().get(chatChannelDomain);
+        selectionService = chatService.getChatChannelSelectionServices().get(chatChannelDomain);
     }
 
     @Override
     public void onActivate() {
-        selectedChannelChanged(chatChannelSelectionService.getSelectedChannel().get());
+        selectedChannelPin = selectionService.getSelectedChannel().addObserver(this::selectedChannelChanged);
         searchTextPin = EasyBind.subscribe(chatSearchService.getSearchText(), searchText ->
                 chatMessagesComponent.setSearchPredicate(item ->
                     searchText == null || searchText.isEmpty() || item.match(searchText)));
@@ -61,12 +61,8 @@ public abstract class CommonChatController<V extends CommonChatView, M extends C
 
     @Override
     public void onDeactivate() {
+        selectedChannelPin.unbind();
         searchTextPin.unsubscribe();
-    }
-
-    @Override
-    protected void selectedChannelChanged(ChatChannel<? extends ChatMessage> chatChannel) {
-        super.selectedChannelChanged(chatChannel);
     }
 
     @Override

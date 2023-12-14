@@ -25,26 +25,29 @@ import javafx.scene.layout.*;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class CommonChatView extends ChatView {
-    public static final double SIDE_PADDING = 40;
+public class CommonChatView<V extends CommonChatView<V, M>, M extends CommonChatModel> extends ChatView {
+    protected static final double SIDE_PADDING = 40;
 
     public CommonChatView(CommonChatModel model,
-                          CommonChatController controller,
+                          CommonChatController<V, M> controller,
                           Pane chatMessagesComponent,
                           Pane channelInfo) {
         super(model, controller, chatMessagesComponent, channelInfo);
     }
 
+    @Override
     protected void configTitleHBox() {
     }
 
+    @Override
     protected void configCenterVBox() {
         VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
-        chatMessagesComponent.setMinWidth(700);
+        chatMessagesComponent.getStyleClass().add("bisq-easy-container");
         centerVBox.getChildren().addAll(chatMessagesComponent);
         centerVBox.setFillWidth(true);
     }
 
+    @Override
     protected void configSideBarVBox() {
         sideBar.getChildren().add(channelSidebar);
         sideBar.getStyleClass().add("bisq-grey-2-bg");
@@ -52,6 +55,7 @@ public class CommonChatView extends ChatView {
         sideBar.setFillWidth(true);
     }
 
+    @Override
     protected void configContainerHBox() {
         containerHBox.setFillHeight(true);
         Layout.pinToAnchorPane(containerHBox, 0, 0, 0, 0);

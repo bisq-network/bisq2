@@ -15,14 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.private_chats;
+package bisq.desktop.main.content.chat.navigation;
 
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.desktop.common.Layout;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
-import bisq.desktop.main.content.chat.ChatView;
+import bisq.desktop.main.content.common_chat.CommonChatView;
 import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.TimeFormatter;
@@ -31,7 +31,10 @@ import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
 import javafx.scene.layout.*;
 import javafx.util.Callback;
 import lombok.EqualsAndHashCode;
@@ -45,23 +48,19 @@ import java.util.Comparator;
 import java.util.Optional;
 
 @Slf4j
-public class BisqEasyPrivateChatsView extends ChatView {
+public class PrivateChatsView extends CommonChatView<PrivateChatsView, PrivateChatsModel> {
     private BisqTableView<ListItem> tableView;
     private VBox chatVBox, openChatsList, chatHeaderVBox;
     private Subscription noOpenChatsPin, tableViewSelectionPin, selectedModelItemPin, peersUserProfilePin,
-        myUserProfilePin;
+            myUserProfilePin;
     private UserProfileDisplay chatPeerUserProfileDisplay, chatMyUserProfileDisplay;
     private Button leaveChatButton;
 
-    public BisqEasyPrivateChatsView(BisqEasyPrivateChatsModel model,
-                                    BisqEasyPrivateChatsController controller,
-                                    VBox chatMessagesComponent,
-                                    Pane channelSidebar) {
-        super(model, controller, chatMessagesComponent, channelSidebar);
-    }
-
-    @Override
-    protected void configTitleHBox() {
+    public PrivateChatsView(PrivateChatsModel model,
+                            PrivateChatsController controller,
+                            Pane chatMessagesComponent,
+                            Pane channelInfo) {
+        super(model, controller, chatMessagesComponent, channelInfo);
     }
 
     @Override
@@ -116,21 +115,13 @@ public class BisqEasyPrivateChatsView extends ChatView {
     }
 
     @Override
-    protected void configSideBarVBox() {
-        sideBar.getChildren().add(channelSidebar);
-        sideBar.getStyleClass().add("bisq-easy-chat-sidebar-bg");
-        sideBar.setAlignment(Pos.TOP_RIGHT);
-        sideBar.setFillWidth(true);
-    }
-
-    @Override
     protected void configContainerHBox() {
         containerHBox.setSpacing(10);
         containerHBox.setFillHeight(true);
         HBox.setHgrow(centerVBox, Priority.ALWAYS);
         HBox.setHgrow(sideBar, Priority.NEVER);
         containerHBox.getChildren().addAll(openChatsList, centerVBox, sideBar);
-        containerHBox.setPadding(new Insets(0, 40, 0, 40));
+        containerHBox.setPadding(new Insets(0, SIDE_PADDING, 0, SIDE_PADDING));
 
         root.setContent(containerHBox);
     }
@@ -139,7 +130,7 @@ public class BisqEasyPrivateChatsView extends ChatView {
     protected void onViewAttached() {
         super.onViewAttached();
 
-        BisqEasyPrivateChatsModel model = getModel();
+        PrivateChatsModel model = getModel();
 
         selectedModelItemPin = EasyBind.subscribe(model.getSelectedItem(), selected ->
                 tableView.getSelectionModel().select(selected));
@@ -211,7 +202,6 @@ public class BisqEasyPrivateChatsView extends ChatView {
 
     private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getTradePeerCellFactory() {
         return column -> new TableCell<>() {
-
             @Override
             public void updateItem(final ListItem item, boolean empty) {
                 super.updateItem(item, empty);
@@ -227,12 +217,12 @@ public class BisqEasyPrivateChatsView extends ChatView {
         };
     }
 
-    private BisqEasyPrivateChatsModel getModel() {
-        return (BisqEasyPrivateChatsModel) model;
+    private PrivateChatsModel getModel() {
+        return (PrivateChatsModel) model;
     }
 
-    private BisqEasyPrivateChatsController getController() {
-        return (BisqEasyPrivateChatsController) controller;
+    private PrivateChatsController getController() {
+        return (PrivateChatsController) controller;
     }
 
     private void createHeaderVBox(boolean hasPeerToDisplay) {

@@ -59,6 +59,7 @@ import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.scene.text.TextAlignment;
 import javafx.util.StringConverter;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -578,6 +579,9 @@ public class ChatMessagesComponent {
 
             Label noChatsLabel = new Label(Res.get("chat.private.messagebox.noChats"));
             noChatsLabel.getStyleClass().add("chat-container-placeholder-text");
+            noChatsLabel.setTextAlignment(TextAlignment.CENTER);
+            noChatsLabel.setWrapText(true);
+            noChatsLabel.setPadding(new Insets(20));
             emptyMessageList = new VBox(noChatsLabel);
             emptyMessageList.setAlignment(Pos.CENTER);
             VBox.setVgrow(emptyMessageList, Priority.ALWAYS);
