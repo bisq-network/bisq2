@@ -2,7 +2,6 @@ plugins {
     id("bisq.java-library")
     id("bisq.gradle.desktop.regtest.BisqDesktopRegtestPlugin")
     application
-    id("bisq.gradle.packaging.PackagingPlugin")
     alias(libs.plugins.openjfx)
 }
 
