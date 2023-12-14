@@ -15,28 +15,24 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.node.envelope;
+package bisq.network.p2p.node.envelope.parser;
 
-import java.nio.ByteBuffer;
+import java.io.IOException;
+import java.io.InputStream;
 
-public class ProtoBufMessageLengthWriter {
-    public static void writeToBuffer(int messageLength, ByteBuffer byteBuffer) {
-        while (messageLength > 0) {
-            int thisByte = 0;
+public class DefaultProtoBufInputStream implements ProtoBufInputStream {
+    private final InputStream inputStream;
 
-            int lowestSevenBits = messageLength & 0x7f;
-            thisByte = thisByte ^ lowestSevenBits;
-
-            messageLength = messageLength >> 7;
-            if (messageLength > 0) {
-                thisByte = setContinuationBit(thisByte);
-            }
-
-            byteBuffer.put((byte) thisByte);
-        }
+    public DefaultProtoBufInputStream(InputStream inputStream) {
+        this.inputStream = inputStream;
     }
 
-    private static int setContinuationBit(int thisByte) {
-        return thisByte ^ 0x80;
+    @Override
+    public byte read() {
+        try {
+            return (byte) inputStream.read();
+        } catch (IOException exception) {
+            throw new ProtoBufStreamIOException(exception);
+        }
     }
 }

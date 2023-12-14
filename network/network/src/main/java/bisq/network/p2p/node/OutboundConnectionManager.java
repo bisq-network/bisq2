@@ -20,7 +20,7 @@ package bisq.network.p2p.node;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.envelope.NetworkEnvelopeSocketChannel;
-import bisq.network.p2p.node.envelope.ProtoBufMessageLengthWriter;
+import bisq.network.p2p.node.envelope.parser.nio.ProtoBufMessageLengthWriter;
 import bisq.network.p2p.node.handshake.ConnectionHandshake;
 import bisq.network.p2p.node.handshake.ConnectionHandshakeInitiator;
 import bisq.network.p2p.node.network_load.ConnectionMetrics;

@@ -24,8 +24,10 @@ import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.Capability;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
-import bisq.network.p2p.node.envelope.ProtoBufMessageLengthParser;
-import bisq.network.p2p.node.envelope.ProtoBufMessageLengthWriter;
+import bisq.network.p2p.node.envelope.parser.DefaultProtoBufInputStream;
+import bisq.network.p2p.node.envelope.parser.ProtoBufMessageLengthParser;
+import bisq.network.p2p.node.envelope.parser.nio.NioProtoBufInputStream;
+import bisq.network.p2p.node.envelope.parser.nio.ProtoBufMessageLengthWriter;
 import bisq.network.p2p.node.handshake.ConnectionHandshake;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.persistence.PersistenceService;
@@ -33,6 +35,7 @@ import bisq.security.SecurityService;
 import bisq.security.pow.ProofOfWorkService;
 import org.junit.jupiter.api.Test;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
@@ -61,9 +64,35 @@ public class ProtoBufMessageLengthTests {
         ProtoBufMessageLengthWriter.writeToBuffer(envelopeInBytes.length, byteBuffer);
         byteBuffer.flip();
 
-        ProtoBufMessageLengthParser messageLengthParser = new ProtoBufMessageLengthParser(byteBuffer);
+        byte[] serializedMessage = new byte[byteBuffer.remaining()];
+        byteBuffer.get(serializedMessage);
+        var byteArrayInputStream = new ByteArrayInputStream(serializedMessage);
+
+        var protoBufStream = new DefaultProtoBufInputStream(byteArrayInputStream);
+        var messageLengthParser = new ProtoBufMessageLengthParser(protoBufStream);
+
         long parsedLength = ProtoBufMessageLengthParser.STILL_PARSING_MESSAGE_LENGTH;
-        while (byteBuffer.hasRemaining()) {
+        while (parsedLength == ProtoBufMessageLengthParser.STILL_PARSING_MESSAGE_LENGTH) {
+            parsedLength = messageLengthParser.parseMessageLength();
+        }
+
+        assertThat(parsedLength).isEqualTo(envelopeInBytes.length);
+    }
+
+    @Test
+    void basicTestNio() {
+        bisq.network.protobuf.NetworkEnvelope networkEnvelope = createValidRequest();
+        byte[] envelopeInBytes = networkEnvelope.toByteArray();
+
+        ByteBuffer byteBuffer = ByteBuffer.allocate(1024);
+        ProtoBufMessageLengthWriter.writeToBuffer(envelopeInBytes.length, byteBuffer);
+        byteBuffer.flip();
+
+        var protoBufInputStream = new NioProtoBufInputStream(byteBuffer);
+        var messageLengthParser = new ProtoBufMessageLengthParser(protoBufInputStream);
+
+        long parsedLength = ProtoBufMessageLengthParser.STILL_PARSING_MESSAGE_LENGTH;
+        while (parsedLength == ProtoBufMessageLengthParser.STILL_PARSING_MESSAGE_LENGTH) {
             parsedLength = messageLengthParser.parseMessageLength();
         }
 
