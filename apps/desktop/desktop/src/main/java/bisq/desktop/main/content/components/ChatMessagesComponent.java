@@ -577,7 +577,7 @@ public class ChatMessagesComponent {
             leaveChannelButton = createAndGetChatButton(Res.get("chat.leave"), 120);
             leaveChannelButton.getStyleClass().add("outlined-button");
 
-            Label noChatsLabel = new Label(Res.get("chat.private.messagebox.noChats"));
+            Label noChatsLabel = new Label(Res.get("chat.private.messagebox.noChats.description"));
             noChatsLabel.getStyleClass().add("chat-container-placeholder-text");
             noChatsLabel.setTextAlignment(TextAlignment.CENTER);
             noChatsLabel.setWrapText(true);

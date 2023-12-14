@@ -240,7 +240,7 @@ public class PrivateChatsView extends CommonChatView<PrivateChatsView, PrivateCh
             chatHeaderVBox.getChildren().add(hBox);
             chatHeaderVBox.setAlignment(Pos.CENTER_LEFT);
         } else {
-            Label emptyChatBoxHeader = new Label(Res.get("chat.private.title"));
+            Label emptyChatBoxHeader = new Label(Res.get("chat.private.messagebox.noChats.title"));
             emptyChatBoxHeader.getStyleClass().add("chat-container-headline");
             chatHeaderVBox.getChildren().add(emptyChatBoxHeader);
         }
