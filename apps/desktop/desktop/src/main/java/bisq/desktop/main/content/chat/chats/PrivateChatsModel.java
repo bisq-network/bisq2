@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.chat.navigation;
+package bisq.desktop.main.content.chat.chats;
 
 import bisq.chat.ChatChannelDomain;
 import bisq.desktop.main.content.common_chat.CommonChatModel;
@@ -34,14 +34,12 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 public class PrivateChatsModel extends CommonChatModel {
     private final BooleanProperty noOpenChats = new SimpleBooleanProperty();
-    //private final StringProperty chatWindowTitle = new SimpleStringProperty();
     private final ObservableList<PrivateChatsView.ListItem> listItems = FXCollections.observableArrayList();
     private final FilteredList<PrivateChatsView.ListItem> filteredList = new FilteredList<>(listItems);
     private final SortedList<PrivateChatsView.ListItem> sortedList = new SortedList<>(filteredList);
     private final ObjectProperty<PrivateChatsView.ListItem> selectedItem = new SimpleObjectProperty<>();
     private final ObjectProperty<UserProfile> peersUserProfile = new SimpleObjectProperty<>();
     private final ObjectProperty<UserProfile> myUserProfile = new SimpleObjectProperty<>();
-    //private final ObjectProperty<Stage> chatWindow = new SimpleObjectProperty<>();
     @Setter
     private ReputationScore peersReputationScore;
 

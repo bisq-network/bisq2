@@ -18,7 +18,6 @@
 package bisq.desktop.main.content.chat;
 
 import bisq.desktop.common.view.NavigationView;
-import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;

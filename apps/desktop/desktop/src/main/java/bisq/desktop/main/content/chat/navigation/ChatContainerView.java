@@ -28,7 +28,8 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
-import javafx.scene.layout.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -71,40 +72,8 @@ public class ChatContainerView extends ContentTabView<ChatContainerModel, ChatCo
         VBox.setMargin(tabs, new Insets(0, 0, 11, 0));
 
         topBox = new VBox(12, searchInfo, tabs);
-        //topBox.setMinHeight(123);
+        topBox.setMinHeight(115);
         topBox.setPadding(DEFAULT_TOP_PANE_PADDING);
-
-//        double thresholdWidth = 900;
-//        topBox.widthProperty().addListener((observable, oldValue, newValue) -> {
-//            double newWidth = newValue.doubleValue();
-//            for (Node child : tabs.getChildren()) {
-//                if (child instanceof TabButton) {
-//                    TabButton tabButton = (TabButton) child;
-//                    tabButton.getNumMessagesBadge().setLayoutY(22);
-//
-//                    Label label = tabButton.getLabel();
-//                    label.setAlignment(Pos.BOTTOM_LEFT);
-//                    label.setPadding(new Insets(0));
-//                    label.setMinHeight(40);
-//                    label.setMaxHeight(40);
-//
-//                    if (newWidth < thresholdWidth) {
-//                        if (tabButton.getNavigationTarget() == NavigationTarget.EVENTS_TRADEEVENTS) {
-//                            label.setWrapText(true);
-//                            label.setMaxWidth(44);
-//                        }
-//                        if (tabButton.getNavigationTarget() == NavigationTarget.EVENTS_PRIVATECHATS) {
-//                            label.setWrapText(true);
-//                            label.setMaxWidth(50);
-//                        }
-//                    } else {
-//                        label.setWrapText(false);
-//                        label.setMaxWidth(Region.USE_COMPUTED_SIZE);
-//                        label.setMaxHeight(Region.USE_PREF_SIZE);
-//                    }
-//                }
-//            }
-//        });
     }
 
     @Override

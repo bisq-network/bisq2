@@ -50,13 +50,14 @@ public class CommonChatView<V extends CommonChatView<V, M>, M extends CommonChat
     @Override
     protected void configSideBarVBox() {
         sideBar.getChildren().add(channelSidebar);
-        sideBar.getStyleClass().add("bisq-grey-2-bg");
+        sideBar.getStyleClass().add("bisq-easy-chat-sidebar-bg");
         sideBar.setAlignment(Pos.TOP_RIGHT);
         sideBar.setFillWidth(true);
     }
 
     @Override
     protected void configContainerHBox() {
+        containerHBox.setSpacing(10);
         containerHBox.setFillHeight(true);
         Layout.pinToAnchorPane(containerHBox, 0, 0, 0, 0);
 

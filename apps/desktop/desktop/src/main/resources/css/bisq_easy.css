@@ -583,7 +583,7 @@
 
 .bisq-easy-chat-sidebar-bg {
     -fx-background-color: -bisq-dark-grey-dim;
-    -fx-background-radius: 8;
+    -fx-background-radius: 8 8 0 0;
 }
 
 .bisq-easy-chat-filter-panel-bg {

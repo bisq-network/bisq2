@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.chat.navigation;
+package bisq.desktop.main.content.chat.chats;
 
 import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatChannel;
@@ -24,12 +24,9 @@ import bisq.chat.ChatMessage;
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.chat.two_party.TwoPartyPrivateChatChannelService;
 import bisq.common.observable.Pin;
-import bisq.common.observable.collection.ObservableArray;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.common.view.Controller;
-import bisq.desktop.main.content.bisq_easy.private_chats.BisqEasyPrivateChatsView;
 import bisq.desktop.main.content.common_chat.CommonChatController;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationService;
@@ -38,7 +35,8 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class PrivateChatsController extends CommonChatController<PrivateChatsView, PrivateChatsModel> implements Controller {
+public class PrivateChatsController<V extends PrivateChatsView, M extends PrivateChatsModel>
+        extends CommonChatController<PrivateChatsView, PrivateChatsModel> {
     private final TwoPartyPrivateChatChannelService channelService;
     private final ReputationService reputationService;
     private Pin channelItemPin, channelsPin;
@@ -49,11 +47,6 @@ public class PrivateChatsController extends CommonChatController<PrivateChatsVie
 
         channelService = chatService.getTwoPartyPrivateChatChannelServices().get(chatChannelDomain);
         reputationService = serviceProvider.getUserService().getReputationService();
-    }
-
-    @Override
-    public void createDependencies(ChatChannelDomain chatChannelDomain) {
-        super.createDependencies(chatChannelDomain);
     }
 
     @Override

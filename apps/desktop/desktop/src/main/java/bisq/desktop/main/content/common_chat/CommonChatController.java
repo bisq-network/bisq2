@@ -31,7 +31,7 @@ import org.fxmisc.easybind.Subscription;
 import java.util.Optional;
 
 @Slf4j
-public abstract class CommonChatController<V extends CommonChatView, M extends CommonChatModel>
+public abstract class CommonChatController<V extends CommonChatView<V, M>, M extends CommonChatModel>
         extends ChatController<V, M> implements Controller {
     private final ChatSearchService chatSearchService;
     protected ChatChannelSelectionService selectionService;

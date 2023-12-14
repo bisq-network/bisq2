@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.chat.navigation;
+package bisq.desktop.main.content.chat.chats;
 
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.desktop.common.Layout;
@@ -35,7 +35,10 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
-import javafx.scene.layout.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -50,7 +53,7 @@ import java.util.Optional;
 @Slf4j
 public class PrivateChatsView extends CommonChatView<PrivateChatsView, PrivateChatsModel> {
     private BisqTableView<ListItem> tableView;
-    private VBox chatVBox, openChatsList, chatHeaderVBox;
+    private VBox openChatsList, chatHeaderVBox;
     private Subscription noOpenChatsPin, tableViewSelectionPin, selectedModelItemPin, peersUserProfilePin,
             myUserProfilePin;
     private UserProfileDisplay chatPeerUserProfileDisplay, chatMyUserProfileDisplay;
@@ -107,7 +110,7 @@ public class PrivateChatsView extends CommonChatView<PrivateChatsView, PrivateCh
 
         VBox.setMargin(chatMessagesComponent, new Insets(0, 30, 15, 30));
         VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
-        chatVBox = new VBox(chatHeaderHBox, Layout.hLine(), chatMessagesComponent);
+        VBox chatVBox = new VBox(chatHeaderHBox, Layout.hLine(), chatMessagesComponent);
         chatVBox.getStyleClass().add("bisq-easy-container");
 
         VBox.setVgrow(chatVBox, Priority.ALWAYS);
@@ -217,11 +220,11 @@ public class PrivateChatsView extends CommonChatView<PrivateChatsView, PrivateCh
         };
     }
 
-    private PrivateChatsModel getModel() {
+    protected PrivateChatsModel getModel() {
         return (PrivateChatsModel) model;
     }
 
-    private PrivateChatsController getController() {
+    protected PrivateChatsController getController() {
         return (PrivateChatsController) controller;
     }
 
