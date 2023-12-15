@@ -12,7 +12,7 @@ import java.util.Arrays;
 import java.util.Optional;
 
 @Slf4j
-public class TorPrivateKeyUtils {
+public class TorKeyUtils {
     public static byte[] getPublicKeyFromOnionAddress(String onionAddress) {
         onionAddress = onionAddress.substring(0, onionAddress.length() - ".onion".length());
         byte[] decodedOnionAddress = Base32.decode(onionAddress.toUpperCase());
