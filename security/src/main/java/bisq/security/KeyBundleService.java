@@ -17,128 +17,59 @@
 
 package bisq.security;
 
-import bisq.common.encoding.Hex;
 import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
-import lombok.Getter;
+import bisq.security.keys.KeyBundle;
+import bisq.security.keys.KeyBundleStore;
+import bisq.security.keys.TempKeyBundleService;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
-import java.security.GeneralSecurityException;
-import java.security.KeyFactory;
 import java.security.KeyPair;
-import java.security.PublicKey;
-import java.security.interfaces.DSAParams;
-import java.security.interfaces.DSAPrivateKey;
-import java.security.spec.DSAPublicKeySpec;
-import java.security.spec.KeySpec;
-import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.ExecutionException;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class KeyBundleService implements PersistenceClient<KeyBundleStore> {
-    @Getter
-    private final KeyBundleStore persistableStore = new KeyBundleStore();
-    @Getter
-    private final Persistence<KeyBundleStore> persistence;
+public class KeyBundleService {
+    private final TempKeyBundleService tempKeyBundleService;
 
     public KeyBundleService(PersistenceService persistenceService) {
-        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
+        tempKeyBundleService = new TempKeyBundleService(persistenceService);
     }
 
     public CompletableFuture<Boolean> initialize() {
-        return getOrCreateKeyPairAsync(getDefaultKeyId()).thenApply(r -> true);
+        return tempKeyBundleService.initialize();
     }
 
     public Optional<KeyPair> findKeyPair(String keyId) {
-        checkArgument(keyId.length() == 40, "Key ID is expected to be a 20 byte hash");
-        synchronized (persistableStore) {
-            return persistableStore.findKeyPair(keyId);
-        }
+        return tempKeyBundleService.findKeyBundle(keyId).map(KeyBundle::getKeyPair);
     }
 
     public KeyPair getOrCreateKeyPair(String keyId) {
-        try {
-            return getOrCreateKeyPairAsync(keyId).get();
-        } catch (InterruptedException | ExecutionException e) {
-            log.error("Error at getOrCreateKeyPair", e);
-            throw new RuntimeException(e);
-        }
+        return tempKeyBundleService.getOrCreateKeyBundle(keyId).join().getKeyPair();
     }
 
     public KeyPair generateKeyPair() {
-        try {
-            return KeyGeneration.generateKeyPair();
-        } catch (GeneralSecurityException e) {
-            log.error("Error at generateKeyPair", e);
-            throw new RuntimeException(e);
-        }
+        return tempKeyBundleService.generateKeyPair();
     }
 
     public void persistKeyPair(String keyId, KeyPair keyPair) {
-        checkArgument(keyId.length() == 40, "Key ID is expected to be a 20 byte hash");
-        synchronized (persistableStore) {
-            persistableStore.put(keyId, keyPair);
-        }
-        persist();
+        tempKeyBundleService.createAndPersistKeyBundle(keyId, keyPair);
     }
 
-    private CompletableFuture<KeyPair> getOrCreateKeyPairAsync(String keyId) {
-        return findKeyPair(keyId).map(CompletableFuture::completedFuture)
-                .orElseGet(() -> CompletableFuture.supplyAsync(() -> {
-                    try {
-                        KeyPair keyPair = KeyGeneration.generateKeyPair();
-                        persistKeyPair(keyId, keyPair);
-                        return keyPair;
-                    } catch (GeneralSecurityException e) {
-                        log.error("Error at getOrCreateKeyPairAsync", e);
-                        throw new CompletionException(e);
-                    }
-                }));
-    }
 
     public String getKeyIdFromTag(String tag) {
-        String combined = persistableStore.getSecretUid() + tag;
-        return Hex.encode(DigestUtil.hash(combined.getBytes(StandardCharsets.UTF_8)));
+        return tempKeyBundleService.getKeyIdFromTag(tag);
     }
 
     public String getDefaultKeyId() {
-        return getKeyIdFromTag("default");
+        return tempKeyBundleService.getDefaultKeyId();
     }
 
     public boolean isDefaultKeyId(String keyId) {
-        return getDefaultKeyId().equals(keyId);
+        return tempKeyBundleService.isDefaultKeyId(keyId);
     }
 
-    public static KeyPair loadDsaKey(String privateKeyPath) throws GeneralSecurityException, IOException {
-        KeyFactory keyFactory = KeyFactory.getInstance("DSA");
-        File filePrivateKey = new File(privateKeyPath);
-        try (FileInputStream fileInputStream = new FileInputStream(filePrivateKey.getPath())) {
-            byte[] encodedPrivateKey = new byte[(int) filePrivateKey.length()];
-            //noinspection ResultOfMethodCallIgnored
-            fileInputStream.read(encodedPrivateKey);
-
-            PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(encodedPrivateKey);
-            DSAPrivateKey privateKey = (DSAPrivateKey) keyFactory.generatePrivate(privateKeySpec);
-
-            DSAParams dsaParams = privateKey.getParams();
-            BigInteger p = dsaParams.getP();
-            BigInteger q = dsaParams.getQ();
-            BigInteger g = dsaParams.getG();
-            BigInteger y = g.modPow(privateKey.getX(), p);
-            KeySpec publicKeySpec = new DSAPublicKeySpec(y, p, q, g);
-            PublicKey publicKey = keyFactory.generatePublic(publicKeySpec);
-            return new KeyPair(publicKey, privateKey);
-        }
+    public Persistence<KeyBundleStore> getPersistence() {
+        return tempKeyBundleService.getPersistence();
     }
 }
