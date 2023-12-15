@@ -30,6 +30,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.settings.CookieKey;
+import bisq.settings.SettingsService;
 import bisq.updater.UpdaterService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
@@ -50,18 +51,22 @@ public class LeftNavController implements Controller {
     private final UserIdentityService userIdentityService;
     private final UpdaterService updaterService;
     private final BisqEasyNotificationsService bisqEasyNotificationsService;
+    private final SettingsService settingsService;
     private Pin bondedRolesPin, selectedUserIdentityPin, releaseNotificationPin;
     private Pin changedChatNotificationPin;
 
     public LeftNavController(ServiceProvider serviceProvider) {
+        settingsService = serviceProvider.getSettingsService();
         chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
         authorizedBondedRolesService = serviceProvider.getBondedRolesService().getAuthorizedBondedRolesService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         updaterService = serviceProvider.getUpdaterService();
         bisqEasyNotificationsService = serviceProvider.getBisqEasyService().getBisqEasyNotificationsService();
-        model = new LeftNavModel(serviceProvider);
+
+        NetworkInfo networkInfo = new NetworkInfo(serviceProvider, this::onNavigationTargetSelected);
+        model = new LeftNavModel(serviceProvider.getWalletService().isPresent());
         model.setVersion("v" + serviceProvider.getConfig().getVersion().toString());
-        view = new LeftNavView(model, this);
+        view = new LeftNavView(model, this, networkInfo.getRoot());
     }
 
     @Override
@@ -72,7 +77,7 @@ public class LeftNavController implements Controller {
         releaseNotificationPin = updaterService.getReleaseNotification().addObserver(releaseNotification ->
                 UIThread.run(() -> model.getNewVersionAvailable().set(releaseNotification != null)));
 
-        model.getMenuHorizontalExpanded().set(model.getSettingsService().getCookie().asBoolean(CookieKey.MENU_HORIZONTAL_EXPANDED).orElse(true));
+        model.getMenuHorizontalExpanded().set(settingsService.getCookie().asBoolean(CookieKey.MENU_HORIZONTAL_EXPANDED).orElse(true));
     }
 
     @Override
@@ -163,7 +168,7 @@ public class LeftNavController implements Controller {
 
     void onToggleHorizontalExpandState() {
         boolean newState = !model.getMenuHorizontalExpanded().get();
-        model.getSettingsService().setCookie(CookieKey.MENU_HORIZONTAL_EXPANDED, newState);
+        settingsService.setCookie(CookieKey.MENU_HORIZONTAL_EXPANDED, newState);
         model.getMenuHorizontalExpanded().set(newState);
     }
 
