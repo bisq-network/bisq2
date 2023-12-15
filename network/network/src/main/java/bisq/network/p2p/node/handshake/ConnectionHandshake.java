@@ -19,7 +19,6 @@ package bisq.network.p2p.node.handshake;
 
 import bisq.common.util.StringUtils;
 import bisq.network.common.Address;
-import bisq.network.identity.TorIdentity;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.Capability;
@@ -31,6 +30,7 @@ import bisq.network.p2p.node.network_load.ConnectionMetrics;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.network.p2p.services.peergroup.BanList;
 import bisq.security.TorSignatureUtil;
+import bisq.security.keys.KeyBundle;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -53,8 +53,7 @@ public final class ConnectionHandshake {
     private final BanList banList;
     private final Capability capability;
     private final AuthorizationService authorizationService;
-    private final TorIdentity myTorIdentity;
-
+    private final KeyBundle myKeyBundle;
     private NetworkEnvelopeSocket networkEnvelopeSocket;
 
     @Getter
@@ -152,11 +151,11 @@ public final class ConnectionHandshake {
                                int socketTimeout,
                                Capability capability,
                                AuthorizationService authorizationService,
-                               TorIdentity myTorIdentity) {
+                               KeyBundle myKeyBundle) {
         this.banList = banList;
         this.capability = capability;
         this.authorizationService = authorizationService;
-        this.myTorIdentity = myTorIdentity;
+        this.myKeyBundle = myKeyBundle;
 
         try {
             // socket.setTcpNoDelay(true);
@@ -177,8 +176,10 @@ public final class ConnectionHandshake {
             Address myAddress = capability.getAddress();
             byte[] addressOwnershipProof = null;
             if (myAddress.isTorAddress()) {
+                // TODO maybe we should add the timestamp and verify at the peer that it is in a certain tolerance
+                //  range to avoid usage of once created proofs fom fake tor nodes with the same peer.
                 String dataToSign = myAddress.getFullAddress() + "|" + peerAddress.getFullAddress();
-                addressOwnershipProof = TorSignatureUtil.sign(myTorIdentity.getPrivateKey(), dataToSign.getBytes());
+                addressOwnershipProof = TorSignatureUtil.sign(myKeyBundle.getTorKeyPair().getPrivateKey(), dataToSign.getBytes());
             }
 
             Request request = new Request(capability, addressOwnershipProof, myNetworkLoad);
