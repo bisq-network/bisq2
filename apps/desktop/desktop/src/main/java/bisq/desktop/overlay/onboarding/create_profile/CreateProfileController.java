@@ -28,7 +28,7 @@ import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.identity.IdentityService;
 import bisq.security.DigestUtil;
-import bisq.security.KeyBundleService;
+import bisq.security.keys.KeyBundleService;
 import bisq.security.pow.ProofOfWork;
 import bisq.security.pow.ProofOfWorkService;
 import bisq.user.NymIdGenerator;

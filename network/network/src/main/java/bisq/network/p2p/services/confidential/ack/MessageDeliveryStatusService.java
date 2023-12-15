@@ -10,7 +10,7 @@ import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
-import bisq.security.KeyBundleService;
+import bisq.security.keys.KeyBundleService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

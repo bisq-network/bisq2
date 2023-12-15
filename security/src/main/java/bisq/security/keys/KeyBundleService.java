@@ -37,13 +37,13 @@ import java.util.concurrent.CompletableFuture;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class TempKeyBundleService implements PersistenceClient<KeyBundleStore> {
+public class KeyBundleService implements PersistenceClient<KeyBundleStore> {
     @Getter
     private final KeyBundleStore persistableStore;
     @Getter
     private final Persistence<KeyBundleStore> persistence;
 
-    public TempKeyBundleService(PersistenceService persistenceService) {
+    public KeyBundleService(PersistenceService persistenceService) {
         persistableStore = new KeyBundleStore();
         persistence = persistenceService.getOrCreatePersistence(this,
                 "db" + File.separator + "private",

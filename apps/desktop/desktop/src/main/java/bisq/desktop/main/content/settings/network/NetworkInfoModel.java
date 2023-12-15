@@ -22,7 +22,7 @@ import bisq.desktop.common.view.Model;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.common.TransportType;
-import bisq.security.KeyBundleService;
+import bisq.security.keys.KeyBundleService;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
