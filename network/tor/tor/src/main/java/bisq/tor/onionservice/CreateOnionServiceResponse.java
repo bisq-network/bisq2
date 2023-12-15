@@ -17,19 +17,16 @@
 
 package bisq.tor.onionservice;
 
-import bisq.network.identity.TorIdentity;
 import lombok.Getter;
 
 import java.net.ServerSocket;
 
 @Getter
 public class CreateOnionServiceResponse {
-    private final TorIdentity torIdentity;
     private final ServerSocket serverSocket;
     private final OnionAddress onionAddress;
 
-    public CreateOnionServiceResponse(TorIdentity torIdentity, ServerSocket serverSocket, OnionAddress onionAddress) {
-        this.torIdentity = torIdentity;
+    public CreateOnionServiceResponse(ServerSocket serverSocket, OnionAddress onionAddress) {
         this.serverSocket = serverSocket;
         this.onionAddress = onionAddress;
     }
