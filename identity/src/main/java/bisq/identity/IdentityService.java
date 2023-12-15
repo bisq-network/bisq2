@@ -150,7 +150,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
         TorIdentity torIdentity = findOrCreateTorIdentity(identityTag);
         NetworkId networkId = createNetworkId(false, pubKey, torIdentity);
-        Identity identity = new Identity(identityTag, networkId, torIdentity, keyPair);
+        Identity identity = new Identity(identityTag, networkId, torIdentity, keyPair, keyBundle);
 
         synchronized (lock) {
             getActiveIdentityByTag().put(identityTag, identity);
@@ -253,7 +253,8 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         boolean isDefaultIdentity = identityTag.equals(DEFAULT_IDENTITY_TAG);
         TorIdentity torIdentity = findOrCreateTorIdentity(identityTag);
         NetworkId networkId = createNetworkId(isDefaultIdentity, pubKey, torIdentity);
-        return new Identity(identityTag, networkId, torIdentity, keyPair);
+        KeyBundle keyBundle = keyBundleService.createAndPersistKeyBundle(keyId, keyPair);
+        return new Identity(identityTag, networkId, torIdentity, keyPair, keyBundle);
     }
 
     private TorIdentity findOrCreateTorIdentity(String identityTag) {
@@ -272,7 +273,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         int torPort = isTorSupported && identityTag.equals(DEFAULT_IDENTITY_TAG) ?
                 defaultPorts.getOrDefault(TransportType.TOR, NetworkUtils.selectRandomPort()) :
                 NetworkUtils.selectRandomPort();
-        byte[] privateKey = keyBundleService.findKeyBundle(DEFAULT_IDENTITY_TAG).orElseThrow().getTorKeyPair().getPrivateKey();
+        byte[] privateKey = keyBundleService.findKeyBundle(keyBundleService.getKeyIdFromTag(identityTag)).orElseThrow().getTorKeyPair().getPrivateKey();
         return TorIdentity.from(privateKey, torPort);
     }
 
