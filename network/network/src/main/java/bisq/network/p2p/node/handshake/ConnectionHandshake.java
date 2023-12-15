@@ -31,6 +31,7 @@ import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.network.p2p.services.peergroup.BanList;
 import bisq.security.TorSignatureUtil;
 import bisq.security.keys.KeyBundle;
+import bisq.security.keys.TorPrivateKeyUtils;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -296,7 +297,8 @@ public final class ConnectionHandshake {
 
                 String message = buildMessageForSigning(peerAddress, myAddress, signatureDate);
                 byte[] signature = request.getAddressOwnershipProof();
-                boolean isProofValid = TorSignatureUtil.verify(peerAddress.getHost(), message.getBytes(), signature);
+                byte[] pubKey = TorPrivateKeyUtils.getPublicKeyFromOnionAddress(peerAddress.getHost());
+                boolean isProofValid = TorSignatureUtil.verify(pubKey, message.getBytes(), signature);
                 if (!isProofValid) {
                     throw new ConnectionException("Peer couldn't proof its onion address: " + peerAddress.getFullAddress() +
                             ", Proof: " + Arrays.toString(signature));
