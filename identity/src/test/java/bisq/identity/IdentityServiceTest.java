@@ -88,7 +88,7 @@ public class IdentityServiceTest {
 
         assertThat(activeIdentity.getTag()).isEqualTo(identityTag);
         assertThat(activeIdentity.getNetworkId().getPubKey().getKeyId()).isEqualTo(keyId);
-        assertThat(activeIdentity.getKeyPair()).isEqualTo(keyPair);
+        assertThat(activeIdentity.getKeyBundle().getKeyPair()).isEqualTo(keyPair);
 
         Identity persistedActiveIdentity = identityService.findActiveIdentity(identityTag)
                 .orElseGet(() -> identityService.createAndInitializeNewActiveIdentity(identityTag, keyId, keyPair).join());
