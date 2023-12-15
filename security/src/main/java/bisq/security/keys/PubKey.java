@@ -15,12 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.security;
+package bisq.security.keys;
 
 import bisq.common.encoding.Hex;
 import bisq.common.proto.Proto;
 import bisq.common.util.StringUtils;
 import bisq.common.validation.NetworkDataValidation;
+import bisq.security.DigestUtil;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

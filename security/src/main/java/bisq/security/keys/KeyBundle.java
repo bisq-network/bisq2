@@ -1,7 +1,6 @@
 package bisq.security.keys;
 
 import bisq.common.proto.Proto;
-import bisq.security.KeyPairProtoUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;

@@ -20,7 +20,7 @@ package bisq.network.identity;
 import bisq.common.proto.Proto;
 import bisq.common.util.StringUtils;
 import bisq.network.common.AddressByTransportTypeMap;
-import bisq.security.PubKey;
+import bisq.security.keys.PubKey;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;

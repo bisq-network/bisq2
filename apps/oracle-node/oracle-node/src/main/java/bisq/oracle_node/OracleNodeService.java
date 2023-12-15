@@ -36,7 +36,7 @@ import bisq.oracle_node.bisq1_bridge.Bisq1BridgeService;
 import bisq.oracle_node.market_price.MarketPricePropagationService;
 import bisq.oracle_node.timestamp.TimestampService;
 import bisq.persistence.PersistenceService;
-import bisq.security.KeyGeneration;
+import bisq.security.keys.KeyGeneration;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

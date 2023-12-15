@@ -17,6 +17,7 @@
 
 package bisq.security;
 
+import bisq.security.keys.KeyGeneration;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 

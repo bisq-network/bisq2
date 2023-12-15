@@ -20,7 +20,7 @@ package bisq.contract;
 import bisq.common.encoding.Hex;
 import bisq.common.proto.Proto;
 import bisq.common.validation.NetworkDataValidation;
-import bisq.security.KeyGeneration;
+import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

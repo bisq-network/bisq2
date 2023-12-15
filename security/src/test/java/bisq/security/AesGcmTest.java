@@ -17,6 +17,7 @@
 
 package bisq.security;
 
+import bisq.security.keys.KeyGeneration;
 import org.junit.jupiter.api.Test;
 
 import javax.crypto.SecretKey;

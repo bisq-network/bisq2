@@ -22,7 +22,6 @@ import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.security.DigestUtil;
-import bisq.security.KeyGeneration;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

@@ -25,8 +25,8 @@ import bisq.common.timer.Scheduler;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
-import bisq.security.KeyGeneration;
 import bisq.security.keys.KeyBundleService;
+import bisq.security.keys.KeyGeneration;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

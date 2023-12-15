@@ -17,6 +17,7 @@
 
 package bisq.security;
 
+import bisq.security.keys.KeyGeneration;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import javax.crypto.*;

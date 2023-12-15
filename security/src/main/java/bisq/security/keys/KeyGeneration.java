@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.security;
+package bisq.security.keys;
 
 import bisq.common.encoding.Hex;
 import org.bouncycastle.jcajce.provider.asymmetric.util.EC5Util;

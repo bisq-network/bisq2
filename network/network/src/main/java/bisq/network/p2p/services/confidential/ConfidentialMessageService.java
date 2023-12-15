@@ -38,9 +38,9 @@ import bisq.network.p2p.services.data.storage.mailbox.MailboxData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.security.ConfidentialData;
 import bisq.security.HybridEncryption;
-import bisq.security.KeyGeneration;
-import bisq.security.PubKey;
 import bisq.security.keys.KeyBundleService;
+import bisq.security.keys.KeyGeneration;
+import bisq.security.keys.PubKey;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;

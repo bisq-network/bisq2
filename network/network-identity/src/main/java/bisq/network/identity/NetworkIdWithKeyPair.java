@@ -17,7 +17,7 @@
 
 package bisq.network.identity;
 
-import bisq.security.PubKey;
+import bisq.security.keys.PubKey;
 import lombok.Getter;
 import lombok.ToString;
 
