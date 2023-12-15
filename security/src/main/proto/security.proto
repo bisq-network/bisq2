@@ -54,9 +54,10 @@ message I2PKeyPair {
   string destination = 3;
 }
 message KeyBundle {
-  KeyPair keyPair = 1;
-  TorKeyPair torKeyPair = 2;
-  /*I2PKeyPair i2PKeyPair = 3;*/
+  string keyId = 1;
+  KeyPair keyPair = 2;
+  TorKeyPair torKeyPair = 3;
+  /*I2PKeyPair i2PKeyPair = 4;*/
 }
 message KeyBundleStore {
   string secretUid = 1;
