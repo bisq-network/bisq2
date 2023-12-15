@@ -27,6 +27,7 @@ import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.network_load.NetworkLoadService;
 import bisq.network.p2p.node.transport.TransportService;
 import bisq.network.p2p.services.peergroup.BanList;
+import bisq.security.keys.KeyBundleService;
 
 import java.util.Collection;
 import java.util.Map;
@@ -54,6 +55,7 @@ public class NodesById implements Node.Listener {
 
     private final BanList banList;
     private final Node.Config nodeConfig;
+    private final KeyBundleService keyBundleService;
     private final TransportService transportService;
     private final NetworkLoadService networkLoadService;
     private final AuthorizationService authorizationService;
@@ -63,11 +65,13 @@ public class NodesById implements Node.Listener {
 
     public NodesById(BanList banList,
                      Node.Config nodeConfig,
+                     KeyBundleService keyBundleService,
                      TransportService transportService,
                      NetworkLoadService networkLoadService,
                      AuthorizationService authorizationService) {
         this.banList = banList;
         this.nodeConfig = nodeConfig;
+        this.keyBundleService = keyBundleService;
         this.transportService = transportService;
         this.networkLoadService = networkLoadService;
         this.authorizationService = authorizationService;
@@ -78,7 +82,7 @@ public class NodesById implements Node.Listener {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public Node createAndConfigNode(NetworkId networkId, TorIdentity torIdentity, boolean isDefaultNode) {
-        Node node = new Node(networkId, torIdentity, isDefaultNode, nodeConfig, banList, transportService, networkLoadService, authorizationService);
+        Node node = new Node(networkId, torIdentity, isDefaultNode, nodeConfig, banList, keyBundleService, transportService, networkLoadService, authorizationService);
         map.put(networkId, node);
         node.addListener(this);
         listeners.forEach(listener -> listener.onNodeAdded(node));
