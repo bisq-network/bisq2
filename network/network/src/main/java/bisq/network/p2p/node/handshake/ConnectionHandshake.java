@@ -30,6 +30,7 @@ import bisq.network.p2p.node.envelope.NetworkEnvelopeSocket;
 import bisq.network.p2p.node.network_load.ConnectionMetrics;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.network.p2p.services.peergroup.BanList;
+import bisq.security.TorSignatureUtil;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -177,7 +178,7 @@ public final class ConnectionHandshake {
             byte[] addressOwnershipProof = null;
             if (myAddress.isTorAddress()) {
                 String dataToSign = myAddress.getFullAddress() + "|" + peerAddress.getFullAddress();
-                addressOwnershipProof = myTorIdentity.signMessage(dataToSign.getBytes());
+                addressOwnershipProof = TorSignatureUtil.sign(myTorIdentity.getPrivateKey(), dataToSign.getBytes());
             }
 
             Request request = new Request(capability, addressOwnershipProof, myNetworkLoad);
@@ -281,7 +282,7 @@ public final class ConnectionHandshake {
             if (peerAddress.isTorAddress()) {
                 String addressOwnershipMessage = peerAddress.getFullAddress() + "|" + myAddress;
                 byte[] addressOwnershipProof = request.getAddressOwnershipProof();
-                boolean isProofValid = TorIdentity.verifyMessage(peerAddress.getHost(),
+                boolean isProofValid = TorSignatureUtil.verify(peerAddress.getHost(),
                         addressOwnershipMessage.getBytes(),
                         addressOwnershipProof);
                 if (!isProofValid) {
