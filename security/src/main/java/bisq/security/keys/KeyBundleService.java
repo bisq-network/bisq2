@@ -126,7 +126,7 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore> {
     }
 
     public void persistKeyBundle(String keyId, KeyBundle keyBundle) {
-        checkArgument(keyId.length() == 40, "Key ID is expected to be a 20 byte hash");
+        checkArgument(keyId.length() == 40, "Key ID is expected to be a 20 byte hash. keyId=" + keyId);
         persistableStore.putKeyBundle(keyId, keyBundle);
         persist();
     }
