@@ -31,7 +31,7 @@ import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.NodesById;
-import bisq.security.KeyPairService;
+import bisq.security.KeyBundleService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,7 +39,7 @@ import java.util.Optional;
 
 @Slf4j
 public class TransportTypeController implements Controller {
-    private final KeyPairService keyPairService;
+    private final KeyBundleService keyBundleService;
     private final IdentityService identityService;
     private final TransportTypeModel model;
     @Getter
@@ -49,7 +49,7 @@ public class TransportTypeController implements Controller {
     private final NodesById.Listener nodesByIdListener;
 
     public TransportTypeController(ServiceProvider serviceProvider, TransportType transportType) {
-        keyPairService = serviceProvider.getSecurityService().getKeyPairService();
+        keyBundleService = serviceProvider.getSecurityService().getKeyBundleService();
         identityService = serviceProvider.getIdentityService();
 
         ServiceNode serviceNode = serviceProvider.getNetworkService().findServiceNode(transportType).orElseThrow();
@@ -112,7 +112,7 @@ public class TransportTypeController implements Controller {
     }
 
     private void addNode(Node node) {
-        NodeListItem nodeListItem = new NodeListItem(node, keyPairService, identityService);
+        NodeListItem nodeListItem = new NodeListItem(node, keyBundleService, identityService);
         if (!model.getNodeListItems().contains(nodeListItem)) {
             model.getNodeListItems().add(nodeListItem);
         }
@@ -121,7 +121,7 @@ public class TransportTypeController implements Controller {
     }
 
     private void removeNode(Node node) {
-        model.getNodeListItems().remove(new NodeListItem(node, keyPairService, identityService));
+        model.getNodeListItems().remove(new NodeListItem(node, keyBundleService, identityService));
 
         node.getAllConnections().forEach(this::removeConnection);
     }

@@ -28,7 +28,7 @@ import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.identity.IdentityService;
 import bisq.security.DigestUtil;
-import bisq.security.KeyPairService;
+import bisq.security.KeyBundleService;
 import bisq.security.pow.ProofOfWork;
 import bisq.security.pow.ProofOfWorkService;
 import bisq.user.NymIdGenerator;
@@ -50,7 +50,7 @@ public class CreateProfileController implements Controller {
     @Getter
     protected final CreateProfileView view;
     protected final UserIdentityService userIdentityService;
-    protected final KeyPairService keyPairService;
+    protected final KeyBundleService keyBundleService;
     protected final ProofOfWorkService proofOfWorkService;
     protected final IdentityService identityService;
     private final OverlayController overlayController;
@@ -58,7 +58,7 @@ public class CreateProfileController implements Controller {
     protected Subscription nickNameSubscription;
 
     public CreateProfileController(ServiceProvider serviceProvider) {
-        keyPairService = serviceProvider.getSecurityService().getKeyPairService();
+        keyBundleService = serviceProvider.getSecurityService().getKeyBundleService();
         proofOfWorkService = serviceProvider.getSecurityService().getProofOfWorkService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         identityService = serviceProvider.getIdentityService();
@@ -139,7 +139,7 @@ public class CreateProfileController implements Controller {
 
     void generateNewKeyPair() {
         setPreGenerateState();
-        KeyPair keyPair = keyPairService.generateKeyPair();
+        KeyPair keyPair = keyBundleService.generateKeyPair();
         model.setKeyPair(Optional.of(keyPair));
         byte[] pubKeyHash = DigestUtil.hash(keyPair.getPublic().getEncoded());
         model.setPubKeyHash(Optional.of(pubKeyHash));

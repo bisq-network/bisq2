@@ -28,7 +28,7 @@ import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
-import bisq.security.KeyPairService;
+import bisq.security.KeyBundleService;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import lombok.EqualsAndHashCode;
@@ -49,14 +49,14 @@ public class NodeListItem implements ActivatableTableItem {
     private final StringProperty numConnections = new SimpleStringProperty();
     private final Node.Listener listener;
 
-    public NodeListItem(Node node, KeyPairService keyPairService, IdentityService identityService) {
+    public NodeListItem(Node node, KeyBundleService keyBundleService, IdentityService identityService) {
         this.node = node;
         keyId = node.getNetworkId().getKeyId();
         type = identityService.findActiveIdentity(node.getNetworkId())
                 .map(i -> Res.get("settings.network.nodes.type.active"))
                 .or(() -> identityService.findRetiredIdentityByNetworkId(node.getNetworkId())
                         .map(i -> Res.get("settings.network.nodes.type.retired")))
-                .orElseGet(() -> keyPairService.isDefaultKeyId(node.getNetworkId().getKeyId()) ?
+                .orElseGet(() -> keyBundleService.isDefaultKeyId(node.getNetworkId().getKeyId()) ?
                         Res.get("settings.network.nodes.type.default") :
                         Res.get("data.na"));
 

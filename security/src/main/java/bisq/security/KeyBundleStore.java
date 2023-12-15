@@ -31,35 +31,35 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Slf4j
-public final class KeyPairStore implements PersistableStore<KeyPairStore> {
+public final class KeyBundleStore implements PersistableStore<KeyBundleStore> {
     // Secret uid used for deriving keyIds
     // As the keyID is public in the mailbox message we do not want to leak any information of the user identity
     // to the network.
     private String secretUid = StringUtils.createUid();
     private final Map<String, KeyPair> keyPairsById = new ConcurrentHashMap<>();
 
-    public KeyPairStore() {
+    public KeyBundleStore() {
     }
 
-    private KeyPairStore(String secretUid, Map<String, KeyPair> map) {
+    private KeyBundleStore(String secretUid, Map<String, KeyPair> map) {
         this.secretUid = secretUid;
         this.keyPairsById.putAll(map);
     }
 
     @Override
-    public KeyPairStore getClone() {
-        return new KeyPairStore(secretUid, keyPairsById);
+    public KeyBundleStore getClone() {
+        return new KeyBundleStore(secretUid, keyPairsById);
     }
 
     @Override
-    public bisq.security.protobuf.KeyPairStore toProto() {
-        return bisq.security.protobuf.KeyPairStore.newBuilder().setSecretUid(secretUid).putAllKeyPairsById(keyPairsById.entrySet().stream()
+    public bisq.security.protobuf.KeyBundleStore toProto() {
+        return bisq.security.protobuf.KeyBundleStore.newBuilder().setSecretUid(secretUid).putAllKeyPairsById(keyPairsById.entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey, entry -> KeyPairProtoUtil.toProto(entry.getValue()))))
                 .build();
     }
 
-    public static KeyPairStore fromProto(bisq.security.protobuf.KeyPairStore proto) {
-        return new KeyPairStore(proto.getSecretUid(),
+    public static KeyBundleStore fromProto(bisq.security.protobuf.KeyBundleStore proto) {
+        return new KeyBundleStore(proto.getSecretUid(),
                 proto.getKeyPairsByIdMap().entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey, e -> KeyPairProtoUtil.fromProto(e.getValue()))));
     }
@@ -68,7 +68,7 @@ public final class KeyPairStore implements PersistableStore<KeyPairStore> {
     public ProtoResolver<PersistableStore<?>> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.security.protobuf.KeyPairStore.class));
+                return fromProto(any.unpack(bisq.security.protobuf.KeyBundleStore.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }
@@ -76,7 +76,7 @@ public final class KeyPairStore implements PersistableStore<KeyPairStore> {
     }
 
     @Override
-    public void applyPersisted(KeyPairStore persisted) {
+    public void applyPersisted(KeyBundleStore persisted) {
         secretUid = persisted.secretUid;
         keyPairsById.clear();
         keyPairsById.putAll(persisted.keyPairsById);

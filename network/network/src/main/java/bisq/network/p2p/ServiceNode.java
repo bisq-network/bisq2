@@ -43,7 +43,7 @@ import bisq.network.p2p.services.data.inventory.InventoryService;
 import bisq.network.p2p.services.peergroup.BanList;
 import bisq.network.p2p.services.peergroup.PeerGroupManager;
 import bisq.persistence.PersistenceService;
-import bisq.security.KeyPairService;
+import bisq.security.KeyBundleService;
 import bisq.security.PubKey;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.Getter;
@@ -106,7 +106,7 @@ public class ServiceNode {
     private final Optional<DataService> dataService;
     private final InventoryService.Config inventoryServiceConfig;
     private final Optional<MessageDeliveryStatusService> messageDeliveryStatusService;
-    private final KeyPairService keyPairService;
+    private final KeyBundleService keyBundleService;
     private final PersistenceService persistenceService;
     private final Set<Address> seedNodeAddresses;
 
@@ -136,7 +136,7 @@ public class ServiceNode {
                 InventoryService.Config inventoryServiceConfig,
                 Optional<DataService> dataService,
                 Optional<MessageDeliveryStatusService> messageDeliveryStatusService,
-                KeyPairService keyPairService,
+                KeyBundleService keyBundleService,
                 PersistenceService persistenceService,
                 AuthorizationService authorizationService,
                 Set<Address> seedNodeAddresses,
@@ -147,7 +147,7 @@ public class ServiceNode {
         this.inventoryServiceConfig = inventoryServiceConfig;
         this.messageDeliveryStatusService = messageDeliveryStatusService;
         this.dataService = dataService;
-        this.keyPairService = keyPairService;
+        this.keyBundleService = keyBundleService;
         this.persistenceService = persistenceService;
         this.seedNodeAddresses = seedNodeAddresses;
 
@@ -187,7 +187,7 @@ public class ServiceNode {
                 Optional.empty();
 
         confidentialMessageService = supportedServices.contains(SupportedService.CONFIDENTIAL) ?
-                Optional.of(new ConfidentialMessageService(nodesById, keyPairService, dataService, messageDeliveryStatusService)) :
+                Optional.of(new ConfidentialMessageService(nodesById, keyBundleService, dataService, messageDeliveryStatusService)) :
                 Optional.empty();
 
         setState(State.INITIALIZING);

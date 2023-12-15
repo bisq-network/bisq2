@@ -21,7 +21,7 @@ import bisq.rest_api.JaxRsApplication;
 import bisq.rest_api.RestApiApplicationService;
 import bisq.rest_api.dto.KeyPairDto;
 import bisq.rest_api.error.StatusException;
-import bisq.security.KeyPairService;
+import bisq.security.KeyBundleService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -47,11 +47,11 @@ import java.security.KeyPair;
 public class KeyPairApi {
     public static final String DESC_KEY_ID = "The ID for identifying the key which we look up or create in case it does not exist.";
 
-    private final KeyPairService keyPairService;
+    private final KeyBundleService keyBundleService;
 
     public KeyPairApi(@Context Application application) {
         RestApiApplicationService applicationService = ((JaxRsApplication) application).getApplicationService().get();
-        keyPairService = applicationService.getSecurityService().getKeyPairService();
+        keyBundleService = applicationService.getSecurityService().getKeyBundleService();
     }
 
     /**
@@ -70,7 +70,7 @@ public class KeyPairApi {
     @Path("get-or-create/{key-id}")
     public KeyPairDto getOrCreateKeyPair(
             @Parameter(description = DESC_KEY_ID) @PathParam("key-id") String keyId) {
-        KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
+        KeyPair keyPair = keyBundleService.getOrCreateKeyPair(keyId);
         return KeyPairDto.from(keyPair);
     }
 
@@ -91,7 +91,7 @@ public class KeyPairApi {
     @GET
     @Path("get/{key-id}")
     public KeyPairDto findKeyPair(@Parameter(description = DESC_KEY_ID) @PathParam("key-id") String keyId) {
-        return KeyPairDto.from(keyPairService.findKeyPair(keyId)
+        return KeyPairDto.from(keyBundleService.findKeyPair(keyId)
                 .orElseThrow(() -> new StatusException(Response.Status.NOT_FOUND, "Could not find the key pair for ID " + keyId)));
     }
 }

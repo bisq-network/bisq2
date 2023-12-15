@@ -44,7 +44,7 @@ message KeyPair {
   bytes publicKey = 2;
 }
 
-message KeyPairStore {
+message KeyBundleStore {
   string secretUid = 1;
   map<string, KeyPair > keyPairsById = 2;
 }

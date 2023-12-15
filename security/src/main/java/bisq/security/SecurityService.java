@@ -29,19 +29,19 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 public class SecurityService implements Service {
     @Getter
-    private final KeyPairService keyPairService;
+    private final KeyBundleService keyBundleService;
     @Getter
     private final ProofOfWorkService proofOfWorkService;
 
     public SecurityService(PersistenceService persistenceService) {
-        keyPairService = new KeyPairService(persistenceService);
+        keyBundleService = new KeyBundleService(persistenceService);
         proofOfWorkService = new HashCashService();
     }
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
         proofOfWorkService.initialize();
-        return keyPairService.initialize();
+        return keyBundleService.initialize();
     }
 
     @Override
