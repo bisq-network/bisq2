@@ -31,7 +31,6 @@ import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.SendMessageResult;
 import bisq.network.identity.NetworkIdWithKeyPair;
-import bisq.network.identity.TorIdentity;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.services.data.BroadcastResult;
@@ -144,13 +143,16 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
         checkArgument(!bannedUserService.isUserProfileBanned(myUserIdentity.getUserProfile()));
 
         NetworkIdWithKeyPair senderNetworkIdWithKeyPair = myUserIdentity.getNetworkIdWithKeyPair();
-        TorIdentity senderTorIdentity = myUserIdentity.getIdentity().getTorIdentity();
         long date = System.currentTimeMillis();
         authorizedBondedRolesService.getAuthorizedBondedRoleStream().filter(e -> e.getBondedRoleType() == BondedRoleType.MODERATOR)
                 .forEach(bondedRole -> {
                     String reportSenderUserProfileId = myUserIdentity.getUserProfile().getId();
-                    networkService.confidentialSend(new ReportToModeratorMessage(date, reportSenderUserProfileId, accusedUserProfile, message, chatChannelDomain),
-                            bondedRole.getNetworkId(), senderNetworkIdWithKeyPair, senderTorIdentity);
+                    ReportToModeratorMessage report = new ReportToModeratorMessage(date,
+                            reportSenderUserProfileId,
+                            accusedUserProfile,
+                            message,
+                            chatChannelDomain);
+                    networkService.confidentialSend(report, bondedRole.getNetworkId(), senderNetworkIdWithKeyPair);
                 });
     }
 

@@ -26,7 +26,6 @@ import bisq.network.common.Address;
 import bisq.network.common.TransportConfig;
 import bisq.network.common.TransportType;
 import bisq.network.identity.NetworkId;
-import bisq.network.identity.TorIdentity;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
@@ -140,8 +139,6 @@ public class Node implements Connection.Handler {
     @Getter
     private final NetworkId networkId;
     @Getter
-    private final TorIdentity torIdentity;
-    @Getter
     private final KeyBundle keyBundle;
     @Getter
     private final Map<Address, OutboundConnection> outboundConnectionsByAddress = new ConcurrentHashMap<>();
@@ -160,7 +157,6 @@ public class Node implements Connection.Handler {
     public final NetworkLoadService networkLoadService;
 
     public Node(NetworkId networkId,
-                TorIdentity torIdentity,
                 boolean isDefaultNode,
                 Config config,
                 BanList banList,
@@ -169,7 +165,6 @@ public class Node implements Connection.Handler {
                 NetworkLoadService networkLoadService,
                 AuthorizationService authorizationService) {
         this.networkId = networkId;
-        this.torIdentity = torIdentity;
         keyBundle = keyBundleService.getOrCreateKeyBundle(networkId.getKeyId());
         this.isDefaultNode = isDefaultNode;
         transportType = config.getTransportType();

@@ -30,7 +30,6 @@ import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkIdWithKeyPair;
-import bisq.network.identity.TorIdentity;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.persistence.Persistence;
@@ -172,20 +171,17 @@ public class MediatorService implements PersistenceClient<MediatorStore>, Servic
             addNewMediationCase(mediationCase);
 
             NetworkIdWithKeyPair networkIdWithKeyPair = myUserIdentity.getNetworkIdWithKeyPair();
-            TorIdentity myNodeTorIdentity = myUserIdentity.getIdentity().getTorIdentity();
 
             // Send to requester
             networkService.confidentialSend(new MediatorsResponse(tradeId),
                     requester.getNetworkId(),
-                    networkIdWithKeyPair,
-                    myNodeTorIdentity);
+                    networkIdWithKeyPair);
             bisqEasyOpenTradeChannelService.addMediatorsResponseMessage(channel, Res.get("authorizedRole.mediator.message.toRequester"));
 
             // Send to peer
             networkService.confidentialSend(new MediatorsResponse(tradeId),
                     peer.getNetworkId(),
-                    networkIdWithKeyPair,
-                    myNodeTorIdentity);
+                    networkIdWithKeyPair);
             bisqEasyOpenTradeChannelService.addMediatorsResponseMessage(channel, Res.get("authorizedRole.mediator.message.toNonRequester"));
         });
     }

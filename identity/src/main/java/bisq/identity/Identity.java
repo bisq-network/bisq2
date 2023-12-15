@@ -20,7 +20,6 @@ package bisq.identity;
 import bisq.common.proto.Proto;
 import bisq.network.identity.NetworkId;
 import bisq.network.identity.NetworkIdWithKeyPair;
-import bisq.network.identity.TorIdentity;
 import bisq.security.keys.KeyBundle;
 import bisq.security.keys.PubKey;
 import lombok.Getter;
@@ -34,12 +33,6 @@ public final class Identity implements Proto {
     private final String tag;
     @Getter
     private final NetworkId networkId;
-
-    public TorIdentity getTorIdentity() {
-        //todo
-        return TorIdentity.from(keyBundle.getTorKeyPair().getPrivateKey(), 0);
-    }
-
 
     @Getter
     private final KeyBundle keyBundle;

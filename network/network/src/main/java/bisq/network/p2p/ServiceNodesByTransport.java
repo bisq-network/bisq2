@@ -27,7 +27,6 @@ import bisq.network.common.AddressByTransportTypeMap;
 import bisq.network.common.TransportConfig;
 import bisq.network.common.TransportType;
 import bisq.network.identity.NetworkId;
-import bisq.network.identity.TorIdentity;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
@@ -117,10 +116,10 @@ public class ServiceNodesByTransport {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public Map<TransportType, CompletableFuture<Node>> getInitializedDefaultNodeByTransport(NetworkId defaultNetworkId, TorIdentity defaultTorIdentity) {
+    public Map<TransportType, CompletableFuture<Node>> getInitializedDefaultNodeByTransport(NetworkId defaultNetworkId) {
         return map.entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey,
-                        entry -> supplyAsync(() -> entry.getValue().getInitializedDefaultNode(defaultNetworkId, defaultTorIdentity),
+                        entry -> supplyAsync(() -> entry.getValue().getInitializedDefaultNode(defaultNetworkId),
                                 NETWORK_IO_POOL)));
     }
 
@@ -129,27 +128,27 @@ public class ServiceNodesByTransport {
         return CompletableFutureUtils.allOf(futures).whenComplete((list, throwable) -> map.clear());
     }
 
-    public CompletableFuture<List<Node>> getAllInitializedNodes(NetworkId networkId, TorIdentity torIdentity) {
-        return CompletableFutureUtils.allOf(getInitializedNodeByTransport(networkId, torIdentity).values());
+    public CompletableFuture<List<Node>> getAllInitializedNodes(NetworkId networkId) {
+        return CompletableFutureUtils.allOf(getInitializedNodeByTransport(networkId).values());
     }
 
-    public CompletableFuture<Node> getAnyInitializedNode(NetworkId networkId, TorIdentity torIdentity) {
-        return CompletableFutureUtils.anyOf(getInitializedNodeByTransport(networkId, torIdentity).values());
+    public CompletableFuture<Node> getAnyInitializedNode(NetworkId networkId) {
+        return CompletableFutureUtils.anyOf(getInitializedNodeByTransport(networkId).values());
     }
 
-    public Map<TransportType, CompletableFuture<Node>> getInitializedNodeByTransport(NetworkId networkId, TorIdentity torIdentity) {
+    public Map<TransportType, CompletableFuture<Node>> getInitializedNodeByTransport(NetworkId networkId) {
         return map.entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey,
-                        entry -> getInitializedNode(entry.getKey(), networkId, torIdentity)));
+                        entry -> getInitializedNode(entry.getKey(), networkId)));
     }
 
-    public CompletableFuture<Node> getInitializedNode(TransportType transportType, NetworkId networkId, TorIdentity torIdentity) {
+    public CompletableFuture<Node> getInitializedNode(TransportType transportType, NetworkId networkId) {
         return supplyAsync(() -> {
             ServiceNode serviceNode = map.get(transportType);
             if (serviceNode.isNodeInitialized(networkId)) {
                 return serviceNode.findNode(networkId).orElseThrow();
             } else {
-                return serviceNode.getInitializedNode(networkId, torIdentity);
+                return serviceNode.getInitializedNode(networkId);
             }
         }, NETWORK_IO_POOL);
     }
@@ -178,8 +177,7 @@ public class ServiceNodesByTransport {
     public SendMessageResult confidentialSend(EnvelopePayloadMessage envelopePayloadMessage,
                                               NetworkId receiverNetworkId,
                                               KeyPair senderKeyPair,
-                                              NetworkId senderNetworkId,
-                                              TorIdentity senderTorIdentity) {
+                                              NetworkId senderNetworkId) {
         SendMessageResult sendMessageResult = new SendMessageResult();
         receiverNetworkId.getAddressByTransportTypeMap().forEach((transportType, address) -> {
             if (map.containsKey(transportType)) {
@@ -188,8 +186,7 @@ public class ServiceNodesByTransport {
                         address,
                         receiverNetworkId.getPubKey(),
                         senderKeyPair,
-                        senderNetworkId,
-                        senderTorIdentity);
+                        senderNetworkId);
                 sendMessageResult.put(transportType, result);
             }
         });
@@ -198,12 +195,11 @@ public class ServiceNodesByTransport {
 
     public Map<TransportType, Connection> send(NetworkId senderNetworkId,
                                                EnvelopePayloadMessage envelopePayloadMessage,
-                                               AddressByTransportTypeMap receiver,
-                                               TorIdentity senderTorIdentity) {
+                                               AddressByTransportTypeMap receiver) {
         return receiver.entrySet().stream().map(entry -> {
                     TransportType transportType = entry.getKey();
                     if (map.containsKey(transportType)) {
-                        return new Pair<>(transportType, map.get(transportType).send(senderNetworkId, envelopePayloadMessage, entry.getValue(), senderTorIdentity));
+                        return new Pair<>(transportType, map.get(transportType).send(senderNetworkId, envelopePayloadMessage, entry.getValue()));
                     } else {
                         return null;
                     }
