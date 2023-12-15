@@ -27,7 +27,6 @@ import bisq.network.common.Address;
 import bisq.network.common.AddressByTransportTypeMap;
 import bisq.network.common.TransportType;
 import bisq.network.identity.NetworkId;
-import bisq.network.identity.TorIdentity;
 import bisq.network.p2p.node.Node;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
@@ -35,6 +34,7 @@ import bisq.persistence.PersistenceService;
 import bisq.security.keys.KeyBundle;
 import bisq.security.keys.KeyBundleService;
 import bisq.security.keys.PubKey;
+import bisq.security.keys.TorKeyGeneration;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Streams;
 import lombok.Getter;
@@ -147,9 +147,10 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
      */
     public CompletableFuture<Identity> createNewActiveIdentity(String identityTag, KeyPair keyPair) {
         String keyId = keyBundleService.getKeyIdFromTag(identityTag);
-        KeyBundle keyBundle = keyBundleService.createAndPersistKeyBundle(keyId, keyPair);
+        Optional<byte[]> torPrivateKeyFromTorDir = findPersistedTorPrivateKeyFromTorDir(identityTag);
+        KeyBundle keyBundle = keyBundleService.createAndPersistKeyBundle(keyId, keyPair, torPrivateKeyFromTorDir);
         PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
-        NetworkId networkId = createNetworkId(false, pubKey, keyBundle);
+        NetworkId networkId = createNetworkId(false, pubKey, keyBundle.getTorKeyPair().getOnionAddress());
         Identity identity = new Identity(identityTag, networkId, keyBundle);
 
         synchronized (lock) {
@@ -251,12 +252,14 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     private Identity createIdentity(String keyId, String identityTag, KeyPair keyPair) {
         PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
         boolean isDefaultIdentity = identityTag.equals(DEFAULT_IDENTITY_TAG);
-        KeyBundle keyBundle = keyBundleService.createAndPersistKeyBundle(keyId, keyPair);
-        NetworkId networkId = createNetworkId(isDefaultIdentity, pubKey, keyBundle);
+        Optional<byte[]> torPrivateKeyFromTorDir = findPersistedTorPrivateKeyFromTorDir(identityTag);
+        KeyBundle keyBundle = keyBundleService.createAndPersistKeyBundle(keyId, keyPair, torPrivateKeyFromTorDir);
+        NetworkId networkId = createNetworkId(isDefaultIdentity, pubKey, keyBundle.getTorKeyPair().getOnionAddress());
+
         return new Identity(identityTag, networkId, keyBundle);
     }
 
-    private NetworkId createNetworkId(boolean isForDefaultId, PubKey pubKey, KeyBundle keyBundle) {
+    private NetworkId createNetworkId(boolean isForDefaultId, PubKey pubKey, String onionAddress) {
         AddressByTransportTypeMap addressByTransportTypeMap = new AddressByTransportTypeMap();
         Set<TransportType> supportedTransportTypes = networkService.getSupportedTransportTypes();
         Map<TransportType, Integer> defaultPorts = networkService.getDefaultNodePortByTransportType();
@@ -274,7 +277,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
             }
 
             if (isTorSupported) {
-                Address address = new Address(keyBundle.getTorKeyPair().getOnionAddress(), torPort);
+                Address address = new Address(onionAddress, torPort);
                 addressByTransportTypeMap.put(TransportType.TOR, address);
             }
         } else {
@@ -285,7 +288,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
             }
 
             if (isTorSupported) {
-                Address address = new Address(keyBundle.getTorKeyPair().getOnionAddress(), torPort);
+                Address address = new Address(onionAddress, torPort);
                 addressByTransportTypeMap.put(TransportType.TOR, address);
             }
         }
@@ -307,25 +310,26 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
             return;
         }
         persistableStore.getDefaultIdentity().ifPresent(defaultIdentity ->
-                maybePersistTorIdentityToTorDir(defaultIdentity, "default"));
-        persistableStore.getActiveIdentityByTag().forEach((key, value) -> maybePersistTorIdentityToTorDir(value, key));
+                maybePersistTorPrivateKeyToTorDir(defaultIdentity, "default"));
+        persistableStore.getActiveIdentityByTag().forEach((key, value) -> maybePersistTorPrivateKeyToTorDir(value, key));
     }
 
-    private void maybePersistTorIdentityToTorDir(Identity identity, String identityTag) {
+    private void maybePersistTorPrivateKeyToTorDir(Identity identity, String identityTag) {
         if (identity.getNetworkId().getAddressByTransportTypeMap().containsKey(TransportType.TOR)) {
-            TorIdentity torIdentity = identity.getTorIdentity();
             String directory = getTorHiddenServiceDirectory(identityTag);
             try {
                 FileUtils.makeDirs(directory);
                 File privateKeyFile = Path.of(directory, "private_key").toFile();
                 if (!privateKeyFile.exists()) {
-                    byte[] privateKey = torIdentity.getPrivateKey();
+                    byte[] privateKey = identity.getKeyBundle().getTorKeyPair().getPrivateKey();
+                    String onionAddress = identity.getKeyBundle().getTorKeyPair().getOnionAddress();
+                    String privateKeyInOpenSshFormat = TorKeyGeneration.getPrivateKeyInOpenSshFormat(privateKey);
                     String privateKeyAsHex = Hex.encode(privateKey);
                     FileUtils.writeToFile(privateKeyAsHex, Path.of(directory, "private_key_hex").toFile());
-                    FileUtils.writeToFile(torIdentity.getTorOnionKey(), privateKeyFile);
-                    FileUtils.writeToFile(torIdentity.getOnionAddress(), Path.of(directory, "hostname").toFile());
-                    FileUtils.writeToFile(String.valueOf(torIdentity.getPort()), Path.of(directory, "port").toFile());
-                    log.info("We persisted the default tor identity {} to {}.", torIdentity, directory);
+                    FileUtils.writeToFile(privateKeyInOpenSshFormat, privateKeyFile);
+                    FileUtils.writeToFile(onionAddress, Path.of(directory, "hostname").toFile());
+                    log.info("We persisted the tor private key for onionAddress {} for identityTag {} to {}.",
+                            onionAddress, identityTag, directory);
                 }
             } catch (IOException e) {
                 log.error("Could not persist torIdentity", e);
@@ -333,19 +337,16 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
         }
     }
 
-    private Optional<TorIdentity> findPersistedTorIdentityFromTorDir(String identityTag) {
+    private Optional<byte[]> findPersistedTorPrivateKeyFromTorDir(String identityTag) {
         String directory = getTorHiddenServiceDirectory(identityTag);
         if (!new File(directory).exists()) {
             return Optional.empty();
         }
-
         try {
             String privateKeyAsHex = FileUtils.readStringFromFile(Path.of(directory, "private_key_hex").toFile());
             byte[] privateKey = Hex.decode(privateKeyAsHex);
-            int port = Integer.parseInt(FileUtils.readStringFromFile(Path.of(directory, "port").toFile()));
-            TorIdentity torIdentity = TorIdentity.from(privateKey, port);
-            log.info("We found an existing tor identity {} at {} and use that for identityTag {}.", torIdentity, directory, identityTag);
-            return Optional.of(torIdentity);
+            log.info("We found an existing tor private key at {} and use that for identityTag {}.", directory, identityTag);
+            return Optional.of(privateKey);
         } catch (IOException e) {
             log.warn("Could not read private_key_hex or port", e);
             return Optional.empty();
