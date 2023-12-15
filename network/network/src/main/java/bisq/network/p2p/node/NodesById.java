@@ -88,7 +88,7 @@ public class NodesById implements Node.Listener {
         return node;
     }
 
-    public Node getInitializedNode(NetworkId networkId) {
+    public Node initializeNode(NetworkId networkId) {
         Node node = getOrCreateNode(networkId);
         node.initialize();   // blocking
         return node;

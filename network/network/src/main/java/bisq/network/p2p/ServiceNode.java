@@ -215,8 +215,8 @@ public class ServiceNode {
     }
 
 
-    Node getInitializedNode(NetworkId networkId) {
-        return nodesById.getInitializedNode(networkId);
+    Node initializeNode(NetworkId networkId) {
+        return nodesById.initializeNode(networkId);
     }
 
     boolean isNodeInitialized(NetworkId networkId) {

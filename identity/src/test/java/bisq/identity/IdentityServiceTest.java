@@ -65,7 +65,7 @@ public class IdentityServiceTest {
         when(networkService.getInitializedDefaultNodeByTransport()).thenReturn(map);
 
         doReturn(CompletableFuture.completedFuture(mock(Node.class)))
-                .when(networkService).getAnyInitializedNode(any());
+                .when(networkService).anySuppliedInitializedNode(any());
 
         keyBundleService = new KeyBundleService(persistenceService);
         identityService = new IdentityService(persistenceService, keyBundleService, networkService);
