@@ -135,7 +135,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
      */
     public CompletableFuture<Identity> createNewActiveIdentity(String identityTag, KeyPair keyPair) {
         KeyBundle keyBundle = keyBundleService.createAndPersistKeyBundle(identityTag, keyPair);
-        NetworkId networkId = networkService.createNetworkId(keyBundle);
+        NetworkId networkId = networkService.createAndGetNetworkId(keyBundle);
         Identity identity = new Identity(identityTag, networkId, keyBundle);
 
         synchronized (lock) {
@@ -216,7 +216,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     private Identity createIdentity(String identityTag) {
         String keyId = keyBundleService.getKeyIdFromTag(identityTag);
         KeyBundle keyBundle = keyBundleService.getOrCreateKeyBundle(keyId);
-        NetworkId networkId = networkService.createNetworkId(keyBundle);
+        NetworkId networkId = networkService.createAndGetNetworkId(keyBundle);
         return new Identity(identityTag, networkId, keyBundle);
     }
 
