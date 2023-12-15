@@ -18,6 +18,7 @@
 package bisq.network.p2p.node.handshake;
 
 import bisq.common.util.StringUtils;
+import bisq.network.common.Address;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.Capability;
 import bisq.network.p2p.node.ConnectionException;
@@ -26,7 +27,6 @@ import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.network.p2p.services.peergroup.BanList;
-import bisq.network.common.Address;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,6 +37,7 @@ import java.util.concurrent.CompletableFuture;
 public class ConnectionHandshakeInitiator {
     private final Capability myCapability;
     private final byte[] addressOwnershipProof;
+    private final long signatureDate;
     private final AuthorizationService authorizationService;
     private final BanList banList;
     private final NetworkLoad myNetworkLoad;
@@ -44,9 +45,16 @@ public class ConnectionHandshakeInitiator {
     @Getter
     private final CompletableFuture<OutboundConnection> completableFuture = new CompletableFuture<>();
 
-    public ConnectionHandshakeInitiator(Capability myCapability, byte[] addressOwnershipProof, AuthorizationService authorizationService, BanList banList, NetworkLoad myNetworkLoad, Address peerAddress) {
+    public ConnectionHandshakeInitiator(Capability myCapability,
+                                        byte[] addressOwnershipProof,
+                                        long signatureDate,
+                                        AuthorizationService authorizationService,
+                                        BanList banList,
+                                        NetworkLoad myNetworkLoad,
+                                        Address peerAddress) {
         this.myCapability = myCapability;
         this.addressOwnershipProof = addressOwnershipProof;
+        this.signatureDate = signatureDate;
         this.authorizationService = authorizationService;
         this.banList = banList;
         this.myNetworkLoad = myNetworkLoad;
@@ -54,7 +62,7 @@ public class ConnectionHandshakeInitiator {
     }
 
     public NetworkEnvelope initiate() {
-        ConnectionHandshake.Request request = new ConnectionHandshake.Request(myCapability, addressOwnershipProof, myNetworkLoad);
+        ConnectionHandshake.Request request = new ConnectionHandshake.Request(myCapability, addressOwnershipProof, myNetworkLoad, signatureDate);
         // As we do not know he peers load yet, we use the NetworkLoad.INITIAL_LOAD
         AuthorizationToken token = authorizationService.createToken(request,
                 NetworkLoad.INITIAL_LOAD,

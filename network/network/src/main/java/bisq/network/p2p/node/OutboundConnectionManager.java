@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.node;
 
+import bisq.network.common.Address;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.envelope.NetworkEnvelopeSocketChannel;
@@ -27,7 +28,6 @@ import bisq.network.p2p.node.network_load.ConnectionMetrics;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.network.p2p.node.network_load.NetworkLoadService;
 import bisq.network.p2p.services.peergroup.BanList;
-import bisq.network.common.Address;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -133,7 +133,8 @@ public class OutboundConnectionManager {
         if (outboundHandshakeChannels.contains(socketChannel)) {
             var handshakeInitiator = new ConnectionHandshakeInitiator(
                     myCapability,
-                    null,
+                    null, //TODO
+                    System.currentTimeMillis(), //TODO
                     authorizationService,
                     banList,
                     myNetworkLoad,

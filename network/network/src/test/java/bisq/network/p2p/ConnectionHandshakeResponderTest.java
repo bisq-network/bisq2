@@ -99,7 +99,7 @@ public class ConnectionHandshakeResponderTest {
 
     @Test
     void wrongEnvelopeVersion() throws IOException {
-        ConnectionHandshake.Request request = new ConnectionHandshake.Request(responderCapability, null, new NetworkLoad());
+        ConnectionHandshake.Request request = new ConnectionHandshake.Request(responderCapability, null, new NetworkLoad(), 0);
         AuthorizationToken token = authorizationService.createToken(request,
                 new NetworkLoad(),
                 Address.localHost(1234).toString(),
@@ -132,7 +132,7 @@ public class ConnectionHandshakeResponderTest {
 
     @Test
     void bannedPeer() throws IOException {
-        ConnectionHandshake.Request request = new ConnectionHandshake.Request(responderCapability, null, new NetworkLoad());
+        ConnectionHandshake.Request request = new ConnectionHandshake.Request(responderCapability, null, new NetworkLoad(), 0);
         AuthorizationToken token = authorizationService.createToken(request,
                 new NetworkLoad(),
                 Address.localHost(1234).toString(),
@@ -152,7 +152,7 @@ public class ConnectionHandshakeResponderTest {
 
     @Test
     void invalidPoW() throws IOException {
-        ConnectionHandshake.Request request = new ConnectionHandshake.Request(responderCapability, null, new NetworkLoad());
+        ConnectionHandshake.Request request = new ConnectionHandshake.Request(responderCapability, null, new NetworkLoad(), 0);
         AuthorizationToken token = authorizationService.createToken(request,
                 new NetworkLoad(),
                 Address.localHost(1234).toString(),
@@ -171,7 +171,7 @@ public class ConnectionHandshakeResponderTest {
     @Test
     void correctPoW() throws IOException {
         Capability peerCapability = new Capability(Address.localHost(2345), supportedTransportTypes);
-        ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, null, new NetworkLoad());
+        ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, null, new NetworkLoad(), 0);
         AuthorizationToken token = authorizationService.createToken(request,
                 new NetworkLoad(),
                 responderCapability.getAddress().getFullAddress(),
@@ -189,7 +189,7 @@ public class ConnectionHandshakeResponderTest {
 
     private NetworkEnvelope createValidRequest() {
         Capability peerCapability = new Capability(Address.localHost(2345), supportedTransportTypes);
-        ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, null, new NetworkLoad());
+        ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, null, new NetworkLoad(), 0);
         AuthorizationToken token = authorizationService.createToken(request,
                 new NetworkLoad(),
                 responderCapability.getAddress().getFullAddress(),

@@ -51,6 +51,7 @@ message ConnectionHandshake {
     Capability capability = 1;
     optional bytes addressOwnershipProof = 2;
     NetworkLoad networkLoad = 3;
+    sint64 signatureDate = 4;
   }
   message Response {
     Capability capability = 1;
