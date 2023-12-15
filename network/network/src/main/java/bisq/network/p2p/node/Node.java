@@ -229,7 +229,7 @@ public class Node implements Connection.Handler {
     }
 
     private void createServerAndListen() {
-        ServerSocketResult serverSocketResult = transportService.getServerSocket(networkId, torIdentity);
+        ServerSocketResult serverSocketResult = transportService.getServerSocket(networkId, myKeyBundle);
         myCapability = Optional.of(new Capability(serverSocketResult.getAddress(), new ArrayList<>(supportedTransportTypes)));
         server = Optional.of(new Server(serverSocketResult,
                 socket -> onClientSocket(socket, serverSocketResult, myCapability.get()),
