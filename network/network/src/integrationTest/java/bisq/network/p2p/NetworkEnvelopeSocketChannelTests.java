@@ -49,6 +49,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 public class NetworkEnvelopeSocketChannelTests {
 
@@ -200,7 +201,7 @@ public class NetworkEnvelopeSocketChannelTests {
     private AuthorizationService createAuthorizationService() {
         String baseDir = tmpDir.toAbsolutePath().toString();
         PersistenceService persistenceService = new PersistenceService(baseDir);
-        SecurityService securityService = new SecurityService(persistenceService);
+        SecurityService securityService = new SecurityService(persistenceService, mock(SecurityService.Config.class));
         securityService.initialize();
 
         ProofOfWorkService proofOfWorkService = securityService.getProofOfWorkService();

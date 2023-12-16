@@ -30,12 +30,25 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 public class SecurityService implements Service {
     @Getter
+    public static class Config {
+        private final com.typesafe.config.Config keyBundle;
+
+        public Config(com.typesafe.config.Config keyBundle) {
+            this.keyBundle = keyBundle;
+        }
+
+        public static SecurityService.Config from(com.typesafe.config.Config config) {
+            return new SecurityService.Config(config.getConfig("keyBundle"));
+        }
+    }
+
+    @Getter
     private final KeyBundleService keyBundleService;
     @Getter
     private final ProofOfWorkService proofOfWorkService;
 
-    public SecurityService(PersistenceService persistenceService) {
-        keyBundleService = new KeyBundleService(persistenceService);
+    public SecurityService(PersistenceService persistenceService, Config config) {
+        keyBundleService = new KeyBundleService(persistenceService, KeyBundleService.Config.from(config.getKeyBundle()));
         proofOfWorkService = new HashCashService();
     }
 
