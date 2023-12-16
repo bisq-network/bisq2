@@ -29,6 +29,7 @@ import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.network_load.ConnectionMetrics;
+import bisq.network.p2p.services.peergroup.PeerGroupService;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.TimeFormatter;
 import javafx.beans.property.SimpleStringProperty;
@@ -36,6 +37,8 @@ import javafx.beans.property.StringProperty;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Optional;
 
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Slf4j
@@ -52,7 +55,10 @@ public class ConnectionListItem implements ActivatableTableItem, DateTableItem {
     private final StringProperty rtt = new SimpleStringProperty("-");
     private final Connection.Listener listener;
 
-    public ConnectionListItem(Connection connection, Node node, IdentityService identityService) {
+    public ConnectionListItem(Connection connection,
+                              Node node,
+                              IdentityService identityService,
+                              Optional<PeerGroupService> peerGroupService) {
         this.connection = connection;
         this.keyId = node.getNetworkId().getKeyId();
         connectionId = connection.getId();
@@ -60,7 +66,10 @@ public class ConnectionListItem implements ActivatableTableItem, DateTableItem {
         date = connectionMetrics.getCreationDate().getTime();
         dateString = DateFormatter.formatDate(date);
         timeString = DateFormatter.formatTime(date);
-        address = connection.getPeerAddress().getFullAddress();
+
+        String fullAddress = connection.getPeerAddress().getFullAddress();
+        boolean isSeed = peerGroupService.map(e -> e.isSeed(connection.getPeerAddress())).orElse(false);
+        address = isSeed ? Res.get("settings.network.connections.seed", fullAddress) : fullAddress;
 
         direction = connection.isOutboundConnection() ?
                 Res.get("settings.network.connections.outbound") :

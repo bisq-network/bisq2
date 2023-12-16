@@ -97,9 +97,7 @@ public class TransportTypeView extends View<GridPane, TransportTypeModel, Transp
     }
 
     private void configConnectionsTableView() {
-        connectionsTableView.getColumns().add(BisqTableColumns.getDateColumn(
-                Res.get("settings.network.connections.header.established"),
-                connectionsTableView.getSortOrder()));
+        connectionsTableView.getColumns().add(BisqTableColumns.getDateColumn(connectionsTableView.getSortOrder()));
 
         connectionsTableView.getColumns().add(new BisqTableColumn.Builder<ConnectionListItem>()
                 .title(Res.get("settings.network.connections.header.address"))

@@ -31,6 +31,8 @@ import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.NodesById;
+import bisq.network.p2p.services.peergroup.PeerGroupManager;
+import bisq.network.p2p.services.peergroup.PeerGroupService;
 import bisq.security.keys.KeyBundleService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -47,6 +49,7 @@ public class TransportTypeController implements Controller {
 
     private final Node.Listener nodeListener;
     private final NodesById.Listener nodesByIdListener;
+    private final Optional<PeerGroupService> peerGroupService;
 
     public TransportTypeController(ServiceProvider serviceProvider, TransportType transportType) {
         keyBundleService = serviceProvider.getSecurityService().getKeyBundleService();
@@ -54,6 +57,7 @@ public class TransportTypeController implements Controller {
 
         ServiceNode serviceNode = serviceProvider.getNetworkService().findServiceNode(transportType).orElseThrow();
         Node defaultNode = serviceNode.getDefaultNode();
+        peerGroupService = serviceNode.getPeerGroupManager().map(PeerGroupManager::getPeerGroupService);
 
         model = new TransportTypeModel(transportType, serviceNode, defaultNode);
         view = new TransportTypeView(model, this);
@@ -89,17 +93,18 @@ public class TransportTypeController implements Controller {
 
     @Override
     public void onActivate() {
-        model.getNodeListItems().onActivate();
-        model.getConnectionListItems().onActivate();
-
         model.getMyDefaultNodeAddress().set(model.getDefaultNode().findMyAddress()
                 .map(Address::getFullAddress)
                 .orElseGet(() -> Res.get("data.na")));
 
+        // addNode triggers addConnection
         model.getServiceNode().getNodesById().getAllNodes().forEach(this::addNode);
 
         model.getServiceNode().getNodesById().addListener(nodesByIdListener);
         model.getServiceNode().getNodesById().addNodeListener(nodeListener);
+
+        model.getNodeListItems().onActivate();
+        model.getConnectionListItems().onActivate();
     }
 
     @Override
@@ -109,6 +114,8 @@ public class TransportTypeController implements Controller {
 
         model.getNodeListItems().onDeactivate();
         model.getConnectionListItems().onDeactivate();
+        model.getNodeListItems().clear();
+        model.getConnectionListItems().clear();
     }
 
     private void addNode(Node node) {
@@ -127,7 +134,7 @@ public class TransportTypeController implements Controller {
     }
 
     private void addConnection(Connection connection, Node node) {
-        ConnectionListItem item = new ConnectionListItem(connection, node, identityService);
+        ConnectionListItem item = new ConnectionListItem(connection, node, identityService, peerGroupService);
         if (!model.getConnectionListItems().contains(item)) {
             model.getConnectionListItems().add(item);
         }

@@ -249,7 +249,7 @@ public class PeerGroupManager {
         peerGroupService.getAllConnections()
                 .filter(Connection::isRunning)
                 .filter(connection -> banList.isBanned(connection.getPeerAddress()))
-                .peek(connection -> log.info("{} -> {}: CloseQuarantined triggered close connection", node, connection.getPeerAddress()))
+                .peek(connection -> log.info("Close connection to banned node. connection={} ", connection.getPeerAddress()))
                 .forEach(connection -> node.closeConnection(connection, CloseReason.BANNED));
     }
 
