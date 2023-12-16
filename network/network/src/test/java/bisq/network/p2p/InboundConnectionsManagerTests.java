@@ -32,9 +32,7 @@ import bisq.network.p2p.node.envelope.parser.nio.ProtoBufMessageLengthWriter;
 import bisq.network.p2p.node.handshake.ConnectionHandshake;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.network.p2p.services.peergroup.BanList;
-import bisq.persistence.PersistenceService;
-import bisq.security.SecurityService;
-import bisq.security.pow.ProofOfWorkService;
+import bisq.security.pow.HashCashService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 
@@ -260,12 +258,6 @@ public class InboundConnectionsManagerTests {
     }
 
     private AuthorizationService createAuthorizationService() {
-        String baseDir = tmpDir.toAbsolutePath().toString();
-        PersistenceService persistenceService = new PersistenceService(baseDir);
-        SecurityService securityService = new SecurityService(persistenceService, mock(SecurityService.Config.class));
-        securityService.initialize();
-
-        ProofOfWorkService proofOfWorkService = securityService.getProofOfWorkService();
-        return new AuthorizationService(proofOfWorkService);
+        return new AuthorizationService(new HashCashService());
     }
 }
