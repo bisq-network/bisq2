@@ -27,7 +27,6 @@ import bisq.network.p2p.services.peergroup.exchange.PeerExchangeService;
 import bisq.network.p2p.services.peergroup.exchange.PeerExchangeStrategy;
 import bisq.network.p2p.services.peergroup.keepalive.KeepAliveService;
 import bisq.network.p2p.services.peergroup.network_load.NetworkLoadExchangeService;
-import bisq.network.p2p.services.peergroup.validateaddress.AddressValidationService;
 import bisq.persistence.PersistenceService;
 import dev.failsafe.Failsafe;
 import dev.failsafe.RetryPolicy;
@@ -123,7 +122,6 @@ public class PeerGroupManager {
     private final PeerExchangeService peerExchangeService;
     private final KeepAliveService keepAliveService;
     private final NetworkLoadExchangeService networkLoadExchangeService;
-    private final AddressValidationService addressValidationService;
     private Optional<Scheduler> scheduler = Optional.empty();
 
 
@@ -147,7 +145,6 @@ public class PeerGroupManager {
         peerExchangeService = new PeerExchangeService(node, peerExchangeStrategy);
         keepAliveService = new KeepAliveService(node, peerGroupService, config.getKeepAliveServiceConfig());
         networkLoadExchangeService = new NetworkLoadExchangeService(node, peerGroupService);
-        addressValidationService = new AddressValidationService(node, banList);
 
         retryPolicy = RetryPolicy.<Boolean>builder()
                 .handle(IllegalStateException.class)
@@ -170,7 +167,6 @@ public class PeerGroupManager {
     public void shutdown() {
         setState(State.STOPPING);
         peerExchangeService.shutdown();
-        addressValidationService.shutdown();
         keepAliveService.shutdown();
         networkLoadExchangeService.shutdown();
         scheduler.ifPresent(Scheduler::stop);
@@ -230,8 +226,6 @@ public class PeerGroupManager {
         log.debug("Node {} called runBlockingTasks", node);
         try {
             closeBanned();
-            maybeVerifyInboundConnections();
-            Thread.sleep(100);
             maybeCloseDuplicateConnections();
             Thread.sleep(100);
             maybeCloseConnectionsToSeeds();
@@ -259,32 +253,12 @@ public class PeerGroupManager {
                 .forEach(connection -> node.closeConnection(connection, CloseReason.BANNED));
     }
 
-    private void maybeVerifyInboundConnections() {
-        log.debug("Node {} called maybeVerifyInboundConnections", node);
-        // We only do the verification in about 30% of calls to avoid getting too much churn
-        if (new Random().nextInt(10) >= 3) {
-            return;
-        }
-        Set<Address> outboundAddresses = peerGroupService.getOutboundConnections()
-                .filter(addressValidationService::isInProgress)
-                .map(Connection::getPeerAddress)
-                .collect(Collectors.toSet());
-        peerGroupService.getInboundConnections()
-                .filter(Connection::isRunning)
-                .filter(inbound -> !inbound.isPeerAddressVerified())
-                .filter(addressValidationService::isNotInProgress)
-                .filter(inbound -> !outboundAddresses.contains(inbound.getPeerAddress()))
-                .peek(inbound -> log.info("{} -> {}: Start addressValidationProtocol", node, inbound.getPeerAddress()))
-                .forEach(inbound -> addressValidationService.startAddressValidationProtocol(inbound).join());
-    }
-
     /**
      * Remove duplicate connections (inbound connections which have an outbound connection with the same address)
      */
     private void maybeCloseDuplicateConnections() {
         log.debug("Node {} called maybeCloseDuplicateConnections", node);
         Set<Address> outboundAddresses = peerGroupService.getOutboundConnections()
-                .filter(addressValidationService::isNotInProgress)
                 .map(Connection::getPeerAddress)
                 .collect(Collectors.toSet());
         peerGroupService.getInboundConnections()
@@ -413,9 +387,7 @@ public class PeerGroupManager {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private boolean mayDisconnect(Connection connection) {
-        return notBootstrapping(connection) &&
-                addressValidationService.isNotInProgress(connection) &&
-                connection.isRunning();
+        return notBootstrapping(connection) && connection.isRunning();
     }
 
     // TODO find better solution than to use a hard coded estimated value
