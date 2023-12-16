@@ -6,12 +6,12 @@ Here are a few IntelliJ IDEA run configurations for running two seeds and differ
 
 Classpath of module (Alt+O)
 ```
-bisq.seed_node.main
+apps.seed-node-app.main
 ```
 
 Main Class (Alt+C)
 ```
-bisq.seed_node.SeedMain
+bisq.seed_node.SeedNodeApp
 ```
 
 Program Arguments (Alt+R)
@@ -47,12 +47,12 @@ Copy the `Seed_1` run configuration, rename it to `Seed_2` and change:
 
 Classpath of module (Alt+O)
 ```
-bisq.desktop.main
+desktop.desktop-app.main
 ```
 
 Main Class (Alt+C)
 ```
-bisq.desktop.Main
+bisq.desktop_app.DesktopApp
 ```
 
 Program Arguments (Alt+R)
