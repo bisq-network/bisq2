@@ -81,8 +81,12 @@ public abstract class NavigationController implements Controller {
 
     public void resetSelectedChildTarget() {
         getModel().setNavigationTarget(getModel().getDefaultNavigationTarget());
-        getModel().setResolvedTarget(Optional.empty());
         getModel().setView(null);
+        resetResolvedTarget();
+    }
+
+    public void resetResolvedTarget() {
+        getModel().setResolvedTarget(Optional.empty());
     }
 
     @Override

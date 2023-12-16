@@ -47,5 +47,7 @@ public abstract class ContentTabController<M extends ContentTabModel> extends Ta
     @Override
     public void onDeactivate() {
         isNotificationVisiblePin.unbind();
+
+        resetResolvedTarget();
     }
 }
