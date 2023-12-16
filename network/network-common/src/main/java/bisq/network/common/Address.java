@@ -34,6 +34,9 @@ public final class Address implements Proto, Comparable<Address> {
     }
 
     private final String host;
+
+    // We use random ports for tor
+    @EqualsAndHashCode.Exclude
     private final int port;
 
     public Address(String fullAddress) {
