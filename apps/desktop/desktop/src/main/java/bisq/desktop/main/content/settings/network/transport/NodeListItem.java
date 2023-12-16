@@ -68,6 +68,7 @@ public class NodeListItem implements ActivatableTableItem {
 
         address = node.findMyAddress().map(Address::getFullAddress).orElse(Res.get("data.na"));
 
+        numConnections.set(String.valueOf(node.getAllConnections().count()));
         listener = new Node.Listener() {
             @Override
             public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
@@ -92,7 +93,6 @@ public class NodeListItem implements ActivatableTableItem {
     @Override
     public void onActivate() {
         node.addListener(listener);
-        numConnections.set(String.valueOf(node.getAllConnections().count()));
     }
 
     @Override
