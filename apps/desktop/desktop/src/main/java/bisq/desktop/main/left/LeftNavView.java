@@ -24,14 +24,11 @@ import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.main.top.TopPanelView;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
@@ -40,7 +37,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -55,8 +51,6 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
     private final static int EXPAND_ICON_SIZE = 18;
 
     private final ToggleGroup toggleGroup = new ToggleGroup();
-    @Getter
-    private final NetworkInfoBox networkInfoBox;
     private final Button horizontalExpandIcon, horizontalCollapseIcon;
     private final ImageView logoExpanded, logoCollapsed;
     private final Region selectionMarker;
@@ -64,10 +58,13 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
     private final int menuTop;
     private final LeftNavButton authorizedRole;
     private final Label version;
+    private final HBox networkInfoRoot;
     private Subscription navigationTargetSubscription, menuExpandedSubscription, selectedNavigationButtonPin, newVersionAvailablePin;
 
-    public LeftNavView(LeftNavModel model, LeftNavController controller) {
+    public LeftNavView(LeftNavModel model, LeftNavController controller, HBox networkInfoRoot) {
         super(new AnchorPane(), model, controller);
+
+        this.networkInfoRoot = networkInfoRoot;
 
         root.getStyleClass().add("bisq-dark-bg");
 
@@ -123,9 +120,6 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 "nav-authorized-role",
                 NavigationTarget.AUTHORIZED_ROLE, false);
 
-        networkInfoBox = new NetworkInfoBox(model,
-                () -> controller.onNavigationTargetSelected(NavigationTarget.NETWORK_INFO));
-
         horizontalExpandIcon = BisqIconButton.createIconButton(AwesomeIcon.CHEVRON_SIGN_RIGHT, 16);
         horizontalExpandIcon.setCursor(Cursor.HAND);
         horizontalExpandIcon.setLayoutY(menuTop - 3);
@@ -175,8 +169,8 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         Pane logoAndVersion = new Pane(logoExpanded, logoCollapsed, version);
 
         Layout.pinToAnchorPane(mainMenuItems, menuTop, 0, 0, MARKER_WIDTH);
-        Layout.pinToAnchorPane(networkInfoBox, null, null, 18, 0);
-        root.getChildren().addAll(logoAndVersion, selectionMarker, mainMenuItems, horizontalExpandIcon, horizontalCollapseIcon, networkInfoBox);
+        Layout.pinToAnchorPane(networkInfoRoot, null, null, 18, 0);
+        root.getChildren().addAll(logoAndVersion, selectionMarker, mainMenuItems, horizontalExpandIcon, horizontalCollapseIcon, networkInfoRoot);
     }
 
     @Override
@@ -203,8 +197,8 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                                 .forEach(e -> e.setHorizontalExpanded(true, duration.get() / 2)))
                         .after(duration.get() / 2);
                 Transitions.animateLeftNavigationWidth(mainMenuItems, EXPANDED_WIDTH, duration.get());
-                networkInfoBox.setPrefWidth(width + MARKER_WIDTH);
-                Transitions.fadeIn(networkInfoBox, duration.get());
+                networkInfoRoot.setPrefWidth(width + MARKER_WIDTH);
+                Transitions.fadeIn(networkInfoRoot, duration.get());
 
                 Transitions.fadeOut(horizontalExpandIcon, duration.get() / 4, () -> {
                     horizontalExpandIcon.setVisible(false);
@@ -220,10 +214,10 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                     version.setLayoutX(91);
                 }).after(duration.get() / 2);
                 UIScheduler.run(() -> {
-                    networkInfoBox.setOpacity(0);
-                    Transitions.fadeIn(networkInfoBox, duration.get() / 4);
-                    networkInfoBox.setVisible(true);
-                    networkInfoBox.setManaged(true);
+                    networkInfoRoot.setOpacity(0);
+                    Transitions.fadeIn(networkInfoRoot, duration.get() / 4);
+                    networkInfoRoot.setVisible(true);
+                    networkInfoRoot.setManaged(true);
                     horizontalCollapseIcon.setOpacity(0);
                     horizontalCollapseIcon.setVisible(true);
                     horizontalCollapseIcon.setManaged(true);
@@ -243,9 +237,9 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                             Transitions.fadeIn(horizontalExpandIcon, 2 * Transitions.DEFAULT_DURATION, 0.3, null);
                         })
                         .after(duration.get() / 4);
-                Transitions.fadeOut(networkInfoBox, duration.get() / 2, () -> {
-                    networkInfoBox.setVisible(false);
-                    networkInfoBox.setManaged(false);
+                Transitions.fadeOut(networkInfoRoot, duration.get() / 2, () -> {
+                    networkInfoRoot.setVisible(false);
+                    networkInfoRoot.setManaged(false);
                 });
                 Transitions.fadeOut(logoExpanded, duration.get() / 2, () -> {
                     logoExpanded.setVisible(false);
@@ -426,61 +420,6 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                         (LeftNavSubButton.HEIGHT + 2) * submenu.getChildren().size() : 0;
                 Transitions.animateHeight(submenu, targetHeight);
             }
-        }
-    }
-
-    private static class NetworkInfoBox extends HBox {
-        private NetworkInfoBox(LeftNavModel model, Runnable handler) {
-            setMinHeight(53);
-            setMaxHeight(53);
-            setPadding(new Insets(26, 24, 0, 24));
-
-            setOnMouseClicked(e -> handler.run());
-
-            getChildren().addAll(
-                    getNetworkBox(
-                            Res.get("navigation.network.info.tor"),
-                            "tor",
-                            model.getTorNumConnections(),
-                            model.getTorNumTargetConnections(),
-                            model.getTorEnabled()
-                    ),
-                    Spacer.fillHBox(),
-                    getNetworkBox(
-                            Res.get("navigation.network.info.i2p"),
-                            "i2p",
-                            model.getI2pNumConnections(),
-                            model.getI2pNumTargetConnections(),
-                            model.getI2pEnabled()
-                    )
-            );
-        }
-
-        private HBox getNetworkBox(String title,
-                                   String imageId,
-                                   StringProperty numConnections,
-                                   StringProperty numTargetConnections,
-                                   BooleanProperty networkEnabled) {
-
-            Label titleLabel = new Label(title);
-            titleLabel.getStyleClass().add("bisq-smaller-dimmed-label");
-
-            Label numConnectionsLabel = new Label();
-            numConnectionsLabel.getStyleClass().add("bisq-smaller-label");
-            numConnectionsLabel.textProperty().bind(numConnections);
-
-            Label separator = new Label("|");
-            separator.getStyleClass().add("bisq-smaller-dimmed-label");
-
-            Label numTargetConnectionsLabel = new Label();
-            numTargetConnectionsLabel.getStyleClass().add("bisq-smaller-label");
-            numTargetConnectionsLabel.textProperty().bind(numTargetConnections);
-
-            ImageView icon = ImageUtil.getImageViewById(imageId);
-            EasyBind.subscribe(networkEnabled, value -> icon.setOpacity(value ? 1 : 0.5));
-            HBox.setMargin(icon, new Insets(0, 0, 0, 2));
-
-            return new HBox(5, titleLabel, numConnectionsLabel, separator, numTargetConnectionsLabel, icon);
         }
     }
 }
