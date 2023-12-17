@@ -26,6 +26,7 @@ import bisq.desktop.common.view.TabView;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
+import bisq.desktop.overlay.OverlayModel;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.scene.Parent;
@@ -72,6 +73,9 @@ public class SignedWitnessView extends TabView<SignedWitnessModel, SignedWitness
         line.prefWidthProperty().unbind();
         line.prefWidthProperty().bind(root.widthProperty().subtract(136));
         closeButton.setOnAction(e -> controller.onClose());
+
+        root.setPrefWidth(OverlayModel.WIDTH);
+        root.setPrefHeight(OverlayModel.HEIGHT + 10);
     }
 
     @Override
