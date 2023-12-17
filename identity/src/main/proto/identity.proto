@@ -30,7 +30,7 @@ message Identity {
 }
 
 message IdentityStore {
-  Identity defaultIdentity = 1;
+  optional Identity defaultIdentity = 1;
   map<string, Identity> activeIdentityByDomainId = 2;
   repeated Identity retired = 3;
 }

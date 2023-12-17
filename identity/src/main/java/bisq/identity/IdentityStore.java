@@ -32,12 +32,12 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public final class IdentityStore implements PersistableStore<IdentityStore> {
-    private Optional<Identity> defaultIdentity;
+    // Is only empty before we get initialize called the first time
+    private Optional<Identity> defaultIdentity = Optional.empty();
     private final Map<String, Identity> activeIdentityByTag = new ConcurrentHashMap<>();
     private final Set<Identity> retired = new CopyOnWriteArraySet<>();
 
     public IdentityStore() {
-        this.defaultIdentity = Optional.empty();
     }
 
     private IdentityStore(Optional<Identity> defaultIdentity,
@@ -105,7 +105,7 @@ public final class IdentityStore implements PersistableStore<IdentityStore> {
         return defaultIdentity;
     }
 
-    void setDefaultIdentity(Optional<Identity> defaultIdentity) {
-        this.defaultIdentity = defaultIdentity;
+    void setDefaultIdentity(Identity defaultIdentity) {
+        this.defaultIdentity = Optional.ofNullable(defaultIdentity);
     }
 }
