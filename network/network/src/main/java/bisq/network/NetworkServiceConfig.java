@@ -70,7 +70,7 @@ public final class NetworkServiceConfig {
                 TransportType.CLEAR, clearNetConf
         );
 
-        Map<TransportType, Integer> defaultNodePortByTransportType = createDefaultNodePortByTransportType(config);
+        Map<TransportType, Integer> defaultPortByTransportType = createDefaultPortByTransportType(config);
         Map<TransportType, TransportConfig> configByTransportType = createConfigByTransportType(config, baseDir);
 
         return new NetworkServiceConfig(baseDir.toAbsolutePath().toString(),
@@ -79,12 +79,12 @@ public final class NetworkServiceConfig {
                 serviceNodeConfig,
                 inventoryServiceConfig,
                 peerGroupServiceConfigByTransport,
-                defaultNodePortByTransportType,
+                defaultPortByTransportType,
                 seedAddressesByTransport,
                 Optional.empty());
     }
 
-    private static Map<TransportType, Integer> createDefaultNodePortByTransportType(Config config) {
+    private static Map<TransportType, Integer> createDefaultPortByTransportType(Config config) {
         Map<TransportType, Integer> map = new HashMap<>();
 
         Config configByTransportType = config.getConfig("configByTransportType");
@@ -171,7 +171,7 @@ public final class NetworkServiceConfig {
     private final Map<TransportType, TransportConfig> configByTransportType;
     private final ServiceNode.Config serviceNodeConfig;
     private final Map<TransportType, PeerGroupManager.Config> peerGroupServiceConfigByTransport;
-    private final Map<TransportType, Integer> defaultNodePortByTransportType;
+    private final Map<TransportType, Integer> defaultPortByTransportType;
     private final Map<TransportType, Set<Address>> seedAddressesByTransport;
     private final Optional<String> socks5ProxyAddress;
 
@@ -181,7 +181,7 @@ public final class NetworkServiceConfig {
                                 ServiceNode.Config serviceNodeConfig,
                                 InventoryService.Config inventoryServiceConfig,
                                 Map<TransportType, PeerGroupManager.Config> peerGroupServiceConfigByTransport,
-                                Map<TransportType, Integer> defaultNodePortByTransportType,
+                                Map<TransportType, Integer> defaultPortByTransportType,
                                 Map<TransportType, Set<Address>> seedAddressesByTransport,
                                 Optional<String> socks5ProxyAddress) {
         this.baseDir = baseDir;
@@ -190,7 +190,7 @@ public final class NetworkServiceConfig {
         this.configByTransportType = filterMap(supportedTransportTypes, configByTransportType);
         this.serviceNodeConfig = serviceNodeConfig;
         this.peerGroupServiceConfigByTransport = filterMap(supportedTransportTypes, peerGroupServiceConfigByTransport);
-        this.defaultNodePortByTransportType = filterMap(supportedTransportTypes, defaultNodePortByTransportType);
+        this.defaultPortByTransportType = filterMap(supportedTransportTypes, defaultPortByTransportType);
         this.seedAddressesByTransport = filterMap(supportedTransportTypes, seedAddressesByTransport);
         this.socks5ProxyAddress = socks5ProxyAddress;
     }

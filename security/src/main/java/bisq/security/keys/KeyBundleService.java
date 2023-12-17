@@ -136,6 +136,10 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore> {
                 });
     }
 
+    public Optional<KeyBundle> findDefaultKeyBundle() {
+        return findKeyBundle(getDefaultKeyId());
+    }
+
     public Optional<KeyBundle> findKeyBundle(String keyId) {
         checkArgument(keyId.length() == 40, "Key ID is expected to be a 20 byte hash. keyId=" + keyId);
         return persistableStore.findKeyBundle(keyId);
