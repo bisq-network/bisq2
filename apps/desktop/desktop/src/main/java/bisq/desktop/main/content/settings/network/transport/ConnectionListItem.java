@@ -24,6 +24,7 @@ import bisq.desktop.components.table.DateTableItem;
 import bisq.i18n.Res;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
+import bisq.network.common.Address;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
@@ -32,6 +33,8 @@ import bisq.network.p2p.node.network_load.ConnectionMetrics;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.TimeFormatter;
+import bisq.user.profile.UserProfile;
+import bisq.user.profile.UserProfileService;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import lombok.EqualsAndHashCode;
@@ -49,7 +52,7 @@ public class ConnectionListItem implements ActivatableTableItem, DateTableItem {
     private final Connection connection;
     private final ConnectionMetrics connectionMetrics;
     private final long date;
-    private final String dateString, timeString, address, keyId, direction, nodeTagTooltip, nodeTag;
+    private final String dateString, timeString, peer, address, keyId, direction, nodeTagTooltip, nodeTag;
     private final StringProperty sent = new SimpleStringProperty();
     private final StringProperty received = new SimpleStringProperty();
     private final StringProperty rtt = new SimpleStringProperty("-");
@@ -58,6 +61,7 @@ public class ConnectionListItem implements ActivatableTableItem, DateTableItem {
     public ConnectionListItem(Connection connection,
                               Node node,
                               IdentityService identityService,
+                              UserProfileService userProfileService,
                               Optional<PeerGroupService> peerGroupService) {
         this.connection = connection;
         this.keyId = node.getNetworkId().getKeyId();
@@ -67,10 +71,14 @@ public class ConnectionListItem implements ActivatableTableItem, DateTableItem {
         dateString = DateFormatter.formatDate(date);
         timeString = DateFormatter.formatTime(date);
 
-        String fullAddress = connection.getPeerAddress().getFullAddress();
-        boolean isSeed = peerGroupService.map(e -> e.isSeed(connection.getPeerAddress())).orElse(false);
-        address = isSeed ? Res.get("settings.network.connections.seed", fullAddress) : fullAddress;
-
+        Address peerAddress = connection.getPeerAddress();
+        boolean isSeed = peerGroupService.map(e -> e.isSeed(peerAddress)).orElse(false);
+        peer = userProfileService.getUserProfiles().stream()
+                .filter(u -> u.getNetworkId().getAddressByTransportTypeMap().containsValue(peerAddress))
+                .map(UserProfile::getUserName)
+                .findAny()
+                .orElse(isSeed ? Res.get("settings.network.connections.seed") : Res.get("data.na"));
+        address = peerAddress.getFullAddress();
         direction = connection.isOutboundConnection() ?
                 Res.get("settings.network.connections.outbound") :
                 Res.get("settings.network.connections.inbound");
@@ -136,6 +144,10 @@ public class ConnectionListItem implements ActivatableTableItem, DateTableItem {
 
     public int compareAddress(ConnectionListItem other) {
         return address.compareTo(other.getAddress());
+    }
+
+    public int comparePeer(ConnectionListItem other) {
+        return peer.compareTo(other.getPeer());
     }
 
     public int compareKeyId(ConnectionListItem other) {

@@ -34,6 +34,7 @@ import bisq.network.p2p.node.NodesById;
 import bisq.network.p2p.services.peergroup.PeerGroupManager;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
 import bisq.security.keys.KeyBundleService;
+import bisq.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -50,10 +51,12 @@ public class TransportTypeController implements Controller {
     private final Node.Listener nodeListener;
     private final NodesById.Listener nodesByIdListener;
     private final Optional<PeerGroupService> peerGroupService;
+    private final UserProfileService userProfileService;
 
     public TransportTypeController(ServiceProvider serviceProvider, TransportType transportType) {
         keyBundleService = serviceProvider.getSecurityService().getKeyBundleService();
         identityService = serviceProvider.getIdentityService();
+        userProfileService = serviceProvider.getUserService().getUserProfileService();
 
         ServiceNode serviceNode = serviceProvider.getNetworkService().findServiceNode(transportType).orElseThrow();
         Node defaultNode = serviceNode.getDefaultNode();
@@ -134,7 +137,7 @@ public class TransportTypeController implements Controller {
     }
 
     private void addConnection(Connection connection, Node node) {
-        ConnectionListItem item = new ConnectionListItem(connection, node, identityService, peerGroupService);
+        ConnectionListItem item = new ConnectionListItem(connection, node, identityService, userProfileService, peerGroupService);
         if (!model.getConnectionListItems().contains(item)) {
             model.getConnectionListItems().add(item);
         }

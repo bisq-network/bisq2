@@ -100,6 +100,13 @@ public class TransportTypeView extends View<GridPane, TransportTypeModel, Transp
         connectionsTableView.getColumns().add(BisqTableColumns.getDateColumn(connectionsTableView.getSortOrder()));
 
         connectionsTableView.getColumns().add(new BisqTableColumn.Builder<ConnectionListItem>()
+                .title(Res.get("settings.network.connections.header.peer"))
+                .minWidth(130)
+                .valueSupplier(ConnectionListItem::getPeer)
+                .tooltipSupplier(ConnectionListItem::getPeer)
+                .comparator(ConnectionListItem::comparePeer)
+                .build());
+        connectionsTableView.getColumns().add(new BisqTableColumn.Builder<ConnectionListItem>()
                 .title(Res.get("settings.network.connections.header.address"))
                 .minWidth(130)
                 .valueSupplier(ConnectionListItem::getAddress)
