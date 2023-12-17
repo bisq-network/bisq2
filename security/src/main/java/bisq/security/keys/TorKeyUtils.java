@@ -3,14 +3,22 @@ package bisq.security.keys;
 import bisq.common.encoding.Hex;
 import bisq.common.util.FileUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.bouncycastle.util.encoders.Base32;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Optional;
 
 @Slf4j
-public class TorPrivateKeyUtils {
+public class TorKeyUtils {
+    public static byte[] getPublicKeyFromOnionAddress(String onionAddress) {
+        onionAddress = onionAddress.substring(0, onionAddress.length() - ".onion".length());
+        byte[] decodedOnionAddress = Base32.decode(onionAddress.toUpperCase());
+        return Arrays.copyOfRange(decodedOnionAddress, 0, 32);
+    }
+
     public static void writePrivateKey(TorKeyPair torKeyPair, String baseDir, String identityTag) {
         File hiddenServiceDir = getHiddenServiceDirectory(baseDir, identityTag);
         // Only try to write if tor directory exists already (if we run with TOR)
