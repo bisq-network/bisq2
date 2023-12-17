@@ -22,6 +22,7 @@ import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.security.DigestUtil;
+import com.google.common.base.Strings;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -38,24 +39,62 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 public class KeyBundleService implements PersistenceClient<KeyBundleStore> {
     @Getter
+    public static class Config {
+        private final Optional<String> defaultTorPrivateKey;
+
+        public Config(String defaultTorPrivateKey) {
+            this.defaultTorPrivateKey = Optional.ofNullable(Strings.emptyToNull(defaultTorPrivateKey));
+        }
+
+        public static Config from(com.typesafe.config.Config config) {
+            return new Config(config.getString("defaultTorPrivateKey"));
+        }
+    }
+
+    @Getter
     private final KeyBundleStore persistableStore;
     @Getter
     private final Persistence<KeyBundleStore> persistence;
     private final String baseDir;
+    private final Optional<String> defaultTorPrivateKey;
 
-    public KeyBundleService(PersistenceService persistenceService) {
+    public KeyBundleService(PersistenceService persistenceService, Config config) {
         persistableStore = new KeyBundleStore();
+        defaultTorPrivateKey = config.getDefaultTorPrivateKey();
         persistence = persistenceService.getOrCreatePersistence(this,
                 "db" + File.separator + "private",
                 persistableStore);
 
         baseDir = persistenceService.getBaseDir();
+
+        if (defaultTorPrivateKey.isPresent()) {
+            log.warn("defaultTorPrivateKey is provided via the config and will replace the persisted key");
+        }
     }
 
     public CompletableFuture<Boolean> initialize() {
         String defaultKeyId = getDefaultKeyId();
-        return getOrCreateKeyBundleAsync(defaultKeyId)
-                .thenApply(Objects::nonNull);
+        if (defaultTorPrivateKey.isEmpty()) {
+            return getOrCreateKeyBundleAsync(defaultKeyId)
+                    .thenApply(Objects::nonNull);
+        } else {
+            // If we get a tor private key passed from the config we always use that and override existing tor keys.
+            return CompletableFuture.supplyAsync(() -> {
+                        byte[] torPrivateKey = Hex.decode(defaultTorPrivateKey.get());
+                        TorKeyPair defaultTorKeyPair = TorKeyGeneration.generateKeyPair(torPrivateKey);
+                        KeyBundle keyBundle = findKeyBundle(defaultKeyId)
+                                .map(bundle -> new KeyBundle(defaultKeyId, bundle.getKeyPair(), defaultTorKeyPair))
+                                .orElseGet(() -> createKeyBundle(defaultKeyId, defaultTorKeyPair));
+                        persistKeyBundle(defaultKeyId, keyBundle);
+
+                        // We write the key to the tor directory. This is used only for the default key, as that is the
+                        // only supported use case (seed nodes, oracle nodes,...)
+                        TorKeyUtils.writePrivateKey(keyBundle.getTorKeyPair(), baseDir, "default");
+
+                        return keyBundle;
+                    })
+                    .thenApply(Objects::nonNull);
+        }
     }
 
     // When a user creates a new profile we generate only the keypair until the user choose to use that.
@@ -72,9 +111,7 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore> {
     // For the above described use case we get a chosen keyPair to create out bundle and persist it
     public KeyBundle createAndPersistKeyBundle(String identityTag, KeyPair keyPair) {
         String keyId = getKeyIdFromTag(identityTag);
-        TorKeyPair torKeyPair = TorKeyUtils.findPrivateKey(baseDir, identityTag)
-                .map(TorKeyGeneration::generateKeyPair)
-                .orElse(TorKeyGeneration.generateKeyPair());
+        TorKeyPair torKeyPair = TorKeyGeneration.generateKeyPair();
         // I2pKeyPair i2PKeyPair = I2pKeyGeneration.generateKeyPair();
         KeyBundle keyBundle = new KeyBundle(keyId, keyPair, torKeyPair/*, i2PKeyPair*/);
         persistKeyBundle(keyId, keyBundle);
@@ -83,7 +120,11 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore> {
 
     public CompletableFuture<KeyBundle> getOrCreateKeyBundleAsync(String keyId) {
         return findKeyBundle(keyId).map(CompletableFuture::completedFuture)
-                .orElseGet(() -> CompletableFuture.supplyAsync(() -> getOrCreateKeyBundle(keyId)));
+                .orElseGet(() -> CompletableFuture.supplyAsync(() -> {
+                    KeyBundle keyBundle = createKeyBundle(keyId);
+                    persistKeyBundle(keyId, keyBundle);
+                    return keyBundle;
+                }));
     }
 
     public KeyBundle getOrCreateKeyBundle(String keyId) {
@@ -105,10 +146,13 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore> {
     }
 
     public KeyBundle createKeyBundle(String keyId) {
+        return createKeyBundle(keyId, TorKeyGeneration.generateKeyPair());
+    }
+
+    public KeyBundle createKeyBundle(String keyId, TorKeyPair torKeyPair) {
         checkArgument(keyId.length() == 40, "Key ID is expected to be a 20 byte hash. keyId=" + keyId);
         try {
             KeyPair keyPair = KeyGeneration.generateKeyPair();
-            TorKeyPair torKeyPair = TorKeyGeneration.generateKeyPair();
             // I2pKeyPair i2PKeyPair = I2pKeyGeneration.generateKeyPair();
             return new KeyBundle(keyId, keyPair, torKeyPair/*, i2PKeyPair*/);
         } catch (GeneralSecurityException e) {
@@ -134,7 +178,5 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore> {
         checkArgument(keyId.length() == 40, "Key ID is expected to be a 20 byte hash. keyId=" + keyId);
         persistableStore.putKeyBundle(keyId, keyBundle);
         persist();
-
-        TorKeyUtils.writePrivateKey(keyBundle.getTorKeyPair(), baseDir, keyId);
     }
 }

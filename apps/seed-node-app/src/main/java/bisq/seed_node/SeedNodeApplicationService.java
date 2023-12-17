@@ -51,7 +51,7 @@ public class SeedNodeApplicationService extends ApplicationService {
     public SeedNodeApplicationService(String[] args) {
         super("seed_node", args);
 
-        securityService = new SecurityService(persistenceService);
+        securityService = new SecurityService(persistenceService, SecurityService.Config.from(getConfig("security")));
 
         NetworkServiceConfig networkServiceConfig = NetworkServiceConfig.from(config.getBaseDir(),
                 getConfig("network"));

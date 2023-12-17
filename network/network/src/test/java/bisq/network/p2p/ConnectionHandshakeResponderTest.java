@@ -30,9 +30,7 @@ import bisq.network.p2p.node.handshake.ConnectionHandshake;
 import bisq.network.p2p.node.handshake.ConnectionHandshakeResponder;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.network.p2p.services.peergroup.BanList;
-import bisq.persistence.PersistenceService;
-import bisq.security.SecurityService;
-import bisq.security.pow.ProofOfWorkService;
+import bisq.security.pow.HashCashService;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -69,13 +67,7 @@ public class ConnectionHandshakeResponderTest {
     }
 
     private AuthorizationService createAuthorizationService() {
-        String baseDir = tmpDir.toAbsolutePath().toString();
-        PersistenceService persistenceService = new PersistenceService(baseDir);
-        SecurityService securityService = new SecurityService(persistenceService);
-        securityService.initialize();
-
-        ProofOfWorkService proofOfWorkService = securityService.getProofOfWorkService();
-        return new AuthorizationService(proofOfWorkService);
+        return new AuthorizationService(new HashCashService());
     }
 
     @Test

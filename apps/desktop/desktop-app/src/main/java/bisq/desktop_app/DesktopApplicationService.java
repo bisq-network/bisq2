@@ -88,7 +88,7 @@ public class DesktopApplicationService extends ApplicationService {
     public DesktopApplicationService(String[] args, ShutDownHandler shutDownHandler) {
         super("desktop", args);
 
-        securityService = new SecurityService(persistenceService);
+        securityService = new SecurityService(persistenceService, SecurityService.Config.from(getConfig("security")));
         com.typesafe.config.Config bitcoinWalletConfig = getConfig("bitcoinWallet");
         BitcoinWalletSelection bitcoinWalletSelection = bitcoinWalletConfig.getEnum(BitcoinWalletSelection.class, "bitcoinWalletSelection");
         switch (bitcoinWalletSelection) {

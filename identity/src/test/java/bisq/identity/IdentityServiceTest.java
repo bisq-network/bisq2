@@ -67,7 +67,7 @@ public class IdentityServiceTest {
         doReturn(CompletableFuture.completedFuture(mock(Node.class)))
                 .when(networkService).anySuppliedInitializedNode(any());
 
-        keyBundleService = new KeyBundleService(persistenceService);
+        keyBundleService = new KeyBundleService(persistenceService, mock(KeyBundleService.Config.class));
         identityService = new IdentityService(persistenceService, keyBundleService, networkService);
         identityService.initialize().join();
 

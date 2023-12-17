@@ -90,7 +90,7 @@ public class RestApiApplicationService extends ApplicationService {
 
     public RestApiApplicationService(String[] args) {
         super("rest_api", args);
-        securityService = new SecurityService(persistenceService);
+        securityService = new SecurityService(persistenceService, SecurityService.Config.from(getConfig("security")));
         com.typesafe.config.Config bitcoinWalletConfig = getConfig("bitcoinWallet");
         BitcoinWalletSelection bitcoinWalletSelection = bitcoinWalletConfig.getEnum(BitcoinWalletSelection.class, "bitcoinWalletSelection");
         switch (bitcoinWalletSelection) {
