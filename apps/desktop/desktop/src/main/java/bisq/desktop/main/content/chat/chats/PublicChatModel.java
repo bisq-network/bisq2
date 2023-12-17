@@ -15,27 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.common_chat;
+package bisq.desktop.main.content.chat.chats;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatChannelDomain;
-import bisq.desktop.main.content.chat.ChatModel;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
+import bisq.desktop.main.content.common_chat.CommonChatModel;
 
-@Slf4j
-@Getter
-public class CommonChatModel extends ChatModel {
-    private final StringProperty searchText = new SimpleStringProperty();
-
-    public CommonChatModel(ChatChannelDomain chatChannelDomain) {
+public class PublicChatModel extends CommonChatModel {
+    public PublicChatModel(ChatChannelDomain chatChannelDomain) {
         super(chatChannelDomain);
-    }
-
-    @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.NONE;
     }
 }

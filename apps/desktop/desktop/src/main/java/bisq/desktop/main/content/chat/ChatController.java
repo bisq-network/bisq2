@@ -185,7 +185,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
         }
     }
 
-    void onToggleChannelInfo() {
+    protected void onToggleChannelInfo() {
         boolean visible = !model.getChannelSidebarVisible().get();
         doCloseSideBar();
         chatMessagesComponent.resetSelectedChatMessage();
@@ -196,7 +196,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
         }
     }
 
-    void onOpenHelp() {
+    protected void onOpenHelp() {
         switch (model.chatChannelDomain) {
             case BISQ_EASY_OFFERBOOK:
             case BISQ_EASY_OPEN_TRADES:

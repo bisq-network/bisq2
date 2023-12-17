@@ -18,7 +18,6 @@
 package bisq.desktop.main.content.chat;
 
 import bisq.desktop.common.view.NavigationView;
-import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
@@ -31,6 +30,8 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public abstract class ChatView extends NavigationView<ScrollPane, ChatModel, ChatController<?, ?>> {
+    protected final static double HEADER_HEIGHT = 61;
+
     protected final Label channelTitle = new Label();
     protected Button helpButton, infoButton;
     protected final VBox sideBar = new VBox();

@@ -286,6 +286,27 @@
     -fx-background-color: rgba(255, 255, 255, 0.05);
 }
 
+.chat-container {
+    -fx-background-color: -bisq-dark-grey-dim;
+    -fx-background-radius: 8 8 0 0;
+}
+
+.chat-container-headline {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 1.8em;
+}
+
+.chat-container-placeholder-text {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 1.3em;
+    -fx-padding: -40 0 0 0;
+}
+
+
 /*******************************************************************************
  *                                                                             *
  * Channel selection                                                           *
@@ -301,7 +322,7 @@
 }
 
 .channel-selection-list-view .list-cell:selected {
-    -fx-background-color: -bisq-dark-grey-mid;
+    -fx-background-color: -bisq-dark-grey-dim;
     -fx-fill: -fx-dark-text-color;
     -fx-text-fill: -fx-dark-text-color;
 }
@@ -317,7 +338,7 @@
 
 /*******************************************************************************
  *                                                                             *
- * Chat messages list                                                           *
+ * Chat messages list                                                          *
  *                                                                             *
  ******************************************************************************/
 
@@ -336,11 +357,10 @@
 
 
 /*******************************************************************************
- * Chat guide                                                              *
+ * Chat guide                                                                  *
  ******************************************************************************/
 
 .chat-guide-headline {
     -fx-font-family: "IBM Plex Sans Light";
     -fx-font-size: 2.15em;
 }
-

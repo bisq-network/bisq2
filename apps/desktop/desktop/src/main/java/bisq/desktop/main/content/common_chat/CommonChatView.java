@@ -18,112 +18,57 @@
 package bisq.desktop.main.content.common_chat;
 
 import bisq.desktop.common.Layout;
-import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.controls.BisqIconButton;
-import bisq.desktop.components.controls.SearchBox;
 import bisq.desktop.main.content.chat.ChatView;
-import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.layout.*;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class CommonChatView extends ChatView {
-    private VBox left;
-    private final Region twoPartyPrivateChatChannelSelection;
-    private SearchBox searchBox;
-    private final CommonChatModel commonChatModel;
+public class CommonChatView<V extends CommonChatView<V, M>, M extends CommonChatModel> extends ChatView {
+    protected static final double SIDE_PADDING = 40;
 
     public CommonChatView(CommonChatModel model,
-                          CommonChatController controller,
-                          Region publicChannelSelection,
-                          Region twoPartyPrivateChatChannelSelection,
+                          CommonChatController<V, M> controller,
                           Pane chatMessagesComponent,
                           Pane channelInfo) {
-        super(model,
-                controller,
-                chatMessagesComponent,
-                channelInfo);
-
-        commonChatModel = model;
-        this.twoPartyPrivateChatChannelSelection = twoPartyPrivateChatChannelSelection;
-
-        left.getChildren().addAll(
-                publicChannelSelection,
-                Layout.hLine(),
-                twoPartyPrivateChatChannelSelection,
-                Spacer.fillVBox());
-        left.setPrefWidth(210);
-        left.setMinWidth(210);
-        left.setFillWidth(true);
-        left.getStyleClass().add("bisq-grey-2-bg");
+        super(model, controller, chatMessagesComponent, channelInfo);
     }
 
-
+    @Override
     protected void configTitleHBox() {
-        channelTitle.setId("chat-messages-headline");
-        HBox.setMargin(channelTitle, new Insets(0, 0, 0, 0));
-
-        searchBox = new SearchBox();
-        searchBox.setPrefWidth(200);
-
-        helpButton = BisqIconButton.createIconButton("icon-help", model.getHelpTitle());
-        infoButton = BisqIconButton.createIconButton("icon-info", Res.get("chat.topMenu.channelInfoIcon.tooltip"));
-
-        HBox.setMargin(searchBox, new Insets(0, 0, 0, 0));
-        HBox.setMargin(infoButton, new Insets(0, 0, 0, -5));
-        titleHBox.getChildren().addAll(
-                channelTitle,
-                Spacer.fillHBox(),
-                searchBox,
-                helpButton,
-                infoButton
-        );
-        titleHBox.setAlignment(Pos.CENTER);
-        titleHBox.setMinHeight(58);
-        titleHBox.setPadding(new Insets(0, 20, 0, 25));
     }
 
+    @Override
     protected void configCenterVBox() {
         VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
-        chatMessagesComponent.setMinWidth(700);
-        centerVBox.getChildren().addAll(titleHBox, Layout.hLine(), chatMessagesComponent);
+        chatMessagesComponent.getStyleClass().add("bisq-easy-container");
+        centerVBox.getChildren().addAll(chatMessagesComponent);
         centerVBox.setFillWidth(true);
     }
 
+    @Override
     protected void configSideBarVBox() {
         sideBar.getChildren().add(channelSidebar);
-        sideBar.getStyleClass().add("bisq-grey-2-bg");
+        sideBar.getStyleClass().add("bisq-easy-chat-sidebar-bg");
         sideBar.setAlignment(Pos.TOP_RIGHT);
         sideBar.setFillWidth(true);
     }
 
+    @Override
     protected void configContainerHBox() {
+        containerHBox.setSpacing(10);
         containerHBox.setFillHeight(true);
         Layout.pinToAnchorPane(containerHBox, 0, 0, 0, 0);
-        root.setContent(containerHBox);
 
-        left = new VBox();
-        HBox.setHgrow(left, Priority.NEVER);
+        AnchorPane wrapper = new AnchorPane();
+        wrapper.setPadding(new Insets(0, SIDE_PADDING, 0, SIDE_PADDING));
+        wrapper.getChildren().add(containerHBox);
+
+        root.setContent(wrapper);
+
         HBox.setHgrow(centerVBox, Priority.ALWAYS);
         HBox.setHgrow(sideBar, Priority.NEVER);
-        containerHBox.getChildren().addAll(left, centerVBox, sideBar);
-    }
-
-    @Override
-    protected void onViewAttached() {
-        super.onViewAttached();
-        searchBox.textProperty().bindBidirectional(commonChatModel.getSearchText());
-        twoPartyPrivateChatChannelSelection.visibleProperty().bind(commonChatModel.getIsTwoPartyPrivateChatChannelSelectionVisible());
-        twoPartyPrivateChatChannelSelection.managedProperty().bind(commonChatModel.getIsTwoPartyPrivateChatChannelSelectionVisible());
-    }
-
-    @Override
-    protected void onViewDetached() {
-        super.onViewDetached();
-        searchBox.textProperty().unbindBidirectional(commonChatModel.getSearchText());
-        twoPartyPrivateChatChannelSelection.visibleProperty().unbind();
-        twoPartyPrivateChatChannelSelection.managedProperty().unbind();
+        containerHBox.getChildren().addAll(centerVBox, sideBar);
     }
 }

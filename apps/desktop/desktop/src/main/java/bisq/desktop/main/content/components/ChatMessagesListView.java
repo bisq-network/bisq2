@@ -421,6 +421,15 @@ public class ChatMessagesListView {
                         if (model.getChatChannelDomain() == ChatChannelDomain.BISQ_EASY_OFFERBOOK) {
                             Navigation.navigateTo(NavigationTarget.BISQ_EASY_PRIVATE_CHAT);
                         }
+                        if (model.getChatChannelDomain() == ChatChannelDomain.DISCUSSION) {
+                            Navigation.navigateTo(NavigationTarget.DISCUSSION_PRIVATECHATS);
+                        }
+                        if (model.getChatChannelDomain() == ChatChannelDomain.EVENTS) {
+                            Navigation.navigateTo(NavigationTarget.EVENTS_PRIVATECHATS);
+                        }
+                        if (model.getChatChannelDomain() == ChatChannelDomain.SUPPORT) {
+                            Navigation.navigateTo(NavigationTarget.SUPPORT_PRIVATECHATS);
+                        }
                     });
         }
 
