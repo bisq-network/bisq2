@@ -680,7 +680,7 @@ public class ChatMessagesListView {
                             message = new Label();
                             message.setWrapText(true);
                             message.setPadding(new Insets(10));
-                            message.getStyleClass().addAll("text-fill-white", "font-size-13", "font-default");
+                            message.getStyleClass().addAll("text-fill-white", "normal-text", "font-default");
 
 
                             // edit
