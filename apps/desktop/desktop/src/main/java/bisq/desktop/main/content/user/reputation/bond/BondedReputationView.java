@@ -18,18 +18,13 @@
 package bisq.desktop.main.content.user.reputation.bond;
 
 import bisq.bisq_easy.NavigationTarget;
-import bisq.desktop.DesktopModel;
 import bisq.desktop.common.Styles;
-import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.TabView;
-import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.overlay.OverlayModel;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
-import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
@@ -42,13 +37,6 @@ public class BondedReputationView extends TabView<BondedReputationModel, BondedR
 
     public BondedReputationView(BondedReputationModel model, BondedReputationController controller) {
         super(model, controller);
-
-        double width = DesktopModel.MIN_WIDTH - 20;
-        root.setMinWidth(width);
-        root.setMaxWidth(width);
-        double height = DesktopModel.MIN_HEIGHT - 80;
-        root.setMinHeight(height);
-        root.setMaxHeight(height);
 
         root.setPadding(new Insets(40, 68, 40, 68));
         root.getStyleClass().add("popup-bg");
@@ -71,7 +59,8 @@ public class BondedReputationView extends TabView<BondedReputationModel, BondedR
     @Override
     protected void onViewAttached() {
         line.prefWidthProperty().unbind();
-        line.prefWidthProperty().bind(root.widthProperty().subtract(136));
+        double paddings = root.getPadding().getLeft() + root.getPadding().getRight();
+        line.prefWidthProperty().bind(root.widthProperty().subtract(paddings));
         closeButton.setOnAction(e -> controller.onClose());
 
         root.setPrefWidth(OverlayModel.WIDTH);
@@ -111,12 +100,5 @@ public class BondedReputationView extends TabView<BondedReputationModel, BondedR
 
         line.getStyleClass().remove("bisq-dark-bg");
         line.getStyleClass().add("bisq-mid-grey");
-    }
-
-    @Override
-    protected void onChildView(View<? extends Parent, ? extends Model, ? extends Controller> oldValue,
-                               View<? extends Parent, ? extends Model, ? extends Controller> newValue) {
-        super.onChildView(oldValue, newValue);
-        scrollPane.setFitToHeight(true);
     }
 }

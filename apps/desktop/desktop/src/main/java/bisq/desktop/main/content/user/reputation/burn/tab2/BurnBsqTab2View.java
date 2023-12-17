@@ -100,8 +100,8 @@ public class BurnBsqTab2View extends View<VBox, BurnBsqTab2Model, BurnBsqTab2Con
         MaterialTextField field = new MaterialTextField(description);
         field.setEditable(false);
         field.setText(value);
-        field.setMinWidth(400);
-        field.setMaxWidth(400);
+        field.setMinWidth(380);
+        field.setMaxWidth(380);
         return field;
     }
 }

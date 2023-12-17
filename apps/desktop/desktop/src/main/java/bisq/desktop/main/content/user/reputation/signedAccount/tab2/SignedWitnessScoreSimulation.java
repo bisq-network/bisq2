@@ -136,16 +136,15 @@ public class SignedWitnessScoreSimulation {
         private MaterialTextField getField(String description) {
             MaterialTextField field = new MaterialTextField(description);
             field.setEditable(false);
-            field.setMinWidth(400);
-            field.setMaxWidth(400);
+            field.setMinWidth(340);
+            field.setMaxWidth(340);
             return field;
         }
 
         private MaterialTextField getInputField(String key) {
             MaterialTextField field = new MaterialTextField(Res.get(key), Res.get(key + ".prompt"));
-            field.setMinWidth(400);
-            field.setMinWidth(400);
-            field.setMaxWidth(400);
+            field.setMinWidth(340);
+            field.setMaxWidth(340);
             return field;
         }
     }

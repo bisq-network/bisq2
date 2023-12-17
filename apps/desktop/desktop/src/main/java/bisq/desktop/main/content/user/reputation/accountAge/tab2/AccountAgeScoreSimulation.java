@@ -136,16 +136,15 @@ public class AccountAgeScoreSimulation {
         private MaterialTextField getField(String description) {
             MaterialTextField field = new MaterialTextField(description);
             field.setEditable(false);
-            field.setMinWidth(400);
-            field.setMaxWidth(400);
+            field.setMinWidth(370);
+            field.setMaxWidth(370);
             return field;
         }
 
         private MaterialTextField getInputField(String key) {
             MaterialTextField field = new MaterialTextField(Res.get(key), Res.get(key + ".prompt"));
-            field.setMinWidth(400);
-            field.setMinWidth(400);
-            field.setMaxWidth(400);
+            field.setMinWidth(370);
+            field.setMaxWidth(370);
             return field;
         }
     }

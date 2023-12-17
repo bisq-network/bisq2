@@ -95,8 +95,8 @@ public class AccountAgeTab2View extends View<VBox, AccountAgeTab2Model, AccountA
         MaterialTextField field = new MaterialTextField(Res.get("user.reputation." + key));
         field.setEditable(false);
         field.setText(value);
-        field.setMinWidth(400);
-        field.setMaxWidth(400);
+        field.setMinWidth(370);
+        field.setMaxWidth(370);
         return field;
     }
 }
