@@ -23,6 +23,8 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.CompletableFutureUtils;
+import bisq.common.util.NetworkUtils;
+import bisq.network.common.Address;
 import bisq.network.common.AddressByTransportTypeMap;
 import bisq.network.common.TransportType;
 import bisq.network.http.BaseHttpClient;
@@ -171,7 +173,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         String keyId = keyBundleService.getDefaultKeyId();
         // keyBundleService creates the defaultKeyBundle at initialize, and is called before we get initialized
         KeyBundle keyBundle = keyBundleService.findKeyBundle(keyId).orElseThrow();
-        defaultNetworkId = Optional.of(createAndGetNetworkId(keyBundle));
+        defaultNetworkId = Optional.of(createAndGetNetworkId(keyBundle, "default"));
         initializedDefaultNodeByTransport.putAll(serviceNodesByTransport.getInitializedDefaultNodeByTransport(defaultNetworkId.get()));
 
         // We use anyOf to complete as soon as we got at least one transport node initialized
@@ -419,15 +421,39 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         persist();
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // NetworkId
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    public NetworkId createAndGetNetworkId(KeyBundle keyBundle) {
+
+    public NetworkId createAndGetNetworkId(KeyBundle keyBundle, String tag) {
         KeyPair keyPair = keyBundle.getKeyPair();
-        AddressByTransportTypeMap addressByTransportTypeMap = AddressByTransportTypeMap.from(getSupportedTransportTypes(),
-                getDefaultNodePortByTransportType(),
-                true,
-                keyBundle.getTorKeyPair().getOnionAddress());
+        AddressByTransportTypeMap addressByTransportTypeMap = new AddressByTransportTypeMap();
+        boolean isDefault = tag.equals("default");
+        Map<TransportType, Integer> defaultPorts = getDefaultNodePortByTransportType();
+        supportedTransportTypes.forEach(transportType -> {
+            switch (transportType) {
+                case TOR:
+                    int torPort = isDefault ?
+                            defaultPorts.getOrDefault(TransportType.TOR, NetworkUtils.selectRandomPort()) :
+                            NetworkUtils.selectRandomPort();
+                    addressByTransportTypeMap.put(TransportType.TOR, new Address(keyBundle.getTorKeyPair().getOnionAddress(), torPort));
+                    break;
+                case I2P:
+                  /*  int i2pPort = isDefault ?
+                            defaultPorts.getOrDefault(TransportType.I2P, NetworkUtils.selectRandomPort()) :
+                            NetworkUtils.selectRandomPort();
+                    addressByTransportTypeMap.put(TransportType.I2P, new Address(keyBundle.getI2pKeyPair().getDestination(), i2pPort));*/
+                    break;
+                case CLEAR:
+                    int clearNetPort = isDefault ?
+                            defaultPorts.getOrDefault(TransportType.CLEAR, NetworkUtils.findFreeSystemPort()) :
+                            NetworkUtils.findFreeSystemPort();
+                    addressByTransportTypeMap.put(TransportType.CLEAR, Address.localHost(clearNetPort));
+                    break;
+            }
+        });
+
         PubKey pubKey = new PubKey(keyPair.getPublic(), keyBundle.getKeyId());
         return new NetworkId(addressByTransportTypeMap, pubKey);
     }

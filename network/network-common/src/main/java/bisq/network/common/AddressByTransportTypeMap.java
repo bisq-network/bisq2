@@ -18,7 +18,6 @@
 package bisq.network.common;
 
 import bisq.common.proto.Proto;
-import bisq.common.util.NetworkUtils;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -36,44 +35,6 @@ import java.util.stream.Collectors;
 @ToString
 @Getter
 public class AddressByTransportTypeMap implements Map<TransportType, Address>, Proto {
-    public static AddressByTransportTypeMap from(Set<TransportType> supportedTransportTypes,
-                                                 Map<TransportType, Integer> defaultPorts,
-                                                 boolean isForDefaultId,
-                                                 String onionAddress) {
-        AddressByTransportTypeMap addressByTransportTypeMap = new AddressByTransportTypeMap();
-
-        boolean isTorSupported = supportedTransportTypes.contains(TransportType.TOR);
-        int torPort = isTorSupported && isForDefaultId ?
-                defaultPorts.getOrDefault(TransportType.TOR, NetworkUtils.selectRandomPort()) :
-                NetworkUtils.selectRandomPort();
-
-        if (isForDefaultId) {
-            if (supportedTransportTypes.contains(TransportType.CLEAR)) {
-                int port = defaultPorts.getOrDefault(TransportType.CLEAR, NetworkUtils.findFreeSystemPort());
-                Address address = Address.localHost(port);
-                addressByTransportTypeMap.put(TransportType.CLEAR, address);
-            }
-
-            if (isTorSupported) {
-                Address address = new Address(onionAddress, torPort);
-                addressByTransportTypeMap.put(TransportType.TOR, address);
-            }
-        } else {
-            if (supportedTransportTypes.contains(TransportType.CLEAR)) {
-                int port = NetworkUtils.findFreeSystemPort();
-                Address address = Address.localHost(port);
-                addressByTransportTypeMap.put(TransportType.CLEAR, address);
-            }
-
-            if (isTorSupported) {
-                Address address = new Address(onionAddress, torPort);
-                addressByTransportTypeMap.put(TransportType.TOR, address);
-            }
-        }
-
-        return addressByTransportTypeMap;
-    }
-
     // We use a TreeMap to get deterministic sorting.
     private final TreeMap<TransportType, Address> map = new TreeMap<>();
 
