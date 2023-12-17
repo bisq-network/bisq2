@@ -22,8 +22,8 @@ update-set-branch "${BISQ_REPO_TAG_OR_BRANCH}"
 update-clean-install-seed
 
 echo "[*] Installing bisq2-seed systemd service"
-sudo -H -i -u "${ROOT_USER}" install -c -o "${ROOT_USER}" -g "${ROOT_GROUP}" -m 644 "${BISQ_HOME}/${BISQ_REPO_NAME}/seed/service-scripts/bisq2-seed.service" "${SYSTEMD_SERVICE_HOME}"
-sudo -H -i -u "${ROOT_USER}" install -c -o "${ROOT_USER}" -g "${ROOT_GROUP}" -m 644 "${BISQ_HOME}/${BISQ_REPO_NAME}/seed/service-scripts/bisq2-seed.env" "${SYSTEMD_ENV_HOME}"
+sudo -H -i -u "${ROOT_USER}" install -c -o "${ROOT_USER}" -g "${ROOT_GROUP}" -m 644 "${BISQ_HOME}/${BISQ_REPO_NAME}/apps/seed-node-app/service-scripts/bisq2-seed.service" "${SYSTEMD_SERVICE_HOME}"
+sudo -H -i -u "${ROOT_USER}" install -c -o "${ROOT_USER}" -g "${ROOT_GROUP}" -m 644 "${BISQ_HOME}/${BISQ_REPO_NAME}/apps/seed-node-app/service-scripts/bisq2-seed.env" "${SYSTEMD_ENV_HOME}"
 
 echo '[*] Part 1 of service installation done'
 echo "[*] To finalize installation, see README.md for part 2 and 3"
