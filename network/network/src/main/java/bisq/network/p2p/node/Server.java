@@ -44,7 +44,6 @@ public final class Server {
         log.debug("Create server: {}", serverSocketResult);
         future = NetworkService.NETWORK_IO_POOL.submit(() -> {
             Thread.currentThread().setName("Server.listen-" +
-                    StringUtils.truncate(serverSocketResult.getTorIdentity().toString()) + "-" +
                     StringUtils.truncate(serverSocketResult.getAddress().toString()));
             try {
                 while (isNotStopped()) {

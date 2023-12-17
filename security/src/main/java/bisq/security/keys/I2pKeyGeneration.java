@@ -15,22 +15,30 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-syntax = "proto3";
+package bisq.security.keys;
 
-package identity;
-option java_package = "bisq.identity.protobuf";
-option java_multiple_files = true;
-import "network_identity.proto";
-import "security.proto";
+public class I2pKeyGeneration {
+    public static byte[] generatePrivateKey() {
+        byte[] privateKey = new byte[32];
+        //todo impl
+        return privateKey;
+    }
 
-message Identity {
-  string domainId = 1;
-  network.identity.NetworkId networkId = 2;
-  security.KeyBundle keyBundle = 3;
+    public static I2pKeyPair generateKeyPair() {
+        byte[] privateKey = generatePrivateKey();
+        return new I2pKeyPair(privateKey, getPublicKey(privateKey));
+    }
+
+    private static byte[] getPublicKey(byte[] privateKey) {
+        byte[] publicKey = new byte[32];
+        //todo impl
+        return publicKey;
+    }
+
+
+    public static String getDestinationFromPublicKey(byte[] publicKey) {
+        // todo impl
+        return "TODO.destination";
+    }
 }
 
-message IdentityStore {
-  Identity defaultIdentity = 1;
-  map<string, Identity> activeIdentityByDomainId = 2;
-  repeated Identity retired = 3;
-}

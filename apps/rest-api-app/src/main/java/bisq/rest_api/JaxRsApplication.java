@@ -2,7 +2,7 @@ package bisq.rest_api;
 
 import bisq.common.application.Service;
 import bisq.rest_api.endpoints.ChatApi;
-import bisq.rest_api.endpoints.KeyPairApi;
+import bisq.rest_api.endpoints.KeyBundleApi;
 import bisq.rest_api.error.CustomExceptionMapper;
 import bisq.rest_api.error.StatusException;
 import bisq.rest_api.util.StaticFileHandler;
@@ -33,7 +33,7 @@ public class JaxRsApplication extends ResourceConfig implements Service {
         // 'config' acts as application in jax-rs
         register(CustomExceptionMapper.class)
                 .register(StatusException.StatusExceptionMapper.class)
-                .register(KeyPairApi.class)
+                .register(KeyBundleApi.class)
                 .register(ChatApi.class)
                 .register(SwaggerResolution.class);
     }

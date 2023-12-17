@@ -17,7 +17,6 @@
 
 package bisq.tor.onionservice;
 
-import bisq.network.identity.TorIdentity;
 import bisq.tor.controller.NativeTorController;
 import lombok.extern.slf4j.Slf4j;
 import net.freehaven.tor.control.TorControlConnection;
@@ -33,51 +32,38 @@ import java.util.concurrent.ExecutionException;
 @Slf4j
 public class OnionServicePublishService {
     private final NativeTorController nativeTorController;
-    private final Map<TorIdentity, CompletableFuture<OnionAddress>> onionAddressByTorIdentity = new HashMap<>();
+    private final Map<String, CompletableFuture<OnionAddress>> onionAddressMap = new HashMap<>();
 
     public OnionServicePublishService(NativeTorController nativeTorController, Path torDirPath) {
         this.nativeTorController = nativeTorController;
     }
 
-    public synchronized CompletableFuture<OnionAddress> publish(TorIdentity torIdentity, int onionServicePort, int localPort) {
-        if (onionAddressByTorIdentity.containsKey(torIdentity)) {
-            return onionAddressByTorIdentity.get(torIdentity);
+    public synchronized CompletableFuture<OnionAddress> publish(String privateOpenSshKey, String onionAddressString, int onionServicePort, int localPort) {
+        if (onionAddressMap.containsKey(onionAddressString)) {
+            return onionAddressMap.get(onionAddressString);
         }
 
         CompletableFuture<OnionAddress> completableFuture = new CompletableFuture<>();
-        onionAddressByTorIdentity.put(torIdentity, completableFuture);
+        onionAddressMap.put(onionAddressString, completableFuture);
 
         try {
-            String privateKey = torIdentity.getTorOnionKey();
             TorControlConnection.CreateHiddenServiceResult jTorResult =
-                    nativeTorController.createHiddenService(onionServicePort, localPort, privateKey);
+                    nativeTorController.createHiddenService(onionServicePort, localPort, privateOpenSshKey);
 
             var onionAddress = new OnionAddress(jTorResult.serviceID + ".onion", onionServicePort);
             completableFuture.complete(onionAddress);
 
         } catch (IOException e) {
-            log.error("Couldn't initialize torIdentity {}", torIdentity);
+            log.error("Couldn't create hidden service");
             completableFuture.completeExceptionally(e);
         }
 
         return completableFuture;
     }
 
-    public synchronized CompletableFuture<Void> publish(TorIdentity torIdentity, int localPort) {
+    public synchronized Optional<OnionAddress> findOnionAddress(String onionAddressString) {
         try {
-            String privateKey = torIdentity.getTorOnionKey();
-            nativeTorController.createHiddenService(torIdentity.getPort(), localPort, privateKey);
-            return CompletableFuture.completedFuture(null);
-
-        } catch (IOException e) {
-            log.error("Couldn't create onion service {}", torIdentity);
-            return CompletableFuture.failedFuture(e);
-        }
-    }
-
-    public synchronized Optional<OnionAddress> findOnionAddress(TorIdentity torIdentity) {
-        try {
-            CompletableFuture<OnionAddress> completableFuture = onionAddressByTorIdentity.get(torIdentity);
+            CompletableFuture<OnionAddress> completableFuture = onionAddressMap.get(onionAddressString);
             if (completableFuture == null) {
                 return Optional.empty();
             }

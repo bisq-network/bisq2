@@ -19,6 +19,7 @@ package bisq.security;
 
 import bisq.common.application.Service;
 import bisq.persistence.PersistenceService;
+import bisq.security.keys.KeyBundleService;
 import bisq.security.pow.HashCashService;
 import bisq.security.pow.ProofOfWorkService;
 import lombok.Getter;
@@ -29,19 +30,19 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 public class SecurityService implements Service {
     @Getter
-    private final KeyPairService keyPairService;
+    private final KeyBundleService keyBundleService;
     @Getter
     private final ProofOfWorkService proofOfWorkService;
 
     public SecurityService(PersistenceService persistenceService) {
-        keyPairService = new KeyPairService(persistenceService);
+        keyBundleService = new KeyBundleService(persistenceService);
         proofOfWorkService = new HashCashService();
     }
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
         proofOfWorkService.initialize();
-        return keyPairService.initialize();
+        return keyBundleService.initialize();
     }
 
     @Override

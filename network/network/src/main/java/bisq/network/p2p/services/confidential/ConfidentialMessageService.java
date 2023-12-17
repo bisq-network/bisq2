@@ -21,7 +21,6 @@ import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.ExceptionUtil;
 import bisq.network.common.Address;
 import bisq.network.identity.NetworkId;
-import bisq.network.identity.TorIdentity;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
@@ -36,7 +35,11 @@ import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
-import bisq.security.*;
+import bisq.security.ConfidentialData;
+import bisq.security.HybridEncryption;
+import bisq.security.keys.KeyBundleService;
+import bisq.security.keys.KeyGeneration;
+import bisq.security.keys.PubKey;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
@@ -54,18 +57,18 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 @Slf4j
 public class ConfidentialMessageService implements Node.Listener, DataService.Listener {
     private final NodesById nodesById;
-    private final KeyPairService keyPairService;
+    private final KeyBundleService keyBundleService;
     private final Optional<DataService> dataService;
     private final Optional<MessageDeliveryStatusService> messageDeliveryStatusService;
     private final Set<MessageListener> listeners = new CopyOnWriteArraySet<>();
     private final Set<ConfidentialMessageListener> confidentialMessageListeners = new CopyOnWriteArraySet<>();
 
     public ConfidentialMessageService(NodesById nodesById,
-                                      KeyPairService keyPairService,
+                                      KeyBundleService keyBundleService,
                                       Optional<DataService> dataService,
                                       Optional<MessageDeliveryStatusService> messageDeliveryStatusService) {
         this.nodesById = nodesById;
-        this.keyPairService = keyPairService;
+        this.keyBundleService = keyBundleService;
         this.dataService = dataService;
         this.messageDeliveryStatusService = messageDeliveryStatusService;
 
@@ -118,7 +121,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                         if (result) {
                             dataService.ifPresent(service -> {
                                 // If we are successful the msg must be for us, so we have the key
-                                KeyPair myKeyPair = keyPairService.findKeyPair(confidentialMessage.getReceiverKeyId()).orElseThrow();
+                                KeyPair myKeyPair = keyBundleService.findKeyPair(confidentialMessage.getReceiverKeyId()).orElseThrow();
                                 service.removeMailboxData(mailboxData, myKeyPair);
                             });
                         } else {
@@ -139,14 +142,13 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                                               Address address,
                                               PubKey receiverPubKey,
                                               KeyPair senderKeyPair,
-                                              NetworkId senderNetworkId,
-                                              TorIdentity senderTorIdentity) {
+                                              NetworkId senderNetworkId) {
         try {
             log.debug("Send message to {}", address);
             // Node gets initialized at higher level services
             nodesById.assertNodeIsInitialized(senderNetworkId);
-            Connection connection = nodesById.getConnection(senderNetworkId, address, senderTorIdentity);
-            return send(envelopePayloadMessage, connection, receiverPubKey, senderKeyPair, senderNetworkId, senderTorIdentity);
+            Connection connection = nodesById.getConnection(senderNetworkId, address);
+            return send(envelopePayloadMessage, connection, receiverPubKey, senderKeyPair, senderNetworkId);
         } catch (Throwable throwable) {
             SendConfidentialMessageResult result;
             if (envelopePayloadMessage instanceof MailboxMessage) {
@@ -168,15 +170,14 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                                                Connection connection,
                                                PubKey receiverPubKey,
                                                KeyPair senderKeyPair,
-                                               NetworkId senderNetworkId,
-                                               TorIdentity senderTorIdentity) {
+                                               NetworkId senderNetworkId) {
         log.debug("Send message to {}", connection);
         ConfidentialMessage confidentialMessage = getConfidentialMessage(envelopePayloadMessage, receiverPubKey, senderKeyPair);
         SendConfidentialMessageResult result;
         try {
             // Node gets initialized at higher level services
             nodesById.assertNodeIsInitialized(senderNetworkId);
-            nodesById.send(senderNetworkId, confidentialMessage, connection, senderTorIdentity);
+            nodesById.send(senderNetworkId, confidentialMessage, connection);
             result = new SendConfidentialMessageResult(MessageDeliveryStatus.ARRIVED);
             onResult(envelopePayloadMessage, result);
             return result;
@@ -255,7 +256,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
     }
 
     private CompletableFuture<Boolean> processConfidentialMessage(ConfidentialMessage confidentialMessage) {
-        return keyPairService.findKeyPair(confidentialMessage.getReceiverKeyId())
+        return keyBundleService.findKeyPair(confidentialMessage.getReceiverKeyId())
                 .map(receiversKeyPair -> supplyAsync(() -> {
                     try {
                         log.info("Found a matching key for processing confidentialMessage");

@@ -58,7 +58,8 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
         try {
             checkArgument(contractService.verifyContractSignature(contract, takersContractSignatureData));
 
-            ContractSignatureData makersContractSignatureData = contractService.signContract(contract, trade.getMyIdentity().getKeyPair());
+            ContractSignatureData makersContractSignatureData = contractService.signContract(contract,
+                    trade.getMyIdentity().getKeyBundle().getKeyPair());
             commitToModel(takersContractSignatureData, makersContractSignatureData);
 
             BisqEasyTakeOfferResponse response = new BisqEasyTakeOfferResponse(StringUtils.createUid(),

@@ -107,11 +107,11 @@ public class DesktopApplicationService extends ApplicationService {
         networkService = new NetworkService(NetworkServiceConfig.from(config.getBaseDir(),
                 getConfig("network")),
                 persistenceService,
-                securityService.getKeyPairService(),
+                securityService.getKeyBundleService(),
                 securityService.getProofOfWorkService());
 
         identityService = new IdentityService(persistenceService,
-                securityService.getKeyPairService(),
+                securityService.getKeyBundleService(),
                 networkService);
 
         bondedRolesService = new BondedRolesService(BondedRolesService.Config.from(getConfig("bondedRoles")),

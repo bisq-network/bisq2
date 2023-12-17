@@ -23,7 +23,6 @@ import bisq.network.NetworkService;
 import bisq.network.common.Address;
 import bisq.network.common.TransportType;
 import bisq.network.identity.NetworkId;
-import bisq.network.identity.TorIdentity;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
@@ -43,8 +42,8 @@ import bisq.network.p2p.services.data.inventory.InventoryService;
 import bisq.network.p2p.services.peergroup.BanList;
 import bisq.network.p2p.services.peergroup.PeerGroupManager;
 import bisq.persistence.PersistenceService;
-import bisq.security.KeyPairService;
-import bisq.security.PubKey;
+import bisq.security.keys.KeyBundleService;
+import bisq.security.keys.PubKey;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -106,7 +105,7 @@ public class ServiceNode {
     private final Optional<DataService> dataService;
     private final InventoryService.Config inventoryServiceConfig;
     private final Optional<MessageDeliveryStatusService> messageDeliveryStatusService;
-    private final KeyPairService keyPairService;
+    private final KeyBundleService keyBundleService;
     private final PersistenceService persistenceService;
     private final Set<Address> seedNodeAddresses;
 
@@ -136,7 +135,7 @@ public class ServiceNode {
                 InventoryService.Config inventoryServiceConfig,
                 Optional<DataService> dataService,
                 Optional<MessageDeliveryStatusService> messageDeliveryStatusService,
-                KeyPairService keyPairService,
+                KeyBundleService keyBundleService,
                 PersistenceService persistenceService,
                 AuthorizationService authorizationService,
                 Set<Address> seedNodeAddresses,
@@ -147,12 +146,12 @@ public class ServiceNode {
         this.inventoryServiceConfig = inventoryServiceConfig;
         this.messageDeliveryStatusService = messageDeliveryStatusService;
         this.dataService = dataService;
-        this.keyPairService = keyPairService;
+        this.keyBundleService = keyBundleService;
         this.persistenceService = persistenceService;
         this.seedNodeAddresses = seedNodeAddresses;
 
         transportService = TransportService.create(transportType, nodeConfig.getTransportConfig());
-        nodesById = new NodesById(banList, nodeConfig, transportService, networkLoadService, authorizationService);
+        nodesById = new NodesById(banList, nodeConfig, keyBundleService, transportService, networkLoadService, authorizationService);
     }
 
 
@@ -160,8 +159,8 @@ public class ServiceNode {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    Node getInitializedDefaultNode(NetworkId defaultNetworkId, TorIdentity defaultTorIdentity) {
-        defaultNode = nodesById.createAndConfigNode(defaultNetworkId, defaultTorIdentity, true);
+    Node getInitializedDefaultNode(NetworkId defaultNetworkId) {
+        defaultNode = nodesById.createAndConfigNode(defaultNetworkId, true);
 
         Set<SupportedService> supportedServices = config.getSupportedServices();
         peerGroupManager = supportedServices.contains(SupportedService.PEER_GROUP) ?
@@ -187,7 +186,7 @@ public class ServiceNode {
                 Optional.empty();
 
         confidentialMessageService = supportedServices.contains(SupportedService.CONFIDENTIAL) ?
-                Optional.of(new ConfidentialMessageService(nodesById, keyPairService, dataService, messageDeliveryStatusService)) :
+                Optional.of(new ConfidentialMessageService(nodesById, keyBundleService, dataService, messageDeliveryStatusService)) :
                 Optional.empty();
 
         setState(State.INITIALIZING);
@@ -216,8 +215,8 @@ public class ServiceNode {
     }
 
 
-    Node getInitializedNode(NetworkId networkId, TorIdentity torIdentity) {
-        return nodesById.getInitializedNode(networkId, torIdentity);
+    Node initializeNode(NetworkId networkId) {
+        return nodesById.initializeNode(networkId);
     }
 
     boolean isNodeInitialized(NetworkId networkId) {
@@ -245,14 +244,13 @@ public class ServiceNode {
                                                    Address address,
                                                    PubKey receiverPubKey,
                                                    KeyPair senderKeyPair,
-                                                   NetworkId senderNetworkId,
-                                                   TorIdentity senderTorIdentity) {
+                                                   NetworkId senderNetworkId) {
         checkArgument(confidentialMessageService.isPresent(), "ConfidentialMessageService not present at confidentialSend");
-        return confidentialMessageService.get().send(envelopePayloadMessage, address, receiverPubKey, senderKeyPair, senderNetworkId, senderTorIdentity);
+        return confidentialMessageService.get().send(envelopePayloadMessage, address, receiverPubKey, senderKeyPair, senderNetworkId);
     }
 
-    Connection send(NetworkId senderNetworkId, EnvelopePayloadMessage envelopePayloadMessage, Address address, TorIdentity torIdentity) {
-        return getNodesById().send(senderNetworkId, envelopePayloadMessage, address, torIdentity);
+    Connection send(NetworkId senderNetworkId, EnvelopePayloadMessage envelopePayloadMessage, Address address) {
+        return getNodesById().send(senderNetworkId, envelopePayloadMessage, address);
     }
 
     void addMessageListener(MessageListener messageListener) {

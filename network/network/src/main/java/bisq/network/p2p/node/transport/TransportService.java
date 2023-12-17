@@ -21,7 +21,7 @@ import bisq.network.common.Address;
 import bisq.network.common.TransportConfig;
 import bisq.network.common.TransportType;
 import bisq.network.identity.NetworkId;
-import bisq.network.identity.TorIdentity;
+import bisq.security.keys.KeyBundle;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 
 import java.io.IOException;
@@ -48,7 +48,7 @@ public interface TransportService {
 
     CompletableFuture<Boolean> shutdown();
 
-    ServerSocketResult getServerSocket(NetworkId networkId, TorIdentity torIdentity);
+    ServerSocketResult getServerSocket(NetworkId networkId, KeyBundle keyBundle);
 
     Socket getSocket(Address address) throws IOException;
 

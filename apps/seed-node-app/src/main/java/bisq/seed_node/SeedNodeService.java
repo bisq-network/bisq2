@@ -25,8 +25,8 @@ import bisq.common.timer.Scheduler;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
-import bisq.security.KeyGeneration;
-import bisq.security.KeyPairService;
+import bisq.security.keys.KeyBundleService;
+import bisq.security.keys.KeyGeneration;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -74,15 +74,15 @@ public class SeedNodeService implements Service {
 
     private final NetworkService networkService;
     private final IdentityService identityService;
-    private final KeyPairService keyPairService;
+    private final KeyBundleService keyBundleService;
     private final Optional<Config> optionalConfig;
     private Scheduler startupScheduler, scheduler;
 
-    public SeedNodeService(Optional<Config> optionalConfig, NetworkService networkService, IdentityService identityService, KeyPairService keyPairService) {
+    public SeedNodeService(Optional<Config> optionalConfig, NetworkService networkService, IdentityService identityService, KeyBundleService keyBundleService) {
         this.optionalConfig = optionalConfig;
         this.networkService = networkService;
         this.identityService = identityService;
-        this.keyPairService = keyPairService;
+        this.keyBundleService = keyBundleService;
     }
 
     @Override
@@ -102,8 +102,8 @@ public class SeedNodeService implements Service {
                     networkId,
                     Optional.empty(),
                     config.isStaticPublicKeysProvided());
-            String keyId = keyPairService.getDefaultKeyId();
-            KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
+            String defaultKeyId = keyBundleService.getDefaultKeyId();
+            KeyPair keyPair = keyBundleService.getOrCreateKeyBundle(defaultKeyId).getKeyPair();
 
             // Repeat 3 times at startup to republish to ensure the data gets well distributed
             startupScheduler = Scheduler.run(() -> publishMyBondedRole(authorizedBondedRole, keyPair, authorizedPrivateKey, authorizedPublicKey))

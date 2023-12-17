@@ -10,7 +10,7 @@ import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
-import bisq.security.KeyPairService;
+import bisq.security.keys.KeyBundleService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,13 +28,13 @@ import java.util.Map;
 public class MessageDeliveryStatusService implements PersistenceClient<MessageDeliveryStatusStore>, MessageListener {
     private final MessageDeliveryStatusStore persistableStore = new MessageDeliveryStatusStore();
     private final Persistence<MessageDeliveryStatusStore> persistence;
-    private final KeyPairService keyPairService;
+    private final KeyBundleService keyBundleService;
     private final NetworkService networkService;
 
     public MessageDeliveryStatusService(PersistenceService persistenceService,
-                                        KeyPairService keyPairService,
+                                        KeyBundleService keyBundleService,
                                         NetworkService networkService) {
-        this.keyPairService = keyPairService;
+        this.keyBundleService = keyBundleService;
         this.networkService = networkService;
 
         persistence = persistenceService.getOrCreatePersistence(this,
@@ -135,12 +135,11 @@ public class MessageDeliveryStatusService implements PersistenceClient<MessageDe
     private void processAckRequestingMessage(AckRequestingMessage message) {
         AckMessage ackMessage = new AckMessage(message.getId());
         NetworkId networkId = message.getReceiver();
-        keyPairService.findKeyPair(networkId.getPubKey().getKeyId())
+        keyBundleService.findKeyPair(networkId.getPubKey().getKeyId())
                 .ifPresent(keyPair -> {
                     log.info("Received a {} with message ID {}", message.getClass().getSimpleName(), message.getId());
                     NetworkIdWithKeyPair networkIdWithKeyPair = new NetworkIdWithKeyPair(networkId, keyPair);
-                    networkService.findTorIdentity(networkId).ifPresent(torIdentity ->
-                            networkService.confidentialSend(ackMessage, message.getSender(), networkIdWithKeyPair, torIdentity));
+                    networkService.confidentialSend(ackMessage, message.getSender(), networkIdWithKeyPair);
                 });
     }
 }

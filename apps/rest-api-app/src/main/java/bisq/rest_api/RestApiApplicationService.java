@@ -31,8 +31,8 @@ import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
 import bisq.offer.OfferService;
 import bisq.presentation.notifications.SendNotificationService;
-import bisq.security.KeyPairService;
 import bisq.security.SecurityService;
+import bisq.security.keys.KeyBundleService;
 import bisq.settings.SettingsService;
 import bisq.support.SupportService;
 import bisq.trade.TradeService;
@@ -109,11 +109,11 @@ public class RestApiApplicationService extends ApplicationService {
         networkService = new NetworkService(NetworkServiceConfig.from(config.getBaseDir(),
                 getConfig("network")),
                 persistenceService,
-                securityService.getKeyPairService(),
+                securityService.getKeyBundleService(),
                 securityService.getProofOfWorkService());
 
         identityService = new IdentityService(persistenceService,
-                securityService.getKeyPairService(),
+                securityService.getKeyBundleService(),
                 networkService);
 
         bondedRolesService = new BondedRolesService(BondedRolesService.Config.from(getConfig("bondedRoles")),
@@ -253,8 +253,8 @@ public class RestApiApplicationService extends ApplicationService {
                 .join());
     }
 
-    public KeyPairService getKeyPairService() {
-        return securityService.getKeyPairService();
+    public KeyBundleService getKeyPairService() {
+        return securityService.getKeyBundleService();
     }
 
 

@@ -39,7 +39,8 @@ public class BisqEasyTakeOfferEventHandler extends SendTradeMessageHandler<BisqE
         BisqEasyTakeOfferEvent bisqEasyTakeOfferEvent = (BisqEasyTakeOfferEvent) event;
         BisqEasyContract bisqEasyContract = bisqEasyTakeOfferEvent.getBisqEasyContract();
         try {
-            ContractSignatureData contractSignatureData = serviceProvider.getContractService().signContract(bisqEasyContract, trade.getMyIdentity().getKeyPair());
+            ContractSignatureData contractSignatureData = serviceProvider.getContractService().signContract(bisqEasyContract,
+                    trade.getMyIdentity().getKeyBundle().getKeyPair());
             commitToModel(contractSignatureData);
             sendMessage(new BisqEasyTakeOfferRequest(StringUtils.createUid(),
                     trade.getId(),

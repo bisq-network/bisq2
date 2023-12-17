@@ -16,19 +16,18 @@
  */
 package bisq.rest_api.dto;
 
+import bisq.security.keys.KeyBundle;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 
 @Getter
-@Schema(name = "KeyPair")
-public final class KeyPairDto {
-    private byte[] publicKey;
-    private byte[] privateKey;
+@Schema(name = "KeyBundle")
+public final class KeyBundleDto {
+    private KeyBundle keyBundle;
 
-    public static KeyPairDto from(java.security.KeyPair keyPair) {
-        KeyPairDto dto = new KeyPairDto();
-        dto.publicKey = keyPair.getPublic().getEncoded();
-        dto.privateKey = keyPair.getPrivate().getEncoded();
+    public static KeyBundleDto from(KeyBundle keyBundle) {
+        KeyBundleDto dto = new KeyBundleDto();
+        dto.keyBundle = keyBundle;
         return dto;
     }
 }

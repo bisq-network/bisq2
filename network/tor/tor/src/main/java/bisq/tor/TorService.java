@@ -20,7 +20,6 @@ package bisq.tor;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.util.NetworkUtils;
-import bisq.network.identity.TorIdentity;
 import bisq.network.tor.common.torrc.TorrcFileGenerator;
 import bisq.tor.controller.NativeTorController;
 import bisq.tor.controller.events.events.BootstrapEvent;
@@ -41,7 +40,6 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
@@ -115,49 +113,19 @@ public class TorService implements Service {
         return nativeTorController.getBootstrapEvent();
     }
 
-    public CompletableFuture<Boolean> startNode(TorIdentity torIdentity) {
-        try {
-            ServerSocket serverSocket = createOnionService(torIdentity).get();
-            return CompletableFuture.completedFuture(true);
-
-        } catch (ExecutionException | InterruptedException e) {
-            return CompletableFuture.failedFuture(e);
-        }
-    }
-
-    public CompletableFuture<CreateOnionServiceResponse> createOnionService(int port, TorIdentity torIdentity) {
-        log.info("Start hidden service with port {} and torIdentity {}", port, torIdentity);
+    public CompletableFuture<CreateOnionServiceResponse> createOnionService(int port, String privateOpenSshKey, String onionAddressString) {
+        log.info("Start hidden service with port {}", port);
         long ts = System.currentTimeMillis();
         try {
             @SuppressWarnings("resource") ServerSocket localServerSocket = new ServerSocket(RANDOM_PORT);
             int localPort = localServerSocket.getLocalPort();
-            return onionServicePublishService.publish(torIdentity, port, localPort)
+            return onionServicePublishService.publish(privateOpenSshKey, onionAddressString, port, localPort)
                     .thenApply(onionAddress -> {
-                        log.info("Tor hidden service Ready. Took {} ms. Onion address={}; torIdentity={}",
-                                        System.currentTimeMillis() - ts, onionAddress, torIdentity);
-                                return new CreateOnionServiceResponse(torIdentity, localServerSocket, onionAddress);
+                        log.info("Tor hidden service Ready. Took {} ms. Onion address={}",
+                                System.currentTimeMillis() - ts, onionAddress);
+                                return new CreateOnionServiceResponse(localServerSocket, onionAddress);
                             }
                     );
-
-        } catch (IOException e) {
-            log.error("Can't create onion service", e);
-            return CompletableFuture.failedFuture(e);
-        }
-    }
-
-    public CompletableFuture<ServerSocket> createOnionService(TorIdentity torIdentity) {
-        log.info("Start hidden service with {}", torIdentity);
-        long ts = System.currentTimeMillis();
-        try {
-            @SuppressWarnings("resource") ServerSocket localServerSocket = new ServerSocket(RANDOM_PORT);
-            int localPort = localServerSocket.getLocalPort();
-
-            return onionServicePublishService.publish(torIdentity, localPort)
-                    .thenApply(unused -> {
-                        log.info("Tor hidden service Ready. Took {} ms. Onion address={}",
-                                System.currentTimeMillis() - ts, torIdentity);
-                        return localServerSocket;
-                    });
 
         } catch (IOException e) {
             log.error("Can't create onion service", e);
