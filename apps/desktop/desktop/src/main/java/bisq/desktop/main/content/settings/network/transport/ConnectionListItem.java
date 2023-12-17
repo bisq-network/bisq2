@@ -77,7 +77,7 @@ public class ConnectionListItem implements ActivatableTableItem, DateTableItem {
                 .filter(u -> u.getNetworkId().getAddressByTransportTypeMap().containsValue(peerAddress))
                 .map(UserProfile::getUserName)
                 .findAny()
-                .orElse(isSeed ? Res.get("settings.network.connections.seed") : Res.get("data.na"));
+                .orElse(isSeed ? Res.get("settings.network.connections.seed") : Res.get("settings.network.nodes.type.default"));
         address = peerAddress.getFullAddress();
         direction = connection.isOutboundConnection() ?
                 Res.get("settings.network.connections.outbound") :
@@ -85,7 +85,7 @@ public class ConnectionListItem implements ActivatableTableItem, DateTableItem {
 
         String identityTag = identityService.findAnyIdentityByNetworkId(node.getNetworkId())
                 .map(Identity::getTag)
-                .orElse(Res.get("data.na"));
+                .orElse("default");
         nodeTagTooltip = Res.get("settings.network.header.nodeTag.tooltip", identityTag);
         nodeTag = identityTag.contains("-") ? identityTag.split("-")[0] : identityTag;
 

@@ -115,7 +115,7 @@ public class TransportTypeView extends View<GridPane, TransportTypeModel, Transp
                 .build());
         connectionsTableView.getColumns().add(new BisqTableColumn.Builder<ConnectionListItem>()
                 .title(Res.get("settings.network.header.nodeTag"))
-                .minWidth(100)
+                .minWidth(120)
                 .valueSupplier(ConnectionListItem::getNodeTag)
                 .tooltipSupplier(ConnectionListItem::getNodeTagTooltip)
                 .comparator(ConnectionListItem::compareNodeTag)

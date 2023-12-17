@@ -62,7 +62,7 @@ public class NodeListItem implements ActivatableTableItem {
 
         String identityTag = identityService.findAnyIdentityByNetworkId(node.getNetworkId())
                 .map(Identity::getTag)
-                .orElse(Res.get("data.na"));
+                .orElse("default");
         nodeTagTooltip = Res.get("settings.network.header.nodeTag.tooltip", identityTag);
         nodeTag = identityTag.contains("-") ? identityTag.split("-")[0] : identityTag;
 
