@@ -1173,7 +1173,7 @@ public class ChatMessagesListView {
                                     if (status != null) {
                                         messageDeliveryStatusTooltip.set(Res.get("chat.message.deliveryState." + status.name()));
                                         switch (status) {
-                                            case SENT:
+                                            case START_SENDING:
                                                 messageDeliveryStatusIcon.set(AwesomeIcon.SPINNER);
                                                 break;
                                             case ARRIVED:

@@ -143,14 +143,15 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                                               PubKey receiverPubKey,
                                               KeyPair senderKeyPair,
                                               NetworkId senderNetworkId) {
+        log.debug("Send message to {}", address);
+        SendConfidentialMessageResult result = new SendConfidentialMessageResult(MessageDeliveryStatus.START_SENDING);
+        onResult(envelopePayloadMessage, result);
         try {
-            log.debug("Send message to {}", address);
             // Node gets initialized at higher level services
             nodesById.assertNodeIsInitialized(senderNetworkId);
             Connection connection = nodesById.getConnection(senderNetworkId, address);
             return send(envelopePayloadMessage, connection, receiverPubKey, senderKeyPair, senderNetworkId);
         } catch (Throwable throwable) {
-            SendConfidentialMessageResult result;
             if (envelopePayloadMessage instanceof MailboxMessage) {
                 log.info("Message could not be sent because of {}.\n" +
                         "We send the message as mailbox message.", throwable.getMessage());

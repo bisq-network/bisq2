@@ -6,7 +6,7 @@ import lombok.Getter;
 
 @Getter
 public enum MessageDeliveryStatus implements ProtoEnum {
-    SENT,
+    START_SENDING,
     ARRIVED(true),
     ADDED_TO_MAILBOX,
     MAILBOX_MSG_RECEIVED(true),
@@ -29,6 +29,6 @@ public enum MessageDeliveryStatus implements ProtoEnum {
     }
 
     public static MessageDeliveryStatus fromProto(bisq.network.protobuf.MessageDeliveryStatus proto) {
-        return ProtobufUtils.enumFromProto(MessageDeliveryStatus.class, proto.name(), SENT);
+        return ProtobufUtils.enumFromProto(MessageDeliveryStatus.class, proto.name(), START_SENDING);
     }
 }
