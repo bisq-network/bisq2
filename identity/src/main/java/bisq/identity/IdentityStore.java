@@ -21,8 +21,6 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
@@ -34,8 +32,6 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public final class IdentityStore implements PersistableStore<IdentityStore> {
-    @Getter
-    @Setter
     private Optional<Identity> defaultIdentity;
     private final Map<String, Identity> activeIdentityByTag = new ConcurrentHashMap<>();
     private final Set<Identity> retired = new CopyOnWriteArraySet<>();
@@ -105,4 +101,11 @@ public final class IdentityStore implements PersistableStore<IdentityStore> {
         return retired;
     }
 
+    Optional<Identity> getDefaultIdentity() {
+        return defaultIdentity;
+    }
+
+    void setDefaultIdentity(Optional<Identity> defaultIdentity) {
+        this.defaultIdentity = defaultIdentity;
+    }
 }

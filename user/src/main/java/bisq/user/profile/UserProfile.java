@@ -21,6 +21,7 @@ import bisq.common.data.ByteArray;
 import bisq.common.encoding.Hex;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.util.StringUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.i18n.Res;
 import bisq.network.identity.NetworkId;
@@ -30,6 +31,7 @@ import bisq.security.DigestUtil;
 import bisq.security.pow.ProofOfWork;
 import bisq.user.NymIdGenerator;
 import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -37,6 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.stream.Collectors;
 
 import static bisq.network.p2p.services.data.storage.MetaData.*;
 
@@ -175,11 +178,23 @@ public final class UserProfile implements DistributedData {
     }
 
     public String getTooltipString() {
-        return Res.get("user.userProfile.tooltip", nickName, getNym(), getId());
+        return Res.get("user.userProfile.tooltip",
+                nickName, getNym(), getId(), getAddressByTransportDisplayString());
     }
 
     public String getUserName() {
         return UserNameLookup.getUserName(getNym(), nickName);
+    }
+
+    public String getAddressByTransportDisplayString() {
+        return getAddressByTransportDisplayString(Integer.MAX_VALUE);
+    }
+
+    public String getAddressByTransportDisplayString(int maxAddressLength) {
+        return Joiner.on("\n").join(networkId.getAddressByTransportTypeMap().entrySet().stream()
+                .map(e -> Res.get("user.userProfile.addressByTransport." + e.getKey().name(),
+                        StringUtils.truncate(e.getValue().getFullAddress(), maxAddressLength)))
+                .collect(Collectors.toList()));
     }
 
     @Override

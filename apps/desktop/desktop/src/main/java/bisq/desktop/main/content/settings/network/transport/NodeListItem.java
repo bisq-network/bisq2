@@ -62,14 +62,13 @@ public class NodeListItem implements ActivatableTableItem {
 
         String identityTag = identityService.findAnyIdentityByNetworkId(node.getNetworkId())
                 .map(Identity::getTag)
-                .orElse(Res.get("data.na"));
+                .orElse("default");
         nodeTagTooltip = Res.get("settings.network.header.nodeTag.tooltip", identityTag);
         nodeTag = identityTag.contains("-") ? identityTag.split("-")[0] : identityTag;
 
         address = node.findMyAddress().map(Address::getFullAddress).orElse(Res.get("data.na"));
 
         numConnections.set(String.valueOf(node.getAllConnections().count()));
-
         listener = new Node.Listener() {
             @Override
             public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {

@@ -400,7 +400,7 @@ public class ChatMessagesComponent {
             }
 
             ChatChannel<? extends ChatMessage> chatChannel = model.selectedChannel.get();
-            UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
+            UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity(), "user identity must not be null");
             Optional<Citation> citation = citationBlock.getCitation();
 
             if (citation.isPresent() && citation.get().getText().length() > Citation.MAX_TEXT_LENGTH) {

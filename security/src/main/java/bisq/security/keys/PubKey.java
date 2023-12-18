@@ -19,27 +19,30 @@ package bisq.security.keys;
 
 import bisq.common.encoding.Hex;
 import bisq.common.proto.Proto;
-import bisq.common.util.StringUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.security.DigestUtil;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
 import java.security.PublicKey;
 
-// The PublicKey implementation (BCECPublicKey) has an equals and hashCode method implemented.
-// Therefor we can use the @EqualsAndHashCode annotation.
 @Slf4j
 @EqualsAndHashCode
+@ToString
 public final class PubKey implements Proto {
+    // The PublicKey implementation (BCECPublicKey) has an equals and hashCode method implemented.
+    // Therefor we can include it for @EqualsAndHashCode.
     @Getter
+    @ToString.Exclude
     private final PublicKey publicKey;
     @Getter
     private final String keyId;
 
+    @ToString.Exclude
     private transient byte[] hash;
     private transient String id;
 
@@ -78,13 +81,5 @@ public final class PubKey implements Proto {
             id = Hex.encode(getHash());
         }
         return id;
-    }
-
-    @Override
-    public String toString() {
-        return "PubKey{" +
-                "publicKey=" + StringUtils.truncate(publicKey.toString(), 20) +
-                ", keyId='" + keyId + '\'' +
-                "}";
     }
 }

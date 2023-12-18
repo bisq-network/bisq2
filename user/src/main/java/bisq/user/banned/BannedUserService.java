@@ -105,6 +105,7 @@ public class BannedUserService implements PersistenceClient<BannedUserStore>, Se
     }
 
     public boolean isNetworkIdBanned(NetworkId networkId) {
-        return getBannedUserProfileDataSet().stream().anyMatch(e -> e.getUserProfile().getNetworkId().equals(networkId));
+        return getBannedUserProfileDataSet().stream()
+                .anyMatch(e -> e.getUserProfile().getNetworkId().equals(networkId));
     }
 }

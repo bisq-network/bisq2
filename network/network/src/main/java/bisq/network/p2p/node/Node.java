@@ -462,7 +462,8 @@ public class Node implements Connection.Handler {
         if (isAuthorized) {
             if (envelopePayloadMessage instanceof CloseConnectionMessage) {
                 CloseConnectionMessage closeConnectionMessage = (CloseConnectionMessage) envelopePayloadMessage;
-                log.debug("Node {} received CloseConnectionMessage from {} with reason: {}", this, connection.getPeerAddress(), closeConnectionMessage.getCloseReason());
+                log.debug("Node {} received CloseConnectionMessage from {} with reason: {}",
+                        this, connection.getPeerAddress(), closeConnectionMessage.getCloseReason());
                 closeConnection(connection, CloseReason.CLOSE_MSG_RECEIVED.details(closeConnectionMessage.getCloseReason().name()));
             } else {
                 // We got called from Connection on the dispatcher thread, so no mapping needed here.
@@ -528,7 +529,7 @@ public class Node implements Connection.Handler {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public void closeConnection(Connection connection, CloseReason closeReason) {
-        log.debug("Node {} got called closeConnection for {}", this, connection);
+        log.debug("Node {} got called closeConnection for {}, closeReason={}", this, connection, closeReason);
         connection.close(closeReason);
     }
 

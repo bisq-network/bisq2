@@ -12,6 +12,7 @@ dependencies {
 
     implementation("network:network")
     implementation("network:network-identity")
+    implementation("network:network-common")
 
     implementation(libs.google.gson)
     implementation(libs.typesafe.config)

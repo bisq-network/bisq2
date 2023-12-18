@@ -18,6 +18,7 @@ public class KeyBundle implements Proto {
     private final String keyId;
     @ToString.Exclude
     private transient final byte[] encodedPrivateKey;
+    @ToString.Exclude
     private transient final byte[] encodedPublicKey;
     // private final I2pKeyPair i2PKeyPair;
 

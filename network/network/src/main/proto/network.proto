@@ -72,13 +72,6 @@ message PeerExchangeResponse {
   repeated Peer peers = 2;
 }
 
-message AddressValidationRequest {
-  sint32 nonce = 1;
-}
-message AddressValidationResponse {
-  sint32 requestNonce = 1;
-}
-
 message Ping {
   sint32 nonce = 1;
 }
@@ -134,25 +127,22 @@ message EnvelopePayloadMessage {
     PeerExchangeRequest peerExchangeRequest = 4;
     PeerExchangeResponse peerExchangeResponse = 5;
 
-    AddressValidationRequest addressValidationRequest = 6;
-    AddressValidationResponse addressValidationResponse = 7;
+    Ping ping = 6;
+    Pong pong = 7;
 
-    Ping ping = 8;
-    Pong pong = 9;
+    ConfidentialMessage confidentialMessage = 8;
+    AckMessage ackMessage = 9;
 
-    ConfidentialMessage confidentialMessage = 10;
-    AckMessage ackMessage = 11;
+    InventoryRequest inventoryRequest = 10;
+    InventoryResponse inventoryResponse = 11;
 
-    InventoryRequest inventoryRequest = 12;
-    InventoryResponse inventoryResponse = 13;
+    DataRequest dataRequest = 12;
 
-    DataRequest dataRequest = 14;
-
-    NetworkLoadExchangeRequest networkLoadExchangeRequest = 15;
-    NetworkLoadExchangeResponse networkLoadExchangeResponse = 16;
+    NetworkLoadExchangeRequest networkLoadExchangeRequest = 13;
+    NetworkLoadExchangeResponse networkLoadExchangeResponse = 14;
 
     // Wrapper for NetworkMessages defined in other modules like PrivateChatMessage which are wrapped in an Any blob
-    ExternalNetworkMessage externalNetworkMessage = 17;
+    ExternalNetworkMessage externalNetworkMessage = 15;
   }
 }
 

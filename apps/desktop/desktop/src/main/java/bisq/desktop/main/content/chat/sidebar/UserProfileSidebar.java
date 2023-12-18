@@ -131,6 +131,9 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             model.userProfileIdString.set(Res.get("chat.sideBar.userProfile.id", userProfile.getId()));
             model.roboHashNode.set(RoboHash.getImage(userProfile.getPubKeyHash()));
 
+            model.addressByTransport.set(userProfile.getAddressByTransportDisplayString(26));
+            model.addressByTransportTooltip.set(userProfile.getAddressByTransportDisplayString());
+
             model.ignoreButtonText.set(Res.get("chat.sideBar.userProfile.ignore"));
             model.statement.set(userProfile.getStatement());
             model.terms.set(userProfile.getTerms());
@@ -195,6 +198,8 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
         private final ObjectProperty<Image> roboHashNode = new SimpleObjectProperty<>();
         private final StringProperty nickName = new SimpleStringProperty();
         private final StringProperty nym = new SimpleStringProperty();
+        private final StringProperty addressByTransport = new SimpleStringProperty();
+        private final StringProperty addressByTransportTooltip = new SimpleStringProperty();
         private final StringProperty userProfileIdString = new SimpleStringProperty();
         private final StringProperty statement = new SimpleStringProperty();
         private final StringProperty terms = new SimpleStringProperty();
@@ -214,7 +219,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final ImageView roboIconImageView;
-        private final Label nickName, botId, userProfileId, statement, totalReputationScore, profileAge;
+        private final Label nickName, botId, userProfileId, addressByTransport, statement, totalReputationScore, profileAge;
         private final Hyperlink privateMsg, mention, ignore, report;
         private final VBox statementBox, termsBox, optionsVBox;
         private final ReputationScoreDisplay reputationScoreDisplay;
@@ -257,6 +262,11 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             userProfileId = new Label();
             userProfileId.getStyleClass().add("chat-side-bar-user-profile-details");
             userProfileId.setTooltip(new BisqTooltip(model.userProfileIdString.get()));
+
+            addressByTransport = new Label();
+            addressByTransport.setWrapText(true);
+            addressByTransport.getStyleClass().add("chat-side-bar-user-profile-details");
+            addressByTransport.setTooltip(new BisqTooltip(model.addressByTransportTooltip.get()));
 
             Label reputationHeadline = new Label(Res.get("chat.sideBar.userProfile.reputation").toUpperCase());
             reputationHeadline.getStyleClass().add("chat-side-bar-user-profile-small-headline");
@@ -303,9 +313,10 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             VBox.setMargin(header, new Insets(0, -20, 0, 0));
             VBox.setMargin(nickName, new Insets(10, 0, 0, 0));
             VBox.setMargin(userProfileId, new Insets(-10, 0, 0, 0));
+            VBox.setMargin(addressByTransport, new Insets(-10, 0, 0, 0));
             VBox.setMargin(reputationBox, new Insets(4, 0, 0, 0));
             root.getChildren().addAll(header,
-                    nickName, roboIconImageView, botId, userProfileId,
+                    nickName, roboIconImageView, botId, userProfileId, addressByTransport,
                     reputationBox, totalReputationScoreBox, profileAgeBox, statementBox, termsBox,
                     optionsVBox);
         }
@@ -317,6 +328,8 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             botId.getTooltip().textProperty().bind(model.nym);
             userProfileId.textProperty().bind(model.userProfileIdString);
             userProfileId.getTooltip().textProperty().bind(model.userProfileIdString);
+            addressByTransport.textProperty().bind(model.addressByTransport);
+            addressByTransport.getTooltip().textProperty().bind(model.addressByTransportTooltip);
             statement.textProperty().bind(model.statement);
             statementBox.visibleProperty().bind(model.statement.isEmpty().not());
             statementBox.managedProperty().bind(model.statement.isEmpty().not());
@@ -357,6 +370,8 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             botId.getTooltip().textProperty().unbind();
             userProfileId.textProperty().unbind();
             userProfileId.getTooltip().textProperty().unbind();
+            addressByTransport.textProperty().unbind();
+            addressByTransport.getTooltip().textProperty().unbind();
             statement.textProperty().unbind();
             statementBox.visibleProperty().unbind();
             statementBox.managedProperty().unbind();

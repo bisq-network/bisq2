@@ -32,8 +32,6 @@ import bisq.network.p2p.services.peergroup.keepalive.Ping;
 import bisq.network.p2p.services.peergroup.keepalive.Pong;
 import bisq.network.p2p.services.peergroup.network_load.NetworkLoadExchangeRequest;
 import bisq.network.p2p.services.peergroup.network_load.NetworkLoadExchangeResponse;
-import bisq.network.p2p.services.peergroup.validateaddress.AddressValidationRequest;
-import bisq.network.p2p.services.peergroup.validateaddress.AddressValidationResponse;
 
 /**
  * Interface for any message sent as payload in NetworkEnvelope
@@ -63,12 +61,6 @@ public interface EnvelopePayloadMessage extends Proto {
             }
             case PEEREXCHANGERESPONSE: {
                 return PeerExchangeResponse.fromProto(proto.getPeerExchangeResponse());
-            }
-            case ADDRESSVALIDATIONREQUEST: {
-                return AddressValidationRequest.fromProto(proto.getAddressValidationRequest());
-            }
-            case ADDRESSVALIDATIONRESPONSE: {
-                return AddressValidationResponse.fromProto(proto.getAddressValidationResponse());
             }
             case PING: {
                 return Ping.fromProto(proto.getPing());

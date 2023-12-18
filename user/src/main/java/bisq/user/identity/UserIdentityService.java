@@ -93,7 +93,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
 
         // We delay publishing to be better bootstrapped 
         Scheduler.run(() -> getUserIdentities().forEach(userProfile ->
-                        maybePublicUserProfile(userProfile.getUserProfile(), userProfile.getNetworkIdWithKeyPair().getKeyPair())))
+                        maybePublishUserProfile(userProfile.getUserProfile(), userProfile.getNetworkIdWithKeyPair().getKeyPair())))
                 .after(5, TimeUnit.SECONDS);
         return CompletableFuture.completedFuture(true);
     }
@@ -209,7 +209,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
                 userIdentity.getIdentity().getNetworkIdWithKeyPair().getKeyPair());
     }
 
-    public CompletableFuture<Boolean> maybePublicUserProfile(UserProfile userProfile, KeyPair keyPair) {
+    public CompletableFuture<Boolean> maybePublishUserProfile(UserProfile userProfile, KeyPair keyPair) {
         long lastPublished = Optional.ofNullable(publishTimeByChatUserId.get(userProfile.getId())).orElse(0L);
         long passed = System.currentTimeMillis() - lastPublished;
         if (passed > config.getRepublishUserProfileDelay()) {

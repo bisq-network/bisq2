@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 public class TorKeyPair implements Proto {
     @ToString.Exclude
     private final byte[] privateKey;
+    @ToString.Exclude
     private final byte[] publicKey;
     @EqualsAndHashCode.Include
     @Getter

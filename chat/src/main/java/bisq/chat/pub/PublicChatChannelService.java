@@ -87,7 +87,7 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
             return CompletableFuture.failedFuture(new RuntimeException());
         }
         KeyPair keyPair = userIdentity.getNetworkIdWithKeyPair().getKeyPair();
-        return userIdentityService.maybePublicUserProfile(userIdentity.getUserProfile(), keyPair)
+        return userIdentityService.maybePublishUserProfile(userIdentity.getUserProfile(), keyPair)
                 .thenCompose(result -> networkService.publishAuthenticatedData(message, keyPair));
     }
 

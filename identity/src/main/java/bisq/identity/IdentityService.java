@@ -39,7 +39,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Stream;
 
 @Slf4j
 public class IdentityService implements PersistenceClient<IdentityStore>, Service {
@@ -135,7 +134,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
      */
     public CompletableFuture<Identity> createNewActiveIdentity(String identityTag, KeyPair keyPair) {
         KeyBundle keyBundle = keyBundleService.createAndPersistKeyBundle(identityTag, keyPair);
-        NetworkId networkId = networkService.createAndGetNetworkId(keyBundle);
+        NetworkId networkId = networkService.createAndGetNetworkId(keyBundle, identityTag);
         Identity identity = new Identity(identityTag, networkId, keyBundle);
 
         synchronized (lock) {
@@ -186,7 +185,9 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
 
     public Optional<Identity> findAnyIdentityByNetworkId(NetworkId networkId) {
         synchronized (lock) {
-            return Streams.concat(Stream.of(getOrCreateDefaultIdentity()), getActiveIdentityByTag().values().stream(), getRetired().stream())
+            return Streams.concat(persistableStore.getDefaultIdentity().stream(),
+                            getActiveIdentityByTag().values().stream(),
+                            getRetired().stream())
                     .filter(e -> e.getNetworkId().equals(networkId))
                     .findAny();
         }
@@ -216,7 +217,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     private Identity createIdentity(String identityTag) {
         String keyId = keyBundleService.getKeyIdFromTag(identityTag);
         KeyBundle keyBundle = keyBundleService.getOrCreateKeyBundle(keyId);
-        NetworkId networkId = networkService.createAndGetNetworkId(keyBundle);
+        NetworkId networkId = networkService.createAndGetNetworkId(keyBundle, identityTag);
         return new Identity(identityTag, networkId, keyBundle);
     }
 

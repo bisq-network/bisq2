@@ -97,10 +97,15 @@ public class TransportTypeView extends View<GridPane, TransportTypeModel, Transp
     }
 
     private void configConnectionsTableView() {
-        connectionsTableView.getColumns().add(BisqTableColumns.getDateColumn(
-                Res.get("settings.network.connections.header.established"),
-                connectionsTableView.getSortOrder()));
+        connectionsTableView.getColumns().add(BisqTableColumns.getDateColumn(connectionsTableView.getSortOrder()));
 
+        connectionsTableView.getColumns().add(new BisqTableColumn.Builder<ConnectionListItem>()
+                .title(Res.get("settings.network.connections.header.peer"))
+                .minWidth(130)
+                .valueSupplier(ConnectionListItem::getPeer)
+                .tooltipSupplier(ConnectionListItem::getPeer)
+                .comparator(ConnectionListItem::comparePeer)
+                .build());
         connectionsTableView.getColumns().add(new BisqTableColumn.Builder<ConnectionListItem>()
                 .title(Res.get("settings.network.connections.header.address"))
                 .minWidth(130)
@@ -110,7 +115,7 @@ public class TransportTypeView extends View<GridPane, TransportTypeModel, Transp
                 .build());
         connectionsTableView.getColumns().add(new BisqTableColumn.Builder<ConnectionListItem>()
                 .title(Res.get("settings.network.header.nodeTag"))
-                .minWidth(100)
+                .minWidth(120)
                 .valueSupplier(ConnectionListItem::getNodeTag)
                 .tooltipSupplier(ConnectionListItem::getNodeTagTooltip)
                 .comparator(ConnectionListItem::compareNodeTag)
