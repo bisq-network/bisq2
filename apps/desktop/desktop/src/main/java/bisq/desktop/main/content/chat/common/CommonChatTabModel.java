@@ -46,7 +46,7 @@ final class CommonChatTabModel extends ContentTabModel {
     public NavigationTarget getDefaultNavigationTarget() {
         return channelTabButtonModelByChannelId.isEmpty()
                 ? NavigationTarget.NONE
-                : channelTabButtonModelByChannelId.values().stream().findFirst().get().getNavigationTarget();
+                : channelTabButtonModelByChannelId.values().stream().sorted().findFirst().get().getNavigationTarget();
     }
 
     NavigationTarget getPrivateChatsNavigationTarget() {
