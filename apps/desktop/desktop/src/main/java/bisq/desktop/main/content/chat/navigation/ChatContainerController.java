@@ -180,12 +180,12 @@ public class ChatContainerController extends ContentTabController<ChatContainerM
     }
 
     protected void onSelected(NavigationTarget navigationTarget) {
-        Optional<Channel> channel = model.channels.values().stream()
+        model.channels.values().stream()
                 .filter(Objects::nonNull)
                 .filter(item -> item.getNavigationTarget().equals(navigationTarget))
-                .findFirst();
-        chatChannelSelectionService.selectChannel(
-                channel.<ChatChannel<? extends ChatMessage>>map(Channel::getChatChannel).orElse(null));
+                .findFirst()
+                .<ChatChannel<? extends ChatMessage>>map(Channel::getChatChannel)
+                .ifPresent(chatChannelSelectionService::selectChannel);
     }
 
     @Override
