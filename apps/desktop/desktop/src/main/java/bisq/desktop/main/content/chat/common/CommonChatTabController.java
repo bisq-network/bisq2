@@ -18,7 +18,11 @@
 package bisq.desktop.main.content.chat.common;
 
 import bisq.bisq_easy.NavigationTarget;
-import bisq.chat.*;
+import bisq.chat.ChatChannel;
+import bisq.chat.ChatChannelDomain;
+import bisq.chat.ChatMessage;
+import bisq.chat.ChatService;
+import bisq.chat.common.CommonChannelSelectionService;
 import bisq.chat.common.CommonPublicChatChannel;
 import bisq.chat.common.CommonPublicChatChannelService;
 import bisq.chat.notifications.ChatNotification;
@@ -48,7 +52,7 @@ public final class CommonChatTabController extends ContentTabController<CommonCh
     private final ChatChannelDomain channelDomain;
     private final CommonPublicChatChannelService commonPublicChatChannelService;
     private final TwoPartyPrivateChatChannelService twoPartyPrivateChatChannelService;
-    private final ChatChannelSelectionService chatChannelSelectionService;
+    private final CommonChannelSelectionService chatChannelSelectionService;
     private final ChatToolbox chatToolbox;
     private Pin selectedChannelPin;
     private Pin changedChatNotificationPin;
@@ -61,7 +65,7 @@ public final class CommonChatTabController extends ContentTabController<CommonCh
         channelDomain = chatChannelDomain;
         commonPublicChatChannelService = chatService.getCommonPublicChatChannelServices().get(chatChannelDomain);
         twoPartyPrivateChatChannelService = chatService.getTwoPartyPrivateChatChannelServices().get(chatChannelDomain);
-        chatChannelSelectionService = chatService.getChatChannelSelectionServices().get(chatChannelDomain);
+        chatChannelSelectionService = (CommonChannelSelectionService) chatService.getChatChannelSelectionServices().get(chatChannelDomain);
 
         createChannels();
 
@@ -178,12 +182,16 @@ public final class CommonChatTabController extends ContentTabController<CommonCh
     }
 
     void onSelected(NavigationTarget navigationTarget) {
-        model.channelTabButtonModelByChannelId.values().stream()
-                .filter(Objects::nonNull)
-                .filter(item -> item.getNavigationTarget().equals(navigationTarget))
-                .findFirst()
-                .<ChatChannel<? extends ChatMessage>>map(ChannelTabButtonModel::getChatChannel)
-                .ifPresent(chatChannelSelectionService::selectChannel);
+        if (navigationTarget == model.getPrivateChatsNavigationTarget()) {
+            chatChannelSelectionService.getLastSelectedPrivateChannel().ifPresent(chatChannelSelectionService::selectChannel);
+        } else {
+            model.channelTabButtonModelByChannelId.values().stream()
+                    .filter(Objects::nonNull)
+                    .filter(item -> item.getNavigationTarget().equals(navigationTarget))
+                    .findFirst()
+                    .<ChatChannel<? extends ChatMessage>>map(ChannelTabButtonModel::getChatChannel)
+                    .ifPresent(chatChannelSelectionService::selectChannel);
+        }
     }
 
     @Override

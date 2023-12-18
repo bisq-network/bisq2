@@ -58,7 +58,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
 import javafx.util.StringConverter;
 import lombok.Getter;
@@ -200,6 +199,7 @@ public class ChatMessagesComponent {
             }
 
             selectedPaymentAccountSubscription.unsubscribe();
+            model.selectedChannel.set(null);
         }
 
         protected void selectedChannelChanged(ChatChannel<? extends ChatMessage> chatChannel) {

@@ -56,8 +56,8 @@ public abstract class PrivateChatsController extends ChatController<PrivateChats
 
     @Override
     public void onActivate() {
-        super.onActivate();
-
+        // We access the (model.getListItems() in selectedChannelChanged triggered by the super call,
+        // thus we set up the binding before the super call
         channelItemPin = FxBindings.<TwoPartyPrivateChatChannel, PrivateChatsView.ListItem>bind(model.getListItems())
                 .map(channel -> {
                     // We call maybeSelectFirst one render frame after we applied the item to the model list.
@@ -65,6 +65,8 @@ public abstract class PrivateChatsController extends ChatController<PrivateChats
                     return new PrivateChatsView.ListItem(channel, reputationService);
                 })
                 .to(channelService.getChannels());
+
+        super.onActivate();
 
         channelsPin = channelService.getChannels().addObserver(this::channelsChanged);
 
