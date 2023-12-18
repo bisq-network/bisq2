@@ -41,12 +41,11 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
-public class ChatTabController extends ContentTabController<ChatTabModel> {
-    protected final ChatService chatService;
+public final class ChatTabController extends ContentTabController<ChatTabModel> {
     @Getter
     private final ChatTabView view;
     private final ChatNotificationService chatNotificationService;
-    protected final ChatChannelDomain channelDomain;
+    private final ChatChannelDomain channelDomain;
     private final CommonPublicChatChannelService commonPublicChatChannelService;
     private final TwoPartyPrivateChatChannelService twoPartyPrivateChatChannelService;
     private final ChatChannelSelectionService chatChannelSelectionService;
@@ -57,7 +56,7 @@ public class ChatTabController extends ContentTabController<ChatTabModel> {
     public ChatTabController(ServiceProvider serviceProvider, ChatChannelDomain chatChannelDomain, NavigationTarget navigationTarget) {
         super(new ChatTabModel(chatChannelDomain), navigationTarget, serviceProvider);
 
-        chatService = serviceProvider.getChatService();
+        ChatService chatService = serviceProvider.getChatService();
         chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
         channelDomain = chatChannelDomain;
         commonPublicChatChannelService = chatService.getCommonPublicChatChannelServices().get(chatChannelDomain);

@@ -53,7 +53,7 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class BisqEasyOfferbookController extends ChatController<BisqEasyOfferbookView, BisqEasyOfferbookModel> {
+public final class BisqEasyOfferbookController extends ChatController<BisqEasyOfferbookView, BisqEasyOfferbookModel> {
     private final BisqEasyOfferbookSelectionService bisqEasyOfferbookSelectionService;
     private final SettingsService settingsService;
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
@@ -148,6 +148,7 @@ public class BisqEasyOfferbookController extends ChatController<BisqEasyOfferboo
     public void onDeactivate() {
         searchTextPin.unsubscribe();
         offerOnlySettingsPin.unbind();
+        selectedChannelPin.unbind();
         bisqEasyPrivateTradeChatChannelsPin.unbind();
 
         resetSelectedChildTarget();
