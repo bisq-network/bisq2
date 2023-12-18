@@ -35,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class PrivateChatsModel extends ChatModel {
+public abstract class PrivateChatsModel extends ChatModel {
     private final BooleanProperty noOpenChats = new SimpleBooleanProperty();
     private final ObservableList<PrivateChatsView.ListItem> listItems = FXCollections.observableArrayList();
     private final FilteredList<PrivateChatsView.ListItem> filteredList = new FilteredList<>(listItems);

@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class BisqEasyOpenTradesModel extends BaseChatModel {
+public final class BisqEasyOpenTradesModel extends BaseChatModel {
     private final BooleanProperty noOpenTrades = new SimpleBooleanProperty();
     private final BooleanProperty tradeWelcomeVisible = new SimpleBooleanProperty();
     private final BooleanProperty tradeRulesAccepted = new SimpleBooleanProperty();

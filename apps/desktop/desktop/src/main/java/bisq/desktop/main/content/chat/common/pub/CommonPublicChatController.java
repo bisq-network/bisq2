@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public class CommonPublicChatController extends ChatController<CommonPublicChatView, CommonPublicChatModel> {
+public final class CommonPublicChatController extends ChatController<CommonPublicChatView, CommonPublicChatModel> {
     public CommonPublicChatController(ServiceProvider serviceProvider,
                                       ChatChannelDomain chatChannelDomain,
                                       NavigationTarget navigationTarget,

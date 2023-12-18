@@ -33,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class BisqEasyOfferbookModel extends BaseChatModel {
+public final class BisqEasyOfferbookModel extends BaseChatModel {
     private final BooleanProperty offerOnly = new SimpleBooleanProperty();
     private final BooleanProperty isTradeChannelVisible = new SimpleBooleanProperty();
     private final BooleanProperty showFilterOverlay = new SimpleBooleanProperty();

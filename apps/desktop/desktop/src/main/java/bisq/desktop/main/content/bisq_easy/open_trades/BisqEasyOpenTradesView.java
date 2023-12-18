@@ -69,7 +69,7 @@ import org.fxmisc.easybind.Subscription;
 import java.util.Comparator;
 
 @Slf4j
-public class BisqEasyOpenTradesView extends BaseChatView {
+public final class BisqEasyOpenTradesView extends BaseChatView {
     private final VBox tradeWelcomeViewRoot, tradeStateViewRoot, chatVBox;
     private final BisqTableView<ListItem> tableView;
     private final Button toggleChatWindowButton;

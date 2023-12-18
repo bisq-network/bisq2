@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.private_chats;
+package bisq.desktop.main.content.chat.common.priv;
 
 import bisq.desktop.main.content.chat.priv.PrivateChatsView;
 import javafx.scene.layout.Pane;
@@ -23,21 +23,21 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public final class BisqEasyPrivateChatsView extends PrivateChatsView {
-    public BisqEasyPrivateChatsView(BisqEasyPrivateChatsModel model,
-                                    BisqEasyPrivateChatsController controller,
-                                    VBox chatMessagesComponent,
-                                    Pane channelSidebar) {
+public final class CommonPrivateChatsView extends PrivateChatsView {
+    public CommonPrivateChatsView(CommonPrivateChatsModel model,
+                                  CommonPrivateChatsController controller,
+                                  VBox chatMessagesComponent,
+                                  Pane channelSidebar) {
         super(model, controller, chatMessagesComponent, channelSidebar);
     }
 
     @Override
-    protected BisqEasyPrivateChatsModel getModel() {
-        return (BisqEasyPrivateChatsModel) model;
+    protected CommonPrivateChatsModel getModel() {
+        return (CommonPrivateChatsModel) model;
     }
 
     @Override
-    protected BisqEasyPrivateChatsController getController() {
-        return (BisqEasyPrivateChatsController) controller;
+    protected CommonPrivateChatsController getController() {
+        return (CommonPrivateChatsController) controller;
     }
 }

@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class BisqEasyPrivateChatsModel extends PrivateChatsModel {
+public final class BisqEasyPrivateChatsModel extends PrivateChatsModel {
     public BisqEasyPrivateChatsModel(ChatChannelDomain chatChannelDomain) {
         super(chatChannelDomain);
     }

@@ -51,7 +51,7 @@ import java.util.Comparator;
 import java.util.Optional;
 
 @Slf4j
-public class PrivateChatsView extends ChatView<PrivateChatsView, PrivateChatsModel> {
+public abstract class PrivateChatsView extends ChatView<PrivateChatsView, PrivateChatsModel> {
     private BisqTableView<ListItem> tableView;
     private VBox openChatsList, chatHeaderVBox;
     private Subscription noOpenChatsPin, tableViewSelectionPin, selectedModelItemPin, peersUserProfilePin,

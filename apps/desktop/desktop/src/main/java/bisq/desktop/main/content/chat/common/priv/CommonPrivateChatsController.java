@@ -15,36 +15,35 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.private_chats;
+package bisq.desktop.main.content.chat.common.priv;
 
 import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatChannelDomain;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.main.content.chat.common.ChatToolbox;
 import bisq.desktop.main.content.chat.priv.PrivateChatsController;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
 @Slf4j
-public final class BisqEasyPrivateChatsController extends PrivateChatsController {
+public final class CommonPrivateChatsController extends PrivateChatsController {
 
-    public BisqEasyPrivateChatsController(ServiceProvider serviceProvider) {
-        super(serviceProvider, ChatChannelDomain.BISQ_EASY_PRIVATE_CHAT, NavigationTarget.BISQ_EASY_PRIVATE_CHAT, Optional.empty());
+    public CommonPrivateChatsController(ServiceProvider serviceProvider,
+                                        ChatChannelDomain chatChannelDomain,
+                                        NavigationTarget navigationTarget,
+                                        Optional<ChatToolbox> toolbox) {
+        super(serviceProvider, chatChannelDomain, navigationTarget, toolbox);
     }
 
     @Override
-    public void createDependencies(ChatChannelDomain chatChannelDomain) {
-        selectionService = chatService.getBisqEasyPrivateChatChannelSelectionService();
+    public CommonPrivateChatsModel createAndGetModel(ChatChannelDomain chatChannelDomain) {
+        return new CommonPrivateChatsModel(chatChannelDomain);
     }
 
     @Override
-    public BisqEasyPrivateChatsModel createAndGetModel(ChatChannelDomain chatChannelDomain) {
-        return new BisqEasyPrivateChatsModel(chatChannelDomain);
-    }
-
-    @Override
-    public BisqEasyPrivateChatsView createAndGetView() {
-        return new BisqEasyPrivateChatsView((BisqEasyPrivateChatsModel) model,
+    public CommonPrivateChatsView createAndGetView() {
+        return new CommonPrivateChatsView((CommonPrivateChatsModel) model,
                 this,
                 chatMessagesComponent.getRoot(),
                 channelSidebar.getRoot());

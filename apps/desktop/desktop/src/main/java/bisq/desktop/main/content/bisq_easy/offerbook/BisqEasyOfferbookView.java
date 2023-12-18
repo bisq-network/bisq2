@@ -42,7 +42,7 @@ import javafx.scene.text.Text;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BisqEasyOfferbookView extends BaseChatView {
+public final class BisqEasyOfferbookView extends BaseChatView {
     // private static double filterPaneHeight;
 
     private final BisqEasyOfferbookModel bisqEasyOfferbookModel;

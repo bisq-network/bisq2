@@ -21,7 +21,7 @@ import bisq.desktop.main.content.chat.ChatModel;
 import bisq.desktop.main.content.chat.ChatView;
 import javafx.scene.layout.Pane;
 
-public class CommonPublicChatView extends ChatView<CommonPublicChatView, CommonPublicChatModel> {
+public final class CommonPublicChatView extends ChatView<CommonPublicChatView, CommonPublicChatModel> {
     public CommonPublicChatView(ChatModel model, CommonPublicChatController controller, Pane chatMessagesComponent, Pane channelInfo) {
         super(model, controller, chatMessagesComponent, channelInfo);
     }

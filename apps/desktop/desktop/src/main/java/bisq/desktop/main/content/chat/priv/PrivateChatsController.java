@@ -38,7 +38,7 @@ import org.fxmisc.easybind.Subscription;
 import java.util.Optional;
 
 @Slf4j
-public class PrivateChatsController extends ChatController<PrivateChatsView, PrivateChatsModel> {
+public abstract class PrivateChatsController extends ChatController<PrivateChatsView, PrivateChatsModel> {
     private final TwoPartyPrivateChatChannelService channelService;
     private final ReputationService reputationService;
     private Pin channelItemPin, channelsPin;
@@ -52,19 +52,6 @@ public class PrivateChatsController extends ChatController<PrivateChatsView, Pri
 
         channelService = chatService.getTwoPartyPrivateChatChannelServices().get(chatChannelDomain);
         reputationService = serviceProvider.getUserService().getReputationService();
-    }
-
-    @Override
-    public PrivateChatsModel createAndGetModel(ChatChannelDomain chatChannelDomain) {
-        return new PrivateChatsModel(chatChannelDomain);
-    }
-
-    @Override
-    public PrivateChatsView createAndGetView() {
-        return new PrivateChatsView(model,
-                this,
-                chatMessagesComponent.getRoot(),
-                channelSidebar.getRoot());
     }
 
     @Override
