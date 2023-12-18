@@ -25,7 +25,7 @@ import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.main.content.academy.AcademyController;
 import bisq.desktop.main.content.authorized_role.AuthorizedRoleController;
 import bisq.desktop.main.content.bisq_easy.BisqEasyController;
-import bisq.desktop.main.content.chat.tab.CommonChatTabController;
+import bisq.desktop.main.content.chat.common.CommonChatTabController;
 import bisq.desktop.main.content.dashboard.DashboardController;
 import bisq.desktop.main.content.settings.SettingsController;
 import bisq.desktop.main.content.trade_apps.TradeAppsController;

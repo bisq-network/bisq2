@@ -28,7 +28,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.main.content.chat.ChatController;
-import bisq.desktop.main.content.chat.tab.ChatToolbox;
+import bisq.desktop.main.content.chat.common.ChatToolbox;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationService;
 import lombok.extern.slf4j.Slf4j;

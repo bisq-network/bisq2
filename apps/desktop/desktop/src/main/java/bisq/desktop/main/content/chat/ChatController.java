@@ -23,7 +23,7 @@ import bisq.chat.ChatChannelSelectionService;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.main.content.chat.tab.ChatToolbox;
+import bisq.desktop.main.content.chat.common.ChatToolbox;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;

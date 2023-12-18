@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.chat.tab;
+package bisq.desktop.main.content.chat.common;
 
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.SearchBox;

@@ -21,7 +21,7 @@ import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatChannelDomain;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.main.content.chat.ChatController;
-import bisq.desktop.main.content.chat.tab.ChatToolbox;
+import bisq.desktop.main.content.chat.common.ChatToolbox;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
