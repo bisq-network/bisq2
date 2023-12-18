@@ -154,14 +154,6 @@ public abstract class Connection {
         return peersCapability.getAddress();
     }
 
-    // Only at outbound connections we can be sure that the peer address is correct.
-    // The announced peer address in capability is not guaranteed to be valid.
-    // For most cases that is sufficient as the peer would not gain anything if lying about their address
-    // as it would make them unreachable for receiving messages from newly established connections. But there are
-    // cases where we need to be sure that it is the real address, like if we might use the peer address for banning a
-    // not correctly behaving peer.
-    public abstract boolean isPeerAddressVerified();
-
     public boolean isOutboundConnection() {
         return this instanceof OutboundConnection;
     }
