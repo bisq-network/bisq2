@@ -33,7 +33,6 @@ import bisq.desktop.common.view.TabButton;
 import bisq.desktop.main.content.ContentTabController;
 import bisq.desktop.main.content.chat.chats.PrivateChatsController;
 import bisq.desktop.main.content.chat.chats.PublicChatController;
-import bisq.desktop.main.content.common_chat.Channel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

@@ -20,7 +20,6 @@ package bisq.desktop.main.content.chat.navigation;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatChannelDomain;
 import bisq.desktop.main.content.ContentTabModel;
-import bisq.desktop.main.content.common_chat.Channel;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
