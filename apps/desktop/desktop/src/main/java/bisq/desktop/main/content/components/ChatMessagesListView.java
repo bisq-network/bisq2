@@ -85,7 +85,6 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
-import javafx.stage.Window;
 import javafx.util.Callback;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -133,6 +132,22 @@ public class ChatMessagesListView {
         controller.refreshMessages();
     }
 
+    public void onOutTransitionStarted() {
+        controller.onOutTransitionStarted();
+    }
+
+    public void onOutTransitionCompleted() {
+        controller.onOutTransitionCompleted();
+    }
+
+    public void onInTransitionStarted() {
+        controller.onInTransitionStarted();
+    }
+
+    public void onInTransitionCompleted() {
+        controller.onInTransitionCompleted();
+    }
+
     private static class Controller implements bisq.desktop.common.view.Controller {
         private final ChatService chatService;
         private final UserIdentityService userIdentityService;
@@ -176,65 +191,27 @@ public class ChatMessagesListView {
 
         @Override
         public void onActivate() {
-            Window window = view.getRoot().getScene().getWindow();
-
             model.getSortedChatMessages().setComparator(ChatMessagesListView.ChatMessageListItem::compareTo);
 
             offerOnlySettingsPin = FxBindings.subscribe(settingsService.getOffersOnly(), offerOnly -> UIThread.run(this::applyPredicate));
 
-            ChatChannelSelectionService chatChannelSelectionService = chatService.getChatChannelSelectionServices().get(model.getChatChannelDomain());
-            selectedChannelPin = chatChannelSelectionService.getSelectedChannel().addObserver(channel -> {
-                UIThread.run(() -> {
-                    model.selectedChannel.set(channel);
-                    model.isPublicChannel.set(channel instanceof PublicChatChannel);
+            if (selectedChannelPin != null) {
+                selectedChannelPin.unbind();
+            }
 
-                    if (chatMessagesPin != null) {
-                        chatMessagesPin.unbind();
-                    }
-
-                    // Clear and call dispose on the current messages when we change the channel.
-                    model.chatMessages.forEach(ChatMessageListItem::dispose);
-                    model.chatMessages.clear();
-
-                    if (channel instanceof BisqEasyOfferbookChannel) {
-                        chatMessagesPin = bindChatMessages((BisqEasyOfferbookChannel) channel);
-                    } else if (channel instanceof BisqEasyOpenTradeChannel) {
-                        chatMessagesPin = bindChatMessages((BisqEasyOpenTradeChannel) channel);
-                    } else if (channel instanceof CommonPublicChatChannel) {
-                        chatMessagesPin = bindChatMessages((CommonPublicChatChannel) channel);
-                    } else if (channel instanceof TwoPartyPrivateChatChannel) {
-                        chatMessagesPin = bindChatMessages((TwoPartyPrivateChatChannel) channel);
-                    }
-
-                    if (focusSubscription != null) {
-                        focusSubscription.unsubscribe();
-                    }
-                    if (selectedChannelSubscription != null) {
-                        selectedChannelSubscription.unsubscribe();
-                    }
-                    if (channel != null) {
-                        focusSubscription = EasyBind.subscribe(window.focusedProperty(),
-                                focused -> {
-                                    if (focused && model.getSelectedChannel().get() != null) {
-                                        chatNotificationService.consume(model.getSelectedChannel().get().getId());
-                                    }
-                                });
-
-                        selectedChannelSubscription = EasyBind.subscribe(model.selectedChannel,
-                                selectedChannel -> {
-                                    if (selectedChannel != null) {
-                                        chatNotificationService.consume(model.getSelectedChannel().get().getId());
-                                    }
-                                });
-                    }
-                });
-            });
+            ChatChannelSelectionService selectionService = chatService.getChatChannelSelectionServices().get(model.getChatChannelDomain());
+            selectedChannelPin = selectionService.getSelectedChannel().addObserver(this::selectedChannelChanged);
         }
 
         @Override
         public void onDeactivate() {
-            offerOnlySettingsPin.unbind();
-            selectedChannelPin.unbind();
+            if (offerOnlySettingsPin != null) {
+                offerOnlySettingsPin.unbind();
+            }
+            if (selectedChannelPin != null) {
+                selectedChannelPin.unbind();
+                selectedChannelPin = null;
+            }
             if (chatMessagesPin != null) {
                 chatMessagesPin.unbind();
                 chatMessagesPin = null;
@@ -247,6 +224,53 @@ public class ChatMessagesListView {
             }
         }
 
+        private void selectedChannelChanged(ChatChannel<? extends ChatMessage> channel) {
+            UIThread.run(() -> {
+                model.selectedChannel.set(channel);
+                model.isPublicChannel.set(channel instanceof PublicChatChannel);
+
+                if (chatMessagesPin != null) {
+                    chatMessagesPin.unbind();
+                }
+
+                // Clear and call dispose on the current messages when we change the channel.
+                model.chatMessages.forEach(ChatMessageListItem::dispose);
+                model.chatMessages.clear();
+
+                if (channel instanceof BisqEasyOfferbookChannel) {
+                    chatMessagesPin = bindChatMessages((BisqEasyOfferbookChannel) channel);
+                } else if (channel instanceof BisqEasyOpenTradeChannel) {
+                    chatMessagesPin = bindChatMessages((BisqEasyOpenTradeChannel) channel);
+                } else if (channel instanceof CommonPublicChatChannel) {
+                    chatMessagesPin = bindChatMessages((CommonPublicChatChannel) channel);
+                } else if (channel instanceof TwoPartyPrivateChatChannel) {
+                    chatMessagesPin = bindChatMessages((TwoPartyPrivateChatChannel) channel);
+                }
+
+                if (focusSubscription != null) {
+                    focusSubscription.unsubscribe();
+                }
+                if (selectedChannelSubscription != null) {
+                    selectedChannelSubscription.unsubscribe();
+                }
+                if (channel != null) {
+                    focusSubscription = EasyBind.subscribe(view.getRoot().getScene().getWindow().focusedProperty(),
+                            focused -> {
+                                if (focused && model.getSelectedChannel().get() != null) {
+                                    chatNotificationService.consume(model.getSelectedChannel().get().getId());
+                                }
+                            });
+
+                    selectedChannelSubscription = EasyBind.subscribe(model.selectedChannel,
+                            selectedChannel -> {
+                                if (selectedChannel != null) {
+                                    chatNotificationService.consume(model.getSelectedChannel().get().getId());
+                                }
+                            });
+                }
+            });
+        }
+
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////
         // API - called from client
@@ -256,9 +280,39 @@ public class ChatMessagesListView {
             model.chatMessages.setAll(new ArrayList<>(model.chatMessages));
         }
 
-        void setSearchPredicate(Predicate<? super ChatMessagesListView.ChatMessageListItem<? extends ChatMessage>> predicate) {
+        private void setSearchPredicate(Predicate<? super ChatMessagesListView.ChatMessageListItem<? extends ChatMessage>> predicate) {
             model.setSearchPredicate(Objects.requireNonNullElseGet(predicate, () -> e -> true));
             applyPredicate();
+        }
+
+        private void onOutTransitionStarted() {
+            if (selectedChannelPin != null) {
+                selectedChannelPin.unbind();
+                selectedChannelPin = null;
+            }
+        }
+
+        private void onOutTransitionCompleted() {
+            if (selectedChannelPin != null) {
+                selectedChannelPin.unbind();
+                selectedChannelPin = null;
+            }
+        }
+
+        private void onInTransitionStarted() {
+            // onActivate is called before onInTransitionStarted, thus we unbind until transition is completed
+            if (selectedChannelPin != null) {
+                selectedChannelPin.unbind();
+                selectedChannelPin = null;
+            }
+        }
+
+        private void onInTransitionCompleted() {
+            if (selectedChannelPin != null) {
+                selectedChannelPin.unbind();
+            }
+            ChatChannelSelectionService selectionService = chatService.getChatChannelSelectionServices().get(model.getChatChannelDomain());
+            selectedChannelPin = selectionService.getSelectedChannel().addObserver(this::selectedChannelChanged);
         }
 
 

@@ -25,14 +25,7 @@ import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.TransitionedView;
 import bisq.desktop.common.view.View;
 import bisq.settings.SettingsService;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Consumer;
-import javafx.animation.FadeTransition;
-import javafx.animation.Interpolator;
-import javafx.animation.KeyFrame;
-import javafx.animation.KeyValue;
-import javafx.animation.Timeline;
+import javafx.animation.*;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.Camera;
@@ -46,9 +39,13 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.transform.Rotate;
 import javafx.util.Duration;
-import javax.annotation.Nullable;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Consumer;
 
 @Slf4j
 public class Transitions {
@@ -92,12 +89,16 @@ public class Transitions {
     private static Map<String, Timeline> removeEffectTimeLineByNodeId = new HashMap<>();
     private static Map<String, ChangeListener<Effect>> effectChangeListenerByNodeId = new HashMap<>();
 
-    public static void fadeIn(Node node) {
-        fadeIn(node, DEFAULT_DURATION);
+    public static FadeTransition fadeIn(Node node) {
+        return fadeIn(node, DEFAULT_DURATION);
     }
 
-    public static void fadeIn(Node node, int duration) {
-        fadeIn(node, duration, null);
+    public static FadeTransition fadeIn(Node node, int duration) {
+        return fadeIn(node, duration, null);
+    }
+
+    public static FadeTransition fadeIn(Node node, Runnable finishedHandler) {
+        return fadeIn(node, DEFAULT_DURATION, finishedHandler);
     }
 
     public static FadeTransition fadeIn(Node node, int duration, @Nullable Runnable finishedHandler) {
@@ -446,17 +447,24 @@ public class Transitions {
 
             UIScheduler.run(() -> {
                 if (newView instanceof TransitionedView) {
-                    ((TransitionedView) newView).onStartTransition();
+                    ((TransitionedView) newView).onInTransitionStarted();
                 }
                 fadeIn(nodeIn,
                         DEFAULT_DURATION / 4,
                         () -> {
                             if (newView instanceof TransitionedView) {
-                                ((TransitionedView) newView).onTransitionCompleted();
+                                ((TransitionedView) newView).onInTransitionCompleted();
                             }
                         });
             }).after(DEFAULT_DURATION / 2);
+
+            if (oldView instanceof TransitionedView) {
+                ((TransitionedView) oldView).onOutTransitionStarted();
+            }
             slideOutRight(nodeOut, () -> {
+                if (oldView instanceof TransitionedView) {
+                    ((TransitionedView) oldView).onOutTransitionCompleted();
+                }
                 Parent parent = nodeOut.getParent();
                 if (parent != null) {
                     if (parent instanceof Pane) {
@@ -467,13 +475,13 @@ public class Transitions {
             });
         } else {
             if (newView instanceof TransitionedView) {
-                ((TransitionedView) newView).onStartTransition();
+                ((TransitionedView) newView).onInTransitionStarted();
             }
             Transitions.fadeIn(nodeIn,
                     DEFAULT_DURATION,
                     () -> {
                         if (newView instanceof TransitionedView) {
-                            ((TransitionedView) newView).onTransitionCompleted();
+                            ((TransitionedView) newView).onInTransitionCompleted();
                         }
                     });
         }

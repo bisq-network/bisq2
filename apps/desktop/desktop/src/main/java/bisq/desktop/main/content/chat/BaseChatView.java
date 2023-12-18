@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.chat;
 
 import bisq.desktop.common.view.NavigationView;
+import bisq.desktop.common.view.TransitionedView;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
@@ -29,7 +30,8 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatModel, BaseChatController<?, ?>> {
+public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatModel, BaseChatController<?, ?>>
+        implements TransitionedView {
     protected final static double HEADER_HEIGHT = 61;
 
     protected final Label channelTitle = new Label();
@@ -125,5 +127,25 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
 
         chatUserOverviewRootSubscription.unsubscribe();
         channelIconPin.unsubscribe();
+    }
+
+    @Override
+    public void onOutTransitionStarted() {
+        controller.onOutTransitionStarted();
+    }
+
+    @Override
+    public void onOutTransitionCompleted() {
+        controller.onOutTransitionCompleted();
+    }
+
+    @Override
+    public void onInTransitionStarted() {
+        controller.onInTransitionStarted();
+    }
+
+    @Override
+    public void onInTransitionCompleted() {
+        controller.onInTransitionCompleted();
     }
 }

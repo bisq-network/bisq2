@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.user.bonded_roles.tabs;
 
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.TabView;
@@ -52,7 +53,7 @@ public abstract class BondedRolesTabView<M extends BondedRolesTabModel, C extend
         line.prefWidthProperty().unbind();
         line.prefWidthProperty().bind(root.widthProperty().subtract(61));
 
-        onStartTransition();
+        UIThread.runOnNextRenderFrame(this::maybeAnimateMark);
     }
 
     @Override

@@ -97,6 +97,22 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
 
     public abstract V createAndGetView();
 
+    void onOutTransitionStarted() {
+        chatMessagesComponent.onOutTransitionStarted();
+    }
+
+    void onOutTransitionCompleted() {
+        chatMessagesComponent.onOutTransitionCompleted();
+    }
+
+    void onInTransitionStarted() {
+        chatMessagesComponent.onInTransitionStarted();
+    }
+
+    void onInTransitionCompleted() {
+        chatMessagesComponent.onInTransitionCompleted();
+    }
+
     protected void openUserProfileSidebar(UserProfile userProfile) {
         doCloseSideBar();
         model.getSideBarVisible().set(true);
@@ -210,7 +226,7 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
                 break;
         }
     }
-    
+
     private void doCloseSideBar() {
         model.getSideBarVisible().set(false);
         model.getSideBarWidth().set(0);
