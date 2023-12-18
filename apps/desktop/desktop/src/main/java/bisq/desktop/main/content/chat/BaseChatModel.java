@@ -37,7 +37,7 @@ import java.util.Optional;
 
 @Slf4j
 @Getter
-public abstract class ChatModel extends NavigationModel {
+public abstract class BaseChatModel extends NavigationModel {
     protected final ChatChannelDomain chatChannelDomain;
     private final Map<String, StringProperty> chatMessagesByChannelId = new HashMap<>();
     private final StringProperty selectedChatMessages = new SimpleStringProperty("");
@@ -53,7 +53,7 @@ public abstract class ChatModel extends NavigationModel {
     @Setter
     private Optional<UserProfileSidebar> chatUserDetails = Optional.empty();
 
-    public ChatModel(ChatChannelDomain chatChannelDomain) {
+    public BaseChatModel(ChatChannelDomain chatChannelDomain) {
         this.chatChannelDomain = chatChannelDomain;
 
         switch (chatChannelDomain) {

@@ -23,7 +23,7 @@ import bisq.chat.ChatChannelSelectionService;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.main.content.chat.ChatController;
+import bisq.desktop.main.content.chat.BaseChatController;
 import bisq.desktop.main.content.chat.tab.ChatToolbox;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -33,7 +33,7 @@ import java.util.Optional;
 
 @Slf4j
 public abstract class CommonChatController<V extends CommonChatView<V, M>, M extends CommonChatModel>
-        extends ChatController<V, M> implements Controller {
+        extends BaseChatController<V, M> implements Controller {
     private final Optional<ChatToolbox> toolbox;
     protected ChatChannelSelectionService selectionService;
     private Subscription searchTextPin;

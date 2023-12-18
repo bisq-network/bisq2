@@ -18,14 +18,14 @@
 package bisq.desktop.main.content.common_chat;
 
 import bisq.desktop.common.Layout;
-import bisq.desktop.main.content.chat.ChatView;
+import bisq.desktop.main.content.chat.BaseChatView;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.layout.*;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class CommonChatView<V extends CommonChatView<V, M>, M extends CommonChatModel> extends ChatView {
+public class CommonChatView<V extends CommonChatView<V, M>, M extends CommonChatModel> extends BaseChatView {
     protected static final double SIDE_PADDING = 40;
 
     public CommonChatView(CommonChatModel model,

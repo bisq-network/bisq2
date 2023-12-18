@@ -19,7 +19,7 @@ package bisq.desktop.main.content.bisq_easy.open_trades;
 
 import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatChannelDomain;
-import bisq.desktop.main.content.chat.ChatModel;
+import bisq.desktop.main.content.chat.BaseChatModel;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class BisqEasyOpenTradesModel extends ChatModel {
+public class BisqEasyOpenTradesModel extends BaseChatModel {
     private final BooleanProperty noOpenTrades = new SimpleBooleanProperty();
     private final BooleanProperty tradeWelcomeVisible = new SimpleBooleanProperty();
     private final BooleanProperty tradeRulesAccepted = new SimpleBooleanProperty();

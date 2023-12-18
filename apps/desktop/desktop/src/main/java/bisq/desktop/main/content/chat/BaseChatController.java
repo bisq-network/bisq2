@@ -55,7 +55,7 @@ import java.util.Optional;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public abstract class ChatController<V extends ChatView, M extends ChatModel> extends NavigationController {
+public abstract class BaseChatController<V extends BaseChatView, M extends BaseChatModel> extends NavigationController {
     @Getter
     protected final M model;
     @Getter
@@ -67,7 +67,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
     protected final ChannelSidebar channelSidebar;
     protected final ChatMessagesComponent chatMessagesComponent;
 
-    public ChatController(ServiceProvider serviceProvider, ChatChannelDomain chatChannelDomain, NavigationTarget host) {
+    public BaseChatController(ServiceProvider serviceProvider, ChatChannelDomain chatChannelDomain, NavigationTarget host) {
         super(host);
 
         this.serviceProvider = serviceProvider;

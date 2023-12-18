@@ -34,7 +34,7 @@ import bisq.desktop.components.table.BisqTableColumns;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.DateTableItem;
 import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
-import bisq.desktop.main.content.chat.ChatView;
+import bisq.desktop.main.content.chat.BaseChatView;
 import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.i18n.Res;
@@ -69,7 +69,7 @@ import org.fxmisc.easybind.Subscription;
 import java.util.Comparator;
 
 @Slf4j
-public class BisqEasyOpenTradesView extends ChatView {
+public class BisqEasyOpenTradesView extends BaseChatView {
     private final VBox tradeWelcomeViewRoot, tradeStateViewRoot, chatVBox;
     private final BisqTableView<ListItem> tableView;
     private final Button toggleChatWindowButton;

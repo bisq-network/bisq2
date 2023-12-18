@@ -19,7 +19,7 @@ package bisq.desktop.main.content.common_chat;
 
 import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatChannelDomain;
-import bisq.desktop.main.content.chat.ChatModel;
+import bisq.desktop.main.content.chat.BaseChatModel;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import lombok.Getter;
@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class CommonChatModel extends ChatModel {
+public class CommonChatModel extends BaseChatModel {
     private final StringProperty searchText = new SimpleStringProperty();
 
     public CommonChatModel(ChatChannelDomain chatChannelDomain) {

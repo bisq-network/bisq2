@@ -36,7 +36,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardController;
-import bisq.desktop.main.content.chat.ChatController;
+import bisq.desktop.main.content.chat.BaseChatController;
 import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.settings.SettingsService;
@@ -53,7 +53,7 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public final class BisqEasyOfferbookController extends ChatController<BisqEasyOfferbookView, BisqEasyOfferbookModel> {
+public final class BisqEasyOfferbookController extends BaseChatController<BisqEasyOfferbookView, BisqEasyOfferbookModel> {
     private final BisqEasyOfferbookSelectionService bisqEasyOfferbookSelectionService;
     private final SettingsService settingsService;
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;

@@ -29,7 +29,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public abstract class ChatView extends NavigationView<ScrollPane, ChatModel, ChatController<?, ?>> {
+public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatModel, BaseChatController<?, ?>> {
     protected final static double HEADER_HEIGHT = 61;
 
     protected final Label channelTitle = new Label();
@@ -42,10 +42,10 @@ public abstract class ChatView extends NavigationView<ScrollPane, ChatModel, Cha
     protected Pane chatUserOverviewRoot;
     protected Subscription channelIconPin, chatUserOverviewRootSubscription;
 
-    public ChatView(ChatModel model,
-                    ChatController<?, ?> controller,
-                    Pane chatMessagesComponent,
-                    Pane channelSidebar) {
+    public BaseChatView(BaseChatModel model,
+                        BaseChatController<?, ?> controller,
+                        Pane chatMessagesComponent,
+                        Pane channelSidebar) {
         super(new ScrollPane(), model, controller);
 
         this.chatMessagesComponent = chatMessagesComponent;

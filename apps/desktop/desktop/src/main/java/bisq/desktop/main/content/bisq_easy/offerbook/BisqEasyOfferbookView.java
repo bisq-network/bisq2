@@ -24,7 +24,7 @@ import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.ComboBoxWithSearch;
 import bisq.desktop.components.controls.SearchBox;
-import bisq.desktop.main.content.chat.ChatView;
+import bisq.desktop.main.content.chat.BaseChatView;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
@@ -42,7 +42,7 @@ import javafx.scene.text.Text;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BisqEasyOfferbookView extends ChatView {
+public class BisqEasyOfferbookView extends BaseChatView {
     // private static double filterPaneHeight;
 
     private final BisqEasyOfferbookModel bisqEasyOfferbookModel;
