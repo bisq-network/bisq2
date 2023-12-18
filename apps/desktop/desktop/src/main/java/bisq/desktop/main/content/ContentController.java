@@ -25,7 +25,7 @@ import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.main.content.academy.AcademyController;
 import bisq.desktop.main.content.authorized_role.AuthorizedRoleController;
 import bisq.desktop.main.content.bisq_easy.BisqEasyController;
-import bisq.desktop.main.content.chat.tab.ChatTabController;
+import bisq.desktop.main.content.chat.tab.CommonChatTabController;
 import bisq.desktop.main.content.dashboard.DashboardController;
 import bisq.desktop.main.content.settings.SettingsController;
 import bisq.desktop.main.content.trade_apps.TradeAppsController;
@@ -70,16 +70,16 @@ public class ContentController extends NavigationController {
                 return Optional.of(new DashboardController(serviceProvider));
             }
             case DISCUSSION: {
-                return Optional.of(new ChatTabController(serviceProvider, ChatChannelDomain.DISCUSSION, NavigationTarget.DISCUSSION));
+                return Optional.of(new CommonChatTabController(serviceProvider, ChatChannelDomain.DISCUSSION, NavigationTarget.DISCUSSION));
             }
             case ACADEMY: {
                 return Optional.of(new AcademyController(serviceProvider));
             }
             case EVENTS: {
-                return Optional.of(new ChatTabController(serviceProvider, ChatChannelDomain.EVENTS, NavigationTarget.EVENTS));
+                return Optional.of(new CommonChatTabController(serviceProvider, ChatChannelDomain.EVENTS, NavigationTarget.EVENTS));
             }
             case SUPPORT: {
-                return Optional.of(new ChatTabController(serviceProvider, ChatChannelDomain.SUPPORT, NavigationTarget.SUPPORT));
+                return Optional.of(new CommonChatTabController(serviceProvider, ChatChannelDomain.SUPPORT, NavigationTarget.SUPPORT));
             }
             case TRADE_PROTOCOLS: {
                 return Optional.of(new TradeAppsController(serviceProvider));

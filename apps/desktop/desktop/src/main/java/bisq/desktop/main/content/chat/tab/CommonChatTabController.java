@@ -41,9 +41,9 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
-public final class ChatTabController extends ContentTabController<ChatTabModel> {
+public final class CommonChatTabController extends ContentTabController<CommonChatTabModel> {
     @Getter
-    private final ChatTabView view;
+    private final CommonChatTabView view;
     private final ChatNotificationService chatNotificationService;
     private final ChatChannelDomain channelDomain;
     private final CommonPublicChatChannelService commonPublicChatChannelService;
@@ -53,8 +53,8 @@ public final class ChatTabController extends ContentTabController<ChatTabModel> 
     private Pin selectedChannelPin;
     private Pin changedChatNotificationPin;
 
-    public ChatTabController(ServiceProvider serviceProvider, ChatChannelDomain chatChannelDomain, NavigationTarget navigationTarget) {
-        super(new ChatTabModel(chatChannelDomain), navigationTarget, serviceProvider);
+    public CommonChatTabController(ServiceProvider serviceProvider, ChatChannelDomain chatChannelDomain, NavigationTarget navigationTarget) {
+        super(new CommonChatTabModel(chatChannelDomain), navigationTarget, serviceProvider);
 
         ChatService chatService = serviceProvider.getChatService();
         chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
@@ -66,7 +66,7 @@ public final class ChatTabController extends ContentTabController<ChatTabModel> 
         createChannels();
 
         chatToolbox = new ChatToolbox();
-        view = new ChatTabView(model, this, chatToolbox.getRoot());
+        view = new CommonChatTabView(model, this, chatToolbox.getRoot());
 
         model.getSelectedTabButton().addListener(observable -> {
             TabButton tabButton = model.getSelectedTabButton().get();
