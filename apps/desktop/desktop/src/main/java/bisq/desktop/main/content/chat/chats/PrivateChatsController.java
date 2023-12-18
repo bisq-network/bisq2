@@ -27,7 +27,7 @@ import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.main.content.chat.navigation.ChatToolbox;
+import bisq.desktop.main.content.chat.tab.ChatToolbox;
 import bisq.desktop.main.content.common_chat.CommonChatController;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationService;

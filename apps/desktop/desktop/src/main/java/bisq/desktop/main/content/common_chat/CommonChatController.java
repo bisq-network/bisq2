@@ -24,7 +24,7 @@ import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.chat.ChatController;
-import bisq.desktop.main.content.chat.navigation.ChatToolbox;
+import bisq.desktop.main.content.chat.tab.ChatToolbox;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;

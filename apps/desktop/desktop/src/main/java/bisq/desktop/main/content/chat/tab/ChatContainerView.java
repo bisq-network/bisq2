@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.chat.navigation;
+package bisq.desktop.main.content.chat.tab;
 
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Model;

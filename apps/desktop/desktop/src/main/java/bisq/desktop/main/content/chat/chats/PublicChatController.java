@@ -20,7 +20,7 @@ package bisq.desktop.main.content.chat.chats;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatChannelDomain;
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.main.content.chat.navigation.ChatToolbox;
+import bisq.desktop.main.content.chat.tab.ChatToolbox;
 import bisq.desktop.main.content.common_chat.CommonChatController;
 import lombok.extern.slf4j.Slf4j;
 
