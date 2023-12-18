@@ -78,22 +78,22 @@ public final class CommonChatTabController extends ContentTabController<CommonCh
 
     private void createChannels() {
         commonPublicChatChannelService.getChannels().forEach(commonPublicChatChannel -> {
-            Channel channel = findOrCreateChannelItem(commonPublicChatChannel);
-            if (channel != null) {
-                model.channels.put(channel.getChannelId(), channel);
+            ChannelTabButtonModel channelTabButtonModel = findOrCreateChannelItem(commonPublicChatChannel);
+            if (channelTabButtonModel != null) {
+                model.channelTabButtonModelByChannelId.put(channelTabButtonModel.getChannelId(), channelTabButtonModel);
             }
         });
     }
 
-    private Channel findOrCreateChannelItem(ChatChannel<? extends ChatMessage> chatChannel) {
+    private ChannelTabButtonModel findOrCreateChannelItem(ChatChannel<? extends ChatMessage> chatChannel) {
         if (chatChannel instanceof CommonPublicChatChannel) {
             CommonPublicChatChannel commonChannel = (CommonPublicChatChannel) chatChannel;
-            if (model.channels.containsKey(chatChannel.getId())) {
-                return model.channels.get(chatChannel.getId());
+            if (model.channelTabButtonModelByChannelId.containsKey(chatChannel.getId())) {
+                return model.channelTabButtonModelByChannelId.get(chatChannel.getId());
             } else {
                 String targetName = channelDomain.toString() + "_" + commonChannel.getChannelTitle().toUpperCase();
                 try {
-                    return new Channel(commonChannel, commonPublicChatChannelService, NavigationTarget.valueOf(targetName));
+                    return new ChannelTabButtonModel(commonChannel, commonPublicChatChannelService, NavigationTarget.valueOf(targetName));
                 } catch (IllegalArgumentException e) {
                     log.info("Couldn't find navigation target " + targetName + " in channel domain " + channelDomain);
                 }
@@ -130,16 +130,16 @@ public final class CommonChatTabController extends ContentTabController<CommonCh
             handlePrivateNotification();
         }
 
-        if (model.channels.containsKey(channelId)) {
+        if (model.channelTabButtonModelByChannelId.containsKey(channelId)) {
             updateTabButtonNotifications(channelId, chatNotificationService.getNumNotifications(channelId));
         }
     }
 
     private void updateTabButtonNotifications(String channelId, long newCount) {
         UIThread.run(() -> {
-            Channel channel = model.channels.get(channelId);
+            ChannelTabButtonModel channelTabButtonModel = model.channelTabButtonModelByChannelId.get(channelId);
             model.getTabButtons().stream()
-                    .filter(tabButton -> channel.getNavigationTarget() == tabButton.getNavigationTarget())
+                    .filter(tabButton -> channelTabButtonModel.getNavigationTarget() == tabButton.getNavigationTarget())
                     .findAny()
                     .ifPresent(tabButton -> tabButton.setNumNotifications(newCount));
         });
@@ -164,25 +164,25 @@ public final class CommonChatTabController extends ContentTabController<CommonCh
     protected void handleSelectedChannelChanged(ChatChannel<? extends ChatMessage> chatChannel) {
         chatToolbox.resetSearchText();
 
-        Channel channel = findOrCreateChannelItem(chatChannel);
-        if (channel != null) {
-            model.selectedChannel.set(channel);
+        ChannelTabButtonModel channelTabButtonModel = findOrCreateChannelItem(chatChannel);
+        if (channelTabButtonModel != null) {
+            model.selectedChannelTabButtonModel.set(channelTabButtonModel);
 
-            if (model.previousSelectedChannel != null) {
-                model.previousSelectedChannel.setSelected(false);
+            if (model.previousSelectedChannelTabButtonModel != null) {
+                model.previousSelectedChannelTabButtonModel.setSelected(false);
             }
-            model.previousSelectedChannel = channel;
+            model.previousSelectedChannelTabButtonModel = channelTabButtonModel;
 
-            channel.setSelected(true);
+            channelTabButtonModel.setSelected(true);
         }
     }
 
     protected void onSelected(NavigationTarget navigationTarget) {
-        model.channels.values().stream()
+        model.channelTabButtonModelByChannelId.values().stream()
                 .filter(Objects::nonNull)
                 .filter(item -> item.getNavigationTarget().equals(navigationTarget))
                 .findFirst()
-                .<ChatChannel<? extends ChatMessage>>map(Channel::getChatChannel)
+                .<ChatChannel<? extends ChatMessage>>map(ChannelTabButtonModel::getChatChannel)
                 .ifPresent(chatChannelSelectionService::selectChannel);
     }
 

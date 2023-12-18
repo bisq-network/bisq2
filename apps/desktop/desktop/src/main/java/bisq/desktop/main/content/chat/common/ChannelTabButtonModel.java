@@ -28,7 +28,7 @@ import lombok.Setter;
 
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Getter
-class Channel implements Comparable<Channel> {
+class ChannelTabButtonModel implements Comparable<ChannelTabButtonModel> {
     @EqualsAndHashCode.Include
     private final String channelId;
     private final ChatChannelDomain chatChannelDomain;
@@ -39,8 +39,8 @@ class Channel implements Comparable<Channel> {
     @Setter
     private boolean isSelected;
 
-    Channel(CommonPublicChatChannel chatChannel, CommonPublicChatChannelService chatChannelService,
-                   NavigationTarget navigationTarget) {
+    ChannelTabButtonModel(CommonPublicChatChannel chatChannel, CommonPublicChatChannelService chatChannelService,
+                          NavigationTarget navigationTarget) {
         this.chatChannel = chatChannel;
         this.navigationTarget = navigationTarget;
         chatChannelDomain = chatChannel.getChatChannelDomain();
@@ -51,7 +51,7 @@ class Channel implements Comparable<Channel> {
     }
 
     @Override
-    public int compareTo(Channel other) {
+    public int compareTo(ChannelTabButtonModel other) {
         return this.channelTitle.compareToIgnoreCase(other.channelTitle);
     }
 }

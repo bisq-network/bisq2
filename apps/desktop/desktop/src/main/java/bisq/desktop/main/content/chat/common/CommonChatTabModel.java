@@ -33,10 +33,10 @@ import java.util.HashMap;
 @Getter
 public final class CommonChatTabModel extends ContentTabModel {
     private final ChatChannelDomain chatChannelDomain;
-    final ObservableMap<String, Channel> channels = FXCollections.observableMap(new HashMap<>());
-    ObjectProperty<Channel> selectedChannel = new SimpleObjectProperty<>();
+    final ObservableMap<String, ChannelTabButtonModel> channelTabButtonModelByChannelId = FXCollections.observableMap(new HashMap<>());
+    ObjectProperty<ChannelTabButtonModel> selectedChannelTabButtonModel = new SimpleObjectProperty<>();
     private final BooleanProperty hasSelectedChannel = new SimpleBooleanProperty();
-    Channel previousSelectedChannel;
+    ChannelTabButtonModel previousSelectedChannelTabButtonModel;
 
     public CommonChatTabModel(ChatChannelDomain chatChannelDomain) {
         this.chatChannelDomain = chatChannelDomain;
@@ -44,9 +44,9 @@ public final class CommonChatTabModel extends ContentTabModel {
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return channels.isEmpty()
+        return channelTabButtonModelByChannelId.isEmpty()
                 ? NavigationTarget.NONE
-                : channels.values().stream().findFirst().get().getNavigationTarget();
+                : channelTabButtonModelByChannelId.values().stream().findFirst().get().getNavigationTarget();
     }
 
     public NavigationTarget getPrivateChatsNavigationTarget() {

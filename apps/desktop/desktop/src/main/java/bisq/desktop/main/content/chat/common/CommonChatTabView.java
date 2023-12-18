@@ -36,7 +36,7 @@ public final class CommonChatTabView extends ContentTabView<CommonChatTabModel, 
 
         topBox.getChildren().add(0, toolboxRoot);
 
-        model.getChannels().values().stream().sorted().forEach(channel ->
+        model.getChannelTabButtonModelByChannelId().values().stream().sorted().forEach(channel ->
                 addTab(channel.getChannelTitle(), channel.getNavigationTarget(), channel.getIconId())
         );
         addTab(Res.get("chat.private.title"), model.getPrivateChatsNavigationTarget(), "channels-private-chats");
