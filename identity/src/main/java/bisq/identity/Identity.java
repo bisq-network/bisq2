@@ -22,10 +22,11 @@ import bisq.network.identity.NetworkId;
 import bisq.network.identity.NetworkIdWithKeyPair;
 import bisq.security.keys.KeyBundle;
 import bisq.security.keys.PubKey;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-
+@EqualsAndHashCode
 @ToString
 public final class Identity implements Proto {
     // Reference to usage (e.g. offerId)
@@ -33,7 +34,6 @@ public final class Identity implements Proto {
     private final String tag;
     @Getter
     private final NetworkId networkId;
-
     @Getter
     private final KeyBundle keyBundle;
 

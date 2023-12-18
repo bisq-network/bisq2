@@ -36,11 +36,15 @@ public class TableList<T> implements ObservableList<T> {
     }
 
     public void onActivate() {
+        filteredList.stream()
+                .filter(e -> e instanceof ActivatableTableItem)
+                .map(e -> (ActivatableTableItem) e)
+                .forEach(ActivatableTableItem::onActivate);
         filteredList.addListener(listChangeListener);
     }
 
     public void onDeactivate() {
-        observableList.clear();
+        observableList.clear(); // triggers onDeactivate
         filteredList.removeListener(listChangeListener);
     }
 

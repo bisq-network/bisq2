@@ -283,6 +283,7 @@ message DataStore {
 
 message NetworkServiceStore {
   repeated network.common.AddressByTransportTypeMap seedNodes = 1;
+  map<string, network.identity.NetworkId> networkIdByTag = 2;
 }
 
 message MessageDeliveryStatusStore {

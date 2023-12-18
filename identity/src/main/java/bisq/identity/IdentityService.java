@@ -73,6 +73,10 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     @Override
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
+
+        // Create default identity
+        getOrCreateDefaultIdentity();
+
         Map<TransportType, CompletableFuture<Node>> map = networkService.getInitializedDefaultNodeByTransport();
         if (map.isEmpty()) {
             return CompletableFuture.failedFuture(new RuntimeException("networkService.getInitializedDefaultNodeByTransport returns an empty map"));
@@ -122,7 +126,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
                 .orElseGet(() -> {
                     Identity identity = createIdentity(DEFAULT_IDENTITY_TAG);
                     synchronized (lock) {
-                        persistableStore.setDefaultIdentity(Optional.of(identity));
+                        persistableStore.setDefaultIdentity(identity);
                     }
                     persist();
                     return identity;
@@ -134,7 +138,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
      */
     public CompletableFuture<Identity> createNewActiveIdentity(String identityTag, KeyPair keyPair) {
         KeyBundle keyBundle = keyBundleService.createAndPersistKeyBundle(identityTag, keyPair);
-        NetworkId networkId = networkService.createAndGetNetworkId(keyBundle, identityTag);
+        NetworkId networkId = networkService.getOrCreateNetworkId(keyBundle, identityTag);
         Identity identity = new Identity(identityTag, networkId, keyBundle);
 
         synchronized (lock) {
@@ -217,7 +221,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     private Identity createIdentity(String identityTag) {
         String keyId = keyBundleService.getKeyIdFromTag(identityTag);
         KeyBundle keyBundle = keyBundleService.getOrCreateKeyBundle(keyId);
-        NetworkId networkId = networkService.createAndGetNetworkId(keyBundle, identityTag);
+        NetworkId networkId = networkService.getOrCreateNetworkId(keyBundle, identityTag);
         return new Identity(identityTag, networkId, keyBundle);
     }
 
