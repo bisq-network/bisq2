@@ -25,13 +25,13 @@ import javafx.scene.layout.*;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class CommonChatView<V extends CommonChatView<V, M>, M extends CommonChatModel> extends BaseChatView {
+public class ChatView<V extends ChatView<V, M>, M extends ChatModel> extends BaseChatView {
     protected static final double SIDE_PADDING = 40;
 
-    public CommonChatView(CommonChatModel model,
-                          CommonChatController<V, M> controller,
-                          Pane chatMessagesComponent,
-                          Pane channelInfo) {
+    public ChatView(ChatModel model,
+                    ChatController<V, M> controller,
+                    Pane chatMessagesComponent,
+                    Pane channelInfo) {
         super(model, controller, chatMessagesComponent, channelInfo);
     }
 

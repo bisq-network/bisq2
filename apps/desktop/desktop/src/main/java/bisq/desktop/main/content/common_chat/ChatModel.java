@@ -27,10 +27,10 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class CommonChatModel extends BaseChatModel {
+public class ChatModel extends BaseChatModel {
     private final StringProperty searchText = new SimpleStringProperty();
 
-    public CommonChatModel(ChatChannelDomain chatChannelDomain) {
+    public ChatModel(ChatChannelDomain chatChannelDomain) {
         super(chatChannelDomain);
     }
 

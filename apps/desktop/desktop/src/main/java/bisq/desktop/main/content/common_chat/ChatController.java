@@ -32,17 +32,17 @@ import org.fxmisc.easybind.Subscription;
 import java.util.Optional;
 
 @Slf4j
-public abstract class CommonChatController<V extends CommonChatView<V, M>, M extends CommonChatModel>
+public abstract class ChatController<V extends ChatView<V, M>, M extends ChatModel>
         extends BaseChatController<V, M> implements Controller {
     private final Optional<ChatToolbox> toolbox;
     protected ChatChannelSelectionService selectionService;
     private Subscription searchTextPin;
     private Pin selectedChannelPin;
 
-    public CommonChatController(ServiceProvider serviceProvider,
-                                ChatChannelDomain chatChannelDomain,
-                                NavigationTarget navigationTarget,
-                                Optional<ChatToolbox> toolbox) {
+    public ChatController(ServiceProvider serviceProvider,
+                          ChatChannelDomain chatChannelDomain,
+                          NavigationTarget navigationTarget,
+                          Optional<ChatToolbox> toolbox) {
         super(serviceProvider, chatChannelDomain, navigationTarget);
 
         this.toolbox = toolbox;

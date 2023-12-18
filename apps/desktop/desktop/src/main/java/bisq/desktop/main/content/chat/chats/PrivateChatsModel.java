@@ -18,10 +18,13 @@
 package bisq.desktop.main.content.chat.chats;
 
 import bisq.chat.ChatChannelDomain;
-import bisq.desktop.main.content.common_chat.CommonChatModel;
+import bisq.desktop.main.content.common_chat.ChatModel;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationScore;
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -32,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class PrivateChatsModel extends CommonChatModel {
+public class PrivateChatsModel extends ChatModel {
     private final BooleanProperty noOpenChats = new SimpleBooleanProperty();
     private final ObservableList<PrivateChatsView.ListItem> listItems = FXCollections.observableArrayList();
     private final FilteredList<PrivateChatsView.ListItem> filteredList = new FilteredList<>(listItems);

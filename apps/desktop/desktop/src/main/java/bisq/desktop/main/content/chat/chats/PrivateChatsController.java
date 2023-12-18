@@ -28,7 +28,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.main.content.chat.tab.ChatToolbox;
-import bisq.desktop.main.content.common_chat.CommonChatController;
+import bisq.desktop.main.content.common_chat.ChatController;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationService;
 import lombok.extern.slf4j.Slf4j;
@@ -38,7 +38,7 @@ import org.fxmisc.easybind.Subscription;
 import java.util.Optional;
 
 @Slf4j
-public class PrivateChatsController extends CommonChatController<PrivateChatsView, PrivateChatsModel> {
+public class PrivateChatsController extends ChatController<PrivateChatsView, PrivateChatsModel> {
     private final TwoPartyPrivateChatChannelService channelService;
     private final ReputationService reputationService;
     private Pin channelItemPin, channelsPin;

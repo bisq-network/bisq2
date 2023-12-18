@@ -22,7 +22,7 @@ import bisq.desktop.common.Layout;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
-import bisq.desktop.main.content.common_chat.CommonChatView;
+import bisq.desktop.main.content.common_chat.ChatView;
 import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.TimeFormatter;
@@ -51,7 +51,7 @@ import java.util.Comparator;
 import java.util.Optional;
 
 @Slf4j
-public class PrivateChatsView extends CommonChatView<PrivateChatsView, PrivateChatsModel> {
+public class PrivateChatsView extends ChatView<PrivateChatsView, PrivateChatsModel> {
     private BisqTableView<ListItem> tableView;
     private VBox openChatsList, chatHeaderVBox;
     private Subscription noOpenChatsPin, tableViewSelectionPin, selectedModelItemPin, peersUserProfilePin,

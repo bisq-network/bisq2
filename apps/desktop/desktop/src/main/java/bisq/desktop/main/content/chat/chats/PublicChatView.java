@@ -17,12 +17,12 @@
 
 package bisq.desktop.main.content.chat.chats;
 
-import bisq.desktop.main.content.common_chat.CommonChatModel;
-import bisq.desktop.main.content.common_chat.CommonChatView;
+import bisq.desktop.main.content.common_chat.ChatModel;
+import bisq.desktop.main.content.common_chat.ChatView;
 import javafx.scene.layout.Pane;
 
-public class PublicChatView extends CommonChatView<PublicChatView, PublicChatModel> {
-    public PublicChatView(CommonChatModel model, PublicChatController controller, Pane chatMessagesComponent, Pane channelInfo) {
+public class PublicChatView extends ChatView<PublicChatView, PublicChatModel> {
+    public PublicChatView(ChatModel model, PublicChatController controller, Pane chatMessagesComponent, Pane channelInfo) {
         super(model, controller, chatMessagesComponent, channelInfo);
     }
 }
