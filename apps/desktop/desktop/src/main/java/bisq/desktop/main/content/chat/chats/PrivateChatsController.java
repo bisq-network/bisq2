@@ -112,10 +112,11 @@ public class PrivateChatsController extends CommonChatController<PrivateChatsVie
                 TwoPartyPrivateChatChannel channel = (TwoPartyPrivateChatChannel) chatChannel;
                 applyPeersIcon(channel);
                 UserProfile peer = channel.getPeer();
-                model.setPeersReputationScore(reputationService.getReputationScore(peer));
                 model.getPeersUserProfile().set(peer);
+                model.setPeersReputationScore(reputationService.getReputationScore(peer));
                 UserProfile myProfile = channel.getMyUserIdentity().getUserProfile();
                 model.getMyUserProfile().set(myProfile);
+                model.setMyUserReputationScore(reputationService.getReputationScore(myProfile));
                 model.getListItems().stream()
                         .filter(item -> item.getChannel().equals(channel))
                         .findAny()

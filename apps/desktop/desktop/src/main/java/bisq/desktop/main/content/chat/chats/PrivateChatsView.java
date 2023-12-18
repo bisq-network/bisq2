@@ -138,20 +138,18 @@ public class PrivateChatsView extends CommonChatView<PrivateChatsView, PrivateCh
         selectedModelItemPin = EasyBind.subscribe(model.getSelectedItem(), selected ->
                 tableView.getSelectionModel().select(selected));
 
-        tableViewSelectionPin = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(),
-                item -> {
-                    if (item != null) {
-                        getController().onSelectItem(item);
-                    }
-                });
+        tableViewSelectionPin = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(), item -> {
+            if (item != null) {
+                getController().onSelectItem(item);
+            }
+        });
 
-        noOpenChatsPin = EasyBind.subscribe(model.getNoOpenChats(),
-                noOpenChats -> {
-                    createHeaderVBox(!noOpenChats);
-                    if (noOpenChats) {
-                        tableView.removeListeners();
-                    }
-                });
+        noOpenChatsPin = EasyBind.subscribe(model.getNoOpenChats(), noOpenChats -> {
+            createHeaderVBox(!noOpenChats);
+            if (noOpenChats) {
+                tableView.removeListeners();
+            }
+        });
 
         peersUserProfilePin = EasyBind.subscribe(model.getPeersUserProfile(), userProfile -> {
             if (userProfile != null) {
@@ -163,6 +161,7 @@ public class PrivateChatsView extends CommonChatView<PrivateChatsView, PrivateCh
         myUserProfilePin = EasyBind.subscribe(model.getMyUserProfile(), userProfile -> {
             if (userProfile != null) {
                 chatMyUserProfileDisplay.setUserProfile(userProfile);
+                chatMyUserProfileDisplay.setReputationScore(model.getMyUserReputationScore());
             }
         });
 

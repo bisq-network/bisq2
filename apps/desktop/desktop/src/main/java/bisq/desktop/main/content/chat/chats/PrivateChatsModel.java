@@ -42,6 +42,8 @@ public class PrivateChatsModel extends CommonChatModel {
     private final ObjectProperty<UserProfile> myUserProfile = new SimpleObjectProperty<>();
     @Setter
     private ReputationScore peersReputationScore;
+    @Setter
+    private ReputationScore myUserReputationScore;
 
     public PrivateChatsModel(ChatChannelDomain chatChannelDomain) {
         super(chatChannelDomain);
