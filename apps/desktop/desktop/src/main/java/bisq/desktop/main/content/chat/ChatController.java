@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.common_chat;
+package bisq.desktop.main.content.chat;
 
 import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatChannelDomain;
@@ -23,7 +23,6 @@ import bisq.chat.ChatChannelSelectionService;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.main.content.chat.BaseChatController;
 import bisq.desktop.main.content.chat.tab.ChatToolbox;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;

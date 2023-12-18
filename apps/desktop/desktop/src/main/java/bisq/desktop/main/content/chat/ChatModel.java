@@ -15,11 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.common_chat;
+package bisq.desktop.main.content.chat;
 
 import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatChannelDomain;
-import bisq.desktop.main.content.chat.BaseChatModel;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import lombok.Getter;

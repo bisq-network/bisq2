@@ -15,10 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.common_chat;
+package bisq.desktop.main.content.chat;
 
 import bisq.desktop.common.Layout;
-import bisq.desktop.main.content.chat.BaseChatView;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.layout.*;

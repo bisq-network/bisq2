@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.chat.chats;
 
 import bisq.chat.ChatChannelDomain;
-import bisq.desktop.main.content.common_chat.ChatModel;
+import bisq.desktop.main.content.chat.ChatModel;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationScore;
 import javafx.beans.property.BooleanProperty;

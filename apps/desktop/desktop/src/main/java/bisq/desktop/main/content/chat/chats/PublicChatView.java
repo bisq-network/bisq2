@@ -17,8 +17,8 @@
 
 package bisq.desktop.main.content.chat.chats;
 
-import bisq.desktop.main.content.common_chat.ChatModel;
-import bisq.desktop.main.content.common_chat.ChatView;
+import bisq.desktop.main.content.chat.ChatModel;
+import bisq.desktop.main.content.chat.ChatView;
 import javafx.scene.layout.Pane;
 
 public class PublicChatView extends ChatView<PublicChatView, PublicChatModel> {

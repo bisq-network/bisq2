@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.chat.chats;
 
 import bisq.chat.ChatChannelDomain;
-import bisq.desktop.main.content.common_chat.ChatModel;
+import bisq.desktop.main.content.chat.ChatModel;
 
 public class PublicChatModel extends ChatModel {
     public PublicChatModel(ChatChannelDomain chatChannelDomain) {
