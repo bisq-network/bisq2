@@ -31,8 +31,8 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.TabButton;
 import bisq.desktop.main.content.ContentTabController;
+import bisq.desktop.main.content.chat.chats.CommonPublicChatController;
 import bisq.desktop.main.content.chat.chats.PrivateChatsController;
-import bisq.desktop.main.content.chat.chats.PublicChatController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -200,7 +200,7 @@ public final class ChatTabController extends ContentTabController<ChatTabModel> 
             case SUPPORT_SUPPORT:
             case SUPPORT_QUESTIONS:
             case SUPPORT_REPORTS: {
-                return Optional.of(new PublicChatController(serviceProvider, channelDomain, navigationTarget, Optional.of(chatToolbox)));
+                return Optional.of(new CommonPublicChatController(serviceProvider, channelDomain, navigationTarget, Optional.of(chatToolbox)));
             }
             case DISCUSSION_PRIVATECHATS:
             case EVENTS_PRIVATECHATS:

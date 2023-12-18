@@ -27,21 +27,21 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public class PublicChatController extends ChatController<PublicChatView, PublicChatModel> {
-    public PublicChatController(ServiceProvider serviceProvider,
-                                ChatChannelDomain chatChannelDomain,
-                                NavigationTarget navigationTarget,
-                                Optional<ChatToolbox> toolbox) {
+public class CommonPublicChatController extends ChatController<CommonPublicChatView, CommonPublicChatModel> {
+    public CommonPublicChatController(ServiceProvider serviceProvider,
+                                      ChatChannelDomain chatChannelDomain,
+                                      NavigationTarget navigationTarget,
+                                      Optional<ChatToolbox> toolbox) {
         super(serviceProvider, chatChannelDomain, navigationTarget, toolbox);
     }
 
     @Override
-    public PublicChatModel createAndGetModel(ChatChannelDomain chatChannelDomain) {
-        return new PublicChatModel(chatChannelDomain);
+    public CommonPublicChatModel createAndGetModel(ChatChannelDomain chatChannelDomain) {
+        return new CommonPublicChatModel(chatChannelDomain);
     }
 
     @Override
-    public PublicChatView createAndGetView() {
-        return new PublicChatView(model, this, chatMessagesComponent.getRoot(), channelSidebar.getRoot());
+    public CommonPublicChatView createAndGetView() {
+        return new CommonPublicChatView(model, this, chatMessagesComponent.getRoot(), channelSidebar.getRoot());
     }
 }
