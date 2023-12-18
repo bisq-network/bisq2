@@ -31,14 +31,14 @@ import lombok.Getter;
 import java.util.HashMap;
 
 @Getter
-public class ChatContainerModel extends ContentTabModel {
+public class ChatTabModel extends ContentTabModel {
     private final ChatChannelDomain chatChannelDomain;
     final ObservableMap<String, Channel> channels = FXCollections.observableMap(new HashMap<>());
     ObjectProperty<Channel> selectedChannel = new SimpleObjectProperty<>();
     private final BooleanProperty hasSelectedChannel = new SimpleBooleanProperty();
     Channel previousSelectedChannel;
 
-    public ChatContainerModel(ChatChannelDomain chatChannelDomain) {
+    public ChatTabModel(ChatChannelDomain chatChannelDomain) {
         this.chatChannelDomain = chatChannelDomain;
     }
 
