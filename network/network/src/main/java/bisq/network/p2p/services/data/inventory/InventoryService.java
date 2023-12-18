@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.data.inventory;
 
 import bisq.common.data.ByteArray;
+import bisq.common.timer.Scheduler;
 import bisq.common.util.ByteUnit;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkService;
@@ -174,10 +175,12 @@ public class InventoryService implements Node.Listener, PeerGroupManager.Listene
                             // Repeat requests until we have received all data
                             if (list.stream().noneMatch(Inventory::noDataMissing)) {
                                 requestsPending = false;
-                                doRequest();
+                                Scheduler.run(this::doRequest).after(1000);
                             }
                         }
                     });
+        } else {
+            Scheduler.run(this::doRequest).after(5000);
         }
     }
 
@@ -193,7 +196,6 @@ public class InventoryService implements Node.Listener, PeerGroupManager.Listene
                 .filter(peerGroupService::notASeed)
                 .map(Peer::getAddress)
                 .collect(Collectors.toList()));
-
         return peerGroupService.getAllConnections()
                 .filter(connection -> !requestHandlerMap.containsKey(connection.getId()))
                 .filter(connection -> candidates.contains(connection.getPeerAddress()))

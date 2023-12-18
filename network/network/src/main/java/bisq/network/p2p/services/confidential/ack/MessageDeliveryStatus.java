@@ -8,6 +8,7 @@ import lombok.Getter;
 public enum MessageDeliveryStatus implements ProtoEnum {
     START_SENDING,
     ARRIVED(true),
+    TRY_ADD_TO_MAILBOX,
     ADDED_TO_MAILBOX,
     MAILBOX_MSG_RECEIVED(true),
     FAILED;

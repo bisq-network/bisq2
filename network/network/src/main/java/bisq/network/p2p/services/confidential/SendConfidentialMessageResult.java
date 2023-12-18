@@ -9,7 +9,7 @@ import java.util.Optional;
 @Getter
 public class SendConfidentialMessageResult {
     private final MessageDeliveryStatus messageDeliveryStatus;
-    private BroadcastResult mailboxFuture = new BroadcastResult();
+    private Optional<BroadcastResult> mailboxFuture = Optional.empty();
     private Optional<String> errorMsg = Optional.empty();
 
     public SendConfidentialMessageResult(MessageDeliveryStatus messageDeliveryStatus) {
@@ -17,7 +17,7 @@ public class SendConfidentialMessageResult {
     }
 
     public SendConfidentialMessageResult setMailboxFuture(BroadcastResult mailboxFuture) {
-        this.mailboxFuture = mailboxFuture;
+        this.mailboxFuture = Optional.of(mailboxFuture);
         return this;
     }
 

@@ -800,6 +800,8 @@ public class ChatMessagesListView {
                                         deliveryState.setVisible(icon != null);
                                         if (icon != null) {
                                             AwesomeDude.setIcon(deliveryState, icon, AwesomeDude.DEFAULT_ICON_SIZE);
+                                            item.messageDeliveryStatusIconColor.ifPresent(color ->
+                                                    Icons.setAwesomeIconColor(deliveryState, color));
                                         }
                                     }
                             ));
@@ -1120,6 +1122,7 @@ public class ChatMessagesListView {
         private final StringProperty messageDeliveryStatusTooltip = new SimpleStringProperty();
         @EqualsAndHashCode.Exclude
         private final ObjectProperty<AwesomeIcon> messageDeliveryStatusIcon = new SimpleObjectProperty<>();
+        private Optional<String> messageDeliveryStatusIconColor = Optional.empty();
         @EqualsAndHashCode.Exclude
         private final Set<Pin> mapPins = new HashSet<>();
         private final Set<Pin> statusPins = new HashSet<>();
@@ -1172,6 +1175,7 @@ public class ChatMessagesListView {
                                 UIThread.run(() -> {
                                     if (status != null) {
                                         messageDeliveryStatusTooltip.set(Res.get("chat.message.deliveryState." + status.name()));
+                                        messageDeliveryStatusIconColor = Optional.empty();
                                         switch (status) {
                                             case START_SENDING:
                                                 messageDeliveryStatusIcon.set(AwesomeIcon.SPINNER);
@@ -1179,13 +1183,18 @@ public class ChatMessagesListView {
                                             case ARRIVED:
                                                 messageDeliveryStatusIcon.set(AwesomeIcon.OK_SIGN);
                                                 break;
+                                            case TRY_ADD_TO_MAILBOX:
+                                                messageDeliveryStatusIcon.set(AwesomeIcon.SHARE_SIGN);
+                                                break;
                                             case ADDED_TO_MAILBOX:
-                                                messageDeliveryStatusIcon.set(AwesomeIcon.ENVELOPE);
+                                                messageDeliveryStatusIcon.set(AwesomeIcon.CLOUD_UPLOAD);
                                                 break;
                                             case MAILBOX_MSG_RECEIVED:
-                                                messageDeliveryStatusIcon.set(AwesomeIcon.CIRCLE_ARROW_DOWN);
+                                                messageDeliveryStatusIcon.set(AwesomeIcon.CLOUD_DOWNLOAD);
                                                 break;
                                             case FAILED:
+                                                // -bisq-warning: #d0831f;
+                                                messageDeliveryStatusIconColor = Optional.of("#d0831f");
                                                 messageDeliveryStatusIcon.set(AwesomeIcon.EXCLAMATION_SIGN);
                                                 break;
                                         }

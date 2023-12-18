@@ -15,6 +15,8 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * This service aggregates the message delivery status for all supported transports and provides
@@ -44,13 +46,14 @@ public class MessageDeliveryStatusService implements PersistenceClient<MessageDe
     }
 
     public void initialize() {
+        checkPending();
+
         networkService.addMessageListener(this);
     }
 
     public void shutdown() {
         networkService.removeMessageListener(this);
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // MessageListener
@@ -90,8 +93,8 @@ public class MessageDeliveryStatusService implements PersistenceClient<MessageDe
             } else {
                 messageDeliveryStatusByMessageId.put(messageId, new Observable<>(status));
             }
-            log.info("Sent an AckRequestingMessage with message ID {} and set status to {}",
-                    messageId, messageDeliveryStatusByMessageId.get(messageId).get());
+            log.info("Persist MessageDeliveryStatus {} with message ID {}",
+                    messageDeliveryStatusByMessageId.get(messageId).get(), messageId);
             persist();
         }
     }
@@ -141,5 +144,14 @@ public class MessageDeliveryStatusService implements PersistenceClient<MessageDe
                     NetworkIdWithKeyPair networkIdWithKeyPair = new NetworkIdWithKeyPair(networkId, keyPair);
                     networkService.confidentialSend(ackMessage, message.getSender(), networkIdWithKeyPair);
                 });
+    }
+
+    private void checkPending() {
+        Set<Map.Entry<String, Observable<MessageDeliveryStatus>>> pendingItems = persistableStore.getMessageDeliveryStatusByMessageId().entrySet().stream()
+                .filter(e -> e.getValue().get() == MessageDeliveryStatus.START_SENDING ||
+                        e.getValue().get() == MessageDeliveryStatus.TRY_ADD_TO_MAILBOX)
+                .collect(Collectors.toSet());
+        pendingItems.forEach(e -> persistableStore.getMessageDeliveryStatusByMessageId().get(e.getKey()).set(MessageDeliveryStatus.FAILED));
+        persist();
     }
 }
