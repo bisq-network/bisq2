@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.private_chats;
 
-import bisq.desktop.main.content.chat.chats.PrivateChatsView;
+import bisq.desktop.main.content.chat.priv.PrivateChatsView;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;

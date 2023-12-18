@@ -31,8 +31,8 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.TabButton;
 import bisq.desktop.main.content.ContentTabController;
-import bisq.desktop.main.content.chat.chats.PrivateChatsController;
 import bisq.desktop.main.content.chat.common.pub.CommonPublicChatController;
+import bisq.desktop.main.content.chat.priv.PrivateChatsController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

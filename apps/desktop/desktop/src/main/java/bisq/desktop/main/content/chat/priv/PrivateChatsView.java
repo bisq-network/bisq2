@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.chat.chats;
+package bisq.desktop.main.content.chat.priv;
 
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.desktop.common.Layout;

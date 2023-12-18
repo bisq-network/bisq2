@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.private_chats;
 
 import bisq.chat.ChatChannelDomain;
-import bisq.desktop.main.content.chat.chats.PrivateChatsModel;
+import bisq.desktop.main.content.chat.priv.PrivateChatsModel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
