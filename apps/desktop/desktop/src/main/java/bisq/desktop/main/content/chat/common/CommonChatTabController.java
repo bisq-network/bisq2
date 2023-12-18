@@ -161,7 +161,7 @@ public final class CommonChatTabController extends ContentTabController<CommonCh
         );
     }
 
-    protected void handleSelectedChannelChanged(ChatChannel<? extends ChatMessage> chatChannel) {
+    void handleSelectedChannelChanged(ChatChannel<? extends ChatMessage> chatChannel) {
         chatToolbox.resetSearchText();
 
         ChannelTabButtonModel channelTabButtonModel = findOrCreateChannelItem(chatChannel);
@@ -177,7 +177,7 @@ public final class CommonChatTabController extends ContentTabController<CommonCh
         }
     }
 
-    protected void onSelected(NavigationTarget navigationTarget) {
+    void onSelected(NavigationTarget navigationTarget) {
         model.channelTabButtonModelByChannelId.values().stream()
                 .filter(Objects::nonNull)
                 .filter(item -> item.getNavigationTarget().equals(navigationTarget))

@@ -29,9 +29,9 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public final class CommonChatTabView extends ContentTabView<CommonChatTabModel, CommonChatTabController> {
+final class CommonChatTabView extends ContentTabView<CommonChatTabModel, CommonChatTabController> {
 
-    public CommonChatTabView(CommonChatTabModel model, CommonChatTabController controller, HBox toolboxRoot) {
+    CommonChatTabView(CommonChatTabModel model, CommonChatTabController controller, HBox toolboxRoot) {
         super(model, controller);
 
         topBox.getChildren().add(0, toolboxRoot);

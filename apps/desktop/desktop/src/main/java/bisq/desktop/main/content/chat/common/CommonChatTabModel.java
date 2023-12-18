@@ -31,14 +31,14 @@ import lombok.Getter;
 import java.util.HashMap;
 
 @Getter
-public final class CommonChatTabModel extends ContentTabModel {
+final class CommonChatTabModel extends ContentTabModel {
     private final ChatChannelDomain chatChannelDomain;
     final ObservableMap<String, ChannelTabButtonModel> channelTabButtonModelByChannelId = FXCollections.observableMap(new HashMap<>());
     ObjectProperty<ChannelTabButtonModel> selectedChannelTabButtonModel = new SimpleObjectProperty<>();
     private final BooleanProperty hasSelectedChannel = new SimpleBooleanProperty();
     ChannelTabButtonModel previousSelectedChannelTabButtonModel;
 
-    public CommonChatTabModel(ChatChannelDomain chatChannelDomain) {
+    CommonChatTabModel(ChatChannelDomain chatChannelDomain) {
         this.chatChannelDomain = chatChannelDomain;
     }
 
@@ -49,7 +49,7 @@ public final class CommonChatTabModel extends ContentTabModel {
                 : channelTabButtonModelByChannelId.values().stream().findFirst().get().getNavigationTarget();
     }
 
-    public NavigationTarget getPrivateChatsNavigationTarget() {
+    NavigationTarget getPrivateChatsNavigationTarget() {
         if (chatChannelDomain == ChatChannelDomain.DISCUSSION) {
             return NavigationTarget.DISCUSSION_PRIVATECHATS;
         } else if (chatChannelDomain == ChatChannelDomain.EVENTS) {
