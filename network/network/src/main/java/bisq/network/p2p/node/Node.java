@@ -46,10 +46,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.EOFException;
 import java.io.IOException;
-import java.net.Socket;
-import java.net.SocketException;
-import java.net.SocketTimeoutException;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Map;
@@ -311,6 +308,7 @@ public class Node implements Connection.Handler {
 
     public Connection send(EnvelopePayloadMessage envelopePayloadMessage, Connection connection) {
         if (connection.isStopped()) {
+            log.debug("Send message failed as connection is already stopped {}", this);
             throw new ConnectionClosedException(connection);
         }
         try {
@@ -322,6 +320,7 @@ public class Node implements Connection.Handler {
         } catch (Throwable throwable) {
             if (connection.isRunning()) {
                 handleException(connection, throwable);
+                log.debug("Send message failed on {}", this, throwable);
                 closeConnection(connection, CloseReason.EXCEPTION.exception(throwable));
             }
             throw new ConnectionClosedException(connection);
@@ -349,15 +348,17 @@ public class Node implements Connection.Handler {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private Connection createOutboundConnection(Address address) {
-        return myCapability.map(capability -> createOutboundConnection(address, capability)).orElseGet(() -> {
-            int port = networkId.getAddressByTransportTypeMap().get(transportType).getPort();
-            log.warn("We create an outbound connection but we have not initialized our server. " +
-                    "We create a server on port {} now but clients better control node " +
-                    "life cycle themselves.", port);
-            initialize();
-            checkArgument(myCapability.isPresent(), "myCapability must be present after initializeServer got called");
-            return createOutboundConnection(address, myCapability.get());
-        });
+        log.debug("Create outbound connection to {}", address);
+        return myCapability.map(capability -> createOutboundConnection(address, capability))
+                .orElseGet(() -> {
+                    int port = networkId.getAddressByTransportTypeMap().get(transportType).getPort();
+                    log.warn("We create an outbound connection but we have not initialized our server. " +
+                            "We create a server on port {} now but clients better control node " +
+                            "life cycle themselves.", port);
+                    initialize();
+                    checkArgument(myCapability.isPresent(), "myCapability must be present after initializeServer got called");
+                    return createOutboundConnection(address, myCapability.get());
+                });
     }
 
     private Connection createOutboundConnection(Address address, Capability myCapability) {
@@ -640,17 +641,19 @@ public class Node implements Connection.Handler {
         if (isShutdown()) {
             return;
         }
+        String msg = "Exception: ";
         if (exception instanceof EOFException) {
-            log.debug(exception.toString(), exception);
+            log.info(msg, exception);
+        } else if (exception instanceof ConnectException) {
+            log.debug(msg, exception);
         } else if (exception instanceof SocketException) {
-            log.debug(exception.toString(), exception);
+            log.debug(msg, exception);
         } else if (exception instanceof UnknownHostException) {
-            log.warn("UnknownHostException. Might happen if we try to connect to wrong network type");
-            log.warn(exception.toString(), exception);
+            log.warn("UnknownHostException. Might happen if we try to connect to wrong network type.", exception);
         } else if (exception instanceof SocketTimeoutException) {
-            log.warn(exception.toString(), exception);
+            log.info(msg, exception);
         } else {
-            log.error(exception.toString(), exception);
+            log.error(msg, exception);
         }
     }
 
