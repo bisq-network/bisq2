@@ -23,7 +23,6 @@ import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.data.broadcast.Broadcaster;
-import bisq.network.p2p.services.peergroup.PeerGroupManager;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -36,10 +35,10 @@ public class DataNetworkService implements Node.Listener {
     private final DataService dataService;
     private final Broadcaster broadcaster;
 
-    public DataNetworkService(Node node, PeerGroupManager peerGroupManager, DataService dataService) {
+    public DataNetworkService(Node node, DataService dataService) {
         this.node = node;
         this.dataService = dataService;
-        broadcaster = new Broadcaster(node, peerGroupManager.getPeerGroupService());
+        broadcaster = new Broadcaster(node);
         node.addListener(this);
         dataService.addBroadcaster(broadcaster);
     }

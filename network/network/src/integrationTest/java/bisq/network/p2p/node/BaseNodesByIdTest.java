@@ -35,6 +35,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
 
 @Slf4j
 public abstract class BaseNodesByIdTest extends BaseNetworkTest {
@@ -44,7 +45,7 @@ public abstract class BaseNodesByIdTest extends BaseNetworkTest {
         BanList banList = new BanList();
         TransportService transportService = TransportService.create(nodeConfig.getTransportType(), nodeConfig.getTransportConfig());
         PersistenceService persistenceService = new PersistenceService("");
-        KeyBundleService keyBundleService = new KeyBundleService(persistenceService);
+        KeyBundleService keyBundleService = new KeyBundleService(persistenceService, mock(KeyBundleService.Config.class));
 
         NodesById nodesById = new NodesById(banList, nodeConfig, keyBundleService, transportService, new NetworkLoadService(), new AuthorizationService(new HashCashService()));
         long ts = System.currentTimeMillis();
@@ -135,7 +136,7 @@ public abstract class BaseNodesByIdTest extends BaseNetworkTest {
         BanList banList = new BanList();
         TransportService transportService = TransportService.create(nodeConfig.getTransportType(), nodeConfig.getTransportConfig());
         PersistenceService persistenceService = new PersistenceService("");
-        KeyBundleService keyBundleService = new KeyBundleService(persistenceService);
+        KeyBundleService keyBundleService = new KeyBundleService(persistenceService, mock(KeyBundleService.Config.class));
         NodesById nodesById = new NodesById(banList, nodeConfig, keyBundleService, transportService, new NetworkLoadService(), new AuthorizationService(new HashCashService()));
         initializeServers(2, nodesById);
         nodesById.shutdown().join();

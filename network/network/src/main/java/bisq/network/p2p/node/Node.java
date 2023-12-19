@@ -438,6 +438,21 @@ public class Node implements Connection.Handler {
         return Stream.concat(inboundConnectionsByAddress.values().stream(), outboundConnectionsByAddress.values().stream());
     }
 
+    public Stream<Connection> getAllActiveConnections() {
+        return getAllConnections().filter(Connection::isRunning);
+    }
+
+    public Stream<OutboundConnection> getActiveOutboundConnections() {
+        return getOutboundConnectionsByAddress().values().stream().filter(Connection::isRunning);
+    }
+
+    public Stream<InboundConnection> getActiveInboundConnections() {
+        return getInboundConnectionsByAddress().values().stream().filter(Connection::isRunning);
+    }
+
+    public int getNumConnections() {
+        return (int) getAllActiveConnections().count();
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Connection.Handler
@@ -587,8 +602,8 @@ public class Node implements Connection.Handler {
         return server.map(Server::getAddress);
     }
 
-    public int getNumConnections() {
-        return inboundConnectionsByAddress.size() + outboundConnectionsByAddress.size();
+    public boolean notMyself(Address address) {
+        return findMyAddress().stream().noneMatch(myAddress -> myAddress.equals(address));
     }
 
     public boolean isInitialized() {
