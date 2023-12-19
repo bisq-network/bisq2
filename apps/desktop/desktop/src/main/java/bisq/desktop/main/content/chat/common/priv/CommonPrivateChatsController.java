@@ -15,33 +15,37 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.chat.chats;
+package bisq.desktop.main.content.chat.common.priv;
 
 import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatChannelDomain;
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.main.content.chat.navigation.ChatToolbox;
-import bisq.desktop.main.content.common_chat.CommonChatController;
+import bisq.desktop.main.content.chat.common.ChatToolbox;
+import bisq.desktop.main.content.chat.priv.PrivateChatsController;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
 @Slf4j
-public class PublicChatController extends CommonChatController<PublicChatView, PublicChatModel> {
-    public PublicChatController(ServiceProvider serviceProvider,
-                                ChatChannelDomain chatChannelDomain,
-                                NavigationTarget navigationTarget,
-                                Optional<ChatToolbox> toolbox) {
+public final class CommonPrivateChatsController extends PrivateChatsController {
+
+    public CommonPrivateChatsController(ServiceProvider serviceProvider,
+                                        ChatChannelDomain chatChannelDomain,
+                                        NavigationTarget navigationTarget,
+                                        Optional<ChatToolbox> toolbox) {
         super(serviceProvider, chatChannelDomain, navigationTarget, toolbox);
     }
 
     @Override
-    public PublicChatModel createAndGetModel(ChatChannelDomain chatChannelDomain) {
-        return new PublicChatModel(chatChannelDomain);
+    public CommonPrivateChatsModel createAndGetModel(ChatChannelDomain chatChannelDomain) {
+        return new CommonPrivateChatsModel(chatChannelDomain);
     }
 
     @Override
-    public PublicChatView createAndGetView() {
-        return new PublicChatView(model, this, chatMessagesComponent.getRoot(), channelSidebar.getRoot());
+    public CommonPrivateChatsView createAndGetView() {
+        return new CommonPrivateChatsView((CommonPrivateChatsModel) model,
+                this,
+                chatMessagesComponent.getRoot(),
+                channelSidebar.getRoot());
     }
 }

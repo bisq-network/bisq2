@@ -38,7 +38,6 @@ import org.fxmisc.easybind.Subscription;
 import javax.annotation.Nullable;
 
 
-
 @Slf4j
 public abstract class TabView<M extends TabModel, C extends TabController<M>> extends NavigationView<VBox, M, C>
         implements TransitionedView {
@@ -56,7 +55,6 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
     @Getter
     protected Pane topBox;
     private Subscription selectedTabButtonSubscription, rootWidthSubscription, layoutDoneSubscription;
-    private boolean transitionStarted;
     private ChangeListener<View<? extends Parent, ? extends Model, ? extends Controller>> viewListener;
 
     public TabView(M model, C controller) {
@@ -80,7 +78,6 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
     void onViewAttachedInternal() {
         selectionMarker.setLayoutX(0);
         selectionMarker.setPrefWidth(0);
-        transitionStarted = false;
 
         line.prefWidthProperty().bind(root.widthProperty().subtract(2 * lineSidePadding));
         model.getTabButtons().forEach(tabButton ->
@@ -112,7 +109,15 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
     protected void onChildView(View<? extends Parent, ? extends Model, ? extends Controller> oldValue,
                                View<? extends Parent, ? extends Model, ? extends Controller> newValue) {
         if (oldValue != null) {
-            Transitions.slideOutRight(oldValue.getRoot(), () -> setNewContent(newValue));
+            if (oldValue instanceof TransitionedView) {
+                ((TransitionedView) oldValue).onOutTransitionStarted();
+            }
+            Transitions.slideOutRight(oldValue.getRoot(), () -> {
+                if (oldValue instanceof TransitionedView) {
+                    ((TransitionedView) oldValue).onOutTransitionCompleted();
+                }
+                setNewContent(newValue);
+            });
         } else {
             setNewContent(newValue);
         }
@@ -126,7 +131,14 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
             scrollPane.setContent(newValue.getRoot());
             scrollPane.setVvalue(0);
 
-            Transitions.fadeIn(newValue.getRoot());
+            if (newValue instanceof TransitionedView) {
+                ((TransitionedView) newValue).onInTransitionStarted();
+            }
+            Transitions.fadeIn(newValue.getRoot(), () -> {
+                if (newValue instanceof TransitionedView) {
+                    ((TransitionedView) newValue).onInTransitionCompleted();
+                }
+            });
         } else {
             scrollPane.setContent(null);
         }
@@ -150,13 +162,8 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
     }
 
     @Override
-    public void onStartTransition() {
-        transitionStarted = true;
+    public void onInTransitionStarted() {
         UIThread.runOnNextRenderFrame(this::maybeAnimateMark);
-    }
-
-    @Override
-    public void onTransitionCompleted() {
     }
 
     protected boolean isRightSide() {

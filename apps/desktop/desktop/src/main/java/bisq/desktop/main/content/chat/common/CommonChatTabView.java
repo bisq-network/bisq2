@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.chat.navigation;
+package bisq.desktop.main.content.chat.common;
 
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Model;
@@ -29,14 +29,14 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ChatContainerView extends ContentTabView<ChatContainerModel, ChatContainerController> {
+final class CommonChatTabView extends ContentTabView<CommonChatTabModel, CommonChatTabController> {
 
-    public ChatContainerView(ChatContainerModel model, ChatContainerController controller, HBox toolboxRoot) {
+    CommonChatTabView(CommonChatTabModel model, CommonChatTabController controller, HBox toolboxRoot) {
         super(model, controller);
 
         topBox.getChildren().add(0, toolboxRoot);
 
-        model.getChannels().values().stream().sorted().forEach(channel ->
+        model.getChannelTabButtonModelByChannelId().values().stream().sorted().forEach(channel ->
                 addTab(channel.getChannelTitle(), channel.getNavigationTarget(), channel.getIconId())
         );
         addTab(Res.get("chat.private.title"), model.getPrivateChatsNavigationTarget(), "channels-private-chats");

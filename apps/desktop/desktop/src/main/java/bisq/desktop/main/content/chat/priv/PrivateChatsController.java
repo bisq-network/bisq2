@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.chat.chats;
+package bisq.desktop.main.content.chat.priv;
 
 import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatChannel;
@@ -27,8 +27,8 @@ import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.main.content.chat.navigation.ChatToolbox;
-import bisq.desktop.main.content.common_chat.CommonChatController;
+import bisq.desktop.main.content.chat.ChatController;
+import bisq.desktop.main.content.chat.common.ChatToolbox;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationService;
 import lombok.extern.slf4j.Slf4j;
@@ -38,7 +38,7 @@ import org.fxmisc.easybind.Subscription;
 import java.util.Optional;
 
 @Slf4j
-public class PrivateChatsController extends CommonChatController<PrivateChatsView, PrivateChatsModel> {
+public abstract class PrivateChatsController extends ChatController<PrivateChatsView, PrivateChatsModel> {
     private final TwoPartyPrivateChatChannelService channelService;
     private final ReputationService reputationService;
     private Pin channelItemPin, channelsPin;
@@ -55,22 +55,9 @@ public class PrivateChatsController extends CommonChatController<PrivateChatsVie
     }
 
     @Override
-    public PrivateChatsModel createAndGetModel(ChatChannelDomain chatChannelDomain) {
-        return new PrivateChatsModel(chatChannelDomain);
-    }
-
-    @Override
-    public PrivateChatsView createAndGetView() {
-        return new PrivateChatsView(model,
-                this,
-                chatMessagesComponent.getRoot(),
-                channelSidebar.getRoot());
-    }
-
-    @Override
     public void onActivate() {
-        super.onActivate();
-
+        // We access the (model.getListItems() in selectedChannelChanged triggered by the super call,
+        // thus we set up the binding before the super call
         channelItemPin = FxBindings.<TwoPartyPrivateChatChannel, PrivateChatsView.ListItem>bind(model.getListItems())
                 .map(channel -> {
                     // We call maybeSelectFirst one render frame after we applied the item to the model list.
@@ -78,6 +65,8 @@ public class PrivateChatsController extends CommonChatController<PrivateChatsVie
                     return new PrivateChatsView.ListItem(channel, reputationService);
                 })
                 .to(channelService.getChannels());
+
+        super.onActivate();
 
         channelsPin = channelService.getChannels().addObserver(this::channelsChanged);
 

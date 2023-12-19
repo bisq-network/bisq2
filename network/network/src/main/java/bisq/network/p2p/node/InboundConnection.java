@@ -21,7 +21,6 @@ import bisq.network.p2p.node.network_load.ConnectionMetrics;
 import bisq.network.p2p.node.network_load.NetworkLoadService;
 import bisq.network.p2p.node.transport.ServerSocketResult;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.Socket;
@@ -31,9 +30,6 @@ import java.util.function.BiConsumer;
 public class InboundConnection extends Connection {
     @Getter
     private final ServerSocketResult serverSocketResult;
-
-    @Setter
-    private boolean isPeerAddressVerified;
 
     InboundConnection(Socket socket,
                       ServerSocketResult serverSocketResult,
@@ -45,10 +41,5 @@ public class InboundConnection extends Connection {
         super(socket, peersCapability, peersNetworkLoadService, connectionMetrics, handler, errorHandler);
         this.serverSocketResult = serverSocketResult;
         log.debug("Create inboundConnection from server: {}", serverSocketResult);
-    }
-
-    @Override
-    public boolean isPeerAddressVerified() {
-        return isPeerAddressVerified;
     }
 }

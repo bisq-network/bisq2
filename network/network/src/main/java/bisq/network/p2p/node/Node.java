@@ -334,13 +334,9 @@ public class Node implements Connection.Handler {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public Connection getConnection(Address address) {
-        return getConnection(address, true);
-    }
-
-    public Connection getConnection(Address address, boolean allowUnverifiedAddress) {
         if (outboundConnectionsByAddress.containsKey(address)) {
             return outboundConnectionsByAddress.get(address);
-        } else if (inboundConnectionsByAddress.containsKey(address) && (allowUnverifiedAddress || inboundConnectionsByAddress.get(address).isPeerAddressVerified())) {
+        } else if (inboundConnectionsByAddress.containsKey(address)) {
             return inboundConnectionsByAddress.get(address);
         } else {
             return createOutboundConnection(address);

@@ -44,6 +44,14 @@ public abstract class ChatChannelSelectionService implements PersistenceClient<C
                 persistableStore);
     }
 
+    @Override
+    public void onPersistedApplied(ChatChannelSelectionStore persisted) {
+        selectedChannel.set(getAllChatChannels()
+                .filter(channel -> channel.getId().equals(persistableStore.getSelectedChannelId()))
+                .findAny()
+                .orElse(null));
+    }
+
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
 
@@ -55,23 +63,11 @@ public abstract class ChatChannelSelectionService implements PersistenceClient<C
         return CompletableFuture.completedFuture(true);
     }
 
-    @Override
-    public void onPersistedApplied(ChatChannelSelectionStore persisted) {
-        applySelectedChannel();
-    }
-
     public void selectChannel(ChatChannel<? extends ChatMessage> chatChannel) {
         persistableStore.setSelectedChannelId(chatChannel != null ? chatChannel.getId() : null);
         persist();
 
         selectedChannel.set(chatChannel);
-    }
-
-    protected void applySelectedChannel() {
-        selectedChannel.set(getAllChatChannels()
-                .filter(channel -> channel.getId().equals(persistableStore.getSelectedChannelId()))
-                .findAny()
-                .orElse(null));
     }
 
     protected abstract Stream<ChatChannel<?>> getAllChatChannels();

@@ -15,13 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.chat.chats;
+package bisq.desktop.main.content.chat.common.pub;
 
 import bisq.chat.ChatChannelDomain;
-import bisq.desktop.main.content.common_chat.CommonChatModel;
+import bisq.desktop.main.content.chat.ChatModel;
 
-public class PublicChatModel extends CommonChatModel {
-    public PublicChatModel(ChatChannelDomain chatChannelDomain) {
+public final class CommonPublicChatModel extends ChatModel {
+    public CommonPublicChatModel(ChatChannelDomain chatChannelDomain) {
         super(chatChannelDomain);
     }
 }

@@ -15,10 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.chat.navigation;
+package bisq.desktop.main.content.chat.common;
 
 import bisq.bisq_easy.NavigationTarget;
-import bisq.chat.*;
+import bisq.chat.ChatChannel;
+import bisq.chat.ChatChannelDomain;
+import bisq.chat.ChatMessage;
+import bisq.chat.ChatService;
+import bisq.chat.common.CommonChannelSelectionService;
 import bisq.chat.common.CommonPublicChatChannel;
 import bisq.chat.common.CommonPublicChatChannelService;
 import bisq.chat.notifications.ChatNotification;
@@ -31,9 +35,8 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.TabButton;
 import bisq.desktop.main.content.ContentTabController;
-import bisq.desktop.main.content.chat.chats.PrivateChatsController;
-import bisq.desktop.main.content.chat.chats.PublicChatController;
-import bisq.desktop.main.content.common_chat.Channel;
+import bisq.desktop.main.content.chat.common.priv.CommonPrivateChatsController;
+import bisq.desktop.main.content.chat.common.pub.CommonPublicChatController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -42,33 +45,32 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
-public class ChatContainerController extends ContentTabController<ChatContainerModel> {
-    protected final ChatService chatService;
+public final class CommonChatTabController extends ContentTabController<CommonChatTabModel> {
     @Getter
-    private final ChatContainerView view;
+    private final CommonChatTabView view;
     private final ChatNotificationService chatNotificationService;
-    protected final ChatChannelDomain channelDomain;
+    private final ChatChannelDomain channelDomain;
     private final CommonPublicChatChannelService commonPublicChatChannelService;
     private final TwoPartyPrivateChatChannelService twoPartyPrivateChatChannelService;
-    private final ChatChannelSelectionService chatChannelSelectionService;
+    private final CommonChannelSelectionService chatChannelSelectionService;
     private final ChatToolbox chatToolbox;
     private Pin selectedChannelPin;
     private Pin changedChatNotificationPin;
 
-    public ChatContainerController(ServiceProvider serviceProvider, ChatChannelDomain chatChannelDomain, NavigationTarget navigationTarget) {
-        super(new ChatContainerModel(chatChannelDomain), navigationTarget, serviceProvider);
+    public CommonChatTabController(ServiceProvider serviceProvider, ChatChannelDomain chatChannelDomain, NavigationTarget navigationTarget) {
+        super(new CommonChatTabModel(chatChannelDomain), navigationTarget, serviceProvider);
 
-        chatService = serviceProvider.getChatService();
+        ChatService chatService = serviceProvider.getChatService();
         chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
         channelDomain = chatChannelDomain;
         commonPublicChatChannelService = chatService.getCommonPublicChatChannelServices().get(chatChannelDomain);
         twoPartyPrivateChatChannelService = chatService.getTwoPartyPrivateChatChannelServices().get(chatChannelDomain);
-        chatChannelSelectionService = chatService.getChatChannelSelectionServices().get(chatChannelDomain);
+        chatChannelSelectionService = (CommonChannelSelectionService) chatService.getChatChannelSelectionServices().get(chatChannelDomain);
 
         createChannels();
 
         chatToolbox = new ChatToolbox();
-        view = new ChatContainerView(model, this, chatToolbox.getRoot());
+        view = new CommonChatTabView(model, this, chatToolbox.getRoot());
 
         model.getSelectedTabButton().addListener(observable -> {
             TabButton tabButton = model.getSelectedTabButton().get();
@@ -80,22 +82,22 @@ public class ChatContainerController extends ContentTabController<ChatContainerM
 
     private void createChannels() {
         commonPublicChatChannelService.getChannels().forEach(commonPublicChatChannel -> {
-            Channel channel = findOrCreateChannelItem(commonPublicChatChannel);
-            if (channel != null) {
-                model.channels.put(channel.getChannelId(), channel);
+            ChannelTabButtonModel channelTabButtonModel = findOrCreateChannelItem(commonPublicChatChannel);
+            if (channelTabButtonModel != null) {
+                model.channelTabButtonModelByChannelId.put(channelTabButtonModel.getChannelId(), channelTabButtonModel);
             }
         });
     }
 
-    private Channel findOrCreateChannelItem(ChatChannel<? extends ChatMessage> chatChannel) {
+    private ChannelTabButtonModel findOrCreateChannelItem(ChatChannel<? extends ChatMessage> chatChannel) {
         if (chatChannel instanceof CommonPublicChatChannel) {
             CommonPublicChatChannel commonChannel = (CommonPublicChatChannel) chatChannel;
-            if (model.channels.containsKey(chatChannel.getId())) {
-                return model.channels.get(chatChannel.getId());
+            if (model.channelTabButtonModelByChannelId.containsKey(chatChannel.getId())) {
+                return model.channelTabButtonModelByChannelId.get(chatChannel.getId());
             } else {
                 String targetName = channelDomain.toString() + "_" + commonChannel.getChannelTitle().toUpperCase();
                 try {
-                    return new Channel(commonChannel, commonPublicChatChannelService, NavigationTarget.valueOf(targetName));
+                    return new ChannelTabButtonModel(commonChannel, commonPublicChatChannelService, NavigationTarget.valueOf(targetName));
                 } catch (IllegalArgumentException e) {
                     log.info("Couldn't find navigation target " + targetName + " in channel domain " + channelDomain);
                 }
@@ -132,16 +134,16 @@ public class ChatContainerController extends ContentTabController<ChatContainerM
             handlePrivateNotification();
         }
 
-        if (model.channels.containsKey(channelId)) {
+        if (model.channelTabButtonModelByChannelId.containsKey(channelId)) {
             updateTabButtonNotifications(channelId, chatNotificationService.getNumNotifications(channelId));
         }
     }
 
     private void updateTabButtonNotifications(String channelId, long newCount) {
         UIThread.run(() -> {
-            Channel channel = model.channels.get(channelId);
+            ChannelTabButtonModel channelTabButtonModel = model.channelTabButtonModelByChannelId.get(channelId);
             model.getTabButtons().stream()
-                    .filter(tabButton -> channel.getNavigationTarget() == tabButton.getNavigationTarget())
+                    .filter(tabButton -> channelTabButtonModel.getNavigationTarget() == tabButton.getNavigationTarget())
                     .findAny()
                     .ifPresent(tabButton -> tabButton.setNumNotifications(newCount));
         });
@@ -163,29 +165,33 @@ public class ChatContainerController extends ContentTabController<ChatContainerM
         );
     }
 
-    protected void handleSelectedChannelChanged(ChatChannel<? extends ChatMessage> chatChannel) {
+    void handleSelectedChannelChanged(ChatChannel<? extends ChatMessage> chatChannel) {
         chatToolbox.resetSearchText();
 
-        Channel channel = findOrCreateChannelItem(chatChannel);
-        if (channel != null) {
-            model.selectedChannel.set(channel);
+        ChannelTabButtonModel channelTabButtonModel = findOrCreateChannelItem(chatChannel);
+        if (channelTabButtonModel != null) {
+            model.selectedChannelTabButtonModel.set(channelTabButtonModel);
 
-            if (model.previousSelectedChannel != null) {
-                model.previousSelectedChannel.setSelected(false);
+            if (model.previousSelectedChannelTabButtonModel != null) {
+                model.previousSelectedChannelTabButtonModel.setSelected(false);
             }
-            model.previousSelectedChannel = channel;
+            model.previousSelectedChannelTabButtonModel = channelTabButtonModel;
 
-            channel.setSelected(true);
+            channelTabButtonModel.setSelected(true);
         }
     }
 
-    protected void onSelected(NavigationTarget navigationTarget) {
-        Optional<Channel> channel = model.channels.values().stream()
-                .filter(Objects::nonNull)
-                .filter(item -> item.getNavigationTarget().equals(navigationTarget))
-                .findFirst();
-        chatChannelSelectionService.selectChannel(
-                channel.<ChatChannel<? extends ChatMessage>>map(Channel::getChatChannel).orElse(null));
+    void onSelected(NavigationTarget navigationTarget) {
+        if (navigationTarget == model.getPrivateChatsNavigationTarget()) {
+            chatChannelSelectionService.getLastSelectedPrivateChannel().ifPresent(chatChannelSelectionService::selectChannel);
+        } else {
+            model.channelTabButtonModelByChannelId.values().stream()
+                    .filter(Objects::nonNull)
+                    .filter(item -> item.getNavigationTarget().equals(navigationTarget))
+                    .findFirst()
+                    .<ChatChannel<? extends ChatMessage>>map(ChannelTabButtonModel::getChatChannel)
+                    .ifPresent(chatChannelSelectionService::selectChannel);
+        }
     }
 
     @Override
@@ -202,12 +208,12 @@ public class ChatContainerController extends ContentTabController<ChatContainerM
             case SUPPORT_SUPPORT:
             case SUPPORT_QUESTIONS:
             case SUPPORT_REPORTS: {
-                return Optional.of(new PublicChatController(serviceProvider, channelDomain, navigationTarget, Optional.of(chatToolbox)));
+                return Optional.of(new CommonPublicChatController(serviceProvider, channelDomain, navigationTarget, Optional.of(chatToolbox)));
             }
             case DISCUSSION_PRIVATECHATS:
             case EVENTS_PRIVATECHATS:
             case SUPPORT_PRIVATECHATS: {
-                return Optional.of(new PrivateChatsController(serviceProvider, channelDomain, navigationTarget, Optional.of(chatToolbox)));
+                return Optional.of(new CommonPrivateChatsController(serviceProvider, channelDomain, navigationTarget, Optional.of(chatToolbox)));
             }
             default: {
                 return Optional.empty();

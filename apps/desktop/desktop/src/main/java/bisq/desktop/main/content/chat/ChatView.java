@@ -17,113 +17,57 @@
 
 package bisq.desktop.main.content.chat;
 
-import bisq.desktop.common.view.NavigationView;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
+import bisq.desktop.common.Layout;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.layout.*;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public abstract class ChatView extends NavigationView<ScrollPane, ChatModel, ChatController<?, ?>> {
-    protected final static double HEADER_HEIGHT = 61;
-
-    protected final Label channelTitle = new Label();
-    protected Button helpButton, infoButton;
-    protected final VBox sideBar = new VBox();
-    protected final VBox centerVBox = new VBox();
-    protected final HBox titleHBox = new HBox(10);
-    protected final HBox containerHBox = new HBox();
-    protected final Pane channelSidebar, chatMessagesComponent;
-    protected Pane chatUserOverviewRoot;
-    protected Subscription channelIconPin, chatUserOverviewRootSubscription;
+public class ChatView<V extends ChatView<V, M>, M extends ChatModel> extends BaseChatView {
+    protected static final double SIDE_PADDING = 40;
 
     public ChatView(ChatModel model,
-                    ChatController<?, ?> controller,
+                    ChatController<V, M> controller,
                     Pane chatMessagesComponent,
-                    Pane channelSidebar) {
-        super(new ScrollPane(), model, controller);
-
-        this.chatMessagesComponent = chatMessagesComponent;
-        this.channelSidebar = channelSidebar;
-
-        configTitleHBox();
-        configCenterVBox();
-        configSideBarVBox();
-        configContainerHBox();
-
-        root.setFitToWidth(true);
-        root.setFitToHeight(true);
-    }
-
-    protected abstract void configTitleHBox();
-
-    protected abstract void configCenterVBox();
-
-    protected abstract void configSideBarVBox();
-
-    protected abstract void configContainerHBox();
-
-    @Override
-    protected void onViewAttached() {
-        channelTitle.textProperty().bind(model.getChannelTitle());
-        channelSidebar.visibleProperty().bind(model.getChannelSidebarVisible());
-        channelSidebar.managedProperty().bind(model.getChannelSidebarVisible());
-        sideBar.visibleProperty().bind(model.getSideBarVisible());
-        sideBar.managedProperty().bind(model.getSideBarVisible());
-
-        if (helpButton != null) {
-            helpButton.setOnAction(e -> controller.onOpenHelp());
-        }
-        if (infoButton != null) {
-            infoButton.setOnAction(e -> controller.onToggleChannelInfo());
-        }
-
-        chatUserOverviewRootSubscription = EasyBind.subscribe(model.getChatUserDetailsRoot(),
-                pane -> {
-                    if (chatUserOverviewRoot != null) {
-                        sideBar.getChildren().remove(chatUserOverviewRoot);
-                        chatUserOverviewRoot = null;
-                    }
-
-                    if (pane != null) {
-                        sideBar.getChildren().add(pane);
-                        chatUserOverviewRoot = pane;
-                    }
-                });
-
-        channelIconPin = EasyBind.subscribe(model.getChannelIconNode(), node -> {
-            if (node != null) {
-                channelTitle.setGraphic(node);
-                channelTitle.setGraphicTextGap(10);
-                node.setStyle("-fx-cursor: hand;");
-                node.setOnMouseClicked(e -> controller.onToggleChannelInfo());
-            } else {
-                channelTitle.setGraphic(null);
-            }
-        });
+                    Pane channelInfo) {
+        super(model, controller, chatMessagesComponent, channelInfo);
     }
 
     @Override
-    protected void onViewDetached() {
-        channelTitle.textProperty().unbind();
-        channelSidebar.visibleProperty().unbind();
-        channelSidebar.managedProperty().unbind();
-        sideBar.visibleProperty().unbind();
-        sideBar.managedProperty().unbind();
+    protected void configTitleHBox() {
+    }
 
-        if (helpButton != null) {
-            helpButton.setOnAction(null);
-        }
-        if (infoButton != null) {
-            infoButton.setOnAction(null);
-        }
+    @Override
+    protected void configCenterVBox() {
+        VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
+        chatMessagesComponent.getStyleClass().add("bisq-easy-container");
+        centerVBox.getChildren().addAll(chatMessagesComponent);
+        centerVBox.setFillWidth(true);
+    }
 
-        chatUserOverviewRootSubscription.unsubscribe();
-        channelIconPin.unsubscribe();
+    @Override
+    protected void configSideBarVBox() {
+        sideBar.getChildren().add(channelSidebar);
+        sideBar.getStyleClass().add("bisq-easy-chat-sidebar-bg");
+        sideBar.setAlignment(Pos.TOP_RIGHT);
+        sideBar.setFillWidth(true);
+    }
+
+    @Override
+    protected void configContainerHBox() {
+        containerHBox.setSpacing(10);
+        containerHBox.setFillHeight(true);
+        Layout.pinToAnchorPane(containerHBox, 0, 0, 0, 0);
+
+        AnchorPane wrapper = new AnchorPane();
+        wrapper.setPadding(new Insets(0, SIDE_PADDING, 0, SIDE_PADDING));
+        wrapper.getChildren().add(containerHBox);
+
+        root.setContent(wrapper);
+
+        HBox.setHgrow(centerVBox, Priority.ALWAYS);
+        HBox.setHgrow(sideBar, Priority.NEVER);
+        containerHBox.getChildren().addAll(centerVBox, sideBar);
     }
 }

@@ -78,6 +78,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
@@ -85,7 +86,6 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
-import javafx.stage.Window;
 import javafx.util.Callback;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -176,65 +176,28 @@ public class ChatMessagesListView {
 
         @Override
         public void onActivate() {
-            Window window = view.getRoot().getScene().getWindow();
-
             model.getSortedChatMessages().setComparator(ChatMessagesListView.ChatMessageListItem::compareTo);
 
             offerOnlySettingsPin = FxBindings.subscribe(settingsService.getOffersOnly(), offerOnly -> UIThread.run(this::applyPredicate));
 
-            ChatChannelSelectionService chatChannelSelectionService = chatService.getChatChannelSelectionServices().get(model.getChatChannelDomain());
-            selectedChannelPin = chatChannelSelectionService.getSelectedChannel().addObserver(channel -> {
-                UIThread.run(() -> {
-                    model.selectedChannel.set(channel);
-                    model.isPublicChannel.set(channel instanceof PublicChatChannel);
+            if (selectedChannelPin != null) {
+                selectedChannelPin.unbind();
+            }
 
-                    if (chatMessagesPin != null) {
-                        chatMessagesPin.unbind();
-                    }
+            ChatChannelSelectionService selectionService = chatService.getChatChannelSelectionServices().get(model.getChatChannelDomain());
 
-                    // Clear and call dispose on the current messages when we change the channel.
-                    model.chatMessages.forEach(ChatMessageListItem::dispose);
-                    model.chatMessages.clear();
-
-                    if (channel instanceof BisqEasyOfferbookChannel) {
-                        chatMessagesPin = bindChatMessages((BisqEasyOfferbookChannel) channel);
-                    } else if (channel instanceof BisqEasyOpenTradeChannel) {
-                        chatMessagesPin = bindChatMessages((BisqEasyOpenTradeChannel) channel);
-                    } else if (channel instanceof CommonPublicChatChannel) {
-                        chatMessagesPin = bindChatMessages((CommonPublicChatChannel) channel);
-                    } else if (channel instanceof TwoPartyPrivateChatChannel) {
-                        chatMessagesPin = bindChatMessages((TwoPartyPrivateChatChannel) channel);
-                    }
-
-                    if (focusSubscription != null) {
-                        focusSubscription.unsubscribe();
-                    }
-                    if (selectedChannelSubscription != null) {
-                        selectedChannelSubscription.unsubscribe();
-                    }
-                    if (channel != null) {
-                        focusSubscription = EasyBind.subscribe(window.focusedProperty(),
-                                focused -> {
-                                    if (focused && model.getSelectedChannel().get() != null) {
-                                        chatNotificationService.consume(model.getSelectedChannel().get().getId());
-                                    }
-                                });
-
-                        selectedChannelSubscription = EasyBind.subscribe(model.selectedChannel,
-                                selectedChannel -> {
-                                    if (selectedChannel != null) {
-                                        chatNotificationService.consume(model.getSelectedChannel().get().getId());
-                                    }
-                                });
-                    }
-                });
-            });
+            selectedChannelPin = selectionService.getSelectedChannel().addObserver(this::selectedChannelChanged);
         }
 
         @Override
         public void onDeactivate() {
-            offerOnlySettingsPin.unbind();
-            selectedChannelPin.unbind();
+            if (offerOnlySettingsPin != null) {
+                offerOnlySettingsPin.unbind();
+            }
+            if (selectedChannelPin != null) {
+                selectedChannelPin.unbind();
+                selectedChannelPin = null;
+            }
             if (chatMessagesPin != null) {
                 chatMessagesPin.unbind();
                 chatMessagesPin = null;
@@ -245,6 +208,59 @@ public class ChatMessagesListView {
             if (selectedChannelSubscription != null) {
                 selectedChannelSubscription.unsubscribe();
             }
+
+            model.chatMessages.forEach(ChatMessageListItem::dispose);
+            model.chatMessages.clear();
+        }
+
+        private void selectedChannelChanged(ChatChannel<? extends ChatMessage> channel) {
+            UIThread.run(() -> {
+                model.selectedChannel.set(channel);
+                model.isPublicChannel.set(channel instanceof PublicChatChannel);
+
+                if (chatMessagesPin != null) {
+                    chatMessagesPin.unbind();
+                }
+
+                // Clear and call dispose on the current messages when we change the channel.
+                model.chatMessages.forEach(ChatMessageListItem::dispose);
+                model.chatMessages.clear();
+
+                if (channel instanceof BisqEasyOfferbookChannel) {
+                    chatMessagesPin = bindChatMessages((BisqEasyOfferbookChannel) channel);
+                } else if (channel instanceof BisqEasyOpenTradeChannel) {
+                    chatMessagesPin = bindChatMessages((BisqEasyOpenTradeChannel) channel);
+                } else if (channel instanceof CommonPublicChatChannel) {
+                    chatMessagesPin = bindChatMessages((CommonPublicChatChannel) channel);
+                } else if (channel instanceof TwoPartyPrivateChatChannel) {
+                    chatMessagesPin = bindChatMessages((TwoPartyPrivateChatChannel) channel);
+                }
+
+                if (focusSubscription != null) {
+                    focusSubscription.unsubscribe();
+                }
+                if (selectedChannelSubscription != null) {
+                    selectedChannelSubscription.unsubscribe();
+                }
+                if (channel != null) {
+                    Scene scene = view.getRoot().getScene();
+                    if (scene != null) {
+                        focusSubscription = EasyBind.subscribe(scene.getWindow().focusedProperty(),
+                                focused -> {
+                                    if (focused && model.getSelectedChannel().get() != null) {
+                                        chatNotificationService.consume(model.getSelectedChannel().get().getId());
+                                    }
+                                });
+                    }
+
+                    selectedChannelSubscription = EasyBind.subscribe(model.selectedChannel,
+                            selectedChannel -> {
+                                if (selectedChannel != null) {
+                                    chatNotificationService.consume(model.getSelectedChannel().get().getId());
+                                }
+                            });
+                }
+            });
         }
 
 
@@ -256,7 +272,7 @@ public class ChatMessagesListView {
             model.chatMessages.setAll(new ArrayList<>(model.chatMessages));
         }
 
-        void setSearchPredicate(Predicate<? super ChatMessagesListView.ChatMessageListItem<? extends ChatMessage>> predicate) {
+        private void setSearchPredicate(Predicate<? super ChatMessagesListView.ChatMessageListItem<? extends ChatMessage>> predicate) {
             model.setSearchPredicate(Objects.requireNonNullElseGet(predicate, () -> e -> true));
             applyPredicate();
         }
@@ -467,9 +483,19 @@ public class ChatMessagesListView {
             return channel.getChatMessages().addObserver(new CollectionObserver<>() {
                 @Override
                 public void add(M chatMessage) {
+                    // TODO Delaying to the next render frame can cause duplicated items in case we get the channel
+                    //  change called 2 times in short interval (should be avoid as well).
+                    // @namloan Could you re-test the performance issues with testing if using UIThread.run makes a difference?
+                    // There have been many changes in the meantime, so maybe the performance issue was fixed by other changes.
                     UIThread.runOnNextRenderFrame(() -> {
-                        model.chatMessages.add(new ChatMessageListItem<>(chatMessage, userProfileService, reputationService,
-                                bisqEasyTradeService, userIdentityService, networkService));
+                        {
+                            ChatMessageListItem<M> item = new ChatMessageListItem<>(chatMessage, userProfileService, reputationService,
+                                    bisqEasyTradeService, userIdentityService, networkService);
+                            // As long as we use runOnNextRenderFrame we need to check to avoid adding duplicates
+                            if (!model.chatMessages.contains(item)) {
+                                model.chatMessages.add(item);
+                            }
+                        }
                     });
                 }
 
@@ -599,6 +625,10 @@ public class ChatMessagesListView {
         @Override
         protected void onViewDetached() {
             model.getChatMessages().removeListener(messagesListener);
+            if (scrollDelay != null) {
+                scrollDelay.stop();
+                scrollDelay = null;
+            }
         }
 
         private void scrollDown() {

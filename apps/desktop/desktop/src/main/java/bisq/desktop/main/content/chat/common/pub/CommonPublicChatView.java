@@ -15,14 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.chat.chats;
+package bisq.desktop.main.content.chat.common.pub;
 
-import bisq.desktop.main.content.common_chat.CommonChatModel;
-import bisq.desktop.main.content.common_chat.CommonChatView;
+import bisq.desktop.main.content.chat.ChatModel;
+import bisq.desktop.main.content.chat.ChatView;
 import javafx.scene.layout.Pane;
 
-public class PublicChatView extends CommonChatView<PublicChatView, PublicChatModel> {
-    public PublicChatView(CommonChatModel model, PublicChatController controller, Pane chatMessagesComponent, Pane channelInfo) {
+public final class CommonPublicChatView extends ChatView<CommonPublicChatView, CommonPublicChatModel> {
+    public CommonPublicChatView(ChatModel model, CommonPublicChatController controller, Pane chatMessagesComponent, Pane channelInfo) {
         super(model, controller, chatMessagesComponent, channelInfo);
     }
 }

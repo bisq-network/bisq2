@@ -15,12 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.chat.navigation;
+package bisq.desktop.main.content.chat.common;
 
 import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatChannelDomain;
 import bisq.desktop.main.content.ContentTabModel;
-import bisq.desktop.main.content.common_chat.Channel;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -32,25 +31,25 @@ import lombok.Getter;
 import java.util.HashMap;
 
 @Getter
-public class ChatContainerModel extends ContentTabModel {
+final class CommonChatTabModel extends ContentTabModel {
     private final ChatChannelDomain chatChannelDomain;
-    final ObservableMap<String, Channel> channels = FXCollections.observableMap(new HashMap<>());
-    ObjectProperty<Channel> selectedChannel = new SimpleObjectProperty<>();
+    final ObservableMap<String, ChannelTabButtonModel> channelTabButtonModelByChannelId = FXCollections.observableMap(new HashMap<>());
+    ObjectProperty<ChannelTabButtonModel> selectedChannelTabButtonModel = new SimpleObjectProperty<>();
     private final BooleanProperty hasSelectedChannel = new SimpleBooleanProperty();
-    Channel previousSelectedChannel;
+    ChannelTabButtonModel previousSelectedChannelTabButtonModel;
 
-    public ChatContainerModel(ChatChannelDomain chatChannelDomain) {
+    CommonChatTabModel(ChatChannelDomain chatChannelDomain) {
         this.chatChannelDomain = chatChannelDomain;
     }
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return channels.isEmpty()
+        return channelTabButtonModelByChannelId.isEmpty()
                 ? NavigationTarget.NONE
-                : channels.values().stream().findFirst().get().getNavigationTarget();
+                : channelTabButtonModelByChannelId.values().stream().sorted().findFirst().get().getNavigationTarget();
     }
 
-    public NavigationTarget getPrivateChatsNavigationTarget() {
+    NavigationTarget getPrivateChatsNavigationTarget() {
         if (chatChannelDomain == ChatChannelDomain.DISCUSSION) {
             return NavigationTarget.DISCUSSION_PRIVATECHATS;
         } else if (chatChannelDomain == ChatChannelDomain.EVENTS) {

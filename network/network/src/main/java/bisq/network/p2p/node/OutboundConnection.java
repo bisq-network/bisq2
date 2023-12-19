@@ -17,9 +17,9 @@
 
 package bisq.network.p2p.node;
 
+import bisq.network.common.Address;
 import bisq.network.p2p.node.network_load.ConnectionMetrics;
 import bisq.network.p2p.node.network_load.NetworkLoadService;
-import bisq.network.common.Address;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -43,11 +43,6 @@ public class OutboundConnection extends Connection {
 
         this.address = address;
         log.debug("Create outboundConnection to {}", address);
-    }
-
-    @Override
-    public boolean isPeerAddressVerified() {
-        return true;
     }
 
     /**

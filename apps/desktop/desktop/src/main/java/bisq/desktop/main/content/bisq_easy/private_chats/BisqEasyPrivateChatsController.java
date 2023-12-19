@@ -20,13 +20,13 @@ package bisq.desktop.main.content.bisq_easy.private_chats;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatChannelDomain;
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.main.content.chat.chats.PrivateChatsController;
+import bisq.desktop.main.content.chat.priv.PrivateChatsController;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
 @Slf4j
-public class BisqEasyPrivateChatsController extends PrivateChatsController {
+public final class BisqEasyPrivateChatsController extends PrivateChatsController {
 
     public BisqEasyPrivateChatsController(ServiceProvider serviceProvider) {
         super(serviceProvider, ChatChannelDomain.BISQ_EASY_PRIVATE_CHAT, NavigationTarget.BISQ_EASY_PRIVATE_CHAT, Optional.empty());

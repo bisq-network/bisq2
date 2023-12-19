@@ -48,8 +48,7 @@ public class ContentView extends NavigationView<StackPane, ContentModel, Content
                 log.warn("We did not add the new child view as we still had it in out children list. " +
                         "This should not happen as the viewTransition.stop() call should remove any old dangling child view. New child view={}", newValue);
             }
-            Region oldValueRoot = oldValue != null ? oldValue.getRoot() : null;
-            viewTransition = new ViewTransition(oldValueRoot, newValue);
+            viewTransition = new ViewTransition(oldValue, newValue);
         });
     }
 

@@ -38,6 +38,8 @@ public class ViewTransition {
     @Nullable
     private Region oldViewRoot, newViewRoot;
     @Nullable
+    private final View<? extends Parent, ? extends Model, ? extends Controller> oldView;
+    @Nullable
     private View<? extends Parent, ? extends Model, ? extends Controller> newView;
     @Nullable
     private Timeline slideOutTimeline;
@@ -47,27 +49,46 @@ public class ViewTransition {
     private FadeTransition fadeinTransition;
     private double oldViewX;
 
-    public ViewTransition(@Nullable Region oldViewRoot,
+    public ViewTransition(@Nullable View<? extends Parent, ? extends Model, ? extends Controller> oldView,
                           View<? extends Parent, ? extends Model, ? extends Controller> newView) {
-        this.oldViewRoot = oldViewRoot;
+        this.oldView = oldView;
         this.newView = newView;
+        oldViewRoot = oldView != null ? oldView.getRoot() : null;
         newViewRoot = newView.getRoot();
         if (!Transitions.getUseAnimations()) {
+            if (oldView != null) {
+                remove(oldViewRoot);
+                if (oldView instanceof TransitionedView) {
+                    ((TransitionedView) oldView).onOutTransitionStarted();
+                    ((TransitionedView) oldView).onOutTransitionCompleted();
+                }
+            }
             newViewRoot.setOpacity(1);
-            remove(oldViewRoot);
+            if (newView instanceof TransitionedView) {
+                ((TransitionedView) newView).onInTransitionStarted();
+                ((TransitionedView) newView).onInTransitionCompleted();
+            }
             return;
         }
+
         int defaultDuration = Transitions.DEFAULT_DURATION;
         newViewRoot.setOpacity(0);
         if (oldViewRoot == null) {
-            fadeIn(defaultDuration);
+            fadeInNewView(defaultDuration);
         } else {
             oldViewX = oldViewRoot.getTranslateX();
-            scheduler = UIScheduler.run(() -> fadeIn(MathUtils.roundDoubleToInt(defaultDuration / 2d))).after(defaultDuration / 2);
+            scheduler = UIScheduler.run(() -> fadeInNewView(MathUtils.roundDoubleToInt(defaultDuration / 2d)))
+                    .after(defaultDuration / 2);
             if (slideOutTimeline != null) {
                 slideOutTimeline.stop();
             }
+            if (oldView instanceof TransitionedView) {
+                ((TransitionedView) oldView).onOutTransitionStarted();
+            }
             slideOutTimeline = Transitions.slideOutRight(oldViewRoot, () -> {
+                if (oldView instanceof TransitionedView) {
+                    ((TransitionedView) oldView).onOutTransitionCompleted();
+                }
                 remove(this.oldViewRoot);
                 this.oldViewRoot = null;
             });
@@ -109,9 +130,9 @@ public class ViewTransition {
         }
     }
 
-    private void fadeIn(int duration) {
+    private void fadeInNewView(int duration) {
         if (newView instanceof TransitionedView) {
-            ((TransitionedView) newView).onStartTransition();
+            ((TransitionedView) newView).onInTransitionStarted();
         }
         if (fadeinTransition != null) {
             fadeinTransition.stop();
@@ -120,7 +141,7 @@ public class ViewTransition {
                 duration,
                 () -> {
                     if (newView instanceof TransitionedView) {
-                        ((TransitionedView) newView).onTransitionCompleted();
+                        ((TransitionedView) newView).onInTransitionCompleted();
                     }
                 });
     }

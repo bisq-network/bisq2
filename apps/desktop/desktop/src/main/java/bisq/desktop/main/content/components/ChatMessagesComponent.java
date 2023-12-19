@@ -58,7 +58,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
 import javafx.util.StringConverter;
 import lombok.Getter;
@@ -171,9 +170,11 @@ public class ChatMessagesComponent {
 
             getUserIdentitiesPin = userIdentityService.getUserIdentities().addObserver(() -> UIThread.run(this::applyUserProfileOrChannelChange));
 
-            ChatChannelSelectionService chatChannelSelectionService = chatService.getChatChannelSelectionServices().get(model.getChatChannelDomain());
-            selectedChannelPin = chatChannelSelectionService.getSelectedChannel()
-                    .addObserver(this::selectedChannelChanged);
+            if (selectedChannelPin != null) {
+                selectedChannelPin.unbind();
+            }
+            ChatChannelSelectionService selectionService = chatService.getChatChannelSelectionServices().get(model.getChatChannelDomain());
+            selectedChannelPin = selectionService.getSelectedChannel().addObserver(this::selectedChannelChanged);
 
             paymentAccountsPin = accountService.getAccounts().addObserver(this::accountsChanged);
             selectedPaymentAccountPin = FxBindings.bind(model.selectedAccountProperty())
@@ -188,7 +189,10 @@ public class ChatMessagesComponent {
 
         @Override
         public void onDeactivate() {
-            selectedChannelPin.unbind();
+            if (selectedChannelPin != null) {
+                selectedChannelPin.unbind();
+                selectedChannelPin = null;
+            }
             selectedPaymentAccountPin.unbind();
             getUserIdentitiesPin.unbind();
             paymentAccountsPin.unbind();
@@ -200,6 +204,7 @@ public class ChatMessagesComponent {
             }
 
             selectedPaymentAccountSubscription.unsubscribe();
+            model.selectedChannel.set(null);
         }
 
         protected void selectedChannelChanged(ChatChannel<? extends ChatMessage> chatChannel) {
