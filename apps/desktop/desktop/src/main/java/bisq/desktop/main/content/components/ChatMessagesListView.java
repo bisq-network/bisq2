@@ -78,6 +78,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
@@ -254,12 +255,15 @@ public class ChatMessagesListView {
                     selectedChannelSubscription.unsubscribe();
                 }
                 if (channel != null) {
-                    focusSubscription = EasyBind.subscribe(view.getRoot().getScene().getWindow().focusedProperty(),
-                            focused -> {
-                                if (focused && model.getSelectedChannel().get() != null) {
-                                    chatNotificationService.consume(model.getSelectedChannel().get().getId());
-                                }
-                            });
+                    Scene scene = view.getRoot().getScene();
+                    if (scene != null) {
+                        focusSubscription = EasyBind.subscribe(scene.getWindow().focusedProperty(),
+                                focused -> {
+                                    if (focused && model.getSelectedChannel().get() != null) {
+                                        chatNotificationService.consume(model.getSelectedChannel().get().getId());
+                                    }
+                                });
+                    }
 
                     selectedChannelSubscription = EasyBind.subscribe(model.selectedChannel,
                             selectedChannel -> {
