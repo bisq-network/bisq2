@@ -139,7 +139,7 @@
 .chat-header-title {
     -fx-text-fill: -bisq2-green;
     -fx-font-size: 1.53em;
-    -fx-font-family: "IBM Plex Sans Medium";
+    -fx-font-family: "IBM Plex Sans Light";
 }
 
 .chat-header-description {
