@@ -32,6 +32,10 @@ public class Icons {
         return getIconForLabel(icon, iconSize, label, null);
     }
 
+    public static void setAwesomeIconColor(Label label, String color) {
+        label.setStyle(label.getStyle() + "; -fx-text-fill: " + color);
+    }
+
     public static Label getIconForLabel(AwesomeIcon icon, Label label, String fontSize) {
         AwesomeDude.setIcon(label, icon, fontSize);
         return label;

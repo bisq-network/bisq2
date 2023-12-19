@@ -800,6 +800,8 @@ public class ChatMessagesListView {
                                         deliveryState.setVisible(icon != null);
                                         if (icon != null) {
                                             AwesomeDude.setIcon(deliveryState, icon, AwesomeDude.DEFAULT_ICON_SIZE);
+                                            item.messageDeliveryStatusIconColor.ifPresent(color ->
+                                                    Icons.setAwesomeIconColor(deliveryState, color));
                                         }
                                     }
                             ));
@@ -1120,6 +1122,7 @@ public class ChatMessagesListView {
         private final StringProperty messageDeliveryStatusTooltip = new SimpleStringProperty();
         @EqualsAndHashCode.Exclude
         private final ObjectProperty<AwesomeIcon> messageDeliveryStatusIcon = new SimpleObjectProperty<>();
+        private Optional<String> messageDeliveryStatusIconColor = Optional.empty();
         @EqualsAndHashCode.Exclude
         private final Set<Pin> mapPins = new HashSet<>();
         private final Set<Pin> statusPins = new HashSet<>();
@@ -1171,21 +1174,37 @@ public class ChatMessagesListView {
                             statusPins.add(value.addObserver(status -> {
                                 UIThread.run(() -> {
                                     if (status != null) {
+                                        messageDeliveryStatusIconColor = Optional.empty();
                                         messageDeliveryStatusTooltip.set(Res.get("chat.message.deliveryState." + status.name()));
                                         switch (status) {
-                                            case SENT:
+                                            case START_SENDING:
+                                                // -bisq-white-dim: #eaeaea;
+                                                messageDeliveryStatusIconColor = Optional.of("#eaeaea");
                                                 messageDeliveryStatusIcon.set(AwesomeIcon.SPINNER);
                                                 break;
                                             case ARRIVED:
+                                                // -bisq2-green-dim-50: #2b5624;
+                                                messageDeliveryStatusIconColor = Optional.of("#2b5624");
                                                 messageDeliveryStatusIcon.set(AwesomeIcon.OK_SIGN);
                                                 break;
+                                            case TRY_ADD_TO_MAILBOX:
+                                                // -bisq-yellow: #e5a500;
+                                                messageDeliveryStatusIconColor = Optional.of("#e5a500");
+                                                messageDeliveryStatusIcon.set(AwesomeIcon.SHARE_SIGN);
+                                                break;
                                             case ADDED_TO_MAILBOX:
-                                                messageDeliveryStatusIcon.set(AwesomeIcon.ENVELOPE);
+                                                // -bisq-yellow: #e5a500;
+                                                messageDeliveryStatusIconColor = Optional.of("#e5a500");
+                                                messageDeliveryStatusIcon.set(AwesomeIcon.CLOUD_UPLOAD);
                                                 break;
                                             case MAILBOX_MSG_RECEIVED:
-                                                messageDeliveryStatusIcon.set(AwesomeIcon.CIRCLE_ARROW_DOWN);
+                                                // -bisq2-green-dim-50: #2b5624;
+                                                messageDeliveryStatusIconColor = Optional.of("#2b5624");
+                                                messageDeliveryStatusIcon.set(AwesomeIcon.CLOUD_DOWNLOAD);
                                                 break;
                                             case FAILED:
+                                                // -bisq-red: #d02c1f;
+                                                messageDeliveryStatusIconColor = Optional.of("#d02c1f");
                                                 messageDeliveryStatusIcon.set(AwesomeIcon.EXCLAMATION_SIGN);
                                                 break;
                                         }

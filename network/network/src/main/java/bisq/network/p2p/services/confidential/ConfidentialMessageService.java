@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.confidential;
 
 import bisq.common.threading.ExecutorFactory;
+import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.ExceptionUtil;
 import bisq.network.common.Address;
 import bisq.network.identity.NetworkId;
@@ -143,14 +144,15 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                                               PubKey receiverPubKey,
                                               KeyPair senderKeyPair,
                                               NetworkId senderNetworkId) {
+        log.debug("Send message to {}", address);
+        SendConfidentialMessageResult result = new SendConfidentialMessageResult(MessageDeliveryStatus.START_SENDING);
+        onResult(envelopePayloadMessage, result);
         try {
-            log.debug("Send message to {}", address);
             // Node gets initialized at higher level services
             nodesById.assertNodeIsInitialized(senderNetworkId);
             Connection connection = nodesById.getConnection(senderNetworkId, address);
             return send(envelopePayloadMessage, connection, receiverPubKey, senderKeyPair, senderNetworkId);
         } catch (Throwable throwable) {
-            SendConfidentialMessageResult result;
             if (envelopePayloadMessage instanceof MailboxMessage) {
                 log.info("Message could not be sent because of {}.\n" +
                         "We send the message as mailbox message.", throwable.getMessage());
@@ -222,6 +224,18 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
             messageDeliveryStatusService.ifPresent(service -> {
                 String messageId = ((AckRequestingMessage) envelopePayloadMessage).getId();
                 service.onMessageSentStatus(messageId, result.getMessageDeliveryStatus());
+
+                // If we tried to store in mailbox we check if at least one successful broadcast happened
+                if (result.getMessageDeliveryStatus() == MessageDeliveryStatus.TRY_ADD_TO_MAILBOX) {
+                    CompletableFutureUtils.anyOf(result.getMailboxFuture().orElseThrow())
+                            .whenComplete((broadcastResult, throwable) -> {
+                                if (throwable != null || broadcastResult.getNumSuccess() == 0) {
+                                    service.onMessageSentStatus(messageId, MessageDeliveryStatus.FAILED);
+                                } else {
+                                    service.onMessageSentStatus(messageId, MessageDeliveryStatus.ADDED_TO_MAILBOX);
+                                }
+                            });
+                }
             });
         }
     }
@@ -241,8 +255,8 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
         BroadcastResult mailboxFuture = dataService.get().addMailboxData(mailboxData,
                         senderKeyPair,
                         receiverPubKey.getPublicKey())
-                .join();
-        return new SendConfidentialMessageResult(MessageDeliveryStatus.ADDED_TO_MAILBOX).setMailboxFuture(mailboxFuture);
+                .join(); // TODO async for creating the stores, could be made blocking
+        return new SendConfidentialMessageResult(MessageDeliveryStatus.TRY_ADD_TO_MAILBOX).setMailboxFuture(mailboxFuture);
     }
 
     private ConfidentialMessage getConfidentialMessage(EnvelopePayloadMessage envelopePayloadMessage, PubKey receiverPubKey, KeyPair senderKeyPair) {

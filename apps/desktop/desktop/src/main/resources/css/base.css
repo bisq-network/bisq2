@@ -47,10 +47,11 @@
 
     /* Bisq 2 Colors */
     -bisq-green-logo: #25b135;
-    -bisq2-green: #56ae48;
+    -bisq2-green: #56ae48; /* rgb(86, 174, 72) */
     -bisq2-green-dim-10: #4d9c40;
     -bisq2-green-dim-20: #448b39;
     -bisq2-green-dim-30: #3c7932;
+    -bisq2-green-dim-50: #2b5624;
 
     /* Bisq Grey Palette */
     -bisq-black-dim: #050505;
