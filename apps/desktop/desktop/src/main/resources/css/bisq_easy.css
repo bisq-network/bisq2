@@ -109,6 +109,13 @@
     -fx-text-fill: -fx-light-text-color !important;
 }
 
+.create-offer-button {
+    -fx-background-radius: 8;
+    -fx-border-color: transparent;
+    -fx-border-radius: 8;
+    -fx-padding: 2 4 4 4;
+    -fx-cursor: hand;
+}
 
 /*******************************************************************************
  *                                                                             *

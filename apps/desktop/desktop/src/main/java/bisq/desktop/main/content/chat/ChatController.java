@@ -69,6 +69,9 @@ public abstract class ChatController<V extends ChatView<V, M>, M extends ChatMod
     @Override
     public void onDeactivate() {
         selectedChannelPin.unbind();
+
+
+
         if (searchTextPin != null) {
             searchTextPin.unsubscribe();
         }

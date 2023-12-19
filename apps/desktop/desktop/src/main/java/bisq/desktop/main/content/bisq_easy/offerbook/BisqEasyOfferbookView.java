@@ -30,7 +30,6 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.Tooltip;
@@ -47,8 +46,8 @@ public final class BisqEasyOfferbookView extends BaseChatView {
     private final BisqEasyOfferbookController bisqEasyOfferbookController;
     //private Switch offersOnlySwitch;
     //private Button closeFilterButton, filterButton;
-    private Button createOfferButton;
-    private Label marketSelectorIcon;
+
+    private Label marketSelectorIcon, channelDescription;
     private SearchBox searchBox;
 
     //private Pane filterPane;
@@ -81,6 +80,19 @@ public final class BisqEasyOfferbookView extends BaseChatView {
 
         channelTitle.setId("chat-messages-headline");
         channelTitle.setCursor(Cursor.HAND);
+        channelTitle.setMinWidth(128);
+
+        channelDescription = new Label("");
+        channelDescription.getStyleClass().addAll("chat-header-description");
+        channelDescription.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(channelDescription, Priority.ALWAYS);
+
+        searchBox = new SearchBox();
+        searchBox.setMaxWidth(200);
+        searchBox.setMaxHeight(searchBox.getMinHeight());
+        searchBox.setDefaultStyle("bisq-easy-offerbook-search-box");
+        searchBox.setActiveStyle("bisq-easy-offerbook-search-box-active");
+        searchBox.setActiveIconId("search-green");
 
         double scale = 1.15;
         helpButton = BisqIconButton.createIconButton("icon-help");
@@ -94,9 +106,8 @@ public final class BisqEasyOfferbookView extends BaseChatView {
         HBox.setMargin(helpButton, new Insets(-2, 0, 0, 0));
         HBox.setMargin(infoButton, new Insets(-2, 0, 0, 0));
         titleHBox.getChildren().addAll(
-                channelTitle, marketSelectorIcon,
-                Spacer.fillHBox(),
-                helpButton, infoButton
+                channelTitle, marketSelectorIcon, channelDescription,
+                searchBox, helpButton, infoButton
         );
     }
 
@@ -105,13 +116,6 @@ public final class BisqEasyOfferbookView extends BaseChatView {
         centerVBox.setSpacing(0);
         centerVBox.setFillWidth(true);
         centerVBox.setMaxWidth(CHAT_BOX_MAX_WIDTH);
-
-        searchBox = new SearchBox();
-        searchBox.setMaxWidth(200);
-        searchBox.setMaxHeight(searchBox.getMinHeight());
-        searchBox.setDefaultStyle("bisq-easy-offerbook-search-box");
-        searchBox.setActiveStyle("bisq-easy-offerbook-search-box-active");
-        searchBox.setActiveIconId("search-green");
 
        /* filterButton = new Button(Res.get("bisqEasy.topPane.filter"));
         ImageView filterIcon = ImageUtil.getImageViewById("filter");
@@ -126,9 +130,6 @@ public final class BisqEasyOfferbookView extends BaseChatView {
 
         // offersOnlySwitch = new Switch(Res.get("bisqEasy.topPane.filter.offersOnly"));
 
-        createOfferButton = new Button(Res.get("offer.createOffer"));
-        createOfferButton.getStyleClass().add("outlined-button");
-
        /* Label filterLabel = new Label(Res.get("bisqEasy.topPane.filter"));
         filterLabel.getStyleClass().add("bisq-easy-chat-filter-headline");
         closeFilterButton = BisqIconButton.createIconButton("close");*/
@@ -141,18 +142,10 @@ public final class BisqEasyOfferbookView extends BaseChatView {
         filterPane.getStyleClass().add("bisq-easy-chat-filter-panel-bg");
         filterPane.setPadding(new Insets(10));*/
 
-        HBox.setMargin(searchBox, new Insets(0.5, 0, 0, 0));
-        HBox toolsHBox = new HBox(15, searchBox, Spacer.fillHBox(), createOfferButton);
-        toolsHBox.setAlignment(Pos.CENTER);
-        toolsHBox.setPadding(new Insets(12.5, 25, 12.5, 25));
-
-        VBox toolBar = new VBox(titleHBox, toolsHBox/*, filterPane*/);
-        toolBar.setMaxHeight(50);
-
         chatMessagesComponent.setMinWidth(700);
 
         VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
-        centerVBox.getChildren().addAll(toolBar, Layout.hLine(), chatMessagesComponent);
+        centerVBox.getChildren().addAll(titleHBox, Layout.hLine(), chatMessagesComponent);
         centerVBox.getStyleClass().add("bisq-easy-container");
     }
 
@@ -223,7 +216,6 @@ public final class BisqEasyOfferbookView extends BaseChatView {
                     }
                 });*/
 
-        createOfferButton.setOnAction(e -> bisqEasyOfferbookController.onCreateOffer());
         //  filterButton.setOnAction(e -> bisqEasyOfferbookController.onToggleFilter());
         //  closeFilterButton.setOnAction(e -> bisqEasyOfferbookController.onCloseFilter());
         marketSelectorIcon.setOnMouseClicked(e -> {
@@ -237,6 +229,7 @@ public final class BisqEasyOfferbookView extends BaseChatView {
                 e.consume();
             }
         });
+        channelDescription.textProperty().bind(model.getChannelDescription());
     }
 
     @Override
@@ -248,11 +241,11 @@ public final class BisqEasyOfferbookView extends BaseChatView {
 
         //  showFilterOverlayPin.unsubscribe();
 
-        createOfferButton.setOnAction(null);
         //  filterButton.setOnAction(null);
         //  closeFilterButton.setOnAction(null);
         marketSelectorIcon.setOnMouseClicked(null);
         channelTitle.setOnMouseClicked(null);
+        channelDescription.textProperty().unbind();
     }
 
     private void onOpenMarketSelector() {
