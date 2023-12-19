@@ -67,9 +67,8 @@ public class NetworkLoadExchangeService implements Node.Listener {
         requestHandlerMap.clear();
     }
 
-
     private void requestFromAll() {
-        peerGroupService.getAllConnections()
+        node.getAllActiveConnections()
                 .filter(this::needsUpdate)
                 .forEach(this::request);
     }

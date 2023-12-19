@@ -41,6 +41,7 @@ import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.inventory.InventoryService;
 import bisq.network.p2p.services.peergroup.BanList;
 import bisq.network.p2p.services.peergroup.PeerGroupManager;
+import bisq.network.p2p.services.peergroup.PeerGroupService;
 import bisq.persistence.PersistenceService;
 import bisq.security.keys.KeyBundleService;
 import bisq.security.keys.PubKey;
@@ -103,10 +104,10 @@ public class ServiceNode {
     private final Config config;
     private final PeerGroupManager.Config peerGroupServiceConfig;
     private final Optional<DataService> dataService;
+    private final PeerGroupService peerGroupService;
     private final InventoryService.Config inventoryServiceConfig;
     private final Optional<MessageDeliveryStatusService> messageDeliveryStatusService;
     private final KeyBundleService keyBundleService;
-    private final PersistenceService persistenceService;
     private final Set<Address> seedNodeAddresses;
 
     @Getter
@@ -147,11 +148,12 @@ public class ServiceNode {
         this.messageDeliveryStatusService = messageDeliveryStatusService;
         this.dataService = dataService;
         this.keyBundleService = keyBundleService;
-        this.persistenceService = persistenceService;
         this.seedNodeAddresses = seedNodeAddresses;
 
         transportService = TransportService.create(transportType, nodeConfig.getTransportConfig());
         nodesById = new NodesById(banList, nodeConfig, keyBundleService, transportService, networkLoadService, authorizationService);
+
+        peerGroupService = new PeerGroupService(persistenceService, transportType, peerGroupServiceConfig.getPeerGroupConfig(), seedNodeAddresses, banList);
     }
 
 
@@ -164,18 +166,17 @@ public class ServiceNode {
 
         Set<SupportedService> supportedServices = config.getSupportedServices();
         peerGroupManager = supportedServices.contains(SupportedService.PEER_GROUP) ?
-                Optional.of(new PeerGroupManager(persistenceService,
-                        defaultNode,
+                Optional.of(new PeerGroupManager(defaultNode,
+                        peerGroupService,
                         banList,
-                        peerGroupServiceConfig,
-                        seedNodeAddresses)) :
+                        peerGroupServiceConfig)) :
                 Optional.empty();
 
         boolean dataServiceEnabled = supportedServices.contains(SupportedService.PEER_GROUP) &&
                 supportedServices.contains(SupportedService.DATA);
 
         dataNetworkService = dataServiceEnabled ?
-                Optional.of(new DataNetworkService(defaultNode, peerGroupManager.orElseThrow(), dataService.orElseThrow())) :
+                Optional.of(new DataNetworkService(defaultNode, dataService.orElseThrow())) :
                 Optional.empty();
 
         inventoryService = dataServiceEnabled ?
@@ -192,8 +193,8 @@ public class ServiceNode {
         setState(State.INITIALIZING);
         transportService.initialize();// blocking
         defaultNode.initialize();// blocking
-        peerGroupManager.ifPresentOrElse(peerGroupService -> {
-                    peerGroupService.initialize();// blocking
+        peerGroupManager.ifPresentOrElse(peerGroupManager -> {
+                    peerGroupManager.initialize();// blocking
                     setState(State.INITIALIZED);
                 },
                 () -> setState(State.INITIALIZED));
@@ -225,19 +226,19 @@ public class ServiceNode {
 
     void addSeedNodeAddresses(Set<Address> seedNodeAddresses) {
         this.seedNodeAddresses.addAll(seedNodeAddresses);
-        peerGroupManager.ifPresent(peerGroupService -> peerGroupService.addSeedNodeAddresses(seedNodeAddresses));
+        peerGroupManager.ifPresent(peerGroupManager -> peerGroupManager.addSeedNodeAddresses(seedNodeAddresses));
     }
 
     void addSeedNodeAddress(Address seedNodeAddress) {
         // In case we would get called before peerGroupManager is created we add the seedNodeAddress to the
         // seedNodeAddresses field
         seedNodeAddresses.add(seedNodeAddress);
-        peerGroupManager.ifPresent(peerGroupService -> peerGroupService.addSeedNodeAddress(seedNodeAddress));
+        peerGroupManager.ifPresent(peerGroupManager -> peerGroupManager.addSeedNodeAddress(seedNodeAddress));
     }
 
     void removeSeedNodeAddress(Address seedNodeAddress) {
         seedNodeAddresses.remove(seedNodeAddress);
-        peerGroupManager.ifPresent(peerGroupService -> peerGroupService.removeSeedNodeAddress(seedNodeAddress));
+        peerGroupManager.ifPresent(peerGroupManager -> peerGroupManager.removeSeedNodeAddress(seedNodeAddress));
     }
 
     SendConfidentialMessageResult confidentialSend(EnvelopePayloadMessage envelopePayloadMessage,

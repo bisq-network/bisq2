@@ -27,7 +27,6 @@ import bisq.network.p2p.services.peergroup.exchange.PeerExchangeService;
 import bisq.network.p2p.services.peergroup.exchange.PeerExchangeStrategy;
 import bisq.network.p2p.services.peergroup.keepalive.KeepAliveService;
 import bisq.network.p2p.services.peergroup.network_load.NetworkLoadExchangeService;
-import bisq.persistence.PersistenceService;
 import dev.failsafe.Failsafe;
 import dev.failsafe.RetryPolicy;
 import lombok.Getter;
@@ -114,6 +113,7 @@ public class PeerGroupManager {
         }
     }
 
+    @Getter
     private final Node node;
     private final BanList banList;
     private final Config config;
@@ -131,19 +131,19 @@ public class PeerGroupManager {
 
     private final RetryPolicy<Boolean> retryPolicy;
 
-    public PeerGroupManager(PersistenceService persistenceService,
-                            Node node,
+    public PeerGroupManager(Node node,
+                            PeerGroupService peerGroupService,
                             BanList banList,
-                            Config config,
-                            Set<Address> seedNodeAddresses) {
+                            Config config) {
         this.node = node;
         this.banList = banList;
         this.config = config;
-        peerGroupService = new PeerGroupService(persistenceService, node, config.peerGroupConfig, seedNodeAddresses, banList);
+        this.peerGroupService = peerGroupService;
         PeerExchangeStrategy peerExchangeStrategy = new PeerExchangeStrategy(peerGroupService,
+                node,
                 config.getPeerExchangeConfig());
         peerExchangeService = new PeerExchangeService(node, peerExchangeStrategy);
-        keepAliveService = new KeepAliveService(node, peerGroupService, config.getKeepAliveServiceConfig());
+        keepAliveService = new KeepAliveService(node, config.getKeepAliveServiceConfig());
         networkLoadExchangeService = new NetworkLoadExchangeService(node, peerGroupService);
 
         retryPolicy = RetryPolicy.<Boolean>builder()
@@ -246,7 +246,7 @@ public class PeerGroupManager {
 
     private void closeBanned() {
         log.debug("Node {} called closeBanned", node);
-        peerGroupService.getAllConnections()
+        node.getAllActiveConnections()
                 .filter(Connection::isRunning)
                 .filter(connection -> banList.isBanned(connection.getPeerAddress()))
                 .peek(connection -> log.info("Close connection to banned node. connection={} ", connection.getPeerAddress()))
@@ -258,10 +258,10 @@ public class PeerGroupManager {
      */
     private void maybeCloseDuplicateConnections() {
         log.debug("Node {} called maybeCloseDuplicateConnections", node);
-        Set<Address> outboundAddresses = peerGroupService.getOutboundConnections()
+        Set<Address> outboundAddresses = node.getActiveOutboundConnections()
                 .map(Connection::getPeerAddress)
                 .collect(Collectors.toSet());
-        peerGroupService.getInboundConnections()
+        node.getActiveInboundConnections()
                 .filter(this::mayDisconnect)
                 .filter(inbound -> outboundAddresses.contains(inbound.getPeerAddress()))
                 .peek(inbound -> log.info("{} -> {}: Send CloseConnectionMessage as we have an " +
@@ -270,11 +270,10 @@ public class PeerGroupManager {
                 .forEach(inbound -> node.closeConnectionGracefully(inbound, CloseReason.DUPLICATE_CONNECTION));
     }
 
-
     private void maybeCloseConnectionsToSeeds() {
         log.debug("Node {} called maybeCloseConnectionsToSeeds", node);
         Comparator<Connection> comparator = peerGroupService.getConnectionAgeComparator().reversed(); // reversed as we use skip
-        peerGroupService.getAllConnections()
+        node.getAllActiveConnections()
                 .filter(this::mayDisconnect)
                 .filter(peerGroupService::isSeed)
                 .sorted(comparator)
@@ -287,7 +286,7 @@ public class PeerGroupManager {
 
     private void maybeCloseAgedConnections() {
         log.debug("Node {} called maybeCloseAgedConnections", node);
-        peerGroupService.getAllConnections()
+        node.getAllActiveConnections()
                 .filter(this::mayDisconnect)
                 .filter(connection -> connection.getConnectionMetrics().getAge() > config.getMaxAge())
                 .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as the connection age " +
@@ -300,7 +299,7 @@ public class PeerGroupManager {
     private void maybeCloseExceedingInboundConnections() {
         log.debug("Node {} called maybeCloseExceedingInboundConnections", node);
         Comparator<Connection> comparator = peerGroupService.getConnectionAgeComparator().reversed();
-        peerGroupService.getInboundConnections()
+        node.getActiveInboundConnections()
                 .filter(this::mayDisconnect)
                 .sorted(comparator)
                 .skip(peerGroupService.getMaxInboundConnections())
@@ -313,7 +312,7 @@ public class PeerGroupManager {
     private void maybeCloseExceedingConnections() {
         log.debug("Node {} called maybeCloseExceedingConnections", node);
         Comparator<Connection> comparator = peerGroupService.getConnectionAgeComparator().reversed();
-        peerGroupService.getAllConnections()
+        node.getAllActiveConnections()
                 .filter(this::mayDisconnect)
                 .sorted(comparator)
                 .skip(peerGroupService.getMaxNumConnectedPeers())
@@ -329,7 +328,7 @@ public class PeerGroupManager {
         // We want to have at least 40% of our minNumConnectedPeers as outbound connections 
         if (getMissingOutboundConnections() <= 0) {
             // We have enough outbound connections, lets check if we have sufficient connections in total
-            if (peerGroupService.getNumConnections() >= minNumConnectedPeers) {
+            if (node.getNumConnections() >= minNumConnectedPeers) {
                 log.debug("Node {} has sufficient connections", node);
                 CompletableFuture.completedFuture(null);
                 return;
@@ -396,7 +395,7 @@ public class PeerGroupManager {
     }
 
     private int getMissingOutboundConnections() {
-        return peerGroupService.getMinOutboundConnections() - (int) peerGroupService.getOutboundConnections().count();
+        return peerGroupService.getMinOutboundConnections() - (int) node.getActiveOutboundConnections().count();
     }
 
 }

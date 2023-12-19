@@ -24,7 +24,6 @@ import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
-import bisq.network.p2p.services.peergroup.PeerGroupService;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
@@ -60,14 +59,12 @@ public class KeepAliveService implements Node.Listener {
     }
 
     private final Node node;
-    private final PeerGroupService peerGroupService;
     private final Config config;
     private final Map<String, KeepAliveHandler> requestHandlerMap = new ConcurrentHashMap<>();
     private Optional<Scheduler> scheduler = Optional.empty();
 
-    public KeepAliveService(Node node, PeerGroupService peerGroupService, Config config) {
+    public KeepAliveService(Node node, Config config) {
         this.node = node;
-        this.peerGroupService = peerGroupService;
         this.config = config;
         this.node.addListener(this);
     }
@@ -124,7 +121,7 @@ public class KeepAliveService implements Node.Listener {
     }
 
     private void sendPingIfRequired() {
-        peerGroupService.getAllConnections()
+        node.getAllActiveConnections()
                 .filter(this::isRequired)
                 .forEach(this::sendPing);
     }

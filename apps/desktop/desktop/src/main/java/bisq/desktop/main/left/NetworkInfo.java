@@ -66,6 +66,7 @@ public class NetworkInfo {
                     networkService.getServiceNodesByTransport().findServiceNode(type).ifPresent(serviceNode -> {
                         serviceNode.getPeerGroupManager().ifPresent(peerGroupManager -> {
                             PeerGroupService peerGroupService = peerGroupManager.getPeerGroupService();
+                            Node node = peerGroupManager.getNode();
                             String numTargetConnections = String.valueOf(peerGroupService.getTargetNumConnectedPeers());
                             switch (type) {
                                 case CLEAR:
@@ -87,16 +88,16 @@ public class NetworkInfo {
 
                                 @Override
                                 public void onConnection(Connection connection) {
-                                    onNumConnectionsChanged(type, peerGroupService);
+                                    onNumConnectionsChanged(type, node);
                                 }
 
                                 @Override
                                 public void onDisconnect(Connection connection, CloseReason closeReason) {
-                                    onNumConnectionsChanged(type, peerGroupService);
+                                    onNumConnectionsChanged(type, node);
                                 }
                             });
 
-                            onNumConnectionsChanged(type, peerGroupService);
+                            onNumConnectionsChanged(type, node);
                         });
                     })
             );
@@ -112,9 +113,9 @@ public class NetworkInfo {
             onNavigationTargetSelectedHandler.accept(NavigationTarget.NETWORK_INFO);
         }
 
-        private void onNumConnectionsChanged(TransportType transportType, PeerGroupService peerGroupService) {
+        private void onNumConnectionsChanged(TransportType transportType, Node node) {
             UIThread.run(() -> {
-                String value = String.valueOf(peerGroupService.getNumConnections());
+                String value = String.valueOf(node.getNumConnections());
                 switch (transportType) {
                     case CLEAR:
                         model.getClearNetNumConnections().set(value);

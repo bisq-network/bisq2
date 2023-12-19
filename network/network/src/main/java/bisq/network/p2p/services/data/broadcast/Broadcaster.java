@@ -20,7 +20,6 @@ package bisq.network.p2p.services.data.broadcast;
 import bisq.network.NetworkService;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
-import bisq.network.p2p.services.peergroup.PeerGroupService;
 import dev.failsafe.Failsafe;
 import dev.failsafe.RetryPolicy;
 import lombok.extern.slf4j.Slf4j;
@@ -39,12 +38,10 @@ public class Broadcaster {
     private static final long RE_BROADCAST_DELAY_MS = 100;
 
     private final Node node;
-    private final PeerGroupService peerGroupService;
     private final RetryPolicy<BroadcastResult> retryPolicy;
 
-    public Broadcaster(Node node, PeerGroupService peerGroupService) {
+    public Broadcaster(Node node) {
         this.node = node;
-        this.peerGroupService = peerGroupService;
 
         retryPolicy = RetryPolicy.<BroadcastResult>builder()
                 .handle(IllegalStateException.class)
@@ -81,11 +78,11 @@ public class Broadcaster {
                 .orTimeout(BROADCAST_TIMEOUT, TimeUnit.SECONDS);
         AtomicInteger numSuccess = new AtomicInteger(0);
         AtomicInteger numFaults = new AtomicInteger(0);
-        long numConnections = peerGroupService.getAllConnections().count();
+        long numConnections = node.getAllActiveConnections().count();
         long numBroadcasts = Math.min(numConnections, Math.round(numConnections * distributionFactor));
         log.debug("Broadcast {} to {} out of {} peers. distributionFactor={}",
                 broadcastMessage.getClass().getSimpleName(), numBroadcasts, numConnections, distributionFactor);
-        List<Connection> allConnections = peerGroupService.getAllConnections().collect(Collectors.toList());
+        List<Connection> allConnections = node.getAllActiveConnections().collect(Collectors.toList());
         Collections.shuffle(allConnections);
         NetworkService.NETWORK_IO_POOL.submit(() -> {
             allConnections.stream()

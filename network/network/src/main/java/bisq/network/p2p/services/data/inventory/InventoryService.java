@@ -131,7 +131,7 @@ public class InventoryService implements Node.Listener, PeerGroupManager.Listene
     public void onConnection(Connection connection) {
         if (sufficientConnections()) {
             log.info("We are sufficiently connected to start the inventory request. numConnections={}",
-                    peerGroupService.getNumConnections());
+                    node.getNumConnections());
             doRequest();
         }
     }
@@ -187,16 +187,16 @@ public class InventoryService implements Node.Listener, PeerGroupManager.Listene
     private List<CompletableFuture<Inventory>> request(DataFilter dataFilter) {
         int maxSeeds = 2;
         int maxCandidates = 4;
-        List<Address> candidates = peerGroupService.getAllConnectedPeers()
+        List<Address> candidates = peerGroupService.getAllConnectedPeers(node)
                 .filter(peerGroupService::isSeed)
                 .limit(maxSeeds)
                 .map(Peer::getAddress)
                 .collect(Collectors.toList());
-        candidates.addAll(peerGroupService.getAllConnectedPeers()
+        candidates.addAll(peerGroupService.getAllConnectedPeers(node)
                 .filter(peerGroupService::notASeed)
                 .map(Peer::getAddress)
                 .collect(Collectors.toList()));
-        return peerGroupService.getAllConnections()
+        return node.getAllActiveConnections()
                 .filter(connection -> !requestHandlerMap.containsKey(connection.getId()))
                 .filter(connection -> candidates.contains(connection.getPeerAddress()))
                 .limit(maxCandidates)
@@ -224,7 +224,7 @@ public class InventoryService implements Node.Listener, PeerGroupManager.Listene
     }
 
     private boolean sufficientConnections() {
-        return peerGroupService.getNumConnections() > peerGroupService.getTargetNumConnectedPeers() / 2;
+        return node.getNumConnections() > peerGroupService.getTargetNumConnectedPeers() / 2;
     }
 
     private FilterEntry toFilterEntry(Map.Entry<ByteArray, ? extends DataRequest> mapEntry) {

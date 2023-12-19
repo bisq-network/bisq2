@@ -123,10 +123,11 @@ public class MessageDeliveryStatusService implements PersistenceClient<MessageDe
                     return;
                 }
 
-                if (observableStatus.get() == MessageDeliveryStatus.ADDED_TO_MAILBOX) {
-                    observableStatus.set(MessageDeliveryStatus.MAILBOX_MSG_RECEIVED);
-                } else {
+                if (observableStatus.get() == MessageDeliveryStatus.START_SENDING) {
                     observableStatus.set(MessageDeliveryStatus.ARRIVED);
+                } else {
+                    // Covers ADDED_TO_MAILBOX, TRY_ADD_TO_MAILBOX and FAILED
+                    observableStatus.set(MessageDeliveryStatus.MAILBOX_MSG_RECEIVED);
                 }
             } else {
                 messageDeliveryStatusByMessageId.put(messageId, new Observable<>(MessageDeliveryStatus.ARRIVED));

@@ -126,9 +126,11 @@ public abstract class Connection {
             } catch (Exception exception) {
                 //todo StreamCorruptedException from i2p at shutdown. prob it send some text data at shut down
                 if (isInputStreamActive()) {
-                    log.debug("Call shutdown from startListen read handler {} due exception={}", this, exception.toString());
+                    log.debug("Exception at input handler on {}", this, exception);
                     close(CloseReason.EXCEPTION.exception(exception));
-                    // EOFException expected if connection got closed
+
+                    // EOFException expected if connection got closed (Socket closed message)
+                    // TODO maybe also filter SocketException
                     if (!(exception instanceof EOFException)) {
                         errorHandler.accept(this, exception);
                     }
@@ -191,6 +193,8 @@ public abstract class Connection {
                 } catch (Throwable throwable) {
                     if (!isStopped) {
                         throw throwable;
+                    } else {
+                        log.warn("Send message failed at stopped connection", throwable);
                     }
                 }
             }
@@ -207,11 +211,10 @@ public abstract class Connection {
             return this;
         } catch (IOException exception) {
             if (!isStopped) {
-                log.error("Call shutdown from send {} due exception={}", this, exception.toString());
+                log.error("Send message failed. {}", this, exception);
                 close(CloseReason.EXCEPTION.exception(exception));
             }
-            // We wrap any exception (also expected EOFException in case of connection close), to inform the caller 
-            // that the "send proto" intent failed.
+            // We wrap any exception (also expected EOFException in case of connection close), to leave handling of the exception to the caller.
             throw new ConnectionException(exception);
         }
     }

@@ -20,10 +20,9 @@ package bisq.network.p2p.services.peergroup;
 import bisq.common.util.MathUtils;
 import bisq.network.NetworkService;
 import bisq.network.common.Address;
+import bisq.network.common.TransportType;
 import bisq.network.p2p.node.Connection;
-import bisq.network.p2p.node.InboundConnection;
 import bisq.network.p2p.node.Node;
-import bisq.network.p2p.node.OutboundConnection;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -72,7 +71,6 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
     private final Persistence<PeerGroupStore> persistence;
     @Getter
     private final PeerGroupStore persistableStore = new PeerGroupStore();
-    private final Node node;
     private final Config config;
     @Getter
     private final Set<Address> seedNodeAddresses;
@@ -81,18 +79,17 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
     private final Set<Peer> reportedPeers = new CopyOnWriteArraySet<>();
 
     public PeerGroupService(PersistenceService persistenceService,
-                            Node node,
+                            TransportType transportType,
                             Config config,
                             Set<Address> seedNodeAddresses,
                             BanList banList) {
-        this.node = node;
         this.config = config;
         this.seedNodeAddresses = seedNodeAddresses;
         this.banList = banList;
 
         persistence = persistenceService.getOrCreatePersistence(this,
                 NetworkService.NETWORK_DB_PATH,
-                node.getTransportType().name().toLowerCase() + persistableStore.getClass().getSimpleName(),
+                transportType.name().toLowerCase() + persistableStore.getClass().getSimpleName(),
                 persistableStore);
     }
 
@@ -105,13 +102,15 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
     }
 
     public void addPersistedPeers(Set<Peer> peers) {
-        getPersistedPeers().addAll(peers);
-        persist();
+        if (getPersistedPeers().addAll(peers)) {
+            persist();
+        }
     }
 
-    public void removePersistedPeers(Collection<Peer> candidates) {
-        getPersistedPeers().removeAll(candidates);
-        persist();
+    public void removePersistedPeers(Collection<Peer> peers) {
+        if (getPersistedPeers().removeAll(peers)) {
+            persist();
+        }
     }
 
 
@@ -131,22 +130,6 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Connections
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    public Stream<OutboundConnection> getOutboundConnections() {
-        return node.getOutboundConnectionsByAddress().values().stream().filter(Connection::isRunning);
-    }
-
-    public Stream<InboundConnection> getInboundConnections() {
-        return node.getInboundConnectionsByAddress().values().stream().filter(Connection::isRunning);
-    }
-
-    public Stream<Connection> getAllConnections() {
-        return node.getAllConnections().filter(Connection::isRunning);
-    }
-
-    public int getNumConnections() {
-        return (int) getAllConnections().count();
-    }
 
     public boolean isSeed(Connection connection) {
         return seedNodeAddresses.stream().anyMatch(seedAddress -> seedAddress.equals(connection.getPeerAddress()));
@@ -169,8 +152,8 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
     // Peers
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public Stream<Peer> getAllConnectedPeers() {
-        return getAllConnections().map(connection ->
+    public Stream<Peer> getAllConnectedPeers(Node node) {
+        return node.getAllActiveConnections().map(connection ->
                 new Peer(connection.getPeersCapability(),
                         connection.getPeersNetworkLoadService().getCurrentNetworkLoad(),
                         connection.isOutboundConnection()));
@@ -182,10 +165,6 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
 
     public boolean isNotBanned(Address address) {
         return banList.isNotBanned(address);
-    }
-
-    public boolean notMyself(Peer peer) {
-        return notMyself(peer.getAddress());
     }
 
     public int getMinNumReportedPeers() {
@@ -215,14 +194,6 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
 
     public void removeSeedNodeAddress(Address seedNodeAddress) {
         this.seedNodeAddresses.remove(seedNodeAddress);
-    }
-
-    public Stream<Address> getAllConnectedPeerAddresses() {
-        return getAllConnectedPeers().map(Peer::getAddress);
-    }
-
-    public boolean notMyself(Address address) {
-        return node.findMyAddress().stream().noneMatch(myAddress -> myAddress.equals(address));
     }
 
     public boolean isSeed(Address address) {
