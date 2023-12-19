@@ -1174,27 +1174,37 @@ public class ChatMessagesListView {
                             statusPins.add(value.addObserver(status -> {
                                 UIThread.run(() -> {
                                     if (status != null) {
-                                        messageDeliveryStatusTooltip.set(Res.get("chat.message.deliveryState." + status.name()));
                                         messageDeliveryStatusIconColor = Optional.empty();
+                                        messageDeliveryStatusTooltip.set(Res.get("chat.message.deliveryState." + status.name()));
                                         switch (status) {
                                             case START_SENDING:
+                                                // -bisq-white-dim: #eaeaea;
+                                                messageDeliveryStatusIconColor = Optional.of("#eaeaea");
                                                 messageDeliveryStatusIcon.set(AwesomeIcon.SPINNER);
                                                 break;
                                             case ARRIVED:
+                                                // -bisq2-green-dim-50: #2b5624;
+                                                messageDeliveryStatusIconColor = Optional.of("#2b5624");
                                                 messageDeliveryStatusIcon.set(AwesomeIcon.OK_SIGN);
                                                 break;
                                             case TRY_ADD_TO_MAILBOX:
+                                                // -bisq-yellow: #e5a500;
+                                                messageDeliveryStatusIconColor = Optional.of("#e5a500");
                                                 messageDeliveryStatusIcon.set(AwesomeIcon.SHARE_SIGN);
                                                 break;
                                             case ADDED_TO_MAILBOX:
+                                                // -bisq-yellow: #e5a500;
+                                                messageDeliveryStatusIconColor = Optional.of("#e5a500");
                                                 messageDeliveryStatusIcon.set(AwesomeIcon.CLOUD_UPLOAD);
                                                 break;
                                             case MAILBOX_MSG_RECEIVED:
+                                                // -bisq2-green-dim-50: #2b5624;
+                                                messageDeliveryStatusIconColor = Optional.of("#2b5624");
                                                 messageDeliveryStatusIcon.set(AwesomeIcon.CLOUD_DOWNLOAD);
                                                 break;
                                             case FAILED:
-                                                // -bisq-warning: #d0831f;
-                                                messageDeliveryStatusIconColor = Optional.of("#d0831f");
+                                                // -bisq-red: #d02c1f;
+                                                messageDeliveryStatusIconColor = Optional.of("#d02c1f");
                                                 messageDeliveryStatusIcon.set(AwesomeIcon.EXCLAMATION_SIGN);
                                                 break;
                                         }
