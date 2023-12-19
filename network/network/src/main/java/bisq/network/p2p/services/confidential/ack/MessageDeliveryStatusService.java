@@ -14,6 +14,7 @@ import bisq.security.keys.KeyBundleService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -32,6 +33,7 @@ public class MessageDeliveryStatusService implements PersistenceClient<MessageDe
     private final Persistence<MessageDeliveryStatusStore> persistence;
     private final KeyBundleService keyBundleService;
     private final NetworkService networkService;
+    private final Set<String> ackedMessageIds = new HashSet<>();
 
     public MessageDeliveryStatusService(PersistenceService persistenceService,
                                         KeyBundleService keyBundleService,
@@ -136,6 +138,11 @@ public class MessageDeliveryStatusService implements PersistenceClient<MessageDe
     }
 
     private void processAckRequestingMessage(AckRequestingMessage message) {
+        if (ackedMessageIds.contains(message.getId())) {
+            log.warn("We received already that AckRequestingMessage and sent the AckMessage");
+            return;
+        }
+
         AckMessage ackMessage = new AckMessage(message.getId());
         NetworkId networkId = message.getReceiver();
         keyBundleService.findKeyPair(networkId.getPubKey().getKeyId())
@@ -143,6 +150,7 @@ public class MessageDeliveryStatusService implements PersistenceClient<MessageDe
                     log.info("Received a {} with message ID {}", message.getClass().getSimpleName(), message.getId());
                     NetworkIdWithKeyPair networkIdWithKeyPair = new NetworkIdWithKeyPair(networkId, keyPair);
                     networkService.confidentialSend(ackMessage, message.getSender(), networkIdWithKeyPair);
+                    ackedMessageIds.add(message.getId());
                 });
     }
 
