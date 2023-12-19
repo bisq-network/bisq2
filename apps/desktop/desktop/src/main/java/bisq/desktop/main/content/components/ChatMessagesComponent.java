@@ -607,7 +607,7 @@ public class ChatMessagesComponent {
             createOfferButton.getStyleClass().addAll("create-offer-button", "normal-text", "default-button");
             createOfferButton.setMinWidth(170);
 
-            bottomHBox.getChildren().addAll(userProfileSelectionRoot, bottomBoxStackPane, createOfferButton, leaveChannelButton);
+            bottomHBox.getChildren().addAll(createOfferButton, userProfileSelectionRoot, bottomBoxStackPane, leaveChannelButton);
             bottomHBox.getStyleClass().add("bg-grey-5");
             bottomHBox.setAlignment(Pos.CENTER);
             bottomHBox.setPadding(new Insets(14, 25, 14, 25));
