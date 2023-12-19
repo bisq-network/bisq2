@@ -133,7 +133,7 @@ public class NativeTorController implements BootstrapEventListener, HsDescUpload
 
     public void waitUntilBootstrapped() {
         try {
-            boolean isSuccess = isBootstrappedCountdownLatch.await(2, TimeUnit.MINUTES);
+            boolean isSuccess = isBootstrappedCountdownLatch.await(3, TimeUnit.MINUTES);
             if (isSuccess) {
                 removeBootstrapEventListener();
             } else {
