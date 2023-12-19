@@ -53,6 +53,7 @@ public abstract class BaseChatModel extends NavigationModel {
     private final String helpTitle;
     @Setter
     private Optional<UserProfileSidebar> chatUserDetails = Optional.empty();
+    private final StringProperty searchText = new SimpleStringProperty();
 
     public BaseChatModel(ChatChannelDomain chatChannelDomain) {
         this.chatChannelDomain = chatChannelDomain;

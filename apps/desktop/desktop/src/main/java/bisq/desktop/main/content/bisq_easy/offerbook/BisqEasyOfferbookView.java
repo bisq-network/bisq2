@@ -23,7 +23,6 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.ComboBoxWithSearch;
-import bisq.desktop.components.controls.SearchBox;
 import bisq.desktop.main.content.chat.BaseChatView;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
@@ -47,8 +46,7 @@ public final class BisqEasyOfferbookView extends BaseChatView {
     //private Switch offersOnlySwitch;
     //private Button closeFilterButton, filterButton;
 
-    private Label marketSelectorIcon, channelDescription;
-    private SearchBox searchBox;
+    private Label marketSelectorIcon;
 
     //private Pane filterPane;
    /* private Subscription showFilterOverlayPin;
@@ -82,12 +80,10 @@ public final class BisqEasyOfferbookView extends BaseChatView {
         channelTitle.setCursor(Cursor.HAND);
         channelTitle.setMinWidth(128);
 
-        channelDescription = new Label("");
         channelDescription.getStyleClass().addAll("chat-header-description");
         channelDescription.setMaxWidth(Double.MAX_VALUE);
         HBox.setHgrow(channelDescription, Priority.ALWAYS);
 
-        searchBox = new SearchBox();
         searchBox.setMaxWidth(200);
         searchBox.setMaxHeight(searchBox.getMinHeight());
         searchBox.setDefaultStyle("bisq-easy-offerbook-search-box");
@@ -179,7 +175,6 @@ public final class BisqEasyOfferbookView extends BaseChatView {
     protected void onViewAttached() {
         super.onViewAttached();
 
-        searchBox.textProperty().bindBidirectional(bisqEasyOfferbookModel.getSearchText());
         // offersOnlySwitch.selectedProperty().bindBidirectional(bisqEasyOfferbookModel.getOfferOnly());
 
       /*  if (filterPaneHeight == 0) {
@@ -229,14 +224,12 @@ public final class BisqEasyOfferbookView extends BaseChatView {
                 e.consume();
             }
         });
-        channelDescription.textProperty().bind(model.getChannelDescription());
     }
 
     @Override
     protected void onViewDetached() {
         super.onViewDetached();
 
-        searchBox.textProperty().unbindBidirectional(bisqEasyOfferbookModel.getSearchText());
         // offersOnlySwitch.selectedProperty().unbindBidirectional(bisqEasyOfferbookModel.getOfferOnly());
 
         //  showFilterOverlayPin.unsubscribe();
@@ -245,7 +238,6 @@ public final class BisqEasyOfferbookView extends BaseChatView {
         //  closeFilterButton.setOnAction(null);
         marketSelectorIcon.setOnMouseClicked(null);
         channelTitle.setOnMouseClicked(null);
-        channelDescription.textProperty().unbind();
     }
 
     private void onOpenMarketSelector() {

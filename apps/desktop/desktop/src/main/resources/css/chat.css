@@ -136,6 +136,12 @@
     -fx-font-family: "IBM Plex Sans Light";
 }
 
+.chat-header-title {
+    -fx-text-fill: -bisq2-green;
+    -fx-font-size: 1.53em;
+    -fx-font-family: "IBM Plex Sans Medium";
+}
+
 .chat-header-description {
     -fx-text-fill: -fx-mid-text-color;
     -fx-fill: -fx-mid-text-color;

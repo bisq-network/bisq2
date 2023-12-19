@@ -44,7 +44,7 @@ public class ChatView<V extends ChatView<V, M>, M extends ChatModel> extends Bas
         VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
         chatMessagesComponent.getStyleClass().add("bisq-easy-container");
         centerVBox.setMaxWidth(CHAT_BOX_MAX_WIDTH);
-        centerVBox.getChildren().addAll(chatMessagesComponent);
+        centerVBox.getChildren().addAll(titleHBox, Layout.hLine(), chatMessagesComponent);
         centerVBox.setFillWidth(true);
     }
 

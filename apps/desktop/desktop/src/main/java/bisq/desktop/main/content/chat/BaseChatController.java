@@ -47,6 +47,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -68,6 +69,7 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
     protected final UserProfileService userProfileService;
     protected final ChannelSidebar channelSidebar;
     protected final ChatMessagesComponent chatMessagesComponent;
+    protected Subscription searchTextPin;
 
     public BaseChatController(ServiceProvider serviceProvider, ChatChannelDomain chatChannelDomain, NavigationTarget host) {
         super(host);
