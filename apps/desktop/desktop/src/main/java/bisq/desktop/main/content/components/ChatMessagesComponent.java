@@ -604,7 +604,7 @@ public class ChatMessagesComponent {
             VBox.setVgrow(emptyMessageList, Priority.ALWAYS);
 
             createOfferButton = new Button(Res.get("offer.createOffer"));
-            createOfferButton.getStyleClass().addAll("create-offer-button", "normal-text", "default-button");
+            createOfferButton.getStyleClass().addAll("create-offer-button", "normal-text");
             createOfferButton.setMinWidth(170);
 
             bottomHBox.getChildren().addAll(createOfferButton, userProfileSelectionRoot, bottomBoxStackPane, leaveChannelButton);
