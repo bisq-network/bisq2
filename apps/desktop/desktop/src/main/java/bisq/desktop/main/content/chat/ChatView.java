@@ -42,7 +42,7 @@ public class ChatView<V extends ChatView<V, M>, M extends ChatModel> extends Bas
     @Override
     protected void configCenterVBox() {
         VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
-        chatMessagesComponent.getStyleClass().add("bisq-easy-container");
+        centerVBox.getStyleClass().add("bisq-easy-container");
         centerVBox.setMaxWidth(CHAT_BOX_MAX_WIDTH);
         centerVBox.getChildren().addAll(titleHBox, Layout.hLine(), chatMessagesComponent);
         centerVBox.setFillWidth(true);

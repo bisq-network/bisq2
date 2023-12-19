@@ -41,7 +41,7 @@ public final class CommonPublicChatView extends ChatView<CommonPublicChatView, C
 
         HBox headerTitle = new HBox(20, channelTitle, channelDescription);
         headerTitle.setAlignment(Pos.BASELINE_LEFT);
-        headerTitle.setPadding(new Insets(2, 0, 0, 0));
+        headerTitle.setPadding(new Insets(7, 0, 0, 0));
         HBox.setHgrow(headerTitle, Priority.ALWAYS);
 
         channelTitle.getStyleClass().add("chat-header-title");

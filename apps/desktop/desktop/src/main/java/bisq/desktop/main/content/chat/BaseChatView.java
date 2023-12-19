@@ -42,7 +42,7 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
     protected final HBox containerHBox = new HBox();
     protected final Pane channelSidebar, chatMessagesComponent;
     protected Pane chatUserOverviewRoot;
-    protected Subscription channelIconPin, chatUserOverviewRootSubscription;
+    protected Subscription /*channelIconPin, */chatUserOverviewRootSubscription;
     protected final SearchBox searchBox = new SearchBox();
 
     public BaseChatView(BaseChatModel model,
@@ -101,16 +101,16 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
                     }
                 });
 
-        channelIconPin = EasyBind.subscribe(model.getChannelIconNode(), node -> {
-            if (node != null) {
-                channelTitle.setGraphic(node);
-                channelTitle.setGraphicTextGap(10);
-                node.setStyle("-fx-cursor: hand;");
-                node.setOnMouseClicked(e -> controller.onToggleChannelInfo());
-            } else {
-                channelTitle.setGraphic(null);
-            }
-        });
+//        channelIconPin = EasyBind.subscribe(model.getChannelIconNode(), node -> {
+//            if (node != null) {
+//                channelTitle.setGraphic(node);
+//                channelTitle.setGraphicTextGap(10);
+//                node.setStyle("-fx-cursor: hand;");
+//                node.setOnMouseClicked(e -> controller.onToggleChannelInfo());
+//            } else {
+//                channelTitle.setGraphic(null);
+//            }
+//        });
     }
 
     @Override
@@ -131,6 +131,6 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
         }
 
         chatUserOverviewRootSubscription.unsubscribe();
-        channelIconPin.unsubscribe();
+//        channelIconPin.unsubscribe();
     }
 }

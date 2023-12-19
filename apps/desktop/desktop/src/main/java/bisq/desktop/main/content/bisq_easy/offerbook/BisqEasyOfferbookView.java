@@ -73,19 +73,21 @@ public final class BisqEasyOfferbookView extends BaseChatView {
         titleHBox.setMinHeight(HEADER_HEIGHT);
         titleHBox.setMaxHeight(HEADER_HEIGHT);
 
-        channelTitle.setId("chat-messages-headline");
+        channelTitle.getStyleClass().add("chat-header-title");
         channelTitle.setCursor(Cursor.HAND);
-        channelTitle.setMinWidth(128);
+        channelTitle.setMinWidth(81);
 
         marketSelectorIcon = Icons.getIcon(AwesomeIcon.CHEVRON_DOWN, "12");
+        marketSelectorIcon.getStyleClass().add("market-selector-icon");
         marketSelectorIcon.setCursor(Cursor.HAND);
-        marketSelectorIcon.setPadding(new Insets(7, 5, 7, 0));
+        marketSelectorIcon.setPadding(new Insets(0, 15, 0, 7));
         marketSelectorIcon.setTooltip(new BisqTooltip(Res.get("bisqEasy.offerbook.selectMarket"), true));
 
         channelDescription.getStyleClass().addAll("chat-header-description");
 
-        HBox headerTitle = new HBox(15, channelTitle, marketSelectorIcon, channelDescription);
+        HBox headerTitle = new HBox(channelTitle, marketSelectorIcon, channelDescription);
         headerTitle.setAlignment(Pos.BASELINE_LEFT);
+        headerTitle.setPadding(new Insets(7, 0, 0, 0));
         HBox.setHgrow(headerTitle, Priority.ALWAYS);
 
         searchBox.setMaxWidth(200);
