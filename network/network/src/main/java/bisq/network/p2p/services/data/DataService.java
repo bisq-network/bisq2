@@ -150,11 +150,6 @@ public class DataService implements StorageService.Listener {
                         AddAuthenticatedDataRequest request = AddAuthenticatedDataRequest.from(store, authenticatedData, keyPair);
                         DataStorageResult dataStorageResult = store.add(request);
                         if (dataStorageResult.isSuccess()) {
-                            if (authenticatedData instanceof AuthorizedData) {
-                                listeners.forEach(e -> e.onAuthorizedDataAdded((AuthorizedData) authenticatedData));
-                            } else {
-                                listeners.forEach(e -> e.onAuthenticatedDataAdded(authenticatedData));
-                            }
                             return new BroadcastResult(broadcasters.stream().map(broadcaster -> broadcaster.broadcast(request)));
                         } else {
                             return new BroadcastResult();
@@ -176,7 +171,6 @@ public class DataService implements StorageService.Listener {
                     AddAppendOnlyDataRequest request = new AddAppendOnlyDataRequest(appendOnlyData);
                     DataStorageResult dataStorageResult = store.add(request);
                     if (dataStorageResult.isSuccess()) {
-                        listeners.forEach(listener -> listener.onAppendOnlyDataAdded(appendOnlyData));
                         return new BroadcastResult(broadcasters.stream().map(broadcaster -> broadcaster.broadcast(request)));
                     } else {
                         return new BroadcastResult();
@@ -193,7 +187,6 @@ public class DataService implements StorageService.Listener {
                         AddMailboxRequest request = AddMailboxRequest.from(mailboxData, senderKeyPair, receiverPublicKey);
                         DataStorageResult dataStorageResult = store.add(request);
                         if (dataStorageResult.isSuccess()) {
-                            listeners.forEach(listener -> listener.onMailboxDataAdded(mailboxData));
                             return new BroadcastResult(broadcasters.stream().map(broadcaster -> broadcaster.broadcast(request)));
                         } else {
                             return new BroadcastResult();
@@ -218,11 +211,6 @@ public class DataService implements StorageService.Listener {
                         RemoveAuthenticatedDataRequest request = RemoveAuthenticatedDataRequest.from(store, authenticatedData, keyPair);
                         DataStorageResult dataStorageResult = store.remove(request);
                         if (dataStorageResult.isSuccess()) {
-                            if (authenticatedData instanceof AuthorizedData) {
-                                listeners.forEach(e -> e.onAuthorizedDataRemoved((AuthorizedData) authenticatedData));
-                            } else {
-                                listeners.forEach(e -> e.onAuthenticatedDataRemoved(authenticatedData));
-                            }
                             return new BroadcastResult(broadcasters.stream().map(broadcaster -> broadcaster.broadcast(request)));
                         } else {
                             return new BroadcastResult();
@@ -245,7 +233,6 @@ public class DataService implements StorageService.Listener {
                         RemoveMailboxRequest request = RemoveMailboxRequest.from(mailboxData, keyPair);
                         DataStorageResult dataStorageResult = store.remove(request);
                         if (dataStorageResult.isSuccess()) {
-                            listeners.forEach(listener -> listener.onMailboxDataRemoved(mailboxData));
                             return new BroadcastResult(broadcasters.stream().map(broadcaster -> broadcaster.broadcast(request)));
                         } else {
                             return new BroadcastResult();
@@ -287,18 +274,6 @@ public class DataService implements StorageService.Listener {
         storageService.onAddDataRequest(addDataRequest)
                 .whenComplete((optionalData, throwable) -> {
                     optionalData.ifPresent(storageData -> {
-                        // We get called on dispatcher thread with onMessage, and we don't switch thread in 
-                        // async calls
-
-                        if (storageData instanceof AuthorizedData) {
-                            listeners.forEach(e -> e.onAuthorizedDataAdded((AuthorizedData) storageData));
-                        } else if (storageData instanceof AuthenticatedData) {
-                            listeners.forEach(e -> e.onAuthenticatedDataAdded((AuthenticatedData) storageData));
-                        } else if (storageData instanceof MailboxData) {
-                            listeners.forEach(listener -> listener.onMailboxDataAdded((MailboxData) storageData));
-                        } else if (storageData instanceof AppendOnlyData) {
-                            listeners.forEach(listener -> listener.onAppendOnlyDataAdded((AppendOnlyData) storageData));
-                        }
                         if (allowReBroadcast) {
                             broadcasters.forEach(e -> e.reBroadcast(addDataRequest));
                         }
@@ -310,13 +285,6 @@ public class DataService implements StorageService.Listener {
         storageService.onRemoveDataRequest(removeDataRequest)
                 .whenComplete((optionalData, throwable) -> {
                     optionalData.ifPresent(storageData -> {
-                        // We get called on dispatcher thread with onMessage, and we don't switch thread in 
-                        // async calls
-                        if (storageData instanceof AuthorizedData) {
-                            listeners.forEach(e -> e.onAuthorizedDataRemoved((AuthorizedData) storageData));
-                        } else if (storageData instanceof AuthenticatedData) {
-                            listeners.forEach(e -> e.onAuthenticatedDataRemoved((AuthenticatedData) storageData));
-                        }
                         if (allowReBroadcast) {
                             broadcasters.forEach(e -> e.reBroadcast(removeDataRequest));
                         }
