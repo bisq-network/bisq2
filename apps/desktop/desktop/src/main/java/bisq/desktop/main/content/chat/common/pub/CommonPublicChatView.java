@@ -36,12 +36,16 @@ public final class CommonPublicChatView extends ChatView<CommonPublicChatView, C
         titleHBox.setAlignment(Pos.CENTER);
         titleHBox.setPadding(new Insets(12.5, 25, 12.5, 25));
         titleHBox.getStyleClass().add("bisq-easy-container-header");
+        titleHBox.setMinHeight(HEADER_HEIGHT);
+        titleHBox.setMaxHeight(HEADER_HEIGHT);
 
         HBox headerTitle = new HBox(20, channelTitle, channelDescription);
         headerTitle.setAlignment(Pos.BASELINE_LEFT);
+        headerTitle.setPadding(new Insets(2, 0, 0, 0));
+        HBox.setHgrow(headerTitle, Priority.ALWAYS);
+
         channelTitle.getStyleClass().add("chat-header-title");
         channelDescription.getStyleClass().add("chat-header-description");
-        HBox.setHgrow(headerTitle, Priority.ALWAYS);
 
         searchBox.setMaxWidth(200);
         searchBox.setMaxHeight(searchBox.getMinHeight());
@@ -60,9 +64,6 @@ public final class CommonPublicChatView extends ChatView<CommonPublicChatView, C
         HBox.setMargin(channelTitle, new Insets(0, -10, 0, 4));
         HBox.setMargin(helpButton, new Insets(-2, 0, 0, 0));
         HBox.setMargin(infoButton, new Insets(-2, 0, 0, 0));
-        titleHBox.getChildren().addAll(
-                headerTitle,
-                searchBox, helpButton, infoButton
-        );
+        titleHBox.getChildren().addAll(headerTitle, searchBox, helpButton, infoButton);
     }
 }

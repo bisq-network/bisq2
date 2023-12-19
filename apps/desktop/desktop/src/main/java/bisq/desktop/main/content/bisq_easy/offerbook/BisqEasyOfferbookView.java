@@ -70,19 +70,23 @@ public final class BisqEasyOfferbookView extends BaseChatView {
         titleHBox.setAlignment(Pos.CENTER);
         titleHBox.setPadding(new Insets(12.5, 25, 12.5, 25));
         titleHBox.getStyleClass().add("bisq-easy-container-header");
-
-        marketSelectorIcon = Icons.getIcon(AwesomeIcon.CHEVRON_DOWN, "12");
-        marketSelectorIcon.setCursor(Cursor.HAND);
-        marketSelectorIcon.setPadding(new Insets(7, 10, 7, 10));
-        marketSelectorIcon.setTooltip(new BisqTooltip(Res.get("bisqEasy.offerbook.selectMarket"), true));
+        titleHBox.setMinHeight(HEADER_HEIGHT);
+        titleHBox.setMaxHeight(HEADER_HEIGHT);
 
         channelTitle.setId("chat-messages-headline");
         channelTitle.setCursor(Cursor.HAND);
         channelTitle.setMinWidth(128);
 
+        marketSelectorIcon = Icons.getIcon(AwesomeIcon.CHEVRON_DOWN, "12");
+        marketSelectorIcon.setCursor(Cursor.HAND);
+        marketSelectorIcon.setPadding(new Insets(7, 5, 7, 0));
+        marketSelectorIcon.setTooltip(new BisqTooltip(Res.get("bisqEasy.offerbook.selectMarket"), true));
+
         channelDescription.getStyleClass().addAll("chat-header-description");
-        channelDescription.setMaxWidth(Double.MAX_VALUE);
-        HBox.setHgrow(channelDescription, Priority.ALWAYS);
+
+        HBox headerTitle = new HBox(15, channelTitle, marketSelectorIcon, channelDescription);
+        headerTitle.setAlignment(Pos.BASELINE_LEFT);
+        HBox.setHgrow(headerTitle, Priority.ALWAYS);
 
         searchBox.setMaxWidth(200);
         searchBox.setMaxHeight(searchBox.getMinHeight());
@@ -101,10 +105,7 @@ public final class BisqEasyOfferbookView extends BaseChatView {
         HBox.setMargin(channelTitle, new Insets(0, -10, 0, 4));
         HBox.setMargin(helpButton, new Insets(-2, 0, 0, 0));
         HBox.setMargin(infoButton, new Insets(-2, 0, 0, 0));
-        titleHBox.getChildren().addAll(
-                channelTitle, marketSelectorIcon, channelDescription,
-                searchBox, helpButton, infoButton
-        );
+        titleHBox.getChildren().addAll(headerTitle, searchBox, helpButton, infoButton);
     }
 
     @Override
