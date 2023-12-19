@@ -133,22 +133,6 @@ public class ChatMessagesListView {
         controller.refreshMessages();
     }
 
-    public void onOutTransitionStarted() {
-        controller.onOutTransitionStarted();
-    }
-
-    public void onOutTransitionCompleted() {
-        controller.onOutTransitionCompleted();
-    }
-
-    public void onInTransitionStarted() {
-        controller.onInTransitionStarted();
-    }
-
-    public void onInTransitionCompleted() {
-        controller.onInTransitionCompleted();
-    }
-
     private static class Controller implements bisq.desktop.common.view.Controller {
         private final ChatService chatService;
         private final UserIdentityService userIdentityService;
@@ -201,6 +185,7 @@ public class ChatMessagesListView {
             }
 
             ChatChannelSelectionService selectionService = chatService.getChatChannelSelectionServices().get(model.getChatChannelDomain());
+
             selectedChannelPin = selectionService.getSelectedChannel().addObserver(this::selectedChannelChanged);
         }
 
@@ -223,6 +208,9 @@ public class ChatMessagesListView {
             if (selectedChannelSubscription != null) {
                 selectedChannelSubscription.unsubscribe();
             }
+
+            model.chatMessages.forEach(ChatMessageListItem::dispose);
+            model.chatMessages.clear();
         }
 
         private void selectedChannelChanged(ChatChannel<? extends ChatMessage> channel) {
@@ -287,36 +275,6 @@ public class ChatMessagesListView {
         private void setSearchPredicate(Predicate<? super ChatMessagesListView.ChatMessageListItem<? extends ChatMessage>> predicate) {
             model.setSearchPredicate(Objects.requireNonNullElseGet(predicate, () -> e -> true));
             applyPredicate();
-        }
-
-        private void onOutTransitionStarted() {
-            if (selectedChannelPin != null) {
-                selectedChannelPin.unbind();
-                selectedChannelPin = null;
-            }
-        }
-
-        private void onOutTransitionCompleted() {
-            if (selectedChannelPin != null) {
-                selectedChannelPin.unbind();
-                selectedChannelPin = null;
-            }
-        }
-
-        private void onInTransitionStarted() {
-            // onActivate is called before onInTransitionStarted, thus we unbind until transition is completed
-            if (selectedChannelPin != null) {
-                selectedChannelPin.unbind();
-                selectedChannelPin = null;
-            }
-        }
-
-        private void onInTransitionCompleted() {
-            if (selectedChannelPin != null) {
-                selectedChannelPin.unbind();
-            }
-            ChatChannelSelectionService selectionService = chatService.getChatChannelSelectionServices().get(model.getChatChannelDomain());
-            selectedChannelPin = selectionService.getSelectedChannel().addObserver(this::selectedChannelChanged);
         }
 
 
@@ -525,9 +483,19 @@ public class ChatMessagesListView {
             return channel.getChatMessages().addObserver(new CollectionObserver<>() {
                 @Override
                 public void add(M chatMessage) {
+                    // TODO Delaying to the next render frame can cause duplicated items in case we get the channel
+                    //  change called 2 times in short interval (should be avoid as well).
+                    // @namloan Could you re-test the performance issues with testing if using UIThread.run makes a difference?
+                    // There have been many changes in the meantime, so maybe the performance issue was fixed by other changes.
                     UIThread.runOnNextRenderFrame(() -> {
-                        model.chatMessages.add(new ChatMessageListItem<>(chatMessage, userProfileService, reputationService,
-                                bisqEasyTradeService, userIdentityService, networkService));
+                        {
+                            ChatMessageListItem<M> item = new ChatMessageListItem<>(chatMessage, userProfileService, reputationService,
+                                    bisqEasyTradeService, userIdentityService, networkService);
+                            // As long as we use runOnNextRenderFrame we need to check to avoid adding duplicates
+                            if (!model.chatMessages.contains(item)) {
+                                model.chatMessages.add(item);
+                            }
+                        }
                     });
                 }
 
@@ -657,6 +625,10 @@ public class ChatMessagesListView {
         @Override
         protected void onViewDetached() {
             model.getChatMessages().removeListener(messagesListener);
+            if (scrollDelay != null) {
+                scrollDelay.stop();
+                scrollDelay = null;
+            }
         }
 
         private void scrollDown() {

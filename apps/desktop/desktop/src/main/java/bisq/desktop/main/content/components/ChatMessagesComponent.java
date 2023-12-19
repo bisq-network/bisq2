@@ -115,22 +115,6 @@ public class ChatMessagesComponent {
         controller.enableChatDialog(isEnabled);
     }
 
-    public void onOutTransitionStarted() {
-        controller.onOutTransitionStarted();
-    }
-
-    public void onOutTransitionCompleted() {
-        controller.onOutTransitionCompleted();
-    }
-
-    public void onInTransitionStarted() {
-        controller.onInTransitionStarted();
-    }
-
-    public void onInTransitionCompleted() {
-        controller.onInTransitionCompleted();
-    }
-
     private static class Controller implements bisq.desktop.common.view.Controller {
         private final Model model;
         @Getter
@@ -484,41 +468,6 @@ public class ChatMessagesComponent {
 
         private void enableChatDialog(boolean isEnabled) {
             model.getChatDialogEnabled().set(isEnabled);
-        }
-
-        private void onOutTransitionStarted() {
-            chatMessagesListView.onOutTransitionStarted();
-            if (selectedChannelPin != null) {
-                selectedChannelPin.unbind();
-                selectedChannelPin = null;
-            }
-        }
-
-        private void onOutTransitionCompleted() {
-            chatMessagesListView.onOutTransitionCompleted();
-            if (selectedChannelPin != null) {
-                selectedChannelPin.unbind();
-                selectedChannelPin = null;
-            }
-        }
-
-        private void onInTransitionStarted() {
-            // onActivate is called before onInTransitionStarted, thus we unbind until transition is completed
-            chatMessagesListView.onInTransitionStarted();
-            if (selectedChannelPin != null) {
-                selectedChannelPin.unbind();
-                selectedChannelPin = null;
-            }
-        }
-
-        private void onInTransitionCompleted() {
-            chatMessagesListView.onInTransitionCompleted();
-            if (selectedChannelPin != null) {
-                selectedChannelPin.unbind();
-            }
-            ChatChannelSelectionService chatChannelSelectionService = chatService.getChatChannelSelectionServices().get(model.getChatChannelDomain());
-            selectedChannelPin = chatChannelSelectionService.getSelectedChannel()
-                    .addObserver(this::selectedChannelChanged);
         }
     }
 
