@@ -702,6 +702,7 @@ public class ChatMessagesListView {
 
                             messageBgHBox = new HBox(15);
                             messageBgHBox.setAlignment(Pos.CENTER_LEFT);
+                            messageBgHBox.setMaxWidth(720);
 
                             // Reactions box
                             replyIcon = getIconWithToolTip(AwesomeIcon.REPLY, Res.get("chat.message.reply"));
