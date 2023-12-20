@@ -40,7 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public final class BisqEasyOfferbookView extends BaseChatView {
-    private static final double CHAT_BOX_MAX_WIDTH = 1000;
+    private static final double CHAT_BOX_MAX_WIDTH = 1440;
     // private static double filterPaneHeight;
 
     private final BisqEasyOfferbookModel bisqEasyOfferbookModel;

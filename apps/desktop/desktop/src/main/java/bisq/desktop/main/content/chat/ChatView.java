@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ChatView<V extends ChatView<V, M>, M extends ChatModel> extends BaseChatView {
     protected static final double SIDE_PADDING = 40;
-    protected static final double CHAT_BOX_MAX_WIDTH = 1000;
+    protected static final double CHAT_BOX_MAX_WIDTH = 1440;
 
     public ChatView(ChatModel model,
                     ChatController<V, M> controller,
