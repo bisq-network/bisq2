@@ -373,7 +373,7 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
             }
             String userName = senderUserProfile.map(UserProfile::getUserName).orElse(Res.get("data.na"));
             title = StringUtils.truncate(userName, 15) + " (" + channelInfo + ")";
-            message = StringUtils.truncate(chatMessage.getText(), 20);
+            message = StringUtils.truncate(chatMessage.getText(), 210);
         }
         return new ChatNotification(id,
                 title,
