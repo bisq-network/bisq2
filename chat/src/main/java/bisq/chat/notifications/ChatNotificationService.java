@@ -362,14 +362,17 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
         } else {
             String channelInfo;
             if (chatMessage instanceof PublicChatMessage) {
-                // For Public messages we show title: `{username} ({channel title})`
-                channelInfo = chatService.findChatChannelService(chatChannel)
+                // For Public messages we show title: `{username} ({channel domain} - {channel title})`
+                String channelTitle = chatService.findChatChannelService(chatChannel)
                         .map(service -> service.getChannelTitle(chatChannel))
                         .orElse(Res.get("data.na"));
+                channelInfo = StringUtils.createNavigationPath(
+                        chatChannel.getChatChannelDomain().getDisplayString(), channelTitle);
             } else {
                 // For Private messages we show title: `{username} ({channel domain} - Private message)`
-                channelInfo = chatChannel.getChatChannelDomain().getDisplayString() + " - " +
-                        Res.get("chat.notifications.privateMessage.headline");
+                channelInfo = StringUtils.createNavigationPath(
+                        chatChannel.getChatChannelDomain().getDisplayString(),
+                        Res.get("chat.notifications.privateMessage.headline"));
             }
             String userName = senderUserProfile.map(UserProfile::getUserName).orElse(Res.get("data.na"));
             title = StringUtils.truncate(userName, 15) + " (" + channelInfo + ")";
