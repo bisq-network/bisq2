@@ -367,10 +367,13 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
                         .map(service -> service.getChannelTitle(chatChannel))
                         .orElse(Res.get("data.na"));
                 channelInfo = StringUtils.createNavigationPath(
-                        chatChannel.getChatChannelDomain().getDisplayString(), channelTitle);
+                        " - ",
+                        chatChannel.getChatChannelDomain().getDisplayString(),
+                        channelTitle);
             } else {
                 // For Private messages we show title: `{username} ({channel domain} - Private message)`
                 channelInfo = StringUtils.createNavigationPath(
+                        " - ",
                         chatChannel.getChatChannelDomain().getDisplayString(),
                         Res.get("chat.notifications.privateMessage.headline"));
             }

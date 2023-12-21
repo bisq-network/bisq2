@@ -200,10 +200,10 @@ public class StringUtils {
         return result;
     }
 
-    public static String createNavigationPath(String... strings) {
+    public static String createNavigationPath(CharSequence delimiter, String... strings) {
         return Arrays.stream(strings)
                 .filter(str -> str != null && !str.trim().isEmpty())
                 .map(String::trim)
-                .collect(Collectors.joining(" - "));
+                .collect(Collectors.joining(delimiter));
     }
 }
