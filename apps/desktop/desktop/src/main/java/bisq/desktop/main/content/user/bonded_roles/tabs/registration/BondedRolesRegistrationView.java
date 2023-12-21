@@ -18,7 +18,6 @@
 package bisq.desktop.main.content.user.bonded_roles.tabs.registration;
 
 import bisq.desktop.common.threading.UIScheduler;
-import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTooltip;
@@ -164,11 +163,11 @@ public abstract class BondedRolesRegistrationView<M extends BondedRolesRegistrat
                     showInfo.setManaged(isCollapsed);
 
                     // Hack to get the height of the scrollPane viewpoint updated.
-                    root.requestLayout();
-                    UIThread.runOnNextRenderFrame(root::requestLayout);
-                    UIScheduler.run(root::requestFocus).after(100);
+                    UIScheduler.run(() -> {
+                        root.requestLayout();
+                        profileId.requestFocus();
+                    }).after(100);
                 });
-
     }
 
     @Override
