@@ -111,12 +111,13 @@ public class ViewTransition {
 
         if (fadeinTransition != null && fadeinTransition.getStatus() == Animation.Status.RUNNING) {
             fadeinTransition.stop();
-            if (newViewRoot != null) {
-                newViewRoot.setOpacity(1);
-                remove(newViewRoot);
-                this.newView = null;
-                newViewRoot = null;
-            }
+        }
+
+        if (newViewRoot != null) {
+            newViewRoot.setOpacity(1);
+            remove(newViewRoot);
+            this.newView = null;
+            newViewRoot = null;
         }
     }
 
