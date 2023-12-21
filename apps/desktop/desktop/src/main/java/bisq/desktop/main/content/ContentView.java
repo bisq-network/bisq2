@@ -45,7 +45,7 @@ public class ContentView extends NavigationView<StackPane, ContentModel, Content
             if (!root.getChildren().contains(newValueRoot)) {
                 root.getChildren().add(newValueRoot);
             } else {
-                log.warn("We did not add the new child view as we still had it in out children list. " +
+                log.warn("We did not add the new child view as we still had it in our children list. " +
                         "This should not happen as the viewTransition.stop() call should remove any old dangling child view. New child view={}", newValue);
             }
             viewTransition = new ViewTransition(oldValue, newValue);

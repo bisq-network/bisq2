@@ -104,15 +104,17 @@ public class ReportToModeratorTable {
             reportListItemsPin.unbind();
         }
 
-        void onContactUser(ReportToModeratorMessage message, UserProfile userProfile) {
+        void onContactUser(ReportToModeratorMessage message, UserProfile userProfile, boolean isReportingUser) {
             ChatChannelDomain chatChannelDomain = message.getChatChannelDomain();
-            navigateToChannel(chatChannelDomain);
-            moderatorService.contactUser(chatChannelDomain, userProfile, Optional.of(message.getMessage()))
+            Optional<String> citation = isReportingUser ? Optional.of(message.getMessage()) : Optional.empty();
+            moderatorService.contactUser(chatChannelDomain, userProfile, citation, isReportingUser)
                     .whenComplete((result, throwable) -> {
                         UIThread.run(() -> {
                             if (throwable == null) {
                                 SendMessageResult.findAnyErrorMsg(result)
                                         .ifPresent(errorMsg -> new Popup().error(errorMsg).show());
+                                navigateToChannel(chatChannelDomain);
+                                UIThread.runOnNextRenderFrame(() -> navigateToChannel(chatChannelDomain));
                             } else {
                                 new Popup().error(throwable).show();
                             }
@@ -259,7 +261,7 @@ public class ReportToModeratorTable {
                         userNameLabel.setText(userName);
                         userProfileIcon.setUserProfile(userProfile);
                         button.setText(Res.get("authorizedRole.moderator.table.contact") + " " + StringUtils.truncate(userName, 8));
-                        button.setOnAction(e -> controller.onContactUser(item.getReportToModeratorMessage(), userProfile));
+                        button.setOnAction(e -> controller.onContactUser(item.getReportToModeratorMessage(), userProfile, true));
                         setGraphic(hBox);
                     } else {
                         button.setOnAction(null);
@@ -294,7 +296,7 @@ public class ReportToModeratorTable {
                         userNameLabel.setText(userName);
                         userProfileIcon.setUserProfile(userProfile);
                         button.setText(Res.get("authorizedRole.moderator.table.contact") + " " + StringUtils.truncate(userName, 8));
-                        button.setOnAction(e -> controller.onContactUser(item.getReportToModeratorMessage(), userProfile));
+                        button.setOnAction(e -> controller.onContactUser(item.getReportToModeratorMessage(), userProfile, false));
                         setGraphic(hBox);
                     } else {
                         button.setOnAction(null);

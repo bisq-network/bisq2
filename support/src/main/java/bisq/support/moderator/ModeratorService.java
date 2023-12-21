@@ -21,6 +21,7 @@ import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.chat.ChatChannelDomain;
+import bisq.chat.ChatChannelSelectionService;
 import bisq.chat.ChatService;
 import bisq.chat.Citation;
 import bisq.chat.two_party.TwoPartyPrivateChatChannelService;
@@ -81,6 +82,7 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
     private final Map<ChatChannelDomain, TwoPartyPrivateChatChannelService> twoPartyPrivateChatChannelServices;
     private final BannedUserService bannedUserService;
     private final boolean staticPublicKeysProvided;
+    private final ChatService chatService;
 
     public ModeratorService(ModeratorService.Config config,
                             PersistenceService persistenceService,
@@ -95,6 +97,7 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
         twoPartyPrivateChatChannelServices = chatService.getTwoPartyPrivateChatChannelServices();
         bannedUserService = userService.getBannedUserService();
         staticPublicKeysProvided = config.isStaticPublicKeysProvided();
+        this.chatService = chatService;
     }
 
 
@@ -182,15 +185,29 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
 
     public CompletableFuture<SendMessageResult> contactUser(ChatChannelDomain chatChannelDomain,
                                                             UserProfile userProfile,
-                                                            Optional<String> citationMessage) {
+                                                            Optional<String> citationMessage,
+                                                            boolean isReportingUser) {
+        if (chatChannelDomain == ChatChannelDomain.BISQ_EASY_OFFERBOOK ||
+                chatChannelDomain == ChatChannelDomain.BISQ_EASY_OPEN_TRADES) {
+            chatChannelDomain = ChatChannelDomain.BISQ_EASY_PRIVATE_CHAT;
+        }
+        ChatChannelSelectionService selectionServices = chatService.getChatChannelSelectionServices().get(chatChannelDomain);
         if (!twoPartyPrivateChatChannelServices.containsKey(chatChannelDomain)) {
             return CompletableFuture.failedFuture(new RuntimeException("No twoPartyPrivateChatChannelService present for " + chatChannelDomain));
         }
         TwoPartyPrivateChatChannelService channelService = twoPartyPrivateChatChannelServices.get(chatChannelDomain);
         return channelService.findOrCreateChannel(chatChannelDomain, userProfile)
-                .map(channel -> channelService.sendTextMessage(Res.get("authorizedRole.moderator.replyMsg"),
-                        citationMessage.map(msg -> new Citation(userProfile.getId(), msg)),
-                        channel))
+                .map(channel -> {
+                    selectionServices.selectChannel(channel);
+
+                    if (channel.getChatMessages().isEmpty() && isReportingUser) {
+                        return channelService.sendTextMessage(Res.get("authorizedRole.moderator.replyMsg"),
+                                citationMessage.map(msg -> new Citation(userProfile.getId(), msg)),
+                                channel);
+                    } else {
+                        return CompletableFuture.completedFuture(new SendMessageResult());
+                    }
+                })
                 .orElse(CompletableFuture.failedFuture(new RuntimeException("No channel found")));
     }
 

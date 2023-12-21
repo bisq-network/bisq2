@@ -98,13 +98,14 @@ public class BannedUserProfileTable {
 
         void onContactUser(BannedUserProfileData data) {
             ChatChannelDomain chatChannelDomain = ChatChannelDomain.SUPPORT;
-            navigateToChannel(chatChannelDomain);
-            moderatorService.contactUser(chatChannelDomain, data.getUserProfile(), Optional.empty())
+            moderatorService.contactUser(chatChannelDomain, data.getUserProfile(), Optional.empty(), false)
                     .whenComplete((result, throwable) -> {
                         UIThread.run(() -> {
                             if (throwable == null) {
                                 SendMessageResult.findAnyErrorMsg(result)
                                         .ifPresent(errorMsg -> new Popup().error(errorMsg).show());
+                                navigateToChannel(chatChannelDomain);
+                                UIThread.runOnNextRenderFrame(() -> navigateToChannel(chatChannelDomain));
                             } else {
                                 new Popup().error(throwable).show();
                             }
