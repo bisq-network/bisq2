@@ -66,7 +66,7 @@ public class PeerGroupManager {
         private final PeerExchangeStrategy.Config peerExchangeConfig;
         private final KeepAliveService.Config keepAliveServiceConfig;
         private final long bootstrapTime;
-        private final long interval;
+        private final long houseKeepingInterval;
         private final long timeout;
         private final long maxAge;
         private final int maxReported;
@@ -77,7 +77,7 @@ public class PeerGroupManager {
                       PeerExchangeStrategy.Config peerExchangeConfig,
                       KeepAliveService.Config keepAliveServiceConfig,
                       long bootstrapTime,
-                      long interval,
+                      long houseKeepingInterval,
                       long timeout,
                       long maxAge,
                       int maxReported,
@@ -87,7 +87,7 @@ public class PeerGroupManager {
             this.peerExchangeConfig = peerExchangeConfig;
             this.keepAliveServiceConfig = keepAliveServiceConfig;
             this.bootstrapTime = bootstrapTime;
-            this.interval = interval;
+            this.houseKeepingInterval = houseKeepingInterval;
             this.timeout = timeout;
             this.maxAge = maxAge;
             this.maxReported = maxReported;
@@ -103,7 +103,7 @@ public class PeerGroupManager {
                     peerExchangeStrategyConfig,
                     keepAliveServiceConfig,
                     SECONDS.toMillis(typesafeConfig.getLong("bootstrapTimeInSeconds")),
-                    SECONDS.toMillis(typesafeConfig.getLong("intervalInSeconds")),
+                    SECONDS.toMillis(typesafeConfig.getLong("houseKeepingIntervalInSeconds")),
                     SECONDS.toMillis(typesafeConfig.getLong("timeoutInSeconds")),
                     HOURS.toMillis(typesafeConfig.getLong("maxAgeInHours")),
                     typesafeConfig.getInt("maxPersisted"),
@@ -183,9 +183,9 @@ public class PeerGroupManager {
                 // blocking
                 peerExchangeService.startInitialPeerExchange().join();
                 log.info("{} completed doInitialPeerExchange. Start periodic tasks with interval: {} ms",
-                        nodeInfo, config.getInterval());
-                scheduler = Optional.of(Scheduler.run(this::runBlockingTasks)
-                        .periodically(config.getInterval())
+                        nodeInfo, config.getHouseKeepingInterval());
+                scheduler = Optional.of(Scheduler.run(this::doHouseKeeping)
+                        .periodically(config.getHouseKeepingInterval())
                         .name("PeerGroupService.scheduler-" + nodeInfo));
                 keepAliveService.initialize();
                 networkLoadExchangeService.initialize();
@@ -222,7 +222,7 @@ public class PeerGroupManager {
     // Tasks
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private void runBlockingTasks() {
+    private void doHouseKeeping() {
         log.debug("Node {} called runBlockingTasks", node);
         try {
             closeBanned();
