@@ -45,7 +45,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavController> {
-    public final static int EXPANDED_WIDTH = 220;
+    public final static int EXPANDED_WIDTH = 190;
     private final static int COLLAPSED_WIDTH = 70;
     private final static int MARKER_WIDTH = 3;
     private final static int EXPAND_ICON_SIZE = 18;
