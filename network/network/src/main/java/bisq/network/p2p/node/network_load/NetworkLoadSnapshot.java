@@ -22,7 +22,7 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
+import java.util.Optional;
 
 @Slf4j
 @Getter
@@ -30,8 +30,7 @@ import javax.annotation.Nullable;
 @EqualsAndHashCode
 public final class NetworkLoadSnapshot {
     private NetworkLoad currentNetworkLoad;
-    @Nullable
-    private NetworkLoad previousNetworkLoad = null;
+    private Optional<NetworkLoad> previousNetworkLoad = Optional.empty();
     private long lastUpdated = 0;
 
     public NetworkLoadSnapshot() {
@@ -45,7 +44,7 @@ public final class NetworkLoadSnapshot {
     public void updateNetworkLoad(NetworkLoad networkLoad) {
         synchronized (this) {
             lastUpdated = System.currentTimeMillis();
-            previousNetworkLoad = currentNetworkLoad;
+            previousNetworkLoad = Optional.of(currentNetworkLoad);
             currentNetworkLoad = networkLoad;
         }
     }

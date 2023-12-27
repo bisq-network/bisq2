@@ -29,12 +29,8 @@ import bisq.security.pow.ProofOfWorkService;
 import com.google.common.base.Charsets;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
 import java.math.BigInteger;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
@@ -72,13 +68,13 @@ public class AuthorizationService {
                                 NetworkLoad currentNetworkLoad,
                                 String connectionId,
                                 String myAddress) {
-        return isAuthorized(message, authorizationToken, currentNetworkLoad, null, connectionId, myAddress);
+        return isAuthorized(message, authorizationToken, currentNetworkLoad, Optional.empty(), connectionId, myAddress);
     }
 
     public boolean isAuthorized(EnvelopePayloadMessage message,
                                 AuthorizationToken authorizationToken,
                                 NetworkLoad currentNetworkLoad,
-                                @Nullable NetworkLoad previousNetworkLoad,
+                                Optional<NetworkLoad> previousNetworkLoad,
                                 String connectionId,
                                 String myAddress) {
         ProofOfWork proofOfWork = authorizationToken.getProofOfWork();
@@ -128,16 +124,15 @@ public class AuthorizationService {
     private boolean isDifficultyInvalid(EnvelopePayloadMessage message,
                                         double proofOfWorkDifficulty,
                                         NetworkLoad currentNetworkLoad,
-                                        NetworkLoad previousNetworkLoad) {
+                                        Optional<NetworkLoad> previousNetworkLoad) {
         log.debug("isDifficultyInvalid/currentNetworkLoad: message.getCostFactor()={}, networkLoad.getValue()={}",
                 message.getCostFactor(), currentNetworkLoad.getValue());
         double expectedDifficulty = calculateDifficulty(message, currentNetworkLoad);
         if (proofOfWorkDifficulty >= expectedDifficulty) {
-
             // We don't want to call calculateDifficulty with the previousNetworkLoad if we are not in dev mode.
-            if (DevMode.isDevMode() && proofOfWorkDifficulty > expectedDifficulty) {
+            if (DevMode.isDevMode() && proofOfWorkDifficulty > expectedDifficulty && previousNetworkLoad.isPresent()) {
                 // Might be that the difficulty was using the previous network load
-                double expectedPreviousDifficulty = calculateDifficulty(message, previousNetworkLoad);
+                double expectedPreviousDifficulty = calculateDifficulty(message, previousNetworkLoad.get());
                 if (proofOfWorkDifficulty != expectedPreviousDifficulty) {
                     log.warn("Unexpected high difficulty provided. This might be a bug (but valid as provided difficulty is larger as expected): " +
                                     "expectedDifficulty={}; expectedPreviousDifficulty={}; proofOfWorkDifficulty={}",
@@ -150,7 +145,7 @@ public class AuthorizationService {
         double missing = expectedDifficulty - proofOfWorkDifficulty;
         double deviationToTolerance = MathUtils.roundDouble(missing / DIFFICULTY_TOLERANCE * 100, 2);
         double deviationToExpectedDifficulty = MathUtils.roundDouble(missing / expectedDifficulty * 100, 2);
-        if (previousNetworkLoad == null) {
+        if (previousNetworkLoad.isEmpty()) {
             log.debug("No previous network load available");
             if (missing <= DIFFICULTY_TOLERANCE) {
                 log.info("Difficulty of current network load deviates from the proofOfWork difficulty but is inside the tolerated range.\n" +
@@ -166,8 +161,8 @@ public class AuthorizationService {
         }
 
         log.debug("isDifficultyInvalid/previousNetworkLoad: message.getCostFactor()={}, networkLoad.getValue()={}",
-                message.getCostFactor(), previousNetworkLoad.getValue());
-        double expectedPreviousDifficulty = calculateDifficulty(message, previousNetworkLoad);
+                message.getCostFactor(), previousNetworkLoad.get().getValue());
+        double expectedPreviousDifficulty = calculateDifficulty(message, previousNetworkLoad.get());
         if (proofOfWorkDifficulty >= expectedPreviousDifficulty) {
             log.debug("Difficulty of previous network load is correct");
             if (proofOfWorkDifficulty > expectedPreviousDifficulty) {
