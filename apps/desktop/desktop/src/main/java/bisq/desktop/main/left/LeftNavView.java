@@ -72,6 +72,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
         mainMenuItems = new VBox();
         mainMenuItems.setSpacing(6);
+        mainMenuItems.setPadding(new Insets(0, MARKER_WIDTH, 0, 0));
 
         LeftNavButton dashBoard = createNavigationButton(Res.get("navigation.dashboard"),
                 "nav-community",
