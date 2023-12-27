@@ -33,7 +33,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Slf4j
 public class NetworkLoadService {
@@ -63,25 +62,22 @@ public class NetworkLoadService {
         updateNetworkLoadScheduler.ifPresent(Scheduler::stop);
     }
 
-    // All connections of all nodes on all transports
-    public Stream<Connection> getAllConnections() {
-        return serviceNodesByTransport.getAllServices().stream()
-                .flatMap(serviceNode -> serviceNode.getNodesById().getAllNodes().stream())
-                .flatMap(Node::getAllConnections);
-    }
-
     private void updateNetworkLoad() {
-        List<ConnectionMetrics> allConnectionMetrics = getAllConnections()
-                .map(Connection::getConnectionMetrics)
-                .collect(Collectors.toList());
-
         List<? extends DataRequest> dataRequests = storageService.getAllDataRequestMapEntries()
                 .map(Map.Entry::getValue)
                 .collect(Collectors.toList());
 
-        double load = calculateLoad(allConnectionMetrics, dataRequests);
+        double load = calculateLoad(getAllConnectionMetrics(), dataRequests);
         NetworkLoad networkLoad = new NetworkLoad(load);
         networkLoadSnapshot.updateNetworkLoad(networkLoad);
+    }
+
+    private List<ConnectionMetrics> getAllConnectionMetrics() {
+        return serviceNodesByTransport.getAllServices().stream()
+                .flatMap(serviceNode -> serviceNode.getNodesById().getAllNodes().stream())
+                .flatMap(Node::getAllConnections)
+                .map(Connection::getConnectionMetrics)
+                .collect(Collectors.toList());
     }
 
     private static double calculateLoad(List<ConnectionMetrics> allConnectionMetrics, List<? extends DataRequest> dataRequests) {
