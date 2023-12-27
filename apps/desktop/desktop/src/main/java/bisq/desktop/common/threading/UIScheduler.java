@@ -21,7 +21,6 @@ import bisq.common.timer.TaskScheduler;
 import bisq.desktop.common.threading.reactfx.FxTimer;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -35,7 +34,6 @@ import java.util.concurrent.TimeUnit;
 public class UIScheduler implements TaskScheduler {
     private Runnable task;
     private FxTimer timer;
-    private final CompletableFuture<Void> future = new CompletableFuture<>();
 
     private UIScheduler() {
     }

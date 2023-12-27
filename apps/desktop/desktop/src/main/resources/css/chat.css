@@ -355,6 +355,10 @@
     -fx-background-color: rgba(0, 0, 0, 0.15);
 }
 
+.chat-messages-badge.bisq-badge .badge-pane {
+    -fx-background-color: -bisq-medium-grey-dim;
+}
+
 
 /*******************************************************************************
  * Chat guide                                                                  *

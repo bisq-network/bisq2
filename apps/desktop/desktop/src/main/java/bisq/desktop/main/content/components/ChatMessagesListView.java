@@ -39,6 +39,7 @@ import bisq.common.observable.map.HashMapObserver;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Icons;
+import bisq.desktop.common.Transitions;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
@@ -46,6 +47,7 @@ import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.*;
+import bisq.desktop.components.list_view.ListViewUtil;
 import bisq.desktop.components.list_view.NoSelectionModel;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.take_offer.TakeOfferController;
@@ -68,25 +70,28 @@ import bisq.user.reputation.ReputationService;
 import com.google.common.base.Joiner;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
+import javafx.animation.Interpolator;
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.Timeline;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.text.Text;
 import javafx.util.Callback;
+import javafx.util.Duration;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -150,7 +155,7 @@ public class ChatMessagesListView {
         private final BannedUserService bannedUserService;
         private final NetworkService networkService;
         private Pin selectedChannelPin, chatMessagesPin, offerOnlySettingsPin;
-        private Subscription selectedChannelSubscription, focusSubscription;
+        private Subscription selectedChannelSubscription, focusSubscription, scrollValuePin, scrollBarVisiblePin;
 
         private Controller(ServiceProvider serviceProvider,
                            Consumer<UserProfile> mentionUserHandler,
@@ -187,6 +192,20 @@ public class ChatMessagesListView {
             ChatChannelSelectionService selectionService = chatService.getChatChannelSelectionServices().get(model.getChatChannelDomain());
 
             selectedChannelPin = selectionService.getSelectedChannel().addObserver(this::selectedChannelChanged);
+
+            scrollValuePin = EasyBind.subscribe(model.getScrollValue(), scrollValue -> {
+                if (scrollValue != null) {
+                    applyScrollValue(scrollValue.doubleValue());
+                }
+            });
+
+            scrollBarVisiblePin = EasyBind.subscribe(model.scrollBarVisible, scrollBarVisible -> {
+                if (scrollBarVisible != null && scrollBarVisible) {
+                    applyScrollValue(1);
+                }
+            });
+
+            applyScrollValue(1);
         }
 
         @Override
@@ -208,6 +227,9 @@ public class ChatMessagesListView {
             if (selectedChannelSubscription != null) {
                 selectedChannelSubscription.unsubscribe();
             }
+
+            scrollValuePin.unsubscribe();
+            scrollBarVisiblePin.unsubscribe();
 
             model.chatMessages.forEach(ChatMessageListItem::dispose);
             model.chatMessages.clear();
@@ -428,6 +450,38 @@ public class ChatMessagesListView {
 
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////
+        // Scrolling
+        ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+        private void applyScrollValue(double scrollValue) {
+            model.scrollValue.set(scrollValue);
+            model.hasUnreadMessages.set(model.numReadMessages < model.getChatMessages().size());
+            boolean isAtBottom = scrollValue == 1d;
+            model.showScrolledDownButton.set(!isAtBottom && model.scrollBarVisible.get());
+            model.autoScrollToBottom = isAtBottom;
+            if (isAtBottom) {
+                model.numReadMessages = model.getChatMessages().size();
+            }
+
+            int numUnReadMessages = model.getChatMessages().size() - model.numReadMessages;
+            model.numUnReadMessages.set(numUnReadMessages > 0 ? String.valueOf(numUnReadMessages) : "");
+        }
+
+        private void maybeScrollDownOnNewItemAdded() {
+            if (model.autoScrollToBottom) {
+                // The 100 ms delay is needed as when the item gets added to the listview it updates the scroll property
+                // to a value < 1. After the render process is done we set it to 1.
+                UIScheduler.run(() -> applyScrollValue(1)).after(100);
+            } else {
+                applyScrollValue(model.scrollValue.get());
+            }
+        }
+
+        void onScrollToBottom() {
+            applyScrollValue(1);
+        }
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////////
         // Private
         ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -480,6 +534,14 @@ public class ChatMessagesListView {
         }
 
         private <M extends ChatMessage, C extends ChatChannel<M>> Pin bindChatMessages(C channel) {
+            // We clear and fill the list at channel change. The addObserver triggers the add method for each item,
+            // but as we have a contains() check there it will not have any effect.
+            model.chatMessages.clear();
+            model.chatMessages.addAll(channel.getChatMessages().stream().map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService,
+                            bisqEasyTradeService, userIdentityService, networkService))
+                    .collect(Collectors.toSet()));
+            maybeScrollDownOnNewItemAdded();
+
             return channel.getChatMessages().addObserver(new CollectionObserver<>() {
                 @Override
                 public void add(M chatMessage) {
@@ -488,13 +550,12 @@ public class ChatMessagesListView {
                     // @namloan Could you re-test the performance issues with testing if using UIThread.run makes a difference?
                     // There have been many changes in the meantime, so maybe the performance issue was fixed by other changes.
                     UIThread.runOnNextRenderFrame(() -> {
-                        {
-                            ChatMessageListItem<M> item = new ChatMessageListItem<>(chatMessage, userProfileService, reputationService,
-                                    bisqEasyTradeService, userIdentityService, networkService);
-                            // As long as we use runOnNextRenderFrame we need to check to avoid adding duplicates
-                            if (!model.chatMessages.contains(item)) {
-                                model.chatMessages.add(item);
-                            }
+                        ChatMessageListItem<M> item = new ChatMessageListItem<>(chatMessage, userProfileService, reputationService,
+                                bisqEasyTradeService, userIdentityService, networkService);
+                        // As long as we use runOnNextRenderFrame we need to check to avoid adding duplicates
+                        if (!model.chatMessages.contains(item)) {
+                            model.chatMessages.add(item);
+                            maybeScrollDownOnNewItemAdded();
                         }
                     });
                 }
@@ -564,8 +625,14 @@ public class ChatMessagesListView {
         private final ChatChannelDomain chatChannelDomain;
         @Setter
         private Predicate<? super ChatMessageListItem<? extends ChatMessage>> searchPredicate = e -> true;
-        private Optional<Runnable> createOfferCompleteHandler = Optional.empty();
-        private Optional<Runnable> takeOfferCompleteHandler = Optional.empty();
+
+        private boolean autoScrollToBottom;
+        private int numReadMessages;
+        private final BooleanProperty hasUnreadMessages = new SimpleBooleanProperty();
+        private final StringProperty numUnReadMessages = new SimpleStringProperty();
+        private final BooleanProperty showScrolledDownButton = new SimpleBooleanProperty();
+        private final BooleanProperty scrollBarVisible = new SimpleBooleanProperty();
+        private final DoubleProperty scrollValue = new SimpleDoubleProperty();
 
         private Model(UserIdentityService userIdentityService,
                       ChatChannelDomain chatChannelDomain) {
@@ -585,16 +652,20 @@ public class ChatMessagesListView {
 
 
     @Slf4j
-    private static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
+    private static class View extends bisq.desktop.common.view.View<StackPane, Model, Controller> {
         private final static String EDITED_POST_FIX = " " + Res.get("chat.message.wasEdited");
 
         private final ListView<ChatMessageListItem<? extends ChatMessage>> listView;
 
-        private final ListChangeListener<ChatMessageListItem<? extends ChatMessage>> messagesListener;
-        private UIScheduler scrollDelay;
+        private final ImageView scrollDownImageView;
+        private final Badge scrollDownBadge;
+        private final BisqTooltip scrollDownTooltip;
+        private Optional<ScrollBar> scrollBar = Optional.empty();
+        private Subscription hasUnreadMessagesPin, showScrolledDownButtonPin;
+        private Timeline fadeInScrollDownBadgeTimeline;
 
         private View(Model model, Controller controller) {
-            super(new VBox(), model, controller);
+            super(new StackPane(), model, controller);
 
             listView = new ListView<>(model.getSortedChatMessages());
             listView.getStyleClass().add("chat-messages-list-view");
@@ -607,32 +678,107 @@ public class ChatMessagesListView {
             listView.setSelectionModel(new NoSelectionModel<>());
 
             VBox.setVgrow(listView, Priority.ALWAYS);
-            root.getChildren().add(listView);
+            scrollDownImageView = new ImageView();
+            scrollDownImageView.setCursor(Cursor.HAND);
+            scrollDownTooltip = new BisqTooltip(Res.get("chat.listView.scrollDown"));
+            Tooltip.install(scrollDownImageView, scrollDownTooltip);
 
-            messagesListener = c -> {
-                if (scrollDelay != null) {
-                    scrollDelay.stop();
-                }
-                scrollDelay = UIScheduler.run(this::scrollDown).after(200);
-            };
+            scrollDownBadge = new Badge(scrollDownImageView);
+            scrollDownBadge.setMaxSize(25, 25);
+            scrollDownBadge.getStyleClass().add("chat-messages-badge");
+            scrollDownBadge.setPosition(Pos.BOTTOM_RIGHT);
+            scrollDownBadge.setBadgeInsets(new Insets(0, -5, -8, 0));
+
+            StackPane.setAlignment(scrollDownBadge, Pos.BOTTOM_RIGHT);
+            StackPane.setMargin(scrollDownBadge, new Insets(0, 25, 20, 0));
+            root.getChildren().addAll(listView, scrollDownBadge);
         }
 
         @Override
         protected void onViewAttached() {
-            model.getChatMessages().addListener(messagesListener);
+            ListViewUtil.findScrollbarAsync(listView, Orientation.VERTICAL, 1000).whenComplete((scrollBar, throwable) -> {
+                if (throwable != null) {
+                    log.error("Find scrollbar failed", throwable);
+                    return;
+                }
+                this.scrollBar = scrollBar;
+                if (scrollBar.isPresent()) {
+                    scrollBar.get().valueProperty().bindBidirectional(model.getScrollValue());
+                    model.scrollBarVisible.bind(scrollBar.get().visibleProperty());
+                    controller.onScrollToBottom();
+                } else {
+                    log.error("scrollBar is empty");
+                }
+            });
+
+            scrollDownBadge.textProperty().bind(model.numUnReadMessages);
+
+            scrollDownBadge.setOpacity(0);
+            showScrolledDownButtonPin = EasyBind.subscribe(model.showScrolledDownButton, showScrolledDownButton -> {
+                if (showScrolledDownButton == null) {
+                    return;
+                }
+                if (fadeInScrollDownBadgeTimeline != null) {
+                    fadeInScrollDownBadgeTimeline.stop();
+                }
+                if (showScrolledDownButton) {
+                    fadeInScrollDownBadge();
+                } else {
+                    scrollDownBadge.setOpacity(0);
+                }
+            });
+            hasUnreadMessagesPin = EasyBind.subscribe(model.hasUnreadMessages, hasUnreadMessages -> {
+                if (hasUnreadMessages) {
+                    scrollDownImageView.setOpacity(1);
+                    scrollDownImageView.setId("scroll-down-green");
+                    scrollDownTooltip.setText(Res.get("chat.listView.scrollDown.newMessages"));
+                } else {
+                    scrollDownImageView.setOpacity(0.5);
+                    scrollDownImageView.setId("scroll-down-white");
+                    scrollDownTooltip.setText(Res.get("chat.listView.scrollDown"));
+                }
+            });
+
+            scrollDownImageView.setOnMouseClicked(e -> controller.onScrollToBottom());
         }
 
         @Override
         protected void onViewDetached() {
-            model.getChatMessages().removeListener(messagesListener);
-            if (scrollDelay != null) {
-                scrollDelay.stop();
-                scrollDelay = null;
+            scrollBar.ifPresent(scrollbar -> scrollbar.valueProperty().unbindBidirectional(model.getScrollValue()));
+            model.scrollBarVisible.unbind();
+            scrollDownBadge.textProperty().unbind();
+            hasUnreadMessagesPin.unsubscribe();
+            showScrolledDownButtonPin.unsubscribe();
+
+            scrollDownImageView.setOnMouseClicked(null);
+            if (fadeInScrollDownBadgeTimeline != null) {
+                fadeInScrollDownBadgeTimeline.stop();
+                fadeInScrollDownBadgeTimeline = null;
+                scrollDownBadge.setOpacity(0);
             }
         }
 
-        private void scrollDown() {
-            listView.scrollTo(listView.getItems().size() - 1);
+        private void fadeInScrollDownBadge() {
+            if (!Transitions.getUseAnimations()) {
+                scrollDownBadge.setOpacity(1);
+                return;
+            }
+
+            fadeInScrollDownBadgeTimeline = new Timeline();
+            scrollDownBadge.setOpacity(0);
+            ObservableList<KeyFrame> keyFrames = fadeInScrollDownBadgeTimeline.getKeyFrames();
+            keyFrames.add(new KeyFrame(Duration.millis(0),
+                    new KeyValue(scrollDownBadge.opacityProperty(), 0, Interpolator.LINEAR)
+            ));
+            // Add a delay before starting fade-in to deal with a render delay when adding a
+            // list item.
+            keyFrames.add(new KeyFrame(Duration.millis(100),
+                    new KeyValue(scrollDownBadge.opacityProperty(), 0, Interpolator.EASE_OUT)
+            ));
+            keyFrames.add(new KeyFrame(Duration.millis(400),
+                    new KeyValue(scrollDownBadge.opacityProperty(), 1, Interpolator.EASE_OUT)
+            ));
+            fadeInScrollDownBadgeTimeline.play();
         }
 
         public Callback<ListView<ChatMessageListItem<? extends ChatMessage>>, ListCell<ChatMessageListItem<? extends ChatMessage>>> getCellFactory() {
