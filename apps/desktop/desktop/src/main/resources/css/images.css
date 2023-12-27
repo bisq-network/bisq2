@@ -938,5 +938,13 @@
     -fx-image: url("/images/video/sound_off.png");
 }
 
+#scroll-down-white {
+    -fx-image: url("/images/icons/scroll-down-white.png");
+}
+
+#scroll-down-green {
+    -fx-image: url("/images/icons/scroll-down-green.png");
+}
+
 
 
