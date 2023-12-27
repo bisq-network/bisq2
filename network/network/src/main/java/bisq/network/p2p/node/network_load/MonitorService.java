@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.services.monitor;
+package bisq.network.p2p.node.network_load;
 
 import bisq.common.timer.Scheduler;
 import bisq.common.util.ByteUnit;
@@ -23,9 +23,6 @@ import bisq.common.util.MathUtils;
 import bisq.network.p2p.ServiceNodesByTransport;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
-import bisq.network.p2p.node.network_load.ConnectionMetrics;
-import bisq.network.p2p.node.network_load.NetworkLoad;
-import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
 import bisq.network.p2p.services.data.DataRequest;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.StorageService;
