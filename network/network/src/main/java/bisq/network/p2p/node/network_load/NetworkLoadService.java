@@ -108,17 +108,17 @@ public class NetworkLoadService {
                 .sum();
         long networkDatabaseSize = dataRequests.stream().mapToLong(e -> e.toProto().getSerializedSize()).sum();
 
-        StringBuilder sb = new StringBuilder("\n##########################################################################################");
-        sb.append("\nNetwork statistics:")
+        StringBuilder sb = new StringBuilder("\n\n##########################################################################################");
+        sb.append("\nNetwork statistics").append(("\n##########################################################################################"))
                 .append("\nNumber of Connections: ").append(numConnections)
                 .append("\nNumber of messages sent in last hour: ").append(numMessagesSentOfLastHour)
-                .append("\nNumber of messages received in last hour:").append(numMessagesReceivedOfLastHour)
-                .append("\nSize of network DB:").append(networkDatabaseSize).append(" bytes")
-                .append("\nData sent in last hour:").append(sentBytesOfLastHour).append(" bytes")
-                .append("\nData received in last hour:").append(receivedBytesOfLastHour).append(" bytes")
-                .append("\nTime for message sending in last hour:").append(spentSendMessageTimeOfLastHour).append(" ms")
-                .append("\nTime for message deserializing in last hour=").append(deserializeTimeOfLastHour).append(" ms")
-                .append("\n##########################################################################################");
+                .append("\nNumber of messages received in last hour: ").append(numMessagesReceivedOfLastHour)
+                .append("\nSize of network DB: ").append(ByteUnit.BYTE.toMB(networkDatabaseSize)).append(" MB")
+                .append("\nData sent in last hour: ").append(ByteUnit.BYTE.toKB(sentBytesOfLastHour)).append(" KB")
+                .append("\nData received in last hour: ").append(ByteUnit.BYTE.toKB(receivedBytesOfLastHour)).append(" KB")
+                .append("\nTime for message sending in last hour: ").append(spentSendMessageTimeOfLastHour / 1000d).append(" sec.")
+                .append("\nTime for message deserializing in last hour: ").append(deserializeTimeOfLastHour / 1000d).append(" sec.")
+                .append("\n##########################################################################################\n");
         log.info(sb.toString());
 
         double MAX_NUM_CON = 30;
