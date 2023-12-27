@@ -72,7 +72,7 @@ class NetworkLoadExchangeHandler implements Connection.Listener {
                 log.info("Node {} received NetworkLoadResponse from {} with nonce {} and peers networkLoad {}. Connection={}",
                         node, connection.getPeerAddress(), response.getRequestNonce(), peersNetworkLoad, connection.getId());
                 removeListeners();
-                connection.getPeersNetworkLoadService().updatePeersNetworkLoad(peersNetworkLoad);
+                connection.getPeersNetworkLoadService().updateNetworkLoad(peersNetworkLoad);
                 connection.getConnectionMetrics().addRtt(System.currentTimeMillis() - ts);
                 future.complete(null);
             } else {

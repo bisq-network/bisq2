@@ -18,35 +18,41 @@
 package bisq.network.p2p.services.monitor;
 
 import bisq.common.timer.Scheduler;
+import bisq.common.util.ByteUnit;
+import bisq.common.util.MathUtils;
 import bisq.network.p2p.ServiceNodesByTransport;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.network_load.ConnectionMetrics;
+import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.network.p2p.node.network_load.NetworkLoadService;
+import bisq.network.p2p.services.data.DataRequest;
 import bisq.network.p2p.services.data.DataService;
-import bisq.network.p2p.services.data.inventory.DataFilter;
+import bisq.network.p2p.services.data.storage.StorageService;
+import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@Slf4j
 public class MonitorService {
     private static final long INITIAL_DELAY = TimeUnit.SECONDS.toSeconds(5);
     private static final long INTERVAL = TimeUnit.MINUTES.toSeconds(3);
 
     private final ServiceNodesByTransport serviceNodesByTransport;
-    private final DataService dataService;
     private final NetworkLoadService networkLoadService;
+    private final StorageService storageService;
     private Optional<Scheduler> updateNetworkLoadScheduler = Optional.empty();
 
     public MonitorService(ServiceNodesByTransport serviceNodesByTransport,
                           DataService dataService,
                           NetworkLoadService networkLoadService) {
         this.serviceNodesByTransport = serviceNodesByTransport;
-        this.dataService = dataService;
+        storageService = dataService.getStorageService();
         this.networkLoadService = networkLoadService;
     }
 
@@ -72,45 +78,108 @@ public class MonitorService {
                 .map(Connection::getConnectionMetrics)
                 .collect(Collectors.toList());
 
-        // Provide an empty filter so that we get all persisted network data
-        DataFilter emptyFilter = new DataFilter(new ArrayList<>());
-        //todo
-        // Inventory inventory = dataService.getStorageService().getInventoryOfAllStores(emptyFilter);
+        List<? extends DataRequest> dataRequests = storageService.getAllDataRequestMapEntries()
+                .map(Map.Entry::getValue)
+                .collect(Collectors.toList());
 
-        // networkLoadService.updateMyLoad(allConnectionMetrics, inventory);
+        double load = calculateLoad(allConnectionMetrics, dataRequests);
+        NetworkLoad networkLoad = new NetworkLoad(load);
+        networkLoadService.updateNetworkLoad(networkLoad);
     }
 
+    private static double calculateLoad(List<ConnectionMetrics> allConnectionMetrics, List<? extends DataRequest> dataRequests) {
+        long numConnections = allConnectionMetrics.size();
+        long sentBytesOfLastHour = allConnectionMetrics.stream()
+                .map(ConnectionMetrics::getSentBytesOfLastHour)
+                .mapToLong(e -> e)
+                .sum();
+        long spentSendMessageTimeOfLastHour = allConnectionMetrics.stream()
+                .map(ConnectionMetrics::getSpentSendMessageTimeOfLastHour)
+                .mapToLong(e -> e)
+                .sum();
+        long numMessagesSentOfLastHour = allConnectionMetrics.stream()
+                .map(ConnectionMetrics::getNumMessagesSentOfLastHour)
+                .mapToLong(e -> e)
+                .sum();
+        long receivedBytesOfLastHour = allConnectionMetrics.stream()
+                .map(ConnectionMetrics::getReceivedBytesOfLastHour)
+                .mapToLong(e -> e)
+                .sum();
+        long deserializeTimeOfLastHour = allConnectionMetrics.stream()
+                .map(ConnectionMetrics::getDeserializeTimeOfLastHour)
+                .mapToLong(e -> e)
+                .sum();
+        long numMessagesReceivedOfLastHour = allConnectionMetrics.stream()
+                .map(ConnectionMetrics::getNumMessagesReceivedOfLastHour)
+                .mapToLong(e -> e)
+                .sum();
+        long networkDatabaseSize = dataRequests.stream().mapToLong(e -> e.toProto().getSerializedSize()).sum();
 
- /*   public String getPeerGroupInfo() {
-        int numSeedConnections = (int) peerGroupService.getAllConnections()
-                .filter(connection -> peerGroupService.isSeed(connection.getPeerAddress())).count();
-        StringBuilder sb = new StringBuilder();
-        sb.append(node.getTransportType().name()).append(": ")
-                .append(node.findMyAddress().map(Address::toString).orElse(""))
-                .append("\n").append("Num connections: ").append(peerGroupService.getNumConnections())
-                .append("\n").append("Num all connections: ").append(peerGroupService.getNumConnections())
-                .append("\n").append("Num outbound connections: ").append(peerGroupService.getOutboundConnections().count())
-                .append("\n").append("Num inbound connections: ").append(peerGroupService.getInboundConnections().count())
-                .append("\n").append("Num seed connections: ").append(numSeedConnections)
-                .append("\n").append("Connections: ").append("\n");
-        peerGroupService.getOutboundConnections()
-                .sorted(peerGroupService.getConnectionAgeComparator())
-                .forEach(connection -> appendConnectionInfo(sb, connection, true));
-        peerGroupService.getInboundConnections()
-                .sorted(peerGroupService.getConnectionAgeComparator())
-                .forEach(connection -> appendConnectionInfo(sb, connection, false));
-        sb.append("\n").append("Reported peers (").append(peerGroupService.getReportedPeers().size()).append("): ").append(peerGroupService.getReportedPeers().stream()
-                .map(Peer::getAddress).sorted(Comparator.comparing(Address::getPort)).collect(Collectors.toList()));
-        sb.append("\n").append("Persisted peers: ").append(peerGroupService.getPersistedPeers().stream()
-                .map(Peer::getAddress).sorted(Comparator.comparing(Address::getPort)).collect(Collectors.toList()));
-        return sb.append("\n").toString();
-    }*/
+        StringBuilder sb = new StringBuilder("\n##########################################################################################");
+        sb.append("\nNetwork statistics:")
+                .append("\nNumber of Connections: ").append(numConnections)
+                .append("\nNumber of messages sent in last hour: ").append(numMessagesSentOfLastHour)
+                .append("\nNumber of messages received in last hour:").append(numMessagesReceivedOfLastHour)
+                .append("\nSize of network DB:").append(networkDatabaseSize).append(" bytes")
+                .append("\nData sent in last hour:").append(sentBytesOfLastHour).append(" bytes")
+                .append("\nData received in last hour:").append(receivedBytesOfLastHour).append(" bytes")
+                .append("\nTime for message sending in last hour:").append(spentSendMessageTimeOfLastHour).append(" ms")
+                .append("\nTime for message deserializing in last hour=").append(deserializeTimeOfLastHour).append(" ms")
+                .append("\n##########################################################################################");
+        log.info(sb.toString());
 
-  /*  private void appendConnectionInfo(StringBuilder sb, Connection connection, boolean isOutbound) {
-        String date = " at " + new SimpleDateFormat("HH:mm:ss.SSS").format(connection.getConnectionMetrics().getCreationDate());
-        String peerAddressVerified = connection.isPeerAddressVerified() ? " !]" : " ?]";
-        String peerAddress = connection.getPeerAddress().toString().replace("]", peerAddressVerified);
-        String dir = isOutbound ? " --> " : " <-- ";
-        sb.append(node).append(dir).append(peerAddress).append(date).append("\n");
-    }*/
+        double MAX_NUM_CON = 30;
+        double NUM_CON_WEIGHT = 0.1;
+        double numConnectionsImpact = numConnections / MAX_NUM_CON * NUM_CON_WEIGHT;
+
+        double MAX_SENT_BYTES = ByteUnit.MB.toBytes(20);
+        double SENT_BYTES_WEIGHT = 0.1;
+        double sentBytesImpact = sentBytesOfLastHour / MAX_SENT_BYTES * SENT_BYTES_WEIGHT;
+
+        double MAX_SPENT_SEND_TIME = TimeUnit.MINUTES.toMillis(1);
+        double SPENT_SEND_TIME_WEIGHT = 0.1;
+        double spentSendTimeImpact = spentSendMessageTimeOfLastHour / MAX_SPENT_SEND_TIME * SPENT_SEND_TIME_WEIGHT;
+
+        double MAX_NUM_MSG_SENT = 2000;
+        double NUM_MSG_SENT_WEIGHT = 0.1;
+        double numMessagesSentImpact = numMessagesSentOfLastHour / MAX_NUM_MSG_SENT * NUM_MSG_SENT_WEIGHT;
+
+        double MAX_REC_BYTES = ByteUnit.MB.toBytes(20);
+        double REC_BYTES_WEIGHT = 0.1;
+        double receivedBytesImpact = receivedBytesOfLastHour / MAX_REC_BYTES * REC_BYTES_WEIGHT;
+
+        double MAX_DESERIALIZE_TIME = TimeUnit.MINUTES.toMillis(1);
+        double DESERIALIZE_TIME_WEIGHT = 0.1;
+        double deserializeTimeImpact = deserializeTimeOfLastHour / MAX_DESERIALIZE_TIME * DESERIALIZE_TIME_WEIGHT;
+
+        double MAX_NUM_MSG_REC = 1000;
+        double NUM_MSG_REC_WEIGHT = 0.1;
+        double numMessagesReceivedImpact = numMessagesReceivedOfLastHour / MAX_NUM_MSG_REC * NUM_MSG_REC_WEIGHT;
+
+        double MAX_DB_SIZE = ByteUnit.MB.toBytes(100);
+        double DB_WEIGHT = 0.3;
+        double networkDatabaseSizeImpact = networkDatabaseSize / MAX_DB_SIZE * DB_WEIGHT;
+
+        double sum = numConnectionsImpact +
+                sentBytesImpact +
+                spentSendTimeImpact +
+                numMessagesSentImpact +
+                receivedBytesImpact +
+                deserializeTimeImpact +
+                numMessagesReceivedImpact +
+                networkDatabaseSizeImpact;
+        sb = new StringBuilder("\n");
+        sb.append("numConnectionsImpact=").append(numConnectionsImpact);
+        sb.append("\nsentBytesImpact=").append(sentBytesImpact);
+        sb.append("\nspentSendTimeImpact=").append(spentSendTimeImpact);
+        sb.append("\nnumMessagesSentImpact=").append(numMessagesSentImpact);
+        sb.append("\nreceivedBytesImpact=").append(receivedBytesImpact);
+        sb.append("\ndeserializeTimeImpact=").append(deserializeTimeImpact);
+        sb.append("\nnumMessagesReceivedImpact=").append(numMessagesReceivedImpact);
+        sb.append("\nnetworkDatabaseSizeImpact=").append(networkDatabaseSizeImpact);
+        sb.append("\nsum=").append(sum);
+        log.debug(sb.toString());
+
+        return MathUtils.bounded(0, 1, sum);
+    }
 }

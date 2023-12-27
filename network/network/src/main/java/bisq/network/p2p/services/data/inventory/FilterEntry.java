@@ -30,11 +30,11 @@ import java.util.Arrays;
 @Getter
 @ToString
 @EqualsAndHashCode
-final class FilterEntry implements Proto, Comparable<FilterEntry> {
+public final class FilterEntry implements Proto, Comparable<FilterEntry> {
     private final byte[] hash;
     private final int sequenceNumber;
 
-    FilterEntry(byte[] hash, int sequenceNumber) {
+    public FilterEntry(byte[] hash, int sequenceNumber) {
         this.hash = hash;
         this.sequenceNumber = sequenceNumber;
 

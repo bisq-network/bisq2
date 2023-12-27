@@ -96,7 +96,7 @@ public class NetworkLoadExchangeService implements Node.Listener {
             NetworkLoad peersNetworkLoad = request.getNetworkLoad();
             log.info("Node {} received NetworkLoadRequest with nonce {} and peers networkLoad {} from {}",
                     node, request.getNonce(), peersNetworkLoad, connection.getPeerAddress());
-            connection.getPeersNetworkLoadService().updatePeersNetworkLoad(peersNetworkLoad);
+            connection.getPeersNetworkLoadService().updateNetworkLoad(peersNetworkLoad);
             NetworkLoad myNetworkLoad = node.getNetworkLoadService().getCurrentNetworkLoad();
             NetworkLoadExchangeResponse response = new NetworkLoadExchangeResponse(request.getNonce(),
                     myNetworkLoad);
