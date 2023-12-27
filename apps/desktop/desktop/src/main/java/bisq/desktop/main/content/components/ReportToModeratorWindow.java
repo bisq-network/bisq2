@@ -137,9 +137,10 @@ public class ReportToModeratorWindow {
         private View(Model model, Controller controller) {
             super(new VBox(20), model, controller);
 
-            root.setAlignment(Pos.CENTER);
+            root.setAlignment(Pos.TOP_CENTER);
             root.setPadding(new Insets(50, 30, 50, 30));
             root.setPrefWidth(OverlayModel.WIDTH);
+            root.setPrefHeight(400);
 
             Label headline = new Label(Res.get("chat.reportToModerator.headline"));
             headline.getStyleClass().addAll("bisq-text-headline-2");
