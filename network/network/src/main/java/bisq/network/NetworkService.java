@@ -36,7 +36,7 @@ import bisq.network.p2p.ServiceNodesByTransport;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
-import bisq.network.p2p.node.network_load.MonitorService;
+import bisq.network.p2p.node.network_load.NetworkLoadService;
 import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
 import bisq.network.p2p.node.transport.BootstrapInfo;
 import bisq.network.p2p.services.confidential.ConfidentialMessageListener;
@@ -101,7 +101,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     @Getter
     private final ServiceNodesByTransport serviceNodesByTransport;
     private final Optional<MessageDeliveryStatusService> messageDeliveryStatusService;
-    private final Optional<MonitorService> monitorService;
+    private final Optional<NetworkLoadService> monitorService;
     @Getter
     private final Persistence<NetworkServiceStore> persistence;
     @Getter
@@ -147,7 +147,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         monitorService = supportedServices.contains(ServiceNode.SupportedService.DATA) &&
                 supportedServices.contains(ServiceNode.SupportedService.PEER_GROUP) &&
                 supportedServices.contains(ServiceNode.SupportedService.MONITOR) ?
-                Optional.of(new MonitorService(serviceNodesByTransport, dataService.orElseThrow(), networkLoadSnapshot)) :
+                Optional.of(new NetworkLoadService(serviceNodesByTransport, dataService.orElseThrow(), networkLoadSnapshot)) :
                 Optional.empty();
 
         persistence = persistenceService.getOrCreatePersistence(this,
@@ -176,7 +176,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                 .thenApply(node -> {
                     if (node != null) {
                         messageDeliveryStatusService.ifPresent(MessageDeliveryStatusService::initialize);
-                        monitorService.ifPresent(MonitorService::initialize);
+                        monitorService.ifPresent(NetworkLoadService::initialize);
                         return true;
                     } else {
                         return false;
@@ -187,7 +187,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
         messageDeliveryStatusService.ifPresent(MessageDeliveryStatusService::shutdown);
-        monitorService.ifPresent(MonitorService::shutdown);
+        monitorService.ifPresent(NetworkLoadService::shutdown);
         dataService.ifPresent(DataService::shutdown);
         return serviceNodesByTransport.shutdown()
                 .thenApply(list -> list.stream().filter(e -> e).count() == supportedTransportTypes.size());

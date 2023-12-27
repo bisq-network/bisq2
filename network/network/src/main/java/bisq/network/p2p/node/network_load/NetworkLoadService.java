@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Slf4j
-public class MonitorService {
+public class NetworkLoadService {
     private static final long INITIAL_DELAY = TimeUnit.SECONDS.toSeconds(5);
     private static final long INTERVAL = TimeUnit.MINUTES.toSeconds(3);
 
@@ -45,9 +45,9 @@ public class MonitorService {
     private final StorageService storageService;
     private Optional<Scheduler> updateNetworkLoadScheduler = Optional.empty();
 
-    public MonitorService(ServiceNodesByTransport serviceNodesByTransport,
-                          DataService dataService,
-                          NetworkLoadSnapshot networkLoadSnapshot) {
+    public NetworkLoadService(ServiceNodesByTransport serviceNodesByTransport,
+                              DataService dataService,
+                              NetworkLoadSnapshot networkLoadSnapshot) {
         this.serviceNodesByTransport = serviceNodesByTransport;
         storageService = dataService.getStorageService();
         this.networkLoadSnapshot = networkLoadSnapshot;
