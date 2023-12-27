@@ -25,7 +25,7 @@ import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.network_load.ConnectionMetrics;
 import bisq.network.p2p.node.network_load.NetworkLoad;
-import bisq.network.p2p.node.network_load.NetworkLoadService;
+import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
 import bisq.network.p2p.services.data.DataRequest;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.StorageService;
@@ -44,16 +44,16 @@ public class MonitorService {
     private static final long INTERVAL = TimeUnit.MINUTES.toSeconds(3);
 
     private final ServiceNodesByTransport serviceNodesByTransport;
-    private final NetworkLoadService networkLoadService;
+    private final NetworkLoadSnapshot networkLoadSnapshot;
     private final StorageService storageService;
     private Optional<Scheduler> updateNetworkLoadScheduler = Optional.empty();
 
     public MonitorService(ServiceNodesByTransport serviceNodesByTransport,
                           DataService dataService,
-                          NetworkLoadService networkLoadService) {
+                          NetworkLoadSnapshot networkLoadSnapshot) {
         this.serviceNodesByTransport = serviceNodesByTransport;
         storageService = dataService.getStorageService();
-        this.networkLoadService = networkLoadService;
+        this.networkLoadSnapshot = networkLoadSnapshot;
     }
 
     public void initialize() {
@@ -84,7 +84,7 @@ public class MonitorService {
 
         double load = calculateLoad(allConnectionMetrics, dataRequests);
         NetworkLoad networkLoad = new NetworkLoad(load);
-        networkLoadService.updateNetworkLoad(networkLoad);
+        networkLoadSnapshot.updateNetworkLoad(networkLoad);
     }
 
     private static double calculateLoad(List<ConnectionMetrics> allConnectionMetrics, List<? extends DataRequest> dataRequests) {

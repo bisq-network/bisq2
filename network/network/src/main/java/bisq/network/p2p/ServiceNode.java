@@ -29,7 +29,7 @@ import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.NodesById;
 import bisq.network.p2p.node.authorization.AuthorizationService;
-import bisq.network.p2p.node.network_load.NetworkLoadService;
+import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
 import bisq.network.p2p.node.transport.TransportService;
 import bisq.network.p2p.services.confidential.ConfidentialMessageListener;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
@@ -141,7 +141,7 @@ public class ServiceNode {
                 AuthorizationService authorizationService,
                 Set<Address> seedNodeAddresses,
                 TransportType transportType,
-                NetworkLoadService networkLoadService) {
+                NetworkLoadSnapshot networkLoadSnapshot) {
         this.config = config;
         this.peerGroupServiceConfig = peerGroupServiceConfig;
         this.inventoryServiceConfig = inventoryServiceConfig;
@@ -151,7 +151,7 @@ public class ServiceNode {
         this.seedNodeAddresses = seedNodeAddresses;
 
         transportService = TransportService.create(transportType, nodeConfig.getTransportConfig());
-        nodesById = new NodesById(banList, nodeConfig, keyBundleService, transportService, networkLoadService, authorizationService);
+        nodesById = new NodesById(banList, nodeConfig, keyBundleService, transportService, networkLoadSnapshot, authorizationService);
 
         peerGroupService = new PeerGroupService(persistenceService, transportType, peerGroupServiceConfig.getPeerGroupConfig(), seedNodeAddresses, banList);
     }

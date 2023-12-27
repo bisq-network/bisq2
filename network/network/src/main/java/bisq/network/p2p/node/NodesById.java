@@ -23,7 +23,7 @@ import bisq.network.common.Address;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.authorization.AuthorizationService;
-import bisq.network.p2p.node.network_load.NetworkLoadService;
+import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
 import bisq.network.p2p.node.transport.TransportService;
 import bisq.network.p2p.services.peergroup.BanList;
 import bisq.security.keys.KeyBundleService;
@@ -56,7 +56,7 @@ public class NodesById implements Node.Listener {
     private final Node.Config nodeConfig;
     private final KeyBundleService keyBundleService;
     private final TransportService transportService;
-    private final NetworkLoadService networkLoadService;
+    private final NetworkLoadSnapshot networkLoadSnapshot;
     private final AuthorizationService authorizationService;
     private final Map<NetworkId, Node> map = new ConcurrentHashMap<>();
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
@@ -66,13 +66,13 @@ public class NodesById implements Node.Listener {
                      Node.Config nodeConfig,
                      KeyBundleService keyBundleService,
                      TransportService transportService,
-                     NetworkLoadService networkLoadService,
+                     NetworkLoadSnapshot networkLoadSnapshot,
                      AuthorizationService authorizationService) {
         this.banList = banList;
         this.nodeConfig = nodeConfig;
         this.keyBundleService = keyBundleService;
         this.transportService = transportService;
-        this.networkLoadService = networkLoadService;
+        this.networkLoadSnapshot = networkLoadSnapshot;
         this.authorizationService = authorizationService;
     }
 
@@ -81,7 +81,7 @@ public class NodesById implements Node.Listener {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public Node createAndConfigNode(NetworkId networkId, boolean isDefaultNode) {
-        Node node = new Node(networkId, isDefaultNode, nodeConfig, banList, keyBundleService, transportService, networkLoadService, authorizationService);
+        Node node = new Node(networkId, isDefaultNode, nodeConfig, banList, keyBundleService, transportService, networkLoadSnapshot, authorizationService);
         map.put(networkId, node);
         node.addListener(this);
         listeners.forEach(listener -> listener.onNodeAdded(node));

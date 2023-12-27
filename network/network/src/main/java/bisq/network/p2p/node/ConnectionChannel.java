@@ -19,13 +19,13 @@ package bisq.network.p2p.node;
 
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
+import bisq.network.common.Address;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
 import bisq.network.p2p.node.envelope.NetworkEnvelopeSocketChannel;
 import bisq.network.p2p.node.network_load.ConnectionMetrics;
-import bisq.network.p2p.node.network_load.NetworkLoadService;
-import bisq.network.common.Address;
+import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -60,7 +60,7 @@ public abstract class ConnectionChannel {
     @Getter
     private final Capability peersCapability;
     @Getter
-    private final NetworkLoadService peersNetworkLoadService;
+    private final NetworkLoadSnapshot peersNetworkLoadSnapshot;
     @Getter
     private final NetworkEnvelopeSocketChannel networkEnvelopeSocketChannel;
     @Getter
@@ -76,11 +76,11 @@ public abstract class ConnectionChannel {
     private final Object writeLock = new Object();
 
     protected ConnectionChannel(Capability peersCapability,
-                                NetworkLoadService peersNetworkLoadService,
+                                NetworkLoadSnapshot peersNetworkLoadSnapshot,
                                 NetworkEnvelopeSocketChannel networkEnvelopeSocketChannel,
                                 ConnectionMetrics connectionMetrics) {
         this.peersCapability = peersCapability;
-        this.peersNetworkLoadService = peersNetworkLoadService;
+        this.peersNetworkLoadSnapshot = peersNetworkLoadSnapshot;
         this.networkEnvelopeSocketChannel = networkEnvelopeSocketChannel;
         this.connectionMetrics = connectionMetrics;
     }

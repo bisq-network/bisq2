@@ -19,7 +19,7 @@ package bisq.network.p2p.node;
 
 import bisq.network.p2p.node.envelope.NetworkEnvelopeSocketChannel;
 import bisq.network.p2p.node.network_load.ConnectionMetrics;
-import bisq.network.p2p.node.network_load.NetworkLoadService;
+import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,10 +29,10 @@ public class InboundConnectionChannel extends ConnectionChannel {
     private boolean isPeerAddressVerified;
 
     public InboundConnectionChannel(Capability peersCapability,
-                                    NetworkLoadService peersNetworkLoadService,
+                                    NetworkLoadSnapshot peersNetworkLoadSnapshot,
                                     NetworkEnvelopeSocketChannel networkEnvelopeSocketChannel,
                                     ConnectionMetrics connectionMetrics) {
-        super(peersCapability, peersNetworkLoadService, networkEnvelopeSocketChannel, connectionMetrics);
+        super(peersCapability, peersNetworkLoadSnapshot, networkEnvelopeSocketChannel, connectionMetrics);
         log.debug("Create inboundConnection");
     }
 

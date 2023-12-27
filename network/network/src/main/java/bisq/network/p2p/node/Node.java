@@ -30,7 +30,7 @@ import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
 import bisq.network.p2p.node.handshake.ConnectionHandshake;
-import bisq.network.p2p.node.network_load.NetworkLoadService;
+import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
 import bisq.network.p2p.node.transport.ServerSocketResult;
 import bisq.network.p2p.node.transport.TransportService;
 import bisq.network.p2p.services.peergroup.BanList;
@@ -151,7 +151,7 @@ public class Node implements Connection.Handler {
     @Getter
     public final Observable<State> observableState = new Observable<>(State.NEW);
     @Getter
-    public final NetworkLoadService networkLoadService;
+    public final NetworkLoadSnapshot networkLoadSnapshot;
 
     public Node(NetworkId networkId,
                 boolean isDefaultNode,
@@ -159,7 +159,7 @@ public class Node implements Connection.Handler {
                 BanList banList,
                 KeyBundleService keyBundleService,
                 TransportService transportService,
-                NetworkLoadService networkLoadService,
+                NetworkLoadSnapshot networkLoadSnapshot,
                 AuthorizationService authorizationService) {
         this.networkId = networkId;
         keyBundle = keyBundleService.getOrCreateKeyBundle(networkId.getKeyId());
@@ -170,7 +170,7 @@ public class Node implements Connection.Handler {
         this.banList = banList;
         this.transportService = transportService;
         this.authorizationService = authorizationService;
-        this.networkLoadService = networkLoadService;
+        this.networkLoadSnapshot = networkLoadSnapshot;
 
         retryPolicy = RetryPolicy.<Boolean>builder()
                 .handle(IllegalStateException.class)
@@ -245,7 +245,7 @@ public class Node implements Connection.Handler {
         connectionHandshakes.put(connectionHandshake.getId(), connectionHandshake);
         log.debug("Inbound handshake request at: {}", myCapability.getAddress());
         try {
-            ConnectionHandshake.Result result = connectionHandshake.onSocket(networkLoadService.getCurrentNetworkLoad()); // Blocking call
+            ConnectionHandshake.Result result = connectionHandshake.onSocket(networkLoadSnapshot.getCurrentNetworkLoad()); // Blocking call
             connectionHandshakes.remove(connectionHandshake.getId());
 
             Address address = result.getCapability().getAddress();
@@ -264,7 +264,7 @@ public class Node implements Connection.Handler {
             InboundConnection connection = new InboundConnection(socket,
                     serverSocketResult,
                     result.getCapability(),
-                    new NetworkLoadService(result.getPeersNetworkLoad()),
+                    new NetworkLoadSnapshot(result.getPeersNetworkLoad()),
                     result.getConnectionMetrics(),
                     this,
                     this::handleException);
@@ -313,7 +313,7 @@ public class Node implements Connection.Handler {
         }
         try {
             AuthorizationToken token = authorizationService.createToken(envelopePayloadMessage,
-                    connection.getPeersNetworkLoadService().getCurrentNetworkLoad(),
+                    connection.getPeersNetworkLoadSnapshot().getCurrentNetworkLoad(),
                     connection.getPeerAddress().getFullAddress(),
                     connection.getSentMessageCounter().incrementAndGet());
             return connection.send(envelopePayloadMessage, token);
@@ -387,7 +387,7 @@ public class Node implements Connection.Handler {
         connectionHandshakes.put(connectionHandshake.getId(), connectionHandshake);
         log.debug("Outbound handshake started: Initiated by {} to {}", myCapability.getAddress(), address);
         try {
-            ConnectionHandshake.Result result = connectionHandshake.start(networkLoadService.getCurrentNetworkLoad(), address); // Blocking call
+            ConnectionHandshake.Result result = connectionHandshake.start(networkLoadSnapshot.getCurrentNetworkLoad(), address); // Blocking call
             connectionHandshakes.remove(connectionHandshake.getId());
             log.debug("Outbound handshake completed: Initiated by {} to {}", myCapability.getAddress(), address);
             log.debug("Create new outbound connection to {}", address);
@@ -415,7 +415,7 @@ public class Node implements Connection.Handler {
             OutboundConnection connection = new OutboundConnection(socket,
                     address,
                     result.getCapability(),
-                    new NetworkLoadService(result.getPeersNetworkLoad()),
+                    new NetworkLoadSnapshot(result.getPeersNetworkLoad()),
                     result.getConnectionMetrics(),
                     this,
                     this::handleException);
@@ -467,8 +467,8 @@ public class Node implements Connection.Handler {
         String myAddress = findMyAddress().orElseThrow().getFullAddress();
         boolean isAuthorized = authorizationService.isAuthorized(envelopePayloadMessage,
                 authorizationToken,
-                networkLoadService.getCurrentNetworkLoad(),
-                networkLoadService.getPreviousNetworkLoad(),
+                networkLoadSnapshot.getCurrentNetworkLoad(),
+                networkLoadSnapshot.getPreviousNetworkLoad(),
                 connection.getId(),
                 myAddress);
         if (isAuthorized) {
@@ -495,8 +495,8 @@ public class Node implements Connection.Handler {
         String myAddress = findMyAddress().orElseThrow().getFullAddress();
         boolean isAuthorized = authorizationService.isAuthorized(envelopePayloadMessage,
                 authorizationToken,
-                networkLoadService.getCurrentNetworkLoad(),
-                networkLoadService.getPreviousNetworkLoad(),
+                networkLoadSnapshot.getCurrentNetworkLoad(),
+                networkLoadSnapshot.getPreviousNetworkLoad(),
                 connection.getId(),
                 myAddress);
         if (isAuthorized) {

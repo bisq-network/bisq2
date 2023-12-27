@@ -155,7 +155,7 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
     public Stream<Peer> getAllConnectedPeers(Node node) {
         return node.getAllActiveConnections().map(connection ->
                 new Peer(connection.getPeersCapability(),
-                        connection.getPeersNetworkLoadService().getCurrentNetworkLoad(),
+                        connection.getPeersNetworkLoadSnapshot().getCurrentNetworkLoad(),
                         connection.isOutboundConnection()));
     }
 

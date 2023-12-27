@@ -31,7 +31,7 @@ import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.authorization.AuthorizationService;
-import bisq.network.p2p.node.network_load.NetworkLoadService;
+import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
 import bisq.network.p2p.node.transport.BootstrapInfo;
 import bisq.network.p2p.services.confidential.ConfidentialMessageListener;
 import bisq.network.p2p.services.confidential.MessageListener;
@@ -79,7 +79,7 @@ public class ServiceNodesByTransport {
                                    ProofOfWorkService proofOfWorkService,
                                    Optional<DataService> dataService,
                                    Optional<MessageDeliveryStatusService> messageDeliveryStatusService,
-                                   NetworkLoadService networkLoadService) {
+                                   NetworkLoadSnapshot networkLoadSnapshot) {
         this.supportedTransportTypes = supportedTransportTypes;
 
         authorizationService = new AuthorizationService(proofOfWorkService);
@@ -106,7 +106,7 @@ public class ServiceNodesByTransport {
                     authorizationService,
                     seedAddresses,
                     transportType,
-                    networkLoadService);
+                    networkLoadSnapshot);
             map.put(transportType, serviceNode);
         });
     }

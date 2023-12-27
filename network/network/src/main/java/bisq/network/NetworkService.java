@@ -36,7 +36,7 @@ import bisq.network.p2p.ServiceNodesByTransport;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
-import bisq.network.p2p.node.network_load.NetworkLoadService;
+import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
 import bisq.network.p2p.node.transport.BootstrapInfo;
 import bisq.network.p2p.services.confidential.ConfidentialMessageListener;
 import bisq.network.p2p.services.confidential.MessageListener;
@@ -129,7 +129,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                 Optional.of(new MessageDeliveryStatusService(persistenceService, keyBundleService, this)) :
                 Optional.empty();
 
-        NetworkLoadService networkLoadService = new NetworkLoadService();
+        NetworkLoadSnapshot networkLoadSnapshot = new NetworkLoadSnapshot();
 
         serviceNodesByTransport = new ServiceNodesByTransport(config.getConfigByTransportType(),
                 config.getServiceNodeConfig(),
@@ -142,12 +142,12 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                 proofOfWorkService,
                 dataService,
                 messageDeliveryStatusService,
-                networkLoadService);
+                networkLoadSnapshot);
 
         monitorService = supportedServices.contains(ServiceNode.SupportedService.DATA) &&
                 supportedServices.contains(ServiceNode.SupportedService.PEER_GROUP) &&
                 supportedServices.contains(ServiceNode.SupportedService.MONITOR) ?
-                Optional.of(new MonitorService(serviceNodesByTransport, dataService.orElseThrow(), networkLoadService)) :
+                Optional.of(new MonitorService(serviceNodesByTransport, dataService.orElseThrow(), networkLoadSnapshot)) :
                 Optional.empty();
 
         persistence = persistenceService.getOrCreatePersistence(this,

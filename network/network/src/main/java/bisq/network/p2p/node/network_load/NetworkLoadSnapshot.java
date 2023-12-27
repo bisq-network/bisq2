@@ -24,25 +24,21 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
-/**
- * Our own NetworkLoadService is one single instance which gets updated via the MonitorService.
- * The peer's NetworkLoadService is part of the connection and manages the peers network load.
- */
 @Slf4j
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class NetworkLoadService {
+public final class NetworkLoadSnapshot {
     private NetworkLoad currentNetworkLoad;
     @Nullable
     private NetworkLoad previousNetworkLoad = null;
     private long lastUpdated = 0;
 
-    public NetworkLoadService() {
+    public NetworkLoadSnapshot() {
         currentNetworkLoad = new NetworkLoad();
     }
 
-    public NetworkLoadService(NetworkLoad networkLoad) {
+    public NetworkLoadSnapshot(NetworkLoad networkLoad) {
         currentNetworkLoad = networkLoad;
     }
 
