@@ -68,6 +68,7 @@ import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import com.google.common.base.Joiner;
+import com.sun.javafx.scene.control.VirtualScrollBar;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.animation.Interpolator;
@@ -660,7 +661,7 @@ public class ChatMessagesListView {
         private final ImageView scrollDownImageView;
         private final Badge scrollDownBadge;
         private final BisqTooltip scrollDownTooltip;
-        private Optional<ScrollBar> scrollBar = Optional.empty();
+        private Optional<VirtualScrollBar> scrollBar = Optional.empty();
         private Subscription hasUnreadMessagesPin, showScrolledDownButtonPin;
         private Timeline fadeInScrollDownBadgeTimeline;
 
