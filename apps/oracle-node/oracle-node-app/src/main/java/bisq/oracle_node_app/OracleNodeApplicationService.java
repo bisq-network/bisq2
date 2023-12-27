@@ -45,7 +45,7 @@ public class OracleNodeApplicationService extends ApplicationService {
     public OracleNodeApplicationService(String[] args) {
         super("oracle_node", args);
 
-        securityService = new SecurityService(persistenceService);
+        securityService = new SecurityService(persistenceService, SecurityService.Config.from(getConfig("security")));
 
         NetworkServiceConfig networkServiceConfig = NetworkServiceConfig.from(config.getBaseDir(),
                 getConfig("network"));

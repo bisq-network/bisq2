@@ -39,6 +39,9 @@ public class BisqTooltip extends Tooltip {
         setShowDelay(Duration.millis(100));
         setHideDelay(Duration.millis(100));
         useDarkStyle(useDarkStyle);
+
+        setMaxWidth(800);
+        setWrapText(true);
     }
 
     public void useDarkStyle(boolean useDarkStyle) {
