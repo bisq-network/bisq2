@@ -597,8 +597,6 @@ public class ChatMessagesComponent {
             Label noChatsLabel = new Label(Res.get("chat.private.messagebox.noChats.description"));
             noChatsLabel.getStyleClass().add("chat-container-placeholder-text");
             noChatsLabel.setTextAlignment(TextAlignment.CENTER);
-            noChatsLabel.setWrapText(true);
-            noChatsLabel.setPadding(new Insets(20));
             emptyMessageList = new VBox(noChatsLabel);
             emptyMessageList.setAlignment(Pos.CENTER);
             VBox.setVgrow(emptyMessageList, Priority.ALWAYS);
