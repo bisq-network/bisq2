@@ -23,12 +23,10 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class StringUtils {
@@ -200,5 +198,12 @@ public class StringUtils {
         }
 
         return result;
+    }
+
+    public static String createNavigationPath(CharSequence delimiter, String... strings) {
+        return Arrays.stream(strings)
+                .filter(str -> str != null && !str.trim().isEmpty())
+                .map(String::trim)
+                .collect(Collectors.joining(delimiter));
     }
 }
