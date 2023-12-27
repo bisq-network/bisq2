@@ -34,15 +34,13 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.Tooltip;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.text.Text;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public final class BisqEasyOfferbookView extends BaseChatView {
+    private static final double CHAT_BOX_MAX_WIDTH = 1440;
     // private static double filterPaneHeight;
 
     private final BisqEasyOfferbookModel bisqEasyOfferbookModel;
@@ -106,6 +104,7 @@ public final class BisqEasyOfferbookView extends BaseChatView {
     protected void configCenterVBox() {
         centerVBox.setSpacing(0);
         centerVBox.setFillWidth(true);
+        centerVBox.setMaxWidth(CHAT_BOX_MAX_WIDTH);
 
         searchBox = new SearchBox();
         searchBox.setMaxWidth(200);
@@ -169,13 +168,18 @@ public final class BisqEasyOfferbookView extends BaseChatView {
     protected void configContainerHBox() {
         containerHBox.setSpacing(10);
         containerHBox.setFillHeight(true);
+        Layout.pinToAnchorPane(containerHBox, 0, 0, 0, 0);
+
+        AnchorPane wrapper = new AnchorPane();
+        wrapper.setPadding(new Insets(0, 40, 0, 40));
+        wrapper.getChildren().add(containerHBox);
+
+        root.setContent(wrapper);
+
         HBox.setHgrow(centerVBox, Priority.ALWAYS);
         HBox.setHgrow(sideBar, Priority.NEVER);
         containerHBox.getChildren().addAll(centerVBox, sideBar);
-        containerHBox.setPadding(new Insets(0, 40, 0, 40));
-
-        Layout.pinToAnchorPane(containerHBox, 0, 40, 40, 40);
-        root.setContent(containerHBox);
+        containerHBox.setAlignment(Pos.CENTER);
     }
 
     @Override

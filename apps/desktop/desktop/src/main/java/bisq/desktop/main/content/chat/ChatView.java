@@ -26,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ChatView<V extends ChatView<V, M>, M extends ChatModel> extends BaseChatView {
     protected static final double SIDE_PADDING = 40;
+    protected static final double CHAT_BOX_MAX_WIDTH = 1440;
 
     public ChatView(ChatModel model,
                     ChatController<V, M> controller,
@@ -42,6 +43,7 @@ public class ChatView<V extends ChatView<V, M>, M extends ChatModel> extends Bas
     protected void configCenterVBox() {
         VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
         chatMessagesComponent.getStyleClass().add("bisq-easy-container");
+        centerVBox.setMaxWidth(CHAT_BOX_MAX_WIDTH);
         centerVBox.getChildren().addAll(chatMessagesComponent);
         centerVBox.setFillWidth(true);
     }
@@ -69,5 +71,6 @@ public class ChatView<V extends ChatView<V, M>, M extends ChatModel> extends Bas
         HBox.setHgrow(centerVBox, Priority.ALWAYS);
         HBox.setHgrow(sideBar, Priority.NEVER);
         containerHBox.getChildren().addAll(centerVBox, sideBar);
+        containerHBox.setAlignment(Pos.CENTER);
     }
 }

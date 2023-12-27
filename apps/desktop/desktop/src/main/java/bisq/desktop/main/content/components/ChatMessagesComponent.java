@@ -542,8 +542,8 @@ public class ChatMessagesComponent {
             this.messagesListView = messagesListView;
 
             inputField = new BisqTextArea();
-            inputField.setId("chat-input-field");
             inputField.setPromptText(Res.get("chat.message.input.prompt"));
+            inputField.getStyleClass().addAll("chat-input-field", "normal-text");
 
             sendButton = new Button("", ImageUtil.getImageViewById("chat-send"));
             sendButton.setId("chat-messages-send-button");

@@ -14,7 +14,7 @@
 }
 
 .normal-text {
-    -fx-font-size: 1em;
+    -fx-font-size: 1.1em !important;
 }
 
 .large-text {

@@ -65,7 +65,7 @@
     -fx-background-radius: 8;
 }
 
-#chat-input-field {
+.chat-input-field {
     -fx-background-color: -bisq-dark-grey-mid;
     -fx-background-radius: 8;
     -fx-border-color: -bisq-dark-grey-mid;
@@ -74,10 +74,9 @@
     -fx-faint-focus-color: transparent;
     -fx-text-fill: -fx-light-text-color;
     -fx-prompt-text-fill: -fx-mid-text-color;
-    -fx-font-size: 1.38em;
     -fx-background-insets: 0;
     -fx-border-insets: 0;
-    -fx-padding: 2 4 4 4;
+    -fx-padding: 4;
     -fx-font-family: "IBM Plex Sans";
 }
 

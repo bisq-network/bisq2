@@ -35,10 +35,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.util.Callback;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -114,6 +111,8 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
         chatVBox.getStyleClass().add("bisq-easy-container");
 
         VBox.setVgrow(chatVBox, Priority.ALWAYS);
+        centerVBox.setMaxWidth(CHAT_BOX_MAX_WIDTH);
+        centerVBox.setFillWidth(true);
         centerVBox.getChildren().add(chatVBox);
     }
 
@@ -121,12 +120,18 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
     protected void configContainerHBox() {
         containerHBox.setSpacing(10);
         containerHBox.setFillHeight(true);
+        Layout.pinToAnchorPane(containerHBox, 0, 0, 0, 0);
+
+        AnchorPane wrapper = new AnchorPane();
+        wrapper.setPadding(new Insets(0, SIDE_PADDING, 0, SIDE_PADDING));
+        wrapper.getChildren().add(containerHBox);
+
+        root.setContent(wrapper);
+
         HBox.setHgrow(centerVBox, Priority.ALWAYS);
         HBox.setHgrow(sideBar, Priority.NEVER);
         containerHBox.getChildren().addAll(openChatsList, centerVBox, sideBar);
-        containerHBox.setPadding(new Insets(0, SIDE_PADDING, 0, SIDE_PADDING));
-
-        root.setContent(containerHBox);
+        containerHBox.setAlignment(Pos.CENTER);
     }
 
     @Override
