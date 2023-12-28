@@ -68,6 +68,7 @@ import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import com.google.common.base.Joiner;
+import com.sun.javafx.scene.control.VirtualScrollBar;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.animation.Interpolator;
@@ -660,7 +661,7 @@ public class ChatMessagesListView {
         private final ImageView scrollDownImageView;
         private final Badge scrollDownBadge;
         private final BisqTooltip scrollDownTooltip;
-        private Optional<ScrollBar> scrollBar = Optional.empty();
+        private Optional<VirtualScrollBar> scrollBar = Optional.empty();
         private Subscription hasUnreadMessagesPin, showScrolledDownButtonPin;
         private Timeline fadeInScrollDownBadgeTimeline;
 
@@ -1324,12 +1325,17 @@ public class ChatMessagesListView {
                                         messageDeliveryStatusIconColor = Optional.empty();
                                         messageDeliveryStatusTooltip.set(Res.get("chat.message.deliveryState." + status.name()));
                                         switch (status) {
-                                            case START_SENDING:
-                                                // -bisq-white-dim: #eaeaea;
-                                                messageDeliveryStatusIconColor = Optional.of("#eaeaea");
+                                            case CONNECTING:
+                                                // -bisq-medium-grey-mid: #808080;
+                                                messageDeliveryStatusIconColor = Optional.of("#808080");
                                                 messageDeliveryStatusIcon.set(AwesomeIcon.SPINNER);
                                                 break;
-                                            case ARRIVED:
+                                            case SENT:
+                                                // -bisq-white-dim: #eaeaea;
+                                                messageDeliveryStatusIconColor = Optional.of("#eaeaea");
+                                                messageDeliveryStatusIcon.set(AwesomeIcon.CIRCLE_ARROW_RIGHT);
+                                                break;
+                                            case ACK_RECEIVED:
                                                 // -bisq2-green-dim-50: #2b5624;
                                                 messageDeliveryStatusIconColor = Optional.of("#2b5624");
                                                 messageDeliveryStatusIcon.set(AwesomeIcon.OK_SIGN);

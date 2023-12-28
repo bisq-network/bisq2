@@ -87,11 +87,7 @@ public class MessageDeliveryStatusService implements PersistenceClient<MessageDe
                     return;
                 }
 
-                if (observableStatus.get() == MessageDeliveryStatus.ADDED_TO_MAILBOX && status.isReceived()) {
-                    observableStatus.set(status);
-                } else {
-                    observableStatus.set(status);
-                }
+                observableStatus.set(status);
             } else {
                 messageDeliveryStatusByMessageId.put(messageId, new Observable<>(status));
             }
@@ -123,14 +119,15 @@ public class MessageDeliveryStatusService implements PersistenceClient<MessageDe
                     return;
                 }
 
-                if (observableStatus.get() == MessageDeliveryStatus.START_SENDING) {
-                    observableStatus.set(MessageDeliveryStatus.ARRIVED);
+                if (observableStatus.get() == MessageDeliveryStatus.CONNECTING ||
+                        observableStatus.get() == MessageDeliveryStatus.SENT) {
+                    observableStatus.set(MessageDeliveryStatus.ACK_RECEIVED);
                 } else {
                     // Covers ADDED_TO_MAILBOX, TRY_ADD_TO_MAILBOX and FAILED
                     observableStatus.set(MessageDeliveryStatus.MAILBOX_MSG_RECEIVED);
                 }
             } else {
-                messageDeliveryStatusByMessageId.put(messageId, new Observable<>(MessageDeliveryStatus.ARRIVED));
+                messageDeliveryStatusByMessageId.put(messageId, new Observable<>(MessageDeliveryStatus.ACK_RECEIVED));
             }
             log.info("Received AckMessage for message with ID {} and set status to {}",
                     messageId, messageDeliveryStatusByMessageId.get(messageId).get());
@@ -157,7 +154,8 @@ public class MessageDeliveryStatusService implements PersistenceClient<MessageDe
 
     private void checkPending() {
         Set<Map.Entry<String, Observable<MessageDeliveryStatus>>> pendingItems = persistableStore.getMessageDeliveryStatusByMessageId().entrySet().stream()
-                .filter(e -> e.getValue().get() == MessageDeliveryStatus.START_SENDING ||
+                .filter(e -> e.getValue().get() == MessageDeliveryStatus.CONNECTING ||
+                        e.getValue().get() == MessageDeliveryStatus.SENT ||
                         e.getValue().get() == MessageDeliveryStatus.TRY_ADD_TO_MAILBOX)
                 .collect(Collectors.toSet());
         pendingItems.forEach(e -> persistableStore.getMessageDeliveryStatusByMessageId().get(e.getKey()).set(MessageDeliveryStatus.FAILED));

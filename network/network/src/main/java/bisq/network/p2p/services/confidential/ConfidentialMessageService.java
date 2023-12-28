@@ -145,7 +145,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                                               KeyPair senderKeyPair,
                                               NetworkId senderNetworkId) {
         log.debug("Send message to {}", address);
-        SendConfidentialMessageResult result = new SendConfidentialMessageResult(MessageDeliveryStatus.START_SENDING);
+        SendConfidentialMessageResult result = new SendConfidentialMessageResult(MessageDeliveryStatus.CONNECTING);
         onResult(envelopePayloadMessage, result);
         try {
             // Node gets initialized at higher level services
@@ -180,7 +180,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
             // Node gets initialized at higher level services
             nodesById.assertNodeIsInitialized(senderNetworkId);
             nodesById.send(senderNetworkId, confidentialMessage, connection);
-            result = new SendConfidentialMessageResult(MessageDeliveryStatus.ARRIVED);
+            result = new SendConfidentialMessageResult(MessageDeliveryStatus.SENT);
             onResult(envelopePayloadMessage, result);
             return result;
         } catch (Throwable throwable) {
