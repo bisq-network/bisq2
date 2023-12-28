@@ -109,6 +109,27 @@
     -fx-text-fill: -fx-light-text-color !important;
 }
 
+.market-selector-icon {
+    -fx-text-fill: -bisq2-green;
+}
+
+.create-offer-button {
+    -fx-background-color: -fx-default-button;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-background-radius: 8;
+    -fx-border-color: transparent;
+    -fx-border-radius: 8;
+    -fx-padding: 2 4 4 4;
+    -fx-cursor: hand;
+}
+
+.create-offer-button:hover {
+    -fx-background-color: -bisq-green-hover;
+}
+
+.create-offer-button:pressed {
+    -fx-background-color: -bisq-green-pressed;
+}
 
 /*******************************************************************************
  *                                                                             *

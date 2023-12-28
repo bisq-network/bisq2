@@ -20,20 +20,16 @@ package bisq.desktop.main.content.chat.common.priv;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatChannelDomain;
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.main.content.chat.common.ChatToolbox;
 import bisq.desktop.main.content.chat.priv.PrivateChatsController;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.Optional;
 
 @Slf4j
 public final class CommonPrivateChatsController extends PrivateChatsController {
 
     public CommonPrivateChatsController(ServiceProvider serviceProvider,
                                         ChatChannelDomain chatChannelDomain,
-                                        NavigationTarget navigationTarget,
-                                        Optional<ChatToolbox> toolbox) {
-        super(serviceProvider, chatChannelDomain, navigationTarget, toolbox);
+                                        NavigationTarget navigationTarget) {
+        super(serviceProvider, chatChannelDomain, navigationTarget);
     }
 
     @Override

@@ -53,7 +53,6 @@ public final class CommonChatTabController extends ContentTabController<CommonCh
     private final CommonPublicChatChannelService commonPublicChatChannelService;
     private final TwoPartyPrivateChatChannelService twoPartyPrivateChatChannelService;
     private final CommonChannelSelectionService chatChannelSelectionService;
-    private final ChatToolbox chatToolbox;
     private Pin selectedChannelPin;
     private Pin changedChatNotificationPin;
 
@@ -68,9 +67,7 @@ public final class CommonChatTabController extends ContentTabController<CommonCh
         chatChannelSelectionService = (CommonChannelSelectionService) chatService.getChatChannelSelectionServices().get(chatChannelDomain);
 
         createChannels();
-
-        chatToolbox = new ChatToolbox();
-        view = new CommonChatTabView(model, this, chatToolbox.getRoot());
+        view = new CommonChatTabView(model, this);
 
         model.getSelectedTabButton().addListener(observable -> {
             TabButton tabButton = model.getSelectedTabButton().get();
@@ -166,8 +163,6 @@ public final class CommonChatTabController extends ContentTabController<CommonCh
     }
 
     void handleSelectedChannelChanged(ChatChannel<? extends ChatMessage> chatChannel) {
-        chatToolbox.resetSearchText();
-
         ChannelTabButtonModel channelTabButtonModel = findOrCreateChannelItem(chatChannel);
         if (channelTabButtonModel != null) {
             model.selectedChannelTabButtonModel.set(channelTabButtonModel);
@@ -208,12 +203,12 @@ public final class CommonChatTabController extends ContentTabController<CommonCh
             case SUPPORT_SUPPORT:
             case SUPPORT_QUESTIONS:
             case SUPPORT_REPORTS: {
-                return Optional.of(new CommonPublicChatController(serviceProvider, channelDomain, navigationTarget, Optional.of(chatToolbox)));
+                return Optional.of(new CommonPublicChatController(serviceProvider, channelDomain, navigationTarget));
             }
             case DISCUSSION_PRIVATECHATS:
             case EVENTS_PRIVATECHATS:
             case SUPPORT_PRIVATECHATS: {
-                return Optional.of(new CommonPrivateChatsController(serviceProvider, channelDomain, navigationTarget, Optional.of(chatToolbox)));
+                return Optional.of(new CommonPrivateChatsController(serviceProvider, channelDomain, navigationTarget));
             }
             default: {
                 return Optional.empty();

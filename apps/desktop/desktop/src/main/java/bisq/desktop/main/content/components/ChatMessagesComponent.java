@@ -39,6 +39,7 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.overlay.Popup;
+import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardController;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.offer.bisq_easy.BisqEasyOffer;
@@ -50,6 +51,8 @@ import bisq.user.profile.UserProfileService;
 import bisq.wallets.core.WalletService;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.*;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -73,6 +76,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -370,6 +374,13 @@ public class ChatMessagesComponent {
                     });
         }
 
+        void onCreateOffer() {
+            ChatChannel<?> chatChannel = model.getSelectedChannel().get();
+            checkArgument(chatChannel instanceof BisqEasyOfferbookChannel,
+                    "channel must be instanceof BisqEasyPublicChatChannel at onCreateOfferButtonClicked");
+            Navigation.navigateTo(NavigationTarget.TRADE_WIZARD, new TradeWizardController.InitData(true));
+        }
+
         private void onSendMessage(String text) {
             if (text == null || text.isEmpty()) {
                 return;
@@ -529,8 +540,9 @@ public class ChatMessagesComponent {
         private final ChatMentionPopupMenu<UserProfile> userMentionPopup;
         private final ChatMentionPopupMenu<ChatChannel<?>> channelMentionPopup;
         private final Pane userProfileSelectionRoot, messagesListView;
-        private final Button leaveChannelButton;
+        private final Button leaveChannelButton, createOfferButton;
         private final VBox emptyMessageList;
+        private final ChangeListener<Number> createOfferButtonHeightListener;
 
         private View(Model model,
                      Controller controller,
@@ -591,7 +603,11 @@ public class ChatMessagesComponent {
             emptyMessageList.setAlignment(Pos.CENTER);
             VBox.setVgrow(emptyMessageList, Priority.ALWAYS);
 
-            bottomHBox.getChildren().addAll(userProfileSelectionRoot, bottomBoxStackPane, leaveChannelButton);
+            createOfferButton = new Button(Res.get("offer.createOffer"));
+            createOfferButton.getStyleClass().addAll("create-offer-button", "normal-text");
+            createOfferButton.setMinWidth(170);
+
+            bottomHBox.getChildren().addAll(createOfferButton, userProfileSelectionRoot, bottomBoxStackPane, leaveChannelButton);
             bottomHBox.getStyleClass().add("bg-grey-5");
             bottomHBox.setAlignment(Pos.CENTER);
             bottomHBox.setPadding(new Insets(14, 25, 14, 25));
@@ -606,6 +622,20 @@ public class ChatMessagesComponent {
             channelMentionPopup = new ChatMentionPopupMenu<>(inputField);
             channelMentionPopup.setItemDisplayConverter(model::getChannelTitle);
             channelMentionPopup.setSelectionHandler(controller::listChannelsHandler);
+
+            createOfferButtonHeightListener = new ChangeListener<>() {
+                @Override
+                public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+                    if (newValue != null) {
+                        createOfferButton.setMinHeight(inputField.getHeight());
+                        createOfferButton.setMaxHeight(inputField.getHeight());
+                        createOfferButton.setPrefHeight(inputField.getHeight());
+                    } else {
+                        UIThread.runOnNextRenderFrame(() -> inputField.heightProperty().removeListener(createOfferButtonHeightListener));
+                    }
+                }
+            };
+            inputField.heightProperty().addListener(createOfferButtonHeightListener);
         }
 
         @Override
@@ -645,6 +675,10 @@ public class ChatMessagesComponent {
             channelMentionPopup.setItems(model.mentionableChatChannels);
 
             createChatDialogEnabledSubscription();
+
+            createOfferButton.visibleProperty().bind(model.getCreateOfferButtonVisible());
+            createOfferButton.managedProperty().bind(model.getCreateOfferButtonVisible());
+            createOfferButton.setOnAction(e -> controller.onCreateOffer());
         }
 
         @Override
@@ -656,11 +690,14 @@ public class ChatMessagesComponent {
             inputField.textProperty().unbindBidirectional(model.getTextInput());
             userMentionPopup.filterProperty().unbind();
             channelMentionPopup.filterProperty().unbind();
+            createOfferButton.visibleProperty().unbind();
+            createOfferButton.managedProperty().unbind();
             removeChatDialogEnabledSubscription();
 
             inputField.setOnKeyPressed(null);
             sendButton.setOnAction(null);
             leaveChannelButton.setOnAction(null);
+            createOfferButton.setOnAction(null);
         }
 
         private void createChatDialogEnabledSubscription() {

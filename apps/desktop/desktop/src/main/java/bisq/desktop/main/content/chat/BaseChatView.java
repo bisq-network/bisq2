@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.chat;
 
 import bisq.desktop.common.view.NavigationView;
+import bisq.desktop.components.controls.SearchBox;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
@@ -33,6 +34,7 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
     protected final static double HEADER_HEIGHT = 61;
 
     protected final Label channelTitle = new Label();
+    protected final Label channelDescription = new Label();
     protected Button helpButton, infoButton;
     protected final VBox sideBar = new VBox();
     protected final VBox centerVBox = new VBox();
@@ -40,7 +42,8 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
     protected final HBox containerHBox = new HBox();
     protected final Pane channelSidebar, chatMessagesComponent;
     protected Pane chatUserOverviewRoot;
-    protected Subscription channelIconPin, chatUserOverviewRootSubscription;
+    protected Subscription /*channelIconPin, */chatUserOverviewRootSubscription;
+    protected final SearchBox searchBox = new SearchBox();
 
     public BaseChatView(BaseChatModel model,
                         BaseChatController<?, ?> controller,
@@ -71,10 +74,12 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
     @Override
     protected void onViewAttached() {
         channelTitle.textProperty().bind(model.getChannelTitle());
+        channelDescription.textProperty().bind(model.getChannelDescription());
         channelSidebar.visibleProperty().bind(model.getChannelSidebarVisible());
         channelSidebar.managedProperty().bind(model.getChannelSidebarVisible());
         sideBar.visibleProperty().bind(model.getSideBarVisible());
         sideBar.managedProperty().bind(model.getSideBarVisible());
+        searchBox.textProperty().bindBidirectional(model.getSearchText());
 
         if (helpButton != null) {
             helpButton.setOnAction(e -> controller.onOpenHelp());
@@ -96,25 +101,27 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
                     }
                 });
 
-        channelIconPin = EasyBind.subscribe(model.getChannelIconNode(), node -> {
-            if (node != null) {
-                channelTitle.setGraphic(node);
-                channelTitle.setGraphicTextGap(10);
-                node.setStyle("-fx-cursor: hand;");
-                node.setOnMouseClicked(e -> controller.onToggleChannelInfo());
-            } else {
-                channelTitle.setGraphic(null);
-            }
-        });
+//        channelIconPin = EasyBind.subscribe(model.getChannelIconNode(), node -> {
+//            if (node != null) {
+//                channelTitle.setGraphic(node);
+//                channelTitle.setGraphicTextGap(10);
+//                node.setStyle("-fx-cursor: hand;");
+//                node.setOnMouseClicked(e -> controller.onToggleChannelInfo());
+//            } else {
+//                channelTitle.setGraphic(null);
+//            }
+//        });
     }
 
     @Override
     protected void onViewDetached() {
         channelTitle.textProperty().unbind();
+        channelDescription.textProperty().unbind();
         channelSidebar.visibleProperty().unbind();
         channelSidebar.managedProperty().unbind();
         sideBar.visibleProperty().unbind();
         sideBar.managedProperty().unbind();
+        searchBox.textProperty().unbindBidirectional(model.getSearchText());
 
         if (helpButton != null) {
             helpButton.setOnAction(null);
@@ -124,6 +131,6 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
         }
 
         chatUserOverviewRootSubscription.unsubscribe();
-        channelIconPin.unsubscribe();
+//        channelIconPin.unsubscribe();
     }
 }

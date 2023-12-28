@@ -22,7 +22,9 @@ import bisq.chat.ChatChannel;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessage;
 import bisq.chat.ChatService;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.common.CommonPublicChatChannel;
 import bisq.chat.priv.PrivateChatChannel;
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.desktop.ServiceProvider;
@@ -45,6 +47,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -66,6 +69,7 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
     protected final UserProfileService userProfileService;
     protected final ChannelSidebar channelSidebar;
     protected final ChatMessagesComponent chatMessagesComponent;
+    protected Subscription searchTextPin;
 
     public BaseChatController(ServiceProvider serviceProvider, ChatChannelDomain chatChannelDomain, NavigationTarget host) {
         super(host);
@@ -130,6 +134,16 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
                 if (model.getChannelSidebarVisible().get()) {
                     cleanupChannelInfo();
                     showChannelInfo();
+                }
+
+                if (chatChannel instanceof CommonPublicChatChannel) {
+                    model.getChannelDescription().set(((CommonPublicChatChannel) chatChannel).getDescription());
+                }
+
+                if (chatChannel instanceof BisqEasyOfferbookChannel) {
+                    String description = ((BisqEasyOfferbookChannel) chatChannel).getDescription();
+                    String oneLineDescription = description.replace("\n", " ");
+                    model.getChannelDescription().set(oneLineDescription);
                 }
             }
         });

@@ -19,16 +19,12 @@ package bisq.desktop.main.content.chat;
 
 import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatChannelDomain;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
 public class ChatModel extends BaseChatModel {
-    private final StringProperty searchText = new SimpleStringProperty();
-
     public ChatModel(ChatChannelDomain chatChannelDomain) {
         super(chatChannelDomain);
     }

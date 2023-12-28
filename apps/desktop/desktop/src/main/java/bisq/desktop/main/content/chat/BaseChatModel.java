@@ -42,6 +42,7 @@ public abstract class BaseChatModel extends NavigationModel {
     private final Map<String, StringProperty> chatMessagesByChannelId = new HashMap<>();
     private final StringProperty selectedChatMessages = new SimpleStringProperty("");
     private final StringProperty channelTitle = new SimpleStringProperty("");
+    private final StringProperty channelDescription = new SimpleStringProperty("");
     private final ObjectProperty<ChatChannel<? extends ChatMessage>> selectedChannel = new SimpleObjectProperty<>();
     private final ObjectProperty<Pane> chatUserDetailsRoot = new SimpleObjectProperty<>();
     private final BooleanProperty sideBarVisible = new SimpleBooleanProperty();
@@ -52,6 +53,7 @@ public abstract class BaseChatModel extends NavigationModel {
     private final String helpTitle;
     @Setter
     private Optional<UserProfileSidebar> chatUserDetails = Optional.empty();
+    private final StringProperty searchText = new SimpleStringProperty();
 
     public BaseChatModel(ChatChannelDomain chatChannelDomain) {
         this.chatChannelDomain = chatChannelDomain;

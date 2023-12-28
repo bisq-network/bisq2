@@ -22,19 +22,14 @@ import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.View;
 import bisq.desktop.main.content.ContentTabView;
 import bisq.i18n.Res;
-import javafx.geometry.Insets;
 import javafx.scene.Parent;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 final class CommonChatTabView extends ContentTabView<CommonChatTabModel, CommonChatTabController> {
 
-    CommonChatTabView(CommonChatTabModel model, CommonChatTabController controller, HBox toolboxRoot) {
+    CommonChatTabView(CommonChatTabModel model, CommonChatTabController controller) {
         super(model, controller);
-
-        topBox.getChildren().add(0, toolboxRoot);
 
         model.getChannelTabButtonModelByChannelId().values().stream().sorted().forEach(channel ->
                 addTab(channel.getChannelTitle(), channel.getNavigationTarget(), channel.getIconId())
@@ -47,26 +42,5 @@ final class CommonChatTabView extends ContentTabView<CommonChatTabModel, CommonC
                                View<? extends Parent, ? extends Model, ? extends Controller> newValue) {
         super.onChildView(oldValue, newValue);
         controller.onSelected(model.getNavigationTarget());
-    }
-
-    @Override
-    protected void setupTopBox() {
-        tabs.setFillHeight(true);
-        tabs.setSpacing(46);
-        VBox.setMargin(tabs, new Insets(0, 0, 11, 0));
-
-        topBox = new VBox(12, tabs);
-        topBox.setMinHeight(115);
-        topBox.setPadding(DEFAULT_TOP_PANE_PADDING);
-    }
-
-    @Override
-    protected void onViewAttached() {
-        super.onViewAttached();
-    }
-
-    @Override
-    protected void onViewDetached() {
-        super.onViewDetached();
     }
 }

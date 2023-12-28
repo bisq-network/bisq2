@@ -23,28 +23,21 @@ import bisq.chat.ChatChannelSelectionService;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.main.content.chat.common.ChatToolbox;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
 import java.util.Optional;
 
 @Slf4j
 public abstract class ChatController<V extends ChatView<V, M>, M extends ChatModel>
         extends BaseChatController<V, M> implements Controller {
-    private final Optional<ChatToolbox> toolbox;
     protected ChatChannelSelectionService selectionService;
-    private Subscription searchTextPin;
     private Pin selectedChannelPin;
 
     public ChatController(ServiceProvider serviceProvider,
                           ChatChannelDomain chatChannelDomain,
-                          NavigationTarget navigationTarget,
-                          Optional<ChatToolbox> toolbox) {
+                          NavigationTarget navigationTarget) {
         super(serviceProvider, chatChannelDomain, navigationTarget);
-
-        this.toolbox = toolbox;
     }
 
     @Override
@@ -55,23 +48,20 @@ public abstract class ChatController<V extends ChatView<V, M>, M extends ChatMod
     @Override
     public void onActivate() {
         selectedChannelPin = selectionService.getSelectedChannel().addObserver(this::selectedChannelChanged);
-
-        toolbox.ifPresent(chatToolbox -> {
-            searchTextPin = EasyBind.subscribe(chatToolbox.searchTextProperty(), searchText ->
-                    chatMessagesComponent.setSearchPredicate(item ->
-                            searchText == null || searchText.isEmpty() || item.match(searchText)));
-
-            chatToolbox.setOnOpenHelpHandler(this::onOpenHelp);
-            chatToolbox.setOnToggleChannelInfoHandler(this::onToggleChannelInfo);
+        model.getSearchText().set("");
+        searchTextPin = EasyBind.subscribe(model.getSearchText(), searchText -> {
+            if (searchText == null || searchText.isEmpty()) {
+                chatMessagesComponent.setSearchPredicate(item -> true);
+            } else {
+                chatMessagesComponent.setSearchPredicate(item -> item.match(searchText));
+            }
         });
     }
 
     @Override
     public void onDeactivate() {
         selectedChannelPin.unbind();
-        if (searchTextPin != null) {
-            searchTextPin.unsubscribe();
-        }
+        searchTextPin.unsubscribe();
     }
 
     @Override
