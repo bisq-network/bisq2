@@ -18,6 +18,7 @@
 package bisq.network.p2p.node;
 
 import bisq.common.data.Pair;
+import bisq.network.common.Address;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.envelope.NetworkEnvelopeSocketChannel;
@@ -25,9 +26,8 @@ import bisq.network.p2p.node.handshake.ConnectionHandshake;
 import bisq.network.p2p.node.handshake.ConnectionHandshakeResponder;
 import bisq.network.p2p.node.network_load.ConnectionMetrics;
 import bisq.network.p2p.node.network_load.NetworkLoad;
-import bisq.network.p2p.node.network_load.NetworkLoadService;
+import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
 import bisq.network.p2p.services.peergroup.BanList;
-import bisq.network.common.Address;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -196,11 +196,11 @@ public class InboundConnectionsManager {
             }
 
             // We got the peers network load passed in the request message.
-            NetworkLoadService peersNetworkLoadService = new NetworkLoadService(handshakeRequest.getNetworkLoad());
+            NetworkLoadSnapshot peersNetworkLoadSnapshot = new NetworkLoadSnapshot(handshakeRequest.getNetworkLoad());
             return Optional.of(
                     new InboundConnectionChannel(
                             handshakeRequest.getCapability(),
-                            peersNetworkLoadService,
+                            peersNetworkLoadSnapshot,
                             networkEnvelopeSocketChannel,
                             new ConnectionMetrics()
                     )

@@ -49,7 +49,7 @@ class NetworkLoadExchangeHandler implements Connection.Listener {
     }
 
     CompletableFuture<Void> request() {
-        NetworkLoad myNetworkLoad = node.getNetworkLoadService().getCurrentNetworkLoad();
+        NetworkLoad myNetworkLoad = node.getNetworkLoadSnapshot().getCurrentNetworkLoad();
         log.info("Node {} send NetworkLoadRequest to {} with nonce {} and my networkLoad {}. Connection={}",
                 node, connection.getPeerAddress(), nonce, myNetworkLoad, connection.getId());
         ts = System.currentTimeMillis();
@@ -72,7 +72,7 @@ class NetworkLoadExchangeHandler implements Connection.Listener {
                 log.info("Node {} received NetworkLoadResponse from {} with nonce {} and peers networkLoad {}. Connection={}",
                         node, connection.getPeerAddress(), response.getRequestNonce(), peersNetworkLoad, connection.getId());
                 removeListeners();
-                connection.getPeersNetworkLoadService().updatePeersNetworkLoad(peersNetworkLoad);
+                connection.getPeersNetworkLoadSnapshot().updateNetworkLoad(peersNetworkLoad);
                 connection.getConnectionMetrics().addRtt(System.currentTimeMillis() - ts);
                 future.complete(null);
             } else {

@@ -21,7 +21,7 @@ import bisq.network.identity.NetworkId;
 import bisq.network.p2p.BaseNetworkTest;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.authorization.AuthorizationService;
-import bisq.network.p2p.node.network_load.NetworkLoadService;
+import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
 import bisq.network.p2p.node.transport.TransportService;
 import bisq.network.p2p.services.peergroup.BanList;
 import bisq.network.p2p.services.peergroup.keepalive.Ping;
@@ -47,7 +47,7 @@ public abstract class BaseNodesByIdTest extends BaseNetworkTest {
         PersistenceService persistenceService = new PersistenceService("");
         KeyBundleService keyBundleService = new KeyBundleService(persistenceService, mock(KeyBundleService.Config.class));
 
-        NodesById nodesById = new NodesById(banList, nodeConfig, keyBundleService, transportService, new NetworkLoadService(), new AuthorizationService(new HashCashService()));
+        NodesById nodesById = new NodesById(banList, nodeConfig, keyBundleService, transportService, new NetworkLoadSnapshot(), new AuthorizationService(new HashCashService()));
         long ts = System.currentTimeMillis();
         numNodes = 5;
         int numRepeats = 1;
@@ -137,7 +137,7 @@ public abstract class BaseNodesByIdTest extends BaseNetworkTest {
         TransportService transportService = TransportService.create(nodeConfig.getTransportType(), nodeConfig.getTransportConfig());
         PersistenceService persistenceService = new PersistenceService("");
         KeyBundleService keyBundleService = new KeyBundleService(persistenceService, mock(KeyBundleService.Config.class));
-        NodesById nodesById = new NodesById(banList, nodeConfig, keyBundleService, transportService, new NetworkLoadService(), new AuthorizationService(new HashCashService()));
+        NodesById nodesById = new NodesById(banList, nodeConfig, keyBundleService, transportService, new NetworkLoadSnapshot(), new AuthorizationService(new HashCashService()));
         initializeServers(2, nodesById);
         nodesById.shutdown().join();
     }

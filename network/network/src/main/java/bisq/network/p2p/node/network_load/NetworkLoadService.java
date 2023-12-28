@@ -17,55 +17,70 @@
 
 package bisq.network.p2p.node.network_load;
 
+import bisq.common.timer.Scheduler;
 import bisq.common.util.ByteUnit;
 import bisq.common.util.MathUtils;
-import bisq.network.p2p.services.data.inventory.Inventory;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.ToString;
+import bisq.network.p2p.ServiceNodesByTransport;
+import bisq.network.p2p.node.Connection;
+import bisq.network.p2p.node.Node;
+import bisq.network.p2p.services.data.DataRequest;
+import bisq.network.p2p.services.data.DataService;
+import bisq.network.p2p.services.data.storage.StorageService;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Slf4j
-@Getter
-@ToString
-@EqualsAndHashCode
-public final class NetworkLoadService {
-    private NetworkLoad currentNetworkLoad;
-    @Nullable
-    private NetworkLoad previousNetworkLoad = null;
-    private long lastUpdated = 0;
+public class NetworkLoadService {
+    private static final long INITIAL_DELAY = TimeUnit.SECONDS.toSeconds(5);
+    private static final long INTERVAL = TimeUnit.MINUTES.toSeconds(3);
 
-    public NetworkLoadService() {
-        currentNetworkLoad = new NetworkLoad();
+    private final ServiceNodesByTransport serviceNodesByTransport;
+    private final NetworkLoadSnapshot networkLoadSnapshot;
+    private final StorageService storageService;
+    private Optional<Scheduler> updateNetworkLoadScheduler = Optional.empty();
+
+    public NetworkLoadService(ServiceNodesByTransport serviceNodesByTransport,
+                              DataService dataService,
+                              NetworkLoadSnapshot networkLoadSnapshot) {
+        this.serviceNodesByTransport = serviceNodesByTransport;
+        storageService = dataService.getStorageService();
+        this.networkLoadSnapshot = networkLoadSnapshot;
     }
 
-    public NetworkLoadService(NetworkLoad networkLoad) {
-        currentNetworkLoad = networkLoad;
+    public void initialize() {
+        updateNetworkLoadScheduler = Optional.of(Scheduler.run(this::updateNetworkLoad)
+                .periodically(INITIAL_DELAY, INTERVAL, TimeUnit.SECONDS)
+                .name("NetworkLoadExchangeService.updateNetworkLoadScheduler"));
     }
 
-    public void updatePeersNetworkLoad(NetworkLoad networkLoad) {
-        synchronized (this) {
-            lastUpdated = System.currentTimeMillis();
-            previousNetworkLoad = currentNetworkLoad;
-            currentNetworkLoad = networkLoad;
-        }
+    public void shutdown() {
+        updateNetworkLoadScheduler.ifPresent(Scheduler::stop);
     }
 
-    public void updateMyLoad(List<ConnectionMetrics> allConnectionMetrics, Inventory inventory) {
-        double load = calculateLoad(allConnectionMetrics, inventory);
+    private void updateNetworkLoad() {
+        List<? extends DataRequest> dataRequests = storageService.getAllDataRequestMapEntries()
+                .map(Map.Entry::getValue)
+                .collect(Collectors.toList());
+
+        double load = calculateLoad(getAllConnectionMetrics(), dataRequests);
         NetworkLoad networkLoad = new NetworkLoad(load);
-        synchronized (this) {
-            lastUpdated = System.currentTimeMillis();
-            previousNetworkLoad = currentNetworkLoad;
-            currentNetworkLoad = networkLoad;
-        }
+        networkLoadSnapshot.updateNetworkLoad(networkLoad);
     }
 
-    private double calculateLoad(List<ConnectionMetrics> allConnectionMetrics, Inventory inventory) {
+    private List<ConnectionMetrics> getAllConnectionMetrics() {
+        return serviceNodesByTransport.getAllServices().stream()
+                .flatMap(serviceNode -> serviceNode.getNodesById().getAllNodes().stream())
+                .flatMap(Node::getAllConnections)
+                .map(Connection::getConnectionMetrics)
+                .collect(Collectors.toList());
+    }
+
+    private static double calculateLoad(List<ConnectionMetrics> allConnectionMetrics, List<? extends DataRequest> dataRequests) {
         long numConnections = allConnectionMetrics.size();
         long sentBytesOfLastHour = allConnectionMetrics.stream()
                 .map(ConnectionMetrics::getSentBytesOfLastHour)
@@ -91,19 +106,19 @@ public final class NetworkLoadService {
                 .map(ConnectionMetrics::getNumMessagesReceivedOfLastHour)
                 .mapToLong(e -> e)
                 .sum();
-        long networkDatabaseSize = inventory.getEntries().stream().mapToLong(e -> e.toProto().getSerializedSize()).sum();
+        long networkDatabaseSize = dataRequests.stream().mapToLong(e -> e.toProto().getSerializedSize()).sum();
 
-        StringBuilder sb = new StringBuilder("\n##########################################################################################");
-        sb.append("\nNetwork statistics:")
+        StringBuilder sb = new StringBuilder("\n\n##########################################################################################");
+        sb.append("\nNetwork statistics").append(("\n##########################################################################################"))
                 .append("\nNumber of Connections: ").append(numConnections)
                 .append("\nNumber of messages sent in last hour: ").append(numMessagesSentOfLastHour)
-                .append("\nNumber of messages received in last hour:").append(numMessagesReceivedOfLastHour)
-                .append("\nSize of network DB:").append(networkDatabaseSize).append(" bytes")
-                .append("\nData sent in last hour:").append(sentBytesOfLastHour).append(" bytes")
-                .append("\nData received in last hour:").append(receivedBytesOfLastHour).append(" bytes")
-                .append("\nTime for message sending in last hour:").append(spentSendMessageTimeOfLastHour).append(" ms")
-                .append("\nTime for message deserializing in last hour=").append(deserializeTimeOfLastHour).append(" ms")
-                .append("\n##########################################################################################");
+                .append("\nNumber of messages received in last hour: ").append(numMessagesReceivedOfLastHour)
+                .append("\nSize of network DB: ").append(ByteUnit.BYTE.toMB(networkDatabaseSize)).append(" MB")
+                .append("\nData sent in last hour: ").append(ByteUnit.BYTE.toKB(sentBytesOfLastHour)).append(" KB")
+                .append("\nData received in last hour: ").append(ByteUnit.BYTE.toKB(receivedBytesOfLastHour)).append(" KB")
+                .append("\nTime for message sending in last hour: ").append(spentSendMessageTimeOfLastHour / 1000d).append(" sec.")
+                .append("\nTime for message deserializing in last hour: ").append(deserializeTimeOfLastHour / 1000d).append(" sec.")
+                .append("\n##########################################################################################\n");
         log.info(sb.toString());
 
         double MAX_NUM_CON = 30;
