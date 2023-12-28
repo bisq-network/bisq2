@@ -75,7 +75,7 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
         openChatsHeader.setMaxHeight(HEADER_HEIGHT);
         openChatsHeader.setAlignment(Pos.CENTER_LEFT);
         openChatsHeader.setPadding(new Insets(15, 30, 15, 30));
-        openChatsHeader.getStyleClass().add("bisq-easy-container-headline");
+        openChatsHeader.getStyleClass().add("chat-header-title");
 
         tableView = new BisqTableView<>(getModel().getSortedList());
         tableView.allowVerticalScrollbar();
@@ -245,7 +245,8 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
             chatHeaderVBox.setAlignment(Pos.CENTER_LEFT);
         } else {
             Label emptyChatBoxHeader = new Label(Res.get("chat.private.messagebox.noChats.title"));
-            emptyChatBoxHeader.getStyleClass().add("chat-container-headline");
+            emptyChatBoxHeader.getStyleClass().add("chat-header-title");
+            chatHeaderVBox.setPadding(new Insets(15, 0, 15, 0));
             chatHeaderVBox.getChildren().add(emptyChatBoxHeader);
         }
     }
