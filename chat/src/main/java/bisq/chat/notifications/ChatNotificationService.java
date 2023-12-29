@@ -25,7 +25,6 @@ import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeMessage;
 import bisq.chat.priv.PrivateChatMessage;
-import bisq.chat.pub.PublicChatMessage;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
@@ -360,24 +359,10 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
             title = Res.get("chat.notifications.offerTaken.title", privateTradeChannel.getPeer().getUserName());
             message = Res.get("chat.notifications.offerTaken.message", privateTradeChannel.getTradeId().substring(0, 8));
         } else {
-            String channelInfo;
-            if (chatMessage instanceof PublicChatMessage) {
-                // For Public messages we show title: `{username} ({channel domain} - {channel title})`
-                String channelTitle = chatService.findChatChannelService(chatChannel)
-                        .map(service -> service.getChannelTitle(chatChannel))
-                        .orElse(Res.get("data.na"));
-                channelInfo = StringUtils.createNavigationPath(
-                        " - ",
-                        chatChannel.getChatChannelDomain().getDisplayString(),
-                        channelTitle);
-            } else {
-                // For Private messages we show title: `{username} ({channel domain} - Private message)`
-                channelInfo = StringUtils.createNavigationPath(
-                        " - ",
-                        chatChannel.getChatChannelDomain().getDisplayString(),
-                        Res.get("chat.notifications.privateMessage.headline"));
-            }
+            // For Public messages we show title: `{username} ({channel domain} - {channel title})`
+            // For Private messages we show title: `{username} ({channel domain} - Private message)`
             String userName = senderUserProfile.map(UserProfile::getUserName).orElse(Res.get("data.na"));
+            String channelInfo = ChatUtil.getChannelNavigationPath(chatChannel);
             title = StringUtils.truncate(userName, 15) + " (" + channelInfo + ")";
             message = StringUtils.truncate(chatMessage.getText(), 210);
         }
