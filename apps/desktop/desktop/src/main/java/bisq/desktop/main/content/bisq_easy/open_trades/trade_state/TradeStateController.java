@@ -253,7 +253,7 @@ public class TradeStateController implements Controller {
                 model.getStateInfoVBox().set(new BuyerState3(serviceProvider, trade, channel).getView().getRoot());
                 break;
 
-            case SELLER_RECEIVED_BTC_ADDRESS:
+            //case SELLER_RECEIVED_BTC_ADDRESS:
             case SELLER_CONFIRMED_FIAT_RECEIPT:
                 model.getStateInfoVBox().set(new SellerState3(serviceProvider, trade, channel).getView().getRoot());
                 break;
@@ -324,7 +324,7 @@ public class TradeStateController implements Controller {
             case BUYER_SENT_FIAT_SENT_CONFIRMATION:
             case SELLER_RECEIVED_FIAT_SENT_CONFIRMATION:
             case BUYER_SENT_BTC_ADDRESS:
-            case SELLER_RECEIVED_BTC_ADDRESS:
+            //case SELLER_RECEIVED_BTC_ADDRESS:
             case SELLER_CONFIRMED_FIAT_RECEIPT:
             case BUYER_RECEIVED_SELLERS_FIAT_RECEIPT_CONFIRMATION:
             case SELLER_SENT_BTC_SENT_CONFIRMATION:

@@ -147,7 +147,7 @@ class TradePhaseBox {
                             model.getReportToMediatorButtonVisible().set(true);
                             break;
                         case BUYER_SENT_BTC_ADDRESS:
-                        case SELLER_RECEIVED_BTC_ADDRESS:
+                        //case SELLER_RECEIVED_BTC_ADDRESS:
                         case SELLER_CONFIRMED_FIAT_RECEIPT:
                         case BUYER_RECEIVED_SELLERS_FIAT_RECEIPT_CONFIRMATION:
                             model.getPhaseIndex().set(2);
