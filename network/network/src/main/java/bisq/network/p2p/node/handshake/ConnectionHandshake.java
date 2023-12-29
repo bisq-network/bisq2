@@ -30,9 +30,7 @@ import bisq.network.p2p.node.envelope.NetworkEnvelopeSocket;
 import bisq.network.p2p.node.network_load.ConnectionMetrics;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.network.p2p.services.peergroup.BanList;
-import bisq.security.TorSignatureUtil;
 import bisq.security.keys.KeyBundle;
-import bisq.security.keys.TorKeyUtils;
 import bisq.tor.TorSocket;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
@@ -43,9 +41,9 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * At initial connection we exchange capabilities and require a valid AuthorizationToken (e.g. PoW).
@@ -54,8 +52,6 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 public final class ConnectionHandshake {
-    private static final long MAX_SIG_DATE_TOLERANCE = TimeUnit.HOURS.toMillis(2);
-
     @Getter
     private final String id = StringUtils.createUid();
     private final BanList banList;
@@ -69,18 +65,23 @@ public final class ConnectionHandshake {
     @EqualsAndHashCode
     public static final class Request implements EnvelopePayloadMessage {
         private final Capability capability;
-        private final byte[] addressOwnershipProof;
+        private final Optional<byte[]> addressOwnershipProof;
         private final NetworkLoad networkLoad;
         private final long signatureDate;
 
         public Request(Capability capability,
-                       byte[] addressOwnershipProof,
+                       Optional<byte[]> addressOwnershipProof,
                        NetworkLoad networkLoad,
                        long signatureDate) {
             this.capability = capability;
             this.addressOwnershipProof = addressOwnershipProof;
             this.networkLoad = networkLoad;
             this.signatureDate = signatureDate;
+
+            addressOwnershipProof.ifPresent(signature -> {
+                checkArgument(signature.length == 64,
+                        "Signature not of the expected size. signature.length=" + signature.length);
+            });
         }
 
         @Override
@@ -89,7 +90,7 @@ public final class ConnectionHandshake {
                     .setCapability(capability.toProto())
                     .setNetworkLoad(networkLoad.toProto())
                     .setSignatureDate(signatureDate);
-            Optional.ofNullable(addressOwnershipProof).ifPresent(e -> builder.setAddressOwnershipProof(ByteString.copyFrom(e)));
+            addressOwnershipProof.ifPresent(e -> builder.setAddressOwnershipProof(ByteString.copyFrom(e)));
             return getNetworkMessageBuilder()
                     .setConnectionHandshakeRequest(builder.build())
                     .build();
@@ -97,7 +98,7 @@ public final class ConnectionHandshake {
 
         public static Request fromProto(bisq.network.protobuf.ConnectionHandshake.Request proto) {
             return new Request(Capability.fromProto(proto.getCapability()),
-                    proto.hasAddressOwnershipProof() ? proto.getAddressOwnershipProof().toByteArray() : null,
+                    proto.hasAddressOwnershipProof() ? Optional.of(proto.getAddressOwnershipProof().toByteArray()) : Optional.empty(),
                     NetworkLoad.fromProto(proto.getNetworkLoad()),
                     proto.getSignatureDate());
         }
@@ -184,12 +185,8 @@ public final class ConnectionHandshake {
             ConnectionMetrics connectionMetrics = new ConnectionMetrics();
 
             Address myAddress = capability.getAddress();
-            byte[] signature = null;
             long signatureDate = System.currentTimeMillis();
-            if (myAddress.isTorAddress()) {
-                String message = buildMessageForSigning(myAddress, peerAddress, signatureDate);
-                signature = TorSignatureUtil.sign(myKeyBundle.getTorKeyPair().getPrivateKey(), message.getBytes());
-            }
+            Optional<byte[]> signature = OnionAddressValidation.sign(myAddress, peerAddress, signatureDate, myKeyBundle.getTorKeyPair().getPrivateKey());
 
             Request request = new Request(capability, signature, myNetworkLoad, signatureDate);
             // As we do not know he peers load yet, we use the NetworkLoad.INITIAL_LOAD
@@ -289,23 +286,9 @@ public final class ConnectionHandshake {
                 throw new ConnectionException("Request authorization failed. request=" + request);
             }
 
-            if (peerAddress.isTorAddress()) {
-                long signatureDate = request.getSignatureDate();
-                if (Math.abs(System.currentTimeMillis() - signatureDate) > MAX_SIG_DATE_TOLERANCE) {
-                    throw new ConnectionException("Peer onion address proof failed because the signatureDate is outside the 2 hour tolerance: " +
-                            peerAddress.getFullAddress() +
-                            ", \nsignatureDate: " + new Date(signatureDate) +
-                            ", \nmy date: " + new Date(System.currentTimeMillis()));
-                }
-
-                String message = buildMessageForSigning(peerAddress, myAddress, signatureDate);
-                byte[] signature = request.getAddressOwnershipProof();
-                byte[] pubKey = TorKeyUtils.getPublicKeyFromOnionAddress(peerAddress.getHost());
-                boolean isProofValid = TorSignatureUtil.verify(pubKey, message.getBytes(), signature);
-                if (!isProofValid) {
-                    throw new ConnectionException("Peer couldn't proof its onion address: " + peerAddress.getFullAddress() +
-                            ", Proof: " + Arrays.toString(signature));
-                }
+            if (!OnionAddressValidation.verify(myAddress, peerAddress, request.getSignatureDate(), request.getAddressOwnershipProof())) {
+                throw new ConnectionException("Peer couldn't proof its onion address: " + peerAddress.getFullAddress() +
+                        ", Proof: " + Arrays.toString(request.getAddressOwnershipProof().orElseThrow()));
             }
 
             log.debug("Clients capability {}, load={}", request.getCapability(), request.getNetworkLoad());
@@ -334,9 +317,5 @@ public final class ConnectionHandshake {
 
     public void shutdown() {
         // todo close pending requests but do not close sockets
-    }
-
-    private static String buildMessageForSigning(Address signersAddress, Address verifiersAddress, long date) {
-        return signersAddress.getFullAddress() + "|" + verifiersAddress.getFullAddress() + "@" + date;
     }
 }

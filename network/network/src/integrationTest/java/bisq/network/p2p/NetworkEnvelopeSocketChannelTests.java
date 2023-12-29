@@ -47,6 +47,7 @@ import java.nio.channels.SocketChannel;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -186,7 +187,7 @@ public class NetworkEnvelopeSocketChannelTests {
         supportedTransportTypes.add(TransportType.CLEAR);
 
         Capability peerCapability = new Capability(Address.localHost(2345), supportedTransportTypes);
-        ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, null, new NetworkLoad(), 0);
+        ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, Optional.empty(), new NetworkLoad(), 0);
         AuthorizationService authorizationService = createAuthorizationService();
 
         Capability responderCapability = new Capability(Address.localHost(1234), supportedTransportTypes);
