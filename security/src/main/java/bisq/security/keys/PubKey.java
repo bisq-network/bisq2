@@ -53,6 +53,7 @@ public final class PubKey implements NetworkProto {
         NetworkDataValidation.validateId(keyId);
     }
 
+    @Override
     public bisq.security.protobuf.PubKey toProto() {
         return bisq.security.protobuf.PubKey.newBuilder()
                 .setPublicKey(ByteString.copyFrom(publicKey.getEncoded()))

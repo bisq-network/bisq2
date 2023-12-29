@@ -17,7 +17,7 @@
 
 package bisq.security;
 
-import bisq.common.proto.NetworkProto;
+import bisq.common.proto.PersistableProto;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @EqualsAndHashCode
 @ToString
-public class ScryptParameters implements NetworkProto {
+public class ScryptParameters implements PersistableProto {
     public static final int KEY_LENGTH = 32; // 256 bits.
 
     private final byte[] salt;

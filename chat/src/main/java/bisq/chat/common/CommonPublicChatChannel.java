@@ -68,6 +68,7 @@ public final class CommonPublicChatChannel extends PublicChatChannel<CommonPubli
         description = Res.get(id + ".description");
     }
 
+    @Override
     public bisq.chat.protobuf.ChatChannel toProto() {
         bisq.chat.protobuf.CommonPublicChatChannel.Builder builder = bisq.chat.protobuf.CommonPublicChatChannel.newBuilder()
                 .setChannelTitle(channelTitle)

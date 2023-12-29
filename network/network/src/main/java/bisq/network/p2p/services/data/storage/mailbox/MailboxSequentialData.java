@@ -90,6 +90,7 @@ public final class MailboxSequentialData implements NetworkProto {
         NetworkDataValidation.validateDate(created);
     }
 
+    @Override
     public bisq.network.protobuf.MailboxSequentialData toProto() {
         return bisq.network.protobuf.MailboxSequentialData.newBuilder()
                 .setMailboxData(mailboxData.toProto())

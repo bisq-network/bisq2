@@ -17,7 +17,7 @@
 
 package bisq.common.data;
 
-import bisq.common.proto.NetworkProto;
+import bisq.common.proto.PersistableProto;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -25,7 +25,7 @@ import lombok.ToString;
 @Getter
 @EqualsAndHashCode
 @ToString
-public final class ByteArrayMapEntry implements NetworkProto {
+public final class ByteArrayMapEntry implements PersistableProto {
     private final ByteArray key;
     private final ByteArray value;
 

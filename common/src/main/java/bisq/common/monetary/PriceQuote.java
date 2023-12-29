@@ -19,7 +19,7 @@ package bisq.common.monetary;
 
 import bisq.common.currency.Market;
 import bisq.common.currency.TradeCurrency;
-import bisq.common.proto.NetworkProto;
+import bisq.common.proto.PersistableProto;
 import bisq.common.util.MathUtils;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -44,7 +44,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Getter
 @ToString
 @Slf4j
-public final class PriceQuote implements Comparable<PriceQuote>, NetworkProto {
+public final class PriceQuote implements Comparable<PriceQuote>, PersistableProto {
     @Setter
     private static String QUOTE_SEPARATOR = "/";
 

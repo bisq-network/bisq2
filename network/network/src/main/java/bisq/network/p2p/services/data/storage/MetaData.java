@@ -80,6 +80,7 @@ public final class MetaData implements NetworkProto {
         NetworkDataValidation.validateText(className, 50);
     }
 
+    @Override
     public bisq.network.protobuf.MetaData toProto() {
         return bisq.network.protobuf.MetaData.newBuilder()
                 .setTtl(ttl)

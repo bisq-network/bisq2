@@ -36,6 +36,7 @@ public final class BitcoinPaymentMethodSpec extends PaymentMethodSpec<BitcoinPay
         super(paymentMethod, saltedMakerAccountId);
     }
 
+    @Override
     public bisq.offer.protobuf.PaymentMethodSpec toProto() {
         return getPaymentMethodSpecBuilder().setBitcoinPaymentMethodSpec(bisq.offer.protobuf.BitcoinPaymentMethodSpec.newBuilder()).build();
     }

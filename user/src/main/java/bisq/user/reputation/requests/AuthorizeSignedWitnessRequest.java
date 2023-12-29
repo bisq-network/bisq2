@@ -65,7 +65,6 @@ public final class AuthorizeSignedWitnessRequest implements MailboxMessage {
         NetworkDataValidation.validateDate(accountAgeWitnessDate);
         NetworkDataValidation.validateDate(witnessSignDate);
         NetworkDataValidation.validatePubKeyBase64(pubKeyBase64);
-        ;
         NetworkDataValidation.validateSignatureBase64(signatureBase64);
 
 

@@ -36,6 +36,7 @@ public final class TradeTermsOption implements OfferOption {
         NetworkDataValidation.validateText(makersTradeTerms, MAX_TERM_LENGTH);
     }
 
+    @Override
     public bisq.offer.protobuf.OfferOption toProto() {
         return getOfferOptionBuilder().setTradeTermsOption(bisq.offer.protobuf.TradeTermsOption.newBuilder()
                         .setMakersTradeTerms(makersTradeTerms))

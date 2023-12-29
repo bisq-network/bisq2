@@ -55,6 +55,7 @@ public final class ConfidentialData implements NetworkProto {
         NetworkDataValidation.validateECSignature(signature);
     }
 
+    @Override
     public bisq.security.protobuf.ConfidentialData toProto() {
         return bisq.security.protobuf.ConfidentialData.newBuilder()
                 .setSenderPublicKey(ByteString.copyFrom(senderPublicKey))

@@ -24,6 +24,7 @@ public final class Citation implements NetworkProto {
         NetworkDataValidation.validateText(text, MAX_TEXT_LENGTH);
     }
 
+    @Override
     public bisq.chat.protobuf.Citation toProto() {
         return bisq.chat.protobuf.Citation.newBuilder()
                 .setAuthorUserProfileId(authorUserProfileId)

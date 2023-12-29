@@ -18,7 +18,7 @@
 package bisq.common.data;
 
 import bisq.common.encoding.Hex;
-import bisq.common.proto.NetworkProto;
+import bisq.common.proto.PersistableProto;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
 
@@ -26,7 +26,7 @@ import java.math.BigInteger;
 import java.util.Arrays;
 
 @Getter
-public final class ByteArray implements NetworkProto, Comparable<ByteArray> {
+public final class ByteArray implements PersistableProto, Comparable<ByteArray> {
     private final byte[] bytes;
 
     public ByteArray(byte[] bytes) {

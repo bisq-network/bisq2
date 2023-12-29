@@ -55,6 +55,7 @@ public abstract class PaymentMethodSpec<T extends PaymentMethod<? extends Paymen
 
     }
 
+    @Override
     public abstract bisq.offer.protobuf.PaymentMethodSpec toProto();
 
     public bisq.offer.protobuf.PaymentMethodSpec.Builder getPaymentMethodSpecBuilder() {

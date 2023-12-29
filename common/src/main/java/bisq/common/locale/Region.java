@@ -17,7 +17,7 @@
 
 package bisq.common.locale;
 
-import bisq.common.proto.NetworkProto;
+import bisq.common.proto.PersistableProto;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -25,7 +25,7 @@ import lombok.ToString;
 @Getter
 @EqualsAndHashCode
 @ToString
-public final class Region implements NetworkProto {
+public final class Region implements PersistableProto {
     private final String code;
     private final String name;
 

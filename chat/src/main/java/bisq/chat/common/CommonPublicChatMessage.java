@@ -79,6 +79,7 @@ public final class CommonPublicChatMessage extends PublicChatMessage {
         // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize()); //755
     }
 
+    @Override
     public bisq.chat.protobuf.ChatMessage toProto() {
         return getChatMessageBuilder().setCommonPublicChatMessage(bisq.chat.protobuf.CommonPublicChatMessage.newBuilder()).build();
     }

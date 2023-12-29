@@ -15,20 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.persistence;
+package bisq.common.proto;
 
-import bisq.common.proto.PersistableProtoResolverMap;
-import bisq.common.proto.ProtoResolver;
-import com.google.protobuf.Any;
-
-public class PersistableStoreResolver {
-    private static final PersistableProtoResolverMap<PersistableStore<?>> protoResolverMap = new PersistableProtoResolverMap<>();
-
-    public static void addResolver(ProtoResolver<PersistableStore<?>> resolver) {
-        protoResolverMap.addProtoResolver(ProtoResolver.getProtoType(resolver), resolver);
-    }
-
-    static PersistableStore<?> fromAny(Any anyProto) {
-        return protoResolverMap.fromAny(anyProto);
-    }
+/**
+ * Interface for any object which gets serialized using protobuf
+ * <p>
+ * We require deterministic serialisation (e.g. used for hashes) for most data.
+ * We need to ensure that Collections are deterministically sorted.
+ * Maps are not allowed as they do not guarantee that (even if Java have deterministic implementation for it as
+ * in HashMap - there is no guarantee that all JVms will support that and non-Java implementations need to be able
+ * to deal with it as well. Rust for instance randomize the key set in maps by default for security reasons).
+ */
+public interface Proto {
 }

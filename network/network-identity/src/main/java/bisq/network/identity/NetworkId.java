@@ -41,6 +41,7 @@ public final class NetworkId implements NetworkProto {
         this.addressByTransportTypeMap.putAll(addressByTransportTypeMap);
     }
 
+    @Override
     public bisq.network.identity.protobuf.NetworkId toProto() {
         return bisq.network.identity.protobuf.NetworkId.newBuilder()
                 .setAddressByNetworkTypeMap(addressByTransportTypeMap.toProto())

@@ -26,19 +26,14 @@ import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
-public class ProtoResolverMap<T extends NetworkProto> {
-    private final boolean addToNetworkStorageWhiteList;
-
-    public ProtoResolverMap(boolean addToNetworkStorageWhiteList) {
-        this.addToNetworkStorageWhiteList = addToNetworkStorageWhiteList;
+public class NetworkProtoResolverMap<T extends NetworkProto> {
+    public NetworkProtoResolverMap() {
     }
 
     private final Map<String, ProtoResolver<T>> map = new HashMap<>();
 
     public void addProtoResolver(String protoTypeName, ProtoResolver<T> resolver) {
-        if (addToNetworkStorageWhiteList) {
-            NetworkStorageWhiteList.add(protoTypeName, resolver);
-        }
+        NetworkStorageWhiteList.add(protoTypeName, resolver);
         map.put(protoTypeName, resolver);
     }
 

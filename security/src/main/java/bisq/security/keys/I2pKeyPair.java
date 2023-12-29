@@ -1,12 +1,12 @@
 package bisq.security.keys;
 
-import bisq.common.proto.NetworkProto;
+import bisq.common.proto.PersistableProto;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-public class I2pKeyPair implements NetworkProto {
+public class I2pKeyPair implements PersistableProto {
     @ToString.Exclude
     private final byte[] privateKey;
     private final byte[] publicKey;

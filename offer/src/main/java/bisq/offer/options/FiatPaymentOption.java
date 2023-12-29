@@ -40,6 +40,7 @@ public final class FiatPaymentOption implements OfferOption {
         NetworkDataValidation.validateText(bankName, MAX_NAME_LENGTH);
     }
 
+    @Override
     public bisq.offer.protobuf.OfferOption toProto() {
         return getOfferOptionBuilder().setFiatPaymentOption(bisq.offer.protobuf.FiatPaymentOption.newBuilder()
                         .setCountyCodeOfBank(countyCodeOfBank)

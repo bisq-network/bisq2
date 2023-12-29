@@ -17,12 +17,12 @@
 
 package bisq.network.p2p.services.data.storage;
 
+import bisq.common.proto.NetworkProtoResolverMap;
 import bisq.common.proto.ProtoResolver;
-import bisq.common.proto.ProtoResolverMap;
 import com.google.protobuf.Any;
 
 public class DistributedDataResolver {
-    private static final ProtoResolverMap<DistributedData> protoResolverMap = new ProtoResolverMap<>(true);
+    private static final NetworkProtoResolverMap<DistributedData> protoResolverMap = new NetworkProtoResolverMap<>();
 
     public static void addResolver(String protoTypeName, ProtoResolver<DistributedData> resolver) {
         protoResolverMap.addProtoResolver(protoTypeName, resolver);

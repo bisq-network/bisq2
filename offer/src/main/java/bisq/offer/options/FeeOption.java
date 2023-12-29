@@ -54,6 +54,7 @@ public final class FeeOption implements OfferOption {
         NetworkDataValidation.validateBtcTxId(feeTxId);
     }
 
+    @Override
     public bisq.offer.protobuf.OfferOption toProto() {
         return getOfferOptionBuilder().setFeeOption(bisq.offer.protobuf.FeeOption.newBuilder()
                         .setFeeType(feeType.toProto())

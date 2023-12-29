@@ -18,7 +18,7 @@
 package bisq.common.monetary;
 
 import bisq.common.currency.TradeCurrency;
-import bisq.common.proto.NetworkProto;
+import bisq.common.proto.PersistableProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
@@ -32,7 +32,7 @@ import java.math.BigDecimal;
 @Getter
 @ToString
 @Slf4j
-public abstract class Monetary implements Comparable<Monetary>, NetworkProto {
+public abstract class Monetary implements Comparable<Monetary>, PersistableProto {
     public static long doubleValueToLong(double value, int precision) {
         double max = BigDecimal.valueOf(Long.MAX_VALUE).movePointLeft(precision).doubleValue();
         if (value > max) {

@@ -21,7 +21,7 @@ import bisq.chat.ChatChannel;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessage;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
-import bisq.common.proto.NetworkProto;
+import bisq.common.proto.PersistableProto;
 import bisq.presentation.notifications.Notification;
 import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
@@ -35,7 +35,7 @@ import java.util.Optional;
 @ToString
 @Getter
 @EqualsAndHashCode
-public class ChatNotification implements Notification, NetworkProto {
+public class ChatNotification implements Notification, PersistableProto {
     public static String createId(String channelId, String messageId) {
         return channelId + "." + messageId;
     }
