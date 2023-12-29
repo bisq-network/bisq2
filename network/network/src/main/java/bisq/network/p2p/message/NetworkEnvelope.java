@@ -22,6 +22,7 @@ import bisq.network.p2p.node.ConnectionException;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,14 +34,17 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @Slf4j
 public final class NetworkEnvelope implements Proto {
-    public static final int VERSION = 1;
+    // For live network we use networkVersion=1
+    // For dev testing networkVersion=0
+    @Setter
+    public static int networkVersion;
 
     private final int version;
     private final AuthorizationToken authorizationToken;
     private final EnvelopePayloadMessage envelopePayloadMessage;
 
     public NetworkEnvelope(AuthorizationToken authorizationToken, EnvelopePayloadMessage envelopePayloadMessage) {
-        this(VERSION, authorizationToken, envelopePayloadMessage);
+        this(networkVersion, authorizationToken, envelopePayloadMessage);
     }
 
     public NetworkEnvelope(int version, AuthorizationToken authorizationToken, EnvelopePayloadMessage envelopePayloadMessage) {
@@ -64,10 +68,10 @@ public final class NetworkEnvelope implements Proto {
     }
 
     public void verifyVersion() throws ConnectionException {
-        if (version != VERSION) {
+        if (version != networkVersion) {
             throw new ConnectionException("Invalid networkEnvelopeVersion. " +
                     "version=" + version +
-                    "; NetworkEnvelope.VERSION=" + VERSION +
+                    "; networkVersion=" + networkVersion +
                     "; networkMessage=" + envelopePayloadMessage.getClass().getSimpleName());
         }
     }

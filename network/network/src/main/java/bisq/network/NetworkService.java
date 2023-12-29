@@ -34,6 +34,7 @@ import bisq.network.identity.NetworkIdWithKeyPair;
 import bisq.network.p2p.ServiceNode;
 import bisq.network.p2p.ServiceNodesByTransport;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
+import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.network_load.NetworkLoadService;
@@ -115,6 +116,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         supportedTransportTypes = config.getSupportedTransportTypes();
         defaultPortByTransportType = config.getDefaultPortByTransportType();
         this.keyBundleService = keyBundleService;
+        NetworkEnvelope.setNetworkVersion(config.getVersion());
 
         httpClientsByTransport = new HttpClientsByTransport();
 

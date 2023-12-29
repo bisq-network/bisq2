@@ -74,6 +74,7 @@ public final class NetworkServiceConfig {
         Map<TransportType, TransportConfig> configByTransportType = createConfigByTransportType(config, baseDir);
 
         return new NetworkServiceConfig(baseDir.toAbsolutePath().toString(),
+                config.getInt("version"),
                 supportedTransportTypes,
                 configByTransportType,
                 serviceNodeConfig,
@@ -166,6 +167,7 @@ public final class NetworkServiceConfig {
     }
 
     private final String baseDir;
+    private final int version;
     private final Set<TransportType> supportedTransportTypes;
     private final InventoryService.Config inventoryServiceConfig;
     private final Map<TransportType, TransportConfig> configByTransportType;
@@ -176,6 +178,7 @@ public final class NetworkServiceConfig {
     private final Optional<String> socks5ProxyAddress;
 
     public NetworkServiceConfig(String baseDir,
+                                int version,
                                 Set<TransportType> supportedTransportTypes,
                                 Map<TransportType, TransportConfig> configByTransportType,
                                 ServiceNode.Config serviceNodeConfig,
@@ -185,6 +188,7 @@ public final class NetworkServiceConfig {
                                 Map<TransportType, Set<Address>> seedAddressesByTransport,
                                 Optional<String> socks5ProxyAddress) {
         this.baseDir = baseDir;
+        this.version = version;
         this.supportedTransportTypes = supportedTransportTypes;
         this.inventoryServiceConfig = inventoryServiceConfig;
         this.configByTransportType = filterMap(supportedTransportTypes, configByTransportType);
