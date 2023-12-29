@@ -711,6 +711,7 @@ public class ChatMessagesComponent {
             emptyMessageList.managedProperty().bind(model.getChatDialogEnabled().not());
             messagesListView.visibleProperty().bind(model.getChatDialogEnabled());
             messagesListView.managedProperty().bind(model.getChatDialogEnabled());
+            userProfileSelectionRoot.disableProperty().bind(model.getChatDialogEnabled().not());
         }
 
         private void removeChatDialogEnabledSubscription() {
@@ -720,6 +721,7 @@ public class ChatMessagesComponent {
             emptyMessageList.managedProperty().unbind();
             messagesListView.visibleProperty().unbind();
             messagesListView.managedProperty().unbind();
+            userProfileSelectionRoot.disableProperty().unbind();
         }
     }
 
