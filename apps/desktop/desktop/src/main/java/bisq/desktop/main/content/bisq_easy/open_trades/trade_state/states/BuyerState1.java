@@ -17,14 +17,25 @@
 
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 
+import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.main.content.bisq_easy.components.WaitingAnimation;
-import bisq.desktop.main.content.bisq_easy.components.WaitingState;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.WrappingText;
+import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
+import bisq.trade.TradeException;
 import bisq.trade.bisq_easy.BisqEasyTrade;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+import javafx.geometry.Insets;
+import javafx.scene.control.Button;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -58,45 +69,85 @@ public class BuyerState1 extends BaseState {
         @Override
         public void onActivate() {
             super.onActivate();
+
+            model.getSendBtcAddressButtonDisabled().bind(model.getBtcAddress().isEmpty());
         }
 
         @Override
         public void onDeactivate() {
             super.onDeactivate();
+
+            model.getSendBtcAddressButtonDisabled().unbind();
+        }
+
+        private void onSendBtcAddress() {
+            // TODO: Either remove completely or only send later on BTC transfer step
+            //sendSystemMessage(Res.get("bisqEasy.tradeState.info.buyer.phase1.systemMessage", model.getBtcAddress().get()));
+            try {
+                bisqEasyTradeService.buyerSendBtcAddress(model.getBisqEasyTrade(), model.getBtcAddress().get());
+            } catch (TradeException e) {
+                new Popup().error(e).show();
+            }
+        }
+
+        void onOpenWalletHelp() {
+            Navigation.navigateTo(NavigationTarget.WALLET_GUIDE);
         }
     }
 
     @Getter
     private static class Model extends BaseState.Model {
-        public Model(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
+        private final StringProperty btcAddress = new SimpleStringProperty();
+        private final BooleanProperty sendBtcAddressButtonDisabled = new SimpleBooleanProperty();
+
+        protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
             super(bisqEasyTrade, channel);
         }
     }
 
     public static class View extends BaseState.View<Model, Controller> {
-        private final WaitingAnimation waitingAnimation;
+        private final Button sendBtcAddressButton, walletInfoButton;
+        private final MaterialTextField btcAddress;
+        private final WrappingText btcAddressHeadline;
+        private final HBox buttons;
 
         private View(Model model, Controller controller) {
             super(model, controller);
-            waitingAnimation = new WaitingAnimation(WaitingState.ACCOUNT_DATA);
-            WrappingText headline = FormUtils.getHeadline(Res.get("bisqEasy.tradeState.info.buyer.phase1.headline"));
-            WrappingText info = FormUtils.getInfo(Res.get("bisqEasy.tradeState.info.buyer.phase1.info"));
-            HBox waitingInfo = createWaitingInfo(waitingAnimation, headline, info);
-            root.getChildren().add(waitingInfo);
+
+            btcAddressHeadline = FormUtils.getHeadline();
+            sendBtcAddressButton = new Button(Res.get("bisqEasy.tradeState.info.buyer.phase1.sendBtcAddress"));
+            sendBtcAddressButton.setDefaultButton(true);
+            walletInfoButton = new Button(Res.get("bisqEasy.tradeState.info.buyer.phase1.walletHelpButton"));
+            walletInfoButton.getStyleClass().add("outlined-button");
+            buttons = new HBox(10, sendBtcAddressButton, Spacer.fillHBox(), walletInfoButton);
+            btcAddress = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.buyer.phase1.btcAddress"), "", true);
+            btcAddress.setPromptText(Res.get("bisqEasy.tradeState.info.buyer.phase1.btcAddress.prompt"));
+            btcAddress.setHelpText(Res.get("bisqEasy.tradeState.info.buyer.phase1.btcAddress.help"));
+
+            VBox.setMargin(btcAddressHeadline, new Insets(5, 0, 0, 0));
+            VBox.setMargin(buttons, new Insets(5, 0, 5, 0));
+            root.getChildren().addAll(btcAddressHeadline, btcAddress, buttons);
         }
 
         @Override
         protected void onViewAttached() {
             super.onViewAttached();
 
-            waitingAnimation.play();
+            btcAddressHeadline.setText(Res.get("bisqEasy.tradeState.info.buyer.phase1.btcAddress.headline"));
+            btcAddress.textProperty().bindBidirectional(model.getBtcAddress());
+            sendBtcAddressButton.disableProperty().bind(model.getSendBtcAddressButtonDisabled());
+            sendBtcAddressButton.setOnAction(e -> controller.onSendBtcAddress());
+            walletInfoButton.setOnAction(e -> controller.onOpenWalletHelp());
         }
 
         @Override
         protected void onViewDetached() {
             super.onViewDetached();
 
-            waitingAnimation.stop();
+            btcAddress.textProperty().unbindBidirectional(model.getBtcAddress());
+            sendBtcAddressButton.disableProperty().unbind();
+            sendBtcAddressButton.setOnAction(null);
+            walletInfoButton.setOnAction(null);
         }
     }
 }
