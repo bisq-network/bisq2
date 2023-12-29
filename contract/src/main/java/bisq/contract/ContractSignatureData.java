@@ -18,7 +18,7 @@
 package bisq.contract;
 
 import bisq.common.encoding.Hex;
-import bisq.common.proto.Proto;
+import bisq.common.proto.NetworkProto;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
@@ -32,7 +32,7 @@ import java.security.PublicKey;
 @Slf4j
 @Getter
 @EqualsAndHashCode
-public class ContractSignatureData implements Proto {
+public class ContractSignatureData implements NetworkProto {
     private final byte[] contractHash;
     private final byte[] signature;
     private final PublicKey publicKey;

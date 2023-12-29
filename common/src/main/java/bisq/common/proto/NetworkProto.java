@@ -28,7 +28,7 @@ import com.google.protobuf.Message;
  * in HashMap - there is no guarantee that all JVms will support that and non-Java implementations need to be able
  * to deal with it as well. Rust for instance randomize the key set in maps by default for security reasons).
  */
-public interface Proto {
+public interface NetworkProto {
     Message toProto();
 
     default byte[] serialize() {

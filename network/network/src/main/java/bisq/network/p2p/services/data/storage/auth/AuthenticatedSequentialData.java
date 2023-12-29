@@ -18,7 +18,7 @@
 package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.encoding.Hex;
-import bisq.common.proto.Proto;
+import bisq.common.proto.NetworkProto;
 import bisq.common.validation.NetworkDataValidation;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
@@ -32,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Getter
 @EqualsAndHashCode
-public final class AuthenticatedSequentialData implements Proto {
+public final class AuthenticatedSequentialData implements NetworkProto {
     public static AuthenticatedSequentialData from(AuthenticatedSequentialData data, int sequenceNumber) {
         return new AuthenticatedSequentialData(data.getAuthenticatedData(),
                 sequenceNumber,

@@ -17,7 +17,7 @@
 
 package bisq.network.common;
 
-import bisq.common.proto.Proto;
+import bisq.common.proto.NetworkProto;
 import bisq.common.util.StringUtils;
 import bisq.common.validation.NetworkDataValidation;
 import com.google.common.net.InetAddresses;
@@ -28,7 +28,7 @@ import java.util.StringTokenizer;
 
 @EqualsAndHashCode
 @Getter
-public final class Address implements Proto, Comparable<Address> {
+public final class Address implements NetworkProto, Comparable<Address> {
     public static Address localHost(int port) {
         return new Address("127.0.0.1", port);
     }

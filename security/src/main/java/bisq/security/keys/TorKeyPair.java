@@ -1,6 +1,6 @@
 package bisq.security.keys;
 
-import bisq.common.proto.Proto;
+import bisq.common.proto.NetworkProto;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -11,7 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString
-public class TorKeyPair implements Proto {
+public class TorKeyPair implements NetworkProto {
     @ToString.Exclude
     private final byte[] privateKey;
     @ToString.Exclude

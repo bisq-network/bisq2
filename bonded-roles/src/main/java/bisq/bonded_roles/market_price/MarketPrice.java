@@ -19,7 +19,7 @@ package bisq.bonded_roles.market_price;
 
 import bisq.common.currency.Market;
 import bisq.common.monetary.PriceQuote;
-import bisq.common.proto.Proto;
+import bisq.common.proto.NetworkProto;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -33,7 +33,7 @@ import java.util.Optional;
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class MarketPrice implements Proto {
+public final class MarketPrice implements NetworkProto {
     public enum Source {
         PERSISTED,
         PROPAGATED_IN_NETWORK,

@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
-public class ProtoResolverMap<T extends Proto> {
+public class ProtoResolverMap<T extends NetworkProto> {
     private final boolean addToNetworkStorageWhiteList;
 
     public ProtoResolverMap(boolean addToNetworkStorageWhiteList) {

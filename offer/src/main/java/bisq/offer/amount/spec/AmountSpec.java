@@ -17,10 +17,10 @@
 
 package bisq.offer.amount.spec;
 
-import bisq.common.proto.Proto;
+import bisq.common.proto.NetworkProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 
-public interface AmountSpec extends Proto {
+public interface AmountSpec extends NetworkProto {
 
     bisq.offer.protobuf.AmountSpec toProto();
 

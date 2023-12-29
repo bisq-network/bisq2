@@ -19,7 +19,7 @@ package bisq.account.accounts;
 
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.currency.TradeCurrency;
-import bisq.common.proto.Proto;
+import bisq.common.proto.NetworkProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @ToString
 @EqualsAndHashCode
-public abstract class Account<P extends AccountPayload, M extends PaymentMethod<?>> implements Proto {
+public abstract class Account<P extends AccountPayload, M extends PaymentMethod<?>> implements NetworkProto {
     protected final long creationDate;
     protected final String accountName;
     protected final P accountPayload;

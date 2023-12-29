@@ -23,7 +23,7 @@ import bisq.chat.common.CommonPublicChatChannel;
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
-import bisq.common.proto.Proto;
+import bisq.common.proto.NetworkProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
@@ -36,7 +36,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @ToString
 @Getter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public abstract class ChatChannel<M extends ChatMessage> implements Proto {
+public abstract class ChatChannel<M extends ChatMessage> implements NetworkProto {
     @EqualsAndHashCode.Include
     protected final String id;
     protected final ChatChannelDomain chatChannelDomain;

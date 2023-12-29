@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.message;
 
-import bisq.common.proto.Proto;
+import bisq.common.proto.NetworkProto;
 import bisq.network.p2p.node.ConnectionException;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
 import lombok.EqualsAndHashCode;
@@ -33,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 @EqualsAndHashCode
 @Getter
 @Slf4j
-public final class NetworkEnvelope implements Proto {
+public final class NetworkEnvelope implements NetworkProto {
     // For live network we use networkVersion=1
     // For dev testing networkVersion=0
     @Setter

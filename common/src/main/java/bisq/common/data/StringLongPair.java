@@ -17,7 +17,7 @@
 
 package bisq.common.data;
 
-import bisq.common.proto.Proto;
+import bisq.common.proto.NetworkProto;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -25,7 +25,7 @@ import lombok.ToString;
 @Getter
 @EqualsAndHashCode
 @ToString
-public final class StringLongPair implements Proto {
+public final class StringLongPair implements NetworkProto {
     private final String key;
     private final Long value;
 

@@ -17,12 +17,12 @@
 
 package bisq.network.p2p.node.authorization;
 
-import bisq.common.proto.Proto;
+import bisq.common.proto.NetworkProto;
 import bisq.security.pow.ProofOfWork;
 import lombok.Data;
 
 @Data
-public final class AuthorizationToken implements Proto {
+public final class AuthorizationToken implements NetworkProto {
     private final ProofOfWork proofOfWork;
     private final int messageCounter;
 

@@ -18,7 +18,7 @@
 package bisq.security.keys;
 
 import bisq.common.encoding.Hex;
-import bisq.common.proto.Proto;
+import bisq.common.proto.NetworkProto;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.security.DigestUtil;
 import com.google.protobuf.ByteString;
@@ -33,7 +33,7 @@ import java.security.PublicKey;
 @Slf4j
 @EqualsAndHashCode
 @ToString
-public final class PubKey implements Proto {
+public final class PubKey implements NetworkProto {
     // The PublicKey implementation (BCECPublicKey) has an equals and hashCode method implemented.
     // Therefor we can include it for @EqualsAndHashCode.
     @Getter

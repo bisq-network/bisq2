@@ -17,14 +17,14 @@
 
 package bisq.persistence;
 
-import bisq.common.proto.Proto;
+import bisq.common.proto.NetworkProto;
 import bisq.common.proto.ProtoResolver;
 import com.google.protobuf.Any;
 
 /**
  * Interface for the outside envelope object persisted to disk.
  */
-public interface PersistableStore<T> extends Proto {
+public interface PersistableStore<T> extends NetworkProto {
     static PersistableStore<?> fromAny(Any anyProto) {
         return PersistableStoreResolver.fromAny(anyProto);
     }

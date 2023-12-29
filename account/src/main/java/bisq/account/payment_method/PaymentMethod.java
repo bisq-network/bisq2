@@ -18,7 +18,7 @@
 package bisq.account.payment_method;
 
 import bisq.common.currency.TradeCurrency;
-import bisq.common.proto.Proto;
+import bisq.common.proto.NetworkProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.i18n.Res;
@@ -40,7 +40,7 @@ import java.util.List;
 @ToString
 @EqualsAndHashCode
 @Getter
-public abstract class PaymentMethod<R extends PaymentRail> implements Comparable<PaymentMethod<R>>, Proto {
+public abstract class PaymentMethod<R extends PaymentRail> implements Comparable<PaymentMethod<R>>, NetworkProto {
     public final static int MAX_NAME_LENGTH = 50;
 
     protected final String name;

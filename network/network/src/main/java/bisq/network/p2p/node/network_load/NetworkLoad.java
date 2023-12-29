@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.node.network_load;
 
-import bisq.common.proto.Proto;
+import bisq.common.proto.NetworkProto;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -25,7 +25,7 @@ import lombok.ToString;
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class NetworkLoad implements Proto {
+public final class NetworkLoad implements NetworkProto {
     public final static NetworkLoad INITIAL_LOAD = new NetworkLoad();
 
     private final double value;

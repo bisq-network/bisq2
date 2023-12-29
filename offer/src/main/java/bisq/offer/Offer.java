@@ -19,7 +19,7 @@ package bisq.offer;
 
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.currency.Market;
-import bisq.common.proto.Proto;
+import bisq.common.proto.NetworkProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
@@ -45,7 +45,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Getter
 @ToString
 @EqualsAndHashCode
-public abstract class Offer<B extends PaymentMethodSpec<?>, Q extends PaymentMethodSpec<?>> implements Proto {
+public abstract class Offer<B extends PaymentMethodSpec<?>, Q extends PaymentMethodSpec<?>> implements NetworkProto {
     protected final String id;
     protected final long date;
     protected final NetworkId makerNetworkId;

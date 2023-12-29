@@ -17,13 +17,13 @@
 
 package bisq.wallets.json_rpc;
 
-import bisq.common.proto.Proto;
+import bisq.common.proto.NetworkProto;
 import lombok.Builder;
 import lombok.Getter;
 
 @Builder
 @Getter
-public final class RpcConfig implements Proto {
+public final class RpcConfig implements NetworkProto {
     private String hostname;
     private int port;
     private String user;

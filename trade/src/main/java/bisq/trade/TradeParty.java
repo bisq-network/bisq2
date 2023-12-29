@@ -18,7 +18,7 @@
 package bisq.trade;
 
 import bisq.common.observable.Observable;
-import bisq.common.proto.Proto;
+import bisq.common.proto.NetworkProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.contract.ContractSignatureData;
 import bisq.network.identity.NetworkId;
@@ -36,7 +36,7 @@ import java.util.Optional;
 @ToString
 @EqualsAndHashCode
 @Getter
-public abstract class TradeParty implements Proto {
+public abstract class TradeParty implements NetworkProto {
     private final NetworkId networkId;
     private final Observable<ContractSignatureData> contractSignatureData = new Observable<>();
 

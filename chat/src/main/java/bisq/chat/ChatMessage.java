@@ -21,7 +21,7 @@ import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeMessage;
 import bisq.chat.common.CommonPublicChatMessage;
 import bisq.chat.two_party.TwoPartyPrivateChatMessage;
-import bisq.common.proto.Proto;
+import bisq.common.proto.NetworkProto;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.util.StringUtils;
@@ -45,7 +45,7 @@ import java.util.Optional;
 @ToString
 @Getter
 @EqualsAndHashCode
-public abstract class ChatMessage implements Proto, Comparable<ChatMessage> {
+public abstract class ChatMessage implements NetworkProto, Comparable<ChatMessage> {
     public static final int MAX_TEXT_LENGTH = 10_000;
 
     protected final String id;

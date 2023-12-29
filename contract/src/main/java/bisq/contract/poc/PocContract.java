@@ -19,7 +19,7 @@ package bisq.contract.poc;
 
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.monetary.Monetary;
-import bisq.common.proto.Proto;
+import bisq.common.proto.NetworkProto;
 import bisq.network.identity.NetworkId;
 import bisq.offer.poc.PocOffer;
 import com.google.protobuf.Message;
@@ -30,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @EqualsAndHashCode
 @Getter
-public final class PocContract implements Proto {
+public final class PocContract implements NetworkProto {
     private final NetworkId takerNetworkId;
     private final TradeProtocolType protocolType;
     private final PocOffer offer;

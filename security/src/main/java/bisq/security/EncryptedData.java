@@ -18,7 +18,7 @@
 package bisq.security;
 
 import bisq.common.encoding.Hex;
-import bisq.common.proto.Proto;
+import bisq.common.proto.NetworkProto;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -32,7 +32,7 @@ import lombok.Getter;
  */
 @Getter
 @EqualsAndHashCode
-public final class EncryptedData implements Proto {
+public final class EncryptedData implements NetworkProto {
     private final byte[] iv;
     private final byte[] cipherText;
 

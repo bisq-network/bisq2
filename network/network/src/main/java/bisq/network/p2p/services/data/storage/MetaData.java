@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.services.data.storage;
 
-import bisq.common.proto.Proto;
+import bisq.common.proto.NetworkProto;
 import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
@@ -34,7 +34,7 @@ import java.util.concurrent.TimeUnit;
 @EqualsAndHashCode
 @ToString
 @Getter
-public final class MetaData implements Proto {
+public final class MetaData implements NetworkProto {
     public static final long TTL_2_DAYS = TimeUnit.DAYS.toMillis(2);
     public static final long TTL_10_DAYS = TimeUnit.DAYS.toMillis(10);
     public static final long TTL_15_DAYS = TimeUnit.DAYS.toMillis(15);

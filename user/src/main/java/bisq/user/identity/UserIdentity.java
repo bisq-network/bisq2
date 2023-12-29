@@ -17,7 +17,7 @@
 
 package bisq.user.identity;
 
-import bisq.common.proto.Proto;
+import bisq.common.proto.NetworkProto;
 import bisq.identity.Identity;
 import bisq.network.identity.NetworkIdWithKeyPair;
 import bisq.user.profile.UserProfile;
@@ -33,7 +33,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @EqualsAndHashCode
 @ToString
 @Getter
-public final class UserIdentity implements Proto {
+public final class UserIdentity implements NetworkProto {
     private final Identity identity;
     private final UserProfile userProfile;
 

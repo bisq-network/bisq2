@@ -17,7 +17,7 @@
 
 package bisq.identity;
 
-import bisq.common.proto.Proto;
+import bisq.common.proto.NetworkProto;
 import bisq.network.identity.NetworkId;
 import bisq.network.identity.NetworkIdWithKeyPair;
 import bisq.security.keys.KeyBundle;
@@ -28,7 +28,7 @@ import lombok.ToString;
 
 @EqualsAndHashCode
 @ToString
-public final class Identity implements Proto {
+public final class Identity implements NetworkProto {
     // Reference to usage (e.g. offerId)
     @Getter
     private final String tag;

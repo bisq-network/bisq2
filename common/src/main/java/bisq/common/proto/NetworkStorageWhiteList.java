@@ -36,7 +36,7 @@ public class NetworkStorageWhiteList {
         classNames.add(clazz.getSimpleName());
     }
 
-    public static <T extends Proto> void add(String protoTypeName, ProtoResolver<T> resolver) {
+    public static <T extends NetworkProto> void add(String protoTypeName, ProtoResolver<T> resolver) {
         try {
             String[] resolverTokens = resolver.getClass().getSimpleName().split("\\$\\$");
             String[] protoTypeNameTokens = protoTypeName.split("\\.");

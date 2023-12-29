@@ -17,7 +17,7 @@
 
 package bisq.security.pow;
 
-import bisq.common.proto.Proto;
+import bisq.common.proto.NetworkProto;
 import bisq.common.validation.NetworkDataValidation;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
@@ -32,7 +32,7 @@ import java.util.Optional;
 @Slf4j
 @Getter
 @EqualsAndHashCode
-public final class ProofOfWork implements Proto {
+public final class ProofOfWork implements NetworkProto {
     // payload is usually the pubKeyHash
     private final byte[] payload;       // message of 1000 chars has about 1300 bytes
     private final long counter;

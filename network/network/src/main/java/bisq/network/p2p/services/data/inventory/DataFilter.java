@@ -18,7 +18,7 @@
 package bisq.network.p2p.services.data.inventory;
 
 
-import bisq.common.proto.Proto;
+import bisq.common.proto.NetworkProto;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class DataFilter implements Proto {
+public final class DataFilter implements NetworkProto {
     private final List<FilterEntry> filterEntries;
 
     public DataFilter(List<FilterEntry> filterEntries) {

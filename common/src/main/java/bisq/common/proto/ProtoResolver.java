@@ -19,7 +19,7 @@ package bisq.common.proto;
 
 import com.google.protobuf.Any;
 
-public interface ProtoResolver<T extends Proto> {
+public interface ProtoResolver<T extends NetworkProto> {
     T fromAny(Any any);
 
     static String getProtoType(ProtoResolver<?> resolver) {
