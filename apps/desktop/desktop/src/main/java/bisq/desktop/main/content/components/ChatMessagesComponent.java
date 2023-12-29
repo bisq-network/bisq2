@@ -588,7 +588,7 @@ public class ChatMessagesComponent {
             userProfileSelectionRoot.setId("chat-user-profile-bg");
 
             HBox.setHgrow(bottomBoxStackPane, Priority.ALWAYS);
-            HBox.setMargin(userProfileSelectionRoot, new Insets(0, -20, 0, -25));
+            HBox.setMargin(userProfileSelectionRoot, new Insets(0, -20, 0, -8));
             HBox bottomHBox = new HBox(10);
 
             leaveChannelButton = createAndGetChatButton(Res.get("chat.leave"), 120);
