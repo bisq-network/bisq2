@@ -238,35 +238,45 @@ public class TradeStateController implements Controller {
                     model.getStateInfoVBox().set(new BuyerState1(serviceProvider, trade, channel).getView().getRoot());
                 }
                 break;
+
+            // Seller
+            case SELLER_RECEIVED_BTC_ADDRESS:
+                break; // ACK BTC address received - Do nothing
             case SELLER_SENT_ACCOUNT_DATA:
+                model.getStateInfoVBox().set(new SellerState2a(serviceProvider, trade, channel).getView().getRoot());
+                break;
             case SELLER_RECEIVED_FIAT_SENT_CONFIRMATION:
-                model.getStateInfoVBox().set(new SellerState2(serviceProvider, trade, channel).getView().getRoot());
+                model.getStateInfoVBox().set(new SellerState2b(serviceProvider, trade, channel).getView().getRoot());
                 break;
-
-            case BUYER_RECEIVED_ACCOUNT_DATA:
-            case BUYER_SENT_FIAT_SENT_CONFIRMATION:
-                model.getStateInfoVBox().set(new BuyerState2(serviceProvider, trade, channel).getView().getRoot());
-                break;
-
-            case BUYER_SENT_BTC_ADDRESS:
-            case BUYER_RECEIVED_SELLERS_FIAT_RECEIPT_CONFIRMATION:
-                model.getStateInfoVBox().set(new BuyerState3(serviceProvider, trade, channel).getView().getRoot());
-                break;
-
             case SELLER_CONFIRMED_FIAT_RECEIPT:
-                model.getStateInfoVBox().set(new SellerState3(serviceProvider, trade, channel).getView().getRoot());
+                model.getStateInfoVBox().set(new SellerState3a(serviceProvider, trade, channel).getView().getRoot());
                 break;
             case SELLER_SENT_BTC_SENT_CONFIRMATION:
-                model.getStateInfoVBox().set(new SellerState4(serviceProvider, trade, channel).getView().getRoot());
+                model.getStateInfoVBox().set(new SellerState3b(serviceProvider, trade, channel).getView().getRoot());
+                break;
+
+            // Buyer
+            case BUYER_SENT_BTC_ADDRESS:
+                model.getStateInfoVBox().set(new BuyerState2a(serviceProvider, trade, channel).getView().getRoot());
+                break;
+            case BUYER_RECEIVED_ACCOUNT_DATA:
+                model.getStateInfoVBox().set(new BuyerState2b(serviceProvider, trade, channel).getView().getRoot());
+                break;
+            case BUYER_SENT_FIAT_SENT_CONFIRMATION:
+                model.getStateInfoVBox().set(new BuyerState2c(serviceProvider, trade, channel).getView().getRoot());
+                break;
+            case BUYER_RECEIVED_SELLERS_FIAT_RECEIPT_CONFIRMATION:
+                model.getStateInfoVBox().set(new BuyerState3a(serviceProvider, trade, channel).getView().getRoot());
                 break;
             case BUYER_RECEIVED_BTC_SENT_CONFIRMATION:
-                model.getStateInfoVBox().set(new BuyerState4(serviceProvider, trade, channel).getView().getRoot());
+                model.getStateInfoVBox().set(new BuyerState3b(serviceProvider, trade, channel).getView().getRoot());
                 break;
+
             case BTC_CONFIRMED:
                 if (isSeller) {
-                    model.getStateInfoVBox().set(new SellerState5(serviceProvider, trade, channel).getView().getRoot());
+                    model.getStateInfoVBox().set(new SellerState4(serviceProvider, trade, channel).getView().getRoot());
                 } else {
-                    model.getStateInfoVBox().set(new BuyerState5(serviceProvider, trade, channel).getView().getRoot());
+                    model.getStateInfoVBox().set(new BuyerState4(serviceProvider, trade, channel).getView().getRoot());
                 }
                 break;
 

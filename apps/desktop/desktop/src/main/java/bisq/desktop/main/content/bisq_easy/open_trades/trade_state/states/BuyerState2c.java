@@ -18,29 +18,21 @@
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
-import bisq.common.data.Pair;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.main.content.bisq_easy.components.WaitingAnimation;
 import bisq.desktop.main.content.bisq_easy.components.WaitingState;
 import bisq.desktop.components.controls.WrappingText;
 import bisq.i18n.Res;
 import bisq.trade.bisq_easy.BisqEasyTrade;
-import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.geometry.Insets;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class SellerState2 extends BaseState {
+public class BuyerState2c extends BaseState {
     private final Controller controller;
 
-    public SellerState2(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
+    public BuyerState2c(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
         controller = new Controller(serviceProvider, bisqEasyTrade, channel);
     }
 
@@ -66,8 +58,6 @@ public class SellerState2 extends BaseState {
         @Override
         public void onActivate() {
             super.onActivate();
-
-            model.getFiatSendConfirmationReceived().set(model.getBisqEasyTrade().getState() == BisqEasyTradeState.SELLER_RECEIVED_FIAT_SENT_CONFIRMATION);
         }
 
         @Override
@@ -78,65 +68,38 @@ public class SellerState2 extends BaseState {
 
     @Getter
     private static class Model extends BaseState.Model {
-        private final BooleanProperty fiatSendConfirmationReceived = new SimpleBooleanProperty();
-
         protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
             super(bisqEasyTrade, channel);
         }
     }
 
     public static class View extends BaseState.View<Model, Controller> {
-
-        private final WrappingText fiatSentConfirmed, headline, info;
+        private final WrappingText headline, info;
         private final WaitingAnimation waitingAnimation;
-        private final HBox fiatSentConfirmedHBox;
-        private Subscription fiatSendConfirmationReceivedPin;
 
         private View(Model model, Controller controller) {
             super(model, controller);
 
-            Pair<WrappingText, HBox> confirmPair = FormUtils.getConfirmInfo();
-            fiatSentConfirmed = confirmPair.getFirst();
-            fiatSentConfirmedHBox = confirmPair.getSecond();
-
-            VBox.setMargin(fiatSentConfirmedHBox, new Insets(0, 0, 10, 0));
-
-            waitingAnimation = new WaitingAnimation();
+            waitingAnimation = new WaitingAnimation(WaitingState.FIAT_PAYMENT_CONFIRMATION);
             headline = FormUtils.getHeadline();
             info = FormUtils.getInfo();
             HBox waitingInfo = createWaitingInfo(waitingAnimation, headline, info);
-
-            root.getChildren().addAll(fiatSentConfirmedHBox, waitingInfo);
+            root.getChildren().add(waitingInfo);
         }
 
         @Override
         protected void onViewAttached() {
             super.onViewAttached();
 
-            fiatSendConfirmationReceivedPin = EasyBind.subscribe(model.getFiatSendConfirmationReceived(), fiatPaymentConfirmed -> {
-                fiatSentConfirmedHBox.setVisible(fiatPaymentConfirmed);
-                fiatSentConfirmedHBox.setManaged(fiatPaymentConfirmed);
-                if (fiatPaymentConfirmed) {
-                    VBox.setMargin(waitingAnimation, new Insets(20, 0, 10, 40));
-                    headline.setText(Res.get("bisqEasy.tradeState.info.seller.phase2.waitForBtcAddress.headline"));
-                    info.setText(Res.get("bisqEasy.tradeState.info.seller.phase2.waitForBtcAddress.info"));
-                    fiatSentConfirmed.setText(Res.get("bisqEasy.tradeState.info.seller.phase2.fiatPaymentSentCheckBox", model.getFormattedQuoteAmount()));
-                    waitingAnimation.setState(WaitingState.BITCOIN_ADDRESS);
-                } else {
-                    VBox.setMargin(waitingAnimation, new Insets(30, 0, 10, 40));
-                    headline.setText(Res.get("bisqEasy.tradeState.info.seller.phase2.waitForPayment.headline", model.getQuoteCode()));
-                    info.setText(Res.get("bisqEasy.tradeState.info.seller.phase2.waitForPayment.info", model.getFormattedQuoteAmount()));
-                    waitingAnimation.setState(WaitingState.FIAT_PAYMENT);
-                }
-            });
-
+            headline.setText(Res.get("bisqEasy.tradeState.info.buyer.phase2c.headline"));
+            info.setText(Res.get("bisqEasy.tradeState.info.buyer.phase2c.info", model.getFormattedQuoteAmount()));
             waitingAnimation.play();
         }
 
         @Override
         protected void onViewDetached() {
             super.onViewDetached();
-            fiatSendConfirmationReceivedPin.unsubscribe();
+
             waitingAnimation.stop();
         }
     }

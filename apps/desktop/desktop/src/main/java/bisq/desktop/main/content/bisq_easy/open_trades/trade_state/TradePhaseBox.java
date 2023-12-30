@@ -32,7 +32,6 @@ import bisq.desktop.components.controls.Badge;
 import bisq.i18n.Res;
 import bisq.support.mediation.MediationRequestService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
-import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
 import javafx.beans.property.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -125,34 +124,31 @@ class TradePhaseBox {
                             model.getPhaseIndex().set(0);
                             model.getRequestMediationButtonVisible().set(false);
                             model.getReportToMediatorButtonVisible().set(true);
+
+                        case SELLER_RECEIVED_BTC_ADDRESS:
+                        case BUYER_RECEIVED_ACCOUNT_DATA:
                             break;
 
                         case SELLER_SENT_ACCOUNT_DATA:
+                        case SELLER_RECEIVED_FIAT_SENT_CONFIRMATION:
                         case BUYER_SENT_BTC_ADDRESS:
+                        case BUYER_SENT_FIAT_SENT_CONFIRMATION:
                             model.getPhaseIndex().set(1);
                             model.getRequestMediationButtonVisible().set(false);
                             model.getReportToMediatorButtonVisible().set(true);
                             break;
 
-                        case SELLER_RECEIVED_FIAT_SENT_CONFIRMATION:
                         case SELLER_CONFIRMED_FIAT_RECEIPT:
-                        case BUYER_RECEIVED_ACCOUNT_DATA: // only show if not received yet
-                        case BUYER_SENT_FIAT_SENT_CONFIRMATION:
                         case BUYER_RECEIVED_SELLERS_FIAT_RECEIPT_CONFIRMATION:
+                        case SELLER_SENT_BTC_SENT_CONFIRMATION:
+                        case BUYER_RECEIVED_BTC_SENT_CONFIRMATION:
                             model.getPhaseIndex().set(2);
                             model.getRequestMediationButtonVisible().set(true);
                             model.getReportToMediatorButtonVisible().set(false);
                             break;
 
-                        case SELLER_SENT_BTC_SENT_CONFIRMATION:
-                        case BUYER_RECEIVED_BTC_SENT_CONFIRMATION:
-                            model.getPhaseIndex().set(3);
-                            model.getRequestMediationButtonVisible().set(true);
-                            model.getReportToMediatorButtonVisible().set(false);
-                            break;
-
                         case BTC_CONFIRMED:
-                            model.getPhaseIndex().set(4);
+                            model.getPhaseIndex().set(3);
                             model.getRequestMediationButtonVisible().set(false);
                             model.getReportToMediatorButtonVisible().set(true);
                             break;
