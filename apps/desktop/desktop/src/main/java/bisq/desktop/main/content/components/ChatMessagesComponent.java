@@ -588,17 +588,23 @@ public class ChatMessagesComponent {
             userProfileSelectionRoot.setId("chat-user-profile-bg");
 
             HBox.setHgrow(bottomBoxStackPane, Priority.ALWAYS);
-            HBox.setMargin(userProfileSelectionRoot, new Insets(0, -20, 0, -25));
+            HBox.setMargin(userProfileSelectionRoot, new Insets(0, -20, 0, -8));
             HBox bottomHBox = new HBox(10);
 
             leaveChannelButton = createAndGetChatButton(Res.get("chat.leave"), 120);
             leaveChannelButton.getStyleClass().add("outlined-button");
 
-            Label noChatsLabel = new Label(Res.get("chat.private.messagebox.noChats.description"));
-            noChatsLabel.getStyleClass().add("chat-container-placeholder-text");
-            noChatsLabel.setTextAlignment(TextAlignment.CENTER);
-            emptyMessageList = new VBox(noChatsLabel);
+            Label noChatsPlaceholderTitle = new Label(Res.get("chat.private.messagebox.noChats.placeholder.title"));
+            noChatsPlaceholderTitle.getStyleClass().add("large-text");
+            noChatsPlaceholderTitle.setTextAlignment(TextAlignment.CENTER);
+
+            Label noChatsPlaceholderDescription = new Label(Res.get("chat.private.messagebox.noChats.placeholder.description"));
+            noChatsPlaceholderDescription.getStyleClass().add("normal-text");
+            noChatsPlaceholderDescription.setTextAlignment(TextAlignment.CENTER);
+
+            emptyMessageList = new VBox(10, noChatsPlaceholderTitle, noChatsPlaceholderDescription);
             emptyMessageList.setAlignment(Pos.CENTER);
+            emptyMessageList.getStyleClass().add("chat-container-placeholder-text");
             VBox.setVgrow(emptyMessageList, Priority.ALWAYS);
 
             createOfferButton = new Button(Res.get("offer.createOffer"));
@@ -705,6 +711,7 @@ public class ChatMessagesComponent {
             emptyMessageList.managedProperty().bind(model.getChatDialogEnabled().not());
             messagesListView.visibleProperty().bind(model.getChatDialogEnabled());
             messagesListView.managedProperty().bind(model.getChatDialogEnabled());
+            userProfileSelectionRoot.disableProperty().bind(model.getChatDialogEnabled().not());
         }
 
         private void removeChatDialogEnabledSubscription() {
@@ -714,6 +721,7 @@ public class ChatMessagesComponent {
             emptyMessageList.managedProperty().unbind();
             messagesListView.visibleProperty().unbind();
             messagesListView.managedProperty().unbind();
+            userProfileSelectionRoot.disableProperty().unbind();
         }
     }
 
