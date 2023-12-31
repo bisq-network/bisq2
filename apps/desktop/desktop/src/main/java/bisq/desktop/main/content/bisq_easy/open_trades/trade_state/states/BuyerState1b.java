@@ -29,10 +29,10 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BuyerState2c extends BaseState {
+public class BuyerState1b extends BaseState {
     private final Controller controller;
 
-    public BuyerState2c(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
+    public BuyerState1b(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
         controller = new Controller(serviceProvider, bisqEasyTrade, channel);
     }
 
@@ -68,21 +68,20 @@ public class BuyerState2c extends BaseState {
 
     @Getter
     private static class Model extends BaseState.Model {
-        protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
+        public Model(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
             super(bisqEasyTrade, channel);
         }
     }
 
     public static class View extends BaseState.View<Model, Controller> {
-        private final WrappingText headline, info;
         private final WaitingAnimation waitingAnimation;
 
         private View(Model model, Controller controller) {
             super(model, controller);
 
-            waitingAnimation = new WaitingAnimation(WaitingState.FIAT_PAYMENT_CONFIRMATION);
-            headline = FormUtils.getHeadline();
-            info = FormUtils.getInfo();
+            waitingAnimation = new WaitingAnimation(WaitingState.ACCOUNT_DATA);
+            WrappingText headline = FormUtils.getHeadline(Res.get("bisqEasy.tradeState.info.buyer.phase1b.headline"));
+            WrappingText info = FormUtils.getInfo(Res.get("bisqEasy.tradeState.info.buyer.phase1b.info"));
             HBox waitingInfo = createWaitingInfo(waitingAnimation, headline, info);
             root.getChildren().add(waitingInfo);
         }
@@ -91,8 +90,6 @@ public class BuyerState2c extends BaseState {
         protected void onViewAttached() {
             super.onViewAttached();
 
-            headline.setText(Res.get("bisqEasy.tradeState.info.buyer.phase2c.headline"));
-            info.setText(Res.get("bisqEasy.tradeState.info.buyer.phase2c.info", model.getFormattedQuoteAmount()));
             waitingAnimation.play();
         }
 

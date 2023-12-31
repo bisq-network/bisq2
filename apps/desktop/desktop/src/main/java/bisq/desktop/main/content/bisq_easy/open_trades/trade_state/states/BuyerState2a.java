@@ -19,12 +19,16 @@ package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.main.content.bisq_easy.components.WaitingAnimation;
-import bisq.desktop.main.content.bisq_easy.components.WaitingState;
+import bisq.desktop.components.controls.MaterialTextArea;
+import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.WrappingText;
+import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
+import bisq.trade.TradeException;
 import bisq.trade.bisq_easy.BisqEasyTrade;
-import javafx.scene.layout.HBox;
+import javafx.geometry.Insets;
+import javafx.scene.control.Button;
+import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -64,40 +68,67 @@ public class BuyerState2a extends BaseState {
         public void onDeactivate() {
             super.onDeactivate();
         }
+
+        private void onConfirmFiatSent() {
+            sendSystemMessage(Res.get("bisqEasy.tradeState.info.buyer.phase2a.systemMessage", model.getQuoteCode()));
+            try {
+                bisqEasyTradeService.buyerConfirmFiatSent(model.getBisqEasyTrade());
+            } catch (TradeException e) {
+                new Popup().error(e).show();
+            }
+        }
     }
 
     @Getter
     private static class Model extends BaseState.Model {
-        public Model(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
+
+        protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
             super(bisqEasyTrade, channel);
         }
     }
 
     public static class View extends BaseState.View<Model, Controller> {
-        private final WaitingAnimation waitingAnimation;
+        private final Button confirmFiatSentButton;
+        private final MaterialTextArea account;
+        private final MaterialTextField quoteAmount;
+        private final WrappingText headline;
 
         private View(Model model, Controller controller) {
             super(model, controller);
 
-            waitingAnimation = new WaitingAnimation(WaitingState.ACCOUNT_DATA);
-            WrappingText headline = FormUtils.getHeadline(Res.get("bisqEasy.tradeState.info.buyer.phase2a.headline"));
-            WrappingText info = FormUtils.getInfo(Res.get("bisqEasy.tradeState.info.buyer.phase2a.info"));
-            HBox waitingInfo = createWaitingInfo(waitingAnimation, headline, info);
-            root.getChildren().add(waitingInfo);
+            headline = FormUtils.getHeadline();
+
+            quoteAmount = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.buyer.phase2a.quoteAmount"), "", false);
+            account = FormUtils.addTextArea(Res.get("bisqEasy.tradeState.info.buyer.phase2a.sellersAccount"), "", false);
+            account.setHelpText(Res.get("bisqEasy.tradeState.info.buyer.phase2a.reasonForPaymentInfo"));
+
+            confirmFiatSentButton = new Button();
+            confirmFiatSentButton.setDefaultButton(true);
+            VBox.setMargin(confirmFiatSentButton, new Insets(0, 0, 5, 0));
+
+            root.getChildren().addAll(
+                    headline,
+                    quoteAmount,
+                    account,
+                    confirmFiatSentButton);
         }
 
         @Override
         protected void onViewAttached() {
             super.onViewAttached();
 
-            waitingAnimation.play();
+            headline.setText(Res.get("bisqEasy.tradeState.info.buyer.phase2a.headline", model.getFormattedQuoteAmount()));
+            quoteAmount.setText(model.getFormattedQuoteAmount());
+            account.setText(model.getBisqEasyTrade().getPaymentAccountData().get());
+            confirmFiatSentButton.setText(Res.get("bisqEasy.tradeState.info.buyer.phase2a.confirmFiatSent", model.getFormattedQuoteAmount()));
+            confirmFiatSentButton.setOnAction(e -> controller.onConfirmFiatSent());
         }
 
         @Override
         protected void onViewDetached() {
             super.onViewDetached();
 
-            waitingAnimation.stop();
+            confirmFiatSentButton.setOnAction(null);
         }
     }
 }

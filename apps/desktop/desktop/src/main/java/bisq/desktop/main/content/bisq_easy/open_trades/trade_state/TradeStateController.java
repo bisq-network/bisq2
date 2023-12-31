@@ -235,7 +235,7 @@ public class TradeStateController implements Controller {
                 if (isSeller) {
                     model.getStateInfoVBox().set(new SellerState1(serviceProvider, trade, channel).getView().getRoot());
                 } else {
-                    model.getStateInfoVBox().set(new BuyerState1(serviceProvider, trade, channel).getView().getRoot());
+                    model.getStateInfoVBox().set(new BuyerState1a(serviceProvider, trade, channel).getView().getRoot());
                 }
                 break;
 
@@ -257,13 +257,13 @@ public class TradeStateController implements Controller {
 
             // Buyer
             case BUYER_SENT_BTC_ADDRESS:
-                model.getStateInfoVBox().set(new BuyerState2a(serviceProvider, trade, channel).getView().getRoot());
+                model.getStateInfoVBox().set(new BuyerState1b(serviceProvider, trade, channel).getView().getRoot());
                 break;
             case BUYER_RECEIVED_ACCOUNT_DATA:
-                model.getStateInfoVBox().set(new BuyerState2b(serviceProvider, trade, channel).getView().getRoot());
+                model.getStateInfoVBox().set(new BuyerState2a(serviceProvider, trade, channel).getView().getRoot());
                 break;
             case BUYER_SENT_FIAT_SENT_CONFIRMATION:
-                model.getStateInfoVBox().set(new BuyerState2c(serviceProvider, trade, channel).getView().getRoot());
+                model.getStateInfoVBox().set(new BuyerState2b(serviceProvider, trade, channel).getView().getRoot());
                 break;
             case BUYER_RECEIVED_SELLERS_FIAT_RECEIPT_CONFIRMATION:
                 model.getStateInfoVBox().set(new BuyerState3a(serviceProvider, trade, channel).getView().getRoot());

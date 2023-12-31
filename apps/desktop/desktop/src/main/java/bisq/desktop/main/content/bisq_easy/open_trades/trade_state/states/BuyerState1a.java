@@ -40,10 +40,10 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BuyerState1 extends BaseState {
+public class BuyerState1a extends BaseState {
     private final Controller controller;
 
-    public BuyerState1(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
+    public BuyerState1a(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
         controller = new Controller(serviceProvider, bisqEasyTrade, channel);
     }
 
@@ -81,7 +81,7 @@ public class BuyerState1 extends BaseState {
         }
 
         private void onSendBtcAddress() {
-            //sendSystemMessage(Res.get("bisqEasy.tradeState.info.buyer.phase1.systemMessage", model.getBtcAddress().get()));
+            //sendSystemMessage(Res.get("bisqEasy.tradeState.info.buyer.phase1a.systemMessage", model.getBtcAddress().get()));
             try {
                 bisqEasyTradeService.buyerSendBtcAddress(model.getBisqEasyTrade(), model.getBtcAddress().get());
             } catch (TradeException e) {
@@ -111,16 +111,16 @@ public class BuyerState1 extends BaseState {
         private View(Model model, Controller controller) {
             super(model, controller);
 
-            WrappingText btcAddressHeadline = FormUtils.getHeadline(Res.get("bisqEasy.tradeState.info.buyer.phase1.btcAddress.headline"));
+            WrappingText btcAddressHeadline = FormUtils.getHeadline(Res.get("bisqEasy.tradeState.info.buyer.phase1a.btcAddress.headline"));
             VBox.setMargin(btcAddressHeadline, new Insets(5, 0, 0, 0));
 
-            btcAddress = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.buyer.phase1.btcAddress"), "", true);
-            btcAddress.setPromptText(Res.get("bisqEasy.tradeState.info.buyer.phase1.btcAddress.prompt"));
-            btcAddress.setHelpText(Res.get("bisqEasy.tradeState.info.buyer.phase1.btcAddress.help"));
+            btcAddress = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.buyer.phase1a.btcAddress"), "", true);
+            btcAddress.setPromptText(Res.get("bisqEasy.tradeState.info.buyer.phase1a.btcAddress.prompt"));
+            btcAddress.setHelpText(Res.get("bisqEasy.tradeState.info.buyer.phase1a.btcAddress.help"));
 
-            sendBtcAddressButton = new Button(Res.get("bisqEasy.tradeState.info.buyer.phase1.sendBtcAddress"));
+            sendBtcAddressButton = new Button(Res.get("bisqEasy.tradeState.info.buyer.phase1a.sendBtcAddress"));
             sendBtcAddressButton.setDefaultButton(true);
-            walletInfoButton = new Button(Res.get("bisqEasy.tradeState.info.buyer.phase1.walletHelpButton"));
+            walletInfoButton = new Button(Res.get("bisqEasy.tradeState.info.buyer.phase1a.walletHelpButton"));
             walletInfoButton.getStyleClass().add("outlined-button");
             HBox buttons = new HBox(10, sendBtcAddressButton, Spacer.fillHBox(), walletInfoButton);
 
