@@ -81,7 +81,7 @@ public class BuyerState1a extends BaseState {
         }
 
         private void onSendBtcAddress() {
-            //sendSystemMessage(Res.get("bisqEasy.tradeState.info.buyer.phase1a.systemMessage", model.getBtcAddress().get()));
+            sendSystemMessage(Res.get("bisqEasy.tradeState.info.buyer.phase1a.systemMessage"));
             try {
                 bisqEasyTradeService.buyerSendBtcAddress(model.getBisqEasyTrade(), model.getBtcAddress().get());
             } catch (TradeException e) {

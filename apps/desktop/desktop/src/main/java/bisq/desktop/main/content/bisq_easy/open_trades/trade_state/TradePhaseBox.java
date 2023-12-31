@@ -122,9 +122,15 @@ class TradePhaseBox {
                         case TAKER_SENT_TAKE_OFFER_REQUEST:
                         case MAKER_SENT_TAKE_OFFER_RESPONSE:
                         case TAKER_RECEIVED_TAKE_OFFER_RESPONSE:
-                        case SELLER_RECEIVED_BTC_ADDRESS:
                         case BUYER_SENT_BTC_ADDRESS:
                             model.getPhaseIndex().set(0);
+                            model.getRequestMediationButtonVisible().set(false);
+                            model.getReportToMediatorButtonVisible().set(true);
+                            break;
+
+                        case SELLER_RECEIVED_BTC_ADDRESS:
+                            boolean hasSentAccountData = model.getBisqEasyTrade().getPaymentAccountData().get() != null;
+                            model.getPhaseIndex().set(hasSentAccountData ? 1 : 0);
                             model.getRequestMediationButtonVisible().set(false);
                             model.getReportToMediatorButtonVisible().set(true);
                             break;

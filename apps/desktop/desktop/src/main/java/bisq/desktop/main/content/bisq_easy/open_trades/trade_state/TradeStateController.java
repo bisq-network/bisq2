@@ -241,7 +241,13 @@ public class TradeStateController implements Controller {
 
             // Seller
             case SELLER_RECEIVED_BTC_ADDRESS:
-                break; // ACK BTC address received - Do nothing
+                boolean hasSentAccountData = trade.getPaymentAccountData().get() != null;
+                if (!hasSentAccountData) {
+                    model.getStateInfoVBox().set(new SellerState1(serviceProvider, trade, channel).getView().getRoot());
+                } else {
+                    model.getStateInfoVBox().set(new SellerState2a(serviceProvider, trade, channel).getView().getRoot());
+                }
+                break;
             case SELLER_SENT_ACCOUNT_DATA:
                 model.getStateInfoVBox().set(new SellerState2a(serviceProvider, trade, channel).getView().getRoot());
                 break;

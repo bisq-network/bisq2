@@ -77,6 +77,7 @@ public class SellerState4 extends BaseState {
         @Override
         public void onActivate() {
             super.onActivate();
+
             model.setTxId(model.getBisqEasyTrade().getTxId().get());
         }
 
