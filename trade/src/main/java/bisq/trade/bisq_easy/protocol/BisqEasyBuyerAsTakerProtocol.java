@@ -50,7 +50,7 @@ public class BisqEasyBuyerAsTakerProtocol extends BisqEasyProtocol {
                 .run(BisqEasySendBtcAddressEventHandler.class)
                 .to(BUYER_SENT_BTC_ADDRESS);
 
-        addTransition() // -> Skip showing in UI if already there
+        addTransition()
                 .from(BUYER_SENT_BTC_ADDRESS)
                 .on(BisqEasyAccountDataMessage.class)
                 .run(BisqEasyAccountDataMessageHandler.class)
@@ -64,13 +64,6 @@ public class BisqEasyBuyerAsTakerProtocol extends BisqEasyProtocol {
 
         addTransition()
                 .from(BUYER_SENT_FIAT_SENT_CONFIRMATION)
-//                .on(BisqEasySendBtcAddressEvent.class)
-//                .run(BisqEasySendBtcAddressEventHandler.class)
-//                .to(BUYER_SENT_BTC_ADDRESS);
-
-
-//        addTransition()
-//                .from(BUYER_SENT_BTC_ADDRESS)
                 .on(BisqEasyConfirmFiatReceiptMessage.class)
                 .run(BisqEasyConfirmFiatReceiptMessageHandler.class)
                 .to(BUYER_RECEIVED_SELLERS_FIAT_RECEIPT_CONFIRMATION);

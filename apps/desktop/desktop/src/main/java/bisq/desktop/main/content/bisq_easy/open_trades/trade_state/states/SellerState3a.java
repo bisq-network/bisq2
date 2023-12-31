@@ -88,7 +88,7 @@ public class SellerState3a extends BaseState {
 
     @Getter
     private static class Model extends BaseState.Model {
-        @Setter // TODO: why setter here?
+        @Setter
         protected String btcAddress;
         private final StringProperty txId = new SimpleStringProperty();
 
@@ -107,7 +107,6 @@ public class SellerState3a extends BaseState {
         private View(Model model, Controller controller) {
             super(model, controller);
 
-            // TODO: no need for the pair (ie. WrappingText here)
             Pair<WrappingText, HBox> confirmPair = FormUtils.getConfirmInfo();
             fiatReceiptConfirmed = confirmPair.getFirst();
             HBox fiatReceiptConfirmedHBox = confirmPair.getSecond();

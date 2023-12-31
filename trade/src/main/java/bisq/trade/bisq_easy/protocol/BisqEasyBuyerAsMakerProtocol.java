@@ -58,12 +58,6 @@ public class BisqEasyBuyerAsMakerProtocol extends BisqEasyProtocol {
 
         addTransition()
                 .from(BUYER_SENT_FIAT_SENT_CONFIRMATION)
-//                .on(BisqEasySendBtcAddressEvent.class)
-//                .run(BisqEasySendBtcAddressEventHandler.class)
-//                .to(BUYER_SENT_BTC_ADDRESS);
-//
-//        addTransition()
-//                .from(BUYER_SENT_BTC_ADDRESS)
                 .on(BisqEasyConfirmFiatReceiptMessage.class)
                 .run(BisqEasyConfirmFiatReceiptMessageHandler.class)
                 .to(BUYER_RECEIVED_SELLERS_FIAT_RECEIPT_CONFIRMATION);
