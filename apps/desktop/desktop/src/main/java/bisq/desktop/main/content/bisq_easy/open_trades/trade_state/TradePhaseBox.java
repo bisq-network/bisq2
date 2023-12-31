@@ -246,7 +246,7 @@ class TradePhaseBox {
             Triple<HBox, Label, Badge> phaseItem1 = getPhaseItem(1);
             Triple<HBox, Label, Badge> phaseItem2 = getPhaseItem(2);
             Triple<HBox, Label, Badge> phaseItem3 = getPhaseItem(3);
-            Triple<HBox, Label, Badge> phaseItem4 = getPhaseItem(4);
+            Triple<HBox, Label, Badge> phaseItem4 = getPhaseItem(4, true);
 
             HBox phase1HBox = phaseItem1.getFirst();
             HBox phase2HBox = phaseItem2.getFirst();
@@ -362,6 +362,17 @@ class TradePhaseBox {
             label.getStyleClass().add("bisq-easy-trade-state-phase");
             Badge badge = new Badge();
             badge.setText(String.valueOf(index));
+            badge.setPrefSize(20, 20);
+            HBox hBox = new HBox(7.5, badge, label);
+            hBox.setAlignment(Pos.CENTER_LEFT);
+            return new Triple<>(hBox, label, badge);
+        }
+
+        private static Triple<HBox, Label, Badge> getPhaseItem(int index, boolean isFinalStep) {
+            Label label = new Label();
+            label.getStyleClass().add("bisq-easy-trade-state-phase");
+            Badge badge = new Badge();
+            badge.setText(isFinalStep ? "\u2713" :  String.valueOf(index));
             badge.setPrefSize(20, 20);
             HBox hBox = new HBox(7.5, badge, label);
             hBox.setAlignment(Pos.CENTER_LEFT);
