@@ -339,6 +339,7 @@ public class TradeStateController implements Controller {
             case BUYER_SENT_FIAT_SENT_CONFIRMATION:
             case SELLER_RECEIVED_FIAT_SENT_CONFIRMATION:
             case BUYER_SENT_BTC_ADDRESS:
+            case SELLER_RECEIVED_BTC_ADDRESS:
             case SELLER_CONFIRMED_FIAT_RECEIPT:
             case BUYER_RECEIVED_SELLERS_FIAT_RECEIPT_CONFIRMATION:
             case SELLER_SENT_BTC_SENT_CONFIRMATION:
