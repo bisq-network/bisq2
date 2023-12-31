@@ -61,7 +61,7 @@ public class WalletGuideDownloadView extends View<HBox, WalletGuideDownloadModel
         download = new Hyperlink(Res.get("bisqEasy.walletGuide.download.link"));
 
         VBox.setMargin(headline, new Insets(0, 0, -5, 0));
-        VBox.setMargin(download, new Insets(0, 0, 10, -3));
+        VBox.setMargin(download, new Insets(0, 0, 10, 0));
         vBox.getChildren().addAll(headline, content, download, buttons);
 
         ImageView image = ImageUtil.getImageViewById("blue-wallet-download");

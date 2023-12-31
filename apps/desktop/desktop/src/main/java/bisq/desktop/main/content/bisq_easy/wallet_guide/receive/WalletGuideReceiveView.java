@@ -66,8 +66,8 @@ public class WalletGuideReceiveView extends View<HBox, WalletGuideReceiveModel, 
 
         HBox buttons = new HBox(20, backButton, closeButton);
         VBox.setMargin(headline, new Insets(0, 0, -5, 0));
-        VBox.setMargin(link1, new Insets(-10, 0, -22.5, -3));
-        VBox.setMargin(link2, new Insets(0, 0, 0, -3));
+        VBox.setMargin(link1, new Insets(-10, 0, -22.5, 0));
+        VBox.setMargin(link2, new Insets(0, 0, 0, 0));
         vBox.getChildren().addAll(headline, content, link1, link2, buttons);
 
         image1 = ImageUtil.getImageViewById("blue-wallet-tx");
