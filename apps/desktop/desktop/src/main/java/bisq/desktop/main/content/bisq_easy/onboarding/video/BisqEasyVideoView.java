@@ -62,7 +62,7 @@ import org.fxmisc.easybind.monadic.MonadicBinding;
 
 @Slf4j
 public class BisqEasyVideoView extends View<StackPane, BisqEasyVideoModel, BisqEasyVideoController> implements FillStageView {
-    public static final double VIDEO_WIDTH = 1289;
+    public static final double VIDEO_WIDTH = 1292;
     public static final double VIDEO_HEIGHT = 875;
     public static final double PADDING = 50;
     public static final double SLIDER_WIDTH = 59.5;
@@ -167,7 +167,7 @@ public class BisqEasyVideoView extends View<StackPane, BisqEasyVideoModel, BisqE
         windowSizePin = EasyBind.subscribe(binding, this::resize);
 
         try {
-            Media media = new Media(getClass().getClassLoader().getResource("video.mp4").toExternalForm());
+            Media media = new Media(getClass().getClassLoader().getResource("bisq-easy-intro.mp4").toExternalForm());
             mediaPlayer = new MediaPlayer(media);
             mediaView.setMediaPlayer(mediaPlayer);
 
