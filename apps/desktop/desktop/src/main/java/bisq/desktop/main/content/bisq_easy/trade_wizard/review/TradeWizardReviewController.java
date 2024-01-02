@@ -408,8 +408,8 @@ public class TradeWizardReviewController implements Controller {
         Optional<UserProfile> mediator = mediationRequestService.selectMediator(bisqEasyOffer.getMakersUserProfileId(), takerIdentity.getId());
         if (mediator.isEmpty()) {
             new Popup().warning(Res.get("bisqEasy.takeOffer.noMediatorAvailable.warning"))
-                    .closeButtonText(Res.get("confirmation.no"))
-                    .actionButtonText(Res.get("confirmation.yes"))
+                    .closeButtonText(Res.get("action.cancel"))
+                    .actionButtonText(Res.get("confirmation.ok"))
                     .onAction(() -> doTakeOffer(bisqEasyOffer, takerIdentity, mediator))
                     .show();
         } else {
