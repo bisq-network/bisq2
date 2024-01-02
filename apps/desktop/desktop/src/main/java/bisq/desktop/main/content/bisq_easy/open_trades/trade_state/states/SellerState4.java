@@ -129,8 +129,8 @@ public class SellerState4 extends BaseState {
 
             WrappingText headline = FormUtils.getHeadline(Res.get("bisqEasy.tradeState.info.seller.phase4.headline"));
 
-            exportButton = new Button(Res.get("bisqEasy.tradeState.info.phase5.exportTrade"));
-            leaveButton = new Button(Res.get("bisqEasy.tradeState.info.phase5.leaveChannel"));
+            exportButton = new Button(Res.get("bisqEasy.tradeState.info.phase4.exportTrade"));
+            leaveButton = new Button(Res.get("bisqEasy.tradeState.info.phase4.leaveChannel"));
             leaveButton.getStyleClass().add("outlined-button");
             quoteAmount = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.seller.phase4.quoteAmount"), "", false);
             baseAmount = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.seller.phase4.baseAmount"), "", false);
