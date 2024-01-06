@@ -20,26 +20,27 @@ package bisq.presentation.notifications.other;
 import bisq.presentation.notifications.NotificationSender;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.swing.ImageIcon;
 import java.awt.*;
+import java.net.URL;
 
 @Slf4j
 public class AwtNotificationSender implements NotificationSender {
-    public void send(String title, String message) {
-        SystemTray systemTray = SystemTray.getSystemTray();
-        Image awtImage = Toolkit.getDefaultToolkit().createImage(getClass().getClassLoader().getResource("images/app_window/icon_128.png"));
-        TrayIcon trayIcon = new TrayIcon(awtImage, "Bisq");
+    private final TrayIcon trayIcon;
+
+    public AwtNotificationSender() {
+        URL image = getClass().getClassLoader().getResource("images/app_window/icon_128.png");
+        trayIcon = new TrayIcon(new ImageIcon(image, "Bisq 2").getImage());
         trayIcon.setImageAutoSize(true);
+        SystemTray systemTray = SystemTray.getSystemTray();
         try {
             systemTray.add(trayIcon);
-            // todo on OSX it shows ugly java icon and Java as app name
-            // check how it behaves on Windows 
-            // With MessageType.NONE the line for the application (would be likely Bisq.exe in binary) 
-            // should not be displayed on windows
-            trayIcon.displayMessage(title, message, TrayIcon.MessageType.NONE);
-            // Tray icon does not remove itself in all cases for Linux
-            trayIcon.addActionListener(l -> systemTray.remove(trayIcon));
         } catch (AWTException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public void send(String title, String message) {
+        trayIcon.displayMessage(title, message, TrayIcon.MessageType.NONE);
     }
 }

@@ -27,6 +27,7 @@ import bisq.presentation.notifications.other.AwtNotificationSender;
 import bisq.settings.SettingsService;
 import lombok.extern.slf4j.Slf4j;
 
+import java.awt.*;
 import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 
@@ -68,7 +69,7 @@ public class SendNotificationService implements Service {
             } else if (OsUtils.getOperatingSystem() == OperatingSystem.MAC &&
                     OsxNotificationSender.isSupported()) {
                 sender = new OsxNotificationSender();
-            } else {
+            } else if (SystemTray.isSupported()) {
                 sender = new AwtNotificationSender();
             }
         }
