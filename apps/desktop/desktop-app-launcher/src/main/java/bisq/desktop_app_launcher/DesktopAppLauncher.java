@@ -62,7 +62,7 @@ import static bisq.updater.UpdaterUtils.readVersionFromVersionFile;
 @Slf4j
 public class DesktopAppLauncher {
     private static final String VERSION = "2.0.0";
-    private static final String APP_NAME = "Bisq2";
+    private static final String APP_NAME = "Bisq 2";
     private static final List<String> KEY_IDS = List.of("4A133008", "E222AA02");
     private final Options options;
 
