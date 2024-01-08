@@ -40,6 +40,12 @@ public class BisqEasyBuyerAsMakerProtocol extends BisqEasyProtocol {
 
         addTransition()
                 .from(MAKER_SENT_TAKE_OFFER_RESPONSE)
+                .on(BisqEasySendBtcAddressEvent.class)
+                .run(BisqEasySendBtcAddressEventHandler.class)
+                .to(BUYER_SENT_BTC_ADDRESS);
+
+        addTransition()
+                .from(BUYER_SENT_BTC_ADDRESS)
                 .on(BisqEasyAccountDataMessage.class)
                 .run(BisqEasyAccountDataMessageHandler.class)
                 .to(BUYER_RECEIVED_ACCOUNT_DATA);
@@ -52,12 +58,6 @@ public class BisqEasyBuyerAsMakerProtocol extends BisqEasyProtocol {
 
         addTransition()
                 .from(BUYER_SENT_FIAT_SENT_CONFIRMATION)
-                .on(BisqEasySendBtcAddressEvent.class)
-                .run(BisqEasySendBtcAddressEventHandler.class)
-                .to(BUYER_SENT_BTC_ADDRESS);
-
-        addTransition()
-                .from(BUYER_SENT_BTC_ADDRESS)
                 .on(BisqEasyConfirmFiatReceiptMessage.class)
                 .run(BisqEasyConfirmFiatReceiptMessageHandler.class)
                 .to(BUYER_RECEIVED_SELLERS_FIAT_RECEIPT_CONFIRMATION);
@@ -92,17 +92,17 @@ public class BisqEasyBuyerAsMakerProtocol extends BisqEasyProtocol {
 
         // Cancel trade
         addTransition()
+                .from(BUYER_SENT_BTC_ADDRESS)
+                .on(BisqEasyCancelTradeMessage.class)
+                .run(BisqEasyCancelTradeMessageHandler.class)
+                .to(CANCELLED);
+        addTransition()
                 .from(BUYER_RECEIVED_ACCOUNT_DATA)
                 .on(BisqEasyCancelTradeMessage.class)
                 .run(BisqEasyCancelTradeMessageHandler.class)
                 .to(CANCELLED);
         addTransition()
                 .from(BUYER_SENT_FIAT_SENT_CONFIRMATION)
-                .on(BisqEasyCancelTradeMessage.class)
-                .run(BisqEasyCancelTradeMessageHandler.class)
-                .to(CANCELLED);
-        addTransition()
-                .from(BUYER_SENT_BTC_ADDRESS)
                 .on(BisqEasyCancelTradeMessage.class)
                 .run(BisqEasyCancelTradeMessageHandler.class)
                 .to(CANCELLED);
@@ -119,17 +119,17 @@ public class BisqEasyBuyerAsMakerProtocol extends BisqEasyProtocol {
 
         // Peer cancelled trade
         addTransition()
+                .from(BUYER_SENT_BTC_ADDRESS)
+                .on(BisqEasyCancelTradeEvent.class)
+                .run(BisqEasyCancelTradeEventHandler.class)
+                .to(CANCELLED);
+        addTransition()
                 .from(BUYER_RECEIVED_ACCOUNT_DATA)
                 .on(BisqEasyCancelTradeEvent.class)
                 .run(BisqEasyCancelTradeEventHandler.class)
                 .to(CANCELLED);
         addTransition()
                 .from(BUYER_SENT_FIAT_SENT_CONFIRMATION)
-                .on(BisqEasyCancelTradeEvent.class)
-                .run(BisqEasyCancelTradeEventHandler.class)
-                .to(CANCELLED);
-        addTransition()
-                .from(BUYER_SENT_BTC_ADDRESS)
                 .on(BisqEasyCancelTradeEvent.class)
                 .run(BisqEasyCancelTradeEventHandler.class)
                 .to(CANCELLED);

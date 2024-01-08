@@ -18,29 +18,21 @@
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
-import bisq.common.data.Pair;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.components.controls.WrappingText;
 import bisq.desktop.main.content.bisq_easy.components.WaitingAnimation;
 import bisq.desktop.main.content.bisq_easy.components.WaitingState;
-import bisq.desktop.components.controls.WrappingText;
 import bisq.i18n.Res;
 import bisq.trade.bisq_easy.BisqEasyTrade;
-import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.geometry.Insets;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class BuyerState3 extends BaseState {
+public class BuyerState3a extends BaseState {
     private final Controller controller;
 
-    public BuyerState3(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
+    public BuyerState3a(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
         controller = new Controller(serviceProvider, bisqEasyTrade, channel);
     }
 
@@ -66,7 +58,6 @@ public class BuyerState3 extends BaseState {
         @Override
         public void onActivate() {
             super.onActivate();
-            model.getFiatReceiptConfirmed().set(model.getBisqEasyTrade().getState() == BisqEasyTradeState.BUYER_RECEIVED_SELLERS_FIAT_RECEIPT_CONFIRMATION);
         }
 
         @Override
@@ -77,56 +68,27 @@ public class BuyerState3 extends BaseState {
 
     @Getter
     private static class Model extends BaseState.Model {
-        private final BooleanProperty fiatReceiptConfirmed = new SimpleBooleanProperty();
-
         protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
             super(bisqEasyTrade, channel);
         }
     }
 
     public static class View extends BaseState.View<Model, Controller> {
-        private final WrappingText headline, info;
         private final WaitingAnimation waitingAnimation;
-        private final WrappingText fiatReceiptConfirmed;
-        private final HBox fiatReceiptConfirmedHBox;
-        private Subscription fiatReceiptConfirmedPin;
 
         private View(Model model, Controller controller) {
             super(model, controller);
 
-            Pair<WrappingText, HBox> confirmPair = FormUtils.getConfirmInfo();
-            fiatReceiptConfirmed = confirmPair.getFirst();
-            fiatReceiptConfirmedHBox = confirmPair.getSecond();
-
-            VBox.setMargin(fiatReceiptConfirmedHBox, new Insets(0, 0, 5, 0));
-
-            waitingAnimation = new WaitingAnimation();
-            headline = FormUtils.getHeadline();
-            info = FormUtils.getInfo();
+            waitingAnimation = new WaitingAnimation(WaitingState.BITCOIN_PAYMENT);
+            WrappingText headline = FormUtils.getHeadline(Res.get("bisqEasy.tradeState.info.buyer.phase3a.headline"));
+            WrappingText info = FormUtils.getInfo(Res.get("bisqEasy.tradeState.info.buyer.phase3a.info"));
             HBox waitingInfo = createWaitingInfo(waitingAnimation, headline, info);
-
-            root.getChildren().addAll(fiatReceiptConfirmedHBox, waitingInfo);
-            root.setSpacing(20);
+            root.getChildren().add(waitingInfo);
         }
 
         @Override
         protected void onViewAttached() {
             super.onViewAttached();
-
-            fiatReceiptConfirmedPin = EasyBind.subscribe(model.getFiatReceiptConfirmed(), fiatPaymentConfirmed -> {
-                fiatReceiptConfirmedHBox.setVisible(fiatPaymentConfirmed);
-                fiatReceiptConfirmedHBox.setManaged(fiatPaymentConfirmed);
-                if (fiatPaymentConfirmed) {
-                    headline.setText(Res.get("bisqEasy.tradeState.info.buyer.phase3b.headline"));
-                    info.setText(Res.get("bisqEasy.tradeState.info.buyer.phase3b.info"));
-                    fiatReceiptConfirmed.setText(Res.get("bisqEasy.tradeState.info.buyer.phase3.fiatReceiptConfirmedCheckBox", model.getFormattedQuoteAmount()));
-                    waitingAnimation.setState(WaitingState.BITCOIN_PAYMENT);
-                } else {
-                    headline.setText(Res.get("bisqEasy.tradeState.info.buyer.phase3a.headline"));
-                    info.setText(Res.get("bisqEasy.tradeState.info.buyer.phase3a.info", model.getFormattedQuoteAmount()));
-                    waitingAnimation.setState(WaitingState.FIAT_PAYMENT_CONFIRMATION);
-                }
-            });
 
             waitingAnimation.play();
         }
@@ -134,9 +96,8 @@ public class BuyerState3 extends BaseState {
         @Override
         protected void onViewDetached() {
             super.onViewDetached();
-            waitingAnimation.stop();
 
-            fiatReceiptConfirmedPin.unsubscribe();
+            waitingAnimation.stop();
         }
     }
 }

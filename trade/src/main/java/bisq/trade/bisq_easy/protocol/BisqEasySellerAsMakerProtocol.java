@@ -37,8 +37,34 @@ public class BisqEasySellerAsMakerProtocol extends BisqEasyProtocol {
                 .run(BisqEasyTakeOfferRequestHandler.class)
                 .to(MAKER_SENT_TAKE_OFFER_RESPONSE);
 
+        // Option 1: Seller sends first account data, then buyer sends btc address
         addTransition()
                 .from(MAKER_SENT_TAKE_OFFER_RESPONSE)
+                .on(BisqEasyAccountDataEvent.class)
+                .run(BisqEasyAccountDataEventHandler.class)
+                .to(SELLER_SENT_ACCOUNT_DATA);
+
+        addTransition()
+                .from(SELLER_SENT_ACCOUNT_DATA)
+                .on(BisqEasyBtcAddressMessage.class)
+                .run(BisqEasyBtcAddressMessageHandler.class)
+                .to(SELLER_RECEIVED_BTC_ADDRESS);
+
+        addTransition()
+                .from(SELLER_RECEIVED_BTC_ADDRESS)
+                .on(BisqEasyConfirmFiatSentMessage.class)
+                .run(BisqEasyConfirmFiatSentMessageHandler.class)
+                .to(SELLER_RECEIVED_FIAT_SENT_CONFIRMATION);
+
+        // Option 2: Buyer sends first btc address, then seller sends account data
+        addTransition()
+                .from(MAKER_SENT_TAKE_OFFER_RESPONSE)
+                .on(BisqEasyBtcAddressMessage.class)
+                .run(BisqEasyBtcAddressMessageHandler.class)
+                .to(SELLER_RECEIVED_BTC_ADDRESS);
+
+        addTransition()
+                .from(SELLER_RECEIVED_BTC_ADDRESS)
                 .on(BisqEasyAccountDataEvent.class)
                 .run(BisqEasyAccountDataEventHandler.class)
                 .to(SELLER_SENT_ACCOUNT_DATA);
@@ -49,14 +75,9 @@ public class BisqEasySellerAsMakerProtocol extends BisqEasyProtocol {
                 .run(BisqEasyConfirmFiatSentMessageHandler.class)
                 .to(SELLER_RECEIVED_FIAT_SENT_CONFIRMATION);
 
+        // from here it's the same
         addTransition()
                 .from(SELLER_RECEIVED_FIAT_SENT_CONFIRMATION)
-                .on(BisqEasyBtcAddressMessage.class)
-                .run(BisqEasyBtcAddressMessageHandler.class)
-                .to(SELLER_RECEIVED_BTC_ADDRESS);
-
-        addTransition()
-                .from(SELLER_RECEIVED_BTC_ADDRESS)
                 .on(BisqEasyConfirmFiatReceiptEvent.class)
                 .run(BisqEasyConfirmFiatReceivedEventHandler.class)
                 .to(SELLER_CONFIRMED_FIAT_RECEIPT);
@@ -87,6 +108,7 @@ public class BisqEasySellerAsMakerProtocol extends BisqEasyProtocol {
                 .on(BisqEasyRejectTradeMessage.class)
                 .run(BisqEasyRejectTradeMessageHandler.class)
                 .to(REJECTED);
+
 
         // Cancel trade
         addTransition()

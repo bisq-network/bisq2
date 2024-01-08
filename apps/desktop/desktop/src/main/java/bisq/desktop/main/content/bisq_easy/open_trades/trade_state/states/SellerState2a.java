@@ -29,10 +29,10 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BuyerState1 extends BaseState {
+public class SellerState2a extends BaseState {
     private final Controller controller;
 
-    public BuyerState1(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
+    public SellerState2a(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
         controller = new Controller(serviceProvider, bisqEasyTrade, channel);
     }
 
@@ -68,19 +68,21 @@ public class BuyerState1 extends BaseState {
 
     @Getter
     private static class Model extends BaseState.Model {
-        public Model(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
+        protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
             super(bisqEasyTrade, channel);
         }
     }
 
     public static class View extends BaseState.View<Model, Controller> {
+        private final WrappingText headline, info;
         private final WaitingAnimation waitingAnimation;
 
         private View(Model model, Controller controller) {
             super(model, controller);
-            waitingAnimation = new WaitingAnimation(WaitingState.ACCOUNT_DATA);
-            WrappingText headline = FormUtils.getHeadline(Res.get("bisqEasy.tradeState.info.buyer.phase1.headline"));
-            WrappingText info = FormUtils.getInfo(Res.get("bisqEasy.tradeState.info.buyer.phase1.info"));
+
+            waitingAnimation = new WaitingAnimation(WaitingState.FIAT_PAYMENT);
+            headline = FormUtils.getHeadline();
+            info = FormUtils.getInfo();
             HBox waitingInfo = createWaitingInfo(waitingAnimation, headline, info);
             root.getChildren().add(waitingInfo);
         }
@@ -89,6 +91,8 @@ public class BuyerState1 extends BaseState {
         protected void onViewAttached() {
             super.onViewAttached();
 
+            headline.setText(Res.get("bisqEasy.tradeState.info.seller.phase2a.waitForPayment.headline", model.getQuoteCode()));
+            info.setText(Res.get("bisqEasy.tradeState.info.seller.phase2a.waitForPayment.info", model.getFormattedQuoteAmount()));
             waitingAnimation.play();
         }
 

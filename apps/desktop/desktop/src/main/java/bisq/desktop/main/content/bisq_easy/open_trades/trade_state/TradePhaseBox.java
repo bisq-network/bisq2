@@ -32,7 +32,6 @@ import bisq.desktop.components.controls.Badge;
 import bisq.i18n.Res;
 import bisq.support.mediation.MediationRequestService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
-import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
 import javafx.beans.property.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -109,61 +108,53 @@ class TradePhaseBox {
                 return;
             }
 
-            boolean isBuyer = bisqEasyTrade.isBuyer();
-
-            model.getPhase1Info().set(isBuyer ?
-                    Res.get("bisqEasy.tradeState.phase.buyer.phase1").toUpperCase() :
-                    Res.get("bisqEasy.tradeState.phase.seller.phase1").toUpperCase());
-            model.getPhase2Info().set(isBuyer ?
-                    Res.get("bisqEasy.tradeState.phase.buyer.phase2a").toUpperCase() :
-                    Res.get("bisqEasy.tradeState.phase.seller.phase2a").toUpperCase());
-            model.getPhase3Info().set(isBuyer ?
-                    Res.get("bisqEasy.tradeState.phase.buyer.phase3a").toUpperCase() :
-                    Res.get("bisqEasy.tradeState.phase.seller.phase3a").toUpperCase());
-            model.getPhase4Info().set(isBuyer ?
-                    Res.get("bisqEasy.tradeState.phase.buyer.phase4").toUpperCase() :
-                    Res.get("bisqEasy.tradeState.phase.seller.phase4").toUpperCase());
-            model.getPhase5Info().set(Res.get("bisqEasy.tradeState.phase.phase5").toUpperCase());
+            model.getPhase1Info().set(Res.get("bisqEasy.tradeState.phase1").toUpperCase());
+            model.getPhase2Info().set(Res.get("bisqEasy.tradeState.phase2").toUpperCase());
+            model.getPhase3Info().set(Res.get("bisqEasy.tradeState.phase3").toUpperCase());
+            model.getPhase4Info().set(Res.get("bisqEasy.tradeState.phase4").toUpperCase());
 
             bisqEasyTradeStatePin = bisqEasyTrade.tradeStateObservable().addObserver(state -> {
                 UIThread.run(() -> {
                     switch (state) {
                         case INIT:
                             break;
+
                         case TAKER_SENT_TAKE_OFFER_REQUEST:
                         case MAKER_SENT_TAKE_OFFER_RESPONSE:
                         case TAKER_RECEIVED_TAKE_OFFER_RESPONSE:
+                        case BUYER_SENT_BTC_ADDRESS:
                             model.getPhaseIndex().set(0);
                             model.getRequestMediationButtonVisible().set(false);
                             model.getReportToMediatorButtonVisible().set(true);
                             break;
 
+                        case SELLER_RECEIVED_BTC_ADDRESS:
+                            boolean hasSentAccountData = model.getBisqEasyTrade().getPaymentAccountData().get() != null;
+                            model.getPhaseIndex().set(hasSentAccountData ? 1 : 0);
+                            model.getRequestMediationButtonVisible().set(false);
+                            model.getReportToMediatorButtonVisible().set(true);
+                            break;
+
                         case SELLER_SENT_ACCOUNT_DATA:
+                        case SELLER_RECEIVED_FIAT_SENT_CONFIRMATION:
                         case BUYER_RECEIVED_ACCOUNT_DATA:
                         case BUYER_SENT_FIAT_SENT_CONFIRMATION:
-                        case SELLER_RECEIVED_FIAT_SENT_CONFIRMATION:
                             model.getPhaseIndex().set(1);
                             model.getRequestMediationButtonVisible().set(false);
                             model.getReportToMediatorButtonVisible().set(true);
                             break;
-                        case BUYER_SENT_BTC_ADDRESS:
-                        case SELLER_RECEIVED_BTC_ADDRESS:
+
                         case SELLER_CONFIRMED_FIAT_RECEIPT:
                         case BUYER_RECEIVED_SELLERS_FIAT_RECEIPT_CONFIRMATION:
+                        case SELLER_SENT_BTC_SENT_CONFIRMATION:
+                        case BUYER_RECEIVED_BTC_SENT_CONFIRMATION:
                             model.getPhaseIndex().set(2);
                             model.getRequestMediationButtonVisible().set(true);
                             model.getReportToMediatorButtonVisible().set(false);
                             break;
 
-                        case SELLER_SENT_BTC_SENT_CONFIRMATION:
-                        case BUYER_RECEIVED_BTC_SENT_CONFIRMATION:
-                            model.getPhaseIndex().set(3);
-                            model.getRequestMediationButtonVisible().set(true);
-                            model.getReportToMediatorButtonVisible().set(false);
-                            break;
-
                         case BTC_CONFIRMED:
-                            model.getPhaseIndex().set(4);
+                            model.getPhaseIndex().set(3);
                             model.getRequestMediationButtonVisible().set(false);
                             model.getReportToMediatorButtonVisible().set(true);
                             break;
@@ -173,17 +164,6 @@ class TradePhaseBox {
                             model.getRequestMediationButtonVisible().set(false);
                             model.getReportToMediatorButtonVisible().set(true);
                             break;
-                    }
-
-                    if (state.ordinal() >= BisqEasyTradeState.BUYER_SENT_FIAT_SENT_CONFIRMATION.ordinal()) {
-                        model.getPhase2Info().set(isBuyer ?
-                                Res.get("bisqEasy.tradeState.phase.buyer.phase2b").toUpperCase() :
-                                Res.get("bisqEasy.tradeState.phase.seller.phase2b").toUpperCase());
-                    }
-                    if (state.ordinal() >= BisqEasyTradeState.SELLER_CONFIRMED_FIAT_RECEIPT.ordinal()) {
-                        model.getPhase3Info().set(isBuyer ?
-                                Res.get("bisqEasy.tradeState.phase.buyer.phase3b").toUpperCase() :
-                                Res.get("bisqEasy.tradeState.phase.seller.phase3b").toUpperCase());
                     }
                 });
             });
@@ -236,7 +216,6 @@ class TradePhaseBox {
         private final StringProperty phase2Info = new SimpleStringProperty();
         private final StringProperty phase3Info = new SimpleStringProperty();
         private final StringProperty phase4Info = new SimpleStringProperty();
-        private final StringProperty phase5Info = new SimpleStringProperty();
 
         void reset() {
             selectedChannel = null;
@@ -248,12 +227,11 @@ class TradePhaseBox {
             phase2Info.set(null);
             phase3Info.set(null);
             phase4Info.set(null);
-            phase5Info.set(null);
         }
     }
 
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
-        private final Label phase1Label, phase2Label, phase3Label, phase4Label, phase5Label;
+        private final Label phase1Label, phase2Label, phase3Label, phase4Label;
         private final Button requestMediationButton;
         private final Hyperlink openTradeGuide, walletHelp, reportToMediator;
         private final List<Triple<HBox, Label, Badge>> phaseItems;
@@ -268,22 +246,19 @@ class TradePhaseBox {
             Triple<HBox, Label, Badge> phaseItem1 = getPhaseItem(1);
             Triple<HBox, Label, Badge> phaseItem2 = getPhaseItem(2);
             Triple<HBox, Label, Badge> phaseItem3 = getPhaseItem(3);
-            Triple<HBox, Label, Badge> phaseItem4 = getPhaseItem(4);
-            Triple<HBox, Label, Badge> phaseItem5 = getPhaseItem(5);
+            Triple<HBox, Label, Badge> phaseItem4 = getPhaseItem(4, true);
 
             HBox phase1HBox = phaseItem1.getFirst();
             HBox phase2HBox = phaseItem2.getFirst();
             HBox phase3HBox = phaseItem3.getFirst();
             HBox phase4HBox = phaseItem4.getFirst();
-            HBox phase5HBox = phaseItem5.getFirst();
 
             phase1Label = phaseItem1.getSecond();
             phase2Label = phaseItem2.getSecond();
             phase3Label = phaseItem3.getSecond();
             phase4Label = phaseItem4.getSecond();
-            phase5Label = phaseItem5.getSecond();
 
-            phaseItems = List.of(phaseItem1, phaseItem2, phaseItem3, phaseItem4, phaseItem5);
+            phaseItems = List.of(phaseItem1, phaseItem2, phaseItem3, phaseItem4);
 
             walletHelp = new Hyperlink(Res.get("bisqEasy.walletGuide.open"), ImageUtil.getImageViewById("icon-wallet"));
             walletHelp.setGraphicTextGap(5);
@@ -311,8 +286,6 @@ class TradePhaseBox {
                     phase3HBox,
                     getVLine(),
                     phase4HBox,
-                    getVLine(),
-                    phase5HBox,
                     Spacer.fillVBox(),
                     walletHelp,
                     openTradeGuide,
@@ -326,7 +299,6 @@ class TradePhaseBox {
             phase2Label.textProperty().bind(model.getPhase2Info());
             phase3Label.textProperty().bind(model.getPhase3Info());
             phase4Label.textProperty().bind(model.getPhase4Info());
-            phase5Label.textProperty().bind(model.getPhase5Info());
             reportToMediator.visibleProperty().bind(model.getReportToMediatorButtonVisible().and(model.getIsInMediation().not()));
             reportToMediator.managedProperty().bind(reportToMediator.visibleProperty());
             requestMediationButton.visibleProperty().bind(model.getRequestMediationButtonVisible());
@@ -346,7 +318,6 @@ class TradePhaseBox {
             phase2Label.textProperty().unbind();
             phase3Label.textProperty().unbind();
             phase4Label.textProperty().unbind();
-            phase5Label.textProperty().unbind();
             reportToMediator.visibleProperty().unbind();
             reportToMediator.managedProperty().unbind();
             requestMediationButton.visibleProperty().unbind();
@@ -391,6 +362,17 @@ class TradePhaseBox {
             label.getStyleClass().add("bisq-easy-trade-state-phase");
             Badge badge = new Badge();
             badge.setText(String.valueOf(index));
+            badge.setPrefSize(20, 20);
+            HBox hBox = new HBox(7.5, badge, label);
+            hBox.setAlignment(Pos.CENTER_LEFT);
+            return new Triple<>(hBox, label, badge);
+        }
+
+        private static Triple<HBox, Label, Badge> getPhaseItem(int index, boolean isFinalStep) {
+            Label label = new Label();
+            label.getStyleClass().add("bisq-easy-trade-state-phase");
+            Badge badge = new Badge();
+            badge.setText(isFinalStep ? "\u2713" :  String.valueOf(index));
             badge.setPrefSize(20, 20);
             HBox hBox = new HBox(7.5, badge, label);
             hBox.setAlignment(Pos.CENTER_LEFT);
