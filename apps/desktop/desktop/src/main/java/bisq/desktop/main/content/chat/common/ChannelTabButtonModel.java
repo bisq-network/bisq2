@@ -28,7 +28,7 @@ import lombok.Setter;
 
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Getter
-class ChannelTabButtonModel implements Comparable<ChannelTabButtonModel> {
+public class ChannelTabButtonModel {
     @EqualsAndHashCode.Include
     private final String channelId;
     private final ChatChannelDomain chatChannelDomain;
@@ -48,10 +48,5 @@ class ChannelTabButtonModel implements Comparable<ChannelTabButtonModel> {
         channelTitle = chatChannelService.getChannelTitle(chatChannel);
         String styleToken = channelId.replace(".", "-");
         iconId = "channels-" + styleToken;
-    }
-
-    @Override
-    public int compareTo(ChannelTabButtonModel other) {
-        return this.channelTitle.compareToIgnoreCase(other.channelTitle);
     }
 }

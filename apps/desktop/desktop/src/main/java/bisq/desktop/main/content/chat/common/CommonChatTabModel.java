@@ -20,6 +20,7 @@ package bisq.desktop.main.content.chat.common;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatChannelDomain;
 import bisq.desktop.main.content.ContentTabModel;
+import bisq.desktop.main.content.chat.ChatUtil;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -28,6 +29,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableMap;
 import lombok.Getter;
 
+import java.util.Comparator;
 import java.util.HashMap;
 
 @Getter
@@ -46,7 +48,7 @@ final class CommonChatTabModel extends ContentTabModel {
     public NavigationTarget getDefaultNavigationTarget() {
         return channelTabButtonModelByChannelId.isEmpty()
                 ? NavigationTarget.NONE
-                : channelTabButtonModelByChannelId.values().stream().sorted().findFirst().get().getNavigationTarget();
+                : channelTabButtonModelByChannelId.values().stream().min(getChannelTabButtonComparator()).get().getNavigationTarget();
     }
 
     NavigationTarget getPrivateChatsNavigationTarget() {
@@ -56,5 +58,11 @@ final class CommonChatTabModel extends ContentTabModel {
             return NavigationTarget.EVENTS_PRIVATECHATS;
         }
         return NavigationTarget.SUPPORT_PRIVATECHATS;
+    }
+
+    Comparator<ChannelTabButtonModel> getChannelTabButtonComparator() {
+        return (chatChannelDomain == ChatChannelDomain.SUPPORT)
+                ? ChatUtil.SUPPORT_CHANNEL_TAB_BUTTON_COMPARATOR
+                : ChatUtil.DEFAULT_CHANNEL_TAB_BUTTON_COMPARATOR;
     }
 }
