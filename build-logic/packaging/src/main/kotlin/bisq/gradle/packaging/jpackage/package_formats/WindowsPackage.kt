@@ -9,6 +9,7 @@ class WindowsPackage(private val resourcesPath: Path) : JPackagePackageFormatCon
             mutableListOf(
                     // "--resource-dir", resourcesPath.toAbsolutePath().toString(),
                     "--icon", resourcesPath.resolve("Bisq2.ico").toAbsolutePath().toString(),
+                    "--description", "Bisq 2",
 
                     "--win-dir-chooser",
                     "--win-per-user-install",

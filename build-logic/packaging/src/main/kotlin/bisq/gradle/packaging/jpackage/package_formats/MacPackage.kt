@@ -9,6 +9,7 @@ class MacPackage(private val resourcesPath: Path) : JPackagePackageFormatConfigs
             mutableListOf(
                     "--resource-dir", resourcesPath.toAbsolutePath().toString(),
                     "--mac-package-name", "Bisq 2",
-                    "--icon", resourcesPath.resolve("Bisq2.icns").toAbsolutePath().toString()
+                    "--icon", resourcesPath.resolve("Bisq2.icns").toAbsolutePath().toString(),
+                    "--description", "A decentralized bitcoin exchange network.",
             )
 }

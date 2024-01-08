@@ -11,6 +11,8 @@ class LinuxPackages(private val resourcesPath: Path) : JPackagePackageFormatConf
                 resourcesPath.resolve("icon.png")
                         .toAbsolutePath().toString(),
 
+                "--description", "A decentralized bitcoin exchange network.",
+
                 "--linux-package-name", "bisq2",
                 "--linux-app-release", "1",
 
