@@ -193,9 +193,9 @@ public class TakeOfferReviewController implements Controller {
         Optional<UserProfile> mediator = mediationRequestService.selectMediator(bisqEasyOffer.getMakersUserProfileId(), takerIdentity.getId());
         if (mediator.isEmpty()) {
             new Popup().warning(Res.get("bisqEasy.takeOffer.noMediatorAvailable.warning"))
-                    .closeButtonText(Res.get("confirmation.no"))
+                    .closeButtonText(Res.get("action.cancel"))
                     .onClose(onCancelHandler)
-                    .actionButtonText(Res.get("confirmation.yes"))
+                    .actionButtonText(Res.get("confirmation.ok"))
                     .onAction(() -> doTakeOffer(bisqEasyOffer, takerIdentity, mediator))
                     .show();
         } else {
