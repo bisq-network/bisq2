@@ -66,6 +66,10 @@ public class LanguageRepository {
             "en", // English
             "de", // German
             "es", // Spanish
+            "it" // Italian
+            /*
+            // not translated yet
+            "cs", // Czech
             "pt", // Portuguese
             "pt-BR", // Portuguese (Brazil)
             "zh-Hans", // Chinese [Han Simplified]
@@ -76,10 +80,6 @@ public class LanguageRepository {
             "th", // Thai
             "ja", // Japanese
             "fa", // Persian
-            "it", // Italian
-            "cs" // Czech
-            /*
-            // not translated yet
             "el", // Greek
             "sr-Latn-RS", // Serbian [Latin] (Serbia)
             "hu", // Hungarian
