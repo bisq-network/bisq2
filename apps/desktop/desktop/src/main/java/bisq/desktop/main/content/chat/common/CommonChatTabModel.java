@@ -61,7 +61,7 @@ final class CommonChatTabModel extends ContentTabModel {
     }
 
     Comparator<ChannelTabButtonModel> getChannelTabButtonComparator() {
-        return (chatChannelDomain == ChatChannelDomain.SUPPORT)
+        return chatChannelDomain == ChatChannelDomain.SUPPORT
                 ? ChatUtil.SUPPORT_CHANNEL_TAB_BUTTON_COMPARATOR
                 : ChatUtil.DEFAULT_CHANNEL_TAB_BUTTON_COMPARATOR;
     }

@@ -24,4 +24,8 @@ public class ChatUtil {
             return lhsOrder.compareTo(rhsOrder);
         }
     };
+
+    public static String getChannelIconId(String channelId) {
+        return "channels-" + channelId.replace(".", "-");
+    }
 }
