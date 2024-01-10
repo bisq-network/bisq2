@@ -68,7 +68,8 @@ public class LanguageRepository {
             "es", // Spanish
             "it", // Italian
             "pt-BR", // Portuguese (Brazil)
-            "cs" // Czech
+            "cs", // Czech
+            "pcm" // Nigerian Pidgin
             /*
             // not translated yet
             "pt", // Portuguese
