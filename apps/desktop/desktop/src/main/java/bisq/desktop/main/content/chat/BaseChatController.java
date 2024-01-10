@@ -130,6 +130,7 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
                 model.getChannelTitle().set(chatService.findChatChannelService(chatChannel)
                         .map(service -> service.getChannelTitle(Objects.requireNonNull(chatChannel)))
                         .orElse(""));
+                model.getChannelIconId().set(ChatUtil.getChannelIconId(chatChannel.getId()));
 
                 if (model.getChannelSidebarVisible().get()) {
                     cleanupChannelInfo();

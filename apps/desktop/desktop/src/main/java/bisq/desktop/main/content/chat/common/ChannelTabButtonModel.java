@@ -22,6 +22,7 @@ import bisq.chat.ChatChannel;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.common.CommonPublicChatChannel;
 import bisq.chat.common.CommonPublicChatChannelService;
+import bisq.desktop.main.content.chat.ChatUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -46,7 +47,6 @@ public class ChannelTabButtonModel {
         chatChannelDomain = chatChannel.getChatChannelDomain();
         channelId = chatChannel.getId();
         channelTitle = chatChannelService.getChannelTitle(chatChannel);
-        String styleToken = channelId.replace(".", "-");
-        iconId = "channels-" + styleToken;
+        iconId = ChatUtil.getChannelIconId(channelId);
     }
 }

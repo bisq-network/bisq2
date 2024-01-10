@@ -17,11 +17,13 @@
 
 package bisq.desktop.main.content.chat;
 
+import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.NavigationView;
 import bisq.desktop.components.controls.SearchBox;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
@@ -35,6 +37,7 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
 
     protected final Label channelTitle = new Label();
     protected final Label channelDescription = new Label();
+    protected Label channelIcon = new Label();
     protected Button helpButton, infoButton;
     protected final VBox sideBar = new VBox();
     protected final VBox centerVBox = new VBox();
@@ -42,7 +45,7 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
     protected final HBox containerHBox = new HBox();
     protected final Pane channelSidebar, chatMessagesComponent;
     protected Pane chatUserOverviewRoot;
-    protected Subscription /*channelIconPin, */chatUserOverviewRootSubscription;
+    protected Subscription channelIconPin, chatUserOverviewRootSubscription;
     protected final SearchBox searchBox = new SearchBox();
 
     public BaseChatView(BaseChatModel model,
@@ -101,16 +104,12 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
                     }
                 });
 
-//        channelIconPin = EasyBind.subscribe(model.getChannelIconNode(), node -> {
-//            if (node != null) {
-//                channelTitle.setGraphic(node);
-//                channelTitle.setGraphicTextGap(10);
-//                node.setStyle("-fx-cursor: hand;");
-//                node.setOnMouseClicked(e -> controller.onToggleChannelInfo());
-//            } else {
-//                channelTitle.setGraphic(null);
-//            }
-//        });
+        channelIconPin = EasyBind.subscribe(model.getChannelIconId(), channelIconId -> {
+            ImageView image = ImageUtil.getImageViewById(channelIconId);
+            image.setScaleX(1.25);
+            image.setScaleY(1.25);
+            channelIcon.setGraphic(image);
+        });
     }
 
     @Override
@@ -131,6 +130,6 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
         }
 
         chatUserOverviewRootSubscription.unsubscribe();
-//        channelIconPin.unsubscribe();
+        channelIconPin.unsubscribe();
     }
 }

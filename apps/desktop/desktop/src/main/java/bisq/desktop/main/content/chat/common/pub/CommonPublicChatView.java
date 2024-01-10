@@ -39,7 +39,7 @@ public final class CommonPublicChatView extends ChatView<CommonPublicChatView, C
         titleHBox.setMinHeight(HEADER_HEIGHT);
         titleHBox.setMaxHeight(HEADER_HEIGHT);
 
-        HBox headerTitle = new HBox(20, channelTitle, channelDescription);
+        HBox headerTitle = new HBox(10, channelTitle, channelDescription);
         headerTitle.setAlignment(Pos.BASELINE_LEFT);
         headerTitle.setPadding(new Insets(7, 0, 0, 0));
         HBox.setHgrow(headerTitle, Priority.ALWAYS);
@@ -61,9 +61,9 @@ public final class CommonPublicChatView extends ChatView<CommonPublicChatView, C
         infoButton.setScaleX(scale);
         infoButton.setScaleY(scale);
 
-        HBox.setMargin(channelTitle, new Insets(0, -10, 0, 4));
+        HBox.setMargin(channelIcon, new Insets(0, 0, -2, 5));
         HBox.setMargin(helpButton, new Insets(-2, 0, 0, 0));
         HBox.setMargin(infoButton, new Insets(-2, 0, 0, 0));
-        titleHBox.getChildren().addAll(headerTitle, searchBox, helpButton, infoButton);
+        titleHBox.getChildren().addAll(channelIcon, headerTitle, searchBox, helpButton, infoButton);
     }
 }
