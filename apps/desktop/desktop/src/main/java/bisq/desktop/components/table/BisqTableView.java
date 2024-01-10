@@ -131,8 +131,7 @@ public class BisqTableView<T> extends TableView<T> {
                 .build();
     }
 
-    public Callback<TableColumn<T, T>, TableCell<T, T>> getSelectionMarkerCellFactory
-            () {
+    public Callback<TableColumn<T, T>, TableCell<T, T>> getSelectionMarkerCellFactory() {
         return column -> new TableCell<>() {
             private Subscription selectedPin;
 
@@ -140,16 +139,17 @@ public class BisqTableView<T> extends TableView<T> {
             public void updateItem(final T item, boolean empty) {
                 super.updateItem(item, empty);
 
-                if (item != null && !empty) {
-                    selectedPin = EasyBind.subscribe(BisqTableView.this.getSelectionModel().selectedItemProperty(),
-                            selected -> {
-                                setId(item.equals(selected) ? "selection-marker" : null);
-                            });
-                } else {
-                    if (selectedPin != null) {
-                        selectedPin.unsubscribe();
-                        selectedPin = null;
-                    }
+                // Clean up previous row
+                if (getTableRow() != null && selectedPin != null) {
+                    selectedPin.unsubscribe();
+                }
+
+                // Set up new row
+                TableRow<T> newRow = getTableRow();
+                if (newRow != null) {
+                    selectedPin = EasyBind.subscribe(newRow.selectedProperty(), isSelected ->
+                        setId(isSelected ? "selection-marker" : null)
+                    );
                 }
             }
         };
