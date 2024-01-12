@@ -55,6 +55,7 @@ public class Fsm<M extends FsmModel> {
                     log.warn("We have reached the final state and do not allow further state transition");
                     return;
                 }
+                log.info("Start transition from currentState {}", currentState);
                 Class<? extends Event> eventClass = event.getClass();
                 Pair<State, Class<? extends Event>> transitionKey = new Pair<>(currentState, eventClass);
                 Transition transition = transitionMap.get(transitionKey);
@@ -62,9 +63,11 @@ public class Fsm<M extends FsmModel> {
                     Optional<Class<? extends EventHandler>> eventHandlerClass = transition.getEventHandlerClass();
                     if (eventHandlerClass.isPresent()) {
                         EventHandler eventHandlerFromClass = newEventHandlerFromClass(eventHandlerClass.get());
+                        log.info("Handle {} at {}", event.getClass().getSimpleName(), eventHandlerFromClass.getClass().getSimpleName());
                         eventHandlerFromClass.handle(event);
                     }
                     State targetState = transition.getTargetState();
+                    log.info("Transition completed to new state {}", targetState);
                     model.setNewState(targetState);
                     model.eventQueue.remove(event);
                     if (targetState.isFinalState()) {
