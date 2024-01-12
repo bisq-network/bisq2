@@ -232,6 +232,8 @@ public class TradeStateController implements Controller {
             case TAKER_SENT_TAKE_OFFER_REQUEST:
             case MAKER_SENT_TAKE_OFFER_RESPONSE:
             case TAKER_RECEIVED_TAKE_OFFER_RESPONSE:
+            case SELLER_DID_NOT_SEND_ACCOUNT_DATA_AND_RECEIVED_BTC_ADDRESS:
+            case BUYER_DID_NOT_SEND_BTC_ADDRESS_AND_RECEIVED_ACCOUNT_DATA:
                 if (isSeller) {
                     model.getStateInfoVBox().set(new SellerState1(serviceProvider, trade, channel).getView().getRoot());
                 } else {
@@ -240,9 +242,6 @@ public class TradeStateController implements Controller {
                 break;
 
             // Seller
-            case SELLER_DID_NOT_SEND_ACCOUNT_DATA_AND_RECEIVED_BTC_ADDRESS:
-                model.getStateInfoVBox().set(new SellerState1(serviceProvider, trade, channel).getView().getRoot());
-                break;
             case SELLER_SENT_ACCOUNT_DATA_AND_WAITING_FOR_BTC_ADDRESS:
             case SELLER_SENT_ACCOUNT_DATA_AND_RECEIVED_BTC_ADDRESS:
                 model.getStateInfoVBox().set(new SellerState2a(serviceProvider, trade, channel).getView().getRoot());
@@ -258,10 +257,10 @@ public class TradeStateController implements Controller {
                 break;
 
             // Buyer
-            case BUYER_SENT_BTC_ADDRESS:
+            case BUYER_SENT_BTC_ADDRESS_AND_WAITING_FOR_ACCOUNT_DATA:
                 model.getStateInfoVBox().set(new BuyerState1b(serviceProvider, trade, channel).getView().getRoot());
                 break;
-            case BUYER_RECEIVED_ACCOUNT_DATA:
+            case BUYER_SENT_BTC_ADDRESS_AND_RECEIVED_ACCOUNT_DATA:
                 model.getStateInfoVBox().set(new BuyerState2a(serviceProvider, trade, channel).getView().getRoot());
                 break;
             case BUYER_SENT_FIAT_SENT_CONFIRMATION:
@@ -336,9 +335,10 @@ public class TradeStateController implements Controller {
             case SELLER_RECEIVED_FIAT_SENT_CONFIRMATION:
             case SELLER_CONFIRMED_FIAT_RECEIPT:
             case SELLER_SENT_BTC_SENT_CONFIRMATION:
-            case BUYER_RECEIVED_ACCOUNT_DATA:
+            case BUYER_SENT_BTC_ADDRESS_AND_WAITING_FOR_ACCOUNT_DATA:
+            case BUYER_DID_NOT_SEND_BTC_ADDRESS_AND_RECEIVED_ACCOUNT_DATA:
+            case BUYER_SENT_BTC_ADDRESS_AND_RECEIVED_ACCOUNT_DATA:
             case BUYER_SENT_FIAT_SENT_CONFIRMATION:
-            case BUYER_SENT_BTC_ADDRESS:
             case BUYER_RECEIVED_SELLERS_FIAT_RECEIPT_CONFIRMATION:
             case BUYER_RECEIVED_BTC_SENT_CONFIRMATION:
                 model.setTradeCloseType(TradeStateModel.TradeCloseType.CANCEL);
