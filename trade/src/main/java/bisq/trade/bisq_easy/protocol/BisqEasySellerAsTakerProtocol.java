@@ -48,40 +48,34 @@ public class BisqEasySellerAsTakerProtocol extends BisqEasyProtocol {
                 .from(TAKER_RECEIVED_TAKE_OFFER_RESPONSE)
                 .on(BisqEasyAccountDataEvent.class)
                 .run(BisqEasyAccountDataEventHandler.class)
-                .to(SELLER_SENT_ACCOUNT_DATA);
+                .to(SELLER_SENT_ACCOUNT_DATA_AND_WAITING_FOR_BTC_ADDRESS);
 
         addTransition()
-                .from(SELLER_SENT_ACCOUNT_DATA)
+                .from(SELLER_SENT_ACCOUNT_DATA_AND_WAITING_FOR_BTC_ADDRESS)
                 .on(BisqEasyBtcAddressMessage.class)
                 .run(BisqEasyBtcAddressMessageHandler.class)
-                .to(SELLER_RECEIVED_BTC_ADDRESS);
-
-        addTransition()
-                .from(SELLER_RECEIVED_BTC_ADDRESS)
-                .on(BisqEasyConfirmFiatSentMessage.class)
-                .run(BisqEasyConfirmFiatSentMessageHandler.class)
-                .to(SELLER_RECEIVED_FIAT_SENT_CONFIRMATION);
+                .to(SELLER_SENT_ACCOUNT_DATA_AND_RECEIVED_BTC_ADDRESS);
 
         // Option 2: Buyer sends first btc address, then seller sends account data
         addTransition()
                 .from(TAKER_RECEIVED_TAKE_OFFER_RESPONSE)
                 .on(BisqEasyBtcAddressMessage.class)
                 .run(BisqEasyBtcAddressMessageHandler.class)
-                .to(SELLER_RECEIVED_BTC_ADDRESS);
+                .to(SELLER_DID_NOT_SEND_ACCOUNT_DATA_AND_RECEIVED_BTC_ADDRESS);
 
         addTransition()
-                .from(SELLER_RECEIVED_BTC_ADDRESS)
+                .from(SELLER_DID_NOT_SEND_ACCOUNT_DATA_AND_RECEIVED_BTC_ADDRESS)
                 .on(BisqEasyAccountDataEvent.class)
                 .run(BisqEasyAccountDataEventHandler.class)
-                .to(SELLER_SENT_ACCOUNT_DATA);
+                .to(SELLER_SENT_ACCOUNT_DATA_AND_RECEIVED_BTC_ADDRESS);
 
+        // Both options continue from here
         addTransition()
-                .from(SELLER_SENT_ACCOUNT_DATA)
+                .from(SELLER_SENT_ACCOUNT_DATA_AND_RECEIVED_BTC_ADDRESS)
                 .on(BisqEasyConfirmFiatSentMessage.class)
                 .run(BisqEasyConfirmFiatSentMessageHandler.class)
                 .to(SELLER_RECEIVED_FIAT_SENT_CONFIRMATION);
 
-        // from here it's the same
         addTransition()
                 .from(SELLER_RECEIVED_FIAT_SENT_CONFIRMATION)
                 .on(BisqEasyConfirmFiatReceiptEvent.class)
@@ -128,17 +122,22 @@ public class BisqEasySellerAsTakerProtocol extends BisqEasyProtocol {
 
         // Cancel trade
         addTransition()
-                .from(SELLER_SENT_ACCOUNT_DATA)
+                .from(SELLER_SENT_ACCOUNT_DATA_AND_WAITING_FOR_BTC_ADDRESS)
+                .on(BisqEasyCancelTradeMessage.class)
+                .run(BisqEasyCancelTradeMessageHandler.class)
+                .to(CANCELLED);
+        addTransition()
+                .from(SELLER_DID_NOT_SEND_ACCOUNT_DATA_AND_RECEIVED_BTC_ADDRESS)
+                .on(BisqEasyCancelTradeMessage.class)
+                .run(BisqEasyCancelTradeMessageHandler.class)
+                .to(CANCELLED);
+        addTransition()
+                .from(SELLER_SENT_ACCOUNT_DATA_AND_RECEIVED_BTC_ADDRESS)
                 .on(BisqEasyCancelTradeMessage.class)
                 .run(BisqEasyCancelTradeMessageHandler.class)
                 .to(CANCELLED);
         addTransition()
                 .from(SELLER_RECEIVED_FIAT_SENT_CONFIRMATION)
-                .on(BisqEasyCancelTradeMessage.class)
-                .run(BisqEasyCancelTradeMessageHandler.class)
-                .to(CANCELLED);
-        addTransition()
-                .from(SELLER_RECEIVED_BTC_ADDRESS)
                 .on(BisqEasyCancelTradeMessage.class)
                 .run(BisqEasyCancelTradeMessageHandler.class)
                 .to(CANCELLED);
@@ -155,17 +154,22 @@ public class BisqEasySellerAsTakerProtocol extends BisqEasyProtocol {
 
         // Peer cancelled trade
         addTransition()
-                .from(SELLER_SENT_ACCOUNT_DATA)
+                .from(SELLER_SENT_ACCOUNT_DATA_AND_WAITING_FOR_BTC_ADDRESS)
+                .on(BisqEasyCancelTradeEvent.class)
+                .run(BisqEasyCancelTradeEventHandler.class)
+                .to(CANCELLED);
+        addTransition()
+                .from(SELLER_DID_NOT_SEND_ACCOUNT_DATA_AND_RECEIVED_BTC_ADDRESS)
+                .on(BisqEasyCancelTradeEvent.class)
+                .run(BisqEasyCancelTradeEventHandler.class)
+                .to(CANCELLED);
+        addTransition()
+                .from(SELLER_SENT_ACCOUNT_DATA_AND_RECEIVED_BTC_ADDRESS)
                 .on(BisqEasyCancelTradeEvent.class)
                 .run(BisqEasyCancelTradeEventHandler.class)
                 .to(CANCELLED);
         addTransition()
                 .from(SELLER_RECEIVED_FIAT_SENT_CONFIRMATION)
-                .on(BisqEasyCancelTradeEvent.class)
-                .run(BisqEasyCancelTradeEventHandler.class)
-                .to(CANCELLED);
-        addTransition()
-                .from(SELLER_RECEIVED_BTC_ADDRESS)
                 .on(BisqEasyCancelTradeEvent.class)
                 .run(BisqEasyCancelTradeEventHandler.class)
                 .to(CANCELLED);
