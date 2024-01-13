@@ -408,6 +408,17 @@ public class MaterialTextField extends Pane {
         }
     }
 
+    public void filterMouseEventOnNonEditableText() {
+        javafx.event.EventHandler<MouseEvent> weakEventFilter = new WeakReference<>((javafx.event.EventHandler<MouseEvent>) event -> {
+            if (!textInputControl.isEditable()) {
+                event.consume();
+            }
+        }).get();
+        if (weakEventFilter != null) {
+            textInputControl.addEventFilter(MouseEvent.ANY, weakEventFilter);
+        }
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Layout

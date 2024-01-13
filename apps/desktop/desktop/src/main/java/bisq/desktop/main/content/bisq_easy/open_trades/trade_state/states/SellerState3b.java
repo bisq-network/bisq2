@@ -186,6 +186,7 @@ public class SellerState3b extends BaseState {
             btcBalance = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.seller.phase3b.balance"), "", false);
             btcBalance.setHelpText(Res.get("bisqEasy.tradeState.info.phase4.balance.help.explorerLookup"));
             btcBalance.setPromptText(Res.get("bisqEasy.tradeState.info.seller.phase3b.balance.prompt"));
+            btcBalance.filterMouseEventOnNonEditableText();
 
             button = new Button(Res.get("bisqEasy.tradeState.info.phase4.buttonText"));
             VBox.setMargin(button, new Insets(5, 0, 5, 0));
