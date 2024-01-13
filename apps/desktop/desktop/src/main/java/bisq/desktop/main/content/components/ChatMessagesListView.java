@@ -90,7 +90,6 @@ import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
-import javafx.scene.text.Text;
 import javafx.util.Callback;
 import javafx.util.Duration;
 import lombok.EqualsAndHashCode;
@@ -692,6 +691,7 @@ public class ChatMessagesListView {
 
             StackPane.setAlignment(scrollDownBadge, Pos.BOTTOM_RIGHT);
             StackPane.setMargin(scrollDownBadge, new Insets(0, 25, 20, 0));
+            root.setAlignment(Pos.CENTER);
             root.getChildren().addAll(listView, scrollDownBadge);
         }
 
@@ -787,12 +787,15 @@ public class ChatMessagesListView {
                 @Override
                 public ListCell<ChatMessageListItem<? extends ChatMessage>> call(ListView<ChatMessageListItem<? extends ChatMessage>> list) {
                     return new ListCell<>() {
+                        private final static double CHAT_BOX_MAX_WIDTH = 1200;
+                        private final static double CHAT_MESSAGE_BOX_MAX_WIDTH = 700;
+
                         private final ReputationScoreDisplay reputationScoreDisplay;
                         private final Button takeOfferButton, removeOfferButton;
                         private final Label message, userName, dateTime, replyIcon, pmIcon, editIcon, deleteIcon, copyIcon,
                                 moreOptionsIcon, supportedLanguages;
                         private final Label deliveryState;
-                        private final Text quotedMessageField;
+                        private final Label quotedMessageField = new Label();
                         private final BisqTextArea editInputField;
                         private final Button saveEditButton, cancelEditButton;
                         private final VBox mainVBox, quotedMessageVBox;
@@ -818,7 +821,7 @@ public class ChatMessagesListView {
                             removeOfferButton.getStyleClass().addAll("red-small-button", "no-background");
 
                             // quoted message
-                            quotedMessageField = new Text();
+                            quotedMessageField.setWrapText(true);
                             quotedMessageVBox = new VBox(5);
                             quotedMessageVBox.setVisible(false);
                             quotedMessageVBox.setManaged(false);
@@ -849,7 +852,7 @@ public class ChatMessagesListView {
 
                             messageBgHBox = new HBox(15);
                             messageBgHBox.setAlignment(Pos.CENTER_LEFT);
-                            messageBgHBox.setMaxWidth(720);
+                            messageBgHBox.setMaxWidth(CHAT_MESSAGE_BOX_MAX_WIDTH);
 
                             // Reactions box
                             replyIcon = getIconWithToolTip(AwesomeIcon.REPLY, Res.get("chat.message.reply"));
@@ -876,6 +879,8 @@ public class ChatMessagesListView {
                             HBox.setHgrow(mainVBox, Priority.ALWAYS);
                             cellHBox = new HBox(15);
                             cellHBox.setPadding(new Insets(0, 25, 0, 0));
+                            cellHBox.setMaxWidth(CHAT_BOX_MAX_WIDTH);
+                            cellHBox.setAlignment(Pos.CENTER);
                         }
 
 
@@ -956,6 +961,7 @@ public class ChatMessagesListView {
                             deliveryState.getTooltip().textProperty().bind(item.messageDeliveryStatusTooltip);
                             editInputField.maxWidthProperty().bind(message.widthProperty());
                             setGraphic(cellHBox);
+                            setAlignment(Pos.CENTER);
                         }
 
                         private void buildPeerMessage(ChatMessageListItem<? extends ChatMessage> item, boolean isBisqEasyPublicChatMessageWithOffer, VBox userProfileIconVbox, ChatMessage chatMessage) {
