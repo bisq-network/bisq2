@@ -202,6 +202,9 @@ public class ChatMessagesListView {
             scrollBarVisiblePin = EasyBind.subscribe(model.scrollBarVisible, scrollBarVisible -> {
                 if (scrollBarVisible != null && scrollBarVisible) {
                     applyScrollValue(1);
+                    view.listView.setPadding(View.LISTVIEW_PADDING_WITH_SCROLLBAR);
+                } else {
+                    view.listView.setPadding(new Insets(0));
                 }
             });
 
@@ -653,10 +656,10 @@ public class ChatMessagesListView {
 
     @Slf4j
     private static class View extends bisq.desktop.common.view.View<StackPane, Model, Controller> {
-        private final static String EDITED_POST_FIX = " " + Res.get("chat.message.wasEdited");
+        public static final Insets LISTVIEW_PADDING_WITH_SCROLLBAR = new Insets(0, 0, 0, 15);
+        private static final String EDITED_POST_FIX = " " + Res.get("chat.message.wasEdited");
 
         private final ListView<ChatMessageListItem<? extends ChatMessage>> listView;
-
         private final ImageView scrollDownImageView;
         private final Badge scrollDownBadge;
         private final BisqTooltip scrollDownTooltip;
@@ -676,8 +679,8 @@ public class ChatMessagesListView {
 
             // https://stackoverflow.com/questions/20621752/javafx-make-listview-not-selectable-via-mouse
             listView.setSelectionModel(new NoSelectionModel<>());
-
             VBox.setVgrow(listView, Priority.ALWAYS);
+
             scrollDownImageView = new ImageView();
             scrollDownImageView.setCursor(Cursor.HAND);
             scrollDownTooltip = new BisqTooltip(Res.get("chat.listView.scrollDown"));
@@ -741,6 +744,8 @@ public class ChatMessagesListView {
             });
 
             scrollDownImageView.setOnMouseClicked(e -> controller.onScrollToBottom());
+
+            UIThread.runOnNextRenderFrame(this::adjustPadding);
         }
 
         @Override
@@ -780,6 +785,14 @@ public class ChatMessagesListView {
                     new KeyValue(scrollDownBadge.opacityProperty(), 1, Interpolator.EASE_OUT)
             ));
             fadeInScrollDownBadgeTimeline.play();
+        }
+
+        private void adjustPadding() {
+            Optional<VirtualScrollBar> scrollBar = ListViewUtil.findScrollbar(listView, Orientation.VERTICAL);
+            scrollBar.ifPresent(bar ->
+                listView.setPadding(
+                        bar.isVisible() ? LISTVIEW_PADDING_WITH_SCROLLBAR : new Insets(0))
+            );
         }
 
         public Callback<ListView<ChatMessageListItem<? extends ChatMessage>>, ListCell<ChatMessageListItem<? extends ChatMessage>>> getCellFactory() {
@@ -878,7 +891,7 @@ public class ChatMessagesListView {
                             mainVBox.setFillWidth(true);
                             HBox.setHgrow(mainVBox, Priority.ALWAYS);
                             cellHBox = new HBox(15);
-                            cellHBox.setPadding(new Insets(0, 25, 0, 0));
+                            cellHBox.setPadding(new Insets(0, 20, 0, 20));
                             cellHBox.setMaxWidth(CHAT_BOX_MAX_WIDTH);
                             cellHBox.setAlignment(Pos.CENTER);
                         }

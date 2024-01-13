@@ -52,7 +52,6 @@ import bisq.wallets.core.WalletService;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -61,7 +60,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
 import javafx.util.StringConverter;
 import lombok.Getter;
@@ -648,37 +646,38 @@ public class ChatMessagesComponent {
             createOfferButton = createAndGetCreateOfferButton();
             setUpUserProfileSelection(userProfileSelection);
             HBox sendMessageBox = createSendMessageBox();
-            leaveChannelButton = createAndGetChatButton(Res.get("chat.leave"), 120); // TODO: Remove this. Need a better solution for this use-case.
+
+            // TODO: Remove this. We need a better solution for this use-case.
+            leaveChannelButton = createAndGetChatButton(Res.get("chat.leave"), 120);
 
             HBox bottomBar = new HBox(10);
             bottomBar.getChildren().addAll(createOfferButton, userProfileSelectionRoot, sendMessageBox, leaveChannelButton);
             bottomBar.setMaxWidth(CHAT_BOX_MAX_WIDTH);
-            //bottomBar.setBackground(new Background(new BackgroundFill(Color.BEIGE, CornerRadii.EMPTY, Insets.EMPTY)));
-            bottomBar.setPadding(new Insets(14, 25, 14, 25));
-            bottomBar.setAlignment(Pos.CENTER);
-            //HBox.setHgrow(bottomBar, Priority.ALWAYS);
+            bottomBar.setPadding(new Insets(14, 20, 14, 20));
 
             VBox bottomBarContainer = new VBox(bottomBar);
             bottomBarContainer.setAlignment(Pos.CENTER);
-            //bottomBarContainer.setBackground(new Background(new BackgroundFill(Color.PINK, CornerRadii.EMPTY, Insets.EMPTY)));
             return bottomBarContainer;
         }
 
         private HBox createSendMessageBox() {
             inputField.setPromptText(Res.get("chat.message.input.prompt"));
             inputField.getStyleClass().addAll("chat-input-field", "normal-text");
+            inputField.setPadding(new Insets(5, 0, 5, 5));
+            HBox.setHgrow(inputField, Priority.ALWAYS);
             setUpInputFieldAtMentions();
 
             sendButton.setGraphic(ImageUtil.getImageViewById("chat-send"));
             sendButton.setId("chat-messages-send-button");
-            sendButton.setPadding(new Insets(5));
-            sendButton.setMinWidth(31);
-            sendButton.setMaxWidth(31);
+            sendButton.setPadding(new Insets(5, 5, 5, 0));
+            sendButton.setMinWidth(30);
+            sendButton.setMaxWidth(30);
             sendButton.setTooltip(new BisqTooltip(Res.get("chat.message.input.send"), true));
 
-            HBox sendMessageBox = new HBox(10, inputField, sendButton);
-            //            sendMessageBox.getStyleClass().addAll("chat-input-field", "normal-text");
-            // TODO: Change this with design
+            HBox sendMessageBox = new HBox(inputField, sendButton);
+            sendMessageBox.getStyleClass().add("chat-send-message-box");
+            sendMessageBox.setAlignment(Pos.CENTER);
+            HBox.setHgrow(sendMessageBox, Priority.ALWAYS);
             return sendMessageBox;
         }
 
