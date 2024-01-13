@@ -38,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public final class BisqEasyOfferbookView extends BaseChatView {
-    private static final double CHAT_BOX_MAX_WIDTH = 1440;
+    private static final double CHAT_BOX_MAX_WIDTH = 1200;
     // private static double filterPaneHeight;
 
     private final BisqEasyOfferbookModel bisqEasyOfferbookModel;
@@ -72,6 +72,7 @@ public final class BisqEasyOfferbookView extends BaseChatView {
         titleHBox.getStyleClass().add("bisq-easy-container-header");
         titleHBox.setMinHeight(HEADER_HEIGHT);
         titleHBox.setMaxHeight(HEADER_HEIGHT);
+        titleHBox.setMaxWidth(CHAT_BOX_MAX_WIDTH);
 
         channelTitle.getStyleClass().add("chat-header-title");
         channelTitle.setCursor(Cursor.HAND);
@@ -114,7 +115,6 @@ public final class BisqEasyOfferbookView extends BaseChatView {
     protected void configCenterVBox() {
         centerVBox.setSpacing(0);
         centerVBox.setFillWidth(true);
-        centerVBox.setMaxWidth(CHAT_BOX_MAX_WIDTH);
 
        /* filterButton = new Button(Res.get("bisqEasy.topPane.filter"));
         ImageView filterIcon = ImageUtil.getImageViewById("filter");
@@ -146,6 +146,7 @@ public final class BisqEasyOfferbookView extends BaseChatView {
         VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
         centerVBox.getChildren().addAll(titleHBox, Layout.hLine(), chatMessagesComponent);
         centerVBox.getStyleClass().add("bisq-easy-container");
+        centerVBox.setAlignment(Pos.CENTER);
     }
 
     @Override
