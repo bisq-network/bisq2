@@ -67,10 +67,10 @@ public class LanguageRepository {
             "de", // German
             "es", // Spanish
             "it", // Italian
-            "pt-BR" // Portuguese (Brazil)
+            "pt-BR", // Portuguese (Brazil)
+            "cs" // Czech
             /*
             // not translated yet
-            "cs", // Czech
             "pt", // Portuguese
             "zh-Hans", // Chinese [Han Simplified]
             "zh-Hant", // Chinese [Han Traditional]
