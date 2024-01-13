@@ -104,14 +104,16 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
         chatHeaderHBox.setAlignment(Pos.CENTER_LEFT);
         chatHeaderHBox.setPadding(new Insets(15, 30, 15, 30));
         chatHeaderHBox.getStyleClass().add("bisq-easy-container-header");
+        chatHeaderHBox.setMaxWidth(CHAT_BOX_MAX_WIDTH);
 
         VBox.setMargin(chatMessagesComponent, new Insets(0, 30, 15, 30));
         VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
         VBox chatVBox = new VBox(chatHeaderHBox, Layout.hLine(), chatMessagesComponent);
         chatVBox.getStyleClass().add("bisq-easy-container");
+        chatVBox.setAlignment(Pos.CENTER);
 
         VBox.setVgrow(chatVBox, Priority.ALWAYS);
-        centerVBox.setMaxWidth(CHAT_BOX_MAX_WIDTH);
+        centerVBox.setAlignment(Pos.CENTER);
         centerVBox.setFillWidth(true);
         centerVBox.getChildren().add(chatVBox);
     }
