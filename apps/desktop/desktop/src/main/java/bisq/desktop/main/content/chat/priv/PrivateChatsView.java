@@ -140,8 +140,9 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
 
         PrivateChatsModel model = getModel();
 
-        selectedModelItemPin = EasyBind.subscribe(model.getSelectedItem(), selected ->
-                tableView.getSelectionModel().select(selected));
+        selectedModelItemPin = EasyBind.subscribe(model.getSelectedItem(), selected -> {
+            tableView.getSelectionModel().select(selected);
+        });
 
         tableViewSelectionPin = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(), item -> {
             if (item != null) {
@@ -199,6 +200,8 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
     }
 
     private void configTableView() {
+        tableView.getColumns().add(tableView.getSelectionMarkerColumn());
+
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .minWidth(100)
                 .left()
