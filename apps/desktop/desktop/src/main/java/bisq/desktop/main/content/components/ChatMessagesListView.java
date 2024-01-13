@@ -801,7 +801,7 @@ public class ChatMessagesListView {
                 public ListCell<ChatMessageListItem<? extends ChatMessage>> call(ListView<ChatMessageListItem<? extends ChatMessage>> list) {
                     return new ListCell<>() {
                         private final static double CHAT_BOX_MAX_WIDTH = 1200;
-                        private final static double CHAT_MESSAGE_BOX_MAX_WIDTH = 700;
+                        private final static double CHAT_MESSAGE_BOX_MAX_WIDTH = 630;
 
                         private final ReputationScoreDisplay reputationScoreDisplay;
                         private final Button takeOfferButton, removeOfferButton;
