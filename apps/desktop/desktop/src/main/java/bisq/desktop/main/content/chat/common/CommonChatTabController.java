@@ -33,7 +33,6 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.TabButton;
 import bisq.desktop.main.content.ContentTabController;
 import bisq.desktop.main.content.chat.common.priv.CommonPrivateChatsController;
 import bisq.desktop.main.content.chat.common.pub.CommonPublicChatController;
@@ -68,13 +67,6 @@ public final class CommonChatTabController extends ContentTabController<CommonCh
 
         createChannels();
         view = new CommonChatTabView(model, this);
-
-        model.getSelectedTabButton().addListener(observable -> {
-            TabButton tabButton = model.getSelectedTabButton().get();
-            boolean noSelectedChannel = tabButton.getNavigationTarget() == model.getPrivateChatsNavigationTarget()
-                    && twoPartyPrivateChatChannelService.getChannels().isEmpty();
-            model.getHasSelectedChannel().set(!noSelectedChannel);
-        });
     }
 
     private void createChannels() {
