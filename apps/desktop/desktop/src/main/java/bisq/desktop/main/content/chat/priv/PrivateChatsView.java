@@ -19,6 +19,7 @@ package bisq.desktop.main.content.chat.priv;
 
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.desktop.common.Layout;
+import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
@@ -35,6 +36,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.util.Callback;
 import lombok.EqualsAndHashCode;
@@ -247,7 +249,13 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
             chatHeaderVBox.getChildren().add(hBox);
             chatHeaderVBox.setAlignment(Pos.CENTER_LEFT);
         } else {
-            Label emptyChatBoxHeader = new Label(Res.get("chat.private.messagebox.noChats.title"));
+            Label emptyChatBoxHeader = new Label(
+                    Res.get("chat.private.messagebox.noChats.title", model.getChatChannelDomain().getDisplayString()));
+            ImageView image = ImageUtil.getImageViewById("channels-private-chats");
+            image.setScaleX(1.25);
+            image.setScaleY(1.25);
+            emptyChatBoxHeader.setGraphicTextGap(13);
+            emptyChatBoxHeader.setGraphic(image);
             emptyChatBoxHeader.getStyleClass().add("chat-header-title");
             chatHeaderVBox.setPadding(new Insets(15, 0, 15, 0));
             chatHeaderVBox.getChildren().add(emptyChatBoxHeader);
