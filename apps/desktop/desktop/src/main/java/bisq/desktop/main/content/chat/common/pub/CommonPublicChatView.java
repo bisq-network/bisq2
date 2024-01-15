@@ -49,10 +49,10 @@ public final class CommonPublicChatView extends ChatView<CommonPublicChatView, C
         channelDescription.getStyleClass().add("chat-header-description");
 
         searchBox.setMaxWidth(200);
-        searchBox.setMaxHeight(searchBox.getMinHeight());
-        searchBox.setDefaultStyle("bisq-easy-offerbook-search-box");
-        searchBox.setActiveStyle("bisq-easy-offerbook-search-box-active");
-        searchBox.setActiveIconId("search-green");
+        double searchBoxHeight = 29;
+        searchBox.setMinHeight(searchBoxHeight);
+        searchBox.setMaxHeight(searchBoxHeight);
+        searchBox.setPrefHeight(searchBoxHeight);
 
         double scale = 1.15;
         helpButton = BisqIconButton.createIconButton("icon-help");
