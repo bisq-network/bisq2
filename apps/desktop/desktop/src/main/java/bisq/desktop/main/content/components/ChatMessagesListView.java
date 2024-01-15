@@ -51,6 +51,7 @@ import bisq.desktop.components.list_view.ListViewUtil;
 import bisq.desktop.components.list_view.NoSelectionModel;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.take_offer.TakeOfferController;
+import bisq.desktop.main.content.chat.ChatUtil;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
@@ -663,6 +664,9 @@ public class ChatMessagesListView {
         private final ImageView scrollDownImageView;
         private final Badge scrollDownBadge;
         private final BisqTooltip scrollDownTooltip;
+        private final Label placeholderTitle = new Label();
+        private final Label placeholderDescription = new Label();
+        private final VBox placeholder;
         private Optional<VirtualScrollBar> scrollBar = Optional.empty();
         private Subscription hasUnreadMessagesPin, showScrolledDownButtonPin;
         private Timeline fadeInScrollDownBadgeTimeline;
@@ -673,8 +677,8 @@ public class ChatMessagesListView {
             listView = new ListView<>(model.getSortedChatMessages());
             listView.getStyleClass().add("chat-messages-list-view");
 
-            //Label placeholder = new Label(Res.get("data.noDataAvailable"));
-            //listView.setPlaceholder(placeholder);
+            placeholder = ChatUtil.createEmptyChatPlaceholder(placeholderTitle, placeholderDescription);
+
             listView.setCellFactory(getCellFactory());
 
             // https://stackoverflow.com/questions/20621752/javafx-make-listview-not-selectable-via-mouse
@@ -746,6 +750,13 @@ public class ChatMessagesListView {
             scrollDownImageView.setOnMouseClicked(e -> controller.onScrollToBottom());
 
             UIThread.runOnNextRenderFrame(this::adjustPadding);
+
+            if (ChatUtil.isCommonChat(model.getChatChannelDomain()) && model.isPublicChannel.get()) {
+                placeholderTitle.setText(Res.get("chat.messagebox.noChats.placeholder.title"));
+                placeholderDescription.setText(Res.get("chat.messagebox.noChats.placeholder.description",
+                        model.getSelectedChannel().get().getDisplayString()));
+                listView.setPlaceholder(placeholder);
+            }
         }
 
         @Override

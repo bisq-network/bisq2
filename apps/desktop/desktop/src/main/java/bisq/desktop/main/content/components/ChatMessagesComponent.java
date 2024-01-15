@@ -40,6 +40,7 @@ import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardController;
+import bisq.desktop.main.content.chat.ChatUtil;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.offer.bisq_easy.BisqEasyOffer;
@@ -60,7 +61,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
-import javafx.scene.text.TextAlignment;
 import javafx.util.StringConverter;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -537,7 +537,7 @@ public class ChatMessagesComponent {
         private final BisqTextArea inputField = new BisqTextArea();
         private final Button sendButton = new Button();
         private final Pane messagesListView;
-        private final VBox emptyMessageList = new VBox();
+        private VBox emptyMessageList;
         private ChatMentionPopupMenu<UserProfile> userMentionPopup;
         private ChatMentionPopupMenu<ChatChannel<?>> channelMentionPopup;
         private ChangeListener<Number> createOfferButtonHeightListener;
@@ -554,7 +554,9 @@ public class ChatMessagesComponent {
             this.messagesListView = messagesListView;
             VBox.setVgrow(messagesListView, Priority.ALWAYS);
 
-            setUpEmptyMessageList();
+            emptyMessageList = ChatUtil.createEmptyChatPlaceholder(
+                    new Label(Res.get("chat.private.messagebox.noChats.placeholder.title")),
+                    new Label(Res.get("chat.private.messagebox.noChats.placeholder.description")));
 
             VBox bottomBarContainer = createBottomBar(userProfileSelection);
 
@@ -624,22 +626,6 @@ public class ChatMessagesComponent {
             sendButton.setOnAction(null);
             leaveChannelButton.setOnAction(null);
             createOfferButton.setOnAction(null);
-        }
-
-        private void setUpEmptyMessageList() {
-            Label noChatsPlaceholderTitle = new Label(Res.get("chat.private.messagebox.noChats.placeholder.title"));
-            noChatsPlaceholderTitle.getStyleClass().add("large-text");
-            noChatsPlaceholderTitle.setTextAlignment(TextAlignment.CENTER);
-
-            Label noChatsPlaceholderDescription = new Label(Res.get("chat.private.messagebox.noChats.placeholder.description"));
-            noChatsPlaceholderDescription.getStyleClass().add("normal-text");
-            noChatsPlaceholderDescription.setTextAlignment(TextAlignment.CENTER);
-
-            emptyMessageList.setSpacing(10);
-            emptyMessageList.getChildren().addAll(noChatsPlaceholderTitle, noChatsPlaceholderDescription);
-            emptyMessageList.setAlignment(Pos.CENTER);
-            emptyMessageList.getStyleClass().add("chat-container-placeholder-text");
-            VBox.setVgrow(emptyMessageList, Priority.ALWAYS);
         }
 
         private VBox createBottomBar(UserProfileSelection userProfileSelection) {
