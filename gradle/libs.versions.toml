@@ -34,6 +34,8 @@ google-gson-lib = { strictly = '2.9.0' }
 google-guava-lib = { strictly = '31.1-jre' }
 
 i2p-lib = { strictly = '1.8.0' }
+i2p-v2 = { strictly = '2.4.0' }
+
 jackson-lib = { strictly = '2.13.3' }
 java-dev-jna-lib = { strictly = '5.13.0' }
 jeromq-lib = { strictly = '0.5.2' }
@@ -96,8 +98,10 @@ glassfish-jaxb-runtime = { module = 'org.glassfish.jaxb:jaxb-runtime', version.r
 google-gson = { module = 'com.google.code.gson:gson', version.ref = 'google-gson-lib' }
 google-guava = { module = 'com.google.guava:guava', version.ref = 'google-guava-lib' }
 
-i2p-streaming = { module = 'net.i2p.client:streaming', version.ref = 'i2p-lib' }
 i2p-core = { module = 'net.i2p:i2p', version.ref = 'i2p-lib' }
+i2p-core-v2 = { module = 'net.i2p:i2p', version.ref = 'i2p-v2' }
+i2p-streaming = { module = 'net.i2p.client:streaming', version.ref = 'i2p-lib' }
+i2p-streaming-v2 = { module = 'net.i2p.client:streaming', version.ref = 'i2p-v2' }
 i2p-router = { module = 'net.i2p:router', version.ref = 'i2p-lib' }
 
 jackson-core = { module = 'com.fasterxml.jackson.core:jackson-core', version.ref = 'jackson-lib' }
@@ -141,6 +145,7 @@ fontawesomefx = ['fontawesomefx', 'fontawesomefx-commons', 'fontawesomefx-materi
 fxmisc-libs = ['fxmisc-easybind', 'fxmisc-richtextfx']
 glassfish-jersey = ['glassfish-jersey-jdk-http', 'glassfish-jersey-json-jackson', 'glassfish-jersey-inject-hk2', 'glassfish-jaxb-runtime']
 i2p = ['i2p-core', 'i2p-router', 'i2p-streaming']
+i2p-v2 = ['i2p-core-v2', 'i2p-streaming-v2']
 jackson = ['jackson-core', 'jackson-annotations', 'jackson-databind']
 springfox-libs = ['springfox-boot-starter', 'springfox-swagger2', 'springfox-swagger-ui']
 
