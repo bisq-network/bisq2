@@ -133,13 +133,11 @@ public class OutboundConnectionManager {
         if (outboundHandshakeChannels.contains(socketChannel)) {
             var handshakeInitiator = new ConnectionHandshakeInitiator(
                     myCapability,
-                    null, //TODO
-                    System.currentTimeMillis(), //TODO
                     authorizationService,
                     banList,
                     myNetworkLoad,
-                    addressByChannel.get(socketChannel)
-            );
+                    addressByChannel.get(socketChannel),
+                    null);
             handshakeInitiatorByChannel.put(socketChannel, handshakeInitiator);
 
             NetworkEnvelope handshakeRequest = handshakeInitiator.initiate();
