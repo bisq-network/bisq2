@@ -21,7 +21,7 @@ To register different roles and nodes it requires to run those nodes in that ord
 Please read the descriptions in the oracle node document for more details about the setup of the oracle node and
 daonode.
 
-1. Make a dao proposal for the bonded role you want to register (including a Github issue)
+1. Make a dao proposal for the bonded role you want to register (including a GitHub issue)
 2. After accepted by DAO voting follow the instructions in Bisq 2 how to register the role or node.
 3. Once a role is successfully registered the left navigation shows an additional `Authorized role` menu item. At that
    screen there are tabs for each registered role in case the selected user profile has multiple roles. Nodes do not
