@@ -38,20 +38,35 @@ public class BisqEasyBuyerAsMakerProtocol extends BisqEasyProtocol {
                 .run(BisqEasyTakeOfferRequestHandler.class)
                 .to(MAKER_SENT_TAKE_OFFER_RESPONSE);
 
+        // Option 1: Seller sends first account data, then buyer sends btc address
+        addTransition()
+                .from(MAKER_SENT_TAKE_OFFER_RESPONSE)
+                .on(BisqEasyAccountDataMessage.class)
+                .run(BisqEasyAccountDataMessageHandler.class)
+                .to(BUYER_DID_NOT_SEND_BTC_ADDRESS_AND_RECEIVED_ACCOUNT_DATA);
+
+        addTransition()
+                .from(BUYER_DID_NOT_SEND_BTC_ADDRESS_AND_RECEIVED_ACCOUNT_DATA)
+                .on(BisqEasySendBtcAddressEvent.class)
+                .run(BisqEasySendBtcAddressEventHandler.class)
+                .to(BUYER_SENT_BTC_ADDRESS_AND_RECEIVED_ACCOUNT_DATA);
+
+        // Option 2: Buyer sends first btc address, then seller sends account data
         addTransition()
                 .from(MAKER_SENT_TAKE_OFFER_RESPONSE)
                 .on(BisqEasySendBtcAddressEvent.class)
                 .run(BisqEasySendBtcAddressEventHandler.class)
-                .to(BUYER_SENT_BTC_ADDRESS);
+                .to(BUYER_SENT_BTC_ADDRESS_AND_WAITING_FOR_ACCOUNT_DATA);
 
         addTransition()
-                .from(BUYER_SENT_BTC_ADDRESS)
+                .from(BUYER_SENT_BTC_ADDRESS_AND_WAITING_FOR_ACCOUNT_DATA)
                 .on(BisqEasyAccountDataMessage.class)
                 .run(BisqEasyAccountDataMessageHandler.class)
-                .to(BUYER_RECEIVED_ACCOUNT_DATA);
+                .to(BUYER_SENT_BTC_ADDRESS_AND_RECEIVED_ACCOUNT_DATA);
 
+        // Both options continue from here
         addTransition()
-                .from(BUYER_RECEIVED_ACCOUNT_DATA)
+                .from(BUYER_SENT_BTC_ADDRESS_AND_RECEIVED_ACCOUNT_DATA)
                 .on(BisqEasyConfirmFiatSentEvent.class)
                 .run(BisqEasyConfirmFiatSentEventHandler.class)
                 .to(BUYER_SENT_FIAT_SENT_CONFIRMATION);
@@ -92,12 +107,17 @@ public class BisqEasyBuyerAsMakerProtocol extends BisqEasyProtocol {
 
         // Cancel trade
         addTransition()
-                .from(BUYER_SENT_BTC_ADDRESS)
+                .from(BUYER_SENT_BTC_ADDRESS_AND_WAITING_FOR_ACCOUNT_DATA)
                 .on(BisqEasyCancelTradeMessage.class)
                 .run(BisqEasyCancelTradeMessageHandler.class)
                 .to(CANCELLED);
         addTransition()
-                .from(BUYER_RECEIVED_ACCOUNT_DATA)
+                .from(BUYER_DID_NOT_SEND_BTC_ADDRESS_AND_RECEIVED_ACCOUNT_DATA)
+                .on(BisqEasyCancelTradeMessage.class)
+                .run(BisqEasyCancelTradeMessageHandler.class)
+                .to(CANCELLED);
+        addTransition()
+                .from(BUYER_SENT_BTC_ADDRESS_AND_RECEIVED_ACCOUNT_DATA)
                 .on(BisqEasyCancelTradeMessage.class)
                 .run(BisqEasyCancelTradeMessageHandler.class)
                 .to(CANCELLED);
@@ -119,12 +139,17 @@ public class BisqEasyBuyerAsMakerProtocol extends BisqEasyProtocol {
 
         // Peer cancelled trade
         addTransition()
-                .from(BUYER_SENT_BTC_ADDRESS)
+                .from(BUYER_SENT_BTC_ADDRESS_AND_WAITING_FOR_ACCOUNT_DATA)
                 .on(BisqEasyCancelTradeEvent.class)
                 .run(BisqEasyCancelTradeEventHandler.class)
                 .to(CANCELLED);
         addTransition()
-                .from(BUYER_RECEIVED_ACCOUNT_DATA)
+                .from(BUYER_DID_NOT_SEND_BTC_ADDRESS_AND_RECEIVED_ACCOUNT_DATA)
+                .on(BisqEasyCancelTradeEvent.class)
+                .run(BisqEasyCancelTradeEventHandler.class)
+                .to(CANCELLED);
+        addTransition()
+                .from(BUYER_SENT_BTC_ADDRESS_AND_RECEIVED_ACCOUNT_DATA)
                 .on(BisqEasyCancelTradeEvent.class)
                 .run(BisqEasyCancelTradeEventHandler.class)
                 .to(CANCELLED);
