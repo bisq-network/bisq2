@@ -18,6 +18,7 @@ includeBuild("tor")
 
 include("network-common")
 include("i2p")
+include("i2p-v2")
 include("network")
 include("network-identity")
 include("socks5-socket-channel")
