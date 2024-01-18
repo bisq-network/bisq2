@@ -15,40 +15,27 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.node.envelope;
+package bisq.network.i2p;
 
 import bisq.network.common.PeerSocket;
-import bisq.network.p2p.message.NetworkEnvelope;
-import lombok.extern.slf4j.Slf4j;
+import lombok.Getter;
+import net.i2p.client.streaming.I2PSocket;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
-@Slf4j
-public class NetworkEnvelopeSocket implements Closeable {
-    private final PeerSocket socket;
+public class I2pSocket implements PeerSocket {
+    private final I2PSocket socket;
+    @Getter
     private final InputStream inputStream;
+    @Getter
     private final OutputStream outputStream;
 
-    public NetworkEnvelopeSocket(PeerSocket socket) throws IOException {
+    public I2pSocket(I2PSocket socket) throws IOException {
         this.socket = socket;
         this.inputStream = socket.getInputStream();
         this.outputStream = socket.getOutputStream();
-    }
-
-    public void send(NetworkEnvelope networkEnvelope) throws IOException {
-        bisq.network.protobuf.NetworkEnvelope proto = checkNotNull(networkEnvelope.toProto(),
-                "networkEnvelope.toProto() must not be null");
-        proto.writeDelimitedTo(outputStream);
-        outputStream.flush();
-    }
-
-    public bisq.network.protobuf.NetworkEnvelope receiveNextEnvelope() throws IOException {
-        return bisq.network.protobuf.NetworkEnvelope.parseDelimitedFrom(inputStream);
     }
 
     @Override

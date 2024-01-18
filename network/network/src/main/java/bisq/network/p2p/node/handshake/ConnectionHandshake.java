@@ -19,6 +19,7 @@ package bisq.network.p2p.node.handshake;
 
 import bisq.common.util.StringUtils;
 import bisq.network.common.Address;
+import bisq.network.common.PeerSocket;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.Capability;
@@ -32,6 +33,7 @@ import bisq.network.p2p.services.peergroup.BanList;
 import bisq.security.TorSignatureUtil;
 import bisq.security.keys.KeyBundle;
 import bisq.security.keys.TorKeyUtils;
+import bisq.tor.TorSocket;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -169,7 +171,8 @@ public final class ConnectionHandshake {
             // socket.setSoLinger(true, 100);
             socket.setSoTimeout(socketTimeout);
 
-            this.networkEnvelopeSocket = new NetworkEnvelopeSocket(socket);
+            PeerSocket peerSocket = new TorSocket(socket);
+            this.networkEnvelopeSocket = new NetworkEnvelopeSocket(peerSocket);
         } catch (IOException e) {
             e.printStackTrace();
         }
