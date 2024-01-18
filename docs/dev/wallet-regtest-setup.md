@@ -1,3 +1,5 @@
+_Note: This document might be partially outdated_
+
 # Wallet Regtest Setup
 
 In Bisq 2, we don't implement our own wallet. We rely on external wallets by making RPC calls to them. At the moment, we

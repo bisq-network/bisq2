@@ -1,3 +1,5 @@
+_Note: This document is outdated_
+
 ### IntelliJ IDEA: Application Run Configs
 
 Here are a few IntelliJ IDEA run configurations for running two seeds and different desktop nodes.
@@ -5,6 +7,7 @@ Here are a few IntelliJ IDEA run configurations for running two seeds and differ
 #### Run Config: `Seed_1` (clearnet + tor + i2p)
 
 Classpath of module (Alt+O)
+
 ```
 apps.seed-node-app.main
 ```
@@ -42,7 +45,6 @@ Copy the `Seed_1` run configuration, rename it to `Seed_2` and change:
 -Dapplication.network.configByTransportType.i2p.defaultNodePort=5001 
 ```
 
-
 #### Run Config: `Alice_clear`
 
 Classpath of module (Alt+O)
@@ -66,7 +68,6 @@ VM Options (Alt+V)
 -Dapplication.network.seedAddressByTransportType.clear.0=127.0.0.1:8000 
 -Dapplication.network.seedAddressByTransportType.clear.1=127.0.0.1:8001
 ```
-
 
 #### Run Config: `Alice_tor`
 
@@ -97,21 +98,20 @@ Copy the `Alice_clear` run configuration, rename it to `Alice_i2p` and change:
 * Choose Gradle Project as `bisq2:desktop`
 * Add VM options as necessary, in the format `-Dprop=value` (e.g. `-Dbisq.application.appName=bisq_Alice_i2p`)
 
-
 ### Command line: Gradle run configs
 
 Start a seed with:
 
 ```
 # Using default settings
-./gradlew seed:run
+./gradlew apps:seed-node-app:run
 ```
 
 For example, to start two local seeds, `bisq2_seed1` and `bisq2_seed2`, reachable on clearnet:
 
 ```
 # Seed 1
-./gradlew seed:run \
+./gradlew apps:seed-node-app:run \
     -Dapplication.appName=bisq2_seed1 \
     -Dapplication.network.configByTransportType.clear.defaultNodePort=8000 \
     -Dapplication.network.supportedTransportTypes.0=CLEAR \
@@ -119,7 +119,7 @@ For example, to start two local seeds, `bisq2_seed1` and `bisq2_seed2`, reachabl
     -Dapplication.network.seedAddressByTransportType.clear.1=127.0.0.1:8001
 
 # Seed 2
-./gradlew seed:run \
+./gradlew apps:seed-node-app:run \
     -Dapplication.appName=bisq2_seed2 \
     -Dapplication.network.configByTransportType.clear.defaultNodePort=8001 \
     -Dapplication.network.supportedTransportTypes.0=CLEAR \
@@ -131,14 +131,14 @@ Start a desktop client with:
 
 ```
 # Using default settings
-./gradlew desktop:run
+./gradlew desktop:desktop-app:run
 ```
 
 To start a custom desktop client connecting only to clearnet:
 
 ```
 # Local client on clearnet only
-./gradlew desktop:run \
+./gradlew desktop:desktop-app:run \
     -Dapplication.appName=bisq_Alice_clear \
     -Dapplication.network.supportedTransportTypes.0=CLEAR \
     -Dapplication.network.seedAddressByTransportType.clear.0=127.0.0.1:8000 \

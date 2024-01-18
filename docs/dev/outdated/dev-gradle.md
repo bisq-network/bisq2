@@ -1,3 +1,5 @@
+_Note: This document is outdated_
+
 ## How to update the Gradle Wrapper
 
 The wrapper can update itself using:
@@ -9,10 +11,9 @@ The wrapper can update itself using:
 ```
 
 - `--gradle-version`: the version you wish to update to
-- `--distribution-type`: `bin` or `all`. Use the `all` distribution to provide the sources needed for the IDE for 
-code-completion and the ability to navigate the Gradle source code.
+- `--distribution-type`: `bin` or `all`. Use the `all` distribution to provide the sources needed for the IDE for
+  code-completion and the ability to navigate the Gradle source code.
 - `--gradle-distribution-sha256-sum`: the checksum[^1] for the chosen distribution
-
 
 ## Managing dependency versions
 
@@ -32,7 +33,6 @@ of a version declaration can be influenced using various keywords[^5].
 
 The platform dependency constraints are maintained in `platform/build.gradle.kts`.
 
-
 ### Usage
 
 To combine the strengths of a version catalog
@@ -51,9 +51,8 @@ In addition, we can use rich versions[^5] for more nuanced version definitions.
 
 To summarize:
 - Use the version catalog to define dependencies usable across all subprojects.
-- Use the platform, by referencing dependencies from the catalog, to define constraints affecting all dependencies, 
-direct and transitive.
-
+- Use the platform, by referencing dependencies from the catalog, to define constraints affecting all dependencies,
+  direct and transitive.
 
 ## Package binaries
 
@@ -70,7 +69,6 @@ Requirements[^7] for building on:
 - Debian: `fakeroot`
 - macOS: Xcode command line tools are required when the `--mac-sign` or `--icon` options are used.
 - Windows: WiX 3.0 or later is required
-
 
 ## Notes on java modularization
 
@@ -97,7 +95,6 @@ compileJava {
     ])
 }
 ```
-
 
 [^1]: https://gradle.org/release-checksums/
 [^2]: https://docs.gradle.org/7.4.1/userguide/platforms.html#sub:platforms-vs-catalog

@@ -45,7 +45,7 @@ public class SwaggerResolution {
             try {
                 OpenAPI api = new OpenAPI();
                 Info info = new Info()
-                        .title("Bisq v2 REST API")
+                        .title("Bisq 2 REST API")
                         .description("This is the rest API description for Bisq2, For more Information about Bisq, see https://bisq.network")
 //                        .termsOfService("http://swagger.io/terms/")
 //                        .contact(new Contact()

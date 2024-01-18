@@ -1,12 +1,17 @@
+_Note: This document is partially outdated, though still useful to read for new developers_
+
 # Overview about the distributed data storage of the P2P network
 
-This document should give a high level overview about the distributed data store concept, the different use cases 
+This document should give a high level overview about the distributed data store concept, the different use cases
 and data types.
 
 ## Use cases
+
 We have several use cases for distributing data to the P2P network.
+
 - **AuthenticatedData**: Offers, public chat messages
-- **MailboxData**: Mailbox message (if peer is not online we store message in encrypted form in the p2p network, similar to a mailbox)
+- **MailboxData**: Mailbox message (if peer is not online we store message in encrypted form in the p2p network, similar
+  to a mailbox)
 - **AuthorizedData**: DaoBridge data (proofs for bonded roles,...), Filter, alert, arbitrator/mediator registrations. Those data can only be published by users who have received an authorization (private) key.
 - **AppendOnlyData**: Account age witness data, trade statistics in Bisq 1 (not intended to be used in Bisq 2)
 
@@ -50,7 +55,7 @@ Once the store reaches its limit it would reject newly added data, thus protects
 All data is held in memory and is persisted at change (using a lazy persistence approach to reduce disk IO). Only at 
 startup we read data from the persisted file. We apply pruning at initial read. Having stored data (also offers) reduces 
 potentially data load at the initial data requests in case the user have just restarted. If the TTL have rendered the 
-persisted data already invalid the persisted data is pruned, so only costs are disk storage size but that's cheap. 
+persisted data already invalid the persisted data is pruned, so only costs are disk storage size but that's cheap.
 
 Data which are provided by the P2P network like offers or public chat messages are stored only at those data stores.
 The domain only holds a reference and does not duplicate data in the domain models.

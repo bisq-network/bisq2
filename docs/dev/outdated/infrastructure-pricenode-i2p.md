@@ -1,3 +1,5 @@
+_Note: This document is partially outdated_
+
 ## Expose a pricenode via I2P
 
 This documents how to create a tunnel between an I2P address and an existing public pricenode. The outcome in this
