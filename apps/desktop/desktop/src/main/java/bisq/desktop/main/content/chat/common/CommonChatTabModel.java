@@ -21,9 +21,7 @@ import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatChannelDomain;
 import bisq.desktop.main.content.ContentTabModel;
 import bisq.desktop.main.content.chat.ChatUtil;
-import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableMap;
@@ -37,7 +35,6 @@ final class CommonChatTabModel extends ContentTabModel {
     private final ChatChannelDomain chatChannelDomain;
     final ObservableMap<String, ChannelTabButtonModel> channelTabButtonModelByChannelId = FXCollections.observableMap(new HashMap<>());
     ObjectProperty<ChannelTabButtonModel> selectedChannelTabButtonModel = new SimpleObjectProperty<>();
-    private final BooleanProperty hasSelectedChannel = new SimpleBooleanProperty();
     ChannelTabButtonModel previousSelectedChannelTabButtonModel;
 
     CommonChatTabModel(ChatChannelDomain chatChannelDomain) {
