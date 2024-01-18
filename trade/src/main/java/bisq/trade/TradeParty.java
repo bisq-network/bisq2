@@ -49,7 +49,8 @@ public abstract class TradeParty implements Proto {
     public bisq.trade.protobuf.TradeParty.Builder getTradePartyBuilder() {
         bisq.trade.protobuf.TradeParty.Builder builder = bisq.trade.protobuf.TradeParty.newBuilder()
                 .setNetworkId(networkId.toProto());
-        Optional.ofNullable(contractSignatureData.get()).ifPresent(ContractSignatureData::toProto);
+        Optional.ofNullable(contractSignatureData.get())
+                .ifPresent(contractSignatureData -> builder.setContractSignatureData(contractSignatureData.toProto()));
         return builder;
     }
 

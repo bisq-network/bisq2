@@ -47,7 +47,7 @@ public class BisqEasyTakeOfferResponseHandler extends TradeMessageHandler<BisqEa
 
     @Override
     protected void verifyMessage(BisqEasyTakeOfferResponse message) {
-       super.verifyMessage(message);
+        super.verifyMessage(message);
 
         ContractSignatureData makersContractSignatureData = message.getContractSignatureData();
         ContractSignatureData takersContractSignatureData = trade.getTaker().getContractSignatureData().get();
