@@ -24,8 +24,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 /**
- * <p>An instance of EncryptedData is a holder for an initialization vector and encrypted bytes. It is typically
- * used to hold encrypted private key bytes.</p>
+ * <p>An instance of EncryptedData is a holder for an initialization vector and encrypted bytes.</p>
  *
  * <p>The initialisation vector is random data that is used to initialise the AES block cipher when the
  * private key bytes were encrypted. You need these for decryption.</p>
@@ -55,8 +54,8 @@ public final class EncryptedData implements PersistableProto {
     @Override
     public String toString() {
         return "EncryptedData{" +
-                "\r\n     initialisationVector=" + Hex.encode(iv) +
-                ",\r\n     encryptedBytes=" + Hex.encode(cipherText) +
+                "\r\n     iv=" + Hex.encode(iv) +
+                ",\r\n     cipherText=" + Hex.encode(cipherText) +
                 "\r\n}";
     }
 }
