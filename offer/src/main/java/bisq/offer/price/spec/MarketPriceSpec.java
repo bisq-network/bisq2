@@ -30,6 +30,11 @@ import lombok.ToString;
 public final class MarketPriceSpec implements PriceSpec {
 
     public MarketPriceSpec() {
+        verify();
+    }
+
+    @Override
+    public void verify() {
     }
 
     @Override

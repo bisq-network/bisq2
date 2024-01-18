@@ -19,6 +19,7 @@ package bisq.support.mediation;
 
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
@@ -44,7 +45,12 @@ public final class MediatorsResponse implements MailboxMessage {
     public MediatorsResponse(String tradeId) {
         this.tradeId = tradeId;
 
-        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize()); //425
+        verify();
+    }
+
+    @Override
+    public void verify() {
+        NetworkDataValidation.validateTradeId(tradeId);
     }
 
     @Override

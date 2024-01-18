@@ -21,6 +21,7 @@ import bisq.common.util.DateUtils;
 import bisq.common.util.Version;
 import lombok.extern.slf4j.Slf4j;
 
+import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -56,6 +57,11 @@ public class NetworkDataValidation {
                 "Public key not of the expected size. pubKey=" + Arrays.toString(pubKey));
     }
 
+    public static void validateECPubKey(PublicKey publicKey) {
+        validateECPubKey(publicKey.getEncoded());
+    }
+
+
     // IDs are created with StringUtils.createUid() which generates 36 chars. We allow upt to 50 for more flexibility.
     // Can be short id as well or custom IDs...
     public static void validateId(String id) {
@@ -69,6 +75,11 @@ public class NetworkDataValidation {
     // Profile ID is hash as hex
     public static void validateProfileId(String profileId) {
         checkArgument(profileId.length() == 40, "Profile ID must be 40 characters. profileId=" + profileId);
+    }
+
+    public static void validateTradeId(String tradeId) {
+        // For private channels we combine user profile IDs for channelId
+        validateText(tradeId, 200);
     }
 
     public static void validateText(String text, int maxLength) {
@@ -88,8 +99,8 @@ public class NetworkDataValidation {
     // Longest supported version is xxx.xxx.xxx
     public static void validateVersion(String version) {
         Version.validate(version);
-        checkArgument(version.length() <= 11 && version.length() > 0,
-                "Version too long. version=" + version);
+        checkArgument(version.length() <= 11 && !version.isEmpty(),
+                "Version too long or empty. version=" + version);
     }
 
     // Language or country code

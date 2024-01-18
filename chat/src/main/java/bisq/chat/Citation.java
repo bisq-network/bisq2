@@ -1,7 +1,6 @@
 package bisq.chat;
 
 import bisq.common.proto.NetworkProto;
-import bisq.common.util.StringUtils;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -18,8 +17,13 @@ public final class Citation implements NetworkProto {
 
     public Citation(String authorUserProfileId, String text) {
         this.authorUserProfileId = authorUserProfileId;
-        this.text = StringUtils.truncate(text, MAX_TEXT_LENGTH - 10);
+        this.text = text;
 
+        verify();
+    }
+
+    @Override
+    public void verify() {
         NetworkDataValidation.validateProfileId(authorUserProfileId);
         NetworkDataValidation.validateText(text, MAX_TEXT_LENGTH);
     }

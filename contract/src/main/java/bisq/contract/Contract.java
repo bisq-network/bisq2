@@ -20,6 +20,7 @@ package bisq.contract;
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.proto.NetworkProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.validation.NetworkDataValidation;
 import bisq.offer.Offer;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -43,6 +44,11 @@ public abstract class Contract<T extends Offer<?, ?>> implements NetworkProto {
         this.offer = offer;
         this.protocolType = protocolType;
         this.maker = new Party(Role.MAKER, offer.getMakerNetworkId());
+    }
+
+    @Override
+    public void verify() {
+        NetworkDataValidation.validateDate(takeOfferDate);
     }
 
     @Override

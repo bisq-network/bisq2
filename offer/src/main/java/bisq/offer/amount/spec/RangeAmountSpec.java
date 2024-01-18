@@ -22,6 +22,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Getter
 @ToString
 @EqualsAndHashCode
@@ -32,6 +34,13 @@ public abstract class RangeAmountSpec implements AmountSpec {
     public RangeAmountSpec(long minAmount, long maxAmount) {
         this.minAmount = minAmount;
         this.maxAmount = maxAmount;
+    }
+
+    @Override
+    public void verify() {
+        checkArgument(minAmount > 0);
+        checkArgument(maxAmount > 0);
+        checkArgument(maxAmount >= minAmount);
     }
 
     public bisq.offer.protobuf.RangeAmountSpec.Builder getRangeAmountSpecBuilder() {

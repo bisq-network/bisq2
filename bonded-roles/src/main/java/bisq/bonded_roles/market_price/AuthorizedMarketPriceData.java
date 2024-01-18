@@ -54,9 +54,13 @@ public final class AuthorizedMarketPriceData implements AuthorizedDistributedDat
         this.marketPriceByCurrencyMap = marketPriceByCurrencyMap;
         this.staticPublicKeysProvided = staticPublicKeysProvided;
 
-        checkArgument(marketPriceByCurrencyMap.size() < 100,
-                "marketPriceByCurrencyMap size must not be >= 100" + marketPriceByCurrencyMap.size());
-        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize()); // 5498
+        verify();
+    }
+
+    @Override
+    public void verify() {
+        checkArgument(marketPriceByCurrencyMap.size() < 200,
+                "marketPriceByCurrencyMap size must be < 200" + marketPriceByCurrencyMap.size());
     }
 
     @Override

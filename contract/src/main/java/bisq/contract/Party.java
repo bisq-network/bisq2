@@ -33,6 +33,12 @@ public final class Party implements NetworkProto {
     public Party(Role role, NetworkId networkId) {
         this.role = role;
         this.networkId = networkId;
+
+        verify();
+    }
+
+    @Override
+    public void verify() {
     }
 
     @Override

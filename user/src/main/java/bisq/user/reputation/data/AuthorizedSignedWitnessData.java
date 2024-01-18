@@ -51,10 +51,13 @@ public final class AuthorizedSignedWitnessData implements AuthorizedDistributedD
         this.witnessSignDate = witnessSignDate;
         this.staticPublicKeysProvided = staticPublicKeysProvided;
 
+        verify();
+    }
+
+    @Override
+    public void verify() {
         NetworkDataValidation.validateProfileId(profileId);
         NetworkDataValidation.validateDate(witnessSignDate);
-
-        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize());
     }
 
     @Override

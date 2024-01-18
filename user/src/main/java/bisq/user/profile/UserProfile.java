@@ -82,11 +82,14 @@ public final class UserProfile implements DistributedData {
         this.terms = terms;
         this.statement = statement;
 
+        verify();
+    }
+
+    @Override
+    public void verify() {
         NetworkDataValidation.validateText(nickName, MAX_LENGTH_NICK_NAME);
         NetworkDataValidation.validateText(terms, MAX_LENGTH_TERMS);
         NetworkDataValidation.validateText(statement, MAX_LENGTH_STATEMENT);
-
-        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize()); // 310
     }
 
     @Override

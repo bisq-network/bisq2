@@ -35,6 +35,12 @@ public class SignedTwoPartyContract<T extends Offer<?, ?>> implements NetworkPro
         this.contract = contract;
         this.makerSignatureData = makerSignatureData;
         this.takerSignatureData = takerSignatureData;
+
+        verify();
+    }
+
+    @Override
+    public void verify() {
     }
 
     @Override

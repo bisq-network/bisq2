@@ -57,12 +57,15 @@ public final class AuthorizedBondedReputationData implements AuthorizedDistribut
         this.lockTime = lockTime;
         this.staticPublicKeysProvided = staticPublicKeysProvided;
 
+        verify();
+    }
+
+    @Override
+    public void verify() {
+        checkArgument(amount > 0);
         NetworkDataValidation.validateDate(time);
         NetworkDataValidation.validateHash(hash);
-        checkArgument(amount > 0);
         checkArgument(lockTime >= 50_000);
-
-        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize());//38
     }
 
     @Override

@@ -1,6 +1,7 @@
 package bisq.account.accounts;
 
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -10,10 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 import java.util.Optional;
 
-import static bisq.account.protobuf.Account.MessageCase.MESSAGE_NOT_SET;
-import static bisq.account.protobuf.BankAccountPayload.MessageCase.ACHTRANSFERACCOUNTPAYLOAD;
-import static bisq.account.protobuf.BankAccountPayload.MessageCase.NATIONALBANKACCOUNTPAYLOAD;
-
+//TODO use Optional instead of Nullable
 @EqualsAndHashCode(callSuper = true)
 @Setter
 @Getter
@@ -24,7 +22,6 @@ public abstract class BankAccountPayload extends CountryBasedAccountPayload {
     protected String bankName;
     protected String branchId;
     protected String accountNr;
-    @Nullable
     protected String accountType;
     @Nullable
     protected String holderTaxId;
@@ -44,6 +41,7 @@ public abstract class BankAccountPayload extends CountryBasedAccountPayload {
                                  @Nullable String bankId,
                                  @Nullable String nationalAccountId) {
         super(id, paymentMethodName, countryCode);
+
         this.holderName = Optional.ofNullable(holderName).orElse("");
         this.bankName = Optional.ofNullable(bankName).orElse("");
         this.branchId = Optional.ofNullable(branchId).orElse("");
@@ -52,6 +50,23 @@ public abstract class BankAccountPayload extends CountryBasedAccountPayload {
         this.holderTaxId = holderTaxId;
         this.bankId = Optional.ofNullable(bankId).orElse("");
         this.nationalAccountId = nationalAccountId;
+    }
+
+    @Override
+    public void verify() {
+        super.verify();
+        NetworkDataValidation.validateText(holderName, 100);
+        NetworkDataValidation.validateText(bankName, 100);
+        NetworkDataValidation.validateText(branchId, 30);
+        NetworkDataValidation.validateText(accountNr, 30);
+        NetworkDataValidation.validateText(accountType, 20);
+        if (holderTaxId != null) {
+            NetworkDataValidation.validateText(holderTaxId, 50);
+        }
+        NetworkDataValidation.validateText(bankId, 50);
+        if (nationalAccountId != null) {
+            NetworkDataValidation.validateText(nationalAccountId, 50);
+        }
     }
 
     protected bisq.account.protobuf.BankAccountPayload.Builder getBankAccountPayloadBuilder() {

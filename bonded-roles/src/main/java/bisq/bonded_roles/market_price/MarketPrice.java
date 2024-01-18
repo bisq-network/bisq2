@@ -20,6 +20,7 @@ package bisq.bonded_roles.market_price;
 import bisq.common.currency.Market;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.proto.NetworkProto;
+import bisq.common.validation.NetworkDataValidation;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -50,8 +51,16 @@ public final class MarketPrice implements NetworkProto {
         this.priceQuote = priceQuote;
         this.timestamp = timestamp;
         this.marketPriceProvider = marketPriceProvider;
+
+        verify();
     }
 
+    @Override
+    public void verify() {
+        NetworkDataValidation.validateDate(timestamp);
+    }
+
+    @Override
     public bisq.bonded_roles.protobuf.MarketPrice toProto() {
         return bisq.bonded_roles.protobuf.MarketPrice.newBuilder()
                 .setPriceQuote(priceQuote.toProto())

@@ -54,6 +54,12 @@ public final class PocContract implements NetworkProto {
         this.quoteSideAmount = quoteSideAmount;
         this.baseSidePaymentMethod = baseSidePaymentMethod;
         this.quoteSidePaymentMethod = quoteSidePaymentMethod;
+
+        verify();
+    }
+
+    @Override
+    public void verify() {
     }
 
     @Override

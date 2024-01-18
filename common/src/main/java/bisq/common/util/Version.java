@@ -21,8 +21,8 @@ import lombok.Getter;
 
 public class Version implements Comparable<Version> {
     public static void validate(String versionAsString) {
-        if (versionAsString == null) {
-            throw new IllegalArgumentException("Version must not be null");
+        if (versionAsString == null || versionAsString.isEmpty()) {
+            throw new IllegalArgumentException("Version must not be null or empty");
         }
         if (!versionAsString.matches("[0-9]+(\\.[0-9]+)*")) {
             throw new IllegalArgumentException("Invalid version format. version=" + versionAsString);

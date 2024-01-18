@@ -27,6 +27,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Getter
 @ToString
 @EqualsAndHashCode
@@ -39,7 +41,15 @@ public final class PeerExchangeResponse implements EnvelopePayloadMessage {
         this.peers = peers;
         // We need to sort deterministically as the data is used in the proof of work check
         Collections.sort(this.peers);
+
+        verify();
     }
+
+    @Override
+    public void verify() {
+        checkArgument(peers.size() < 10000);
+    }
+
 
     @Override
     public bisq.network.protobuf.EnvelopePayloadMessage toProto() {

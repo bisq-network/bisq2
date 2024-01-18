@@ -83,7 +83,11 @@ public final class MailboxSequentialData implements NetworkProto {
         this.created = created;
         this.sequenceNumber = sequenceNumber;
 
+        verify();
+    }
 
+    @Override
+    public void verify() {
         NetworkDataValidation.validateHash(senderPublicKeyHash);
         NetworkDataValidation.validateHash(receiversPublicKeyHash);
         NetworkDataValidation.validateECPubKey(receiversPubKeyBytes);

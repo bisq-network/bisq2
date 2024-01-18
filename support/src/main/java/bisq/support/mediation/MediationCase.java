@@ -2,6 +2,7 @@ package bisq.support.mediation;
 
 import bisq.common.observable.Observable;
 import bisq.common.proto.NetworkProto;
+import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -23,6 +24,13 @@ public class MediationCase implements NetworkProto {
         this.mediationRequest = mediationRequest;
         this.requestDate = requestDate;
         this.isClosed.set(isClosed);
+
+        verify();
+    }
+
+    @Override
+    public void verify() {
+        NetworkDataValidation.validateDate(requestDate);
     }
 
     @Override

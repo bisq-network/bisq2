@@ -27,7 +27,5 @@ package bisq.common.proto;
  * to deal with it as well. Rust for instance randomize the key set in maps by default for security reasons).
  */
 public interface NetworkProto extends Proto {
-    // TODO Remove default implementation
-    default void verify() {
-    }
+    void verify();
 }

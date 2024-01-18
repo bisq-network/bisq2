@@ -29,6 +29,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Getter
 @ToString
 @EqualsAndHashCode
@@ -41,8 +43,16 @@ public final class Capability implements NetworkProto {
         this.supportedTransportTypes = supportedTransportTypes;
         // We need to sort deterministically as the data is used in the proof of work check
         Collections.sort(this.supportedTransportTypes);
+
+        verify();
     }
 
+    @Override
+    public void verify() {
+        checkArgument(supportedTransportTypes.size() <= TransportType.values().length);
+    }
+
+    @Override
     public bisq.network.protobuf.Capability toProto() {
         return bisq.network.protobuf.Capability.newBuilder()
                 .setAddress(address.toProto())

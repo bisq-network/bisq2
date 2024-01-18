@@ -86,6 +86,11 @@ public final class RefreshAuthenticatedDataRequest implements DataRequest {
         this.sequenceNumber = sequenceNumber;
         this.signature = signature;
 
+        verify();
+    }
+
+    @Override
+    public void verify() {
         NetworkDataValidation.validateHash(hash);
         NetworkDataValidation.validateECPubKey(ownerPublicKeyBytes);
         NetworkDataValidation.validateECSignature(signature);

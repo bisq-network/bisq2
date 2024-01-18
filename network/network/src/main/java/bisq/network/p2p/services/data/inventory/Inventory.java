@@ -31,6 +31,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Getter
 @ToString
 @EqualsAndHashCode
@@ -46,8 +48,16 @@ public final class Inventory implements NetworkProto {
         // We need to sort deterministically as the data is used in the proof of work check
         // todo find cheaper solution or cache serialized result to avoid that its done repeatedly 
         this.entries.sort(Comparator.comparing((DataRequest e) -> new ByteArray(e.serialize())));
+
+        verify();
     }
 
+    @Override
+    public void verify() {
+        checkArgument(entries.size() < 1000);
+    }
+
+    @Override
     public bisq.network.protobuf.Inventory toProto() {
         return bisq.network.protobuf.Inventory.newBuilder()
                 .addAllEntries(entries.stream().map(e -> e.toProto().getDataRequest()).collect(Collectors.toList()))

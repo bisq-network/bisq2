@@ -87,7 +87,10 @@ public abstract class Offer<B extends PaymentMethodSpec<?>, Q extends PaymentMet
         this.baseSidePaymentMethodSpecs.sort(Comparator.comparingInt(PaymentMethodSpec::hashCode));
         this.quoteSidePaymentMethodSpecs.sort(Comparator.comparingInt(PaymentMethodSpec::hashCode));
         this.offerOptions.sort(Comparator.comparingInt(OfferOption::hashCode));
+    }
 
+    @Override
+    public void verify() {
         NetworkDataValidation.validateId(id);
         NetworkDataValidation.validateDate(date);
 
@@ -97,6 +100,7 @@ public abstract class Offer<B extends PaymentMethodSpec<?>, Q extends PaymentMet
         checkArgument(offerOptions.size() < 10);
     }
 
+    @Override
     public abstract bisq.offer.protobuf.Offer toProto();
 
     protected bisq.offer.protobuf.Offer.Builder getOfferBuilder() {

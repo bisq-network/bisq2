@@ -60,15 +60,17 @@ public final class AuthorizeSignedWitnessRequest implements MailboxMessage {
         this.pubKeyBase64 = pubKeyBase64;
         this.signatureBase64 = signatureBase64;
 
+        verify();
+    }
+
+    @Override
+    public void verify() {
         NetworkDataValidation.validateProfileId(profileId);
         NetworkDataValidation.validateHashAsHex(hashAsHex);
         NetworkDataValidation.validateDate(accountAgeWitnessDate);
         NetworkDataValidation.validateDate(witnessSignDate);
         NetworkDataValidation.validatePubKeyBase64(pubKeyBase64);
         NetworkDataValidation.validateSignatureBase64(signatureBase64);
-
-
-        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize());
     }
 
     @Override

@@ -47,8 +47,15 @@ public final class MailboxData implements StorageData {
     public MailboxData(ConfidentialMessage confidentialMessage, MetaData metaData) {
         this.confidentialMessage = confidentialMessage;
         this.metaData = metaData;
+
+        verify();
     }
 
+    @Override
+    public void verify() {
+    }
+
+    @Override
     public bisq.network.protobuf.MailboxData toProto() {
         return bisq.network.protobuf.MailboxData.newBuilder()
                 .setConfidentialMessage(confidentialMessage.toProto().getConfidentialMessage())

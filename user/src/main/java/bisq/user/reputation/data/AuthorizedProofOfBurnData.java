@@ -55,11 +55,14 @@ public final class AuthorizedProofOfBurnData implements AuthorizedDistributedDat
         this.hash = hash;
         this.staticPublicKeysProvided = staticPublicKeysProvided;
 
+        verify();
+    }
+
+    @Override
+    public void verify() {
         NetworkDataValidation.validateDate(time);
         NetworkDataValidation.validateHash(hash);
         checkArgument(amount > 0);
-
-        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize());//34
     }
 
     @Override

@@ -33,6 +33,12 @@ public final class NetworkLoadExchangeResponse implements EnvelopePayloadMessage
     public NetworkLoadExchangeResponse(int requestNonce, NetworkLoad networkLoad) {
         this.requestNonce = requestNonce;
         this.networkLoad = networkLoad;
+
+        verify();
+    }
+
+    @Override
+    public void verify() {
     }
 
     @Override

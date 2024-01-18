@@ -27,6 +27,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Getter
 @ToString
 @EqualsAndHashCode
@@ -37,8 +39,17 @@ public final class DataFilter implements NetworkProto {
         this.filterEntries = filterEntries;
         // We need to sort deterministically as the data is used in the proof of work check
         Collections.sort(this.filterEntries);
+
+        verify();
     }
 
+    @Override
+    public void verify() {
+
+        checkArgument(filterEntries.size() < 1000);
+    }
+
+    @Override
     public bisq.network.protobuf.DataFilter toProto() {
         return bisq.network.protobuf.DataFilter.newBuilder()
                 .addAllFilterEntries(filterEntries.stream()

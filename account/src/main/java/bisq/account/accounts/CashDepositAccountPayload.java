@@ -1,6 +1,7 @@
 package bisq.account.accounts;
 
 import bisq.account.protobuf.AccountPayload;
+import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -14,16 +15,25 @@ public final class CashDepositAccountPayload extends BankAccountPayload {
 
     private final String requirements;
 
-    protected CashDepositAccountPayload(String id, String paymentMethodName, String countryCode,
-                                         String holderName, String bankName, String branchId,
-                                         String accountNr, String accountType,
-                                         String holderTaxId, String bankId,
-                                         String nationalAccountId, String requirements) {
+    public CashDepositAccountPayload(String id, String paymentMethodName, String countryCode,
+                                     String holderName, String bankName, String branchId,
+                                     String accountNr, String accountType,
+                                     String holderTaxId, String bankId,
+                                     String nationalAccountId, String requirements) {
         super(id, paymentMethodName, countryCode,
                 holderName, bankName, branchId,
                 accountNr, accountType, holderTaxId,
                 bankId, nationalAccountId);
         this.requirements = requirements;
+
+        verify();
+    }
+
+    @Override
+    public void verify() {
+        super.verify();
+
+        NetworkDataValidation.validateText(requirements, 500);
     }
 
     @Override

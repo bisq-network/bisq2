@@ -57,13 +57,16 @@ public final class AuthorizeAccountAgeRequest implements MailboxMessage {
         this.pubKeyBase64 = pubKeyBase64;
         this.signatureBase64 = signatureBase64;
 
+        verify();
+    }
+
+    @Override
+    public void verify() {
         NetworkDataValidation.validateProfileId(profileId);
         NetworkDataValidation.validateHashAsHex(hashAsHex);
         NetworkDataValidation.validateDate(date);
         NetworkDataValidation.validatePubKeyBase64(pubKeyBase64);
         NetworkDataValidation.validateSignatureBase64(signatureBase64);
-
-        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize());//814
     }
 
     @Override

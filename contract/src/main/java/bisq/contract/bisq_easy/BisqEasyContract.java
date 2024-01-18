@@ -37,11 +37,11 @@ import java.util.Optional;
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public class BisqEasyContract extends TwoPartyContract<BisqEasyOffer> {
+public final class BisqEasyContract extends TwoPartyContract<BisqEasyOffer> {
     private final long baseSideAmount;
     private final long quoteSideAmount;
-    protected final BitcoinPaymentMethodSpec baseSidePaymentMethodSpec;
-    protected final FiatPaymentMethodSpec quoteSidePaymentMethodSpec;
+    private final BitcoinPaymentMethodSpec baseSidePaymentMethodSpec;
+    private final FiatPaymentMethodSpec quoteSidePaymentMethodSpec;
     private final Optional<UserProfile> mediator;
     private final PriceSpec agreedPriceSpec;
     private final long marketPrice;
@@ -90,6 +90,13 @@ public class BisqEasyContract extends TwoPartyContract<BisqEasyOffer> {
         this.agreedPriceSpec = agreedPriceSpec;
         this.marketPrice = marketPrice;
         this.takeOfferDate = takeOfferDate;
+
+        verify();
+    }
+
+    @Override
+    public void verify() {
+        super.verify();
     }
 
     @Override

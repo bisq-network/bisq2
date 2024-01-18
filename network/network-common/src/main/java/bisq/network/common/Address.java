@@ -45,20 +45,34 @@ public final class Address implements NetworkProto, Comparable<Address> {
             this.port = -1;
         }
 
-        NetworkDataValidation.validateText(host, 700);
+        verify();
     }
 
     public Address(String host, int port) {
         this.host = maybeConvertLocalHost(host);
         this.port = port;
 
-        NetworkDataValidation.validateText(host, 700);
+        verify();
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protobuf
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Override
+    public void verify() {
+        if (isTorAddress()) {
+            NetworkDataValidation.validateText(host, 62);
+        } else if (isClearNetAddress()) {
+            NetworkDataValidation.validateText(host, 45);
+        } else {
+            // I2P
+            NetworkDataValidation.validateText(host, 512);
+        }
+    }
+
+    @Override
     public bisq.network.common.protobuf.Address toProto() {
         return bisq.network.common.protobuf.Address.newBuilder()
                 .setHost(host)

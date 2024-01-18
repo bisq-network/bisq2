@@ -44,7 +44,12 @@ public final class BisqEasyTakeOfferRequest extends BisqEasyTradeMessage {
         this.bisqEasyContract = bisqEasyContract;
         this.contractSignatureData = contractSignatureData;
 
-        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize()); //1158
+        verify();
+    }
+
+    @Override
+    public void verify() {
+        super.verify();
     }
 
     @Override

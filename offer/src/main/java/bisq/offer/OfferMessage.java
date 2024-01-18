@@ -40,7 +40,11 @@ public final class OfferMessage implements DistributedData {
     public OfferMessage(Offer<?, ?> offer) {
         this.offer = offer;
 
-        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize());
+        verify();
+    }
+
+    @Override
+    public void verify() {
     }
 
     @Override

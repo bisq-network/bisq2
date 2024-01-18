@@ -33,6 +33,12 @@ public final class FixPriceSpec implements PriceSpec {
 
     public FixPriceSpec(PriceQuote priceQuote) {
         this.priceQuote = priceQuote;
+
+        verify();
+    }
+
+    @Override
+    public void verify() {
     }
 
     @Override

@@ -84,6 +84,13 @@ public final class BisqEasyOffer extends Offer<BitcoinPaymentMethodSpec, FiatPay
         this.supportedLanguageCodes = supportedLanguageCodes;
         Collections.sort(this.supportedLanguageCodes);
 
+        verify();
+    }
+
+    @Override
+    public void verify() {
+        super.verify();
+
         NetworkDataValidation.validateText(supportedLanguageCodes.toString(), 100);
     }
 

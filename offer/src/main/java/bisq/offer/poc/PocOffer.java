@@ -23,9 +23,9 @@ import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
+import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.identity.NetworkId;
 import bisq.offer.Direction;
 import bisq.offer.options.OfferOption;
 import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
@@ -100,6 +100,12 @@ public final class PocOffer implements DistributedData {
         this.baseSidePaymentMethodSpecs = baseSidePaymentMethodSpecs;
         this.quoteSidePaymentMethodSpecs = quoteSidePaymentMethodSpecs;
         this.offerOptions = offerOptions;
+
+        verify();
+    }
+
+    @Override
+    public void verify() {
     }
 
     @Override

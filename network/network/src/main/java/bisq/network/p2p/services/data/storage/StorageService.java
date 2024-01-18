@@ -399,8 +399,8 @@ public class StorageService {
 
     private Set<String> getExistingStoreKeys(String directory) {
         return NetworkStorageWhiteList.getClassNames().stream()
-                .filter(storeKey -> {
-                    String storageFileName = StringUtils.camelCaseToSnakeCase(storeKey + DataStorageService.STORE_POST_FIX) + Persistence.EXTENSION;
+                .filter(className -> {
+                    String storageFileName = StringUtils.camelCaseToSnakeCase(className + DataStorageService.STORE_POST_FIX) + Persistence.EXTENSION;
                     return Path.of(directory, storageFileName).toFile().exists();
                 })
                 .collect(Collectors.toSet());

@@ -76,7 +76,12 @@ public final class CommonPublicChatMessage extends PublicChatMessage {
                 wasEdited,
                 chatMessageType);
 
-        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize()); //755
+        verify();
+    }
+
+    @Override
+    public void verify() {
+        super.verify();
     }
 
     @Override

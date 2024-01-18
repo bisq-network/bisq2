@@ -19,9 +19,9 @@ package bisq.network.p2p.services.peergroup;
 
 import bisq.common.proto.NetworkProto;
 import bisq.common.validation.NetworkDataValidation;
+import bisq.network.common.Address;
 import bisq.network.p2p.node.Capability;
 import bisq.network.p2p.node.network_load.NetworkLoad;
-import bisq.network.common.Address;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -49,9 +49,15 @@ public final class Peer implements NetworkProto, Comparable<Peer> {
         this.isOutboundConnection = isOutboundConnection;
         this.created = created;
 
+        verify();
+    }
+
+    @Override
+    public void verify() {
         NetworkDataValidation.validateDate(created);
     }
 
+    @Override
     public bisq.network.protobuf.Peer toProto() {
         return bisq.network.protobuf.Peer.newBuilder()
                 .setCapability(capability.toProto())

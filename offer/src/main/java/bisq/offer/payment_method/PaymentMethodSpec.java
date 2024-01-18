@@ -50,12 +50,15 @@ public abstract class PaymentMethodSpec<T extends PaymentMethod<? extends Paymen
     public PaymentMethodSpec(T paymentMethod, Optional<String> saltedMakerAccountId) {
         this.paymentMethod = paymentMethod;
         this.saltedMakerAccountId = saltedMakerAccountId;
-
-        NetworkDataValidation.validateText(saltedMakerAccountId, 100);
-
     }
 
     @Override
+    public void verify() {
+        NetworkDataValidation.validateText(saltedMakerAccountId, 100);
+    }
+
+    @Override
+
     public abstract bisq.offer.protobuf.PaymentMethodSpec toProto();
 
     public bisq.offer.protobuf.PaymentMethodSpec.Builder getPaymentMethodSpecBuilder() {

@@ -44,9 +44,12 @@ public final class AuthorizeTimestampRequest implements MailboxMessage {
     public AuthorizeTimestampRequest(String profileId) {
         this.profileId = profileId;
 
-        NetworkDataValidation.validateProfileId(profileId);
+        verify();
+    }
 
-        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize()); //100
+    @Override
+    public void verify() {
+        NetworkDataValidation.validateProfileId(profileId);
     }
 
     @Override

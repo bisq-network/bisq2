@@ -38,9 +38,15 @@ public final class FilterEntry implements NetworkProto, Comparable<FilterEntry> 
         this.hash = hash;
         this.sequenceNumber = sequenceNumber;
 
+        verify();
+    }
+
+    @Override
+    public void verify() {
         NetworkDataValidation.validateHash(hash);
     }
 
+    @Override
     public bisq.network.protobuf.FilterEntry toProto() {
         return bisq.network.protobuf.FilterEntry.newBuilder()
                 .setHash(ByteString.copyFrom(hash))

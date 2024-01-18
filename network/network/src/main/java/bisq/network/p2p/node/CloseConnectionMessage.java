@@ -14,6 +14,12 @@ public final class CloseConnectionMessage implements EnvelopePayloadMessage {
 
     public CloseConnectionMessage(CloseReason closeReason) {
         this.closeReason = closeReason;
+
+        verify();
+    }
+
+    @Override
+    public void verify() {
     }
 
     @Override

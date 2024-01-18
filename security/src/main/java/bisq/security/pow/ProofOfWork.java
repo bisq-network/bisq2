@@ -28,6 +28,7 @@ import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.Optional;
 
+// TODO use Optional instead of Nullable
 // Borrowed from: https://github.com/bisq-network/bisq
 @Slf4j
 @Getter
@@ -57,6 +58,16 @@ public final class ProofOfWork implements NetworkProto {
         this.solution = solution;
         this.duration = duration;
 
+        verify();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void verify() {
         // We have to allow a large size here as InventoryData can be large
         NetworkDataValidation.validateByteArray(payload, 10_000_000);
         if (challenge != null) {
@@ -64,11 +75,6 @@ public final class ProofOfWork implements NetworkProto {
         }
         NetworkDataValidation.validateByteArray(solution, 75);
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // PROTO BUFFER
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public bisq.security.protobuf.ProofOfWork toProto() {

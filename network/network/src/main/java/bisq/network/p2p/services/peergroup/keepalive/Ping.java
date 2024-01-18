@@ -30,13 +30,17 @@ public final class Ping implements EnvelopePayloadMessage {
 
     public Ping(int nonce) {
         this.nonce = nonce;
+
+        verify();
+    }
+
+    @Override
+    public void verify() {
     }
 
     @Override
     public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
-        return getNetworkMessageBuilder().setPing(
-                        bisq.network.protobuf.Ping.newBuilder().setNonce(nonce))
-                .build();
+        return getNetworkMessageBuilder().setPing(bisq.network.protobuf.Ping.newBuilder().setNonce(nonce)).build();
     }
 
     public static Ping fromProto(bisq.network.protobuf.Ping proto) {

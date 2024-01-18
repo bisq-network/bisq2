@@ -83,13 +83,16 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
         this.securityManagerProfileId = securityManagerProfileId;
         this.staticPublicKeysProvided = staticPublicKeysProvided;
 
+        verify();
+    }
+
+    @Override
+    public void verify() {
         NetworkDataValidation.validateId(id);
         NetworkDataValidation.validateDate(date);
         NetworkDataValidation.validateText(message, MAX_MESSAGE_LENGTH);
         minVersion.ifPresent(NetworkDataValidation::validateVersion);
         NetworkDataValidation.validateProfileId(securityManagerProfileId);
-
-        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize());//957
     }
 
     @Override
