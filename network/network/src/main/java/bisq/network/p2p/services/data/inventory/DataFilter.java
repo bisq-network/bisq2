@@ -33,6 +33,10 @@ import static com.google.common.base.Preconditions.checkArgument;
 @ToString
 @EqualsAndHashCode
 public final class DataFilter implements NetworkProto {
+    // FilterEntry has about 24 bytes (hash of 20 bytes + integer). 200_000 items are about 4.8 MB)
+    // We should aim to be much below that limit.
+    public final static int MAX_ENTRIES = 200_000;
+
     private final List<FilterEntry> filterEntries;
 
     public DataFilter(List<FilterEntry> filterEntries) {
@@ -45,8 +49,7 @@ public final class DataFilter implements NetworkProto {
 
     @Override
     public void verify() {
-
-        checkArgument(filterEntries.size() < 1000);
+        checkArgument(filterEntries.size() < MAX_ENTRIES);
     }
 
     @Override

@@ -21,6 +21,7 @@ import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.peergroup.Peer;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 
 import java.util.Collections;
@@ -33,6 +34,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 @ToString
 @EqualsAndHashCode
 public final class PeerExchangeResponse implements EnvelopePayloadMessage {
+    @Setter
+    public static long maxNumPeers;
     private final int nonce;
     private final List<Peer> peers;
 
@@ -47,7 +50,7 @@ public final class PeerExchangeResponse implements EnvelopePayloadMessage {
 
     @Override
     public void verify() {
-        checkArgument(peers.size() < 10000);
+        checkArgument(peers.size() <= maxNumPeers);
     }
 
 
