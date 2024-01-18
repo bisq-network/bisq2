@@ -40,6 +40,7 @@ import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardController;
+import bisq.desktop.main.content.chat.ChatUtil;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.offer.bisq_easy.BisqEasyOffer;
@@ -60,7 +61,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
-import javafx.scene.text.TextAlignment;
 import javafx.util.StringConverter;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -537,10 +537,9 @@ public class ChatMessagesComponent {
         private final BisqTextArea inputField = new BisqTextArea();
         private final Button sendButton = new Button();
         private final Pane messagesListView;
-        private final VBox emptyMessageList = new VBox();
+        private final VBox emptyMessageList;
         private ChatMentionPopupMenu<UserProfile> userMentionPopup;
         private ChatMentionPopupMenu<ChatChannel<?>> channelMentionPopup;
-        private ChangeListener<Number> createOfferButtonHeightListener;
         private Pane userProfileSelectionRoot;
         private Button leaveChannelButton, createOfferButton;
 
@@ -554,9 +553,11 @@ public class ChatMessagesComponent {
             this.messagesListView = messagesListView;
             VBox.setVgrow(messagesListView, Priority.ALWAYS);
 
-            setUpEmptyMessageList();
+            emptyMessageList = ChatUtil.createEmptyChatPlaceholder(
+                    new Label(Res.get("chat.private.messagebox.noChats.placeholder.title")),
+                    new Label(Res.get("chat.private.messagebox.noChats.placeholder.description")));
 
-            VBox bottomBarContainer = createBottomBar(userProfileSelection);
+            VBox bottomBarContainer = createAndGetBottomBar(userProfileSelection);
 
             quotedMessageBlock.setMaxWidth(CHAT_BOX_MAX_WIDTH);
 
@@ -626,26 +627,10 @@ public class ChatMessagesComponent {
             createOfferButton.setOnAction(null);
         }
 
-        private void setUpEmptyMessageList() {
-            Label noChatsPlaceholderTitle = new Label(Res.get("chat.private.messagebox.noChats.placeholder.title"));
-            noChatsPlaceholderTitle.getStyleClass().add("large-text");
-            noChatsPlaceholderTitle.setTextAlignment(TextAlignment.CENTER);
-
-            Label noChatsPlaceholderDescription = new Label(Res.get("chat.private.messagebox.noChats.placeholder.description"));
-            noChatsPlaceholderDescription.getStyleClass().add("normal-text");
-            noChatsPlaceholderDescription.setTextAlignment(TextAlignment.CENTER);
-
-            emptyMessageList.setSpacing(10);
-            emptyMessageList.getChildren().addAll(noChatsPlaceholderTitle, noChatsPlaceholderDescription);
-            emptyMessageList.setAlignment(Pos.CENTER);
-            emptyMessageList.getStyleClass().add("chat-container-placeholder-text");
-            VBox.setVgrow(emptyMessageList, Priority.ALWAYS);
-        }
-
-        private VBox createBottomBar(UserProfileSelection userProfileSelection) {
+        private VBox createAndGetBottomBar(UserProfileSelection userProfileSelection) {
             createOfferButton = createAndGetCreateOfferButton();
             setUpUserProfileSelection(userProfileSelection);
-            HBox sendMessageBox = createSendMessageBox();
+            HBox sendMessageBox = createAndGetSendMessageBox();
 
             // TODO: Remove this. We need a better solution for this use-case.
             leaveChannelButton = createAndGetChatButton(Res.get("chat.leave"), 120);
@@ -654,29 +639,31 @@ public class ChatMessagesComponent {
             bottomBar.getChildren().addAll(createOfferButton, userProfileSelectionRoot, sendMessageBox, leaveChannelButton);
             bottomBar.setMaxWidth(CHAT_BOX_MAX_WIDTH);
             bottomBar.setPadding(new Insets(14, 20, 14, 20));
+            bottomBar.setAlignment(Pos.BOTTOM_CENTER);
 
             VBox bottomBarContainer = new VBox(bottomBar);
             bottomBarContainer.setAlignment(Pos.CENTER);
             return bottomBarContainer;
         }
 
-        private HBox createSendMessageBox() {
+        private HBox createAndGetSendMessageBox() {
             inputField.setPromptText(Res.get("chat.message.input.prompt"));
             inputField.getStyleClass().addAll("chat-input-field", "normal-text");
             inputField.setPadding(new Insets(5, 0, 5, 5));
+            HBox.setMargin(inputField, new Insets(0, 0, 1.5, 0));
             HBox.setHgrow(inputField, Priority.ALWAYS);
             setUpInputFieldAtMentions();
 
             sendButton.setGraphic(ImageUtil.getImageViewById("chat-send"));
             sendButton.setId("chat-messages-send-button");
-            sendButton.setPadding(new Insets(5, 5, 5, 0));
+            HBox.setMargin(sendButton, new Insets(0, 0, 5, 0));
             sendButton.setMinWidth(30);
             sendButton.setMaxWidth(30);
             sendButton.setTooltip(new BisqTooltip(Res.get("chat.message.input.send"), true));
 
             HBox sendMessageBox = new HBox(inputField, sendButton);
             sendMessageBox.getStyleClass().add("chat-send-message-box");
-            sendMessageBox.setAlignment(Pos.CENTER);
+            sendMessageBox.setAlignment(Pos.BOTTOM_CENTER);
             HBox.setHgrow(sendMessageBox, Priority.ALWAYS);
             return sendMessageBox;
         }
@@ -696,16 +683,10 @@ public class ChatMessagesComponent {
             createOfferButton.getStyleClass().addAll("create-offer-button", "normal-text");
             createOfferButton.setMinWidth(170);
 
-            createOfferButtonHeightListener = (observable, oldValue, newValue) -> {
-                if (newValue != null) {
-                    createOfferButton.setMinHeight(inputField.getHeight());
-                    createOfferButton.setMaxHeight(inputField.getHeight());
-                    createOfferButton.setPrefHeight(inputField.getHeight());
-                } else {
-                    UIThread.runOnNextRenderFrame(() -> inputField.heightProperty().removeListener(createOfferButtonHeightListener));
-                }
-            };
-            inputField.heightProperty().addListener(createOfferButtonHeightListener);
+            double height = 45;
+            createOfferButton.setMinHeight(height);
+            createOfferButton.setMaxHeight(height);
+            createOfferButton.setPrefHeight(height);
             return createOfferButton;
         }
 
