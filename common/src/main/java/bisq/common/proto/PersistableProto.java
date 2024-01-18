@@ -17,8 +17,6 @@
 
 package bisq.common.proto;
 
-import com.google.protobuf.Message;
-
 /**
  * Interface for any object which gets serialized using protobuf
  * <p>
@@ -29,9 +27,4 @@ import com.google.protobuf.Message;
  * to deal with it as well. Rust for instance randomize the key set in maps by default for security reasons).
  */
 public interface PersistableProto extends Proto {
-    Message toProto();
-
-    default byte[] serialize() {
-        return toProto().toByteArray();
-    }
 }
