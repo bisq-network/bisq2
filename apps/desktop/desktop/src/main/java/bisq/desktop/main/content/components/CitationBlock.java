@@ -129,7 +129,7 @@ public class CitationBlock {
         private final ImageView roboIconImageView;
         private final Label userName;
         private final Button closeButton;
-        private final Text citation;
+        private final Label citation;
         private Subscription roboHashNodeSubscription;
 
         private View(Model model, Controller controller) {
@@ -161,7 +161,8 @@ public class CitationBlock {
             roboIconImageView.setFitHeight(25);
             HBox userBox = new HBox(15, roboIconImageView, userName);
             VBox.setMargin(userBox, new Insets(0, 0, 0, 0));
-            citation = new Text();
+            citation = new Label();
+            citation.setWrapText(true);
             citation.setStyle("-fx-fill: -fx-mid-text-color");
             VBox.setMargin(citation, new Insets(0, 0, 15, 0));
             root.getChildren().addAll(topBox, userBox, citation);

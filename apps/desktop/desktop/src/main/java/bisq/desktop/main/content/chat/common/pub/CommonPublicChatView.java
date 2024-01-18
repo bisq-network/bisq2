@@ -27,7 +27,8 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 
 public final class CommonPublicChatView extends ChatView<CommonPublicChatView, CommonPublicChatModel> {
-    public CommonPublicChatView(ChatModel model, CommonPublicChatController controller, Pane chatMessagesComponent, Pane channelInfo) {
+    public CommonPublicChatView(ChatModel model, CommonPublicChatController controller,
+                                Pane chatMessagesComponent, Pane channelInfo) {
         super(model, controller, chatMessagesComponent, channelInfo);
     }
 

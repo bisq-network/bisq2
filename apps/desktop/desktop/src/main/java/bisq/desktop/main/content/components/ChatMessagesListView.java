@@ -90,7 +90,6 @@ import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
-import javafx.scene.text.Text;
 import javafx.util.Callback;
 import javafx.util.Duration;
 import lombok.EqualsAndHashCode;
@@ -203,6 +202,9 @@ public class ChatMessagesListView {
             scrollBarVisiblePin = EasyBind.subscribe(model.scrollBarVisible, scrollBarVisible -> {
                 if (scrollBarVisible != null && scrollBarVisible) {
                     applyScrollValue(1);
+                    view.listView.setPadding(View.LISTVIEW_PADDING_WITH_SCROLLBAR);
+                } else {
+                    view.listView.setPadding(new Insets(0));
                 }
             });
 
@@ -654,10 +656,10 @@ public class ChatMessagesListView {
 
     @Slf4j
     private static class View extends bisq.desktop.common.view.View<StackPane, Model, Controller> {
-        private final static String EDITED_POST_FIX = " " + Res.get("chat.message.wasEdited");
+        public static final Insets LISTVIEW_PADDING_WITH_SCROLLBAR = new Insets(0, 0, 0, 15);
+        private static final String EDITED_POST_FIX = " " + Res.get("chat.message.wasEdited");
 
         private final ListView<ChatMessageListItem<? extends ChatMessage>> listView;
-
         private final ImageView scrollDownImageView;
         private final Badge scrollDownBadge;
         private final BisqTooltip scrollDownTooltip;
@@ -677,8 +679,8 @@ public class ChatMessagesListView {
 
             // https://stackoverflow.com/questions/20621752/javafx-make-listview-not-selectable-via-mouse
             listView.setSelectionModel(new NoSelectionModel<>());
-
             VBox.setVgrow(listView, Priority.ALWAYS);
+
             scrollDownImageView = new ImageView();
             scrollDownImageView.setCursor(Cursor.HAND);
             scrollDownTooltip = new BisqTooltip(Res.get("chat.listView.scrollDown"));
@@ -692,6 +694,7 @@ public class ChatMessagesListView {
 
             StackPane.setAlignment(scrollDownBadge, Pos.BOTTOM_RIGHT);
             StackPane.setMargin(scrollDownBadge, new Insets(0, 25, 20, 0));
+            root.setAlignment(Pos.CENTER);
             root.getChildren().addAll(listView, scrollDownBadge);
         }
 
@@ -741,6 +744,8 @@ public class ChatMessagesListView {
             });
 
             scrollDownImageView.setOnMouseClicked(e -> controller.onScrollToBottom());
+
+            UIThread.runOnNextRenderFrame(this::adjustPadding);
         }
 
         @Override
@@ -782,17 +787,28 @@ public class ChatMessagesListView {
             fadeInScrollDownBadgeTimeline.play();
         }
 
+        private void adjustPadding() {
+            Optional<VirtualScrollBar> scrollBar = ListViewUtil.findScrollbar(listView, Orientation.VERTICAL);
+            scrollBar.ifPresent(bar ->
+                listView.setPadding(
+                        bar.isVisible() ? LISTVIEW_PADDING_WITH_SCROLLBAR : new Insets(0))
+            );
+        }
+
         public Callback<ListView<ChatMessageListItem<? extends ChatMessage>>, ListCell<ChatMessageListItem<? extends ChatMessage>>> getCellFactory() {
             return new Callback<>() {
                 @Override
                 public ListCell<ChatMessageListItem<? extends ChatMessage>> call(ListView<ChatMessageListItem<? extends ChatMessage>> list) {
                     return new ListCell<>() {
+                        private final static double CHAT_BOX_MAX_WIDTH = 1200;
+                        private final static double CHAT_MESSAGE_BOX_MAX_WIDTH = 630;
+
                         private final ReputationScoreDisplay reputationScoreDisplay;
                         private final Button takeOfferButton, removeOfferButton;
                         private final Label message, userName, dateTime, replyIcon, pmIcon, editIcon, deleteIcon, copyIcon,
                                 moreOptionsIcon, supportedLanguages;
                         private final Label deliveryState;
-                        private final Text quotedMessageField;
+                        private final Label quotedMessageField = new Label();
                         private final BisqTextArea editInputField;
                         private final Button saveEditButton, cancelEditButton;
                         private final VBox mainVBox, quotedMessageVBox;
@@ -818,7 +834,7 @@ public class ChatMessagesListView {
                             removeOfferButton.getStyleClass().addAll("red-small-button", "no-background");
 
                             // quoted message
-                            quotedMessageField = new Text();
+                            quotedMessageField.setWrapText(true);
                             quotedMessageVBox = new VBox(5);
                             quotedMessageVBox.setVisible(false);
                             quotedMessageVBox.setManaged(false);
@@ -849,7 +865,7 @@ public class ChatMessagesListView {
 
                             messageBgHBox = new HBox(15);
                             messageBgHBox.setAlignment(Pos.CENTER_LEFT);
-                            messageBgHBox.setMaxWidth(720);
+                            messageBgHBox.setMaxWidth(CHAT_MESSAGE_BOX_MAX_WIDTH);
 
                             // Reactions box
                             replyIcon = getIconWithToolTip(AwesomeIcon.REPLY, Res.get("chat.message.reply"));
@@ -875,7 +891,9 @@ public class ChatMessagesListView {
                             mainVBox.setFillWidth(true);
                             HBox.setHgrow(mainVBox, Priority.ALWAYS);
                             cellHBox = new HBox(15);
-                            cellHBox.setPadding(new Insets(0, 25, 0, 0));
+                            cellHBox.setPadding(new Insets(0, 20, 0, 20));
+                            cellHBox.setMaxWidth(CHAT_BOX_MAX_WIDTH);
+                            cellHBox.setAlignment(Pos.CENTER);
                         }
 
 
@@ -956,6 +974,7 @@ public class ChatMessagesListView {
                             deliveryState.getTooltip().textProperty().bind(item.messageDeliveryStatusTooltip);
                             editInputField.maxWidthProperty().bind(message.widthProperty());
                             setGraphic(cellHBox);
+                            setAlignment(Pos.CENTER);
                         }
 
                         private void buildPeerMessage(ChatMessageListItem<? extends ChatMessage> item, boolean isBisqEasyPublicChatMessageWithOffer, VBox userProfileIconVbox, ChatMessage chatMessage) {

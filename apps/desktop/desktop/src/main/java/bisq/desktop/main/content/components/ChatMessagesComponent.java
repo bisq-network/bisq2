@@ -52,7 +52,6 @@ import bisq.wallets.core.WalletService;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -532,17 +531,18 @@ public class ChatMessagesComponent {
 
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
+        private final static double CHAT_BOX_MAX_WIDTH = 1200;
         public final static String EDITED_POST_FIX = " " + Res.get("chat.message.wasEdited");
 
-        private final BisqTextArea inputField;
-        private final Button sendButton;
-
-        private final ChatMentionPopupMenu<UserProfile> userMentionPopup;
-        private final ChatMentionPopupMenu<ChatChannel<?>> channelMentionPopup;
-        private final Pane userProfileSelectionRoot, messagesListView;
-        private final Button leaveChannelButton, createOfferButton;
-        private final VBox emptyMessageList;
-        private final ChangeListener<Number> createOfferButtonHeightListener;
+        private final BisqTextArea inputField = new BisqTextArea();
+        private final Button sendButton = new Button();
+        private final Pane messagesListView;
+        private final VBox emptyMessageList = new VBox();
+        private ChatMentionPopupMenu<UserProfile> userMentionPopup;
+        private ChatMentionPopupMenu<ChatChannel<?>> channelMentionPopup;
+        private ChangeListener<Number> createOfferButtonHeightListener;
+        private Pane userProfileSelectionRoot;
+        private Button leaveChannelButton, createOfferButton;
 
         private View(Model model,
                      Controller controller,
@@ -552,94 +552,16 @@ public class ChatMessagesComponent {
             super(new VBox(), model, controller);
 
             this.messagesListView = messagesListView;
-
-            inputField = new BisqTextArea();
-            inputField.setPromptText(Res.get("chat.message.input.prompt"));
-            inputField.getStyleClass().addAll("chat-input-field", "normal-text");
-
-            sendButton = new Button("", ImageUtil.getImageViewById("chat-send"));
-            sendButton.setId("chat-messages-send-button");
-            sendButton.setPadding(new Insets(5));
-            sendButton.setMinWidth(31);
-            sendButton.setMaxWidth(31);
-            sendButton.setTooltip(new BisqTooltip(Res.get("chat.message.input.send"), true));
-
-            StackPane.setAlignment(inputField, Pos.CENTER_LEFT);
-            StackPane.setAlignment(sendButton, Pos.CENTER_RIGHT);
-            StackPane.setMargin(sendButton, new Insets(0, 5, 0, 0));
-            StackPane bottomBoxStackPane = new StackPane(inputField, sendButton);
-
-            userProfileSelection.setMaxComboBoxWidth(165);
-            userProfileSelection.setConverter(new StringConverter<>() {
-                @Override
-                public String toString(UserProfileSelection.ListItem item) {
-                    return item != null ? StringUtils.truncate(item.getUserIdentity().getUserName(), 10) : "";
-                }
-
-                @Override
-                public UserProfileSelection.ListItem fromString(String string) {
-                    return null;
-                }
-            });
-            userProfileSelectionRoot = userProfileSelection.getRoot();
-            userProfileSelectionRoot.setMaxHeight(44);
-            userProfileSelectionRoot.setMaxWidth(165);
-            userProfileSelectionRoot.setMinWidth(165);
-            userProfileSelectionRoot.setId("chat-user-profile-bg");
-
-            HBox.setHgrow(bottomBoxStackPane, Priority.ALWAYS);
-            HBox.setMargin(userProfileSelectionRoot, new Insets(0, -20, 0, -8));
-            HBox bottomHBox = new HBox(10);
-
-            leaveChannelButton = createAndGetChatButton(Res.get("chat.leave"), 120);
-            leaveChannelButton.getStyleClass().add("outlined-button");
-
-            Label noChatsPlaceholderTitle = new Label(Res.get("chat.private.messagebox.noChats.placeholder.title"));
-            noChatsPlaceholderTitle.getStyleClass().add("large-text");
-            noChatsPlaceholderTitle.setTextAlignment(TextAlignment.CENTER);
-
-            Label noChatsPlaceholderDescription = new Label(Res.get("chat.private.messagebox.noChats.placeholder.description"));
-            noChatsPlaceholderDescription.getStyleClass().add("normal-text");
-            noChatsPlaceholderDescription.setTextAlignment(TextAlignment.CENTER);
-
-            emptyMessageList = new VBox(10, noChatsPlaceholderTitle, noChatsPlaceholderDescription);
-            emptyMessageList.setAlignment(Pos.CENTER);
-            emptyMessageList.getStyleClass().add("chat-container-placeholder-text");
-            VBox.setVgrow(emptyMessageList, Priority.ALWAYS);
-
-            createOfferButton = new Button(Res.get("offer.createOffer"));
-            createOfferButton.getStyleClass().addAll("create-offer-button", "normal-text");
-            createOfferButton.setMinWidth(170);
-
-            bottomHBox.getChildren().addAll(createOfferButton, userProfileSelectionRoot, bottomBoxStackPane, leaveChannelButton);
-            bottomHBox.getStyleClass().add("bg-grey-5");
-            bottomHBox.setAlignment(Pos.CENTER);
-            bottomHBox.setPadding(new Insets(14, 25, 14, 25));
-
             VBox.setVgrow(messagesListView, Priority.ALWAYS);
-            root.getChildren().addAll(emptyMessageList, messagesListView, quotedMessageBlock, bottomHBox);
 
-            userMentionPopup = new ChatMentionPopupMenu<>(inputField);
-            userMentionPopup.setItemDisplayConverter(UserProfile::getUserName);
-            userMentionPopup.setSelectionHandler(controller::listUserNamesHandler);
+            setUpEmptyMessageList();
 
-            channelMentionPopup = new ChatMentionPopupMenu<>(inputField);
-            channelMentionPopup.setItemDisplayConverter(model::getChannelTitle);
-            channelMentionPopup.setSelectionHandler(controller::listChannelsHandler);
+            VBox bottomBarContainer = createBottomBar(userProfileSelection);
 
-            createOfferButtonHeightListener = new ChangeListener<>() {
-                @Override
-                public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-                    if (newValue != null) {
-                        createOfferButton.setMinHeight(inputField.getHeight());
-                        createOfferButton.setMaxHeight(inputField.getHeight());
-                        createOfferButton.setPrefHeight(inputField.getHeight());
-                    } else {
-                        UIThread.runOnNextRenderFrame(() -> inputField.heightProperty().removeListener(createOfferButtonHeightListener));
-                    }
-                }
-            };
-            inputField.heightProperty().addListener(createOfferButtonHeightListener);
+            quotedMessageBlock.setMaxWidth(CHAT_BOX_MAX_WIDTH);
+
+            root.setAlignment(Pos.CENTER);
+            root.getChildren().addAll(messagesListView, emptyMessageList, quotedMessageBlock, bottomBarContainer);
         }
 
         @Override
@@ -704,6 +626,110 @@ public class ChatMessagesComponent {
             createOfferButton.setOnAction(null);
         }
 
+        private void setUpEmptyMessageList() {
+            Label noChatsPlaceholderTitle = new Label(Res.get("chat.private.messagebox.noChats.placeholder.title"));
+            noChatsPlaceholderTitle.getStyleClass().add("large-text");
+            noChatsPlaceholderTitle.setTextAlignment(TextAlignment.CENTER);
+
+            Label noChatsPlaceholderDescription = new Label(Res.get("chat.private.messagebox.noChats.placeholder.description"));
+            noChatsPlaceholderDescription.getStyleClass().add("normal-text");
+            noChatsPlaceholderDescription.setTextAlignment(TextAlignment.CENTER);
+
+            emptyMessageList.setSpacing(10);
+            emptyMessageList.getChildren().addAll(noChatsPlaceholderTitle, noChatsPlaceholderDescription);
+            emptyMessageList.setAlignment(Pos.CENTER);
+            emptyMessageList.getStyleClass().add("chat-container-placeholder-text");
+            VBox.setVgrow(emptyMessageList, Priority.ALWAYS);
+        }
+
+        private VBox createBottomBar(UserProfileSelection userProfileSelection) {
+            createOfferButton = createAndGetCreateOfferButton();
+            setUpUserProfileSelection(userProfileSelection);
+            HBox sendMessageBox = createSendMessageBox();
+
+            // TODO: Remove this. We need a better solution for this use-case.
+            leaveChannelButton = createAndGetChatButton(Res.get("chat.leave"), 120);
+
+            HBox bottomBar = new HBox(10);
+            bottomBar.getChildren().addAll(createOfferButton, userProfileSelectionRoot, sendMessageBox, leaveChannelButton);
+            bottomBar.setMaxWidth(CHAT_BOX_MAX_WIDTH);
+            bottomBar.setPadding(new Insets(14, 20, 14, 20));
+
+            VBox bottomBarContainer = new VBox(bottomBar);
+            bottomBarContainer.setAlignment(Pos.CENTER);
+            return bottomBarContainer;
+        }
+
+        private HBox createSendMessageBox() {
+            inputField.setPromptText(Res.get("chat.message.input.prompt"));
+            inputField.getStyleClass().addAll("chat-input-field", "normal-text");
+            inputField.setPadding(new Insets(5, 0, 5, 5));
+            HBox.setHgrow(inputField, Priority.ALWAYS);
+            setUpInputFieldAtMentions();
+
+            sendButton.setGraphic(ImageUtil.getImageViewById("chat-send"));
+            sendButton.setId("chat-messages-send-button");
+            sendButton.setPadding(new Insets(5, 5, 5, 0));
+            sendButton.setMinWidth(30);
+            sendButton.setMaxWidth(30);
+            sendButton.setTooltip(new BisqTooltip(Res.get("chat.message.input.send"), true));
+
+            HBox sendMessageBox = new HBox(inputField, sendButton);
+            sendMessageBox.getStyleClass().add("chat-send-message-box");
+            sendMessageBox.setAlignment(Pos.CENTER);
+            HBox.setHgrow(sendMessageBox, Priority.ALWAYS);
+            return sendMessageBox;
+        }
+
+        private void setUpInputFieldAtMentions() {
+            userMentionPopup = new ChatMentionPopupMenu<>(inputField);
+            userMentionPopup.setItemDisplayConverter(UserProfile::getUserName);
+            userMentionPopup.setSelectionHandler(controller::listUserNamesHandler);
+
+            channelMentionPopup = new ChatMentionPopupMenu<>(inputField);
+            channelMentionPopup.setItemDisplayConverter(model::getChannelTitle);
+            channelMentionPopup.setSelectionHandler(controller::listChannelsHandler);
+        }
+
+        private Button createAndGetCreateOfferButton() {
+            Button createOfferButton = new Button(Res.get("offer.createOffer"));
+            createOfferButton.getStyleClass().addAll("create-offer-button", "normal-text");
+            createOfferButton.setMinWidth(170);
+
+            createOfferButtonHeightListener = (observable, oldValue, newValue) -> {
+                if (newValue != null) {
+                    createOfferButton.setMinHeight(inputField.getHeight());
+                    createOfferButton.setMaxHeight(inputField.getHeight());
+                    createOfferButton.setPrefHeight(inputField.getHeight());
+                } else {
+                    UIThread.runOnNextRenderFrame(() -> inputField.heightProperty().removeListener(createOfferButtonHeightListener));
+                }
+            };
+            inputField.heightProperty().addListener(createOfferButtonHeightListener);
+            return createOfferButton;
+        }
+
+        private void setUpUserProfileSelection(UserProfileSelection userProfileSelection) {
+            userProfileSelection.setMaxComboBoxWidth(165);
+            userProfileSelection.setConverter(new StringConverter<>() {
+                @Override
+                public String toString(UserProfileSelection.ListItem item) {
+                    return item != null ? StringUtils.truncate(item.getUserIdentity().getUserName(), 10) : "";
+                }
+
+                @Override
+                public UserProfileSelection.ListItem fromString(String string) {
+                    return null;
+                }
+            });
+            userProfileSelectionRoot = userProfileSelection.getRoot();
+            userProfileSelectionRoot.setMaxHeight(44);
+            userProfileSelectionRoot.setMaxWidth(165);
+            userProfileSelectionRoot.setMinWidth(165);
+            userProfileSelectionRoot.setId("chat-user-profile-bg");
+            HBox.setMargin(userProfileSelectionRoot, new Insets(0, -20, 0, -8));
+        }
+
         private void createChatDialogEnabledSubscription() {
             inputField.disableProperty().bind(model.getChatDialogEnabled().not());
             sendButton.disableProperty().bind(model.getChatDialogEnabled().not());
@@ -730,6 +756,7 @@ public class ChatMessagesComponent {
         button.setStyle("-fx-label-padding: 0 -30 0 -30; -fx-background-radius: 8; -fx-border-radius: 8;");
         button.setMinHeight(34);
         button.setMinWidth(width);
+        button.getStyleClass().add("outlined-button");
         return button;
     }
 }

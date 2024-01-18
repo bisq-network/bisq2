@@ -137,7 +137,10 @@ public class BisqTextArea extends TextArea {
         } else {
             selectorScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         }
-        setMinHeight(textHeight + INITIAL_HEIGHT);
-        setMaxHeight(textHeight + INITIAL_HEIGHT);
+        double newHeight = textHeight + INITIAL_HEIGHT;
+        setMinHeight(newHeight);
+
+        // Set max height dynamically or remove if not needed
+        setMaxHeight(Math.min(newHeight, 300)); // FIXME: max width not being applied
     }
 }
