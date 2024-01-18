@@ -27,8 +27,11 @@ import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.network.p2p.services.peergroup.BanList;
+import bisq.security.TorSignatureUtil;
+import bisq.security.keys.TorKeyPair;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.bouncycastle.crypto.CryptoException;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -36,39 +39,52 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 public class ConnectionHandshakeInitiator {
     private final Capability myCapability;
-    private final byte[] addressOwnershipProof;
-    private final long signatureDate;
     private final AuthorizationService authorizationService;
     private final BanList banList;
     private final NetworkLoad myNetworkLoad;
     private final Address peerAddress;
     @Getter
     private final CompletableFuture<OutboundConnection> completableFuture = new CompletableFuture<>();
+    private final TorKeyPair torKeyPair;
 
     public ConnectionHandshakeInitiator(Capability myCapability,
-                                        byte[] addressOwnershipProof,
-                                        long signatureDate,
                                         AuthorizationService authorizationService,
                                         BanList banList,
                                         NetworkLoad myNetworkLoad,
-                                        Address peerAddress) {
+                                        Address peerAddress,
+                                        TorKeyPair torKeyPair) {
         this.myCapability = myCapability;
-        this.addressOwnershipProof = addressOwnershipProof;
-        this.signatureDate = signatureDate;
         this.authorizationService = authorizationService;
         this.banList = banList;
         this.myNetworkLoad = myNetworkLoad;
         this.peerAddress = peerAddress;
+        this.torKeyPair = torKeyPair;
     }
 
     public NetworkEnvelope initiate() {
-        ConnectionHandshake.Request request = new ConnectionHandshake.Request(myCapability, addressOwnershipProof, myNetworkLoad, signatureDate);
+        Address myAddress = myCapability.getAddress();
+        byte[] signature = null;
+        long signatureDate = System.currentTimeMillis();
+        if (myAddress.isTorAddress()) {
+            String message = buildMessageForSigning(myAddress, peerAddress, signatureDate);
+            try {
+                signature = TorSignatureUtil.sign(torKeyPair.getPrivateKey(), message.getBytes());
+            } catch (CryptoException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        ConnectionHandshake.Request request = new ConnectionHandshake.Request(myCapability, signature, myNetworkLoad, signatureDate);
         // As we do not know he peers load yet, we use the NetworkLoad.INITIAL_LOAD
         AuthorizationToken token = authorizationService.createToken(request,
                 NetworkLoad.INITIAL_LOAD,
                 peerAddress.getFullAddress(),
                 0);
         return new NetworkEnvelope(token, request);
+    }
+
+    private static String buildMessageForSigning(Address signersAddress, Address verifiersAddress, long date) {
+        return signersAddress.getFullAddress() + "|" + verifiersAddress.getFullAddress() + "@" + date;
     }
 
     public ConnectionHandshake.Response finish(List<NetworkEnvelope> responseNetworkEnvelopes) {
