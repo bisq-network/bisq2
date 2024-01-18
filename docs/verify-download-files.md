@@ -2,8 +2,8 @@
 
 If you have Bisq already installed it is best to update from inside the Bisq application and let Bisq perform the
 signature verification. The Bisq application contains the PGP keys used for signing and those will be compared to the
-signing key from the Github download page and the Bisq webpage. This provides an additional layer of security compared
-to downloading and verifying it via the Github page only.
+signing key from the GitHub download page and the Bisq webpage. This provides an additional layer of security compared
+to downloading and verifying it via the GitHub page only.
 
 ### Installer updates
 

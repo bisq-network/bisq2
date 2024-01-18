@@ -45,7 +45,7 @@ sudo tar Jxvf data.tar.xz
 sudo cp -rp opt/Bisq2 /opt/
 ```
 
-That instruction is not tested on many different distros. If you encounter problems please report it in a Github issue
+That instruction is not tested on many different distros. If you encounter problems please report it in a GitHub issue
 so we can improve it.
 
 [1] Application directory (contains application installation files):
