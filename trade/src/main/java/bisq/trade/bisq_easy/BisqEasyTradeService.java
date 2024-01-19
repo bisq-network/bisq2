@@ -190,15 +190,15 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     // Events
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public BisqEasyTrade onTakeOffer(Identity takerIdentity,
-                                     BisqEasyOffer bisqEasyOffer,
-                                     Monetary baseSideAmount,
-                                     Monetary quoteSideAmount,
-                                     BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec,
-                                     FiatPaymentMethodSpec fiatPaymentMethodSpec,
-                                     Optional<UserProfile> mediator,
-                                     PriceSpec agreedPriceSpec,
-                                     long marketPrice) {
+    public BisqEasyProtocol createBisqEasyProtocol(Identity takerIdentity,
+                                                   BisqEasyOffer bisqEasyOffer,
+                                                   Monetary baseSideAmount,
+                                                   Monetary quoteSideAmount,
+                                                   BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec,
+                                                   FiatPaymentMethodSpec fiatPaymentMethodSpec,
+                                                   Optional<UserProfile> mediator,
+                                                   PriceSpec agreedPriceSpec,
+                                                   long marketPrice) {
         NetworkId takerNetworkId = takerIdentity.getNetworkId();
         BisqEasyContract contract = new BisqEasyContract(
                 System.currentTimeMillis(),
@@ -220,9 +220,12 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         checkArgument(!tradeExists(bisqEasyTrade.getId()), "A trade with that ID exists already");
         persistableStore.addTrade(bisqEasyTrade);
 
+        return createAndAddTradeProtocol(bisqEasyTrade);
+    }
+
+    public void takeOffer(BisqEasyTrade bisqEasyTrade) {
         createAndAddTradeProtocol(bisqEasyTrade).handle(new BisqEasyTakeOfferEvent());
         persist();
-        return bisqEasyTrade;
     }
 
     public void sellerSendsPaymentAccount(BisqEasyTrade trade, String paymentAccountData) {

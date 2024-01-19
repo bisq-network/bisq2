@@ -28,6 +28,7 @@ import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
+import bisq.common.observable.Pin;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
@@ -49,9 +50,9 @@ import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.PercentageFormatter;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.support.mediation.MediationRequestService;
-import bisq.trade.TradeProtocolException;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
+import bisq.trade.bisq_easy.protocol.BisqEasyProtocol;
 import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
@@ -82,6 +83,7 @@ public class TakeOfferReviewController implements Controller {
     private final ReviewDataDisplay reviewDataDisplay;
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
     private final MediationRequestService mediationRequestService;
+    private Pin tradeProtocolExceptionPin;
 
     public TakeOfferReviewController(ServiceProvider serviceProvider,
                                      Consumer<Boolean> mainButtonsVisibleHandler,
@@ -209,36 +211,36 @@ public class TakeOfferReviewController implements Controller {
         FiatPaymentMethodSpec fiatPaymentMethodSpec = model.getFiatPaymentMethodSpec();
         PriceSpec sellersPriceSpec = model.getSellersPriceSpec();
         long marketPrice = model.getMarketPrice();
-        try {
-            BisqEasyTrade bisqEasyTrade = bisqEasyTradeService.onTakeOffer(takerIdentity.getIdentity(),
-                    bisqEasyOffer,
-                    takersBaseSideAmount,
-                    takersQuoteSideAmount,
-                    bisqEasyOffer.getBaseSidePaymentMethodSpecs().get(0),
-                    fiatPaymentMethodSpec,
-                    mediator,
-                    sellersPriceSpec,
-                    marketPrice);
 
-            model.setBisqEasyTrade(bisqEasyTrade);
+        BisqEasyProtocol bisqEasyProtocol = bisqEasyTradeService.createBisqEasyProtocol(takerIdentity.getIdentity(),
+                bisqEasyOffer,
+                takersBaseSideAmount,
+                takersQuoteSideAmount,
+                bisqEasyOffer.getBaseSidePaymentMethodSpecs().get(0),
+                fiatPaymentMethodSpec,
+                mediator,
+                sellersPriceSpec,
+                marketPrice);
+        BisqEasyTrade bisqEasyTrade = bisqEasyProtocol.getModel();
+        model.setBisqEasyTrade(bisqEasyTrade);
+        String tradeId = bisqEasyTrade.getId();
+        tradeProtocolExceptionPin = bisqEasyTrade.getTradeProtocolException().addObserver(exception ->
+                new Popup().error(exception).show());
 
-            BisqEasyContract contract = bisqEasyTrade.getContract();
-            String tradeId = bisqEasyTrade.getId();
-            bisqEasyOpenTradeChannelService.sendTakeOfferMessage(tradeId, bisqEasyOffer, contract.getMediator())
-                    .thenAccept(result -> UIThread.run(() -> {
+        bisqEasyTradeService.takeOffer(bisqEasyTrade);
 
-                        // In case the user has switched to another market we want to select that market in the offer book
-                        ChatChannelSelectionService chatChannelSelectionService = chatService.getChatChannelSelectionService(ChatChannelDomain.BISQ_EASY_OFFERBOOK);
-                        bisqEasyOfferbookChannelService.findChannel(contract.getOffer().getMarket())
-                                .ifPresent(chatChannelSelectionService::selectChannel);
+        BisqEasyContract contract = bisqEasyTrade.getContract();
+        bisqEasyOpenTradeChannelService.sendTakeOfferMessage(tradeId, bisqEasyOffer, contract.getMediator())
+                .thenAccept(result -> UIThread.run(() -> {
 
-                        model.getShowTakeOfferSuccess().set(true);
-                        mainButtonsVisibleHandler.accept(false);
-                    }));
-        } catch (TradeProtocolException e) {
-            //todo add better error handling
-            new Popup().error(e).show();
-        }
+                    // In case the user has switched to another market we want to select that market in the offer book
+                    ChatChannelSelectionService chatChannelSelectionService = chatService.getChatChannelSelectionService(ChatChannelDomain.BISQ_EASY_OFFERBOOK);
+                    bisqEasyOfferbookChannelService.findChannel(contract.getOffer().getMarket())
+                            .ifPresent(chatChannelSelectionService::selectChannel);
+
+                    model.getShowTakeOfferSuccess().set(true);
+                    mainButtonsVisibleHandler.accept(false);
+                }));
     }
 
     @Override
@@ -278,6 +280,9 @@ public class TakeOfferReviewController implements Controller {
 
     @Override
     public void onDeactivate() {
+        if (tradeProtocolExceptionPin != null) {
+            tradeProtocolExceptionPin.unbind();
+        }
     }
 
     void onShowOpenTrades() {

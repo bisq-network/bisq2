@@ -60,9 +60,9 @@ import bisq.presentation.formatters.PercentageFormatter;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.settings.SettingsService;
 import bisq.support.mediation.MediationRequestService;
-import bisq.trade.TradeProtocolException;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
+import bisq.trade.bisq_easy.protocol.BisqEasyProtocol;
 import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
@@ -423,8 +423,7 @@ public class TradeWizardReviewController implements Controller {
         FiatPaymentMethodSpec fiatPaymentMethodSpec = new FiatPaymentMethodSpec(model.getTakersSelectedPaymentMethod());
         PriceSpec sellersPriceSpec = model.getPriceSpec();
         long marketPrice = model.getMarketPrice();
-        try {
-            BisqEasyTrade bisqEasyTrade = bisqEasyTradeService.onTakeOffer(takerIdentity.getIdentity(),
+        BisqEasyProtocol bisqEasyProtocol = bisqEasyTradeService.createBisqEasyProtocol(takerIdentity.getIdentity(),
                     bisqEasyOffer,
                     takersBaseSideAmount,
                     takersQuoteSideAmount,
@@ -433,7 +432,7 @@ public class TradeWizardReviewController implements Controller {
                     mediator,
                     sellersPriceSpec,
                     marketPrice);
-
+        BisqEasyTrade bisqEasyTrade = bisqEasyProtocol.getModel();
             model.setBisqEasyTrade(bisqEasyTrade);
 
             BisqEasyContract contract = bisqEasyTrade.getContract();
@@ -449,10 +448,6 @@ public class TradeWizardReviewController implements Controller {
                         model.getShowTakeOfferSuccess().set(true);
                         mainButtonsVisibleHandler.accept(false);
                     }));
-        } catch (TradeProtocolException e) {
-            //todo add better error handling
-            new Popup().error(e).show();
-        }
     }
 
     @Override
