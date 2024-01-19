@@ -137,8 +137,8 @@
 }
 
 .bisq-text-2 {
-    -fx-fill: -bisq-medium-grey-mid;
-    -fx-text-fill: -bisq-medium-grey-mid;
+    -fx-fill: -bisq-mid-grey-30;
+    -fx-text-fill: -bisq-mid-grey-30;
     -fx-font-size: 1.2em;
 }
 
@@ -472,7 +472,7 @@
 .bisq-small-light-label-dimmed {
     -fx-font-size: 0.9em;
     -fx-font-family: "IBM Plex Sans Light";
-    -fx-text-fill: -bisq-medium-grey-mid;
+    -fx-text-fill: -bisq-mid-grey-30;
 }
 
 .bisq-content-headline-label {
@@ -504,7 +504,7 @@
 }
 
 .bisq-grey-dimmed {
-    -fx-text-fill: -bisq-medium-grey-mid;
+    -fx-text-fill: -bisq-mid-grey-30;
 }
 
 .bisq-text-white {

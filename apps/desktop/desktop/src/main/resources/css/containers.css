@@ -553,7 +553,7 @@
     -fx-background-radius: 0 8 8 0;
     -fx-border-radius: 0;
     -fx-border-width: 0 0 0 3;
-    -fx-border-color: -bisq-medium-grey-mid;
+    -fx-border-color: -bisq-mid-grey-30;
     -fx-padding: 10 10 10 15;
 }
 
@@ -562,7 +562,7 @@
     -fx-background-radius: 0 8 8 0;
     -fx-border-radius: 0;
     -fx-border-width: 0 0 0 3;
-    -fx-border-color: -bisq-medium-grey-mid;
+    -fx-border-color: -bisq-mid-grey-30;
     -fx-padding: 10 10 10 15;
 }
 

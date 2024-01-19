@@ -256,8 +256,8 @@
 }
 
 .bisq-easy-trade-state-phase-inactive {
-    -fx-fill: -bisq-medium-grey-mid;
-    -fx-text-fill: -bisq-medium-grey-mid;
+    -fx-fill: -bisq-mid-grey-30;
+    -fx-text-fill: -bisq-mid-grey-30;
     -fx-font-family: "IBM Plex Sans Light";
 }
 
@@ -662,7 +662,7 @@
 #bisq-easy-next-button {
     -fx-background-color: transparent;
     -fx-background-radius: 4;
-    -fx-border-color: -bisq-medium-grey-mid;
+    -fx-border-color: -bisq-mid-grey-30;
     -fx-border-width: 0.75;
     -fx-border-radius: 2.5;
     -fx-text-fill: -fx-light-text-color;

@@ -473,7 +473,7 @@
     -bisq-toggle-color: -fx-default-button;
     -bisq-un-toggle-color: -bisq-white-lit;
     -bisq-toggle-line-color: derive(-bisq-toggle-color, 65%);
-    -bisq-un-toggle-line-color: -bisq-medium-grey-mid;
+    -bisq-un-toggle-line-color: -bisq-mid-grey-30;
     -bisq-size: 8;
 }
 
@@ -637,12 +637,12 @@
 .check-box > .box {
     -fx-background-color: transparent;
     -fx-background-radius: 0;
-    -fx-border-color: -bisq-medium-grey-mid;
+    -fx-border-color: -bisq-mid-grey-30;
     -fx-border-width: 1;
 }
 
 .check-box:hover > .box {
-    -fx-border-color: derive(-bisq-medium-grey-mid, 20%);
+    -fx-border-color: derive(-bisq-mid-grey-30, 20%);
 }
 
 .check-box > .box > .mark {
