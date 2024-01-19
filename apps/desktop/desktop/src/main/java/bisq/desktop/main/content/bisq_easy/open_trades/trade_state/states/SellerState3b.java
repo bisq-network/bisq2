@@ -26,13 +26,13 @@ import bisq.desktop.common.Browser;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.controls.MaterialTextField;
-import bisq.desktop.main.content.bisq_easy.components.WaitingAnimation;
-import bisq.desktop.main.content.bisq_easy.components.WaitingState;
 import bisq.desktop.components.controls.WrappingText;
 import bisq.desktop.components.overlay.Popup;
+import bisq.desktop.main.content.bisq_easy.components.WaitingAnimation;
+import bisq.desktop.main.content.bisq_easy.components.WaitingState;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
-import bisq.trade.TradeException;
+import bisq.trade.TradeProtocolException;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.BooleanProperty;
@@ -110,7 +110,7 @@ public class SellerState3b extends BaseState {
         private void onComplete() {
             try {
                 bisqEasyTradeService.btcConfirmed(model.getBisqEasyTrade());
-            } catch (TradeException e) {
+            } catch (TradeProtocolException e) {
                 new Popup().error(e).show();
             }
         }
@@ -151,7 +151,7 @@ public class SellerState3b extends BaseState {
             sendSystemMessage(Res.get("bisqEasy.tradeState.info.phase3b.systemMessage", model.getFormattedBaseAmount(), model.btcAddress));
             try {
                 bisqEasyTradeService.btcConfirmed(model.getBisqEasyTrade());
-            } catch (TradeException e) {
+            } catch (TradeProtocolException e) {
                 new Popup().error(e).show();
             }
         }

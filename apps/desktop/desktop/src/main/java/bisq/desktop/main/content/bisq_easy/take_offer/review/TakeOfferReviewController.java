@@ -49,7 +49,7 @@ import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.PercentageFormatter;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.support.mediation.MediationRequestService;
-import bisq.trade.TradeException;
+import bisq.trade.TradeProtocolException;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.user.banned.BannedUserService;
@@ -235,7 +235,7 @@ public class TakeOfferReviewController implements Controller {
                         model.getShowTakeOfferSuccess().set(true);
                         mainButtonsVisibleHandler.accept(false);
                     }));
-        } catch (TradeException e) {
+        } catch (TradeProtocolException e) {
             //todo add better error handling
             new Popup().error(e).show();
         }

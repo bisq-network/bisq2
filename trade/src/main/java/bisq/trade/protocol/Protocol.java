@@ -22,7 +22,7 @@ import bisq.common.fsm.Fsm;
 import bisq.common.fsm.FsmException;
 import bisq.trade.ServiceProvider;
 import bisq.trade.Trade;
-import bisq.trade.TradeException;
+import bisq.trade.TradeProtocolException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -39,11 +39,11 @@ public abstract class Protocol<M extends Trade<?, ?, ?>> extends Fsm<M> {
         this.serviceProvider = serviceProvider;
     }
 
-    public void handle(Event event) throws TradeException {
+    public void handle(Event event) throws TradeProtocolException {
         try {
             super.handle(event);
         } catch (FsmException e) {
-            throw new TradeException(e);
+            throw new TradeProtocolException(e);
         }
     }
 }

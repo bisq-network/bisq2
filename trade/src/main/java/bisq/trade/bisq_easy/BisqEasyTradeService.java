@@ -32,7 +32,7 @@ import bisq.offer.price.spec.PriceSpec;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.trade.ServiceProvider;
-import bisq.trade.TradeException;
+import bisq.trade.TradeProtocolException;
 import bisq.trade.bisq_easy.protocol.*;
 import bisq.trade.bisq_easy.protocol.events.*;
 import bisq.trade.bisq_easy.protocol.messages.*;
@@ -235,7 +235,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
                                      FiatPaymentMethodSpec fiatPaymentMethodSpec,
                                      Optional<UserProfile> mediator,
                                      PriceSpec agreedPriceSpec,
-                                     long marketPrice) throws TradeException {
+                                     long marketPrice) throws TradeProtocolException {
         NetworkId takerNetworkId = takerIdentity.getNetworkId();
         BisqEasyContract contract = new BisqEasyContract(
                 System.currentTimeMillis(),
@@ -262,42 +262,42 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         return bisqEasyTrade;
     }
 
-    public void sellerSendsPaymentAccount(BisqEasyTrade trade, String paymentAccountData) throws TradeException {
+    public void sellerSendsPaymentAccount(BisqEasyTrade trade, String paymentAccountData) throws TradeProtocolException {
         getProtocol(trade.getId()).handle(new BisqEasyAccountDataEvent(paymentAccountData));
         persist();
     }
 
-    public void buyerConfirmFiatSent(BisqEasyTrade trade) throws TradeException {
+    public void buyerConfirmFiatSent(BisqEasyTrade trade) throws TradeProtocolException {
         getProtocol(trade.getId()).handle(new BisqEasyConfirmFiatSentEvent());
         persist();
     }
 
-    public void buyerSendBtcAddress(BisqEasyTrade trade, String buyersBtcAddress) throws TradeException {
+    public void buyerSendBtcAddress(BisqEasyTrade trade, String buyersBtcAddress) throws TradeProtocolException {
         getProtocol(trade.getId()).handle(new BisqEasySendBtcAddressEvent(buyersBtcAddress));
         persist();
     }
 
-    public void sellerConfirmFiatReceipt(BisqEasyTrade trade) throws TradeException {
+    public void sellerConfirmFiatReceipt(BisqEasyTrade trade) throws TradeProtocolException {
         getProtocol(trade.getId()).handle(new BisqEasyConfirmFiatReceiptEvent());
         persist();
     }
 
-    public void sellerConfirmBtcSent(BisqEasyTrade trade, String txId) throws TradeException {
+    public void sellerConfirmBtcSent(BisqEasyTrade trade, String txId) throws TradeProtocolException {
         getProtocol(trade.getId()).handle(new BisqEasyConfirmBtcSentEvent(txId));
         persist();
     }
 
-    public void btcConfirmed(BisqEasyTrade trade) throws TradeException {
+    public void btcConfirmed(BisqEasyTrade trade) throws TradeProtocolException {
         getProtocol(trade.getId()).handle(new BisqEasyBtcConfirmedEvent());
         persist();
     }
 
-    public void rejectTrade(BisqEasyTrade trade) throws TradeException {
+    public void rejectTrade(BisqEasyTrade trade) throws TradeProtocolException {
         getProtocol(trade.getId()).handle(new BisqEasyRejectTradeEvent());
         persist();
     }
 
-    public void cancelTrade(BisqEasyTrade trade) throws TradeException {
+    public void cancelTrade(BisqEasyTrade trade) throws TradeProtocolException {
         getProtocol(trade.getId()).handle(new BisqEasyCancelTradeEvent());
         persist();
     }

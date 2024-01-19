@@ -28,7 +28,7 @@ import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
-import bisq.trade.TradeException;
+import bisq.trade.TradeProtocolException;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyAccountDataMessage;
 import bisq.user.profile.UserProfile;
@@ -127,7 +127,7 @@ public class SellerState1 extends BaseState {
             sendSystemMessage(Res.get("bisqEasy.tradeState.info.seller.phase1.systemMessage"));
             try {
                 bisqEasyTradeService.sellerSendsPaymentAccount(model.getBisqEasyTrade(), paymentAccountData);
-            } catch (TradeException e) {
+            } catch (TradeProtocolException e) {
                 new Popup().error(e).show();
             }
         }

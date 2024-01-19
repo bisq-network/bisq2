@@ -19,8 +19,8 @@ package bisq.trade;
 
 import bisq.common.fsm.FsmException;
 
-public class TradeException extends FsmException {
-    public TradeException(FsmException e) {
+public class TradeProtocolException extends FsmException {
+    public TradeProtocolException(FsmException e) {
         super(e);
     }
 }

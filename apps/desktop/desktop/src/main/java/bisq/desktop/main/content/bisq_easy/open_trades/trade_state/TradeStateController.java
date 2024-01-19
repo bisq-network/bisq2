@@ -33,7 +33,7 @@ import bisq.desktop.main.content.bisq_easy.components.TradeDataHeader;
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.*;
 import bisq.i18n.Res;
 import bisq.support.mediation.MediationRequestService;
-import bisq.trade.TradeException;
+import bisq.trade.TradeProtocolException;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
@@ -183,7 +183,7 @@ public class TradeStateController implements Controller {
                             case COMPLETED:
                             default:
                         }
-                    } catch (TradeException e) {
+                    } catch (TradeProtocolException e) {
                         new Popup().error(e).show();
                     }
                 })
