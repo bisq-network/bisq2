@@ -280,7 +280,7 @@
 }
 
 .text-fill-light-dimmed {
-    -fx-text-fill: -bisq-light-grey-dim !Important;
+    -fx-text-fill: -bisq-light-grey-10 !Important;
 }
 
 .text-fill-grey-dimmed {

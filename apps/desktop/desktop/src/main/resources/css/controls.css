@@ -721,9 +721,9 @@
     -fx-show-delay: 100ms;
     -fx-hide-delay: 100ms;
     -fx-show-duration: 20000ms;
-    -fx-background: -bisq-light-grey-dim;
+    -fx-background: -bisq-light-grey-10;
     -fx-text-fill: -fx-dark-text-color;
-    -fx-background-color: -bisq-light-grey-dim;
+    -fx-background-color: -bisq-light-grey-10;
     -fx-background-radius: 6px;
     -fx-background-insets: 0;
     -fx-padding: 0.667em 0.75em 0.667em 0.75em; /* 10px */
@@ -732,7 +732,7 @@
 }
 
 .tooltip .dark-tooltip {
-    -fx-text-fill: -bisq-light-grey-dim;
+    -fx-text-fill: -bisq-light-grey-10;
     -fx-background-color: -bisq-dark-grey-20;
     -fx-font-size: 0.85em;
 }
