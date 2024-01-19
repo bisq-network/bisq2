@@ -28,7 +28,7 @@ public class FsmTest {
     @Test
     void testOutOfOrderEvents() throws FsmException {
         MockModel model = new MockModel(MockState.INIT);
-        Fsm<MockModel> fsm = new Fsm<>(model);
+        SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
 
         // No change in data as no handler was defined
         fsm.addTransition()
@@ -80,7 +80,7 @@ public class FsmTest {
     @Test
     void testValidStateTransitions() throws FsmException {
         MockModel model = new MockModel(MockState.INIT);
-        Fsm<MockModel> fsm = new Fsm<>(model);
+        SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
 
         // No change in data as no handler was defined
         fsm.addTransition()
@@ -118,7 +118,7 @@ public class FsmTest {
     @Test
     void testTransitions() throws FsmException {
         MockModel model = new MockModel(MockState.INIT);
-        Fsm<MockModel> fsm = new Fsm<>(model);
+        SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
 
         // No change in data as no handler was defined
         fsm.addTransition()
@@ -163,7 +163,7 @@ public class FsmTest {
     void testNoStateTransition() throws FsmException {
         // No such event defined: No state change, no handler call
         MockModel model1 = new MockModel(MockState.INIT);
-        Fsm<MockModel> fsm1 = new Fsm<>(model1);
+        Fsm<MockModel> fsm1 = new SimpleFsm<>(model1);
         fsm1.addTransition()
                 .from(MockState.INIT)
                 .on(MockEvent1.class)
@@ -176,7 +176,7 @@ public class FsmTest {
         // If no target state is set we do not create the transition, so no exception is thrown but no transition if
         // found at handle.
         MockModel model2 = new MockModel(MockState.INIT);
-        Fsm<MockModel> fsm2 = new Fsm<>(model2);
+        Fsm<MockModel> fsm2 = new SimpleFsm<>(model2);
         fsm2.addTransition()
                 .from(MockState.INIT)
                 .on(MockEvent1.class)
@@ -187,7 +187,7 @@ public class FsmTest {
 
         // If source state is already final we do not transit
         MockModel model3 = new MockModel(MockState.COMPLETED);
-        Fsm<MockModel> fsm3 = new Fsm<>(model3);
+        Fsm<MockModel> fsm3 = new SimpleFsm<>(model3);
         fsm3.addTransition()
                 .from(MockState.COMPLETED)
                 .on(MockEvent1.class)
@@ -199,7 +199,7 @@ public class FsmTest {
 
         // Same event and state combination: No state change, no handler call
         MockModel model4 = new MockModel(MockState.INIT);
-        Fsm<MockModel> fsm4 = new Fsm<>(model4);
+        Fsm<MockModel> fsm4 = new SimpleFsm<>(model4);
         fsm4.addTransition()
                 .from(MockState.INIT)
                 .on(MockEvent1.class)
@@ -214,7 +214,7 @@ public class FsmTest {
 
         // No state change as wrong event fired
         MockModel model5 = new MockModel(MockState.INIT);
-        Fsm<MockModel> fsm5 = new Fsm<>(model5);
+        Fsm<MockModel> fsm5 = new SimpleFsm<>(model5);
         fsm5.addTransition()
                 .from(MockState.INIT)
                 .on(MockEvent1.class)
@@ -229,7 +229,7 @@ public class FsmTest {
     void testEventHandlerNotCalled() throws FsmException {
         // No EventHandlerClass defined
         MockModel model1 = new MockModel(MockState.INIT);
-        Fsm<MockModel> fsm1 = new Fsm<>(model1);
+        Fsm<MockModel> fsm1 = new SimpleFsm<>(model1);
         fsm1.addTransition()
                 .from(MockState.INIT)
                 .on(MockEvent1.class)
@@ -243,7 +243,7 @@ public class FsmTest {
     void testFsmExceptions() throws FsmException {
         Assertions.assertThrows(IllegalArgumentException.class, () -> {
             MockModel model = new MockModel(MockState.INIT);
-            Fsm<MockModel> fsm = new Fsm<>(model);
+            SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
             fsm.addTransition()
                     .from(null)
                     .on(MockEvent1.class)
@@ -253,7 +253,7 @@ public class FsmTest {
         });
         Assertions.assertThrows(IllegalArgumentException.class, () -> {
             MockModel model = new MockModel(MockState.INIT);
-            Fsm<MockModel> fsm = new Fsm<>(model);
+            SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
             fsm.addTransition()
                     .on(MockEvent1.class)
                     .run(MockEventHandler.class)
@@ -262,7 +262,7 @@ public class FsmTest {
         });
         Assertions.assertThrows(IllegalArgumentException.class, () -> {
             MockModel model = new MockModel(MockState.INIT);
-            Fsm<MockModel> fsm = new Fsm<>(model);
+            SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
             fsm.addTransition()
                     .from(MockState.INIT)
                     .on(null)
@@ -272,7 +272,7 @@ public class FsmTest {
         });
         Assertions.assertThrows(IllegalArgumentException.class, () -> {
             MockModel model = new MockModel(MockState.INIT);
-            Fsm<MockModel> fsm = new Fsm<>(model);
+            SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
             fsm.addTransition()
                     .from(MockState.INIT)
                     .run(MockEventHandler.class)
@@ -281,7 +281,7 @@ public class FsmTest {
         });
         Assertions.assertThrows(NullPointerException.class, () -> {
             MockModel model = new MockModel(MockState.INIT);
-            Fsm<MockModel> fsm = new Fsm<>(model);
+            SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
             fsm.addTransition()
                     .from(MockState.INIT)
                     .on(MockEvent1.class)
@@ -291,7 +291,7 @@ public class FsmTest {
         });
         Assertions.assertThrows(IllegalArgumentException.class, () -> {
             MockModel model = new MockModel(MockState.INIT);
-            Fsm<MockModel> fsm = new Fsm<>(model);
+            SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
             fsm.addTransition()
                     .from(MockState.INIT)
                     .on(MockEvent1.class)
@@ -302,7 +302,7 @@ public class FsmTest {
         // Initial state is null
         Assertions.assertThrows(NullPointerException.class, () -> {
             MockModel model = new MockModel(null);
-            Fsm<MockModel> fsm = new Fsm<>(model);
+            SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
             fsm.addTransition()
                     .from(MockState.INIT)
                     .on(MockEvent1.class)
@@ -313,7 +313,7 @@ public class FsmTest {
         // Same source and target state
         Assertions.assertThrows(IllegalArgumentException.class, () -> {
             MockModel model = new MockModel(MockState.INIT);
-            Fsm<MockModel> fsm = new Fsm<>(model);
+            SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
             fsm.addTransition()
                     .from(MockState.INIT)
                     .on(MockEvent1.class)
@@ -325,7 +325,7 @@ public class FsmTest {
         // MockEventHandler2 constructor not matching defined constructor signature in newEventHandlerFromClass
         Assertions.assertThrows(IllegalArgumentException.class, () -> {
             MockModel model = new MockModel(MockState.INIT);
-            Fsm<MockModel> fsm = new Fsm<>(model);
+            SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
             fsm.addTransition()
                     .from(MockState.INIT)
                     .on(MockEvent1.class)
@@ -337,7 +337,7 @@ public class FsmTest {
         // same pair sourceState/event added
         Assertions.assertThrows(IllegalArgumentException.class, () -> {
             MockModel model = new MockModel(MockState.INIT);
-            Fsm<MockModel> fsm = new Fsm<>(model);
+            SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
             fsm.addTransition()
                     .from(MockState.INIT)
                     .on(MockEvent1.class)

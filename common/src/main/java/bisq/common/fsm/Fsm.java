@@ -38,20 +38,17 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * is used for multiple transitions.
  */
 @Slf4j
-public class Fsm<M extends FsmModel> {
+public abstract class Fsm<M extends FsmModel> {
     private final Map<Pair<State, Class<? extends Event>>, Transition> transitionMap = new HashMap<>();
     @Getter
     protected final M model;
 
-    public Fsm(M model) {
+    protected Fsm(M model) {
         this.model = model;
         configTransitions();
     }
 
-    // todo make abstract
-    protected void configTransitions() {
-        // Subclasses might use that for transition config
-    }
+    abstract protected void configTransitions();
 
     public void handle(Event event) {
         try {
@@ -117,15 +114,10 @@ public class Fsm<M extends FsmModel> {
         }
     }
 
-    protected void handleFsmException(FsmException fsmException) {
-        handle(fsmException);
-    }
+    abstract protected void handleFsmException(FsmException fsmException);
 
-    // make abstract
-    protected EventHandler newEventHandlerFromClass(Class<? extends EventHandler> handlerClass)
-            throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
-        return handlerClass.getDeclaredConstructor().newInstance();
-    }
+    abstract protected EventHandler newEventHandlerFromClass(Class<? extends EventHandler> handlerClass)
+            throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException;
 
     private void addTransition(Transition transition) {
         checkArgument(transition.isValid(), "Invalid transition. transition=%s", transition);
