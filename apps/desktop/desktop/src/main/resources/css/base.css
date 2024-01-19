@@ -57,7 +57,7 @@
     -bisq-black-10: #050505;
     -bisq-black-20: #0d0d0d;
     -bisq-dark-grey-10: #151515;
-    -bisq-dark-grey-dim: #1e1e1e;
+    -bisq-dark-grey-20: #1e1e1e;
     -bisq-dark-grey-mid: #2b2b2b;
     -bisq-dark-grey-lit: #383838;
     -bisq-medium-grey-dim: #4d4d4d;
@@ -71,8 +71,8 @@
     -bisq-white-lit: #fafafa;
 
     /* Background colors */
-    -bisq-darker-grey: -bisq-dark-grey-dim;
-    -bisq-dark-grey: -bisq-dark-grey-dim;
+    -bisq-darker-grey: -bisq-dark-grey-20;
+    -bisq-dark-grey: -bisq-dark-grey-20;
     -bisq-content-bg-grey: -bisq-dark-grey-mid;
     -bisq-popup-bg-grey: -bisq-dark-grey-mid;
 

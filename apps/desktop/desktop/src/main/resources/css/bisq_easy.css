@@ -3,12 +3,12 @@
  ******************************************************************************/
 
 .bisq-easy-container {
-    -fx-background-color: -bisq-dark-grey-dim;
+    -fx-background-color: -bisq-dark-grey-20;
     -fx-background-radius: 8;
 }
 
 .bisq-easy-container-header {
-    -fx-background-color: -bisq-dark-grey-dim;
+    -fx-background-color: -bisq-dark-grey-20;
     -fx-background-radius: 8 8 0 0;
 }
 
@@ -64,7 +64,7 @@
  ******************************************************************************/
 
 .bisq-easy-onboarding-big-box {
-    -fx-background-color: -bisq-dark-grey-dim;
+    -fx-background-color: -bisq-dark-grey-20;
     -fx-background-radius: 8;
 }
 
@@ -154,7 +154,7 @@
  ******************************************************************************/
 
 .bisq-easy-open-trades-welcome-bg {
-    -fx-background-color: -bisq-dark-grey-dim;
+    -fx-background-color: -bisq-dark-grey-20;
     -fx-background-radius: 8;
 }
 
@@ -603,7 +603,7 @@
  ******************************************************************************/
 
 .bisq-easy-chat-sidebar-bg {
-    -fx-background-color: -bisq-dark-grey-dim;
+    -fx-background-color: -bisq-dark-grey-20;
     -fx-background-radius: 8 8 0 0;
 }
 
@@ -692,7 +692,7 @@
  ******************************************************************************/
 
 .bisq-easy-private-chats-table-view {
-    -fx-background-color: -bisq-dark-grey-dim;
+    -fx-background-color: -bisq-dark-grey-20;
 }
 
 /*******************************************************************************

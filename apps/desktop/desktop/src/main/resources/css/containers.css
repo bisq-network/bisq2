@@ -5,7 +5,7 @@
  ******************************************************************************/
 
 .bisq-popup {
-    -fx-background-color: -bisq-dark-grey-dim;
+    -fx-background-color: -bisq-dark-grey-20;
 }
 
 /*******************************************************************************
@@ -515,7 +515,7 @@
 }
 
 .bisq-box-2 {
-    -fx-background-color: -bisq-dark-grey-dim;
+    -fx-background-color: -bisq-dark-grey-20;
     -fx-background-radius: 8;
 }
 
@@ -549,7 +549,7 @@
 }
 
 #chat-message-quote-box-peer-msg {
-    -fx-background-color: -bisq-dark-grey-dim;
+    -fx-background-color: -bisq-dark-grey-20;
     -fx-background-radius: 0 8 8 0;
     -fx-border-radius: 0;
     -fx-border-width: 0 0 0 3;
