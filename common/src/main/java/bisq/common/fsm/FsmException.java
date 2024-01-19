@@ -17,7 +17,7 @@
 
 package bisq.common.fsm;
 
-public class FsmException extends RuntimeException {
+public class FsmException extends RuntimeException implements Event {
     public FsmException() {
     }
 

@@ -48,6 +48,7 @@ public class Fsm<M extends FsmModel> {
         configTransitions();
     }
 
+    // todo make abstract
     protected void configTransitions() {
         // Subclasses might use that for transition config
     }
@@ -64,16 +65,16 @@ public class Fsm<M extends FsmModel> {
                 }
                 log.info("Start transition from currentState {}", currentState);
                 Class<? extends Event> eventClass = event.getClass();
-                Pair<State, Class<? extends Event>> transitionKey = new Pair<>(currentState, eventClass);
-                Transition transition = transitionMap.get(transitionKey);
-                if (transition != null) {
-                    Optional<Class<? extends EventHandler>> eventHandlerClass = transition.getEventHandlerClass();
+                Optional<Transition> transition = findTransition(currentState, eventClass);
+                if (transition.isPresent()) {
+                    Optional<Class<? extends EventHandler>> eventHandlerClass = transition.get().getEventHandlerClass();
                     if (eventHandlerClass.isPresent()) {
-                        EventHandler eventHandlerFromClass = newEventHandlerFromClass(eventHandlerClass.get());
-                        log.info("Handle {} at {}", event.getClass().getSimpleName(), eventHandlerFromClass.getClass().getSimpleName());
-                        eventHandlerFromClass.handle(event);
+                        EventHandler eventHandler = newEventHandlerFromClass(eventHandlerClass.get());
+                        String eventHandlerName = eventHandler.getClass().getSimpleName();
+                        log.info("Handle {} at {}", event.getClass().getSimpleName(), eventHandlerName);
+                        eventHandler.handle(event);
                     }
-                    State targetState = transition.getTargetState();
+                    State targetState = transition.get().getTargetState();
                     log.info("Transition completed to new state {}", targetState);
                     model.setNewState(targetState);
                     model.eventQueue.remove(event);
@@ -82,7 +83,10 @@ public class Fsm<M extends FsmModel> {
                         model.eventQueue.clear();
                     } else {
                         model.processedEvents.add(eventClass);
-                        // Apply all pending events to see if any of those match our current state
+                        // Apply all pending events to see if any of those match our current state.
+                        // If an exception is thrown by the processed pending event it will get thrown to the
+                        // caller. This would be a different triggering event as the event which cause
+                        // the exception (the one from the queue).
                         // Clone set to avoid ConcurrentModificationException
                         new HashSet<>(model.getEventQueue()).forEach(this::handle);
                     }
@@ -96,13 +100,28 @@ public class Fsm<M extends FsmModel> {
                 }
             }
         } catch (Exception e) {
-            // If a queued event caused an exception we prefer to remove it.
-            model.eventQueue.remove(event);
-            log.error("Error at handling event.", e);
-            throw new FsmException(e);
+            log.error("Error at handling {}.", event, e);
+            handleFsmException(new FsmException(e));
         }
     }
 
+    private Optional<Transition> findTransition(State currentState, Class<? extends Event> eventClass) {
+        if (currentState == FsmState.ANY) {
+            return transitionMap.entrySet().stream()
+                    .filter(e -> e.getKey().getSecond().equals(eventClass))
+                    .map(Map.Entry::getValue)
+                    .findAny();
+        } else {
+            Pair<State, Class<? extends Event>> transitionKey = new Pair<>(currentState, eventClass);
+            return Optional.ofNullable(transitionMap.get(transitionKey));
+        }
+    }
+
+    protected void handleFsmException(FsmException fsmException) {
+        handle(fsmException);
+    }
+
+    // make abstract
     protected EventHandler newEventHandlerFromClass(Class<? extends EventHandler> handlerClass)
             throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
         return handlerClass.getDeclaredConstructor().newInstance();

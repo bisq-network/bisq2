@@ -241,7 +241,7 @@ public class FsmTest {
 
     @Test
     void testFsmExceptions() throws FsmException {
-        Assertions.assertThrows(FsmException.class, () -> {
+        Assertions.assertThrows(IllegalArgumentException.class, () -> {
             MockModel model = new MockModel(MockState.INIT);
             Fsm<MockModel> fsm = new Fsm<>(model);
             fsm.addTransition()
@@ -251,7 +251,7 @@ public class FsmTest {
                     .to(MockState.S1);
             fsm.handle(new MockEvent1(model, ""));
         });
-        Assertions.assertThrows(FsmException.class, () -> {
+        Assertions.assertThrows(IllegalArgumentException.class, () -> {
             MockModel model = new MockModel(MockState.INIT);
             Fsm<MockModel> fsm = new Fsm<>(model);
             fsm.addTransition()
@@ -260,7 +260,7 @@ public class FsmTest {
                     .to(MockState.S1);
             fsm.handle(new MockEvent1(model, ""));
         });
-        Assertions.assertThrows(FsmException.class, () -> {
+        Assertions.assertThrows(IllegalArgumentException.class, () -> {
             MockModel model = new MockModel(MockState.INIT);
             Fsm<MockModel> fsm = new Fsm<>(model);
             fsm.addTransition()
@@ -270,7 +270,7 @@ public class FsmTest {
                     .to(MockState.S1);
             fsm.handle(new MockEvent1(model, ""));
         });
-        Assertions.assertThrows(FsmException.class, () -> {
+        Assertions.assertThrows(IllegalArgumentException.class, () -> {
             MockModel model = new MockModel(MockState.INIT);
             Fsm<MockModel> fsm = new Fsm<>(model);
             fsm.addTransition()
@@ -279,7 +279,7 @@ public class FsmTest {
                     .to(MockState.S1);
             fsm.handle(new MockEvent1(model, ""));
         });
-        Assertions.assertThrows(FsmException.class, () -> {
+        Assertions.assertThrows(NullPointerException.class, () -> {
             MockModel model = new MockModel(MockState.INIT);
             Fsm<MockModel> fsm = new Fsm<>(model);
             fsm.addTransition()
@@ -289,7 +289,7 @@ public class FsmTest {
                     .to(MockState.S1);
             fsm.handle(new MockEvent1(model, ""));
         });
-        Assertions.assertThrows(FsmException.class, () -> {
+        Assertions.assertThrows(IllegalArgumentException.class, () -> {
             MockModel model = new MockModel(MockState.INIT);
             Fsm<MockModel> fsm = new Fsm<>(model);
             fsm.addTransition()
@@ -300,7 +300,7 @@ public class FsmTest {
             fsm.handle(new MockEvent1(model, ""));
         });
         // Initial state is null
-        Assertions.assertThrows(FsmException.class, () -> {
+        Assertions.assertThrows(NullPointerException.class, () -> {
             MockModel model = new MockModel(null);
             Fsm<MockModel> fsm = new Fsm<>(model);
             fsm.addTransition()
@@ -311,7 +311,7 @@ public class FsmTest {
             fsm.handle(new MockEvent1(model, ""));
         });
         // Same source and target state
-        Assertions.assertThrows(FsmException.class, () -> {
+        Assertions.assertThrows(IllegalArgumentException.class, () -> {
             MockModel model = new MockModel(MockState.INIT);
             Fsm<MockModel> fsm = new Fsm<>(model);
             fsm.addTransition()
@@ -323,7 +323,7 @@ public class FsmTest {
         });
 
         // MockEventHandler2 constructor not matching defined constructor signature in newEventHandlerFromClass
-        Assertions.assertThrows(FsmException.class, () -> {
+        Assertions.assertThrows(IllegalArgumentException.class, () -> {
             MockModel model = new MockModel(MockState.INIT);
             Fsm<MockModel> fsm = new Fsm<>(model);
             fsm.addTransition()
@@ -335,7 +335,7 @@ public class FsmTest {
         });
 
         // same pair sourceState/event added
-        Assertions.assertThrows(FsmException.class, () -> {
+        Assertions.assertThrows(IllegalArgumentException.class, () -> {
             MockModel model = new MockModel(MockState.INIT);
             Fsm<MockModel> fsm = new Fsm<>(model);
             fsm.addTransition()
