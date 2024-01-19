@@ -54,7 +54,7 @@
     -bisq2-green-dim-50: #2b5624;
 
     /* Bisq Grey Palette */
-    -bisq-black-dim: #050505;
+    -bisq-black-10: #050505;
     -bisq-black-mid: #0d0d0d;
     -bisq-black-lit: #151515;
     -bisq-dark-grey-dim: #1e1e1e;
@@ -95,7 +95,7 @@
     -bisq-green-hover: -bisq2-green-dim-10;
     -bisq-green-pressed: -bisq2-green-dim-30;
 
-    -fx-dark-text-color: -bisq-black-dim;
+    -fx-dark-text-color: -bisq-black-10;
     -fx-mid-text-color: -bisq-medium-grey-mid;
     -fx-light-text-color: -bisq-white-lit;
 
