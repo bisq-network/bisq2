@@ -17,7 +17,6 @@
 
 package bisq.trade.bisq_easy.protocol.events;
 
-import bisq.contract.bisq_easy.BisqEasyContract;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -26,9 +25,7 @@ import lombok.ToString;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public class BisqEasyTakeOfferEvent extends BisqEasyTradeEvent {
-    private final BisqEasyContract bisqEasyContract;
 
-    public BisqEasyTakeOfferEvent(BisqEasyContract bisqEasyContract) {
-        this.bisqEasyContract = bisqEasyContract;
+    public BisqEasyTakeOfferEvent() {
     }
 }

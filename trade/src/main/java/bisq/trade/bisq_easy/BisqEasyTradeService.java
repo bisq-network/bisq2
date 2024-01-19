@@ -257,7 +257,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         checkArgument(!tradeExists(bisqEasyTrade.getId()), "A trade with that ID exists already");
         persistableStore.addTrade(bisqEasyTrade);
 
-        createAndAddTradeProtocol(bisqEasyTrade).handle(new BisqEasyTakeOfferEvent(contract));
+        createAndAddTradeProtocol(bisqEasyTrade).handle(new BisqEasyTakeOfferEvent());
         persist();
         return bisqEasyTrade;
     }
