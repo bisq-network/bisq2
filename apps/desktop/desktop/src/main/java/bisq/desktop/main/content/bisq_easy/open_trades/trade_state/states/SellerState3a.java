@@ -22,9 +22,7 @@ import bisq.common.data.Pair;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.WrappingText;
-import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
-import bisq.trade.TradeProtocolException;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -78,11 +76,7 @@ public class SellerState3a extends BaseState {
         private void onBtcSent() {
             String txId = model.getTxId().get();
             sendSystemMessage(Res.get("bisqEasy.tradeState.info.seller.phase3a.systemMessage", txId));
-            try {
-                bisqEasyTradeService.sellerConfirmBtcSent(model.getBisqEasyTrade(), txId);
-            } catch (TradeProtocolException e) {
-                new Popup().error(e).show();
-            }
+            bisqEasyTradeService.sellerConfirmBtcSent(model.getBisqEasyTrade(), txId);
         }
     }
 

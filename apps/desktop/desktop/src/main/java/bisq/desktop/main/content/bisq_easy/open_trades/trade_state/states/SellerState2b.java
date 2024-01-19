@@ -20,9 +20,7 @@ package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.components.controls.WrappingText;
-import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
-import bisq.trade.TradeProtocolException;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
@@ -69,11 +67,7 @@ public class SellerState2b extends BaseState {
 
         private void onConfirmFiatReceipt() {
             sendSystemMessage(Res.get("bisqEasy.tradeState.info.seller.phase2b.systemMessage", model.getFormattedQuoteAmount()));
-            try {
-                bisqEasyTradeService.sellerConfirmFiatReceipt(model.getBisqEasyTrade());
-            } catch (TradeProtocolException e) {
-                new Popup().error(e).show();
-            }
+            bisqEasyTradeService.sellerConfirmFiatReceipt(model.getBisqEasyTrade());
         }
     }
 

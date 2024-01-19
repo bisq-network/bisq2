@@ -33,7 +33,6 @@ import bisq.desktop.main.content.bisq_easy.components.TradeDataHeader;
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.*;
 import bisq.i18n.Res;
 import bisq.support.mediation.MediationRequestService;
-import bisq.trade.TradeProtocolException;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
@@ -167,29 +166,25 @@ public class TradeStateController implements Controller {
         new Popup().warning(message)
                 .actionButtonText(Res.get("confirmation.yes"))
                 .onAction(() -> {
-                    try {
-                        switch (model.getTradeCloseType()) {
-                            case REJECT:
-                                model.getTradeInterrupted().set(true);
-                                model.getInterruptTradeButtonVisible().set(false);
-                                applyTradeInterruptedInfo(trade, false);
-                                channelService.sendSystemMessage(Res.get("bisqEasy.openTrades.systemMessage.rejected"),
-                                        model.getChannel().get());
-                                bisqEasyTradeService.rejectTrade(trade);
-                                break;
-                            case CANCEL:
-                                model.getTradeInterrupted().set(true);
-                                model.getInterruptTradeButtonVisible().set(false);
-                                applyTradeInterruptedInfo(trade, true);
-                                channelService.sendSystemMessage(Res.get("bisqEasy.openTrades.systemMessage.cancelled"),
-                                        model.getChannel().get());
-                                bisqEasyTradeService.cancelTrade(trade);
-                                break;
-                            case COMPLETED:
-                            default:
-                        }
-                    } catch (TradeProtocolException e) {
-                        new Popup().error(e).show();
+                    switch (model.getTradeCloseType()) {
+                        case REJECT:
+                            model.getTradeInterrupted().set(true);
+                            model.getInterruptTradeButtonVisible().set(false);
+                            applyTradeInterruptedInfo(trade, false);
+                            channelService.sendSystemMessage(Res.get("bisqEasy.openTrades.systemMessage.rejected"),
+                                    model.getChannel().get());
+                            bisqEasyTradeService.rejectTrade(trade);
+                            break;
+                        case CANCEL:
+                            model.getTradeInterrupted().set(true);
+                            model.getInterruptTradeButtonVisible().set(false);
+                            applyTradeInterruptedInfo(trade, true);
+                            channelService.sendSystemMessage(Res.get("bisqEasy.openTrades.systemMessage.cancelled"),
+                                    model.getChannel().get());
+                            bisqEasyTradeService.cancelTrade(trade);
+                            break;
+                        case COMPLETED:
+                        default:
                     }
                 })
                 .closeButtonText(Res.get("confirmation.no"))

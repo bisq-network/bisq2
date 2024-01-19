@@ -24,9 +24,7 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.WrappingText;
-import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
-import bisq.trade.TradeProtocolException;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -82,11 +80,7 @@ public class BuyerState1a extends BaseState {
 
         private void onSendBtcAddress() {
             sendSystemMessage(Res.get("bisqEasy.tradeState.info.buyer.phase1a.systemMessage"));
-            try {
-                bisqEasyTradeService.buyerSendBtcAddress(model.getBisqEasyTrade(), model.getBtcAddress().get());
-            } catch (TradeProtocolException e) {
-                new Popup().error(e).show();
-            }
+            bisqEasyTradeService.buyerSendBtcAddress(model.getBisqEasyTrade(), model.getBtcAddress().get());
         }
 
         void onOpenWalletHelp() {
