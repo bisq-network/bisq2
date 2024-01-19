@@ -20,11 +20,11 @@ package bisq.trade.bisq_easy.protocol;
 import bisq.common.fsm.EventHandler;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
-import bisq.trade.protocol.Protocol;
+import bisq.trade.protocol.TradeProtocol;
 
 import java.lang.reflect.InvocationTargetException;
 
-public abstract class BisqEasyProtocol extends Protocol<BisqEasyTrade> {
+public abstract class BisqEasyProtocol extends TradeProtocol<BisqEasyTrade> {
 
     public BisqEasyProtocol(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);

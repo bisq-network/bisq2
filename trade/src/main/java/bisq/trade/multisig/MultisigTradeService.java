@@ -29,7 +29,7 @@ import bisq.persistence.PersistenceClient;
 import bisq.trade.ServiceProvider;
 import bisq.trade.TradeProtocolException;
 import bisq.trade.multisig.protocol.*;
-import bisq.trade.protocol.Protocol;
+import bisq.trade.protocol.TradeProtocol;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -107,7 +107,7 @@ public class MultisigTradeService implements PersistenceClient<MultisigTradeStor
 
         persistableStore.add(tradeModel);
 
-        Protocol<MultisigTrade> protocol = createAndAddTradeProtocol(tradeModel);
+        TradeProtocol<MultisigTrade> tradeProtocol = createAndAddTradeProtocol(tradeModel);
         // protocol.handle(new MultisigTakeOfferEvent(takerIdentity, contract));
         persist();
         return tradeModel;

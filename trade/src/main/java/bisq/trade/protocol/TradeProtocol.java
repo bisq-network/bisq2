@@ -29,11 +29,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public abstract class Protocol<M extends Trade<?, ?, ?>> extends Fsm<M> {
+public abstract class TradeProtocol<M extends Trade<?, ?, ?>> extends Fsm<M> {
 
     protected final ServiceProvider serviceProvider;
 
-    public Protocol(ServiceProvider serviceProvider, M model) {
+    public TradeProtocol(ServiceProvider serviceProvider, M model) {
         super(model);
 
         this.serviceProvider = serviceProvider;

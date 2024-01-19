@@ -28,7 +28,7 @@ import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.trade.ServiceProvider;
 import bisq.trade.TradeProtocolException;
-import bisq.trade.protocol.Protocol;
+import bisq.trade.protocol.TradeProtocol;
 import bisq.trade.submarine.protocol.*;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -107,7 +107,7 @@ public class SubmarineTradeService implements PersistenceClient<SubmarineTradeSt
 
         persistableStore.add(tradeModel);
 
-        Protocol<SubmarineTrade> protocol = createAndAddTradeProtocol(tradeModel);
+        TradeProtocol<SubmarineTrade> tradeProtocol = createAndAddTradeProtocol(tradeModel);
         // protocol.handle(new SubmarineTakeOfferEvent(takerIdentity, contract));
         persist();
         return tradeModel;
