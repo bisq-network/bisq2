@@ -15,7 +15,7 @@
  ******************************************************************************/
 
 .bisq-popup-menu {
-    -fx-background-color: -bisq-dark-grey-mid;
+    -fx-background-color: -bisq-dark-grey-40;
     -fx-background-radius: 6px;
     -fx-padding: 0.667em 0.75em 0.667em 0.75em; /* 10px */
     -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.5), 10, 0.0, 5, 5);
@@ -85,12 +85,12 @@
  ******************************************************************************/
 
 .separator:horizontal .line {
-    -fx-border-color: -bisq-dark-grey-mid;
+    -fx-border-color: -bisq-dark-grey-40;
     -fx-border-width: 0.5;
 }
 
 .separator:vertical .line {
-    -fx-border-color: -bisq-dark-grey-mid;
+    -fx-border-color: -bisq-dark-grey-40;
     -fx-border-width: 0.5;
 }
 
@@ -105,7 +105,7 @@
 }
 
 .popup-bg {
-    -fx-background-color: -bisq-dark-grey-mid;
+    -fx-background-color: -bisq-dark-grey-40;
 }
 
 
@@ -246,7 +246,7 @@
 }
 
 .table-view .table-row-cell:selected .table-cell {
-    -fx-background-color: -bisq-dark-grey-mid;
+    -fx-background-color: -bisq-dark-grey-40;
 }
 
 /* Custom style used in selection column for vertical green bar */
@@ -520,7 +520,7 @@
 }
 
 .bisq-dual-amount-bg {
-    -fx-background-color: -bisq-dark-grey-mid;
+    -fx-background-color: -bisq-dark-grey-40;
     -fx-background-radius: 8 8 0 0;
 }
 

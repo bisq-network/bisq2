@@ -122,7 +122,7 @@
  ******************************************************************************/
 
 .notification-pane {
-    -fx-background-color: -bisq-dark-grey-mid;
+    -fx-background-color: -bisq-dark-grey-40;
 }
 
 .notification-pane-dark {

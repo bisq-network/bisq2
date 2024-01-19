@@ -50,7 +50,7 @@
 
 .close-sidebar-button {
     -fx-background-color: -bisq-medium-grey-mid;
-    -fx-text-fill: -bisq-dark-grey-mid;
+    -fx-text-fill: -bisq-dark-grey-40;
 }
 
 #chat-filter-box {
@@ -60,7 +60,7 @@
 }
 
 #chat-user-profile-bg {
-    -fx-background-color: -bisq-dark-grey-mid;
+    -fx-background-color: -bisq-dark-grey-40;
     -fx-background-insets: 1 20 1 9;
     -fx-background-radius: 8;
 }
@@ -73,10 +73,10 @@
 }
 
 .chat-send-message-box {
-    -fx-background-color: -bisq-dark-grey-mid;
+    -fx-background-color: -bisq-dark-grey-40;
     -fx-background-radius: 8;
     -fx-background-insets: 0;
-    -fx-border-color: -bisq-dark-grey-mid;
+    -fx-border-color: -bisq-dark-grey-40;
     -fx-border-radius: 8;
     -fx-border-width: 1;
     -fx-border-insets: 0;
@@ -166,7 +166,7 @@
 }
 
 .create-offer-box-my-offer {
-    -fx-background-color: -bisq-dark-grey-mid;
+    -fx-background-color: -bisq-dark-grey-40;
 }
 
 .trade-wizard-feedback-bg {

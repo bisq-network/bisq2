@@ -104,7 +104,7 @@
 }
 
 .dark-grey-button {
-    -fx-background-color: -bisq-dark-grey-mid;
+    -fx-background-color: -bisq-dark-grey-40;
     -fx-border-color: transparent;
     -fx-fill: -bisq-white-lit;
     -fx-text-fill: -bisq-white-lit;
@@ -868,7 +868,7 @@
  ******************************************************************************/
 
 .search-box {
-    -fx-background-color: -bisq-dark-grey-mid;
+    -fx-background-color: -bisq-dark-grey-40;
     -fx-background-radius: 6;
     -fx-border-color: transparent;
     -fx-border-width: 0;
