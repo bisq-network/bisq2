@@ -458,7 +458,7 @@
 }
 
 .bisq-large-profile-id-label {
-    -fx-background-color: -bisq-medium-grey-dim;
+    -fx-background-color: -bisq-mid-grey-20;
     -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 1em;
 }
@@ -574,7 +574,7 @@
     -fx-faint-focus-color: transparent;
     -fx-background-color: transparent;
     -fx-text-fill: -fx-light-text-color;
-    -fx-prompt-text-fill: -bisq-medium-grey-dim;
+    -fx-prompt-text-fill: -bisq-mid-grey-20;
     -fx-font-size: 1.25em;
     -fx-font-family: "IBM Plex Sans Light";
 }
@@ -667,7 +667,7 @@
     -fx-faint-focus-color: transparent;
     -fx-background-color: transparent;
     -fx-text-fill: -fx-light-text-color;
-    -fx-prompt-text-fill: -bisq-medium-grey-dim;
+    -fx-prompt-text-fill: -bisq-mid-grey-20;
     -fx-font-size: 1.25em;
     -fx-font-family: "IBM Plex Sans Light";
 }

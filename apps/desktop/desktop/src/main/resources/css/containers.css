@@ -120,12 +120,12 @@
 }
 
 .scroll-bar > .thumb {
-    -fx-background-color: -bisq-medium-grey-dim;
+    -fx-background-color: -bisq-mid-grey-20;
 }
 
 .scroll-bar > .increment-button,
 .scroll-bar > .decrement-button {
-    -fx-background-color: -bisq-medium-grey-dim;
+    -fx-background-color: -bisq-mid-grey-20;
 }
 
 
@@ -269,8 +269,8 @@
 
 /* disabled */
 .table-view .table-row-cell:disabled .table-cell .text {
-    -fx-text-fill: -bisq-medium-grey-dim;
-    -fx-fill: -bisq-medium-grey-dim;
+    -fx-text-fill: -bisq-mid-grey-20;
+    -fx-fill: -bisq-mid-grey-20;
 }
 
 
@@ -496,7 +496,7 @@
 }
 
 .tab-view-line {
-    -fx-background-color: -bisq-medium-grey-dim;
+    -fx-background-color: -bisq-mid-grey-20;
 }
 
 .tab-view-selection {
@@ -533,7 +533,7 @@
 }
 
 .bisq-mid-grey {
-    -fx-background-color: -bisq-medium-grey-dim;
+    -fx-background-color: -bisq-mid-grey-20;
 }
 
 .bisq-green-line {

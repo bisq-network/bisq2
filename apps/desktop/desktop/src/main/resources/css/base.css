@@ -61,7 +61,7 @@
     -bisq-dark-grey-30: #242424;
     -bisq-dark-grey-40: #2b2b2b;
     -bisq-dark-grey-50: #383838;
-    -bisq-medium-grey-dim: #4d4d4d;
+    -bisq-mid-grey-20: #4d4d4d;
     -bisq-medium-grey-mid: #808080;
     -bisq-medium-grey-lit: #b2b2b2;
     -bisq-light-grey-dim: #c7c7c7;
@@ -78,7 +78,7 @@
     -bisq-popup-bg-grey: -bisq-dark-grey-40;
 
     /* Border colors */
-    -bisq-border-color-grey: -bisq-medium-grey-dim;
+    -bisq-border-color-grey: -bisq-mid-grey-20;
     -bisq-border-color-grey-hover: -bisq-light-grey-dim;
 
 
