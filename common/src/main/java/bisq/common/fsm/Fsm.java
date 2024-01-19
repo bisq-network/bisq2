@@ -29,8 +29,15 @@ import java.util.Optional;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+/**
+ * Minimalistic finite state machine implementation inspired by <a href="https://github.com/j-easy/easy-states">easy-states</a>
+ * <br/>
+ * In case of out-of-order events we store the un-handled events (we do not persist it) and retry to apply those
+ * pending states after the next state transition.
+ * The handling of out-of-order events only support unique event/state pairs. It is not supported that the same event
+ * is used for multiple transitions.
+ */
 @Slf4j
-
 public class Fsm<M extends FsmModel> {
     private final Map<Pair<State, Class<? extends Event>>, Transition> transitionMap = new HashMap<>();
     @Getter
@@ -75,10 +82,13 @@ public class Fsm<M extends FsmModel> {
                         model.eventQueue.clear();
                     } else {
                         model.processedEvents.add(eventClass);
+                        // Apply all pending events to see if any of those match our current state
                         // Clone set to avoid ConcurrentModificationException
                         new HashSet<>(model.getEventQueue()).forEach(this::handle);
                     }
                 } else {
+                    // In case we get an event which does not match our current state we add the event to our
+                    // event queue if the event was not already processed.
                     transitionMap.keySet().stream()
                             .filter(key -> key.getSecond().equals(eventClass) &&
                                     !model.processedEvents.contains(eventClass))
