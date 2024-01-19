@@ -56,8 +56,6 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
         ContractSignatureData takersContractSignatureData = message.getContractSignatureData();
         ContractService contractService = serviceProvider.getContractService();
         try {
-            checkArgument(contractService.verifyContractSignature(contract, takersContractSignatureData));
-
             ContractSignatureData makersContractSignatureData = contractService.signContract(contract,
                     trade.getMyIdentity().getKeyBundle().getKeyPair());
             commitToModel(takersContractSignatureData, makersContractSignatureData);
@@ -81,7 +79,6 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
                                     }
                                 }));
             }
-
         } catch (GeneralSecurityException e) {
             throw new RuntimeException(e);
         }
@@ -114,6 +111,13 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
         checkArgument(mediator.equals(takersContract.getMediator()), "Mediators do not match. " +
                         "mediator={}, takersContract.getMediator()={}",
                 mediator, takersContract.getMediator());
+
+        ContractSignatureData takersContractSignatureData = message.getContractSignatureData();
+        try {
+            checkArgument(serviceProvider.getContractService().verifyContractSignature(takersContract, takersContractSignatureData));
+        } catch (GeneralSecurityException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void commitToModel(ContractSignatureData takersContractSignatureData, ContractSignatureData makersContractSignatureData) {
