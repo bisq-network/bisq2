@@ -70,7 +70,7 @@
     -bisq-light-grey-40: #e3e3e3;
     -bisq-light-grey-50: #eaeaea;
     -bisq-white-10: #f2f2f2;
-    -bisq-white-lit: #fafafa;
+    -bisq-white-20: #fafafa;
 
     /* Background colors */
     -bisq-darker-grey: -bisq-dark-grey-20;
@@ -99,7 +99,7 @@
 
     -fx-dark-text-color: -bisq-black-10;
     -fx-mid-text-color: -bisq-mid-grey-30;
-    -fx-light-text-color: -bisq-white-lit;
+    -fx-light-text-color: -bisq-white-20;
 
     -bisq-error: -bisq-red;
 

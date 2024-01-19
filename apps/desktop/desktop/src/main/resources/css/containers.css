@@ -370,13 +370,13 @@
 }
 
 .titled-pane > .title > .arrow-button > .arrow {
-    -fx-background-color: -bisq-white-lit;
+    -fx-background-color: -bisq-white-20;
     -fx-background-insets: 2.5;
     -fx-shape: "M 0 0 h 7 l -3.5 4 z";
 }
 
 .titled-pane:focused > .title > .arrow-button > .arrow {
-    -fx-background-color: -bisq-white-lit;
+    -fx-background-color: -bisq-white-20;
     -fx-effect: null;
 }
 
@@ -541,7 +541,7 @@
 }
 
 .bisq-white-bg {
-    -fx-background-color: -bisq-white-lit;
+    -fx-background-color: -bisq-white-20;
 }
 
 .bisq-content-bg {
