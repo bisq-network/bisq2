@@ -17,7 +17,6 @@
 
 package bisq.trade.bisq_easy.protocol;
 
-import bisq.common.fsm.FsmState;
 import bisq.trade.ServiceProvider;
 import bisq.trade.TradeProtocolException;
 import bisq.trade.bisq_easy.BisqEasyTrade;
@@ -37,7 +36,7 @@ public class BisqEasyBuyerAsMakerProtocol extends BisqEasyProtocol {
     public void configTransitions() {
         // Error handling
         addTransition()
-                .from(FsmState.ANY)
+                .fromAny()
                 .on(TradeProtocolException.class)
                 .run(TradeProtocolExceptionHandler.class)
                 .to(FAILED);

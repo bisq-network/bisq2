@@ -106,7 +106,7 @@ public abstract class Fsm<M extends FsmModel> {
     abstract protected void handleFsmException(FsmException fsmException);
 
     private Optional<Transition> findTransition(State currentState, Class<? extends Event> eventClass) {
-        if (currentState == FsmState.ANY) {
+        if (currentState instanceof AnySourceState) {
             return transitionMap.entrySet().stream()
                     .filter(e -> e.getKey().getSecond().equals(eventClass))
                     .map(Map.Entry::getValue)
@@ -118,19 +118,16 @@ public abstract class Fsm<M extends FsmModel> {
     }
 
     private void addTransition(Transition transition) {
-        checkArgument(transition.isValid(), "Invalid transition. transition=%s", transition);
-        if (transition.getSourceStates().isEmpty()) {
-            Pair<State, Class<? extends Event>> pair = new Pair<>(transition.getSourceState(), transition.getEventClass());
-            checkArgument(!transitionMap.containsKey(pair),
-                    "A transition exists already with the state/event pair. pair=%s", pair);
-            transitionMap.put(pair, transition);
-        } else {
+        try {
+            checkArgument(transition.isValid(), "Invalid transition. transition=%s", transition);
             transition.getSourceStates().forEach(sourceState -> {
                 Pair<State, Class<? extends Event>> pair = new Pair<>(sourceState, transition.getEventClass());
                 checkArgument(!transitionMap.containsKey(pair),
                         "A transition exists already with the state/event pair. pair=%s", pair);
                 transitionMap.put(pair, transition);
             });
+        } catch (IllegalArgumentException e) {
+            throw new FsmConfigException(e);
         }
     }
 
@@ -147,13 +144,27 @@ public abstract class Fsm<M extends FsmModel> {
             transition = new Transition();
         }
 
-        public TransitionBuilder<M> fromAny(State... sourceStates) {
-            transition.setSourceStates(Set.of(sourceStates));
+        public TransitionBuilder<M> from(State sourceState) {
+            if (sourceState == null) {
+                throw new FsmConfigException("sourceState must not be null");
+            }
+            return fromAny(sourceState);
+        }
+
+        public TransitionBuilder<M> fromAny() {
+            from(new AnySourceState());
             return this;
         }
 
-        public TransitionBuilder<M> from(State sourceState) {
-            transition.setSourceState(sourceState);
+        public TransitionBuilder<M> fromAny(State... sourceStates) {
+            if (sourceStates == null) {
+                throw new FsmConfigException("sourceStates must not be null");
+            }
+            if (sourceStates.length == 0) {
+                throw new FsmConfigException("sourceStates must not be empty");
+            }
+            transition.getSourceStates().clear();
+            transition.getSourceStates().addAll(Set.of(sourceStates));
             return this;
         }
 
@@ -163,6 +174,9 @@ public abstract class Fsm<M extends FsmModel> {
         }
 
         public TransitionBuilder<M> run(Class<? extends EventHandler> eventHandlerClass) {
+            if (eventHandlerClass == null) {
+                throw new FsmConfigException("eventHandlerClass must not be null");
+            }
             transition.setEventHandlerClass(Optional.of(eventHandlerClass));
             return this;
         }
