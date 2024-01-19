@@ -140,7 +140,7 @@ public class CitationBlock {
             root.setPadding(new Insets(0, 15, 0, 20));
 
             Label headline = new Label(Res.get("chat.message.citation.headline"));
-            headline.setStyle("-fx-text-fill: -bisq-medium-grey-lit");
+            headline.setStyle("-fx-text-fill: -bisq-mid-grey-40");
             headline.getStyleClass().addAll("font-light", "font-size-11");
 
             closeButton = BisqIconButton.createDeleteIconButton();
@@ -154,7 +154,7 @@ public class CitationBlock {
             userName = new Label();
             userName.setPadding(new Insets(3, 0, 0, -3));
             userName.getStyleClass().add("font-medium");
-            userName.setStyle("-fx-text-fill: -bisq-medium-grey-lit");
+            userName.setStyle("-fx-text-fill: -bisq-mid-grey-40");
 
             roboIconImageView = new ImageView();
             roboIconImageView.setFitWidth(25);

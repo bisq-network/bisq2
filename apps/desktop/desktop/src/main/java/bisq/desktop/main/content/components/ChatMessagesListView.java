@@ -1218,7 +1218,7 @@ public class ChatMessagesListView {
                                     quotedMessageField.setStyle("-fx-fill: -fx-mid-text-color");
                                     Label userName = new Label(controller.getUserName(citation.getAuthorUserProfileId()));
                                     userName.getStyleClass().add("font-medium");
-                                    userName.setStyle("-fx-text-fill: -bisq-medium-grey-lit");
+                                    userName.setStyle("-fx-text-fill: -bisq-mid-grey-40");
                                     quotedMessageVBox.getChildren().setAll(userName, quotedMessageField);
                                 }
                             } else {

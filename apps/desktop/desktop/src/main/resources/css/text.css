@@ -433,7 +433,7 @@
 #quote-amount-text-field {
     -fx-background-color: transparent;
     -fx-border-style: none;
-    -fx-text-fill: -bisq-medium-grey-lit;
+    -fx-text-fill: -bisq-mid-grey-40;
     -fx-font-size: 1.1em;
     -fx-font-family: "IBM Plex Sans Light";
 }
@@ -524,7 +524,7 @@
 }
 
 .bisq-text-grey-10 {
-    -fx-text-fill: -bisq-medium-grey-lit;
+    -fx-text-fill: -bisq-mid-grey-40;
 }
 
 .font-medium {
