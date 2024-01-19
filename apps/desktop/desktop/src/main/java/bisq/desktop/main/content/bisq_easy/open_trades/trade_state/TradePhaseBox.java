@@ -160,6 +160,10 @@ class TradePhaseBox {
                             model.getRequestMediationButtonVisible().set(false);
                             model.getReportToMediatorButtonVisible().set(true);
                             break;
+
+                        case FAILED:
+                            // TODO
+                            break;
                     }
                 });
             });

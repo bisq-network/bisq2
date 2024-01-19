@@ -39,7 +39,7 @@ public class BisqEasySellerAsTakerProtocol extends BisqEasyProtocol {
                 .from(FsmState.ANY)
                 .on(TradeProtocolException.class)
                 .run(TradeProtocolExceptionHandler.class)
-                .to(FsmState.ERROR);
+                .to(FAILED);
 
         addTransition()
                 .from(INIT)

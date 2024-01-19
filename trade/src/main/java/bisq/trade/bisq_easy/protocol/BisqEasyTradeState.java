@@ -49,7 +49,9 @@ public enum BisqEasyTradeState implements State {
     BTC_CONFIRMED(true),
 
     REJECTED(true),
-    CANCELLED(true);
+    CANCELLED(true),
+
+    FAILED(true);
 
     private final boolean isFinalState;
 

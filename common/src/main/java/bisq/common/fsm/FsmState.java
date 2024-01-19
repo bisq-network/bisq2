@@ -6,8 +6,7 @@ import lombok.ToString;
 @ToString
 @Getter
 public enum FsmState implements State {
-    ANY(),
-    ERROR(true);
+    ANY();
 
     private final boolean isFinalState;
 

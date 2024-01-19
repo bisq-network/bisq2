@@ -291,6 +291,10 @@ public class TradeStateController implements Controller {
                 model.getInterruptTradeButtonVisible().set(false);
                 applyTradeInterruptedInfo(trade, true);
                 break;
+
+            case FAILED:
+                // TODO
+                break;
             default:
                 log.error(state.name());
         }
@@ -352,6 +356,10 @@ public class TradeStateController implements Controller {
             case REJECTED:
             case CANCELLED:
                 model.getInterruptTradeButtonVisible().set(false);
+                break;
+
+            case FAILED:
+                // TODO
                 break;
         }
     }
