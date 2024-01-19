@@ -17,9 +17,27 @@
 
 package bisq.common.fsm;
 
+import lombok.Getter;
+
 public interface State {
 
     boolean isFinalState();
 
     String name();
+
+    @Getter
+    enum FsmState implements State {
+        ANY,
+        ERROR(true);
+
+        private final boolean isFinalState;
+
+        FsmState() {
+            this.isFinalState = false;
+        }
+
+        FsmState(boolean isFinalState) {
+            this.isFinalState = isFinalState;
+        }
+    }
 }

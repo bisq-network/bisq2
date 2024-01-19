@@ -33,14 +33,16 @@ public class BisqEasyBuyerAsMakerProtocol extends BisqEasyProtocol {
     }
 
     @Override
-    public void configTransitions() {
-        // Error handling
+    protected void configErrorHandling() {
         addTransition()
                 .fromAny()
                 .on(TradeProtocolException.class)
                 .run(TradeProtocolExceptionHandler.class)
                 .to(FAILED);
+    }
 
+    @Override
+    public void configTransitions() {
         addTransition()
                 .from(INIT)
                 .on(BisqEasyTakeOfferRequest.class)
@@ -115,7 +117,7 @@ public class BisqEasyBuyerAsMakerProtocol extends BisqEasyProtocol {
 
         // Cancel trade
         addTransition()
-                .fromAny(BUYER_SENT_BTC_ADDRESS_AND_WAITING_FOR_ACCOUNT_DATA,
+                .fromStates(BUYER_SENT_BTC_ADDRESS_AND_WAITING_FOR_ACCOUNT_DATA,
                         BUYER_DID_NOT_SEND_BTC_ADDRESS_AND_RECEIVED_ACCOUNT_DATA,
                         BUYER_SENT_BTC_ADDRESS_AND_RECEIVED_ACCOUNT_DATA,
                         BUYER_SENT_FIAT_SENT_CONFIRMATION,
@@ -127,7 +129,7 @@ public class BisqEasyBuyerAsMakerProtocol extends BisqEasyProtocol {
 
         // Peer cancelled trade
         addTransition()
-                .fromAny(BUYER_SENT_BTC_ADDRESS_AND_WAITING_FOR_ACCOUNT_DATA,
+                .fromStates(BUYER_SENT_BTC_ADDRESS_AND_WAITING_FOR_ACCOUNT_DATA,
                         BUYER_DID_NOT_SEND_BTC_ADDRESS_AND_RECEIVED_ACCOUNT_DATA,
                         BUYER_SENT_BTC_ADDRESS_AND_RECEIVED_ACCOUNT_DATA,
                         BUYER_SENT_FIAT_SENT_CONFIRMATION,

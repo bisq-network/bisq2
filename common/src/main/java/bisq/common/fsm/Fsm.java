@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -43,10 +44,18 @@ public abstract class Fsm<M extends FsmModel> {
     protected Fsm(M model) {
         this.model = model;
 
+        configErrorHandling();
         configTransitions();
     }
 
     abstract protected void configTransitions();
+
+    protected void configErrorHandling() {
+        addTransition()
+                .fromAny()
+                .on(FsmException.class)
+                .to(State.FsmState.ERROR);
+    }
 
     public void handle(Event event) {
         try {
@@ -60,7 +69,9 @@ public abstract class Fsm<M extends FsmModel> {
                 }
                 log.info("Start transition from currentState {}", currentState);
                 Class<? extends Event> eventClass = event.getClass();
-                Optional<Transition> transition = findTransition(currentState, eventClass);
+                var transitionMapEntriesForEvent = findTransitionMapEntriesForEvent(eventClass);
+                checkArgument(!transitionMapEntriesForEvent.isEmpty(), "No transition found for given event " + event);
+                Optional<Transition> transition = findTransition(currentState, transitionMapEntriesForEvent);
                 if (transition.isPresent()) {
                     Optional<Class<? extends EventHandler>> eventHandlerClass = transition.get().getEventHandlerClass();
                     if (eventHandlerClass.isPresent()) {
@@ -86,6 +97,9 @@ public abstract class Fsm<M extends FsmModel> {
                         new HashSet<>(model.getEventQueue()).forEach(this::handle);
                     }
                 } else {
+                    log.info("We did not find a transition with state {} and event {}. " +
+                                    "We add the event to the eventQueue for potential later processing.",
+                            currentState, eventClass.getSimpleName());
                     // In case we get an event which does not match our current state we add the event to our
                     // event queue if the event was not already processed.
                     transitionMap.keySet().stream()
@@ -105,16 +119,18 @@ public abstract class Fsm<M extends FsmModel> {
 
     abstract protected void handleFsmException(FsmException fsmException);
 
-    private Optional<Transition> findTransition(State currentState, Class<? extends Event> eventClass) {
-        if (currentState instanceof AnySourceState) {
-            return transitionMap.entrySet().stream()
-                    .filter(e -> e.getKey().getSecond().equals(eventClass))
-                    .map(Map.Entry::getValue)
-                    .findAny();
-        } else {
-            Pair<State, Class<? extends Event>> transitionKey = new Pair<>(currentState, eventClass);
-            return Optional.ofNullable(transitionMap.get(transitionKey));
-        }
+    private Set<Map.Entry<Pair<State, Class<? extends Event>>, Transition>> findTransitionMapEntriesForEvent(Class<? extends Event> eventClass) {
+        return transitionMap.entrySet().stream()
+                .filter(e -> e.getKey().getSecond().equals(eventClass))
+                .collect(Collectors.toSet());
+    }
+
+    private Optional<Transition> findTransition(State currentState,
+                                                Set<Map.Entry<Pair<State, Class<? extends Event>>, Transition>> transitionMapEntriesForEvent) {
+        return transitionMapEntriesForEvent.stream()
+                .filter(e -> e.getKey().getFirst().equals(currentState) || e.getKey().getFirst() == State.FsmState.ANY)
+                .map(Map.Entry::getValue)
+                .findAny();
     }
 
     private void addTransition(Transition transition) {
@@ -148,15 +164,15 @@ public abstract class Fsm<M extends FsmModel> {
             if (sourceState == null) {
                 throw new FsmConfigException("sourceState must not be null");
             }
-            return fromAny(sourceState);
+            return fromStates(sourceState);
         }
 
         public TransitionBuilder<M> fromAny() {
-            from(new AnySourceState());
+            from(State.FsmState.ANY);
             return this;
         }
 
-        public TransitionBuilder<M> fromAny(State... sourceStates) {
+        public TransitionBuilder<M> fromStates(State... sourceStates) {
             if (sourceStates == null) {
                 throw new FsmConfigException("sourceStates must not be null");
             }

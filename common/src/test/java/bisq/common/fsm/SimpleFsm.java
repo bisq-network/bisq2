@@ -3,6 +3,7 @@ package bisq.common.fsm;
 import java.lang.reflect.InvocationTargetException;
 
 public class SimpleFsm<M extends FsmModel> extends Fsm<M> {
+
     public SimpleFsm(M model) {
         super(model);
     }
