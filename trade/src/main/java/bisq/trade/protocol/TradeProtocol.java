@@ -30,7 +30,6 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public abstract class TradeProtocol<M extends Trade<?, ?, ?>> extends Fsm<M> {
-
     protected final ServiceProvider serviceProvider;
 
     public TradeProtocol(ServiceProvider serviceProvider, M model) {
