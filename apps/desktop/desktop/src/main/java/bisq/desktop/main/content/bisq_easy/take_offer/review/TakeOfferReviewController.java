@@ -223,14 +223,13 @@ public class TakeOfferReviewController implements Controller {
                 marketPrice);
         BisqEasyTrade bisqEasyTrade = bisqEasyProtocol.getModel();
         model.setBisqEasyTrade(bisqEasyTrade);
-        String tradeId = bisqEasyTrade.getId();
         tradeProtocolExceptionPin = bisqEasyTrade.getTradeProtocolException().addObserver(exception ->
-                new Popup().error(exception).show());
+                UIThread.run(() -> new Popup().error(exception).show()));
 
         bisqEasyTradeService.takeOffer(bisqEasyTrade);
 
         BisqEasyContract contract = bisqEasyTrade.getContract();
-        bisqEasyOpenTradeChannelService.sendTakeOfferMessage(tradeId, bisqEasyOffer, contract.getMediator())
+        bisqEasyOpenTradeChannelService.sendTakeOfferMessage(bisqEasyTrade.getId(), bisqEasyOffer, contract.getMediator())
                 .thenAccept(result -> UIThread.run(() -> {
 
                     // In case the user has switched to another market we want to select that market in the offer book

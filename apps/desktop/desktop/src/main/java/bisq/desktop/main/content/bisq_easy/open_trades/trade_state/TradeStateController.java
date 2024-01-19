@@ -59,7 +59,7 @@ public class TradeStateController implements Controller {
     private final BisqEasyOpenTradeChannelService channelService;
     private final BisqEasyOpenTradeSelectionService selectionService;
     private final MediationRequestService mediationRequestService;
-    private Pin bisqEasyTradeStatePin, isInMediationPin;
+    private Pin bisqEasyTradeStatePin, tradeProtocolExceptionPin, isInMediationPin;
     private Subscription channelPin;
 
     public TradeStateController(ServiceProvider serviceProvider) {
@@ -117,21 +117,26 @@ public class TradeStateController implements Controller {
 
             bisqEasyTradeStatePin = bisqEasyTrade.tradeStateObservable().addObserver(state ->
                     UIThread.run(() -> applyStateInfoVBox(state)));
+
+            tradeProtocolExceptionPin = bisqEasyTrade.getTradeProtocolException().addObserver(exception ->
+                    UIThread.run(() -> new Popup().error(exception).show()));
         });
     }
 
     @Override
     public void onDeactivate() {
         channelPin.unsubscribe();
-        if (isInMediationPin != null) {
-            isInMediationPin.unbind();
-            isInMediationPin = null;
-        }
         if (bisqEasyTradeStatePin != null) {
             bisqEasyTradeStatePin.unbind();
             bisqEasyTradeStatePin = null;
         }
-
+        if (tradeProtocolExceptionPin != null) {
+            tradeProtocolExceptionPin.unbind();
+        }
+        if (isInMediationPin != null) {
+            isInMediationPin.unbind();
+            isInMediationPin = null;
+        }
         model.resetAll();
     }
 

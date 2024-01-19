@@ -31,6 +31,7 @@ import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
+import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.desktop.ServiceProvider;
@@ -95,6 +96,7 @@ public class TradeWizardReviewController implements Controller {
     private final SettingsService settingsService;
     private final ReviewDataDisplay reviewDataDisplay;
     private final MediationRequestService mediationRequestService;
+    private Pin tradeProtocolExceptionPin;
 
     public TradeWizardReviewController(ServiceProvider serviceProvider,
                                        Consumer<Boolean> mainButtonsVisibleHandler,
@@ -424,30 +426,32 @@ public class TradeWizardReviewController implements Controller {
         PriceSpec sellersPriceSpec = model.getPriceSpec();
         long marketPrice = model.getMarketPrice();
         BisqEasyProtocol bisqEasyProtocol = bisqEasyTradeService.createBisqEasyProtocol(takerIdentity.getIdentity(),
-                    bisqEasyOffer,
-                    takersBaseSideAmount,
-                    takersQuoteSideAmount,
-                    bisqEasyOffer.getBaseSidePaymentMethodSpecs().get(0),
-                    fiatPaymentMethodSpec,
-                    mediator,
-                    sellersPriceSpec,
-                    marketPrice);
+                bisqEasyOffer,
+                takersBaseSideAmount,
+                takersQuoteSideAmount,
+                bisqEasyOffer.getBaseSidePaymentMethodSpecs().get(0),
+                fiatPaymentMethodSpec,
+                mediator,
+                sellersPriceSpec,
+                marketPrice);
         BisqEasyTrade bisqEasyTrade = bisqEasyProtocol.getModel();
-            model.setBisqEasyTrade(bisqEasyTrade);
+        model.setBisqEasyTrade(bisqEasyTrade);
 
-            BisqEasyContract contract = bisqEasyTrade.getContract();
-            String tradeId = bisqEasyTrade.getId();
-            bisqEasyOpenTradeChannelService.sendTakeOfferMessage(tradeId, bisqEasyOffer, contract.getMediator())
-                    .thenAccept(result -> UIThread.run(() -> {
+        tradeProtocolExceptionPin = bisqEasyTrade.getTradeProtocolException().addObserver(exception ->
+                UIThread.run(() -> new Popup().error(exception).show()));
 
-                        // In case the user has switched to another market we want to select that market in the offer book
-                        ChatChannelSelectionService chatChannelSelectionService = chatService.getChatChannelSelectionService(ChatChannelDomain.BISQ_EASY_OFFERBOOK);
-                        bisqEasyOfferbookChannelService.findChannel(contract.getOffer().getMarket())
-                                .ifPresent(chatChannelSelectionService::selectChannel);
+        BisqEasyContract contract = bisqEasyTrade.getContract();
+        bisqEasyOpenTradeChannelService.sendTakeOfferMessage(bisqEasyTrade.getId(), bisqEasyOffer, contract.getMediator())
+                .thenAccept(result -> UIThread.run(() -> {
 
-                        model.getShowTakeOfferSuccess().set(true);
-                        mainButtonsVisibleHandler.accept(false);
-                    }));
+                    // In case the user has switched to another market we want to select that market in the offer book
+                    ChatChannelSelectionService chatChannelSelectionService = chatService.getChatChannelSelectionService(ChatChannelDomain.BISQ_EASY_OFFERBOOK);
+                    bisqEasyOfferbookChannelService.findChannel(contract.getOffer().getMarket())
+                            .ifPresent(chatChannelSelectionService::selectChannel);
+
+                    model.getShowTakeOfferSuccess().set(true);
+                    mainButtonsVisibleHandler.accept(false);
+                }));
     }
 
     @Override
@@ -457,6 +461,9 @@ public class TradeWizardReviewController implements Controller {
 
     @Override
     public void onDeactivate() {
+        if (tradeProtocolExceptionPin != null) {
+            tradeProtocolExceptionPin.unbind();
+        }
     }
 
     void onShowOfferbook() {
