@@ -27,8 +27,8 @@
 }
 
 .bisq-easy-trade-isInMediation-headline {
-    -fx-fill: -bisq-dark-grey-lit;
-    -fx-text-fill: -bisq-dark-grey-lit;
+    -fx-fill: -bisq-dark-grey-50;
+    -fx-text-fill: -bisq-dark-grey-50;
     -fx-font-size: 1.15em;
     -fx-font-family: "IBM Plex Sans";
 }
@@ -278,7 +278,7 @@
 }
 
 .bisq-easy-trade-state-phase-badge-inactive .badge-pane {
-    -fx-background-color: -bisq-dark-grey-lit;
+    -fx-background-color: -bisq-dark-grey-50;
 }
 
 .bisq-easy-trade-state-phase-badge-active .badge-pane {
@@ -483,7 +483,7 @@
 
 
 .trade-wizard-review-payment-combo-box {
-    -fx-background-color: -bisq-dark-grey-lit;
+    -fx-background-color: -bisq-dark-grey-50;
     -fx-background-insets: 6 0 6 0;
     -fx-fill: -fx-light-text-color;
     -fx-text-fill: -fx-light-text-color;

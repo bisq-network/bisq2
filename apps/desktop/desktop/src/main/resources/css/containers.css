@@ -68,12 +68,12 @@
  ******************************************************************************/
 
 .h-line {
-    -fx-border-color: -bisq-dark-grey-lit;
+    -fx-border-color: -bisq-dark-grey-50;
     -fx-border-width: 1 0 0 0;
 }
 
 .v-line {
-    -fx-border-color: -bisq-dark-grey-lit;
+    -fx-border-color: -bisq-dark-grey-50;
     -fx-border-width: 0 1 0 0;
 }
 
@@ -101,7 +101,7 @@
  ******************************************************************************/
 
 .bg-grey-5 {
-    -fx-background-color: -bisq-dark-grey-lit;
+    -fx-background-color: -bisq-dark-grey-50;
 }
 
 .popup-bg {
@@ -242,7 +242,7 @@
 }
 
 .table-view .table-row-cell:hover .table-cell {
-    -fx-background-color: -bisq-dark-grey-lit;
+    -fx-background-color: -bisq-dark-grey-50;
 }
 
 .table-view .table-row-cell:selected .table-cell {
@@ -456,12 +456,12 @@
 
 .scroll-bar:horizontal .thumb:hover,
 .scroll-bar:vertical .thumb:hover {
-    -fx-background-color: -bisq-dark-grey-lit;
+    -fx-background-color: -bisq-dark-grey-50;
 }
 
 .scroll-bar:horizontal .thumb:pressed,
 .scroll-bar:vertical .thumb:pressed {
-    -fx-background-color: -bisq-dark-grey-lit;
+    -fx-background-color: -bisq-dark-grey-50;
 }
 
 .scroll-bar:vertical:focused,
@@ -558,7 +558,7 @@
 }
 
 #chat-message-quote-box-my-msg {
-    -fx-background-color: -bisq-dark-grey-lit;
+    -fx-background-color: -bisq-dark-grey-50;
     -fx-background-radius: 0 8 8 0;
     -fx-border-radius: 0;
     -fx-border-width: 0 0 0 3;
