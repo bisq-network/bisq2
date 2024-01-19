@@ -1361,7 +1361,7 @@ public class ChatMessagesListView {
                                                 messageDeliveryStatusIcon.set(AwesomeIcon.SPINNER);
                                                 break;
                                             case SENT:
-                                                // -bisq-white-dim: #eaeaea;
+                                                // -bisq-light-grey-50: #eaeaea;
                                                 messageDeliveryStatusIconColor = Optional.of("#eaeaea");
                                                 messageDeliveryStatusIcon.set(AwesomeIcon.CIRCLE_ARROW_RIGHT);
                                                 break;
