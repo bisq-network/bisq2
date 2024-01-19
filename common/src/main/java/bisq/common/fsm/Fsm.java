@@ -52,7 +52,7 @@ public class Fsm<M extends FsmModel> {
         // Subclasses might use that for transition config
     }
 
-    public void handle(Event event) throws FsmException {
+    public void handle(Event event) {
         try {
             checkNotNull(event, "event must not be null");
             synchronized (this) {
@@ -108,16 +108,12 @@ public class Fsm<M extends FsmModel> {
         return handlerClass.getDeclaredConstructor().newInstance();
     }
 
-    private void addTransition(Transition transition) throws FsmException {
-        try {
-            checkArgument(transition.isValid(), "Invalid transition. transition=%s", transition);
-            Pair<State, Class<? extends Event>> pair = new Pair<>(transition.getSourceState(), transition.getEventClass());
-            checkArgument(!transitionMap.containsKey(pair),
-                    "A transition exists already with the state/event pair. pair=%s", pair);
-            transitionMap.put(pair, transition);
-        } catch (Exception e) {
-            throw new FsmException(e);
-        }
+    private void addTransition(Transition transition) {
+        checkArgument(transition.isValid(), "Invalid transition. transition=%s", transition);
+        Pair<State, Class<? extends Event>> pair = new Pair<>(transition.getSourceState(), transition.getEventClass());
+        checkArgument(!transitionMap.containsKey(pair),
+                "A transition exists already with the state/event pair. pair=%s", pair);
+        transitionMap.put(pair, transition);
     }
 
     public TransitionBuilder<M> addTransition() {
@@ -144,11 +140,7 @@ public class Fsm<M extends FsmModel> {
         }
 
         public TransitionBuilder<M> run(Class<? extends EventHandler> eventHandlerClass) {
-            try {
-                transition.setEventHandlerClass(Optional.of(eventHandlerClass));
-            } catch (Exception e) {
-                throw new FsmException(e);
-            }
+            transition.setEventHandlerClass(Optional.of(eventHandlerClass));
             return this;
         }
 

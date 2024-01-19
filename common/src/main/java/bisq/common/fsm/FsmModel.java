@@ -27,6 +27,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @Slf4j
 @ToString
 @EqualsAndHashCode
@@ -38,16 +40,12 @@ public class FsmModel {
     final Set<Class<? extends Event>> processedEvents = new HashSet<>();
 
     public FsmModel(State initialState) {
-        if (initialState == null) {
-            throw new FsmException("InitialState must not be null at Model constructor");
-        }
+        checkNotNull(initialState, "InitialState must not be null at Model constructor");
         state.set(initialState);
     }
 
     public FsmModel(State initialState, Set<Event> eventQueue, Set<Class<? extends Event>> processedEvents) {
-        if (initialState == null) {
-            throw new FsmException("InitialState must not be null at Model constructor");
-        }
+        checkNotNull(initialState, "InitialState must not be null at Model constructor");
         state.set(initialState);
         this.eventQueue.addAll(eventQueue);
         this.processedEvents.addAll(processedEvents);
