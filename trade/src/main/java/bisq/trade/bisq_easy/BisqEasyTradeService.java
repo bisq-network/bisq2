@@ -134,12 +134,13 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         Identity myIdentity = serviceProvider.getIdentityService().findAnyIdentityByNetworkId(bisqEasyContract.getOffer().getMakerNetworkId()).orElseThrow();
         BisqEasyTrade bisqEasyTrade = new BisqEasyTrade(isBuyer, false, myIdentity, bisqEasyContract, sender);
 
-        if (findProtocol(bisqEasyTrade.getId()).isPresent()) {
+        String tradeId = bisqEasyTrade.getId();
+        if (findProtocol(tradeId).isPresent()) {
             log.error("We received the BisqEasyTakeOfferRequest for an already existing protocol");
             return;
         }
-        checkArgument(!hadTrade(bisqEasyTrade.getId()), "Trade has been already taken");
-        persistableStore.add(bisqEasyTrade);
+        checkArgument(!tradeExists(tradeId), "A trade with that ID exists already");
+        persistableStore.addTrade(bisqEasyTrade);
 
         try {
             createAndAddTradeProtocol(bisqEasyTrade).handle(message);
@@ -253,8 +254,8 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         checkArgument(findProtocol(bisqEasyTrade.getId()).isEmpty(),
                 "We received the BisqEasyTakeOfferRequest for an already existing protocol");
 
-        checkArgument(!hadTrade(bisqEasyTrade.getId()), "Trade has been already taken");
-        persistableStore.add(bisqEasyTrade);
+        checkArgument(!tradeExists(bisqEasyTrade.getId()), "A trade with that ID exists already");
+        persistableStore.addTrade(bisqEasyTrade);
 
         createAndAddTradeProtocol(bisqEasyTrade).handle(new BisqEasyTakeOfferEvent(contract));
         persist();
@@ -320,8 +321,8 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         return persistableStore.findTrade(tradeId);
     }
 
-    public boolean hadTrade(String tradeId) {
-        return persistableStore.hadTrade(tradeId);
+    public boolean tradeExists(String tradeId) {
+        return persistableStore.tradeExists(tradeId);
     }
 
     public ObservableSet<BisqEasyTrade> getTrades() {
