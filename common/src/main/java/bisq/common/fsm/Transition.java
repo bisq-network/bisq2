@@ -23,6 +23,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
+import java.util.Set;
 
 @Slf4j
 @ToString
@@ -32,14 +33,23 @@ import java.util.Optional;
 @EqualsAndHashCode
 public class Transition {
     private State sourceState;
+    private Set<State> sourceStates;
     private State targetState;
     private Class<? extends Event> eventClass;
     private Optional<Class<? extends EventHandler>> eventHandlerClass = Optional.empty();
 
     public boolean isValid() {
-        return sourceState != null &&
-                targetState != null &&
-                eventClass != null &&
-                !sourceState.equals(targetState);
+        if (sourceStates.isEmpty()) {
+            return sourceState != null &&
+                    targetState != null &&
+                    eventClass != null &&
+                    !sourceState.equals(targetState);
+        } else {
+            return sourceState == null &&
+                    targetState != null &&
+                    eventClass != null &&
+                    !sourceStates.contains(targetState);
+        }
+
     }
 }

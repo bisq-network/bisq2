@@ -21,10 +21,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -45,6 +42,7 @@ public abstract class Fsm<M extends FsmModel> {
 
     protected Fsm(M model) {
         this.model = model;
+
         configTransitions();
     }
 
@@ -102,6 +100,11 @@ public abstract class Fsm<M extends FsmModel> {
         }
     }
 
+    abstract protected EventHandler newEventHandlerFromClass(Class<? extends EventHandler> handlerClass)
+            throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException;
+
+    abstract protected void handleFsmException(FsmException fsmException);
+
     private Optional<Transition> findTransition(State currentState, Class<? extends Event> eventClass) {
         if (currentState == FsmState.ANY) {
             return transitionMap.entrySet().stream()
@@ -114,17 +117,21 @@ public abstract class Fsm<M extends FsmModel> {
         }
     }
 
-    abstract protected void handleFsmException(FsmException fsmException);
-
-    abstract protected EventHandler newEventHandlerFromClass(Class<? extends EventHandler> handlerClass)
-            throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException;
-
     private void addTransition(Transition transition) {
         checkArgument(transition.isValid(), "Invalid transition. transition=%s", transition);
-        Pair<State, Class<? extends Event>> pair = new Pair<>(transition.getSourceState(), transition.getEventClass());
-        checkArgument(!transitionMap.containsKey(pair),
-                "A transition exists already with the state/event pair. pair=%s", pair);
-        transitionMap.put(pair, transition);
+        if (transition.getSourceStates().isEmpty()) {
+            Pair<State, Class<? extends Event>> pair = new Pair<>(transition.getSourceState(), transition.getEventClass());
+            checkArgument(!transitionMap.containsKey(pair),
+                    "A transition exists already with the state/event pair. pair=%s", pair);
+            transitionMap.put(pair, transition);
+        } else {
+            transition.getSourceStates().forEach(sourceState -> {
+                Pair<State, Class<? extends Event>> pair = new Pair<>(sourceState, transition.getEventClass());
+                checkArgument(!transitionMap.containsKey(pair),
+                        "A transition exists already with the state/event pair. pair=%s", pair);
+                transitionMap.put(pair, transition);
+            });
+        }
     }
 
     public TransitionBuilder<M> addTransition() {
@@ -138,6 +145,11 @@ public abstract class Fsm<M extends FsmModel> {
         private TransitionBuilder(Fsm<M> fsm) {
             this.fsm = fsm;
             transition = new Transition();
+        }
+
+        public TransitionBuilder<M> fromAny(State... sourceStates) {
+            transition.setSourceStates(Set.of(sourceStates));
+            return this;
         }
 
         public TransitionBuilder<M> from(State sourceState) {
