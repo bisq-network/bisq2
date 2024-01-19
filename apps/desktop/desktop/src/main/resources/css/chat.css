@@ -151,7 +151,7 @@
 }
 
 .chat-message-bg-my-message {
-    -fx-background-color: -bisq-black-lit;
+    -fx-background-color: -bisq-dark-grey-10;
     -fx-background-radius: 8;
 }
 
@@ -161,7 +161,7 @@
 }
 
 .create-offer-message-my-offer {
-    -fx-background-color: -bisq-black-lit;
+    -fx-background-color: -bisq-dark-grey-10;
     -fx-background-radius: 8;
 }
 
@@ -170,7 +170,7 @@
 }
 
 .trade-wizard-feedback-bg {
-    -fx-background-color: -bisq-black-lit;
+    -fx-background-color: -bisq-dark-grey-10;
     -fx-background-radius: 0 0 16 16;
 }
 

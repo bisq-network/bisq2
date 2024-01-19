@@ -189,7 +189,7 @@
 }
 
 .bisq-easy-open-trades.table-view .table-row-cell:filled:selected .table-cell {
-    -fx-background-color: -bisq-black-lit;
+    -fx-background-color: -bisq-dark-grey-10;
 }
 
 

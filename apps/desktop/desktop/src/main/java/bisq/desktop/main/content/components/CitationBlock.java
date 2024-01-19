@@ -136,7 +136,7 @@ public class CitationBlock {
             super(new VBox(), model, controller);
             root.setSpacing(10);
             root.setAlignment(Pos.CENTER_LEFT);
-            root.setStyle("-fx-background-color: -bisq-black-lit;");
+            root.setStyle("-fx-background-color: -bisq-dark-grey-10;");
             root.setPadding(new Insets(0, 15, 0, 20));
 
             Label headline = new Label(Res.get("chat.message.citation.headline"));
