@@ -151,7 +151,7 @@
 
 .notification-hyperlink:hover,
 .notification-hyperlink:visited:hover {
-    -fx-text-fill: -bisq-white-mid;
+    -fx-text-fill: -bisq-white-10;
 }
 .notification-hyperlink:visited,
 .notification-hyperlink:armed:visited,
