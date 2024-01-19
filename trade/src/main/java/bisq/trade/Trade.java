@@ -19,6 +19,7 @@ package bisq.trade;
 
 import bisq.common.fsm.FsmModel;
 import bisq.common.fsm.State;
+import bisq.common.observable.Observable;
 import bisq.common.proto.PersistableProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.contract.Contract;
@@ -62,6 +63,7 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
     private final P taker;
     private final P maker;
     private transient final TradeRole tradeRole;
+    private final Observable<TradeProtocolException> tradeProtocolException = new Observable<>();
 
     public Trade(State state,
                  boolean isBuyer,

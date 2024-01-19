@@ -17,10 +17,13 @@
 
 package bisq.trade.bisq_easy.protocol;
 
+import bisq.common.fsm.FsmState;
 import bisq.trade.ServiceProvider;
+import bisq.trade.TradeProtocolException;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.protocol.events.*;
 import bisq.trade.bisq_easy.protocol.messages.*;
+import bisq.trade.protocol.events.TradeProtocolExceptionHandler;
 
 import static bisq.trade.bisq_easy.protocol.BisqEasyTradeState.*;
 
@@ -31,6 +34,13 @@ public class BisqEasySellerAsTakerProtocol extends BisqEasyProtocol {
     }
 
     public void configTransitions() {
+        // Error handling
+        addTransition()
+                .from(FsmState.ANY)
+                .on(TradeProtocolException.class)
+                .run(TradeProtocolExceptionHandler.class)
+                .to(FsmState.ERROR);
+
         addTransition()
                 .from(INIT)
                 .on(BisqEasyTakeOfferEvent.class)

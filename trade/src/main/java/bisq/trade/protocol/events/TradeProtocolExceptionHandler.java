@@ -15,32 +15,21 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.protocol;
+package bisq.trade.protocol.events;
 
-import bisq.common.fsm.Fsm;
-import bisq.common.fsm.FsmException;
+import bisq.common.fsm.Event;
 import bisq.trade.ServiceProvider;
 import bisq.trade.Trade;
 import bisq.trade.TradeProtocolException;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
-@Getter
-@EqualsAndHashCode(callSuper = true)
-public abstract class Protocol<M extends Trade<?, ?, ?>> extends Fsm<M> {
-
-    protected final ServiceProvider serviceProvider;
-
-    public Protocol(ServiceProvider serviceProvider, M model) {
-        super(model);
-
-        this.serviceProvider = serviceProvider;
+public class TradeProtocolExceptionHandler<M extends Trade<?, ?, ?>> extends TradeEventHandler<M> {
+    protected TradeProtocolExceptionHandler(ServiceProvider serviceProvider, M model) {
+        super(serviceProvider, model);
     }
 
     @Override
-    protected void handleFsmException(FsmException fsmException) {
-        handle(new TradeProtocolException(fsmException));
+    public void handle(Event event) {
+        TradeProtocolException tradeProtocolException = (TradeProtocolException) event;
+        trade.getTradeProtocolException().set(tradeProtocolException);
     }
 }
