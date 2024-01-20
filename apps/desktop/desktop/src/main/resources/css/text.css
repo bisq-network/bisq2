@@ -516,7 +516,7 @@
 }
 
 .bisq-text-yellow {
-    -fx-text-fill: -bisq-yellow !important;
+    -fx-text-fill: -bisq-warning !important;
 }
 
 .bisq-text-error {

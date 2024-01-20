@@ -130,7 +130,7 @@
 }
 
 .notification-box {
-    -fx-background-color: -bisq-yellow;
+    -fx-background-color: -bisq-warning;
     -fx-background-radius: 8;
     -fx-border-color: transparent;
 }

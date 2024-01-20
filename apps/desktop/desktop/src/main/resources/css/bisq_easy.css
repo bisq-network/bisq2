@@ -20,8 +20,8 @@
 }
 
 .bisq-easy-trade-interrupted-headline {
-    -fx-fill: -bisq-yellow;
-    -fx-text-fill: -bisq-yellow;
+    -fx-fill: -bisq-warning;
+    -fx-text-fill: -bisq-warning;
     -fx-font-size: 1.15em;
     -fx-font-family: "IBM Plex Sans";
 }
@@ -41,7 +41,7 @@
 }
 
 .bisq-easy-trade-isInMediation-bg {
-    -fx-background-color: -bisq-yellow;
+    -fx-background-color: -bisq-warning;
     -fx-background-radius: 8;
     -fx-border-color: transparent;
 }
@@ -146,7 +146,7 @@
 
 
 .open-trades-badge.bisq-badge .badge-pane {
-    -fx-background-color: -bisq-yellow;
+    -fx-background-color: -bisq-warning;
 }
 
 .open-trades-badge.bisq-badge .badge-pane .label {
