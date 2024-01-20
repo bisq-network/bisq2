@@ -1,0 +1,28 @@
+- name: Bisq 2 - Oracle Node Setup
+  hosts: my_hosts
+
+  tasks:
+   - name: Install JDK 11 for bisq-daonode
+     ansible.builtin.apt:
+       name: openjdk-11-jdk
+       state: present
+
+   - name: Clone bisq-daonode
+     ansible.builtin.git:
+       repo: https://github.com/bisq-network/bisq-daonode.git
+       dest: /home/user/bisq-daonode
+       single_branch: yes
+       version: main
+
+   - name: Build bisq-daonode
+     ansible.builtin.command:
+       chdir: /home/user/bisq-daonode
+       cmd: ./gradlew build --no-daemon
+
+   - name: Copy run_bisq_daonode.sh to server
+     ansible.builtin.template:
+       src: run_daonode.j2
+       dest: /home/user/run_daonode.sh
+       owner: user
+       group: user
+       mode: '0744'
