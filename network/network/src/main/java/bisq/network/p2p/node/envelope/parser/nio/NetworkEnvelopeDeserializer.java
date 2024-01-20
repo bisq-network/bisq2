@@ -96,6 +96,7 @@ public class NetworkEnvelopeDeserializer {
             NetworkEnvelope message = NetworkEnvelope.parseFrom(currentProtobufMessage);
             bisq.network.p2p.message.NetworkEnvelope
                     networkEnvelope = bisq.network.p2p.message.NetworkEnvelope.fromProto(message);
+            networkEnvelope.verifyVersion();
             parsedNetworkEnvelopes.add(networkEnvelope);
 
         } catch (InvalidProtocolBufferException e) {

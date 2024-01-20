@@ -96,7 +96,7 @@ public class ConnectionHandshakeResponderTest {
                 new NetworkLoad(),
                 Address.localHost(1234).toString(),
                 0);
-        NetworkEnvelope requestNetworkEnvelope = new NetworkEnvelope(NetworkEnvelope.VERSION + 1000, token, request);
+        NetworkEnvelope requestNetworkEnvelope = new NetworkEnvelope(NetworkEnvelope.networkVersion + 1000, token, request);
         List<NetworkEnvelope> allEnvelopesToReceive = List.of(requestNetworkEnvelope);
         when(networkEnvelopeSocketChannel.receiveNetworkEnvelopes()).thenReturn(allEnvelopesToReceive);
 
