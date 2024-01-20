@@ -1371,12 +1371,12 @@ public class ChatMessagesListView {
                                                 messageDeliveryStatusIcon.set(AwesomeIcon.OK_SIGN);
                                                 break;
                                             case TRY_ADD_TO_MAILBOX:
-                                                // -bisq-warning: #d0831f;
+                                                // -bisq2-yellow: #d0831f;
                                                 messageDeliveryStatusIconColor = Optional.of("#d0831f");
                                                 messageDeliveryStatusIcon.set(AwesomeIcon.SHARE_SIGN);
                                                 break;
                                             case ADDED_TO_MAILBOX:
-                                                // -bisq-warning: #d0831f;
+                                                // -bisq2-yellow: #d0831f;
                                                 messageDeliveryStatusIconColor = Optional.of("#d0831f");
                                                 messageDeliveryStatusIcon.set(AwesomeIcon.CLOUD_UPLOAD);
                                                 break;
