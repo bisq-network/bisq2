@@ -1366,8 +1366,8 @@ public class ChatMessagesListView {
                                                 messageDeliveryStatusIcon.set(AwesomeIcon.CIRCLE_ARROW_RIGHT);
                                                 break;
                                             case ACK_RECEIVED:
-                                                // -bisq2-green-dim-50: #2b5624;
-                                                messageDeliveryStatusIconColor = Optional.of("#2b5624");
+                                                // -bisq2-green-dim-50: #2b5724;
+                                                messageDeliveryStatusIconColor = Optional.of("#2b5724");
                                                 messageDeliveryStatusIcon.set(AwesomeIcon.OK_SIGN);
                                                 break;
                                             case TRY_ADD_TO_MAILBOX:
@@ -1381,8 +1381,8 @@ public class ChatMessagesListView {
                                                 messageDeliveryStatusIcon.set(AwesomeIcon.CLOUD_UPLOAD);
                                                 break;
                                             case MAILBOX_MSG_RECEIVED:
-                                                // -bisq2-green-dim-50: #2b5624;
-                                                messageDeliveryStatusIconColor = Optional.of("#2b5624");
+                                                // -bisq2-green-dim-50: #2b5724;
+                                                messageDeliveryStatusIconColor = Optional.of("#2b5724");
                                                 messageDeliveryStatusIcon.set(AwesomeIcon.CLOUD_DOWNLOAD);
                                                 break;
                                             case FAILED:
