@@ -83,8 +83,14 @@ public final class MultisigTrade extends Trade<MultisigOffer, MultisigContract, 
         if (proto.hasErrorMessage()) {
             trade.setErrorMessage(proto.getErrorMessage());
         }
+        if (proto.hasErrorStackTrace()) {
+            trade.setErrorStackTrace(proto.getErrorStackTrace());
+        }
         if (proto.hasPeersErrorMessage()) {
             trade.setPeersErrorMessage(proto.getPeersErrorMessage());
+        }
+        if (proto.hasPeersErrorStackTrace()) {
+            trade.setPeersErrorStackTrace(proto.getPeersErrorStackTrace());
         }
         return trade;
     }

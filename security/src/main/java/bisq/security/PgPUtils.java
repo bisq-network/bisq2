@@ -17,7 +17,6 @@
 
 package bisq.security;
 
-import bisq.common.util.ExceptionUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.openpgp.*;
 import org.bouncycastle.openpgp.operator.bc.BcPGPContentVerifierBuilderProvider;
@@ -41,8 +40,8 @@ public class PgPUtils {
             PGPPublicKey publicKey = checkNotNull(pgpPublicKeyRing.getPublicKey(keyIdFromSignature), "No public key found for key ID from signature");
             return isSignatureValid(pgpSignature, publicKey, jarFileName);
         } catch (PGPException | IOException | SignatureException e) {
-            log.error("Signature verification failed. \npubKeyFile={} \nsigFile={} \njarFileName={}.\nError: {}",
-                    pubKeyFile, sigFile, jarFileName, ExceptionUtil.print(e));
+            log.error("Signature verification failed. \npubKeyFile={} \nsigFile={} \njarFileName={}.",
+                    pubKeyFile, sigFile, jarFileName, e);
             return false;
         }
     }

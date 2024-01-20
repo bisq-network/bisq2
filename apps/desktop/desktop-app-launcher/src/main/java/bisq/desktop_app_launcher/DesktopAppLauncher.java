@@ -70,7 +70,7 @@ public class DesktopAppLauncher {
         try {
             new DesktopAppLauncher(args);
         } catch (Exception e) {
-            System.err.println("Error at launch: " + ExceptionUtil.print(e));
+            System.err.println("Error at launch: " + ExceptionUtil.getStackTraceAsString(e));
         }
     }
 

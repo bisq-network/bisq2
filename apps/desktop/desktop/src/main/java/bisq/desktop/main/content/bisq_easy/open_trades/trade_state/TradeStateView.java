@@ -68,10 +68,12 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
 
         Label tradeInterruptedIcon = Icons.getIcon(AwesomeIcon.WARNING_SIGN);
         tradeInterruptedIcon.getStyleClass().add("bisq-text-yellow");
+        tradeInterruptedIcon.setMinWidth(16);
         tradeInterruptedInfo = new Label();
         tradeInterruptedInfo.getStyleClass().add("bisq-easy-trade-interrupted-headline");
 
         exportButton = new Button(Res.get("bisqEasy.openTrades.exportTrade"));
+        exportButton.setMinWidth(180);
 
         reportToMediatorButton = new Button(Res.get("bisqEasy.openTrades.reportToMediator"));
         reportToMediatorButton.getStyleClass().add("outlined-button");
@@ -85,6 +87,7 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
 
         Label errorIcon = Icons.getIcon(AwesomeIcon.WARNING_SIGN);
         errorIcon.getStyleClass().add("bisq-text-error");
+        errorIcon.setMinWidth(16);
         errorMessage = new Label();
         errorMessage.getStyleClass().add("bisq-easy-trade-failed-headline");
         tradeFailedHBox = new HBox(10, errorIcon, errorMessage);

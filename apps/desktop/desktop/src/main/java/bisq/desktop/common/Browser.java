@@ -17,7 +17,6 @@
 
 package bisq.desktop.common;
 
-import bisq.common.util.ExceptionUtil;
 import bisq.common.util.OsUtils;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.components.overlay.Popup;
@@ -29,6 +28,8 @@ import javafx.application.HostServices;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class Browser {
@@ -65,15 +66,17 @@ public class Browser {
     }
 
     private static void doOpen(String url) {
-        if (hostServices == null) {
-            throw new IllegalArgumentException("hostServices must be set before open is called");
-        }
+        checkNotNull(hostServices, "hostServices must be set before doOpen is called");
         try {
             hostServices.showDocument(url);
         } catch (Exception e) {
-            log.error("Error at opening URL with hostServices.showDocument. We try to open it via OsUtils.browse. Error={}; URL={}",
-                    ExceptionUtil.print(e), url);
-            OsUtils.browse(url);
+            log.info("Error at opening {} with hostServices.showDocument. We try to open it via OsUtils.browse.", url, e);
+
+            try {
+                OsUtils.browse(url);
+            } catch (Exception e2) {
+                log.error("Error at opening {} with OsUtils.browse.", url, e);
+            }
         }
     }
 }

@@ -17,24 +17,66 @@
 
 package bisq.common.util;
 
-public class ExceptionUtil {
+import com.google.common.base.Joiner;
+import com.google.common.base.Throwables;
 
-    /**
-     * @param throwable The throwable we want to get a meaningful message from.
-     * @return Returns either the message of the cause if available, otherwise the cause as string, if cause is not available
-     * * it returns the message if available, otherwise the throwable as string.
-     */
-    public static String print(Throwable throwable) {
-        if (throwable.getCause() != null) {
-            if (throwable.getCause().getMessage() != null) {
-                return throwable.getCause().getMessage();
-            } else {
-                return throwable.getCause().toString();
-            }
-        } else if (throwable.getMessage() != null) {
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class ExceptionUtil {
+    public static String getStackTraceAsString(Throwable throwable) {
+        return Throwables.getStackTraceAsString(throwable);
+    }
+
+    public static String getRootCauseMessage(Throwable throwable) {
+        Throwable rootCause = getRootCause(throwable);
+        return getMessageOrToString(rootCause);
+    }
+
+    public static String getMessageOrToString(Throwable throwable) {
+        if (throwable.getMessage() != null) {
             return throwable.getMessage();
         } else {
             return throwable.toString();
         }
+    }
+
+    public static String getCauseStackClassNames(Throwable throwable) {
+        List<String> classNames = getCauseStack(throwable).stream()
+                .map(e -> e.getClass().getSimpleName())
+                .collect(Collectors.toList());
+        return Joiner.on(", ").join(classNames);
+    }
+
+    public static List<Throwable> getCauseStack(Throwable throwable) {
+        List<Throwable> stack = new ArrayList<>();
+        while (throwable != null) {
+            stack.add(0, throwable);
+            throwable = throwable.getCause();
+        }
+        return stack;
+    }
+
+    // We do not want to print the message as that might leak private data, but only want the stack trace
+    // Therefore we do not use guava's Throwables.getStackTraceAsString(throwable)
+    public static String getSafeStackTraceAsString(Throwable throwable) {
+        if (throwable == null) {
+            return "";
+        }
+        Throwable rootCause = getRootCause(throwable);
+        List<String> traceClasses = Arrays.stream(rootCause.getStackTrace())
+                .map(StackTraceElement::toString)
+                .collect(Collectors.toList());
+        traceClasses.add(0, rootCause.getClass().getName());
+        return Joiner.on("\n    at ").join(traceClasses);
+    }
+
+    public static Throwable getRootCause(Throwable throwable) {
+        while (throwable != null && throwable.getCause() != null) {
+            throwable = throwable.getCause();
+        }
+        return throwable;
     }
 }
