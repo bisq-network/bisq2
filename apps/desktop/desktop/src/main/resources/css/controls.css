@@ -81,7 +81,7 @@
 
 
 .white-button {
-    -fx-background-color: -bisq-white-20;
+    -fx-background-color: -bisq-white;
     -fx-fill: -bisq-black-10 !important;
     -fx-text-fill: -bisq-black-10 !important;
 }
@@ -106,8 +106,8 @@
 .dark-grey-button {
     -fx-background-color: -bisq-dark-grey-40;
     -fx-border-color: transparent;
-    -fx-fill: -bisq-white-20;
-    -fx-text-fill: -bisq-white-20;
+    -fx-fill: -bisq-white;
+    -fx-text-fill: -bisq-white;
 }
 
 .dark-grey-button:hover {
@@ -210,8 +210,8 @@
 
 .white-transparent-outlined-button {
     -fx-background-color: transparent;
-    -fx-border-color: -bisq-white-20;
-    -fx-text-fill: -bisq-white-20;
+    -fx-border-color: -bisq-white;
+    -fx-text-fill: -bisq-white;
 }
 
 .white-transparent-outlined-button:hover {
@@ -471,7 +471,7 @@
     -fx-background-insets: 0px;
     -fx-padding: 2px;
     -bisq-toggle-color: -fx-default-button;
-    -bisq-un-toggle-color: -bisq-white-20;
+    -bisq-un-toggle-color: -bisq-white;
     -bisq-toggle-line-color: derive(-bisq-toggle-color, 65%);
     -bisq-un-toggle-line-color: -bisq-mid-grey-20;
     -bisq-size: 8;
@@ -554,17 +554,17 @@
 
 .card-button-border {
     -fx-background-color: transparent;
-    -fx-border-color: derive(-bisq-white-20, -25%);
+    -fx-border-color: derive(-bisq-white, -25%);
 }
 
 .card-button-border:hover {
     -fx-background-color: rgba(0, 0, 0, 0.15);
-    -fx-border-color: derive(-bisq-white-20, -15%);
+    -fx-border-color: derive(-bisq-white, -15%);
 }
 
 .card-button-border:pressed {
     -fx-background-color: rgba(0, 0, 0, 0.2);
-    -fx-border-color: derive(-bisq-white-20, -10%);
+    -fx-border-color: derive(-bisq-white, -10%);
 }
 
 .card-button-border:default {
@@ -667,7 +667,7 @@
 
 .check-box:selected > .box > .mark,
 .check-box:indeterminate > .box > .mark {
-    -fx-background-color: -bisq-white-20;
+    -fx-background-color: -bisq-white;
     -fx-background-insets: 1 0 -1 0, 0;
     -fx-border-color: transparent;
 }
@@ -857,7 +857,7 @@
 }
 
 .radio-button:selected .radio .dot {
-    -fx-background-color: -bisq-white-20;
+    -fx-background-color: -bisq-white;
 }
 
 
