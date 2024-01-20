@@ -588,7 +588,7 @@
 }
 
 .material-text-field-selection-line:error {
-    -fx-background-color: -bisq-red;
+    -fx-background-color: -bisq2-red;
 }
 
 .material-text-field-bg {
@@ -617,7 +617,7 @@
 }
 
 .material-text-field-description-selected:error {
-    -fx-text-fill: -bisq-red;
+    -fx-text-fill: -bisq2-red;
 }
 
 .material-text-field-description-deselected {
@@ -640,7 +640,7 @@
 
 .material-text-field-help:error {
     -fx-font-size: 0.95em;
-    -fx-text-fill: -bisq-red;
+    -fx-text-fill: -bisq2-red;
     -fx-font-family: "IBM Plex Sans Light";
 }
 

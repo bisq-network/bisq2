@@ -638,7 +638,7 @@
 }
 
 .overlay-headline-error {
-    -fx-text-fill: -bisq-red;
+    -fx-text-fill: -bisq2-red;
 }
 
 .overlay-icon-information {
@@ -650,7 +650,7 @@
 }
 
 .overlay-icon-error {
-    -fx-text-fill: -bisq-red;
+    -fx-text-fill: -bisq2-red;
 }
 
 .overlay-message {

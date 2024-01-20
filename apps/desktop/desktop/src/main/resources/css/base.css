@@ -38,7 +38,7 @@
     -fx-font-size: 13;
 
     /* Colors */
-    -bisq-red: #d02c1f;
+    -bisq2-red: #d02c1f;
     -you-tube-red: #fc0d1b;
 
     /* Bisq 2 Colors */
@@ -105,7 +105,7 @@
     -fx-mid-text-color: -bisq-mid-grey-30;
     -fx-light-text-color: -bisq-white-20;
 
-    -bisq-error: -bisq-red;
+    -bisq-error: -bisq2-red;
 
     -fx-text-background-color: ladder(
                 -fx-background,

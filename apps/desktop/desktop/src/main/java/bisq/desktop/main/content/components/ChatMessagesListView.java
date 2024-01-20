@@ -1386,7 +1386,7 @@ public class ChatMessagesListView {
                                                 messageDeliveryStatusIcon.set(AwesomeIcon.CLOUD_DOWNLOAD);
                                                 break;
                                             case FAILED:
-                                                // -bisq-red: #d02c1f;
+                                                // -bisq2-red: #d02c1f;
                                                 messageDeliveryStatusIconColor = Optional.of("#d02c1f");
                                                 messageDeliveryStatusIcon.set(AwesomeIcon.EXCLAMATION_SIGN);
                                                 break;

@@ -61,15 +61,15 @@
 }
 
 .red-button {
-    -fx-background-color: -bisq-red;
+    -fx-background-color: -bisq2-red;
 }
 
 .red-button:hover {
-    -fx-background-color: derive(-bisq-red, 10%);
+    -fx-background-color: derive(-bisq2-red, 10%);
 }
 
 .red-button:pressed {
-    -fx-background-color: derive(-bisq-red, -10%);
+    -fx-background-color: derive(-bisq2-red, -10%);
 }
 
 .button.icon-button {
@@ -235,39 +235,39 @@
 
 .red-outlined-button {
     -fx-background-color: transparent;
-    -fx-border-color: -bisq-red;
-    -fx-text-fill: -bisq-red;
+    -fx-border-color: -bisq2-red;
+    -fx-text-fill: -bisq2-red;
 }
 
 .red-outlined-button:hover {
-    -fx-border-color: derive(-bisq-red, 10%);
-    -fx-text-fill: derive(-bisq-red, 10%);
+    -fx-border-color: derive(-bisq2-red, 10%);
+    -fx-text-fill: derive(-bisq2-red, 10%);
 }
 
 .red-outlined-button:pressed {
-    -fx-border-color: derive(-bisq-red, -10%);
-    -fx-text-fill: derive(-bisq-red, -10%);
+    -fx-border-color: derive(-bisq2-red, -10%);
+    -fx-text-fill: derive(-bisq2-red, -10%);
 }
 
 
 .red-small-button {
     -fx-background-color: transparent;
-    -fx-border-color: -bisq-red;
+    -fx-border-color: -bisq2-red;
     -fx-border-width: 1;
     -fx-border-radius: 2;
-    -fx-text-fill: -bisq-red;
+    -fx-text-fill: -bisq2-red;
     -fx-font-size: 0.8em;
     -fx-padding: 2.5 16 2.5 16;
 }
 
 .red-small-button:hover {
-    -fx-border-color: derive(-bisq-red, 10%);
-    -fx-text-fill: derive(-bisq-red, 10%);
+    -fx-border-color: derive(-bisq2-red, 10%);
+    -fx-text-fill: derive(-bisq2-red, 10%);
 }
 
 .red-small-button:pressed {
-    -fx-border-color: derive(-bisq-red, -10%);
-    -fx-text-fill: derive(-bisq-red, -10%);
+    -fx-border-color: derive(-bisq2-red, -10%);
+    -fx-text-fill: derive(-bisq2-red, -10%);
 }
 
 
