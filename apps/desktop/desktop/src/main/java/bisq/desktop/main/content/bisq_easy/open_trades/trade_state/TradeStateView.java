@@ -37,7 +37,7 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public class TradeStateView extends View<VBox, TradeStateModel, TradeStateController> {
     private final HBox phaseAndInfoHBox, tradeInterruptedHBox, tradeFailedHBox, isInMediationHBox;
-    private final Button interruptTrade, closeTradeButton, exportButton, reportToMediatorButton;
+    private final Button interruptTradeButton, closeTradeButton, exportButton, reportToMediatorButton;
     private final Label tradeInterruptedInfo, errorMessage;
     private Subscription stateInfoVBoxPin;
 
@@ -47,11 +47,11 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
                           HBox tradeDataHeader) {
         super(new VBox(0), model, controller);
 
-        interruptTrade = new Button();
-        interruptTrade.setMinWidth(160);
-        interruptTrade.getStyleClass().add("outlined-button");
+        interruptTradeButton = new Button();
+        interruptTradeButton.setMinWidth(160);
+        interruptTradeButton.getStyleClass().add("outlined-button");
 
-        tradeDataHeader.getChildren().addAll(Spacer.fillHBox(), interruptTrade);
+        tradeDataHeader.getChildren().addAll(Spacer.fillHBox(), interruptTradeButton);
 
 
         Label isInMediationIcon = Icons.getIcon(AwesomeIcon.WARNING_SIGN);
@@ -80,27 +80,27 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         closeTradeButton.setMinWidth(160);
         closeTradeButton.setDefaultButton(true);
 
-        tradeInterruptedHBox = new HBox(10, tradeInterruptedIcon, tradeInterruptedInfo, Spacer.fillHBox(),
-                reportToMediatorButton, exportButton, closeTradeButton);
+        tradeInterruptedHBox = new HBox(10, tradeInterruptedIcon, tradeInterruptedInfo);
         tradeInterruptedHBox.setAlignment(Pos.CENTER_LEFT);
 
         Label errorIcon = Icons.getIcon(AwesomeIcon.WARNING_SIGN);
         errorIcon.getStyleClass().add("bisq-text-error");
         errorMessage = new Label();
         errorMessage.getStyleClass().add("bisq-easy-trade-failed-headline");
-        tradeFailedHBox = new HBox(10, errorIcon, errorMessage, Spacer.fillHBox(),
-                reportToMediatorButton, exportButton, closeTradeButton);
+        tradeFailedHBox = new HBox(10, errorIcon, errorMessage);
         tradeFailedHBox.setAlignment(Pos.CENTER_LEFT);
+
+        HBox buttonsHBox = new HBox(10, reportToMediatorButton, exportButton, closeTradeButton);
+        HBox hBox = new HBox(10, tradeInterruptedHBox, tradeFailedHBox, Spacer.fillHBox(), buttonsHBox);
+        hBox.setAlignment(Pos.CENTER_LEFT);
 
         HBox.setHgrow(tradePhaseBox, Priority.ALWAYS);
         phaseAndInfoHBox = new HBox(tradePhaseBox);
 
         VBox.setMargin(isInMediationHBox, new Insets(20, 30, 0, 30));
-        VBox.setMargin(tradeInterruptedHBox, new Insets(20, 30, 20, 30));
-        VBox.setMargin(tradeFailedHBox, new Insets(20, 30, 20, 30));
+        VBox.setMargin(hBox, new Insets(20, 30, 20, 30));
         VBox.setMargin(phaseAndInfoHBox, new Insets(0, 30, 15, 30));
-        VBox vBox = new VBox(tradeDataHeader, Layout.hLine(), isInMediationHBox, tradeInterruptedHBox,
-                tradeFailedHBox, phaseAndInfoHBox);
+        VBox vBox = new VBox(tradeDataHeader, Layout.hLine(), isInMediationHBox, hBox, phaseAndInfoHBox);
         vBox.getStyleClass().add("bisq-easy-container");
 
         root.getChildren().add(vBox);
@@ -122,9 +122,9 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         tradeInterruptedInfo.textProperty().bind(model.getTradeInterruptedInfo());
         errorMessage.textProperty().bind(model.getErrorMessage());
 
-        interruptTrade.textProperty().bind(model.getInterruptTradeButtonText());
-        interruptTrade.visibleProperty().bind(model.getInterruptTradeButtonVisible());
-        interruptTrade.managedProperty().bind(model.getInterruptTradeButtonVisible());
+        interruptTradeButton.textProperty().bind(model.getInterruptTradeButtonText());
+        interruptTradeButton.visibleProperty().bind(model.getInterruptTradeButtonVisible());
+        interruptTradeButton.managedProperty().bind(model.getInterruptTradeButtonVisible());
 
         stateInfoVBoxPin = EasyBind.subscribe(model.getStateInfoVBox(),
                 stateInfoVBox -> {
@@ -138,7 +138,7 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
                     }
                 });
 
-        interruptTrade.setOnAction(e -> controller.onInterruptTrade());
+        interruptTradeButton.setOnAction(e -> controller.onInterruptTrade());
         closeTradeButton.setOnAction(e -> controller.onCloseTrade());
         exportButton.setOnAction(e -> controller.onExportTrade());
         reportToMediatorButton.setOnAction(e -> controller.onReportToMediator());
@@ -160,13 +160,13 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         tradeInterruptedInfo.textProperty().unbind();
         errorMessage.textProperty().unbind();
 
-        interruptTrade.textProperty().unbind();
-        interruptTrade.visibleProperty().unbind();
-        interruptTrade.managedProperty().unbind();
+        interruptTradeButton.textProperty().unbind();
+        interruptTradeButton.visibleProperty().unbind();
+        interruptTradeButton.managedProperty().unbind();
 
         stateInfoVBoxPin.unsubscribe();
 
-        interruptTrade.setOnAction(null);
+        interruptTradeButton.setOnAction(null);
         closeTradeButton.setOnAction(null);
         exportButton.setOnAction(null);
         reportToMediatorButton.setOnAction(null);

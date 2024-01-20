@@ -73,7 +73,7 @@ public final class MultisigTrade extends Trade<MultisigOffer, MultisigContract, 
     }
 
     public static MultisigTrade fromProto(bisq.trade.protobuf.Trade proto) {
-        MultisigTrade multisigTrade = new MultisigTrade(ProtobufUtils.enumFromProto(MultisigTradeState.class, proto.getState()),
+        MultisigTrade trade = new MultisigTrade(ProtobufUtils.enumFromProto(MultisigTradeState.class, proto.getState()),
                 proto.getId(),
                 TradeRole.fromProto(proto.getTradeRole()),
                 Identity.fromProto(proto.getMyIdentity()),
@@ -81,9 +81,12 @@ public final class MultisigTrade extends Trade<MultisigOffer, MultisigContract, 
                 TradeParty.protoToMultisigTradeParty(proto.getTaker()),
                 TradeParty.protoToMultisigTradeParty(proto.getMaker()));
         if (proto.hasErrorMessage()) {
-            multisigTrade.setErrorMessage(proto.getErrorMessage());
+            trade.setErrorMessage(proto.getErrorMessage());
         }
-        return multisigTrade;
+        if (proto.hasPeersErrorMessage()) {
+            trade.setPeersErrorMessage(proto.getPeersErrorMessage());
+        }
+        return trade;
     }
 
     public MultisigTradeState getTradeState() {

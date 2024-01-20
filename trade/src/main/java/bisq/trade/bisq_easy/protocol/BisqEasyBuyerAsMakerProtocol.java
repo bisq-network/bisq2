@@ -38,6 +38,11 @@ public class BisqEasyBuyerAsMakerProtocol extends BisqEasyProtocol {
                 .on(TradeProtocolException.class)
                 .run(BisqEasyProtocolExceptionHandler.class)
                 .to(FAILED);
+        addTransition()
+                .fromAny()
+                .on(BisqEasyReportErrorMessage.class)
+                .run(BisqEasyReportErrorMessageHandler.class)
+                .to(FAILED_AT_PEER);
     }
 
     @Override

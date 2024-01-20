@@ -37,10 +37,6 @@ public interface State {
         private final boolean isFinalState;
         private final boolean isAnyState;
 
-        FsmState() {
-            this(false, false);
-        }
-
         FsmState(boolean isFinalState, boolean isAnyState) {
             this.isFinalState = isFinalState;
             this.isAnyState = isAnyState;

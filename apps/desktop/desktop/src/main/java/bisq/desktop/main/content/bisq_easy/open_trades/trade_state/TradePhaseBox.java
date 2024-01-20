@@ -162,6 +162,7 @@ class TradePhaseBox {
                             break;
 
                         case FAILED:
+                        case FAILED_AT_PEER:
                             model.getRequestMediationButtonVisible().set(false);
                             model.getReportToMediatorButtonVisible().set(false);
                             break;
@@ -376,7 +377,7 @@ class TradePhaseBox {
             Label label = new Label();
             label.getStyleClass().add("bisq-easy-trade-state-phase");
             Badge badge = new Badge();
-            badge.setText(isFinalStep ? "\u2713" :  String.valueOf(index));
+            badge.setText(isFinalStep ? "\u2713" : String.valueOf(index));
             badge.setPrefSize(20, 20);
             HBox hBox = new HBox(7.5, badge, label);
             hBox.setAlignment(Pos.CENTER_LEFT);

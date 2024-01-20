@@ -62,6 +62,7 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
     private final P maker;
     private transient final TradeRole tradeRole;
     private final Observable<String> errorMessage = new Observable<>();
+    private final Observable<String> peersErrorMessage = new Observable<>();
 
     public Trade(State state,
                  boolean isBuyer,
@@ -106,6 +107,7 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
                 .setMaker(maker.toProto())
                 .setState(getState().name());
         Optional.ofNullable(getErrorMessage()).ifPresent(builder::setErrorMessage);
+        Optional.ofNullable(getPeersErrorMessage()).ifPresent(builder::setPeersErrorMessage);
         return builder;
     }
 
@@ -119,6 +121,18 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
 
     public String getErrorMessage() {
         return errorMessage.get();
+    }
+
+    public void setPeersErrorMessage(String errorMessage) {
+        this.peersErrorMessage.set(errorMessage);
+    }
+
+    public ReadOnlyObservable<String> peersErrorMessageObservable() {
+        return peersErrorMessage;
+    }
+
+    public String getPeersErrorMessage() {
+        return peersErrorMessage.get();
     }
 
 

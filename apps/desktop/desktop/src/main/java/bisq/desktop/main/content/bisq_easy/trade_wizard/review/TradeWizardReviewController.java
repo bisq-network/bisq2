@@ -96,7 +96,7 @@ public class TradeWizardReviewController implements Controller {
     private final SettingsService settingsService;
     private final ReviewDataDisplay reviewDataDisplay;
     private final MediationRequestService mediationRequestService;
-    private Pin tradeProtocolExceptionPin;
+    private Pin errorMessagePin, peersErrorMessagePin;
 
     public TradeWizardReviewController(ServiceProvider serviceProvider,
                                        Consumer<Boolean> mainButtonsVisibleHandler,
@@ -436,9 +436,16 @@ public class TradeWizardReviewController implements Controller {
                 marketPrice);
         BisqEasyTrade bisqEasyTrade = bisqEasyProtocol.getModel();
         model.setBisqEasyTrade(bisqEasyTrade);
-        tradeProtocolExceptionPin = bisqEasyTrade.errorMessageObservable().addObserver(errorMessage -> {
+        errorMessagePin = bisqEasyTrade.errorMessageObservable().addObserver(errorMessage -> {
             if (errorMessage != null) {
                 UIThread.run(() -> new Popup().error(errorMessage).show());
+                    }
+                }
+        );
+        peersErrorMessagePin = bisqEasyTrade.peersErrorMessageObservable().addObserver(peersErrorMessage -> {
+                    if (peersErrorMessage != null) {
+                        UIThread.run(() -> new Popup().error(Res.get("bisqEasy.openTrades.failedAtPeer", peersErrorMessage))
+                                .show());
                     }
                 }
         );
@@ -464,8 +471,11 @@ public class TradeWizardReviewController implements Controller {
 
     @Override
     public void onDeactivate() {
-        if (tradeProtocolExceptionPin != null) {
-            tradeProtocolExceptionPin.unbind();
+        if (errorMessagePin != null) {
+            errorMessagePin.unbind();
+        }
+        if (peersErrorMessagePin != null) {
+            peersErrorMessagePin.unbind();
         }
     }
 

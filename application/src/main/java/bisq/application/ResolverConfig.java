@@ -92,11 +92,12 @@ public class ResolverConfig {
         // TradeMessage subclasses
         NetworkStorageWhiteList.add(BisqEasyAccountDataMessage.class);
         NetworkStorageWhiteList.add(BisqEasyBtcAddressMessage.class);
-        NetworkStorageWhiteList.add(BisqEasyCancelTradeMessage.class);
         NetworkStorageWhiteList.add(BisqEasyConfirmBtcSentMessage.class);
         NetworkStorageWhiteList.add(BisqEasyConfirmFiatReceiptMessage.class);
         NetworkStorageWhiteList.add(BisqEasyConfirmFiatSentMessage.class);
+        NetworkStorageWhiteList.add(BisqEasyCancelTradeMessage.class);
         NetworkStorageWhiteList.add(BisqEasyRejectTradeMessage.class);
+        NetworkStorageWhiteList.add(BisqEasyReportErrorMessage.class);
         NetworkStorageWhiteList.add(BisqEasyTakeOfferRequest.class);
         NetworkStorageWhiteList.add(BisqEasyTakeOfferResponse.class);
     }

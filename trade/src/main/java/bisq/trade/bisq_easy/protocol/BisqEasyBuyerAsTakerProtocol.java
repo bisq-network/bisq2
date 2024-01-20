@@ -30,6 +30,7 @@ public class BisqEasyBuyerAsTakerProtocol extends BisqEasyProtocol {
     public BisqEasyBuyerAsTakerProtocol(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }
+
     @Override
     protected void configErrorHandling() {
         addTransition()
@@ -37,6 +38,11 @@ public class BisqEasyBuyerAsTakerProtocol extends BisqEasyProtocol {
                 .on(TradeProtocolException.class)
                 .run(BisqEasyProtocolExceptionHandler.class)
                 .to(FAILED);
+        addTransition()
+                .fromAny()
+                .on(BisqEasyReportErrorMessage.class)
+                .run(BisqEasyReportErrorMessageHandler.class)
+                .to(FAILED_AT_PEER);
     }
 
     @Override
