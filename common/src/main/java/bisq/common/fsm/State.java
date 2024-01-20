@@ -29,6 +29,8 @@ public interface State {
 
     String name();
 
+    int ordinal();
+
     @Getter
     enum FsmState implements State {
         ANY(false, true),

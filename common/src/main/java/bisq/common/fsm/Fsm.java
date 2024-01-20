@@ -49,8 +49,7 @@ public abstract class Fsm<M extends FsmModel> {
     }
 
     protected void configErrorHandling() {
-        addTransition()
-                .fromAny()
+        fromAny()
                 .on(FsmException.class)
                 .to(State.FsmState.ERROR);
     }
@@ -73,6 +72,9 @@ public abstract class Fsm<M extends FsmModel> {
                 checkArgument(!transitionMapEntriesForEvent.isEmpty(), "No transition found for given event " + event);
                 Optional<Transition> transition = findTransition(currentState, transitionMapEntriesForEvent);
                 if (transition.isPresent()) {
+                    State targetState = transition.get().getTargetState();
+                    checkArgument(targetState.ordinal() > currentState.ordinal(),
+                            "The target state ordinal must be higher than the current state ordinal");
                     Optional<Class<? extends EventHandler>> eventHandlerClass = transition.get().getEventHandlerClass();
                     if (eventHandlerClass.isPresent()) {
                         EventHandler eventHandler = newEventHandlerFromClass(eventHandlerClass.get());
@@ -80,7 +82,7 @@ public abstract class Fsm<M extends FsmModel> {
                         log.info("Handle {} at {}", event.getClass().getSimpleName(), eventHandlerName);
                         eventHandler.handle(event);
                     }
-                    State targetState = transition.get().getTargetState();
+
                     log.info("Transition completed to new state {}", targetState);
                     model.setNewState(targetState);
                     model.eventQueue.remove(event);
@@ -115,6 +117,23 @@ public abstract class Fsm<M extends FsmModel> {
     }
 
     public TransitionBuilder<M> addTransition() {
+        return new TransitionBuilder<>(this);
+    }
+
+    public TransitionBuilder<M> fromAny() {
+        return new TransitionBuilder<>(this).from(State.FsmState.ANY);
+    }
+
+    public TransitionBuilder<M> from(State sourceState) {
+        return new TransitionBuilder<>(this).fromStates(sourceState);
+    }
+
+    public TransitionBuilder<M> fromStates(State... sourceStates) {
+        return new TransitionBuilder<>(this).fromStates(sourceStates);
+    }
+
+    // The description parma is not used, it serves in the protocol config to give additional context info about the path
+    public TransitionBuilder<M> path(String description) {
         return new TransitionBuilder<>(this);
     }
 
@@ -197,9 +216,19 @@ public abstract class Fsm<M extends FsmModel> {
             return this;
         }
 
-        public void to(State targetState) {
+        public TransitionBuilder<M> to(State targetState) {
             transition.setTargetState(targetState);
             fsm.insertTransition(transition);
+            return this;
+        }
+
+        // The paths param is not used. It is just to allow nesting the paths inside the branch for better readability.
+        public TransitionBuilder<M> branch(Object... paths) {
+            return this;
+        }
+
+        public TransitionBuilder<M> then() {
+            return new TransitionBuilder<>(fsm);
         }
     }
 }
