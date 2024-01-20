@@ -31,6 +31,7 @@ public final class ReputationOption implements OfferOption {
         this.requiredTotalReputationScore = requiredTotalReputationScore;
     }
 
+    @Override
     public bisq.offer.protobuf.OfferOption toProto() {
         return getOfferOptionBuilder().setReputationOption(
                         bisq.offer.protobuf.ReputationOption.newBuilder()

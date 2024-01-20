@@ -17,7 +17,7 @@
 
 package bisq.network.identity;
 
-import bisq.common.proto.Proto;
+import bisq.common.proto.NetworkProto;
 import bisq.common.util.StringUtils;
 import bisq.network.common.AddressByTransportTypeMap;
 import bisq.security.keys.PubKey;
@@ -30,7 +30,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @Getter
 @EqualsAndHashCode
-public final class NetworkId implements Proto {
+public final class NetworkId implements NetworkProto {
     private final PubKey pubKey;
     private final AddressByTransportTypeMap addressByTransportTypeMap = new AddressByTransportTypeMap();
 
@@ -41,6 +41,7 @@ public final class NetworkId implements Proto {
         this.addressByTransportTypeMap.putAll(addressByTransportTypeMap);
     }
 
+    @Override
     public bisq.network.identity.protobuf.NetworkId toProto() {
         return bisq.network.identity.protobuf.NetworkId.newBuilder()
                 .setAddressByNetworkTypeMap(addressByTransportTypeMap.toProto())

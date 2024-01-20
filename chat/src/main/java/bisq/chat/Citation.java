@@ -1,6 +1,6 @@
 package bisq.chat;
 
-import bisq.common.proto.Proto;
+import bisq.common.proto.NetworkProto;
 import bisq.common.util.StringUtils;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
@@ -10,7 +10,7 @@ import lombok.ToString;
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class Citation implements Proto {
+public final class Citation implements NetworkProto {
     public static final int MAX_TEXT_LENGTH = 1000;
 
     private final String authorUserProfileId;
@@ -24,6 +24,7 @@ public final class Citation implements Proto {
         NetworkDataValidation.validateText(text, MAX_TEXT_LENGTH);
     }
 
+    @Override
     public bisq.chat.protobuf.Citation toProto() {
         return bisq.chat.protobuf.Citation.newBuilder()
                 .setAuthorUserProfileId(authorUserProfileId)

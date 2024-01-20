@@ -1,6 +1,6 @@
 package bisq.security.keys;
 
-import bisq.common.proto.Proto;
+import bisq.common.proto.PersistableProto;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -10,7 +10,7 @@ import java.security.KeyPair;
 @ToString
 @Getter
 @EqualsAndHashCode
-public class KeyBundle implements Proto {
+public class KeyBundle implements PersistableProto {
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
     private final KeyPair keyPair;

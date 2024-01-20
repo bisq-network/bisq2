@@ -17,10 +17,10 @@
 
 package bisq.offer.options;
 
-import bisq.common.proto.Proto;
+import bisq.common.proto.NetworkProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 
-public interface OfferOption extends Proto {
+public interface OfferOption extends NetworkProto {
 
     bisq.offer.protobuf.OfferOption toProto();
 

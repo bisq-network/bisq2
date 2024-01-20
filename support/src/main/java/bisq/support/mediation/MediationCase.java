@@ -1,7 +1,7 @@
 package bisq.support.mediation;
 
 import bisq.common.observable.Observable;
-import bisq.common.proto.Proto;
+import bisq.common.proto.NetworkProto;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -9,7 +9,7 @@ import java.util.Date;
 
 @Getter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public class MediationCase implements Proto {
+public class MediationCase implements NetworkProto {
     @EqualsAndHashCode.Include
     private final MediationRequest mediationRequest;
     private final long requestDate;

@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.services.data.storage.mailbox;
 
-import bisq.common.proto.Proto;
+import bisq.common.proto.NetworkProto;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
@@ -31,7 +31,7 @@ import java.security.PublicKey;
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class MailboxSequentialData implements Proto {
+public final class MailboxSequentialData implements NetworkProto {
     private final MailboxData mailboxData;
     private final byte[] senderPublicKeyHash;
     private final byte[] receiversPublicKeyHash;
@@ -90,6 +90,7 @@ public final class MailboxSequentialData implements Proto {
         NetworkDataValidation.validateDate(created);
     }
 
+    @Override
     public bisq.network.protobuf.MailboxSequentialData toProto() {
         return bisq.network.protobuf.MailboxSequentialData.newBuilder()
                 .setMailboxData(mailboxData.toProto())

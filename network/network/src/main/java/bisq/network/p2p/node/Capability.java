@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.node;
 
-import bisq.common.proto.Proto;
+import bisq.common.proto.NetworkProto;
 import bisq.common.util.ProtobufUtils;
 import bisq.network.common.Address;
 import bisq.network.common.TransportType;
@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class Capability implements Proto {
+public final class Capability implements NetworkProto {
     private final Address address;
     private final List<TransportType> supportedTransportTypes;
 

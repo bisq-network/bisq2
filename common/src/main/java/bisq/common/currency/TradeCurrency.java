@@ -17,7 +17,7 @@
 
 package bisq.common.currency;
 
-import bisq.common.proto.Proto;
+import bisq.common.proto.PersistableProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -26,7 +26,7 @@ import lombok.ToString;
 @EqualsAndHashCode
 @ToString
 @Getter
-public abstract class TradeCurrency implements Comparable<TradeCurrency>, Proto {
+public abstract class TradeCurrency implements Comparable<TradeCurrency>, PersistableProto {
     protected final String code;
     @EqualsAndHashCode.Exclude
     protected final String name;

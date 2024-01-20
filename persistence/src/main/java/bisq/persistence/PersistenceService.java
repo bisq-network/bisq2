@@ -17,7 +17,7 @@
 
 package bisq.persistence;
 
-import bisq.common.proto.Proto;
+import bisq.common.proto.PersistableProto;
 import bisq.common.util.CompletableFutureUtils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -32,8 +32,8 @@ public class PersistenceService {
     @Getter
     private final String baseDir;
     @Getter
-    protected final List<PersistenceClient<? extends Proto>> clients = new CopyOnWriteArrayList<>();
-    protected final List<Persistence<? extends Proto>> persistenceInstances = new CopyOnWriteArrayList<>();
+    protected final List<PersistenceClient<? extends PersistableProto>> clients = new CopyOnWriteArrayList<>();
+    protected final List<Persistence<? extends PersistableProto>> persistenceInstances = new CopyOnWriteArrayList<>();
 
     public PersistenceService(String baseDir) {
         this.baseDir = baseDir;

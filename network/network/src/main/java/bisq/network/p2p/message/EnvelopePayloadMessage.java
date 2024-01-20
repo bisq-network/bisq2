@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.message;
 
-import bisq.common.proto.Proto;
+import bisq.common.proto.NetworkProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.node.CloseConnectionMessage;
 import bisq.network.p2p.node.handshake.ConnectionHandshake;
@@ -36,7 +36,7 @@ import bisq.network.p2p.services.peergroup.network_load.NetworkLoadExchangeRespo
 /**
  * Interface for any message sent as payload in NetworkEnvelope
  */
-public interface EnvelopePayloadMessage extends Proto {
+public interface EnvelopePayloadMessage extends NetworkProto {
     double getCostFactor();
 
     default bisq.network.protobuf.EnvelopePayloadMessage.Builder getNetworkMessageBuilder() {

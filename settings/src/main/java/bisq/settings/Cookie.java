@@ -17,7 +17,7 @@
 
 package bisq.settings;
 
-import bisq.common.proto.Proto;
+import bisq.common.proto.PersistableProto;
 import bisq.settings.protobuf.CookieMapEntry;
 
 import java.util.HashMap;
@@ -32,7 +32,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Should not be over-used for domain specific data where type safety and data integrity is important.
  * Does not support observable properties.
  */
-public final class Cookie implements Proto {
+public final class Cookie implements PersistableProto {
     private final Map<CookieKey, String> map = new HashMap<>();
 
     public Cookie() {

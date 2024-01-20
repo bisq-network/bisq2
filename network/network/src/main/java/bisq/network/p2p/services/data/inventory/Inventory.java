@@ -18,7 +18,7 @@
 package bisq.network.p2p.services.data.inventory;
 
 import bisq.common.data.ByteArray;
-import bisq.common.proto.Proto;
+import bisq.common.proto.NetworkProto;
 import bisq.network.p2p.services.data.DataRequest;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 @ToString
 @EqualsAndHashCode
 @Slf4j
-public final class Inventory implements Proto {
+public final class Inventory implements NetworkProto {
     private final List<? extends DataRequest> entries;
     private final boolean maxSizeReached;
 

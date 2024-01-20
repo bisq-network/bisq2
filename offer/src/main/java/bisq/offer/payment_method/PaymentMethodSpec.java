@@ -19,7 +19,7 @@ package bisq.offer.payment_method;
 
 import bisq.account.payment_method.PaymentMethod;
 import bisq.account.payment_method.PaymentRail;
-import bisq.common.proto.Proto;
+import bisq.common.proto.NetworkProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
@@ -31,7 +31,7 @@ import java.util.Optional;
 @ToString
 @Getter
 @EqualsAndHashCode
-public abstract class PaymentMethodSpec<T extends PaymentMethod<? extends PaymentRail>> implements Proto {
+public abstract class PaymentMethodSpec<T extends PaymentMethod<? extends PaymentRail>> implements NetworkProto {
     protected final Optional<String> saltedMakerAccountId;
     protected final T paymentMethod;
 
@@ -55,6 +55,7 @@ public abstract class PaymentMethodSpec<T extends PaymentMethod<? extends Paymen
 
     }
 
+    @Override
     public abstract bisq.offer.protobuf.PaymentMethodSpec toProto();
 
     public bisq.offer.protobuf.PaymentMethodSpec.Builder getPaymentMethodSpecBuilder() {

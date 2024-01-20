@@ -17,14 +17,14 @@
 
 package bisq.offer.poc;
 
-import bisq.common.proto.Proto;
+import bisq.common.proto.NetworkProto;
 import com.google.protobuf.Message;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 @EqualsAndHashCode
 @Getter
-public final class PocOpenOffer implements Proto {
+public final class PocOpenOffer implements NetworkProto {
     private final PocOffer offer;
 
     public PocOpenOffer(PocOffer offer) {

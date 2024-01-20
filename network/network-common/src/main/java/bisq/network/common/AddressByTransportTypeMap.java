@@ -17,7 +17,7 @@
 
 package bisq.network.common;
 
-import bisq.common.proto.Proto;
+import bisq.common.proto.NetworkProto;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode
 @ToString
 @Getter
-public class AddressByTransportTypeMap implements Map<TransportType, Address>, Proto {
+public class AddressByTransportTypeMap implements Map<TransportType, Address>, NetworkProto {
     // We use a TreeMap to get deterministic sorting.
     private final TreeMap<TransportType, Address> map = new TreeMap<>();
 

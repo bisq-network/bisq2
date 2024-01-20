@@ -17,7 +17,8 @@
 
 package bisq.common.currency;
 
-import bisq.common.proto.Proto;
+import bisq.common.proto.NetworkProto;
+import bisq.common.proto.PersistableProto;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -25,7 +26,7 @@ import org.jetbrains.annotations.NotNull;
 
 @Getter
 @EqualsAndHashCode
-public final class Market implements Proto, Comparable<Market> {
+public final class Market implements NetworkProto, PersistableProto, Comparable<Market> {
     public final static int MAX_NAME_LENGTH = 50;
     private static final String QUOTE_SEPARATOR = "/";
 
@@ -49,6 +50,7 @@ public final class Market implements Proto, Comparable<Market> {
         NetworkDataValidation.validateText(quoteCurrencyName, MAX_NAME_LENGTH);
     }
 
+    @Override
     public bisq.common.protobuf.Market toProto() {
         return bisq.common.protobuf.Market.newBuilder()
                 .setBaseCurrencyCode(baseCurrencyCode)

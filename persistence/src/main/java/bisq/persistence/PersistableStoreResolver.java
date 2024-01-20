@@ -17,12 +17,12 @@
 
 package bisq.persistence;
 
+import bisq.common.proto.PersistableProtoResolverMap;
 import bisq.common.proto.ProtoResolver;
-import bisq.common.proto.ProtoResolverMap;
 import com.google.protobuf.Any;
 
 public class PersistableStoreResolver {
-    private static final ProtoResolverMap<PersistableStore<?>> protoResolverMap = new ProtoResolverMap<>(false);
+    private static final PersistableProtoResolverMap<PersistableStore<?>> protoResolverMap = new PersistableProtoResolverMap<>();
 
     public static void addResolver(ProtoResolver<PersistableStore<?>> resolver) {
         protoResolverMap.addProtoResolver(ProtoResolver.getProtoType(resolver), resolver);

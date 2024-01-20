@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.services.peergroup;
 
-import bisq.common.proto.Proto;
+import bisq.common.proto.NetworkProto;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.node.Capability;
 import bisq.network.p2p.node.network_load.NetworkLoad;
@@ -32,7 +32,7 @@ import java.util.Date;
 @Getter
 @ToString
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public final class Peer implements Proto, Comparable<Peer> {
+public final class Peer implements NetworkProto, Comparable<Peer> {
     @EqualsAndHashCode.Include
     private final Capability capability;
     private final NetworkLoad networkLoad;

@@ -17,7 +17,7 @@
 
 package bisq.network.p2p.services.data.inventory;
 
-import bisq.common.proto.Proto;
+import bisq.common.proto.NetworkProto;
 import bisq.common.validation.NetworkDataValidation;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
@@ -30,7 +30,7 @@ import java.util.Arrays;
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class FilterEntry implements Proto, Comparable<FilterEntry> {
+public final class FilterEntry implements NetworkProto, Comparable<FilterEntry> {
     private final byte[] hash;
     private final int sequenceNumber;
 

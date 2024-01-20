@@ -36,6 +36,7 @@ public final class FiatPaymentMethodSpec extends PaymentMethodSpec<FiatPaymentMe
         super(paymentMethod, saltedMakerAccountId);
     }
 
+    @Override
     public bisq.offer.protobuf.PaymentMethodSpec toProto() {
         return getPaymentMethodSpecBuilder().setFiatPaymentMethodSpec(bisq.offer.protobuf.FiatPaymentMethodSpec.newBuilder()).build();
     }

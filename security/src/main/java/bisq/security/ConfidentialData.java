@@ -17,7 +17,7 @@
 
 package bisq.security;
 
-import bisq.common.proto.Proto;
+import bisq.common.proto.NetworkProto;
 import bisq.common.validation.NetworkDataValidation;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
@@ -31,7 +31,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class ConfidentialData implements Proto {
+public final class ConfidentialData implements NetworkProto {
     private static final int MAX_SIZE_CIPHERTEXT = 20_000;
 
     private final byte[] senderPublicKey;
@@ -55,6 +55,7 @@ public final class ConfidentialData implements Proto {
         NetworkDataValidation.validateECSignature(signature);
     }
 
+    @Override
     public bisq.security.protobuf.ConfidentialData toProto() {
         return bisq.security.protobuf.ConfidentialData.newBuilder()
                 .setSenderPublicKey(ByteString.copyFrom(senderPublicKey))
