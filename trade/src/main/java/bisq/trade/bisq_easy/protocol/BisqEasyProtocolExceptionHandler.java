@@ -18,6 +18,7 @@
 package bisq.trade.bisq_easy.protocol;
 
 import bisq.common.fsm.Event;
+import bisq.common.util.ExceptionUtil;
 import bisq.trade.ServiceProvider;
 import bisq.trade.TradeProtocolException;
 import bisq.trade.bisq_easy.BisqEasyTrade;
@@ -31,6 +32,10 @@ public class BisqEasyProtocolExceptionHandler extends TradeEventHandler<BisqEasy
     @Override
     public void handle(Event event) {
         TradeProtocolException tradeProtocolException = (TradeProtocolException) event;
-        trade.getTradeProtocolException().set(tradeProtocolException);
+        commitToModel(tradeProtocolException);
+    }
+
+    private void commitToModel(TradeProtocolException tradeProtocolException) {
+        trade.setErrorMessage(ExceptionUtil.print(tradeProtocolException));
     }
 }

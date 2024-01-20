@@ -32,6 +32,7 @@ import bisq.desktop.main.content.bisq_easy.BisqEasyServiceUtil;
 import bisq.desktop.main.content.bisq_easy.components.TradeDataHeader;
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.*;
 import bisq.i18n.Res;
+import bisq.settings.DontShowAgainService;
 import bisq.support.mediation.MediationRequestService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
@@ -117,9 +118,14 @@ public class TradeStateController implements Controller {
             bisqEasyTradeStatePin = bisqEasyTrade.tradeStateObservable().addObserver(state ->
                     UIThread.run(() -> applyStateInfoVBox(state)));
 
-            tradeProtocolExceptionPin = bisqEasyTrade.getTradeProtocolException().addObserver(exception -> {
-                        if (exception != null) {
-                            UIThread.run(() -> new Popup().error(exception).show());
+            tradeProtocolExceptionPin = bisqEasyTrade.errorMessageObservable().addObserver(errorMessage -> {
+                if (errorMessage != null) {
+                    String key = "BisqEasyTradeErrorMessage_" + model.getBisqEasyTrade().get().getId();
+                    if (DontShowAgainService.showAgain(key)) {
+                        UIThread.run(() -> new Popup().error(errorMessage)
+                                .dontShowAgainId(key)
+                                .show());
+                    }
                         }
                     }
             );
@@ -230,6 +236,12 @@ public class TradeStateController implements Controller {
         BisqEasyTrade trade = checkNotNull(model.getBisqEasyTrade().get());
         BisqEasyOpenTradeChannel channel = checkNotNull(model.getChannel().get());
         boolean isSeller = trade.isSeller();
+
+        model.getTradeFailed().set(false);
+        model.getPhaseAndInfoVisible().set(true);
+        model.getTradeInterrupted().set(false);
+        model.getInterruptTradeButtonVisible().set(true);
+
         switch (state) {
             case INIT:
                 break;
@@ -286,21 +298,29 @@ public class TradeStateController implements Controller {
                 break;
 
             case REJECTED:
+                model.getPhaseAndInfoVisible().set(false);
                 model.getTradeInterrupted().set(true);
                 model.getInterruptTradeButtonVisible().set(false);
                 applyTradeInterruptedInfo(trade, false);
                 break;
             case CANCELLED:
+                model.getPhaseAndInfoVisible().set(false);
                 model.getTradeInterrupted().set(true);
                 model.getInterruptTradeButtonVisible().set(false);
                 applyTradeInterruptedInfo(trade, true);
                 break;
 
             case FAILED:
-                // TODO
+                model.getPhaseAndInfoVisible().set(false);
+                model.getInterruptTradeButtonVisible().set(false);
+                model.getShowReportToMediatorButton().set(false);
+                model.getTradeFailed().set(true);
+                model.getErrorMessage().set(Res.get("bisqEasy.openTrades.errorMessage",
+                        model.getBisqEasyTrade().get().getErrorMessage()));
                 break;
+
             default:
-                log.error(state.name());
+                log.error("State {} not handled", state.name());
         }
     }
 
@@ -359,12 +379,12 @@ public class TradeStateController implements Controller {
                 break;
             case REJECTED:
             case CANCELLED:
+            case FAILED:
                 model.getInterruptTradeButtonVisible().set(false);
                 break;
 
-            case FAILED:
-                // TODO
-                break;
+            default:
+                log.error("State {} not handled", state.name());
         }
     }
 }

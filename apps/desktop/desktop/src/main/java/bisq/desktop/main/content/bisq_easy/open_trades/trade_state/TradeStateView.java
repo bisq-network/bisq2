@@ -36,9 +36,9 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class TradeStateView extends View<VBox, TradeStateModel, TradeStateController> {
-    private final HBox phaseAndInfoHBox, tradeInterruptedHBox, isInMediationHBox;
+    private final HBox phaseAndInfoHBox, tradeInterruptedHBox, tradeFailedHBox, isInMediationHBox;
     private final Button interruptTrade, closeTradeButton, exportButton, reportToMediatorButton;
-    private final Label tradeInterruptedInfo;
+    private final Label tradeInterruptedInfo, errorMessage;
     private Subscription stateInfoVBoxPin;
 
     public TradeStateView(TradeStateModel model,
@@ -84,14 +84,23 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
                 reportToMediatorButton, exportButton, closeTradeButton);
         tradeInterruptedHBox.setAlignment(Pos.CENTER_LEFT);
 
+        Label errorIcon = Icons.getIcon(AwesomeIcon.WARNING_SIGN);
+        errorIcon.getStyleClass().add("bisq-text-error");
+        errorMessage = new Label();
+        errorMessage.getStyleClass().add("bisq-easy-trade-failed-headline");
+        tradeFailedHBox = new HBox(10, errorIcon, errorMessage, Spacer.fillHBox(),
+                reportToMediatorButton, exportButton, closeTradeButton);
+        tradeFailedHBox.setAlignment(Pos.CENTER_LEFT);
 
         HBox.setHgrow(tradePhaseBox, Priority.ALWAYS);
         phaseAndInfoHBox = new HBox(tradePhaseBox);
 
         VBox.setMargin(isInMediationHBox, new Insets(20, 30, 0, 30));
         VBox.setMargin(tradeInterruptedHBox, new Insets(20, 30, 20, 30));
+        VBox.setMargin(tradeFailedHBox, new Insets(20, 30, 20, 30));
         VBox.setMargin(phaseAndInfoHBox, new Insets(0, 30, 15, 30));
-        VBox vBox = new VBox(tradeDataHeader, Layout.hLine(), isInMediationHBox, tradeInterruptedHBox, phaseAndInfoHBox);
+        VBox vBox = new VBox(tradeDataHeader, Layout.hLine(), isInMediationHBox, tradeInterruptedHBox,
+                tradeFailedHBox, phaseAndInfoHBox);
         vBox.getStyleClass().add("bisq-easy-container");
 
         root.getChildren().add(vBox);
@@ -105,10 +114,13 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         isInMediationHBox.managedProperty().bind(model.getIsInMediation());
         tradeInterruptedHBox.visibleProperty().bind(model.getTradeInterrupted());
         tradeInterruptedHBox.managedProperty().bind(model.getTradeInterrupted());
-        phaseAndInfoHBox.visibleProperty().bind(model.getTradeInterrupted().not());
-        phaseAndInfoHBox.managedProperty().bind(model.getTradeInterrupted().not());
+        tradeFailedHBox.visibleProperty().bind(model.getTradeFailed());
+        tradeFailedHBox.managedProperty().bind(model.getTradeFailed());
+        phaseAndInfoHBox.visibleProperty().bind(model.getPhaseAndInfoVisible());
+        phaseAndInfoHBox.managedProperty().bind(model.getPhaseAndInfoVisible());
 
         tradeInterruptedInfo.textProperty().bind(model.getTradeInterruptedInfo());
+        errorMessage.textProperty().bind(model.getErrorMessage());
 
         interruptTrade.textProperty().bind(model.getInterruptTradeButtonText());
         interruptTrade.visibleProperty().bind(model.getInterruptTradeButtonVisible());
@@ -140,10 +152,13 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         isInMediationHBox.managedProperty().unbind();
         tradeInterruptedHBox.visibleProperty().unbind();
         tradeInterruptedHBox.managedProperty().unbind();
+        tradeFailedHBox.visibleProperty().unbind();
+        tradeFailedHBox.managedProperty().unbind();
         phaseAndInfoHBox.visibleProperty().unbind();
         phaseAndInfoHBox.managedProperty().unbind();
 
         tradeInterruptedInfo.textProperty().unbind();
+        errorMessage.textProperty().unbind();
 
         interruptTrade.textProperty().unbind();
         interruptTrade.visibleProperty().unbind();

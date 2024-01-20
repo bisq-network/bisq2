@@ -436,10 +436,9 @@ public class TradeWizardReviewController implements Controller {
                 marketPrice);
         BisqEasyTrade bisqEasyTrade = bisqEasyProtocol.getModel();
         model.setBisqEasyTrade(bisqEasyTrade);
-
-        tradeProtocolExceptionPin = bisqEasyTrade.getTradeProtocolException().addObserver(exception -> {
-                    if (exception != null) {
-                        UIThread.run(() -> new Popup().error(exception).show());
+        tradeProtocolExceptionPin = bisqEasyTrade.errorMessageObservable().addObserver(errorMessage -> {
+            if (errorMessage != null) {
+                UIThread.run(() -> new Popup().error(errorMessage).show());
                     }
                 }
         );

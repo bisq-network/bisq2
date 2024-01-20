@@ -162,8 +162,12 @@ class TradePhaseBox {
                             break;
 
                         case FAILED:
-                            // TODO
+                            model.getRequestMediationButtonVisible().set(false);
+                            model.getReportToMediatorButtonVisible().set(false);
                             break;
+
+                        default:
+                            log.error("State {} not handled", state.name());
                     }
                 });
             });

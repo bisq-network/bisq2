@@ -519,6 +519,10 @@
     -fx-text-fill: -bisq-yellow !important;
 }
 
+.bisq-text-error {
+    -fx-text-fill: -bisq-error !important;
+}
+
 .bisq-text-grey-9 {
     -fx-text-fill: -fx-mid-text-color;
 }

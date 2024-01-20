@@ -20,7 +20,6 @@ package bisq.trade.multisig;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
-import bisq.trade.Trade;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -66,7 +65,7 @@ public final class MultisigTradeStore implements PersistableStore<MultisigTradeS
     public static MultisigTradeStore fromProto(bisq.trade.protobuf.MultisigTradeStore proto) {
         var tradeById = proto.getTradeByIdMap().entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey,
-                        e -> Trade.protoToMultisigTrade(e.getValue())));
+                        e -> MultisigTrade.fromProto(e.getValue())));
         return new MultisigTradeStore(tradeById);
     }
 
