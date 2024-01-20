@@ -812,7 +812,7 @@ public class ChatMessagesListView {
                 public ListCell<ChatMessageListItem<? extends ChatMessage>> call(ListView<ChatMessageListItem<? extends ChatMessage>> list) {
                     return new ListCell<>() {
                         private final static double CHAT_BOX_MAX_WIDTH = 1200;
-                        private final static double CHAT_MESSAGE_BOX_MAX_WIDTH = 740;
+                        private final static double CHAT_MESSAGE_BOX_MAX_WIDTH = 630;
 
                         private final ReputationScoreDisplay reputationScoreDisplay;
                         private final Button takeOfferButton, removeOfferButton;
@@ -1023,7 +1023,7 @@ public class ChatMessagesListView {
                                 HBox.setMargin(userProfileIconVbox, new Insets(-5, 0, -5, 0));
                                 HBox.setMargin(messageVBox, new Insets(0, 0, 0, -10));
                                 HBox.setMargin(reputationVBox, new Insets(-5, 10, 0, 0));
-                                HBox.setMargin(takeOfferButton, new Insets(0, 5, 0, 0));
+                                HBox.setMargin(takeOfferButton, new Insets(0, 10, 0, 0));
                                 messageBgHBox.getChildren().setAll(userProfileIconVbox, messageVBox, Spacer.fillHBox(), reputationVBox, takeOfferButton);
 
                                 VBox.setMargin(userNameAndDateHBox, new Insets(-5, 0, 5, 10));
