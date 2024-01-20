@@ -123,11 +123,11 @@ cd bisq-daonode
   -jar [PATH TO bisq-daonode]/build/libs/bisq-daonode-1.9.14-SNAPSHOT-all.jar \
   --appName=daonode \
   --daoNodeApiPort=[DAO-NODE PORT] \
-  --fullDaoNode=true
-  --rpcPort=[RPC PORT]  
-  --rpcUser=[RPC USER]
-  --rpcPassword=[RPC PW]
-  --rpcBlockNotificationPort=5120
+  --fullDaoNode=true \
+  --rpcPort=[RPC PORT] \  
+  --rpcUser=[RPC USER] \
+  --rpcPassword=[RPC PW] \
+  --rpcBlockNotificationPort=5120 \
   --maxMemory=5000
   ```
 
