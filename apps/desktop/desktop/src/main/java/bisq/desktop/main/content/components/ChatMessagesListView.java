@@ -1300,9 +1300,11 @@ public class ChatMessagesListView {
         private final StringProperty messageDeliveryStatusTooltip = new SimpleStringProperty();
         @EqualsAndHashCode.Exclude
         private final ObjectProperty<AwesomeIcon> messageDeliveryStatusIcon = new SimpleObjectProperty<>();
+        @EqualsAndHashCode.Exclude
         private Optional<String> messageDeliveryStatusIconColor = Optional.empty();
         @EqualsAndHashCode.Exclude
         private final Set<Pin> mapPins = new HashSet<>();
+        @EqualsAndHashCode.Exclude
         private final Set<Pin> statusPins = new HashSet<>();
 
         public ChatMessageListItem(T chatMessage,
