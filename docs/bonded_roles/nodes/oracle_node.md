@@ -14,13 +14,20 @@ For running a local oracle node you do not need the above described process. You
 how to run a dev oracle node.
 
 ## Install and run a Bisq 2 Oracle node
+The Bisq 2 Oracle node depends on the bisq-daonode project.
+
+### 1. Install JDK 11 for bisq-daonode
+```
+sudo apt-get update
+sudo apt-get install openjdk-11-jdk
+```
 
 ### Check out and build Bisq 2
 
 ```
 git clone https://github.com/bisq-network/bisq2.git
 cd bisq2
-./gradlew build
+./gradlew build --no-daemon
 ```
 
 - Set up the `oracle` systemd service
@@ -104,10 +111,8 @@ privKey: `30818d020100301006072a8648ce3d020106052b8104000a0476307402010104205b44
 ```
 git clone --recursive https://github.com/bisq-network/bisq-daonode.git
 cd bisq-daonode
-./gradlew build
+./gradlew build --no-daemon
 ```
-
-- Stop gradle as it remains running in background and consumes allocated memory (e.g. `killall java`)
 
 - Set up the `daonode` systemd service
 
@@ -118,11 +123,11 @@ cd bisq-daonode
   -jar [PATH TO bisq-daonode]/build/libs/bisq-daonode-1.9.14-SNAPSHOT-all.jar \
   --appName=daonode \
   --daoNodeApiPort=[DAO-NODE PORT] \
-  --fullDaoNode=true
-  --rpcPort=[RPC PORT]  
-  --rpcUser=[RPC USER]
-  --rpcPassword=[RPC PW]
-  --rpcBlockNotificationPort=5120
+  --fullDaoNode=true \
+  --rpcPort=[RPC PORT] \  
+  --rpcUser=[RPC USER] \
+  --rpcPassword=[RPC PW] \
+  --rpcBlockNotificationPort=5120 \
   --maxMemory=5000
   ```
 
