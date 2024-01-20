@@ -1012,10 +1012,8 @@ public class ChatMessagesListView {
                                 reputationLabel.getStyleClass().add("bisq-text-7");
 
                                 reputationScoreDisplay.setReputationScore(item.getReputationScore());
-                                VBox.setMargin(reputationScoreDisplay, new Insets(0, 0, 10, 0));
-                                reputationScoreDisplay.setAlignment(Pos.CENTER);
-                                VBox reputationTakeOfferVBox = new VBox(4, reputationLabel, reputationScoreDisplay, takeOfferButton);
-                                reputationTakeOfferVBox.setAlignment(Pos.CENTER);
+                                VBox reputationVBox = new VBox(4, reputationLabel, reputationScoreDisplay);
+                                reputationVBox.setAlignment(Pos.CENTER_LEFT);
 
                                 BisqEasyOfferbookMessage bisqEasyOfferbookMessage = (BisqEasyOfferbookMessage) chatMessage;
                                 takeOfferButton.setOnAction(e -> controller.onTakeOffer(bisqEasyOfferbookMessage, item.isCanTakeOffer()));
@@ -1024,8 +1022,9 @@ public class ChatMessagesListView {
                                 VBox messageVBox = new VBox(quotedMessageVBox, message);
                                 HBox.setMargin(userProfileIconVbox, new Insets(-5, 0, -5, 0));
                                 HBox.setMargin(messageVBox, new Insets(0, 0, 0, -10));
-                                HBox.setMargin(reputationTakeOfferVBox, new Insets(-5, 10, 0, 0));
-                                messageBgHBox.getChildren().setAll(userProfileIconVbox, messageVBox, Spacer.fillHBox(), reputationTakeOfferVBox);
+                                HBox.setMargin(reputationVBox, new Insets(-5, 10, 0, 0));
+                                HBox.setMargin(takeOfferButton, new Insets(0, 10, 0, 0));
+                                messageBgHBox.getChildren().setAll(userProfileIconVbox, messageVBox, Spacer.fillHBox(), reputationVBox, takeOfferButton);
 
                                 VBox.setMargin(userNameAndDateHBox, new Insets(-5, 0, 5, 10));
                                 mainVBox.getChildren().setAll(userNameAndDateHBox, messageBgHBox, reactionsHBox);
