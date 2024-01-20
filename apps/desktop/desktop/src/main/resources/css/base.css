@@ -38,7 +38,6 @@
     -fx-font-size: 13;
 
     /* Colors */
-    -bisq2-red: #d02c1f;
     -you-tube-red: #fc0d1b;
 
     /* Bisq 2 Colors */
@@ -56,6 +55,13 @@
     -bisq2-yellow-dim-30: #915b15;
     -bisq2-yellow-dim-40: #7c4e12;
     -bisq2-yellow-dim-50: #68410f;
+
+    -bisq2-red: #d02c1f;
+    -bisq2-red-dim-10: #a62318;
+    -bisq2-red-dim-20: #a62318;
+    -bisq2-red-dim-30: #911e15;
+    -bisq2-red-dim-40: #7c1a12;
+    -bisq2-red-dim-50: #68160f;
 
     /* Bisq Grey Palette */
     -bisq-black-10: #050505;
