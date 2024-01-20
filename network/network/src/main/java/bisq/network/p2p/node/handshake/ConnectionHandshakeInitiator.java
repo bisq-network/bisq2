@@ -27,13 +27,12 @@ import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.network.p2p.services.peergroup.BanList;
-import bisq.security.TorSignatureUtil;
 import bisq.security.keys.TorKeyPair;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.bouncycastle.crypto.CryptoException;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -63,16 +62,8 @@ public class ConnectionHandshakeInitiator {
 
     public NetworkEnvelope initiate() {
         Address myAddress = myCapability.getAddress();
-        byte[] signature = null;
         long signatureDate = System.currentTimeMillis();
-        if (myAddress.isTorAddress()) {
-            String message = buildMessageForSigning(myAddress, peerAddress, signatureDate);
-            try {
-                signature = TorSignatureUtil.sign(torKeyPair.getPrivateKey(), message.getBytes());
-            } catch (CryptoException e) {
-                throw new RuntimeException(e);
-            }
-        }
+        Optional<byte[]> signature = OnionAddressValidation.sign(myAddress, peerAddress, signatureDate, torKeyPair.getPrivateKey());
 
         ConnectionHandshake.Request request = new ConnectionHandshake.Request(myCapability, signature, myNetworkLoad, signatureDate);
         // As we do not know he peers load yet, we use the NetworkLoad.INITIAL_LOAD
@@ -81,10 +72,6 @@ public class ConnectionHandshakeInitiator {
                 peerAddress.getFullAddress(),
                 0);
         return new NetworkEnvelope(token, request);
-    }
-
-    private static String buildMessageForSigning(Address signersAddress, Address verifiersAddress, long date) {
-        return signersAddress.getFullAddress() + "|" + verifiersAddress.getFullAddress() + "@" + date;
     }
 
     public ConnectionHandshake.Response finish(List<NetworkEnvelope> responseNetworkEnvelopes) {
@@ -108,12 +95,11 @@ public class ConnectionHandshakeInitiator {
             throw new ConnectionException("Peers address is in quarantine. response=" + response);
         }
 
-        String myAddress = myCapability.getAddress().getFullAddress();
         boolean isAuthorized = authorizationService.isAuthorized(response,
                 responseNetworkEnvelope.getAuthorizationToken(),
                 myNetworkLoad,
                 StringUtils.createUid(),
-                myAddress);
+                myCapability.getAddress().getFullAddress());
 
         if (isAuthorized) {
             log.info("Authorized PoW of outbound peer {}", response.getCapability().getAddress());

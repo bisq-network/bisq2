@@ -38,6 +38,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -91,7 +92,7 @@ public class ConnectionHandshakeResponderTest {
 
     @Test
     void wrongEnvelopeVersion() throws IOException {
-        ConnectionHandshake.Request request = new ConnectionHandshake.Request(responderCapability, null, new NetworkLoad(), 0);
+        ConnectionHandshake.Request request = new ConnectionHandshake.Request(responderCapability, Optional.empty(), new NetworkLoad(), 0);
         AuthorizationToken token = authorizationService.createToken(request,
                 new NetworkLoad(),
                 Address.localHost(1234).toString(),
@@ -124,7 +125,7 @@ public class ConnectionHandshakeResponderTest {
 
     @Test
     void bannedPeer() throws IOException {
-        ConnectionHandshake.Request request = new ConnectionHandshake.Request(responderCapability, null, new NetworkLoad(), 0);
+        ConnectionHandshake.Request request = new ConnectionHandshake.Request(responderCapability, Optional.empty(), new NetworkLoad(), 0);
         AuthorizationToken token = authorizationService.createToken(request,
                 new NetworkLoad(),
                 Address.localHost(1234).toString(),
@@ -144,7 +145,7 @@ public class ConnectionHandshakeResponderTest {
 
     @Test
     void invalidPoW() throws IOException {
-        ConnectionHandshake.Request request = new ConnectionHandshake.Request(responderCapability, null, new NetworkLoad(), 0);
+        ConnectionHandshake.Request request = new ConnectionHandshake.Request(responderCapability, Optional.empty(), new NetworkLoad(), 0);
         AuthorizationToken token = authorizationService.createToken(request,
                 new NetworkLoad(),
                 Address.localHost(1234).toString(),
@@ -163,7 +164,7 @@ public class ConnectionHandshakeResponderTest {
     @Test
     void correctPoW() throws IOException {
         Capability peerCapability = new Capability(Address.localHost(2345), supportedTransportTypes);
-        ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, null, new NetworkLoad(), 0);
+        ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, Optional.empty(), new NetworkLoad(), 0);
         AuthorizationToken token = authorizationService.createToken(request,
                 new NetworkLoad(),
                 responderCapability.getAddress().getFullAddress(),
@@ -181,7 +182,7 @@ public class ConnectionHandshakeResponderTest {
 
     private NetworkEnvelope createValidRequest() {
         Capability peerCapability = new Capability(Address.localHost(2345), supportedTransportTypes);
-        ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, null, new NetworkLoad(), 0);
+        ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, Optional.empty(), new NetworkLoad(), 0);
         AuthorizationToken token = authorizationService.createToken(request,
                 new NetworkLoad(),
                 responderCapability.getAddress().getFullAddress(),
