@@ -73,7 +73,7 @@
     -bisq-dark-grey-40: #2b2b2b;
     -bisq-dark-grey-50: #383838;
     -bisq-mid-grey-10: #4d4d4d;
-    -bisq-mid-grey-30: #808080;
+    -bisq-mid-grey-20: #808080;
     -bisq-mid-grey-40: #b2b2b2;
     -bisq-light-grey-10: #c7c7c7;
     -bisq-light-grey-20: #d4d4d4;
@@ -109,7 +109,7 @@
     -bisq-green-pressed: -bisq2-green-dim-30;
 
     -fx-dark-text-color: -bisq-black-10;
-    -fx-mid-text-color: -bisq-mid-grey-30;
+    -fx-mid-text-color: -bisq-mid-grey-20;
     -fx-light-text-color: -bisq-white-20;
 
     -bisq-error: -bisq2-red;

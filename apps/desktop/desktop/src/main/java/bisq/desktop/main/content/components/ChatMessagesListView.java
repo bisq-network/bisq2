@@ -1356,7 +1356,7 @@ public class ChatMessagesListView {
                                         messageDeliveryStatusTooltip.set(Res.get("chat.message.deliveryState." + status.name()));
                                         switch (status) {
                                             case CONNECTING:
-                                                // -bisq-mid-grey-30: #808080;
+                                                // -bisq-mid-grey-20: #808080;
                                                 messageDeliveryStatusIconColor = Optional.of("#808080");
                                                 messageDeliveryStatusIcon.set(AwesomeIcon.SPINNER);
                                                 break;
