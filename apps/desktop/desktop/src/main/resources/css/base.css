@@ -39,7 +39,6 @@
 
     /* Colors */
     -bisq-red: #d02c1f;
-    -bisq2-yellow: #d0831f;
     -you-tube-red: #fc0d1b;
 
     /* Bisq 2 Colors */
@@ -50,6 +49,13 @@
     -bisq2-green-dim-30: #3c7932;
     -bisq2-green-dim-40: #33682b;
     -bisq2-green-dim-50: #2b5724;
+
+    -bisq2-yellow: #d0831f;
+    -bisq2-yellow-dim-10: #bb751b;
+    -bisq2-yellow-dim-20: #a66818;
+    -bisq2-yellow-dim-30: #915b15;
+    -bisq2-yellow-dim-40: #7c4e12;
+    -bisq2-yellow-dim-50: #68410f;
 
     /* Bisq Grey Palette */
     -bisq-black-10: #050505;
