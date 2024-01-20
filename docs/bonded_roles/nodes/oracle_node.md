@@ -14,6 +14,13 @@ For running a local oracle node you do not need the above described process. You
 how to run a dev oracle node.
 
 ## Install and run a Bisq 2 Oracle node
+The Bisq 2 Oracle node depends on the bisq-daonode project.
+
+### 1. Install JDK 11 for bisq-daonode
+```
+sudo apt-get update
+sudo apt-get install openjdk-11-jdk
+```
 
 ### Check out and build Bisq 2
 
