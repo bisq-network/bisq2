@@ -144,7 +144,7 @@
 
 .notification-hyperlink,
 .notification-hyperlink:visited {
-    -fx-text-fill: -bisq-black-20;
+    -fx-text-fill: -bisq-black-lit;
     -fx-font-size: 1.15em;
     -fx-font-family: "IBM Plex Sans";
 }
