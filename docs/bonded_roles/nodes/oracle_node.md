@@ -27,7 +27,7 @@ sudo apt-get install openjdk-11-jdk
 ```
 git clone https://github.com/bisq-network/bisq2.git
 cd bisq2
-./gradlew build
+./gradlew build --no-daemon
 ```
 
 - Set up the `oracle` systemd service
@@ -111,10 +111,8 @@ privKey: `30818d020100301006072a8648ce3d020106052b8104000a0476307402010104205b44
 ```
 git clone --recursive https://github.com/bisq-network/bisq-daonode.git
 cd bisq-daonode
-./gradlew build
+./gradlew build --no-daemon
 ```
-
-- Stop gradle as it remains running in background and consumes allocated memory (e.g. `killall java`)
 
 - Set up the `daonode` systemd service
 
