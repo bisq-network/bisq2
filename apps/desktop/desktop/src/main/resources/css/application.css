@@ -17,7 +17,7 @@
 .splash-bootstrap-details {
     -fx-font-size: 1em;
     -fx-font-family: "IBM Plex Sans Light";
-    -fx-text-fill: -bisq-medium-grey-mid;
+    -fx-text-fill: -bisq-mid-grey-30;
 }
 
 .splash-bootstrap-progress {
@@ -97,12 +97,12 @@
 
 .updater-release-notes .content {
     -fx-padding: 1.0em;
-    -fx-background-color: -bisq-dark-grey-dim;
+    -fx-background-color: -bisq-dark-grey-20;
 }
 
 .updater-release-notes:focused .content {
     -fx-padding: 1.0em;
-    -fx-background-color: -bisq-dark-grey-dim;
+    -fx-background-color: -bisq-dark-grey-20;
 }
 
 .updater-text {
@@ -113,7 +113,7 @@
 }
 
 .updater-table-view {
-    -fx-background-color: -bisq-dark-grey-dim;
+    -fx-background-color: -bisq-dark-grey-20;
 }
 
 
@@ -122,11 +122,11 @@
  ******************************************************************************/
 
 .notification-pane {
-    -fx-background-color: -bisq-dark-grey-mid;
+    -fx-background-color: -bisq-dark-grey-40;
 }
 
 .notification-pane-dark {
-    -fx-background-color: -bisq-dark-grey-dim;
+    -fx-background-color: -bisq-dark-grey-20;
 }
 
 .notification-box {
@@ -136,27 +136,27 @@
 }
 
 .notification-headline {
-    -fx-fill: -bisq-dark-grey-lit;
-    -fx-text-fill: -bisq-dark-grey-lit;
+    -fx-fill: -bisq-dark-grey-50;
+    -fx-text-fill: -bisq-dark-grey-50;
     -fx-font-size: 1.15em;
     -fx-font-family: "IBM Plex Sans";
 }
 
 .notification-hyperlink,
 .notification-hyperlink:visited {
-    -fx-text-fill: -bisq-black-mid;
+    -fx-text-fill: -bisq-black-20;
     -fx-font-size: 1.15em;
     -fx-font-family: "IBM Plex Sans";
 }
 
 .notification-hyperlink:hover,
 .notification-hyperlink:visited:hover {
-    -fx-text-fill: -bisq-white-mid;
+    -fx-text-fill: -bisq-white-10;
 }
 .notification-hyperlink:visited,
 .notification-hyperlink:armed:visited,
 .notification-hyperlink:hover:armed {
-    -fx-text-fill: -bisq-dark-grey-lit;
+    -fx-text-fill: -bisq-dark-grey-50;
 }
 
 /*******************************************************************************
@@ -188,7 +188,7 @@
  ******************************************************************************/
 
 .video-bg {
-    -fx-background-color: -bisq-black-dim;
+    -fx-background-color: -bisq-black-10;
 }
 
 .video-control-bg {

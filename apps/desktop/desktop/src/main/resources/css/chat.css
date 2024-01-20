@@ -15,7 +15,7 @@
 
 .channel-large-thin-headline {
     -fx-font-size: 1.692em;
-    -fx-text-fill: -bisq-dark-grey-lit;
+    -fx-text-fill: -bisq-dark-grey-50;
 }
 
 .market-fiat-label {
@@ -49,18 +49,18 @@
 }
 
 .close-sidebar-button {
-    -fx-background-color: -bisq-medium-grey-mid;
-    -fx-text-fill: -bisq-dark-grey-mid;
+    -fx-background-color: -bisq-mid-grey-30;
+    -fx-text-fill: -bisq-dark-grey-40;
 }
 
 #chat-filter-box {
-    -fx-border-color: -bisq-medium-grey-dim;
+    -fx-border-color: -bisq-mid-grey-20;
     -fx-border-width: 0 0 1 0;
     -fx-border-insets: 0 0 -1 0;
 }
 
 #chat-user-profile-bg {
-    -fx-background-color: -bisq-dark-grey-mid;
+    -fx-background-color: -bisq-dark-grey-40;
     -fx-background-insets: 1 20 1 9;
     -fx-background-radius: 8;
 }
@@ -73,10 +73,10 @@
 }
 
 .chat-send-message-box {
-    -fx-background-color: -bisq-dark-grey-mid;
+    -fx-background-color: -bisq-dark-grey-40;
     -fx-background-radius: 8;
     -fx-background-insets: 0;
-    -fx-border-color: -bisq-dark-grey-mid;
+    -fx-border-color: -bisq-dark-grey-40;
     -fx-border-radius: 8;
     -fx-border-width: 1;
     -fx-border-insets: 0;
@@ -151,26 +151,26 @@
 }
 
 .chat-message-bg-my-message {
-    -fx-background-color: -bisq-black-lit;
+    -fx-background-color: -bisq-dark-grey-10;
     -fx-background-radius: 8;
 }
 
 .chat-message-bg-peer-message {
-    -fx-background-color: -bisq-dark-grey-lit;
+    -fx-background-color: -bisq-dark-grey-50;
     -fx-background-radius: 8;
 }
 
 .create-offer-message-my-offer {
-    -fx-background-color: -bisq-black-lit;
+    -fx-background-color: -bisq-dark-grey-10;
     -fx-background-radius: 8;
 }
 
 .create-offer-box-my-offer {
-    -fx-background-color: -bisq-dark-grey-mid;
+    -fx-background-color: -bisq-dark-grey-40;
 }
 
 .trade-wizard-feedback-bg {
-    -fx-background-color: -bisq-black-lit;
+    -fx-background-color: -bisq-dark-grey-10;
     -fx-background-radius: 0 0 16 16;
 }
 
@@ -187,13 +187,13 @@
 }
 
 #button-inactive {
-    -fx-background-color: -bisq-dark-grey-lit;
+    -fx-background-color: -bisq-dark-grey-50;
     -fx-text-fill: -fx-light-text-color;
     -fx-background-insets: 0;
 }
 
 #bisq-combo-box-list-view {
-    -fx-background-color: -bisq-dark-grey-lit;
+    -fx-background-color: -bisq-dark-grey-50;
     -fx-border-color: -bisq-dark-grey;;
     -fx-border-width: 1;
     -fx-border-insets: 0;
@@ -228,7 +228,7 @@
 }
 
 #chat-message-reactions-separator {
-    -fx-text-fill: -bisq-dark-grey-lit;
+    -fx-text-fill: -bisq-dark-grey-50;
 }
 
 
@@ -237,7 +237,7 @@
 }
 
 .chat-mention-popup-menu-item {
-    -fx-background-color: -bisq-dark-grey-dim;
+    -fx-background-color: -bisq-dark-grey-20;
     -fx-text-fill: -fx-light-text-color;
     -fx-alignment: center-left;
     -fx-padding: 8 14 8 14;
@@ -254,7 +254,7 @@
 }
 
 #onboarding-top-panel {
-    -fx-background-color: -bisq-dark-grey-dim;
+    -fx-background-color: -bisq-dark-grey-20;
 }
 
 /*******************************************************************************
@@ -300,7 +300,7 @@
 }
 
 .chat-container {
-    -fx-background-color: -bisq-dark-grey-dim;
+    -fx-background-color: -bisq-dark-grey-20;
     -fx-background-radius: 8 8 0 0;
 }
 
@@ -334,7 +334,7 @@
 }
 
 .channel-selection-list-view .list-cell:selected {
-    -fx-background-color: -bisq-dark-grey-dim;
+    -fx-background-color: -bisq-dark-grey-20;
     -fx-fill: -fx-dark-text-color;
     -fx-text-fill: -fx-dark-text-color;
 }
@@ -363,7 +363,7 @@
 }
 
 .chat-messages-badge.bisq-badge .badge-pane {
-    -fx-background-color: -bisq-medium-grey-dim;
+    -fx-background-color: -bisq-mid-grey-20;
 }
 
 

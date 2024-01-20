@@ -81,14 +81,14 @@
 
 
 .white-button {
-    -fx-background-color: -bisq-white-lit;
-    -fx-fill: -bisq-black-dim !important;
-    -fx-text-fill: -bisq-black-dim !important;
+    -fx-background-color: -bisq-white-20;
+    -fx-fill: -bisq-black-10 !important;
+    -fx-text-fill: -bisq-black-10 !important;
 }
 
 .white-button > .text {
-    -fx-fill: -bisq-black-dim !important;
-    -fx-text-fill: -bisq-black-dim !important;
+    -fx-fill: -bisq-black-10 !important;
+    -fx-text-fill: -bisq-black-10 !important;
 }
 
 .white-button:hover {
@@ -104,20 +104,20 @@
 }
 
 .dark-grey-button {
-    -fx-background-color: -bisq-dark-grey-mid;
+    -fx-background-color: -bisq-dark-grey-40;
     -fx-border-color: transparent;
-    -fx-fill: -bisq-white-lit;
-    -fx-text-fill: -bisq-white-lit;
+    -fx-fill: -bisq-white-20;
+    -fx-text-fill: -bisq-white-20;
 }
 
 .dark-grey-button:hover {
-    -fx-background-color: -bisq-dark-grey-dim;
+    -fx-background-color: -bisq-dark-grey-20;
     -fx-text-fill: rgba(255, 255, 255, 0.9);
     -fx-effect: none;
 }
 
 .dark-grey-button:pressed {
-    -fx-background-color: -bisq-dark-grey-dim;
+    -fx-background-color: -bisq-dark-grey-20;
     -fx-text-fill: rgba(255, 255, 255, 0.85);
     -fx-effect: none;
 }
@@ -210,8 +210,8 @@
 
 .white-transparent-outlined-button {
     -fx-background-color: transparent;
-    -fx-border-color: -bisq-white-lit;
-    -fx-text-fill: -bisq-white-lit;
+    -fx-border-color: -bisq-white-20;
+    -fx-text-fill: -bisq-white-20;
 }
 
 .white-transparent-outlined-button:hover {
@@ -471,9 +471,9 @@
     -fx-background-insets: 0px;
     -fx-padding: 2px;
     -bisq-toggle-color: -fx-default-button;
-    -bisq-un-toggle-color: -bisq-white-lit;
+    -bisq-un-toggle-color: -bisq-white-20;
     -bisq-toggle-line-color: derive(-bisq-toggle-color, 65%);
-    -bisq-un-toggle-line-color: -bisq-medium-grey-mid;
+    -bisq-un-toggle-line-color: -bisq-mid-grey-30;
     -bisq-size: 8;
 }
 
@@ -521,7 +521,7 @@
  ******************************************************************************/
 
 .card-button {
-    -fx-background-color: derive(-bisq-dark-grey-dim, -20%);
+    -fx-background-color: derive(-bisq-dark-grey-20, -20%);
     -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 1.55em;
     -fx-background-radius: 4;
@@ -529,11 +529,11 @@
 }
 
 .card-button:hover {
-    -fx-background-color: derive(-bisq-dark-grey-dim, -30%);
+    -fx-background-color: derive(-bisq-dark-grey-20, -30%);
 }
 
 .card-button:pressed {
-    -fx-background-color: derive(-bisq-dark-grey-dim, -40%);
+    -fx-background-color: derive(-bisq-dark-grey-20, -40%);
 }
 
 .card-button:default {
@@ -554,17 +554,17 @@
 
 .card-button-border {
     -fx-background-color: transparent;
-    -fx-border-color: derive(-bisq-white-lit, -25%);
+    -fx-border-color: derive(-bisq-white-20, -25%);
 }
 
 .card-button-border:hover {
     -fx-background-color: rgba(0, 0, 0, 0.15);
-    -fx-border-color: derive(-bisq-white-lit, -15%);
+    -fx-border-color: derive(-bisq-white-20, -15%);
 }
 
 .card-button-border:pressed {
     -fx-background-color: rgba(0, 0, 0, 0.2);
-    -fx-border-color: derive(-bisq-white-lit, -10%);
+    -fx-border-color: derive(-bisq-white-20, -10%);
 }
 
 .card-button-border:default {
@@ -637,12 +637,12 @@
 .check-box > .box {
     -fx-background-color: transparent;
     -fx-background-radius: 0;
-    -fx-border-color: -bisq-medium-grey-mid;
+    -fx-border-color: -bisq-mid-grey-30;
     -fx-border-width: 1;
 }
 
 .check-box:hover > .box {
-    -fx-border-color: derive(-bisq-medium-grey-mid, 20%);
+    -fx-border-color: derive(-bisq-mid-grey-30, 20%);
 }
 
 .check-box > .box > .mark {
@@ -667,7 +667,7 @@
 
 .check-box:selected > .box > .mark,
 .check-box:indeterminate > .box > .mark {
-    -fx-background-color: -bisq-white-lit;
+    -fx-background-color: -bisq-white-20;
     -fx-background-insets: 1 0 -1 0, 0;
     -fx-border-color: transparent;
 }
@@ -695,7 +695,7 @@
 
 .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:hover,
 .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected:hover {
-    -fx-background-color: -bisq-dark-grey-lit;
+    -fx-background-color: -bisq-dark-grey-50;
     -fx-background: transparent;
 }
 
@@ -721,9 +721,9 @@
     -fx-show-delay: 100ms;
     -fx-hide-delay: 100ms;
     -fx-show-duration: 20000ms;
-    -fx-background: -bisq-light-grey-dim;
+    -fx-background: -bisq-light-grey-10;
     -fx-text-fill: -fx-dark-text-color;
-    -fx-background-color: -bisq-light-grey-dim;
+    -fx-background-color: -bisq-light-grey-10;
     -fx-background-radius: 6px;
     -fx-background-insets: 0;
     -fx-padding: 0.667em 0.75em 0.667em 0.75em; /* 10px */
@@ -732,15 +732,15 @@
 }
 
 .tooltip .dark-tooltip {
-    -fx-text-fill: -bisq-light-grey-dim;
-    -fx-background-color: -bisq-dark-grey-dim;
+    -fx-text-fill: -bisq-light-grey-10;
+    -fx-background-color: -bisq-dark-grey-20;
     -fx-font-size: 0.85em;
 }
 
 .tooltip .medium-dark-tooltip {
-    -fx-background: -bisq-dark-grey-lit;
+    -fx-background: -bisq-dark-grey-50;
     -fx-text-fill: -fx-light-text-color;
-    -fx-background-color: -bisq-dark-grey-lit;
+    -fx-background-color: -bisq-dark-grey-50;
     -fx-font-size: 0.85em;
 }
 
@@ -756,7 +756,7 @@
 }
 
 .progress-bar > .track {
-    -fx-background-color: -bisq-dark-grey-lit;
+    -fx-background-color: -bisq-dark-grey-50;
 }
 
 .progress-bar > .bar,
@@ -802,7 +802,7 @@
  ******************************************************************************/
 
 .slider .track {
-    -fx-background-color: -bisq-dark-grey-lit;
+    -fx-background-color: -bisq-dark-grey-50;
     -fx-pref-height: 2px;
 }
 
@@ -826,7 +826,7 @@
 }
 
 .radio-button .radio {
-    -fx-background-color: -bisq-dark-grey-lit;
+    -fx-background-color: -bisq-dark-grey-50;
     -fx-padding: 1px;
     -fx-border-radius: 15px;
     -fx-border-width: 2px;
@@ -842,22 +842,22 @@
 }
 
 .radio-button .radio .dot {
-    -fx-background-color: -bisq-dark-grey-lit;
+    -fx-background-color: -bisq-dark-grey-50;
     -fx-background-insets: 0;
     -fx-padding: 5px
 }
 
 .radio-button:armed .radio {
-    -fx-background-color: -bisq-dark-grey-lit;
+    -fx-background-color: -bisq-dark-grey-50;
 }
 
 .radio-button:armed .radio .dot,
 .radio-button:hover .radio .dot {
-    -fx-background-color: -bisq-dark-grey-lit;
+    -fx-background-color: -bisq-dark-grey-50;
 }
 
 .radio-button:selected .radio .dot {
-    -fx-background-color: -bisq-white-lit;
+    -fx-background-color: -bisq-white-20;
 }
 
 
@@ -868,7 +868,7 @@
  ******************************************************************************/
 
 .search-box {
-    -fx-background-color: -bisq-dark-grey-mid;
+    -fx-background-color: -bisq-dark-grey-40;
     -fx-background-radius: 6;
     -fx-border-color: transparent;
     -fx-border-width: 0;
@@ -877,7 +877,7 @@
 }
 
 .search-box-active {
-    -fx-background-color: -bisq-dark-grey-lit;
+    -fx-background-color: -bisq-dark-grey-50;
 }
 
 .search-text-field {

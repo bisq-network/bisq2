@@ -1218,7 +1218,7 @@ public class ChatMessagesListView {
                                     quotedMessageField.setStyle("-fx-fill: -fx-mid-text-color");
                                     Label userName = new Label(controller.getUserName(citation.getAuthorUserProfileId()));
                                     userName.getStyleClass().add("font-medium");
-                                    userName.setStyle("-fx-text-fill: -bisq-medium-grey-lit");
+                                    userName.setStyle("-fx-text-fill: -bisq-mid-grey-40");
                                     quotedMessageVBox.getChildren().setAll(userName, quotedMessageField);
                                 }
                             } else {
@@ -1356,12 +1356,12 @@ public class ChatMessagesListView {
                                         messageDeliveryStatusTooltip.set(Res.get("chat.message.deliveryState." + status.name()));
                                         switch (status) {
                                             case CONNECTING:
-                                                // -bisq-medium-grey-mid: #808080;
+                                                // -bisq-mid-grey-30: #808080;
                                                 messageDeliveryStatusIconColor = Optional.of("#808080");
                                                 messageDeliveryStatusIcon.set(AwesomeIcon.SPINNER);
                                                 break;
                                             case SENT:
-                                                // -bisq-white-dim: #eaeaea;
+                                                // -bisq-light-grey-50: #eaeaea;
                                                 messageDeliveryStatusIconColor = Optional.of("#eaeaea");
                                                 messageDeliveryStatusIcon.set(AwesomeIcon.CIRCLE_ARROW_RIGHT);
                                                 break;

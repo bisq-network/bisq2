@@ -3,12 +3,12 @@
  ******************************************************************************/
 
 .bisq-easy-container {
-    -fx-background-color: -bisq-dark-grey-dim;
+    -fx-background-color: -bisq-dark-grey-20;
     -fx-background-radius: 8;
 }
 
 .bisq-easy-container-header {
-    -fx-background-color: -bisq-dark-grey-dim;
+    -fx-background-color: -bisq-dark-grey-20;
     -fx-background-radius: 8 8 0 0;
 }
 
@@ -27,8 +27,8 @@
 }
 
 .bisq-easy-trade-isInMediation-headline {
-    -fx-fill: -bisq-dark-grey-lit;
-    -fx-text-fill: -bisq-dark-grey-lit;
+    -fx-fill: -bisq-dark-grey-50;
+    -fx-text-fill: -bisq-dark-grey-50;
     -fx-font-size: 1.15em;
     -fx-font-family: "IBM Plex Sans";
 }
@@ -64,7 +64,7 @@
  ******************************************************************************/
 
 .bisq-easy-onboarding-big-box {
-    -fx-background-color: -bisq-dark-grey-dim;
+    -fx-background-color: -bisq-dark-grey-20;
     -fx-background-radius: 8;
 }
 
@@ -154,7 +154,7 @@
  ******************************************************************************/
 
 .bisq-easy-open-trades-welcome-bg {
-    -fx-background-color: -bisq-dark-grey-dim;
+    -fx-background-color: -bisq-dark-grey-20;
     -fx-background-radius: 8;
 }
 
@@ -189,7 +189,7 @@
 }
 
 .bisq-easy-open-trades.table-view .table-row-cell:filled:selected .table-cell {
-    -fx-background-color: -bisq-black-lit;
+    -fx-background-color: -bisq-dark-grey-10;
 }
 
 
@@ -256,8 +256,8 @@
 }
 
 .bisq-easy-trade-state-phase-inactive {
-    -fx-fill: -bisq-medium-grey-mid;
-    -fx-text-fill: -bisq-medium-grey-mid;
+    -fx-fill: -bisq-mid-grey-30;
+    -fx-text-fill: -bisq-mid-grey-30;
     -fx-font-family: "IBM Plex Sans Light";
 }
 
@@ -278,7 +278,7 @@
 }
 
 .bisq-easy-trade-state-phase-badge-inactive .badge-pane {
-    -fx-background-color: -bisq-dark-grey-lit;
+    -fx-background-color: -bisq-dark-grey-50;
 }
 
 .bisq-easy-trade-state-phase-badge-active .badge-pane {
@@ -483,7 +483,7 @@
 
 
 .trade-wizard-review-payment-combo-box {
-    -fx-background-color: -bisq-dark-grey-lit;
+    -fx-background-color: -bisq-dark-grey-50;
     -fx-background-insets: 6 0 6 0;
     -fx-fill: -fx-light-text-color;
     -fx-text-fill: -fx-light-text-color;
@@ -509,7 +509,7 @@
 }
 
 .bisq-easy-trade-wizard-market.table-view .table-row-cell .table-cell {
-    -fx-background-color: -bisq-dark-grey-mid;
+    -fx-background-color: -bisq-dark-grey-40;
 }
 
 .bisq-easy-trade-wizard-market.table-view .table-row-cell:hover .table-cell {
@@ -538,7 +538,7 @@
 }
 
 .bisq-easy-trade-wizard-select-offer.table-view .table-row-cell .table-cell {
-    -fx-background-color: -bisq-dark-grey-mid;
+    -fx-background-color: -bisq-dark-grey-40;
 }
 
 .bisq-easy-trade-wizard-select-offer.table-view .table-row-cell:hover .table-cell {
@@ -550,19 +550,19 @@
 }
 
 .bisq-easy-trade-wizard-select-offer.table-view .table-row-cell:empty {
-    -fx-border-color: derive(-bisq-dark-grey-mid, -30%);
+    -fx-border-color: derive(-bisq-dark-grey-40, -30%);
 }
 
 .bisq-easy-trade-wizard-select-offer.table-view .table-row-cell:empty .table-cell {
-    -fx-background-color: derive(-bisq-dark-grey-mid, -15%);
+    -fx-background-color: derive(-bisq-dark-grey-40, -15%);
 }
 
 .bisq-easy-trade-wizard-select-offer.table-view .table-row-cell:empty:hover .table-cell {
-    -fx-background-color: derive(-bisq-dark-grey-mid, -15%);
+    -fx-background-color: derive(-bisq-dark-grey-40, -15%);
 }
 
 .bisq-easy-trade-wizard-select-offer.table-view .table-row-cell:selected .button.white-button .text {
-    -fx-fill: -bisq-black-dim !important;
+    -fx-fill: -bisq-black-10 !important;
     -fx-font-family: "IBM Plex Sans Medium" !important;
 }
 
@@ -603,7 +603,7 @@
  ******************************************************************************/
 
 .bisq-easy-chat-sidebar-bg {
-    -fx-background-color: -bisq-dark-grey-dim;
+    -fx-background-color: -bisq-dark-grey-20;
     -fx-background-radius: 8 8 0 0;
 }
 
@@ -662,7 +662,7 @@
 #bisq-easy-next-button {
     -fx-background-color: transparent;
     -fx-background-radius: 4;
-    -fx-border-color: -bisq-medium-grey-mid;
+    -fx-border-color: -bisq-mid-grey-30;
     -fx-border-width: 0.75;
     -fx-border-radius: 2.5;
     -fx-text-fill: -fx-light-text-color;
@@ -692,7 +692,7 @@
  ******************************************************************************/
 
 .bisq-easy-private-chats-table-view {
-    -fx-background-color: -bisq-dark-grey-dim;
+    -fx-background-color: -bisq-dark-grey-20;
 }
 
 /*******************************************************************************

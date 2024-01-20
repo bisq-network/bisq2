@@ -28,7 +28,7 @@
  ******************************************************************************/
 
 .user-reputation-table-view {
-    -fx-background-color: -bisq-dark-grey-dim;
+    -fx-background-color: -bisq-dark-grey-20;
 }
 
 /*******************************************************************************
@@ -61,10 +61,10 @@
 }
 
 .user-bonded-roles-table-view {
-    -fx-background-color: -bisq-dark-grey-dim;
+    -fx-background-color: -bisq-dark-grey-20;
 }
 
 .user-bonded-roles-tab-view {
-    -fx-background-color: -bisq-dark-grey-dim;
+    -fx-background-color: -bisq-dark-grey-20;
     -fx-background-radius: 8;
 }
