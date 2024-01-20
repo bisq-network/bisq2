@@ -18,6 +18,7 @@
 package bisq.trade.bisq_easy.protocol;
 
 import bisq.trade.ServiceProvider;
+import bisq.trade.TradeProtocolException;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.protocol.events.*;
 import bisq.trade.bisq_easy.protocol.messages.*;
@@ -28,6 +29,14 @@ public class BisqEasyBuyerAsTakerProtocol extends BisqEasyProtocol {
 
     public BisqEasyBuyerAsTakerProtocol(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
+    }
+    @Override
+    protected void configErrorHandling() {
+        addTransition()
+                .fromAny()
+                .on(TradeProtocolException.class)
+                .run(BisqEasyProtocolExceptionHandler.class)
+                .to(FAILED);
     }
 
     @Override
@@ -120,67 +129,26 @@ public class BisqEasyBuyerAsTakerProtocol extends BisqEasyProtocol {
                 .run(BisqEasyRejectTradeMessageHandler.class)
                 .to(REJECTED);
 
-
         // Cancel trade
         addTransition()
-                .from(BUYER_SENT_BTC_ADDRESS_AND_WAITING_FOR_ACCOUNT_DATA)
-                .on(BisqEasyCancelTradeMessage.class)
-                .run(BisqEasyCancelTradeMessageHandler.class)
-                .to(CANCELLED);
-        addTransition()
-                .from(BUYER_DID_NOT_SEND_BTC_ADDRESS_AND_RECEIVED_ACCOUNT_DATA)
-                .on(BisqEasyCancelTradeMessage.class)
-                .run(BisqEasyCancelTradeMessageHandler.class)
-                .to(CANCELLED);
-        addTransition()
-                .from(BUYER_SENT_BTC_ADDRESS_AND_RECEIVED_ACCOUNT_DATA)
-                .on(BisqEasyCancelTradeMessage.class)
-                .run(BisqEasyCancelTradeMessageHandler.class)
-                .to(CANCELLED);
-        addTransition()
-                .from(BUYER_SENT_FIAT_SENT_CONFIRMATION)
-                .on(BisqEasyCancelTradeMessage.class)
-                .run(BisqEasyCancelTradeMessageHandler.class)
-                .to(CANCELLED);
-        addTransition()
-                .from(BUYER_RECEIVED_SELLERS_FIAT_RECEIPT_CONFIRMATION)
-                .on(BisqEasyCancelTradeMessage.class)
-                .run(BisqEasyCancelTradeMessageHandler.class)
-                .to(CANCELLED);
-        addTransition()
-                .from(BUYER_RECEIVED_BTC_SENT_CONFIRMATION)
+                .fromStates(BUYER_SENT_BTC_ADDRESS_AND_WAITING_FOR_ACCOUNT_DATA,
+                        BUYER_DID_NOT_SEND_BTC_ADDRESS_AND_RECEIVED_ACCOUNT_DATA,
+                        BUYER_SENT_BTC_ADDRESS_AND_RECEIVED_ACCOUNT_DATA,
+                        BUYER_SENT_FIAT_SENT_CONFIRMATION,
+                        BUYER_RECEIVED_SELLERS_FIAT_RECEIPT_CONFIRMATION,
+                        BUYER_RECEIVED_BTC_SENT_CONFIRMATION)
                 .on(BisqEasyCancelTradeMessage.class)
                 .run(BisqEasyCancelTradeMessageHandler.class)
                 .to(CANCELLED);
 
         // Peer cancelled trade
         addTransition()
-                .from(BUYER_SENT_BTC_ADDRESS_AND_WAITING_FOR_ACCOUNT_DATA)
-                .on(BisqEasyCancelTradeEvent.class)
-                .run(BisqEasyCancelTradeEventHandler.class)
-                .to(CANCELLED);
-        addTransition()
-                .from(BUYER_DID_NOT_SEND_BTC_ADDRESS_AND_RECEIVED_ACCOUNT_DATA)
-                .on(BisqEasyCancelTradeEvent.class)
-                .run(BisqEasyCancelTradeEventHandler.class)
-                .to(CANCELLED);
-        addTransition()
-                .from(BUYER_SENT_BTC_ADDRESS_AND_RECEIVED_ACCOUNT_DATA)
-                .on(BisqEasyCancelTradeEvent.class)
-                .run(BisqEasyCancelTradeEventHandler.class)
-                .to(CANCELLED);
-        addTransition()
-                .from(BUYER_SENT_FIAT_SENT_CONFIRMATION)
-                .on(BisqEasyCancelTradeEvent.class)
-                .run(BisqEasyCancelTradeEventHandler.class)
-                .to(CANCELLED);
-        addTransition()
-                .from(BUYER_RECEIVED_SELLERS_FIAT_RECEIPT_CONFIRMATION)
-                .on(BisqEasyCancelTradeEvent.class)
-                .run(BisqEasyCancelTradeEventHandler.class)
-                .to(CANCELLED);
-        addTransition()
-                .from(BUYER_RECEIVED_BTC_SENT_CONFIRMATION)
+                .fromStates(BUYER_SENT_BTC_ADDRESS_AND_WAITING_FOR_ACCOUNT_DATA,
+                        BUYER_DID_NOT_SEND_BTC_ADDRESS_AND_RECEIVED_ACCOUNT_DATA,
+                        BUYER_SENT_BTC_ADDRESS_AND_RECEIVED_ACCOUNT_DATA,
+                        BUYER_SENT_FIAT_SENT_CONFIRMATION,
+                        BUYER_RECEIVED_SELLERS_FIAT_RECEIPT_CONFIRMATION,
+                        BUYER_RECEIVED_BTC_SENT_CONFIRMATION)
                 .on(BisqEasyCancelTradeEvent.class)
                 .run(BisqEasyCancelTradeEventHandler.class)
                 .to(CANCELLED);

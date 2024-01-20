@@ -19,21 +19,20 @@ package bisq.trade;
 
 import bisq.common.fsm.FsmModel;
 import bisq.common.fsm.State;
+import bisq.common.observable.Observable;
+import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.proto.PersistableProto;
-import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.contract.Contract;
 import bisq.identity.Identity;
 import bisq.offer.Offer;
 import bisq.security.DigestUtil;
-import bisq.trade.bisq_easy.BisqEasyTrade;
-import bisq.trade.multisig.MultisigTrade;
-import bisq.trade.submarine.SubmarineTrade;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -62,6 +61,7 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
     private final P taker;
     private final P maker;
     private transient final TradeRole tradeRole;
+    private final Observable<String> errorMessage = new Observable<>();
 
     public Trade(State state,
                  boolean isBuyer,
@@ -97,7 +97,7 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
     }
 
     protected bisq.trade.protobuf.Trade.Builder getTradeBuilder() {
-        return bisq.trade.protobuf.Trade.newBuilder()
+        bisq.trade.protobuf.Trade.Builder builder = bisq.trade.protobuf.Trade.newBuilder()
                 .setId(id)
                 .setTradeRole(tradeRole.toProto())
                 .setMyIdentity(myIdentity.toProto())
@@ -105,45 +105,20 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
                 .setTaker(taker.toProto())
                 .setMaker(maker.toProto())
                 .setState(getState().name());
+        Optional.ofNullable(getErrorMessage()).ifPresent(builder::setErrorMessage);
+        return builder;
     }
 
-    public static BisqEasyTrade protoToBisqEasyTrade(bisq.trade.protobuf.Trade proto) {
-        switch (proto.getMessageCase()) {
-            case BISQEASYTRADE: {
-                return BisqEasyTrade.fromProto(proto);
-            }
-
-            case MESSAGE_NOT_SET: {
-                throw new UnresolvableProtobufMessageException(proto);
-            }
-        }
-        throw new UnresolvableProtobufMessageException(proto);
+    public void setErrorMessage(String errorMessage) {
+        this.errorMessage.set(errorMessage);
     }
 
-    public static MultisigTrade protoToMultisigTrade(bisq.trade.protobuf.Trade proto) {
-        switch (proto.getMessageCase()) {
-            case MULTISIGTRADE: {
-                return MultisigTrade.fromProto(proto);
-            }
-
-            case MESSAGE_NOT_SET: {
-                throw new UnresolvableProtobufMessageException(proto);
-            }
-        }
-        throw new UnresolvableProtobufMessageException(proto);
+    public ReadOnlyObservable<String> errorMessageObservable() {
+        return errorMessage;
     }
 
-    public static SubmarineTrade protoToSubmarineTrade(bisq.trade.protobuf.Trade proto) {
-        switch (proto.getMessageCase()) {
-            case SUBMARINETRADE: {
-                return SubmarineTrade.fromProto(proto);
-            }
-
-            case MESSAGE_NOT_SET: {
-                throw new UnresolvableProtobufMessageException(proto);
-            }
-        }
-        throw new UnresolvableProtobufMessageException(proto);
+    public String getErrorMessage() {
+        return errorMessage.get();
     }
 
 

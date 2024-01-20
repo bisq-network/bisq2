@@ -19,12 +19,12 @@ package bisq.trade.submarine.protocol;
 
 import bisq.common.fsm.EventHandler;
 import bisq.trade.ServiceProvider;
-import bisq.trade.protocol.Protocol;
+import bisq.trade.protocol.TradeProtocol;
 import bisq.trade.submarine.SubmarineTrade;
 
 import java.lang.reflect.InvocationTargetException;
 
-public abstract class SubmarineProtocol extends Protocol<SubmarineTrade> {
+public abstract class SubmarineProtocol extends TradeProtocol<SubmarineTrade> {
 
     public SubmarineProtocol(ServiceProvider serviceProvider, SubmarineTrade model) {
         super(serviceProvider, model);

@@ -20,11 +20,11 @@ package bisq.trade.multisig.protocol;
 import bisq.common.fsm.EventHandler;
 import bisq.trade.ServiceProvider;
 import bisq.trade.multisig.MultisigTrade;
-import bisq.trade.protocol.Protocol;
+import bisq.trade.protocol.TradeProtocol;
 
 import java.lang.reflect.InvocationTargetException;
 
-public abstract class MultisigProtocol extends Protocol<MultisigTrade> {
+public abstract class MultisigProtocol extends TradeProtocol<MultisigTrade> {
 
     public MultisigProtocol(ServiceProvider serviceProvider, MultisigTrade model) {
         super(serviceProvider, model);

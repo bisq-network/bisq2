@@ -22,9 +22,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.WrappingText;
-import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
-import bisq.trade.TradeException;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
@@ -71,11 +69,7 @@ public class BuyerState2a extends BaseState {
 
         private void onConfirmFiatSent() {
             sendSystemMessage(Res.get("bisqEasy.tradeState.info.buyer.phase2a.systemMessage", model.getQuoteCode()));
-            try {
-                bisqEasyTradeService.buyerConfirmFiatSent(model.getBisqEasyTrade());
-            } catch (TradeException e) {
-                new Popup().error(e).show();
-            }
+            bisqEasyTradeService.buyerConfirmFiatSent(model.getBisqEasyTrade());
         }
     }
 

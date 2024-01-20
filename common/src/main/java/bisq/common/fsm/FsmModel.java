@@ -39,14 +39,14 @@ public class FsmModel {
 
     public FsmModel(State initialState) {
         if (initialState == null) {
-            throw new FsmException("InitialState must not be null at Model constructor");
+            throw new FsmConfigException("initialState must not be null");
         }
         state.set(initialState);
     }
 
     public FsmModel(State initialState, Set<Event> eventQueue, Set<Class<? extends Event>> processedEvents) {
         if (initialState == null) {
-            throw new FsmException("InitialState must not be null at Model constructor");
+            throw new FsmConfigException("initialState must not be null");
         }
         state.set(initialState);
         this.eventQueue.addAll(eventQueue);

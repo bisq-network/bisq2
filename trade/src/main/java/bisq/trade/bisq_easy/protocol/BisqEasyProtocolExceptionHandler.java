@@ -17,26 +17,25 @@
 
 package bisq.trade.bisq_easy.protocol;
 
-import bisq.common.fsm.EventHandler;
+import bisq.common.fsm.Event;
+import bisq.common.util.ExceptionUtil;
 import bisq.trade.ServiceProvider;
+import bisq.trade.TradeProtocolException;
 import bisq.trade.bisq_easy.BisqEasyTrade;
-import bisq.trade.protocol.TradeProtocol;
+import bisq.trade.protocol.events.TradeEventHandler;
 
-import java.lang.reflect.InvocationTargetException;
-
-public abstract class BisqEasyProtocol extends TradeProtocol<BisqEasyTrade> {
-
-    public BisqEasyProtocol(ServiceProvider serviceProvider, BisqEasyTrade model) {
+public class BisqEasyProtocolExceptionHandler extends TradeEventHandler<BisqEasyTrade> {
+    protected BisqEasyProtocolExceptionHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
-    protected EventHandler newEventHandlerFromClass(Class<? extends EventHandler> handlerClass) {
-        try {
-            return handlerClass.getDeclaredConstructor(ServiceProvider.class, BisqEasyTrade.class).newInstance(serviceProvider, model);
-        } catch (InstantiationException | IllegalAccessException | InvocationTargetException |
-                 NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        }
+    public void handle(Event event) {
+        TradeProtocolException tradeProtocolException = (TradeProtocolException) event;
+        commitToModel(tradeProtocolException);
+    }
+
+    private void commitToModel(TradeProtocolException tradeProtocolException) {
+        trade.setErrorMessage(ExceptionUtil.print(tradeProtocolException));
     }
 }

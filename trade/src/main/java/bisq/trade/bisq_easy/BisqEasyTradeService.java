@@ -32,7 +32,6 @@ import bisq.offer.price.spec.PriceSpec;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.trade.ServiceProvider;
-import bisq.trade.TradeException;
 import bisq.trade.bisq_easy.protocol.*;
 import bisq.trade.bisq_easy.protocol.events.*;
 import bisq.trade.bisq_easy.protocol.messages.*;
@@ -57,10 +56,10 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     @Getter
     private final Persistence<BisqEasyTradeStore> persistence;
     private final ServiceProvider serviceProvider;
+    private final BannedUserService bannedUserService;
 
     // We don't persist the protocol, only the model.
     private final Map<String, BisqEasyProtocol> tradeProtocolById = new ConcurrentHashMap<>();
-    private final BannedUserService bannedUserService;
 
     public BisqEasyTradeService(ServiceProvider serviceProvider) {
         persistence = serviceProvider.getPersistenceService().getOrCreatePersistence(this, persistableStore);
@@ -134,91 +133,56 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         Identity myIdentity = serviceProvider.getIdentityService().findAnyIdentityByNetworkId(bisqEasyContract.getOffer().getMakerNetworkId()).orElseThrow();
         BisqEasyTrade bisqEasyTrade = new BisqEasyTrade(isBuyer, false, myIdentity, bisqEasyContract, sender);
 
-        if (findProtocol(bisqEasyTrade.getId()).isPresent()) {
+        String tradeId = bisqEasyTrade.getId();
+        if (findProtocol(tradeId).isPresent()) {
             log.error("We received the BisqEasyTakeOfferRequest for an already existing protocol");
             return;
         }
-        checkArgument(!hadTrade(bisqEasyTrade.getId()), "Trade has been already taken");
-        persistableStore.add(bisqEasyTrade);
+        checkArgument(!tradeExists(tradeId), "A trade with that ID exists already");
+        persistableStore.addTrade(bisqEasyTrade);
 
-        try {
-            createAndAddTradeProtocol(bisqEasyTrade).handle(message);
-            persist();
-        } catch (Exception e) {
-            log.error("Error at processing message " + message, e);
-        }
+        createAndAddTradeProtocol(bisqEasyTrade).handle(message);
+        persist();
     }
 
     private void onBisqEasyTakeOfferResponse(BisqEasyTakeOfferResponse message) {
-        try {
-            getProtocol(message.getTradeId()).handle(message);
-            persist();
-        } catch (Exception e) {
-            log.error("Error at processing message " + message, e);
-        }
+        getProtocol(message.getTradeId()).handle(message);
+        persist();
     }
 
     private void onBisqEasySendAccountDataMessage(BisqEasyAccountDataMessage message) {
-        try {
-            getProtocol(message.getTradeId()).handle(message);
-            persist();
-        } catch (Exception e) {
-            log.error("Error at processing message " + message, e);
-        }
+        getProtocol(message.getTradeId()).handle(message);
+        persist();
     }
 
     private void onBisqEasyConfirmFiatSentMessage(BisqEasyConfirmFiatSentMessage message) {
-        try {
-            getProtocol(message.getTradeId()).handle(message);
-            persist();
-        } catch (Exception e) {
-            log.error("Error at processing message " + message, e);
-        }
+        getProtocol(message.getTradeId()).handle(message);
+        persist();
     }
 
     private void onBisqEasyBtcAddressMessage(BisqEasyBtcAddressMessage message) {
-        try {
-            getProtocol(message.getTradeId()).handle(message);
-            persist();
-        } catch (Exception e) {
-            log.error("Error at processing message " + message, e);
-        }
+        getProtocol(message.getTradeId()).handle(message);
+        persist();
     }
 
     private void onBisqEasyConfirmFiatReceiptMessage(BisqEasyConfirmFiatReceiptMessage message) {
-        try {
-            getProtocol(message.getTradeId()).handle(message);
-            persist();
-        } catch (Exception e) {
-            log.error("Error at processing message " + message, e);
-        }
+        getProtocol(message.getTradeId()).handle(message);
+        persist();
     }
 
     private void onBisqEasyConfirmBtcSentMessage(BisqEasyConfirmBtcSentMessage message) {
-        try {
-            getProtocol(message.getTradeId()).handle(message);
-            persist();
-        } catch (Exception e) {
-            log.error("Error at processing message " + message, e);
-        }
+        getProtocol(message.getTradeId()).handle(message);
+        persist();
     }
 
     private void onBisqEasyRejectTradeMessage(BisqEasyRejectTradeMessage message) {
-        try {
-            getProtocol(message.getTradeId()).handle(message);
-            persist();
-        } catch (Exception e) {
-            log.error("Error at processing message " + message, e);
-        }
+        getProtocol(message.getTradeId()).handle(message);
+        persist();
     }
 
     private void onBisqEasyCancelTradeMessage(BisqEasyCancelTradeMessage message) {
-        try {
-            getProtocol(message.getTradeId()).handle(message);
-            persist();
-        } catch (Exception e) {
-            log.error("Error at processing message " + message, e);
-        }
+        getProtocol(message.getTradeId()).handle(message);
+        persist();
     }
 
 
@@ -226,15 +190,15 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     // Events
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public BisqEasyTrade onTakeOffer(Identity takerIdentity,
-                                     BisqEasyOffer bisqEasyOffer,
-                                     Monetary baseSideAmount,
-                                     Monetary quoteSideAmount,
-                                     BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec,
-                                     FiatPaymentMethodSpec fiatPaymentMethodSpec,
-                                     Optional<UserProfile> mediator,
-                                     PriceSpec agreedPriceSpec,
-                                     long marketPrice) throws TradeException {
+    public BisqEasyProtocol createBisqEasyProtocol(Identity takerIdentity,
+                                                   BisqEasyOffer bisqEasyOffer,
+                                                   Monetary baseSideAmount,
+                                                   Monetary quoteSideAmount,
+                                                   BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec,
+                                                   FiatPaymentMethodSpec fiatPaymentMethodSpec,
+                                                   Optional<UserProfile> mediator,
+                                                   PriceSpec agreedPriceSpec,
+                                                   long marketPrice) {
         NetworkId takerNetworkId = takerIdentity.getNetworkId();
         BisqEasyContract contract = new BisqEasyContract(
                 System.currentTimeMillis(),
@@ -253,50 +217,53 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         checkArgument(findProtocol(bisqEasyTrade.getId()).isEmpty(),
                 "We received the BisqEasyTakeOfferRequest for an already existing protocol");
 
-        checkArgument(!hadTrade(bisqEasyTrade.getId()), "Trade has been already taken");
-        persistableStore.add(bisqEasyTrade);
+        checkArgument(!tradeExists(bisqEasyTrade.getId()), "A trade with that ID exists already");
+        persistableStore.addTrade(bisqEasyTrade);
 
-        createAndAddTradeProtocol(bisqEasyTrade).handle(new BisqEasyTakeOfferEvent(contract));
-        persist();
-        return bisqEasyTrade;
+        return createAndAddTradeProtocol(bisqEasyTrade);
     }
 
-    public void sellerSendsPaymentAccount(BisqEasyTrade trade, String paymentAccountData) throws TradeException {
+    public void takeOffer(BisqEasyTrade bisqEasyTrade) {
+        createAndAddTradeProtocol(bisqEasyTrade).handle(new BisqEasyTakeOfferEvent());
+        persist();
+    }
+
+    public void sellerSendsPaymentAccount(BisqEasyTrade trade, String paymentAccountData) {
         getProtocol(trade.getId()).handle(new BisqEasyAccountDataEvent(paymentAccountData));
         persist();
     }
 
-    public void buyerConfirmFiatSent(BisqEasyTrade trade) throws TradeException {
+    public void buyerConfirmFiatSent(BisqEasyTrade trade) {
         getProtocol(trade.getId()).handle(new BisqEasyConfirmFiatSentEvent());
         persist();
     }
 
-    public void buyerSendBtcAddress(BisqEasyTrade trade, String buyersBtcAddress) throws TradeException {
+    public void buyerSendBtcAddress(BisqEasyTrade trade, String buyersBtcAddress) {
         getProtocol(trade.getId()).handle(new BisqEasySendBtcAddressEvent(buyersBtcAddress));
         persist();
     }
 
-    public void sellerConfirmFiatReceipt(BisqEasyTrade trade) throws TradeException {
+    public void sellerConfirmFiatReceipt(BisqEasyTrade trade) {
         getProtocol(trade.getId()).handle(new BisqEasyConfirmFiatReceiptEvent());
         persist();
     }
 
-    public void sellerConfirmBtcSent(BisqEasyTrade trade, String txId) throws TradeException {
+    public void sellerConfirmBtcSent(BisqEasyTrade trade, String txId) {
         getProtocol(trade.getId()).handle(new BisqEasyConfirmBtcSentEvent(txId));
         persist();
     }
 
-    public void btcConfirmed(BisqEasyTrade trade) throws TradeException {
+    public void btcConfirmed(BisqEasyTrade trade) {
         getProtocol(trade.getId()).handle(new BisqEasyBtcConfirmedEvent());
         persist();
     }
 
-    public void rejectTrade(BisqEasyTrade trade) throws TradeException {
+    public void rejectTrade(BisqEasyTrade trade) {
         getProtocol(trade.getId()).handle(new BisqEasyRejectTradeEvent());
         persist();
     }
 
-    public void cancelTrade(BisqEasyTrade trade) throws TradeException {
+    public void cancelTrade(BisqEasyTrade trade) {
         getProtocol(trade.getId()).handle(new BisqEasyCancelTradeEvent());
         persist();
     }
@@ -320,8 +287,8 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         return persistableStore.findTrade(tradeId);
     }
 
-    public boolean hadTrade(String tradeId) {
-        return persistableStore.hadTrade(tradeId);
+    public boolean tradeExists(String tradeId) {
+        return persistableStore.tradeExists(tradeId);
     }
 
     public ObservableSet<BisqEasyTrade> getTrades() {

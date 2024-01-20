@@ -28,7 +28,6 @@ import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
-import bisq.trade.TradeException;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyAccountDataMessage;
 import bisq.user.profile.UserProfile;
@@ -125,11 +124,7 @@ public class SellerState1 extends BaseState {
                 return;
             }
             sendSystemMessage(Res.get("bisqEasy.tradeState.info.seller.phase1.systemMessage"));
-            try {
-                bisqEasyTradeService.sellerSendsPaymentAccount(model.getBisqEasyTrade(), paymentAccountData);
-            } catch (TradeException e) {
-                new Popup().error(e).show();
-            }
+            bisqEasyTradeService.sellerSendsPaymentAccount(model.getBisqEasyTrade(), paymentAccountData);
         }
 
         private void onSelectAccount(UserDefinedFiatAccount account) {

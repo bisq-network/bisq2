@@ -332,7 +332,7 @@ public class TradeWizardSelectOfferController implements Controller {
                 UserProfile myUserProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
                 NetworkId myNetworkId = myUserProfile.getNetworkId();
                 String tradeId = Trade.createId(bisqEasyOffer.getId(), myNetworkId.getId());
-                if (bisqEasyTradeService.hadTrade(tradeId)) {
+                if (bisqEasyTradeService.tradeExists(tradeId)) {
                     return false;
                 }
 

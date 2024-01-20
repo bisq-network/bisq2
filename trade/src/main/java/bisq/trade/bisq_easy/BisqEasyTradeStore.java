@@ -86,7 +86,7 @@ final class BisqEasyTradeStore implements PersistableStore<BisqEasyTradeStore> {
         tradeIds.setAll(persisted.getTradeIds());
     }
 
-    void add(BisqEasyTrade trade) {
+    void addTrade(BisqEasyTrade trade) {
         trades.add(trade);
         tradeIds.add(trade.getId());
     }
@@ -99,7 +99,7 @@ final class BisqEasyTradeStore implements PersistableStore<BisqEasyTradeStore> {
         return trades.stream().filter(trade -> trade.getId().equals(tradeId)).findAny();
     }
 
-    boolean hadTrade(String tradeId) {
+    boolean tradeExists(String tradeId) {
         return tradeIds.contains(tradeId);
     }
 }

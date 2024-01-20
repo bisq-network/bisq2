@@ -22,24 +22,29 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 @Slf4j
 @ToString
 
 @Getter
-@Setter
+
 @EqualsAndHashCode
 public class Transition {
-    private State sourceState;
+    private final Set<State> sourceStates = new HashSet<>();
+    @Setter
     private State targetState;
+    @Setter
     private Class<? extends Event> eventClass;
+    @Setter
     private Optional<Class<? extends EventHandler>> eventHandlerClass = Optional.empty();
 
-    public boolean isValid() {
-        return sourceState != null &&
+    boolean isValid() {
+        return !sourceStates.isEmpty() &&
                 targetState != null &&
                 eventClass != null &&
-                !sourceState.equals(targetState);
+                !sourceStates.contains(targetState);
     }
 }

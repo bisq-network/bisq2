@@ -41,7 +41,6 @@ public final class AddressByTransportTypeMap implements Map<TransportType, Addre
     private final TreeMap<TransportType, Address> map = new TreeMap<>();
 
     public AddressByTransportTypeMap() {
-        verify();
     }
 
     public AddressByTransportTypeMap(AddressByTransportTypeMap map) {

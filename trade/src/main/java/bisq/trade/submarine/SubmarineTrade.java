@@ -73,13 +73,17 @@ public final class SubmarineTrade extends Trade<SubmarineOffer, SubmarineContrac
     }
 
     public static SubmarineTrade fromProto(bisq.trade.protobuf.Trade proto) {
-        return new SubmarineTrade(ProtobufUtils.enumFromProto(SubmarineTradeState.class, proto.getState()),
+        SubmarineTrade submarineTrade = new SubmarineTrade(ProtobufUtils.enumFromProto(SubmarineTradeState.class, proto.getState()),
                 proto.getId(),
                 TradeRole.fromProto(proto.getTradeRole()),
                 Identity.fromProto(proto.getMyIdentity()),
                 SubmarineContract.fromProto(proto.getContract()),
                 TradeParty.protoToSubmarineTradeParty(proto.getTaker()),
                 TradeParty.protoToSubmarineTradeParty(proto.getMaker()));
+        if (proto.hasErrorMessage()) {
+            submarineTrade.setErrorMessage(proto.getErrorMessage());
+        }
+        return submarineTrade;
     }
 
     public SubmarineTradeState getTradeState() {

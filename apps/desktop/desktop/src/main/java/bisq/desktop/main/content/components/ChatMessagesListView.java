@@ -1335,7 +1335,7 @@ public class ChatMessagesListView {
                     NetworkId takerNetworkId = userProfile.getNetworkId();
                     BisqEasyOffer bisqEasyOffer = bisqEasyOfferbookMessage.getBisqEasyOffer().get();
                     String tradeId = Trade.createId(bisqEasyOffer.getId(), takerNetworkId.getId());
-                    canTakeOffer = !bisqEasyTradeService.hadTrade(tradeId);
+                    canTakeOffer = !bisqEasyTradeService.tradeExists(tradeId);
                 } else {
                     canTakeOffer = false;
                 }

@@ -15,25 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.fsm;
+package bisq.trade;
 
-public class FsmException extends RuntimeException implements Event {
-    public FsmException() {
-    }
+import bisq.common.fsm.FsmException;
 
-    public FsmException(String message) {
-        super(message);
-    }
-
-    public FsmException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public FsmException(Throwable cause) {
-        super(cause);
-    }
-
-    public FsmException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-        super(message, cause, enableSuppression, writableStackTrace);
+public class TradeProtocolException extends FsmException {
+    public TradeProtocolException(FsmException e) {
+        super(e);
     }
 }

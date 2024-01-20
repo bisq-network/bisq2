@@ -26,6 +26,13 @@
     -fx-font-family: "IBM Plex Sans";
 }
 
+.bisq-easy-trade-failed-headline {
+    -fx-fill: -bisq-error;
+    -fx-text-fill: -bisq-error;
+    -fx-font-size: 1.15em;
+    -fx-font-family: "IBM Plex Sans";
+}
+
 .bisq-easy-trade-isInMediation-headline {
     -fx-fill: -bisq-dark-grey-50;
     -fx-text-fill: -bisq-dark-grey-50;
