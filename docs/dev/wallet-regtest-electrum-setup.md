@@ -1,11 +1,15 @@
+_Note: This document might be partially outdated_
+
 # Electrum Wallet Regtest Setup
 
 ## Setup
+
 1. Install Bitcoin Core (https://bitcoin.org/en/download)
 2. Install ElectrumX (https://electrumx-spesmilo.readthedocs.io/en/latest/HOWTO.html#running)
 3. Install Electrum (https://electrum.org/#download)
 
 ## Running Electrum in Regtest Mode
+
 1. Start Bitcoin Core in Regtest Mode
 ```
 bitcoin-qt -regtest -daemon -server -rpcbind -rpcallowip=127.0.0.1 -rpcuser=bisq -rpcpassword=bisq -fallbackfee=0.00000001 -whitelist=127.0.0.1 -txindex=1

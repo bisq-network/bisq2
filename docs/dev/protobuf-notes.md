@@ -1,3 +1,5 @@
+_Note: This document is partially outdated, though still useful to read for new developers_
+
 ## Usage of protobuf in Bisq
 
 This document gives an overview about some conventions and reasoning behind the way how we integrated protobuf.

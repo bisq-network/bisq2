@@ -1,10 +1,13 @@
+_Note: This document is partially outdated, though still useful to read for new developers_
+
 # Developer guild lines
 
 This is a preliminary collection of description of patterns, developer guild lines and frameworks we use in Bisq 2.
 For general guideline see also: https://github.com/bisq-network/bisq/blob/master/CONTRIBUTING.md
 
 ## Dependencies
-We try to avoid adding dependencies as far as possible to reduce the risk for supply chain attacks. Sticking to plain 
+
+We try to avoid adding dependencies as far as possible to reduce the risk for supply chain attacks. Sticking to plain
 Java libraries is preferred over using 3rd party libraries.
 
 ## Asynchronous handling
@@ -28,7 +31,7 @@ other parts of the application.
 We pass usually the applicationService as provider for the domain service classes. 
 The controller never calls methods on the view but sets properties in the model and the view listens to changes on those 
 properties to react on the change.
-The controller might listen on changes in services and apply the changes to the model. 
+The controller might listen on changes in services and apply the changes to the model.
 
 #### Model
 The model is holding state and bindable properties or observable collections. It does not contain any logic and 
@@ -41,7 +44,7 @@ It binds the properties of its component (e.g. textProperty of a label) to the p
 dynamically changing value or otherwise call a getter at the model. Trivial values like resource strings are applied directly.
 It calls handler methods on the controllers for UI events like button clicks or text input. We use the "on" prefix as 
 convention for such UI handler methods (e.g. `onClose`). It does not call setter methods on the model but use the model 
-only for reading data.  
+only for reading data.
 
 ### View graph
 The graph of the views is constructed from the controllers. A controller creates the controller for the child view 
@@ -58,7 +61,7 @@ but they are not using separate classes to avoid too much boilerplate. They use 
 `Model`, `View` and `Controller` as the class names. The outer component class creates the controller and acts as 
 interface for the client using it. All the inner classes are private and not exposing anything to the clients.
 To avoid boilerplate we do not use getter/setters inside those MCV classes but access the properties directly.
-In the normal MVC classes we use private fields and Lombok Getter annotation. 
+In the normal MVC classes we use private fields and Lombok Getter annotation.
 
 #### Typical use cases
 A typical use case could look like following:

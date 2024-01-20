@@ -1,3 +1,5 @@
+_Note: This document is taken from Bisq1 and would require update to Bisq 2's different update process_
+
 ## Verification of Bisq updates
 
 If you have Bisq already installed it is best to update from inside the Bisq application and let Bisq perform the
