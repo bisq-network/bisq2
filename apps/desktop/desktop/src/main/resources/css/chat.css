@@ -174,12 +174,6 @@
     -fx-background-radius: 0 0 16 16;
 }
 
-#buy-button {
-    -fx-background-color: -bisq-buy;
-    -fx-text-fill: -fx-light-text-color;
-    -fx-background-insets: 0 0 0 0;
-}
-
 #sell-button {
     -fx-background-color: -bisq-sell;
     -fx-text-fill: -fx-light-text-color;
