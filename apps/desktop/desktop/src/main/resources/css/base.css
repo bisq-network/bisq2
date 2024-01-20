@@ -37,11 +37,11 @@
     -fx-font-family: "IBM Plex Sans";
     -fx-font-size: 13;
 
-    /* Colors */
+    /* External Colors */
+    -bisq-green-logo: #25b135;
     -you-tube-red: #fc0d1b;
 
-    /* Bisq 2 Colors */
-    -bisq-green-logo: #25b135;
+    /* Bisq2 App Colors */
     -bisq2-green: #56ae48; /* rgb(86, 174, 72) */
     -bisq2-green-dim-10: #4d9c40;
     -bisq2-green-dim-20: #448b39;
