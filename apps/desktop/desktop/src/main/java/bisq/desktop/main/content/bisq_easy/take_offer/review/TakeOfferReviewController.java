@@ -223,8 +223,12 @@ public class TakeOfferReviewController implements Controller {
                 marketPrice);
         BisqEasyTrade bisqEasyTrade = bisqEasyProtocol.getModel();
         model.setBisqEasyTrade(bisqEasyTrade);
-        tradeProtocolExceptionPin = bisqEasyTrade.getTradeProtocolException().addObserver(exception ->
-                UIThread.run(() -> new Popup().error(exception).show()));
+        tradeProtocolExceptionPin = bisqEasyTrade.getTradeProtocolException().addObserver(exception -> {
+                    if (exception != null) {
+                        UIThread.run(() -> new Popup().error(exception).show());
+                    }
+                }
+        );
 
         bisqEasyTradeService.takeOffer(bisqEasyTrade);
 

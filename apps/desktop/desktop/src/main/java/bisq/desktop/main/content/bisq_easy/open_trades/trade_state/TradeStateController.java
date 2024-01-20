@@ -117,8 +117,12 @@ public class TradeStateController implements Controller {
             bisqEasyTradeStatePin = bisqEasyTrade.tradeStateObservable().addObserver(state ->
                     UIThread.run(() -> applyStateInfoVBox(state)));
 
-            tradeProtocolExceptionPin = bisqEasyTrade.getTradeProtocolException().addObserver(exception ->
-                    UIThread.run(() -> new Popup().error(exception).show()));
+            tradeProtocolExceptionPin = bisqEasyTrade.getTradeProtocolException().addObserver(exception -> {
+                        if (exception != null) {
+                            UIThread.run(() -> new Popup().error(exception).show());
+                        }
+                    }
+            );
         });
     }
 
