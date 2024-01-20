@@ -73,7 +73,7 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
                         .ifPresent(chatMessage -> bisqEasyOfferbookChannelService.deleteChatMessage(chatMessage, trade.getMyIdentity().getNetworkIdWithKeyPair())
                                 .whenComplete((deleteChatMessageResult, throwable) -> {
                                     if (throwable == null) {
-                                        log.error("Offer with ID {} removed", chatMessage.getBisqEasyOffer().map(Offer::getId).orElse("N/A"));
+                                        log.info("Offer with ID {} removed", chatMessage.getBisqEasyOffer().map(Offer::getId).orElse("N/A"));
                                     } else {
                                         log.error("We got an error at doDeleteMessage: " + throwable);
                                     }

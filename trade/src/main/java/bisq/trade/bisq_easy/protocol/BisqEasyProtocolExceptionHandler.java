@@ -15,15 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.protocol.events;
+package bisq.trade.bisq_easy.protocol;
 
 import bisq.common.fsm.Event;
 import bisq.trade.ServiceProvider;
-import bisq.trade.Trade;
 import bisq.trade.TradeProtocolException;
+import bisq.trade.bisq_easy.BisqEasyTrade;
+import bisq.trade.protocol.events.TradeEventHandler;
 
-public class TradeProtocolExceptionHandler<M extends Trade<?, ?, ?>> extends TradeEventHandler<M> {
-    protected TradeProtocolExceptionHandler(ServiceProvider serviceProvider, M model) {
+public class BisqEasyProtocolExceptionHandler extends TradeEventHandler<BisqEasyTrade> {
+    protected BisqEasyProtocolExceptionHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }
 

@@ -22,7 +22,6 @@ import bisq.trade.TradeProtocolException;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.protocol.events.*;
 import bisq.trade.bisq_easy.protocol.messages.*;
-import bisq.trade.protocol.events.TradeProtocolExceptionHandler;
 
 import static bisq.trade.bisq_easy.protocol.BisqEasyTradeState.*;
 
@@ -36,7 +35,7 @@ public class BisqEasyBuyerAsTakerProtocol extends BisqEasyProtocol {
         addTransition()
                 .fromAny()
                 .on(TradeProtocolException.class)
-                .run(TradeProtocolExceptionHandler.class)
+                .run(BisqEasyProtocolExceptionHandler.class)
                 .to(FAILED);
     }
 
