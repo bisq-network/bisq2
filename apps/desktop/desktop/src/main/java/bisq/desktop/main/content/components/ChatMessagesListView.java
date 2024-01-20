@@ -1018,6 +1018,7 @@ public class ChatMessagesListView {
                                 BisqEasyOfferbookMessage bisqEasyOfferbookMessage = (BisqEasyOfferbookMessage) chatMessage;
                                 takeOfferButton.setOnAction(e -> controller.onTakeOffer(bisqEasyOfferbookMessage, item.isCanTakeOffer()));
                                 takeOfferButton.setDefaultButton(item.isCanTakeOffer());
+                                takeOfferButton.setMinWidth(Control.USE_PREF_SIZE);
 
                                 VBox messageVBox = new VBox(quotedMessageVBox, message);
                                 HBox.setMargin(userProfileIconVbox, new Insets(-5, 0, -5, 0));
