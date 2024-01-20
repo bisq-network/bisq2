@@ -92,7 +92,7 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
     }
 
     public static BisqEasyTrade fromProto(bisq.trade.protobuf.Trade proto) {
-        BisqEasyTrade bisqEasyTrade = new BisqEasyTrade(ProtobufUtils.enumFromProto(BisqEasyTradeState.class, proto.getState()),
+        BisqEasyTrade trade = new BisqEasyTrade(ProtobufUtils.enumFromProto(BisqEasyTradeState.class, proto.getState()),
                 proto.getId(),
                 TradeRole.fromProto(proto.getTradeRole()),
                 Identity.fromProto(proto.getMyIdentity()),
@@ -100,23 +100,26 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
                 TradeParty.protoToBisqEasyTradeParty(proto.getTaker()),
                 TradeParty.protoToBisqEasyTradeParty(proto.getMaker()));
         if (proto.hasErrorMessage()) {
-            bisqEasyTrade.setErrorMessage(proto.getErrorMessage());
+            trade.setErrorMessage(proto.getErrorMessage());
+        }
+        if (proto.hasPeersErrorMessage()) {
+            trade.setPeersErrorMessage(proto.getPeersErrorMessage());
         }
 
         bisq.trade.protobuf.BisqEasyTrade bisqEasyTradeProto = proto.getBisqEasyTrade();
         if (bisqEasyTradeProto.hasPaymentAccountData()) {
-            bisqEasyTrade.getPaymentAccountData().set(bisqEasyTradeProto.getPaymentAccountData());
+            trade.getPaymentAccountData().set(bisqEasyTradeProto.getPaymentAccountData());
         }
         if (bisqEasyTradeProto.hasBtcAddress()) {
-            bisqEasyTrade.getBtcAddress().set(bisqEasyTradeProto.getBtcAddress());
+            trade.getBtcAddress().set(bisqEasyTradeProto.getBtcAddress());
         }
         if (bisqEasyTradeProto.hasTxId()) {
-            bisqEasyTrade.getTxId().set(bisqEasyTradeProto.getTxId());
+            trade.getTxId().set(bisqEasyTradeProto.getTxId());
         }
         if (bisqEasyTradeProto.hasInterruptTradeInitiator()) {
-            bisqEasyTrade.getInterruptTradeInitiator().set(Role.fromProto(bisqEasyTradeProto.getInterruptTradeInitiator()));
+            trade.getInterruptTradeInitiator().set(Role.fromProto(bisqEasyTradeProto.getInterruptTradeInitiator()));
         }
-        return bisqEasyTrade;
+        return trade;
     }
 
     public BisqEasyTradeState getTradeState() {

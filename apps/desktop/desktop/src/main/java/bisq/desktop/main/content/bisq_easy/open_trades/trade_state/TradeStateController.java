@@ -59,7 +59,7 @@ public class TradeStateController implements Controller {
     private final BisqEasyOpenTradeChannelService channelService;
     private final BisqEasyOpenTradeSelectionService selectionService;
     private final MediationRequestService mediationRequestService;
-    private Pin bisqEasyTradeStatePin, tradeProtocolExceptionPin, isInMediationPin;
+    private Pin bisqEasyTradeStatePin, errorMessagePin, peersErrorMessagePin, isInMediationPin;
     private Subscription channelPin;
 
     public TradeStateController(ServiceProvider serviceProvider) {
@@ -118,14 +118,25 @@ public class TradeStateController implements Controller {
             bisqEasyTradeStatePin = bisqEasyTrade.tradeStateObservable().addObserver(state ->
                     UIThread.run(() -> applyStateInfoVBox(state)));
 
-            tradeProtocolExceptionPin = bisqEasyTrade.errorMessageObservable().addObserver(errorMessage -> {
+            errorMessagePin = bisqEasyTrade.errorMessageObservable().addObserver(errorMessage -> {
                 if (errorMessage != null) {
-                    String key = "BisqEasyTradeErrorMessage_" + model.getBisqEasyTrade().get().getId();
+                    String key = "errorMessage_" + model.getBisqEasyTrade().get().getId();
                     if (DontShowAgainService.showAgain(key)) {
                         UIThread.run(() -> new Popup().error(errorMessage)
                                 .dontShowAgainId(key)
                                 .show());
                     }
+                        }
+                    }
+            );
+            peersErrorMessagePin = bisqEasyTrade.peersErrorMessageObservable().addObserver(peersErrorMessage -> {
+                        if (peersErrorMessage != null) {
+                            String key = "peersErrorMessage_" + model.getBisqEasyTrade().get().getId();
+                            if (DontShowAgainService.showAgain(key)) {
+                                UIThread.run(() -> new Popup().error(Res.get("bisqEasy.openTrades.failedAtPeer", peersErrorMessage))
+                                        .dontShowAgainId(key)
+                                        .show());
+                            }
                         }
                     }
             );
@@ -139,8 +150,11 @@ public class TradeStateController implements Controller {
             bisqEasyTradeStatePin.unbind();
             bisqEasyTradeStatePin = null;
         }
-        if (tradeProtocolExceptionPin != null) {
-            tradeProtocolExceptionPin.unbind();
+        if (errorMessagePin != null) {
+            errorMessagePin.unbind();
+        }
+        if (peersErrorMessagePin != null) {
+            peersErrorMessagePin.unbind();
         }
         if (isInMediationPin != null) {
             isInMediationPin.unbind();
@@ -315,8 +329,16 @@ public class TradeStateController implements Controller {
                 model.getInterruptTradeButtonVisible().set(false);
                 model.getShowReportToMediatorButton().set(false);
                 model.getTradeFailed().set(true);
-                model.getErrorMessage().set(Res.get("bisqEasy.openTrades.errorMessage",
+                model.getErrorMessage().set(Res.get("bisqEasy.openTrades.failed",
                         model.getBisqEasyTrade().get().getErrorMessage()));
+                break;
+            case FAILED_AT_PEER:
+                model.getPhaseAndInfoVisible().set(false);
+                model.getInterruptTradeButtonVisible().set(false);
+                model.getShowReportToMediatorButton().set(false);
+                model.getTradeFailed().set(true);
+                model.getErrorMessage().set(Res.get("bisqEasy.openTrades.failedAtPeer",
+                        model.getBisqEasyTrade().get().getPeersErrorMessage()));
                 break;
 
             default:
@@ -380,6 +402,7 @@ public class TradeStateController implements Controller {
             case REJECTED:
             case CANCELLED:
             case FAILED:
+            case FAILED_AT_PEER:
                 model.getInterruptTradeButtonVisible().set(false);
                 break;
 

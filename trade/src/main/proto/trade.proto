@@ -52,6 +52,7 @@ message Trade {
   TradeParty taker = 6;
   TradeParty maker = 7;
   optional string errorMessage = 8;
+  optional string peersErrorMessage = 9;
 
   oneof message {
     BisqEasyTrade bisqEasyTrade = 20;
@@ -99,6 +100,7 @@ message BisqEasyTradeMessage {
     BisqEasyConfirmBtcSentMessage bisqEasyConfirmBtcSentMessage = 26;
     BisqEasyRejectTradeMessage bisqEasyRejectTradeMessage = 27;
     BisqEasyCancelTradeMessage bisqEasyCancelTradeMessage = 28;
+    BisqEasyReportErrorMessage bisqEasyReportErrorMessage = 29;
   }
 }
 message BisqEasyTakeOfferRequest {
@@ -124,6 +126,9 @@ message BisqEasyConfirmBtcSentMessage {
 message BisqEasyRejectTradeMessage {
 }
 message BisqEasyCancelTradeMessage {
+}
+message BisqEasyReportErrorMessage {
+  string errorMessage = 1;
 }
 
 

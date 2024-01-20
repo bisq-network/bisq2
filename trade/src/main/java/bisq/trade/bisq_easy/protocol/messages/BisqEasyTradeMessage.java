@@ -69,6 +69,9 @@ public abstract class BisqEasyTradeMessage extends TradeMessage {
             case BISQEASYCANCELTRADEMESSAGE: {
                 return BisqEasyCancelTradeMessage.fromProto(proto);
             }
+            case BISQEASYREPORTERRORMESSAGE: {
+                return BisqEasyReportErrorMessage.fromProto(proto);
+            }
 
             case MESSAGE_NOT_SET: {
                 throw new UnresolvableProtobufMessageException(proto);

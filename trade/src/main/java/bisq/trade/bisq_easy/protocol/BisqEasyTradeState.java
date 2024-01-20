@@ -51,7 +51,8 @@ public enum BisqEasyTradeState implements State {
     REJECTED(true),
     CANCELLED(true),
 
-    FAILED(true);
+    FAILED(true),
+    FAILED_AT_PEER(true);
 
     private final boolean isFinalState;
 

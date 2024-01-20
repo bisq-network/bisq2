@@ -117,6 +117,8 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
                 onBisqEasyRejectTradeMessage((BisqEasyRejectTradeMessage) bisqEasyTradeMessage);
             } else if (bisqEasyTradeMessage instanceof BisqEasyCancelTradeMessage) {
                 onBisqEasyCancelTradeMessage((BisqEasyCancelTradeMessage) bisqEasyTradeMessage);
+            } else if (bisqEasyTradeMessage instanceof BisqEasyReportErrorMessage) {
+                onBisqEasyReportErrorMessage((BisqEasyReportErrorMessage) bisqEasyTradeMessage);
             }
         }
     }
@@ -181,6 +183,11 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     }
 
     private void onBisqEasyCancelTradeMessage(BisqEasyCancelTradeMessage message) {
+        getProtocol(message.getTradeId()).handle(message);
+        persist();
+    }
+
+    private void onBisqEasyReportErrorMessage(BisqEasyReportErrorMessage message) {
         getProtocol(message.getTradeId()).handle(message);
         persist();
     }

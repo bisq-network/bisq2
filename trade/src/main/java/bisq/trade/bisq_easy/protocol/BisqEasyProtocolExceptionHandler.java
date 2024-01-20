@@ -19,12 +19,14 @@ package bisq.trade.bisq_easy.protocol;
 
 import bisq.common.fsm.Event;
 import bisq.common.util.ExceptionUtil;
+import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.TradeProtocolException;
 import bisq.trade.bisq_easy.BisqEasyTrade;
-import bisq.trade.protocol.events.TradeEventHandler;
+import bisq.trade.bisq_easy.protocol.messages.BisqEasyReportErrorMessage;
+import bisq.trade.protocol.events.SendTradeMessageHandler;
 
-public class BisqEasyProtocolExceptionHandler extends TradeEventHandler<BisqEasyTrade> {
+public class BisqEasyProtocolExceptionHandler extends SendTradeMessageHandler<BisqEasyTrade> {
     protected BisqEasyProtocolExceptionHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }
@@ -32,10 +34,20 @@ public class BisqEasyProtocolExceptionHandler extends TradeEventHandler<BisqEasy
     @Override
     public void handle(Event event) {
         TradeProtocolException tradeProtocolException = (TradeProtocolException) event;
-        commitToModel(tradeProtocolException);
+        String errorMessage = ExceptionUtil.print(tradeProtocolException);
+        commitToModel(errorMessage);
+
+        // We might want to add a flag to the TradeProtocolException to decide if we want to send
+        // the error message to the peer.
+        // Also, we need to take care that the errorMessage does not contain private data.
+        sendMessage(new BisqEasyReportErrorMessage(StringUtils.createUid(),
+                trade.getId(),
+                trade.getMyIdentity().getNetworkId(),
+                trade.getPeer().getNetworkId(),
+                StringUtils.truncate(errorMessage, BisqEasyReportErrorMessage.MAX_LENGTH)));
     }
 
-    private void commitToModel(TradeProtocolException tradeProtocolException) {
-        trade.setErrorMessage(ExceptionUtil.print(tradeProtocolException));
+    private void commitToModel(String errorMessage) {
+        trade.setErrorMessage(errorMessage);
     }
 }
