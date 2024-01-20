@@ -46,25 +46,7 @@ import bisq.user.reputation.requests.AuthorizeTimestampRequest;
 
 public class ResolverConfig {
     public static void config() {
-        // If the classes added via `addResolver` are not final classes, we need to add manually the subclasses.
-        // Otherwise, the className gets added from the `addResolver` method call.
-
-        // ChatMessage subclasses
-        NetworkStorageWhiteList.add(CommonPublicChatMessage.class);
-        NetworkStorageWhiteList.add(BisqEasyOfferbookMessage.class);
-        NetworkStorageWhiteList.add(TwoPartyPrivateChatMessage.class);
-        NetworkStorageWhiteList.add(BisqEasyOpenTradeMessage.class);
-
-        // TradeMessage subclasses
-        NetworkStorageWhiteList.add(BisqEasyAccountDataMessage.class);
-        NetworkStorageWhiteList.add(BisqEasyBtcAddressMessage.class);
-        NetworkStorageWhiteList.add(BisqEasyConfirmBtcSentMessage.class);
-        NetworkStorageWhiteList.add(BisqEasyConfirmFiatReceiptMessage.class);
-        NetworkStorageWhiteList.add(BisqEasyConfirmFiatSentMessage.class);
-        NetworkStorageWhiteList.add(BisqEasyTakeOfferRequest.class);
-        NetworkStorageWhiteList.add(BisqEasyTakeOfferResponse.class);
-
-        // Register resolvers for distributedData 
+        // Register resolvers for distributedData
         // Abstract classes
         DistributedDataResolver.addResolver("chat.ChatMessage", ChatMessage.getDistributedDataResolver());
 
@@ -96,5 +78,26 @@ public class ResolverConfig {
         NetworkMessageResolver.addResolver("support.MediationRequest", MediationRequest.getNetworkMessageResolver());
         NetworkMessageResolver.addResolver("support.MediatorsResponse", MediatorsResponse.getNetworkMessageResolver());
         NetworkMessageResolver.addResolver("support.ReportToModeratorMessage", ReportToModeratorMessage.getNetworkMessageResolver());
+
+
+        // If the classes added via `addResolver` are not final classes, we need to add manually the subclasses.
+        // Otherwise, the className gets added from the `addResolver` method call.
+
+        // ChatMessage subclasses
+        NetworkStorageWhiteList.add(CommonPublicChatMessage.class);
+        NetworkStorageWhiteList.add(BisqEasyOfferbookMessage.class);
+        NetworkStorageWhiteList.add(TwoPartyPrivateChatMessage.class);
+        NetworkStorageWhiteList.add(BisqEasyOpenTradeMessage.class);
+
+        // TradeMessage subclasses
+        NetworkStorageWhiteList.add(BisqEasyAccountDataMessage.class);
+        NetworkStorageWhiteList.add(BisqEasyBtcAddressMessage.class);
+        NetworkStorageWhiteList.add(BisqEasyCancelTradeMessage.class);
+        NetworkStorageWhiteList.add(BisqEasyConfirmBtcSentMessage.class);
+        NetworkStorageWhiteList.add(BisqEasyConfirmFiatReceiptMessage.class);
+        NetworkStorageWhiteList.add(BisqEasyConfirmFiatSentMessage.class);
+        NetworkStorageWhiteList.add(BisqEasyRejectTradeMessage.class);
+        NetworkStorageWhiteList.add(BisqEasyTakeOfferRequest.class);
+        NetworkStorageWhiteList.add(BisqEasyTakeOfferResponse.class);
     }
 }
