@@ -23,21 +23,27 @@ public interface State {
 
     boolean isFinalState();
 
+    default boolean isAnyState() {
+        return false;
+    }
+
     String name();
 
     @Getter
     enum FsmState implements State {
-        ANY,
-        ERROR(true);
+        ANY(false, true),
+        ERROR(true, false);
 
         private final boolean isFinalState;
+        private final boolean isAnyState;
 
         FsmState() {
-            this.isFinalState = false;
+            this(false, false);
         }
 
-        FsmState(boolean isFinalState) {
+        FsmState(boolean isFinalState, boolean isAnyState) {
             this.isFinalState = isFinalState;
+            this.isAnyState = isAnyState;
         }
     }
 }

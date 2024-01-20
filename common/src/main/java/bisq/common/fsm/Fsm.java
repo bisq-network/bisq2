@@ -48,14 +48,14 @@ public abstract class Fsm<M extends FsmModel> {
         configTransitions();
     }
 
-    abstract protected void configTransitions();
-
     protected void configErrorHandling() {
         addTransition()
                 .fromAny()
                 .on(FsmException.class)
                 .to(State.FsmState.ERROR);
     }
+
+    abstract protected void configTransitions();
 
     public void handle(Event event) {
         try {
@@ -114,6 +114,10 @@ public abstract class Fsm<M extends FsmModel> {
         }
     }
 
+    public TransitionBuilder<M> addTransition() {
+        return new TransitionBuilder<>(this);
+    }
+
     abstract protected EventHandler newEventHandlerFromClass(Class<? extends EventHandler> handlerClass)
             throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException;
 
@@ -128,12 +132,12 @@ public abstract class Fsm<M extends FsmModel> {
     private Optional<Transition> findTransition(State currentState,
                                                 Set<Map.Entry<Pair<State, Class<? extends Event>>, Transition>> transitionMapEntriesForEvent) {
         return transitionMapEntriesForEvent.stream()
-                .filter(e -> e.getKey().getFirst().equals(currentState) || e.getKey().getFirst() == State.FsmState.ANY)
+                .filter(e -> e.getKey().getFirst().equals(currentState) || e.getKey().getFirst().isAnyState())
                 .map(Map.Entry::getValue)
                 .findAny();
     }
 
-    private void addTransition(Transition transition) {
+    private void insertTransition(Transition transition) {
         try {
             checkArgument(transition.isValid(), "Invalid transition. transition=%s", transition);
             transition.getSourceStates().forEach(sourceState -> {
@@ -145,10 +149,6 @@ public abstract class Fsm<M extends FsmModel> {
         } catch (IllegalArgumentException e) {
             throw new FsmConfigException(e);
         }
-    }
-
-    public TransitionBuilder<M> addTransition() {
-        return new TransitionBuilder<>(this);
     }
 
     public static class TransitionBuilder<M extends FsmModel> {
@@ -199,7 +199,7 @@ public abstract class Fsm<M extends FsmModel> {
 
         public void to(State targetState) {
             transition.setTargetState(targetState);
-            fsm.addTransition(transition);
+            fsm.insertTransition(transition);
         }
     }
 }
