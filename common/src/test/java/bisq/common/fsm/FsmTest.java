@@ -220,6 +220,20 @@ public class FsmTest {
         assertEquals(MockState.S3, fsm.getModel().getState());
     }
 
+    @Test
+    void testErrorState() {
+        MockModel model = new MockModel(MockState.INIT);
+        SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
+        // FailingMockEventHandler thrown an error
+        fsm.addTransition()
+                .from(MockState.INIT)
+                .on(MockEvent1.class)
+                .run(FailingMockEventHandler.class)
+                .to(MockState.S1);
+        fsm.handle(new MockEvent1(model, ""));
+        assertEquals(State.FsmState.ERROR, fsm.getModel().getState());
+        assertEquals(State.FsmState.ERROR, fsm.getModel().getState());
+    }
 
     @Test
     void testCyclicGraph() {
@@ -557,6 +571,16 @@ public class FsmTest {
                 MockEvent1 mockEvent = (MockEvent1) event;
                 mockEvent.model.data = mockEvent.data;
             }
+        }
+    }
+
+    public static class FailingMockEventHandler implements EventHandler {
+        public FailingMockEventHandler() {
+        }
+
+        @Override
+        public void handle(Event event) {
+            throw new RuntimeException("event is FsmException");
         }
     }
 
