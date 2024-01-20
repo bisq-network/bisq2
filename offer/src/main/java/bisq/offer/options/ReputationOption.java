@@ -29,6 +29,12 @@ public final class ReputationOption implements OfferOption {
 
     public ReputationOption(long requiredTotalReputationScore) {
         this.requiredTotalReputationScore = requiredTotalReputationScore;
+
+        verify();
+    }
+
+    @Override
+    public void verify() {
     }
 
     @Override

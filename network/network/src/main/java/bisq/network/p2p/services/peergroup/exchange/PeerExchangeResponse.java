@@ -21,16 +21,21 @@ import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.peergroup.Peer;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Getter
 @ToString
 @EqualsAndHashCode
 public final class PeerExchangeResponse implements EnvelopePayloadMessage {
+    @Setter
+    public static long maxNumPeers;
     private final int nonce;
     private final List<Peer> peers;
 
@@ -39,7 +44,15 @@ public final class PeerExchangeResponse implements EnvelopePayloadMessage {
         this.peers = peers;
         // We need to sort deterministically as the data is used in the proof of work check
         Collections.sort(this.peers);
+
+        verify();
     }
+
+    @Override
+    public void verify() {
+        checkArgument(peers.size() <= maxNumPeers);
+    }
+
 
     @Override
     public bisq.network.protobuf.EnvelopePayloadMessage toProto() {

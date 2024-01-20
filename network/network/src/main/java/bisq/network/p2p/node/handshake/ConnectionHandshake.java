@@ -78,7 +78,13 @@ public final class ConnectionHandshake {
             this.networkLoad = networkLoad;
             this.signatureDate = signatureDate;
 
+            verify();
+        }
+
+        @Override
+        public void verify() {
             addressOwnershipProof.ifPresent(signature -> {
+                // Tor signature has 64 bytes
                 checkArgument(signature.length == 64,
                         "Signature not of the expected size. signature.length=" + signature.length);
             });
@@ -119,6 +125,12 @@ public final class ConnectionHandshake {
         public Response(Capability capability, NetworkLoad networkLoad) {
             this.capability = capability;
             this.networkLoad = networkLoad;
+
+            verify();
+        }
+
+        @Override
+        public void verify() {
         }
 
         @Override

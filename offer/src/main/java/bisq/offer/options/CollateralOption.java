@@ -31,6 +31,12 @@ public final class CollateralOption implements OfferOption {
     public CollateralOption(long buyerSecurityDeposit, long sellerSecurityDeposit) {
         this.buyerSecurityDeposit = buyerSecurityDeposit;
         this.sellerSecurityDeposit = sellerSecurityDeposit;
+
+        verify();
+    }
+
+    @Override
+    public void verify() {
     }
 
     public bisq.offer.protobuf.OfferOption toProto() {

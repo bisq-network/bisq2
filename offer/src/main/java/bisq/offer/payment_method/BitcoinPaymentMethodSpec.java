@@ -34,6 +34,13 @@ public final class BitcoinPaymentMethodSpec extends PaymentMethodSpec<BitcoinPay
 
     public BitcoinPaymentMethodSpec(BitcoinPaymentMethod paymentMethod, Optional<String> saltedMakerAccountId) {
         super(paymentMethod, saltedMakerAccountId);
+
+        verify();
+    }
+
+    @Override
+    public void verify() {
+        super.verify();
     }
 
     @Override

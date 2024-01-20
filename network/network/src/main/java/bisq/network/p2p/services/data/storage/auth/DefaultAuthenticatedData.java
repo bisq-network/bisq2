@@ -28,6 +28,12 @@ import lombok.extern.slf4j.Slf4j;
 public final class DefaultAuthenticatedData extends AuthenticatedData {
     public DefaultAuthenticatedData(DistributedData distributedData) {
         super(distributedData);
+
+        verify();
+    }
+
+    @Override
+    public void verify() {
     }
 
     public bisq.network.protobuf.AuthenticatedData toProto() {

@@ -1,5 +1,6 @@
 package bisq.account.accounts;
 
+import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -18,6 +19,14 @@ public final class FasterPaymentsAccountPayload extends AccountPayload {
         super(id, paymentMethodName);
         this.sortCode = sortCode;
         this.accountNr = accountNr;
+
+        verify();
+    }
+
+    @Override
+    public void verify() {
+        NetworkDataValidation.validateText(sortCode, 50);
+        NetworkDataValidation.validateText(accountNr, 50);
     }
 
     @Override

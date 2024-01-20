@@ -54,10 +54,16 @@ public final class AuthenticatedSequentialData implements NetworkProto {
         this.pubKeyHash = pubKeyHash;
         this.created = created;
 
-        NetworkDataValidation.validateDate(created);
-        NetworkDataValidation.validateHash(pubKeyHash);
+        verify();
     }
 
+    @Override
+    public void verify() {
+        NetworkDataValidation.validateHash(pubKeyHash);
+        NetworkDataValidation.validateDate(created);
+    }
+
+    @Override
     public bisq.network.protobuf.AuthenticatedSequentialData toProto() {
         return bisq.network.protobuf.AuthenticatedSequentialData.newBuilder()
                 .setAuthenticatedData(authenticatedData.toProto())

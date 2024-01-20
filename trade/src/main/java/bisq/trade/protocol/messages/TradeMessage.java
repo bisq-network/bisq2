@@ -21,10 +21,10 @@ import bisq.common.fsm.Event;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
+import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ack.AckRequestingMessage;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
-import bisq.network.identity.NetworkId;
 import bisq.network.protobuf.ExternalNetworkMessage;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTradeMessage;
 import bisq.trade.submarine.messages.SubmarineTradeMessage;
@@ -50,8 +50,12 @@ public abstract class TradeMessage implements MailboxMessage, AckRequestingMessa
         this.tradeId = tradeId;
         this.sender = sender;
         this.receiver = receiver;
+    }
 
-        NetworkDataValidation.validateText(tradeId, 200); // For private channels we combine user profile IDs for channelId
+    @Override
+    public void verify() {
+        NetworkDataValidation.validateId(id);
+        NetworkDataValidation.validateTradeId(tradeId);
     }
 
     public bisq.trade.protobuf.TradeMessage.Builder getTradeMessageBuilder() {

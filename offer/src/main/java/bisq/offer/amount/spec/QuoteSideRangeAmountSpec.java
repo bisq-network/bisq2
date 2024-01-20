@@ -27,6 +27,13 @@ import lombok.ToString;
 public final class QuoteSideRangeAmountSpec extends RangeAmountSpec implements QuoteSideAmountSpec {
     public QuoteSideRangeAmountSpec(long minAmount, long maxAmount) {
         super(minAmount, maxAmount);
+
+        verify();
+    }
+
+    @Override
+    public void verify() {
+        super.verify();
     }
 
     @Override

@@ -44,6 +44,11 @@ public final class Market implements NetworkProto, PersistableProto, Comparable<
         this.baseCurrencyName = baseCurrencyName;
         this.quoteCurrencyName = quoteCurrencyName;
 
+        verify();
+    }
+
+    @Override
+    public void verify() {
         NetworkDataValidation.validateCode(baseCurrencyCode);
         NetworkDataValidation.validateCode(quoteCurrencyCode);
         NetworkDataValidation.validateText(baseCurrencyName, MAX_NAME_LENGTH);

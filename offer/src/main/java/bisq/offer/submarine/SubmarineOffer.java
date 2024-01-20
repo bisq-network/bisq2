@@ -73,6 +73,12 @@ public final class SubmarineOffer extends Offer<BitcoinPaymentMethodSpec, FiatPa
                 baseSidePaymentMethodSpecs,
                 quoteSidePaymentMethodSpecs,
                 offerOptions);
+        verify();
+    }
+
+    @Override
+    public void verify() {
+        super.verify();
     }
 
     @Override

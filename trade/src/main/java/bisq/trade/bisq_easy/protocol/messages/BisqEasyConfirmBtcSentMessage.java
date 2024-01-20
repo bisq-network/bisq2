@@ -40,10 +40,15 @@ public final class BisqEasyConfirmBtcSentMessage extends BisqEasyTradeMessage {
 
         this.txId = txId;
 
-        // We tolerate non-btc txId data as well 
-        NetworkDataValidation.validateText(txId, 200);
+        verify();
+    }
 
-        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize()); //412
+    @Override
+    public void verify() {
+        super.verify();
+
+        // We tolerate non-btc txId data as well
+        NetworkDataValidation.validateText(txId, 1000);
     }
 
     @Override

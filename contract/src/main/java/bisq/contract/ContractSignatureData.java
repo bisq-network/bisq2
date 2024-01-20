@@ -42,8 +42,14 @@ public class ContractSignatureData implements NetworkProto {
         this.signature = signature;
         this.publicKey = publicKey;
 
+        verify();
+    }
+
+    @Override
+    public void verify() {
         NetworkDataValidation.validateHash(contractHash);
         NetworkDataValidation.validateECSignature(signature);
+        NetworkDataValidation.validateECPubKey(publicKey);
     }
 
     @Override

@@ -76,8 +76,13 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
         this.senderPublicKeyBytes = senderPublicKeyBytes;
         this.senderPublicKey = senderPublicKey;
 
-        NetworkDataValidation.validateECPubKey(senderPublicKeyBytes);
+        verify();
+    }
+
+    @Override
+    public void verify() {
         NetworkDataValidation.validateECSignature(signature);
+        NetworkDataValidation.validateECPubKey(senderPublicKeyBytes);
     }
 
     @Override

@@ -51,6 +51,11 @@ public final class FeeOption implements OfferOption {
         this.blockHeightAtFeePayment = blockHeightAtFeePayment;
         this.feeTxId = feeTxId;
 
+        verify();
+    }
+
+    @Override
+    public void verify() {
         NetworkDataValidation.validateBtcTxId(feeTxId);
     }
 

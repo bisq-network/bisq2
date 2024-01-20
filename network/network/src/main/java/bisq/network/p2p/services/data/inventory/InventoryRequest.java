@@ -32,6 +32,12 @@ public final class InventoryRequest implements BroadcastMessage {
     public InventoryRequest(DataFilter dataFilter, int nonce) {
         this.dataFilter = dataFilter;
         this.nonce = nonce;
+
+        verify();
+    }
+
+    @Override
+    public void verify() {
     }
 
     @Override

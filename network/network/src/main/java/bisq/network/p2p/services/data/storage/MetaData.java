@@ -77,6 +77,11 @@ public final class MetaData implements NetworkProto {
         this.className = className;
         this.maxMapSize = maxMapSize;
 
+        verify();
+    }
+
+    @Override
+    public void verify() {
         NetworkDataValidation.validateText(className, 50);
     }
 

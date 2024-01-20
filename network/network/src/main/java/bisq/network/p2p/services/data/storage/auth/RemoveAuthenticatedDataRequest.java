@@ -30,7 +30,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
@@ -56,7 +55,6 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
     private final MetaData metaData;
     private final byte[] hash;
     private final byte[] ownerPublicKeyBytes;
-    @Nullable
     transient private PublicKey ownerPublicKey;
     private final int sequenceNumber;
     private final byte[] signature;
@@ -105,9 +103,15 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
         this.signature = signature;
         this.created = created;
 
+        verify();
+    }
+
+    @Override
+    public void verify() {
         NetworkDataValidation.validateHash(hash);
         NetworkDataValidation.validateECPubKey(ownerPublicKeyBytes);
         NetworkDataValidation.validateECSignature(signature);
+        NetworkDataValidation.validateDate(created);
     }
 
     @Override

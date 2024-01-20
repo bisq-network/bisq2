@@ -74,12 +74,15 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
         this.authorizingOracleNode = authorizingOracleNode;
         this.staticPublicKeysProvided = staticPublicKeysProvided;
 
+        verify();
+    }
+
+    @Override
+    public void verify() {
         NetworkDataValidation.validateProfileId(profileId);
         NetworkDataValidation.validatePubKeyHex(authorizedPublicKey);
         NetworkDataValidation.validateBondUserName(bondUserName);
         NetworkDataValidation.validateSignatureBase64(signatureBase64);
-
-        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize());//862
     }
 
     @Override

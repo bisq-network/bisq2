@@ -46,6 +46,13 @@ public class MultisigContract extends TwoPartyContract<MultisigOffer> {
                              TradeProtocolType protocolType,
                              Party taker) {
         super(takeOfferDate, offer, protocolType, taker);
+
+        verify();
+    }
+
+    @Override
+    public void verify() {
+        super.verify();
     }
 
     @Override

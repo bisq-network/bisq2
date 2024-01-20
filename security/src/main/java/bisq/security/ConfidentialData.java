@@ -48,9 +48,13 @@ public final class ConfidentialData implements NetworkProto {
         this.cipherText = cipherText;
         this.signature = signature;
 
+        verify();
+    }
+
+    @Override
+    public void verify() {
         checkArgument(iv.length <= 20);
         checkArgument(cipherText.length <= MAX_SIZE_CIPHERTEXT);
-
         NetworkDataValidation.validateECPubKey(senderPublicKey);
         NetworkDataValidation.validateECSignature(signature);
     }

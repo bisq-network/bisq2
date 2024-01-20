@@ -32,6 +32,12 @@ public final class InventoryResponse implements BroadcastMessage {
     public InventoryResponse(Inventory inventory, int requestNonce) {
         this.inventory = inventory;
         this.requestNonce = requestNonce;
+
+        verify();
+    }
+
+    @Override
+    public void verify() {
     }
 
     @Override

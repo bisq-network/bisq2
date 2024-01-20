@@ -20,6 +20,7 @@ package bisq.support.mediation;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeMessage;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.validation.NetworkDataValidation;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -39,6 +40,7 @@ import java.util.stream.Collectors;
 
 import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
@@ -68,7 +70,13 @@ public final class MediationRequest implements MailboxMessage {
         // We need to sort deterministically as the data is used in the proof of work check
         Collections.sort(this.chatMessages);
 
-        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize()); // 3729 -> can be much more if lot of messages!
+        verify();
+    }
+
+    @Override
+    public void verify() {
+        NetworkDataValidation.validateTradeId(tradeId);
+        checkArgument(chatMessages.size() < 1000);
     }
 
     @Override

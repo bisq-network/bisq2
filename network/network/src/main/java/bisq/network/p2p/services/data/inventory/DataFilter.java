@@ -27,18 +27,32 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Getter
 @ToString
 @EqualsAndHashCode
 public final class DataFilter implements NetworkProto {
+    // FilterEntry has about 24 bytes (hash of 20 bytes + integer). 200_000 items are about 4.8 MB)
+    // We should aim to be much below that limit.
+    public final static int MAX_ENTRIES = 200_000;
+
     private final List<FilterEntry> filterEntries;
 
     public DataFilter(List<FilterEntry> filterEntries) {
         this.filterEntries = filterEntries;
         // We need to sort deterministically as the data is used in the proof of work check
         Collections.sort(this.filterEntries);
+
+        verify();
     }
 
+    @Override
+    public void verify() {
+        checkArgument(filterEntries.size() < MAX_ENTRIES);
+    }
+
+    @Override
     public bisq.network.protobuf.DataFilter toProto() {
         return bisq.network.protobuf.DataFilter.newBuilder()
                 .addAllFilterEntries(filterEntries.stream()

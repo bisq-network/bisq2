@@ -34,6 +34,13 @@ public final class BisqEasyCancelTradeMessage extends BisqEasyTradeMessage {
                                       NetworkId sender,
                                       NetworkId receiver) {
         super(id, tradeId, sender, receiver);
+
+        verify();
+    }
+
+    @Override
+    public void verify() {
+        super.verify();
     }
 
     @Override

@@ -30,7 +30,7 @@ import java.util.List;
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public class CryptoPaymentMethod extends PaymentMethod<CryptoPaymentRail> {
+public final class CryptoPaymentMethod extends PaymentMethod<CryptoPaymentRail> {
     private final String currencyCode;
 
     public static CryptoPaymentMethod fromPaymentRail(CryptoPaymentRail cryptoPaymentRail, String currencyCode) {
@@ -52,6 +52,13 @@ public class CryptoPaymentMethod extends PaymentMethod<CryptoPaymentRail> {
     private CryptoPaymentMethod(String name, String currencyCode) {
         super(name);
         this.currencyCode = currencyCode;
+
+        verify();
+    }
+
+    @Override
+    public void verify() {
+        NetworkDataValidation.validateCode(currencyCode);
     }
 
     @Override

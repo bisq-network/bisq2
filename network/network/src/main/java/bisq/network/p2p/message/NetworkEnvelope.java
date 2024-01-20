@@ -51,8 +51,15 @@ public final class NetworkEnvelope implements NetworkProto {
         this.version = version;
         this.authorizationToken = authorizationToken;
         this.envelopePayloadMessage = envelopePayloadMessage;
+
+        verify();
     }
 
+    @Override
+    public void verify() {
+    }
+
+    @Override
     public bisq.network.protobuf.NetworkEnvelope toProto() {
         return bisq.network.protobuf.NetworkEnvelope.newBuilder()
                 .setVersion(version)

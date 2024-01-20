@@ -28,27 +28,39 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 /**
  * Wrapper for a (sorted) TreeMap for the address by transport type map and for convenient protobuf methods.
  */
 @EqualsAndHashCode
 @ToString
 @Getter
-public class AddressByTransportTypeMap implements Map<TransportType, Address>, NetworkProto {
+public final class AddressByTransportTypeMap implements Map<TransportType, Address>, NetworkProto {
     // We use a TreeMap to get deterministic sorting.
     private final TreeMap<TransportType, Address> map = new TreeMap<>();
 
     public AddressByTransportTypeMap() {
+        verify();
+    }
+
+    public AddressByTransportTypeMap(AddressByTransportTypeMap map) {
+        this(map.getMap());
     }
 
     public AddressByTransportTypeMap(Map<TransportType, Address> map) {
         this.map.putAll(map);
+
+        verify();
     }
 
-    public AddressByTransportTypeMap(AddressByTransportTypeMap map) {
-        this.map.putAll(map);
+    @Override
+    public void verify() {
+        checkArgument(map.size() <= TransportType.values().length);
+        checkArgument(!map.isEmpty());
     }
 
+    @Override
     public bisq.network.common.protobuf.AddressByTransportTypeMap toProto() {
         return bisq.network.common.protobuf.AddressByTransportTypeMap.newBuilder()
                 .putAllAddressByTransportType(map.entrySet().stream()

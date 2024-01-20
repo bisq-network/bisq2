@@ -25,8 +25,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 @Slf4j
 @Getter
 @EqualsAndHashCode
@@ -36,9 +34,11 @@ public final class NetworkId implements NetworkProto {
 
     public NetworkId(AddressByTransportTypeMap addressByTransportTypeMap, PubKey pubKey) {
         this.pubKey = pubKey;
-        checkArgument(!addressByTransportTypeMap.isEmpty(),
-                "We require at least 1 addressByNetworkType for a valid NetworkId");
         this.addressByTransportTypeMap.putAll(addressByTransportTypeMap);
+    }
+
+    @Override
+    public void verify() {
     }
 
     @Override

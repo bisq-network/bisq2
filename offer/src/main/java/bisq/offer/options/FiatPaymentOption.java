@@ -27,8 +27,6 @@ import lombok.ToString;
 @ToString
 @EqualsAndHashCode
 public final class FiatPaymentOption implements OfferOption {
-    public final static int MAX_NAME_LENGTH = 50;
-
     private final String countyCodeOfBank;
     private final String bankName;
 
@@ -36,8 +34,13 @@ public final class FiatPaymentOption implements OfferOption {
         this.countyCodeOfBank = countyCodeOfBank;
         this.bankName = bankName;
 
+        verify();
+    }
+
+    @Override
+    public void verify() {
         NetworkDataValidation.validateCode(countyCodeOfBank);
-        NetworkDataValidation.validateText(bankName, MAX_NAME_LENGTH);
+        NetworkDataValidation.validateText(bankName, 100);
     }
 
     @Override

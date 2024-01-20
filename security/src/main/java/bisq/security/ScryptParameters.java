@@ -66,6 +66,7 @@ public class ScryptParameters implements PersistableProto {
         }
     }
 
+    @Override
     public bisq.security.protobuf.ScryptParameters toProto() {
         return bisq.security.protobuf.ScryptParameters.newBuilder()
                 .setSalt(ByteString.copyFrom(salt))

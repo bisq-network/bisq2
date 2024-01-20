@@ -22,6 +22,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 /**
  * No min. amount supported
  */
@@ -33,6 +35,11 @@ public abstract class FixedAmountSpec implements AmountSpec {
 
     public FixedAmountSpec(long amount) {
         this.amount = amount;
+    }
+
+    @Override
+    public void verify() {
+        checkArgument(amount > 0);
     }
 
     public bisq.offer.protobuf.FixedAmountSpec.Builder getFixedAmountSpecBuilder() {

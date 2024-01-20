@@ -61,12 +61,15 @@ public final class AuthorizedOracleNode implements AuthorizedDistributedData {
         this.signatureBase64 = signatureBase64;
         this.staticPublicKeysProvided = staticPublicKeysProvided;
 
+        verify();
+    }
+
+    @Override
+    public void verify() {
         NetworkDataValidation.validateProfileId(profileId);
         NetworkDataValidation.validatePubKeyHex(authorizedPublicKey);
         NetworkDataValidation.validateBondUserName(bondUserName);
         NetworkDataValidation.validateSignatureBase64(signatureBase64);
-
-        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize());//326
     }
 
     @Override

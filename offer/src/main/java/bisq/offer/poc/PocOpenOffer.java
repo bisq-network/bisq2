@@ -29,8 +29,12 @@ public final class PocOpenOffer implements NetworkProto {
 
     public PocOpenOffer(PocOffer offer) {
         this.offer = offer;
+        verify();
     }
 
+    @Override
+    public void verify() {
+    }
 
     @Override
     public Message toProto() {

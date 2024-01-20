@@ -43,6 +43,11 @@ public final class ConfidentialMessage implements EnvelopePayloadMessage, Distri
         this.confidentialData = confidentialData;
         this.receiverKeyId = receiverKeyId;
 
+        verify();
+    }
+
+    @Override
+    public void verify() {
         NetworkDataValidation.validateId(receiverKeyId);
     }
 

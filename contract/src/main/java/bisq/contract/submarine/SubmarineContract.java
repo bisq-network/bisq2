@@ -46,6 +46,12 @@ public class SubmarineContract extends TwoPartyContract<SubmarineOffer> {
                               TradeProtocolType protocolType,
                               Party taker) {
         super(takeOfferDate, offer, protocolType, taker);
+        verify();
+    }
+
+    @Override
+    public void verify() {
+        super.verify();
     }
 
     @Override

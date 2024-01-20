@@ -34,7 +34,12 @@ public final class BisqEasyConfirmFiatReceiptMessage extends BisqEasyTradeMessag
                                              NetworkId receiver) {
         super(id, tradeId, sender, receiver);
 
-        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize());//332
+        verify();
+    }
+
+    @Override
+    public void verify() {
+        super.verify();
     }
 
     @Override

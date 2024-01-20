@@ -50,10 +50,13 @@ public final class AuthorizedTimestampData implements AuthorizedDistributedData 
         this.date = date;
         this.staticPublicKeysProvided = staticPublicKeysProvided;
 
+        verify();
+    }
+
+    @Override
+    public void verify() {
         NetworkDataValidation.validateProfileId(profileId);
         NetworkDataValidation.validateDate(date);
-
-        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize());//51
     }
 
     @Override

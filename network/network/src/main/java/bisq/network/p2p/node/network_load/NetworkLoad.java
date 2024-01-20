@@ -22,6 +22,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Getter
 @ToString
 @EqualsAndHashCode
@@ -36,8 +38,16 @@ public final class NetworkLoad implements NetworkProto {
 
     public NetworkLoad(double value) {
         this.value = Math.min(1, value);
+
+        verify();
     }
 
+    @Override
+    public void verify() {
+        checkArgument(value > 0);
+    }
+
+    @Override
     public bisq.network.protobuf.NetworkLoad toProto() {
         return bisq.network.protobuf.NetworkLoad.newBuilder()
                 .setValue(value)

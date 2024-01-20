@@ -80,13 +80,16 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
 
         version = new Version(versionString);
 
+        verify();
+    }
+
+    @Override
+    public void verify() {
         NetworkDataValidation.validateId(id);
         NetworkDataValidation.validateDate(date);
         NetworkDataValidation.validateText(releaseNotes, MAX_MESSAGE_LENGTH);
         NetworkDataValidation.validateVersion(versionString);
         NetworkDataValidation.validateProfileId(releaseManagerProfileId);
-
-        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize()); //3545
     }
 
     @Override

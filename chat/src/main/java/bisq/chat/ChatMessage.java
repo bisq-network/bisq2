@@ -24,7 +24,6 @@ import bisq.chat.two_party.TwoPartyPrivateChatMessage;
 import bisq.common.proto.NetworkProto;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
-import bisq.common.util.StringUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.i18n.Res;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
@@ -51,7 +50,7 @@ public abstract class ChatMessage implements NetworkProto, Comparable<ChatMessag
     protected final String id;
     private final ChatChannelDomain chatChannelDomain;
     protected final String channelId;
-    protected final Optional<String> optionalText;
+    protected final Optional<String> text;
     protected String authorUserProfileId;
     protected final Optional<Citation> citation;
     protected final long date;
@@ -71,12 +70,15 @@ public abstract class ChatMessage implements NetworkProto, Comparable<ChatMessag
         this.chatChannelDomain = chatChannelDomain;
         this.channelId = channelId;
         this.authorUserProfileId = authorUserProfileId;
-        this.optionalText = text.map(e -> StringUtils.truncate(e, MAX_TEXT_LENGTH - 10));
+        this.text = text;
         this.citation = citation;
         this.date = date;
         this.wasEdited = wasEdited;
         this.chatMessageType = chatMessageType;
+    }
 
+    @Override
+    public void verify() {
         NetworkDataValidation.validateId(id);
         NetworkDataValidation.validateText(channelId, 200); // For private channels we combine user profile IDs for channelId
         NetworkDataValidation.validateProfileId(authorUserProfileId);
@@ -94,7 +96,7 @@ public abstract class ChatMessage implements NetworkProto, Comparable<ChatMessag
                 .setWasEdited(wasEdited)
                 .setChatMessageType(chatMessageType.toProto());
         citation.ifPresent(citation -> builder.setCitation(citation.toProto()));
-        optionalText.ifPresent(builder::setText);
+        text.ifPresent(builder::setText);
         return builder;
     }
 
@@ -174,7 +176,7 @@ public abstract class ChatMessage implements NetworkProto, Comparable<ChatMessag
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public String getText() {
-        return optionalText.orElse(Res.get("data.na"));
+        return text.orElse(Res.get("data.na"));
     }
 
     public boolean wasMentioned(UserIdentity userIdentity) {

@@ -34,6 +34,13 @@ public final class FiatPaymentMethodSpec extends PaymentMethodSpec<FiatPaymentMe
 
     public FiatPaymentMethodSpec(FiatPaymentMethod paymentMethod, Optional<String> saltedMakerAccountId) {
         super(paymentMethod, saltedMakerAccountId);
+
+        verify();
+    }
+
+    @Override
+    public void verify() {
+        super.verify();
     }
 
     @Override

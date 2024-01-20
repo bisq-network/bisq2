@@ -18,6 +18,7 @@
 package bisq.account.accounts;
 
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -33,6 +34,12 @@ public abstract class CountryBasedAccountPayload extends AccountPayload {
     public CountryBasedAccountPayload(String id, String paymentMethodName, String countryCode) {
         super(id, paymentMethodName);
         this.countryCode = countryCode;
+    }
+
+    @Override
+    public void verify() {
+        super.verify();
+        NetworkDataValidation.validateCode(countryCode);
     }
 
     protected bisq.account.protobuf.CountryBasedAccountPayload.Builder getCountryBasedAccountPayloadBuilder() {

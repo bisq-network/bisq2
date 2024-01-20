@@ -21,6 +21,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 /**
  * A floating price based on the current market price.
  */
@@ -31,12 +33,19 @@ public final class FloatPriceSpec implements PriceSpec {
     private final double percentage;
 
     /**
-     * @param percentage  The percentage value normalized to 1 (1 = 100%) above or below the market price.
-     *                    Positive value means higher than market price. 
-     *                    E.g. 0.1 means `marketPrice * 1.1`, -0.2 means `marketPrice * 0.8`
+     * @param percentage The percentage value normalized to 1 (1 = 100%) above or below the market price.
+     *                   Positive value means higher than market price.
+     *                   E.g. 0.1 means `marketPrice * 1.1`, -0.2 means `marketPrice * 0.8`
      */
     public FloatPriceSpec(double percentage) {
         this.percentage = percentage;
+
+        verify();
+    }
+
+    @Override
+    public void verify() {
+        checkArgument(percentage >= -1 && percentage <= 1);
     }
 
     @Override

@@ -19,7 +19,7 @@ package bisq.trade;
 
 import bisq.common.fsm.FsmModel;
 import bisq.common.fsm.State;
-import bisq.common.proto.NetworkProto;
+import bisq.common.proto.PersistableProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.contract.Contract;
 import bisq.identity.Identity;
@@ -40,7 +40,7 @@ import java.util.UUID;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P extends TradeParty> extends FsmModel implements NetworkProto {
+public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P extends TradeParty> extends FsmModel implements PersistableProto {
     public static String createId(String offerId, String takerPubKeyHash) {
         String combined = offerId + takerPubKeyHash;
         return UUID.nameUUIDFromBytes(DigestUtil.hash(combined.getBytes(StandardCharsets.UTF_8))).toString();

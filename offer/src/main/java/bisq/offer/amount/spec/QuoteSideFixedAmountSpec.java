@@ -30,6 +30,13 @@ import lombok.ToString;
 public final class QuoteSideFixedAmountSpec extends FixedAmountSpec implements QuoteSideAmountSpec {
     public QuoteSideFixedAmountSpec(long amount) {
         super(amount);
+
+        verify();
+    }
+
+    @Override
+    public void verify() {
+        super.verify();
     }
 
     @Override

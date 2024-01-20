@@ -50,7 +50,11 @@ public final class BannedUserProfileData implements AuthorizedDistributedData {
         this.userProfile = userProfile;
         this.staticPublicKeysProvided = staticPublicKeysProvided;
 
-        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize()); //313
+        verify();
+    }
+
+    @Override
+    public void verify() {
     }
 
     @Override

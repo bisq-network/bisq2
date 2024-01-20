@@ -42,8 +42,13 @@ public final class BisqEasyAccountDataMessage extends BisqEasyTradeMessage {
 
         this.paymentAccountData = paymentAccountData;
 
+        verify();
+    }
+
+    @Override
+    public void verify() {
+        super.verify();
         NetworkDataValidation.validateText(paymentAccountData, MAX_LENGTH);
-        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize()); //631
     }
 
     @Override

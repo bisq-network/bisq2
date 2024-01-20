@@ -29,6 +29,12 @@ public final class AuthorizationToken implements NetworkProto {
     public AuthorizationToken(ProofOfWork proofOfWork, int messageCounter) {
         this.proofOfWork = proofOfWork;
         this.messageCounter = messageCounter;
+
+        verify();
+    }
+
+    @Override
+    public void verify() {
     }
 
     @Override

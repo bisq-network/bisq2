@@ -27,6 +27,11 @@ public final class AckMessage implements MailboxMessage {
     public AckMessage(String id) {
         this.id = id;
 
+        verify();
+    }
+
+    @Override
+    public void verify() {
         NetworkDataValidation.validateText(id, 100);
     }
 

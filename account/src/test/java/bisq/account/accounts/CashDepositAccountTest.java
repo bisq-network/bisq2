@@ -8,8 +8,7 @@ import bisq.account.protobuf.CashDepositAccount;
 import bisq.account.protobuf.CashDepositAccountPayload;
 import bisq.account.protobuf.CountryBasedAccount;
 import bisq.account.protobuf.CountryBasedAccountPayload;
-import bisq.account.protobuf.FiatPaymentMethod;
-import bisq.account.protobuf.PaymentMethod;
+import bisq.account.protobuf.*;
 import bisq.common.protobuf.Country;
 import bisq.common.protobuf.Region;
 import org.junit.jupiter.api.Test;
@@ -22,7 +21,7 @@ class CashDepositAccountTest {
 
     private static final bisq.account.protobuf.Account PROTO = Account.newBuilder()
             .setAccountName("accountName")
-            .setCreationDate(123)
+            .setCreationDate(System.currentTimeMillis())
             .setPaymentMethod(PaymentMethod.newBuilder()
                     .setName("CASH_DEPOSIT")
                     .setFiatPaymentMethod(FiatPaymentMethod.newBuilder()))
@@ -30,7 +29,7 @@ class CashDepositAccountTest {
                     .setId("id")
                     .setPaymentMethodName("CASH_DEPOSIT")
                     .setCountryBasedAccountPayload(CountryBasedAccountPayload.newBuilder()
-                            .setCountryCode("countryCode")
+                            .setCountryCode("US")
                             .setBankAccountPayload(BankAccountPayload.newBuilder()
                                     .setHolderName("holderName")
                                     .setAccountNr("accountNr")
@@ -46,7 +45,7 @@ class CashDepositAccountTest {
             )
             .setCountryBasedAccount(CountryBasedAccount.newBuilder()
                     .setCountry(Country.newBuilder()
-                            .setCode("countryCode")
+                            .setCode("US")
                             .setName("countryName")
                             .setRegion(Region.newBuilder()
                                     .setCode("regionCode")
@@ -58,12 +57,12 @@ class CashDepositAccountTest {
     private static final bisq.account.accounts.CashDepositAccount ACCOUNT = new bisq.account.accounts.CashDepositAccount(
             "accountName",
             new bisq.account.accounts.CashDepositAccountPayload(
-                    "id", "CASH_DEPOSIT", "countryCode",
+                    "id", "CASH_DEPOSIT", "US",
                     "holderName", "bankName", "branchId",
                     "accountNr", "accountType", "holderTaxId",
                     "bankId", "nationalAccountId", "requirements"),
             new bisq.common.locale.Country(
-                    "countryCode",
+                    "US",
                     "countryName",
                     new bisq.common.locale.Region("regionCode", "regionName")));
 

@@ -60,6 +60,8 @@ import java.util.stream.Collectors;
  * Manages Inventory data requests and response and apply it to the data service.
  * We have InventoryServices for each supported transport. The data service though is a single instance getting services
  * by all transport specific services.
+ *
+ * TODO Find better solution for getting the diff of the missing data. See https://github.com/bisq-network/bisq2/issues/1602
  */
 @Slf4j
 public class InventoryService implements Node.Listener, PeerGroupManager.Listener {
@@ -67,6 +69,7 @@ public class InventoryService implements Node.Listener, PeerGroupManager.Listene
 
     @Getter
     public static final class Config {
+        // Default config value is 2000 (about 2MB)
         private final int maxSizeInKb;
 
         public static Config from(com.typesafe.config.Config config) {
@@ -100,6 +103,8 @@ public class InventoryService implements Node.Listener, PeerGroupManager.Listene
 
         node.addListener(this);
         peerGroupManager.addListener(this);
+
+        Inventory.setMaxSize(maxSize);
     }
 
     public void shutdown() {
@@ -166,9 +171,16 @@ public class InventoryService implements Node.Listener, PeerGroupManager.Listene
     private void doRequest() {
         if (!requestsPending && peerGroupManager.getState().get() == PeerGroupManager.State.RUNNING) {
             requestsPending = true;
-            DataFilter dataFilter = new DataFilter(storageService.getAllDataRequestMapEntries()
+            List<FilterEntry> filterEntries = storageService.getAllDataRequestMapEntries()
                     .map(this::toFilterEntry)
-                    .collect(Collectors.toList()));
+                    .collect(Collectors.toList());
+            if (filterEntries.size() > DataFilter.MAX_ENTRIES) {
+                filterEntries = filterEntries.stream().limit(DataFilter.MAX_ENTRIES).collect(Collectors.toList());
+                // TODO Find better solution for getting the diff of the missing data. See https://github.com/bisq-network/bisq2/issues/1602
+                log.warn("We limited the number of filter entries we send in our inventory request to {}",
+                        DataFilter.MAX_ENTRIES);
+            }
+            DataFilter dataFilter = new DataFilter(filterEntries);
             CompletableFutureUtils.allOf(request(dataFilter))
                     .whenComplete((list, throwable) -> {
                         if (list != null) {

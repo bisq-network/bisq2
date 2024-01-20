@@ -65,10 +65,16 @@ public final class AuthorizedData extends AuthenticatedData {
         this.authorizedPublicKey = authorizedPublicKey;
         this.authorizedPublicKeyBytes = authorizedPublicKeyBytes;
 
+        verify();
+    }
+
+    @Override
+    public void verify() {
         signature.ifPresent(NetworkDataValidation::validateECSignature);
         NetworkDataValidation.validateECPubKey(authorizedPublicKeyBytes);
     }
 
+    @Override
     public bisq.network.protobuf.AuthenticatedData toProto() {
         bisq.network.protobuf.AuthorizedData.Builder builder = bisq.network.protobuf.AuthorizedData.newBuilder()
                 .setAuthorizedPublicKeyBytes(ByteString.copyFrom(authorizedPublicKeyBytes));

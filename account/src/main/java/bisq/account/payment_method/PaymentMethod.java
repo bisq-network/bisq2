@@ -78,6 +78,13 @@ public abstract class PaymentMethod<R extends PaymentRail> implements Comparable
         // Avoid accidentally using a translation string in case the customName would match a key
         displayString = name;
         shortDisplayString = name;
+
+        verify();
+    }
+
+    @Override
+    public void verify() {
+        NetworkDataValidation.validateText(name, 100);
     }
 
     protected String createDisplayString() {

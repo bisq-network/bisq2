@@ -19,6 +19,7 @@ package bisq.account.accounts;
 
 import bisq.common.proto.NetworkProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -38,6 +39,12 @@ public abstract class AccountPayload implements NetworkProto {
     public AccountPayload(String id, String paymentMethodName) {
         this.id = id;
         this.paymentMethodName = paymentMethodName;
+    }
+
+    @Override
+    public void verify() {
+        NetworkDataValidation.validateId(id);
+        NetworkDataValidation.validateText(paymentMethodName, 100);
     }
 
     public abstract bisq.account.protobuf.AccountPayload toProto();

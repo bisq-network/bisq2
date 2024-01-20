@@ -34,6 +34,12 @@ public final class AddAppendOnlyDataRequest implements AddDataRequest {
 
     public AddAppendOnlyDataRequest(AppendOnlyData appendOnlyData) {
         this.appendOnlyData = appendOnlyData;
+
+        verify();
+    }
+
+    @Override
+    public void verify() {
     }
 
     @Override

@@ -19,6 +19,7 @@ package bisq.common.currency;
 
 import bisq.common.proto.PersistableProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -27,6 +28,8 @@ import lombok.ToString;
 @ToString
 @Getter
 public abstract class TradeCurrency implements Comparable<TradeCurrency>, PersistableProto {
+    public final static int MAX_NAME_LENGTH = 100;
+
     protected final String code;
     @EqualsAndHashCode.Exclude
     protected final String name;
@@ -50,6 +53,9 @@ public abstract class TradeCurrency implements Comparable<TradeCurrency>, Persis
     public TradeCurrency(String code, String name) {
         this.code = code;
         this.name = name;
+
+        NetworkDataValidation.validateCode(code);
+        NetworkDataValidation.validateText(name, MAX_NAME_LENGTH);
     }
 
     public bisq.common.protobuf.TradeCurrency.Builder getTradeCurrencyBuilder() {

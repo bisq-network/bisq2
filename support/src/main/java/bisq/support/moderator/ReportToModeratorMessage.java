@@ -41,7 +41,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 @ToString
 @EqualsAndHashCode
 public final class ReportToModeratorMessage implements MailboxMessage {
-    public final static int MAX_MESSAGE_LENGTH = 1000;
+    public final static int MAX_MESSAGE_LENGTH = 10_000;
 
     private final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
     private final long date;
@@ -61,11 +61,14 @@ public final class ReportToModeratorMessage implements MailboxMessage {
         this.message = message;
         this.chatChannelDomain = chatChannelDomain;
 
+        verify();
+    }
+
+    @Override
+    public void verify() {
         NetworkDataValidation.validateDate(date);
         NetworkDataValidation.validateProfileId(reporterUserProfileId);
         NetworkDataValidation.validateText(message, MAX_MESSAGE_LENGTH);
-
-        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize());//1438
     }
 
     @Override

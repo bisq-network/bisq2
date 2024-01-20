@@ -22,32 +22,50 @@ import bisq.common.proto.NetworkProto;
 import bisq.network.p2p.services.data.DataRequest;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Getter
 @ToString
 @EqualsAndHashCode
 @Slf4j
 public final class Inventory implements NetworkProto {
+    @Setter
+    public static int maxSize;
+
     private final List<? extends DataRequest> entries;
     private final boolean maxSizeReached;
+    private transient final Optional<Integer> serializedSize;
 
     public Inventory(Collection<? extends DataRequest> entries, boolean maxSizeReached) {
-        this.entries = new ArrayList<>(entries);
-        this.maxSizeReached = maxSizeReached;
-
-        // We need to sort deterministically as the data is used in the proof of work check
-        // todo find cheaper solution or cache serialized result to avoid that its done repeatedly 
-        this.entries.sort(Comparator.comparing((DataRequest e) -> new ByteArray(e.serialize())));
+        this(entries, maxSizeReached, Optional.empty());
     }
 
+    public Inventory(Collection<? extends DataRequest> entries, boolean maxSizeReached, Optional<Integer> serializedSize) {
+        this.entries = new ArrayList<>(entries);
+        this.maxSizeReached = maxSizeReached;
+        this.serializedSize = serializedSize;
+
+        // We need to sort deterministically as the data is used in the proof of work check
+        // TODO dataRequest.serialize() is expensive. We have the hash of the data in most DataRequest implementations. This could be used and combined with the other remaining data, like signature and pubkey
+        this.entries.sort(Comparator.comparing((DataRequest dataRequest) -> new ByteArray(dataRequest.serialize())));
+
+        verify();
+    }
+
+    @Override
+    public void verify() {
+        // We limit the max serialized size but not the number of entries.
+        serializedSize.ifPresent(size -> checkArgument(size <= maxSize));
+    }
+
+    @Override
     public bisq.network.protobuf.Inventory toProto() {
         return bisq.network.protobuf.Inventory.newBuilder()
                 .addAllEntries(entries.stream().map(e -> e.toProto().getDataRequest()).collect(Collectors.toList()))
@@ -60,7 +78,7 @@ public final class Inventory implements NetworkProto {
         List<DataRequest> entries = entriesList.stream()
                 .map(DataRequest::fromProto)
                 .collect(Collectors.toList());
-        return new Inventory(entries, proto.getMaxSizeReached());
+        return new Inventory(entries, proto.getMaxSizeReached(), Optional.of(proto.getSerializedSize()));
     }
 
     public boolean noDataMissing() {

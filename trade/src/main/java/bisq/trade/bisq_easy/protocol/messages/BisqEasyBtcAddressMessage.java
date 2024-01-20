@@ -40,10 +40,17 @@ public final class BisqEasyBtcAddressMessage extends BisqEasyTradeMessage {
 
         this.btcAddress = btcAddress;
 
-        // We tolerate non-btc address data as well (e.g. LN invoice)
-        NetworkDataValidation.validateText(btcAddress, 200);
+        verify();
+    }
 
-        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize());//338
+    @Override
+    public void verify() {
+        super.verify();
+
+        // We tolerate non-btc address data as well (e.g. LN invoice)
+        // The minimum possible length of an LN invoice is around 190 characters
+        // Max. length depends on optional fields
+        NetworkDataValidation.validateText(btcAddress, 1000);
     }
 
     @Override

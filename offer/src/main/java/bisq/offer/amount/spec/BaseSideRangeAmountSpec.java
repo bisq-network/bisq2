@@ -27,6 +27,13 @@ import lombok.ToString;
 public final class BaseSideRangeAmountSpec extends RangeAmountSpec implements BaseSideAmountSpec {
     public BaseSideRangeAmountSpec(long minAmount, long maxAmount) {
         super(minAmount, maxAmount);
+
+        verify();
+    }
+
+    @Override
+    public void verify() {
+        super.verify();
     }
 
     @Override

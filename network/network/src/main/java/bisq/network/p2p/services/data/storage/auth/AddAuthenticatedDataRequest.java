@@ -87,8 +87,13 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
         this.ownerPublicKeyBytes = ownerPublicKeyBytes;
         this.ownerPublicKey = ownerPublicKey;
 
-        NetworkDataValidation.validateECPubKey(ownerPublicKeyBytes);
+        verify();
+    }
+
+    @Override
+    public void verify() {
         NetworkDataValidation.validateECSignature(signature);
+        NetworkDataValidation.validateECPubKey(ownerPublicKeyBytes);
     }
 
     @Override
