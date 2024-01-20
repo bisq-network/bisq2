@@ -24,6 +24,8 @@ import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.WrappingText;
 import bisq.i18n.Res;
 import bisq.trade.bisq_easy.BisqEasyTrade;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
@@ -66,11 +68,14 @@ public class SellerState3a extends BaseState {
             super.onActivate();
 
             model.setBtcAddress(model.getBisqEasyTrade().getBtcAddress().get());
+            model.getBtcSentButtonDisabled().bind(model.getTxId().isEmpty());
         }
 
         @Override
         public void onDeactivate() {
             super.onDeactivate();
+
+            model.getBtcSentButtonDisabled().unbind();
         }
 
         private void onBtcSent() {
@@ -85,6 +90,7 @@ public class SellerState3a extends BaseState {
         @Setter
         protected String btcAddress;
         private final StringProperty txId = new SimpleStringProperty();
+        private final BooleanProperty btcSentButtonDisabled = new SimpleBooleanProperty();
 
         protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
             super(bisqEasyTrade, channel);
@@ -135,6 +141,7 @@ public class SellerState3a extends BaseState {
             sendBtcHeadline.setText(Res.get("bisqEasy.tradeState.info.seller.phase3a.sendBtc", model.getFormattedBaseAmount()));
             fiatReceiptConfirmed.setText(Res.get("bisqEasy.tradeState.info.seller.phase3a.fiatPaymentReceivedCheckBox", model.getFormattedQuoteAmount()));
             btcSentButton.setOnAction(e -> controller.onBtcSent());
+            btcSentButton.disableProperty().bind(model.getBtcSentButtonDisabled());
         }
 
         @Override
@@ -143,6 +150,7 @@ public class SellerState3a extends BaseState {
 
             txId.textProperty().unbindBidirectional(model.getTxId());
             btcSentButton.setOnAction(null);
+            btcSentButton.disableProperty().unbind();
         }
     }
 }
