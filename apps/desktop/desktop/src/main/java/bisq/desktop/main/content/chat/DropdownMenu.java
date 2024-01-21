@@ -51,7 +51,6 @@ public class DropdownMenu extends Button {
             contextMenu.show(this, x, y);
         } else {
             contextMenu.hide();
-
         }
     }
 

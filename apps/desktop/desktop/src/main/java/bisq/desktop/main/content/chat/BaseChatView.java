@@ -59,17 +59,12 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
         this.channelSidebar = channelSidebar;
 
         headerDropdownMenu.setGraphic(ImageUtil.getImageViewById("ellipsis-v"));
-        double scale = 1;
 
         ImageView helpIcon = ImageUtil.getImageViewById("icon-help");
-        helpIcon.setScaleX(scale);
-        helpIcon.setScaleY(scale);
         helpButton.setText("Test help");
         helpButton.setGraphic(helpIcon);
 
         ImageView infoIcon = ImageUtil.getImageViewById("icon-info");
-        infoIcon.setScaleX(scale);
-        infoIcon.setScaleY(scale);
         infoButton.setText("Test Info");
         infoButton.setGraphic(infoIcon);
 

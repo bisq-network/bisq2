@@ -261,10 +261,7 @@
     -fx-background-color: transparent;
 }
 
-.dropdown-menu:hover {
-    -fx-background-color: -bisq-dark-grey-40;
-}
-
+.dropdown-menu:hover,
 .dropdown-menu-active {
     -fx-background-color: -bisq-dark-grey-40;
 }
@@ -276,7 +273,7 @@
 
 .dropdown-menu .context-menu {
     -fx-background-insets: 0 0 0 0;
-    -fx-background-color: -bisq-dark-grey-50;
+    -fx-background-color: -bisq-dark-grey-40;
 }
 
 /*******************************************************************************
