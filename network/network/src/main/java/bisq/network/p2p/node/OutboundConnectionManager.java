@@ -24,6 +24,7 @@ import bisq.network.p2p.node.envelope.NetworkEnvelopeSocketChannel;
 import bisq.network.p2p.node.envelope.parser.nio.ProtoBufMessageLengthWriter;
 import bisq.network.p2p.node.handshake.ConnectionHandshake;
 import bisq.network.p2p.node.handshake.ConnectionHandshakeInitiator;
+import bisq.tor.TorAddressOwnershipProofGenerator;
 import bisq.network.p2p.node.network_load.ConnectionMetrics;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
@@ -137,7 +138,7 @@ public class OutboundConnectionManager {
                     banList,
                     myNetworkLoad,
                     addressByChannel.get(socketChannel),
-                    null);
+                    new TorAddressOwnershipProofGenerator(null));
             handshakeInitiatorByChannel.put(socketChannel, handshakeInitiator);
 
             NetworkEnvelope handshakeRequest = handshakeInitiator.initiate();
