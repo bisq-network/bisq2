@@ -29,19 +29,21 @@ public interface State {
 
     String name();
 
-    int ordinal();
+    int getOrdinal();
 
     @Getter
     enum FsmState implements State {
-        ANY(false, true),
-        ERROR(true, false);
+        ANY(false, true, 0),
+        ERROR(true, false, Integer.MAX_VALUE);
 
         private final boolean isFinalState;
         private final boolean isAnyState;
+        private final int ordinal;
 
-        FsmState(boolean isFinalState, boolean isAnyState) {
+        FsmState(boolean isFinalState, boolean isAnyState, int ordinal) {
             this.isFinalState = isFinalState;
             this.isAnyState = isAnyState;
+            this.ordinal = ordinal;
         }
     }
 }

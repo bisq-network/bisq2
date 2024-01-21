@@ -32,8 +32,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * <br/>
  * In case of out-of-order events we store the un-handled events (we do not persist it) and retry to apply those
  * pending states after the next state transition.
- * The handling of out-of-order events only support unique event/state pairs. It is not supported that the same event
- * is used for multiple transitions.
+ * The handling of out-of-order events only support unique event/state pairs. The out-of-order handling does not
+ * support the use fo the same event for multiple transitions. Though that is not a restriction of the transition config.
+ * <br/>
+ * The Fsm does not allow cycle graphs or transitions to previous states. For determining the order of the states we
+ * use getOrdinal() which returns in case of enums the ordinal.
  */
 @Slf4j
 public abstract class Fsm<M extends FsmModel> {
@@ -73,7 +76,7 @@ public abstract class Fsm<M extends FsmModel> {
                 Optional<Transition> transition = findTransition(currentState, transitionMapEntriesForEvent);
                 if (transition.isPresent()) {
                     State targetState = transition.get().getTargetState();
-                    checkArgument(targetState.ordinal() > currentState.ordinal(),
+                    checkArgument(targetState.getOrdinal() > currentState.getOrdinal(),
                             "The target state ordinal must be higher than the current state ordinal");
                     Optional<Class<? extends EventHandler>> eventHandlerClass = transition.get().getEventHandlerClass();
                     if (eventHandlerClass.isPresent()) {

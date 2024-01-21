@@ -32,12 +32,14 @@ public enum SubmarineTradeState implements State {
     COMPLETED(true);
 
     private final boolean isFinalState;
+    private final int ordinal;
 
     SubmarineTradeState() {
-        this.isFinalState = false;
+        this(false);
     }
 
     SubmarineTradeState(boolean isFinalState) {
         this.isFinalState = isFinalState;
+        ordinal = ordinal();
     }
 }

@@ -25,102 +25,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class FsmTest {
-    @Test
-    void testOutOfOrderEvents() {
-        MockModel model = new MockModel(MockState.INIT);
-        SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
-
-        // No change in data as no handler was defined
-        fsm.addTransition()
-                .from(MockState.INIT)
-                .on(MockEvent1.class)
-                .run(MockEventHandler.class)
-                .to(MockState.S1);
-        fsm.addTransition()
-                .from(MockState.S1)
-                .on(MockEvent2.class)
-                .run(MockEventHandler.class)
-                .to(MockState.S2);
-        fsm.addTransition()
-                .from(MockState.S2)
-                .on(MockEvent3.class)
-                .run(MockEventHandler.class)
-                .to(MockState.S3);
-        fsm.addTransition()
-                .from(MockState.S3)
-                .on(MockEvent4.class)
-                .run(MockEventHandler.class)
-                .to(MockState.COMPLETED);
-
-        fsm.handle(new MockEvent3(model, "test3"));
-        assertEquals(MockState.INIT, fsm.getModel().getState());
-        assertNull((fsm.getModel()).data);
-        assertEquals(1, model.eventQueue.size());
-        assertEquals(0, model.processedEvents.size());
-
-        fsm.handle(new MockEvent2(model, "test2"));
-        assertEquals(MockState.INIT, fsm.getModel().getState());
-        assertNull((fsm.getModel()).data);
-        assertEquals(2, model.eventQueue.size());
-        assertEquals(0, model.processedEvents.size());
-
-        fsm.handle(new MockEvent1(model, "test1"));
-        assertEquals(MockState.S3, fsm.getModel().getState());
-        assertEquals("test3", ((MockModel) fsm.getModel()).data);
-        assertEquals(0, model.eventQueue.size());
-        assertEquals(3, model.processedEvents.size());
-
-        fsm.handle(new MockEvent4(model, "test_comp"));
-        assertEquals(MockState.COMPLETED, fsm.getModel().getState());
-        assertEquals("test_comp", ((MockModel) fsm.getModel()).data);
-        assertEquals(0, model.eventQueue.size());
-        assertEquals(0, model.processedEvents.size());
-    }
-
-    @Test
-    void testValidStateTransitions() {
-        MockModel model = new MockModel(MockState.INIT);
-        SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
-
-        // No change in data as no handler was defined
-        fsm.addTransition()
-                .from(MockState.INIT)
-                .on(MockEvent1.class)
-                .to(MockState.S1);
-
-        assertEquals(MockState.INIT, fsm.getModel().getState());
-        fsm.handle(new MockEvent1(model, "test1"));
-        assertEquals(MockState.S1, fsm.getModel().getState());
-        assertNull(((MockModel) fsm.getModel()).data);
-
-        // Transit with event handler called
-        fsm.addTransition()
-                .from(MockState.S1)
-                .on(MockEvent2.class)
-                .run(MockEventHandler.class)
-                .to(MockState.S2);
-        assertEquals(MockState.S1, fsm.getModel().getState());
-        fsm.handle(new MockEvent2(model, "test2"));
-        assertEquals(MockState.S2, fsm.getModel().getState());
-        assertEquals("test2", ((MockModel) fsm.getModel()).data);
-
-        // Different source state, same event.
-        fsm.addTransition()
-                .from(MockState.S2)
-                .on(MockEvent2.class)
-                .run(MockEventHandler.class)
-                .to(MockState.S3);
-        fsm.handle(new MockEvent2(model, "test3"));
-        assertEquals(MockState.S3, fsm.getModel().getState());
-        assertEquals("test3", ((MockModel) fsm.getModel()).data);
-    }
 
     @Test
     void testTransitions() {
         MockModel model = new MockModel(MockState.INIT);
         SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
 
-        // No change in data as no handler was defined
         fsm.addTransition()
                 .from(MockState.INIT)
                 .on(MockEvent1.class)
@@ -157,6 +67,95 @@ public class FsmTest {
         fsm.handle(new MockEvent1(model, "test4"));
         assertEquals(MockState.COMPLETED, fsm.getModel().getState());
         assertEquals("test4", model.data);
+
+        model = new MockModel(MockState.INIT);
+        fsm = new SimpleFsm<>(model);
+
+        // No change in data as no handler was defined
+        fsm.addTransition()
+                .from(MockState.INIT)
+                .on(MockEvent1.class)
+                .to(MockState.S1);
+
+        assertEquals(MockState.INIT, fsm.getModel().getState());
+        fsm.handle(new MockEvent1(model, "test1"));
+        assertEquals(MockState.S1, fsm.getModel().getState());
+        assertNull(fsm.getModel().data);
+
+        // Transit with event handler called
+        fsm.addTransition()
+                .from(MockState.S1)
+                .on(MockEvent2.class)
+                .run(MockEventHandler.class)
+                .to(MockState.S2);
+        assertEquals(MockState.S1, fsm.getModel().getState());
+        fsm.handle(new MockEvent2(model, "test2"));
+        assertEquals(MockState.S2, fsm.getModel().getState());
+        assertEquals("test2", fsm.getModel().data);
+
+        // Different source state, same event.
+        fsm.addTransition()
+                .from(MockState.S2)
+                .on(MockEvent2.class)
+                .run(MockEventHandler.class)
+                .to(MockState.S3);
+        fsm.handle(new MockEvent2(model, "test3"));
+        assertEquals(MockState.S3, fsm.getModel().getState());
+        assertEquals("test3", fsm.getModel().data);
+    }
+
+    @Test
+    void testOutOfOrderEvents() {
+        MockModel model = new MockModel(MockState.INIT);
+        SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
+
+        fsm.addTransition()
+                .from(MockState.INIT)
+                .on(MockEvent1.class)
+                .run(MockEventHandler.class)
+                .to(MockState.S1);
+        fsm.addTransition()
+                .from(MockState.S1)
+                .on(MockEvent2.class)
+                .run(MockEventHandler.class)
+                .to(MockState.S2);
+        fsm.addTransition()
+                .from(MockState.S2)
+                .on(MockEvent3.class)
+                .run(MockEventHandler.class)
+                .to(MockState.S3);
+        fsm.addTransition()
+                .from(MockState.S3)
+                .on(MockEvent4.class)
+                .run(MockEventHandler.class)
+                .to(MockState.COMPLETED);
+
+        fsm.handle(new MockEvent3(model, "test3"));
+        assertEquals(MockState.INIT, fsm.getModel().getState());
+        assertNull((fsm.getModel()).data);
+        assertEquals(1, model.eventQueue.size());
+        assertEquals(0, model.processedEvents.size());
+
+        fsm.handle(new MockEvent2(model, "test2"));
+        assertEquals(MockState.INIT, fsm.getModel().getState());
+        assertNull((fsm.getModel()).data);
+        assertEquals(2, model.eventQueue.size());
+        assertEquals(0, model.processedEvents.size());
+
+        // Now we trigger transition from INIT state and process the queued events
+        // to arrive at S3
+        fsm.handle(new MockEvent1(model, "test1"));
+        assertEquals(MockState.S3, fsm.getModel().getState());
+        assertEquals("test3", fsm.getModel().data);
+        assertEquals(0, model.eventQueue.size());
+        assertEquals(3, model.processedEvents.size());
+
+        // At a final state we clear the eventQueue and processedEvents
+        fsm.handle(new MockEvent4(model, "test_comp"));
+        assertEquals(MockState.COMPLETED, fsm.getModel().getState());
+        assertEquals("test_comp", fsm.getModel().data);
+        assertEquals(0, model.eventQueue.size());
+        assertEquals(0, model.processedEvents.size());
     }
 
     @Test
@@ -177,14 +176,16 @@ public class FsmTest {
                 .on(MockEvent3.class)
                 .to(MockState.S3);
 
-        fsm.handle(new MockEvent2(model, ""));
-        assertEquals(MockState.S2, fsm.getModel().getState());
-
         fsm.handle(new MockEvent1(model, ""));
         assertEquals(MockState.S1, fsm.getModel().getState());
-
+        fsm.handle(new MockEvent2(model, ""));
+        assertEquals(MockState.S2, fsm.getModel().getState());
         fsm.handle(new MockEvent3(model, ""));
         assertEquals(MockState.S3, fsm.getModel().getState());
+
+        // Trying to go to a prev state leads to an error
+        fsm.handle(new MockEvent1(model, ""));
+        assertEquals(State.FsmState.ERROR, fsm.getModel().getState());
     }
 
     @Test
@@ -236,7 +237,7 @@ public class FsmTest {
     }
 
     @Test
-    void testCyclicGraph() {
+    void testCyclicGraphFailing() {
         MockModel model = new MockModel(MockState.S1);
         SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
 
@@ -252,14 +253,31 @@ public class FsmTest {
         fsm.handle(new MockEvent1(model, ""));
         assertEquals(MockState.S2, fsm.getModel().getState());
 
+        // Going to a lower state is not permitted
         fsm.handle(new MockEvent2(model, ""));
-        assertEquals(MockState.S1, fsm.getModel().getState());
+        assertEquals(State.FsmState.ERROR, fsm.getModel().getState());
+    }
+
+    @Test
+    void testTransitionToLowerState() {
+        MockModel model = new MockModel(MockState.INIT);
+        SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
+
+        fsm.addTransition()
+                .from(MockState.INIT)
+                .on(MockEvent1.class)
+                .to(MockState.S2);
+        fsm.addTransition()
+                .from(MockState.S2)
+                .on(MockEvent2.class)
+                .to(MockState.S1);
 
         fsm.handle(new MockEvent1(model, ""));
         assertEquals(MockState.S2, fsm.getModel().getState());
 
+        // Going to a lower state is not permitted (S2->S1)
         fsm.handle(new MockEvent2(model, ""));
-        assertEquals(MockState.S1, fsm.getModel().getState());
+        assertEquals(State.FsmState.ERROR, fsm.getModel().getState());
     }
 
     @Test
@@ -513,13 +531,15 @@ public class FsmTest {
         COMPLETED(true),
         POST;
         private final boolean isFinalState;
+        private final int ordinal;
 
         MockState() {
-            this.isFinalState = false;
+            this(false);
         }
 
         MockState(boolean isFinalState) {
             this.isFinalState = isFinalState;
+            ordinal = ordinal();
         }
     }
 
