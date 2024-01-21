@@ -277,14 +277,15 @@
     -fx-background-color: -bisq-dark-grey-40;
     -fx-background-radius: 6;
     -fx-padding: 10 5 10 5;
-    -fx-border-color: -bisq-mid-grey-20;
+    -fx-border-color: -bisq-dark-grey-50;
     -fx-border-width: 1;
     -fx-border-radius: 6;
+    -fx-effect: none;
 }
 
 .dropdown-menu-popup .menu-item,
 .dropdown-menu-popup .menu-item:focused {
-    -fx-padding: 5;
+    -fx-padding: 10;
     -fx-background-color: transparent;
     -fx-cursor: hand;
 }

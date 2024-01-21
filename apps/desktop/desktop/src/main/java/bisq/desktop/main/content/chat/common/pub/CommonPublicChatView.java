@@ -55,8 +55,6 @@ public final class CommonPublicChatView extends ChatView<CommonPublicChatView, C
         searchBox.setMaxHeight(searchBoxHeight);
         searchBox.setPrefHeight(searchBoxHeight);
 
-        headerDropdownMenu.addMenuItems(helpButton, infoButton);
-
         HBox.setMargin(channelIcon, new Insets(0, 0, -2, 5));
         titleHBox.getChildren().addAll(channelIcon, headerTitle, searchBox, headerDropdownMenu/*, helpButton, infoButton*/);
     }

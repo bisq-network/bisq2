@@ -58,15 +58,7 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
         this.chatMessagesComponent = chatMessagesComponent;
         this.channelSidebar = channelSidebar;
 
-        headerDropdownMenu.setGraphic(ImageUtil.getImageViewById("ellipsis-v"));
-
-        ImageView helpIcon = ImageUtil.getImageViewById("icon-help");
-        helpButton.setText("Test help");
-        helpButton.setGraphic(helpIcon);
-
-        ImageView infoIcon = ImageUtil.getImageViewById("icon-info");
-        infoButton.setText("Test Info");
-        infoButton.setGraphic(infoIcon);
+        setUpHeaderDropdownMenu();
 
         configTitleHBox();
         configCenterVBox();
@@ -75,6 +67,19 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
 
         root.setFitToWidth(true);
         root.setFitToHeight(true);
+    }
+
+    private void setUpHeaderDropdownMenu() {
+        headerDropdownMenu.setGraphic(ImageUtil.getImageViewById("ellipsis-v"));
+        headerDropdownMenu.addMenuItems(helpButton, infoButton);
+
+        ImageView helpIcon = ImageUtil.getImageViewById("icon-help");
+        helpButton.setText("Test help");
+        helpButton.setGraphic(helpIcon);
+
+        ImageView infoIcon = ImageUtil.getImageViewById("icon-info");
+        infoButton.setText("Test Info");
+        infoButton.setGraphic(infoIcon);
     }
 
     protected abstract void configTitleHBox();

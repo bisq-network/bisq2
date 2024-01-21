@@ -47,8 +47,8 @@ public class DropdownMenu extends Button {
         if (!contextMenu.isShowing()) {
             contextMenu.setAnchorLocation(PopupWindow.AnchorLocation.WINDOW_TOP_RIGHT);
             Bounds bounds = this.localToScreen(this.getBoundsInLocal());
-            double x = bounds.getMaxX();
-            double y = bounds.getMaxY() - 7;
+            double x = bounds.getMaxX() - 10; // Removing padding
+            double y = bounds.getMaxY() - 3;
             contextMenu.show(this, x, y);
         } else {
             contextMenu.hide();
