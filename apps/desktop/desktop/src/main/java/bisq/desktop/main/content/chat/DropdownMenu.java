@@ -38,6 +38,7 @@ public class DropdownMenu extends Button {
         attachHideListeners();
         setOnAction(event -> toggleContextMenu());
 
+        contextMenu.getStyleClass().add("dropdown-menu-popup");
         contextMenu.setOnShowing(e -> getStyleClass().add("dropdown-menu-active"));
         contextMenu.setOnHidden(e -> getStyleClass().remove("dropdown-menu-active"));
     }
@@ -47,7 +48,7 @@ public class DropdownMenu extends Button {
             contextMenu.setAnchorLocation(PopupWindow.AnchorLocation.WINDOW_TOP_RIGHT);
             Bounds bounds = this.localToScreen(this.getBoundsInLocal());
             double x = bounds.getMaxX();
-            double y = bounds.getMaxY();
+            double y = bounds.getMaxY() - 7;
             contextMenu.show(this, x, y);
         } else {
             contextMenu.hide();
