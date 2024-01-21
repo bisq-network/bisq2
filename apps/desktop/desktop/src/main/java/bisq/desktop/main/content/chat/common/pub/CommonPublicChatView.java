@@ -19,13 +19,11 @@ package bisq.desktop.main.content.chat.common.pub;
 
 import bisq.desktop.main.content.chat.ChatModel;
 import bisq.desktop.main.content.chat.ChatView;
-import bisq.desktop.components.controls.BisqIconButton;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
 
 public final class CommonPublicChatView extends ChatView<CommonPublicChatView, CommonPublicChatModel> {
     public CommonPublicChatView(ChatModel model, CommonPublicChatController controller,
@@ -56,6 +54,6 @@ public final class CommonPublicChatView extends ChatView<CommonPublicChatView, C
         searchBox.setPrefHeight(searchBoxHeight);
 
         HBox.setMargin(channelIcon, new Insets(0, 0, -2, 5));
-        titleHBox.getChildren().addAll(channelIcon, headerTitle, searchBox, headerDropdownMenu/*, helpButton, infoButton*/);
+        titleHBox.getChildren().addAll(channelIcon, headerTitle, searchBox, headerDropdownMenu);
     }
 }
