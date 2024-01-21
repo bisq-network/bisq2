@@ -105,7 +105,7 @@ public class SellerState3b extends BaseState {
             Browser.open(url);
         }
 
-        private void onComplete() {
+        private void onSkip() {
             bisqEasyTradeService.btcConfirmed(model.getBisqEasyTrade());
         }
 
@@ -127,7 +127,7 @@ public class SellerState3b extends BaseState {
                                                 .orElse(""));
                                 model.getIsConfirmed().set(tx.getStatus().isConfirmed());
                                 if (tx.getStatus().isConfirmed()) {
-                                    onConfirmed();
+                                    onTxConfirmed();
                                 } else {
                                     model.getConfirmationState().set(Res.get("bisqEasy.tradeState.info.phase3b.balance.help.notConfirmed"));
                                     scheduler = UIScheduler.run(this::requestTx).after(20, TimeUnit.SECONDS);
@@ -140,7 +140,7 @@ public class SellerState3b extends BaseState {
                     });
         }
 
-        private void onConfirmed() {
+        private void onTxConfirmed() {
             model.getConfirmationState().set(Res.get("bisqEasy.tradeState.info.phase3b.balance.help.confirmed"));
             sendSystemMessage(Res.get("bisqEasy.tradeState.info.phase3b.systemMessage", model.getFormattedBaseAmount(), model.btcAddress));
             bisqEasyTradeService.btcConfirmed(model.getBisqEasyTrade());
@@ -163,7 +163,7 @@ public class SellerState3b extends BaseState {
     }
 
     public static class View extends BaseState.View<Model, Controller> {
-        private final Button button;
+        private final Button skipButton;
         private final MaterialTextField txId, btcBalance;
         private final WaitingAnimation waitingAnimation;
 
@@ -178,15 +178,15 @@ public class SellerState3b extends BaseState {
             btcBalance.setPromptText(Res.get("bisqEasy.tradeState.info.seller.phase3b.balance.prompt"));
             btcBalance.filterMouseEventOnNonEditableText();
 
-            button = new Button(Res.get("bisqEasy.tradeState.info.phase3b.buttonText"));
-            VBox.setMargin(button, new Insets(5, 0, 5, 0));
+            skipButton = new Button(Res.get("bisqEasy.tradeState.info.phase3b.buttonText"));
+            VBox.setMargin(skipButton, new Insets(5, 0, 5, 0));
 
             waitingAnimation = new WaitingAnimation(WaitingState.BITCOIN_CONFIRMATION);
             WrappingText headline = FormUtils.getHeadline(Res.get("bisqEasy.tradeState.info.seller.phase3b.headline"));
             WrappingText info = FormUtils.getInfo(Res.get("bisqEasy.tradeState.info.seller.phase3b.info"));
             HBox waitingInfo = createWaitingInfo(waitingAnimation, headline, info);
 
-            root.getChildren().addAll(waitingInfo, txId, btcBalance, button);
+            root.getChildren().addAll(waitingInfo, txId, btcBalance, skipButton);
         }
 
         @Override
@@ -195,11 +195,11 @@ public class SellerState3b extends BaseState {
 
             txId.setText(model.getTxId());
 
-            button.defaultButtonProperty().bind(model.isConfirmed);
+            skipButton.defaultButtonProperty().bind(model.isConfirmed);
             btcBalance.textProperty().bind(model.getBtcBalance());
             btcBalance.helpHelpProperty().bind(model.getConfirmationState());
 
-            button.setOnAction(e -> controller.onComplete());
+            skipButton.setOnAction(e -> controller.onSkip());
             txId.getIconButton().setOnAction(e -> controller.openExplorer());
 
             waitingAnimation.play();
@@ -209,11 +209,11 @@ public class SellerState3b extends BaseState {
         protected void onViewDetached() {
             super.onViewDetached();
 
-            button.defaultButtonProperty().unbind();
+            skipButton.defaultButtonProperty().unbind();
             btcBalance.textProperty().unbind();
             btcBalance.helpHelpProperty().unbind();
 
-            button.setOnAction(null);
+            skipButton.setOnAction(null);
             txId.getIconButton().setOnAction(null);
 
             waitingAnimation.stop();

@@ -60,9 +60,9 @@ public abstract class Fsm<M extends FsmModel> {
     abstract protected void configTransitions();
 
     public void handle(Event event) {
-        try {
-            checkNotNull(event, "event must not be null");
-            synchronized (this) {
+        synchronized (this) {
+            try {
+                checkNotNull(event, "event must not be null");
                 State currentState = model.getState();
                 checkNotNull(currentState, "currentState must not be null");
                 if (currentState.isFinalState()) {
@@ -112,10 +112,10 @@ public abstract class Fsm<M extends FsmModel> {
                                     !model.processedEvents.contains(eventClass))
                             .forEach(e -> model.eventQueue.add(event));
                 }
+            } catch (Exception e) {
+                log.error("Error at handling {}.", event, e);
+                handleFsmException(new FsmException(e));
             }
-        } catch (Exception e) {
-            log.error("Error at handling {}.", event, e);
-            handleFsmException(new FsmException(e));
         }
     }
 

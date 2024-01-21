@@ -131,10 +131,6 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
         this.errorStackTrace.set(peersErrorStacktrace);
     }
 
-    public ReadOnlyObservable<String> errorStackTraceObservable() {
-        return errorStackTrace;
-    }
-
     public String getErrorStackTrace() {
         return errorStackTrace.get();
     }
@@ -153,10 +149,6 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
 
     public void setPeersErrorStackTrace(String peersErrorStackTrace) {
         this.peersErrorStackTrace.set(peersErrorStackTrace);
-    }
-
-    public ReadOnlyObservable<String> peersErrorStackTraceObservable() {
-        return peersErrorStackTrace;
     }
 
     public String getPeersErrorStackTrace() {
