@@ -28,8 +28,18 @@ public class DropdownMenu extends Button {
     public DropdownMenu(String buttonText) {
         super(buttonText);
 
+        getStyleClass().add("dropdown-menu");
+
+        double size = 29;
+        setMaxSize(size, size);
+        setMinSize(size, size);
+        setPrefSize(size, size);
+
         attachHideListeners();
         setOnAction(event -> toggleContextMenu());
+
+        contextMenu.setOnShowing(e -> getStyleClass().add("dropdown-menu-active"));
+        contextMenu.setOnHidden(e -> getStyleClass().remove("dropdown-menu-active"));
     }
 
     private void toggleContextMenu() {
@@ -41,6 +51,7 @@ public class DropdownMenu extends Button {
             contextMenu.show(this, x, y);
         } else {
             contextMenu.hide();
+
         }
     }
 

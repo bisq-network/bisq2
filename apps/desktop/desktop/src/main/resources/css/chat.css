@@ -257,47 +257,27 @@
     -fx-background-color: -bisq-dark-grey-20;
 }
 
-
-.chat-combo-box > .arrow-button:hover {
-    -fx-background-color: -bisq-dark-grey-50;
-}
-
-.chat-combo-box:showing > .arrow-button {
-    -fx-background-color: -bisq-dark-grey-50;
-}
-
-.chat-combo-box .arrow {
+.dropdown-menu {
     -fx-background-color: transparent;
-    -fx-background-image: url('/images/icons/ellipsis-v-grey.png');
-    -fx-background-repeat: no-repeat;
-    -fx-background-position: center;
-    -fx-padding: 15px;
 }
 
-.chat-combo-box > .arrow-button {
-    -fx-background-radius: 6;
-    -fx-border-color: transparent;
+.dropdown-menu:hover {
+    -fx-background-color: -bisq-dark-grey-40;
 }
 
+.dropdown-menu-active {
+    -fx-background-color: -bisq-dark-grey-40;
+}
 
-.menu-button .arrow {
+.dropdown-menu > .arrow-button {
     -fx-padding: 0;
     -fx-shape: none;
 }
 
-.menu-button > .arrow-button {
-    -fx-padding: 0;
-    -fx-shape: none;
+.dropdown-menu .context-menu {
+    -fx-background-insets: 0 0 0 0;
+    -fx-background-color: -bisq-dark-grey-50;
 }
-
-.menu-button .context-menu {
-    -fx-background-insets: 5 0 0 0;
-    -fx-background-color: white, transparent;
-}
-
-
-
-
 
 /*******************************************************************************
  * Side bar                                                          *
