@@ -19,6 +19,7 @@ package bisq.desktop.main.content.chat;
 
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.NavigationView;
+import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.SearchBox;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
@@ -36,7 +37,8 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
     protected final Label channelTitle = new Label();
     protected final Label channelDescription = new Label();
     protected Label channelIcon = new Label();
-    protected Button helpButton, infoButton;
+    protected final MenuItem helpButton = new MenuItem();
+    protected final MenuItem infoButton = new MenuItem();
     protected final VBox sideBar = new VBox();
     protected final VBox centerVBox = new VBox();
     protected final HBox titleHBox = new HBox(10);
@@ -45,9 +47,7 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
     protected Pane chatUserOverviewRoot;
     protected Subscription channelIconPin, chatUserOverviewRootSubscription;
     protected final SearchBox searchBox = new SearchBox();
-//    protected final MenuButton headerDropdownMenu = new MenuButton("", ImageUtil.getImageViewById("ellipsis-v"));
-
-    protected final DropdownMenu headerDropdownMenu = new DropdownMenu("Options");
+    protected final DropdownMenu headerDropdownMenu = new DropdownMenu("");
 
     public BaseChatView(BaseChatModel model,
                         BaseChatController<?, ?> controller,
@@ -58,12 +58,20 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
         this.chatMessagesComponent = chatMessagesComponent;
         this.channelSidebar = channelSidebar;
 
-        // Add menu items
-        for (int i = 1; i <= 5; i++) {
-            headerDropdownMenu.addMenuItem("Option " + i);
-        }
+        headerDropdownMenu.setGraphic(ImageUtil.getImageViewById("ellipsis-v"));
+        double scale = 1;
 
-        headerDropdownMenu.attachHideListeners();
+        ImageView helpIcon = ImageUtil.getImageViewById("icon-help");
+        helpIcon.setScaleX(scale);
+        helpIcon.setScaleY(scale);
+        helpButton.setText("Test help");
+        helpButton.setGraphic(helpIcon);
+
+        ImageView infoIcon = ImageUtil.getImageViewById("icon-info");
+        infoIcon.setScaleX(scale);
+        infoIcon.setScaleY(scale);
+        infoButton.setText("Test Info");
+        infoButton.setGraphic(infoIcon);
 
         configTitleHBox();
         configCenterVBox();
