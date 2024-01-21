@@ -103,7 +103,7 @@ public class BisqEasyBuyerAsMakerProtocol extends BisqEasyProtocol {
         from(MAKER_SENT_TAKE_OFFER_RESPONSE)
                 .on(BisqEasyRejectTradeMessage.class)
                 .run(BisqEasyRejectTradeMessageHandler.class)
-                .to(REJECTED);
+                .to(PEER_REJECTED);
 
         // Cancel trade
         fromStates(BUYER_SENT_BTC_ADDRESS_AND_WAITING_FOR_ACCOUNT_DATA,
@@ -125,6 +125,6 @@ public class BisqEasyBuyerAsMakerProtocol extends BisqEasyProtocol {
                 BUYER_RECEIVED_BTC_SENT_CONFIRMATION)
                 .on(BisqEasyCancelTradeEvent.class)
                 .run(BisqEasyCancelTradeEventHandler.class)
-                .to(CANCELLED);
+                .to(PEER_CANCELLED);
     }
 }

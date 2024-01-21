@@ -156,7 +156,9 @@ class TradePhaseBox {
                             break;
 
                         case REJECTED:
+                        case PEER_REJECTED:
                         case CANCELLED:
+                        case PEER_CANCELLED:
                             model.getRequestMediationButtonVisible().set(false);
                             model.getReportToMediatorButtonVisible().set(true);
                             break;

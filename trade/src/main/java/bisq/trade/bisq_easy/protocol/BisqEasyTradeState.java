@@ -49,7 +49,10 @@ public enum BisqEasyTradeState implements State {
     BTC_CONFIRMED(true),
 
     REJECTED(true),
+    PEER_REJECTED(true),
+
     CANCELLED(true),
+    PEER_CANCELLED(true),
 
     FAILED(true),
     FAILED_AT_PEER(true);

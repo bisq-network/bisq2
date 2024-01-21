@@ -317,12 +317,15 @@ public class TradeStateController implements Controller {
                 break;
 
             case REJECTED:
+            case PEER_REJECTED:
                 model.getPhaseAndInfoVisible().set(false);
                 model.getTradeInterrupted().set(true);
                 model.getInterruptTradeButtonVisible().set(false);
                 applyTradeInterruptedInfo(trade, false);
                 break;
+
             case CANCELLED:
+            case PEER_CANCELLED:
                 model.getPhaseAndInfoVisible().set(false);
                 model.getTradeInterrupted().set(true);
                 model.getInterruptTradeButtonVisible().set(false);
@@ -405,7 +408,9 @@ public class TradeStateController implements Controller {
                 model.getInterruptTradeButtonVisible().set(false);
                 break;
             case REJECTED:
+            case PEER_REJECTED:
             case CANCELLED:
+            case PEER_CANCELLED:
             case FAILED:
             case FAILED_AT_PEER:
                 model.getInterruptTradeButtonVisible().set(false);
