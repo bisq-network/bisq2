@@ -46,14 +46,15 @@ public class BisqPopup extends PopupControl {
     public final void show(Node owner) {
         Bounds bounds = owner.localToScreen(owner.getBoundsInLocal());
         double anchorX = 0;
-        if (alignment == Alignment.RIGHT) {
-            setAnchorLocation(AnchorLocation.WINDOW_BOTTOM_RIGHT);
-            anchorX = bounds.getMaxX();
-        } else if (alignment == Alignment.LEFT) {
-            setAnchorLocation(AnchorLocation.WINDOW_BOTTOM_LEFT);
-            anchorX = bounds.getMinX();
-        }
-        super.show(owner, anchorX, bounds.getMinY());
+        setAnchorLocation(AnchorLocation.WINDOW_TOP_RIGHT);
+//        if (alignment == Alignment.RIGHT) {
+//            setAnchorLocation(AnchorLocation.WINDOW_BOTTOM_RIGHT);
+//            anchorX = bounds.getMaxX();
+//        } else if (alignment == Alignment.LEFT) {
+//            setAnchorLocation(AnchorLocation.WINDOW_BOTTOM_LEFT);
+//            anchorX = bounds.getMinX();
+//        }
+        super.show(owner, bounds.getMaxX(), bounds.getMaxY());
     }
 
     public enum Alignment {

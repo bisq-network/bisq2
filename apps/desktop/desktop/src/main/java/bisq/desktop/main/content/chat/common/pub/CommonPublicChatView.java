@@ -25,6 +25,7 @@ import javafx.geometry.Pos;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 
 public final class CommonPublicChatView extends ChatView<CommonPublicChatView, CommonPublicChatModel> {
     public CommonPublicChatView(ChatModel model, CommonPublicChatController controller,
@@ -63,8 +64,8 @@ public final class CommonPublicChatView extends ChatView<CommonPublicChatView, C
         infoButton.setScaleY(scale);
 
         HBox.setMargin(channelIcon, new Insets(0, 0, -2, 5));
-        HBox.setMargin(helpButton, new Insets(-2, 0, 0, 0));
-        HBox.setMargin(infoButton, new Insets(-2, 0, 0, 0));
-        titleHBox.getChildren().addAll(channelIcon, headerTitle, searchBox, helpButton, infoButton);
+//        HBox.setMargin(helpButton, new Insets(-2, 0, 0, 0));
+//        HBox.setMargin(infoButton, new Insets(-2, 0, 0, 0));
+        titleHBox.getChildren().addAll(channelIcon, headerTitle, searchBox, headerDropdownMenu/*, helpButton, infoButton*/);
     }
 }

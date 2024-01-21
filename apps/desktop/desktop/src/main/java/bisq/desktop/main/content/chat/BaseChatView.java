@@ -20,9 +20,7 @@ package bisq.desktop.main.content.chat;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.NavigationView;
 import bisq.desktop.components.controls.SearchBox;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
+import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -47,6 +45,9 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
     protected Pane chatUserOverviewRoot;
     protected Subscription channelIconPin, chatUserOverviewRootSubscription;
     protected final SearchBox searchBox = new SearchBox();
+//    protected final MenuButton headerDropdownMenu = new MenuButton("", ImageUtil.getImageViewById("ellipsis-v"));
+
+    protected final DropdownMenu headerDropdownMenu = new DropdownMenu("Options");
 
     public BaseChatView(BaseChatModel model,
                         BaseChatController<?, ?> controller,
@@ -56,6 +57,13 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
 
         this.chatMessagesComponent = chatMessagesComponent;
         this.channelSidebar = channelSidebar;
+
+        // Add menu items
+        for (int i = 1; i <= 5; i++) {
+            headerDropdownMenu.addMenuItem("Option " + i);
+        }
+
+        headerDropdownMenu.attachHideListeners();
 
         configTitleHBox();
         configCenterVBox();
