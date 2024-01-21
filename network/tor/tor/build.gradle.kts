@@ -19,10 +19,13 @@ sourceSets {
 dependencies {
     implementation(project(":tor-common"))
 
+    implementation("bisq:security")
+
     implementation("network:network-common")
     implementation("network:network-identity")
     implementation("network:socks5-socket-channel")
 
+    implementation(libs.bouncycastle)
     implementation(libs.failsafe)
     implementation(libs.tukaani)
     implementation(libs.typesafe.config)
