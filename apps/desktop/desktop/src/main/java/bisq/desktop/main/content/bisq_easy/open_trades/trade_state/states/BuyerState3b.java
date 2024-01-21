@@ -134,7 +134,6 @@ public class BuyerState3b extends BaseState {
                                 }
                             } else {
                                 model.getConfirmationState().set(Res.get("bisqEasy.tradeState.info.phase3b.txId.failed"));
-                                log.warn("Transaction lookup failed", throwable);
                             }
                         });
                     });

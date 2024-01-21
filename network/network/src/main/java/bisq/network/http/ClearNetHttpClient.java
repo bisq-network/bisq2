@@ -19,6 +19,7 @@ package bisq.network.http;
 
 import bisq.common.data.Pair;
 import bisq.common.threading.ExecutorFactory;
+import bisq.common.util.ExceptionUtil;
 import bisq.common.util.StringUtils;
 import bisq.network.http.utils.HttpException;
 import bisq.network.http.utils.HttpMethod;
@@ -143,10 +144,9 @@ public class ClearNetHttpClient extends BaseHttpClient {
                         param);
                 throw new HttpException("Request failed", responseCode);
             }
-        } catch (Throwable t) {
-            String message = "Error at requestWithoutProxy with url " + baseUrl + " and param " + param +
-                    ". Throwable=" + t.getMessage();
-            throw new IOException(message, t);
+        } catch (Exception e) {
+            String message = "Request to " + baseUrl + param + " failed with error: " + ExceptionUtil.getMessageOrToString(e);
+            throw new IOException(message, e);
         } finally {
             try {
                 if (connection != null) {
