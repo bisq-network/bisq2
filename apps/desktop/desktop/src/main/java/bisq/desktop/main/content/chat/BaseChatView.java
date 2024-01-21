@@ -21,6 +21,7 @@ import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.NavigationView;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.SearchBox;
+import bisq.i18n.Res;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
@@ -74,11 +75,11 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
         headerDropdownMenu.addMenuItems(helpButton, infoButton);
 
         ImageView helpIcon = ImageUtil.getImageViewById("icon-help");
-        helpButton.setText("Test help");
+        helpButton.setText(Res.get("chat.dropDownMenu.chatRules"));
         helpButton.setGraphic(helpIcon);
 
         ImageView infoIcon = ImageUtil.getImageViewById("icon-info");
-        infoButton.setText("Test Info");
+        infoButton.setText(Res.get("chat.dropDownMenu.channelInfo"));
         infoButton.setGraphic(infoIcon);
     }
 

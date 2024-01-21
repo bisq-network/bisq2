@@ -276,7 +276,7 @@
 .dropdown-menu-popup {
     -fx-background-color: -bisq-dark-grey-40;
     -fx-background-radius: 6;
-    -fx-padding: 10 5 10 5;
+    -fx-padding: 8 3 8 3;
     -fx-border-color: -bisq-dark-grey-50;
     -fx-border-width: 1;
     -fx-border-radius: 6;
@@ -290,6 +290,10 @@
     -fx-cursor: hand;
 }
 
+.dropdown-menu-popup .menu-item .label {
+    -fx-padding: 0 0 0 5;
+}
+
 .dropdown-menu-popup .menu-item > .label,
 .dropdown-menu-popup .menu-item:focused > .label {
     -fx-font-size: 1em;
@@ -299,6 +303,10 @@
 
 .dropdown-menu-popup .menu-item:hover {
     -fx-background-color: -bisq-dark-grey-20;
+}
+
+.dropdown-menu-popup .menu-item:hover > .label {
+    -fx-text-fill: -fx-light-text-color;
 }
 
 /*******************************************************************************
