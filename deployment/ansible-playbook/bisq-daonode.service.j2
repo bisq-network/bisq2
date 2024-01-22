@@ -3,6 +3,7 @@ Description=Bisq 1 - DAO Node
 Documentation=https://github.com/bisq-network/bisq-daonode
 
 [Service]
+Type=exec
 ExecStart=/usr/lib/jvm/java-11-openjdk-amd64/bin/java -Xms2000M -Xmx5000M \
         -jar /home/user/bisq-daonode/build/libs/bisq-daonode-1.9.14-SNAPSHOT-all.jar \
         --appName=daonode \
