@@ -37,6 +37,10 @@ public class StringUtils {
     }
 
     public static String truncate(String value, int maxLength) {
+        if (value == null) {
+            log.warn("value at truncate is null");
+            return "";
+        }
         if (maxLength > 3 && value.length() > maxLength) {
             return value.substring(0, maxLength - 3) + "...";
         } else {

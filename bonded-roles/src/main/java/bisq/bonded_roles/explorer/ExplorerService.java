@@ -21,6 +21,7 @@ import bisq.bonded_roles.explorer.dto.Tx;
 import bisq.common.data.Pair;
 import bisq.common.observable.Observable;
 import bisq.common.threading.ExecutorFactory;
+import bisq.common.util.ExceptionUtil;
 import bisq.common.util.Version;
 import bisq.network.NetworkService;
 import bisq.network.common.TransportType;
@@ -156,8 +157,7 @@ public class ExplorerService {
                 return new ObjectMapper().readValue(json, Tx.class);
             } catch (IOException e) {
                 if (!shutdownStarted) {
-                    String url = httpClient.getBaseUrl() + param;
-                    log.info("Requesting tx from {} failed.", url, e);
+                    log.warn(ExceptionUtil.getMessageOrToString(e));
                 }
                 throw new RuntimeException(e);
             }

@@ -39,27 +39,33 @@ public class BisqEasyProtocolExceptionHandler extends SendTradeMessageHandler<Bi
 
     @Override
     public void handle(Event event) {
-        TradeProtocolException tradeProtocolException = (TradeProtocolException) event;
-        commitToModel(ExceptionUtil.getRootCauseMessage(tradeProtocolException),
-                ExceptionUtil.getStackTraceAsString(tradeProtocolException));
+        // We wrap in a try catch to avoid a potentially recursive error handling
+        try {
+            TradeProtocolException tradeProtocolException = (TradeProtocolException) event;
+            commitToModel(ExceptionUtil.getRootCauseMessage(tradeProtocolException),
+                    ExceptionUtil.getStackTraceAsString(tradeProtocolException));
 
-        // We do not send the error message to the peer as there is risk that private data could be leaked.
-        // Instead, we send the stack of causes as error message.
-        // We might send more meaningful error messages in the future.
-        String errorMessage = truncate(ExceptionUtil.getCauseStackClassNames(tradeProtocolException), MAX_LENGTH_ERROR_MESSAGE);
-        String stackTrace = truncate(ExceptionUtil.getSafeStackTraceAsString(tradeProtocolException), MAX_LENGTH_STACKTRACE);
-        log.warn("We send the cause stack and stackTrace to our peer.\n" +
-                "errorMessage={}\nstackTrace={}", errorMessage, stackTrace);
-        sendMessage(new BisqEasyReportErrorMessage(createUid(),
-                trade.getId(),
-                trade.getMyIdentity().getNetworkId(),
-                trade.getPeer().getNetworkId(),
-                errorMessage,
-                stackTrace));
+            // We do not send the error message to the peer as there is risk that private data could be leaked.
+            // Instead, we send the stack of causes as error message.
+            // We might send more meaningful error messages in the future.
+            String errorMessage = truncate(ExceptionUtil.getCauseStackClassNames(tradeProtocolException), MAX_LENGTH_ERROR_MESSAGE);
+            String stackTrace = truncate(ExceptionUtil.getSafeStackTraceAsString(tradeProtocolException), MAX_LENGTH_STACKTRACE);
+            log.warn("We send the cause stack and stackTrace to our peer.\n" +
+                    "errorMessage={}\nstackTrace={}", errorMessage, stackTrace);
+            sendMessage(new BisqEasyReportErrorMessage(createUid(),
+                    trade.getId(),
+                    trade.getMyIdentity().getNetworkId(),
+                    trade.getPeer().getNetworkId(),
+                    errorMessage,
+                    stackTrace));
+        } catch (Exception e) {
+            log.error("Handling of {} failed.", event, e);
+        }
     }
 
     private void commitToModel(String errorMessage, String errorStackTrace) {
-        trade.setErrorMessage(errorMessage);
+        // Set errorStackTrace first as we use errorMessage observable in the handler code accessing both fields
         trade.setErrorStackTrace(errorStackTrace);
+        trade.setErrorMessage(errorMessage);
     }
 }

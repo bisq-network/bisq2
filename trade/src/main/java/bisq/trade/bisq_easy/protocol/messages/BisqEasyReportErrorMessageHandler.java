@@ -46,7 +46,8 @@ public class BisqEasyReportErrorMessageHandler extends TradeMessageHandler<BisqE
     }
 
     private void commitToModel(BisqEasyReportErrorMessage message) {
-        trade.setPeersErrorMessage(message.getErrorMessage());
+        // Set peersErrorStackTrace first as we use peersErrorMessage observable in the handler code accessing both fields
         trade.setPeersErrorStackTrace(message.getStackTrace());
+        trade.setPeersErrorMessage(message.getErrorMessage());
     }
 }

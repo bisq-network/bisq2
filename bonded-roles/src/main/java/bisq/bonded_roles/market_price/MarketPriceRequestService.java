@@ -26,6 +26,7 @@ import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.CollectionUtil;
+import bisq.common.util.ExceptionUtil;
 import bisq.common.util.MathUtils;
 import bisq.common.util.Version;
 import bisq.network.NetworkService;
@@ -193,7 +194,7 @@ public class MarketPriceRequestService {
                 marketPriceByCurrencyMap.putAll(filtered);
             } catch (IOException e) {
                 if (!shutdownStarted) {
-                    log.warn("Request to market price provider {} failed.", httpClient.getBaseUrl(), e);
+                    log.warn("Request to market price provider {} failed: {}", httpClient.getBaseUrl(), ExceptionUtil.getMessageOrToString(e));
                 }
                 throw new RuntimeException(e);
             }
