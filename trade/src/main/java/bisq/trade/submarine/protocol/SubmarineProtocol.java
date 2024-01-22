@@ -39,4 +39,8 @@ public abstract class SubmarineProtocol extends TradeProtocol<SubmarineTrade> {
             throw new RuntimeException(e);
         }
     }
+
+    @Override
+    protected void configErrorHandling() {
+    }
 }
