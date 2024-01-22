@@ -17,7 +17,9 @@
 
 package bisq.trade.bisq_easy.protocol;
 
+import bisq.common.fsm.Event;
 import bisq.common.fsm.EventHandler;
+import bisq.common.fsm.FsmException;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.protocol.TradeProtocol;
@@ -37,6 +39,20 @@ public abstract class BisqEasyProtocol extends TradeProtocol<BisqEasyTrade> {
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException |
                  NoSuchMethodException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void handle(Event event) {
+        try {
+            handle(event);
+        } catch (FsmException fsmException) {
+            // We swallow the exception as we handle exceptions as an error state.
+            // The client need to listen for that state for error handling.
+            // In case we get the error from the network message throwing the exception to the caller
+            // (network layer) would not make sense. As we do not want to distinguish at the client if the error came
+            // from a message or from a user event we prefer to use the same mechanism for both sources and
+            // therefor do not throw an exception either.
         }
     }
 }

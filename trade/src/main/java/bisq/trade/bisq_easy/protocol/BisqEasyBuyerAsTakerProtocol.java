@@ -17,8 +17,8 @@
 
 package bisq.trade.bisq_easy.protocol;
 
+import bisq.common.fsm.FsmErrorEvent;
 import bisq.trade.ServiceProvider;
-import bisq.trade.TradeProtocolException;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.protocol.events.*;
 import bisq.trade.bisq_easy.protocol.messages.*;
@@ -34,8 +34,8 @@ public class BisqEasyBuyerAsTakerProtocol extends BisqEasyProtocol {
     @Override
     protected void configErrorHandling() {
         fromAny()
-                .on(TradeProtocolException.class)
-                .run(BisqEasyProtocolExceptionHandler.class)
+                .on(FsmErrorEvent.class)
+                .run(BisqEasyFsmErrorEventHandler.class)
                 .to(FAILED);
 
         fromAny()

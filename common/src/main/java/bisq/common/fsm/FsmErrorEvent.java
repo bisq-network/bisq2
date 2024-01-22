@@ -15,12 +15,19 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade;
+package bisq.common.fsm;
 
-import bisq.common.fsm.FsmException;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
-public class TradeProtocolException extends FsmException {
-    public TradeProtocolException(FsmException e) {
-        super(e);
+@ToString
+@Getter
+@EqualsAndHashCode
+public class FsmErrorEvent implements Event {
+    private final FsmException fsmException;
+
+    public FsmErrorEvent(FsmException fsmException) {
+        this.fsmException = fsmException;
     }
 }

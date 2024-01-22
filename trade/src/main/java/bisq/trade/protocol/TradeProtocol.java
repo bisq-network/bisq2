@@ -18,10 +18,8 @@
 package bisq.trade.protocol;
 
 import bisq.common.fsm.Fsm;
-import bisq.common.fsm.FsmException;
 import bisq.trade.ServiceProvider;
 import bisq.trade.Trade;
-import bisq.trade.TradeProtocolException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -36,10 +34,5 @@ public abstract class TradeProtocol<M extends Trade<?, ?, ?>> extends Fsm<M> {
         super(model);
 
         this.serviceProvider = serviceProvider;
-    }
-
-    @Override
-    protected void handleFsmException(FsmException fsmException) {
-        handle(new TradeProtocolException(fsmException));
     }
 }

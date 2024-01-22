@@ -51,11 +51,7 @@ public abstract class Fsm<M extends FsmModel> {
         configTransitions();
     }
 
-    protected void configErrorHandling() {
-        fromAny()
-                .on(FsmException.class)
-                .to(State.FsmState.ERROR);
-    }
+    abstract protected void configErrorHandling();
 
     abstract protected void configTransitions();
 
@@ -77,7 +73,8 @@ public abstract class Fsm<M extends FsmModel> {
                 if (transition.isPresent()) {
                     State targetState = transition.get().getTargetState();
                     checkArgument(targetState.getOrdinal() > currentState.getOrdinal(),
-                            "The target state ordinal must be higher than the current state ordinal");
+                            "The target state ordinal must be higher than the current state ordinal. " +
+                                    "currentState=%s, targetState=%s", currentState, targetState);
                     Optional<Class<? extends EventHandler>> eventHandlerClass = transition.get().getEventHandlerClass();
                     if (eventHandlerClass.isPresent()) {
                         EventHandler eventHandler = newEventHandlerFromClass(eventHandlerClass.get());
@@ -112,9 +109,17 @@ public abstract class Fsm<M extends FsmModel> {
                                     !model.processedEvents.contains(eventClass))
                             .forEach(e -> model.eventQueue.add(event));
                 }
-            } catch (Exception e) {
-                log.error("Error at handling {}.", event, e);
-                handleFsmException(new FsmException(e));
+            } catch (Exception exception) {
+                log.error("Error at handling {}.", event, exception);
+                FsmException fsmException = new FsmException(exception, event);
+                // In case of an exception we fire the FsmErrorEvent to trigger an error state.
+                // We apply that only if the event which triggered the exception was not the FsmErrorEvent itself
+                // to avoid potential recursive calls if the error handling code causes a follow-up exception.
+                if (!(fsmException.getEvent() instanceof FsmErrorEvent)) {
+                    handle(new FsmErrorEvent(fsmException));
+                }
+                // We throw the exception and leave further error handling to the concrete Fsm implementation.
+                throw fsmException;
             }
         }
     }
@@ -142,8 +147,6 @@ public abstract class Fsm<M extends FsmModel> {
 
     abstract protected EventHandler newEventHandlerFromClass(Class<? extends EventHandler> handlerClass)
             throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException;
-
-    abstract protected void handleFsmException(FsmException fsmException);
 
     private Set<Map.Entry<Pair<State, Class<? extends Event>>, Transition>> findTransitionMapEntriesForEvent(Class<? extends Event> eventClass) {
         return transitionMap.entrySet().stream()
