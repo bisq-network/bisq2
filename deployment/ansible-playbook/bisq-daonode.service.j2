@@ -17,6 +17,7 @@ ExecStart=/usr/lib/jvm/java-11-openjdk-amd64/bin/java -Xms2000M -Xmx5000M \
 Restart=always
 User=user
 Group=user
+ProtectSystem=strict
 
 [Install]
 WantedBy=multi-user.target
