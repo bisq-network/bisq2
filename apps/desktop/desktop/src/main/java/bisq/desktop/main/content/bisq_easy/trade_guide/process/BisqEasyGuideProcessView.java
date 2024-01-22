@@ -47,6 +47,7 @@ public class BisqEasyGuideProcessView extends View<VBox, BisqEasyGuideProcessMod
         content.setWrapText(true);
         content.getStyleClass().add("bisq-easy-trade-guide-content");
         OrderedList rules = new OrderedList(Res.get("bisqEasy.tradeGuide.process.steps"), "bisq-easy-trade-guide-content");
+        rules.setSpacing(15);
 
         backButton = new Button(Res.get("action.back"));
 
