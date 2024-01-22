@@ -57,7 +57,7 @@ public class ConnectionHandshakeResponderTest {
 
     public ConnectionHandshakeResponderTest() throws IOException {
         supportedTransportTypes.add(TransportType.CLEAR);
-        this.responderCapability = new Capability(Address.localHost(1234), supportedTransportTypes);
+        this.responderCapability = new Capability(Address.localHost(1234), supportedTransportTypes, new ArrayList<>());
         this.authorizationService = createAuthorizationService();
         this.handshakeResponder = new ConnectionHandshakeResponder(
                 banList,
@@ -163,7 +163,7 @@ public class ConnectionHandshakeResponderTest {
 
     @Test
     void correctPoW() throws IOException {
-        Capability peerCapability = new Capability(Address.localHost(2345), supportedTransportTypes);
+        Capability peerCapability = new Capability(Address.localHost(2345), supportedTransportTypes, new ArrayList<>());
         ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, Optional.empty(), new NetworkLoad(), 0);
         AuthorizationToken token = authorizationService.createToken(request,
                 new NetworkLoad(),
@@ -181,7 +181,7 @@ public class ConnectionHandshakeResponderTest {
     }
 
     private NetworkEnvelope createValidRequest() {
-        Capability peerCapability = new Capability(Address.localHost(2345), supportedTransportTypes);
+        Capability peerCapability = new Capability(Address.localHost(2345), supportedTransportTypes, new ArrayList<>());
         ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, Optional.empty(), new NetworkLoad(), 0);
         AuthorizationToken token = authorizationService.createToken(request,
                 new NetworkLoad(),

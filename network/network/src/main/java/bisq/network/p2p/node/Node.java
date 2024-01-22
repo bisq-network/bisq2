@@ -105,17 +105,20 @@ public class Node implements Connection.Handler {
     public static final class Config {
         private final TransportType transportType;
         private final Set<TransportType> supportedTransportTypes;
+        private final Set<Feature> features;
         private final TransportConfig transportConfig;
         private final int defaultNodeSocketTimeout;
         private final int userNodeSocketTimeout;
 
         public Config(TransportType transportType,
                       Set<TransportType> supportedTransportTypes,
+                      Set<Feature> features,
                       TransportConfig transportConfig,
                       int defaultNodeSocketTimeout,
                       int userNodeSocketTimeout) {
             this.transportType = transportType;
             this.supportedTransportTypes = supportedTransportTypes;
+            this.features = features;
             this.transportConfig = transportConfig;
             this.defaultNodeSocketTimeout = defaultNodeSocketTimeout;
             this.userNodeSocketTimeout = userNodeSocketTimeout;
@@ -127,6 +130,7 @@ public class Node implements Connection.Handler {
     private final AuthorizationService authorizationService;
     private final int socketTimeout;
     private final Set<TransportType> supportedTransportTypes;
+    private final Set<Feature> features;
     @Getter
     private final boolean isDefaultNode;
     @EqualsAndHashCode.Include
@@ -166,6 +170,7 @@ public class Node implements Connection.Handler {
         this.isDefaultNode = isDefaultNode;
         transportType = config.getTransportType();
         supportedTransportTypes = config.getSupportedTransportTypes();
+        features = config.getFeatures();
         socketTimeout = isDefaultNode ? config.getDefaultNodeSocketTimeout() : config.getUserNodeSocketTimeout();
         this.banList = banList;
         this.transportService = transportService;
@@ -225,7 +230,7 @@ public class Node implements Connection.Handler {
 
     private void createServerAndListen() {
         ServerSocketResult serverSocketResult = transportService.getServerSocket(networkId, keyBundle);
-        myCapability = Optional.of(new Capability(serverSocketResult.getAddress(), new ArrayList<>(supportedTransportTypes)));
+        myCapability = Optional.of(new Capability(serverSocketResult.getAddress(), new ArrayList<>(supportedTransportTypes), new ArrayList<>(features)));
         server = Optional.of(new Server(serverSocketResult,
                 socket -> onClientSocket(socket, serverSocketResult, myCapability.get()),
                 exception -> {

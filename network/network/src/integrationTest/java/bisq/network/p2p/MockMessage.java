@@ -46,4 +46,9 @@ public class MockMessage implements EnvelopePayloadMessage {
     public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
         return null;
     }
+
+    @Override
+    public void verify() {
+
+    }
 }

@@ -22,6 +22,7 @@ import bisq.network.common.Address;
 import bisq.network.common.TransportConfig;
 import bisq.network.common.TransportType;
 import bisq.network.p2p.ServiceNode;
+import bisq.network.p2p.node.Feature;
 import bisq.network.p2p.node.transport.ClearNetTransportService;
 import bisq.network.p2p.node.transport.I2PTransportService;
 import bisq.network.p2p.services.data.inventory.InventoryService;
@@ -51,6 +52,8 @@ public final class NetworkServiceConfig {
                 .collect(toMap(supportedTransportType -> supportedTransportType,
                         supportedTransportType -> getSeedAddresses(supportedTransportType, seedConfig)));
 
+        Set<Feature> features = new HashSet<>(config.getEnumList(Feature.class, "features"));
+
         PeerGroupService.Config peerGroupConfig = PeerGroupService.Config.from(config.getConfig("peerGroup"));
         PeerExchangeStrategy.Config peerExchangeStrategyConfig = PeerExchangeStrategy.Config.from(config.getConfig("peerExchangeStrategy"));
         KeepAliveService.Config keepAliveServiceConfig = KeepAliveService.Config.from(config.getConfig("keepAlive"));
@@ -76,6 +79,7 @@ public final class NetworkServiceConfig {
         return new NetworkServiceConfig(baseDir.toAbsolutePath().toString(),
                 config.getInt("version"),
                 supportedTransportTypes,
+                features,
                 configByTransportType,
                 serviceNodeConfig,
                 inventoryServiceConfig,
@@ -169,6 +173,7 @@ public final class NetworkServiceConfig {
     private final String baseDir;
     private final int version;
     private final Set<TransportType> supportedTransportTypes;
+    private final Set<Feature> features;
     private final InventoryService.Config inventoryServiceConfig;
     private final Map<TransportType, TransportConfig> configByTransportType;
     private final ServiceNode.Config serviceNodeConfig;
@@ -180,6 +185,7 @@ public final class NetworkServiceConfig {
     public NetworkServiceConfig(String baseDir,
                                 int version,
                                 Set<TransportType> supportedTransportTypes,
+                                Set<Feature> features,
                                 Map<TransportType, TransportConfig> configByTransportType,
                                 ServiceNode.Config serviceNodeConfig,
                                 InventoryService.Config inventoryServiceConfig,
@@ -190,6 +196,7 @@ public final class NetworkServiceConfig {
         this.baseDir = baseDir;
         this.version = version;
         this.supportedTransportTypes = supportedTransportTypes;
+        this.features = features;
         this.inventoryServiceConfig = inventoryServiceConfig;
         this.configByTransportType = filterMap(supportedTransportTypes, configByTransportType);
         this.serviceNodeConfig = serviceNodeConfig;

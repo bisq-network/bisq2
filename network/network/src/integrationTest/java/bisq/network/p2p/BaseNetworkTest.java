@@ -23,6 +23,7 @@ import bisq.network.common.TransportType;
 import bisq.network.p2p.node.Node;
 
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -34,6 +35,7 @@ public abstract class BaseNetworkTest {
     protected Node.Config getConfig(TransportType transportType, Set<TransportType> supportedTransportTypes) {
         return new Node.Config(transportType,
                 supportedTransportTypes,
+                new HashSet<>(),
                 getTransportConfig(getBaseDir()),
                 (int) TimeUnit.SECONDS.toMillis(120),
                 (int) TimeUnit.SECONDS.toMillis(120));

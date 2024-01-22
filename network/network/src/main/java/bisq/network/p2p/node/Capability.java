@@ -37,12 +37,16 @@ import static com.google.common.base.Preconditions.checkArgument;
 public final class Capability implements NetworkProto {
     private final Address address;
     private final List<TransportType> supportedTransportTypes;
+    private final List<Feature> features;
 
-    public Capability(Address address, List<TransportType> supportedTransportTypes) {
+    public Capability(Address address, List<TransportType> supportedTransportTypes, List<Feature> features) {
         this.address = address;
         this.supportedTransportTypes = supportedTransportTypes;
+        this.features = features;
+
         // We need to sort deterministically as the data is used in the proof of work check
         Collections.sort(this.supportedTransportTypes);
+        Collections.sort(this.features);
 
         verify();
     }
@@ -50,6 +54,7 @@ public final class Capability implements NetworkProto {
     @Override
     public void verify() {
         checkArgument(supportedTransportTypes.size() <= TransportType.values().length);
+        checkArgument(features.size() <= Feature.values().length);
     }
 
     @Override
@@ -59,6 +64,9 @@ public final class Capability implements NetworkProto {
                 .addAllSupportedTransportTypes(supportedTransportTypes.stream()
                         .map(Enum::name)
                         .collect(Collectors.toList()))
+                .addAllFeatures(features.stream()
+                        .map(Feature::toProto)
+                        .collect(Collectors.toList()))
                 .build();
     }
 
@@ -66,6 +74,11 @@ public final class Capability implements NetworkProto {
         List<TransportType> supportedTransportTypes = proto.getSupportedTransportTypesList().stream()
                 .map(e -> ProtobufUtils.enumFromProto(TransportType.class, e))
                 .collect(Collectors.toList());
-        return new Capability(Address.fromProto(proto.getAddress()), supportedTransportTypes);
+        List<Feature> features = proto.getFeaturesList().stream()
+                .map(Feature::fromProto)
+                .collect(Collectors.toList());
+        return new Capability(Address.fromProto(proto.getAddress()),
+                supportedTransportTypes,
+                features);
     }
 }
