@@ -120,12 +120,12 @@
 }
 
 .scroll-bar > .thumb {
-    -fx-background-color: -bisq-mid-grey-20;
+    -fx-background-color: -bisq-mid-grey-10;
 }
 
 .scroll-bar > .increment-button,
 .scroll-bar > .decrement-button {
-    -fx-background-color: -bisq-mid-grey-20;
+    -fx-background-color: -bisq-mid-grey-10;
 }
 
 
@@ -269,8 +269,8 @@
 
 /* disabled */
 .table-view .table-row-cell:disabled .table-cell .text {
-    -fx-text-fill: -bisq-mid-grey-20;
-    -fx-fill: -bisq-mid-grey-20;
+    -fx-text-fill: -bisq-mid-grey-10;
+    -fx-fill: -bisq-mid-grey-10;
 }
 
 
@@ -370,13 +370,13 @@
 }
 
 .titled-pane > .title > .arrow-button > .arrow {
-    -fx-background-color: -bisq-white-20;
+    -fx-background-color: -bisq-white;
     -fx-background-insets: 2.5;
     -fx-shape: "M 0 0 h 7 l -3.5 4 z";
 }
 
 .titled-pane:focused > .title > .arrow-button > .arrow {
-    -fx-background-color: -bisq-white-20;
+    -fx-background-color: -bisq-white;
     -fx-effect: null;
 }
 
@@ -496,7 +496,7 @@
 }
 
 .tab-view-line {
-    -fx-background-color: -bisq-mid-grey-20;
+    -fx-background-color: -bisq-mid-grey-10;
 }
 
 .tab-view-selection {
@@ -533,7 +533,7 @@
 }
 
 .bisq-mid-grey {
-    -fx-background-color: -bisq-mid-grey-20;
+    -fx-background-color: -bisq-mid-grey-10;
 }
 
 .bisq-green-line {
@@ -541,7 +541,7 @@
 }
 
 .bisq-white-bg {
-    -fx-background-color: -bisq-white-20;
+    -fx-background-color: -bisq-white;
 }
 
 .bisq-content-bg {
@@ -553,7 +553,7 @@
     -fx-background-radius: 0 8 8 0;
     -fx-border-radius: 0;
     -fx-border-width: 0 0 0 3;
-    -fx-border-color: -bisq-mid-grey-30;
+    -fx-border-color: -bisq-mid-grey-20;
     -fx-padding: 10 10 10 15;
 }
 
@@ -562,7 +562,7 @@
     -fx-background-radius: 0 8 8 0;
     -fx-border-radius: 0;
     -fx-border-width: 0 0 0 3;
-    -fx-border-color: -bisq-mid-grey-30;
+    -fx-border-color: -bisq-mid-grey-20;
     -fx-padding: 10 10 10 15;
 }
 
@@ -634,11 +634,11 @@
 }
 
 .overlay-headline-warning {
-    -fx-text-fill: -bisq-warning;
+    -fx-text-fill: -bisq2-yellow;
 }
 
 .overlay-headline-error {
-    -fx-text-fill: -bisq-red;
+    -fx-text-fill: -bisq2-red;
 }
 
 .overlay-icon-information {
@@ -646,11 +646,11 @@
 }
 
 .overlay-icon-warning {
-    -fx-text-fill: -bisq-warning;
+    -fx-text-fill: -bisq2-yellow;
 }
 
 .overlay-icon-error {
-    -fx-text-fill: -bisq-red;
+    -fx-text-fill: -bisq2-red;
 }
 
 .overlay-message {

@@ -17,7 +17,7 @@
 .splash-bootstrap-details {
     -fx-font-size: 1em;
     -fx-font-family: "IBM Plex Sans Light";
-    -fx-text-fill: -bisq-mid-grey-30;
+    -fx-text-fill: -bisq-mid-grey-20;
 }
 
 .splash-bootstrap-progress {
@@ -130,7 +130,7 @@
 }
 
 .notification-box {
-    -fx-background-color: -bisq-yellow;
+    -fx-background-color: -bisq2-yellow;
     -fx-background-radius: 8;
     -fx-border-color: transparent;
 }
@@ -144,14 +144,14 @@
 
 .notification-hyperlink,
 .notification-hyperlink:visited {
-    -fx-text-fill: -bisq-black-20;
+    -fx-text-fill: -bisq-black-lit;
     -fx-font-size: 1.15em;
     -fx-font-family: "IBM Plex Sans";
 }
 
 .notification-hyperlink:hover,
 .notification-hyperlink:visited:hover {
-    -fx-text-fill: -bisq-white-10;
+    -fx-text-fill: -bisq-white-dim;
 }
 .notification-hyperlink:visited,
 .notification-hyperlink:armed:visited,
@@ -188,7 +188,7 @@
  ******************************************************************************/
 
 .video-bg {
-    -fx-background-color: -bisq-black-10;
+    -fx-background-color: -bisq-black;
 }
 
 .video-control-bg {

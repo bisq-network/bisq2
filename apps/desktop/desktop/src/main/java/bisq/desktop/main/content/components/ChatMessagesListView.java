@@ -1218,7 +1218,7 @@ public class ChatMessagesListView {
                                     quotedMessageField.setStyle("-fx-fill: -fx-mid-text-color");
                                     Label userName = new Label(controller.getUserName(citation.getAuthorUserProfileId()));
                                     userName.getStyleClass().add("font-medium");
-                                    userName.setStyle("-fx-text-fill: -bisq-mid-grey-40");
+                                    userName.setStyle("-fx-text-fill: -bisq-mid-grey-30");
                                     quotedMessageVBox.getChildren().setAll(userName, quotedMessageField);
                                 }
                             } else {
@@ -1356,7 +1356,7 @@ public class ChatMessagesListView {
                                         messageDeliveryStatusTooltip.set(Res.get("chat.message.deliveryState." + status.name()));
                                         switch (status) {
                                             case CONNECTING:
-                                                // -bisq-mid-grey-30: #808080;
+                                                // -bisq-mid-grey-20: #808080;
                                                 messageDeliveryStatusIconColor = Optional.of("#808080");
                                                 messageDeliveryStatusIcon.set(AwesomeIcon.SPINNER);
                                                 break;
@@ -1366,27 +1366,27 @@ public class ChatMessagesListView {
                                                 messageDeliveryStatusIcon.set(AwesomeIcon.CIRCLE_ARROW_RIGHT);
                                                 break;
                                             case ACK_RECEIVED:
-                                                // -bisq2-green-dim-50: #2b5624;
-                                                messageDeliveryStatusIconColor = Optional.of("#2b5624");
+                                                // -bisq2-green-dim-50: #2b5724;
+                                                messageDeliveryStatusIconColor = Optional.of("#2b5724");
                                                 messageDeliveryStatusIcon.set(AwesomeIcon.OK_SIGN);
                                                 break;
                                             case TRY_ADD_TO_MAILBOX:
-                                                // -bisq-yellow: #e5a500;
-                                                messageDeliveryStatusIconColor = Optional.of("#e5a500");
+                                                // -bisq2-yellow: #d0831f;
+                                                messageDeliveryStatusIconColor = Optional.of("#d0831f");
                                                 messageDeliveryStatusIcon.set(AwesomeIcon.SHARE_SIGN);
                                                 break;
                                             case ADDED_TO_MAILBOX:
-                                                // -bisq-yellow: #e5a500;
-                                                messageDeliveryStatusIconColor = Optional.of("#e5a500");
+                                                // -bisq2-yellow: #d0831f;
+                                                messageDeliveryStatusIconColor = Optional.of("#d0831f");
                                                 messageDeliveryStatusIcon.set(AwesomeIcon.CLOUD_UPLOAD);
                                                 break;
                                             case MAILBOX_MSG_RECEIVED:
-                                                // -bisq2-green-dim-50: #2b5624;
-                                                messageDeliveryStatusIconColor = Optional.of("#2b5624");
+                                                // -bisq2-green-dim-50: #2b5724;
+                                                messageDeliveryStatusIconColor = Optional.of("#2b5724");
                                                 messageDeliveryStatusIcon.set(AwesomeIcon.CLOUD_DOWNLOAD);
                                                 break;
                                             case FAILED:
-                                                // -bisq-red: #d02c1f;
+                                                // -bisq2-red: #d02c1f;
                                                 messageDeliveryStatusIconColor = Optional.of("#d02c1f");
                                                 messageDeliveryStatusIcon.set(AwesomeIcon.EXCLAMATION_SIGN);
                                                 break;

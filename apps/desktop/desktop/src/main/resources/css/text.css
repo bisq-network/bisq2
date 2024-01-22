@@ -137,8 +137,8 @@
 }
 
 .bisq-text-2 {
-    -fx-fill: -bisq-mid-grey-30;
-    -fx-text-fill: -bisq-mid-grey-30;
+    -fx-fill: -bisq-mid-grey-20;
+    -fx-text-fill: -bisq-mid-grey-20;
     -fx-font-size: 1.2em;
 }
 
@@ -433,7 +433,7 @@
 #quote-amount-text-field {
     -fx-background-color: transparent;
     -fx-border-style: none;
-    -fx-text-fill: -bisq-mid-grey-40;
+    -fx-text-fill: -bisq-mid-grey-30;
     -fx-font-size: 1.1em;
     -fx-font-family: "IBM Plex Sans Light";
 }
@@ -458,7 +458,7 @@
 }
 
 .bisq-large-profile-id-label {
-    -fx-background-color: -bisq-mid-grey-20;
+    -fx-background-color: -bisq-mid-grey-10;
     -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 1em;
 }
@@ -472,7 +472,7 @@
 .bisq-small-light-label-dimmed {
     -fx-font-size: 0.9em;
     -fx-font-family: "IBM Plex Sans Light";
-    -fx-text-fill: -bisq-mid-grey-30;
+    -fx-text-fill: -bisq-mid-grey-20;
 }
 
 .bisq-content-headline-label {
@@ -504,7 +504,7 @@
 }
 
 .bisq-grey-dimmed {
-    -fx-text-fill: -bisq-mid-grey-30;
+    -fx-text-fill: -bisq-mid-grey-20;
 }
 
 .bisq-text-white {
@@ -516,7 +516,7 @@
 }
 
 .bisq-text-yellow {
-    -fx-text-fill: -bisq-yellow !important;
+    -fx-text-fill: -bisq2-yellow !important;
 }
 
 .bisq-text-error {
@@ -528,7 +528,7 @@
 }
 
 .bisq-text-grey-10 {
-    -fx-text-fill: -bisq-mid-grey-40;
+    -fx-text-fill: -bisq-mid-grey-30;
 }
 
 .font-medium {
@@ -578,7 +578,7 @@
     -fx-faint-focus-color: transparent;
     -fx-background-color: transparent;
     -fx-text-fill: -fx-light-text-color;
-    -fx-prompt-text-fill: -bisq-mid-grey-20;
+    -fx-prompt-text-fill: -bisq-mid-grey-10;
     -fx-font-size: 1.25em;
     -fx-font-family: "IBM Plex Sans Light";
 }
@@ -588,7 +588,7 @@
 }
 
 .material-text-field-selection-line:error {
-    -fx-background-color: -bisq-red;
+    -fx-background-color: -bisq2-red;
 }
 
 .material-text-field-bg {
@@ -617,7 +617,7 @@
 }
 
 .material-text-field-description-selected:error {
-    -fx-text-fill: -bisq-red;
+    -fx-text-fill: -bisq2-red;
 }
 
 .material-text-field-description-deselected {
@@ -640,7 +640,7 @@
 
 .material-text-field-help:error {
     -fx-font-size: 0.95em;
-    -fx-text-fill: -bisq-red;
+    -fx-text-fill: -bisq2-red;
     -fx-font-family: "IBM Plex Sans Light";
 }
 
@@ -671,7 +671,7 @@
     -fx-faint-focus-color: transparent;
     -fx-background-color: transparent;
     -fx-text-fill: -fx-light-text-color;
-    -fx-prompt-text-fill: -bisq-mid-grey-20;
+    -fx-prompt-text-fill: -bisq-mid-grey-10;
     -fx-font-size: 1.25em;
     -fx-font-family: "IBM Plex Sans Light";
 }

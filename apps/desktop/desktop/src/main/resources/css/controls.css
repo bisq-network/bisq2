@@ -61,15 +61,15 @@
 }
 
 .red-button {
-    -fx-background-color: -bisq-red;
+    -fx-background-color: -bisq2-red;
 }
 
 .red-button:hover {
-    -fx-background-color: derive(-bisq-red, 10%);
+    -fx-background-color: derive(-bisq2-red, 10%);
 }
 
 .red-button:pressed {
-    -fx-background-color: derive(-bisq-red, -10%);
+    -fx-background-color: derive(-bisq2-red, -10%);
 }
 
 .button.icon-button {
@@ -81,14 +81,14 @@
 
 
 .white-button {
-    -fx-background-color: -bisq-white-20;
-    -fx-fill: -bisq-black-10 !important;
-    -fx-text-fill: -bisq-black-10 !important;
+    -fx-background-color: -bisq-white;
+    -fx-fill: -bisq-black !important;
+    -fx-text-fill: -bisq-black !important;
 }
 
 .white-button > .text {
-    -fx-fill: -bisq-black-10 !important;
-    -fx-text-fill: -bisq-black-10 !important;
+    -fx-fill: -bisq-black !important;
+    -fx-text-fill: -bisq-black !important;
 }
 
 .white-button:hover {
@@ -106,8 +106,8 @@
 .dark-grey-button {
     -fx-background-color: -bisq-dark-grey-40;
     -fx-border-color: transparent;
-    -fx-fill: -bisq-white-20;
-    -fx-text-fill: -bisq-white-20;
+    -fx-fill: -bisq-white;
+    -fx-text-fill: -bisq-white;
 }
 
 .dark-grey-button:hover {
@@ -210,8 +210,8 @@
 
 .white-transparent-outlined-button {
     -fx-background-color: transparent;
-    -fx-border-color: -bisq-white-20;
-    -fx-text-fill: -bisq-white-20;
+    -fx-border-color: -bisq-white;
+    -fx-text-fill: -bisq-white;
 }
 
 .white-transparent-outlined-button:hover {
@@ -235,39 +235,39 @@
 
 .red-outlined-button {
     -fx-background-color: transparent;
-    -fx-border-color: -bisq-red;
-    -fx-text-fill: -bisq-red;
+    -fx-border-color: -bisq2-red;
+    -fx-text-fill: -bisq2-red;
 }
 
 .red-outlined-button:hover {
-    -fx-border-color: derive(-bisq-red, 10%);
-    -fx-text-fill: derive(-bisq-red, 10%);
+    -fx-border-color: derive(-bisq2-red, 10%);
+    -fx-text-fill: derive(-bisq2-red, 10%);
 }
 
 .red-outlined-button:pressed {
-    -fx-border-color: derive(-bisq-red, -10%);
-    -fx-text-fill: derive(-bisq-red, -10%);
+    -fx-border-color: derive(-bisq2-red, -10%);
+    -fx-text-fill: derive(-bisq2-red, -10%);
 }
 
 
 .red-small-button {
     -fx-background-color: transparent;
-    -fx-border-color: -bisq-red;
+    -fx-border-color: -bisq2-red;
     -fx-border-width: 1;
     -fx-border-radius: 2;
-    -fx-text-fill: -bisq-red;
+    -fx-text-fill: -bisq2-red;
     -fx-font-size: 0.8em;
     -fx-padding: 2.5 16 2.5 16;
 }
 
 .red-small-button:hover {
-    -fx-border-color: derive(-bisq-red, 10%);
-    -fx-text-fill: derive(-bisq-red, 10%);
+    -fx-border-color: derive(-bisq2-red, 10%);
+    -fx-text-fill: derive(-bisq2-red, 10%);
 }
 
 .red-small-button:pressed {
-    -fx-border-color: derive(-bisq-red, -10%);
-    -fx-text-fill: derive(-bisq-red, -10%);
+    -fx-border-color: derive(-bisq2-red, -10%);
+    -fx-text-fill: derive(-bisq2-red, -10%);
 }
 
 
@@ -471,9 +471,9 @@
     -fx-background-insets: 0px;
     -fx-padding: 2px;
     -bisq-toggle-color: -fx-default-button;
-    -bisq-un-toggle-color: -bisq-white-20;
+    -bisq-un-toggle-color: -bisq-white;
     -bisq-toggle-line-color: derive(-bisq-toggle-color, 65%);
-    -bisq-un-toggle-line-color: -bisq-mid-grey-30;
+    -bisq-un-toggle-line-color: -bisq-mid-grey-20;
     -bisq-size: 8;
 }
 
@@ -554,17 +554,17 @@
 
 .card-button-border {
     -fx-background-color: transparent;
-    -fx-border-color: derive(-bisq-white-20, -25%);
+    -fx-border-color: derive(-bisq-white, -25%);
 }
 
 .card-button-border:hover {
     -fx-background-color: rgba(0, 0, 0, 0.15);
-    -fx-border-color: derive(-bisq-white-20, -15%);
+    -fx-border-color: derive(-bisq-white, -15%);
 }
 
 .card-button-border:pressed {
     -fx-background-color: rgba(0, 0, 0, 0.2);
-    -fx-border-color: derive(-bisq-white-20, -10%);
+    -fx-border-color: derive(-bisq-white, -10%);
 }
 
 .card-button-border:default {
@@ -637,12 +637,12 @@
 .check-box > .box {
     -fx-background-color: transparent;
     -fx-background-radius: 0;
-    -fx-border-color: -bisq-mid-grey-30;
+    -fx-border-color: -bisq-mid-grey-20;
     -fx-border-width: 1;
 }
 
 .check-box:hover > .box {
-    -fx-border-color: derive(-bisq-mid-grey-30, 20%);
+    -fx-border-color: derive(-bisq-mid-grey-20, 20%);
 }
 
 .check-box > .box > .mark {
@@ -667,7 +667,7 @@
 
 .check-box:selected > .box > .mark,
 .check-box:indeterminate > .box > .mark {
-    -fx-background-color: -bisq-white-20;
+    -fx-background-color: -bisq-white;
     -fx-background-insets: 1 0 -1 0, 0;
     -fx-border-color: transparent;
 }
@@ -857,7 +857,7 @@
 }
 
 .radio-button:selected .radio .dot {
-    -fx-background-color: -bisq-white-20;
+    -fx-background-color: -bisq-white;
 }
 
 
