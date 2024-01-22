@@ -1,0 +1,9 @@
+[Unit]
+Description=daonode
+
+[Service]
+ExecStart=/home/user/run_daonode.sh
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

@@ -27,3 +27,12 @@
        owner: user
        group: user
        mode: '0744'
+
+   - name: Install bisq-daonode systemd service
+     ansible.builtin.template:
+       src: bisq-daonode.service.j2
+       dest: /etc/systemd/system/bisq-daonode.service
+       owner: root
+       group: root
+       mode: '0644'
+     become: true
