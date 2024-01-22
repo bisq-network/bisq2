@@ -19,6 +19,8 @@ package bisq.network.p2p.node.handshake;
 
 import bisq.common.util.StringUtils;
 import bisq.network.common.Address;
+import bisq.network.common.AddressOwnershipProof;
+import bisq.network.common.AddressOwnershipProofGenerator;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.Capability;
 import bisq.network.p2p.node.ConnectionException;
@@ -27,10 +29,10 @@ import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.network.p2p.services.peergroup.BanList;
-import bisq.security.keys.TorKeyPair;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -44,28 +46,28 @@ public class ConnectionHandshakeInitiator {
     private final Address peerAddress;
     @Getter
     private final CompletableFuture<OutboundConnection> completableFuture = new CompletableFuture<>();
-    private final TorKeyPair torKeyPair;
+    private final AddressOwnershipProofGenerator addressOwnershipProofGenerator;
 
     public ConnectionHandshakeInitiator(Capability myCapability,
                                         AuthorizationService authorizationService,
                                         BanList banList,
                                         NetworkLoad myNetworkLoad,
                                         Address peerAddress,
-                                        TorKeyPair torKeyPair) {
+                                        AddressOwnershipProofGenerator addressOwnershipProofGenerator) {
         this.myCapability = myCapability;
         this.authorizationService = authorizationService;
         this.banList = banList;
         this.myNetworkLoad = myNetworkLoad;
         this.peerAddress = peerAddress;
-        this.torKeyPair = torKeyPair;
+        this.addressOwnershipProofGenerator = addressOwnershipProofGenerator;
     }
 
     public NetworkEnvelope initiate() {
         Address myAddress = myCapability.getAddress();
-        long signatureDate = System.currentTimeMillis();
-        Optional<byte[]> signature = OnionAddressValidation.sign(myAddress, peerAddress, signatureDate, torKeyPair.getPrivateKey());
+        AddressOwnershipProof proof = addressOwnershipProofGenerator.generate(myAddress, peerAddress);
+        Optional<byte[]> optionalProof = proof.getProof().map(ByteBuffer::array);
 
-        ConnectionHandshake.Request request = new ConnectionHandshake.Request(myCapability, signature, myNetworkLoad, signatureDate);
+        ConnectionHandshake.Request request = new ConnectionHandshake.Request(myCapability, optionalProof, myNetworkLoad, proof.getSignatureDate());
         // As we do not know he peers load yet, we use the NetworkLoad.INITIAL_LOAD
         AuthorizationToken token = authorizationService.createToken(request,
                 NetworkLoad.INITIAL_LOAD,
