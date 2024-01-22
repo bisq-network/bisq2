@@ -20,14 +20,6 @@
        chdir: /home/user/bisq-daonode
        cmd: ./gradlew build --no-daemon
 
-   - name: Copy run_bisq_daonode.sh to server
-     ansible.builtin.template:
-       src: run_daonode.j2
-       dest: /home/user/run_daonode.sh
-       owner: user
-       group: user
-       mode: '0744'
-
    - name: Install bisq-daonode systemd service
      ansible.builtin.template:
        src: bisq-daonode.service.j2
