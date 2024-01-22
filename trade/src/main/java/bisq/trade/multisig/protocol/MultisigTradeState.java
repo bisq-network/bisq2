@@ -32,12 +32,14 @@ public enum MultisigTradeState implements State {
     COMPLETED(true);
 
     private final boolean isFinalState;
+    private final int ordinal;
 
     MultisigTradeState() {
-        this.isFinalState = false;
+        this(false);
     }
 
     MultisigTradeState(boolean isFinalState) {
         this.isFinalState = isFinalState;
+        ordinal = ordinal();
     }
 }

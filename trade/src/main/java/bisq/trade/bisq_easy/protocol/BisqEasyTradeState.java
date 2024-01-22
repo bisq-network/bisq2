@@ -26,41 +26,53 @@ import lombok.ToString;
 public enum BisqEasyTradeState implements State {
     INIT,
 
+    // Take offer
     TAKER_SENT_TAKE_OFFER_REQUEST,
     MAKER_SENT_TAKE_OFFER_RESPONSE,
     TAKER_RECEIVED_TAKE_OFFER_RESPONSE,
 
-    // SELLER
-    SELLER_SENT_ACCOUNT_DATA_AND_WAITING_FOR_BTC_ADDRESS, // Option 1
-    SELLER_DID_NOT_SEND_ACCOUNT_DATA_AND_RECEIVED_BTC_ADDRESS, // Option 2
-    SELLER_SENT_ACCOUNT_DATA_AND_RECEIVED_BTC_ADDRESS, // Both options continue from here
+    // Account details
+    // Option 1: Peer starts sending
+    BUYER_DID_NOT_SEND_BTC_ADDRESS_AND_RECEIVED_ACCOUNT_DATA,
+    SELLER_DID_NOT_SEND_ACCOUNT_DATA_AND_RECEIVED_BTC_ADDRESS,
+
+    // Option 2: Self start sending
+    BUYER_SENT_BTC_ADDRESS_AND_WAITING_FOR_ACCOUNT_DATA,
+    SELLER_SENT_ACCOUNT_DATA_AND_WAITING_FOR_BTC_ADDRESS,
+
+    // Branch completed and payment data and BTC address are received
+    BUYER_SENT_BTC_ADDRESS_AND_RECEIVED_ACCOUNT_DATA,
+    SELLER_SENT_ACCOUNT_DATA_AND_RECEIVED_BTC_ADDRESS,
+
+    // Fiat settlement
+    BUYER_SENT_FIAT_SENT_CONFIRMATION,
     SELLER_RECEIVED_FIAT_SENT_CONFIRMATION,
     SELLER_CONFIRMED_FIAT_RECEIPT,
-    SELLER_SENT_BTC_SENT_CONFIRMATION,
-
-    // BUYER
-    BUYER_SENT_BTC_ADDRESS_AND_WAITING_FOR_ACCOUNT_DATA, // Option 1
-    BUYER_DID_NOT_SEND_BTC_ADDRESS_AND_RECEIVED_ACCOUNT_DATA, // Option 2
-    BUYER_SENT_BTC_ADDRESS_AND_RECEIVED_ACCOUNT_DATA, // Both options continue from here
-    BUYER_SENT_FIAT_SENT_CONFIRMATION,
     BUYER_RECEIVED_SELLERS_FIAT_RECEIPT_CONFIRMATION,
-    BUYER_RECEIVED_BTC_SENT_CONFIRMATION,
 
+    // BTC transfer
+    SELLER_SENT_BTC_SENT_CONFIRMATION,
+    BUYER_RECEIVED_BTC_SENT_CONFIRMATION,
     BTC_CONFIRMED(true),
 
     REJECTED(true),
+    PEER_REJECTED(true),
+
     CANCELLED(true),
+    PEER_CANCELLED(true),
 
     FAILED(true),
     FAILED_AT_PEER(true);
 
     private final boolean isFinalState;
+    private final int ordinal;
 
     BisqEasyTradeState() {
-        this.isFinalState = false;
+        this(false);
     }
 
     BisqEasyTradeState(boolean isFinalState) {
         this.isFinalState = isFinalState;
+        ordinal = ordinal();
     }
 }
