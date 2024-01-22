@@ -6,6 +6,7 @@
      ansible.builtin.apt:
        name: openjdk-11-jdk
        state: present
+     become: true
 
    - name: Clone bisq-daonode
      ansible.builtin.git:
