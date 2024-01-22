@@ -14,7 +14,7 @@ ExecStart=/usr/lib/jvm/java-11-openjdk-amd64/bin/java -Xms2000M -Xmx5000M \
         --rpcPassword="{{ bitcoin_rpc_password }}" \
         --rpcBlockNotificationPort=5120 \
         --maxMemory=5000
-Restart=on-failure
+Restart=always
 
 [Install]
 WantedBy=multi-user.target
