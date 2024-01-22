@@ -438,13 +438,18 @@ public class TradeWizardReviewController implements Controller {
         model.setBisqEasyTrade(bisqEasyTrade);
         errorMessagePin = bisqEasyTrade.errorMessageObservable().addObserver(errorMessage -> {
             if (errorMessage != null) {
-                UIThread.run(() -> new Popup().error(errorMessage).show());
+                UIThread.run(() -> new Popup().error(Res.get("bisqEasy.openTrades.failed.popup",
+                                errorMessage,
+                                StringUtils.truncate(bisqEasyTrade.getErrorStackTrace(), 500)))
+                        .show());
                     }
                 }
         );
         peersErrorMessagePin = bisqEasyTrade.peersErrorMessageObservable().addObserver(peersErrorMessage -> {
                     if (peersErrorMessage != null) {
-                        UIThread.run(() -> new Popup().error(Res.get("bisqEasy.openTrades.failedAtPeer", peersErrorMessage))
+                        UIThread.run(() -> new Popup().error(Res.get("bisqEasy.openTrades.failedAtPeer.popup",
+                                        peersErrorMessage,
+                                        StringUtils.truncate(bisqEasyTrade.getPeersErrorStackTrace(), 500)))
                                 .show());
                     }
                 }

@@ -102,8 +102,14 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
         if (proto.hasErrorMessage()) {
             trade.setErrorMessage(proto.getErrorMessage());
         }
+        if (proto.hasErrorStackTrace()) {
+            trade.setErrorStackTrace(proto.getErrorStackTrace());
+        }
         if (proto.hasPeersErrorMessage()) {
             trade.setPeersErrorMessage(proto.getPeersErrorMessage());
+        }
+        if (proto.hasPeersErrorStackTrace()) {
+            trade.setPeersErrorStackTrace(proto.getPeersErrorStackTrace());
         }
 
         bisq.trade.protobuf.BisqEasyTrade bisqEasyTradeProto = proto.getBisqEasyTrade();

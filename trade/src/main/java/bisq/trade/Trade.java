@@ -62,7 +62,9 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
     private final P maker;
     private transient final TradeRole tradeRole;
     private final Observable<String> errorMessage = new Observable<>();
+    private final Observable<String> errorStackTrace = new Observable<>();
     private final Observable<String> peersErrorMessage = new Observable<>();
+    private final Observable<String> peersErrorStackTrace = new Observable<>();
 
     public Trade(State state,
                  boolean isBuyer,
@@ -107,7 +109,9 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
                 .setMaker(maker.toProto())
                 .setState(getState().name());
         Optional.ofNullable(getErrorMessage()).ifPresent(builder::setErrorMessage);
+        Optional.ofNullable(getErrorStackTrace()).ifPresent(builder::setErrorStackTrace);
         Optional.ofNullable(getPeersErrorMessage()).ifPresent(builder::setPeersErrorMessage);
+        Optional.ofNullable(getPeersErrorStackTrace()).ifPresent(builder::setPeersErrorStackTrace);
         return builder;
     }
 
@@ -123,6 +127,18 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
         return errorMessage.get();
     }
 
+    public void setErrorStackTrace(String peersErrorStacktrace) {
+        this.errorStackTrace.set(peersErrorStacktrace);
+    }
+
+    public ReadOnlyObservable<String> errorStackTraceObservable() {
+        return errorStackTrace;
+    }
+
+    public String getErrorStackTrace() {
+        return errorStackTrace.get();
+    }
+
     public void setPeersErrorMessage(String errorMessage) {
         this.peersErrorMessage.set(errorMessage);
     }
@@ -135,6 +151,17 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
         return peersErrorMessage.get();
     }
 
+    public void setPeersErrorStackTrace(String peersErrorStackTrace) {
+        this.peersErrorStackTrace.set(peersErrorStackTrace);
+    }
+
+    public ReadOnlyObservable<String> peersErrorStackTraceObservable() {
+        return peersErrorStackTrace;
+    }
+
+    public String getPeersErrorStackTrace() {
+        return peersErrorStackTrace.get();
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Delegates

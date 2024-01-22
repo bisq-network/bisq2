@@ -52,12 +52,14 @@ message Trade {
   TradeParty taker = 6;
   TradeParty maker = 7;
   optional string errorMessage = 8;
-  optional string peersErrorMessage = 9;
+  optional string errorStackTrace = 9;
+  optional string peersErrorMessage = 10;
+  optional string peersErrorStackTrace = 11;
 
   oneof message {
-    BisqEasyTrade bisqEasyTrade = 20;
-    MultisigTrade multisigTrade = 21;
-    SubmarineTrade submarineTrade = 22;
+    BisqEasyTrade bisqEasyTrade = 30;
+    MultisigTrade multisigTrade = 31;
+    SubmarineTrade submarineTrade = 32;
   }
 }
 message TradeMessage {
@@ -129,6 +131,7 @@ message BisqEasyCancelTradeMessage {
 }
 message BisqEasyReportErrorMessage {
   string errorMessage = 1;
+  string stackTrace = 2;
 }
 
 

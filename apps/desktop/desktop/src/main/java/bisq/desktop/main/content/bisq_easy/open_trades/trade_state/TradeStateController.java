@@ -22,6 +22,7 @@ import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeSelectionService;
 import bisq.common.observable.Pin;
+import bisq.common.util.StringUtils;
 import bisq.contract.Role;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
@@ -122,7 +123,9 @@ public class TradeStateController implements Controller {
                 if (errorMessage != null) {
                     String key = "errorMessage_" + model.getBisqEasyTrade().get().getId();
                     if (DontShowAgainService.showAgain(key)) {
-                        UIThread.run(() -> new Popup().error(errorMessage)
+                        UIThread.run(() -> new Popup().error(Res.get("bisqEasy.openTrades.failed.popup",
+                                        errorMessage,
+                                        StringUtils.truncate(bisqEasyTrade.getErrorStackTrace(), 500)))
                                 .dontShowAgainId(key)
                                 .show());
                     }
@@ -133,7 +136,9 @@ public class TradeStateController implements Controller {
                         if (peersErrorMessage != null) {
                             String key = "peersErrorMessage_" + model.getBisqEasyTrade().get().getId();
                             if (DontShowAgainService.showAgain(key)) {
-                                UIThread.run(() -> new Popup().error(Res.get("bisqEasy.openTrades.failedAtPeer", peersErrorMessage))
+                                UIThread.run(() -> new Popup().error(Res.get("bisqEasy.openTrades.failedAtPeer.popup",
+                                                peersErrorMessage,
+                                                StringUtils.truncate(bisqEasyTrade.getPeersErrorStackTrace(), 500)))
                                         .dontShowAgainId(key)
                                         .show());
                             }

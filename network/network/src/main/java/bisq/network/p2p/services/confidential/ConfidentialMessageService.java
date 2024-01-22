@@ -19,7 +19,6 @@ package bisq.network.p2p.services.confidential;
 
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.CompletableFutureUtils;
-import bisq.common.util.ExceptionUtil;
 import bisq.network.common.Address;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
@@ -286,8 +285,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                         }, DISPATCHER);
                         return true;
                     } catch (Exception e) {
-                        log.error("Error at decryption using receiversKeyId={}", confidentialMessage.getReceiverKeyId());
-                        log.error(ExceptionUtil.print(e));
+                        log.error("Error at decryption using receiversKeyId={}", confidentialMessage.getReceiverKeyId(), e);
                         throw new RuntimeException(e);
                     }
                 }, ExecutorFactory.WORKER_POOL))

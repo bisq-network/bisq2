@@ -34,6 +34,9 @@ public class BisqEasyReportErrorMessageHandler extends TradeMessageHandler<BisqE
     public void handle(Event event) {
         BisqEasyReportErrorMessage message = (BisqEasyReportErrorMessage) event;
         verifyMessage(message);
+        log.warn("We received an error report from our peer.\n" +
+                        "errorMessage={}\nstackTrace={}\ntradeId={}",
+                message.getErrorMessage(), message.getStackTrace(), trade.getId());
         commitToModel(message);
     }
 
@@ -44,5 +47,6 @@ public class BisqEasyReportErrorMessageHandler extends TradeMessageHandler<BisqE
 
     private void commitToModel(BisqEasyReportErrorMessage message) {
         trade.setPeersErrorMessage(message.getErrorMessage());
+        trade.setPeersErrorStackTrace(message.getStackTrace());
     }
 }

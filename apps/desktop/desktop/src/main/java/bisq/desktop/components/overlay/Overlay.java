@@ -19,7 +19,6 @@ package bisq.desktop.components.overlay;
 
 import bisq.application.ShutDownHandler;
 import bisq.common.locale.LanguageRepository;
-import bisq.common.util.ExceptionUtil;
 import bisq.common.util.OsUtils;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
@@ -34,6 +33,7 @@ import bisq.desktop.components.controls.BusyAnimation;
 import bisq.i18n.Res;
 import bisq.settings.DontShowAgainService;
 import bisq.settings.SettingsService;
+import com.google.common.base.Throwables;
 import com.google.common.reflect.TypeToken;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.animation.Interpolator;
@@ -399,7 +399,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     }
 
     public T error(Throwable throwable) {
-        return error(ExceptionUtil.print(throwable));
+        return error(StringUtils.truncate(Throwables.getStackTraceAsString(throwable), 800));
     }
 
     public T error(String message) {

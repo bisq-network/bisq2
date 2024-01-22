@@ -29,17 +29,21 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public final class BisqEasyReportErrorMessage extends BisqEasyTradeMessage {
-    public static final int MAX_LENGTH = 1000;
+    public static final int MAX_LENGTH_ERROR_MESSAGE = 500;
+    public static final int MAX_LENGTH_STACKTRACE = 2000;
 
     private final String errorMessage;
+    private final String stackTrace;
 
     public BisqEasyReportErrorMessage(String id,
                                       String tradeId,
                                       NetworkId sender,
                                       NetworkId receiver,
-                                      String errorMessage) {
+                                      String errorMessage,
+                                      String stackTrace) {
         super(id, tradeId, sender, receiver);
         this.errorMessage = errorMessage;
+        this.stackTrace = stackTrace;
 
         verify();
     }
@@ -48,7 +52,8 @@ public final class BisqEasyReportErrorMessage extends BisqEasyTradeMessage {
     public void verify() {
         super.verify();
 
-        NetworkDataValidation.validateText(errorMessage, MAX_LENGTH);
+        NetworkDataValidation.validateText(errorMessage, MAX_LENGTH_ERROR_MESSAGE);
+        NetworkDataValidation.validateText(stackTrace, MAX_LENGTH_STACKTRACE);
     }
 
     @Override
@@ -57,21 +62,24 @@ public final class BisqEasyReportErrorMessage extends BisqEasyTradeMessage {
                 .setBisqEasyTradeMessage(bisq.trade.protobuf.BisqEasyTradeMessage.newBuilder()
                         .setBisqEasyReportErrorMessage(
                                 bisq.trade.protobuf.BisqEasyReportErrorMessage.newBuilder()
-                                        .setErrorMessage(errorMessage)))
+                                        .setErrorMessage(errorMessage)
+                                        .setStackTrace(stackTrace)))
                 .build();
     }
 
     public static BisqEasyReportErrorMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {
+        var bisqEasyReportErrorMessage = proto.getBisqEasyTradeMessage().getBisqEasyReportErrorMessage();
         return new BisqEasyReportErrorMessage(
                 proto.getId(),
                 proto.getTradeId(),
                 NetworkId.fromProto(proto.getSender()),
                 NetworkId.fromProto(proto.getReceiver()),
-                proto.getBisqEasyTradeMessage().getBisqEasyReportErrorMessage().getErrorMessage());
+                bisqEasyReportErrorMessage.getErrorMessage(),
+                bisqEasyReportErrorMessage.getStackTrace());
     }
 
     @Override
     public double getCostFactor() {
-        return getCostFactor(0.1, 0.3);
+        return getCostFactor(0.3, 0.7);
     }
 }

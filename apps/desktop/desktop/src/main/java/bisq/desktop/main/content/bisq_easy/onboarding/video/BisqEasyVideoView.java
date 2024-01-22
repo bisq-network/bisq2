@@ -295,8 +295,8 @@ public class BisqEasyVideoView extends View<StackPane, BisqEasyVideoModel, BisqE
             });
         } catch (Exception e) {
             // If OS does not support mp4 we get an exception
-            log.error(ExceptionUtil.print(e));
-            new Popup().warning(Res.get("video.mp4NotSupported.warning", ExceptionUtil.print(e))).show();
+            log.error("mp4 not supported", e);
+            new Popup().warning(Res.get("video.mp4NotSupported.warning", ExceptionUtil.getRootCauseMessage(e))).show();
         }
     }
 

@@ -19,7 +19,6 @@ package bisq.desktop.main.content.user.bonded_roles.nodes.tabs.registration;
 
 import bisq.bonded_roles.BondedRoleType;
 import bisq.common.encoding.Hex;
-import bisq.common.util.ExceptionUtil;
 import bisq.common.util.FileUtils;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
@@ -130,7 +129,7 @@ public class NodeRegistrationController extends BondedRolesRegistrationControlle
             getNodesRegistrationModel().getJsonValid().set(true);
             return new AddressByTransportTypeMap(map);
         } catch (Exception e) {
-            log.error(ExceptionUtil.print(e));
+            log.error("Cannot process json data {}", json, e);
             getNodesRegistrationModel().getJsonValid().set(false);
             return new AddressByTransportTypeMap();
         }

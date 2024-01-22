@@ -29,6 +29,7 @@ import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.observable.Pin;
+import bisq.common.util.StringUtils;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
@@ -225,13 +226,18 @@ public class TakeOfferReviewController implements Controller {
         model.setBisqEasyTrade(bisqEasyTrade);
         errorMessagePin = bisqEasyTrade.errorMessageObservable().addObserver(errorMessage -> {
             if (errorMessage != null) {
-                UIThread.run(() -> new Popup().error(errorMessage).show());
+                UIThread.run(() -> new Popup().error(Res.get("bisqEasy.openTrades.failed.popup",
+                                errorMessage,
+                                StringUtils.truncate(bisqEasyTrade.getErrorStackTrace(), 500)))
+                        .show());
                     }
                 }
         );
         peersErrorMessagePin = bisqEasyTrade.peersErrorMessageObservable().addObserver(peersErrorMessage -> {
                     if (peersErrorMessage != null) {
-                        UIThread.run(() -> new Popup().error(Res.get("bisqEasy.openTrades.failedAtPeer", peersErrorMessage))
+                        UIThread.run(() -> new Popup().error(Res.get("bisqEasy.openTrades.failedAtPeer.popup",
+                                        peersErrorMessage,
+                                        StringUtils.truncate(bisqEasyTrade.getPeersErrorStackTrace(), 500)))
                                 .show());
                     }
                 }
