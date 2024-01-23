@@ -186,11 +186,11 @@ public class NetworkEnvelopeSocketChannelTests {
         List<TransportType> supportedTransportTypes = new ArrayList<>(1);
         supportedTransportTypes.add(TransportType.CLEAR);
 
-        Capability peerCapability = new Capability(Address.localHost(2345), supportedTransportTypes);
+        Capability peerCapability = new Capability(Address.localHost(2345), supportedTransportTypes, new ArrayList<>());
         ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, Optional.empty(), new NetworkLoad(), 0);
         AuthorizationService authorizationService = createAuthorizationService();
 
-        Capability responderCapability = new Capability(Address.localHost(1234), supportedTransportTypes);
+        Capability responderCapability = new Capability(Address.localHost(1234), supportedTransportTypes, new ArrayList<>());
 
         AuthorizationToken token = authorizationService.createToken(request,
                 new NetworkLoad(),

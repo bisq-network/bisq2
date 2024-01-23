@@ -139,6 +139,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                 config.getSeedAddressesByTransport(),
                 config.getInventoryServiceConfig(),
                 supportedTransportTypes,
+                config.getFeatures(),
                 keyBundleService,
                 persistenceService,
                 proofOfWorkService,

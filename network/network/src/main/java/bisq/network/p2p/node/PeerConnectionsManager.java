@@ -18,6 +18,7 @@
 package bisq.network.p2p.node;
 
 import bisq.network.common.Address;
+import bisq.network.common.TransportType;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.network_load.NetworkLoad;
@@ -29,10 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.spi.SelectorProvider;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -124,7 +122,9 @@ public class PeerConnectionsManager {
 
     private Capability createServerAndListen(Node node) throws IOException {
         ServerSocketResult serverSocketResult = transportService.getServerSocket(networkId, node.getKeyBundle());
-        Capability serverCapability = new Capability(serverSocketResult.getAddress(), new ArrayList<>(config.getSupportedTransportTypes()));
+        List<TransportType> supportedTransportTypes = new ArrayList<>(config.getSupportedTransportTypes());
+        List<Feature> features = new ArrayList<>(config.getFeatures());
+        Capability serverCapability = new Capability(serverSocketResult.getAddress(), supportedTransportTypes, features);
         ServerChannel serverChannel = new ServerChannel(
                 serverCapability,
                 myNetworkLoad,

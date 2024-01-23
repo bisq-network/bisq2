@@ -73,7 +73,7 @@ public class InboundConnectionsManagerTests {
         );
         serverSocketChannel.socket().bind(socketAddress);
 
-        Capability myCapability = new Capability(myAddress, supportedTransportTypes);
+        Capability myCapability = new Capability(myAddress, supportedTransportTypes, new ArrayList<>());
 
         Selector selector = SelectorProvider.provider().openSelector();
         InboundConnectionsManager inboundConnectionsManager = new InboundConnectionsManager(
@@ -162,7 +162,7 @@ public class InboundConnectionsManagerTests {
         );
         serverSocketChannel.socket().bind(socketAddress);
 
-        Capability myCapability = new Capability(myAddress, supportedTransportTypes);
+        Capability myCapability = new Capability(myAddress, supportedTransportTypes, new ArrayList<>());
 
         Selector selector = SelectorProvider.provider().openSelector();
         InboundConnectionsManager inboundConnectionsManager = new InboundConnectionsManager(
@@ -243,7 +243,7 @@ public class InboundConnectionsManagerTests {
     private bisq.network.protobuf.NetworkEnvelope createPoWRequest(Address myAddress, Address peerAddress) {
         List<TransportType> supportedTransportTypes = new ArrayList<>(1);
         supportedTransportTypes.add(TransportType.CLEAR);
-        Capability peerCapability = new Capability(peerAddress, supportedTransportTypes);
+        Capability peerCapability = new Capability(peerAddress, supportedTransportTypes, new ArrayList<>());
 
         ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, Optional.empty(), new NetworkLoad(), 0);
         AuthorizationService authorizationService = createAuthorizationService();

@@ -59,7 +59,7 @@ public class OutboundConnectionsMultiplexerTest {
         supportedTransportTypes.add(TransportType.CLEAR);
 
         Address serverAddress = Address.localHost(NetworkUtils.findFreeSystemPort());
-        Capability serverCapability = new Capability(serverAddress, supportedTransportTypes);
+        Capability serverCapability = new Capability(serverAddress, supportedTransportTypes, new ArrayList<>());
         ServerChannel serverChannel = new ServerChannel(
                 serverCapability,
                 new NetworkLoad(),
@@ -83,7 +83,7 @@ public class OutboundConnectionsMultiplexerTest {
 
                 AuthorizationService authorizationService = createAuthorizationService();
                 Address outboundAddress = Address.localHost(NetworkUtils.findFreeSystemPort());
-                Capability outboundCapability = new Capability(outboundAddress, supportedTransportTypes);
+                Capability outboundCapability = new Capability(outboundAddress, supportedTransportTypes, new ArrayList<>());
                 Selector selector = SelectorProvider.provider().openSelector();
 
                 var outboundConnectionManager = new OutboundConnectionManager(

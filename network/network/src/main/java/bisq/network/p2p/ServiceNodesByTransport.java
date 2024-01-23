@@ -29,6 +29,7 @@ import bisq.network.common.TransportType;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.Connection;
+import bisq.network.p2p.node.Feature;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
@@ -74,6 +75,7 @@ public class ServiceNodesByTransport {
                                    Map<TransportType, Set<Address>> seedAddressesByTransport,
                                    InventoryService.Config inventoryServiceConfig,
                                    Set<TransportType> supportedTransportTypes,
+                                   Set<Feature> features,
                                    KeyBundleService keyBundleService,
                                    PersistenceService persistenceService,
                                    ProofOfWorkService proofOfWorkService,
@@ -88,6 +90,7 @@ public class ServiceNodesByTransport {
             TransportConfig transportConfig = configByTransportType.get(transportType);
             Node.Config nodeConfig = new Node.Config(transportType,
                     supportedTransportTypes,
+                    features,
                     transportConfig,
                     transportConfig.getDefaultNodeSocketTimeout(),
                     transportConfig.getUserNodeSocketTimeout());

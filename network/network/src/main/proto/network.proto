@@ -12,13 +12,20 @@ import "google/protobuf/any.proto";
 // Data
 ////////////////////////////////////////////////////////////////////
 
+message NetworkLoad {
+  double value = 1;
+}
+
+enum Feature {
+  FEATURE_UNSPECIFIED = 0;
+  FEATURE_POW_HASH_CASH = 1;
+  FEATURE_INVENTORY_HASH_SEQ = 2;
+}
+
 message Capability {
   network.common.Address address = 1;
   repeated string supportedTransportTypes = 2;
-}
-
-message NetworkLoad {
-  double value = 1;
+  repeated Feature features = 3;
 }
 
 message FilterEntry {
