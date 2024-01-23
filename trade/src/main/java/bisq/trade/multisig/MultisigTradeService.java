@@ -27,7 +27,6 @@ import bisq.offer.multisig.MultisigOffer;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.trade.ServiceProvider;
-import bisq.trade.TradeProtocolException;
 import bisq.trade.multisig.protocol.*;
 import bisq.trade.protocol.TradeProtocol;
 import lombok.Getter;
@@ -94,8 +93,7 @@ public class MultisigTradeService implements PersistenceClient<MultisigTradeStor
     // Events
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public MultisigTrade onTakeOffer(Identity takerIdentity,
-                                     MultisigOffer multisigOffer) throws TradeProtocolException {
+    public MultisigTrade onTakeOffer(Identity takerIdentity, MultisigOffer multisigOffer) {
         NetworkId takerNetworkId = takerIdentity.getNetworkId();
         MultisigContract contract = new MultisigContract(System.currentTimeMillis(),
                 multisigOffer,

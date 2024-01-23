@@ -27,7 +27,6 @@ import bisq.offer.submarine.SubmarineOffer;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.trade.ServiceProvider;
-import bisq.trade.TradeProtocolException;
 import bisq.trade.protocol.TradeProtocol;
 import bisq.trade.submarine.protocol.*;
 import lombok.Getter;
@@ -94,8 +93,7 @@ public class SubmarineTradeService implements PersistenceClient<SubmarineTradeSt
     // Events
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public SubmarineTrade onTakeOffer(Identity takerIdentity,
-                                      SubmarineOffer submarineOffer) throws TradeProtocolException {
+    public SubmarineTrade onTakeOffer(Identity takerIdentity, SubmarineOffer submarineOffer) {
         NetworkId takerNetworkId = takerIdentity.getNetworkId();
         SubmarineContract contract = new SubmarineContract(System.currentTimeMillis(),
                 submarineOffer,

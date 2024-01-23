@@ -15,12 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.trade.bisq_easy.protocol;
+package bisq.trade.bisq_easy.protocol.events;
 
 import bisq.common.fsm.Event;
+import bisq.common.fsm.FsmErrorEvent;
+import bisq.common.fsm.FsmException;
 import bisq.common.util.ExceptionUtil;
 import bisq.trade.ServiceProvider;
-import bisq.trade.TradeProtocolException;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyReportErrorMessage;
 import bisq.trade.protocol.events.SendTradeMessageHandler;
@@ -32,24 +33,23 @@ import static bisq.trade.bisq_easy.protocol.messages.BisqEasyReportErrorMessage.
 import static bisq.trade.bisq_easy.protocol.messages.BisqEasyReportErrorMessage.MAX_LENGTH_STACKTRACE;
 
 @Slf4j
-public class BisqEasyProtocolExceptionHandler extends SendTradeMessageHandler<BisqEasyTrade> {
-    protected BisqEasyProtocolExceptionHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
+public class BisqEasyFsmErrorEventHandler extends SendTradeMessageHandler<BisqEasyTrade> {
+    public BisqEasyFsmErrorEventHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }
 
     @Override
     public void handle(Event event) {
-        // We wrap in a try catch to avoid a potentially recursive error handling
-        try {
-            TradeProtocolException tradeProtocolException = (TradeProtocolException) event;
-            commitToModel(ExceptionUtil.getRootCauseMessage(tradeProtocolException),
-                    ExceptionUtil.getStackTraceAsString(tradeProtocolException));
+        FsmErrorEvent fsmErrorEvent = (FsmErrorEvent) event;
+        FsmException fsmException = fsmErrorEvent.getFsmException();
+        commitToModel(ExceptionUtil.getRootCauseMessage(fsmException),
+                ExceptionUtil.getStackTraceAsString(fsmException));
 
             // We do not send the error message to the peer as there is risk that private data could be leaked.
             // Instead, we send the stack of causes as error message.
             // We might send more meaningful error messages in the future.
-            String errorMessage = truncate(ExceptionUtil.getCauseStackClassNames(tradeProtocolException), MAX_LENGTH_ERROR_MESSAGE);
-            String stackTrace = truncate(ExceptionUtil.getSafeStackTraceAsString(tradeProtocolException), MAX_LENGTH_STACKTRACE);
+        String errorMessage = truncate(ExceptionUtil.getCauseStackClassNames(fsmException), MAX_LENGTH_ERROR_MESSAGE);
+        String stackTrace = truncate(ExceptionUtil.getSafeStackTraceAsString(fsmException), MAX_LENGTH_STACKTRACE);
             log.warn("We send the cause stack and stackTrace to our peer.\n" +
                     "errorMessage={}\nstackTrace={}", errorMessage, stackTrace);
             sendMessage(new BisqEasyReportErrorMessage(createUid(),
@@ -58,9 +58,6 @@ public class BisqEasyProtocolExceptionHandler extends SendTradeMessageHandler<Bi
                     trade.getPeer().getNetworkId(),
                     errorMessage,
                     stackTrace));
-        } catch (Exception e) {
-            log.error("Handling of {} failed.", event, e);
-        }
     }
 
     private void commitToModel(String errorMessage, String errorStackTrace) {

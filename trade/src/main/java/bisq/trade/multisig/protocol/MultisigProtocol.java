@@ -39,4 +39,8 @@ public abstract class MultisigProtocol extends TradeProtocol<MultisigTrade> {
             throw new RuntimeException(e);
         }
     }
+
+    @Override
+    protected void configErrorHandling() {
+    }
 }

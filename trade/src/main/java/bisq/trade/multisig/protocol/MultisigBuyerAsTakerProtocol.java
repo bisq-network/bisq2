@@ -26,6 +26,7 @@ public class MultisigBuyerAsTakerProtocol extends MultisigProtocol {
         super(serviceProvider, model);
     }
 
+
     @Override
     public void configTransitions() {
     }

@@ -32,7 +32,6 @@ import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatusService;
 import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.security.ConfidentialData;
@@ -107,10 +106,6 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // DataService.Listener
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
-    }
 
     @Override
     public void onMailboxDataAdded(MailboxData mailboxData) {
@@ -280,8 +275,22 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                         PublicKey senderPublicKey = KeyGeneration.generatePublic(confidentialData.getSenderPublicKey());
                         log.info("Decrypted confidentialMessage");
                         runAsync(() -> {
-                            listeners.forEach(l -> l.onMessage(decryptedEnvelopePayloadMessage));
-                            confidentialMessageListeners.forEach(l -> l.onMessage(decryptedEnvelopePayloadMessage, senderPublicKey));
+                            listeners.forEach(listener -> {
+                                try {
+                                    listener.onMessage(decryptedEnvelopePayloadMessage);
+                                } catch (Exception e) {
+                                    // Catch the exception to avoid to break the iteration. We want to continue to notify all listeners.
+                                    log.error("listener.onMessage failed at listener {}", listener);
+                                }
+                            });
+                            confidentialMessageListeners.forEach(listener -> {
+                                try {
+                                    listener.onMessage(decryptedEnvelopePayloadMessage, senderPublicKey);
+                                } catch (Exception e) {
+                                    // Catch the exception to avoid to break the iteration. We want to continue to notify all listeners.
+                                    log.error("listener.onMessage failed at listener {}", listener);
+                                }
+                            });
                         }, DISPATCHER);
                         return true;
                     } catch (Exception e) {

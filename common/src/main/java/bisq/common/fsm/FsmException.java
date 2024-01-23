@@ -17,23 +17,14 @@
 
 package bisq.common.fsm;
 
-public class FsmException extends RuntimeException implements Event {
-    public FsmException() {
-    }
+import lombok.Getter;
 
-    public FsmException(String message) {
-        super(message);
-    }
+@Getter
+public class FsmException extends RuntimeException {
+    private final Event event;
 
-    public FsmException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public FsmException(Throwable cause) {
+    public FsmException(Throwable cause, Event event) {
         super(cause);
-    }
-
-    public FsmException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-        super(message, cause, enableSuppression, writableStackTrace);
+        this.event = event;
     }
 }

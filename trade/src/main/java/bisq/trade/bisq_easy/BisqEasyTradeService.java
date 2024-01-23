@@ -18,6 +18,7 @@
 package bisq.trade.bisq_easy;
 
 import bisq.common.application.Service;
+import bisq.common.fsm.Event;
 import bisq.common.monetary.Monetary;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.contract.bisq_easy.BisqEasyContract;
@@ -34,7 +35,8 @@ import bisq.persistence.PersistenceClient;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.protocol.*;
 import bisq.trade.bisq_easy.protocol.events.*;
-import bisq.trade.bisq_easy.protocol.messages.*;
+import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequest;
+import bisq.trade.bisq_easy.protocol.messages.BisqEasyTradeMessage;
 import bisq.user.banned.BannedUserService;
 import bisq.user.profile.UserProfile;
 import lombok.Getter;
@@ -101,24 +103,8 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
 
             if (bisqEasyTradeMessage instanceof BisqEasyTakeOfferRequest) {
                 onBisqEasyTakeOfferMessage((BisqEasyTakeOfferRequest) bisqEasyTradeMessage);
-            } else if (bisqEasyTradeMessage instanceof BisqEasyTakeOfferResponse) {
-                onBisqEasyTakeOfferResponse((BisqEasyTakeOfferResponse) bisqEasyTradeMessage);
-            } else if (bisqEasyTradeMessage instanceof BisqEasyAccountDataMessage) {
-                onBisqEasySendAccountDataMessage((BisqEasyAccountDataMessage) bisqEasyTradeMessage);
-            } else if (bisqEasyTradeMessage instanceof BisqEasyConfirmFiatSentMessage) {
-                onBisqEasyConfirmFiatSentMessage((BisqEasyConfirmFiatSentMessage) bisqEasyTradeMessage);
-            } else if (bisqEasyTradeMessage instanceof BisqEasyBtcAddressMessage) {
-                onBisqEasyBtcAddressMessage((BisqEasyBtcAddressMessage) bisqEasyTradeMessage);
-            } else if (bisqEasyTradeMessage instanceof BisqEasyConfirmFiatReceiptMessage) {
-                onBisqEasyConfirmFiatReceiptMessage((BisqEasyConfirmFiatReceiptMessage) bisqEasyTradeMessage);
-            } else if (bisqEasyTradeMessage instanceof BisqEasyConfirmBtcSentMessage) {
-                onBisqEasyConfirmBtcSentMessage((BisqEasyConfirmBtcSentMessage) bisqEasyTradeMessage);
-            } else if (bisqEasyTradeMessage instanceof BisqEasyRejectTradeMessage) {
-                onBisqEasyRejectTradeMessage((BisqEasyRejectTradeMessage) bisqEasyTradeMessage);
-            } else if (bisqEasyTradeMessage instanceof BisqEasyCancelTradeMessage) {
-                onBisqEasyCancelTradeMessage((BisqEasyCancelTradeMessage) bisqEasyTradeMessage);
-            } else if (bisqEasyTradeMessage instanceof BisqEasyReportErrorMessage) {
-                onBisqEasyReportErrorMessage((BisqEasyReportErrorMessage) bisqEasyTradeMessage);
+            } else {
+                handleBisqEasyTradeMessage(bisqEasyTradeMessage);
             }
         }
     }
@@ -129,6 +115,8 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private void onBisqEasyTakeOfferMessage(BisqEasyTakeOfferRequest message) {
+        // We only create the data required for the protocol creation.
+        // Verification will happen in the BisqEasyTakeOfferRequestHandler
         NetworkId sender = checkNotNull(message.getSender());
         BisqEasyContract bisqEasyContract = checkNotNull(message.getBisqEasyContract());
         boolean isBuyer = bisqEasyContract.getOffer().getMakersDirection().isBuy();
@@ -143,53 +131,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         checkArgument(!tradeExists(tradeId), "A trade with that ID exists already");
         persistableStore.addTrade(bisqEasyTrade);
 
-        createAndAddTradeProtocol(bisqEasyTrade).handle(message);
-        persist();
-    }
-
-    private void onBisqEasyTakeOfferResponse(BisqEasyTakeOfferResponse message) {
-        getProtocol(message.getTradeId()).handle(message);
-        persist();
-    }
-
-    private void onBisqEasySendAccountDataMessage(BisqEasyAccountDataMessage message) {
-        getProtocol(message.getTradeId()).handle(message);
-        persist();
-    }
-
-    private void onBisqEasyConfirmFiatSentMessage(BisqEasyConfirmFiatSentMessage message) {
-        getProtocol(message.getTradeId()).handle(message);
-        persist();
-    }
-
-    private void onBisqEasyBtcAddressMessage(BisqEasyBtcAddressMessage message) {
-        getProtocol(message.getTradeId()).handle(message);
-        persist();
-    }
-
-    private void onBisqEasyConfirmFiatReceiptMessage(BisqEasyConfirmFiatReceiptMessage message) {
-        getProtocol(message.getTradeId()).handle(message);
-        persist();
-    }
-
-    private void onBisqEasyConfirmBtcSentMessage(BisqEasyConfirmBtcSentMessage message) {
-        getProtocol(message.getTradeId()).handle(message);
-        persist();
-    }
-
-    private void onBisqEasyRejectTradeMessage(BisqEasyRejectTradeMessage message) {
-        getProtocol(message.getTradeId()).handle(message);
-        persist();
-    }
-
-    private void onBisqEasyCancelTradeMessage(BisqEasyCancelTradeMessage message) {
-        getProtocol(message.getTradeId()).handle(message);
-        persist();
-    }
-
-    private void onBisqEasyReportErrorMessage(BisqEasyReportErrorMessage message) {
-        getProtocol(message.getTradeId()).handle(message);
-        persist();
+        handleEvent(createAndAddTradeProtocol(bisqEasyTrade), message);
     }
 
 
@@ -230,48 +172,52 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         return createAndAddTradeProtocol(bisqEasyTrade);
     }
 
-    public void takeOffer(BisqEasyTrade bisqEasyTrade) {
-        createAndAddTradeProtocol(bisqEasyTrade).handle(new BisqEasyTakeOfferEvent());
-        persist();
+    public void takeOffer(BisqEasyTrade trade) {
+        handleBisqEasyTradeEvent(trade, new BisqEasyTakeOfferEvent());
     }
 
     public void sellerSendsPaymentAccount(BisqEasyTrade trade, String paymentAccountData) {
-        getProtocol(trade.getId()).handle(new BisqEasyAccountDataEvent(paymentAccountData));
-        persist();
+        handleBisqEasyTradeEvent(trade, new BisqEasyAccountDataEvent(paymentAccountData));
     }
 
     public void buyerConfirmFiatSent(BisqEasyTrade trade) {
-        getProtocol(trade.getId()).handle(new BisqEasyConfirmFiatSentEvent());
-        persist();
+        handleBisqEasyTradeEvent(trade, new BisqEasyConfirmFiatSentEvent());
     }
 
     public void buyerSendBtcAddress(BisqEasyTrade trade, String buyersBtcAddress) {
-        getProtocol(trade.getId()).handle(new BisqEasySendBtcAddressEvent(buyersBtcAddress));
-        persist();
+        handleBisqEasyTradeEvent(trade, new BisqEasySendBtcAddressEvent(buyersBtcAddress));
     }
 
     public void sellerConfirmFiatReceipt(BisqEasyTrade trade) {
-        getProtocol(trade.getId()).handle(new BisqEasyConfirmFiatReceiptEvent());
-        persist();
+        handleBisqEasyTradeEvent(trade, new BisqEasyConfirmFiatReceiptEvent());
     }
 
     public void sellerConfirmBtcSent(BisqEasyTrade trade, String txId) {
-        getProtocol(trade.getId()).handle(new BisqEasyConfirmBtcSentEvent(txId));
-        persist();
+        handleBisqEasyTradeEvent(trade, new BisqEasyConfirmBtcSentEvent(txId));
     }
 
     public void btcConfirmed(BisqEasyTrade trade) {
-        getProtocol(trade.getId()).handle(new BisqEasyBtcConfirmedEvent());
-        persist();
+        handleBisqEasyTradeEvent(trade, new BisqEasyBtcConfirmedEvent());
     }
 
     public void rejectTrade(BisqEasyTrade trade) {
-        getProtocol(trade.getId()).handle(new BisqEasyRejectTradeEvent());
-        persist();
+        handleBisqEasyTradeEvent(trade, new BisqEasyRejectTradeEvent());
     }
 
     public void cancelTrade(BisqEasyTrade trade) {
-        getProtocol(trade.getId()).handle(new BisqEasyCancelTradeEvent());
+        handleBisqEasyTradeEvent(trade, new BisqEasyCancelTradeEvent());
+    }
+
+    private void handleBisqEasyTradeEvent(BisqEasyTrade trade, BisqEasyTradeEvent event) {
+        handleEvent(getProtocol(trade.getId()), event);
+    }
+
+    private void handleBisqEasyTradeMessage(BisqEasyTradeMessage message) {
+        handleEvent(getProtocol(message.getTradeId()), message);
+    }
+
+    private void handleEvent(BisqEasyProtocol protocol, Event event) {
+        protocol.handle(event);
         persist();
     }
 
