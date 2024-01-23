@@ -168,7 +168,7 @@ public final class BisqEasyOfferbookController extends BaseChatController<BisqEa
                         market.getBaseCurrencyCode().toLowerCase(),
                         market.getQuoteCurrencyCode().toLowerCase()).getFirst();
 
-                //todo get larger icons and dont use scaling
+                //fixme (low prio) get larger icons and dont use scaling
                 marketsImage.setScaleX(1.25);
                 marketsImage.setScaleY(1.25);
                 model.getChannelIconNode().set(marketsImage);

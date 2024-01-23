@@ -253,7 +253,7 @@ public class DesktopController extends NavigationController {
     }
 
     private boolean isLocked() {
-        // todo add wallet support
+        // todo (deferred) add wallet support
         return userIdentityService.isDataStoreEncrypted();
     }
 }

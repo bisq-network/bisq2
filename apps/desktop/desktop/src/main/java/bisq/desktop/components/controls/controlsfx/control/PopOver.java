@@ -712,10 +712,6 @@ public class PopOver extends PopupControl {
         return detachedProperty().get();
     }
 
-    // arrow size support
-
-    // TODO: make styleable
-
     private final DoubleProperty arrowSize = new SimpleDoubleProperty(this,
             "arrowSize", 12);
 
@@ -747,10 +743,6 @@ public class PopOver extends PopupControl {
     public final void setArrowSize(double size) {
         arrowSizeProperty().set(size);
     }
-
-    // arrow indent support
-
-    // TODO: make styleable
 
     private final DoubleProperty arrowIndent = new SimpleDoubleProperty(this,
             "arrowIndent", 12);
@@ -784,10 +776,6 @@ public class PopOver extends PopupControl {
     public final void setArrowIndent(double size) {
         arrowIndentProperty().set(size);
     }
-
-    // radius support
-
-    // TODO: make styleable
 
     private final DoubleProperty cornerRadius = new SimpleDoubleProperty(this,
             "cornerRadius", 6);

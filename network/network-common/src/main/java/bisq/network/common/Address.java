@@ -93,7 +93,7 @@ public final class Address implements NetworkProto, Comparable<Address> {
     }
 
     public boolean isI2pAddress() {
-        //TODO
+        //TODO (deferred) add more specific check
         return !isClearNetAddress() && !isTorAddress();
     }
 

@@ -549,7 +549,7 @@ public class ChatMessagesListView {
             return channel.getChatMessages().addObserver(new CollectionObserver<>() {
                 @Override
                 public void add(M chatMessage) {
-                    // TODO Delaying to the next render frame can cause duplicated items in case we get the channel
+                    // TODO (low prio) Delaying to the next render frame can cause duplicated items in case we get the channel
                     //  change called 2 times in short interval (should be avoid as well).
                     // @namloan Could you re-test the performance issues with testing if using UIThread.run makes a difference?
                     // There have been many changes in the meantime, so maybe the performance issue was fixed by other changes.

@@ -42,8 +42,8 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
 @Getter
 public final class ReleaseNotification implements AuthorizedDistributedData {
     public final static int MAX_MESSAGE_LENGTH = 10_000;
-
-    // todo Production key not set yet - we use devMode key only yet
+    // FIXME
+    // TODO (Critical) add production keys
     public static final Set<String> AUTHORIZED_PUBLIC_KEYS = Set.of(
             // ReleaseManager1
             "3056301006072a8648ce3d020106052b8104000a0342000498742bc67190380704173a3db345b7a7281a6d57fc754bd006740d99b8d5dcce8556034b61ce974ce95a708482d2921609d93b83361266fa209157ebc3f62983"

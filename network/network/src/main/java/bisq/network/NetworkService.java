@@ -245,7 +245,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                         NETWORK_IO_POOL));
     }
 
-    // TODO: Not used. Consider to remove it so it wont get used accidentally.
+    // TODO (low prio): Not used. Consider to remove it so it wont get used accidentally.
 
     /**
      * Send message via given senderNodeId to the supported network types of the addresses specified at

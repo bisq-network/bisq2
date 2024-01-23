@@ -55,28 +55,23 @@ public class MoreProtocolsController implements InitWithDataController<MoreProto
         switch (tradeProtocolType) {
             case LIQUID_MULTISIG: {
                 return Optional.of(new ProtocolRoadmapController(TradeProtocolType.LIQUID_MULTISIG,
-                        "protocol-liquid-multisig",
                         "https://bisq.wiki/Trade_Protocols#Liquid_Multisig"));
             }
 
             case LIQUID_SWAP: {
                 return Optional.of(new ProtocolRoadmapController(TradeProtocolType.LIQUID_SWAP,
-                        "protocol-liquid-multisig",
                         "https://bisq.wiki/Trade_Protocols#Liquid_Swaps"));
             }
             case BSQ_SWAP: {
                 return Optional.of(new ProtocolRoadmapController(TradeProtocolType.BSQ_SWAP,
-                        "protocol-bsq-swap",
                         "https://bisq.wiki/BSQ"));
             }
             case LIGHTNING_ESCROW: {
                 return Optional.of(new ProtocolRoadmapController(TradeProtocolType.LIGHTNING_ESCROW,
-                        "protocol-lightning-escrow",
                         "https://github.com/bisq-network/proposals/issues/416"));
             }
             case MONERO_SWAP: {
                 return Optional.of(new ProtocolRoadmapController(TradeProtocolType.MONERO_SWAP,
-                        "protocol-monero-swap",
                         "https://bisq.wiki/Trade_Protocols#Monero_Swaps"));
             }
             default: {

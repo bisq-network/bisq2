@@ -50,7 +50,7 @@ class MaterialPasswordFieldTest {
     MaterialPasswordField materialPasswordField;
 
     static {
-        //TODO: Set these properties based on the environment (local or CI)
+        // Set these properties based on the environment (local or CI)
         //https://nofluffjuststuff.com/blog/andres_almiray/2016/02/running_testfx_tests_in_headless_mode
         System.setProperty("testfx.robot", "glass");
         // Set to false to see the robot when running locally. On OSX one need to grant permissions at the privacy settings. 

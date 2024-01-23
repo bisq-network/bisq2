@@ -27,11 +27,6 @@ public class MarketImageComposition {
     public static Pair<StackPane, List<ImageView>> imageBoxForMarket(String baseCurrencyCode, String quoteCurrencyCode) {
         StackPane pane = new StackPane();
 
-        // TODO check on systems without high resolution
-       /* boolean isRetina = ImageUtil.isRetina();
-        pane.setPrefHeight(isRetina ? 34 : 17);
-        pane.setPrefWidth(isRetina ? 30 : 15);*/
-
         pane.setPrefHeight(34);
         pane.setPrefWidth(30);
 

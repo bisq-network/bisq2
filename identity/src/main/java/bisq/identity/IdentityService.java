@@ -70,7 +70,6 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
      * Creates and initialized the default identity. This includes initialisation of the associated network node
      * on at least one transport.
      */
-    // TODO Would be good to decouple that dependency on network node initialisation
     @Override
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");

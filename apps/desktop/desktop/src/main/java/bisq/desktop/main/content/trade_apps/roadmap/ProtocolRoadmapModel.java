@@ -28,8 +28,7 @@ public class ProtocolRoadmapModel implements Model {
     private final String iconId;
     private final String url;
 
-    //todo
-    public ProtocolRoadmapModel(TradeProtocolType tradeProtocolType, String iconId, String url) {
+    public ProtocolRoadmapModel(TradeProtocolType tradeProtocolType, String url) {
         this.tradeProtocolType = tradeProtocolType;
         this.url = url;
         this.iconId = "protocol-" + StringUtils.snakeCaseToKebapCase(tradeProtocolType.name().toLowerCase());

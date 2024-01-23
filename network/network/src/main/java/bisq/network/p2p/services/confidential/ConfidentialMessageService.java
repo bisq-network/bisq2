@@ -249,7 +249,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
         BroadcastResult mailboxFuture = dataService.get().addMailboxData(mailboxData,
                         senderKeyPair,
                         receiverPubKey.getPublicKey())
-                .join(); // TODO async for creating the stores, could be made blocking
+                .join(); // TODO (refactor, low prio) async for creating the stores, could be made blocking
         return new SendConfidentialMessageResult(MessageDeliveryStatus.TRY_ADD_TO_MAILBOX).setMailboxFuture(mailboxFuture);
     }
 

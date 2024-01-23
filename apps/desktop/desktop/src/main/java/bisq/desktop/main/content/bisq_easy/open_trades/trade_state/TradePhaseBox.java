@@ -89,7 +89,6 @@ class TradePhaseBox {
         }
 
         private void setSelectedChannel(@Nullable BisqEasyOpenTradeChannel channel) {
-            //todo
             model.setSelectedChannel(channel);
             if (isInMediationPin != null) {
                 isInMediationPin.unbind();

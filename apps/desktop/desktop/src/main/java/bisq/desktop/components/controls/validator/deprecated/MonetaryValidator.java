@@ -20,7 +20,7 @@ package bisq.desktop.components.controls.validator.deprecated;
 import bisq.i18n.Res;
 import lombok.extern.slf4j.Slf4j;
 
-// todo better use another validation framework as in bisq 1
+// todo: (refactor) better use another validation framework as in bisq 1
 @Slf4j
 @Deprecated
 public class MonetaryValidator extends InputValidator {

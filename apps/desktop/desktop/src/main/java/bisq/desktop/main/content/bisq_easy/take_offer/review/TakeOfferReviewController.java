@@ -66,7 +66,7 @@ import java.util.function.Consumer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-// TODO Consider to use a base class to avoid code duplication with TradeWizardReviewController
+// TODO (refactor, low prio) Consider to use a base class to avoid code duplication with TradeWizardReviewController
 @Slf4j
 public class TakeOfferReviewController implements Controller {
     private final TakeOfferReviewModel model;

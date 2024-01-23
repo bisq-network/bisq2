@@ -134,7 +134,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                 } else {
                     value.ifPresent(s -> tableColumn.setComparator(Comparator.comparing(e -> s)));
                 }
-                //todo support for  valuePropertySupplier, valuePropertyBiDirBindingSupplier missing
+                //todo (low prio) add support for  valuePropertySupplier, valuePropertyBiDirBindingSupplier missing
             }
             return tableColumn;
         }

@@ -62,7 +62,7 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 /**
  * Maintains a map of ServiceNodes by transportType. Delegates to relevant ServiceNode.
  */
-// TODO: if we change the supported transports we need to clean up the persisted networkIds.
+// TODO (deferred): if we change the supported transports we need to clean up the persisted networkIds.
 @Slf4j
 public class ServiceNodesByTransport {
     private final Map<TransportType, ServiceNode> map = new ConcurrentHashMap<>();

@@ -69,7 +69,7 @@ public class BisqEasyPrivateChatChannelSelectionService extends ChatChannelSelec
 
     @Override
     protected Stream<ChatChannel<?>> getAllChatChannels() {
-        // fixme: cannot return publicChatChannelService.getChannels().stream() due type issues
+        // fixme (low prio): cannot return publicChatChannelService.getChannels().stream() due type issues
         return Stream.concat(channelService.getChannels().stream(), Stream.empty());
     }
 }

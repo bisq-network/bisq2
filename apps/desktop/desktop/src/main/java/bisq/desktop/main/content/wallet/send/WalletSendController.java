@@ -55,7 +55,6 @@ public class WalletSendController implements Controller {
 
         });
 
-        //todo check if wallet is encrypted
         walletService.isWalletEncrypted()
                 .thenAccept(isWalletEncrypted -> UIThread.run(() -> model.getIsPasswordVisible().set(isWalletEncrypted)));
     }
@@ -67,7 +66,6 @@ public class WalletSendController implements Controller {
     }
 
     void onSend() {
-        //todo
         double amount = Double.parseDouble(model.getAmount().get());
         String address = model.getAddress().get();
         walletService.sendToAddress(Optional.ofNullable(model.getPassword().get()), address, amount)

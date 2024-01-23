@@ -140,7 +140,6 @@ public final class PocOffer implements DistributedData {
             return Monetary.from(quoteAmountValue, market.getQuoteCurrencyCode());
         } else if (priceSpec instanceof FloatPriceSpec) {
             Optional<MarketPrice> marketPrice = marketPriceService.findMarketPrice(market);
-            //todo
             throw new RuntimeException("floatPrice not impl yet");
         } else {
             throw new IllegalStateException("Not supported priceSpec. priceSpec=" + priceSpec);
@@ -152,7 +151,6 @@ public final class PocOffer implements DistributedData {
             return ((FixPriceSpec) priceSpec).getPriceQuote();
         } else if (priceSpec instanceof FloatPriceSpec) {
             Optional<MarketPrice> marketPrice = marketPriceService.findMarketPrice(market);
-            //todo
             throw new RuntimeException("floatPrice not impl yet");
         } else {
             throw new IllegalStateException("Not supported priceSpec. priceSpec=" + priceSpec);

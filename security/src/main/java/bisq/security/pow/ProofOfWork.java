@@ -28,7 +28,7 @@ import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.Optional;
 
-// TODO use Optional instead of Nullable
+// TODO (refactor, low prio) use Optional instead of Nullable
 // Borrowed from: https://github.com/bisq-network/bisq
 @Slf4j
 @Getter

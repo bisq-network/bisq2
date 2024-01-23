@@ -115,7 +115,7 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
         // This prevents that the list gets opened and steals the focus
         setupFocusHandler();
 
-        // todo does not update items when we change list so add a handler here for a quick fix
+        // todo (investigate, low prio) does not update items when we change list so add a handler here for a quick fix
         // need to figure out why its not updating
         items.addListener(new WeakReference<>((ListChangeListener<T>) c -> setAutocompleteItems(items)).get());
     }
@@ -366,8 +366,6 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
             // of 5 as well. Design had 25 but that would complicate layouts where comboBoxes would require 
             // larger paddings in containers or some adoptions to clipping areas...
 
-            // todo: 5px does not look good, so leave it to 25 and wait for designer to make decision. Maybe we need
-            // update layouts then...
             dropShadow = new DropShadow();
             dropShadow.setBlurType(BlurType.GAUSSIAN);
             dropShadow.setRadius(25);

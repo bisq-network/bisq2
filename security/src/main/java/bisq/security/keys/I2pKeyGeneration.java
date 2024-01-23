@@ -20,7 +20,7 @@ package bisq.security.keys;
 public class I2pKeyGeneration {
     public static byte[] generatePrivateKey() {
         byte[] privateKey = new byte[32];
-        //todo impl
+        //todo (deferred) impl
         return privateKey;
     }
 
@@ -31,13 +31,13 @@ public class I2pKeyGeneration {
 
     private static byte[] getPublicKey(byte[] privateKey) {
         byte[] publicKey = new byte[32];
-        //todo impl
+        //todo (deferred) impl
         return publicKey;
     }
 
 
     public static String getDestinationFromPublicKey(byte[] publicKey) {
-        // todo impl
+        // todo (deferred) impl
         return "TODO.destination";
     }
 }

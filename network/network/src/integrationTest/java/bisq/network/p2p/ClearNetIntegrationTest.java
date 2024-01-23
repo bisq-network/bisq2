@@ -19,7 +19,7 @@ package bisq.network.p2p;
 
 import lombok.extern.slf4j.Slf4j;
 
-//TODO Test commented out as network layer has changed. not sure yet the test will be reactivate/rewritten or delete later.
+//TODO (low prio) Test commented out as network layer has changed. not sure yet the test will be reactivate/rewritten or delete later.
 // leave it for now...
 @Slf4j
 public class ClearNetIntegrationTest extends BaseTest {

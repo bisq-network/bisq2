@@ -52,7 +52,9 @@ public class ExplorerService {
     @ToString
     public static final class Config {
         public static Config from(com.typesafe.config.Config config) {
-            //todo move to conf
+            // FIXME
+            //TODO (Critical) add production providers we use in release
+            //TODO (refactor, deferred) move to conf
             return new Config(List.of(
                     //https://mempool.space/api/tx/15e10745f15593a899cef391191bdd3d7c12412cc4696b7bcb669d0feadc8521
                     new Provider("https://mempool.emzy.de/", TransportType.CLEAR),

@@ -115,7 +115,7 @@ public class SecurityManagerController implements Controller {
 
     void onSendAlert() {
         String message = model.getMessage().get();
-        //todo use validation framework instead (not impl yet)
+        //todo (refactor, low prio) use validation framework instead (not impl yet)
         if (message != null && message.length() > AuthorizedAlertData.MAX_MESSAGE_LENGTH) {
             new Popup().warning(Res.get("authorizedRole.securityManager.alert.message.tooLong")).show();
             return;

@@ -272,7 +272,7 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
     }
 
 
-    //todo
+    //todo (refactor, low prio)
     @Override
     protected BisqEasyOpenTradeChannel createAndGetNewPrivateChatChannel(UserProfile peer, UserIdentity myUserIdentity) {
         throw new RuntimeException("createNewChannel not supported at PrivateTradeChannelService. " +

@@ -158,7 +158,7 @@ public class TakeOfferPriceController implements Controller {
     }
 
 
-    //todo add validator and give feedback
+    //todo (refactor, low prio) add validator and give feedback
     private boolean isQuoteValid(PriceQuote priceQuote) {
         Optional<Double> optionalPercentage = getPercentage(priceQuote);
         if (optionalPercentage.isPresent()) {

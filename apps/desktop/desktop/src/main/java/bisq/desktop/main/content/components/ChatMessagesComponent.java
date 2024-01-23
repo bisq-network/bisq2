@@ -52,7 +52,6 @@ import bisq.user.profile.UserProfileService;
 import bisq.wallets.core.WalletService;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.*;
-import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -60,7 +59,10 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
-import javafx.scene.layout.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -285,7 +287,6 @@ public class ChatMessagesComponent {
         private void listUserNamesHandler(UserProfile user) {
             String content = model.getTextInput().get().replaceAll("@[a-zA-Z\\d]*$", "@" + user.getUserName() + " ");
             model.getTextInput().set(content);
-            //todo
             view.inputField.positionCaret(content.length());
         }
 
@@ -295,7 +296,6 @@ public class ChatMessagesComponent {
                     .orElse("");
             String content = model.getTextInput().get().replaceAll("#[a-zA-Z\\d]*$", "#" + channelTitle + " ");
             model.getTextInput().set(content);
-            //todo
             view.inputField.positionCaret(content.length());
         }
 

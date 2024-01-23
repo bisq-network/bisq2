@@ -48,8 +48,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 public class Bisq1BridgeHttpService implements Service {
-    //todo set it to block height of launch date. We are not interested in txs published before
-    private static final int LAUNCH_BLOCK_HEIGHT = 0;
+    //todo (Critical) set it to block height of launch date. We are not interested in txs published before
+    private static final int LAUNCH_BLOCK_HEIGHT = 827056; // block height on Jan 23 2024
 
     @Getter
     @ToString
@@ -196,7 +196,7 @@ public class Bisq1BridgeHttpService implements Service {
         return CompletableFuture.supplyAsync(() -> {
             // We cannot use URLEncoding as it would convert a + into a space (+ and / can appear in base64 encoding)
             String signatureAsHex = Hex.encode(Base64.decode(signatureBase64));
-            //todo URLEncoding for userName
+            //todo (Critical) URLEncoding for userName
             String path = "/api/v1/bonded-role-verification/get-bonded-role-verification/" +
                     bondUserName + "/" +
                     roleType + "/" +

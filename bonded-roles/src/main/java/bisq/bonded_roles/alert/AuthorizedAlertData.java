@@ -44,7 +44,8 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
 public final class AuthorizedAlertData implements AuthorizedDistributedData {
     public final static int MAX_MESSAGE_LENGTH = 1000;
 
-    // todo Production key not set yet - we use devMode key only yet
+    // FIXME
+    // TODO (Critical) Production key not set yet - we use devMode key only yet
     public static final Set<String> AUTHORIZED_PUBLIC_KEYS = Set.of(
             // SecurityManager1
             "3056301006072a8648ce3d020106052b8104000a03420004b406936966b236bcfd26a85f53b952fbc8fc1c1c80b549de589c8c3bd1e0a114dc426afb6794747341f117ac9c452ad5ecbfcbb66801527ba1dbc7a33f776a40"

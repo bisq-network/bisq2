@@ -25,7 +25,7 @@ import lombok.ToString;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-//todo check at connection handshake
+//todo (Critical) check at connection handshake
 public class BanList {
     public enum Reason {
         ADDRESS_VALIDATION_FAILED,

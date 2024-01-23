@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.lang.ref.WeakReference;
 import java.util.List;
 
-// TODO use TextFlow
+// TODO (refactor, low prio) use TextFlow
 @Slf4j
 public class MultiStyleLabelPane extends HBox {
     private final StringProperty text = new SimpleStringProperty();

@@ -119,7 +119,7 @@ public abstract class PrivateChatsController extends ChatController<PrivateChats
     }
 
     void onLeaveChat() {
-        //todo add popup
+        //todo (Critical) add popup
         if (model.getSelectedChannel() != null) {
             channelService.leaveChannel(model.getSelectedChannel().getId());
             selectionService.getSelectedChannel().set(null);
