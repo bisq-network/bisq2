@@ -88,7 +88,7 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
         }
         KeyPair keyPair = userIdentity.getNetworkIdWithKeyPair().getKeyPair();
         return userIdentityService.maybePublishUserProfile(userIdentity.getUserProfile(), keyPair)
-                .thenCompose(result -> networkService.publishAuthenticatedData(message, keyPair));
+                .thenCompose(nil -> networkService.publishAuthenticatedData(message, keyPair));
     }
 
     public CompletableFuture<BroadcastResult> publishEditedChatMessage(M originalChatMessage,

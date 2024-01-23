@@ -39,11 +39,9 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.security.KeyPair;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -54,14 +52,14 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     @Getter
     @ToString
     public static final class Config {
-        private final long republishUserProfileDelay;
+        private final long republishUserProfileInterval;
 
-        public Config(long republishUserProfileDelay) {
-            this.republishUserProfileDelay = TimeUnit.HOURS.toMillis(republishUserProfileDelay);
+        public Config(long republishUserProfileInterval) {
+            this.republishUserProfileInterval = TimeUnit.HOURS.toMillis(republishUserProfileInterval);
         }
 
         public static Config from(com.typesafe.config.Config typeSafeConfig) {
-            return new Config(typeSafeConfig.getLong("republishUserProfileDelay"));
+            return new Config(typeSafeConfig.getLong("republishUserProfileInterval"));
         }
     }
 
@@ -74,8 +72,6 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     private final NetworkService networkService;
     private final Object lock = new Object();
     private final Config config;
-    //TODO move to store and persist
-    private final Map<String, Long> publishTimeByChatUserId = new ConcurrentHashMap<>();
     @Getter
     private final Observable<UserIdentity> newlyCreatedUserIdentity = new Observable<>();
 
@@ -93,9 +89,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         log.info("initialize");
 
         // We delay publishing to be better bootstrapped 
-        Scheduler.run(() -> getUserIdentities().forEach(userProfile ->
-                        maybePublishUserProfile(userProfile.getUserProfile(), userProfile.getNetworkIdWithKeyPair().getKeyPair())))
-                .after(5, TimeUnit.SECONDS);
+        Scheduler.run(this::maybePublishAllUserProfiles).after(5, TimeUnit.SECONDS);
         return CompletableFuture.completedFuture(true);
     }
 
@@ -210,13 +204,20 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
                 userIdentity.getIdentity().getNetworkIdWithKeyPair().getKeyPair());
     }
 
-    public CompletableFuture<Boolean> maybePublishUserProfile(UserProfile userProfile, KeyPair keyPair) {
-        long lastPublished = Optional.ofNullable(publishTimeByChatUserId.get(userProfile.getId())).orElse(0L);
-        long passed = System.currentTimeMillis() - lastPublished;
-        if (passed > config.getRepublishUserProfileDelay()) {
-            return publishPublicUserProfile(userProfile, keyPair).thenApply(result -> true);
+    public CompletableFuture<Void> maybePublishUserProfile(UserProfile userProfile, KeyPair keyPair) {
+        if (shouldPublishUserProfile()) {
+            return publishPublicUserProfile(userProfile, keyPair)
+                    .whenComplete((broadcastResult, throwable) -> {
+                        boolean success = throwable == null && !broadcastResult.isEmpty();
+                        // Publish all other user profiles as well
+                        getUserIdentities().stream()
+                                .filter(userIdentity -> !success || !userProfile.equals(userIdentity.getUserProfile()))
+                                .forEach(userIdentity -> publishPublicUserProfile(userIdentity.getUserProfile(),
+                                        userIdentity.getNetworkIdWithKeyPair().getKeyPair()));
+                    })
+                    .thenApply(broadcastResult -> null);
         } else {
-            return CompletableFuture.completedFuture(false);
+            return CompletableFuture.completedFuture(null);
         }
     }
 
@@ -255,6 +256,23 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
                 .collect(Collectors.toSet());
     }
 
+    private boolean shouldPublishUserProfile() {
+        return System.currentTimeMillis() - persistableStore.getLastUserProfilePublishingDate() > config.getRepublishUserProfileInterval();
+    }
+
+    private void maybePublishAllUserProfiles() {
+        if (shouldPublishUserProfile()) {
+            getUserIdentities().forEach(userIdentity -> publishPublicUserProfile(userIdentity.getUserProfile(),
+                    userIdentity.getNetworkIdWithKeyPair().getKeyPair()));
+        }
+    }
+
+    private CompletableFuture<BroadcastResult> publishPublicUserProfile(UserProfile userProfile, KeyPair keyPair) {
+        persistableStore.setLastUserProfilePublishingDate(System.currentTimeMillis());
+        persist();
+        return networkService.publishAuthenticatedData(userProfile, keyPair);
+    }
+
     private UserIdentity createUserIdentity(String nickName,
                                             ProofOfWork proofOfWork,
                                             String terms,
@@ -272,10 +290,5 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         newlyCreatedUserIdentity.set(userIdentity);
         persist();
         return userIdentity;
-    }
-
-    private CompletableFuture<BroadcastResult> publishPublicUserProfile(UserProfile userProfile, KeyPair keyPair) {
-        publishTimeByChatUserId.put(userProfile.getId(), System.currentTimeMillis());
-        return networkService.publishAuthenticatedData(userProfile, keyPair);
     }
 }
