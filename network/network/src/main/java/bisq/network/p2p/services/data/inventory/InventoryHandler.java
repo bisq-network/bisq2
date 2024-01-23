@@ -23,6 +23,7 @@ import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
+import bisq.network.p2p.services.data.inventory.filter.InventoryFilter;
 import bisq.network.p2p.services.data.storage.append.AddAppendOnlyDataRequest;
 import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
@@ -35,7 +36,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
-import static java.util.concurrent.CompletableFuture.supplyAsync;
+import static java.util.concurrent.CompletableFuture.runAsync;
 
 @Getter
 @Slf4j
@@ -54,15 +55,14 @@ class InventoryHandler implements Connection.Listener {
         connection.addListener(this);
     }
 
-    CompletableFuture<Inventory> request(DataFilter dataFilter) {
-        // log.debug("Node {} send GetInventoryRequest to {} with dataFilter {} and nonce {}. Connection={}",
-        //        node, connection.getPeerAddress(), dataFilter, nonce, connection.getId());
+    CompletableFuture<Inventory> request(InventoryFilter inventoryFilter) {
         ts = System.currentTimeMillis();
-        supplyAsync(() -> node.send(new InventoryRequest(dataFilter, nonce), connection), NetworkService.NETWORK_IO_POOL)
-                .whenComplete((c, throwable) -> {
+        InventoryRequest inventoryRequest = new InventoryRequest(inventoryFilter, nonce);
+        runAsync(() -> node.send(inventoryRequest, connection), NetworkService.NETWORK_IO_POOL)
+                .whenComplete((connection, throwable) -> {
                     if (throwable != null) {
                         future.completeExceptionally(throwable);
-                        dispose();
+                        removeListeners();
                     }
                 });
         return future;
@@ -73,55 +73,59 @@ class InventoryHandler implements Connection.Listener {
         if (envelopePayloadMessage instanceof InventoryResponse) {
             InventoryResponse response = (InventoryResponse) envelopePayloadMessage;
             if (response.getRequestNonce() == nonce) {
-                Map<String, List<String>> details = new HashMap<>();
-                response.getInventory().getEntries()
-                        .forEach(entry -> {
-                            String key = entry.getClass().getSimpleName();
-                            String data = null;
-                            if (entry instanceof AddAuthenticatedDataRequest) {
-                                AddAuthenticatedDataRequest addRequest = (AddAuthenticatedDataRequest) entry;
-                                data = addRequest.getAuthenticatedSequentialData().getAuthenticatedData().getDistributedData().getClass().getSimpleName();
-                            } else if (entry instanceof RemoveAuthenticatedDataRequest) {
-                                RemoveAuthenticatedDataRequest removeRequest = (RemoveAuthenticatedDataRequest) entry;
-                                data = Hex.encode(removeRequest.getHash());
-                                key += ": Hashes";
-                            } else if (entry instanceof AddMailboxRequest) {
-                                AddMailboxRequest addRequest = (AddMailboxRequest) entry;
-                                data = addRequest.getMailboxSequentialData().getMailboxData().getConfidentialMessage().getReceiverKeyId();
-                                key += ": ReceiverKeyIds";
-                            } else if (entry instanceof RemoveMailboxRequest) {
-                                RemoveMailboxRequest removeRequest = (RemoveMailboxRequest) entry;
-                                data = Hex.encode(removeRequest.getHash());
-                                key += ": Hashes";
-                            } else if (entry instanceof AddAppendOnlyDataRequest) {
-                                AddAppendOnlyDataRequest addRequest = (AddAppendOnlyDataRequest) entry;
-                                data = addRequest.getAppendOnlyData().getClass().getSimpleName();
-                            }
-                            if (data != null) {
-                                details.putIfAbsent(key, new ArrayList<>());
-                                List<String> list = details.get(key);
-                                list.add(data);
-                                details.put(key, list);
-                            }
-                        });
-
-                String report = details.entrySet().stream().map(e -> e.getValue().size() + " " + e.getKey() + ": " + e.getValue())
-                        .collect(Collectors.joining("\n"));
-                if (report.isEmpty()) {
-                    report = "No items received";
-                }
-                log.info("\n##########################################################################################\n" +
-                        "Inventory from: " + connection.getPeerAddress() + "\n" +
-                        report +
-                        "\n##########################################################################################");
+                printReceivedInventory(response);
                 removeListeners();
                 connection.getConnectionMetrics().addRtt(System.currentTimeMillis() - ts);
                 future.complete(response.getInventory());
             } else {
-                log.warn("Node {} received Pong from {} with invalid nonce {}. Request nonce was {}. Connection={}",
+                log.warn("Node {} received InventoryResponse from {} with invalid nonce {}. Request nonce was {}. Connection={}",
                         node, connection.getPeerAddress(), response.getRequestNonce(), nonce, connection.getId());
             }
         }
+    }
+
+    private void printReceivedInventory(InventoryResponse response) {
+        Map<String, List<String>> details = new HashMap<>();
+        response.getInventory().getEntries()
+                .forEach(entry -> {
+                    String key = entry.getClass().getSimpleName();
+                    String data = null;
+                    if (entry instanceof AddAuthenticatedDataRequest) {
+                        AddAuthenticatedDataRequest addRequest = (AddAuthenticatedDataRequest) entry;
+                        data = addRequest.getAuthenticatedSequentialData().getAuthenticatedData().getDistributedData().getClass().getSimpleName();
+                    } else if (entry instanceof RemoveAuthenticatedDataRequest) {
+                        RemoveAuthenticatedDataRequest removeRequest = (RemoveAuthenticatedDataRequest) entry;
+                        data = Hex.encode(removeRequest.getHash());
+                        key += ": Hashes";
+                    } else if (entry instanceof AddMailboxRequest) {
+                        AddMailboxRequest addRequest = (AddMailboxRequest) entry;
+                        data = addRequest.getMailboxSequentialData().getMailboxData().getConfidentialMessage().getReceiverKeyId();
+                        key += ": ReceiverKeyIds";
+                    } else if (entry instanceof RemoveMailboxRequest) {
+                        RemoveMailboxRequest removeRequest = (RemoveMailboxRequest) entry;
+                        data = Hex.encode(removeRequest.getHash());
+                        key += ": Hashes";
+                    } else if (entry instanceof AddAppendOnlyDataRequest) {
+                        AddAppendOnlyDataRequest addRequest = (AddAppendOnlyDataRequest) entry;
+                        data = addRequest.getAppendOnlyData().getClass().getSimpleName();
+                    }
+                    if (data != null) {
+                        details.putIfAbsent(key, new ArrayList<>());
+                        List<String> list = details.get(key);
+                        list.add(data);
+                        details.put(key, list);
+                    }
+                });
+
+        String report = details.entrySet().stream().map(e -> e.getValue().size() + " " + e.getKey() + ": " + e.getValue())
+                .collect(Collectors.joining("\n"));
+        if (report.isEmpty()) {
+            report = "No items received";
+        }
+        log.info("\n##########################################################################################\n" +
+                "Inventory from: " + connection.getPeerAddress() + "\n" +
+                report +
+                "\n##########################################################################################");
     }
 
     @Override
