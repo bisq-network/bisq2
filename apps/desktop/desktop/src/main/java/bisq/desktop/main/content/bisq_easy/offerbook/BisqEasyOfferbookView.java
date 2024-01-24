@@ -20,7 +20,6 @@ package bisq.desktop.main.content.bisq_easy.offerbook;
 import bisq.desktop.common.Icons;
 import bisq.desktop.common.Layout;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.ComboBoxWithSearch;
 import bisq.desktop.main.content.chat.BaseChatView;
@@ -97,18 +96,10 @@ public final class BisqEasyOfferbookView extends BaseChatView {
         searchBox.setMaxHeight(searchBoxHeight);
         searchBox.setPrefHeight(searchBoxHeight);
 
-        double scale = 1.15;
-        helpButton = BisqIconButton.createIconButton("icon-help");
-        helpButton.setScaleX(scale);
-        helpButton.setScaleY(scale);
-        infoButton = BisqIconButton.createIconButton("icon-info");
-        infoButton.setScaleX(scale);
-        infoButton.setScaleY(scale);
+        helpButton.setText(Res.get("chat.dropDownMenu.tradeGuide"));
 
         HBox.setMargin(channelTitle, new Insets(0, -10, 0, 4));
-        HBox.setMargin(helpButton, new Insets(-2, 0, 0, 0));
-        HBox.setMargin(infoButton, new Insets(-2, 0, 0, 0));
-        titleHBox.getChildren().addAll(headerTitle, searchBox, helpButton, infoButton);
+        titleHBox.getChildren().addAll(headerTitle, searchBox, headerDropdownMenu);
     }
 
     @Override

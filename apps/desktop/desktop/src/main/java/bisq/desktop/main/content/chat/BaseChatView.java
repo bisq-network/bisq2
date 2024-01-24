@@ -20,9 +20,8 @@ package bisq.desktop.main.content.chat;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.NavigationView;
 import bisq.desktop.components.controls.SearchBox;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
+import bisq.i18n.Res;
+import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -38,7 +37,8 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
     protected final Label channelTitle = new Label();
     protected final Label channelDescription = new Label();
     protected Label channelIcon = new Label();
-    protected Button helpButton, infoButton;
+    protected final MenuItem helpButton = new MenuItem();
+    protected final MenuItem infoButton = new MenuItem();
     protected final VBox sideBar = new VBox();
     protected final VBox centerVBox = new VBox();
     protected final HBox titleHBox = new HBox(10);
@@ -47,6 +47,7 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
     protected Pane chatUserOverviewRoot;
     protected Subscription channelIconPin, chatUserOverviewRootSubscription;
     protected final SearchBox searchBox = new SearchBox();
+    protected final DropdownMenu headerDropdownMenu = new DropdownMenu("");
 
     public BaseChatView(BaseChatModel model,
                         BaseChatController<?, ?> controller,
@@ -57,6 +58,8 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
         this.chatMessagesComponent = chatMessagesComponent;
         this.channelSidebar = channelSidebar;
 
+        setUpHeaderDropdownMenu();
+
         configTitleHBox();
         configCenterVBox();
         configSideBarVBox();
@@ -64,6 +67,19 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
 
         root.setFitToWidth(true);
         root.setFitToHeight(true);
+    }
+
+    private void setUpHeaderDropdownMenu() {
+        headerDropdownMenu.setGraphic(ImageUtil.getImageViewById("ellipsis-v"));
+        headerDropdownMenu.addMenuItems(helpButton, infoButton);
+
+        ImageView helpIcon = ImageUtil.getImageViewById("icon-help");
+        helpButton.setText(Res.get("chat.dropDownMenu.chatRules"));
+        helpButton.setGraphic(helpIcon);
+
+        ImageView infoIcon = ImageUtil.getImageViewById("icon-info");
+        infoButton.setText(Res.get("chat.dropDownMenu.channelInfo"));
+        infoButton.setGraphic(infoIcon);
     }
 
     protected abstract void configTitleHBox();

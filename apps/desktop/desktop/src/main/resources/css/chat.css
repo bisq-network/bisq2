@@ -246,7 +246,63 @@
 }
 
 /*******************************************************************************
- * Side bar                                                          *
+ * Dropdown Menu                                                               *
+ ******************************************************************************/
+
+.dropdown-menu {
+    -fx-background-color: transparent;
+    -fx-background-radius: 6;
+    -fx-border-width: 0;
+}
+
+.dropdown-menu:hover,
+.dropdown-menu-active {
+    -fx-background-color: -bisq-dark-grey-40;
+}
+
+.dropdown-menu > .arrow-button {
+    -fx-padding: 0;
+    -fx-shape: none;
+}
+
+.dropdown-menu-popup {
+    -fx-background-color: -bisq-dark-grey-40;
+    -fx-background-radius: 6;
+    -fx-padding: 8 3 8 3;
+    -fx-border-color: -bisq-dark-grey-50;
+    -fx-border-width: 1;
+    -fx-border-radius: 6;
+    -fx-effect: none;
+}
+
+.dropdown-menu-popup .menu-item,
+.dropdown-menu-popup .menu-item:focused {
+    -fx-padding: 10;
+    -fx-background-color: transparent;
+    -fx-cursor: hand;
+}
+
+.dropdown-menu-popup .menu-item .label {
+    -fx-padding: 0 0 0 5;
+}
+
+.dropdown-menu-popup .menu-item > .label,
+.dropdown-menu-popup .menu-item:focused > .label {
+    -fx-font-size: 1em;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-family: "IBM Plex Sans";
+}
+
+.dropdown-menu-popup .menu-item:hover {
+    -fx-background-color: -bisq-dark-grey-20;
+}
+
+.dropdown-menu-popup .menu-item:hover > .label {
+    -fx-text-fill: -fx-light-text-color;
+}
+
+/*******************************************************************************
+ * Side bar                                                                    *
  ******************************************************************************/
 
 .chat-side-bar-user-profile-nickname {
