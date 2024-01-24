@@ -34,16 +34,16 @@ public enum BisqEasyTradeState implements State {
     TAKER_RECEIVED_TAKE_OFFER_RESPONSE, // TODO: REMOVE
 
     // BUYER AS TAKER *****************************/
-    // Branch 1: Buyer received take offer response first
+    // Branch 1: Buyer receives take offer response first
     TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA,
 
-        // Branch 1.1.: Buyer sent Btc address first
+        // Branch 1.1.: Buyer sends Btc address first
         TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA,
 
-        // Branch 1.2.: Buyer received account data first
+        // Branch 1.2.: Buyer receives account data first
         TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA,
 
-    // Branch 2: Buyer sent Btc address first
+    // Branch 2: Buyer sends Btc address first
     TAKER_DID_NOT_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA,
     //TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA,
 
@@ -53,16 +53,16 @@ public enum BisqEasyTradeState implements State {
 
 
     // SELLER AS TAKER *****************************/
-    // Branch 1: Seller received take offer response first
+    // Branch 1: Seller receives take offer response first
     TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS,
 
-        // Branch 1.1.: Seller sent account data first
+        // Branch 1.1.: Seller sends account data first
         TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS,
 
-        // Branch 1.2.: Buyer received account data first
+        // Branch 1.2.: Buyer receives account data first
         TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS,
 
-    // Branch 2: Seller sent account data first
+    // Branch 2: Seller sends account data first
     TAKER_DID_NOT_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS,
     //TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS,
 
@@ -72,10 +72,10 @@ public enum BisqEasyTradeState implements State {
 
 
     // SELLER AS MAKER *****************************/
-    // Branch 1: Seller sent account data first
+    // Branch 1: Seller sends account data first
     SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS,
 
-    // Branch 2: Seller received btc address first
+    // Branch 2: Seller receives btc address first
     SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS,
 
     // Unique final converging step (the two states have been completed)
