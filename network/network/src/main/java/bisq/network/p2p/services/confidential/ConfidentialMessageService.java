@@ -59,7 +59,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
         void onMessage(EnvelopePayloadMessage envelopePayloadMessage, PublicKey senderPublicKey);
     }
 
-    public interface MessageListener {
+    public interface Listener {
         void onMessage(EnvelopePayloadMessage envelopePayloadMessage);
     }
 
@@ -67,7 +67,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
     private final KeyBundleService keyBundleService;
     private final Optional<DataService> dataService;
     private final Optional<MessageDeliveryStatusService> messageDeliveryStatusService;
-    private final Set<MessageListener> listeners = new CopyOnWriteArraySet<>();
+    private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     private final Set<ConfidentialMessageListener> confidentialMessageListeners = new CopyOnWriteArraySet<>();
 
     public ConfidentialMessageService(NodesById nodesById,
@@ -200,12 +200,12 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
         }
     }
 
-    public void addMessageListener(MessageListener messageListener) {
-        listeners.add(messageListener);
+    public void addMessageListener(Listener listener) {
+        listeners.add(listener);
     }
 
-    public void removeMessageListener(MessageListener messageListener) {
-        listeners.remove(messageListener);
+    public void removeMessageListener(Listener listener) {
+        listeners.remove(listener);
     }
 
     public void addConfidentialMessageListener(ConfidentialMessageListener listener) {

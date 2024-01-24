@@ -42,7 +42,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
-public class SubmarineTradeService implements PersistenceClient<SubmarineTradeStore>, Service, ConfidentialMessageService.MessageListener {
+public class SubmarineTradeService implements PersistenceClient<SubmarineTradeStore>, Service, ConfidentialMessageService.Listener {
     @Getter
     private final SubmarineTradeStore persistableStore = new SubmarineTradeStore();
     @Getter

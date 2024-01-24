@@ -43,7 +43,7 @@ public abstract class PrivateChatChannelService<
         M extends PrivateChatMessage,
         C extends PrivateChatChannel<M>,
         S extends PersistableStore<S>
-        > extends ChatChannelService<M, C, S> implements ConfidentialMessageService.MessageListener {
+        > extends ChatChannelService<M, C, S> implements ConfidentialMessageService.Listener {
     protected final ProofOfWorkService proofOfWorkService;
 
     public PrivateChatChannelService(NetworkService networkService,

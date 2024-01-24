@@ -211,12 +211,12 @@ public class ServiceNodesByTransport {
     }
 
 
-    public void addMessageListener(ConfidentialMessageService.MessageListener messageListener) {
-        map.values().forEach(serviceNode -> serviceNode.addMessageListener(messageListener));
+    public void addMessageListener(ConfidentialMessageService.Listener listener) {
+        map.values().forEach(serviceNode -> serviceNode.addMessageListener(listener));
     }
 
-    public void removeMessageListener(ConfidentialMessageService.MessageListener messageListener) {
-        map.values().forEach(serviceNode -> serviceNode.removeMessageListener(messageListener));
+    public void removeMessageListener(ConfidentialMessageService.Listener listener) {
+        map.values().forEach(serviceNode -> serviceNode.removeMessageListener(listener));
     }
 
     public void addConfidentialMessageListener(ConfidentialMessageService.ConfidentialMessageListener listener) {

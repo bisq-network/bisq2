@@ -42,7 +42,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
-public class MultisigTradeService implements PersistenceClient<MultisigTradeStore>, Service, ConfidentialMessageService.MessageListener {
+public class MultisigTradeService implements PersistenceClient<MultisigTradeStore>, Service, ConfidentialMessageService.Listener {
     @Getter
     private final MultisigTradeStore persistableStore = new MultisigTradeStore();
     @Getter

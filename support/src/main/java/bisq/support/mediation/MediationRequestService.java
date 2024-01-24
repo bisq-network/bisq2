@@ -53,7 +53,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  * Service used by traders to select mediators, request mediation and process MediationResponses
  */
 @Slf4j
-public class MediationRequestService implements Service, ConfidentialMessageService.MessageListener {
+public class MediationRequestService implements Service, ConfidentialMessageService.Listener {
     private final NetworkService networkService;
     private final UserProfileService userProfileService;
     private final BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService;

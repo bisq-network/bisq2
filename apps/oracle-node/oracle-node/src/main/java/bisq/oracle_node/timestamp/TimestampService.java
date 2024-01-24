@@ -41,7 +41,7 @@ import java.util.Date;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class TimestampService implements Service, PersistenceClient<TimestampStore>, ConfidentialMessageService.MessageListener, DataService.Listener {
+public class TimestampService implements Service, PersistenceClient<TimestampStore>, ConfidentialMessageService.Listener, DataService.Listener {
     @Getter
     private final TimestampStore persistableStore = new TimestampStore();
     @Getter

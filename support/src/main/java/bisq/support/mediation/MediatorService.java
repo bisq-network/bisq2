@@ -53,7 +53,7 @@ import java.util.stream.Stream;
  * Service used by mediators
  */
 @Slf4j
-public class MediatorService implements PersistenceClient<MediatorStore>, Service, ConfidentialMessageService.MessageListener {
+public class MediatorService implements PersistenceClient<MediatorStore>, Service, ConfidentialMessageService.Listener {
     @Getter
     private final MediatorStore persistableStore = new MediatorStore();
     @Getter

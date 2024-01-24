@@ -56,7 +56,7 @@ import java.util.concurrent.CompletableFuture;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class ModeratorService implements PersistenceClient<ModeratorStore>, Service, ConfidentialMessageService.MessageListener {
+public class ModeratorService implements PersistenceClient<ModeratorStore>, Service, ConfidentialMessageService.Listener {
     @Getter
     public static class Config {
         private final boolean staticPublicKeysProvided;

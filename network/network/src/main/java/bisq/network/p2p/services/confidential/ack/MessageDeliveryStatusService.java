@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Getter
-public class MessageDeliveryStatusService implements PersistenceClient<MessageDeliveryStatusStore>, ConfidentialMessageService.MessageListener {
+public class MessageDeliveryStatusService implements PersistenceClient<MessageDeliveryStatusStore>, ConfidentialMessageService.Listener {
     private final MessageDeliveryStatusStore persistableStore = new MessageDeliveryStatusStore();
     private final Persistence<MessageDeliveryStatusStore> persistence;
     private final KeyBundleService keyBundleService;

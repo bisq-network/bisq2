@@ -53,7 +53,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 @Getter
-public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStore>, Service, ConfidentialMessageService.MessageListener {
+public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStore>, Service, ConfidentialMessageService.Listener {
     @Getter
     private final BisqEasyTradeStore persistableStore = new BisqEasyTradeStore();
     @Getter

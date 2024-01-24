@@ -31,7 +31,7 @@ public abstract class PrivateGroupChatChannelService<
         C extends PrivateGroupChatChannel<M>,
         S extends PersistableStore<S>
         >
-        extends PrivateChatChannelService<M, C, S> implements ConfidentialMessageService.MessageListener {
+        extends PrivateChatChannelService<M, C, S> implements ConfidentialMessageService.Listener {
 
     public PrivateGroupChatChannelService(NetworkService networkService,
                                           UserService userService,
