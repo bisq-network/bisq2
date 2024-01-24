@@ -29,7 +29,7 @@ import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
-import bisq.network.p2p.services.confidential.MessageListener;
+import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.security.DigestUtil;
 import bisq.user.UserService;
 import bisq.user.banned.BannedUserService;
@@ -53,7 +53,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  * Service used by traders to select mediators, request mediation and process MediationResponses
  */
 @Slf4j
-public class MediationRequestService implements Service, MessageListener {
+public class MediationRequestService implements Service, ConfidentialMessageService.MessageListener {
     private final NetworkService networkService;
     private final UserProfileService userProfileService;
     private final BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService;

@@ -34,8 +34,7 @@ import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
 import bisq.network.p2p.node.transport.BootstrapInfo;
-import bisq.network.p2p.services.confidential.ConfidentialMessageListener;
-import bisq.network.p2p.services.confidential.MessageListener;
+import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.confidential.SendConfidentialMessageResult;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatusService;
 import bisq.network.p2p.services.data.DataService;
@@ -212,19 +211,19 @@ public class ServiceNodesByTransport {
     }
 
 
-    public void addMessageListener(MessageListener messageListener) {
+    public void addMessageListener(ConfidentialMessageService.MessageListener messageListener) {
         map.values().forEach(serviceNode -> serviceNode.addMessageListener(messageListener));
     }
 
-    public void removeMessageListener(MessageListener messageListener) {
+    public void removeMessageListener(ConfidentialMessageService.MessageListener messageListener) {
         map.values().forEach(serviceNode -> serviceNode.removeMessageListener(messageListener));
     }
 
-    public void addConfidentialMessageListener(ConfidentialMessageListener listener) {
+    public void addConfidentialMessageListener(ConfidentialMessageService.ConfidentialMessageListener listener) {
         map.values().forEach(serviceNode -> serviceNode.addConfidentialMessageListener(listener));
     }
 
-    public void removeConfidentialMessageListener(ConfidentialMessageListener listener) {
+    public void removeConfidentialMessageListener(ConfidentialMessageService.ConfidentialMessageListener listener) {
         map.values().forEach(serviceNode -> serviceNode.removeConfidentialMessageListener(listener));
     }
 

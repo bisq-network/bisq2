@@ -21,7 +21,7 @@ import bisq.common.application.Service;
 import bisq.identity.Identity;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
-import bisq.network.p2p.services.confidential.MessageListener;
+import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
@@ -41,7 +41,7 @@ import java.util.Date;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class TimestampService implements Service, PersistenceClient<TimestampStore>, MessageListener, DataService.Listener {
+public class TimestampService implements Service, PersistenceClient<TimestampStore>, ConfidentialMessageService.MessageListener, DataService.Listener {
     @Getter
     private final TimestampStore persistableStore = new TimestampStore();
     @Getter

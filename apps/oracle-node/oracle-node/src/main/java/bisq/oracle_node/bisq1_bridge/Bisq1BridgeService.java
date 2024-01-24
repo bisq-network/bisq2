@@ -31,7 +31,7 @@ import bisq.common.util.CompletableFutureUtils;
 import bisq.identity.Identity;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
-import bisq.network.p2p.services.confidential.ConfidentialMessageListener;
+import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
@@ -68,7 +68,7 @@ import java.util.concurrent.TimeUnit;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class Bisq1BridgeService implements Service, ConfidentialMessageListener, DataService.Listener, PersistenceClient<Bisq1BridgeStore> {
+public class Bisq1BridgeService implements Service, ConfidentialMessageService.ConfidentialMessageListener, DataService.Listener, PersistenceClient<Bisq1BridgeStore> {
     @Getter
     public static class Config {
         private final com.typesafe.config.Config httpService;

@@ -55,6 +55,14 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 @Slf4j
 public class ConfidentialMessageService implements Node.Listener, DataService.Listener {
+    public interface ConfidentialMessageListener {
+        void onMessage(EnvelopePayloadMessage envelopePayloadMessage, PublicKey senderPublicKey);
+    }
+
+    public interface MessageListener {
+        void onMessage(EnvelopePayloadMessage envelopePayloadMessage);
+    }
+
     private final NodesById nodesById;
     private final KeyBundleService keyBundleService;
     private final Optional<DataService> dataService;

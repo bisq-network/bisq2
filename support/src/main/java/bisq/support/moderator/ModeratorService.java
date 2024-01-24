@@ -33,7 +33,7 @@ import bisq.network.NetworkService;
 import bisq.network.SendMessageResult;
 import bisq.network.identity.NetworkIdWithKeyPair;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
-import bisq.network.p2p.services.confidential.MessageListener;
+import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
@@ -56,7 +56,7 @@ import java.util.concurrent.CompletableFuture;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class ModeratorService implements PersistenceClient<ModeratorStore>, Service, MessageListener {
+public class ModeratorService implements PersistenceClient<ModeratorStore>, Service, ConfidentialMessageService.MessageListener {
     @Getter
     public static class Config {
         private final boolean staticPublicKeysProvided;

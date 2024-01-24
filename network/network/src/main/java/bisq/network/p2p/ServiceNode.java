@@ -31,9 +31,7 @@ import bisq.network.p2p.node.NodesById;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
 import bisq.network.p2p.node.transport.TransportService;
-import bisq.network.p2p.services.confidential.ConfidentialMessageListener;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
-import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.services.confidential.SendConfidentialMessageResult;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatusService;
 import bisq.network.p2p.services.data.DataNetworkService;
@@ -257,7 +255,7 @@ public class ServiceNode {
         return getNodesById().send(senderNetworkId, envelopePayloadMessage, address);
     }
 
-    void addMessageListener(MessageListener messageListener) {
+    void addMessageListener(ConfidentialMessageService.MessageListener messageListener) {
         //todo (refactor, low prio) rename NodeListener
 
         nodesById.addNodeListener(new Node.Listener() {
@@ -277,16 +275,16 @@ public class ServiceNode {
         confidentialMessageService.ifPresent(service -> service.addMessageListener(messageListener));
     }
 
-    void removeMessageListener(MessageListener messageListener) {
+    void removeMessageListener(ConfidentialMessageService.MessageListener messageListener) {
         //todo (Critical) missing nodesById.removeNodeListener ?
         confidentialMessageService.ifPresent(service -> service.removeMessageListener(messageListener));
     }
 
-    void addConfidentialMessageListener(ConfidentialMessageListener listener) {
+    void addConfidentialMessageListener(ConfidentialMessageService.ConfidentialMessageListener listener) {
         confidentialMessageService.ifPresent(service -> service.addConfidentialMessageListener(listener));
     }
 
-    void removeConfidentialMessageListener(ConfidentialMessageListener listener) {
+    void removeConfidentialMessageListener(ConfidentialMessageService.ConfidentialMessageListener listener) {
         confidentialMessageService.ifPresent(service -> service.removeConfidentialMessageListener(listener));
     }
 

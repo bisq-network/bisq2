@@ -22,7 +22,7 @@ import bisq.contract.multisig.MultisigContract;
 import bisq.identity.Identity;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
-import bisq.network.p2p.services.confidential.MessageListener;
+import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.offer.multisig.MultisigOffer;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
@@ -42,7 +42,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
-public class MultisigTradeService implements PersistenceClient<MultisigTradeStore>, Service, MessageListener {
+public class MultisigTradeService implements PersistenceClient<MultisigTradeStore>, Service, ConfidentialMessageService.MessageListener {
     @Getter
     private final MultisigTradeStore persistableStore = new MultisigTradeStore();
     @Getter

@@ -22,7 +22,7 @@ import bisq.contract.submarine.SubmarineContract;
 import bisq.identity.Identity;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
-import bisq.network.p2p.services.confidential.MessageListener;
+import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.offer.submarine.SubmarineOffer;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
@@ -42,7 +42,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
-public class SubmarineTradeService implements PersistenceClient<SubmarineTradeStore>, Service, MessageListener {
+public class SubmarineTradeService implements PersistenceClient<SubmarineTradeStore>, Service, ConfidentialMessageService.MessageListener {
     @Getter
     private final SubmarineTradeStore persistableStore = new SubmarineTradeStore();
     @Getter
