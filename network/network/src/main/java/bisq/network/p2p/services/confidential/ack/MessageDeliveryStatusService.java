@@ -7,6 +7,7 @@ import bisq.network.identity.NetworkId;
 import bisq.network.identity.NetworkIdWithKeyPair;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.MessageListener;
+import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -41,10 +42,7 @@ public class MessageDeliveryStatusService implements PersistenceClient<MessageDe
         this.keyBundleService = keyBundleService;
         this.networkService = networkService;
 
-        persistence = persistenceService.getOrCreatePersistence(this,
-                NetworkService.NETWORK_DB_PATH,
-                "MessageDeliveryStatusServiceStore",
-                persistableStore);
+        persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.SETTINGS, persistableStore);
     }
 
     public void initialize() {

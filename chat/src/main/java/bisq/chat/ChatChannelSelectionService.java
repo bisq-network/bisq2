@@ -19,6 +19,7 @@ package bisq.chat;
 
 import bisq.common.observable.Observable;
 import bisq.common.util.StringUtils;
+import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -39,7 +40,7 @@ public abstract class ChatChannelSelectionService implements PersistenceClient<C
                                        ChatChannelDomain chatChannelDomain) {
         String prefix = StringUtils.capitalize(StringUtils.snakeCaseToCamelCase(chatChannelDomain.name().toLowerCase()));
         persistence = persistenceService.getOrCreatePersistence(this,
-                "db",
+                DbSubDirectory.SETTINGS,
                 prefix + "ChannelSelectionStore",
                 persistableStore);
     }

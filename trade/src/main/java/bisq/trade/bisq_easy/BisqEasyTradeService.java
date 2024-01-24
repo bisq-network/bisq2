@@ -30,6 +30,7 @@ import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import bisq.offer.price.spec.PriceSpec;
+import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.trade.ServiceProvider;
@@ -64,7 +65,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     private final Map<String, BisqEasyProtocol> tradeProtocolById = new ConcurrentHashMap<>();
 
     public BisqEasyTradeService(ServiceProvider serviceProvider) {
-        persistence = serviceProvider.getPersistenceService().getOrCreatePersistence(this, persistableStore);
+        persistence = serviceProvider.getPersistenceService().getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
         this.serviceProvider = serviceProvider;
         bannedUserService = serviceProvider.getUserService().getBannedUserService();
     }

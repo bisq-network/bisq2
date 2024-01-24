@@ -40,14 +40,16 @@ public class PersistenceService {
     }
 
     public <T extends PersistableStore<T>> Persistence<T> getOrCreatePersistence(PersistenceClient<T> client,
+                                                                                 DbSubDirectory dbSubDirectory,
                                                                                  PersistableStore<T> persistableStore) {
-        return getOrCreatePersistence(client, "db", persistableStore.getClass().getSimpleName(), persistableStore);
+        return getOrCreatePersistence(client, dbSubDirectory.getDbPath(), persistableStore.getClass().getSimpleName(), persistableStore);
     }
 
     public <T extends PersistableStore<T>> Persistence<T> getOrCreatePersistence(PersistenceClient<T> client,
-                                                                                 String subDir,
+                                                                                 DbSubDirectory dbSubDirectory,
+                                                                                 String fileName,
                                                                                  PersistableStore<T> persistableStore) {
-        return getOrCreatePersistence(client, subDir, persistableStore.getClass().getSimpleName(), persistableStore);
+        return getOrCreatePersistence(client, dbSubDirectory.getDbPath(), fileName, persistableStore);
     }
 
     public <T extends PersistableStore<T>> Persistence<T> getOrCreatePersistence(PersistenceClient<T> client,

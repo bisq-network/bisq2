@@ -25,6 +25,7 @@ import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
+import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
 import bisq.user.UserService;
@@ -55,7 +56,7 @@ public final class CommonPublicChatChannelService extends PublicChatChannelServi
 
         String name = StringUtils.capitalize(StringUtils.snakeCaseToCamelCase(chatChannelDomain.name().toLowerCase()));
         persistence = persistenceService.getOrCreatePersistence(this,
-                "db",
+                DbSubDirectory.CACHE,
                 "Public" + name + "ChatChannelStore",
                 persistableStore);
     }

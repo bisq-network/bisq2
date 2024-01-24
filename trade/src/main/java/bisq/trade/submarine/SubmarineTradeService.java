@@ -24,6 +24,7 @@ import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.offer.submarine.SubmarineOffer;
+import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.trade.ServiceProvider;
@@ -53,7 +54,7 @@ public class SubmarineTradeService implements PersistenceClient<SubmarineTradeSt
 
     public SubmarineTradeService(ServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
-        persistence = serviceProvider.getPersistenceService().getOrCreatePersistence(this, persistableStore);
+        persistence = serviceProvider.getPersistenceService().getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
     }
 
 

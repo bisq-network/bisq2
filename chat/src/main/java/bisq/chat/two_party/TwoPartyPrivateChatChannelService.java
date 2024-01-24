@@ -26,6 +26,7 @@ import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
 import bisq.network.SendMessageResult;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
+import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
 import bisq.security.pow.ProofOfWorkService;
@@ -54,7 +55,7 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
         super(networkService, userService, proofOfWorkService, chatChannelDomain);
         String name = StringUtils.capitalize(StringUtils.snakeCaseToCamelCase(chatChannelDomain.name().toLowerCase()));
         persistence = persistenceService.getOrCreatePersistence(this,
-                "db",
+                DbSubDirectory.PRIVATE,
                 "Private" + name + "ChatChannelStore",
                 persistableStore);
     }

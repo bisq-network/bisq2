@@ -30,9 +30,9 @@ import bisq.network.p2p.services.data.storage.append.AppendOnlyData;
 import bisq.network.p2p.services.data.storage.append.AppendOnlyDataStorageService;
 import bisq.network.p2p.services.data.storage.auth.*;
 import bisq.network.p2p.services.data.storage.mailbox.*;
+import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -44,24 +44,10 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static bisq.network.p2p.services.data.storage.StorageService.StoreType.*;
+import static bisq.network.p2p.services.data.storage.StoreType.*;
 
 @Slf4j
 public class StorageService {
-    public enum StoreType {
-        ALL(""),
-        AUTHENTICATED_DATA_STORE("authenticated"),
-        MAILBOX_DATA_STORE("mailbox"),
-        APPEND_ONLY_DATA_STORE("append");
-        @Getter
-        private final String storeName;
-
-        StoreType(String storeName) {
-            this.storeName = storeName;
-        }
-    }
-
-
     public interface Listener {
         void onAdded(StorageData storageData);
 
@@ -79,7 +65,7 @@ public class StorageService {
 
         // We create all stores for those files we have already persisted.
         // Persisted data is read at the very early stages of the application start.
-        String subPath = persistenceService.getBaseDir() + File.separator + NetworkService.NETWORK_DB_PATH;
+        String subPath = persistenceService.getBaseDir() + File.separator + DbSubDirectory.NETWORK_DB.getDbPath();
         try {
             String authStoreName = AUTHENTICATED_DATA_STORE.getStoreName();
             String directory = subPath + File.separator + authStoreName;

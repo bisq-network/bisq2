@@ -40,6 +40,7 @@ import bisq.offer.options.OfferOption;
 import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import bisq.offer.price.spec.FixPriceSpec;
+import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -77,7 +78,7 @@ public class PocOpenOfferService implements PersistenceClient<PocOpenOfferStore>
                                PersistenceService persistenceService) {
         this.networkService = networkService;
         this.identityService = identityService;
-        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
+        persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
     }
 
     public CompletableFuture<Boolean> initialize() {

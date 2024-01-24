@@ -19,6 +19,7 @@ package bisq.offer.multisig;
 
 import bisq.common.application.Service;
 import bisq.common.observable.collection.ObservableSet;
+import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -36,7 +37,7 @@ public class MyMultisigOffersService implements PersistenceClient<MyMultisigOffe
     private final Persistence<MyMultisigOffersStore> persistence;
 
     public MyMultisigOffersService(PersistenceService persistenceService) {
-        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
+        persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
     }
 
 

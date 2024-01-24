@@ -28,6 +28,7 @@ import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
 import bisq.user.UserService;
@@ -51,7 +52,7 @@ public class BisqEasyOfferbookChannelService extends PublicChatChannelService<Bi
                                            NetworkService networkService,
                                            UserService userService) {
         super(networkService, userService, ChatChannelDomain.BISQ_EASY_OFFERBOOK);
-        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
+        persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.CACHE, persistableStore);
     }
 
 

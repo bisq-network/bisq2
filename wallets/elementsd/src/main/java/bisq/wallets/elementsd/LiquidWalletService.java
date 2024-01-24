@@ -19,6 +19,7 @@ package bisq.wallets.elementsd;
 
 import bisq.common.monetary.Coin;
 import bisq.common.observable.Observable;
+import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
 import bisq.wallets.bitcoind.AbstractBitcoindWalletService;
@@ -42,7 +43,7 @@ public class LiquidWalletService extends AbstractBitcoindWalletService<LiquidWal
     public LiquidWalletService(PersistenceService persistenceService,
                                boolean isRegtest) {
         super("L-BTC", getOptionalRegtestConfig(isRegtest, 7040), "bisq_elements_default_wallet");
-        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
+        persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.WALLETS, persistableStore);
     }
 
     @Override

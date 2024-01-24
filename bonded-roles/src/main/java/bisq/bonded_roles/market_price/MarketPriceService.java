@@ -29,6 +29,7 @@ import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
+import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -65,7 +66,7 @@ public class MarketPriceService implements Service, PersistenceClient<MarketPric
         marketPriceRequestService = new MarketPriceRequestService(MarketPriceRequestService.Config.from(marketPrice),
                 version,
                 networkService);
-        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
+        persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.SETTINGS, persistableStore);
     }
 
 

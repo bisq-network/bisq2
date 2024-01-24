@@ -28,6 +28,7 @@ import bisq.network.NetworkService;
 import bisq.network.SendMessageResult;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
 import bisq.security.pow.ProofOfWorkService;
@@ -62,7 +63,7 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
                                            ProofOfWorkService proofOfWorkService) {
         super(networkService, userService, proofOfWorkService, ChatChannelDomain.BISQ_EASY_OPEN_TRADES);
 
-        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
+        persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
     }
 
 

@@ -24,6 +24,7 @@ import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.offer.multisig.MultisigOffer;
+import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.trade.ServiceProvider;
@@ -52,7 +53,7 @@ public class MultisigTradeService implements PersistenceClient<MultisigTradeStor
     private final Map<String, MultisigProtocol> tradeProtocolById = new ConcurrentHashMap<>();
 
     public MultisigTradeService(ServiceProvider serviceProvider) {
-        persistence = serviceProvider.getPersistenceService().getOrCreatePersistence(this, persistableStore);
+        persistence = serviceProvider.getPersistenceService().getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
         this.serviceProvider = serviceProvider;
     }
 

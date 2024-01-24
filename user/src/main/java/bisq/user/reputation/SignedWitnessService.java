@@ -23,6 +23,7 @@ import bisq.common.timer.Scheduler;
 import bisq.common.util.MathUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
+import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -93,7 +94,7 @@ public class SignedWitnessService extends SourceReputationService<AuthorizedSign
                                 BannedUserService bannedUserService,
                                 AuthorizedBondedRolesService authorizedBondedRolesService) {
         super(networkService, userIdentityService, userProfileService, bannedUserService, authorizedBondedRolesService);
-        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
+        persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.SETTINGS, persistableStore);
     }
 
     @Override
