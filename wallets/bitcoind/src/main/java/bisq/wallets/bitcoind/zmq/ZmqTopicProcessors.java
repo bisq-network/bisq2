@@ -18,7 +18,9 @@
 package bisq.wallets.bitcoind.zmq;
 
 import com.google.common.io.BaseEncoding;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class ZmqTopicProcessors {
 
     private final ZmqListeners listeners;
@@ -44,7 +46,13 @@ public class ZmqTopicProcessors {
 
     private void processHashBlock(byte[] blockHash, byte[] sequenceNumber) {
         String blockHashInHex = bytesToHexString(blockHash);
-        listeners.getNewBlockMinedListeners().forEach(listener -> listener.onNewBlock(blockHashInHex));
+        listeners.getNewBlockMinedListeners().forEach(listener -> {
+            try {
+                listener.onNewBlock(blockHashInHex);
+            } catch (Exception e) {
+                log.error("Calling onNewBlock at listener {} failed", listener, e);
+            }
+        });
     }
 
     private String bytesToHexString(byte[] bytes) {

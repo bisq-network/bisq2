@@ -36,7 +36,7 @@ public class ElectrumNotifyApi {
     private static final List<Listener> listeners = new CopyOnWriteArrayList<>();
 
     public interface Listener {
-        void onAddressStatusChanged(String address, String status) throws Exception;
+        void onAddressStatusChanged(String address, String status);
     }
 
     @POST
