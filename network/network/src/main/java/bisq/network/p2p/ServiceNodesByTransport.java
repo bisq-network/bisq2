@@ -210,7 +210,6 @@ public class ServiceNodesByTransport {
                 .collect(Collectors.toMap(Pair::getFirst, Pair::getSecond));
     }
 
-
     public void addConfidentialMessageListener(ConfidentialMessageService.Listener listener) {
         map.values().forEach(serviceNode -> serviceNode.addConfidentialMessageListener(listener));
     }

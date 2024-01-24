@@ -68,10 +68,7 @@ public final class CommonPublicChatChannelService extends PublicChatChannelServi
 
     @Override
     public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
-        DistributedData distributedData = authenticatedData.getDistributedData();
-        if (distributedData instanceof CommonPublicChatMessage) {
-            processAddedMessage((CommonPublicChatMessage) distributedData);
-        }
+        handleAuthenticatedDataAdded(authenticatedData);
     }
 
     @Override
@@ -79,6 +76,14 @@ public final class CommonPublicChatChannelService extends PublicChatChannelServi
         DistributedData distributedData = authenticatedData.getDistributedData();
         if (distributedData instanceof CommonPublicChatMessage) {
             processRemovedMessage((CommonPublicChatMessage) distributedData);
+        }
+    }
+
+    @Override
+    protected void handleAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
+        DistributedData distributedData = authenticatedData.getDistributedData();
+        if (distributedData instanceof CommonPublicChatMessage) {
+            processAddedMessage((CommonPublicChatMessage) distributedData);
         }
     }
 

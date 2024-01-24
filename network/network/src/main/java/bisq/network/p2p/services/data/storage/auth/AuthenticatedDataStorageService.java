@@ -122,7 +122,13 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             return new Result(false).payloadAlreadyStored();
         }*/
 
-        listeners.forEach(listener -> listener.onAdded(authenticatedData));
+        listeners.forEach(listener -> {
+            try {
+                listener.onAdded(authenticatedData);
+            } catch (Exception e) {
+                log.error("Calling onAdded at listener {} failed", listener, e);
+            }
+        });
         return new DataStorageResult(true);
     }
 
@@ -186,7 +192,13 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             map.put(byteArray, request);
         }
         persist();
-        listeners.forEach(listener -> listener.onRemoved(authenticatedDataFromMap));
+        listeners.forEach(listener -> {
+            try {
+                listener.onRemoved(authenticatedDataFromMap);
+            } catch (Exception e) {
+                log.error("Calling onRemoved at listener {} failed", listener, e);
+            }
+        });
         return new DataStorageResult(true).removedData(authenticatedDataFromMap);
     }
 
@@ -236,7 +248,13 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             map.put(byteArray, updatedRequest);
         }
         persist();
-        listeners.forEach(listener -> listener.onRefreshed(updatedRequest.getAuthenticatedSequentialData().getAuthenticatedData()));
+        listeners.forEach(listener -> {
+            try {
+                listener.onRefreshed(updatedRequest.getAuthenticatedSequentialData().getAuthenticatedData());
+            } catch (Exception e) {
+                log.error("Calling onRefreshed at listener {} failed", listener, e);
+            }
+        });
         return new DataStorageResult(true);
     }
 
@@ -271,7 +289,13 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                 persistableStore.getMap().remove(entry.getKey());
                 if (entry.getValue() instanceof AddAuthenticatedDataRequest) {
                     AuthenticatedData data = ((AddAuthenticatedDataRequest) entry.getValue()).getAuthenticatedSequentialData().getAuthenticatedData();
-                    listeners.forEach(listener -> listener.onRemoved(data));
+                    listeners.forEach(listener -> {
+                        try {
+                            listener.onRemoved(data);
+                        } catch (Exception e) {
+                            log.error("Calling onRemoved at listener {} failed", listener, e);
+                        }
+                    });
                 }
             });
         }

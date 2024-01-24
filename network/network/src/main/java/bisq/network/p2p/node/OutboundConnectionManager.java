@@ -24,11 +24,11 @@ import bisq.network.p2p.node.envelope.NetworkEnvelopeSocketChannel;
 import bisq.network.p2p.node.envelope.parser.nio.ProtoBufMessageLengthWriter;
 import bisq.network.p2p.node.handshake.ConnectionHandshake;
 import bisq.network.p2p.node.handshake.ConnectionHandshakeInitiator;
-import bisq.tor.TorAddressOwnershipProofGenerator;
 import bisq.network.p2p.node.network_load.ConnectionMetrics;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
 import bisq.network.p2p.services.peergroup.BanList;
+import bisq.tor.TorAddressOwnershipProofGenerator;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -173,7 +173,13 @@ public class OutboundConnectionManager {
             );
 
             connectionByChannel.put(socketChannel, outboundConnectionChannel);
-            listeners.forEach(l -> l.onNewConnection(outboundConnectionChannel));
+            listeners.forEach(listener -> {
+                try {
+                    listener.onNewConnection(outboundConnectionChannel);
+                } catch (Exception e) {
+                    log.error("Calling onNewConnection at listener {} failed", listener, e);
+                }
+            });
 
             CompletableFuture<OutboundConnectionChannel> completableFuture =
                     completableFutureByPeerAddress.get(peerCapability.getAddress());

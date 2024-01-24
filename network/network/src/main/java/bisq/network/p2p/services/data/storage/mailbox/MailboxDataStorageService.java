@@ -101,7 +101,13 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
             return new DataStorageResult(false).payloadAlreadyStored();
         }
 
-        listeners.forEach(listener -> listener.onAdded(mailboxData));
+        listeners.forEach(listener -> {
+            try {
+                listener.onAdded(mailboxData);
+            } catch (Exception e) {
+                log.error("Calling onAdded at listener {} failed", listener, e);
+            }
+        });
         return new DataStorageResult(true);
     }
 
@@ -148,7 +154,13 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
             }
 
             map.put(byteArray, request);
-            listeners.forEach(listener -> listener.onRemoved(sequentialDataFromMap.getMailboxData()));
+            listeners.forEach(listener -> {
+                try {
+                    listener.onRemoved(sequentialDataFromMap.getMailboxData());
+                } catch (Exception e) {
+                    log.error("Calling onRemoved at listener {} failed", listener, e);
+                }
+            });
         }
 
         persist();

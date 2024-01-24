@@ -53,7 +53,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public abstract class Connection {
     protected interface Handler {
-        void handleNetworkMessage(EnvelopePayloadMessage envelopePayloadMessage, AuthorizationToken authorizationToken, Connection connection);
+        void handleNetworkMessage(EnvelopePayloadMessage envelopePayloadMessage,
+                                  AuthorizationToken authorizationToken,
+                                  Connection connection);
 
         void handleConnectionClosed(Connection connection, CloseReason closeReason);
     }
@@ -241,13 +243,25 @@ public abstract class Connection {
         }
         NetworkService.DISPATCHER.submit(() -> {
             handler.handleConnectionClosed(this, closeReason);
-            listeners.forEach(listener -> listener.onConnectionClosed(closeReason));
+            listeners.forEach(listener -> {
+                try {
+                    listener.onConnectionClosed(closeReason);
+                } catch (Exception e) {
+                    log.error("Calling onConnectionClosed at listener {} failed", listener, e);
+                }
+            });
             listeners.clear();
         });
     }
 
     void notifyListeners(EnvelopePayloadMessage envelopePayloadMessage) {
-        listeners.forEach(listener -> listener.onNetworkMessage(envelopePayloadMessage));
+        listeners.forEach(listener -> {
+            try {
+                listener.onNetworkMessage(envelopePayloadMessage);
+            } catch (Exception e) {
+                log.error("Calling onNetworkMessage at listener {} failed", listener, e);
+            }
+        });
     }
 
     AtomicInteger getSentMessageCounter() {
