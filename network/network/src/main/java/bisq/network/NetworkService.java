@@ -153,7 +153,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                 Optional.empty();
 
         persistence = persistenceService.getOrCreatePersistence(this,
-                DbSubDirectory.SETTINGS,
+                DbSubDirectory.CACHE,
                 persistableStore);
     }
 
