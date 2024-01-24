@@ -326,12 +326,12 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         dataService.orElseThrow().removeListener(listener);
     }
 
-    public void addMessageListener(ConfidentialMessageService.Listener listener) {
-        serviceNodesByTransport.addMessageListener(listener);
+    public void addConfidentialMessageListener(ConfidentialMessageService.Listener listener) {
+        serviceNodesByTransport.addConfidentialMessageListener(listener);
     }
 
-    public void removeMessageListener(ConfidentialMessageService.Listener listener) {
-        serviceNodesByTransport.removeMessageListener(listener);
+    public void removeConfidentialMessageListener(ConfidentialMessageService.Listener listener) {
+        serviceNodesByTransport.removeConfidentialMessageListener(listener);
     }
 
     public void addDefaultNodeListener(Node.Listener nodeListener) {

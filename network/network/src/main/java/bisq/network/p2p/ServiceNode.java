@@ -255,9 +255,8 @@ public class ServiceNode {
         return getNodesById().send(senderNetworkId, envelopePayloadMessage, address);
     }
 
-    void addMessageListener(ConfidentialMessageService.Listener listener) {
-        //todo (refactor, low prio) rename NodeListener
-
+    void addConfidentialMessageListener(ConfidentialMessageService.Listener listener) {
+        //todo (Critical) store nodeListener
         nodesById.addNodeListener(new Node.Listener() {
             @Override
             public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
@@ -272,12 +271,12 @@ public class ServiceNode {
             public void onDisconnect(Connection connection, CloseReason closeReason) {
             }
         });
-        confidentialMessageService.ifPresent(service -> service.addMessageListener(listener));
+        confidentialMessageService.ifPresent(service -> service.addListener(listener));
     }
 
-    void removeMessageListener(ConfidentialMessageService.Listener listener) {
+    void removeConfidentialMessageListener(ConfidentialMessageService.Listener listener) {
         //todo (Critical) missing nodesById.removeNodeListener ?
-        confidentialMessageService.ifPresent(service -> service.removeMessageListener(listener));
+        confidentialMessageService.ifPresent(service -> service.removeListener(listener));
     }
 
     void addListener(Listener listener) {

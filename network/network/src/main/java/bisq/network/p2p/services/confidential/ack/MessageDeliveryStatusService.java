@@ -48,15 +48,15 @@ public class MessageDeliveryStatusService implements PersistenceClient<MessageDe
     public void initialize() {
         checkPending();
 
-        networkService.addMessageListener(this);
+        networkService.addConfidentialMessageListener(this);
     }
 
     public void shutdown() {
-        networkService.removeMessageListener(this);
+        networkService.removeConfidentialMessageListener(this);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // MessageListener
+    // ConfidentialMessageService.Listener
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override

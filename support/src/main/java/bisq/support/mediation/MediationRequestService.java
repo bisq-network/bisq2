@@ -78,13 +78,13 @@ public class MediationRequestService implements Service, ConfidentialMessageServ
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        networkService.addMessageListener(this);
+        networkService.addConfidentialMessageListener(this);
         return CompletableFuture.completedFuture(true);
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        networkService.removeMessageListener(this);
+        networkService.removeConfidentialMessageListener(this);
         return CompletableFuture.completedFuture(true);
     }
 

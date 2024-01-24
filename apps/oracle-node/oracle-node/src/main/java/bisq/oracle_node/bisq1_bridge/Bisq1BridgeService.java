@@ -131,7 +131,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
         log.info("initialize");
         return httpService.initialize()
                 .whenComplete((result, throwable) -> {
-                    networkService.addMessageListener(this);
+                    networkService.addConfidentialMessageListener(this);
                     networkService.getDataService()
                             .ifPresent(dataService -> dataService.getAuthorizedData()
                                     .forEach(this::onAuthorizedDataAdded));
@@ -150,7 +150,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
             republishAuthorizedBondedRolesScheduler.stop();
         }
         networkService.removeDataServiceListener(this);
-        networkService.removeMessageListener(this);
+        networkService.removeConfidentialMessageListener(this);
         return httpService.shutdown();
     }
 

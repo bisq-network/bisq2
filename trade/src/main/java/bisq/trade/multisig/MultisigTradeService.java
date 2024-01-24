@@ -63,7 +63,7 @@ public class MultisigTradeService implements PersistenceClient<MultisigTradeStor
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<Boolean> initialize() {
-        serviceProvider.getNetworkService().addMessageListener(this);
+        serviceProvider.getNetworkService().addConfidentialMessageListener(this);
 
         persistableStore.getTradeById().values().forEach(this::createAndAddTradeProtocol);
 
@@ -71,7 +71,7 @@ public class MultisigTradeService implements PersistenceClient<MultisigTradeStor
     }
 
     public CompletableFuture<Boolean> shutdown() {
-        serviceProvider.getNetworkService().removeMessageListener(this);
+        serviceProvider.getNetworkService().removeConfidentialMessageListener(this);
         return CompletableFuture.completedFuture(true);
     }
 

@@ -197,11 +197,11 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
         }
     }
 
-    public void addMessageListener(Listener listener) {
+    public void addListener(Listener listener) {
         listeners.add(listener);
     }
 
-    public void removeMessageListener(Listener listener) {
+    public void removeListener(Listener listener) {
         listeners.remove(listener);
     }
 
