@@ -154,13 +154,12 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
 
         persistence = persistenceService.getOrCreatePersistence(this,
                 DbSubDirectory.SETTINGS,
-                persistableStore.getClass().getSimpleName(),
                 persistableStore);
     }
 
     @Override
     public void onPersistedApplied(NetworkServiceStore persisted) {
-        serviceNodesByTransport.addAddressByTransportTypeMaps(persistableStore.getSeedNodes());
+        serviceNodesByTransport.addSeedNodes(persistableStore.getSeedNodes());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -403,18 +402,18 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Add seed node address
+    // Add seed node from seed node bonded role
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public void addSeedNodeAddressByTransport(AddressByTransportTypeMap seedNodeAddressesByTransport) {
-        serviceNodesByTransport.addAddressByTransportTypeMap(seedNodeAddressesByTransport);
-        persistableStore.getSeedNodes().add(seedNodeAddressesByTransport);
+    public void addSeedNodeAddressByTransport(AddressByTransportTypeMap seedNode) {
+        serviceNodesByTransport.addSeedNode(seedNode);
+        persistableStore.getSeedNodes().add(seedNode);
         persist();
     }
 
-    public void removeSeedNodeAddressByTransport(AddressByTransportTypeMap seedNodeAddressesByTransport) {
-        serviceNodesByTransport.removeSeedNode(seedNodeAddressesByTransport);
-        persistableStore.getSeedNodes().remove(seedNodeAddressesByTransport);
+    public void removeSeedNodeAddressByTransport(AddressByTransportTypeMap seedNode) {
+        serviceNodesByTransport.removeSeedNode(seedNode);
+        persistableStore.getSeedNodes().remove(seedNode);
         persist();
     }
 

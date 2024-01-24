@@ -156,7 +156,7 @@ public class ServiceNodesByTransport {
         }, NETWORK_IO_POOL);
     }
 
-    public void addAddressByTransportTypeMaps(Set<AddressByTransportTypeMap> seedNodeMaps) {
+    public void addSeedNodes(Set<AddressByTransportTypeMap> seedNodeMaps) {
         supportedTransportTypes.forEach(transportType -> {
             Set<Address> seeds = seedNodeMaps.stream()
                     .map(map -> map.get(transportType))
@@ -165,7 +165,7 @@ public class ServiceNodesByTransport {
         });
     }
 
-    public void addAddressByTransportTypeMap(AddressByTransportTypeMap seedNodeMap) {
+    public void addSeedNode(AddressByTransportTypeMap seedNodeMap) {
         supportedTransportTypes.forEach(transportType ->
                 map.get(transportType).addSeedNodeAddress(seedNodeMap.get(transportType)));
     }
