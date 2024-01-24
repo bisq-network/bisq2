@@ -31,8 +31,6 @@ public enum BisqEasyTradeState implements State {
     MAKER_SENT_TAKE_OFFER_RESPONSE,
 
 
-    TAKER_RECEIVED_TAKE_OFFER_RESPONSE, // TODO: REMOVE
-
     // BUYER AS TAKER *****************************/
     // Branch 1: Buyer receives take offer response first
     TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA,
@@ -94,20 +92,6 @@ public enum BisqEasyTradeState implements State {
     BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA,
     // *********************************************/
 
-
-    // TODO: Remove
-    // Account details
-    // Branch 1: Peer starts sending
-    BUYER_DID_NOT_SEND_BTC_ADDRESS_AND_RECEIVED_ACCOUNT_DATA,
-    SELLER_DID_NOT_SEND_ACCOUNT_DATA_AND_RECEIVED_BTC_ADDRESS,
-
-    // Branch 2: Self start sending
-    BUYER_SENT_BTC_ADDRESS_AND_WAITING_FOR_ACCOUNT_DATA,
-    SELLER_SENT_ACCOUNT_DATA_AND_WAITING_FOR_BTC_ADDRESS,
-
-    // Branch completed and payment data and BTC address are received
-    BUYER_SENT_BTC_ADDRESS_AND_RECEIVED_ACCOUNT_DATA,
-    SELLER_SENT_ACCOUNT_DATA_AND_RECEIVED_BTC_ADDRESS,
 
     // Fiat settlement
     BUYER_SENT_FIAT_SENT_CONFIRMATION,
