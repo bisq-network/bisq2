@@ -43,6 +43,7 @@ message UserIdentityStore {
   optional string selectedUserIdentityId = 2;
   optional security.EncryptedData encryptedData = 3;
   optional security.ScryptParameters scryptParameters = 4;
+  sint64 lastUserProfilePublishingDate = 5;
 }
 
 message NymList {
