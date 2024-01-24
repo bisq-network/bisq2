@@ -102,6 +102,7 @@ public class ServiceNode {
     }
 
     private final Config config;
+    private final Node.Config nodeConfig;
     private final PeerGroupManager.Config peerGroupServiceConfig;
     private final Optional<DataService> dataService;
     private final PeerGroupService peerGroupService;
@@ -143,6 +144,7 @@ public class ServiceNode {
                 TransportType transportType,
                 NetworkLoadSnapshot networkLoadSnapshot) {
         this.config = config;
+        this.nodeConfig = nodeConfig;
         this.peerGroupServiceConfig = peerGroupServiceConfig;
         this.inventoryServiceConfig = inventoryServiceConfig;
         this.messageDeliveryStatusService = messageDeliveryStatusService;
@@ -183,7 +185,8 @@ public class ServiceNode {
                 Optional.of(new InventoryService(inventoryServiceConfig,
                         defaultNode,
                         peerGroupManager.orElseThrow(),
-                        dataService.orElseThrow())) :
+                        dataService.orElseThrow(),
+                        nodeConfig.getFeatures())) :
                 Optional.empty();
 
         confidentialMessageService = supportedServices.contains(SupportedService.CONFIDENTIAL) ?

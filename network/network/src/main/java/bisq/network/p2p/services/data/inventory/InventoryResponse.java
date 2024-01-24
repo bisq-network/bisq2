@@ -53,7 +53,6 @@ public final class InventoryResponse implements BroadcastMessage {
         return new InventoryResponse(Inventory.fromProto(proto.getInventory()), proto.getRequestNonce());
     }
 
-
     @Override
     public double getCostFactor() {
         return 0.1;

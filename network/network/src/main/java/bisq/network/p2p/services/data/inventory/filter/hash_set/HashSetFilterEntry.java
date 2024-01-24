@@ -15,26 +15,25 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.services.data.inventory;
+package bisq.network.p2p.services.data.inventory.filter.hash_set;
 
+import bisq.common.encoding.Hex;
 import bisq.common.proto.NetworkProto;
 import bisq.common.validation.NetworkDataValidation;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.ToString;
 
 import javax.annotation.Nonnull;
 import java.util.Arrays;
 
 @Getter
-@ToString
 @EqualsAndHashCode
-public final class FilterEntry implements NetworkProto, Comparable<FilterEntry> {
+public final class HashSetFilterEntry implements NetworkProto, Comparable<HashSetFilterEntry> {
     private final byte[] hash;
     private final int sequenceNumber;
 
-    public FilterEntry(byte[] hash, int sequenceNumber) {
+    public HashSetFilterEntry(byte[] hash, int sequenceNumber) {
         this.hash = hash;
         this.sequenceNumber = sequenceNumber;
 
@@ -47,19 +46,27 @@ public final class FilterEntry implements NetworkProto, Comparable<FilterEntry> 
     }
 
     @Override
-    public bisq.network.protobuf.FilterEntry toProto() {
-        return bisq.network.protobuf.FilterEntry.newBuilder()
+    public bisq.network.protobuf.HashSetFilterEntry toProto() {
+        return bisq.network.protobuf.HashSetFilterEntry.newBuilder()
                 .setHash(ByteString.copyFrom(hash))
                 .setSequenceNumber(sequenceNumber)
                 .build();
     }
 
-    public static FilterEntry fromProto(bisq.network.protobuf.FilterEntry proto) {
-        return new FilterEntry(proto.getHash().toByteArray(), proto.getSequenceNumber());
+    public static HashSetFilterEntry fromProto(bisq.network.protobuf.HashSetFilterEntry proto) {
+        return new HashSetFilterEntry(proto.getHash().toByteArray(), proto.getSequenceNumber());
     }
 
     @Override
-    public int compareTo(@Nonnull FilterEntry o) {
+    public int compareTo(@Nonnull HashSetFilterEntry o) {
         return Arrays.compare(hash, o.getHash());
+    }
+
+    @Override
+    public String toString() {
+        return "HashSetFilterEntry{" +
+                "hash (as hex)=" + Hex.encode(hash) +
+                ", sequenceNumber=" + sequenceNumber +
+                '}';
     }
 }

@@ -74,6 +74,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     private final NetworkService networkService;
     private final Object lock = new Object();
     private final Config config;
+    //TODO move to store and persist
     private final Map<String, Long> publishTimeByChatUserId = new ConcurrentHashMap<>();
     @Getter
     private final Observable<UserIdentity> newlyCreatedUserIdentity = new Observable<>();

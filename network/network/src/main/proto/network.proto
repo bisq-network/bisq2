@@ -19,7 +19,8 @@ message NetworkLoad {
 enum Feature {
   FEATURE_UNSPECIFIED = 0;
   FEATURE_POW_HASH_CASH = 1;
-  FEATURE_INVENTORY_HASH_SEQ = 2;
+  FEATURE_INVENTORY_HASH_SET = 2;
+  FEATURE_INVENTORY_MINI_SKETCH = 3;
 }
 
 message Capability {
@@ -28,13 +29,30 @@ message Capability {
   repeated Feature features = 3;
 }
 
-message FilterEntry {
+enum InventoryFilterType{
+  INVENTORYFILTERTYPE_UNSPECIFIED = 0;
+  INVENTORYFILTERTYPE_HASH_SET = 1;
+  INVENTORYFILTERTYPE_MINI_SKETCH = 2;
+}
+
+message HashSetFilterEntry {
   bytes hash = 1;
   sint32 sequenceNumber = 2;
 }
 
-message DataFilter {
-  repeated FilterEntry filterEntries = 1;
+message HashSetFilter {
+  repeated HashSetFilterEntry filterEntries = 1;
+}
+
+message MiniSketchFilter {
+}
+
+message InventoryFilter {
+  InventoryFilterType inventoryFilterType = 1;
+  oneof message {
+    HashSetFilter hashSetFilter = 10;
+    MiniSketchFilter miniSketchFilter = 11;
+  }
 }
 
 message Inventory {
@@ -105,11 +123,11 @@ message AckMessage {
   string id = 1;
 }
 
-
 message InventoryRequest {
-  DataFilter dataFilter = 1;
+  InventoryFilter inventoryFilter = 1;
   sint32 nonce = 2;
 }
+
 message InventoryResponse {
   Inventory inventory = 1;
   sint32 requestNonce = 2;

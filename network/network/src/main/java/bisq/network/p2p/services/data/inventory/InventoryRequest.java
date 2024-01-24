@@ -18,19 +18,22 @@
 package bisq.network.p2p.services.data.inventory;
 
 import bisq.network.p2p.services.data.broadcast.BroadcastMessage;
+import bisq.network.p2p.services.data.inventory.filter.InventoryFilter;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Getter
 @ToString
 @EqualsAndHashCode
 public final class InventoryRequest implements BroadcastMessage {
-    private final DataFilter dataFilter;
+    private final InventoryFilter inventoryFilter;
     private final int nonce;
 
-    public InventoryRequest(DataFilter dataFilter, int nonce) {
-        this.dataFilter = dataFilter;
+    public InventoryRequest(InventoryFilter inventoryFilter, int nonce) {
+        this.inventoryFilter = inventoryFilter;
         this.nonce = nonce;
 
         verify();
@@ -44,13 +47,14 @@ public final class InventoryRequest implements BroadcastMessage {
     public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
         return getNetworkMessageBuilder().setInventoryRequest(
                         bisq.network.protobuf.InventoryRequest.newBuilder()
-                                .setDataFilter(dataFilter.toProto())
+                                .setInventoryFilter(inventoryFilter.toProto())
                                 .setNonce(nonce))
                 .build();
     }
 
     public static InventoryRequest fromProto(bisq.network.protobuf.InventoryRequest proto) {
-        return new InventoryRequest(DataFilter.fromProto(proto.getDataFilter()), proto.getNonce());
+        return new InventoryRequest(InventoryFilter.fromProto(proto.getInventoryFilter()),
+                proto.getNonce());
     }
 
     @Override
