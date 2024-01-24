@@ -160,7 +160,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.C
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, PublicKey senderPublicKey) {
+    public void onConfidentialMessage(EnvelopePayloadMessage envelopePayloadMessage, PublicKey senderPublicKey) {
         if (envelopePayloadMessage instanceof AuthorizeAccountAgeRequest) {
             processAuthorizeAccountAgeRequest((AuthorizeAccountAgeRequest) envelopePayloadMessage);
         } else if (envelopePayloadMessage instanceof AuthorizeSignedWitnessRequest) {

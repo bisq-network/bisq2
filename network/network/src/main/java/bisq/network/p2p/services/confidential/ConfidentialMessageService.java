@@ -56,7 +56,7 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 @Slf4j
 public class ConfidentialMessageService implements Node.Listener, DataService.Listener {
     public interface ConfidentialMessageListener {
-        void onMessage(EnvelopePayloadMessage envelopePayloadMessage, PublicKey senderPublicKey);
+        void onConfidentialMessage(EnvelopePayloadMessage envelopePayloadMessage, PublicKey senderPublicKey);
     }
 
     public interface Listener {
@@ -293,7 +293,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                             });
                             confidentialMessageListeners.forEach(listener -> {
                                 try {
-                                    listener.onMessage(decryptedEnvelopePayloadMessage, senderPublicKey);
+                                    listener.onConfidentialMessage(decryptedEnvelopePayloadMessage, senderPublicKey);
                                 } catch (Exception e) {
                                     // Catch the exception to avoid to break the iteration. We want to continue to notify all listeners.
                                     log.error("listener.onMessage failed at listener {}", listener);
