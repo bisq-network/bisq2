@@ -24,6 +24,7 @@ import bisq.common.locale.LanguageRepository;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.i18n.Res;
+import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -51,7 +52,7 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
     private boolean isInitialized;
 
     public SettingsService(PersistenceService persistenceService) {
-        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
+        persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.SETTINGS, persistableStore);
         SettingsService.instance = this;
     }
 

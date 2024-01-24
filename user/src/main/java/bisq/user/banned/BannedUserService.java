@@ -23,6 +23,7 @@ import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
+import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -42,7 +43,7 @@ public class BannedUserService implements PersistenceClient<BannedUserStore>, Se
 
     public BannedUserService(PersistenceService persistenceService,
                              NetworkService networkService) {
-        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
+        persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.CACHE, persistableStore);
         this.networkService = networkService;
     }
 

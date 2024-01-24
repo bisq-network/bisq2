@@ -24,6 +24,7 @@ import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
+import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -48,7 +49,7 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
 
     public UserProfileService(PersistenceService persistenceService,
                               NetworkService networkService) {
-        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
+        persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.SETTINGS, persistableStore);
         this.networkService = networkService;
         UserNameLookup.setUserProfileService(this);
     }

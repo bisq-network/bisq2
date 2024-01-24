@@ -26,6 +26,7 @@ import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.BroadcastResult;
+import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -80,7 +81,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
                                IdentityService identityService,
                                NetworkService networkService) {
         this.config = config;
-        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
+        persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
         this.identityService = identityService;
         this.networkService = networkService;
     }

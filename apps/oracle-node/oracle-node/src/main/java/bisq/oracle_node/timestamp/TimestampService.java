@@ -25,6 +25,7 @@ import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
+import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -62,7 +63,7 @@ public class TimestampService implements Service, PersistenceClient<TimestampSto
         this.authorizedPublicKey = authorizedPublicKey;
         this.staticPublicKeysProvided = staticPublicKeysProvided;
 
-        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
+        persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
     }
 
 

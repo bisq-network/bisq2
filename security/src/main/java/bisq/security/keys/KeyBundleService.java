@@ -18,6 +18,7 @@
 package bisq.security.keys;
 
 import bisq.common.encoding.Hex;
+import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -26,7 +27,6 @@ import com.google.common.base.Strings;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
@@ -61,9 +61,7 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore> {
     public KeyBundleService(PersistenceService persistenceService, Config config) {
         persistableStore = new KeyBundleStore();
         defaultTorPrivateKey = config.getDefaultTorPrivateKey();
-        persistence = persistenceService.getOrCreatePersistence(this,
-                "db" + File.separator + "private",
-                persistableStore);
+        persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
 
         baseDir = persistenceService.getBaseDir();
 

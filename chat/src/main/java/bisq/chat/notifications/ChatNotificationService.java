@@ -33,6 +33,7 @@ import bisq.common.observable.collection.ObservableArray;
 import bisq.common.util.StringUtils;
 import bisq.i18n.Res;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -81,7 +82,7 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
                                    SettingsService settingsService,
                                    UserIdentityService userIdentityService,
                                    UserProfileService userProfileService) {
-        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
+        persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.SETTINGS, persistableStore);
         this.chatService = chatService;
         this.sendNotificationService = sendNotificationService;
         this.settingsService = settingsService;

@@ -19,6 +19,7 @@ package bisq.wallets.bitcoind;
 
 import bisq.common.monetary.Coin;
 import bisq.common.observable.Observable;
+import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
 import bisq.wallets.json_rpc.RpcConfig;
@@ -57,7 +58,7 @@ public class BitcoinWalletService extends AbstractBitcoindWalletService<BitcoinW
                                 PersistenceService persistenceService) {
         super("BTC", getOptionalRegtestConfig(config.isRegtest(), 18443), "bisq_bitcoind_default_wallet");
         this.config = config;
-        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
+        persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.WALLETS, persistableStore);
     }
 
     @Override

@@ -51,6 +51,7 @@ import bisq.network.p2p.services.data.storage.append.AppendOnlyData;
 import bisq.network.p2p.services.data.storage.auth.DefaultAuthenticatedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
+import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -63,7 +64,6 @@ import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PrivateKey;
@@ -84,7 +84,6 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
  */
 @Slf4j
 public class NetworkService implements PersistenceClient<NetworkServiceStore>, Service {
-    public static final String NETWORK_DB_PATH = "db" + File.separator + "network";
     public static final ExecutorService NETWORK_IO_POOL = ExecutorFactory.newCachedThreadPool("NetworkService.network-IO-pool");
     public static final ExecutorService DISPATCHER = ExecutorFactory.newSingleThreadExecutor("NetworkService.dispatcher");
 
@@ -154,7 +153,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                 Optional.empty();
 
         persistence = persistenceService.getOrCreatePersistence(this,
-                NetworkService.NETWORK_DB_PATH,
+                DbSubDirectory.SETTINGS,
                 persistableStore.getClass().getSimpleName(),
                 persistableStore);
     }

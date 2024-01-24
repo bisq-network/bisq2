@@ -37,6 +37,7 @@ import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.oracle_node.bisq1_bridge.dto.BondedReputationDto;
 import bisq.oracle_node.bisq1_bridge.dto.ProofOfBurnDto;
+import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -118,7 +119,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageListener,
         Bisq1BridgeHttpService.Config httpServiceConfig = Bisq1BridgeHttpService.Config.from(config.getHttpService());
         httpService = new Bisq1BridgeHttpService(httpServiceConfig, networkService);
 
-        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
+        persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
     }
 
 

@@ -26,6 +26,7 @@ import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
+import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -47,7 +48,7 @@ public class AccountService implements PersistenceClient<AccountStore>, Service 
     private transient final ObservableSet<Account<?, ? extends PaymentMethod<?>>> accounts = new ObservableSet<>();
 
     public AccountService(PersistenceService persistenceService) {
-        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
+        persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
     }
 
     @Override

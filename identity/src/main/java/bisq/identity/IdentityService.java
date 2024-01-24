@@ -23,6 +23,7 @@ import bisq.network.NetworkService;
 import bisq.network.common.TransportType;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.node.Node;
+import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -55,7 +56,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
     public IdentityService(PersistenceService persistenceService,
                            KeyBundleService keyBundleService,
                            NetworkService networkService) {
-        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
+        persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
         this.keyBundleService = keyBundleService;
         this.networkService = networkService;
     }
