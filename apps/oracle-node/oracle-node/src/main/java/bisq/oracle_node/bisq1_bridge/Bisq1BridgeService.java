@@ -68,7 +68,7 @@ import java.util.concurrent.TimeUnit;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class Bisq1BridgeService implements Service, ConfidentialMessageService.ConfidentialMessageListener, DataService.Listener, PersistenceClient<Bisq1BridgeStore> {
+public class Bisq1BridgeService implements Service, ConfidentialMessageService.Listener, DataService.Listener, PersistenceClient<Bisq1BridgeStore> {
     @Getter
     public static class Config {
         private final com.typesafe.config.Config httpService;
@@ -131,7 +131,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.C
         log.info("initialize");
         return httpService.initialize()
                 .whenComplete((result, throwable) -> {
-                    networkService.addConfidentialMessageListener(this);
+                    networkService.addMessageListener(this);
                     networkService.getDataService()
                             .ifPresent(dataService -> dataService.getAuthorizedData()
                                     .forEach(this::onAuthorizedDataAdded));
@@ -150,7 +150,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.C
             republishAuthorizedBondedRolesScheduler.stop();
         }
         networkService.removeDataServiceListener(this);
-        networkService.removeConfidentialMessageListener(this);
+        networkService.removeMessageListener(this);
         return httpService.shutdown();
     }
 
@@ -160,12 +160,17 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.C
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onConfidentialMessage(EnvelopePayloadMessage envelopePayloadMessage, PublicKey senderPublicKey) {
+    public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
         if (envelopePayloadMessage instanceof AuthorizeAccountAgeRequest) {
             processAuthorizeAccountAgeRequest((AuthorizeAccountAgeRequest) envelopePayloadMessage);
         } else if (envelopePayloadMessage instanceof AuthorizeSignedWitnessRequest) {
             processAuthorizeSignedWitnessRequest((AuthorizeSignedWitnessRequest) envelopePayloadMessage);
-        } else if (envelopePayloadMessage instanceof BondedRoleRegistrationRequest) {
+        }
+    }
+
+    @Override
+    public void onConfidentialMessage(EnvelopePayloadMessage envelopePayloadMessage, PublicKey senderPublicKey) {
+        if (envelopePayloadMessage instanceof BondedRoleRegistrationRequest) {
             processBondedRoleRegistrationRequest((BondedRoleRegistrationRequest) envelopePayloadMessage, senderPublicKey);
         }
     }
