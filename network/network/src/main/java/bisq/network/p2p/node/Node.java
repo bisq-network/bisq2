@@ -274,7 +274,13 @@ public class Node implements Connection.Handler {
                     this,
                     this::handleException);
             inboundConnectionsByAddress.put(connection.getPeerAddress(), connection);
-            DISPATCHER.submit(() -> listeners.forEach(listener -> listener.onConnection(connection)));
+            DISPATCHER.submit(() -> listeners.forEach(listener -> {
+                try {
+                    listener.onConnection(connection);
+                } catch (Exception e) {
+                    log.error("Calling onConnection at listener {} failed", listener, e);
+                }
+            }));
         } catch (Throwable throwable) {
             connectionHandshake.shutdown();
             connectionHandshakes.remove(connectionHandshake.getId());
@@ -425,7 +431,13 @@ public class Node implements Connection.Handler {
                     this,
                     this::handleException);
             outboundConnectionsByAddress.put(address, connection);
-            DISPATCHER.submit(() -> listeners.forEach(listener -> listener.onConnection(connection)));
+            DISPATCHER.submit(() -> listeners.forEach(listener -> {
+                try {
+                    listener.onConnection(connection);
+                } catch (Exception e) {
+                    log.error("Calling onConnection at listener {} failed", listener, e);
+                }
+            }));
             return connection;
         } catch (Throwable throwable) {
             connectionHandshake.shutdown();
@@ -485,7 +497,13 @@ public class Node implements Connection.Handler {
             } else {
                 // We got called from Connection on the dispatcher thread, so no mapping needed here.
                 connection.notifyListeners(envelopePayloadMessage);
-                listeners.forEach(listener -> listener.onMessage(envelopePayloadMessage, connection, networkId));
+                listeners.forEach(listener -> {
+                    try {
+                        listener.onMessage(envelopePayloadMessage, connection, networkId);
+                    } catch (Exception e) {
+                        log.error("Calling onMessage at listener {} failed", listener, e);
+                    }
+                });
             }
         } else {
             //todo (Critical) should we add the connection to the ban list in that case or close the connection?
@@ -537,7 +555,13 @@ public class Node implements Connection.Handler {
             }
         }
         if (wasRemoved) {
-            listeners.forEach(listener -> listener.onDisconnect(connection, closeReason));
+            listeners.forEach(listener -> {
+                try {
+                    listener.onDisconnect(connection, closeReason);
+                } catch (Exception e) {
+                    log.error("Calling onDisconnect at listener {} failed", listener, e);
+                }
+            });
         }
     }
 
@@ -585,7 +609,13 @@ public class Node implements Connection.Handler {
                     }
                     outboundConnectionsByAddress.clear();
                     inboundConnectionsByAddress.clear();
-                    listeners.forEach(listener -> listener.onShutdown(this));
+                    listeners.forEach(listener -> {
+                        try {
+                            listener.onShutdown(this);
+                        } catch (Exception e) {
+                            log.error("Calling onShutdown at listener {} failed", listener, e);
+                        }
+                    });
                     listeners.clear();
                     setState(State.TERMINATED);
                 })
@@ -669,7 +699,13 @@ public class Node implements Connection.Handler {
                 newState, state.get(), networkId);
         state.set(newState);
         observableState.set(newState);
-        listeners.forEach(listener -> listener.onStateChange(newState));
+        listeners.forEach(listener -> {
+            try {
+                listener.onStateChange(newState);
+            } catch (Exception e) {
+                log.error("Calling onStateChange at listener {} failed", listener, e);
+            }
+        });
     }
 
     private boolean isShutdown() {

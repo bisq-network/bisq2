@@ -98,24 +98,66 @@ public class DataService implements StorageService.Listener {
     @Override
     public void onAdded(StorageData storageData) {
         if (storageData instanceof AuthorizedData) {
-            listeners.forEach(e -> e.onAuthorizedDataAdded((AuthorizedData) storageData));
+            listeners.forEach(listener -> {
+                try {
+                    listener.onAuthorizedDataAdded((AuthorizedData) storageData);
+                } catch (Exception e) {
+                    log.error("Calling onAuthorizedDataAdded at listener {} failed", listener, e);
+                }
+            });
         } else if (storageData instanceof AuthenticatedData) {
-            listeners.forEach(e -> e.onAuthenticatedDataAdded((AuthenticatedData) storageData));
+            listeners.forEach(listener -> {
+                try {
+                    listener.onAuthenticatedDataAdded((AuthenticatedData) storageData);
+                } catch (Exception e) {
+                    log.error("Calling onAuthenticatedDataAdded at listener {} failed", listener, e);
+                }
+            });
         } else if (storageData instanceof MailboxData) {
-            listeners.forEach(e -> e.onMailboxDataAdded((MailboxData) storageData));
+            listeners.forEach(listener -> {
+                try {
+                    listener.onMailboxDataAdded((MailboxData) storageData);
+                } catch (Exception e) {
+                    log.error("Calling onMailboxDataAdded at listener {} failed", listener, e);
+                }
+            });
         } else if (storageData instanceof AppendOnlyData) {
-            listeners.forEach(e -> e.onAppendOnlyDataAdded((AppendOnlyData) storageData));
+            listeners.forEach(listener -> {
+                try {
+                    listener.onAppendOnlyDataAdded((AppendOnlyData) storageData);
+                } catch (Exception e) {
+                    log.error("Calling onAppendOnlyDataAdded at listener {} failed", listener, e);
+                }
+            });
         }
     }
 
     @Override
     public void onRemoved(StorageData storageData) {
         if (storageData instanceof AuthorizedData) {
-            listeners.forEach(e -> e.onAuthorizedDataRemoved((AuthorizedData) storageData));
+            listeners.forEach(listener -> {
+                try {
+                    listener.onAuthorizedDataRemoved((AuthorizedData) storageData);
+                } catch (Exception e) {
+                    log.error("Calling onAuthorizedDataRemoved at listener {} failed", listener, e);
+                }
+            });
         } else if (storageData instanceof AuthenticatedData) {
-            listeners.forEach(e -> e.onAuthenticatedDataRemoved((AuthenticatedData) storageData));
+            listeners.forEach(listener -> {
+                try {
+                    listener.onAuthenticatedDataRemoved((AuthenticatedData) storageData);
+                } catch (Exception e) {
+                    log.error("Calling onAuthenticatedDataRemoved at listener {} failed", listener, e);
+                }
+            });
         } else if (storageData instanceof MailboxData) {
-            listeners.forEach(e -> e.onMailboxDataRemoved((MailboxData) storageData));
+            listeners.forEach(listener -> {
+                try {
+                    listener.onMailboxDataRemoved((MailboxData) storageData);
+                } catch (Exception e) {
+                    log.error("Calling onMailboxDataRemoved at listener {} failed", listener, e);
+                }
+            });
         }
     }
 

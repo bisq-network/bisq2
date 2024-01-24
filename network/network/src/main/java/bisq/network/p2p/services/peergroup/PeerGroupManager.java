@@ -377,7 +377,13 @@ public class PeerGroupManager {
                 "New state %s must have a higher ordinal as the current state %s", newState, state.get());
         state.set(newState);
         log.info("New state {}", newState);
-        runAsync(() -> listeners.forEach(e -> e.onStateChanged(newState)), NetworkService.DISPATCHER);
+        runAsync(() -> listeners.forEach(listener -> {
+            try {
+                listener.onStateChanged(newState);
+            } catch (Exception e) {
+                log.error("Calling onStateChanged at listener {} failed", listener, e);
+            }
+        }), NetworkService.DISPATCHER);
     }
 
 

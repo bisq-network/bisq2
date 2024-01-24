@@ -260,7 +260,11 @@ public class ServiceNode {
         nodesById.addNodeListener(new Node.Listener() {
             @Override
             public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
-                listener.onMessage(envelopePayloadMessage);
+                try {
+                    listener.onMessage(envelopePayloadMessage);
+                } catch (Exception e) {
+                    log.error("Calling onMessage at messageListener {} failed", listener, e);
+                }
             }
 
             @Override
@@ -303,6 +307,12 @@ public class ServiceNode {
                 "New state %s must have a higher ordinal as the current state %s", newState, state.get());
         state.set(newState);
         log.info("New state {}", newState);
-        runAsync(() -> listeners.forEach(e -> e.onStateChanged(newState)), NetworkService.DISPATCHER);
+        runAsync(() -> listeners.forEach(listener -> {
+            try {
+                listener.onStateChanged(newState);
+            } catch (Exception e) {
+                log.error("Calling onMessage at onStateChanged {} failed", listener, e);
+            }
+        }), NetworkService.DISPATCHER);
     }
 }

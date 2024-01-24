@@ -36,14 +36,20 @@ public class ElectrumNotifyApi {
     private static final List<Listener> listeners = new CopyOnWriteArrayList<>();
 
     public interface Listener {
-        void onAddressStatusChanged(String address, String status);
+        void onAddressStatusChanged(String address, String status) throws Exception;
     }
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     public String notifyEndpoint(ElectrumNotifyRequest request) {
         log.info(request.toString());
-        listeners.forEach(listener -> listener.onAddressStatusChanged(request.getAddress(), request.getStatus()));
+        listeners.forEach(listener -> {
+            try {
+                listener.onAddressStatusChanged(request.getAddress(), request.getStatus());
+            } catch (Exception e) {
+                log.error("Calling onAddressStatusChanged at listener {} failed", listener, e);
+            }
+        });
         return "SUCCESS";
     }
 

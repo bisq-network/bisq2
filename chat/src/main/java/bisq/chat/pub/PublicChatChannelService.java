@@ -22,6 +22,7 @@ import bisq.network.NetworkService;
 import bisq.network.identity.NetworkIdWithKeyPair;
 import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.network.p2p.services.data.DataService;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.persistence.PersistableStore;
 import bisq.user.UserService;
 import bisq.user.identity.UserIdentity;
@@ -55,10 +56,12 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
 
         networkService.addDataServiceListener(this);
         networkService.getDataService().ifPresent(dataService ->
-                dataService.getAuthenticatedData().forEach(this::onAuthenticatedDataAdded));
+                dataService.getAuthenticatedData().forEach(this::handleAuthenticatedDataAdded));
 
         return CompletableFuture.completedFuture(true);
     }
+
+    protected abstract void handleAuthenticatedDataAdded(AuthenticatedData authenticatedData);
 
     @Override
     public CompletableFuture<Boolean> shutdown() {

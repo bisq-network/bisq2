@@ -76,12 +76,24 @@ public class StorageService {
                             dataStore.addListener(new AuthenticatedDataStorageService.Listener() {
                                 @Override
                                 public void onAdded(AuthenticatedData authenticatedData) {
-                                    listeners.forEach(listener -> listener.onAdded(authenticatedData));
+                                    listeners.forEach(listener -> {
+                                        try {
+                                            listener.onAdded(authenticatedData);
+                                        } catch (Exception e) {
+                                            log.error("Calling onAdded at listener {} failed", listener, e);
+                                        }
+                                    });
                                 }
 
                                 @Override
                                 public void onRemoved(AuthenticatedData authenticatedData) {
-                                    listeners.forEach(listener -> listener.onRemoved(authenticatedData));
+                                    listeners.forEach(listener -> {
+                                        try {
+                                            listener.onRemoved(authenticatedData);
+                                        } catch (Exception e) {
+                                            log.error("Calling onRemoved at listener {} failed", listener, e);
+                                        }
+                                    });
                                 }
                             });
                             authenticatedDataStores.put(storeKey, dataStore);
@@ -96,12 +108,24 @@ public class StorageService {
                             dataStore.addListener(new MailboxDataStorageService.Listener() {
                                 @Override
                                 public void onAdded(MailboxData mailboxData) {
-                                    listeners.forEach(listener -> listener.onAdded(mailboxData));
+                                    listeners.forEach(listener -> {
+                                        try {
+                                            listener.onAdded(mailboxData);
+                                        } catch (Exception e) {
+                                            log.error("Calling onAdded at listener {} failed", listener, e);
+                                        }
+                                    });
                                 }
 
                                 @Override
                                 public void onRemoved(MailboxData mailboxData) {
-                                    listeners.forEach(listener -> listener.onRemoved(mailboxData));
+                                    listeners.forEach(listener -> {
+                                        try {
+                                            listener.onRemoved(mailboxData);
+                                        } catch (Exception e) {
+                                            log.error("Calling onRemoved at listener {} failed", listener, e);
+                                        }
+                                    });
                                 }
                             });
                             mailboxStores.put(storeKey, dataStore);
@@ -114,7 +138,13 @@ public class StorageService {
                 getExistingStoreKeys(directory)
                         .forEach(storeKey -> {
                             AppendOnlyDataStorageService dataStore = new AppendOnlyDataStorageService(persistenceService, appendStoreName, storeKey);
-                            dataStore.addListener(appendOnlyData -> listeners.forEach(listener -> listener.onAdded(appendOnlyData)));
+                            dataStore.addListener(appendOnlyData -> listeners.forEach(listener -> {
+                                try {
+                                    listener.onAdded(appendOnlyData);
+                                } catch (Exception e) {
+                                    log.error("Calling onAdded at listener {} failed", listener, e);
+                                }
+                            }));
                             appendOnlyDataStores.put(storeKey, dataStore);
                         });
             }
@@ -296,12 +326,24 @@ public class StorageService {
             dataStore.addListener(new AuthenticatedDataStorageService.Listener() {
                 @Override
                 public void onAdded(AuthenticatedData authenticatedData) {
-                    listeners.forEach(listener -> listener.onAdded(authenticatedData));
+                    listeners.forEach(listener -> {
+                        try {
+                            listener.onAdded(authenticatedData);
+                        } catch (Exception e) {
+                            log.error("Calling onAdded at listener {} failed", listener, e);
+                        }
+                    });
                 }
 
                 @Override
                 public void onRemoved(AuthenticatedData authenticatedData) {
-                    listeners.forEach(listener -> listener.onRemoved(authenticatedData));
+                    listeners.forEach(listener -> {
+                        try {
+                            listener.onRemoved(authenticatedData);
+                        } catch (Exception e) {
+                            log.error("Calling onRemoved at listener {} failed", listener, e);
+                        }
+                    });
                 }
             });
             authenticatedDataStores.put(storeKey, dataStore);
@@ -319,12 +361,24 @@ public class StorageService {
             dataStore.addListener(new MailboxDataStorageService.Listener() {
                 @Override
                 public void onAdded(MailboxData mailboxData) {
-                    listeners.forEach(listener -> listener.onAdded(mailboxData));
+                    listeners.forEach(listener -> {
+                        try {
+                            listener.onAdded(mailboxData);
+                        } catch (Exception e) {
+                            log.error("Calling onAdded at listener {} failed", listener, e);
+                        }
+                    });
                 }
 
                 @Override
                 public void onRemoved(MailboxData mailboxData) {
-                    listeners.forEach(listener -> listener.onRemoved(mailboxData));
+                    listeners.forEach(listener -> {
+                        try {
+                            listener.onRemoved(mailboxData);
+                        } catch (Exception e) {
+                            log.error("Calling onRemoved at listener {} failed", listener, e);
+                        }
+                    });
                 }
             });
             mailboxStores.put(storeKey, dataStore);

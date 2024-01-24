@@ -277,8 +277,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                                     listener.onMessage(decryptedEnvelopePayloadMessage);
                                     listener.onConfidentialMessage(decryptedEnvelopePayloadMessage, senderPublicKey);
                                 } catch (Exception e) {
-                                    // Catch the exception to avoid to break the iteration. We want to continue to notify all listeners.
-                                    log.error("listener.onMessage failed at listener {}", listener);
+                                    log.error("Calling onMessage(decryptedEnvelopePayloadMessage, senderPublicKey) at messageListener {} failed", listener, e);
                                 }
                             });
                         }, DISPATCHER);

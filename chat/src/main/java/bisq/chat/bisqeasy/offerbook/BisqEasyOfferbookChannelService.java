@@ -62,10 +62,7 @@ public class BisqEasyOfferbookChannelService extends PublicChatChannelService<Bi
 
     @Override
     public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
-        DistributedData distributedData = authenticatedData.getDistributedData();
-        if (distributedData instanceof BisqEasyOfferbookMessage) {
-            processAddedMessage((BisqEasyOfferbookMessage) distributedData);
-        }
+        handleAuthenticatedDataAdded(authenticatedData);
     }
 
     @Override
@@ -76,6 +73,13 @@ public class BisqEasyOfferbookChannelService extends PublicChatChannelService<Bi
         }
     }
 
+    @Override
+    protected void handleAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
+        DistributedData distributedData = authenticatedData.getDistributedData();
+        if (distributedData instanceof BisqEasyOfferbookMessage) {
+            processAddedMessage((BisqEasyOfferbookMessage) distributedData);
+        }
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // API 
