@@ -280,14 +280,6 @@ public class ServiceNode {
         confidentialMessageService.ifPresent(service -> service.removeMessageListener(listener));
     }
 
-    void addConfidentialMessageListener(ConfidentialMessageService.ConfidentialMessageListener listener) {
-        confidentialMessageService.ifPresent(service -> service.addConfidentialMessageListener(listener));
-    }
-
-    void removeConfidentialMessageListener(ConfidentialMessageService.ConfidentialMessageListener listener) {
-        confidentialMessageService.ifPresent(service -> service.removeConfidentialMessageListener(listener));
-    }
-
     void addListener(Listener listener) {
         listeners.add(listener);
     }

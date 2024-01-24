@@ -219,14 +219,6 @@ public class ServiceNodesByTransport {
         map.values().forEach(serviceNode -> serviceNode.removeMessageListener(listener));
     }
 
-    public void addConfidentialMessageListener(ConfidentialMessageService.ConfidentialMessageListener listener) {
-        map.values().forEach(serviceNode -> serviceNode.addConfidentialMessageListener(listener));
-    }
-
-    public void removeConfidentialMessageListener(ConfidentialMessageService.ConfidentialMessageListener listener) {
-        map.values().forEach(serviceNode -> serviceNode.removeConfidentialMessageListener(listener));
-    }
-
     public void addDefaultNodeListener(Node.Listener nodeListener) {
         map.values().forEach(serviceNode -> serviceNode.getDefaultNode().addListener(nodeListener));
     }

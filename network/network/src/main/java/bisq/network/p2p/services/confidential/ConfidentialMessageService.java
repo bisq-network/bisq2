@@ -55,10 +55,6 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 @Slf4j
 public class ConfidentialMessageService implements Node.Listener, DataService.Listener {
-    public interface ConfidentialMessageListener {
-        void onConfidentialMessage(EnvelopePayloadMessage envelopePayloadMessage, PublicKey senderPublicKey);
-    }
-
     public interface Listener {
         void onMessage(EnvelopePayloadMessage envelopePayloadMessage);
 
@@ -71,7 +67,6 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
     private final Optional<DataService> dataService;
     private final Optional<MessageDeliveryStatusService> messageDeliveryStatusService;
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
-    private final Set<ConfidentialMessageListener> confidentialMessageListeners = new CopyOnWriteArraySet<>();
 
     public ConfidentialMessageService(NodesById nodesById,
                                       KeyBundleService keyBundleService,
@@ -90,7 +85,6 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
         nodesById.removeNodeListener(this);
         dataService.ifPresent(service -> service.removeListener(this));
         listeners.clear();
-        confidentialMessageListeners.clear();
     }
 
 
@@ -211,14 +205,6 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
         listeners.remove(listener);
     }
 
-    public void addConfidentialMessageListener(ConfidentialMessageListener listener) {
-        confidentialMessageListeners.add(listener);
-    }
-
-    public void removeConfidentialMessageListener(ConfidentialMessageListener listener) {
-        confidentialMessageListeners.remove(listener);
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -289,14 +275,6 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                             listeners.forEach(listener -> {
                                 try {
                                     listener.onMessage(decryptedEnvelopePayloadMessage);
-                                    listener.onConfidentialMessage(decryptedEnvelopePayloadMessage, senderPublicKey);
-                                } catch (Exception e) {
-                                    // Catch the exception to avoid to break the iteration. We want to continue to notify all listeners.
-                                    log.error("listener.onMessage failed at listener {}", listener);
-                                }
-                            });
-                            confidentialMessageListeners.forEach(listener -> {
-                                try {
                                     listener.onConfidentialMessage(decryptedEnvelopePayloadMessage, senderPublicKey);
                                 } catch (Exception e) {
                                     // Catch the exception to avoid to break the iteration. We want to continue to notify all listeners.
