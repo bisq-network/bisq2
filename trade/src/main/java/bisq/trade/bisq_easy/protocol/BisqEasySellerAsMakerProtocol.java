@@ -47,8 +47,10 @@ public class BisqEasySellerAsMakerProtocol extends BisqEasyProtocol {
     @Override
     public void configTransitions() {
         from(INIT)
+        .then()
                 .branch(
                         path("Option 1: Maker (self) is online and sends take offer response immediately")
+                                .from(INIT)
                                 .on(BisqEasyTakeOfferRequest.class)
                                 .run(BisqEasyTakeOfferRequestHandler.class)
                                 .to(MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS)
@@ -76,6 +78,7 @@ public class BisqEasySellerAsMakerProtocol extends BisqEasyProtocol {
                                             .to(MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS)
                                 ),
                         path("Option 2: Maker (self) is offline and taker already sends btc address without receiving take offer response")
+                                .from(INIT)
                                 .on(BisqEasyBtcAddressMessage.class)
                                 .run(BisqEasyBtcAddressMessageHandler.class)
                                 .to(MAKER_DID_NOT_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS)
