@@ -48,7 +48,7 @@ message Trade {
   string id = 2;
   TradeRole tradeRole = 3;
   identity.Identity myIdentity = 4;
-  contract.Contract contract = 5;
+  optional contract.Contract contract = 5;
   TradeParty taker = 6;
   TradeParty maker = 7;
   optional string errorMessage = 8;
@@ -119,6 +119,7 @@ message BisqEasyConfirmFiatSentMessage {
 }
 message BisqEasyBtcAddressMessage {
   string btcAddress = 1;
+  offer.Offer bisqEasyOffer = 2;
 }
 message BisqEasyConfirmFiatReceiptMessage {
 }

@@ -25,6 +25,7 @@ import bisq.trade.protocol.events.TradeMessageHandler;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class BisqEasyBtcAddressMessageHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyBtcAddressMessage> {
@@ -48,6 +49,7 @@ public class BisqEasyBtcAddressMessageHandler extends TradeMessageHandler<BisqEa
         checkArgument(StringUtils.isNotEmpty(message.getBtcAddress()));
         // We leave it flexible so that users can use other than a BTC address data as btcAddress
         checkArgument(message.getBtcAddress().length() <= 100);
+        checkNotNull(message.getBisqEasyOffer());
     }
 
     private void commitToModel(String btcAddress) {

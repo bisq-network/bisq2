@@ -33,7 +33,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * In case of out-of-order events we store the un-handled events (we do not persist it) and retry to apply those
  * pending states after the next state transition.
  * The handling of out-of-order events only support unique event/state pairs. The out-of-order handling does not
- * support the use fo the same event for multiple transitions. Though that is not a restriction of the transition config.
+ * support the use of the same event for multiple transitions. Though that is not a restriction of the transition config.
  * <br/>
  * The Fsm does not allow cycle graphs or transitions to previous states. For determining the order of the states we
  * use getOrdinal() which returns in case of enums the ordinal.

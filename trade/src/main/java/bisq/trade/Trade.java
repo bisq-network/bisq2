@@ -35,6 +35,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.UUID;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @Slf4j
 @Getter
 @ToString(callSuper = true)
@@ -57,10 +60,10 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
 
     private final String id;
     private final Identity myIdentity;
-    private final C contract;
     private final P taker;
     private final P maker;
     private transient final TradeRole tradeRole;
+    private final Observable<C> contract = new Observable<>();
     private final Observable<String> errorMessage = new Observable<>();
     private final Observable<String> errorStackTrace = new Observable<>();
     private final Observable<String> peersErrorMessage = new Observable<>();
@@ -70,14 +73,13 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
                  boolean isBuyer,
                  boolean isTaker,
                  Identity myIdentity,
-                 C contract,
+                 T offer,
                  P taker,
                  P maker) {
         this(state,
-                createId(contract.getOffer().getId(), taker.getNetworkId().getId()),
+                createId(offer.getId(), taker.getNetworkId().getId()),
                 createRole(isBuyer, isTaker),
                 myIdentity,
-                contract,
                 taker,
                 maker);
     }
@@ -86,7 +88,6 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
                     String id,
                     TradeRole tradeRole,
                     Identity myIdentity,
-                    C contract,
                     P taker,
                     P maker) {
         super(state);
@@ -94,7 +95,6 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
         this.id = id;
         this.tradeRole = tradeRole;
         this.myIdentity = myIdentity;
-        this.contract = contract;
         this.taker = taker;
         this.maker = maker;
     }
@@ -104,15 +104,23 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
                 .setId(id)
                 .setTradeRole(tradeRole.toProto())
                 .setMyIdentity(myIdentity.toProto())
-                .setContract(contract.toProto())
                 .setTaker(taker.toProto())
                 .setMaker(maker.toProto())
                 .setState(getState().name());
+        Optional.ofNullable(contract.get()).ifPresent(contract -> builder.setContract(contract.toProto()));
         Optional.ofNullable(getErrorMessage()).ifPresent(builder::setErrorMessage);
         Optional.ofNullable(getErrorStackTrace()).ifPresent(builder::setErrorStackTrace);
         Optional.ofNullable(getPeersErrorMessage()).ifPresent(builder::setPeersErrorMessage);
         Optional.ofNullable(getPeersErrorStackTrace()).ifPresent(builder::setPeersErrorStackTrace);
         return builder;
+    }
+
+    public C getContract() {
+        return contract.get();
+    }
+
+    public void setContract(C contract) {
+        this.contract.set(contract);
     }
 
     public void setErrorMessage(String errorMessage) {
@@ -160,7 +168,8 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public T getOffer() {
-        return contract.getOffer();
+        checkArgument(contract.get() != null, "Cannot get offer, since contract has not yet been set.");
+        return contract.get().getOffer();
     }
 
     public boolean isBuyer() {

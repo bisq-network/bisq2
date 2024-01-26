@@ -39,7 +39,8 @@ public class BisqEasySendBtcAddressEventHandler extends SendTradeMessageHandler<
                 trade.getId(),
                 trade.getMyIdentity().getNetworkId(),
                 trade.getPeer().getNetworkId(),
-                btcAddress));
+                btcAddress,
+                trade.getOffer()));
     }
 
     private void commitToModel(String btcAddress) {
