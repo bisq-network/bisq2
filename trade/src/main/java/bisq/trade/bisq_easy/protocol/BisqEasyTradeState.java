@@ -30,9 +30,6 @@ public enum BisqEasyTradeState implements State {
     TAKER_SENT_TAKE_OFFER_REQUEST,
 
 
-    MAKER_SENT_TAKE_OFFER_RESPONSE, // TODO: REMOVE
-
-
     // BUYER AS TAKER *****************************/
     // Branch 1: Buyer receives take offer response first
     TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA,
@@ -106,17 +103,6 @@ public enum BisqEasyTradeState implements State {
 
     // Unique final converging step (all three states have been completed)
     MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA,
-
-
-    // TODO: Remove
-    // Branch 1: Buyer sends btc address first
-    BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA,
-
-    // Branch 2: Buyer receives account data first
-    BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA,
-
-    // Unique final converging step (the two states have been completed)
-    BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA,
     // *********************************************/
 
 
