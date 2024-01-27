@@ -45,7 +45,7 @@ public abstract class BisqEasyProtocol extends TradeProtocol<BisqEasyTrade> {
     @Override
     public void handle(Event event) {
         try {
-            handle(event);
+            super.handle(event);
         } catch (FsmException fsmException) {
             // We swallow the exception as we handle exceptions as an error state.
             // The client need to listen for that state for error handling.
