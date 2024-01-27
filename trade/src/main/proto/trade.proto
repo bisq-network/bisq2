@@ -114,6 +114,7 @@ message BisqEasyTakeOfferResponse {
 }
 message BisqEasyAccountDataMessage {
   string paymentAccountData = 1;
+  offer.Offer bisqEasyOffer = 2;
 }
 message BisqEasyConfirmFiatSentMessage {
 }

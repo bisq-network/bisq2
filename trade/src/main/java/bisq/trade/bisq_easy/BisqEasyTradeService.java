@@ -108,6 +108,8 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
                 onBisqEasyTakeOfferMessage((BisqEasyTakeOfferRequest) bisqEasyTradeMessage);
             } else if (bisqEasyTradeMessage instanceof BisqEasyBtcAddressMessage) {
                 onBisqEasyBtcAddressMessage((BisqEasyBtcAddressMessage) bisqEasyTradeMessage);
+            } else if (bisqEasyTradeMessage instanceof BisqEasyAccountDataMessage) {
+                onBisqEasySendAccountDataMessage((BisqEasyAccountDataMessage) bisqEasyTradeMessage);
             } else {
                 handleBisqEasyTradeMessage(bisqEasyTradeMessage);
             }
@@ -132,6 +134,16 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     }
 
     private void onBisqEasyBtcAddressMessage(BisqEasyBtcAddressMessage message) {
+        BisqEasyOffer offer = checkNotNull(message.getBisqEasyOffer());
+        NetworkId sender = checkNotNull(message.getSender());
+        NetworkId receiver = checkNotNull(message.getReceiver());
+        BisqEasyProtocol protocol = findProtocol(message.getTradeId()).isPresent()
+                ? getProtocol(message.getTradeId())
+                : createTradeProtocol(offer, sender, receiver);
+        handleEvent(protocol, message);
+    }
+
+    private void onBisqEasySendAccountDataMessage(BisqEasyAccountDataMessage message) {
         BisqEasyOffer offer = checkNotNull(message.getBisqEasyOffer());
         NetworkId sender = checkNotNull(message.getSender());
         NetworkId receiver = checkNotNull(message.getReceiver());

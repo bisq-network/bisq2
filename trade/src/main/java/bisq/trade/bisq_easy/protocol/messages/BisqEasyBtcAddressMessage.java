@@ -30,6 +30,8 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public final class BisqEasyBtcAddressMessage extends BisqEasyTradeMessage {
+    public final static int MAX_LENGTH = 1000;
+
     private final String btcAddress;
     private final BisqEasyOffer bisqEasyOffer;
 
@@ -53,7 +55,7 @@ public final class BisqEasyBtcAddressMessage extends BisqEasyTradeMessage {
         // We tolerate non-btc address data as well (e.g. LN invoice)
         // The minimum possible length of an LN invoice is around 190 characters
         // Max. length depends on optional fields
-        NetworkDataValidation.validateText(btcAddress, 1000);
+        NetworkDataValidation.validateText(btcAddress, MAX_LENGTH);
     }
 
     @Override
