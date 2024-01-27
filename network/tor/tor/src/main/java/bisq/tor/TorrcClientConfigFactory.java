@@ -73,6 +73,7 @@ public class TorrcClientConfigFactory {
                 .dataDirPath(dataDir)
                 .controlPort(controlPort)
                 .hashedControlPassword(hashedControlPassword.getHashedPassword())
+                .isTestNetwork(isTestNetwork)
                 .build();
     }
 
