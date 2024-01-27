@@ -171,7 +171,7 @@ public class DesktopApplicationService extends ApplicationService {
                 sendNotificationService,
                 tradeService);
 
-        // TODO: Not sure if ServiceProvider is still needed as added BisqEasyService which exposes most of the services.
+        // TODO (refactor, low prio): Not sure if ServiceProvider is still needed as we added BisqEasyService which exposes most of the services.
         serviceProvider = new ServiceProvider(shutDownHandler,
                 getConfig(),
                 persistenceService,

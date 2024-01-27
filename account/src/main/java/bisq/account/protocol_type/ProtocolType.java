@@ -20,7 +20,7 @@ package bisq.account.protocol_type;
 import bisq.common.proto.ProtoEnum;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 
-// TODO does not fit right into the account module. But dependency graph does not provide a lower level module
+// TODO (refactoring) does not fit right into the account module. But dependency graph does not provide a lower level module
 // where it would fit in. protocol module is rather high level and we use protocol type in the POC code in 
 // the account, offer and contract modules. So leave it for now here. Maybe we need another low level exchange domain 
 // specific module where it would fit in.

@@ -21,7 +21,7 @@ import java.util.function.Supplier;
  */
 @Slf4j
 public class JaxRsApplication extends ResourceConfig implements Service {
-    //todo use config
+    //todo (refactor, low prio) use config
     public static final String BASE_URL = "http://localhost:8082/api/v1";
 
     @Getter

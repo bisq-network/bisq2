@@ -389,7 +389,6 @@ public class PeerGroupManager {
         return notBootstrapping(connection) && connection.isRunning();
     }
 
-    // TODO find better solution than to use a hard coded estimated value
     private boolean notBootstrapping(Connection connection) {
         return connection.getConnectionMetrics().getAge() > config.getBootstrapTime();
     }

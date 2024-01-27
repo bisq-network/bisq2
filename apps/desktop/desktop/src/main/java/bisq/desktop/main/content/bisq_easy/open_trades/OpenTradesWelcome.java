@@ -90,7 +90,6 @@ public class OpenTradesWelcome {
             infoHeadline.setWrapText(true);
             infoHeadline.setAlignment(Pos.TOP_LEFT);
             infoHeadline.getStyleClass().add("bisq-easy-open-trades-welcome-info");
-            // todo container structure does not guarantee the wrapping
             infoHeadline.setMinHeight(80);
 
             HBox line1 = getIconAndText(Res.get("bisqEasy.openTrades.welcome.line1"), "reputation");

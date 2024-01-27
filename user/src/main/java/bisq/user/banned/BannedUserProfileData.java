@@ -38,7 +38,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
 @EqualsAndHashCode
 @Getter
 public final class BannedUserProfileData implements AuthorizedDistributedData {
-    // todo Production key not set yet - we use devMode key only yet
+    // todo (Critical) Production key not set yet - we use devMode key only yet
     public static final Set<String> AUTHORIZED_PUBLIC_KEYS = Set.of(
     );
 

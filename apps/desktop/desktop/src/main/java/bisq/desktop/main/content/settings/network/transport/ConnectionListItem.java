@@ -163,14 +163,14 @@ public class ConnectionListItem implements ActivatableTableItem, DateTableItem {
     }
 
     public int compareSent(ConnectionListItem other) {
-        return 0; //todo
+        return 0;//todo (low prio)
     }
 
     public int compareReceived(ConnectionListItem other) {
-        return 0;//todo
+        return 0;//todo (low prio)
     }
 
     public int compareRtt(ConnectionListItem other) {
-        return 0;//todo
+        return 0;//todo (low prio)
     }
 }

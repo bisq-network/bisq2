@@ -193,7 +193,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageListener,
                                                 "bannedRole={}\nauthorizedData sent by security manager={}",
                                         bannedRole, authorizedData);
                             } else {
-                                //todo
+                                //todo (Critical)
                                 //removeAuthorizedData(...);
                             }
                         });
@@ -411,7 +411,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageListener,
     }
 
     private String toBisq1RoleTypeName(BondedRoleType bondedRoleType) {
-        //todo switch
+        //todo (refactor, low prio) use switch
         String name = bondedRoleType.name();
         if (name.equals("MEDIATOR")) {
             return "MEDIATOR"; // 5k

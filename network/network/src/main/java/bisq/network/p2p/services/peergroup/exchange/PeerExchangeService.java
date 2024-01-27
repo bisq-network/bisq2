@@ -50,7 +50,7 @@ public class PeerExchangeService implements Node.Listener {
     private final Node node;
     private final PeerExchangeStrategy peerExchangeStrategy;
     private final Map<String, PeerExchangeRequestHandler> requestHandlerMap = new ConcurrentHashMap<>();
-    private int doInitialPeerExchangeDelaySec = 1; //todo move to config
+    private int doInitialPeerExchangeDelaySec = 1; //todo (refactor, low prio) move to config
     private volatile boolean isStopped;
     private CompletableFuture<Void> resultFuture;
     private Optional<Scheduler> scheduler = Optional.empty();

@@ -29,7 +29,6 @@ public class TimeFormatter {
     public static final long DAY_AS_MS = TimeUnit.DAYS.toMillis(1);
 
     public static String formatDuration(long duration) {
-        //todo
         if (duration < 1000) {
             return duration + " ms";
         } else {

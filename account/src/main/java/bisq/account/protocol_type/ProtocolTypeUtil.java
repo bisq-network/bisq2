@@ -64,7 +64,7 @@ public class ProtocolTypeUtil {
     }
 
     private static boolean isLiquidSwapSupported(Market market) {
-        //todo we need an asset repository to check if any asset is a liquid asset
+        //TODO (deferred) we need an asset repository to check if any asset is a liquid asset
         return (market.getBaseCurrencyCode().equals("L-BTC") ||
                 market.getQuoteCurrencyCode().equals("L-BTC"));
     }
@@ -77,7 +77,7 @@ public class ProtocolTypeUtil {
     }
 
     private static boolean isLNSwapSupported(Market market) {
-        return false;//todo need some liquid asset lookup table
+        return false;//TODO (deferred) need some liquid asset lookup table
     }
 
     private static boolean isMultiSigSupported(Market market) {

@@ -488,7 +488,7 @@ public class Node implements Connection.Handler {
                 listeners.forEach(listener -> listener.onMessage(envelopePayloadMessage, connection, networkId));
             }
         } else {
-            //todo handle
+            //todo (Critical) should we add the connection to the ban list in that case or close the connection?
             log.warn("Message authorization failed. authorizedMessage={}", StringUtils.truncate(envelopePayloadMessage.toString()));
         }
     }
@@ -514,7 +514,7 @@ public class Node implements Connection.Handler {
                 connection.notifyListeners(envelopePayloadMessage);
             }
         } else {
-            //todo handle
+            //todo (Critical) should we add the connection to the ban list in that case or close the connection?
             log.warn("Message authorization failed. authorizedMessage={}", StringUtils.truncate(envelopePayloadMessage.toString()));
         }
     }

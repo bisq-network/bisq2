@@ -115,18 +115,4 @@ public class PriceUtil {
     public static Optional<PriceQuote> findMarketPriceQuote(MarketPriceService marketPriceService, Market market) {
         return marketPriceService.findMarketPrice(market).map(MarketPrice::getPriceQuote).stream().findAny();
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // PriceSpec
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-    //todo
-    public static PriceSpec fromPercentage(double percentage) {
-        return percentage != 0 ?
-                new FloatPriceSpec(percentage) :
-                new MarketPriceSpec();
-    }
-
 }

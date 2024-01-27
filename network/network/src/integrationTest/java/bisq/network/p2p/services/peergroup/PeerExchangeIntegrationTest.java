@@ -42,7 +42,7 @@ public class PeerExchangeIntegrationTest extends PeerExchangeBase {
      /*   bootstrapSeedNode();
         bootstrapNode1();
         bootstrapNode2();
-       // bootstrapNode3(); //todo fails
+       // bootstrapNode3(); // fails
         shutDownSeed();
         shutDownNode1();
         shutDownNode2();*/

@@ -25,11 +25,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -115,7 +111,8 @@ public enum FiatPaymentRail implements PaymentRail {
 }
 
     /*
-TODO add missing bisq 1 payment methods with supported countries and currencies
+Most important methods are added already. we can add more on demand/request later:
+Here are the missing ones (not updated with maybe newly added ones in Bisq1)
 SAME_BANK=Transfer with same bank
 SPECIFIC_BANKS=Transfers with specific banks
 MONEY_GRAM=MoneyGram

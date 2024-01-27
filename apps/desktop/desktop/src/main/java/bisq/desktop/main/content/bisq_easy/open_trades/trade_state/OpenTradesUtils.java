@@ -84,7 +84,7 @@ public class OpenTradesUtils {
                     .information(Res.get("bisqEasy.mediation.request.confirm.msg"))
                     .actionButtonText(Res.get("bisqEasy.mediation.request.confirm.openMediation"))
                     .onAction(() -> {
-                        //todo
+                        //todo (Critical) should be handled with the solution how to treat system messages
                         //String systemMessage = Res.get("bisqEasy.mediation.requester.systemMessage");
                         // chatService.getBisqEasyPrivateTradeChatChannelService().sendSystemMessage(systemMessage, channel);
 

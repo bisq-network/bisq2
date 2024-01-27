@@ -48,7 +48,7 @@ import java.util.concurrent.TimeUnit;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-// TODO close connection if failing
+// TODO (Critical) close connection if failing
 @Slf4j
 public class TorHttpClient extends BaseHttpClient {
     private final Socks5ProxyProvider socks5ProxyProvider;

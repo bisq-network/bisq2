@@ -29,13 +29,13 @@
  *  This is the second generation theme for JavaFX after Caspian.
  */
 
+/* This file is only kept here for lookup in the reference css. It is not used in the code*/
+
 /*******************************************************************************
  *                                                                             *
  * THEMING INSTRUCTIONS                                                       *
  *                                                                             *
  *******************************************************************************
-
-TODO: Explain here how theming works:
 
      * -fx-text-base-color for text on top of -fx-base, -fx-color, and -fx-body-color
      * -fx-text-background-color for text on top of -fx-background
@@ -197,7 +197,6 @@ is being used to size a border should also be in pixels.
     /* A little darker than -fx-base and used as the -fx-color for the
      * "armed" pseudoclass state.
      *
-     * TODO: should this be renamed to -fx-armed-base?
      */
     -fx-pressed-base: derive(-fx-base,-6%);
 
@@ -341,7 +340,6 @@ is being used to size a border should also be in pixels.
     /* The color to use as -fx-text-fill when painting text on top of
      * backgrounds filled with -fx-selection-bar.
      *
-     * TODO: this can be removed
      */
     -fx-selection-bar-text: -fx-text-background-color;
 
@@ -1662,7 +1660,6 @@ is being used to size a border should also be in pixels.
     -fx-color: -fx-base;
 }
 .tab-pane > .tab-header-area > .tab-header-background {
-    /* TODO should not be using text-box-border I think? */
     -fx-background-color:
             -fx-outer-border,
             -fx-text-box-border,
@@ -1693,7 +1690,6 @@ is being used to size a border should also be in pixels.
 .tab-pane:right > .tab-header-area {
     -fx-padding: 0.416667em 0.416667em 0.166667em 0.0em; /* 5 5 2 0 */
 }
-/* TODO: scaling the shape seems to make it way too large */
 .tab-pane > .tab-header-area > .headers-region > .tab > .tab-container > .tab-close-button {
     -fx-background-color: -fx-mark-color;
     -fx-shape: "M 0,0 H1 L 4,3 7,0 H8 V1 L 5,4 8,7 V8 H7 L 4,5 1,8 H0 V7 L 3,4 0,1 Z";
@@ -1714,7 +1710,7 @@ is being used to size a border should also be in pixels.
     -fx-background-radius: 10;
 }
 .tab-pane:bottom > .tab-header-area > .control-buttons-tab > .container > .tab-down-button {
-    -fx-padding: -5 4 4 4; /* TODO convert to ems */
+    -fx-padding: -5 4 4 4;
 }
 /* FLOATING TABS CUSTOMISATION */
 .tab-pane.floating > .tab-header-area > .tab-header-background {

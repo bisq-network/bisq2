@@ -20,7 +20,8 @@ package bisq.bonded_roles;
 import java.util.Set;
 
 public class AuthorizedPubKeys {
-    // todo Production key not set yet - we use devMode key only yet
+    // FIXME
+    // TODO (Critical) add production keys
     public static final Set<String> KEYS = Set.of(
             // OracleNode1
             "3056301006072a8648ce3d020106052b8104000a03420004b9f698d9644d01193eaa2e7a823570aeea50e4f96749305db523c010e998b3a8f2ef0a567bb9282e80ff66b6de8f0df39d242f609728def1dbaa6f1862429188",

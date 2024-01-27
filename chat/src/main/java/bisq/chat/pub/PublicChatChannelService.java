@@ -29,7 +29,6 @@ import bisq.user.profile.UserProfile;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.KeyPair;
-import java.util.Collection;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -104,11 +103,6 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
 
     public CompletableFuture<BroadcastResult> deleteChatMessage(M chatMessage, NetworkIdWithKeyPair networkIdWithKeyPair) {
         return networkService.removeAuthenticatedData(chatMessage, networkIdWithKeyPair.getKeyPair());
-    }
-
-    public Collection<C> getMentionableChannels() {
-        // TODO: implement logic
-        return getChannels();
     }
 
     @Override

@@ -21,7 +21,7 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.control.ProgressIndicator;
 
-// TODO consider to remove
+// TODO (refactor, low prio) consider to remove
 public class BusyAnimation extends ProgressIndicator {
 
     private final BooleanProperty isRunningProperty = new SimpleBooleanProperty();

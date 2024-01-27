@@ -72,7 +72,7 @@ public final class Market implements NetworkProto, PersistableProto, Comparable<
                 proto.getQuoteCurrencyName());
     }
 
-    //todo make static utils
+    //todo (refactor, low prio) make static utils
     public String getNonBitcoinCurrency() {
         return isFiat() ? quoteCurrencyName : baseCurrencyName;
     }

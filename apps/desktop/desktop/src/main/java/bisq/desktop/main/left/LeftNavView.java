@@ -106,9 +106,6 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 "nav-support",
                 NavigationTarget.SUPPORT, false);
 
-
-        //todo lower priority menu add design
-
         LeftNavButton user = createNavigationButton(Res.get("navigation.userOptions"),
                 "nav-user",
                 NavigationTarget.USER, false);

@@ -49,7 +49,6 @@ public class MaterialPasswordField extends MaterialTextField {
     public MaterialPasswordField(@Nullable String description, @Nullable String prompt, @Nullable String help) {
         super(description, prompt, help);
 
-        //todo remove String objects for password 
         textProperty().addListener(new WeakReference<>(
                 (ChangeListener<String>) (observable, oldValue, newValue) -> {
                     password.set(newValue);
@@ -125,7 +124,7 @@ public class MaterialPasswordField extends MaterialTextField {
         private void handleIsMaskedChange(boolean isMasked) {
             iconButton.setIcon(isMasked ? AwesomeIcon.EYE_CLOSE : AwesomeIcon.EYE_OPEN);
 
-            // TODO if binding is used we don't get the text updated. With bi-dir binding it works
+            // FIXME (low prio) if binding is used we don't get the text updated. With bi-dir binding it works
             textField.setText(textField.getText());
             textField.end();
         }

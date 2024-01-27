@@ -328,6 +328,6 @@ public final class ConnectionHandshake {
     }
 
     public void shutdown() {
-        // todo close pending requests but do not close sockets
+        // todo (Critical) close pending requests but do not close sockets
     }
 }

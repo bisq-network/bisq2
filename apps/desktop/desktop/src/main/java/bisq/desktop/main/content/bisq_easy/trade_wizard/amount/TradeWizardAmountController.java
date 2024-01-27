@@ -319,16 +319,17 @@ public class TradeWizardAmountController implements Controller {
 
     private boolean filterOffers(BisqEasyOffer peersOffer) {
         try {
-            Optional<UserProfile> authorUserProfile = userProfileService.findUserProfile(peersOffer.getMakersUserProfileId());
-            if (authorUserProfile.isEmpty()) {
+            Optional<UserProfile> optionalAuthorUserProfile = userProfileService.findUserProfile(peersOffer.getMakersUserProfileId());
+            if (optionalAuthorUserProfile.isEmpty()) {
                 return false;
             }
-            if (userProfileService.isChatUserIgnored(authorUserProfile.get())) {
+            UserProfile authorUserProfile = optionalAuthorUserProfile.get();
+            if (userProfileService.isChatUserIgnored(authorUserProfile)) {
                 return false;
             }
             if (userIdentityService.getUserIdentities().stream()
                     .map(userIdentity -> userIdentity.getUserProfile().getId())
-                    .anyMatch(userProfileId -> userProfileId.equals(authorUserProfile.get().getId()))) {
+                    .anyMatch(userProfileId -> userProfileId.equals(optionalAuthorUserProfile.get().getId()))) {
                 return false;
             }
 
@@ -359,7 +360,7 @@ public class TradeWizardAmountController implements Controller {
                 return false;
             }
 
-            //todo
+            //todo (Critical)
            /* if (reputationService.getReputationScore(senderUserProfile).getTotalScore() < myChatOffer.getRequiredTotalReputationScore()) {
                 return false;
             }*/

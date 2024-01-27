@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
-// TODO if walletService is present we want to encrypt the wallet file.
+// TODO (deferred) if walletService is present we want to encrypt the wallet file.
 // Wallet encryption is not implemented yet in the wallet domain
 @Slf4j
 public class PasswordController implements Controller {

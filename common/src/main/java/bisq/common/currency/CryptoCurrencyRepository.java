@@ -87,7 +87,7 @@ public class CryptoCurrencyRepository {
     }
 
 
-    //todo fill with major coins
+    //todo (deferred) fill with major coins
     private static void fillNameByCodeMap() {
         nameByCode.put("ALGO", "Algorand");
     }

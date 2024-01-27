@@ -27,8 +27,8 @@ public class ProtocolRoadmapController implements Controller {
     private final ProtocolRoadmapView view;
     private final ProtocolRoadmapModel model;
 
-    public ProtocolRoadmapController(TradeProtocolType tradeProtocolType, String iconId, String url) {
-        model = new ProtocolRoadmapModel(tradeProtocolType, iconId, url);
+    public ProtocolRoadmapController(TradeProtocolType tradeProtocolType, String url) {
+        model = new ProtocolRoadmapModel(tradeProtocolType, url);
         view = new ProtocolRoadmapView(model, this);
     }
 

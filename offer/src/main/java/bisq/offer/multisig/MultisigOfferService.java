@@ -80,7 +80,6 @@ public class MultisigOfferService implements Service {
 
         republishMyOffers();
         // Do again once we assume we better connected
-        // todo provide an API from network to get an event for that
         Scheduler.run(this::republishMyOffers).after(5000, TimeUnit.MILLISECONDS);
 
         return myMultisigOffersService.initialize();

@@ -11,7 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 import java.util.Optional;
 
-//TODO use Optional instead of Nullable
+//fixme (low prio) use Optional instead of Nullable
 @EqualsAndHashCode(callSuper = true)
 @Setter
 @Getter

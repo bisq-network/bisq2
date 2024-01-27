@@ -138,7 +138,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             model.statement.set(userProfile.getStatement());
             model.terms.set(userProfile.getTerms());
 
-            // todo add tooltip
+            // todo (low prio) add tooltip
             model.reputationScore.set(reputationService.getReputationScore(userProfile));
 
             model.profileAge.set(reputationService.getProfileAgeService().getProfileAge(userProfile)

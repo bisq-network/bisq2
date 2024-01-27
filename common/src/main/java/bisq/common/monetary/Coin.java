@@ -182,7 +182,7 @@ public final class Coin extends Monetary {
     }
 
     public Coin round(int roundPrecision) {
-        //todo not tested
+        //todo (low prio) add tests
         double rounded = MathUtils.roundDouble(toDouble(value), roundPrecision);
         long shifted = BigDecimal.valueOf(rounded).movePointRight(precision).longValue();
         return Coin.fromValue(shifted, code, precision);

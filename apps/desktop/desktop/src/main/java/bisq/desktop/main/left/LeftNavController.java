@@ -122,7 +122,7 @@ public class LeftNavController implements Controller {
         }
 
         UIThread.run(() -> {
-            // todo add moderators notification support
+            // todo (deferred) add moderators notification support
             AtomicLong numMediatorsNotConsumedNotifications = new AtomicLong();
             findNavButton(NavigationTarget.AUTHORIZED_ROLE).ifPresent(authorizedRoleButton -> {
                 numMediatorsNotConsumedNotifications.set(bisqEasyNotificationsService.getMediatorsNotConsumedNotifications().count());

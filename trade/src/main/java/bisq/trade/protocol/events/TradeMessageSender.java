@@ -36,10 +36,6 @@ public interface TradeMessageSender<M extends Trade<?, ?, ?>> {
 
         return serviceProvider.getNetworkService().confidentialSend(message,
                         trade.getPeer().getNetworkId(),
-                        trade.getMyIdentity().getNetworkIdWithKeyPair())
-                .whenComplete((result, throwable) -> {
-                    // System.out.println("sendMessage " + message + ". result=" + result);
-                    //todo store info if message arrive or stored in mailbox
-                });
+                trade.getMyIdentity().getNetworkIdWithKeyPair());
     }
 }
