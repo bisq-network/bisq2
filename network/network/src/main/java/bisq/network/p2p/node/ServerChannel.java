@@ -17,10 +17,10 @@
 
 package bisq.network.p2p.node;
 
+import bisq.network.common.Address;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.network.p2p.services.peergroup.BanList;
-import bisq.network.common.Address;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,7 +37,7 @@ import java.util.*;
 @Slf4j
 public class ServerChannel {
 
-    public interface Listener {
+    public interface Handler {
         void onServerReady();
     }
 
@@ -53,7 +53,7 @@ public class ServerChannel {
     private Optional<InboundConnectionsManager> inboundConnectionsManager = Optional.empty();
 
     @Setter
-    private Optional<Listener> onServerReadyListener = Optional.empty();
+    private Optional<Handler> onServerReadyListener = Optional.empty();
 
     public ServerChannel(Capability myCapability,
                          NetworkLoad myNetworkLoad,
@@ -95,7 +95,7 @@ public class ServerChannel {
                 this.inboundConnectionsManager = Optional.of(inboundConnectionsManager);
 
                 inboundConnectionsManager.registerOpAccept();
-                onServerReadyListener.ifPresent(Listener::onServerReady);
+                onServerReadyListener.ifPresent(Handler::onServerReady);
 
                 while (selector.select() > 0) {
                     if (isServerStopped()) {

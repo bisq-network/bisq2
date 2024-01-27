@@ -143,13 +143,25 @@ public abstract class ConnectionChannel {
         } catch (IOException ignore) {
         }
         NetworkService.DISPATCHER.submit(() -> {
-            listeners.forEach(listener -> listener.onConnectionClosed(closeReason));
+            listeners.forEach(listener -> {
+                try {
+                    listener.onConnectionClosed(closeReason);
+                } catch (Exception e) {
+                    log.error("Calling onConnectionClosed at listener {} failed", listener, e);
+                }
+            });
             listeners.clear();
         });
     }
 
     void notifyListeners(EnvelopePayloadMessage envelopePayloadMessage) {
-        listeners.forEach(listener -> listener.onNetworkMessage(envelopePayloadMessage));
+        listeners.forEach(listener -> {
+            try {
+                listener.onNetworkMessage(envelopePayloadMessage);
+            } catch (Exception e) {
+                log.error("Calling onNetworkMessage at listener {} failed", listener, e);
+            }
+        });
     }
 
     public void addListener(Listener listener) {

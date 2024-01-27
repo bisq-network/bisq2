@@ -27,6 +27,7 @@ import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
 import bisq.network.p2p.node.transport.TransportService;
 import bisq.network.p2p.services.peergroup.BanList;
 import bisq.security.keys.KeyBundleService;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
 import java.util.Map;
@@ -44,6 +45,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  * Maintains a map with nodes by nodeId.
  * Provides delegate methods to node with given nodeId
  */
+@Slf4j
 public class NodesById implements Node.Listener {
     public interface Listener {
         void onNodeAdded(Node node);
@@ -84,7 +86,13 @@ public class NodesById implements Node.Listener {
         Node node = new Node(networkId, isDefaultNode, nodeConfig, banList, keyBundleService, transportService, networkLoadSnapshot, authorizationService);
         map.put(networkId, node);
         node.addListener(this);
-        listeners.forEach(listener -> listener.onNodeAdded(node));
+        listeners.forEach(listener -> {
+            try {
+                listener.onNodeAdded(node);
+            } catch (Exception e) {
+                log.error("Calling onNodeAdded at listener {} failed", listener, e);
+            }
+        });
         return node;
     }
 
@@ -159,25 +167,55 @@ public class NodesById implements Node.Listener {
 
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
-        nodeListeners.forEach(listener -> listener.onMessage(envelopePayloadMessage, connection, networkId));
+        nodeListeners.forEach(listener -> {
+            try {
+                listener.onMessage(envelopePayloadMessage, connection, networkId);
+            } catch (Exception e) {
+                log.error("Calling onMessage at listener {} failed", listener, e);
+            }
+        });
     }
 
     @Override
     public void onConnection(Connection connection) {
-        nodeListeners.forEach(listener -> listener.onConnection(connection));
+        nodeListeners.forEach(listener -> {
+            try {
+                listener.onConnection(connection);
+            } catch (Exception e) {
+                log.error("Calling onConnection at listener {} failed", listener, e);
+            }
+        });
     }
 
     @Override
     public void onDisconnect(Connection connection, CloseReason closeReason) {
-        nodeListeners.forEach(listener -> listener.onDisconnect(connection, closeReason));
+        nodeListeners.forEach(listener -> {
+            try {
+                listener.onDisconnect(connection, closeReason);
+            } catch (Exception e) {
+                log.error("Calling onDisconnect at listener {} failed", listener, e);
+            }
+        });
     }
 
     @Override
     public void onShutdown(Node node) {
         map.remove(node.getNetworkId());
         node.removeListener(this);
-        listeners.forEach(listener -> listener.onNodeRemoved(node));
-        nodeListeners.forEach(listener -> listener.onShutdown(node));
+        listeners.forEach(listener -> {
+            try {
+                listener.onNodeRemoved(node);
+            } catch (Exception e) {
+                log.error("Calling onNodeRemoved at listener {} failed", listener, e);
+            }
+        });
+        nodeListeners.forEach(listener -> {
+            try {
+                listener.onShutdown(node);
+            } catch (Exception e) {
+                log.error("Calling onShutdown at listener {} failed", listener, e);
+            }
+        });
     }
 
 

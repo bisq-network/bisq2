@@ -43,7 +43,13 @@ public class ElectrumNotifyApi {
     @Consumes(MediaType.APPLICATION_JSON)
     public String notifyEndpoint(ElectrumNotifyRequest request) {
         log.info(request.toString());
-        listeners.forEach(listener -> listener.onAddressStatusChanged(request.getAddress(), request.getStatus()));
+        listeners.forEach(listener -> {
+            try {
+                listener.onAddressStatusChanged(request.getAddress(), request.getStatus());
+            } catch (Exception e) {
+                log.error("Calling onAddressStatusChanged at listener {} failed", listener, e);
+            }
+        });
         return "SUCCESS";
     }
 
