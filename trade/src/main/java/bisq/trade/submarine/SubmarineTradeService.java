@@ -22,7 +22,7 @@ import bisq.contract.submarine.SubmarineContract;
 import bisq.identity.Identity;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
-import bisq.network.p2p.services.confidential.MessageListener;
+import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.offer.submarine.SubmarineOffer;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
@@ -42,7 +42,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
-public class SubmarineTradeService implements PersistenceClient<SubmarineTradeStore>, Service, MessageListener {
+public class SubmarineTradeService implements PersistenceClient<SubmarineTradeStore>, Service, ConfidentialMessageService.Listener {
     @Getter
     private final SubmarineTradeStore persistableStore = new SubmarineTradeStore();
     @Getter
@@ -63,7 +63,7 @@ public class SubmarineTradeService implements PersistenceClient<SubmarineTradeSt
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<Boolean> initialize() {
-        serviceProvider.getNetworkService().addMessageListener(this);
+        serviceProvider.getNetworkService().addConfidentialMessageListener(this);
 
         persistableStore.getTradeById().values().forEach(this::createAndAddTradeProtocol);
 
@@ -71,7 +71,7 @@ public class SubmarineTradeService implements PersistenceClient<SubmarineTradeSt
     }
 
     public CompletableFuture<Boolean> shutdown() {
-        serviceProvider.getNetworkService().removeMessageListener(this);
+        serviceProvider.getNetworkService().removeConfidentialMessageListener(this);
         return CompletableFuture.completedFuture(true);
     }
 

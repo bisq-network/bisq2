@@ -31,7 +31,7 @@ import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkIdWithKeyPair;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
-import bisq.network.p2p.services.confidential.MessageListener;
+import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
@@ -53,7 +53,7 @@ import java.util.stream.Stream;
  * Service used by mediators
  */
 @Slf4j
-public class MediatorService implements PersistenceClient<MediatorStore>, Service, MessageListener {
+public class MediatorService implements PersistenceClient<MediatorStore>, Service, ConfidentialMessageService.Listener {
     @Getter
     private final MediatorStore persistableStore = new MediatorStore();
     @Getter
@@ -84,13 +84,13 @@ public class MediatorService implements PersistenceClient<MediatorStore>, Servic
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        networkService.addMessageListener(this);
+        networkService.addConfidentialMessageListener(this);
         return CompletableFuture.completedFuture(true);
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        networkService.removeMessageListener(this);
+        networkService.removeConfidentialMessageListener(this);
         return CompletableFuture.completedFuture(true);
     }
 

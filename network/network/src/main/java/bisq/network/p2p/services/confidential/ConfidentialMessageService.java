@@ -55,12 +55,18 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 @Slf4j
 public class ConfidentialMessageService implements Node.Listener, DataService.Listener {
+    public interface Listener {
+        void onMessage(EnvelopePayloadMessage envelopePayloadMessage);
+
+        default void onConfidentialMessage(EnvelopePayloadMessage envelopePayloadMessage, PublicKey senderPublicKey) {
+        }
+    }
+
     private final NodesById nodesById;
     private final KeyBundleService keyBundleService;
     private final Optional<DataService> dataService;
     private final Optional<MessageDeliveryStatusService> messageDeliveryStatusService;
-    private final Set<MessageListener> listeners = new CopyOnWriteArraySet<>();
-    private final Set<ConfidentialMessageListener> confidentialMessageListeners = new CopyOnWriteArraySet<>();
+    private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
 
     public ConfidentialMessageService(NodesById nodesById,
                                       KeyBundleService keyBundleService,
@@ -79,7 +85,6 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
         nodesById.removeNodeListener(this);
         dataService.ifPresent(service -> service.removeListener(this));
         listeners.clear();
-        confidentialMessageListeners.clear();
     }
 
 
@@ -192,20 +197,12 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
         }
     }
 
-    public void addMessageListener(MessageListener messageListener) {
-        listeners.add(messageListener);
+    public void addListener(Listener listener) {
+        listeners.add(listener);
     }
 
-    public void removeMessageListener(MessageListener messageListener) {
-        listeners.remove(messageListener);
-    }
-
-    public void addConfidentialMessageListener(ConfidentialMessageListener listener) {
-        confidentialMessageListeners.add(listener);
-    }
-
-    public void removeConfidentialMessageListener(ConfidentialMessageListener listener) {
-        confidentialMessageListeners.remove(listener);
+    public void removeListener(Listener listener) {
+        listeners.remove(listener);
     }
 
 
@@ -278,14 +275,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                             listeners.forEach(listener -> {
                                 try {
                                     listener.onMessage(decryptedEnvelopePayloadMessage);
-                                } catch (Exception e) {
-                                    // Catch the exception to avoid to break the iteration. We want to continue to notify all listeners.
-                                    log.error("listener.onMessage failed at listener {}", listener);
-                                }
-                            });
-                            confidentialMessageListeners.forEach(listener -> {
-                                try {
-                                    listener.onMessage(decryptedEnvelopePayloadMessage, senderPublicKey);
+                                    listener.onConfidentialMessage(decryptedEnvelopePayloadMessage, senderPublicKey);
                                 } catch (Exception e) {
                                     // Catch the exception to avoid to break the iteration. We want to continue to notify all listeners.
                                     log.error("listener.onMessage failed at listener {}", listener);

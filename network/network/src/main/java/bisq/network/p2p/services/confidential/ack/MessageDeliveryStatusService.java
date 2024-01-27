@@ -6,7 +6,7 @@ import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
 import bisq.network.identity.NetworkIdWithKeyPair;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
-import bisq.network.p2p.services.confidential.MessageListener;
+import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Getter
-public class MessageDeliveryStatusService implements PersistenceClient<MessageDeliveryStatusStore>, MessageListener {
+public class MessageDeliveryStatusService implements PersistenceClient<MessageDeliveryStatusStore>, ConfidentialMessageService.Listener {
     private final MessageDeliveryStatusStore persistableStore = new MessageDeliveryStatusStore();
     private final Persistence<MessageDeliveryStatusStore> persistence;
     private final KeyBundleService keyBundleService;
@@ -48,15 +48,15 @@ public class MessageDeliveryStatusService implements PersistenceClient<MessageDe
     public void initialize() {
         checkPending();
 
-        networkService.addMessageListener(this);
+        networkService.addConfidentialMessageListener(this);
     }
 
     public void shutdown() {
-        networkService.removeMessageListener(this);
+        networkService.removeConfidentialMessageListener(this);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // MessageListener
+    // ConfidentialMessageService.Listener
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override

@@ -40,8 +40,7 @@ import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.network_load.NetworkLoadService;
 import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
 import bisq.network.p2p.node.transport.BootstrapInfo;
-import bisq.network.p2p.services.confidential.ConfidentialMessageListener;
-import bisq.network.p2p.services.confidential.MessageListener;
+import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatusService;
 import bisq.network.p2p.services.data.BroadcastResult;
@@ -327,19 +326,11 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         dataService.orElseThrow().removeListener(listener);
     }
 
-    public void addMessageListener(MessageListener messageListener) {
-        serviceNodesByTransport.addMessageListener(messageListener);
-    }
-
-    public void removeMessageListener(MessageListener messageListener) {
-        serviceNodesByTransport.removeMessageListener(messageListener);
-    }
-
-    public void addConfidentialMessageListener(ConfidentialMessageListener listener) {
+    public void addConfidentialMessageListener(ConfidentialMessageService.Listener listener) {
         serviceNodesByTransport.addConfidentialMessageListener(listener);
     }
 
-    public void removeConfidentialMessageListener(ConfidentialMessageListener listener) {
+    public void removeConfidentialMessageListener(ConfidentialMessageService.Listener listener) {
         serviceNodesByTransport.removeConfidentialMessageListener(listener);
     }
 

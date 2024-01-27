@@ -38,7 +38,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Represents an inbound or outbound connection to a peer node.
  * Listens for messages from the peer.
  * Send messages to the peer.
- * Notifies messageListeners on new received messages.
+ * Notifies listeners on new received messages.
  * Notifies errorHandler on exceptions from the inputHandlerService executor.
  */
 @Slf4j

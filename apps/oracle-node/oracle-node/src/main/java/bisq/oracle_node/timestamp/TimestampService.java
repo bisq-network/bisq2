@@ -21,7 +21,7 @@ import bisq.common.application.Service;
 import bisq.identity.Identity;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
-import bisq.network.p2p.services.confidential.MessageListener;
+import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
@@ -41,7 +41,7 @@ import java.util.Date;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class TimestampService implements Service, PersistenceClient<TimestampStore>, MessageListener, DataService.Listener {
+public class TimestampService implements Service, PersistenceClient<TimestampStore>, ConfidentialMessageService.Listener, DataService.Listener {
     @Getter
     private final TimestampStore persistableStore = new TimestampStore();
     @Getter
@@ -74,7 +74,7 @@ public class TimestampService implements Service, PersistenceClient<TimestampSto
     @Override
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        networkService.addMessageListener(this);
+        networkService.addConfidentialMessageListener(this);
         networkService.addDataServiceListener(this);
         networkService.getDataService().ifPresent(service -> service.getAuthorizedData().forEach(this::onAuthorizedDataAdded));
 
@@ -85,7 +85,7 @@ public class TimestampService implements Service, PersistenceClient<TimestampSto
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        networkService.removeMessageListener(this);
+        networkService.removeConfidentialMessageListener(this);
         networkService.removeDataServiceListener(this);
         return CompletableFuture.completedFuture(true);
     }

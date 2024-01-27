@@ -19,7 +19,7 @@ package bisq.chat.priv;
 
 import bisq.chat.ChatChannelDomain;
 import bisq.network.NetworkService;
-import bisq.network.p2p.services.confidential.MessageListener;
+import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.persistence.PersistableStore;
 import bisq.security.pow.ProofOfWorkService;
 import bisq.user.UserService;
@@ -31,7 +31,7 @@ public abstract class PrivateGroupChatChannelService<
         C extends PrivateGroupChatChannel<M>,
         S extends PersistableStore<S>
         >
-        extends PrivateChatChannelService<M, C, S> implements MessageListener {
+        extends PrivateChatChannelService<M, C, S> implements ConfidentialMessageService.Listener {
 
     public PrivateGroupChatChannelService(NetworkService networkService,
                                           UserService userService,

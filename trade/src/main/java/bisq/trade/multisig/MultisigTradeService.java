@@ -22,7 +22,7 @@ import bisq.contract.multisig.MultisigContract;
 import bisq.identity.Identity;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
-import bisq.network.p2p.services.confidential.MessageListener;
+import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.offer.multisig.MultisigOffer;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
@@ -42,7 +42,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
-public class MultisigTradeService implements PersistenceClient<MultisigTradeStore>, Service, MessageListener {
+public class MultisigTradeService implements PersistenceClient<MultisigTradeStore>, Service, ConfidentialMessageService.Listener {
     @Getter
     private final MultisigTradeStore persistableStore = new MultisigTradeStore();
     @Getter
@@ -63,7 +63,7 @@ public class MultisigTradeService implements PersistenceClient<MultisigTradeStor
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<Boolean> initialize() {
-        serviceProvider.getNetworkService().addMessageListener(this);
+        serviceProvider.getNetworkService().addConfidentialMessageListener(this);
 
         persistableStore.getTradeById().values().forEach(this::createAndAddTradeProtocol);
 
@@ -71,7 +71,7 @@ public class MultisigTradeService implements PersistenceClient<MultisigTradeStor
     }
 
     public CompletableFuture<Boolean> shutdown() {
-        serviceProvider.getNetworkService().removeMessageListener(this);
+        serviceProvider.getNetworkService().removeConfidentialMessageListener(this);
         return CompletableFuture.completedFuture(true);
     }
 

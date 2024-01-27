@@ -73,7 +73,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  * - Performs initial connection handshake for exchanging capability and performing authorization
  * - Performs authorization protocol at sending and receiving messages
  * - Notifies ConnectionListeners when a new connection has been created or closed.
- * - Notifies MessageListeners when a new proto has been received.
+ * - Notifies ConfidentialMessageListeners when a new proto has been received.
  */
 @Slf4j
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)

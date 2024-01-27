@@ -25,7 +25,7 @@ import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.identity.Identity;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
-import bisq.network.p2p.services.confidential.MessageListener;
+import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
@@ -53,7 +53,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 @Getter
-public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStore>, Service, MessageListener {
+public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStore>, Service, ConfidentialMessageService.Listener {
     @Getter
     private final BisqEasyTradeStore persistableStore = new BisqEasyTradeStore();
     @Getter
@@ -76,7 +76,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<Boolean> initialize() {
-        serviceProvider.getNetworkService().addMessageListener(this);
+        serviceProvider.getNetworkService().addConfidentialMessageListener(this);
 
         persistableStore.getTrades().forEach(this::createAndAddTradeProtocol);
 
@@ -84,7 +84,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
     }
 
     public CompletableFuture<Boolean> shutdown() {
-        serviceProvider.getNetworkService().removeMessageListener(this);
+        serviceProvider.getNetworkService().removeConfidentialMessageListener(this);
         return CompletableFuture.completedFuture(true);
     }
 
