@@ -22,12 +22,14 @@ import bisq.wallets.bitcoind.zmq.listeners.NewBlockMinedListener;
 import bisq.wallets.bitcoind.zmq.listeners.TransactionOutputAddressesListener;
 import bisq.wallets.bitcoind.zmq.listeners.TxIdInInputListener;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class ZmqListeners {
     @Getter
     private final List<NewBlockMinedListener> newBlockMinedListeners = new CopyOnWriteArrayList<>();
@@ -41,14 +43,26 @@ public class ZmqListeners {
                 .stream()
                 .flatMap(vout -> vout.getAddresses().stream())
                 .collect(Collectors.toSet());
-        txOutputAddressesListeners.forEach(listener -> listener.onNewTransaction(addressesInOutput));
+        txOutputAddressesListeners.forEach(listener -> {
+            try {
+                listener.onNewTransaction(addressesInOutput);
+            } catch (Exception e) {
+                log.error("Calling onNewTransaction at listener {} failed", listener, e);
+            }
+        });
     }
 
     public <T extends AbstractDecodeRawTransactionResponse<?, ?>> void fireTxIdInputListeners(T rawTransaction) {
         rawTransaction.getVin().forEach(vin -> {
             String txId = vin.getTxId();
             if (txId != null) {
-                txIdInInputListeners.forEach(listener -> listener.onTxIdInInput(txId));
+                txIdInInputListeners.forEach(listener -> {
+                    try {
+                        listener.onTxIdInInput(txId);
+                    } catch (Exception e) {
+                        log.error("Calling onTxIdInInput at listener {} failed", listener, e);
+                    }
+                });
             }
         });
     }

@@ -21,12 +21,14 @@ import bisq.tor.controller.events.events.BootstrapEvent;
 import bisq.tor.controller.events.events.HsDescUploadedEvent;
 import bisq.tor.controller.events.listener.BootstrapEventListener;
 import bisq.tor.controller.events.listener.HsDescUploadedEventListener;
+import lombok.extern.slf4j.Slf4j;
 import net.freehaven.tor.control.EventHandler;
 
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
+@Slf4j
 public class ControllerEventHandler implements EventHandler {
 
     private final Set<BootstrapEventListener> bootstrapListeners = new CopyOnWriteArraySet<>();
@@ -76,7 +78,13 @@ public class ControllerEventHandler implements EventHandler {
     public void hiddenServiceEvent(String action, String msg) {
         if (HsDescUploadedEvent.isHsDescMessage(action)) {
             HsDescUploadedEvent uploadedEvent = HsDescUploadedEvent.fromHsDescMessage(msg);
-            hsDescUploadedEventListeners.forEach(l -> l.onHsDescUploaded(uploadedEvent));
+            hsDescUploadedEventListeners.forEach(listener -> {
+                try {
+                    listener.onHsDescUploaded(uploadedEvent);
+                } catch (Exception e) {
+                    log.error("Calling onHsDescUploaded at listener {} failed", listener, e);
+                }
+            });
         }
     }
 
@@ -92,7 +100,13 @@ public class ControllerEventHandler implements EventHandler {
     public void unrecognized(String type, String msg) {
         if (BootstrapEvent.isBootstrapMessage(type, msg)) {
             BootstrapEvent bootstrapEvent = BootstrapEvent.fromEventMessage(msg);
-            bootstrapListeners.forEach(l -> l.onBootstrapStatusEvent(bootstrapEvent));
+            bootstrapListeners.forEach(listener -> {
+                try {
+                    listener.onBootstrapStatusEvent(bootstrapEvent);
+                } catch (Exception e) {
+                    log.error("Calling onBootstrapStatusEvent at listener {} failed", listener, e);
+                }
+            });
         }
     }
 
