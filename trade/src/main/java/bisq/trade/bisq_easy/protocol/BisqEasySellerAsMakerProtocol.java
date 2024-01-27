@@ -49,7 +49,7 @@ public class BisqEasySellerAsMakerProtocol extends BisqEasyProtocol {
         from(INIT)
         .then()
                 .branch(
-                        path("Option 1: Seller receives taker offer request, then account details can be exchanged in any order.")
+                        path("Option 1: Seller receives take offer request, then account details can be exchanged in any order.")
                                 .from(INIT)
                                 .on(BisqEasyTakeOfferRequest.class)
                                 .run(BisqEasyTakeOfferRequestHandler.class)

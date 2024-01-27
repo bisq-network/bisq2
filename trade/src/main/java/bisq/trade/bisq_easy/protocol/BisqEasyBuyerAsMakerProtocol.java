@@ -47,34 +47,55 @@ public class BisqEasyBuyerAsMakerProtocol extends BisqEasyProtocol {
     @Override
     public void configTransitions() {
         from(INIT)
-                .on(BisqEasyTakeOfferRequest.class)
-                .run(BisqEasyTakeOfferRequestHandler.class)
-                .to(MAKER_SENT_TAKE_OFFER_RESPONSE)
-                .then()
+        .then()
                 .branch(
-                        path("Option 1: Buyer sends btc address first, then seller sends account data")
-                                .from(MAKER_SENT_TAKE_OFFER_RESPONSE)
-                                .on(BisqEasySendBtcAddressEvent.class)
-                                .run(BisqEasySendBtcAddressEventHandler.class)
-                                .to(BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA)
+                        path("Option 1: Buyer receives take offer request, then account details can be exchanged in any order.")
+                                .from(INIT)
+                                .on(BisqEasyTakeOfferRequest.class)
+                                .run(BisqEasyTakeOfferRequestHandler.class)
+                                .to(MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA)
                                 .then()
-                                .from(BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA)
+                                .branch(
+                                        path("Option 1.1.: Buyer sends btc address first, then seller sends account data.")
+                                                .from(MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA)
+                                                .on(BisqEasySendBtcAddressEvent.class)
+                                                .run(BisqEasySendBtcAddressEventHandler.class)
+                                                .to(MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA)
+                                                .then()
+                                                .from(MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA)
+                                                .on(BisqEasyAccountDataMessage.class)
+                                                .run(BisqEasyAccountDataMessageHandler.class)
+                                                .to(MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA),
+                                        path("Option 1.2.: Seller sends account data first, then buyer sends btc address.")
+                                                .from(MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA)
+                                                .on(BisqEasyAccountDataMessage.class)
+                                                .run(BisqEasyAccountDataMessageHandler.class)
+                                                .to(MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA)
+                                                .then()
+                                                .from(MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA)
+                                                .on(BisqEasySendBtcAddressEvent.class)
+                                                .run(BisqEasySendBtcAddressEventHandler.class)
+                                                .to(MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA)
+                                ),
+                        path("Option 2: Seller takes offer and sends account data right after that." +
+                                "Buyer receives first account data message, then take offer request.")
+                                .from(INIT)
                                 .on(BisqEasyAccountDataMessage.class)
                                 .run(BisqEasyAccountDataMessageHandler.class)
-                                .to(BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA),
-                        path("Option 2: Seller sends account data first, then buyer sends btc address")
-                                .from(MAKER_SENT_TAKE_OFFER_RESPONSE)
-                                .on(BisqEasyAccountDataMessage.class)
-                                .run(BisqEasyAccountDataMessageHandler.class)
-                                .to(BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA)
+                                .to(MAKER_DID_NOT_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA)
                                 .then()
-                                .from(BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA)
+                                .from(MAKER_DID_NOT_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA)
+                                .on(BisqEasyTakeOfferRequest.class)
+                                .run(BisqEasyTakeOfferRequestHandler.class)
+                                .to(MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA_)
+                                .then()
+                                .from(MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA_)
                                 .on(BisqEasySendBtcAddressEvent.class)
                                 .run(BisqEasySendBtcAddressEventHandler.class)
-                                .to(BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA)
+                                .to(MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA)
                 )
                 .then()
-                .from(BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA)
+                .from(MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA)
                 .on(BisqEasyConfirmFiatSentEvent.class)
                 .run(BisqEasyConfirmFiatSentEventHandler.class)
                 .to(BUYER_SENT_FIAT_SENT_CONFIRMATION)
@@ -95,21 +116,24 @@ public class BisqEasyBuyerAsMakerProtocol extends BisqEasyProtocol {
                 .to(BTC_CONFIRMED);
 
         // Reject trade
-        from(MAKER_SENT_TAKE_OFFER_RESPONSE)
+        fromStates(MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA,
+                MAKER_DID_NOT_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA)
                 .on(BisqEasyRejectTradeEvent.class)
                 .run(BisqEasyRejectTradeEventHandler.class)
                 .to(REJECTED);
 
         // Peer rejected trade
-        from(MAKER_SENT_TAKE_OFFER_RESPONSE)
+        fromStates(MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA,
+                MAKER_DID_NOT_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA)
                 .on(BisqEasyRejectTradeMessage.class)
                 .run(BisqEasyRejectTradeMessageHandler.class)
                 .to(PEER_REJECTED);
 
         // Cancel trade
-        fromStates(BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA,
-                BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA,
-                BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA,
+        fromStates(MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA,
+                MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA,
+                MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA_,
+                MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA,
                 BUYER_SENT_FIAT_SENT_CONFIRMATION,
                 BUYER_RECEIVED_SELLERS_FIAT_RECEIPT_CONFIRMATION,
                 BUYER_RECEIVED_BTC_SENT_CONFIRMATION)
@@ -118,9 +142,10 @@ public class BisqEasyBuyerAsMakerProtocol extends BisqEasyProtocol {
                 .to(CANCELLED);
 
         // Peer cancelled trade
-        fromStates(BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA,
-                BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA,
-                BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA,
+        fromStates(MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA,
+                MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA,
+                MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA_,
+                MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA,
                 BUYER_SENT_FIAT_SENT_CONFIRMATION,
                 BUYER_RECEIVED_SELLERS_FIAT_RECEIPT_CONFIRMATION,
                 BUYER_RECEIVED_BTC_SENT_CONFIRMATION)
