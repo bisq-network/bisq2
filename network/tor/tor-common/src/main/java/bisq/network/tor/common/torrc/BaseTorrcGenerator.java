@@ -29,11 +29,13 @@ public class BaseTorrcGenerator implements TorrcConfigGenerator {
     private final Path dataDirPath;
     private final int controlPort;
     private final String hashedControlPassword;
+    private final boolean isTestNetwork;
 
-    public BaseTorrcGenerator(Path dataDirPath, int controlPort, String hashedControlPassword) {
+    public BaseTorrcGenerator(Path dataDirPath, int controlPort, String hashedControlPassword, boolean isTestNetwork) {
         this.dataDirPath = dataDirPath;
         this.controlPort = controlPort;
         this.hashedControlPassword = hashedControlPassword;
+        this.isTestNetwork = isTestNetwork;
     }
 
     @Override
@@ -43,8 +45,10 @@ public class BaseTorrcGenerator implements TorrcConfigGenerator {
 
         torConfigMap.put("ControlPort", "127.0.0.1:" + controlPort);
         torConfigMap.put("HashedControlPassword", hashedControlPassword);
+
+        String logLevel = isTestNetwork ? "debug" : "notice";
         torConfigMap.put("Log",
-                "debug file " + dataDirPath.resolve("debug.log").toAbsolutePath()
+                logLevel + " file " + dataDirPath.resolve("debug.log").toAbsolutePath()
         );
 
         torConfigMap.put("SocksPort", "0");
