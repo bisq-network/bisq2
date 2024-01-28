@@ -557,7 +557,8 @@ public class ChatMessagesListView {
                         ChatMessageListItem<M> item = new ChatMessageListItem<>(chatMessage, userProfileService, reputationService,
                                 bisqEasyTradeService, userIdentityService, networkService);
                         // As long as we use runOnNextRenderFrame we need to check to avoid adding duplicates
-                        if (!model.chatMessages.contains(item)) {
+                        // The model is updated async in stages, verify that messages belong to the selected channel
+                        if (!model.chatMessages.contains(item) && channel.equals(model.selectedChannel.get())) {
                             model.chatMessages.add(item);
                             maybeScrollDownOnNewItemAdded();
                         }
