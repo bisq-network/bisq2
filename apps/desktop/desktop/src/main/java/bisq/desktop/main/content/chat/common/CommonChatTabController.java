@@ -170,7 +170,7 @@ public final class CommonChatTabController extends ContentTabController<CommonCh
 
     void onSelected(NavigationTarget navigationTarget) {
         if (navigationTarget == model.getPrivateChatsNavigationTarget()) {
-            chatChannelSelectionService.getLastSelectedPrivateChannel().ifPresent(chatChannelSelectionService::selectChannel);
+            chatChannelSelectionService.selectChannel(chatChannelSelectionService.getLastSelectedPrivateChannel().orElse(null));
         } else {
             model.channelTabButtonModelByChannelId.values().stream()
                     .filter(Objects::nonNull)
