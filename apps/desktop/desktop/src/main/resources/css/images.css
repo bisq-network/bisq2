@@ -648,6 +648,10 @@
     -fx-image: url("/images/chat/attach.png");
 }
 
+#exit-door {
+    -fx-image: url("/images/chat/exit-door.png");
+}
+
 
 /* ------------------------------------------------------------------------------------ */
 /* Markets */
