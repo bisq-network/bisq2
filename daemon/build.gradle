@@ -4,6 +4,11 @@ plugins {
     id 'application'
 }
 
+dependencies {
+    implementation 'tor:tor-common'
+    implementation 'tor:tor'
+}
+
 protobuf {
     protoc {
         artifact = "com.google.protobuf:protoc:3.19.1"
