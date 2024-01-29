@@ -23,4 +23,6 @@ public interface ReadOnlyObservable<S> {
     S get();
 
     Pin addObserver(Consumer<S> observer);
+
+    void removeObserver(Consumer<S> observer);
 }
