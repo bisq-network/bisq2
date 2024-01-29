@@ -56,12 +56,17 @@
     -bisq2-yellow-dim-40: #7c4e12;
     -bisq2-yellow-dim-50: #68410f;
 
-    -bisq2-red: #d02c1f;
-    -bisq2-red-dim-10: #a62318;
-    -bisq2-red-dim-20: #a62318;
-    -bisq2-red-dim-30: #911e15;
-    -bisq2-red-dim-40: #7c1a12;
-    -bisq2-red-dim-50: #68160f;
+    -bisq2-red-lit-50: #e898a2;
+    -bisq2-red-lit-40: #e48490;
+    -bisq2-red-lit-30: #df6f7d;
+    -bisq2-red-lit-20: #db5b6b;
+    -bisq2-red-lit-10: #d64658;
+    -bisq2-red: #d23246;
+    -bisq2-red-dim-10: #bd2d3f;
+    -bisq2-red-dim-20: #a82838;
+    -bisq2-red-dim-30: #932331;
+    -bisq2-red-dim-40: #7e1e2a;
+    -bisq2-red-dim-50: #691923;
 
     /* Bisq Grey Palette */
     -bisq-black: #050505;
