@@ -17,16 +17,20 @@
 
 package bisq.desktop.main.content.chat;
 
+import bisq.desktop.common.utils.ImageUtil;
 import javafx.geometry.Bounds;
 import javafx.scene.control.*;
+import javafx.scene.image.ImageView;
 import javafx.stage.PopupWindow;
 import javafx.stage.WindowEvent;
 
 public class DropdownMenu extends Button {
     private final ContextMenu contextMenu = new ContextMenu();
 
-    public DropdownMenu(String buttonText) {
-        super(buttonText);
+    public DropdownMenu(String regularIconId, String hoveringIconId) {
+        ImageView regularIcon = ImageUtil.getImageViewById(regularIconId);
+        ImageView hoveringIcon = ImageUtil.getImageViewById(hoveringIconId);
+        setGraphic(regularIcon);
 
         getStyleClass().add("dropdown-menu");
 
@@ -39,8 +43,16 @@ public class DropdownMenu extends Button {
         setOnAction(event -> toggleContextMenu());
 
         contextMenu.getStyleClass().add("dropdown-menu-popup");
-        contextMenu.setOnShowing(e -> getStyleClass().add("dropdown-menu-active"));
-        contextMenu.setOnHidden(e -> getStyleClass().remove("dropdown-menu-active"));
+        contextMenu.setOnShowing(e -> {
+            getStyleClass().add("dropdown-menu-active");
+            setGraphic(hoveringIcon);
+        });
+        contextMenu.setOnHidden(e -> {
+            getStyleClass().remove("dropdown-menu-active");
+            setGraphic(regularIcon);
+        });
+        setOnMouseExited(e -> setGraphic(contextMenu.isShowing() ? hoveringIcon : regularIcon));
+        setOnMouseEntered(e -> setGraphic(hoveringIcon));
     }
 
     private void toggleContextMenu() {
