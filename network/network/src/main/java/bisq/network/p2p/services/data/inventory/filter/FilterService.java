@@ -47,11 +47,11 @@ public abstract class FilterService<T extends InventoryFilter> {
         List<DataRequest> dataRequests = getAuthenticatedDataRequests(filter, accumulatedSize, maxSizeReached);
 
         if (!maxSizeReached.get()) {
-            dataRequests.addAll(getMailboxRequests(accumulatedSize, maxSizeReached));
+            dataRequests.addAll(getMailboxRequests(filter, accumulatedSize, maxSizeReached));
         }
 
         if (!maxSizeReached.get()) {
-            dataRequests.addAll(getAppendOnlyDataRequests(accumulatedSize, maxSizeReached));
+            dataRequests.addAll(getAppendOnlyDataRequests(filter, accumulatedSize, maxSizeReached));
         }
 
         log.info("Inventory with {} items and accumulatedSize of {} kb. maxSizeReached={}",
@@ -106,11 +106,11 @@ public abstract class FilterService<T extends InventoryFilter> {
     }
 
 
-    private List<DataRequest> getMailboxRequests(AtomicInteger accumulatedSize,
+    private List<DataRequest> getMailboxRequests(T filter,
+                                                 AtomicInteger accumulatedSize,
                                                  AtomicBoolean maxSizeReached) {
         List<AddMailboxRequest> addRequests = new ArrayList<>();
         List<RemoveMailboxRequest> removeRequests = new ArrayList<>();
-        T filter = getFilter();
         storageService.getMailboxStoreMaps().flatMap(map -> map.entrySet().stream())
                 .forEach(mapEntry -> {
                     if (isMailboxRequestMissing(filter, mapEntry)) {
@@ -155,9 +155,9 @@ public abstract class FilterService<T extends InventoryFilter> {
         return sortedAndFilteredRequests;
     }
 
-    private List<DataRequest> getAppendOnlyDataRequests(AtomicInteger accumulatedSize,
+    private List<DataRequest> getAppendOnlyDataRequests(T filter,
+                                                        AtomicInteger accumulatedSize,
                                                         AtomicBoolean maxSizeReached) {
-        T filter = getFilter();
         return storageService.getAddAppendOnlyDataStoreMaps().flatMap(map -> map.entrySet().stream())
                 .filter(entry -> isAddAppendOnlyDataRequestMissing(filter, entry))
                 //hashSetFilter.getFilterEntries().contains(toFilterEntry(mapEntry)))
