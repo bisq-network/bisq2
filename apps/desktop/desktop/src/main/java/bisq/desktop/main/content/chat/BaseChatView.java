@@ -74,7 +74,6 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
         headerDropdownMenu.addMenuItems(helpButton, infoButton);
 
         ImageView helpIcon = ImageUtil.getImageViewById("icon-help");
-        helpButton.setText(Res.get("chat.dropDownMenu.chatRules"));
         helpButton.setGraphic(helpIcon);
 
         ImageView infoIcon = ImageUtil.getImageViewById("icon-info");
@@ -101,6 +100,7 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
         searchBox.textProperty().bindBidirectional(model.getSearchText());
 
         if (helpButton != null) {
+            helpButton.setText(controller.getHelpButtonText());
             helpButton.setOnAction(e -> controller.onOpenHelp());
         }
         if (infoButton != null) {

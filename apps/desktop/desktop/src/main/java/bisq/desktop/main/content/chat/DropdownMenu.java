@@ -59,6 +59,10 @@ public class DropdownMenu extends Button {
         contextMenu.getItems().addAll(items);
     }
 
+    public void clearMenuItems() {
+        contextMenu.getItems().clear();
+    }
+
     private void attachHideListeners() {
         this.sceneProperty().addListener((observable, oldScene, newScene) -> {
             if (newScene != null) {

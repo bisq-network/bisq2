@@ -36,6 +36,7 @@ import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.main.content.chat.sidebar.ChannelSidebar;
 import bisq.desktop.main.content.chat.sidebar.UserProfileSidebar;
 import bisq.desktop.main.content.components.ChatMessagesComponent;
+import bisq.i18n.Res;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
@@ -223,6 +224,20 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
             case SUPPORT:
                 Navigation.navigateTo(NavigationTarget.CHAT_RULES);
                 break;
+        }
+    }
+
+    String getHelpButtonText() {
+        switch (model.chatChannelDomain) {
+            case BISQ_EASY_OFFERBOOK:
+            case BISQ_EASY_OPEN_TRADES:
+            case BISQ_EASY_PRIVATE_CHAT:
+                return Res.get("chat.dropDownMenu.tradeGuide");
+            case DISCUSSION:
+            case EVENTS:
+            case SUPPORT:
+            default:
+                return Res.get("chat.dropDownMenu.chatRules");
         }
     }
 
