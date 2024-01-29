@@ -300,11 +300,11 @@
 
 .dropdown-menu-popup .leave-chat-item > .label,
 .dropdown-menu-popup .leave-chat-item:focused > .label {
-    -fx-text-fill: -bisq2-red-dim-40; /* FIXME: Change with updated palette */
+    -fx-text-fill: -bisq2-red-lit-10;
 }
 
 .dropdown-menu-popup .leave-chat-item:hover > .label {
-    -fx-text-fill: -bisq2-red-dim-10; /* FIXME: Change with updated palette */
+    -fx-text-fill: -bisq2-red-lit-50;
 }
 
 
