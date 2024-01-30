@@ -37,6 +37,28 @@ public class ChatView<V extends ChatView<V, M>, M extends ChatModel> extends Bas
 
     @Override
     protected void configTitleHBox() {
+        titleHBox.setAlignment(Pos.CENTER);
+        titleHBox.setPadding(new Insets(12.5, 25, 12.5, 25));
+        titleHBox.getStyleClass().add("bisq-easy-container-header");
+        titleHBox.setMinHeight(HEADER_HEIGHT);
+        titleHBox.setMaxHeight(HEADER_HEIGHT);
+
+        HBox headerTitle = new HBox(10, channelTitle, channelDescription);
+        headerTitle.setAlignment(Pos.BASELINE_LEFT);
+        headerTitle.setPadding(new Insets(7, 0, 0, 0));
+        HBox.setHgrow(headerTitle, Priority.ALWAYS);
+
+        channelTitle.getStyleClass().add("chat-header-title");
+        channelDescription.getStyleClass().add("chat-header-description");
+
+        searchBox.setMaxWidth(200);
+        double searchBoxHeight = 29;
+        searchBox.setMinHeight(searchBoxHeight);
+        searchBox.setMaxHeight(searchBoxHeight);
+        searchBox.setPrefHeight(searchBoxHeight);
+
+        HBox.setMargin(channelIcon, new Insets(0, 0, -2, 5));
+        titleHBox.getChildren().addAll(channelIcon, headerTitle, searchBox, headerDropdownMenu);
     }
 
     @Override

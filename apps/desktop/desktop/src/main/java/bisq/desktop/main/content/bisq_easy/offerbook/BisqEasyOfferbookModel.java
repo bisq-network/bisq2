@@ -17,9 +17,8 @@
 
 package bisq.desktop.main.content.bisq_easy.offerbook;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatChannelDomain;
-import bisq.desktop.main.content.chat.BaseChatModel;
+import bisq.desktop.main.content.chat.ChatModel;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
@@ -31,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public final class BisqEasyOfferbookModel extends BaseChatModel {
+public final class BisqEasyOfferbookModel extends ChatModel {
     private final BooleanProperty offerOnly = new SimpleBooleanProperty();
     private final BooleanProperty isTradeChannelVisible = new SimpleBooleanProperty();
     private final BooleanProperty showFilterOverlay = new SimpleBooleanProperty();
@@ -40,10 +39,5 @@ public final class BisqEasyOfferbookModel extends BaseChatModel {
     private final SortedList<MarketChannelItem> sortedMarketChannelItems = new SortedList<>(filteredMarketChannelItems);
     public BisqEasyOfferbookModel(ChatChannelDomain chatChannelDomain) {
         super(chatChannelDomain);
-    }
-
-    @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.NONE;
     }
 }

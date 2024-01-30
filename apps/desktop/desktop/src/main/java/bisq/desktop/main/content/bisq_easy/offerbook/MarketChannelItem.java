@@ -24,7 +24,7 @@ import lombok.Getter;
 
 @EqualsAndHashCode
 @Getter
-class MarketChannelItem {
+public class MarketChannelItem {
     private final Market market;
     private final BisqEasyOfferbookChannel channel;
 

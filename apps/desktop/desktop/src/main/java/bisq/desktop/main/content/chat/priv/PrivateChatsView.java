@@ -70,20 +70,9 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
 
     @Override
     protected void configContainerHBox() {
-        containerHBox.setSpacing(10);
-        containerHBox.setFillHeight(true);
-        Layout.pinToAnchorPane(containerHBox, 0, 0, 0, 0);
+        super.configContainerHBox();
 
-        AnchorPane wrapper = new AnchorPane();
-        wrapper.setPadding(new Insets(0, SIDE_PADDING, 0, SIDE_PADDING));
-        wrapper.getChildren().add(containerHBox);
-
-        root.setContent(wrapper);
-
-        HBox.setHgrow(centerVBox, Priority.ALWAYS);
-        HBox.setHgrow(sideBar, Priority.NEVER);
-        containerHBox.getChildren().addAll(openChatsSelectionList, centerVBox, sideBar);
-        containerHBox.setAlignment(Pos.CENTER);
+        containerHBox.getChildren().setAll(openChatsSelectionList, centerVBox, sideBar);
     }
 
     @Override
