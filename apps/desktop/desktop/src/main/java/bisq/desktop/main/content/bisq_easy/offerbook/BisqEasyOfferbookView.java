@@ -164,6 +164,11 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
 
     private void addMarketSelectionList() {
         marketSelectionListHeader = new HBox(channelTitle);
+        marketSelectionListHeader.setMinHeight(HEADER_HEIGHT);
+        marketSelectionListHeader.setMaxHeight(HEADER_HEIGHT);
+        marketSelectionListHeader.setAlignment(Pos.CENTER_LEFT);
+        marketSelectionListHeader.setPadding(new Insets(12.5, 25, 12.5, 25));
+        marketSelectionListHeader.getStyleClass().add("chat-header-title");
 
         tableView = new BisqTableView<>(getModel().getSortedMarketChannelItems());
         tableView.allowVerticalScrollbar();
