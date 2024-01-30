@@ -49,7 +49,7 @@ import java.util.Optional;
 @Slf4j
 public abstract class PrivateChatsView extends ChatView<PrivateChatsView, PrivateChatsModel> {
     private BisqTableView<ListItem> tableView;
-    private VBox openChatsList, chatHeaderVBox;
+    private VBox openChatsSelectionList, chatHeaderVBox;
     private Subscription noOpenChatsPin, tableViewSelectionPin, selectedModelItemPin, peersUserProfilePin,
             myUserProfilePin;
     private UserProfileDisplay chatPeerUserProfileDisplay, chatMyUserProfileDisplay;
@@ -64,11 +64,11 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
 
     @Override
     protected void configCenterVBox() {
-        addOpenChatsList();
+        addOpenChatsSelectionList();
         addChatBox();
     }
 
-    private void addOpenChatsList() {
+    private void addOpenChatsSelectionList() {
         Label openChatsHeader = new Label(Res.get("chat.private.openChatsList.headline"));
         openChatsHeader.setMinHeight(HEADER_HEIGHT);
         openChatsHeader.setMaxHeight(HEADER_HEIGHT);
@@ -81,11 +81,11 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
         configTableView();
         VBox.setVgrow(tableView, Priority.ALWAYS);
 
-        openChatsList = new VBox(openChatsHeader, Layout.hLine(), tableView);
-        openChatsList.setPrefWidth(210);
-        openChatsList.setMinWidth(210);
-        openChatsList.setFillWidth(true);
-        openChatsList.getStyleClass().add("chat-container");
+        openChatsSelectionList = new VBox(openChatsHeader, Layout.hLine(), tableView);
+        openChatsSelectionList.setPrefWidth(210);
+        openChatsSelectionList.setMinWidth(210);
+        openChatsSelectionList.setFillWidth(true);
+        openChatsSelectionList.getStyleClass().add("chat-container");
     }
 
     private void addChatBox() {
@@ -135,7 +135,7 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
 
         HBox.setHgrow(centerVBox, Priority.ALWAYS);
         HBox.setHgrow(sideBar, Priority.NEVER);
-        containerHBox.getChildren().addAll(openChatsList, centerVBox, sideBar);
+        containerHBox.getChildren().addAll(openChatsSelectionList, centerVBox, sideBar);
         containerHBox.setAlignment(Pos.CENTER);
     }
 
