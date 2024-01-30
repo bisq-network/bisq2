@@ -665,9 +665,8 @@ public class ChatMessagesListView {
         private final ImageView scrollDownImageView;
         private final Badge scrollDownBadge;
         private final BisqTooltip scrollDownTooltip;
-        private final Label placeholderTitle = new Label();
-        private final Label placeholderDescription = new Label();
-        private final VBox placeholder;
+        private final Label placeholderTitle = new Label("");
+        private final Label placeholderDescription = new Label("");
         private Optional<VirtualScrollBar> scrollBar = Optional.empty();
         private Subscription hasUnreadMessagesPin, showScrolledDownButtonPin;
         private Timeline fadeInScrollDownBadgeTimeline;
@@ -678,7 +677,8 @@ public class ChatMessagesListView {
             listView = new ListView<>(model.getSortedChatMessages());
             listView.getStyleClass().add("chat-messages-list-view");
 
-            placeholder = ChatUtil.createEmptyChatPlaceholder(placeholderTitle, placeholderDescription);
+            VBox placeholder = ChatUtil.createEmptyChatPlaceholder(placeholderTitle, placeholderDescription);
+            listView.setPlaceholder(placeholder);
 
             listView.setCellFactory(getCellFactory());
 
@@ -756,7 +756,9 @@ public class ChatMessagesListView {
                 placeholderTitle.setText(Res.get("chat.messagebox.noChats.placeholder.title"));
                 placeholderDescription.setText(Res.get("chat.messagebox.noChats.placeholder.description",
                         model.getSelectedChannel().get().getDisplayString()));
-                listView.setPlaceholder(placeholder);
+            } else {
+                placeholderTitle.setText("");
+                placeholderDescription.setText("");
             }
         }
 

@@ -47,7 +47,7 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
     protected Pane chatUserOverviewRoot;
     protected Subscription channelIconPin, chatUserOverviewRootSubscription;
     protected final SearchBox searchBox = new SearchBox();
-    protected final DropdownMenu headerDropdownMenu = new DropdownMenu("");
+    protected final DropdownMenu headerDropdownMenu = new DropdownMenu("ellipsis-v", "ellipsis-v-white");
 
     public BaseChatView(BaseChatModel model,
                         BaseChatController<?, ?> controller,
@@ -70,11 +70,9 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
     }
 
     private void setUpHeaderDropdownMenu() {
-        headerDropdownMenu.setGraphic(ImageUtil.getImageViewById("ellipsis-v"));
         headerDropdownMenu.addMenuItems(helpButton, infoButton);
 
         ImageView helpIcon = ImageUtil.getImageViewById("icon-help");
-        helpButton.setText(Res.get("chat.dropDownMenu.chatRules"));
         helpButton.setGraphic(helpIcon);
 
         ImageView infoIcon = ImageUtil.getImageViewById("icon-info");
@@ -101,6 +99,7 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
         searchBox.textProperty().bindBidirectional(model.getSearchText());
 
         if (helpButton != null) {
+            helpButton.setText(controller.getHelpButtonText());
             helpButton.setOnAction(e -> controller.onOpenHelp());
         }
         if (infoButton != null) {

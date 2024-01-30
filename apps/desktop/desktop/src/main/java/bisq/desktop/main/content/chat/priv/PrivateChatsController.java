@@ -27,7 +27,9 @@ import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.chat.ChatController;
+import bisq.i18n.Res;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationService;
 import lombok.extern.slf4j.Slf4j;
@@ -123,7 +125,14 @@ public abstract class PrivateChatsController extends ChatController<PrivateChats
     }
 
     void onLeaveChat() {
-        //todo (Critical) add popup
+        new Popup().warning(Res.get("chat.private.leaveChat.confirmation"))
+                .actionButtonText(Res.get("confirmation.yes"))
+                .onAction(this::doLeaveChat)
+                .closeButtonText(Res.get("confirmation.no"))
+                .show();
+    }
+
+    void doLeaveChat() {
         if (model.getSelectedChannel() != null) {
             channelService.leaveChannel(model.getSelectedChannel().getId());
             if (channelService.getChannels().isEmpty()) {

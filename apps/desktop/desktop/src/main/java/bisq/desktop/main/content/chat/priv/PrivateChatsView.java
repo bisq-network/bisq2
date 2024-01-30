@@ -32,10 +32,7 @@ import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
+import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.util.Callback;
@@ -56,7 +53,7 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
     private Subscription noOpenChatsPin, tableViewSelectionPin, selectedModelItemPin, peersUserProfilePin,
             myUserProfilePin;
     private UserProfileDisplay chatPeerUserProfileDisplay, chatMyUserProfileDisplay;
-    private Button leaveChatButton;
+    private MenuItem leaveChatButton;
 
     public PrivateChatsView(PrivateChatsModel model,
                             PrivateChatsController controller,
@@ -97,10 +94,14 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
 
         chatHeaderVBox = new VBox(0);
 
-        leaveChatButton = new Button(Res.get("bisqEasy.privateChats.leave"));
-        leaveChatButton.getStyleClass().add("outlined-button");
+        leaveChatButton = new MenuItem(Res.get("bisqEasy.privateChats.leave"));
+        leaveChatButton.getStyleClass().add("leave-chat-item");
+        leaveChatButton.setGraphic(ImageUtil.getImageViewById("exit-door"));
 
-        HBox chatHeaderHBox = new HBox(10, chatHeaderVBox, Spacer.fillHBox(), leaveChatButton);
+        headerDropdownMenu.clearMenuItems();
+        headerDropdownMenu.addMenuItems(helpButton, leaveChatButton);
+
+        HBox chatHeaderHBox = new HBox(10, chatHeaderVBox, Spacer.fillHBox(), headerDropdownMenu);
         chatHeaderHBox.setMinHeight(HEADER_HEIGHT);
         chatHeaderHBox.setMaxHeight(HEADER_HEIGHT);
         chatHeaderHBox.setAlignment(Pos.CENTER_LEFT);
@@ -176,8 +177,8 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
         });
 
         leaveChatButton.setOnAction(e -> getController().onLeaveChat());
-        leaveChatButton.visibleProperty().bind(model.getNoOpenChats().not());
-        leaveChatButton.managedProperty().bind(model.getNoOpenChats().not());
+        headerDropdownMenu.visibleProperty().bind(model.getNoOpenChats().not());
+        headerDropdownMenu.managedProperty().bind(model.getNoOpenChats().not());
 
         tableView.visibleProperty().bind(model.getNoOpenChats().not());
         tableView.managedProperty().bind(model.getNoOpenChats().not());
@@ -196,8 +197,8 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
         myUserProfilePin.unsubscribe();
 
         leaveChatButton.setOnAction(null);
-        leaveChatButton.visibleProperty().unbind();
-        leaveChatButton.managedProperty().unbind();
+        headerDropdownMenu.visibleProperty().unbind();
+        headerDropdownMenu.managedProperty().unbind();
 
         tableView.visibleProperty().unbind();
         tableView.managedProperty().unbind();

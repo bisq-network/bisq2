@@ -174,6 +174,10 @@
     -fx-image: url("/images/icons/ellipsis-v-grey.png");
 }
 
+#ellipsis-v-white {
+    -fx-image: url("/images/icons/ellipsis-v-white.png");
+}
+
 /* ------------------------------------------------------------------------------------ */
 /* Navigation */
 /* ------------------------------------------------------------------------------------ */
@@ -646,6 +650,10 @@
 
 #attach {
     -fx-image: url("/images/chat/attach.png");
+}
+
+#exit-door {
+    -fx-image: url("/images/chat/exit-door.png");
 }
 
 

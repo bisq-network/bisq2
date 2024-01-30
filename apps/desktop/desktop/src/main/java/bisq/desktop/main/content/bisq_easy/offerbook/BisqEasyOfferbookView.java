@@ -96,8 +96,6 @@ public final class BisqEasyOfferbookView extends BaseChatView {
         searchBox.setMaxHeight(searchBoxHeight);
         searchBox.setPrefHeight(searchBoxHeight);
 
-        helpButton.setText(Res.get("chat.dropDownMenu.tradeGuide"));
-
         HBox.setMargin(channelTitle, new Insets(0, -10, 0, 4));
         titleHBox.getChildren().addAll(headerTitle, searchBox, headerDropdownMenu);
     }
