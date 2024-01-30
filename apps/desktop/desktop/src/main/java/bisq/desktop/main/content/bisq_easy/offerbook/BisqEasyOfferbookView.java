@@ -17,27 +17,21 @@
 
 package bisq.desktop.main.content.bisq_easy.offerbook;
 
-import bisq.desktop.common.Icons;
 import bisq.desktop.common.Layout;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.ComboBoxWithSearch;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
-import bisq.desktop.main.content.chat.BaseChatView;
 import bisq.desktop.main.content.chat.ChatView;
 import bisq.i18n.Res;
-import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
-import javafx.scene.control.TableColumn;
 import javafx.scene.control.Tooltip;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
-import javafx.scene.text.Text;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -46,7 +40,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
 
     private final BisqEasyOfferbookModel bisqEasyOfferbookModel;
     private final BisqEasyOfferbookController bisqEasyOfferbookController;
-    private Label selectedMarketTitle;
+    private Label chatDomainTitle;
     private BisqTableView<MarketChannelItem> tableView;
     private VBox marketSelectionList;
     private HBox marketSelectionListHeader;
@@ -67,6 +61,21 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
 
         bisqEasyOfferbookController = controller;
         bisqEasyOfferbookModel = model;
+    }
+
+    @Override
+    protected void configTitleHBox() {
+        super.configTitleHBox();
+
+        chatDomainTitle = new Label(Res.get("bisqEasy.offerbook"));
+        chatDomainTitle.getStyleClass().add("chat-header-title");
+
+        HBox headerTitle = new HBox(10, chatDomainTitle, channelDescription);
+        headerTitle.setAlignment(Pos.BASELINE_LEFT);
+        headerTitle.setPadding(new Insets(7, 0, 0, 0));
+        HBox.setHgrow(headerTitle, Priority.ALWAYS);
+
+        titleHBox.getChildren().setAll(headerTitle, searchBox, headerDropdownMenu);
     }
 
     @Override
@@ -129,7 +138,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
 //            onOpenMarketSelector();
 //            e.consume();
 //        });
-        channelTitle.setOnMouseClicked(e -> { // TODO: Remove
+        chatDomainTitle.setOnMouseClicked(e -> { // TODO: Remove
             onOpenMarketSelector();
             e.consume();
         });
@@ -146,7 +155,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         //  filterButton.setOnAction(null);
         //  closeFilterButton.setOnAction(null);
 //        marketSelectorIcon.setOnMouseClicked(null);
-        channelTitle.setOnMouseClicked(null);
+        chatDomainTitle.setOnMouseClicked(null);
     }
 
     private BisqEasyOfferbookModel getModel() {
@@ -154,8 +163,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     }
 
     private void addMarketSelectionList() {
-        selectedMarketTitle = new Label("BTC/GBP"); // FIXME
-        marketSelectionListHeader = new HBox(selectedMarketTitle);
+        marketSelectionListHeader = new HBox(channelTitle);
 
         tableView = new BisqTableView<>(getModel().getSortedMarketChannelItems());
         tableView.allowVerticalScrollbar();
@@ -218,7 +226,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     }
 
     private void onOpenMarketSelector() {
-        new ComboBoxWithSearch<>(channelTitle,
+        new ComboBoxWithSearch<>(chatDomainTitle,
                 bisqEasyOfferbookModel.getSortedMarketChannelItems(),
                 c -> getMarketListCell(),
                 bisqEasyOfferbookController::onSwitchMarketChannel,

@@ -144,6 +144,10 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                 marketsImage.setScaleX(1.25);
                 marketsImage.setScaleY(1.25);
                 model.getChannelIconNode().set(marketsImage);
+
+                String description = ((BisqEasyOfferbookChannel) chatChannel).getDescription();
+                String oneLineDescription = description.replace("\n", " ");
+                model.getChannelDescription().set(oneLineDescription);
             });
         }
     }
