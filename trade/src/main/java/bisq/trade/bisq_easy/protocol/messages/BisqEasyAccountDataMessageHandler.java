@@ -26,6 +26,7 @@ import bisq.trade.protocol.events.TradeMessageHandler;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class BisqEasyAccountDataMessageHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyAccountDataMessage> {
@@ -47,6 +48,7 @@ public class BisqEasyAccountDataMessageHandler extends TradeMessageHandler<BisqE
 
         checkArgument(StringUtils.isNotEmpty(message.getPaymentAccountData()));
         checkArgument(message.getPaymentAccountData().length() <= UserDefinedFiatAccountPayload.MAX_DATA_LENGTH);
+        checkNotNull(message.getBisqEasyOffer());
     }
 
     private void commitToModel(String paymentAccountData) {

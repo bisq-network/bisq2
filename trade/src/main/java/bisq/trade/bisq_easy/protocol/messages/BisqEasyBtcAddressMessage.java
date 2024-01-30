@@ -19,6 +19,7 @@ package bisq.trade.bisq_easy.protocol.messages;
 
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
+import bisq.offer.bisq_easy.BisqEasyOffer;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -29,17 +30,21 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public final class BisqEasyBtcAddressMessage extends BisqEasyTradeMessage {
+    public final static int MAX_LENGTH = 1000;
+
     private final String btcAddress;
+    private final BisqEasyOffer bisqEasyOffer;
 
     public BisqEasyBtcAddressMessage(String id,
                                      String tradeId,
                                      NetworkId sender,
                                      NetworkId receiver,
-                                     String btcAddress) {
+                                     String btcAddress,
+                                     BisqEasyOffer bisqEasyOffer) {
         super(id, tradeId, sender, receiver);
 
         this.btcAddress = btcAddress;
-
+        this.bisqEasyOffer = bisqEasyOffer;
         verify();
     }
 
@@ -50,7 +55,7 @@ public final class BisqEasyBtcAddressMessage extends BisqEasyTradeMessage {
         // We tolerate non-btc address data as well (e.g. LN invoice)
         // The minimum possible length of an LN invoice is around 190 characters
         // Max. length depends on optional fields
-        NetworkDataValidation.validateText(btcAddress, 1000);
+        NetworkDataValidation.validateText(btcAddress, MAX_LENGTH);
     }
 
     @Override
@@ -59,18 +64,20 @@ public final class BisqEasyBtcAddressMessage extends BisqEasyTradeMessage {
                 .setBisqEasyTradeMessage(bisq.trade.protobuf.BisqEasyTradeMessage.newBuilder()
                         .setBisqEasyBtcAddressMessage(
                                 bisq.trade.protobuf.BisqEasyBtcAddressMessage.newBuilder()
-                                        .setBtcAddress(btcAddress)))
+                                        .setBtcAddress(btcAddress)
+                                        .setBisqEasyOffer(bisqEasyOffer.toProto())))
                 .build();
     }
 
     public static BisqEasyBtcAddressMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {
-        bisq.trade.protobuf.BisqEasyBtcAddressMessage bisqEasyConfirmFiatSentMessage = proto.getBisqEasyTradeMessage().getBisqEasyBtcAddressMessage();
+        bisq.trade.protobuf.BisqEasyBtcAddressMessage bisqEasyBtcAddressMessage = proto.getBisqEasyTradeMessage().getBisqEasyBtcAddressMessage();
         return new BisqEasyBtcAddressMessage(
                 proto.getId(),
                 proto.getTradeId(),
                 NetworkId.fromProto(proto.getSender()),
                 NetworkId.fromProto(proto.getReceiver()),
-                bisqEasyConfirmFiatSentMessage.getBtcAddress());
+                bisqEasyBtcAddressMessage.getBtcAddress(),
+                BisqEasyOffer.fromProto(bisqEasyBtcAddressMessage.getBisqEasyOffer()));
     }
 
     @Override

@@ -56,15 +56,16 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
     public BisqEasyTrade(boolean isBuyer,
                          boolean isTaker,
                          Identity myIdentity,
-                         BisqEasyContract contract,
-                         NetworkId takerNetworkId) {
+                         BisqEasyOffer offer,
+                         NetworkId takerNetworkId,
+                         NetworkId makerNetworkId) {
         super(BisqEasyTradeState.INIT,
                 isBuyer,
                 isTaker,
                 myIdentity,
-                contract,
+                offer,
                 new BisqEasyTradeParty(takerNetworkId),
-                new BisqEasyTradeParty(contract.getMaker().getNetworkId()));
+                new BisqEasyTradeParty(makerNetworkId));
 
         stateObservable().addObserver(s -> tradeState.set((BisqEasyTradeState) s));
     }
@@ -73,10 +74,9 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
                           String id,
                           TradeRole tradeRole,
                           Identity myIdentity,
-                          BisqEasyContract contract,
                           BisqEasyTradeParty taker,
                           BisqEasyTradeParty maker) {
-        super(state, id, tradeRole, myIdentity, contract, taker, maker);
+        super(state, id, tradeRole, myIdentity, taker, maker);
 
         stateObservable().addObserver(s -> tradeState.set((BisqEasyTradeState) s));
     }
@@ -96,9 +96,11 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
                 proto.getId(),
                 TradeRole.fromProto(proto.getTradeRole()),
                 Identity.fromProto(proto.getMyIdentity()),
-                BisqEasyContract.fromProto(proto.getContract()),
                 TradeParty.protoToBisqEasyTradeParty(proto.getTaker()),
                 TradeParty.protoToBisqEasyTradeParty(proto.getMaker()));
+        if (proto.hasContract()) {
+            trade.setContract(BisqEasyContract.fromProto(proto.getContract()));
+        }
         if (proto.hasErrorMessage()) {
             trade.setErrorMessage(proto.getErrorMessage());
         }

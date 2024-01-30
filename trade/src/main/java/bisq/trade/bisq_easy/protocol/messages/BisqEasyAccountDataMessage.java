@@ -19,6 +19,7 @@ package bisq.trade.bisq_easy.protocol.messages;
 
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
+import bisq.offer.bisq_easy.BisqEasyOffer;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -32,22 +33,25 @@ public final class BisqEasyAccountDataMessage extends BisqEasyTradeMessage {
     public final static int MAX_LENGTH = 1000;
 
     private final String paymentAccountData;
+    private final BisqEasyOffer bisqEasyOffer;
 
     public BisqEasyAccountDataMessage(String id,
                                       String tradeId,
                                       NetworkId sender,
                                       NetworkId receiver,
-                                      String paymentAccountData) {
+                                      String paymentAccountData,
+                                      BisqEasyOffer bisqEasyOffer) {
         super(id, tradeId, sender, receiver);
 
         this.paymentAccountData = paymentAccountData;
-
+        this.bisqEasyOffer = bisqEasyOffer;
         verify();
     }
 
     @Override
     public void verify() {
         super.verify();
+
         NetworkDataValidation.validateText(paymentAccountData, MAX_LENGTH);
     }
 
@@ -57,7 +61,8 @@ public final class BisqEasyAccountDataMessage extends BisqEasyTradeMessage {
                 .setBisqEasyTradeMessage(bisq.trade.protobuf.BisqEasyTradeMessage.newBuilder()
                         .setBisqEasyAccountDataMessage(
                                 bisq.trade.protobuf.BisqEasyAccountDataMessage.newBuilder()
-                                        .setPaymentAccountData(paymentAccountData)))
+                                        .setPaymentAccountData(paymentAccountData)
+                                        .setBisqEasyOffer(bisqEasyOffer.toProto())))
                 .build();
     }
 
@@ -68,7 +73,8 @@ public final class BisqEasyAccountDataMessage extends BisqEasyTradeMessage {
                 proto.getTradeId(),
                 NetworkId.fromProto(proto.getSender()),
                 NetworkId.fromProto(proto.getReceiver()),
-                bisqEasyAccountDataMessage.getPaymentAccountData());
+                bisqEasyAccountDataMessage.getPaymentAccountData(),
+                BisqEasyOffer.fromProto(bisqEasyAccountDataMessage.getBisqEasyOffer()));
     }
 
     @Override

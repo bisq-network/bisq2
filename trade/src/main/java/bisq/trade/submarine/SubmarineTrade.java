@@ -47,10 +47,11 @@ public final class SubmarineTrade extends Trade<SubmarineOffer, SubmarineContrac
                 isBuyer,
                 isTaker,
                 myIdentity,
-                contract,
+                contract.getOffer(),
                 new SubmarineTradeParty(takerNetworkId),
                 new SubmarineTradeParty(contract.getMaker().getNetworkId()));
 
+        setContract(contract);
         stateObservable().addObserver(s -> tradeState.set((SubmarineTradeState) s));
     }
 
@@ -58,10 +59,9 @@ public final class SubmarineTrade extends Trade<SubmarineOffer, SubmarineContrac
                            String id,
                            TradeRole tradeRole,
                            Identity myIdentity,
-                           SubmarineContract contract,
                            SubmarineTradeParty taker,
                            SubmarineTradeParty maker) {
-        super(state, id, tradeRole, myIdentity, contract, taker, maker);
+        super(state, id, tradeRole, myIdentity, taker, maker);
 
         stateObservable().addObserver(s -> tradeState.set((SubmarineTradeState) s));
     }
@@ -77,9 +77,11 @@ public final class SubmarineTrade extends Trade<SubmarineOffer, SubmarineContrac
                 proto.getId(),
                 TradeRole.fromProto(proto.getTradeRole()),
                 Identity.fromProto(proto.getMyIdentity()),
-                SubmarineContract.fromProto(proto.getContract()),
                 TradeParty.protoToSubmarineTradeParty(proto.getTaker()),
                 TradeParty.protoToSubmarineTradeParty(proto.getMaker()));
+        if (proto.hasContract()) {
+            trade.setContract(SubmarineContract.fromProto(proto.getContract()));
+        }
         if (proto.hasErrorMessage()) {
             trade.setErrorMessage(proto.getErrorMessage());
         }
