@@ -90,6 +90,10 @@ public abstract class PrivateChatsController extends ChatController<PrivateChats
         UIThread.run(() -> {
             if (chatChannel == null) {
                 model.getSelectedItem().set(null);
+                model.setMyUserReputationScore(null);
+                model.getMyUserProfile().set(null);
+                model.setPeersReputationScore(null);
+                model.getPeersUserProfile().set(null);
                 maybeSelectFirst();
             }
 
@@ -122,7 +126,9 @@ public abstract class PrivateChatsController extends ChatController<PrivateChats
         //todo (Critical) add popup
         if (model.getSelectedChannel() != null) {
             channelService.leaveChannel(model.getSelectedChannel().getId());
-            selectionService.getSelectedChannel().set(null);
+            if (channelService.getChannels().isEmpty()) {
+                selectionService.selectChannel(null);
+            }
         }
     }
 
@@ -137,7 +143,7 @@ public abstract class PrivateChatsController extends ChatController<PrivateChats
         if (selectionService.getSelectedChannel().get() == null &&
                 !channelService.getChannels().isEmpty() &&
                 !model.getSortedList().isEmpty()) {
-            selectionService.getSelectedChannel().set(model.getSortedList().get(0).getChannel());
+            selectionService.selectChannel(model.getSortedList().get(0).getChannel());
         }
     }
 }
