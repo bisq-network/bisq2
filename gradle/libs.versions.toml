@@ -9,6 +9,7 @@ annotations-lib = { strictly = '23.0.0' }
 
 apache-httpcomponents-core-lib = { strictly = '4.4.13' }
 apache-httpcomponents-httpclient-lib = { strictly = '4.5.13' }
+apache-tomcat-annotations-api = { strictly = '6.0.53' }
 
 assertj-core-lib = { strictly = '3.22.0' }
 bouncycastle-lib = { strictly = '1.69' } # Oldest version without known CVEs
@@ -32,6 +33,8 @@ glassfish-jaxb-runtime-lib = { strictly = '3.0.2' }
 
 google-gson-lib = { strictly = '2.9.0' }
 google-guava-lib = { strictly = '31.1-jre' }
+
+grpc = { strictly = '1.61.0' }
 
 i2p-lib = { strictly = '1.8.0' }
 i2p-v2 = { strictly = '2.4.0' }
@@ -69,6 +72,7 @@ typesafe-config-lib = { strictly = '1.4.2' }
 [libraries]
 apache-httpcomponents-core = { module = 'org.apache.httpcomponents:httpcore', version.ref = 'apache-httpcomponents-core-lib' }
 apache-httpcomponents-httpclient = { module = 'org.apache.httpcomponents:httpclient', version.ref = 'apache-httpcomponents-httpclient-lib' }
+apache-tomcat-annotations-api = { module = 'org.apache.tomcat:annotations-api', version.ref = 'apache-tomcat-annotations-api' }
 assertj-core = { module = 'org.assertj:assertj-core', version.ref = 'assertj-core-lib' }
 
 annotations = { module = 'org.jetbrains:annotations', version.ref = 'annotations-lib' }
@@ -97,6 +101,11 @@ glassfish-jaxb-runtime = { module = 'org.glassfish.jaxb:jaxb-runtime', version.r
 
 google-gson = { module = 'com.google.code.gson:gson', version.ref = 'google-gson-lib' }
 google-guava = { module = 'com.google.guava:guava', version.ref = 'google-guava-lib' }
+
+grpc-netty-shaded = { module = 'io.grpc:grpc-netty-shaded', version.ref = 'grpc' }
+grpc-protobuf = { module = 'io.grpc:grpc-protobuf', version.ref = 'grpc' }
+grpc-services = { module = 'io.grpc:grpc-services', version.ref = 'grpc' }
+grpc-stub = { module = 'io.grpc:grpc-stub', version.ref = 'grpc' }
 
 i2p-core = { module = 'net.i2p:i2p', version.ref = 'i2p-lib' }
 i2p-core-v2 = { module = 'net.i2p:i2p', version.ref = 'i2p-v2' }
@@ -144,6 +153,7 @@ typesafe-config = { module = 'com.typesafe:config', version.ref = 'typesafe-conf
 fontawesomefx = ['fontawesomefx', 'fontawesomefx-commons', 'fontawesomefx-materialdesignfont']
 fxmisc-libs = ['fxmisc-easybind', 'fxmisc-richtextfx']
 glassfish-jersey = ['glassfish-jersey-jdk-http', 'glassfish-jersey-json-jackson', 'glassfish-jersey-inject-hk2', 'glassfish-jaxb-runtime']
+grpc = ['grpc-protobuf', 'grpc-services', 'grpc-stub']
 i2p = ['i2p-core', 'i2p-router', 'i2p-streaming']
 i2p-v2 = ['i2p-core-v2', 'i2p-streaming-v2']
 jackson = ['jackson-core', 'jackson-annotations', 'jackson-databind']

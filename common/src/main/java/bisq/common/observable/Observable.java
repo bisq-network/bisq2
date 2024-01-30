@@ -38,6 +38,11 @@ public class Observable<S> implements ReadOnlyObservable<S> {
         return () -> observers.remove(observer);
     }
 
+    @Override
+    public void removeObserver(Consumer<S> observer) {
+        observers.remove(observer);
+    }
+
     public void set(S value) {
         this.value = value;
         observers.forEach(observer -> observer.accept(value));

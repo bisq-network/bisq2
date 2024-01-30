@@ -15,14 +15,22 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.observable;
+syntax = "proto3";
 
-import java.util.function.Consumer;
+package daemon;
+option java_package = "bisq.daemon.protobuf";
+option java_multiple_files = true;
 
-public interface ReadOnlyObservable<S> {
-    S get();
+service Daemon {
+  rpc BootstrapTor(Command) returns (stream BootstrapEvent) {}
+}
 
-    Pin addObserver(Consumer<S> observer);
+message Command {
+  string name = 1;
+}
 
-    void removeObserver(Consumer<S> observer);
+message BootstrapEvent {
+  uint32 progress = 1;
+  string tag = 2;
+  string summary = 3;
 }
