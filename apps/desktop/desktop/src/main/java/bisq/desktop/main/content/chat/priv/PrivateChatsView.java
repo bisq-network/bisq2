@@ -68,59 +68,6 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
         addChatBox();
     }
 
-    private void addOpenChatsSelectionList() {
-        Label openChatsHeader = new Label(Res.get("chat.private.openChatsList.headline"));
-        openChatsHeader.setMinHeight(HEADER_HEIGHT);
-        openChatsHeader.setMaxHeight(HEADER_HEIGHT);
-        openChatsHeader.setAlignment(Pos.CENTER_LEFT);
-        openChatsHeader.setPadding(new Insets(15, 30, 15, 30));
-        openChatsHeader.getStyleClass().add("chat-header-title");
-
-        tableView = new BisqTableView<>(getModel().getSortedList());
-        tableView.allowVerticalScrollbar();
-        configTableView();
-        VBox.setVgrow(tableView, Priority.ALWAYS);
-
-        openChatsSelectionList = new VBox(openChatsHeader, Layout.hLine(), tableView);
-        openChatsSelectionList.setPrefWidth(210);
-        openChatsSelectionList.setMinWidth(210);
-        openChatsSelectionList.setFillWidth(true);
-        openChatsSelectionList.getStyleClass().add("chat-container");
-    }
-
-    private void addChatBox() {
-        chatMessagesComponent.setMinHeight(200);
-        chatMessagesComponent.setPadding(new Insets(0, -30, -15, -30));
-
-        chatHeaderVBox = new VBox(0);
-
-        leaveChatButton = new MenuItem(Res.get("bisqEasy.privateChats.leave"));
-        leaveChatButton.getStyleClass().add("leave-chat-item");
-        leaveChatButton.setGraphic(ImageUtil.getImageViewById("exit-door"));
-
-        headerDropdownMenu.clearMenuItems();
-        headerDropdownMenu.addMenuItems(helpButton, leaveChatButton);
-
-        HBox chatHeaderHBox = new HBox(10, chatHeaderVBox, Spacer.fillHBox(), headerDropdownMenu);
-        chatHeaderHBox.setMinHeight(HEADER_HEIGHT);
-        chatHeaderHBox.setMaxHeight(HEADER_HEIGHT);
-        chatHeaderHBox.setAlignment(Pos.CENTER_LEFT);
-        chatHeaderHBox.setPadding(new Insets(15, 30, 15, 30));
-        chatHeaderHBox.getStyleClass().add("bisq-easy-container-header");
-        chatHeaderHBox.setMaxWidth(CHAT_BOX_MAX_WIDTH);
-
-        VBox.setMargin(chatMessagesComponent, new Insets(0, 30, 15, 30));
-        VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
-        VBox chatVBox = new VBox(chatHeaderHBox, Layout.hLine(), chatMessagesComponent);
-        chatVBox.getStyleClass().add("bisq-easy-container");
-        chatVBox.setAlignment(Pos.CENTER);
-
-        VBox.setVgrow(chatVBox, Priority.ALWAYS);
-        centerVBox.setAlignment(Pos.CENTER);
-        centerVBox.setFillWidth(true);
-        centerVBox.getChildren().add(chatVBox);
-    }
-
     @Override
     protected void configContainerHBox() {
         containerHBox.setSpacing(10);
@@ -202,6 +149,59 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
 
         tableView.visibleProperty().unbind();
         tableView.managedProperty().unbind();
+    }
+
+    private void addOpenChatsSelectionList() {
+        Label openChatsHeader = new Label(Res.get("chat.private.openChatsList.headline"));
+        openChatsHeader.setMinHeight(HEADER_HEIGHT);
+        openChatsHeader.setMaxHeight(HEADER_HEIGHT);
+        openChatsHeader.setAlignment(Pos.CENTER_LEFT);
+        openChatsHeader.setPadding(new Insets(15, 30, 15, 30));
+        openChatsHeader.getStyleClass().add("chat-header-title");
+
+        tableView = new BisqTableView<>(getModel().getSortedList());
+        tableView.allowVerticalScrollbar();
+        configTableView();
+        VBox.setVgrow(tableView, Priority.ALWAYS);
+
+        openChatsSelectionList = new VBox(openChatsHeader, Layout.hLine(), tableView);
+        openChatsSelectionList.setPrefWidth(210);
+        openChatsSelectionList.setMinWidth(210);
+        openChatsSelectionList.setFillWidth(true);
+        openChatsSelectionList.getStyleClass().add("chat-container");
+    }
+
+    private void addChatBox() {
+        chatMessagesComponent.setMinHeight(200);
+        chatMessagesComponent.setPadding(new Insets(0, -30, -15, -30));
+
+        chatHeaderVBox = new VBox(0);
+
+        leaveChatButton = new MenuItem(Res.get("bisqEasy.privateChats.leave"));
+        leaveChatButton.getStyleClass().add("leave-chat-item");
+        leaveChatButton.setGraphic(ImageUtil.getImageViewById("exit-door"));
+
+        headerDropdownMenu.clearMenuItems();
+        headerDropdownMenu.addMenuItems(helpButton, leaveChatButton);
+
+        HBox chatHeaderHBox = new HBox(10, chatHeaderVBox, Spacer.fillHBox(), headerDropdownMenu);
+        chatHeaderHBox.setMinHeight(HEADER_HEIGHT);
+        chatHeaderHBox.setMaxHeight(HEADER_HEIGHT);
+        chatHeaderHBox.setAlignment(Pos.CENTER_LEFT);
+        chatHeaderHBox.setPadding(new Insets(15, 30, 15, 30));
+        chatHeaderHBox.getStyleClass().add("bisq-easy-container-header");
+        chatHeaderHBox.setMaxWidth(CHAT_BOX_MAX_WIDTH);
+
+        VBox.setMargin(chatMessagesComponent, new Insets(0, 30, 15, 30));
+        VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
+        VBox chatVBox = new VBox(chatHeaderHBox, Layout.hLine(), chatMessagesComponent);
+        chatVBox.getStyleClass().add("bisq-easy-container");
+        chatVBox.setAlignment(Pos.CENTER);
+
+        VBox.setVgrow(chatVBox, Priority.ALWAYS);
+        centerVBox.setAlignment(Pos.CENTER);
+        centerVBox.setFillWidth(true);
+        centerVBox.getChildren().add(chatVBox);
     }
 
     private void configTableView() {
