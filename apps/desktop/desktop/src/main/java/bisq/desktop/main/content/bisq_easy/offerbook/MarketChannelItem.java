@@ -19,6 +19,8 @@ package bisq.desktop.main.content.bisq_easy.offerbook;
 
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
 import bisq.common.currency.Market;
+import bisq.desktop.common.utils.ImageUtil;
+import javafx.scene.image.ImageView;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -27,10 +29,12 @@ import lombok.Getter;
 public class MarketChannelItem {
     private final Market market;
     private final BisqEasyOfferbookChannel channel;
+    private final ImageView icon;
 
     public MarketChannelItem(BisqEasyOfferbookChannel channel) {
         this.channel = channel;
         market = channel.getMarket();
+        icon = ImageUtil.getImageViewById("test");
     }
 
     public String getMarketString() {

@@ -120,6 +120,10 @@
     -fx-text-fill: -bisq2-green;
 }
 
+.market-selection-list .table-cell {
+    -fx-padding: 0;
+}
+
 .create-offer-button {
     -fx-background-color: -fx-default-button;
     -fx-text-fill: -fx-light-text-color;

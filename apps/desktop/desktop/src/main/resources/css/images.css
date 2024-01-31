@@ -697,6 +697,10 @@
     -fx-image: url("/images/markets/market-xmr.png");
 }
 
+#test {
+    -fx-image: url("/images/app_window/icon_32.png");
+}
+
 
 /* ------------------------------------------------------------------------------------ */
 /* Learn */
