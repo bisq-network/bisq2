@@ -130,6 +130,14 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
 
         if (chatChannel instanceof BisqEasyOfferbookChannel) {
             UIThread.run(() -> {
+                BisqEasyOfferbookChannel channel = (BisqEasyOfferbookChannel) chatChannel;
+
+                // FIXME: marketChannelItems needs to be a hashmap
+                model.getMarketChannelItems().stream()
+                        .filter(item -> item.getChannel().equals(channel))
+                        .findAny()
+                        .ifPresent(item -> model.getSelectedMarketChannelItem().set(item));
+
                 updateMarketItemsPredicate();
 
                 model.getSearchText().set("");
@@ -189,5 +197,13 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
 
     private boolean isMaker(BisqEasyOffer bisqEasyOffer) {
         return bisqEasyOffer.isMyOffer(userIdentityService.getMyUserProfileIds());
+    }
+
+    void onSelectMarketChannelItem(MarketChannelItem item) {
+        if (item == null) {
+            selectionService.selectChannel(null);
+        } else if (!item.getChannel().equals(selectionService.getSelectedChannel().get())) {
+            selectionService.selectChannel(item.getChannel());
+        }
     }
 }

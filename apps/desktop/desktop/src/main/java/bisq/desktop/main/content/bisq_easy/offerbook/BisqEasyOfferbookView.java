@@ -32,6 +32,8 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.util.Callback;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView, BisqEasyOfferbookModel> {
@@ -43,6 +45,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     private BisqTableView<MarketChannelItem> tableView;
     private VBox marketSelectionList;
     private HBox marketSelectionListHeader;
+    private Subscription tableViewSelectionPin, selectedModelItemPin;
     //private Switch offersOnlySwitch;
     //private Button closeFilterButton, filterButton;
 
@@ -141,6 +144,16 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
             onOpenMarketSelector();
             e.consume();
         });
+
+        selectedModelItemPin = EasyBind.subscribe(getModel().getSelectedMarketChannelItem(), selected -> {
+            tableView.getSelectionModel().select(selected);
+        });
+
+        tableViewSelectionPin = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(), item -> {
+            if (item != null) {
+                getController().onSelectMarketChannelItem(item);
+            }
+        });
     }
 
     @Override
@@ -155,10 +168,17 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         //  closeFilterButton.setOnAction(null);
 //        marketSelectorIcon.setOnMouseClicked(null);
         chatDomainTitle.setOnMouseClicked(null);
+
+        selectedModelItemPin.unsubscribe();
+        tableViewSelectionPin.unsubscribe();
     }
 
     private BisqEasyOfferbookModel getModel() {
         return (BisqEasyOfferbookModel) model;
+    }
+
+    private BisqEasyOfferbookController getController() {
+        return (BisqEasyOfferbookController) controller;
     }
 
     private void addMarketSelectionList() {
