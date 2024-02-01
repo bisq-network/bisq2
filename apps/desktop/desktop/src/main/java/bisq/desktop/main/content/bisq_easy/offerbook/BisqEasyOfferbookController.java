@@ -58,6 +58,8 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         bisqEasyOfferbookChannelService = chatService.getBisqEasyOfferbookChannelService();
         settingsService = serviceProvider.getSettingsService();
         bisqEasyOfferbookModel = getModel();
+
+        createMarketChannels();
     }
 
     @Override
@@ -82,11 +84,6 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         ObservableArray<BisqEasyOpenTradeChannel> bisqEasyOpenTradeChannels = chatService.getBisqEasyOpenTradeChannelService().getChannels();
         bisqEasyPrivateTradeChatChannelsPin = bisqEasyOpenTradeChannels.addObserver(() ->
                 model.getIsTradeChannelVisible().set(!bisqEasyOpenTradeChannels.isEmpty()));
-
-        List<MarketChannelItem> marketChannelItems = bisqEasyOfferbookChannelService.getChannels().stream()
-                .map(MarketChannelItem::new)
-                .collect(Collectors.toList());
-        model.getMarketChannelItems().setAll(marketChannelItems);
 
         selectedChannelPin = FxBindings.subscribe(selectionService.getSelectedChannel(), this::selectedChannelChanged);
 
@@ -168,6 +165,13 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                 model.getChannelDescription().set(oneLineDescription);
             }
         });
+    }
+
+    private void createMarketChannels() {
+        List<MarketChannelItem> marketChannelItems = bisqEasyOfferbookChannelService.getChannels().stream()
+                .map(MarketChannelItem::new)
+                .collect(Collectors.toList());
+        model.getMarketChannelItems().setAll(marketChannelItems);
     }
 
     void onCreateOffer() {

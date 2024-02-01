@@ -27,9 +27,10 @@ import lombok.Getter;
 @EqualsAndHashCode
 @Getter
 public class MarketChannelItem {
-    private final Market market;
     private final BisqEasyOfferbookChannel channel;
+    private final Market market;
     private final ImageView icon;
+    private int numOffers;
 
     public MarketChannelItem(BisqEasyOfferbookChannel channel) {
         this.channel = channel;
