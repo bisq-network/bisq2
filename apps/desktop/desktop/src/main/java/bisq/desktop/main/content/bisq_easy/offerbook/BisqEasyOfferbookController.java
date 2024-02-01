@@ -50,7 +50,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     private final SettingsService settingsService;
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
     private final BisqEasyOfferbookModel bisqEasyOfferbookModel;
-    private Pin offerOnlySettingsPin, bisqEasyPrivateTradeChatChannelsPin;
+    private Pin offerOnlySettingsPin, bisqEasyPrivateTradeChatChannelsPin, selectedChannelPin;
 
     public BisqEasyOfferbookController(ServiceProvider serviceProvider) {
         super(serviceProvider, ChatChannelDomain.BISQ_EASY_OFFERBOOK, NavigationTarget.BISQ_EASY_OFFERBOOK);
@@ -88,7 +88,11 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                 .collect(Collectors.toList());
         model.getMarketChannelItems().setAll(marketChannelItems);
 
+        selectedChannelPin = FxBindings.subscribe(selectionService.getSelectedChannel(), this::selectedChannelChanged);
+
         updateMarketItemsPredicate();
+
+        maybeSelectFirst();
 
 //        model.getSortedMarketChannelItems().setComparator((o1, o2) -> {
 //            Comparator<MarketChannelItem> byNumMessages = (left, right) -> Integer.compare(
@@ -120,6 +124,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
 
         offerOnlySettingsPin.unbind();
         bisqEasyPrivateTradeChatChannelsPin.unbind();
+        selectedChannelPin.unbind();
 
         resetSelectedChildTarget();
     }
@@ -128,8 +133,13 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     protected void selectedChannelChanged(ChatChannel<? extends ChatMessage> chatChannel) {
         super.selectedChannelChanged(chatChannel);
 
-        if (chatChannel instanceof BisqEasyOfferbookChannel) {
-            UIThread.run(() -> {
+        UIThread.run(() -> {
+            if (chatChannel == null) {
+                model.getSelectedMarketChannelItem().set(null);
+                maybeSelectFirst();
+            }
+
+            if (chatChannel instanceof BisqEasyOfferbookChannel) {
                 BisqEasyOfferbookChannel channel = (BisqEasyOfferbookChannel) chatChannel;
 
                 // FIXME: marketChannelItems needs to be a hashmap
@@ -156,8 +166,8 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                 String description = ((BisqEasyOfferbookChannel) chatChannel).getDescription();
                 String oneLineDescription = description.replace("\n", " ");
                 model.getChannelDescription().set(oneLineDescription);
-            });
-        }
+            }
+        });
     }
 
     void onCreateOffer() {
@@ -204,6 +214,14 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
             selectionService.selectChannel(null);
         } else if (!item.getChannel().equals(selectionService.getSelectedChannel().get())) {
             selectionService.selectChannel(item.getChannel());
+        }
+    }
+
+    private void maybeSelectFirst() {
+        if (selectionService.getSelectedChannel().get() == null &&
+                !bisqEasyOfferbookChannelService.getChannels().isEmpty() &&
+                !model.getSortedMarketChannelItems().isEmpty()) {
+            selectionService.selectChannel(model.getSortedMarketChannelItems().get(0).getChannel());
         }
     }
 }
