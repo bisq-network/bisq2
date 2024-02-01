@@ -120,7 +120,9 @@
     -fx-text-fill: -bisq2-green;
 }
 
-.market-selection-subheader {}
+.market-selection-subheader {
+    -fx-background-color: -bisq-dark-grey-30;
+}
 
 .market-selection-search-box {
     -fx-background-radius: 0;

@@ -107,29 +107,6 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         updateMarketItemsPredicate();
 
         maybeSelectFirst();
-
-//        model.getSortedMarketChannelItems().setComparator((o1, o2) -> {
-//            Comparator<MarketChannelItem> byNumMessages = (left, right) -> Integer.compare(
-//                    getNumMessages(right.getMarket()),
-//                    getNumMessages(left.getMarket()));
-//
-//            List<Market> majorMarkets = MarketRepository.getMajorMarkets();
-//            Comparator<MarketChannelItem> byMajorMarkets = (left, right) -> {
-//                int indexOfLeftMarket = majorMarkets.indexOf(left.getMarket());
-//                int indexOfRightMarket = majorMarkets.indexOf(right.getMarket());
-//                if (indexOfLeftMarket > -1 && indexOfRightMarket > -1) {
-//                    return Integer.compare(indexOfLeftMarket, indexOfRightMarket);
-//                } else {
-//                    return -1;
-//                }
-//            };
-//
-//            Comparator<MarketChannelItem> byName = Comparator.comparing(MarketChannelItem::getMarketString);
-//            return byNumMessages
-//                    .thenComparing(byMajorMarkets)
-//                    .thenComparing(byName)
-//                    .compare(o1, o2);
-//        });
     }
 
     @Override
@@ -173,7 +150,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                         market.getBaseCurrencyCode().toLowerCase(),
                         market.getQuoteCurrencyCode().toLowerCase()).getFirst();
 
-                //fixme (low prio) get larger icons and dont use scaling
+                // FIXME: (low prio) get larger icons and dont use scaling
                 marketsImage.setScaleX(1.25);
                 marketsImage.setScaleY(1.25);
                 model.getChannelIconNode().set(marketsImage);

@@ -19,6 +19,7 @@ package bisq.desktop.main.content.bisq_easy.offerbook;
 
 import bisq.desktop.common.Layout;
 import bisq.desktop.components.controls.BisqTooltip;
+import bisq.desktop.components.controls.DropdownMenu;
 import bisq.desktop.components.controls.SearchBox;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
@@ -36,6 +37,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.util.Comparator;
+
 @Slf4j
 public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView, BisqEasyOfferbookModel> {
     // private static double filterPaneHeight;
@@ -45,9 +48,12 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     private SearchBox marketSelectorSearchBox;
     private Label chatDomainTitle;
     private BisqTableView<MarketChannelItem> tableView;
+    private BisqTableColumn<MarketChannelItem> marketsTableColumn;
     private VBox marketSelectionList;
     private Subscription tableViewSelectionPin, selectedModelItemPin;
     private Button createOfferButton;
+    private DropdownMenu dropdownMenu;
+    private MenuItem offers, nameAZ, nameZA;
     //private Switch offersOnlySwitch;
     //private Button closeFilterButton, filterButton;
 
@@ -155,7 +161,16 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
             }
         });
 
+        offers.setOnAction(e -> sortTableViewColumn(BisqEasyOfferbookUtil.SortByNumOffers()));
+        nameAZ.setOnAction(e -> sortTableViewColumn(BisqEasyOfferbookUtil.SortByMarketNameAsc()));
+        nameZA.setOnAction(e -> sortTableViewColumn(BisqEasyOfferbookUtil.SortByMarketNameDesc()));
         createOfferButton.setOnAction(e -> getController().onCreateOffer());
+    }
+
+    private void sortTableViewColumn(Comparator<MarketChannelItem> comparator) {
+        tableView.getSortOrder().clear();
+        marketsTableColumn.setComparator(comparator);
+        tableView.getSortOrder().add(marketsTableColumn);
     }
 
     @Override
@@ -196,7 +211,14 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
 
         marketSelectorSearchBox = new SearchBox();
         marketSelectorSearchBox.getStyleClass().add("market-selection-search-box");
-        HBox subheader = new HBox(marketSelectorSearchBox);
+
+        dropdownMenu = new DropdownMenu("arrow-down", "arrow-down");
+        offers = new MenuItem(Res.get("bisqEasy.offerbook.dropdownMenu.offers"));
+        nameAZ = new MenuItem(Res.get("bisqEasy.offerbook.dropdownMenu.nameAZ"));
+        nameZA = new MenuItem(Res.get("bisqEasy.offerbook.dropdownMenu.nameZA"));
+        dropdownMenu.addMenuItems(offers, nameAZ, nameZA);
+
+        HBox subheader = new HBox(10, marketSelectorSearchBox, dropdownMenu);
         subheader.maxHeight(30);
         subheader.setPadding(new Insets(4, 10, 4, 5));
         subheader.getStyleClass().add("market-selection-subheader");
@@ -234,12 +256,12 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     private void configTableView() {
         tableView.getColumns().add(tableView.getSelectionMarkerColumn());
 
-        tableView.getColumns().add(new BisqTableColumn.Builder<MarketChannelItem>()
+        marketsTableColumn = new BisqTableColumn.Builder<MarketChannelItem>()
                 .minWidth(100)
                 .left()
-                //.comparator(Comparator.comparing(PrivateChatsView.ListItem::getPeersUserName))
                 .setCellFactory(getMarketChannelItemCellFactory())
-                .build());
+                .build();
+        tableView.getColumns().add(marketsTableColumn);
     }
 
     private void addChatBox() {
