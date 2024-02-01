@@ -34,7 +34,14 @@ public class MarketChannelItem {
     public MarketChannelItem(BisqEasyOfferbookChannel channel) {
         this.channel = channel;
         market = channel.getMarket();
-        icon = ImageUtil.getImageViewById("test");
+
+        // FIXME: Temporarily setting images to test resolution
+        icon = market.getQuoteCurrencyCode().equals("EUR") ? ImageUtil.getImageViewById("test2")
+                : market.getQuoteCurrencyCode().equals("USD") ? ImageUtil.getImageViewById("test3")
+                : market.getQuoteCurrencyCode().equals("CAD") ? ImageUtil.getImageViewById("test4")
+                : ImageUtil.getImageViewById("test");
+
+        //icon = ImageUtil.getImageViewById("test");
     }
 
     public String getMarketString() {
