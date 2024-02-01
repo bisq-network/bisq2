@@ -46,6 +46,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     private VBox marketSelectionList;
     private HBox marketSelectionListHeader;
     private Subscription tableViewSelectionPin, selectedModelItemPin;
+    private Button createOfferButton;
     //private Switch offersOnlySwitch;
     //private Button closeFilterButton, filterButton;
 
@@ -154,6 +155,8 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
                 getController().onSelectMarketChannelItem(item);
             }
         });
+
+        createOfferButton.setOnAction(e -> getController().onCreateOffer());
     }
 
     @Override
@@ -195,11 +198,28 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         configTableView();
         VBox.setVgrow(tableView, Priority.ALWAYS);
 
-        marketSelectionList = new VBox(marketSelectionListHeader, Layout.hLine(), tableView);
+        createOfferButton = createAndGetCreateOfferButton();
+        HBox offerButtonContainer = new HBox(createOfferButton);
+        offerButtonContainer.setAlignment(Pos.CENTER);
+        offerButtonContainer.setPadding(new Insets(14, 20, 14, 20));
+
+        marketSelectionList = new VBox(marketSelectionListHeader, Layout.hLine(), tableView, offerButtonContainer);
         marketSelectionList.setPrefWidth(210);
         marketSelectionList.setMinWidth(210);
         marketSelectionList.setFillWidth(true);
         marketSelectionList.getStyleClass().add("chat-container");
+    }
+
+    private Button createAndGetCreateOfferButton() {
+        Button createOfferButton = new Button(Res.get("offer.createOffer"));
+        createOfferButton.getStyleClass().addAll("create-offer-button", "normal-text");
+        createOfferButton.setMinWidth(170);
+
+        double height = 42;
+        createOfferButton.setMinHeight(height);
+        createOfferButton.setMaxHeight(height);
+        createOfferButton.setPrefHeight(height);
+        return createOfferButton;
     }
 
     private void configTableView() {
