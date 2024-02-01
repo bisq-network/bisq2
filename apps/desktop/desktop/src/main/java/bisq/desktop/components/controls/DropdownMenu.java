@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.chat;
+package bisq.desktop.components.controls;
 
 import bisq.desktop.common.utils.ImageUtil;
 import javafx.geometry.Bounds;

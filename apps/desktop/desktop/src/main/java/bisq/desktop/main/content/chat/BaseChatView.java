@@ -19,6 +19,7 @@ package bisq.desktop.main.content.chat;
 
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.NavigationView;
+import bisq.desktop.components.controls.DropdownMenu;
 import bisq.desktop.components.controls.SearchBox;
 import bisq.i18n.Res;
 import javafx.scene.control.*;
