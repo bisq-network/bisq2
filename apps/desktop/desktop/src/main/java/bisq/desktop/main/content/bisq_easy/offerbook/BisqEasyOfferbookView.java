@@ -18,9 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.offerbook;
 
 import bisq.desktop.common.Layout;
-import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTooltip;
-import bisq.desktop.components.controls.ComboBoxWithSearch;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.main.content.chat.ChatView;
@@ -143,10 +141,6 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
 //            onOpenMarketSelector();
 //            e.consume();
 //        });
-        chatDomainTitle.setOnMouseClicked(e -> { // TODO: Remove
-            onOpenMarketSelector();
-            e.consume();
-        });
 
         selectedModelItemPin = EasyBind.subscribe(getModel().getSelectedMarketChannelItem(), selected -> {
             tableView.getSelectionModel().select(selected);
@@ -302,6 +296,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
                             getFormattedTooltip(item.getNumOffers().get(), item), item.getNumOffers());
                     tooltip.textProperty().bind(formattedTooltip);
                     tooltip.setStyle("-fx-text-fill: -fx-dark-text-color;");
+
                     setGraphic(hBox);
                 } else {
                     numOffers.textProperty().unbind();
@@ -330,66 +325,6 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
                 return numMessages > 1
                         ? Res.get("bisqEasy.offerbook.marketListCell.numOffers.tooltip.many", numMessages, quoteCurrencyName)
                         : Res.get("bisqEasy.offerbook.marketListCell.numOffers.tooltip.one", numMessages, quoteCurrencyName);
-            }
-        };
-    }
-
-
-
-    private void onOpenMarketSelector() {
-        new ComboBoxWithSearch<>(chatDomainTitle,
-                bisqEasyOfferbookModel.getSortedMarketChannelItems(),
-                c -> getMarketListCell(),
-                bisqEasyOfferbookController::onSwitchMarketChannel,
-                Res.get("bisqEasy.offerbook.selectMarket").toUpperCase(),
-                Res.get("action.search"),
-                350, 5, 23, 31.5)
-                .show();
-    }
-
-    private ListCell<MarketChannelItem> getMarketListCell() {
-        return new ListCell<>() {
-            final Label market = new Label();
-            final Label numOffers = new Label();
-            final HBox hBox = new HBox(10, market, Spacer.fillHBox(), numOffers);
-            final Tooltip tooltip = new BisqTooltip();
-
-            {
-                setCursor(Cursor.HAND);
-                setPrefHeight(40);
-                setPadding(new Insets(0, 0, -20, 0));
-
-                market.getStyleClass().add("market-selection");
-
-                hBox.setAlignment(Pos.CENTER_LEFT);
-                hBox.setPadding(new Insets(0, 10, 0, -5));
-                Tooltip.install(hBox, tooltip);
-            }
-
-            @Override
-            protected void updateItem(MarketChannelItem item, boolean empty) {
-                super.updateItem(item, empty);
-                if (item != null && !empty) {
-                    market.setText(item.getMarketString());
-                    int numMessages = bisqEasyOfferbookController.getNumMessages(item.getMarket());
-                    numOffers.setText(numMessages > 0 ?
-                            numMessages > 1 ?
-                                    Res.get("bisqEasy.offerbook.marketListCell.numOffers.many", numMessages) :
-                                    Res.get("bisqEasy.offerbook.marketListCell.numOffers.one", numMessages) :
-                            "");
-                    String quoteCurrencyName = item.getMarket().getQuoteCurrencyName();
-                    tooltip.setText(numMessages > 0 ?
-                            numMessages > 1 ?
-                                    Res.get("bisqEasy.offerbook.marketListCell.numOffers.tooltip.many",
-                                            numMessages, quoteCurrencyName) :
-                                    Res.get("bisqEasy.offerbook.marketListCell.numOffers.tooltip.one",
-                                            numMessages, quoteCurrencyName) :
-                            Res.get("bisqEasy.offerbook.marketListCell.numOffers.tooltip.none",
-                                    quoteCurrencyName));
-                    setGraphic(hBox);
-                } else {
-                    setGraphic(null);
-                }
             }
         };
     }
