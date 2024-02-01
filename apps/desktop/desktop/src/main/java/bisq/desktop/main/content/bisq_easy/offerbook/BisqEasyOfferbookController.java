@@ -23,7 +23,6 @@ import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessage;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannelService;
-import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.currency.Market;
 import bisq.common.observable.Pin;
@@ -39,6 +38,8 @@ import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.settings.SettingsService;
 import javafx.scene.layout.StackPane;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -51,6 +52,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
     private final BisqEasyOfferbookModel bisqEasyOfferbookModel;
     private Pin offerOnlySettingsPin, bisqEasyPrivateTradeChatChannelsPin, selectedChannelPin;
+    private Subscription marketSelectorSearchPin;
 
     public BisqEasyOfferbookController(ServiceProvider serviceProvider) {
         super(serviceProvider, ChatChannelDomain.BISQ_EASY_OFFERBOOK, NavigationTarget.BISQ_EASY_OFFERBOOK);
@@ -79,6 +81,8 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     public void onActivate() {
         super.onActivate();
 
+        model.getMarketSelectorSearchText().set("");
+
         offerOnlySettingsPin = FxBindings.bindBiDir(model.getOfferOnly()).to(settingsService.getOffersOnly());
 
         ObservableArray<BisqEasyOpenTradeChannel> bisqEasyOpenTradeChannels = chatService.getBisqEasyOpenTradeChannelService().getChannels();
@@ -86,6 +90,19 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                 model.getIsTradeChannelVisible().set(!bisqEasyOpenTradeChannels.isEmpty()));
 
         selectedChannelPin = FxBindings.subscribe(selectionService.getSelectedChannel(), this::selectedChannelChanged);
+
+        marketSelectorSearchPin = EasyBind.subscribe(model.getMarketSelectorSearchText(), searchText -> {
+            if (searchText == null || searchText.isEmpty()) {
+                model.getFilteredMarketChannelItems().setPredicate(item -> true);
+            } else {
+                String search = searchText.toLowerCase();
+                model.getFilteredMarketChannelItems().setPredicate(item ->
+                        item != null &&
+                                (item.getMarket().getQuoteCurrencyCode().toLowerCase().contains(search) ||
+                                        item.getMarket().getQuoteCurrencyName().toLowerCase().contains(search))
+                );
+            }
+        });
 
         updateMarketItemsPredicate();
 
@@ -122,6 +139,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         offerOnlySettingsPin.unbind();
         bisqEasyPrivateTradeChatChannelsPin.unbind();
         selectedChannelPin.unbind();
+        marketSelectorSearchPin.unsubscribe();
 
         resetSelectedChildTarget();
     }
@@ -187,22 +205,6 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
 
     void onCloseFilter() {
         bisqEasyOfferbookModel.getShowFilterOverlay().set(false);
-    }
-
-    void onSwitchMarketChannel(MarketChannelItem marketChannelItem) {
-        if (marketChannelItem != null) {
-            bisqEasyOfferbookChannelService.findChannel(marketChannelItem.getMarket())
-                    .ifPresent(selectionService::selectChannel);
-            updateMarketItemsPredicate();
-        }
-    }
-
-    int getNumMessages(Market market) {
-        return bisqEasyOfferbookChannelService.findChannel(market)
-                .map(channel -> (int) channel.getChatMessages().stream()
-                        .filter(BisqEasyOfferbookMessage::hasBisqEasyOffer)
-                        .count())
-                .orElse(0);
     }
 
     private void updateMarketItemsPredicate() {

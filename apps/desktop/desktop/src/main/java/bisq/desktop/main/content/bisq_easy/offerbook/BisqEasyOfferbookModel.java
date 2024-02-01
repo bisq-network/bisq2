@@ -19,10 +19,7 @@ package bisq.desktop.main.content.bisq_easy.offerbook;
 
 import bisq.chat.ChatChannelDomain;
 import bisq.desktop.main.content.chat.ChatModel;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -40,6 +37,7 @@ public final class BisqEasyOfferbookModel extends ChatModel {
     private final FilteredList<MarketChannelItem> filteredMarketChannelItems = new FilteredList<>(marketChannelItems);
     private final SortedList<MarketChannelItem> sortedMarketChannelItems = new SortedList<>(filteredMarketChannelItems);
     private final ObjectProperty<MarketChannelItem> selectedMarketChannelItem = new SimpleObjectProperty<>();
+    private final StringProperty marketSelectorSearchText = new SimpleStringProperty();
     public BisqEasyOfferbookModel(ChatChannelDomain chatChannelDomain) {
         super(chatChannelDomain);
     }

@@ -120,6 +120,19 @@
     -fx-text-fill: -bisq2-green;
 }
 
+.market-selection-subheader {}
+
+.market-selection-search-box {
+    -fx-background-radius: 0;
+    -fx-background-color: -bisq-dark-grey-40;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-border-radius: 0;
+    -fx-padding: 0;
+    -fx-min-width: 100;
+    -fx-max-width: 100;
+}
+
 .market-selection-list .table-cell {
     -fx-padding: 0;
 }

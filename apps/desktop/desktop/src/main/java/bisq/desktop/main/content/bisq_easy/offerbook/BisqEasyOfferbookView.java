@@ -19,6 +19,7 @@ package bisq.desktop.main.content.bisq_easy.offerbook;
 
 import bisq.desktop.common.Layout;
 import bisq.desktop.components.controls.BisqTooltip;
+import bisq.desktop.components.controls.SearchBox;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.main.content.chat.ChatView;
@@ -41,10 +42,10 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
 
     private final BisqEasyOfferbookModel bisqEasyOfferbookModel;
     private final BisqEasyOfferbookController bisqEasyOfferbookController;
+    private SearchBox marketSelectorSearchBox;
     private Label chatDomainTitle;
     private BisqTableView<MarketChannelItem> tableView;
     private VBox marketSelectionList;
-    private HBox marketSelectionListHeader;
     private Subscription tableViewSelectionPin, selectedModelItemPin;
     private Button createOfferButton;
     //private Switch offersOnlySwitch;
@@ -142,6 +143,8 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
 //            e.consume();
 //        });
 
+        marketSelectorSearchBox.textProperty().bindBidirectional(getModel().getMarketSelectorSearchText());
+
         selectedModelItemPin = EasyBind.subscribe(getModel().getSelectedMarketChannelItem(), selected -> {
             tableView.getSelectionModel().select(selected);
         });
@@ -166,6 +169,9 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         //  filterButton.setOnAction(null);
         //  closeFilterButton.setOnAction(null);
 //        marketSelectorIcon.setOnMouseClicked(null);
+
+        marketSelectorSearchBox.textProperty().unbindBidirectional(getModel().getMarketSelectorSearchText());
+
         chatDomainTitle.setOnMouseClicked(null);
 
         selectedModelItemPin.unsubscribe();
@@ -181,12 +187,19 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     }
 
     private void addMarketSelectionList() {
-        marketSelectionListHeader = new HBox(channelTitle);
-        marketSelectionListHeader.setMinHeight(HEADER_HEIGHT);
-        marketSelectionListHeader.setMaxHeight(HEADER_HEIGHT);
-        marketSelectionListHeader.setAlignment(Pos.CENTER_LEFT);
-        marketSelectionListHeader.setPadding(new Insets(12.5, 25, 12.5, 25));
-        marketSelectionListHeader.getStyleClass().add("chat-header-title");
+        HBox header = new HBox(channelTitle);
+        header.setMinHeight(HEADER_HEIGHT);
+        header.setMaxHeight(HEADER_HEIGHT);
+        header.setAlignment(Pos.CENTER_LEFT);
+        header.setPadding(new Insets(12.5, 25, 12.5, 25));
+        header.getStyleClass().add("chat-header-title");
+
+        marketSelectorSearchBox = new SearchBox();
+        marketSelectorSearchBox.getStyleClass().add("market-selection-search-box");
+        HBox subheader = new HBox(marketSelectorSearchBox);
+        subheader.maxHeight(30);
+        subheader.setPadding(new Insets(4, 10, 4, 5));
+        subheader.getStyleClass().add("market-selection-subheader");
 
         tableView = new BisqTableView<>(getModel().getSortedMarketChannelItems());
         tableView.getStyleClass().add("market-selection-list");
@@ -199,7 +212,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         offerButtonContainer.setAlignment(Pos.CENTER);
         offerButtonContainer.setPadding(new Insets(14, 20, 14, 20));
 
-        marketSelectionList = new VBox(marketSelectionListHeader, Layout.hLine(), tableView, offerButtonContainer);
+        marketSelectionList = new VBox(header, Layout.hLine(), subheader, tableView, offerButtonContainer);
         marketSelectionList.setPrefWidth(210);
         marketSelectionList.setMinWidth(210);
         marketSelectionList.setFillWidth(true);
