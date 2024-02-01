@@ -25,6 +25,8 @@ import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.main.content.chat.ChatView;
 import bisq.i18n.Res;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.StringExpression;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
@@ -293,12 +295,18 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
                 if (item != null && !empty) {
                     market.setText(item.getMarket().getQuoteCurrencyCode());
                     market.setGraphic(item.getIcon());
-                    int numMessages = bisqEasyOfferbookController.getNumMessages(item.getMarket());
-                    numOffers.setText(getFormattedOfferNumber(numMessages));
-                    tooltip.setText(getFormattedTooltip(numMessages, item));
+                    StringExpression formattedNumOffers = Bindings.createStringBinding(() ->
+                            getFormattedOfferNumber(item.getNumOffers().get()), item.getNumOffers());
+                    numOffers.textProperty().bind(formattedNumOffers);
+                    StringExpression formattedTooltip = Bindings.createStringBinding(() ->
+                            getFormattedTooltip(item.getNumOffers().get(), item), item.getNumOffers());
+                    tooltip.textProperty().bind(formattedTooltip);
                     tooltip.setStyle("-fx-text-fill: -fx-dark-text-color;");
                     setGraphic(hBox);
                 } else {
+                    numOffers.textProperty().unbind();
+                    tooltip.textProperty().unbind();
+
                     setGraphic(null);
                 }
             }
