@@ -161,13 +161,16 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
             }
         });
 
-        offers.setOnAction(e -> sortTableViewColumn(BisqEasyOfferbookUtil.SortByNumOffers()));
-        nameAZ.setOnAction(e -> sortTableViewColumn(BisqEasyOfferbookUtil.SortByMarketNameAsc()));
-        nameZA.setOnAction(e -> sortTableViewColumn(BisqEasyOfferbookUtil.SortByMarketNameDesc()));
+        offers.setOnAction(e -> sortTableViewColumn(BisqEasyOfferbookUtil.SortByMarketActivity(), offers));
+        nameAZ.setOnAction(e -> sortTableViewColumn(BisqEasyOfferbookUtil.SortByMarketNameAsc(), nameAZ));
+        nameZA.setOnAction(e -> sortTableViewColumn(BisqEasyOfferbookUtil.SortByMarketNameDesc(), nameZA));
         createOfferButton.setOnAction(e -> getController().onCreateOffer());
+
+        sortTableViewColumn(BisqEasyOfferbookUtil.SortByMarketActivity(), offers);
     }
 
-    private void sortTableViewColumn(Comparator<MarketChannelItem> comparator) {
+    private void sortTableViewColumn(Comparator<MarketChannelItem> comparator, MenuItem menuItem) {
+        dropdownMenu.setLabel(menuItem.getText());
         tableView.getSortOrder().clear();
         marketsTableColumn.setComparator(comparator);
         tableView.getSortOrder().add(marketsTableColumn);
@@ -191,6 +194,11 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
 
         selectedModelItemPin.unsubscribe();
         tableViewSelectionPin.unsubscribe();
+
+        offers.setOnAction(null);
+        nameAZ.setOnAction(null);
+        nameZA.setOnAction(null);
+        createOfferButton.setOnAction(null);
     }
 
     private BisqEasyOfferbookModel getModel() {
@@ -212,15 +220,16 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         marketSelectorSearchBox = new SearchBox();
         marketSelectorSearchBox.getStyleClass().add("market-selection-search-box");
 
-        dropdownMenu = new DropdownMenu("arrow-down", "arrow-down");
+        dropdownMenu = new DropdownMenu("arrow-down", "arrow-down", false);
+        dropdownMenu.getStyleClass().add("market-selection-dropdown-menu");
         offers = new MenuItem(Res.get("bisqEasy.offerbook.dropdownMenu.offers"));
         nameAZ = new MenuItem(Res.get("bisqEasy.offerbook.dropdownMenu.nameAZ"));
         nameZA = new MenuItem(Res.get("bisqEasy.offerbook.dropdownMenu.nameZA"));
         dropdownMenu.addMenuItems(offers, nameAZ, nameZA);
 
-        HBox subheader = new HBox(10, marketSelectorSearchBox, dropdownMenu);
+        HBox subheader = new HBox(5, marketSelectorSearchBox, dropdownMenu);
         subheader.maxHeight(30);
-        subheader.setPadding(new Insets(4, 10, 4, 5));
+        subheader.setPadding(new Insets(4, 5, 4, 5));
         subheader.getStyleClass().add("market-selection-subheader");
 
         tableView = new BisqTableView<>(getModel().getSortedMarketChannelItems());

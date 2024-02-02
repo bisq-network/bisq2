@@ -131,8 +131,13 @@
     -fx-border-width: 0;
     -fx-border-radius: 0;
     -fx-padding: 0;
-    -fx-min-width: 100;
-    -fx-max-width: 100;
+    -fx-min-width: 95;
+    -fx-max-width: 95;
+}
+
+.market-selection-dropdown-menu {
+    -fx-min-width: 95;
+    -fx-max-width: 95;
 }
 
 .market-selection-list .table-cell {

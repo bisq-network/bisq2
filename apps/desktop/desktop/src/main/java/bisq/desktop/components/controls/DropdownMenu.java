@@ -18,49 +18,58 @@
 package bisq.desktop.components.controls;
 
 import bisq.desktop.common.utils.ImageUtil;
+import javafx.beans.value.WeakChangeListener;
 import javafx.geometry.Bounds;
-import javafx.scene.control.*;
+import javafx.geometry.Pos;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
 import javafx.stage.PopupWindow;
 import javafx.stage.WindowEvent;
 
-public class DropdownMenu extends Button {
+public class DropdownMenu extends HBox {
+    private final Label label = new Label();
+    private final ImageView defaultIcon, activeIcon;
     private final ContextMenu contextMenu = new ContextMenu();
+    private ImageView buttonIcon;
 
-    public DropdownMenu(String regularIconId, String hoveringIconId) {
-        ImageView regularIcon = ImageUtil.getImageViewById(regularIconId);
-        ImageView hoveringIcon = ImageUtil.getImageViewById(hoveringIconId);
-        setGraphic(regularIcon);
+    public DropdownMenu(String defaultIconId, String activeIconId, boolean useIconOnly) {
+        defaultIcon = ImageUtil.getImageViewById(defaultIconId);
+        activeIcon = ImageUtil.getImageViewById(activeIconId);
+
+        buttonIcon = defaultIcon;
+
+        getChildren().addAll(label, buttonIcon);
 
         getStyleClass().add("dropdown-menu");
-
-        double size = 29;
-        setMaxSize(size, size);
-        setMinSize(size, size);
-        setPrefSize(size, size);
-
-        attachHideListeners();
-        setOnAction(event -> toggleContextMenu());
-
         contextMenu.getStyleClass().add("dropdown-menu-popup");
-        contextMenu.setOnShowing(e -> {
-            getStyleClass().add("dropdown-menu-active");
-            setGraphic(hoveringIcon);
-        });
-        contextMenu.setOnHidden(e -> {
-            getStyleClass().remove("dropdown-menu-active");
-            setGraphic(regularIcon);
-        });
-        setOnMouseExited(e -> setGraphic(contextMenu.isShowing() ? hoveringIcon : regularIcon));
-        setOnMouseEntered(e -> setGraphic(hoveringIcon));
+
+        if (useIconOnly) {
+            double size = 29;
+            setMaxSize(size, size);
+            setMinSize(size, size);
+            setPrefSize(size, size);
+            setAlignment(Pos.CENTER);
+        } else {
+            setSpacing(5);
+            setAlignment(Pos.CENTER_RIGHT);
+        }
+
+        attachListeners();
+    }
+
+    public void setLabel(String text) {
+        label.setText(text);
     }
 
     private void toggleContextMenu() {
         if (!contextMenu.isShowing()) {
             contextMenu.setAnchorLocation(PopupWindow.AnchorLocation.WINDOW_TOP_RIGHT);
             Bounds bounds = this.localToScreen(this.getBoundsInLocal());
-            double x = bounds.getMaxX() - 10; // Removing padding
-            double y = bounds.getMaxY() - 3;
+            double x = bounds.getMaxX();
+            double y = bounds.getMaxY() + 10;
             contextMenu.show(this, x, y);
         } else {
             contextMenu.hide();
@@ -75,15 +84,36 @@ public class DropdownMenu extends Button {
         contextMenu.getItems().clear();
     }
 
-    private void attachHideListeners() {
-        this.sceneProperty().addListener((observable, oldScene, newScene) -> {
+    private void attachListeners() {
+        setOnMouseClicked(event -> toggleContextMenu());
+        setOnMouseExited(e -> updateIcon(contextMenu.isShowing() ? activeIcon : defaultIcon));
+        setOnMouseEntered(e -> updateIcon(activeIcon));
+
+        sceneProperty().addListener(new WeakChangeListener<>((observable, oldScene, newScene) -> {
             if (newScene != null) {
-                newScene.windowProperty().addListener((obs, oldWindow, newWindow) -> {
+                newScene.windowProperty().addListener(new WeakChangeListener<>((obs, oldWindow, newWindow) -> {
                     if (newWindow != null) {
                         newWindow.addEventHandler(WindowEvent.WINDOW_HIDING, e -> contextMenu.hide());
                     }
-                });
+                }));
             }
+        }));
+
+        contextMenu.setOnShowing(e -> {
+            getStyleClass().add("dropdown-menu-active");
+            updateIcon(activeIcon);
         });
+        contextMenu.setOnHidden(e -> {
+            getStyleClass().remove("dropdown-menu-active");
+            updateIcon(defaultIcon);
+        });
+    }
+
+    private void updateIcon(ImageView newIcon) {
+        if (buttonIcon != newIcon) {
+            getChildren().remove(buttonIcon);
+            buttonIcon = newIcon;
+            getChildren().add(buttonIcon);
+        }
     }
 }
