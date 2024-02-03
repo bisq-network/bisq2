@@ -34,6 +34,7 @@ public class CssConfig {
                 requireNonNull(aClass.getResource("/css/user.css")).toExternalForm(),
                 requireNonNull(aClass.getResource("/css/bisq_easy.css")).toExternalForm(),
                 requireNonNull(aClass.getResource("/css/trade_apps.css")).toExternalForm(),
-                requireNonNull(aClass.getResource("/css/images.css")).toExternalForm());
+                requireNonNull(aClass.getResource("/css/images.css")).toExternalForm(),
+                requireNonNull(aClass.getResource("/css/markets.css")).toExternalForm());
     }
 }

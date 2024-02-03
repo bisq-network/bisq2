@@ -697,22 +697,6 @@
     -fx-image: url("/images/markets/market-xmr.png");
 }
 
-#test {
-    -fx-image: url("/images/markets/test/BSQ-30.png");
-}
-
-#test2 {
-    -fx-image: url("/images/markets/test/EUR-30.png");
-}
-
-#test3 {
-    -fx-image: url("/images/markets/test/USD-30.png");
-}
-
-#test4 {
-    -fx-image: url("/images/markets/test/BTC-30.png");
-}
-
 
 /* ------------------------------------------------------------------------------------ */
 /* Learn */

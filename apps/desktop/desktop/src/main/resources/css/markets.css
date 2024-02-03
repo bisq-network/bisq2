@@ -1,0 +1,595 @@
+/* ------------------------------------------------------------------------------------ */
+/* Fiat                                                                                 */
+/* ------------------------------------------------------------------------------------ */
+
+#market-aed {
+    -fx-image: url("/images/markets/fiat-logos/market-aed.png");
+}
+
+#market-afn {
+    -fx-image: url("/images/markets/fiat-logos/market-afn.png");
+}
+
+#market-all {
+    -fx-image: url("/images/markets/fiat-logos/market-all.png");
+}
+
+#market-amd {
+    -fx-image: url("/images/markets/fiat-logos/market-amd.png");
+}
+
+#market-aoa {
+    -fx-image: url("/images/markets/fiat-logos/market-aoa.png");
+}
+
+#market-ars {
+    -fx-image: url("/images/markets/fiat-logos/market-ars.png");
+}
+
+#market-aud {
+    -fx-image: url("/images/markets/fiat-logos/market-aud.png");
+}
+
+#market-awg {
+    -fx-image: url("/images/markets/fiat-logos/market-awg.png");
+}
+
+#market-azn {
+    -fx-image: url("/images/markets/fiat-logos/market-azn.png");
+}
+
+#market-bam {
+    -fx-image: url("/images/markets/fiat-logos/market-bam.png");
+}
+
+#market-bbd {
+    -fx-image: url("/images/markets/fiat-logos/market-bbd.png");
+}
+
+#market-bdt {
+    -fx-image: url("/images/markets/fiat-logos/market-bdt.png");
+}
+
+#market-bgn {
+    -fx-image: url("/images/markets/fiat-logos/market-bgn.png");
+}
+
+#market-bhd {
+    -fx-image: url("/images/markets/fiat-logos/market-bhd.png");
+}
+
+#market-bif {
+    -fx-image: url("/images/markets/fiat-logos/market-bif.png");
+}
+
+#market-bmd {
+    -fx-image: url("/images/markets/fiat-logos/market-bmd.png");
+}
+
+#market-bnd {
+    -fx-image: url("/images/markets/fiat-logos/market-bnd.png");
+}
+
+#market-bob {
+    -fx-image: url("/images/markets/fiat-logos/market-bob.png");
+}
+
+#market-brl {
+    -fx-image: url("/images/markets/fiat-logos/market-brl.png");
+}
+
+#market-bsd {
+    -fx-image: url("/images/markets/fiat-logos/market-bsd.png");
+}
+
+#market-btn {
+    -fx-image: url("/images/markets/fiat-logos/market-btn.png");
+}
+
+#market-bwp {
+    -fx-image: url("/images/markets/fiat-logos/market-bwp.png");
+}
+
+#market-byn {
+    -fx-image: url("/images/markets/fiat-logos/market-byn.png");
+}
+
+#market-bzd {
+    -fx-image: url("/images/markets/fiat-logos/market-bzd.png");
+}
+
+#market-cad {
+    -fx-image: url("/images/markets/fiat-logos/market-cad.png");
+}
+
+#market-chf {
+    -fx-image: url("/images/markets/fiat-logos/market-chf.png");
+}
+
+#market-clp {
+    -fx-image: url("/images/markets/fiat-logos/market-clp.png");
+}
+
+#market-cny {
+    -fx-image: url("/images/markets/fiat-logos/market-cny.png");
+}
+
+#market-cop {
+    -fx-image: url("/images/markets/fiat-logos/market-cop.png");
+}
+
+#market-crc {
+    -fx-image: url("/images/markets/fiat-logos/market-crc.png");
+}
+
+#market-cup {
+    -fx-image: url("/images/markets/fiat-logos/market-cup.png");
+}
+
+#market-cve {
+    -fx-image: url("/images/markets/fiat-logos/market-cve.png");
+}
+
+#market-czk {
+    -fx-image: url("/images/markets/fiat-logos/market-czk.png");
+}
+
+#market-djf {
+    -fx-image: url("/images/markets/fiat-logos/market-djf.png");
+}
+
+#market-dkk {
+    -fx-image: url("/images/markets/fiat-logos/market-dkk.png");
+}
+
+#market-dop {
+    -fx-image: url("/images/markets/fiat-logos/market-dop.png");
+}
+
+#market-dzd {
+    -fx-image: url("/images/markets/fiat-logos/market-dzd.png");
+}
+
+#market-egp {
+    -fx-image: url("/images/markets/fiat-logos/market-egp.png");
+}
+
+#market-ern {
+    -fx-image: url("/images/markets/fiat-logos/market-ern.png");
+}
+
+#market-etb {
+    -fx-image: url("/images/markets/fiat-logos/market-etb.png");
+}
+
+#market-eur {
+    -fx-image: url("/images/markets/fiat-logos/market-eur.png");
+}
+
+#market-fjd {
+    -fx-image: url("/images/markets/fiat-logos/market-fjd.png");
+}
+
+#market-fkp {
+    -fx-image: url("/images/markets/fiat-logos/market-fkp.png");
+}
+
+#market-gbp {
+    -fx-image: url("/images/markets/fiat-logos/market-gbp.png");
+}
+
+#market-gel {
+    -fx-image: url("/images/markets/fiat-logos/market-gel.png");
+}
+
+#market-ghs {
+    -fx-image: url("/images/markets/fiat-logos/market-ghs.png");
+}
+
+#market-gip {
+    -fx-image: url("/images/markets/fiat-logos/market-gip.png");
+}
+
+#market-gmd {
+    -fx-image: url("/images/markets/fiat-logos/market-gmd.png");
+}
+
+#market-gnf {
+    -fx-image: url("/images/markets/fiat-logos/market-gnf.png");
+}
+
+#market-gtq {
+    -fx-image: url("/images/markets/fiat-logos/market-gtq.png");
+}
+
+#market-gyd {
+    -fx-image: url("/images/markets/fiat-logos/market-gyd.png");
+}
+
+#market-hkd {
+    -fx-image: url("/images/markets/fiat-logos/market-hkd.png");
+}
+
+#market-hnl {
+    -fx-image: url("/images/markets/fiat-logos/market-hnl.png");
+}
+
+#market-htg {
+    -fx-image: url("/images/markets/fiat-logos/market-htg.png");
+}
+
+#market-huf {
+    -fx-image: url("/images/markets/fiat-logos/market-huf.png");
+}
+
+#market-idr {
+    -fx-image: url("/images/markets/fiat-logos/market-idr.png");
+}
+
+#market-ils {
+    -fx-image: url("/images/markets/fiat-logos/market-ils.png");
+}
+
+#market-inr {
+    -fx-image: url("/images/markets/fiat-logos/market-inr.png");
+}
+
+#market-iqd {
+    -fx-image: url("/images/markets/fiat-logos/market-iqd.png");
+}
+
+#market-irr {
+    -fx-image: url("/images/markets/fiat-logos/market-irr.png");
+}
+
+#market-isk {
+    -fx-image: url("/images/markets/fiat-logos/market-isk.png");
+}
+
+#market-jmd {
+    -fx-image: url("/images/markets/fiat-logos/market-jmd.png");
+}
+
+#market-jod {
+    -fx-image: url("/images/markets/fiat-logos/market-jod.png");
+}
+
+#market-jpy {
+    -fx-image: url("/images/markets/fiat-logos/market-jpy.png");
+}
+
+#market-kes {
+    -fx-image: url("/images/markets/fiat-logos/market-kes.png");
+}
+
+#market-kgs {
+    -fx-image: url("/images/markets/fiat-logos/market-kgs.png");
+}
+
+#market-khr {
+    -fx-image: url("/images/markets/fiat-logos/market-khr.png");
+}
+
+#market-kmf {
+    -fx-image: url("/images/markets/fiat-logos/market-kmf.png");
+}
+
+#market-kpw {
+    -fx-image: url("/images/markets/fiat-logos/market-kpw.png");
+}
+
+#market-krw {
+    -fx-image: url("/images/markets/fiat-logos/market-krw.png");
+}
+
+#market-kwd {
+    -fx-image: url("/images/markets/fiat-logos/market-kwd.png");
+}
+
+#market-kyd {
+    -fx-image: url("/images/markets/fiat-logos/market-kyd.png");
+}
+
+#market-kzt {
+    -fx-image: url("/images/markets/fiat-logos/market-kzt.png");
+}
+
+#market-lak {
+    -fx-image: url("/images/markets/fiat-logos/market-lak.png");
+}
+
+#market-lbp {
+    -fx-image: url("/images/markets/fiat-logos/market-lbp.png");
+}
+
+#market-lkr {
+    -fx-image: url("/images/markets/fiat-logos/market-lkr.png");
+}
+
+#market-lrd {
+    -fx-image: url("/images/markets/fiat-logos/market-lrd.png");
+}
+
+#market-lsl {
+    -fx-image: url("/images/markets/fiat-logos/market-lsl.png");
+}
+
+#market-lyd {
+    -fx-image: url("/images/markets/fiat-logos/market-lyd.png");
+}
+
+#market-mad {
+    -fx-image: url("/images/markets/fiat-logos/market-mad.png");
+}
+
+#market-mdl {
+    -fx-image: url("/images/markets/fiat-logos/market-mdl.png");
+}
+
+#market-mga {
+    -fx-image: url("/images/markets/fiat-logos/market-mga.png");
+}
+
+#market-mmk {
+    -fx-image: url("/images/markets/fiat-logos/market-mmk.png");
+}
+
+#market-mnt {
+    -fx-image: url("/images/markets/fiat-logos/market-mnt.png");
+}
+
+#market-mop {
+    -fx-image: url("/images/markets/fiat-logos/market-mop.png");
+}
+
+#market-mru {
+    -fx-image: url("/images/markets/fiat-logos/market-mru.png");
+}
+
+#market-mur {
+    -fx-image: url("/images/markets/fiat-logos/market-mur.png");
+}
+
+#market-mvr {
+    -fx-image: url("/images/markets/fiat-logos/market-mvr.png");
+}
+
+#market-mwk {
+    -fx-image: url("/images/markets/fiat-logos/market-mwk.png");
+}
+
+#market-mxn {
+    -fx-image: url("/images/markets/fiat-logos/market-mxn.png");
+}
+
+#market-myr {
+    -fx-image: url("/images/markets/fiat-logos/market-myr.png");
+}
+
+#market-mzn {
+    -fx-image: url("/images/markets/fiat-logos/market-mzn.png");
+}
+
+#market-nad {
+    -fx-image: url("/images/markets/fiat-logos/market-nad.png");
+}
+
+#market-ngn {
+    -fx-image: url("/images/markets/fiat-logos/market-ngn.png");
+}
+
+#market-nio {
+    -fx-image: url("/images/markets/fiat-logos/market-nio.png");
+}
+
+#market-nok {
+    -fx-image: url("/images/markets/fiat-logos/market-nok.png");
+}
+
+#market-npr {
+    -fx-image: url("/images/markets/fiat-logos/market-npr.png");
+}
+
+#market-nzd {
+    -fx-image: url("/images/markets/fiat-logos/market-nzd.png");
+}
+
+#market-omr {
+    -fx-image: url("/images/markets/fiat-logos/market-omr.png");
+}
+
+#market-pab {
+    -fx-image: url("/images/markets/fiat-logos/market-pab.png");
+}
+
+#market-pen {
+    -fx-image: url("/images/markets/fiat-logos/market-pen.png");
+}
+
+#market-pgk {
+    -fx-image: url("/images/markets/fiat-logos/market-pgk.png");
+}
+
+#market-php {
+    -fx-image: url("/images/markets/fiat-logos/market-php.png");
+}
+
+#market-pkr {
+    -fx-image: url("/images/markets/fiat-logos/market-pkr.png");
+}
+
+#market-pln {
+    -fx-image: url("/images/markets/fiat-logos/market-pln.png");
+}
+
+#market-pyg {
+    -fx-image: url("/images/markets/fiat-logos/market-pyg.png");
+}
+
+#market-qar {
+    -fx-image: url("/images/markets/fiat-logos/market-qar.png");
+}
+
+#market-ron {
+    -fx-image: url("/images/markets/fiat-logos/market-ron.png");
+}
+
+#market-rsd {
+    -fx-image: url("/images/markets/fiat-logos/market-rsd.png");
+}
+
+#market-rub {
+    -fx-image: url("/images/markets/fiat-logos/market-rub.png");
+}
+
+#market-rwf {
+    -fx-image: url("/images/markets/fiat-logos/market-rwf.png");
+}
+
+#market-sar {
+    -fx-image: url("/images/markets/fiat-logos/market-sar.png");
+}
+
+#market-sbd {
+    -fx-image: url("/images/markets/fiat-logos/market-sbd.png");
+}
+
+#market-scr {
+    -fx-image: url("/images/markets/fiat-logos/market-scr.png");
+}
+
+#market-sdg {
+    -fx-image: url("/images/markets/fiat-logos/market-sdg.png");
+}
+
+#market-sek {
+    -fx-image: url("/images/markets/fiat-logos/market-sek.png");
+}
+
+#market-sgd {
+    -fx-image: url("/images/markets/fiat-logos/market-sgd.png");
+}
+
+#market-sle {
+    -fx-image: url("/images/markets/fiat-logos/market-sle.png");
+}
+
+#market-sos {
+    -fx-image: url("/images/markets/fiat-logos/market-sos.png");
+}
+
+#market-srd {
+    -fx-image: url("/images/markets/fiat-logos/market-srd.png");
+}
+
+#market-ssp {
+    -fx-image: url("/images/markets/fiat-logos/market-ssp.png");
+}
+
+#market-stn {
+    -fx-image: url("/images/markets/fiat-logos/market-stn.png");
+}
+
+#market-svc {
+    -fx-image: url("/images/markets/fiat-logos/market-svc.png");
+}
+
+#market-syp {
+    -fx-image: url("/images/markets/fiat-logos/market-syp.png");
+}
+
+#market-szl {
+    -fx-image: url("/images/markets/fiat-logos/market-szl.png");
+}
+
+#market-thb {
+    -fx-image: url("/images/markets/fiat-logos/market-thb.png");
+}
+
+#market-tjs {
+    -fx-image: url("/images/markets/fiat-logos/market-tjs.png");
+}
+
+#market-tmt {
+    -fx-image: url("/images/markets/fiat-logos/market-tmt.png");
+}
+
+#market-tnd {
+    -fx-image: url("/images/markets/fiat-logos/market-tnd.png");
+}
+
+#market-top {
+    -fx-image: url("/images/markets/fiat-logos/market-top.png");
+}
+
+#market-try {
+    -fx-image: url("/images/markets/fiat-logos/market-try.png");
+}
+
+#market-ttd {
+    -fx-image: url("/images/markets/fiat-logos/market-ttd.png");
+}
+
+#market-twd {
+    -fx-image: url("/images/markets/fiat-logos/market-twd.png");
+}
+
+#market-tzs {
+    -fx-image: url("/images/markets/fiat-logos/market-tzs.png");
+}
+
+#market-uah {
+    -fx-image: url("/images/markets/fiat-logos/market-uah.png");
+}
+
+#market-ugx {
+    -fx-image: url("/images/markets/fiat-logos/market-ugx.png");
+}
+
+#market-usd {
+    -fx-image: url("/images/markets/fiat-logos/market-usd.png");
+}
+
+#market-uyu {
+    -fx-image: url("/images/markets/fiat-logos/market-uyu.png");
+}
+
+#market-uzs {
+    -fx-image: url("/images/markets/fiat-logos/market-uzs.png");
+}
+
+#market-ves {
+    -fx-image: url("/images/markets/fiat-logos/market-ves.png");
+}
+
+#market-vnd {
+    -fx-image: url("/images/markets/fiat-logos/market-vnd.png");
+}
+
+#market-vuv {
+    -fx-image: url("/images/markets/fiat-logos/market-vuv.png");
+}
+
+#market-wst {
+    -fx-image: url("/images/markets/fiat-logos/market-wst.png");
+}
+
+#market-xaf {
+    -fx-image: url("/images/markets/fiat-logos/market-xaf.png");
+}
+
+#market-yer {
+    -fx-image: url("/images/markets/fiat-logos/market-yer.png");
+}
+
+#market-zar {
+    -fx-image: url("/images/markets/fiat-logos/market-zar.png");
+}
+
+#market-zmw {
+    -fx-image: url("/images/markets/fiat-logos/market-zmw.png");
+}
+
+#market-zwl {
+    -fx-image: url("/images/markets/fiat-logos/market-zwl.png");
+}
