@@ -36,17 +36,18 @@ import java.lang.ref.WeakReference;
 public class MarketChannelItem {
     private final BisqEasyOfferbookChannel channel;
     private final Market market;
-    private final ImageView icon;
+    private final ImageView marketLogo;
     private final IntegerProperty numOffers = new SimpleIntegerProperty(0);
 
     public MarketChannelItem(BisqEasyOfferbookChannel channel) {
         this.channel = channel;
         market = channel.getMarket();
 
-        String iconId = String.format("market-%s", market.getQuoteCurrencyCode().toLowerCase());
-        icon = ImageUtil.getImageViewById(iconId);
-        icon.setCache(true);
-        icon.setCacheHint(CacheHint.SPEED);
+        String marketCode = market.getQuoteCurrencyCode().toLowerCase();
+        String iconId = String.format("market-%s", marketCode);
+        marketLogo = ImageUtil.getImageViewById(iconId);
+        marketLogo.setCache(true);
+        marketLogo.setCacheHint(CacheHint.SPEED);
 
         channel.getChatMessages().addObserver(new WeakReference<Runnable>(this::updateNumOffers).get());
         updateNumOffers();

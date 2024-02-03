@@ -7,12 +7,15 @@ import bisq.desktop.common.utils.ImageUtil;
 import bisq.security.DigestUtil;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Circle;
+import javafx.scene.text.Text;
 import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigInteger;
@@ -116,12 +119,7 @@ public class MarketImageComposition {
             circle.setFill(Paint.valueOf("#3D8603"));
         } else {
             circle.setFill(Paint.valueOf("#FF0000"));
-            ColorAdjust colorAdjust = new ColorAdjust();
-            colorAdjust.setSaturation(-0.25);
-            colorAdjust.setBrightness(-0.5);
-            double hue = new BigInteger(DigestUtil.sha256(symbolOrCode.getBytes())).mod(BigInteger.valueOf(100000)).doubleValue() / 100000;
-            colorAdjust.setHue(hue);
-            circle.setEffect(colorAdjust);
+            circle.setEffect(createColorAdjust(symbolOrCode));
         }
 
         StackPane.setAlignment(label, Pos.CENTER);
@@ -130,5 +128,29 @@ public class MarketImageComposition {
         pane.setTranslateX(6.5);
 
         return pane;
+    }
+
+    public static Label createMarketLogoPlaceholder(String marketCode) {
+        Circle circle = new Circle(15);
+        circle.setFill(Paint.valueOf("#FF0000"));
+        circle.setEffect(createColorAdjust(marketCode));
+
+        Text text = new Text(marketCode.substring(0, Math.min(3, marketCode.length())));
+        text.getStyleClass().setAll("fiat-code");
+
+        Label label = new Label("", new Circle(15, Color.LIGHTGRAY));
+        label.setGraphic(circle);
+        label.setText(text.getText());
+        label.setContentDisplay(ContentDisplay.CENTER);
+        return label;
+    }
+
+    private static ColorAdjust createColorAdjust(String code) {
+        ColorAdjust colorAdjust = new ColorAdjust();
+        colorAdjust.setSaturation(-0.25);
+        colorAdjust.setBrightness(-0.5);
+        double hue = new BigInteger(DigestUtil.sha256(code.getBytes())).mod(BigInteger.valueOf(100000)).doubleValue() / 100000;
+        colorAdjust.setHue(hue);
+        return colorAdjust;
     }
 }
