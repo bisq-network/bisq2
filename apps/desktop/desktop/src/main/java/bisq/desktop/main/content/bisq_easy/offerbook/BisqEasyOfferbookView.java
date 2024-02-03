@@ -18,21 +18,16 @@
 package bisq.desktop.main.content.bisq_easy.offerbook;
 
 import bisq.desktop.common.Layout;
-import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.DropdownMenu;
 import bisq.desktop.components.controls.SearchBox;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.main.content.chat.ChatView;
 import bisq.i18n.Res;
-import javafx.beans.binding.Bindings;
-import javafx.beans.binding.StringExpression;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Cursor;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
-import javafx.util.Callback;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -48,7 +43,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     private SearchBox marketSelectorSearchBox;
     private Label chatDomainTitle;
     private BisqTableView<MarketChannelItem> tableView;
-    private BisqTableColumn<MarketChannelItem> marketsTableColumn;
+    private BisqTableColumn<MarketChannelItem> marketLabelTableColumn;
     private VBox marketSelectionList;
     private Subscription tableViewSelectionPin, selectedModelItemPin;
     private Button createOfferButton;
@@ -172,8 +167,8 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     private void sortTableViewColumn(Comparator<MarketChannelItem> comparator, MenuItem menuItem) {
         dropdownMenu.setLabel(menuItem.getText());
         tableView.getSortOrder().clear();
-        marketsTableColumn.setComparator(comparator);
-        tableView.getSortOrder().add(marketsTableColumn);
+        marketLabelTableColumn.setComparator(comparator);
+        tableView.getSortOrder().add(marketLabelTableColumn);
     }
 
     @Override
@@ -236,6 +231,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         tableView.getStyleClass().add("market-selection-list");
         tableView.allowVerticalScrollbar();
         tableView.hideHorizontalScrollbar();
+        tableView.setFixedCellSize(53);
         configTableView();
         VBox.setVgrow(tableView, Priority.ALWAYS);
 
@@ -264,14 +260,21 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     }
 
     private void configTableView() {
-        tableView.getColumns().add(tableView.getSelectionMarkerColumn());
+        BisqTableColumn<MarketChannelItem> marketLogoTableColumn = new BisqTableColumn.Builder<MarketChannelItem>()
+                .fixWidth(50)
+                .setCellFactory(BisqEasyOfferbookUtil.getMarketLogoCellFactory())
+                .isSortable(false)
+                .build();
 
-        marketsTableColumn = new BisqTableColumn.Builder<MarketChannelItem>()
+        marketLabelTableColumn = new BisqTableColumn.Builder<MarketChannelItem>()
                 .minWidth(100)
                 .left()
-                .setCellFactory(getMarketChannelItemCellFactory())
+                .setCellFactory(BisqEasyOfferbookUtil.getMarketLabelCellFactory())
                 .build();
-        tableView.getColumns().add(marketsTableColumn);
+
+        tableView.getColumns().add(tableView.getSelectionMarkerColumn());
+        tableView.getColumns().add(marketLogoTableColumn);
+        tableView.getColumns().add(marketLabelTableColumn);
     }
 
     private void addChatBox() {
@@ -309,68 +312,5 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         centerVBox.getChildren().addAll(titleHBox, Layout.hLine(), chatMessagesComponent);
         centerVBox.getStyleClass().add("bisq-easy-container");
         centerVBox.setAlignment(Pos.CENTER);
-    }
-
-    private Callback<TableColumn<MarketChannelItem, MarketChannelItem>,
-            TableCell<MarketChannelItem, MarketChannelItem>> getMarketChannelItemCellFactory() {
-        return column -> new TableCell<>() {
-            private final Label market = new Label();
-            private final Label numOffers = new Label();
-            private final HBox hBox = new HBox(10, market, numOffers);
-            private final Tooltip tooltip = new BisqTooltip();
-
-            {
-                market.setGraphicTextGap(10);
-                setCursor(Cursor.HAND);
-                hBox.setPadding(new Insets(10));
-                //hBox.setStyle("-fx-background-color: black;");
-                hBox.setAlignment(Pos.CENTER_LEFT);
-                Tooltip.install(hBox, tooltip);
-            }
-
-            @Override
-            protected void updateItem(MarketChannelItem item, boolean empty) {
-                super.updateItem(item, empty);
-                if (item != null && !empty) {
-                    market.setText(item.getMarket().getQuoteCurrencyCode());
-                    market.setGraphic(item.getIcon());
-                    StringExpression formattedNumOffers = Bindings.createStringBinding(() ->
-                            getFormattedOfferNumber(item.getNumOffers().get()), item.getNumOffers());
-                    numOffers.textProperty().bind(formattedNumOffers);
-                    StringExpression formattedTooltip = Bindings.createStringBinding(() ->
-                            getFormattedTooltip(item.getNumOffers().get(), item), item.getNumOffers());
-                    tooltip.textProperty().bind(formattedTooltip);
-                    tooltip.setStyle("-fx-text-fill: -fx-dark-text-color;");
-
-                    setGraphic(hBox);
-                } else {
-                    numOffers.textProperty().unbind();
-                    tooltip.textProperty().unbind();
-
-                    setGraphic(null);
-                }
-            }
-
-            private String getFormattedOfferNumber(int numMessages) {
-                if (numMessages == 0) {
-                    return "";
-                }
-                return String.format("(%s)",
-                        numMessages > 1
-                                ? Res.get("bisqEasy.offerbook.marketListCell.numOffers.many", numMessages)
-                                : Res.get("bisqEasy.offerbook.marketListCell.numOffers.one", numMessages)
-                );
-            }
-
-            private String getFormattedTooltip(int numMessages, MarketChannelItem item) {
-                String quoteCurrencyName = item.getMarket().getQuoteCurrencyName();
-                if (numMessages == 0) {
-                    return Res.get("bisqEasy.offerbook.marketListCell.numOffers.tooltip.none", quoteCurrencyName);
-                }
-                return numMessages > 1
-                        ? Res.get("bisqEasy.offerbook.marketListCell.numOffers.tooltip.many", numMessages, quoteCurrencyName)
-                        : Res.get("bisqEasy.offerbook.marketListCell.numOffers.tooltip.one", numMessages, quoteCurrencyName);
-            }
-        };
     }
 }

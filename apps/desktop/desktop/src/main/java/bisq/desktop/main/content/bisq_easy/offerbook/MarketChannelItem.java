@@ -24,6 +24,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.scene.CacheHint;
 import javafx.scene.image.ImageView;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -42,13 +43,10 @@ public class MarketChannelItem {
         this.channel = channel;
         market = channel.getMarket();
 
-        // FIXME: Temporarily setting images to test resolution
-        icon = market.getQuoteCurrencyCode().equals("EUR") ? ImageUtil.getImageViewById("test2")
-                : market.getQuoteCurrencyCode().equals("USD") ? ImageUtil.getImageViewById("test3")
-                : market.getQuoteCurrencyCode().equals("CAD") ? ImageUtil.getImageViewById("test4")
-                : ImageUtil.getImageViewById("test");
-
-        //icon = ImageUtil.getImageViewById("test");
+        String iconId = String.format("market-%s", market.getQuoteCurrencyCode().toLowerCase());
+        icon = ImageUtil.getImageViewById(iconId);
+        icon.setCache(true);
+        icon.setCacheHint(CacheHint.SPEED);
 
         channel.getChatMessages().addObserver(new WeakReference<Runnable>(this::updateNumOffers).get());
         updateNumOffers();
