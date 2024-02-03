@@ -179,11 +179,16 @@
     -fx-border-width: 0;
 }
 
-/* Keep for testing */
-/*.market-selection-list .table-cell {*/
-/*    -fx-border-width: 1;*/
-/*    -fx-border-color: blue;*/
-/*}*/
+.market-selection-list .table-cell {
+    /*-fx-border-width: 1;*/
+    /*-fx-border-color: blue;*/
+    -fx-padding: 0;
+}
+
+.market-selection-list .table-cell .text {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+}
 
 .create-offer-button {
     -fx-background-color: -fx-default-button;

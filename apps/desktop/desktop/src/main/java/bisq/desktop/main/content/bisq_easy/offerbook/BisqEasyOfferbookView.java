@@ -199,7 +199,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
 
     private void configTableView() {
         BisqTableColumn<MarketChannelItem> marketLogoTableColumn = new BisqTableColumn.Builder<MarketChannelItem>()
-                .fixWidth(50)
+                .fixWidth(55)
                 .setCellFactory(BisqEasyOfferbookUtil.getMarketLogoCellFactory())
                 .isSortable(false)
                 .build();

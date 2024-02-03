@@ -12,6 +12,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 
 import java.util.Comparator;
@@ -65,23 +66,26 @@ public class BisqEasyOfferbookUtil {
     public static Callback<TableColumn<MarketChannelItem, MarketChannelItem>,
             TableCell<MarketChannelItem, MarketChannelItem>> getMarketLabelCellFactory() {
         return column -> new TableCell<>() {
-            private final Label market = new Label();
+            private final Label marketName = new Label();
+            private final Label marketCode = new Label();
             private final Label numOffers = new Label();
-            private final HBox hBox = new HBox(10, market, numOffers);
+            private final HBox hBox = new HBox(10, marketCode, numOffers);
+            private final VBox vBox = new VBox(0, marketName, hBox);
             private final Tooltip tooltip = new BisqTooltip();
 
             {
                 setCursor(Cursor.HAND);
-                hBox.setPadding(new Insets(10));
                 hBox.setAlignment(Pos.CENTER_LEFT);
-                Tooltip.install(hBox, tooltip);
+                vBox.setAlignment(Pos.CENTER_LEFT);
+                Tooltip.install(vBox, tooltip);
             }
 
             @Override
             protected void updateItem(MarketChannelItem item, boolean empty) {
                 super.updateItem(item, empty);
                 if (item != null && !empty) {
-                    market.setText(item.getMarket().getQuoteCurrencyCode());
+                    marketName.setText(item.getMarket().getQuoteCurrencyName());
+                    marketCode.setText(item.getMarket().getQuoteCurrencyCode());
                     StringExpression formattedNumOffers = Bindings.createStringBinding(() ->
                             BisqEasyOfferbookUtil.getFormattedOfferNumber(item.getNumOffers().get()), item.getNumOffers());
                     numOffers.textProperty().bind(formattedNumOffers);
@@ -90,7 +94,7 @@ public class BisqEasyOfferbookUtil {
                     tooltip.textProperty().bind(formattedTooltip);
                     tooltip.setStyle("-fx-text-fill: -fx-dark-text-color;");
 
-                    setGraphic(hBox);
+                    setGraphic(vBox);
                 } else {
                     numOffers.textProperty().unbind();
                     tooltip.textProperty().unbind();
