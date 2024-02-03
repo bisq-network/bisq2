@@ -190,6 +190,11 @@
     -fx-text-fill: -fx-mid-text-color;
 }
 
+.market-selection-list .market-name .text {
+    -fx-fill: -fx-light-text-color !important;
+    -fx-text-fill: -fx-light-text-color !important;
+}
+
 .create-offer-button {
     -fx-background-color: -fx-default-button;
     -fx-text-fill: -fx-light-text-color;

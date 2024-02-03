@@ -75,6 +75,7 @@ public class BisqEasyOfferbookUtil {
 
             {
                 setCursor(Cursor.HAND);
+                marketName.getStyleClass().add("market-name");
                 hBox.setAlignment(Pos.CENTER_LEFT);
                 vBox.setAlignment(Pos.CENTER_LEFT);
                 Tooltip.install(vBox, tooltip);

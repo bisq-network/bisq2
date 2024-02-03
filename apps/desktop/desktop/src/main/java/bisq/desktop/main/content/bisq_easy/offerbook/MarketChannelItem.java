@@ -25,6 +25,7 @@ import bisq.desktop.common.utils.ImageUtil;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.scene.CacheHint;
+import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.ImageView;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -48,6 +49,9 @@ public class MarketChannelItem {
         marketLogo = ImageUtil.getImageViewById(iconId);
         marketLogo.setCache(true);
         marketLogo.setCacheHint(CacheHint.SPEED);
+        ColorAdjust colorAdjust = new ColorAdjust();
+        colorAdjust.setBrightness(-0.1);
+        marketLogo.setEffect(colorAdjust);
 
         channel.getChatMessages().addObserver(new WeakReference<Runnable>(this::updateNumOffers).get());
         updateNumOffers();
