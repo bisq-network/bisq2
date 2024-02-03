@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.offerbook;
 
 import bisq.desktop.common.Layout;
+import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.DropdownMenu;
 import bisq.desktop.components.controls.SearchBox;
 import bisq.desktop.components.table.BisqTableColumn;
@@ -160,7 +161,8 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         nameZA = new MenuItem(Res.get("bisqEasy.offerbook.dropdownMenu.nameZA"));
         dropdownMenu.addMenuItems(offers, nameAZ, nameZA);
 
-        HBox subheader = new HBox(5, marketSelectorSearchBox, dropdownMenu);
+        HBox subheader = new HBox(marketSelectorSearchBox, Spacer.fillHBox(), dropdownMenu);
+        dropdownMenu.setMaxWidth(Double.MAX_VALUE);
         subheader.getStyleClass().add("market-selection-subheader");
 
         tableView = new BisqTableView<>(getModel().getSortedMarketChannelItems());
