@@ -135,13 +135,28 @@
     -fx-max-width: 95;
 }
 
+.market-selection-search-box .search-text-field {
+    -fx-padding: 0 0 0 5;
+}
+
 .market-selection-dropdown-menu {
     -fx-min-width: 95;
     -fx-max-width: 95;
 }
 
-.market-selection-list .table-cell {
+.market-selection-list .column-header-background {
+    -fx-max-height: 0;
+    -fx-pref-height: 0;
+    -fx-min-height: 0;
+}
+
+.market-selection-list {
+    -fx-background-insets: 0;
     -fx-padding: 0;
+}
+
+.market-selection-list .table-row-cell {
+    -fx-border-width: 0;
 }
 
 .create-offer-button {

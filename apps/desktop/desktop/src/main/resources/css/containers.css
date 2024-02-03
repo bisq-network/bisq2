@@ -175,6 +175,14 @@
     -fx-opacity: 0;
 }
 
+.force-hide-horizontal-scrollbar *.scroll-bar:horizontal {
+    -fx-max-height: 0;
+    -fx-pref-height: 0;
+    -fx-min-height: 0;
+    -fx-opacity: 0;
+    -fx-visible: false;
+}
+
 /* column-header */
 .table-view .column-header {
     -fx-background-color: transparent;

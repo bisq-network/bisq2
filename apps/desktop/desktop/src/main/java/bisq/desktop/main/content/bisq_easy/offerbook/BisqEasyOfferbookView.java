@@ -235,6 +235,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         tableView = new BisqTableView<>(getModel().getSortedMarketChannelItems());
         tableView.getStyleClass().add("market-selection-list");
         tableView.allowVerticalScrollbar();
+        tableView.hideHorizontalScrollbar();
         configTableView();
         VBox.setVgrow(tableView, Priority.ALWAYS);
 

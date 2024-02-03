@@ -20,6 +20,7 @@ package bisq.desktop.components.controls;
 import bisq.desktop.common.utils.ImageUtil;
 import javafx.beans.value.WeakChangeListener;
 import javafx.geometry.Bounds;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
@@ -55,6 +56,7 @@ public class DropdownMenu extends HBox {
         } else {
             setSpacing(5);
             setAlignment(Pos.CENTER_RIGHT);
+            setPadding(new Insets(0, 5, 0, 0));
         }
 
         attachListeners();
