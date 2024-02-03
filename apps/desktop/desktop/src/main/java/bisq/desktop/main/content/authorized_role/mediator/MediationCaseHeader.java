@@ -164,7 +164,7 @@ public class MediationCaseHeader {
             root.setMaxHeight(HEIGHT);
             root.setAlignment(Pos.CENTER_LEFT);
             root.setPadding(new Insets(0, 30, 0, 30));
-            root.getStyleClass().add("bisq-easy-container-header");
+            root.getStyleClass().add("chat-container-header");
 
             tradeId = getElements(Res.get("bisqEasy.tradeState.header.tradeId"));
 
