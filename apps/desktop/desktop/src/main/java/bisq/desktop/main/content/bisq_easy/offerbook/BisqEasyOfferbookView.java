@@ -47,7 +47,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     private Button createOfferButton;
     private DropdownMenu dropdownMenu;
     private MenuItem offers, nameAZ, nameZA;
-    private CheckBox offersOnlySwitch;
+    private CheckBox hideUserMessagesCheckbox;
 
     public BisqEasyOfferbookView(BisqEasyOfferbookModel model,
                                  BisqEasyOfferbookController controller,
@@ -91,7 +91,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     protected void onViewAttached() {
         super.onViewAttached();
 
-        offersOnlySwitch.selectedProperty().bindBidirectional(bisqEasyOfferbookModel.getOfferOnly());
+        hideUserMessagesCheckbox.selectedProperty().bindBidirectional(bisqEasyOfferbookModel.getOfferOnly());
         marketSelectorSearchBox.textProperty().bindBidirectional(getModel().getMarketSelectorSearchText());
 
         selectedModelItemPin = EasyBind.subscribe(getModel().getSelectedMarketChannelItem(), selected -> {
@@ -122,7 +122,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     protected void onViewDetached() {
         super.onViewDetached();
 
-        offersOnlySwitch.selectedProperty().unbindBidirectional(bisqEasyOfferbookModel.getOfferOnly());
+        hideUserMessagesCheckbox.selectedProperty().unbindBidirectional(bisqEasyOfferbookModel.getOfferOnly());
         marketSelectorSearchBox.textProperty().unbindBidirectional(getModel().getMarketSelectorSearchText());
 
         selectedModelItemPin.unsubscribe();
@@ -217,9 +217,13 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         centerVBox.setSpacing(0);
         centerVBox.setFillWidth(true);
 
-        offersOnlySwitch = new CheckBox(Res.get("bisqEasy.topPane.filter.offersOnly"));
+        Label label = new Label(Res.get("bisqEasy.topPane.filter.hideUserMessages"));
+        hideUserMessagesCheckbox = new CheckBox();
+        HBox checkbox = new HBox(5, label, hideUserMessagesCheckbox);
+        checkbox.getStyleClass().add("market-selection-subheader-checkbox");
+        checkbox.setAlignment(Pos.CENTER);
 
-        HBox subheaderContent = new HBox(5, offersOnlySwitch);
+        HBox subheaderContent = new HBox(5, checkbox);
         subheaderContent.getStyleClass().add("market-selection-subheader-content");
         HBox.setHgrow(subheaderContent, Priority.ALWAYS);
 

@@ -129,6 +129,22 @@
     -fx-pref-height: 30;
 }
 
+.market-selection-subheader-checkbox .check-box {
+    -fx-scale-x: 0.6;
+    -fx-scale-y: 0.6;
+}
+
+.market-selection-subheader-checkbox .label {
+    -fx-text-fill: -fx-mid-text-color;
+}
+
+.market-selection-subheader-checkbox .check-box > .box {
+    -fx-background-color: transparent;
+    -fx-background-radius: 0;
+    -fx-border-color: -bisq-mid-grey-20;
+    -fx-border-width: 1;
+}
+
 .market-selection-search-box {
     -fx-background-radius: 0;
     -fx-background-color: -bisq-dark-grey-40;
