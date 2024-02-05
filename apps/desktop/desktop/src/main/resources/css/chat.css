@@ -414,7 +414,15 @@
 }
 
 .chat-messages-badge.bisq-badge .badge-pane {
-    -fx-background-color: -bisq-mid-grey-10;
+    -fx-background-color: transparent;
+}
+
+.chat-messages-badge.bisq-badge .badge-pane .label .text {
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.chat-messages-badge.bisq-badge .badge-pane .label {
+    -fx-text-fill: -fx-mid-text-color !important;
 }
 
 

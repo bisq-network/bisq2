@@ -687,18 +687,19 @@ public class ChatMessagesListView {
             VBox.setVgrow(listView, Priority.ALWAYS);
 
             scrollDownImageView = new ImageView();
-            scrollDownImageView.setCursor(Cursor.HAND);
-            scrollDownTooltip = new BisqTooltip(Res.get("chat.listView.scrollDown"));
-            Tooltip.install(scrollDownImageView, scrollDownTooltip);
 
             scrollDownBadge = new Badge(scrollDownImageView);
             scrollDownBadge.setMaxSize(25, 25);
             scrollDownBadge.getStyleClass().add("chat-messages-badge");
             scrollDownBadge.setPosition(Pos.BOTTOM_RIGHT);
-            scrollDownBadge.setBadgeInsets(new Insets(0, -5, -8, 0));
+            scrollDownBadge.setBadgeInsets(new Insets(20, 10, 0, 50));
+            scrollDownBadge.setCursor(Cursor.HAND);
 
-            StackPane.setAlignment(scrollDownBadge, Pos.BOTTOM_RIGHT);
-            StackPane.setMargin(scrollDownBadge, new Insets(0, 25, 20, 0));
+            scrollDownTooltip = new BisqTooltip(Res.get("chat.listView.scrollDown"));
+            Tooltip.install(scrollDownBadge, scrollDownTooltip);
+
+            StackPane.setAlignment(scrollDownBadge, Pos.BOTTOM_CENTER);
+            StackPane.setMargin(scrollDownBadge, new Insets(0, 0, 10, 0));
             root.setAlignment(Pos.CENTER);
             root.getChildren().addAll(listView, scrollDownBadge);
         }
@@ -748,7 +749,7 @@ public class ChatMessagesListView {
                 }
             });
 
-            scrollDownImageView.setOnMouseClicked(e -> controller.onScrollToBottom());
+            scrollDownBadge.setOnMouseClicked(e -> controller.onScrollToBottom());
 
             UIThread.runOnNextRenderFrame(this::adjustPadding);
 
@@ -770,7 +771,7 @@ public class ChatMessagesListView {
             hasUnreadMessagesPin.unsubscribe();
             showScrolledDownButtonPin.unsubscribe();
 
-            scrollDownImageView.setOnMouseClicked(null);
+            scrollDownBadge.setOnMouseClicked(null);
             if (fadeInScrollDownBadgeTimeline != null) {
                 fadeInScrollDownBadgeTimeline.stop();
                 fadeInScrollDownBadgeTimeline = null;
