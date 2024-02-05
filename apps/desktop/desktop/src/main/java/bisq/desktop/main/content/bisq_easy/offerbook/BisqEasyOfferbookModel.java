@@ -17,11 +17,9 @@
 
 package bisq.desktop.main.content.bisq_easy.offerbook;
 
-import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatChannelDomain;
-import bisq.desktop.main.content.chat.BaseChatModel;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
+import bisq.desktop.main.content.chat.ChatModel;
+import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -31,19 +29,16 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public final class BisqEasyOfferbookModel extends BaseChatModel {
+public final class BisqEasyOfferbookModel extends ChatModel {
     private final BooleanProperty offerOnly = new SimpleBooleanProperty();
     private final BooleanProperty isTradeChannelVisible = new SimpleBooleanProperty();
     private final BooleanProperty showFilterOverlay = new SimpleBooleanProperty();
     private final ObservableList<MarketChannelItem> marketChannelItems = FXCollections.observableArrayList();
     private final FilteredList<MarketChannelItem> filteredMarketChannelItems = new FilteredList<>(marketChannelItems);
     private final SortedList<MarketChannelItem> sortedMarketChannelItems = new SortedList<>(filteredMarketChannelItems);
+    private final ObjectProperty<MarketChannelItem> selectedMarketChannelItem = new SimpleObjectProperty<>();
+    private final StringProperty marketSelectorSearchText = new SimpleStringProperty();
     public BisqEasyOfferbookModel(ChatChannelDomain chatChannelDomain) {
         super(chatChannelDomain);
-    }
-
-    @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.NONE;
     }
 }

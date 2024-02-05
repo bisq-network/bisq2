@@ -19,6 +19,7 @@ package bisq.desktop.main.content.chat;
 
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.NavigationView;
+import bisq.desktop.components.controls.DropdownMenu;
 import bisq.desktop.components.controls.SearchBox;
 import bisq.i18n.Res;
 import javafx.scene.control.*;
@@ -47,7 +48,7 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
     protected Pane chatUserOverviewRoot;
     protected Subscription channelIconPin, chatUserOverviewRootSubscription;
     protected final SearchBox searchBox = new SearchBox();
-    protected final DropdownMenu headerDropdownMenu = new DropdownMenu("ellipsis-v", "ellipsis-v-white");
+    protected final DropdownMenu headerDropdownMenu = new DropdownMenu("ellipsis-v", "ellipsis-v-white", true);
 
     public BaseChatView(BaseChatModel model,
                         BaseChatController<?, ?> controller,

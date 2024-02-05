@@ -7,11 +7,6 @@
     -fx-background-radius: 8;
 }
 
-.bisq-easy-container-header {
-    -fx-background-color: -bisq-dark-grey-20;
-    -fx-background-radius: 8 8 0 0;
-}
-
 .bisq-easy-container-headline {
     -fx-fill: -fx-light-text-color;
     -fx-text-fill: -fx-light-text-color;
@@ -118,6 +113,86 @@
 
 .market-selector-icon {
     -fx-text-fill: -bisq2-green;
+}
+
+.market-selection-subheader-content {
+    -fx-max-width: 1200;
+    -fx-alignment: center-right;
+    -fx-padding: 0 25 0 25;
+}
+
+.market-selection-subheader {
+    -fx-background-color: -bisq-dark-grey-30;
+    -fx-background-radius: 0;
+    -fx-max-height: 30;
+    -fx-min-height: 30;
+    -fx-pref-height: 30;
+    -fx-padding: 2 12 2 7;
+}
+
+.market-selection-subheader-checkbox .check-box {
+    -fx-scale-x: 0.6;
+    -fx-scale-y: 0.6;
+}
+
+.market-selection-subheader-checkbox .label {
+    -fx-text-fill: -fx-mid-text-color;
+}
+
+.market-selection-subheader-checkbox .check-box > .box {
+    -fx-background-color: transparent;
+    -fx-background-radius: 0;
+    -fx-border-color: -bisq-mid-grey-20;
+    -fx-border-width: 1;
+}
+
+.market-selection-search-box {
+    -fx-background-radius: 0;
+    -fx-background-color: -bisq-dark-grey-30;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-border-radius: 0;
+    -fx-padding: 0;
+    -fx-max-width: 95;
+}
+
+.market-selection-search-box .search-text-field {
+    -fx-padding: 0 5 0 5;
+}
+
+.market-selection-dropdown-menu {
+    -fx-padding: 0 10 0 10;
+}
+
+.market-selection-list .column-header-background {
+    -fx-max-height: 0;
+    -fx-pref-height: 0;
+    -fx-min-height: 0;
+}
+
+.market-selection-list {
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.market-selection-list .table-row-cell {
+    -fx-border-width: 0;
+}
+
+.market-selection-list .table-cell {
+    /*-fx-border-width: 1;*/
+    /*-fx-border-color: blue;*/
+    -fx-padding: 0;
+}
+
+.market-selection-list .table-cell .text {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+}
+
+.market-selection-list .market-name .text {
+    -fx-fill: -fx-light-text-color !important;
+    -fx-text-fill: -fx-light-text-color !important;
 }
 
 .create-offer-button {
@@ -612,21 +687,6 @@
 .bisq-easy-chat-sidebar-bg {
     -fx-background-color: -bisq-dark-grey-20;
     -fx-background-radius: 8 8 0 0;
-}
-
-.bisq-easy-chat-filter-panel-bg {
-    -fx-background-color: rgba(255, 255, 255, 0.05);
-    -fx-background-radius: 4;
-    -fx-background-insets: 0 25 10 25;
-    -fx-border-color: transparent;
-    -fx-border-insets: 0 25 10 25;
-}
-
-.bisq-easy-chat-filter-headline {
-    -fx-fill: -fx-light-text-color;
-    -fx-text-fill: -fx-light-text-color;
-    -fx-font-family: "IBM Plex Sans Light";
-    -fx-font-size: 1.4em;
 }
 
 

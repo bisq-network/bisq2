@@ -100,6 +100,14 @@ public class BisqTableView<T> extends TableView<T> {
         getStyleClass().remove("hide-vertical-scrollbar");
     }
 
+    public void hideHorizontalScrollbar() {
+        getStyleClass().add("force-hide-horizontal-scrollbar");
+    }
+
+    public void allowHorizontalScrollbar() {
+        getStyleClass().remove("force-hide-horizontal-scrollbar");
+    }
+
     public void removeListeners() {
         if (listChangeListener != null) {
             getItems().removeListener(listChangeListener);

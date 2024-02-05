@@ -39,7 +39,6 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.overlay.Popup;
-import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardController;
 import bisq.desktop.main.content.chat.ChatUtil;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
@@ -77,7 +76,6 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -217,11 +215,9 @@ public class ChatMessagesComponent {
                 model.selectedChannel.set(chatChannel);
                 applyUserProfileOrChannelChange();
 
-                boolean isBisqEasyPublicChatChannel = chatChannel instanceof BisqEasyOfferbookChannel;
                 boolean isBisqEasyPrivateTradeChatChannel = chatChannel instanceof BisqEasyOpenTradeChannel;
                 boolean isTwoPartyPrivateChatChannel = chatChannel instanceof TwoPartyPrivateChatChannel;
                 model.getLeaveChannelButtonVisible().set(false);
-                model.getCreateOfferButtonVisible().set(isBisqEasyPublicChatChannel);
                 model.getOpenDisputeButtonVisible().set(isBisqEasyPrivateTradeChatChannel);
                 model.getSendBtcAddressButtonVisible().set(false);
                 model.getSendPaymentAccountButtonVisible().set(false);
@@ -373,13 +369,6 @@ public class ChatMessagesComponent {
                     });
         }
 
-        void onCreateOffer() {
-            ChatChannel<?> chatChannel = model.getSelectedChannel().get();
-            checkArgument(chatChannel instanceof BisqEasyOfferbookChannel,
-                    "channel must be instanceof BisqEasyPublicChatChannel at onCreateOfferButtonClicked");
-            Navigation.navigateTo(NavigationTarget.TRADE_WIZARD, new TradeWizardController.InitData(true));
-        }
-
         private void onSendMessage(String text) {
             if (text == null || text.isEmpty()) {
                 return;
@@ -484,7 +473,6 @@ public class ChatMessagesComponent {
     @Getter
     private static class Model implements bisq.desktop.common.view.Model {
         private final BooleanProperty leaveChannelButtonVisible = new SimpleBooleanProperty();
-        private final BooleanProperty createOfferButtonVisible = new SimpleBooleanProperty();
         private final BooleanProperty openDisputeButtonVisible = new SimpleBooleanProperty();
         private final BooleanProperty sendBtcAddressButtonVisible = new SimpleBooleanProperty();
         private final BooleanProperty sendPaymentAccountButtonVisible = new SimpleBooleanProperty();
@@ -541,7 +529,7 @@ public class ChatMessagesComponent {
         private ChatMentionPopupMenu<UserProfile> userMentionPopup;
         private ChatMentionPopupMenu<ChatChannel<?>> channelMentionPopup;
         private Pane userProfileSelectionRoot;
-        private Button leaveChannelButton, createOfferButton;
+        private Button leaveChannelButton;
 
         private View(Model model,
                      Controller controller,
@@ -602,10 +590,6 @@ public class ChatMessagesComponent {
             channelMentionPopup.setItems(model.mentionableChatChannels);
 
             createChatDialogEnabledSubscription();
-
-            createOfferButton.visibleProperty().bind(model.getCreateOfferButtonVisible());
-            createOfferButton.managedProperty().bind(model.getCreateOfferButtonVisible());
-            createOfferButton.setOnAction(e -> controller.onCreateOffer());
         }
 
         @Override
@@ -617,18 +601,14 @@ public class ChatMessagesComponent {
             inputField.textProperty().unbindBidirectional(model.getTextInput());
             userMentionPopup.filterProperty().unbind();
             channelMentionPopup.filterProperty().unbind();
-            createOfferButton.visibleProperty().unbind();
-            createOfferButton.managedProperty().unbind();
             removeChatDialogEnabledSubscription();
 
             inputField.setOnKeyPressed(null);
             sendButton.setOnAction(null);
             leaveChannelButton.setOnAction(null);
-            createOfferButton.setOnAction(null);
         }
 
         private VBox createAndGetBottomBar(UserProfileSelection userProfileSelection) {
-            createOfferButton = createAndGetCreateOfferButton();
             setUpUserProfileSelection(userProfileSelection);
             HBox sendMessageBox = createAndGetSendMessageBox();
 
@@ -636,7 +616,7 @@ public class ChatMessagesComponent {
             leaveChannelButton = createAndGetChatButton(Res.get("chat.leave"), 120);
 
             HBox bottomBar = new HBox(10);
-            bottomBar.getChildren().addAll(createOfferButton, userProfileSelectionRoot, sendMessageBox, leaveChannelButton);
+            bottomBar.getChildren().addAll(userProfileSelectionRoot, sendMessageBox, leaveChannelButton);
             bottomBar.setMaxWidth(CHAT_BOX_MAX_WIDTH);
             bottomBar.setPadding(new Insets(14, 20, 14, 20));
             bottomBar.setAlignment(Pos.BOTTOM_CENTER);
@@ -676,18 +656,6 @@ public class ChatMessagesComponent {
             channelMentionPopup = new ChatMentionPopupMenu<>(inputField);
             channelMentionPopup.setItemDisplayConverter(model::getChannelTitle);
             channelMentionPopup.setSelectionHandler(controller::listChannelsHandler);
-        }
-
-        private Button createAndGetCreateOfferButton() {
-            Button createOfferButton = new Button(Res.get("offer.createOffer"));
-            createOfferButton.getStyleClass().addAll("create-offer-button", "normal-text");
-            createOfferButton.setMinWidth(170);
-
-            double height = 45;
-            createOfferButton.setMinHeight(height);
-            createOfferButton.setMaxHeight(height);
-            createOfferButton.setPrefHeight(height);
-            return createOfferButton;
         }
 
         private void setUpUserProfileSelection(UserProfileSelection userProfileSelection) {

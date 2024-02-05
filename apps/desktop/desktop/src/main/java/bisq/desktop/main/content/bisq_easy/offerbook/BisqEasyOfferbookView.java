@@ -17,48 +17,44 @@
 
 package bisq.desktop.main.content.bisq_easy.offerbook;
 
-import bisq.desktop.common.Icons;
 import bisq.desktop.common.Layout;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.controls.BisqTooltip;
-import bisq.desktop.components.controls.ComboBoxWithSearch;
-import bisq.desktop.main.content.chat.BaseChatView;
+import bisq.desktop.components.controls.DropdownMenu;
+import bisq.desktop.components.controls.SearchBox;
+import bisq.desktop.components.table.BisqTableColumn;
+import bisq.desktop.components.table.BisqTableView;
+import bisq.desktop.main.content.chat.ChatView;
 import bisq.i18n.Res;
-import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Cursor;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.Tooltip;
+import javafx.scene.control.*;
 import javafx.scene.layout.*;
-import javafx.scene.text.Text;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
+
+import java.util.Comparator;
 
 @Slf4j
-public final class BisqEasyOfferbookView extends BaseChatView {
-    private static final double CHAT_BOX_MAX_WIDTH = 1200;
-    // private static double filterPaneHeight;
-
+public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView, BisqEasyOfferbookModel> {
     private final BisqEasyOfferbookModel bisqEasyOfferbookModel;
     private final BisqEasyOfferbookController bisqEasyOfferbookController;
-    //private Switch offersOnlySwitch;
-    //private Button closeFilterButton, filterButton;
+    private SearchBox marketSelectorSearchBox;
+    private Label chatDomainTitle;
+    private BisqTableView<MarketChannelItem> tableView;
+    private BisqTableColumn<MarketChannelItem> marketLabelTableColumn;
+    private VBox marketSelectionList;
+    private Subscription tableViewSelectionPin, selectedModelItemPin;
+    private Button createOfferButton;
+    private DropdownMenu dropdownMenu;
+    private MenuItem offers, nameAZ, nameZA;
+    private CheckBox hideUserMessagesCheckbox;
 
-    private Label marketSelectorIcon;
-
-    //private Pane filterPane;
-   /* private Subscription showFilterOverlayPin;
-    private Subscription filterPaneHeightPin;
-*/
     public BisqEasyOfferbookView(BisqEasyOfferbookModel model,
                                  BisqEasyOfferbookController controller,
                                  VBox chatMessagesComponent,
                                  Pane channelSidebar) {
-        super(model,
-                controller,
-                chatMessagesComponent,
-                channelSidebar);
+        super(model, controller, chatMessagesComponent, channelSidebar);
 
         bisqEasyOfferbookController = controller;
         bisqEasyOfferbookModel = model;
@@ -66,229 +62,182 @@ public final class BisqEasyOfferbookView extends BaseChatView {
 
     @Override
     protected void configTitleHBox() {
-        titleHBox.setAlignment(Pos.CENTER);
-        titleHBox.setPadding(new Insets(12.5, 25, 12.5, 25));
-        titleHBox.getStyleClass().add("bisq-easy-container-header");
-        titleHBox.setMinHeight(HEADER_HEIGHT);
-        titleHBox.setMaxHeight(HEADER_HEIGHT);
-        titleHBox.setMaxWidth(CHAT_BOX_MAX_WIDTH);
+        super.configTitleHBox();
 
-        channelTitle.getStyleClass().add("chat-header-title");
-        channelTitle.setCursor(Cursor.HAND);
-        channelTitle.setMinWidth(81);
+        chatDomainTitle = new Label(Res.get("bisqEasy.offerbook"));
+        chatDomainTitle.getStyleClass().add("chat-header-title");
 
-        marketSelectorIcon = Icons.getIcon(AwesomeIcon.CHEVRON_DOWN, "12");
-        marketSelectorIcon.getStyleClass().add("market-selector-icon");
-        marketSelectorIcon.setCursor(Cursor.HAND);
-        marketSelectorIcon.setPadding(new Insets(0, 15, 0, 7));
-        marketSelectorIcon.setTooltip(new BisqTooltip(Res.get("bisqEasy.offerbook.selectMarket"), true));
-
-        channelDescription.getStyleClass().addAll("chat-header-description");
-
-        HBox headerTitle = new HBox(channelTitle, marketSelectorIcon, channelDescription);
+        HBox headerTitle = new HBox(10, chatDomainTitle, channelDescription);
         headerTitle.setAlignment(Pos.BASELINE_LEFT);
         headerTitle.setPadding(new Insets(7, 0, 0, 0));
         HBox.setHgrow(headerTitle, Priority.ALWAYS);
 
-        searchBox.setMaxWidth(200);
-        double searchBoxHeight = 29;
-        searchBox.setMinHeight(searchBoxHeight);
-        searchBox.setMaxHeight(searchBoxHeight);
-        searchBox.setPrefHeight(searchBoxHeight);
-
-        HBox.setMargin(channelTitle, new Insets(0, -10, 0, 4));
-        titleHBox.getChildren().addAll(headerTitle, searchBox, headerDropdownMenu);
+        titleHBox.getChildren().setAll(headerTitle, searchBox, headerDropdownMenu);
     }
 
     @Override
     protected void configCenterVBox() {
-        centerVBox.setSpacing(0);
-        centerVBox.setFillWidth(true);
-
-       /* filterButton = new Button(Res.get("bisqEasy.topPane.filter"));
-        ImageView filterIcon = ImageUtil.getImageViewById("filter");
-        filterIcon.setOpacity(0.3);
-        filterButton.setAlignment(Pos.CENTER_LEFT);
-        filterButton.setTextAlignment(TextAlignment.LEFT);
-        filterButton.setPadding(new Insets(0, -110, 0, 0));
-        filterButton.setGraphic(filterIcon);
-        filterButton.setGraphicTextGap(10);
-        filterButton.getStyleClass().add("grey-transparent-outlined-button");
-        filterButton.setStyle("-fx-padding: 5 12 5 12;");*/
-
-        // offersOnlySwitch = new Switch(Res.get("bisqEasy.topPane.filter.offersOnly"));
-
-       /* Label filterLabel = new Label(Res.get("bisqEasy.topPane.filter"));
-        filterLabel.getStyleClass().add("bisq-easy-chat-filter-headline");
-        closeFilterButton = BisqIconButton.createIconButton("close");*/
-
-       /* HBox.setMargin(closeFilterButton, new Insets(0, 0, 0, 0));
-        HBox headlineAndCloseButton = new HBox(filterLabel, Spacer.fillHBox(), closeFilterButton);
-        headlineAndCloseButton.setAlignment(Pos.CENTER);*/
-
-      /*  filterPane = new VBox(20, headlineAndCloseButton, searchBox, offersOnlySwitch);
-        filterPane.getStyleClass().add("bisq-easy-chat-filter-panel-bg");
-        filterPane.setPadding(new Insets(10));*/
-
-        chatMessagesComponent.setMinWidth(700);
-
-        VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
-        centerVBox.getChildren().addAll(titleHBox, Layout.hLine(), chatMessagesComponent);
-        centerVBox.getStyleClass().add("bisq-easy-container");
-        centerVBox.setAlignment(Pos.CENTER);
-    }
-
-    @Override
-    protected void configSideBarVBox() {
-        sideBar.getChildren().add(channelSidebar);
-        sideBar.getStyleClass().add("bisq-easy-chat-sidebar-bg");
-        sideBar.setAlignment(Pos.TOP_RIGHT);
-        sideBar.setFillWidth(true);
+        addMarketSelectionList();
+        addChatBox();
     }
 
     @Override
     protected void configContainerHBox() {
-        containerHBox.setSpacing(10);
-        containerHBox.setFillHeight(true);
-        Layout.pinToAnchorPane(containerHBox, 0, 0, 0, 0);
+        super.configContainerHBox();
 
-        AnchorPane wrapper = new AnchorPane();
-        wrapper.setPadding(new Insets(0, 40, 0, 40));
-        wrapper.getChildren().add(containerHBox);
-
-        root.setContent(wrapper);
-
-        HBox.setHgrow(centerVBox, Priority.ALWAYS);
-        HBox.setHgrow(sideBar, Priority.NEVER);
-        containerHBox.getChildren().addAll(centerVBox, sideBar);
-        containerHBox.setAlignment(Pos.CENTER);
+        containerHBox.getChildren().setAll(marketSelectionList, centerVBox, sideBar);
     }
 
     @Override
     protected void onViewAttached() {
         super.onViewAttached();
 
-        // offersOnlySwitch.selectedProperty().bindBidirectional(bisqEasyOfferbookModel.getOfferOnly());
+        hideUserMessagesCheckbox.selectedProperty().bindBidirectional(bisqEasyOfferbookModel.getOfferOnly());
+        marketSelectorSearchBox.textProperty().bindBidirectional(getModel().getMarketSelectorSearchText());
 
-      /*  if (filterPaneHeight == 0) {
-            filterPaneHeightPin = EasyBind.subscribe(filterPane.heightProperty(), h -> {
-                if (h.doubleValue() > 0) {
-                    filterPaneHeight = h.doubleValue();
-                    double target = bisqEasyOfferbookModel.getShowFilterOverlay().get() ? filterPaneHeight : 0;
-                    filterPane.setMinHeight(target);
-                    filterPane.setMaxHeight(target);
-                    filterPaneHeightPin.unsubscribe();
-                }
-            });
-        } else {
-            double target = bisqEasyOfferbookModel.getShowFilterOverlay().get() ? filterPaneHeight : 0;
-            filterPane.setMinHeight(target);
-            filterPane.setMaxHeight(target);
-        }*/
-       /* showFilterOverlayPin = EasyBind.subscribe(bisqEasyOfferbookModel.getShowFilterOverlay(),
-                showFilterOverlay -> {
-                    if (filterPaneHeight > 0) {
-                        if (showFilterOverlay) {
-                            filterButton.setText(Res.get("bisqEasy.topPane.closeFilter"));
-                            root.getScene().setOnKeyReleased(keyEvent -> KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, bisqEasyOfferbookController::onCloseFilter));
-                        } else {
-                            filterButton.setText(Res.get("bisqEasy.topPane.filter"));
-                            root.getScene().setOnKeyReleased(null);
-                        }
-                        double target = showFilterOverlay ? filterPaneHeight : 0;
-                        if (filterPane.getMaxHeight() != target) {
-                            double start = showFilterOverlay ? 0 : filterPaneHeight;
-                            Transitions.animateMaxHeight(filterPane, start, target, Transitions.DEFAULT_DURATION / 4d, () -> {
-                            });
-                        }
-                    }
-                });*/
-
-        //  filterButton.setOnAction(e -> bisqEasyOfferbookController.onToggleFilter());
-        //  closeFilterButton.setOnAction(e -> bisqEasyOfferbookController.onCloseFilter());
-        marketSelectorIcon.setOnMouseClicked(e -> {
-            onOpenMarketSelector();
-            e.consume();
+        selectedModelItemPin = EasyBind.subscribe(getModel().getSelectedMarketChannelItem(), selected -> {
+            tableView.getSelectionModel().select(selected);
         });
-        channelTitle.setOnMouseClicked(e -> {
-            // Only handle click on text. On click of channel icon we show channel info
-            if (e.getTarget() instanceof Text) {
-                onOpenMarketSelector();
-                e.consume();
+        tableViewSelectionPin = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(), item -> {
+            if (item != null) {
+                getController().onSelectMarketChannelItem(item);
             }
         });
+
+        offers.setOnAction(e -> sortTableViewColumn(BisqEasyOfferbookUtil.SortByMarketActivity(), offers));
+        nameAZ.setOnAction(e -> sortTableViewColumn(BisqEasyOfferbookUtil.SortByMarketNameAsc(), nameAZ));
+        nameZA.setOnAction(e -> sortTableViewColumn(BisqEasyOfferbookUtil.SortByMarketNameDesc(), nameZA));
+        createOfferButton.setOnAction(e -> getController().onCreateOffer());
+
+        sortTableViewColumn(BisqEasyOfferbookUtil.SortByMarketActivity(), offers);
+    }
+
+    private void sortTableViewColumn(Comparator<MarketChannelItem> comparator, MenuItem menuItem) {
+        dropdownMenu.setLabel(menuItem.getText());
+        tableView.getSortOrder().clear();
+        marketLabelTableColumn.setComparator(comparator);
+        tableView.getSortOrder().add(marketLabelTableColumn);
     }
 
     @Override
     protected void onViewDetached() {
         super.onViewDetached();
 
-        // offersOnlySwitch.selectedProperty().unbindBidirectional(bisqEasyOfferbookModel.getOfferOnly());
+        hideUserMessagesCheckbox.selectedProperty().unbindBidirectional(bisqEasyOfferbookModel.getOfferOnly());
+        marketSelectorSearchBox.textProperty().unbindBidirectional(getModel().getMarketSelectorSearchText());
 
-        //  showFilterOverlayPin.unsubscribe();
+        selectedModelItemPin.unsubscribe();
+        tableViewSelectionPin.unsubscribe();
 
-        //  filterButton.setOnAction(null);
-        //  closeFilterButton.setOnAction(null);
-        marketSelectorIcon.setOnMouseClicked(null);
-        channelTitle.setOnMouseClicked(null);
+        offers.setOnAction(null);
+        nameAZ.setOnAction(null);
+        nameZA.setOnAction(null);
+        createOfferButton.setOnAction(null);
     }
 
-    private void onOpenMarketSelector() {
-        new ComboBoxWithSearch<>(marketSelectorIcon,
-                bisqEasyOfferbookModel.getSortedMarketChannelItems(),
-                c -> getMarketListCell(),
-                bisqEasyOfferbookController::onSwitchMarketChannel,
-                Res.get("bisqEasy.offerbook.selectMarket").toUpperCase(),
-                Res.get("action.search"),
-                350, 5, 23, 31.5)
-                .show();
+    private BisqEasyOfferbookModel getModel() {
+        return (BisqEasyOfferbookModel) model;
     }
 
-    private ListCell<MarketChannelItem> getMarketListCell() {
-        return new ListCell<>() {
-            final Label market = new Label();
-            final Label numOffers = new Label();
-            final HBox hBox = new HBox(10, market, Spacer.fillHBox(), numOffers);
-            final Tooltip tooltip = new BisqTooltip();
-
-            {
-                setCursor(Cursor.HAND);
-                setPrefHeight(40);
-                setPadding(new Insets(0, 0, -20, 0));
-
-                market.getStyleClass().add("market-selection");
-
-                hBox.setAlignment(Pos.CENTER_LEFT);
-                hBox.setPadding(new Insets(0, 10, 0, -5));
-                Tooltip.install(hBox, tooltip);
-            }
-
-            @Override
-            protected void updateItem(MarketChannelItem item, boolean empty) {
-                super.updateItem(item, empty);
-                if (item != null && !empty) {
-                    market.setText(item.getMarketString());
-                    int numMessages = bisqEasyOfferbookController.getNumMessages(item.getMarket());
-                    numOffers.setText(numMessages > 0 ?
-                            numMessages > 1 ?
-                                    Res.get("bisqEasy.offerbook.marketListCell.numOffers.many", numMessages) :
-                                    Res.get("bisqEasy.offerbook.marketListCell.numOffers.one", numMessages) :
-                            "");
-                    String quoteCurrencyName = item.getMarket().getQuoteCurrencyName();
-                    tooltip.setText(numMessages > 0 ?
-                            numMessages > 1 ?
-                                    Res.get("bisqEasy.offerbook.marketListCell.numOffers.tooltip.many",
-                                            numMessages, quoteCurrencyName) :
-                                    Res.get("bisqEasy.offerbook.marketListCell.numOffers.tooltip.one",
-                                            numMessages, quoteCurrencyName) :
-                            Res.get("bisqEasy.offerbook.marketListCell.numOffers.tooltip.none",
-                                    quoteCurrencyName));
-                    setGraphic(hBox);
-                } else {
-                    setGraphic(null);
-                }
-            }
-        };
+    private BisqEasyOfferbookController getController() {
+        return (BisqEasyOfferbookController) controller;
     }
 
+    private void addMarketSelectionList() {
+        HBox header = new HBox(channelTitle);
+        header.setMinHeight(HEADER_HEIGHT);
+        header.setMaxHeight(HEADER_HEIGHT);
+        header.setAlignment(Pos.CENTER_LEFT);
+        header.setPadding(new Insets(12.5, 25, 12.5, 25));
+        header.getStyleClass().add("chat-header-title");
+
+        marketSelectorSearchBox = new SearchBox();
+        marketSelectorSearchBox.getStyleClass().add("market-selection-search-box");
+
+        dropdownMenu = new DropdownMenu("arrow-down", "arrow-down", false);
+        dropdownMenu.getStyleClass().add("market-selection-dropdown-menu");
+        offers = new MenuItem(Res.get("bisqEasy.offerbook.dropdownMenu.offers"));
+        nameAZ = new MenuItem(Res.get("bisqEasy.offerbook.dropdownMenu.nameAZ"));
+        nameZA = new MenuItem(Res.get("bisqEasy.offerbook.dropdownMenu.nameZA"));
+        dropdownMenu.addMenuItems(offers, nameAZ, nameZA);
+
+        HBox subheader = new HBox(marketSelectorSearchBox, Spacer.fillHBox(), dropdownMenu);
+        dropdownMenu.setMaxWidth(Double.MAX_VALUE);
+        subheader.getStyleClass().add("market-selection-subheader");
+
+        tableView = new BisqTableView<>(getModel().getSortedMarketChannelItems());
+        tableView.getStyleClass().add("market-selection-list");
+        tableView.allowVerticalScrollbar();
+        tableView.hideHorizontalScrollbar();
+        tableView.setFixedCellSize(53);
+        configTableView();
+        VBox.setVgrow(tableView, Priority.ALWAYS);
+
+        createOfferButton = createAndGetCreateOfferButton();
+        HBox offerButtonContainer = new HBox(createOfferButton);
+        offerButtonContainer.setAlignment(Pos.CENTER);
+        offerButtonContainer.setPadding(new Insets(14, 20, 14, 20));
+
+        marketSelectionList = new VBox(header, Layout.hLine(), subheader, tableView, offerButtonContainer);
+        marketSelectionList.setPrefWidth(210);
+        marketSelectionList.setMinWidth(210);
+        marketSelectionList.setFillWidth(true);
+        marketSelectionList.getStyleClass().add("chat-container");
+    }
+
+    private Button createAndGetCreateOfferButton() {
+        Button createOfferButton = new Button(Res.get("offer.createOffer"));
+        createOfferButton.getStyleClass().addAll("create-offer-button", "normal-text");
+        createOfferButton.setMinWidth(170);
+
+        double height = 42;
+        createOfferButton.setMinHeight(height);
+        createOfferButton.setMaxHeight(height);
+        createOfferButton.setPrefHeight(height);
+        return createOfferButton;
+    }
+
+    private void configTableView() {
+        BisqTableColumn<MarketChannelItem> marketLogoTableColumn = new BisqTableColumn.Builder<MarketChannelItem>()
+                .fixWidth(55)
+                .setCellFactory(BisqEasyOfferbookUtil.getMarketLogoCellFactory())
+                .isSortable(false)
+                .build();
+
+        marketLabelTableColumn = new BisqTableColumn.Builder<MarketChannelItem>()
+                .minWidth(100)
+                .left()
+                .setCellFactory(BisqEasyOfferbookUtil.getMarketLabelCellFactory())
+                .build();
+
+        tableView.getColumns().add(tableView.getSelectionMarkerColumn());
+        tableView.getColumns().add(marketLogoTableColumn);
+        tableView.getColumns().add(marketLabelTableColumn);
+    }
+
+    private void addChatBox() {
+        centerVBox.setSpacing(0);
+        centerVBox.setFillWidth(true);
+
+        Label label = new Label(Res.get("bisqEasy.topPane.filter.hideUserMessages"));
+        hideUserMessagesCheckbox = new CheckBox();
+        HBox checkbox = new HBox(5, label, hideUserMessagesCheckbox);
+        checkbox.getStyleClass().add("market-selection-subheader-checkbox");
+        checkbox.setAlignment(Pos.CENTER);
+
+        HBox subheaderContent = new HBox(5, checkbox);
+        subheaderContent.getStyleClass().add("market-selection-subheader-content");
+        HBox.setHgrow(subheaderContent, Priority.ALWAYS);
+
+        HBox subheader = new HBox(subheaderContent);
+        subheader.setAlignment(Pos.CENTER);
+        subheader.getStyleClass().add("market-selection-subheader");
+
+        chatMessagesComponent.setMinWidth(700);
+
+        VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
+        centerVBox.getChildren().addAll(titleHBox, Layout.hLine(), subheader, chatMessagesComponent);
+        centerVBox.getStyleClass().add("bisq-easy-container");
+        centerVBox.setAlignment(Pos.CENTER);
+    }
 }
