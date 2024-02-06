@@ -34,6 +34,7 @@ public class BisqEasyConfirmFiatSentEventHandler extends SendTradeMessageHandler
     public void handle(Event event) {
         sendMessage(new BisqEasyConfirmFiatSentMessage(StringUtils.createUid(),
                 trade.getId(),
+                trade.getProtocolVersion(),
                 trade.getMyIdentity().getNetworkId(),
                 trade.getPeer().getNetworkId()));
     }

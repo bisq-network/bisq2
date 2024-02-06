@@ -36,6 +36,7 @@ public class BisqEasyCancelTradeEventHandler extends SendTradeMessageHandler<Bis
         commitToModel();
         sendMessage(new BisqEasyCancelTradeMessage(StringUtils.createUid(),
                 trade.getId(),
+                trade.getProtocolVersion(),
                 trade.getMyIdentity().getNetworkId(),
                 trade.getPeer().getNetworkId()));
     }

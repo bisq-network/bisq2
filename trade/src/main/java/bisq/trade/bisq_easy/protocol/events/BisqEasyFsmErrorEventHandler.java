@@ -54,6 +54,7 @@ public class BisqEasyFsmErrorEventHandler extends SendTradeMessageHandler<BisqEa
                     "errorMessage={}\nstackTrace={}", errorMessage, stackTrace);
             sendMessage(new BisqEasyReportErrorMessage(createUid(),
                     trade.getId(),
+                    trade.getProtocolVersion(),
                     trade.getMyIdentity().getNetworkId(),
                     trade.getPeer().getNetworkId(),
                     errorMessage,

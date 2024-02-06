@@ -62,6 +62,7 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
 
             BisqEasyTakeOfferResponse response = new BisqEasyTakeOfferResponse(StringUtils.createUid(),
                     trade.getId(),
+                    trade.getProtocolVersion(),
                     trade.getMyself().getNetworkId(),
                     trade.getPeer().getNetworkId(),
                     makersContractSignatureData);

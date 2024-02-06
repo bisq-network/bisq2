@@ -33,10 +33,11 @@ public final class BisqEasyConfirmBtcSentMessage extends BisqEasyTradeMessage {
 
     public BisqEasyConfirmBtcSentMessage(String id,
                                          String tradeId,
+                                         String protocolVersion,
                                          NetworkId sender,
                                          NetworkId receiver,
                                          String txId) {
-        super(id, tradeId, sender, receiver);
+        super(id, tradeId, protocolVersion, sender, receiver);
 
         this.txId = txId;
 
@@ -66,6 +67,7 @@ public final class BisqEasyConfirmBtcSentMessage extends BisqEasyTradeMessage {
         return new BisqEasyConfirmBtcSentMessage(
                 proto.getId(),
                 proto.getTradeId(),
+                proto.getProtocolVersion(),
                 NetworkId.fromProto(proto.getSender()),
                 NetworkId.fromProto(proto.getReceiver()),
                 bisqEasyConfirmBtcSentMessage.getTxId());

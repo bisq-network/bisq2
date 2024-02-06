@@ -37,11 +37,12 @@ public final class BisqEasyBtcAddressMessage extends BisqEasyTradeMessage {
 
     public BisqEasyBtcAddressMessage(String id,
                                      String tradeId,
+                                     String protocolVersion,
                                      NetworkId sender,
                                      NetworkId receiver,
                                      String btcAddress,
                                      BisqEasyOffer bisqEasyOffer) {
-        super(id, tradeId, sender, receiver);
+        super(id, tradeId, protocolVersion, sender, receiver);
 
         this.btcAddress = btcAddress;
         this.bisqEasyOffer = bisqEasyOffer;
@@ -74,6 +75,7 @@ public final class BisqEasyBtcAddressMessage extends BisqEasyTradeMessage {
         return new BisqEasyBtcAddressMessage(
                 proto.getId(),
                 proto.getTradeId(),
+                proto.getProtocolVersion(),
                 NetworkId.fromProto(proto.getSender()),
                 NetworkId.fromProto(proto.getReceiver()),
                 bisqEasyBtcAddressMessage.getBtcAddress(),

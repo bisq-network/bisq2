@@ -37,11 +37,12 @@ public final class BisqEasyAccountDataMessage extends BisqEasyTradeMessage {
 
     public BisqEasyAccountDataMessage(String id,
                                       String tradeId,
+                                      String protocolVersion,
                                       NetworkId sender,
                                       NetworkId receiver,
                                       String paymentAccountData,
                                       BisqEasyOffer bisqEasyOffer) {
-        super(id, tradeId, sender, receiver);
+        super(id, tradeId, protocolVersion, sender, receiver);
 
         this.paymentAccountData = paymentAccountData;
         this.bisqEasyOffer = bisqEasyOffer;
@@ -71,6 +72,7 @@ public final class BisqEasyAccountDataMessage extends BisqEasyTradeMessage {
         return new BisqEasyAccountDataMessage(
                 proto.getId(),
                 proto.getTradeId(),
+                proto.getProtocolVersion(),
                 NetworkId.fromProto(proto.getSender()),
                 NetworkId.fromProto(proto.getReceiver()),
                 bisqEasyAccountDataMessage.getPaymentAccountData(),

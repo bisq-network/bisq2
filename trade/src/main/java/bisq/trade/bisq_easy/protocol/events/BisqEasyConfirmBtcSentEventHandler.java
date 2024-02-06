@@ -37,6 +37,7 @@ public class BisqEasyConfirmBtcSentEventHandler extends SendTradeMessageHandler<
         commitToModel(txId);
         sendMessage(new BisqEasyConfirmBtcSentMessage(StringUtils.createUid(),
                 trade.getId(),
+                trade.getProtocolVersion(),
                 trade.getMyIdentity().getNetworkId(),
                 trade.getPeer().getNetworkId(),
                 txId));

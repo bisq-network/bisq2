@@ -310,6 +310,7 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
                 tradeProtocol = new BisqEasySellerAsMakerProtocol(serviceProvider, trade);
             }
         }
+        trade.setProtocolVersion(tradeProtocol.getVersion());
         tradeProtocolById.put(id, tradeProtocol);
         return tradeProtocol;
     }

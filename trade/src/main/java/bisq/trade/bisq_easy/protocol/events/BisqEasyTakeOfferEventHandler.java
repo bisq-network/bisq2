@@ -43,6 +43,7 @@ public class BisqEasyTakeOfferEventHandler extends SendTradeMessageHandler<BisqE
             commitToModel(contractSignatureData);
             sendMessage(new BisqEasyTakeOfferRequest(StringUtils.createUid(),
                     trade.getId(),
+                    trade.getProtocolVersion(),
                     trade.getMyIdentity().getNetworkId(),
                     trade.getPeer().getNetworkId(),
                     bisqEasyContract,
