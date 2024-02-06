@@ -4,9 +4,7 @@
   </a>
 </p>
 
-<h3 align="center">
-
-# Bisq 2
+# Bisq 2: The Decentralized Trading Platform
 
 Bisq 2 will be the successor to [Bisq v1](https://github.com/bisq-network/bisq) and will support multiple trade
 protocols, multiple privacy networks and multiple identities. Read more about Bisq 2 in
@@ -21,14 +19,62 @@ Bitcoin seller. It does not compete with the current Bisq v1 trade protocol but 
 targets a user group which we cannot reach with Bisq v1. You can read more about Bisq Easy
 in [the Bisq wiki](https://bisq.wiki/Bisq_Easy).
 
-## Build and run from source code
 
-See the [build doc](./docs/dev/build.md) for instructions how to build and run Bisq 2.
+ ![Actions Status](https://github.com/bisq-network/bisq2/actions/workflows/build.yml/badge.svg)
 
-## Contributing
+## Why work on Bisq 2?
+
+- **Compensated Contributions:** Unique in open-source, contributors are rewarded for their work.
+- **Technological Edge:** Java, Blockchain, P2P networks, JavaFX - cutting-edge tech at your fingertips.
+- **Complex, Rewarding Challenges:** Dive into a sophisticated architecture that rewards ingenuity.
+
+## Getting Started
+
+### Quick Setup
+
+1. **Clone Bisq 2:**
+   ```bash
+   git clone https://github.com/bisq-network/bisq2.git
+   ```
+
+2. **Install Dependencies:**
+   See our [Installation Guide](./docs/dev/build.md) for detailed instructions.
+
+3. **Run seed node:**
+   ```bash
+   ./gradlew apps:seed-node-app:run \
+    -Dapplication.appName=bisq2_seed1 \
+    -Dapplication.network.configByTransportType.clear.defaultNodePort=8000 \
+    -Dapplication.network.supportedTransportTypes.0=CLEAR \
+    -Dapplication.network.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
+    -Dapplication.network.seedAddressByTransportType.clear.1=127.0.0.1:8001
+   ```
+4. **Run desktop client:**
+   ```bash
+   ./gradlew desktop:desktop-app:run
+   ```
+
+## Community and Contributions
 
 Bisq is an open source project and a [Decentralized Autonomous Organization (DAO)](https://bisq.network/dao/).
 
-If you want to contribute please read the [contributing doc](./docs/dev/contributing.md) and reach out to the Bisq
-community at the [Bisq Matrix channels](https://matrix.to/#/#bisq.v2.dev:bitcoin.kyoto).
+Whether you're reporting bugs, suggesting features, or contributing code, you're part of our ecosystem. Get involved:
+- [Contribution Guideline](./docs/dev/contributing.md)
+- [Development Guidelines](./docs/dev/dev-guide.md)
+- Join the discussion on [Matrix](https://matrix.to/#/#bisq.v2.dev:bitcoin.kyoto)
+
+## Documentation
+
+Dive into our extensive documentation for a deeper understanding of Bisq 2:
+
+- [Distributed Data Storage](./docs/dev/distributed-data-storage-notes.md)
+- [Protobuf](./docs/dev/protobuf-notes.md)
+
+## Support and Troubleshooting
+
+Run into issues? Check our [Troubleshooting Guide](./docs/known-issues-with-installation.md) or reach out on [Matrix](https://bisq.chat).
+
+## License
+
+Bisq 2 is licensed under the [AGPL-3.0 license](LICENSE). All contributions are subject to this license.
 

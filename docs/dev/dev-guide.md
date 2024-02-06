@@ -1,6 +1,6 @@
 _Note: This document is partially outdated, though still useful to read for new developers_
 
-# Developer guild lines
+# Developer guide lines
 
 This is a preliminary collection of description of patterns, developer guild lines and frameworks we use in Bisq 2.
 For general guideline see also: https://github.com/bisq-network/bisq/blob/master/CONTRIBUTING.md
