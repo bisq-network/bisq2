@@ -35,11 +35,12 @@ public final class BisqEasyTakeOfferRequest extends BisqEasyTradeMessage {
 
     public BisqEasyTakeOfferRequest(String id,
                                     String tradeId,
+                                    String protocolVersion,
                                     NetworkId sender,
                                     NetworkId receiver,
                                     BisqEasyContract bisqEasyContract,
                                     ContractSignatureData contractSignatureData) {
-        super(id, tradeId, sender, receiver);
+        super(id, tradeId, protocolVersion, sender, receiver);
 
         this.bisqEasyContract = bisqEasyContract;
         this.contractSignatureData = contractSignatureData;
@@ -68,6 +69,7 @@ public final class BisqEasyTakeOfferRequest extends BisqEasyTradeMessage {
         return new BisqEasyTakeOfferRequest(
                 proto.getId(),
                 proto.getTradeId(),
+                proto.getProtocolVersion(),
                 NetworkId.fromProto(proto.getSender()),
                 NetworkId.fromProto(proto.getReceiver()),
                 BisqEasyContract.fromProto(bisqEasyTakeOfferRequest.getBisqEasyContract()),

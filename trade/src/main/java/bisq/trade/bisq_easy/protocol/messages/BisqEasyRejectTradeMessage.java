@@ -31,9 +31,10 @@ public final class BisqEasyRejectTradeMessage extends BisqEasyTradeMessage {
 
     public BisqEasyRejectTradeMessage(String id,
                                       String tradeId,
+                                      String protocolVersion,
                                       NetworkId sender,
                                       NetworkId receiver) {
-        super(id, tradeId, sender, receiver);
+        super(id, tradeId, protocolVersion, sender, receiver);
 
         verify();
     }
@@ -56,6 +57,7 @@ public final class BisqEasyRejectTradeMessage extends BisqEasyTradeMessage {
         return new BisqEasyRejectTradeMessage(
                 proto.getId(),
                 proto.getTradeId(),
+                proto.getProtocolVersion(),
                 NetworkId.fromProto(proto.getSender()),
                 NetworkId.fromProto(proto.getReceiver()));
     }

@@ -30,8 +30,8 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public abstract class MultisigTradeMessage extends TradeMessage {
-    protected MultisigTradeMessage(String id, String tradeId, NetworkId sender, NetworkId receiver) {
-        super(id, tradeId, sender, receiver);
+    protected MultisigTradeMessage(String id, String tradeId, String protocolVersion, NetworkId sender, NetworkId receiver) {
+        super(id, tradeId, protocolVersion, sender, receiver);
     }
 
     public static MultisigTradeMessage fromProto(bisq.trade.protobuf.MultisigTradeMessage proto) {

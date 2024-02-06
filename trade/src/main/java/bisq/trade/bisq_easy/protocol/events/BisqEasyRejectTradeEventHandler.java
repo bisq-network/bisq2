@@ -36,6 +36,7 @@ public class BisqEasyRejectTradeEventHandler extends SendTradeMessageHandler<Bis
         commitToModel();
         sendMessage(new BisqEasyRejectTradeMessage(StringUtils.createUid(),
                 trade.getId(),
+                trade.getProtocolVersion(),
                 trade.getMyIdentity().getNetworkId(),
                 trade.getPeer().getNetworkId()));
     }

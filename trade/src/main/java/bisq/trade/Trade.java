@@ -68,6 +68,7 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
     private final Observable<String> errorStackTrace = new Observable<>();
     private final Observable<String> peersErrorMessage = new Observable<>();
     private final Observable<String> peersErrorStackTrace = new Observable<>();
+    private final Observable<String> protocolVersion = new Observable<>();
 
     public Trade(State state,
                  boolean isBuyer,
@@ -161,6 +162,14 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
 
     public String getPeersErrorStackTrace() {
         return peersErrorStackTrace.get();
+    }
+
+    public void setProtocolVersion(String protocolVersion) {
+        this.protocolVersion.set(protocolVersion);
+    }
+
+    public String getProtocolVersion() {
+        return this.protocolVersion.get();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////

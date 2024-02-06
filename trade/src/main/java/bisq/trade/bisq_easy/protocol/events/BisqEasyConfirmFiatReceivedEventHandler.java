@@ -34,6 +34,7 @@ public class BisqEasyConfirmFiatReceivedEventHandler extends SendTradeMessageHan
     public void handle(Event event) {
         sendMessage(new BisqEasyConfirmFiatReceiptMessage(StringUtils.createUid(),
                 trade.getId(),
+                trade.getProtocolVersion(),
                 trade.getMyIdentity().getNetworkId(),
                 trade.getPeer().getNetworkId()));
     }

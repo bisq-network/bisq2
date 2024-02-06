@@ -30,8 +30,8 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public abstract class SubmarineTradeMessage extends TradeMessage {
-    protected SubmarineTradeMessage(String id, String tradeId, NetworkId sender, NetworkId receiver) {
-        super(id, tradeId, sender, receiver);
+    protected SubmarineTradeMessage(String id, String tradeId, String protocolVersion, NetworkId sender, NetworkId receiver) {
+        super(id, tradeId, protocolVersion, sender, receiver);
     }
 
     public static SubmarineTradeMessage fromProto(bisq.trade.protobuf.SubmarineTradeMessage proto) {

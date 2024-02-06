@@ -37,6 +37,7 @@ public class BisqEasyAccountDataEventHandler extends SendTradeMessageHandler<Bis
         commitToModel(paymentAccountData);
         sendMessage(new BisqEasyAccountDataMessage(StringUtils.createUid(),
                 trade.getId(),
+                trade.getProtocolVersion(),
                 trade.getMyIdentity().getNetworkId(),
                 trade.getPeer().getNetworkId(),
                 paymentAccountData,

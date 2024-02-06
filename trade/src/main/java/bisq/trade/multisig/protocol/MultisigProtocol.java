@@ -25,9 +25,10 @@ import bisq.trade.protocol.TradeProtocol;
 import java.lang.reflect.InvocationTargetException;
 
 public abstract class MultisigProtocol extends TradeProtocol<MultisigTrade> {
+    private static final String version = "1.0.0";
 
     public MultisigProtocol(ServiceProvider serviceProvider, MultisigTrade model) {
-        super(serviceProvider, model);
+        super(version, serviceProvider, model);
     }
 
     @Override

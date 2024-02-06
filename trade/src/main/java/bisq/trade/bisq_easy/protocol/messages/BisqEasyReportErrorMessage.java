@@ -37,11 +37,12 @@ public final class BisqEasyReportErrorMessage extends BisqEasyTradeMessage {
 
     public BisqEasyReportErrorMessage(String id,
                                       String tradeId,
+                                      String protocolVersion,
                                       NetworkId sender,
                                       NetworkId receiver,
                                       String errorMessage,
                                       String stackTrace) {
-        super(id, tradeId, sender, receiver);
+        super(id, tradeId, protocolVersion, sender, receiver);
         this.errorMessage = errorMessage;
         this.stackTrace = stackTrace;
 
@@ -72,6 +73,7 @@ public final class BisqEasyReportErrorMessage extends BisqEasyTradeMessage {
         return new BisqEasyReportErrorMessage(
                 proto.getId(),
                 proto.getTradeId(),
+                proto.getProtocolVersion(),
                 NetworkId.fromProto(proto.getSender()),
                 NetworkId.fromProto(proto.getReceiver()),
                 bisqEasyReportErrorMessage.getErrorMessage(),

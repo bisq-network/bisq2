@@ -42,12 +42,14 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class TradeMessage implements MailboxMessage, AckRequestingMessage, Event {
     private final String id;
     private final String tradeId;
+    private final String protocolVersion;
     private final NetworkId sender;
     protected final NetworkId receiver;
 
-    protected TradeMessage(String id, String tradeId, NetworkId sender, NetworkId receiver) {
+    protected TradeMessage(String id, String tradeId, String protocolVersion, NetworkId sender, NetworkId receiver) {
         this.id = id;
         this.tradeId = tradeId;
+        this.protocolVersion = protocolVersion;
         this.sender = sender;
         this.receiver = receiver;
     }
@@ -62,6 +64,7 @@ public abstract class TradeMessage implements MailboxMessage, AckRequestingMessa
         return bisq.trade.protobuf.TradeMessage.newBuilder()
                 .setId(id)
                 .setTradeId(tradeId)
+                .setProtocolVersion(protocolVersion)
                 .setSender(sender.toProto())
                 .setReceiver(receiver.toProto());
     }

@@ -25,9 +25,10 @@ import bisq.trade.submarine.SubmarineTrade;
 import java.lang.reflect.InvocationTargetException;
 
 public abstract class SubmarineProtocol extends TradeProtocol<SubmarineTrade> {
+    private static final String version = "1.0.0";
 
     public SubmarineProtocol(ServiceProvider serviceProvider, SubmarineTrade model) {
-        super(serviceProvider, model);
+        super(version, serviceProvider, model);
     }
 
     @Override
