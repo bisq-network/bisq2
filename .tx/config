@@ -2,8 +2,8 @@
 host = https://app.transifex.com
 
 [o:bisq:p:bisq-2:r:academyproperties]
-file_filter            = src/main/resources/academy_<lang>.properties
-source_file            = src/main/resources/academy.properties
+file_filter            = i18n/src/main/resources/academy_<lang>.properties
+source_file            = i18n/src/main/resources/academy.properties
 type                   = UNICODEPROPERTIES
 minimum_perc           = 0
 resource_name          = academy.properties
@@ -11,8 +11,8 @@ replace_edited_strings = false
 keep_translations      = false
 
 [o:bisq:p:bisq-2:r:applicationproperties]
-file_filter            = srch/main/resources/application_<lang>.properties
-source_file            = src/main/resources/application.properties
+file_filter            = i18n/src/main/resources/application_<lang>.properties
+source_file            = i18n/src/main/resources/application.properties
 type                   = UNICODEPROPERTIES
 minimum_perc           = 0
 resource_name          = application.properties
@@ -20,8 +20,8 @@ replace_edited_strings = false
 keep_translations      = false
 
 [o:bisq:p:bisq-2:r:authorized_roleproperties]
-file_filter            = src/main/resources/authorized_role_<lang>.properties
-source_file            = src/main/resources/authorized_role.properties
+file_filter            = i18n/src/main/resources/authorized_role_<lang>.properties
+source_file            = i18n/src/main/resources/authorized_role.properties
 type                   = UNICODEPROPERTIES
 minimum_perc           = 0
 resource_name          = authorized_role.properties
@@ -29,8 +29,8 @@ replace_edited_strings = false
 keep_translations      = false
 
 [o:bisq:p:bisq-2:r:bisq_easyproperties]
-file_filter            = src/main/resources/bisq_easy_<lang>.properties
-source_file            = src/main/resources/bisq_easy.properties
+file_filter            = i18n/src/main/resources/bisq_easy_<lang>.properties
+source_file            = i18n/src/main/resources/bisq_easy.properties
 type                   = UNICODEPROPERTIES
 minimum_perc           = 0
 resource_name          = bisq_easy.properties
@@ -38,8 +38,8 @@ replace_edited_strings = false
 keep_translations      = false
 
 [o:bisq:p:bisq-2:r:chatproperties]
-file_filter            = src/main/resources/chat_<lang>.properties
-source_file            = src/main/resources/chat.properties
+file_filter            = i18n/src/main/resources/chat_<lang>.properties
+source_file            = i18n/src/main/resources/chat.properties
 type                   = UNICODEPROPERTIES
 minimum_perc           = 0
 resource_name          = chat.properties
@@ -47,8 +47,8 @@ replace_edited_strings = false
 keep_translations      = false
 
 [o:bisq:p:bisq-2:r:defaultproperties]
-file_filter            = src/main/resources/default_<lang>.properties
-source_file            = src/main/resources/default.properties
+file_filter            = i18n/src/main/resources/default_<lang>.properties
+source_file            = i18n/src/main/resources/default.properties
 type                   = UNICODEPROPERTIES
 minimum_perc           = 0
 resource_name          = default.properties
@@ -56,8 +56,8 @@ replace_edited_strings = false
 keep_translations      = false
 
 [o:bisq:p:bisq-2:r:payment_methodproperties]
-file_filter            = src/main/resources/payment_method_<lang>.properties
-source_file            = src/main/resources/payment_method.properties
+file_filter            = i18n/src/main/resources/payment_method_<lang>.properties
+source_file            = i18n/src/main/resources/payment_method.properties
 type                   = UNICODEPROPERTIES
 minimum_perc           = 0
 resource_name          = payment_method.properties
@@ -65,8 +65,8 @@ replace_edited_strings = false
 keep_translations      = false
 
 [o:bisq:p:bisq-2:r:settingsproperties]
-file_filter            = src/main/resources/settings_<lang>.properties
-source_file            = src/main/resources/settings.properties
+file_filter            = i18n/src/main/resources/settings_<lang>.properties
+source_file            = i18n/src/main/resources/settings.properties
 type                   = UNICODEPROPERTIES
 minimum_perc           = 0
 resource_name          = settings.properties
@@ -74,8 +74,8 @@ replace_edited_strings = false
 keep_translations      = false
 
 [o:bisq:p:bisq-2:r:trade_appsproperties]
-file_filter            = src/main/resources/trade_apps_<lang>.properties
-source_file            = src/main/resources/trade_apps.properties
+file_filter            = i18n/src/main/resources/trade_apps_<lang>.properties
+source_file            = i18n/src/main/resources/trade_apps.properties
 type                   = UNICODEPROPERTIES
 minimum_perc           = 0
 resource_name          = trade_apps.properties
@@ -83,8 +83,8 @@ replace_edited_strings = false
 keep_translations      = false
 
 [o:bisq:p:bisq-2:r:userproperties]
-file_filter            = src/main/resources/user_<lang>.properties
-source_file            = src/main/resources/user.properties
+file_filter            = i18n/src/main/resources/user_<lang>.properties
+source_file            = i18n/src/main/resources/user.properties
 type                   = UNICODEPROPERTIES
 minimum_perc           = 0
 resource_name          = user.properties
@@ -92,11 +92,10 @@ replace_edited_strings = false
 keep_translations      = false
 
 [o:bisq:p:bisq-2:r:walletproperties]
-file_filter            = src/main/resources/wallet_<lang>.properties
-source_file            = src/main/resources/wallet.properties
+file_filter            = i18n/src/main/resources/wallet_<lang>.properties
+source_file            = i18n/src/main/resources/wallet.properties
 type                   = UNICODEPROPERTIES
 minimum_perc           = 0
 resource_name          = wallet.properties
 replace_edited_strings = false
 keep_translations      = false
-
