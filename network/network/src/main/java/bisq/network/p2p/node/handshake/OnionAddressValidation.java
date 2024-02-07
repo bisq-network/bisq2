@@ -21,7 +21,7 @@ public class OnionAddressValidation {
     }
 
     static Optional<byte[]> sign(Address myAddress, Address peerAddress, long date, byte[] privateKey) {
-        if (!peerAddress.isTorAddress()) {
+        if (!myAddress.isTorAddress() || !peerAddress.isTorAddress()) {
             return Optional.empty();
         }
         String message = buildMessageForSigning(myAddress, peerAddress, date);
