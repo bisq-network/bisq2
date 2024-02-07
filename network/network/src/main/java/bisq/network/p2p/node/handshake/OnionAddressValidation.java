@@ -42,8 +42,12 @@ public class OnionAddressValidation {
                 ", \nmy date: " + new Date(System.currentTimeMillis());
         checkArgument(Math.abs(System.currentTimeMillis() - date) <= MAX_SIG_AGE, errorMsg);
 
+        if (signature.isEmpty()) {
+            return false;
+        }
+
         String message = buildMessageForSigning(peerAddress, myAddress, date);
         byte[] pubKey = TorKeyUtils.getPublicKeyFromOnionAddress(peerAddress.getHost());
-        return TorSignatureUtil.verify(pubKey, message.getBytes(), signature.orElseThrow());
+        return TorSignatureUtil.verify(pubKey, message.getBytes(), signature.get());
     }
 }

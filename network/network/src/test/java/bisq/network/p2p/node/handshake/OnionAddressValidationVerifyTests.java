@@ -56,6 +56,14 @@ public class OnionAddressValidationVerifyTests {
     }
 
     @Test
+    void testVerifyWithoutPeerProof() {
+        Address myAddress = new Address(myTorKeyPair.getOnionAddress());
+        Address peerAddress = new Address(peerTorKeyPair.getOnionAddress());
+        boolean isValid = OnionAddressValidation.verify(myAddress, peerAddress, signatureDate, Optional.empty());
+        assertThat(isValid).isFalse();
+    }
+
+    @Test
     void testVerifyValidProof() {
         Address myAddress = new Address(myTorKeyPair.getOnionAddress());
         Address peerAddress = new Address(peerTorKeyPair.getOnionAddress());
