@@ -14,7 +14,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class OnionAddressValidation {
-    private static final long MAX_SIG_AGE = TimeUnit.HOURS.toMillis(2);
+    static final long MAX_SIG_AGE = TimeUnit.HOURS.toMillis(2);
 
     private static String buildMessageForSigning(Address signersAddress, Address verifiersAddress, long date) {
         return signersAddress.getFullAddress() + "|" + verifiersAddress.getFullAddress() + "@" + date;
