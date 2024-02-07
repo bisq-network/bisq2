@@ -203,9 +203,6 @@ public class ChatMessagesListView {
             scrollBarVisiblePin = EasyBind.subscribe(model.scrollBarVisible, scrollBarVisible -> {
                 if (scrollBarVisible != null && scrollBarVisible) {
                     applyScrollValue(1);
-                    view.listView.setPadding(View.LISTVIEW_PADDING_WITH_SCROLLBAR);
-                } else {
-                    view.listView.setPadding(new Insets(0));
                 }
             });
 
@@ -658,7 +655,6 @@ public class ChatMessagesListView {
 
     @Slf4j
     private static class View extends bisq.desktop.common.view.View<StackPane, Model, Controller> {
-        public static final Insets LISTVIEW_PADDING_WITH_SCROLLBAR = new Insets(0, 0, 0, 15);
         private static final String EDITED_POST_FIX = " " + Res.get("chat.message.wasEdited");
 
         private final ListView<ChatMessageListItem<? extends ChatMessage>> listView;
@@ -751,8 +747,6 @@ public class ChatMessagesListView {
 
             scrollDownBadge.setOnMouseClicked(e -> controller.onScrollToBottom());
 
-            UIThread.runOnNextRenderFrame(this::adjustPadding);
-
             if (ChatUtil.isCommonChat(model.getChatChannelDomain()) && model.isPublicChannel.get()) {
                 placeholderTitle.setText(Res.get("chat.messagebox.noChats.placeholder.title"));
                 placeholderDescription.setText(Res.get("chat.messagebox.noChats.placeholder.description",
@@ -800,14 +794,6 @@ public class ChatMessagesListView {
                     new KeyValue(scrollDownBadge.opacityProperty(), 1, Interpolator.EASE_OUT)
             ));
             fadeInScrollDownBadgeTimeline.play();
-        }
-
-        private void adjustPadding() {
-            Optional<VirtualScrollBar> scrollBar = ListViewUtil.findScrollbar(listView, Orientation.VERTICAL);
-            scrollBar.ifPresent(bar ->
-                listView.setPadding(
-                        bar.isVisible() ? LISTVIEW_PADDING_WITH_SCROLLBAR : new Insets(0))
-            );
         }
 
         public Callback<ListView<ChatMessageListItem<? extends ChatMessage>>, ListCell<ChatMessageListItem<? extends ChatMessage>>> getCellFactory() {
@@ -906,7 +892,6 @@ public class ChatMessagesListView {
                             mainVBox.setFillWidth(true);
                             HBox.setHgrow(mainVBox, Priority.ALWAYS);
                             cellHBox = new HBox(15);
-                            cellHBox.setPadding(new Insets(0, 20, 0, 20));
                             cellHBox.setMaxWidth(CHAT_BOX_MAX_WIDTH);
                             cellHBox.setAlignment(Pos.CENTER);
                         }
@@ -988,6 +973,21 @@ public class ChatMessagesListView {
                             ));
                             deliveryState.getTooltip().textProperty().bind(item.messageDeliveryStatusTooltip);
                             editInputField.maxWidthProperty().bind(message.widthProperty());
+
+                            subscriptions.add(EasyBind.subscribe(mainVBox.widthProperty(), width -> {
+                                if (width == null) {
+                                    return;
+                                }
+
+                                mainVBox.getStyleClass().clear();
+                                if (width.doubleValue() < CHAT_BOX_MAX_WIDTH) {
+                                    // FIXME (low prio): This should also be dependent of whether there's a scrollbar
+                                    mainVBox.getStyleClass().add("chat-message-list-cell-main-vbox-with-margins");
+                                } else {
+                                    mainVBox.getStyleClass().add("chat-message-list-cell-main-vbox-no-margins");
+                                }
+                            }));
+
                             setGraphic(cellHBox);
                             setAlignment(Pos.CENTER);
                         }
