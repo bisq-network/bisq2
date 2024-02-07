@@ -10,8 +10,6 @@ import java.util.Date;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 @Slf4j
 public class OnionAddressValidation {
     static final long MAX_SIG_AGE = TimeUnit.HOURS.toMillis(2);
@@ -36,18 +34,26 @@ public class OnionAddressValidation {
         if (!myAddress.isTorAddress() || !peerAddress.isTorAddress()) {
             return true;
         }
-        String errorMsg = "Peer onion address proof failed because the signatureDate is outside the 2 hour tolerance: " +
-                peerAddress.getFullAddress() +
-                ", \nsignatureDate: " + new Date(date) +
-                ", \nmy date: " + new Date(System.currentTimeMillis());
-        checkArgument(Math.abs(System.currentTimeMillis() - date) <= MAX_SIG_AGE, errorMsg);
 
         if (signature.isEmpty()) {
+            return false;
+        }
+
+        if (!isDateWithinTolerance(date)) {
+            log.warn("{}'s proof failed because the signatureDate=[{}] " +
+                            "is outside the 2 hour tolerance. The current time is [{}].",
+                    peerAddress.getFullAddress(),
+                    new Date(date),
+                    new Date(System.currentTimeMillis()));
             return false;
         }
 
         String message = buildMessageForSigning(peerAddress, myAddress, date);
         byte[] pubKey = TorKeyUtils.getPublicKeyFromOnionAddress(peerAddress.getHost());
         return TorSignatureUtil.verify(pubKey, message.getBytes(), signature.get());
+    }
+
+    private static boolean isDateWithinTolerance(long date) {
+        return Math.abs(System.currentTimeMillis() - date) <= MAX_SIG_AGE;
     }
 }
