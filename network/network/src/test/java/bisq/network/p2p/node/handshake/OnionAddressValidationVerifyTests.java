@@ -40,6 +40,14 @@ public class OnionAddressValidationVerifyTests {
     }
 
     @Test
+    void testVerifyMyNonOnionAddress() {
+        Address myAddress = Address.localHost(1234);
+        Address peerAddress = new Address(peerTorKeyPair.getOnionAddress());
+        boolean isValid = OnionAddressValidation.verify(myAddress, peerAddress, signatureDate, Optional.empty());
+        assertThat(isValid).isTrue();
+    }
+
+    @Test
     void testVerifyPeerNonOnionAddress() {
         Address myAddress = new Address(myTorKeyPair.getOnionAddress());
         Address peerAddress = Address.localHost(4321);

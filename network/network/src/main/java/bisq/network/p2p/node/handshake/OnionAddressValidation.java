@@ -33,7 +33,7 @@ public class OnionAddressValidation {
     }
 
     static boolean verify(Address myAddress, Address peerAddress, long date, Optional<byte[]> signature) {
-        if (!peerAddress.isTorAddress()) {
+        if (!myAddress.isTorAddress() || !peerAddress.isTorAddress()) {
             return true;
         }
         String errorMsg = "Peer onion address proof failed because the signatureDate is outside the 2 hour tolerance: " +
