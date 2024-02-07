@@ -363,6 +363,16 @@
     -fx-background-color: transparent;
 }
 
+.chat-messages-list-view .chat-message-list-cell-main-vbox-no-margins {
+    -fx-border-width: 0 15 0 30;
+    -fx-border-color: transparent;
+}
+
+.chat-messages-list-view .chat-message-list-cell-main-vbox-with-margins {
+    -fx-border-width: 0 0 0 15;
+    -fx-border-color: transparent;
+}
+
 .chat-messages-list-view .list-cell:filled:hover {
     -fx-background-color: none;
 }
