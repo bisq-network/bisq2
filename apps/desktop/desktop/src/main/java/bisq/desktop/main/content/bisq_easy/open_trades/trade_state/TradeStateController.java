@@ -235,7 +235,7 @@ public class TradeStateController implements Controller {
     void onReportToMediator() {
         OpenTradesUtils.reportToMediator(model.getChannel().get(),
                 model.getBisqEasyTrade().get().getContract(),
-                mediationRequestService);
+                mediationRequestService, channelService);
     }
 
     private void applyStateInfoVBox(@Nullable BisqEasyTradeState state) {
