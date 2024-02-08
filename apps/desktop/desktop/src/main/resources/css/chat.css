@@ -361,15 +361,25 @@
 
 .chat-messages-list-view {
     -fx-background-color: transparent;
+    -fx-padding: 0;
 }
 
-.chat-messages-list-view .chat-message-list-cell-main-vbox-no-margins {
-    -fx-border-width: 0 15 0 30;
+.chat-messages-list-view .list-cell {
+    -fx-padding: 5 0 5 0;
+}
+
+.chat-messages-list-view .chat-message-list-cell-wo-scrollbar {
+    -fx-border-width: 0 20 0 20;
     -fx-border-color: transparent;
 }
 
-.chat-messages-list-view .chat-message-list-cell-main-vbox-with-margins {
-    -fx-border-width: 0 0 0 15;
+.chat-messages-list-view .chat-message-list-cell-w-scrollbar-max-width {
+    -fx-border-width: 0 12 0 28;
+    -fx-border-color: transparent;
+}
+
+.chat-messages-list-view .chat-message-list-cell-w-scrollbar-full-width {
+    -fx-border-width: 0 6 0 20;
     -fx-border-color: transparent;
 }
 
@@ -388,7 +398,6 @@
 .chat-messages-badge.bisq-badge .badge-pane .label {
     -fx-text-fill: -fx-mid-text-color !important;
 }
-
 
 /*******************************************************************************
  * Chat guide                                                                  *

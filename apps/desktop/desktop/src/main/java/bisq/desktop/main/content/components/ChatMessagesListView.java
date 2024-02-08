@@ -978,13 +978,20 @@ public class ChatMessagesListView {
                                 if (width == null) {
                                     return;
                                 }
-
                                 mainVBox.getStyleClass().clear();
+
+                                // List cell has no padding, so it must have the same width as list view (no scrollbar)
+                                if (width.doubleValue() == listView.widthProperty().doubleValue()) {
+                                    mainVBox.getStyleClass().add("chat-message-list-cell-wo-scrollbar");
+                                    return;
+                                }
+
                                 if (width.doubleValue() < CHAT_BOX_MAX_WIDTH) {
-                                    // FIXME (low prio): This should also be dependent of whether there's a scrollbar
-                                    mainVBox.getStyleClass().add("chat-message-list-cell-main-vbox-with-margins");
+                                    // List cell has different size as list view, therefore there's a scrollbar
+                                    mainVBox.getStyleClass().add("chat-message-list-cell-w-scrollbar-full-width");
                                 } else {
-                                    mainVBox.getStyleClass().add("chat-message-list-cell-main-vbox-no-margins");
+                                    // FIXME (low prio): needs to take into account whether there's scrollbar
+                                    mainVBox.getStyleClass().add("chat-message-list-cell-w-scrollbar-max-width");
                                 }
                             }));
 
