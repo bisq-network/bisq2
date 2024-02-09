@@ -30,10 +30,13 @@ import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.CacheHint;
+import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.Tooltip;
+import javafx.scene.effect.ColorAdjust;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
@@ -149,7 +152,7 @@ public class TradeWizardMarketView extends View<VBox, TradeWizardMarketModel, Tr
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    label.setGraphic(item.getIcon());
+                    label.setGraphic(item.getMarketLogo());
                     String quoteCurrencyName = item.getQuoteCurrencyName();
                     label.setText(quoteCurrencyName);
                     if (quoteCurrencyName.length() > 20) {
@@ -178,7 +181,7 @@ public class TradeWizardMarketView extends View<VBox, TradeWizardMarketModel, Tr
         private final String numOffers;
         private final String numUsers;
         @EqualsAndHashCode.Exclude
-        private final StackPane icon;
+        private final Node marketLogo;
 
         MarketListItem(Market market, int numOffersAsInteger, int numUsersAsInteger) {
             this.market = market;
@@ -186,8 +189,13 @@ public class TradeWizardMarketView extends View<VBox, TradeWizardMarketModel, Tr
             this.numOffers = String.valueOf(numOffersAsInteger);
             this.numOffersAsInteger = numOffersAsInteger;
             this.numUsers = String.valueOf(numUsersAsInteger);
-            icon = MarketImageComposition.getCurrencyIcon(market.getQuoteCurrencyCode());
             this.numUsersAsInteger = numUsersAsInteger;
+            marketLogo = MarketImageComposition.createMarketLogo(market.getQuoteCurrencyCode());
+            marketLogo.setCache(true);
+            marketLogo.setCacheHint(CacheHint.SPEED);
+            ColorAdjust colorAdjust = new ColorAdjust();
+            colorAdjust.setBrightness(-0.1);
+            marketLogo.setEffect(colorAdjust);
         }
 
         @Override

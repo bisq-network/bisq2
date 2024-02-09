@@ -21,12 +21,12 @@ import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.currency.Market;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.common.utils.ImageUtil;
+import bisq.desktop.main.content.components.MarketImageComposition;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.scene.CacheHint;
+import javafx.scene.Node;
 import javafx.scene.effect.ColorAdjust;
-import javafx.scene.image.ImageView;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -37,16 +37,13 @@ import java.lang.ref.WeakReference;
 public class MarketChannelItem {
     private final BisqEasyOfferbookChannel channel;
     private final Market market;
-    private final ImageView marketLogo;
+    private final Node marketLogo;
     private final IntegerProperty numOffers = new SimpleIntegerProperty(0);
 
     public MarketChannelItem(BisqEasyOfferbookChannel channel) {
         this.channel = channel;
         market = channel.getMarket();
-
-        String marketCode = market.getQuoteCurrencyCode().toLowerCase();
-        String iconId = String.format("market-%s", marketCode);
-        marketLogo = ImageUtil.getImageViewById(iconId);
+        marketLogo = MarketImageComposition.createMarketLogo(market.getQuoteCurrencyCode());
         marketLogo.setCache(true);
         marketLogo.setCacheHint(CacheHint.SPEED);
         ColorAdjust colorAdjust = new ColorAdjust();
