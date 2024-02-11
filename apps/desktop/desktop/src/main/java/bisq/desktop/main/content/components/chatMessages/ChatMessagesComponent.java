@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.components;
+package bisq.desktop.main.content.components.chatMessages;
 
 import bisq.account.AccountService;
 import bisq.account.accounts.Account;
@@ -40,7 +40,11 @@ import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.chat.ChatUtil;
+import bisq.desktop.main.content.components.ChatMentionPopupMenu;
+import bisq.desktop.main.content.components.CitationBlock;
+import bisq.desktop.main.content.components.UserProfileSelection;
 import bisq.desktop.main.content.components.chatMessages.ChatMessageListItem;
+import bisq.desktop.main.content.components.chatMessages.ChatMessagesListView;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.offer.bisq_easy.BisqEasyOffer;

@@ -28,7 +28,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.main.content.components.ChatMessagesComponent;
+import bisq.desktop.main.content.components.chatMessages.ChatMessagesComponent;
 import bisq.support.mediation.MediationCase;
 import bisq.support.mediation.MediationRequest;
 import bisq.support.mediation.MediatorService;

@@ -51,12 +51,12 @@ import lombok.extern.slf4j.Slf4j;
 import java.text.DateFormat;
 import java.util.*;
 
-import static bisq.desktop.main.content.components.ChatMessagesComponent.View.EDITED_POST_FIX;
+import static bisq.desktop.main.content.components.chatMessages.ChatMessagesComponent.View.EDITED_POST_FIX;
 
 @Slf4j
 @Getter
 @EqualsAndHashCode
-public final class ChatMessageListItem<T extends ChatMessage> implements Comparable<ChatMessageListItem<T>> {
+final class ChatMessageListItem<T extends ChatMessage> implements Comparable<ChatMessageListItem<T>> {
     private final T chatMessage;
     private final String message;
     private final String date;
