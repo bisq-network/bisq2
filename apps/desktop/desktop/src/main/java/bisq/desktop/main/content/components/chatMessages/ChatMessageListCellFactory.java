@@ -30,9 +30,6 @@ import javafx.util.Callback;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.HashSet;
-import java.util.Set;
-
 final class ChatMessageListCellFactory implements Callback<ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>>,
         ListCell<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>>> {
     private final ChatMessagesListView.Controller controller;
@@ -48,9 +45,9 @@ final class ChatMessageListCellFactory implements Callback<ListView<ChatMessageL
         return new ListCell<>() {
             private final static double CHAT_BOX_MAX_WIDTH = 1200;
 
-            private Message mainVBox;
             private final HBox cellHBox;
-            private final Set<Subscription> subscriptions = new HashSet<>();
+            private Subscription listWidthPropertyPin;
+            private Message message;
 
             {
                 cellHBox = new HBox(15);
@@ -66,7 +63,6 @@ final class ChatMessageListCellFactory implements Callback<ListView<ChatMessageL
                     return;
                 }
 
-                subscriptions.clear();
                 ChatMessage chatMessage = item.getChatMessage();
 
                 Node flow = this.getListView().lookup(".virtual-flow");
@@ -76,48 +72,48 @@ final class ChatMessageListCellFactory implements Callback<ListView<ChatMessageL
 
                 boolean isMyMessage = model.isMyMessage(chatMessage);
                 if (isMyMessage) {
-                    mainVBox = new MyMessage(item, list, controller, model, subscriptions);
+                    message = new MyMessage(item, list, controller, model);
                 } else {
-                    mainVBox = new PeerMessage(item, list, controller, model);
+                    message = new PeerMessage(item, list, controller, model);
                 }
-                cellHBox.getChildren().setAll(mainVBox);
+                cellHBox.getChildren().setAll(message);
 
-                subscriptions.add(EasyBind.subscribe(mainVBox.widthProperty(), width -> {
+                listWidthPropertyPin = EasyBind.subscribe(message.widthProperty(), width -> {
                     if (width == null) {
                         return;
                     }
-                    mainVBox.getStyleClass().clear();
+                    message.getStyleClass().clear();
 
                     // List cell has no padding, so it must have the same width as list view (no scrollbar)
                     if (width.doubleValue() == list.widthProperty().doubleValue()) {
-                        mainVBox.getStyleClass().add("chat-message-list-cell-wo-scrollbar");
+                        message.getStyleClass().add("chat-message-list-cell-wo-scrollbar");
                         return;
                     }
 
                     if (width.doubleValue() < CHAT_BOX_MAX_WIDTH) {
                         // List cell has different size as list view, therefore there's a scrollbar
-                        mainVBox.getStyleClass().add("chat-message-list-cell-w-scrollbar-full-width");
+                        message.getStyleClass().add("chat-message-list-cell-w-scrollbar-full-width");
                     } else {
                         // FIXME (low prio): needs to take into account whether there's scrollbar
-                        mainVBox.getStyleClass().add("chat-message-list-cell-w-scrollbar-max-width");
+                        message.getStyleClass().add("chat-message-list-cell-w-scrollbar-max-width");
                     }
-                }));
+                });
 
                 setGraphic(cellHBox);
                 setAlignment(Pos.CENTER);
             }
 
-
             private void cleanup() {
-                if (mainVBox != null) {
-                    mainVBox.cleanup();
+                if (message != null) {
+                    message.cleanup();
                 }
 
                 cellHBox.setOnMouseEntered(null);
                 cellHBox.setOnMouseExited(null);
 
-                subscriptions.forEach(Subscription::unsubscribe);
-                subscriptions.clear();
+                if (listWidthPropertyPin != null) {
+                    listWidthPropertyPin.unsubscribe();
+                }
 
                 setGraphic(null);
             }

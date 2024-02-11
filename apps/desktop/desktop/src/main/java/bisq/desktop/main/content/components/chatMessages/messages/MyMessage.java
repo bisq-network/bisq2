@@ -46,7 +46,6 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.Optional;
-import java.util.Set;
 
 public final class MyMessage extends Message {
     private final static double CHAT_MESSAGE_BOX_MAX_WIDTH = 630;
@@ -64,12 +63,12 @@ public final class MyMessage extends Message {
     private final BisqTextArea editInputField;
     private final Button saveEditButton, cancelEditButton;
     private final HBox reactionsHBox, editButtonsHBox;
+    private Subscription reactionsVisiblePropertyPin, messageDeliveryStatusIconPin;
 
 
     public MyMessage(final ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
                      ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
-                     ChatMessagesListView.Controller controller, ChatMessagesListView.Model model,
-                     Set<Subscription> subscriptions) {
+                     ChatMessagesListView.Controller controller, ChatMessagesListView.Model model) {
         this.controller = controller;
         this.model = model;
 
@@ -172,6 +171,7 @@ public final class MyMessage extends Message {
         deliveryState.setTooltip(new BisqTooltip(true));
 
         VBox messageVBox = new VBox(quotedMessageVBox, message, editInputField);
+        // TODO (refactor): Move this logic to BisqEasy package
         if (item.isBisqEasyPublicChatMessageWithOffer()) {
             message.maxWidthProperty().bind(list.widthProperty().subtract(160));
             userProfileIcon.setSize(60);
@@ -204,7 +204,7 @@ public final class MyMessage extends Message {
         HBox.setMargin(deliveryState, new Insets(0, 10, 0, 0));
         HBox deliveryStateHBox = new HBox(Spacer.fillHBox(), reactionsHBox);
 
-        subscriptions.add(EasyBind.subscribe(reactionsHBox.visibleProperty(), v -> {
+        reactionsVisiblePropertyPin = EasyBind.subscribe(reactionsHBox.visibleProperty(), v -> {
             if (v) {
                 deliveryStateHBox.getChildren().remove(deliveryState);
                 if (!reactionsHBox.getChildren().contains(deliveryState)) {
@@ -216,18 +216,18 @@ public final class MyMessage extends Message {
                     deliveryStateHBox.getChildren().add(deliveryState);
                 }
             }
-        }));
+        });
 
-        subscriptions.add(EasyBind.subscribe(item.getMessageDeliveryStatusIcon(), icon -> {
-                    deliveryState.setManaged(icon != null);
-                    deliveryState.setVisible(icon != null);
-                    if (icon != null) {
-                        AwesomeDude.setIcon(deliveryState, icon, AwesomeDude.DEFAULT_ICON_SIZE);
-                        item.getMessageDeliveryStatusIconColor().ifPresent(color ->
-                                Icons.setAwesomeIconColor(deliveryState, color));
-                    }
+        messageDeliveryStatusIconPin = EasyBind.subscribe(item.getMessageDeliveryStatusIcon(), icon -> {
+                deliveryState.setManaged(icon != null);
+                deliveryState.setVisible(icon != null);
+                if (icon != null) {
+                    AwesomeDude.setIcon(deliveryState, icon, AwesomeDude.DEFAULT_ICON_SIZE);
+                    item.getMessageDeliveryStatusIconColor().ifPresent(color ->
+                            Icons.setAwesomeIconColor(deliveryState, color));
                 }
-        ));
+            }
+        );
 
         deliveryState.getTooltip().textProperty().bind(item.getMessageDeliveryStatusTooltip());
         editInputField.maxWidthProperty().bind(message.widthProperty());
@@ -385,5 +385,13 @@ public final class MyMessage extends Message {
 
         editInputField.setOnKeyPressed(null);
         userProfileIcon.releaseResources();
+
+        if (reactionsVisiblePropertyPin != null) {
+            reactionsVisiblePropertyPin.unsubscribe();
+        }
+
+        if (messageDeliveryStatusIconPin != null) {
+            messageDeliveryStatusIconPin.unsubscribe();
+        }
     }
 }

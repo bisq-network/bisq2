@@ -144,6 +144,7 @@ public final class PeerMessage extends Message {
         messageHBox = new HBox();
         VBox.setMargin(messageHBox, new Insets(10, 0, 0, 0));
 
+        // TODO (refactor): Move this logic to BisqEasy package
         if (item.isBisqEasyPublicChatMessageWithOffer()) {
             supportedLanguages.setText(item.getSupportedLanguageCodes(((BisqEasyOfferbookMessage) item.getChatMessage())));
             supportedLanguages.setTooltip(new BisqTooltip(item.getSupportedLanguageCodesForTooltip(((BisqEasyOfferbookMessage) item.getChatMessage()))));
