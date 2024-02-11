@@ -32,10 +32,8 @@ import bisq.chat.pub.PublicChatChannel;
 import bisq.chat.pub.PublicChatMessage;
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.common.locale.LanguageRepository;
-import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
-import bisq.common.observable.map.HashMapObserver;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Icons;
@@ -52,21 +50,17 @@ import bisq.desktop.components.list_view.NoSelectionModel;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.take_offer.TakeOfferController;
 import bisq.desktop.main.content.chat.ChatUtil;
+import bisq.desktop.main.content.components.chatMessages.ChatMessageListItem;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
-import bisq.network.identity.NetworkId;
-import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.presentation.formatters.DateFormatter;
 import bisq.settings.SettingsService;
-import bisq.trade.Trade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
-import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import com.google.common.base.Joiner;
 import com.sun.javafx.scene.control.VirtualScrollBar;
@@ -93,21 +87,18 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
 import javafx.util.Callback;
 import javafx.util.Duration;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.text.DateFormat;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static bisq.desktop.main.content.components.ChatMessagesComponent.View.EDITED_POST_FIX;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -131,7 +122,7 @@ public class ChatMessagesListView {
         return controller.view.getRoot();
     }
 
-    public void setSearchPredicate(Predicate<? super ChatMessagesListView.ChatMessageListItem<? extends ChatMessage>> predicate) {
+    public void setSearchPredicate(Predicate<? super ChatMessageListItem<? extends ChatMessage>> predicate) {
         controller.setSearchPredicate(predicate);
     }
 
@@ -182,7 +173,7 @@ public class ChatMessagesListView {
 
         @Override
         public void onActivate() {
-            model.getSortedChatMessages().setComparator(ChatMessagesListView.ChatMessageListItem::compareTo);
+            model.getSortedChatMessages().setComparator(ChatMessageListItem::compareTo);
 
             offerOnlySettingsPin = FxBindings.subscribe(settingsService.getOffersOnly(), offerOnly -> UIThread.run(this::applyPredicate));
 
@@ -295,7 +286,7 @@ public class ChatMessagesListView {
             model.chatMessages.setAll(new ArrayList<>(model.chatMessages));
         }
 
-        private void setSearchPredicate(Predicate<? super ChatMessagesListView.ChatMessageListItem<? extends ChatMessage>> predicate) {
+        private void setSearchPredicate(Predicate<? super ChatMessageListItem<? extends ChatMessage>> predicate) {
             model.setSearchPredicate(Objects.requireNonNullElseGet(predicate, () -> e -> true));
             applyPredicate();
         }
@@ -966,12 +957,12 @@ public class ChatMessagesListView {
                                         deliveryState.setVisible(icon != null);
                                         if (icon != null) {
                                             AwesomeDude.setIcon(deliveryState, icon, AwesomeDude.DEFAULT_ICON_SIZE);
-                                            item.messageDeliveryStatusIconColor.ifPresent(color ->
+                                            item.getMessageDeliveryStatusIconColor().ifPresent(color ->
                                                     Icons.setAwesomeIconColor(deliveryState, color));
                                         }
                                     }
                             ));
-                            deliveryState.getTooltip().textProperty().bind(item.messageDeliveryStatusTooltip);
+                            deliveryState.getTooltip().textProperty().bind(item.getMessageDeliveryStatusTooltip());
                             editInputField.maxWidthProperty().bind(message.widthProperty());
 
                             subscriptions.add(EasyBind.subscribe(mainVBox.widthProperty(), width -> {
@@ -1291,154 +1282,6 @@ public class ChatMessagesListView {
                     return iconLabel;
                 }
             };
-        }
-    }
-
-    @Slf4j
-    @Getter
-    @EqualsAndHashCode
-    public static class ChatMessageListItem<T extends ChatMessage> implements Comparable<ChatMessageListItem<T>> {
-        private final T chatMessage;
-        private final String message;
-        private final String date;
-        private final Optional<Citation> citation;
-        private final Optional<UserProfile> senderUserProfile;
-        private final String nym;
-        private final String nickName;
-        @EqualsAndHashCode.Exclude
-        private final ReputationScore reputationScore;
-        private final boolean canTakeOffer;
-        @EqualsAndHashCode.Exclude
-        private final StringProperty messageDeliveryStatusTooltip = new SimpleStringProperty();
-        @EqualsAndHashCode.Exclude
-        private final ObjectProperty<AwesomeIcon> messageDeliveryStatusIcon = new SimpleObjectProperty<>();
-        @EqualsAndHashCode.Exclude
-        private Optional<String> messageDeliveryStatusIconColor = Optional.empty();
-        @EqualsAndHashCode.Exclude
-        private final Set<Pin> mapPins = new HashSet<>();
-        @EqualsAndHashCode.Exclude
-        private final Set<Pin> statusPins = new HashSet<>();
-
-        public ChatMessageListItem(T chatMessage,
-                                   UserProfileService userProfileService,
-                                   ReputationService reputationService,
-                                   BisqEasyTradeService bisqEasyTradeService,
-                                   UserIdentityService userIdentityService,
-                                   NetworkService networkService) {
-            this.chatMessage = chatMessage;
-
-            if (chatMessage instanceof PrivateChatMessage) {
-                senderUserProfile = Optional.of(((PrivateChatMessage) chatMessage).getSenderUserProfile());
-            } else {
-                senderUserProfile = userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId());
-            }
-            String editPostFix = chatMessage.isWasEdited() ? EDITED_POST_FIX : "";
-            message = chatMessage.getText() + editPostFix;
-            citation = chatMessage.getCitation();
-            date = DateFormatter.formatDateTime(new Date(chatMessage.getDate()), DateFormat.MEDIUM, DateFormat.SHORT, true, " " + Res.get("temporal.at") + " ");
-
-            nym = senderUserProfile.map(UserProfile::getNym).orElse("");
-            nickName = senderUserProfile.map(UserProfile::getNickName).orElse("");
-
-            reputationScore = senderUserProfile.flatMap(reputationService::findReputationScore).orElse(ReputationScore.NONE);
-
-            if (chatMessage instanceof BisqEasyOfferbookMessage) {
-                BisqEasyOfferbookMessage bisqEasyOfferbookMessage = (BisqEasyOfferbookMessage) chatMessage;
-                if (userIdentityService.getSelectedUserIdentity() != null && bisqEasyOfferbookMessage.getBisqEasyOffer().isPresent()) {
-                    UserProfile userProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
-                    NetworkId takerNetworkId = userProfile.getNetworkId();
-                    BisqEasyOffer bisqEasyOffer = bisqEasyOfferbookMessage.getBisqEasyOffer().get();
-                    String tradeId = Trade.createId(bisqEasyOffer.getId(), takerNetworkId.getId());
-                    canTakeOffer = !bisqEasyTradeService.tradeExists(tradeId);
-                } else {
-                    canTakeOffer = false;
-                }
-            } else {
-                canTakeOffer = false;
-            }
-
-            mapPins.add(networkService.getMessageDeliveryStatusByMessageId().addObserver(new HashMapObserver<>() {
-                @Override
-                public void put(String key, Observable<MessageDeliveryStatus> value) {
-                    if (key.equals(chatMessage.getId())) {
-                        // Delay to avoid ConcurrentModificationException
-                        UIThread.runOnNextRenderFrame(() -> {
-                            statusPins.add(value.addObserver(status -> {
-                                UIThread.run(() -> {
-                                    if (status != null) {
-                                        messageDeliveryStatusIconColor = Optional.empty();
-                                        messageDeliveryStatusTooltip.set(Res.get("chat.message.deliveryState." + status.name()));
-                                        switch (status) {
-                                            case CONNECTING:
-                                                // -bisq-mid-grey-20: #808080;
-                                                messageDeliveryStatusIconColor = Optional.of("#808080");
-                                                messageDeliveryStatusIcon.set(AwesomeIcon.SPINNER);
-                                                break;
-                                            case SENT:
-                                                // -bisq-light-grey-50: #eaeaea;
-                                                messageDeliveryStatusIconColor = Optional.of("#eaeaea");
-                                                messageDeliveryStatusIcon.set(AwesomeIcon.CIRCLE_ARROW_RIGHT);
-                                                break;
-                                            case ACK_RECEIVED:
-                                                // -bisq2-green-dim-50: #2b5724;
-                                                messageDeliveryStatusIconColor = Optional.of("#2b5724");
-                                                messageDeliveryStatusIcon.set(AwesomeIcon.OK_SIGN);
-                                                break;
-                                            case TRY_ADD_TO_MAILBOX:
-                                                // -bisq2-yellow: #d0831f;
-                                                messageDeliveryStatusIconColor = Optional.of("#d0831f");
-                                                messageDeliveryStatusIcon.set(AwesomeIcon.SHARE_SIGN);
-                                                break;
-                                            case ADDED_TO_MAILBOX:
-                                                // -bisq2-yellow: #d0831f;
-                                                messageDeliveryStatusIconColor = Optional.of("#d0831f");
-                                                messageDeliveryStatusIcon.set(AwesomeIcon.CLOUD_UPLOAD);
-                                                break;
-                                            case MAILBOX_MSG_RECEIVED:
-                                                // -bisq2-green-dim-50: #2b5724;
-                                                messageDeliveryStatusIconColor = Optional.of("#2b5724");
-                                                messageDeliveryStatusIcon.set(AwesomeIcon.CLOUD_DOWNLOAD);
-                                                break;
-                                            case FAILED:
-                                                // -bisq2-red: #d02c1f;
-                                                messageDeliveryStatusIconColor = Optional.of("#d02c1f");
-                                                messageDeliveryStatusIcon.set(AwesomeIcon.EXCLAMATION_SIGN);
-                                                break;
-                                        }
-                                    }
-                                });
-                            }));
-                        });
-                    }
-                }
-
-                @Override
-                public void putAll(Map<? extends String, ? extends Observable<MessageDeliveryStatus>> map) {
-                    map.forEach(this::put);
-                }
-
-                @Override
-                public void remove(Object key) {
-                }
-
-                @Override
-                public void clear() {
-                }
-            }));
-        }
-
-        @Override
-        public int compareTo(ChatMessageListItem o) {
-            return Comparator.comparingLong(ChatMessage::getDate).compare(this.getChatMessage(), o.getChatMessage());
-        }
-
-        public boolean match(String filterString) {
-            return filterString == null || filterString.isEmpty() || StringUtils.containsIgnoreCase(message, filterString) || StringUtils.containsIgnoreCase(nym, filterString) || StringUtils.containsIgnoreCase(nickName, filterString) || StringUtils.containsIgnoreCase(date, filterString);
-        }
-
-        public void dispose() {
-            mapPins.forEach(Pin::unbind);
-            statusPins.forEach(Pin::unbind);
         }
     }
 }
