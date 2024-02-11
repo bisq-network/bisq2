@@ -103,7 +103,7 @@ public class ChatMessagesComponent {
         controller.mentionUserHandler(userProfile);
     }
 
-    public void setSearchPredicate(Predicate<? super ChatMessageListItem<? extends ChatMessage>> predicate) {
+    public void setSearchPredicate(Predicate<? super ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate) {
         controller.chatMessagesListView.setSearchPredicate(predicate);
     }
 

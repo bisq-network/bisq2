@@ -19,7 +19,6 @@ package bisq.desktop.main.content.components.chatMessages;
 
 import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.*;
-import bisq.chat.bisqeasy.BisqEasyOfferMessage;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
@@ -116,7 +115,7 @@ public class ChatMessagesListView {
         return controller.view.getRoot();
     }
 
-    public void setSearchPredicate(Predicate<? super ChatMessageListItem<? extends ChatMessage>> predicate) {
+    public void setSearchPredicate(Predicate<? super ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate) {
         controller.setSearchPredicate(predicate);
     }
 
@@ -124,7 +123,7 @@ public class ChatMessagesListView {
         controller.refreshMessages();
     }
 
-    static class Controller implements bisq.desktop.common.view.Controller {
+    public static class Controller implements bisq.desktop.common.view.Controller {
         private final ChatService chatService;
         private final UserIdentityService userIdentityService;
         private final UserProfileService userProfileService;
@@ -280,7 +279,7 @@ public class ChatMessagesListView {
             model.chatMessages.setAll(new ArrayList<>(model.chatMessages));
         }
 
-        private void setSearchPredicate(Predicate<? super ChatMessageListItem<? extends ChatMessage>> predicate) {
+        private void setSearchPredicate(Predicate<? super ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate) {
             model.setSearchPredicate(Objects.requireNonNullElseGet(predicate, () -> e -> true));
             applyPredicate();
         }
@@ -290,15 +289,15 @@ public class ChatMessagesListView {
         // UI - delegate to client
         ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-        void onMention(UserProfile userProfile) {
+        public void onMention(UserProfile userProfile) {
             mentionUserHandler.accept(userProfile);
         }
 
-        void onShowChatUserDetails(ChatMessage chatMessage) {
+        public void onShowChatUserDetails(ChatMessage chatMessage) {
             showChatUserDetailsHandler.accept(chatMessage);
         }
 
-        void onReply(ChatMessage chatMessage) {
+        public void onReply(ChatMessage chatMessage) {
             replyHandler.accept(chatMessage);
         }
 
@@ -307,7 +306,7 @@ public class ChatMessagesListView {
         // UI - handler
         ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-        void onTakeOffer(BisqEasyOfferbookMessage chatMessage, boolean canTakeOffer) {
+        public void onTakeOffer(BisqEasyOfferbookMessage chatMessage, boolean canTakeOffer) {
             if (userIdentityService.getSelectedUserIdentity() == null ||
                     bannedUserService.isUserProfileBanned(chatMessage.getAuthorUserProfileId()) ||
                     bannedUserService.isUserProfileBanned(userIdentityService.getSelectedUserIdentity().getUserProfile())) {
@@ -363,7 +362,7 @@ public class ChatMessagesListView {
             }
         }
 
-        void onOpenPrivateChannel(ChatMessage chatMessage) {
+        public void onOpenPrivateChannel(ChatMessage chatMessage) {
             checkArgument(!model.isMyMessage(chatMessage));
 
             userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId())
@@ -412,7 +411,7 @@ public class ChatMessagesListView {
             menu.show(owner);
         }
 
-        private void onReportUser(ChatMessage chatMessage) {
+        public void onReportUser(ChatMessage chatMessage) {
             ChatChannelDomain chatChannelDomain = model.getSelectedChannel().get().getChatChannelDomain();
             if (chatMessage instanceof PrivateChatMessage) {
                 PrivateChatMessage privateChatMessage = (PrivateChatMessage) chatMessage;
@@ -425,7 +424,7 @@ public class ChatMessagesListView {
             }
         }
 
-        private void onIgnoreUser(ChatMessage chatMessage) {
+        public void onIgnoreUser(ChatMessage chatMessage) {
             userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId())
                     .ifPresent(userProfileService::ignoreUserProfile);
         }
@@ -491,7 +490,7 @@ public class ChatMessagesListView {
 
         private void applyPredicate() {
             boolean offerOnly = settingsService.getOffersOnly().get();
-            Predicate<ChatMessageListItem<? extends ChatMessage>> predicate = item -> {
+            Predicate<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate = item -> {
                 Optional<UserProfile> senderUserProfile = item.getSenderUserProfile();
                 if (senderUserProfile.isEmpty()) {
                     return false;
@@ -523,7 +522,7 @@ public class ChatMessagesListView {
             // We clear and fill the list at channel change. The addObserver triggers the add method for each item,
             // but as we have a contains() check there it will not have any effect.
             model.chatMessages.clear();
-            model.chatMessages.addAll(channel.getChatMessages().stream().map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService,
+            model.chatMessages.addAll(channel.getChatMessages().stream().map(chatMessage -> new ChatMessageListItem<>(chatMessage, channel, userProfileService, reputationService,
                             bisqEasyTradeService, userIdentityService, networkService))
                     .collect(Collectors.toSet()));
             maybeScrollDownOnNewItemAdded();
@@ -536,7 +535,7 @@ public class ChatMessagesListView {
                     // @namloan Could you re-test the performance issues with testing if using UIThread.run makes a difference?
                     // There have been many changes in the meantime, so maybe the performance issue was fixed by other changes.
                     UIThread.runOnNextRenderFrame(() -> {
-                        ChatMessageListItem<M> item = new ChatMessageListItem<>(chatMessage, userProfileService, reputationService,
+                        ChatMessageListItem<M, C> item = new ChatMessageListItem<>(chatMessage, channel, userProfileService, reputationService,
                                 bisqEasyTradeService, userIdentityService, networkService);
                         // As long as we use runOnNextRenderFrame we need to check to avoid adding duplicates
                         // The model is updated async in stages, verify that messages belong to the selected channel
@@ -552,7 +551,8 @@ public class ChatMessagesListView {
                     if (element instanceof ChatMessage) {
                         UIThread.runOnNextRenderFrame(() -> {
                             ChatMessage chatMessage = (ChatMessage) element;
-                            Optional<ChatMessageListItem<? extends ChatMessage>> toRemove = model.chatMessages.stream()
+                            Optional<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> toRemove =
+                                    model.chatMessages.stream()
                                     .filter(item -> item.getChatMessage().getId().equals(chatMessage.getId()))
                                     .findAny();
                             toRemove.ifPresent(item -> {
@@ -573,45 +573,25 @@ public class ChatMessagesListView {
             });
         }
 
-        String getUserName(String userProfileId) {
+        public String getUserName(String userProfileId) {
             return userProfileService.findUserProfile(userProfileId)
                     .map(UserProfile::getUserName)
                     .orElse(Res.get("data.na"));
         }
-
-        String getSupportedLanguageCodes(BisqEasyOfferbookMessage chatMessage) {
-            String result = getSupportedLanguageCodes(chatMessage, ", ", LanguageRepository::getDisplayLanguage);
-            return result.isEmpty() ? "" : Res.get("chat.message.supportedLanguages") + " " + StringUtils.truncate(result, 100);
-        }
-
-        String getSupportedLanguageCodesForTooltip(BisqEasyOfferbookMessage chatMessage) {
-            String result = getSupportedLanguageCodes(chatMessage, "\n", LanguageRepository::getDisplayString);
-            return result.isEmpty() ? "" : Res.get("chat.message.supportedLanguages") + "\n" + result;
-        }
-
-        private String getSupportedLanguageCodes(BisqEasyOfferbookMessage chatMessage, String separator, Function<String, String> toStringFunction) {
-            return chatMessage.getBisqEasyOffer()
-                    .map(BisqEasyOffer::getSupportedLanguageCodes)
-                    .map(supportedLanguageCodes -> Joiner.on(separator)
-                            .join(supportedLanguageCodes.stream()
-                                    .map(toStringFunction)
-                                    .collect(Collectors.toList())))
-                    .orElse("");
-        }
     }
 
     @Getter
-    static class Model implements bisq.desktop.common.view.Model {
+    public static class Model implements bisq.desktop.common.view.Model {
         private final UserIdentityService userIdentityService;
         private final ObjectProperty<ChatChannel<?>> selectedChannel = new SimpleObjectProperty<>();
-        private final ObservableList<ChatMessageListItem<? extends ChatMessage>> chatMessages = FXCollections.observableArrayList();
-        private final FilteredList<ChatMessageListItem<? extends ChatMessage>> filteredChatMessages = new FilteredList<>(chatMessages);
-        private final SortedList<ChatMessageListItem<? extends ChatMessage>> sortedChatMessages = new SortedList<>(filteredChatMessages);
+        private final ObservableList<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> chatMessages = FXCollections.observableArrayList();
+        private final FilteredList<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> filteredChatMessages = new FilteredList<>(chatMessages);
+        private final SortedList<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> sortedChatMessages = new SortedList<>(filteredChatMessages);
         private final BooleanProperty isPublicChannel = new SimpleBooleanProperty();
         private final ObjectProperty<ChatMessage> selectedChatMessageForMoreOptionsPopup = new SimpleObjectProperty<>(null);
         private final ChatChannelDomain chatChannelDomain;
         @Setter
-        private Predicate<? super ChatMessageListItem<? extends ChatMessage>> searchPredicate = e -> true;
+        private Predicate<? super ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> searchPredicate = e -> true;
 
         private boolean autoScrollToBottom;
         private int numReadMessages;
@@ -630,17 +610,12 @@ public class ChatMessagesListView {
         boolean isMyMessage(ChatMessage chatMessage) {
             return chatMessage.isMyMessage(userIdentityService);
         }
-
-        boolean hasTradeChatOffer(ChatMessage chatMessage) {
-            return chatMessage instanceof BisqEasyOfferMessage &&
-                    ((BisqEasyOfferMessage) chatMessage).hasBisqEasyOffer();
-        }
     }
 
 
     @Slf4j
     private static class View extends bisq.desktop.common.view.View<StackPane, Model, Controller> {
-        private final ListView<ChatMessageListItem<? extends ChatMessage>> listView;
+        private final ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> listView;
         private final ImageView scrollDownImageView;
         private final Badge scrollDownBadge;
         private final BisqTooltip scrollDownTooltip;

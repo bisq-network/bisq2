@@ -17,10 +17,14 @@
 
 package bisq.desktop.main.content.components.chatMessages;
 
+import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.chat.Citation;
+import bisq.chat.bisqeasy.BisqEasyOfferMessage;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.priv.PrivateChatMessage;
+import bisq.chat.pub.PublicChatChannel;
+import bisq.common.locale.LanguageRepository;
 import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
 import bisq.common.observable.map.HashMapObserver;
@@ -39,6 +43,7 @@ import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
+import com.google.common.base.Joiner;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -50,14 +55,17 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.text.DateFormat;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static bisq.desktop.main.content.components.chatMessages.ChatMessagesComponent.View.EDITED_POST_FIX;
 
 @Slf4j
 @Getter
 @EqualsAndHashCode
-public final class ChatMessageListItem<T extends ChatMessage> implements Comparable<ChatMessageListItem<T>> {
-    private final T chatMessage;
+public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChannel<M>> implements Comparable<ChatMessageListItem<M, C>> {
+    private final M chatMessage;
+    private final C chatChannel;
     private final String message;
     private final String date;
     private final Optional<Citation> citation;
@@ -78,13 +86,15 @@ public final class ChatMessageListItem<T extends ChatMessage> implements Compara
     @EqualsAndHashCode.Exclude
     private final Set<Pin> statusPins = new HashSet<>();
 
-    public ChatMessageListItem(T chatMessage,
+    public ChatMessageListItem(M chatMessage,
+                               C chatChannel,
                                UserProfileService userProfileService,
                                ReputationService reputationService,
                                BisqEasyTradeService bisqEasyTradeService,
                                UserIdentityService userIdentityService,
                                NetworkService networkService) {
         this.chatMessage = chatMessage;
+        this.chatChannel = chatChannel;
 
         if (chatMessage instanceof PrivateChatMessage) {
             senderUserProfile = Optional.of(((PrivateChatMessage) chatMessage).getSenderUserProfile());
@@ -204,5 +214,38 @@ public final class ChatMessageListItem<T extends ChatMessage> implements Compara
     public void dispose() {
         mapPins.forEach(Pin::unbind);
         statusPins.forEach(Pin::unbind);
+    }
+
+    public boolean hasTradeChatOffer() {
+        return chatMessage instanceof BisqEasyOfferMessage &&
+                ((BisqEasyOfferMessage) chatMessage).hasBisqEasyOffer();
+    }
+
+    public boolean isBisqEasyPublicChatMessageWithOffer() {
+        return chatMessage instanceof BisqEasyOfferbookMessage && hasTradeChatOffer();
+    }
+
+    public boolean isPublicChannel() {
+        return chatChannel instanceof PublicChatChannel;
+    }
+
+    public String getSupportedLanguageCodes(BisqEasyOfferbookMessage chatMessage) {
+        String result = getSupportedLanguageCodes(chatMessage, ", ", LanguageRepository::getDisplayLanguage);
+        return result.isEmpty() ? "" : Res.get("chat.message.supportedLanguages") + " " + StringUtils.truncate(result, 100);
+    }
+
+    public String getSupportedLanguageCodesForTooltip(BisqEasyOfferbookMessage chatMessage) {
+        String result = getSupportedLanguageCodes(chatMessage, "\n", LanguageRepository::getDisplayString);
+        return result.isEmpty() ? "" : Res.get("chat.message.supportedLanguages") + "\n" + result;
+    }
+
+    private String getSupportedLanguageCodes(BisqEasyOfferbookMessage chatMessage, String separator, Function<String, String> toStringFunction) {
+        return chatMessage.getBisqEasyOffer()
+                .map(BisqEasyOffer::getSupportedLanguageCodes)
+                .map(supportedLanguageCodes -> Joiner.on(separator)
+                        .join(supportedLanguageCodes.stream()
+                                .map(toStringFunction)
+                                .collect(Collectors.toList())))
+                .orElse("");
     }
 }

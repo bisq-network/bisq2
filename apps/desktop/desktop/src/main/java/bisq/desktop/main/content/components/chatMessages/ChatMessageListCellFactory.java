@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.components.chatMessages;
 
+import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.chat.Citation;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
@@ -27,6 +28,7 @@ import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.main.content.components.ReputationScoreDisplay;
 import bisq.desktop.main.content.components.UserProfileIcon;
+import bisq.desktop.main.content.components.chatMessages.messages.PeerMessage;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
@@ -47,7 +49,8 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
-final class ChatMessageListCellFactory implements Callback<ListView<ChatMessageListItem<? extends ChatMessage>>, ListCell<ChatMessageListItem<? extends ChatMessage>>> {
+final class ChatMessageListCellFactory implements Callback<ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>>,
+        ListCell<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>>> {
     private final ChatMessagesListView.Controller controller;
     private final ChatMessagesListView.Model model;
 
@@ -57,13 +60,12 @@ final class ChatMessageListCellFactory implements Callback<ListView<ChatMessageL
     }
 
     @Override
-    public ListCell<ChatMessageListItem<? extends ChatMessage>> call(ListView<ChatMessageListItem<? extends ChatMessage>> list) {
+    public ListCell<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> call(ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list) {
         return new ListCell<>() {
             private final static double CHAT_BOX_MAX_WIDTH = 1200;
             private final static double CHAT_MESSAGE_BOX_MAX_WIDTH = 630;
             private final String EDITED_POST_FIX = " " + Res.get("chat.message.wasEdited");
 
-            private final ReputationScoreDisplay reputationScoreDisplay;
             private final Button takeOfferButton, removeOfferButton;
             private final Label message, userName, dateTime, replyIcon, pmIcon, editIcon, deleteIcon, copyIcon,
                     moreOptionsIcon, supportedLanguages;
@@ -71,7 +73,7 @@ final class ChatMessageListCellFactory implements Callback<ListView<ChatMessageL
             private final Label quotedMessageField = new Label();
             private final BisqTextArea editInputField;
             private final Button saveEditButton, cancelEditButton;
-            private final VBox mainVBox, quotedMessageVBox;
+            private VBox mainVBox, quotedMessageVBox;
             private final HBox cellHBox, messageHBox, messageBgHBox, reactionsHBox, editButtonsHBox;
             private final UserProfileIcon userProfileIcon = new UserProfileIcon(60);
             private final Set<Subscription> subscriptions = new HashSet<>();
@@ -87,7 +89,6 @@ final class ChatMessageListCellFactory implements Callback<ListView<ChatMessageL
                 dateTime = new Label();
                 dateTime.getStyleClass().addAll("text-fill-grey-dimmed", "font-size-09", "font-light");
 
-                reputationScoreDisplay = new ReputationScoreDisplay();
                 takeOfferButton = new Button(Res.get("offer.takeOffer"));
 
                 removeOfferButton = new Button(Res.get("offer.deleteOffer"));
@@ -147,21 +148,18 @@ final class ChatMessageListCellFactory implements Callback<ListView<ChatMessageL
                 VBox.setMargin(quotedMessageVBox, new Insets(15, 0, 10, 5));
                 VBox.setMargin(messageHBox, new Insets(10, 0, 0, 0));
                 VBox.setMargin(editButtonsHBox, new Insets(10, 25, -15, 0));
-                mainVBox = new VBox();
-                mainVBox.setFillWidth(true);
-                HBox.setHgrow(mainVBox, Priority.ALWAYS);
+
                 cellHBox = new HBox(15);
                 cellHBox.setMaxWidth(CHAT_BOX_MAX_WIDTH);
                 cellHBox.setAlignment(Pos.CENTER);
             }
-
 
             private void hideReactionsBox() {
                 reactionsHBox.setVisible(false);
             }
 
             @Override
-            public void updateItem(final ChatMessageListItem<? extends ChatMessage> item, boolean empty) {
+            public void updateItem(final ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item, boolean empty) {
                 super.updateItem(item, empty);
                 if (item == null || empty) {
                     cleanup();
@@ -176,18 +174,17 @@ final class ChatMessageListCellFactory implements Callback<ListView<ChatMessageL
                     return;
                 }
 
-                boolean hasTradeChatOffer = model.hasTradeChatOffer(chatMessage);
-                boolean isBisqEasyPublicChatMessageWithOffer = chatMessage instanceof BisqEasyOfferbookMessage && hasTradeChatOffer;
+                boolean hasTradeChatOffer = item.hasTradeChatOffer();
+                boolean isBisqEasyPublicChatMessageWithOffer = item.isBisqEasyPublicChatMessageWithOffer();
                 boolean isMyMessage = model.isMyMessage(chatMessage);
 
-                if (isBisqEasyPublicChatMessageWithOffer) {
-                    supportedLanguages.setText(controller.getSupportedLanguageCodes(((BisqEasyOfferbookMessage) chatMessage)));
-                    supportedLanguages.setTooltip(new BisqTooltip(controller.getSupportedLanguageCodesForTooltip(((BisqEasyOfferbookMessage) chatMessage))));
-                }
+//                if (isBisqEasyPublicChatMessageWithOffer) {
+//                    supportedLanguages.setText(controller.getSupportedLanguageCodes(((BisqEasyOfferbookMessage) chatMessage)));
+//                    supportedLanguages.setTooltip(new BisqTooltip(controller.getSupportedLanguageCodesForTooltip(((BisqEasyOfferbookMessage) chatMessage))));
+//                }
 
                 dateTime.setVisible(false);
 
-                cellHBox.getChildren().setAll(mainVBox);
 
                 message.maxWidthProperty().unbind();
                 if (hasTradeChatOffer) {
@@ -198,10 +195,16 @@ final class ChatMessageListCellFactory implements Callback<ListView<ChatMessageL
                 messageBgHBox.getStyleClass().removeAll("chat-message-bg-my-message", "chat-message-bg-peer-message");
                 VBox userProfileIconVbox = new VBox(userProfileIcon);
                 if (isMyMessage) {
+                    mainVBox = new VBox();
+                    mainVBox.setFillWidth(true);
+                    HBox.setHgrow(mainVBox, Priority.ALWAYS);
                     buildMyMessage(isBisqEasyPublicChatMessageWithOffer, userProfileIconVbox, chatMessage);
                 } else {
-                    buildPeerMessage(item, isBisqEasyPublicChatMessageWithOffer, userProfileIconVbox, chatMessage);
+                    mainVBox = new PeerMessage(item, list, controller, model);
+                    //buildPeerMessage(item, isBisqEasyPublicChatMessageWithOffer, userProfileIconVbox, chatMessage);
                 }
+
+                cellHBox.getChildren().setAll(mainVBox);
 
                 handleQuoteMessageBox(item);
                 handleReactionsBox(item);
@@ -256,64 +259,6 @@ final class ChatMessageListCellFactory implements Callback<ListView<ChatMessageL
 
                 setGraphic(cellHBox);
                 setAlignment(Pos.CENTER);
-            }
-
-            private void buildPeerMessage(ChatMessageListItem<? extends ChatMessage> item, boolean isBisqEasyPublicChatMessageWithOffer, VBox userProfileIconVbox, ChatMessage chatMessage) {
-                // Peer
-                HBox userNameAndDateHBox = new HBox(10, userName, dateTime);
-                message.setAlignment(Pos.CENTER_LEFT);
-                userNameAndDateHBox.setAlignment(Pos.CENTER_LEFT);
-
-                userProfileIcon.setSize(60);
-                HBox.setMargin(replyIcon, new Insets(4, 0, -4, 10));
-                HBox.setMargin(pmIcon, new Insets(4, 0, -4, 0));
-                HBox.setMargin(moreOptionsIcon, new Insets(6, 0, -6, 0));
-
-
-                quotedMessageVBox.setId("chat-message-quote-box-peer-msg");
-
-                messageBgHBox.getStyleClass().add("chat-message-bg-peer-message");
-                if (isBisqEasyPublicChatMessageWithOffer) {
-                    reactionsHBox.getChildren().setAll(replyIcon, pmIcon, editIcon, deleteIcon, moreOptionsIcon, supportedLanguages, Spacer.fillHBox());
-                    message.maxWidthProperty().bind(list.widthProperty().subtract(430));
-                    userProfileIconVbox.setAlignment(Pos.CENTER_LEFT);
-
-                    Label reputationLabel = new Label(Res.get("chat.message.reputation").toUpperCase());
-                    reputationLabel.getStyleClass().add("bisq-text-7");
-
-                    reputationScoreDisplay.setReputationScore(item.getReputationScore());
-                    VBox reputationVBox = new VBox(4, reputationLabel, reputationScoreDisplay);
-                    reputationVBox.setAlignment(Pos.CENTER_LEFT);
-
-                    BisqEasyOfferbookMessage bisqEasyOfferbookMessage = (BisqEasyOfferbookMessage) chatMessage;
-                    takeOfferButton.setOnAction(e -> controller.onTakeOffer(bisqEasyOfferbookMessage, item.isCanTakeOffer()));
-                    takeOfferButton.setDefaultButton(item.isCanTakeOffer());
-                    takeOfferButton.setMinWidth(Control.USE_PREF_SIZE);
-
-                    VBox messageVBox = new VBox(quotedMessageVBox, message);
-                    HBox.setMargin(userProfileIconVbox, new Insets(-5, 0, -5, 0));
-                    HBox.setMargin(messageVBox, new Insets(0, 0, 0, -10));
-                    HBox.setMargin(reputationVBox, new Insets(-5, 10, 0, 0));
-                    HBox.setMargin(takeOfferButton, new Insets(0, 10, 0, 0));
-                    messageBgHBox.getChildren().setAll(userProfileIconVbox, messageVBox, Spacer.fillHBox(), reputationVBox, takeOfferButton);
-
-                    VBox.setMargin(userNameAndDateHBox, new Insets(-5, 0, 5, 10));
-                    mainVBox.getChildren().setAll(userNameAndDateHBox, messageBgHBox, reactionsHBox);
-                } else {
-                    reactionsHBox.getChildren().setAll(replyIcon, pmIcon, editIcon, deleteIcon, moreOptionsIcon, Spacer.fillHBox());
-                    message.maxWidthProperty().bind(list.widthProperty().subtract(140));//165
-                    userProfileIcon.setSize(30);
-                    userProfileIconVbox.setAlignment(Pos.TOP_LEFT);
-
-                    VBox messageVBox = new VBox(quotedMessageVBox, message);
-                    HBox.setMargin(userProfileIconVbox, new Insets(7.5, 0, -5, 5));
-                    HBox.setMargin(messageVBox, new Insets(0, 0, 0, -10));
-                    messageBgHBox.getChildren().setAll(userProfileIconVbox, messageVBox);
-                    messageHBox.getChildren().setAll(messageBgHBox, Spacer.fillHBox());
-
-                    VBox.setMargin(userNameAndDateHBox, new Insets(-5, 0, -5, 10));
-                    mainVBox.getChildren().setAll(userNameAndDateHBox, messageHBox, reactionsHBox);
-                }
             }
 
             private void buildMyMessage(boolean isBisqEasyPublicChatMessageWithOffer, VBox userProfileIconVbox, ChatMessage chatMessage) {
@@ -421,7 +366,7 @@ final class ChatMessageListCellFactory implements Callback<ListView<ChatMessageL
                 cancelEditButton.setOnAction(e -> onCloseEditMessage());
             }
 
-            private void handleReactionsBox(ChatMessageListItem<? extends ChatMessage> item) {
+            private void handleReactionsBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item) {
                 ChatMessage chatMessage = item.getChatMessage();
                 boolean isMyMessage = model.isMyMessage(chatMessage);
 
@@ -478,7 +423,7 @@ final class ChatMessageListCellFactory implements Callback<ListView<ChatMessageL
                 });
             }
 
-            private void handleQuoteMessageBox(ChatMessageListItem<? extends ChatMessage> item) {
+            private void handleQuoteMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item) {
                 Optional<Citation> optionalCitation = item.getCitation();
                 if (optionalCitation.isPresent()) {
                     Citation citation = optionalCitation.get();
@@ -499,7 +444,7 @@ final class ChatMessageListCellFactory implements Callback<ListView<ChatMessageL
                 }
             }
 
-            private void onEditMessage(ChatMessageListItem<? extends ChatMessage> item) {
+            private void onEditMessage(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item) {
                 reactionsHBox.setVisible(false);
                 editInputField.setVisible(true);
                 editInputField.setManaged(true);
@@ -543,7 +488,7 @@ final class ChatMessageListCellFactory implements Callback<ListView<ChatMessageL
         };
     }
 
-    private Label getIconWithToolTip(AwesomeIcon icon, String tooltipString) {
+    private static Label getIconWithToolTip(AwesomeIcon icon, String tooltipString) {
         Label iconLabel = Icons.getIcon(icon);
         iconLabel.setCursor(Cursor.HAND);
         iconLabel.setTooltip(new BisqTooltip(tooltipString, true));
