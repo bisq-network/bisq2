@@ -1,3 +1,20 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package bisq.desktop.main.content.components.chatMessages.messages;
 
 import bisq.chat.ChatChannel;
@@ -31,15 +48,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-// Represents mainVBox
-public class PeerMessage extends VBox {
+public final class PeerMessage extends Message {
     private final static double CHAT_MESSAGE_BOX_MAX_WIDTH = 630;
 
     private final ChatMessagesListView.Controller controller;
     private final ChatMessagesListView.Model model;
     private final UserProfileIcon userProfileIcon = new UserProfileIcon(60);
     private final VBox quotedMessageVBox;
-    private final Label message, userName, dateTime, replyIcon, pmIcon, moreOptionsIcon, supportedLanguages;
+    private final Label message, userName, dateTime, replyIcon, pmIcon, moreOptionsIcon;
     private final HBox messageHBox, messageBgHBox;
     private final HBox reactionsHBox;
     private final ReputationScoreDisplay reputationScoreDisplay;
@@ -80,7 +96,7 @@ public class PeerMessage extends VBox {
         replyIcon = getIconWithToolTip(AwesomeIcon.REPLY, Res.get("chat.message.reply"));
         pmIcon = getIconWithToolTip(AwesomeIcon.COMMENT_ALT, Res.get("chat.message.privateMessage"));
         moreOptionsIcon = getIconWithToolTip(AwesomeIcon.ELLIPSIS_HORIZONTAL, Res.get("chat.message.moreOptions"));
-        supportedLanguages = new Label();
+        Label supportedLanguages = new Label();
         HBox.setMargin(replyIcon, new Insets(4, 0, -4, 10));
         HBox.setMargin(pmIcon, new Insets(4, 0, -4, 0));
         HBox.setMargin(moreOptionsIcon, new Insets(6, 0, -6, 0));
@@ -275,5 +291,18 @@ public class PeerMessage extends VBox {
         ClipboardUtil.copyToClipboard(chatMessage.getText());
     }
 
-    // TODO: Add clean-up function
+    @Override
+    public void cleanup() {
+        message.maxWidthProperty().unbind();
+
+        takeOfferButton.setOnAction(null);
+
+        userName.setOnMouseClicked(null);
+        userProfileIcon.setOnMouseClicked(null);
+        replyIcon.setOnMouseClicked(null);
+        pmIcon.setOnMouseClicked(null);
+        moreOptionsIcon.setOnMouseClicked(null);
+
+        userProfileIcon.releaseResources();
+    }
 }

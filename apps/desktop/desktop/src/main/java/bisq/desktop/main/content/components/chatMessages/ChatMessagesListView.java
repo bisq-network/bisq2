@@ -30,10 +30,8 @@ import bisq.chat.priv.PrivateChatMessage;
 import bisq.chat.pub.PublicChatChannel;
 import bisq.chat.pub.PublicChatMessage;
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
-import bisq.common.locale.LanguageRepository;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
-import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.observable.FxBindings;
@@ -59,7 +57,6 @@ import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationService;
-import com.google.common.base.Joiner;
 import com.sun.javafx.scene.control.VirtualScrollBar;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
@@ -88,7 +85,6 @@ import org.fxmisc.easybind.Subscription;
 
 import java.util.*;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -324,7 +320,7 @@ public class ChatMessagesListView {
             Navigation.navigateTo(NavigationTarget.TAKE_OFFER, new TakeOfferController.InitData(bisqEasyOffer));
         }
 
-        void onDeleteMessage(ChatMessage chatMessage) {
+        public void onDeleteMessage(ChatMessage chatMessage) {
             String authorUserProfileId = chatMessage.getAuthorUserProfileId();
             userIdentityService.findUserIdentity(authorUserProfileId)
                     .ifPresent(authorUserIdentity -> {
@@ -369,7 +365,7 @@ public class ChatMessagesListView {
                     .ifPresent(this::createAndSelectTwoPartyPrivateChatChannel);
         }
 
-        void onSaveEditedMessage(ChatMessage chatMessage, String editedText) {
+        public void onSaveEditedMessage(ChatMessage chatMessage, String editedText) {
             checkArgument(chatMessage instanceof PublicChatMessage);
             checkArgument(model.isMyMessage(chatMessage));
 
@@ -429,7 +425,7 @@ public class ChatMessagesListView {
                     .ifPresent(userProfileService::ignoreUserProfile);
         }
 
-        void onCopyMessage(ChatMessage chatMessage) {
+        public void onCopyMessage(ChatMessage chatMessage) {
             ClipboardUtil.copyToClipboard(chatMessage.getText());
         }
 
