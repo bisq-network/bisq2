@@ -19,13 +19,11 @@ package bisq.desktop.main.content.components.chatMessages.messages;
 
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
-import bisq.chat.Citation;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.desktop.common.Icons;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.components.controls.BisqTooltip;
-import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.desktop.main.content.components.chatMessages.ChatMessageListItem;
 import bisq.desktop.main.content.components.chatMessages.ChatMessagesListView;
 import bisq.i18n.Res;
@@ -37,136 +35,33 @@ import javafx.scene.Cursor;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
-import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.Optional;
-
-public final class MyMessage extends Message {
-    private final static double CHAT_MESSAGE_BOX_MAX_WIDTH = 630;
+public final class MyMessage extends BubbleMessage {
     private final static String EDITED_POST_FIX = " " + Res.get("chat.message.wasEdited");
 
-    private final ChatMessagesListView.Controller controller;
-    private final ChatMessagesListView.Model model;
-    private final UserProfileIcon userProfileIcon = new UserProfileIcon(60);
-    private final Label message, userName, dateTime, editIcon, deleteIcon, copyIcon;
-    private final Label quotedMessageField = new Label();
-    private final VBox quotedMessageVBox;
-    private final HBox messageHBox, messageBgHBox;
     private final Button removeOfferButton;
     private final Label deliveryState;
-    private final BisqTextArea editInputField;
-    private final Button saveEditButton, cancelEditButton;
-    private final HBox reactionsHBox, editButtonsHBox;
-    private Subscription reactionsVisiblePropertyPin, messageDeliveryStatusIconPin;
+    private final Subscription reactionsVisiblePropertyPin, messageDeliveryStatusIconPin;
+    private Label editIcon, deleteIcon, copyIcon;
+    private BisqTextArea editInputField;
+    private Button saveEditButton, cancelEditButton;
+    private HBox editButtonsHBox;
 
-    public MyMessage(final ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
+    public MyMessage(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
                      ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
                      ChatMessagesListView.Controller controller, ChatMessagesListView.Model model) {
-        this.controller = controller;
-        this.model = model;
+        super(item, list, controller, model);
 
-        // userName and DateTime
-        userName = new Label();
-        userName.getStyleClass().addAll("text-fill-white", "font-size-09", "font-default");
-        dateTime = new Label();
-        dateTime.getStyleClass().addAll("text-fill-grey-dimmed", "font-size-09", "font-light");
-        dateTime.setVisible(false);
-        dateTime.setText(item.getDate());
-
-        HBox userNameAndDateHBox = new HBox(10, dateTime, userName);
-        userNameAndDateHBox.setAlignment(Pos.CENTER_RIGHT);
-        VBox.setMargin(userNameAndDateHBox, new Insets(-5, 10, -5, 0));
-
-        // userProfileIcon
-        userProfileIcon.setSize(60);
-        VBox userProfileIconVbox = new VBox(userProfileIcon);
-
-        item.getSenderUserProfile().ifPresent(author -> {
-            userName.setText(author.getUserName());
-            userName.setOnMouseClicked(e -> controller.onMention(author));
-
-            userProfileIcon.setUserProfile(author);
-            userProfileIcon.setCursor(Cursor.HAND);
-            Tooltip.install(userProfileIcon, new BisqTooltip(author.getTooltipString()));
-            userProfileIcon.setOnMouseClicked(e -> controller.onShowChatUserDetails(item.getChatMessage()));
-        });
-
-        // removeOfferButton
-        removeOfferButton = new Button(Res.get("offer.deleteOffer"));
-        removeOfferButton.getStyleClass().addAll("red-small-button", "no-background");
-
-        // reactions
-        editIcon = getIconWithToolTip(AwesomeIcon.EDIT, Res.get("action.edit"));
-        copyIcon = getIconWithToolTip(AwesomeIcon.COPY, Res.get("action.copyToClipboard"));
-        deleteIcon = getIconWithToolTip(AwesomeIcon.REMOVE_SIGN, Res.get("action.delete"));
-        HBox.setMargin(editIcon, new Insets(1, 0, 0, 0));
-        reactionsHBox = new HBox(20);
-        reactionsHBox.setVisible(false);
-        handleReactionsBox(item);
-
-        // supportedLanguages
-        Label supportedLanguages = new Label();
-        if (item.isBisqEasyPublicChatMessageWithOffer()) {
-            supportedLanguages.setText(item.getSupportedLanguageCodes(((BisqEasyOfferbookMessage) item.getChatMessage())));
-            supportedLanguages.setTooltip(new BisqTooltip(item.getSupportedLanguageCodesForTooltip(((BisqEasyOfferbookMessage) item.getChatMessage()))));
-        }
-
-        // edit
-        editInputField = new BisqTextArea();
-        editInputField.setId("chat-messages-edit-text-area");
-        editInputField.setMinWidth(150);
-        editInputField.setVisible(false);
-        editInputField.setManaged(false);
-
-        // edit buttons
-        saveEditButton = new Button(Res.get("action.save"));
-        saveEditButton.setDefaultButton(true);
-        cancelEditButton = new Button(Res.get("action.cancel"));
-        editButtonsHBox = new HBox(15, Spacer.fillHBox(), cancelEditButton, saveEditButton);
-        editButtonsHBox.setVisible(false);
-        editButtonsHBox.setManaged(false);
-        VBox.setMargin(editButtonsHBox, new Insets(10, 25, -15, 0));
-        handleEditBox(item.getChatMessage());
-
-        // quoted message
-        quotedMessageVBox = new VBox(5);
-        quotedMessageVBox.setVisible(false);
-        quotedMessageVBox.setManaged(false);
+        removeOfferButton = createAndGetRemoveOfferButton();
         quotedMessageVBox.setId("chat-message-quote-box-my-msg");
-        VBox.setMargin(quotedMessageVBox, new Insets(15, 0, 10, 5));
-        quotedMessageField.setWrapText(true);
-        handleQuoteMessageBox(item);
-
-        // HBox for message reputation vBox and action button
-        message = new Label();
-        message.maxWidthProperty().unbind();
-        message.setWrapText(true);
-        message.setPadding(new Insets(10));
-        message.getStyleClass().addAll("text-fill-white", "normal-text", "font-default");
+        setUpEditFunctionality();
         message.setAlignment(Pos.CENTER_RIGHT);
-        message.setText(item.getMessage());
-
-        // message background
-        messageBgHBox = new HBox(15);
-        messageBgHBox.setAlignment(Pos.CENTER_LEFT);
-        messageBgHBox.setMaxWidth(CHAT_MESSAGE_BOX_MAX_WIDTH);
         messageBgHBox.getStyleClass().add("chat-message-bg-my-message");
-        HBox.setHgrow(messageBgHBox, Priority.SOMETIMES);
-        if (item.hasTradeChatOffer()) {
-            messageBgHBox.setPadding(new Insets(15));
-        } else {
-            messageBgHBox.setPadding(new Insets(5, 15, 5, 15));
-        }
-
-        // messageHBox
-        messageHBox = new HBox();
-        VBox.setMargin(messageHBox, new Insets(10, 0, 0, 0));
 
         // deliveryState
         deliveryState = new Label();
@@ -174,6 +69,7 @@ public final class MyMessage extends Message {
         deliveryState.setTooltip(new BisqTooltip(true));
 
         VBox messageVBox = new VBox(quotedMessageVBox, message, editInputField);
+
         // TODO (refactor): Move this logic to BisqEasy package
         if (item.isBisqEasyPublicChatMessageWithOffer()) {
             message.maxWidthProperty().bind(list.widthProperty().subtract(160));
@@ -238,27 +134,47 @@ public final class MyMessage extends Message {
         VBox.setMargin(deliveryStateHBox, new Insets(4, 0, -3, 0));
         messageHBox.getChildren().setAll(Spacer.fillHBox(), messageBgHBox);
         getChildren().setAll(userNameAndDateHBox, messageHBox, editButtonsHBox, deliveryStateHBox);
-        setFillWidth(true);
-        HBox.setHgrow(this, Priority.ALWAYS);
     }
 
-    // TODO: move outside
-    private static Label getIconWithToolTip(AwesomeIcon icon, String tooltipString) {
-        Label iconLabel = Icons.getIcon(icon);
-        iconLabel.setCursor(Cursor.HAND);
-        iconLabel.setTooltip(new BisqTooltip(tooltipString, true));
-        return iconLabel;
+    @Override
+    protected void setUpUserNameAndDateTime() {
+        super.setUpUserNameAndDateTime();
+
+        userNameAndDateHBox = new HBox(10, dateTime, userName);
+        userNameAndDateHBox.setAlignment(Pos.CENTER_RIGHT);
+        VBox.setMargin(userNameAndDateHBox, new Insets(-5, 10, -5, 0));
     }
 
-    private void handleEditBox(ChatMessage chatMessage) {
-        saveEditButton.setOnAction(e -> {
-            controller.onSaveEditedMessage(chatMessage, editInputField.getText());
-            onCloseEditMessage();
-        });
-        cancelEditButton.setOnAction(e -> onCloseEditMessage());
+    @Override
+    protected void setUpReactions() {
+        editIcon = getIconWithToolTip(AwesomeIcon.EDIT, Res.get("action.edit"));
+        copyIcon = getIconWithToolTip(AwesomeIcon.COPY, Res.get("action.copyToClipboard"));
+        deleteIcon = getIconWithToolTip(AwesomeIcon.REMOVE_SIGN, Res.get("action.delete"));
+        HBox.setMargin(editIcon, new Insets(1, 0, 0, 0));
+        reactionsHBox.setVisible(false);
     }
 
-    private void handleReactionsBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item) {
+    private void setUpEditFunctionality() {
+        // edit
+        editInputField = new BisqTextArea();
+        editInputField.setId("chat-messages-edit-text-area");
+        editInputField.setMinWidth(150);
+        editInputField.setVisible(false);
+        editInputField.setManaged(false);
+
+        // edit buttons
+        saveEditButton = new Button(Res.get("action.save"));
+        saveEditButton.setDefaultButton(true);
+        cancelEditButton = new Button(Res.get("action.cancel"));
+        editButtonsHBox = new HBox(15, Spacer.fillHBox(), cancelEditButton, saveEditButton);
+        editButtonsHBox.setVisible(false);
+        editButtonsHBox.setManaged(false);
+        VBox.setMargin(editButtonsHBox, new Insets(10, 25, -15, 0));
+        handleEditBox();
+    }
+
+    @Override
+    protected void addReactionsHandlers() {
         ChatMessage chatMessage = item.getChatMessage();
         boolean isPublicChannel = item.isPublicChannel();
         boolean allowEditing = isPublicChannel;
@@ -267,10 +183,9 @@ public final class MyMessage extends Message {
             allowEditing = allowEditing && bisqEasyOfferbookMessage.getBisqEasyOffer().isEmpty();
         }
 
-        // myMessage
-        copyIcon.setOnMouseClicked(e -> controller.onCopyMessage(chatMessage));
+        copyIcon.setOnMouseClicked(e -> onCopyMessage(chatMessage));
         if (allowEditing) {
-            editIcon.setOnMouseClicked(e -> onEditMessage(item));
+            editIcon.setOnMouseClicked(e -> onEditMessage());
         }
         if (isPublicChannel) {
             deleteIcon.setOnMouseClicked(e -> controller.onDeleteMessage(chatMessage));
@@ -280,52 +195,25 @@ public final class MyMessage extends Message {
         editIcon.setManaged(allowEditing);
         deleteIcon.setVisible(isPublicChannel);
         deleteIcon.setManaged(isPublicChannel);
-        removeOfferButton.setVisible(isPublicChannel);
-        removeOfferButton.setManaged(isPublicChannel);
+    }
 
-        setOnMouseEntered(e -> {
-            if (model.getSelectedChatMessageForMoreOptionsPopup().get() != null || editInputField.isVisible()) {
-                return;
-            }
-            dateTime.setVisible(true);
-            reactionsHBox.setVisible(true);
+    private Button createAndGetRemoveOfferButton() {
+        Button button = new Button(Res.get("offer.deleteOffer"));
+        button.getStyleClass().addAll("red-small-button", "no-background");
+        button.setVisible(item.isPublicChannel());
+        button.setManaged(item.isPublicChannel());
+        return button;
+    }
+
+    private void handleEditBox() {
+        saveEditButton.setOnAction(e -> {
+            controller.onSaveEditedMessage(item.getChatMessage(), editInputField.getText());
+            onCloseEditMessage();
         });
-
-        setOnMouseExited(e -> {
-            if (model.getSelectedChatMessageForMoreOptionsPopup().get() == null) {
-                hideReactionsBox();
-                dateTime.setVisible(false);
-                reactionsHBox.setVisible(false);
-            }
-        });
+        cancelEditButton.setOnAction(e -> onCloseEditMessage());
     }
 
-    private void hideReactionsBox() {
-        reactionsHBox.setVisible(false);
-    }
-
-    private void handleQuoteMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item) {
-        Optional<Citation> optionalCitation = item.getCitation();
-        if (optionalCitation.isPresent()) {
-            Citation citation = optionalCitation.get();
-            if (citation.isValid()) {
-                quotedMessageVBox.setVisible(true);
-                quotedMessageVBox.setManaged(true);
-                quotedMessageField.setText(citation.getText());
-                quotedMessageField.setStyle("-fx-fill: -fx-mid-text-color");
-                Label userName = new Label(controller.getUserName(citation.getAuthorUserProfileId()));
-                userName.getStyleClass().add("font-medium");
-                userName.setStyle("-fx-text-fill: -bisq-mid-grey-30");
-                quotedMessageVBox.getChildren().setAll(userName, quotedMessageField);
-            }
-        } else {
-            quotedMessageVBox.getChildren().clear();
-            quotedMessageVBox.setVisible(false);
-            quotedMessageVBox.setManaged(false);
-        }
-    }
-
-    private void onEditMessage(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item) {
+    private void onEditMessage() {
         reactionsHBox.setVisible(false);
         editInputField.setVisible(true);
         editInputField.setManaged(true);
@@ -371,8 +259,8 @@ public final class MyMessage extends Message {
     public void cleanup() {
         message.maxWidthProperty().unbind();
         editInputField.maxWidthProperty().unbind();
+        deliveryState.getTooltip().textProperty().unbind();
 
-        editInputField.maxWidthProperty().unbind();
         removeOfferButton.setOnAction(null);
 
         saveEditButton.setOnAction(null);
