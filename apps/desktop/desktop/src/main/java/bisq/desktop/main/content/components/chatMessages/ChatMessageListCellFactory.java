@@ -22,6 +22,7 @@ import bisq.chat.ChatMessage;
 import bisq.desktop.main.content.components.chatMessages.messages.Message;
 import bisq.desktop.main.content.components.chatMessages.messages.MyMessage;
 import bisq.desktop.main.content.components.chatMessages.messages.PeerMessage;
+import bisq.desktop.main.content.components.chatMessages.messages.SystemMessage;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
@@ -70,12 +71,18 @@ final class ChatMessageListCellFactory implements Callback<ListView<ChatMessageL
                     return;
                 }
 
-                boolean isMyMessage = model.isMyMessage(chatMessage);
-                if (isMyMessage) {
-                    message = new MyMessage(item, list, controller, model);
+                // TODO: Implement factory method
+                if (item.isSystemMessage()) {
+                    message = new SystemMessage(item);
                 } else {
-                    message = new PeerMessage(item, list, controller, model);
+                    boolean isMyMessage = model.isMyMessage(chatMessage);
+                    if (isMyMessage) {
+                        message = new MyMessage(item, list, controller, model);
+                    } else {
+                        message = new PeerMessage(item, list, controller, model);
+                    }
                 }
+
                 cellHBox.getChildren().setAll(message);
 
                 listWidthPropertyPin = EasyBind.subscribe(message.widthProperty(), width -> {

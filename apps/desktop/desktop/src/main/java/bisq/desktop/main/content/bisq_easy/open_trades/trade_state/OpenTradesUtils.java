@@ -88,8 +88,7 @@ public class OpenTradesUtils {
                     .information(Res.get("bisqEasy.mediation.request.confirm.msg"))
                     .actionButtonText(Res.get("bisqEasy.mediation.request.confirm.openMediation"))
                     .onAction(() -> {
-                        //todo (Critical) should be handled with the solution how to treat system messages
-                        String systemMessage = Res.get("bisqEasy.mediation.requester.systemMessage");
+                        String systemMessage = Res.get("bisqEasy.mediation.requester.systemMessage", channel.getMyUserIdentity().getUserName());
                         channelService.sendSystemMessage(systemMessage, channel);
 
                         channel.setIsInMediation(true);
@@ -104,5 +103,4 @@ public class OpenTradesUtils {
             new Popup().warning(Res.get("bisqEasy.mediation.request.feedback.noMediatorAvailable")).show();
         }
     }
-
 }
