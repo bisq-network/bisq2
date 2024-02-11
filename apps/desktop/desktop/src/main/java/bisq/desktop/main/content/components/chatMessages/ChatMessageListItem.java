@@ -56,7 +56,7 @@ import static bisq.desktop.main.content.components.chatMessages.ChatMessagesComp
 @Slf4j
 @Getter
 @EqualsAndHashCode
-final class ChatMessageListItem<T extends ChatMessage> implements Comparable<ChatMessageListItem<T>> {
+public final class ChatMessageListItem<T extends ChatMessage> implements Comparable<ChatMessageListItem<T>> {
     private final T chatMessage;
     private final String message;
     private final String date;
