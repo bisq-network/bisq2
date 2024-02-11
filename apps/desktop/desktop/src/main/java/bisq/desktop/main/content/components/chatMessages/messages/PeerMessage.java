@@ -96,13 +96,19 @@ public final class PeerMessage extends Message {
         replyIcon = getIconWithToolTip(AwesomeIcon.REPLY, Res.get("chat.message.reply"));
         pmIcon = getIconWithToolTip(AwesomeIcon.COMMENT_ALT, Res.get("chat.message.privateMessage"));
         moreOptionsIcon = getIconWithToolTip(AwesomeIcon.ELLIPSIS_HORIZONTAL, Res.get("chat.message.moreOptions"));
-        Label supportedLanguages = new Label();
         HBox.setMargin(replyIcon, new Insets(4, 0, -4, 10));
         HBox.setMargin(pmIcon, new Insets(4, 0, -4, 0));
         HBox.setMargin(moreOptionsIcon, new Insets(6, 0, -6, 0));
         reactionsHBox = new HBox(20);
         reactionsHBox.setVisible(false);
         handleReactionsBox(item);
+
+        // supportedLanguages
+        Label supportedLanguages = new Label();
+        if (item.isBisqEasyPublicChatMessageWithOffer()) {
+            supportedLanguages.setText(item.getSupportedLanguageCodes(((BisqEasyOfferbookMessage) item.getChatMessage())));
+            supportedLanguages.setTooltip(new BisqTooltip(item.getSupportedLanguageCodesForTooltip(((BisqEasyOfferbookMessage) item.getChatMessage()))));
+        }
 
         // quoted message
         quotedMessageVBox = new VBox(5);
@@ -146,9 +152,6 @@ public final class PeerMessage extends Message {
 
         // TODO (refactor): Move this logic to BisqEasy package
         if (item.isBisqEasyPublicChatMessageWithOffer()) {
-            supportedLanguages.setText(item.getSupportedLanguageCodes(((BisqEasyOfferbookMessage) item.getChatMessage())));
-            supportedLanguages.setTooltip(new BisqTooltip(item.getSupportedLanguageCodesForTooltip(((BisqEasyOfferbookMessage) item.getChatMessage()))));
-
             reactionsHBox.getChildren().setAll(replyIcon, pmIcon, moreOptionsIcon, supportedLanguages, Spacer.fillHBox());
             message.maxWidthProperty().bind(list.widthProperty().subtract(430));
             userProfileIconVbox.setAlignment(Pos.CENTER_LEFT);

@@ -49,14 +49,14 @@ import java.util.Optional;
 
 public final class MyMessage extends Message {
     private final static double CHAT_MESSAGE_BOX_MAX_WIDTH = 630;
-    private final String EDITED_POST_FIX = " " + Res.get("chat.message.wasEdited");
+    private final static String EDITED_POST_FIX = " " + Res.get("chat.message.wasEdited");
 
     private final ChatMessagesListView.Controller controller;
     private final ChatMessagesListView.Model model;
     private final UserProfileIcon userProfileIcon = new UserProfileIcon(60);
-    private final Label message, userName, dateTime, editIcon, deleteIcon, copyIcon, moreOptionsIcon;
+    private final Label message, userName, dateTime, editIcon, deleteIcon, copyIcon;
     private final Label quotedMessageField = new Label();
-    private VBox quotedMessageVBox;
+    private final VBox quotedMessageVBox;
     private final HBox messageHBox, messageBgHBox;
     private final Button removeOfferButton;
     private final Label deliveryState;
@@ -64,7 +64,6 @@ public final class MyMessage extends Message {
     private final Button saveEditButton, cancelEditButton;
     private final HBox reactionsHBox, editButtonsHBox;
     private Subscription reactionsVisiblePropertyPin, messageDeliveryStatusIconPin;
-
 
     public MyMessage(final ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
                      ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
@@ -106,13 +105,17 @@ public final class MyMessage extends Message {
         editIcon = getIconWithToolTip(AwesomeIcon.EDIT, Res.get("action.edit"));
         copyIcon = getIconWithToolTip(AwesomeIcon.COPY, Res.get("action.copyToClipboard"));
         deleteIcon = getIconWithToolTip(AwesomeIcon.REMOVE_SIGN, Res.get("action.delete"));
-        moreOptionsIcon = getIconWithToolTip(AwesomeIcon.ELLIPSIS_HORIZONTAL, Res.get("chat.message.moreOptions"));
-        Label supportedLanguages = new Label();
         HBox.setMargin(editIcon, new Insets(1, 0, 0, 0));
-        HBox.setMargin(moreOptionsIcon, new Insets(6, 0, -6, 0));
         reactionsHBox = new HBox(20);
         reactionsHBox.setVisible(false);
         handleReactionsBox(item);
+
+        // supportedLanguages
+        Label supportedLanguages = new Label();
+        if (item.isBisqEasyPublicChatMessageWithOffer()) {
+            supportedLanguages.setText(item.getSupportedLanguageCodes(((BisqEasyOfferbookMessage) item.getChatMessage())));
+            supportedLanguages.setTooltip(new BisqTooltip(item.getSupportedLanguageCodesForTooltip(((BisqEasyOfferbookMessage) item.getChatMessage()))));
+        }
 
         // edit
         editInputField = new BisqTextArea();
@@ -381,7 +384,6 @@ public final class MyMessage extends Message {
         editIcon.setOnMouseClicked(null);
         copyIcon.setOnMouseClicked(null);
         deleteIcon.setOnMouseClicked(null);
-        moreOptionsIcon.setOnMouseClicked(null);
 
         editInputField.setOnKeyPressed(null);
         userProfileIcon.releaseResources();
