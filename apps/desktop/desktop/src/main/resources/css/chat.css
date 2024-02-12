@@ -383,6 +383,10 @@
     -fx-padding: 0;
 }
 
+.chat-messages-list-view .list-cell {
+    -fx-padding: 5 0 5 0;
+}
+
 .chat-messages-list-view .chat-message-list-cell-wo-scrollbar {
     -fx-border-width: 0 20 0 20;
     -fx-border-color: transparent;
@@ -400,6 +404,16 @@
 
 .chat-messages-list-view .list-cell:filled:hover {
     -fx-background-color: none;
+}
+
+.system-message-labels {
+    -fx-font-size: 0.9em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.system-message-background {
+    -fx-background-color: rgba(36, 36, 36, 0.4); /* -bisq-dark-grey-30 */
+    -fx-padding: 25 0 25 0;
 }
 
 .chat-messages-badge.bisq-badge .badge-pane {

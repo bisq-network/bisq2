@@ -17,17 +17,17 @@ public class SystemMessage extends Message {
         this.item = item;
 
         Label message = new Label(item.getMessage());
-        message.getStyleClass().addAll("text-fill-white", "font-size-09", "font-default");
+        message.getStyleClass().addAll("text-fill-white", "system-message-labels");
         message.setAlignment(Pos.CENTER);
         message.setWrapText(true);
 
         Label dateTime = new Label(item.getDate());
-        dateTime.getStyleClass().addAll("text-fill-grey-dimmed", "font-size-09", "font-light");
+        dateTime.getStyleClass().addAll("text-fill-grey-dimmed", "system-message-labels");
 
         VBox vBox = new VBox(5, message, dateTime);
-        vBox.setPadding(new Insets(7, 0, 7, 0));
         vBox.setFillWidth(true);
         vBox.setAlignment(Pos.CENTER);
+        vBox.getStyleClass().add("system-message-background");
         HBox.setHgrow(vBox, Priority.ALWAYS);
 
         setFillWidth(true);
