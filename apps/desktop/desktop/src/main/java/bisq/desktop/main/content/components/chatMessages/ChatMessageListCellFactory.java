@@ -23,6 +23,7 @@ import bisq.desktop.main.content.components.chatMessages.messages.Message;
 import bisq.desktop.main.content.components.chatMessages.messages.MyMessage;
 import bisq.desktop.main.content.components.chatMessages.messages.PeerMessage;
 import bisq.desktop.main.content.components.chatMessages.messages.SystemMessage;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
@@ -47,6 +48,7 @@ final class ChatMessageListCellFactory implements Callback<ListView<ChatMessageL
             private final static double CHAT_BOX_MAX_WIDTH = 1200;
 
             private final HBox cellHBox;
+            private ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> previousItem;
             private Subscription listWidthPropertyPin;
             private Message message;
 
@@ -54,6 +56,7 @@ final class ChatMessageListCellFactory implements Callback<ListView<ChatMessageL
                 cellHBox = new HBox(15);
                 cellHBox.setMaxWidth(CHAT_BOX_MAX_WIDTH);
                 cellHBox.setAlignment(Pos.CENTER);
+                cellHBox.setPadding(new Insets(15, 0, 15, 0));
             }
 
             @Override
@@ -108,6 +111,8 @@ final class ChatMessageListCellFactory implements Callback<ListView<ChatMessageL
 
                 setGraphic(cellHBox);
                 setAlignment(Pos.CENTER);
+
+                previousItem = item;
             }
 
             private void cleanup() {

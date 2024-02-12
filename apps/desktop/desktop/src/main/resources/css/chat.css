@@ -383,10 +383,6 @@
     -fx-padding: 0;
 }
 
-.chat-messages-list-view .list-cell {
-    -fx-padding: 5 0 5 0;
-}
-
 .chat-messages-list-view .chat-message-list-cell-wo-scrollbar {
     -fx-border-width: 0 20 0 20;
     -fx-border-color: transparent;
@@ -417,6 +413,7 @@
 .chat-messages-badge.bisq-badge .badge-pane .label {
     -fx-text-fill: -fx-mid-text-color !important;
 }
+
 
 /*******************************************************************************
  * Chat guide                                                                  *
