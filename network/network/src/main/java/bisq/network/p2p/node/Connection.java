@@ -171,7 +171,6 @@ public abstract class Connection {
     @Override
     public String toString() {
         return "'" + getClass().getSimpleName() + " [peerAddress=" + getPeersCapability().getAddress() +
-                ", socket=" + networkEnvelopeSocket +
                 ", keyId=" + getId() + "]'";
     }
 
