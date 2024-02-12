@@ -197,13 +197,13 @@ public class TradeStateController implements Controller {
                 .onAction(() -> {
                     switch (model.getTradeCloseType()) {
                         case REJECT:
-                            channelService.sendSystemMessage(Res.get("bisqEasy.openTrades.systemMessage.rejected"),
-                                    model.getChannel().get());
+                            channelService.sendSystemMessage(Res.get("bisqEasy.openTrades.systemMessage.rejected",
+                                            model.getChannel().get().getMyUserIdentity().getUserName()), model.getChannel().get());
                             bisqEasyTradeService.rejectTrade(trade);
                             break;
                         case CANCEL:
-                            channelService.sendSystemMessage(Res.get("bisqEasy.openTrades.systemMessage.cancelled"),
-                                    model.getChannel().get());
+                            channelService.sendSystemMessage(Res.get("bisqEasy.openTrades.systemMessage.cancelled",
+                                            model.getChannel().get().getMyUserIdentity().getUserName()), model.getChannel().get());
                             bisqEasyTradeService.cancelTrade(trade);
                             break;
                         case COMPLETED:
