@@ -153,15 +153,21 @@
     -fx-border-width: 0;
     -fx-border-radius: 0;
     -fx-padding: 0;
-    -fx-max-width: 95;
+    -fx-max-width: 160;
 }
 
 .market-selection-search-box .search-text-field {
-    -fx-padding: 0 5 0 5;
+    -fx-padding: 0 5 0 8;
 }
 
 .market-selection-dropdown-menu {
     -fx-padding: 0 10 0 10;
+    -fx-max-height: 24;
+    -fx-min-height: 24;
+    -fx-pref-height: 24;
+    -fx-max-width: 24;
+    -fx-min-width: 24;
+    -fx-pref-width: 24;
 }
 
 .market-selection-list .column-header-background {
