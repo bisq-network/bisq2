@@ -67,19 +67,19 @@ public class TradeOverviewController implements Controller {
                 NavigationTarget.MULTISIG,
                 TradeProtocolType.MULTISIG,
                 new Pair<>(10000L, 700000L),
-                "Q4/23"
+                "Q3/24"
         );
         ProtocolListItem submarine = new ProtocolListItem(TradeAppsAttributes.Type.SUBMARINE,
                 NavigationTarget.SUBMARINE,
                 TradeProtocolType.SUBMARINE,
                 new Pair<>(10000L, 700000L),
-                "Q1/24"
+                "Q4/24"
         );
         ProtocolListItem liquidFiat = new ProtocolListItem(TradeAppsAttributes.Type.BISQ_LIGHTNING,
                 NavigationTarget.BISQ_LIGHTNING,
                 TradeProtocolType.BISQ_LIGHTNING,
                 new Pair<>(10000L, 700000L),
-                "Q3/24"
+                "Q2/25"
         );
         return List.of(bisqEasy,
                 multisig,
@@ -92,34 +92,27 @@ public class TradeOverviewController implements Controller {
                 NavigationTarget.MORE_TRADE_PROTOCOLS,
                 TradeProtocolType.LIQUID_MULTISIG,
                 new Pair<>(10000L, 700000L),
-                "Q2/24"
-        );
-        ProtocolListItem lightningEscrow = new ProtocolListItem(TradeAppsAttributes.Type.LIGHTNING_ESCROW,
-                NavigationTarget.MORE_TRADE_PROTOCOLS,
-                TradeProtocolType.LIGHTNING_ESCROW,
-                new Pair<>(10000L, 700000L),
                 "Q4/24"
         );
         ProtocolListItem moneroSwap = new ProtocolListItem(TradeAppsAttributes.Type.MONERO_SWAP,
                 NavigationTarget.MORE_TRADE_PROTOCOLS,
                 TradeProtocolType.MONERO_SWAP,
                 new Pair<>(10000L, 700000L),
-                "Q4/24"
+                "Q3/25"
         );
         ProtocolListItem liquidSwap = new ProtocolListItem(TradeAppsAttributes.Type.LIQUID_SWAP,
                 NavigationTarget.MORE_TRADE_PROTOCOLS,
                 TradeProtocolType.LIQUID_SWAP,
                 new Pair<>(10000L, 700000L),
-                "Q4/24"
+                "Q2/25"
         );
         ProtocolListItem bsqSwap = new ProtocolListItem(TradeAppsAttributes.Type.BSQ_SWAP,
                 NavigationTarget.MORE_TRADE_PROTOCOLS,
                 TradeProtocolType.BSQ_SWAP,
                 new Pair<>(10000L, 700000L),
-                "Q4/24"
+                "Q3/25"
         );
         return List.of(liquidMultisig,
-                lightningEscrow,
                 moneroSwap,
                 liquidSwap,
                 bsqSwap);
