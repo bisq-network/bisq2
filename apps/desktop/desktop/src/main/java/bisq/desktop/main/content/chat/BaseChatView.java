@@ -72,12 +72,13 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
 
     private void setUpHeaderDropdownMenu() {
         headerDropdownMenu.addMenuItems(helpButton, infoButton);
+        headerDropdownMenu.setTooltip(Res.get("chat.dropdownMenu.tooltip"));
 
         ImageView helpIcon = ImageUtil.getImageViewById("icon-help");
         helpButton.setGraphic(helpIcon);
 
         ImageView infoIcon = ImageUtil.getImageViewById("icon-info");
-        infoButton.setText(Res.get("chat.dropDownMenu.channelInfo"));
+        infoButton.setText(Res.get("chat.dropdownMenu.channelInfo"));
         infoButton.setGraphic(infoIcon);
     }
 

@@ -154,6 +154,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         marketSelectorSearchBox.getStyleClass().add("market-selection-search-box");
 
         dropdownMenu = new DropdownMenu("sort-grey", "sort-white", true);
+        dropdownMenu.setTooltip(Res.get("bisqEasy.offerbook.dropdownMenu.tooltip"));
         dropdownMenu.getStyleClass().add("market-selection-dropdown-menu");
         offers = new MenuItem(Res.get("bisqEasy.offerbook.dropdownMenu.offers"));
         nameAZ = new MenuItem(Res.get("bisqEasy.offerbook.dropdownMenu.nameAZ"));

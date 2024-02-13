@@ -25,6 +25,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.stage.PopupWindow;
@@ -84,6 +85,18 @@ public class DropdownMenu extends HBox {
 
     public void clearMenuItems() {
         contextMenu.getItems().clear();
+    }
+
+    public void setTooltip(String tooltip) {
+        if (tooltip != null) {
+            Tooltip.install(this, new BisqTooltip(tooltip));
+        }
+    }
+
+    public void setTooltip(Tooltip tooltip) {
+        if (tooltip != null) {
+            Tooltip.install(this, tooltip);
+        }
     }
 
     private void attachListeners() {
