@@ -591,12 +591,20 @@
     -fx-image: url("/images/icons/icon-bell.png");
 }
 
-#icon-info {
-    -fx-image: url("/images/icons/icon-info.png");
+#icon-info-white {
+    -fx-image: url("/images/icons/icon-info-white.png");
 }
 
-#icon-help {
-    -fx-image: url("/images/icons/icon-help.png");
+#icon-info-grey {
+    -fx-image: url("/images/icons/icon-info-grey.png");
+}
+
+#icon-help-white {
+    -fx-image: url("/images/icons/icon-help-white.png");
+}
+
+#icon-help-grey {
+    -fx-image: url("/images/icons/icon-help-grey.png");
 }
 
 #icon-search {

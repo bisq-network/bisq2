@@ -20,6 +20,7 @@ package bisq.desktop.main.content.chat;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.NavigationView;
 import bisq.desktop.components.controls.DropdownMenu;
+import bisq.desktop.components.controls.DropdownMenuItem;
 import bisq.desktop.components.controls.SearchBox;
 import bisq.i18n.Res;
 import javafx.scene.control.*;
@@ -38,8 +39,7 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
     protected final Label channelTitle = new Label();
     protected final Label channelDescription = new Label();
     protected Label channelIcon = new Label();
-    protected final MenuItem helpButton = new MenuItem();
-    protected final MenuItem infoButton = new MenuItem();
+    protected DropdownMenuItem helpButton, infoButton;
     protected final VBox sideBar = new VBox();
     protected final VBox centerVBox = new VBox();
     protected final HBox titleHBox = new HBox(10);
@@ -71,15 +71,11 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
     }
 
     private void setUpHeaderDropdownMenu() {
+        helpButton = new DropdownMenuItem("icon-help-grey", "icon-help-white");
+        infoButton = new DropdownMenuItem("icon-info-grey", "icon-info-white",
+                Res.get("chat.dropdownMenu.channelInfo"));
         headerDropdownMenu.addMenuItems(helpButton, infoButton);
         headerDropdownMenu.setTooltip(Res.get("chat.dropdownMenu.tooltip"));
-
-        ImageView helpIcon = ImageUtil.getImageViewById("icon-help");
-        helpButton.setGraphic(helpIcon);
-
-        ImageView infoIcon = ImageUtil.getImageViewById("icon-info");
-        infoButton.setText(Res.get("chat.dropdownMenu.channelInfo"));
-        infoButton.setGraphic(infoIcon);
     }
 
     protected abstract void configTitleHBox();
@@ -101,7 +97,7 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
         searchBox.textProperty().bindBidirectional(model.getSearchText());
 
         if (helpButton != null) {
-            helpButton.setText(controller.getHelpButtonText());
+            helpButton.setLabelText(controller.getHelpButtonText());
             helpButton.setOnAction(e -> controller.onOpenHelp());
         }
         if (infoButton != null) {
