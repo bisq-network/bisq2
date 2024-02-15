@@ -24,6 +24,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
@@ -31,10 +32,13 @@ import javafx.stage.PopupWindow;
 import javafx.stage.WindowEvent;
 
 public class DropdownMenu extends HBox {
+    public static final Double INITIAL_WIDTH = 24.0;
+
     private final Label label = new Label();
     private final ImageView defaultIcon, activeIcon;
     private final ContextMenu contextMenu = new ContextMenu();
     private ImageView buttonIcon;
+    private boolean isFirstRun = false;
 
     public DropdownMenu(String defaultIconId, String activeIconId, boolean useIconOnly) {
         defaultIcon = ImageUtil.getImageViewById(defaultIconId);
@@ -120,11 +124,26 @@ public class DropdownMenu extends HBox {
         contextMenu.setOnShowing(e -> {
             getStyleClass().add("dropdown-menu-active");
             updateIcon(activeIcon);
+
         });
         contextMenu.setOnHidden(e -> {
             getStyleClass().remove("dropdown-menu-active");
             updateIcon(defaultIcon);
         });
+
+        contextMenu.widthProperty().addListener(new WeakChangeListener<Number>((observable, oldValue, newValue) -> {
+            if (newValue.doubleValue() > INITIAL_WIDTH && !isFirstRun) {
+                isFirstRun = true;
+                // Once the contextMenu has calculated the width on the first render time we update the items
+                // so that they all have the same size.
+                for (MenuItem item : contextMenu.getItems()) {
+                    if (item instanceof DropdownMenuItem) {
+                        DropdownMenuItem dropdownMenuItem = (DropdownMenuItem) item;
+                        dropdownMenuItem.updateWidth(contextMenu.getWidth() - 5); // Remove margins
+                    }
+                }
+            }
+        }));
     }
 
     private void updateIcon(ImageView newIcon) {

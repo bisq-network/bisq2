@@ -18,11 +18,11 @@
 package bisq.desktop.components.controls;
 
 import bisq.desktop.common.utils.ImageUtil;
+import javafx.geometry.Pos;
 import javafx.scene.control.CustomMenuItem;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
+import javafx.scene.layout.*;
 
 public class DropdownMenuItem extends CustomMenuItem {
     private final HBox content;
@@ -33,8 +33,7 @@ public class DropdownMenuItem extends CustomMenuItem {
         label = new Label(text);
         content = new HBox(label);
         content.getStyleClass().add("dropdown-menu-item-content");
-        content.setFillHeight(true);
-        HBox.setHgrow(content, Priority.ALWAYS);
+        content.setAlignment(Pos.CENTER_LEFT);
         setContent(content);
 
         if (defaultIconId != null && activeIconId != null) {
@@ -56,6 +55,14 @@ public class DropdownMenuItem extends CustomMenuItem {
 
     public void setLabelText(String text) {
         label.setText(text);
+    }
+
+    public Double getWidth() {
+        return content.getWidth();
+    }
+
+    public void updateWidth(Double width) {
+        content.setPrefWidth(width);
     }
 
     private void attachListeners() {
