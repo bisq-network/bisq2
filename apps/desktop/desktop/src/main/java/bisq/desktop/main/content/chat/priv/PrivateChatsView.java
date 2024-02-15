@@ -148,7 +148,8 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
         chatHeaderVBox = new VBox(0);
         HBox.setHgrow(chatHeaderVBox, Priority.ALWAYS);
 
-        leaveChatButton = new DropdownMenuItem("exit-door", "exit-door", Res.get("bisqEasy.privateChats.leave"));
+        leaveChatButton = new DropdownMenuItem("leave-chat-red-lit-10", "leave-chat-red",
+                Res.get("bisqEasy.privateChats.leave"));
         leaveChatButton.getStyleClass().add("leave-chat-item");
 
         headerDropdownMenu.clearMenuItems();
