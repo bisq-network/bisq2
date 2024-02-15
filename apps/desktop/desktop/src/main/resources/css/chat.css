@@ -24,21 +24,22 @@
     -fx-font-family: "IBM Plex Sans";
 }
 
-.fiat-code {
-    -fx-font-size: 8;
-    -fx-text-fill: -fx-light-text-color !important;;
-    -fx-font-family: "IBM Plex Sans Medium";
+.fiat-code > .text {
+    -fx-font-size: 12;
+    -fx-fill: -bisq-white !important;
+    -fx-text-fill: -bisq-white !important;
+    -fx-font-family: "IBM Plex Sans SemiBold";
 }
 
 .fiat-symbol {
     -fx-font-size: 13;
-    -fx-text-fill: -fx-light-text-color !important;;
+    -fx-text-fill: -fx-light-text-color !important;
     -fx-font-family: "IBM Plex Sans Medium";
 }
 
 .fiat-symbol-2 {
     -fx-font-size: 11;
-    -fx-text-fill: -fx-light-text-color !important;;
+    -fx-text-fill: -fx-light-text-color !important;
     -fx-font-family: "IBM Plex Sans Medium";
 }
 
