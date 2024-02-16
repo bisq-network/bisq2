@@ -4,7 +4,7 @@
 
 .bisq-easy-container {
     -fx-background-color: -bisq-dark-grey-20;
-    -fx-background-radius: 8;
+    -fx-background-radius: 8 8 0 0;
 }
 
 .bisq-easy-container-headline {

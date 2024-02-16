@@ -955,5 +955,5 @@
 }
 
 .dropdown-menu-popup .leave-chat-item:hover > .label {
-    -fx-text-fill: -bisq2-red-lit-50;
+    -fx-text-fill: -bisq2-red;
 }

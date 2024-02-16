@@ -329,6 +329,7 @@
  * Channel selection                                                           *
  *                                                                             *
  ******************************************************************************/
+
 .channel-selection-list-view {
     -fx-background-color: transparent;
 }
@@ -350,6 +351,23 @@
 
 .channel-selection-list-view .list-cell:selected .label {
     -fx-text-fill: -bisq2-green;
+}
+
+.private-chats-selection-list {
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.private-chats-selection-list .table-row-cell {
+    -fx-border-width: 0;
+}
+
+.private-chats-selection-list .table-cell {
+    -fx-padding: 0;
+}
+
+.private-chats-selection-list .user-profile-table-cell {
+    -fx-padding: 0 0 0 13;
 }
 
 

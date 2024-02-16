@@ -166,6 +166,7 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
         openChatsHeader.getStyleClass().add("chat-header-title");
 
         tableView = new BisqTableView<>(getModel().getSortedList());
+        tableView.getStyleClass().add("private-chats-selection-list");
         tableView.allowVerticalScrollbar();
         configTableView();
         VBox.setVgrow(tableView, Priority.ALWAYS);
@@ -207,6 +208,7 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
                 if (item != null && !empty) {
                     UserProfileDisplay userProfileDisplay = new UserProfileDisplay(item.getChannel().getPeer());
                     userProfileDisplay.setReputationScore(item.getReputationScore());
+                    getStyleClass().add("user-profile-table-cell");
                     setGraphic(userProfileDisplay);
                 } else {
                     setGraphic(null);
