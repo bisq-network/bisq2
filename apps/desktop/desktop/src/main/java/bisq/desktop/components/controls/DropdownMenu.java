@@ -71,7 +71,7 @@ public class DropdownMenu extends HBox {
             contextMenu.setAnchorLocation(PopupWindow.AnchorLocation.WINDOW_TOP_RIGHT);
             Bounds bounds = this.localToScreen(this.getBoundsInLocal());
             double x = bounds.getMaxX();
-            double y = bounds.getMaxY() + 5;
+            double y = bounds.getMaxY() + 3;
             contextMenu.show(this, x, y);
         } else {
             contextMenu.hide();

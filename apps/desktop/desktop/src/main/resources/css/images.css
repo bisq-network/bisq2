@@ -627,6 +627,22 @@
     -fx-image: url("/images/icons/star-grey.png");
 }
 
+#scroll-down-white {
+    -fx-image: url("/images/icons/scroll-down-white.png");
+}
+
+#scroll-down-green {
+    -fx-image: url("/images/icons/scroll-down-green.png");
+}
+
+#sort-grey {
+    -fx-image: url("/images/icons/sort-grey.png");
+}
+
+#sort-white {
+    -fx-image: url("/images/icons/sort-white.png");
+}
+
 
 /* ------------------------------------------------------------------------------------ */
 /* Chat */
@@ -949,14 +965,3 @@
 #sound-off {
     -fx-image: url("/images/video/sound_off.png");
 }
-
-#scroll-down-white {
-    -fx-image: url("/images/icons/scroll-down-white.png");
-}
-
-#scroll-down-green {
-    -fx-image: url("/images/icons/scroll-down-green.png");
-}
-
-
-

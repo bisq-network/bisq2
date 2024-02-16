@@ -104,16 +104,15 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
             }
         });
 
-        offers.setOnAction(e -> sortTableViewColumn(BisqEasyOfferbookUtil.SortByMarketActivity(), offers));
-        nameAZ.setOnAction(e -> sortTableViewColumn(BisqEasyOfferbookUtil.SortByMarketNameAsc(), nameAZ));
-        nameZA.setOnAction(e -> sortTableViewColumn(BisqEasyOfferbookUtil.SortByMarketNameDesc(), nameZA));
+        offers.setOnAction(e -> sortTableViewColumn(BisqEasyOfferbookUtil.SortByMarketActivity()));
+        nameAZ.setOnAction(e -> sortTableViewColumn(BisqEasyOfferbookUtil.SortByMarketNameAsc()));
+        nameZA.setOnAction(e -> sortTableViewColumn(BisqEasyOfferbookUtil.SortByMarketNameDesc()));
         createOfferButton.setOnAction(e -> getController().onCreateOffer());
 
-        sortTableViewColumn(BisqEasyOfferbookUtil.SortByMarketActivity(), offers);
+        sortTableViewColumn(BisqEasyOfferbookUtil.SortByMarketActivity());
     }
 
-    private void sortTableViewColumn(Comparator<MarketChannelItem> comparator, MenuItem menuItem) {
-        dropdownMenu.setLabel(menuItem.getText());
+    private void sortTableViewColumn(Comparator<MarketChannelItem> comparator) {
         tableView.getSortOrder().clear();
         marketLabelTableColumn.setComparator(comparator);
         tableView.getSortOrder().add(marketLabelTableColumn);
@@ -154,7 +153,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         marketSelectorSearchBox = new SearchBox();
         marketSelectorSearchBox.getStyleClass().add("market-selection-search-box");
 
-        dropdownMenu = new DropdownMenu("arrow-down", "arrow-down", false);
+        dropdownMenu = new DropdownMenu("sort-grey", "sort-white", true);
         dropdownMenu.getStyleClass().add("market-selection-dropdown-menu");
         offers = new MenuItem(Res.get("bisqEasy.offerbook.dropdownMenu.offers"));
         nameAZ = new MenuItem(Res.get("bisqEasy.offerbook.dropdownMenu.nameAZ"));
@@ -163,6 +162,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
 
         HBox subheader = new HBox(marketSelectorSearchBox, Spacer.fillHBox(), dropdownMenu);
         dropdownMenu.setMaxWidth(Double.MAX_VALUE);
+        subheader.setAlignment(Pos.CENTER);
         subheader.getStyleClass().add("market-selection-subheader");
 
         tableView = new BisqTableView<>(getModel().getSortedMarketChannelItems());
