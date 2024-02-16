@@ -153,16 +153,15 @@ public class MarketImageComposition {
     }
 
     private static Label createMarketLogoPlaceholder(String marketCode) {
-        Circle circle = new Circle(15);
+        Circle circle = new Circle(16);
         circle.setFill(Paint.valueOf("#FF0000"));
         circle.setEffect(createColorAdjust(marketCode));
 
         Text text = new Text(marketCode.substring(0, Math.min(3, marketCode.length())));
-        text.getStyleClass().setAll("fiat-code");
-
-        Label label = new Label("", new Circle(15, Color.LIGHTGRAY));
+        Label label = new Label(text.getText(), new Circle(16, Color.TRANSPARENT));
+        label.getStyleClass().add("fiat-code");
+        label.setAlignment(Pos.CENTER);
         label.setGraphic(circle);
-        label.setText(text.getText());
         label.setContentDisplay(ContentDisplay.CENTER);
         return label;
     }
