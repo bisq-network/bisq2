@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.node.handshake;
 
+import bisq.common.encoding.Hex;
 import bisq.common.util.StringUtils;
 import bisq.network.common.Address;
 import bisq.network.common.PeerSocket;
@@ -40,7 +41,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.net.Socket;
-import java.util.Arrays;
 import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -213,7 +213,7 @@ public final class ConnectionHandshake {
 
             bisq.network.protobuf.NetworkEnvelope responseProto = networkEnvelopeSocket.receiveNextEnvelope();
             if (responseProto == null) {
-                throw new ConnectionException("Response NetworkEnvelope protobuf is null");
+                throw new ConnectionException("Response NetworkEnvelope protobuf is null. peerAddress=" + peerAddress);
             }
 
             long startDeserializeTs = System.currentTimeMillis();
@@ -300,7 +300,7 @@ public final class ConnectionHandshake {
 
             if (!OnionAddressValidation.verify(myAddress, peerAddress, request.getSignatureDate(), request.getAddressOwnershipProof())) {
                 throw new ConnectionException("Peer couldn't proof its onion address: " + peerAddress.getFullAddress() +
-                        ", Proof: " + Arrays.toString(request.getAddressOwnershipProof().orElseThrow()));
+                        ", Proof: " + Hex.encode(request.getAddressOwnershipProof().orElseThrow()));
             }
 
             log.debug("Clients capability {}, load={}", request.getCapability(), request.getNetworkLoad());

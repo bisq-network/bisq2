@@ -18,6 +18,7 @@
 package bisq.network.p2p.node.handshake;
 
 import bisq.common.data.Pair;
+import bisq.common.encoding.Hex;
 import bisq.common.util.StringUtils;
 import bisq.network.common.Address;
 import bisq.network.p2p.message.NetworkEnvelope;
@@ -31,7 +32,6 @@ import bisq.network.p2p.services.peergroup.BanList;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 
 @Slf4j
@@ -69,7 +69,7 @@ public class ConnectionHandshakeResponder {
         Address myAddress = capability.getAddress();
         if (!OnionAddressValidation.verify(myAddress, peerAddress, request.getSignatureDate(), request.getAddressOwnershipProof())) {
             throw new ConnectionException("Peer couldn't proof its onion address: " + peerAddress.getFullAddress() +
-                    ", Proof: " + Arrays.toString(request.getAddressOwnershipProof().orElseThrow()));
+                    ", Proof: " + Hex.encode(request.getAddressOwnershipProof().orElseThrow()));
         }
 
         NetworkEnvelope responseEnvelope = createResponseEnvelope(myNetworkLoad, request.getNetworkLoad(), peerAddress);
