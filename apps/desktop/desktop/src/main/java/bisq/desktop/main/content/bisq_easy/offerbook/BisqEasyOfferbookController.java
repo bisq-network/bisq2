@@ -24,6 +24,7 @@ import bisq.chat.ChatMessage;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.common.currency.Market;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.ObservableArray;
 import bisq.desktop.ServiceProvider;
@@ -32,8 +33,10 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardController;
 import bisq.desktop.main.content.chat.ChatController;
+import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.settings.SettingsService;
+import javafx.scene.layout.StackPane;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -145,6 +148,12 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                 String description = ((BisqEasyOfferbookChannel) chatChannel).getDescription();
                 String oneLineDescription = description.replace("\n", " ");
                 model.getChannelDescription().set(oneLineDescription);
+
+                Market market = ((BisqEasyOfferbookChannel) chatChannel).getMarket();
+                StackPane marketsImage = MarketImageComposition.imageBoxForMarkets(
+                        market.getBaseCurrencyCode().toLowerCase(),
+                        market.getQuoteCurrencyCode().toLowerCase());
+                model.getChannelIconNode().set(marketsImage);
             }
         });
     }

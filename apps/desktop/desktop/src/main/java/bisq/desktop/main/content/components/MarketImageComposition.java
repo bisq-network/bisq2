@@ -27,8 +27,8 @@ import java.util.stream.Stream;
 
 @Slf4j
 public class MarketImageComposition {
-    private static final List<String> MARKETS_WITH_IMAGE = List.of("bsq", "btc", "eur", "usd", "xmr", "any-base", "any-quote");
-    private static final Set<String> MARKETS_WITH_LOGOS = Stream.of("aed", "afn", "all", "amd", "aoa", "ars", "aud",
+    private static final List<String> CRYPTO_MARKETS_WITH_LOGO = List.of("bsq", "btc", "xmr");
+    private static final Set<String> FIAT_MARKETS_WITH_LOGO = Stream.of("aed", "afn", "all", "amd", "aoa", "ars", "aud",
                     "awg", "azn", "bam", "bbd", "bdt", "bgn", "bhd", "bif", "bmd", "bnd", "bob", "brl", "bsd", "btn", "bwp",
                     "byn", "bzd", "cad", "chf", "clp", "cny", "cop", "crc", "cup", "cve", "czk", "djf", "dkk", "dop", "dzd",
                     "egp", "ern", "etb", "eur", "fjd", "fkp", "gbp", "gel", "ghs", "gip", "gmd", "gnf", "gtq", "gyd", "hkd",
@@ -64,7 +64,7 @@ public class MarketImageComposition {
             StackPane.setAlignment(imageView, alignment);
             pane.getChildren().add(imageView);
 
-            if (MARKETS_WITH_IMAGE.contains(code)) {
+            if (CRYPTO_MARKETS_WITH_LOGO.contains(code) || FIAT_MARKETS_WITH_LOGO.contains(code)) {
                 imageView.setId("market-" + code);
             } else {
                 boolean isFiat = TradeCurrency.isFiat(code.toUpperCase());
@@ -101,6 +101,22 @@ public class MarketImageComposition {
         }).collect(Collectors.toList());
 
         return new Pair<>(pane, imageViews);
+    }
+
+    public static StackPane imageBoxForMarkets(String baseCurrencyCode, String quoteCurrencyCode) {
+        StackPane pane = new StackPane();
+        pane.setPrefWidth(52);
+
+        Stream<String> stream = baseCurrencyCode.equals("btc")
+                ? Stream.of(baseCurrencyCode, quoteCurrencyCode)
+                : Stream.of(quoteCurrencyCode, baseCurrencyCode);
+        stream.forEach(code -> {
+            Pos alignment = quoteCurrencyCode.equals(code) ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT;
+            Node node = createMarketLogo(code);
+            StackPane.setAlignment(node, alignment);
+            pane.getChildren().add(node);
+        });
+        return pane;
     }
 
     public static StackPane getCurrencyIcon(String code) {
@@ -147,7 +163,7 @@ public class MarketImageComposition {
     public static Node createMarketLogo(String marketCode) {
         String market = marketCode.toLowerCase();
         String iconId = String.format("market-%s", market);
-        return MARKETS_WITH_LOGOS.contains(market)
+        return FIAT_MARKETS_WITH_LOGO.contains(market) //|| CRYPTO_MARKETS_WITH_LOGO.contains(market) TODO: Fix images
                 ? ImageUtil.getImageViewById(iconId)
                 : createMarketLogoPlaceholder(marketCode);
     }

@@ -27,6 +27,7 @@ import bisq.desktop.main.content.chat.ChatView;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import lombok.extern.slf4j.Slf4j;
@@ -44,7 +45,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     private BisqTableView<MarketChannelItem> tableView;
     private BisqTableColumn<MarketChannelItem> marketLabelTableColumn;
     private VBox marketSelectionList;
-    private Subscription tableViewSelectionPin, selectedModelItemPin;
+    private Subscription tableViewSelectionPin, selectedModelItemPin, marketSelectorHeaderIconPin;
     private Button createOfferButton;
     private DropdownMenu dropdownMenu;
     private MenuItem offers, nameAZ, nameZA;
@@ -103,6 +104,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
                 getController().onSelectMarketChannelItem(item);
             }
         });
+        marketSelectorHeaderIconPin = EasyBind.subscribe(model.getChannelIconNode(), this::updateMarketSelectorHeaderIcon);
 
         offers.setOnAction(e -> sortTableViewColumn(BisqEasyOfferbookUtil.SortByMarketActivity(), offers));
         nameAZ.setOnAction(e -> sortTableViewColumn(BisqEasyOfferbookUtil.SortByMarketNameAsc(), nameAZ));
@@ -128,6 +130,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
 
         selectedModelItemPin.unsubscribe();
         tableViewSelectionPin.unsubscribe();
+        marketSelectorHeaderIconPin.unsubscribe();
 
         offers.setOnAction(null);
         nameAZ.setOnAction(null);
@@ -148,7 +151,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         header.setMinHeight(HEADER_HEIGHT);
         header.setMaxHeight(HEADER_HEIGHT);
         header.setAlignment(Pos.CENTER_LEFT);
-        header.setPadding(new Insets(12.5, 25, 12.5, 25));
+        header.setPadding(new Insets(4, 0, 0, 15));
         header.getStyleClass().add("chat-header-title");
 
         marketSelectorSearchBox = new SearchBox();
@@ -239,5 +242,9 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         centerVBox.getChildren().addAll(titleHBox, Layout.hLine(), subheader, chatMessagesComponent);
         centerVBox.getStyleClass().add("bisq-easy-container");
         centerVBox.setAlignment(Pos.CENTER);
+    }
+
+    private void updateMarketSelectorHeaderIcon(Node node) {
+        channelTitle.setGraphic(node);
     }
 }
