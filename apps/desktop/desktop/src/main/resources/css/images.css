@@ -673,10 +673,6 @@
     -fx-image: url("/images/markets/market-bsq.png");
 }
 
-#market-btc {
-    -fx-image: url("/images/markets/market-btc.png");
-}
-
 #market-crypto {
     -fx-image: url("/images/markets/market-crypto.png");
 }

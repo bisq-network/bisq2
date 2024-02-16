@@ -593,3 +593,11 @@
 #market-zwl {
     -fx-image: url("/images/markets/fiat-logos/market-zwl.png");
 }
+
+/* ------------------------------------------------------------------------------------ */
+/* Crypto                                                                               */
+/* ------------------------------------------------------------------------------------ */
+
+#market-btc {
+    -fx-image: url("/images/markets/crypto-logos/market-btc.png");
+}
