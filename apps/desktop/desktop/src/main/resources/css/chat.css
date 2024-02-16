@@ -49,6 +49,10 @@
     -fx-font-family: "IBM Plex Sans";
 }
 
+.quote-currency-market-logo {
+    -fx-fill: -bisq-dark-grey-20;
+}
+
 .close-sidebar-button {
     -fx-background-color: -bisq-mid-grey-20;
     -fx-text-fill: -bisq-dark-grey-40;

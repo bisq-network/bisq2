@@ -105,16 +105,31 @@ public class MarketImageComposition {
 
     public static StackPane imageBoxForMarkets(String baseCurrencyCode, String quoteCurrencyCode) {
         StackPane pane = new StackPane();
-        pane.setPrefWidth(52);
+        pane.setPrefWidth(61);
 
         Stream<String> stream = baseCurrencyCode.equals("btc")
                 ? Stream.of(baseCurrencyCode, quoteCurrencyCode)
                 : Stream.of(quoteCurrencyCode, baseCurrencyCode);
         stream.forEach(code -> {
-            Pos alignment = quoteCurrencyCode.equals(code) ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT;
-            Node node = createMarketLogo(code);
-            StackPane.setAlignment(node, alignment);
-            pane.getChildren().add(node);
+            if (quoteCurrencyCode.equals(code)) {
+                double radius = 18;
+                Circle circle = new Circle(radius);
+                circle.getStyleClass().add("quote-currency-market-logo");
+                StackPane.setAlignment(circle, Pos.CENTER);
+
+                Node node = createMarketLogo(code);
+                StackPane.setAlignment(node, Pos.CENTER);
+
+                StackPane quoteLogo = new StackPane();
+                quoteLogo.setMaxWidth(radius*2);
+                quoteLogo.getChildren().addAll(circle, node);
+                StackPane.setAlignment(quoteLogo, Pos.CENTER_RIGHT);
+                pane.getChildren().add(quoteLogo);
+            } else {
+                Node node = createMarketLogo(code);
+                StackPane.setAlignment(node, Pos.CENTER_LEFT);
+                pane.getChildren().add(node);
+            }
         });
         return pane;
     }
@@ -163,7 +178,7 @@ public class MarketImageComposition {
     public static Node createMarketLogo(String marketCode) {
         String market = marketCode.toLowerCase();
         String iconId = String.format("market-%s", market);
-        return FIAT_MARKETS_WITH_LOGO.contains(market) //|| CRYPTO_MARKETS_WITH_LOGO.contains(market) TODO: Fix images
+        return FIAT_MARKETS_WITH_LOGO.contains(market) || CRYPTO_MARKETS_WITH_LOGO.contains(market)
                 ? ImageUtil.getImageViewById(iconId)
                 : createMarketLogoPlaceholder(marketCode);
     }
@@ -173,7 +188,7 @@ public class MarketImageComposition {
         circle.setFill(Paint.valueOf("#FF0000"));
         circle.setEffect(createColorAdjust(marketCode));
 
-        Text text = new Text(marketCode.substring(0, Math.min(3, marketCode.length())));
+        Text text = new Text(marketCode.substring(0, Math.min(3, marketCode.length())).toUpperCase());
         Label label = new Label(text.getText(), new Circle(16, Color.TRANSPARENT));
         label.getStyleClass().add("fiat-code");
         label.setAlignment(Pos.CENTER);
