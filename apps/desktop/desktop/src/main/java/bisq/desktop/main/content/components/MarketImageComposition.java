@@ -7,6 +7,7 @@ import bisq.desktop.common.utils.ImageUtil;
 import bisq.security.DigestUtil;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.effect.ColorAdjust;
@@ -20,12 +21,25 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigInteger;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Slf4j
 public class MarketImageComposition {
     private static final List<String> MARKETS_WITH_IMAGE = List.of("bsq", "btc", "eur", "usd", "xmr", "any-base", "any-quote");
+    private static final Set<String> MARKETS_WITH_LOGOS = Stream.of("aed", "afn", "all", "amd", "aoa", "ars", "aud",
+                    "awg", "azn", "bam", "bbd", "bdt", "bgn", "bhd", "bif", "bmd", "bnd", "bob", "brl", "bsd", "btn", "bwp",
+                    "byn", "bzd", "cad", "chf", "clp", "cny", "cop", "crc", "cup", "cve", "czk", "djf", "dkk", "dop", "dzd",
+                    "egp", "ern", "etb", "eur", "fjd", "fkp", "gbp", "gel", "ghs", "gip", "gmd", "gnf", "gtq", "gyd", "hkd",
+                    "hnl", "htg", "huf", "idr", "ils", "inr", "iqd", "irr", "isk", "jmd", "jod", "jpy", "kes", "kgs", "khr",
+                    "kmf", "kpw", "krw", "kwd", "kyd", "kzt", "lak", "lbp", "lkr", "lrd", "lsl", "lyd", "mad", "mdl", "mga",
+                    "mmk", "mnt", "mop", "mru", "mur", "mvr", "mwk", "mxn", "myr", "mzn", "nad", "ngn", "nio", "nok", "npr",
+                    "nzd", "omr", "pab", "pen", "pgk", "php", "pkr", "pln", "pyg", "qar", "ron", "rsd", "rub", "rwf", "sar",
+                    "sbd", "scr", "sdg", "sek", "sgd", "sle", "sos", "srd", "ssp", "stn", "svc", "syp", "szl", "thb", "tjs",
+                    "tmt", "tnd", "top", "try", "ttd", "twd", "tzs", "uah", "ugx", "usd", "uyu", "uzs", "ves", "vnd", "vuv",
+                    "wst", "xaf", "yer", "zar", "zmw", "zwl")
+            .collect(Collectors.toUnmodifiableSet());
 
     public static Pair<StackPane, List<ImageView>> imageBoxForMarket(String baseCurrencyCode, String quoteCurrencyCode) {
         StackPane pane = new StackPane();
@@ -130,7 +144,15 @@ public class MarketImageComposition {
         return pane;
     }
 
-    public static Label createMarketLogoPlaceholder(String marketCode) {
+    public static Node createMarketLogo(String marketCode) {
+        String market = marketCode.toLowerCase();
+        String iconId = String.format("market-%s", market);
+        return MARKETS_WITH_LOGOS.contains(market)
+                ? ImageUtil.getImageViewById(iconId)
+                : createMarketLogoPlaceholder(marketCode);
+    }
+
+    private static Label createMarketLogoPlaceholder(String marketCode) {
         Circle circle = new Circle(15);
         circle.setFill(Paint.valueOf("#FF0000"));
         circle.setEffect(createColorAdjust(marketCode));

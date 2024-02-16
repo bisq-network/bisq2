@@ -3,11 +3,9 @@ package bisq.desktop.main.content.bisq_easy.offerbook;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.desktop.components.controls.BisqTooltip;
-import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.i18n.Res;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.StringExpression;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.control.*;
@@ -17,24 +15,9 @@ import javafx.util.Callback;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class BisqEasyOfferbookUtil {
     private static final List<Market> majorMarkets = MarketRepository.getMajorMarkets();
-    private static final Set<String> marketsWithLogos = Stream.of("aed", "afn", "all", "amd", "aoa", "ars", "aud",
-            "awg", "azn", "bam", "bbd", "bdt", "bgn", "bhd", "bif", "bmd", "bnd", "bob", "brl", "bsd", "btn", "bwp",
-            "byn", "bzd", "cad", "chf", "clp", "cny", "cop", "crc", "cup", "cve", "czk", "djf", "dkk", "dop", "dzd",
-            "egp", "ern", "etb", "eur", "fjd", "fkp", "gbp", "gel", "ghs", "gip", "gmd", "gnf", "gtq", "gyd", "hkd",
-            "hnl", "htg", "huf", "idr", "ils", "inr", "iqd", "irr", "isk", "jmd", "jod", "jpy", "kes", "kgs", "khr",
-            "kmf", "kpw", "krw", "kwd", "kyd", "kzt", "lak", "lbp", "lkr", "lrd", "lsl", "lyd", "mad", "mdl", "mga",
-            "mmk", "mnt", "mop", "mru", "mur", "mvr", "mwk", "mxn", "myr", "mzn", "nad", "ngn", "nio", "nok", "npr",
-            "nzd", "omr", "pab", "pen", "pgk", "php", "pkr", "pln", "pyg", "qar", "ron", "rsd", "rub", "rwf", "sar",
-            "sbd", "scr", "sdg", "sek", "sgd", "sle", "sos", "srd", "ssp", "stn", "svc", "syp", "szl", "thb", "tjs",
-            "tmt", "tnd", "top", "try", "ttd", "twd", "tzs", "uah", "ugx", "usd", "uyu", "uzs", "ves", "vnd", "vuv",
-            "wst", "xaf", "yer", "zar", "zmw", "zwl")
-            .collect(Collectors.toUnmodifiableSet());
 
     public static Comparator<MarketChannelItem> SortByNumOffers() {
         return (lhs, rhs) -> Integer.compare(rhs.getNumOffers().get(), lhs.getNumOffers().get());
@@ -116,14 +99,8 @@ public class BisqEasyOfferbookUtil {
             @Override
             protected void updateItem(MarketChannelItem item, boolean empty) {
                 super.updateItem(item, empty);
-                if (item != null && !empty) {
-                    String marketCode = item.getMarket().getQuoteCurrencyCode();
-                    setGraphic(marketsWithLogos.contains(marketCode.toLowerCase())
-                            ? item.getMarketLogo()
-                            : MarketImageComposition.createMarketLogoPlaceholder(marketCode));
-                } else {
-                    setGraphic(null);
-                }
+
+                setGraphic(item != null && !empty ? item.getMarketLogo() : null);
             }
         };
     }
