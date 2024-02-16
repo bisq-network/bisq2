@@ -143,7 +143,7 @@
 }
 
 .chat-header-title {
-    -fx-text-fill: -bisq2-green;
+    -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 1.4em;
     -fx-font-family: "IBM Plex Sans Light";
 }
