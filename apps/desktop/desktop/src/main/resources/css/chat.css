@@ -156,12 +156,12 @@
 }
 
 .chat-message-bg-my-message {
-    -fx-background-color: -bisq-dark-grey-10;
+    -fx-background-color: -bisq-dark-grey-40;
     -fx-background-radius: 8;
 }
 
 .chat-message-bg-peer-message {
-    -fx-background-color: -bisq-dark-grey-50;
+    -fx-background-color: -bisq-dark-grey-40;
     -fx-background-radius: 8;
 }
 
