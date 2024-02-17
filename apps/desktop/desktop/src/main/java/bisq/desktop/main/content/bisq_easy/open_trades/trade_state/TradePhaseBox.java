@@ -294,7 +294,7 @@ class TradePhaseBox {
             walletHelp = new Hyperlink(Res.get("bisqEasy.walletGuide.open"), ImageUtil.getImageViewById("icon-wallet"));
             walletHelp.setGraphicTextGap(5);
 
-            openTradeGuide = new Hyperlink(Res.get("bisqEasy.tradeGuide.open"), ImageUtil.getImageViewById("icon-help"));
+            openTradeGuide = new Hyperlink(Res.get("bisqEasy.tradeGuide.open"), ImageUtil.getImageViewById("icon-help-grey"));
             openTradeGuide.setGraphicTextGap(5);
 
             reportToMediator = new Hyperlink(Res.get("bisqEasy.tradeState.reportToMediator"), ImageUtil.getImageViewById("icon-report"));

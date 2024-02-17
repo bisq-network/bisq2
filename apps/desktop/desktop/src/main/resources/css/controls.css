@@ -926,15 +926,20 @@
     -fx-effect: none;
 }
 
-.dropdown-menu-popup .menu-item,
-.dropdown-menu-popup .menu-item:focused {
-    -fx-padding: 10;
+.dropdown-menu-item-content {
     -fx-background-color: transparent;
+    -fx-padding: 10;
     -fx-cursor: hand;
 }
 
-.dropdown-menu-popup .menu-item > .label,
-.dropdown-menu-popup .menu-item:focused > .label {
+.dropdown-menu-popup .menu-item,
+.dropdown-menu-popup .menu-item:focused {
+    -fx-padding: 0;
+    -fx-background-color: transparent;
+}
+
+.dropdown-menu-popup .menu-item .dropdown-menu-item-content .label,
+.dropdown-menu-popup .menu-item:focused .dropdown-menu-item-content .label {
     -fx-padding: 0 5 0 5;
     -fx-font-size: 1em;
     -fx-text-fill: -fx-mid-text-color;
@@ -945,15 +950,15 @@
     -fx-background-color: -bisq-dark-grey-20;
 }
 
-.dropdown-menu-popup .menu-item:hover > .label {
+.dropdown-menu-popup .menu-item:hover .dropdown-menu-item-content .label {
     -fx-text-fill: -fx-light-text-color;
 }
 
-.dropdown-menu-popup .leave-chat-item > .label,
-.dropdown-menu-popup .leave-chat-item:focused > .label {
+.dropdown-menu-popup .leave-chat-item .dropdown-menu-item-content .label,
+.dropdown-menu-popup .leave-chat-item:focused .dropdown-menu-item-content .label {
     -fx-text-fill: -bisq2-red-lit-10;
 }
 
-.dropdown-menu-popup .leave-chat-item:hover > .label {
+.dropdown-menu-popup .leave-chat-item:hover .dropdown-menu-item-content .label {
     -fx-text-fill: -bisq2-red;
 }

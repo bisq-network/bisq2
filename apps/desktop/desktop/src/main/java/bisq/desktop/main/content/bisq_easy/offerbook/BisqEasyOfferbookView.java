@@ -20,6 +20,7 @@ package bisq.desktop.main.content.bisq_easy.offerbook;
 import bisq.desktop.common.Layout;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.DropdownMenu;
+import bisq.desktop.components.controls.DropdownMenuItem;
 import bisq.desktop.components.controls.SearchBox;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
@@ -47,7 +48,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     private Subscription tableViewSelectionPin, selectedModelItemPin;
     private Button createOfferButton;
     private DropdownMenu dropdownMenu;
-    private MenuItem offers, nameAZ, nameZA;
+    private DropdownMenuItem offers, nameAZ, nameZA;
     private CheckBox hideUserMessagesCheckbox;
 
     public BisqEasyOfferbookView(BisqEasyOfferbookModel model,
@@ -154,10 +155,11 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         marketSelectorSearchBox.getStyleClass().add("market-selection-search-box");
 
         dropdownMenu = new DropdownMenu("sort-grey", "sort-white", true);
+        dropdownMenu.setTooltip(Res.get("bisqEasy.offerbook.dropdownMenu.tooltip"));
         dropdownMenu.getStyleClass().add("market-selection-dropdown-menu");
-        offers = new MenuItem(Res.get("bisqEasy.offerbook.dropdownMenu.offers"));
-        nameAZ = new MenuItem(Res.get("bisqEasy.offerbook.dropdownMenu.nameAZ"));
-        nameZA = new MenuItem(Res.get("bisqEasy.offerbook.dropdownMenu.nameZA"));
+        offers = new DropdownMenuItem(Res.get("bisqEasy.offerbook.dropdownMenu.offers"));
+        nameAZ = new DropdownMenuItem(Res.get("bisqEasy.offerbook.dropdownMenu.nameAZ"));
+        nameZA = new DropdownMenuItem(Res.get("bisqEasy.offerbook.dropdownMenu.nameZA"));
         dropdownMenu.addMenuItems(offers, nameAZ, nameZA);
 
         HBox subheader = new HBox(marketSelectorSearchBox, Spacer.fillHBox(), dropdownMenu);

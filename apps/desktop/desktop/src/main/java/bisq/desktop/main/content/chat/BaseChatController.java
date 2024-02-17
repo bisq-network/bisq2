@@ -225,12 +225,12 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
             case BISQ_EASY_OFFERBOOK:
             case BISQ_EASY_OPEN_TRADES:
             case BISQ_EASY_PRIVATE_CHAT:
-                return Res.get("chat.dropDownMenu.tradeGuide");
+                return Res.get("chat.dropdownMenu.tradeGuide");
             case DISCUSSION:
             case EVENTS:
             case SUPPORT:
             default:
-                return Res.get("chat.dropDownMenu.chatRules");
+                return Res.get("chat.dropdownMenu.chatRules");
         }
     }
 

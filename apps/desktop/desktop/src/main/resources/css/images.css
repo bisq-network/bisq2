@@ -591,12 +591,20 @@
     -fx-image: url("/images/icons/icon-bell.png");
 }
 
-#icon-info {
-    -fx-image: url("/images/icons/icon-info.png");
+#icon-info-white {
+    -fx-image: url("/images/icons/icon-info-white.png");
 }
 
-#icon-help {
-    -fx-image: url("/images/icons/icon-help.png");
+#icon-info-grey {
+    -fx-image: url("/images/icons/icon-info-grey.png");
+}
+
+#icon-help-white {
+    -fx-image: url("/images/icons/icon-help-white.png");
+}
+
+#icon-help-grey {
+    -fx-image: url("/images/icons/icon-help-grey.png");
 }
 
 #icon-search {
@@ -668,10 +676,13 @@
     -fx-image: url("/images/chat/attach.png");
 }
 
-#exit-door {
-    -fx-image: url("/images/chat/exit-door.png");
+#leave-chat-red {
+    -fx-image: url("/images/chat/leave-chat-red.png");
 }
 
+#leave-chat-red-lit-10 {
+    -fx-image: url("/images/chat/leave-chat-red-lit-10.png");
+}
 
 /* ------------------------------------------------------------------------------------ */
 /* Markets */
