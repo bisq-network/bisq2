@@ -31,7 +31,7 @@ public class DropdownMenuItem extends CustomMenuItem {
 
     public DropdownMenuItem(String defaultIconId, String activeIconId, String text) {
         label = new Label(text);
-        content = new HBox(label);
+        content = new HBox(8, label);
         content.getStyleClass().add("dropdown-menu-item-content");
         content.setAlignment(Pos.CENTER_LEFT);
         setContent(content);

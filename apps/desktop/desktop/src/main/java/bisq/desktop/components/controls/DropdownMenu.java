@@ -135,7 +135,7 @@ public class DropdownMenu extends HBox {
                 for (MenuItem item : contextMenu.getItems()) {
                     if (item instanceof DropdownMenuItem) {
                         DropdownMenuItem dropdownMenuItem = (DropdownMenuItem) item;
-                        dropdownMenuItem.updateWidth(contextMenu.getWidth() - 5); // Remove margins
+                        dropdownMenuItem.updateWidth(contextMenu.getWidth() - 10); // Remove margins
                     }
                 }
             }
