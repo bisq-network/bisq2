@@ -94,11 +94,12 @@ public final class MyOfferMessage extends BubbleMessage {
     }
 
     private DropdownMenu createAndGetDropdownMenu() {
-        removeOffer = new DropdownMenuItem(Res.get("offer.deleteOffer"));
+        removeOffer = new DropdownMenuItem("delete-bin-red-lit-10", "delete-bin-red",
+                Res.get("offer.deleteOffer"));
         removeOffer.setOnAction(e -> controller.onDeleteMessage(item.getChatMessage()));
         removeOffer.getStyleClass().add("red-menu-item");
 
-        DropdownMenu dropdownMenu = new DropdownMenu("ellipsis-h", "ellipsis-h-white", true);
+        DropdownMenu dropdownMenu = new DropdownMenu("ellipsis-h-grey", "ellipsis-h-white", true);
         dropdownMenu.setVisible(item.isPublicChannel());
         dropdownMenu.setManaged(item.isPublicChannel());
         dropdownMenu.setTooltip(Res.get("chat.dropdownMenu.tooltip"));

@@ -170,7 +170,7 @@
     -fx-image: url("/images/video.png");
 }
 
-#ellipsis-v {
+#ellipsis-v-grey {
     -fx-image: url("/images/icons/ellipsis-v-grey.png");
 }
 
@@ -178,12 +178,20 @@
     -fx-image: url("/images/icons/ellipsis-v-white.png");
 }
 
-#ellipsis-h {
+#ellipsis-h-grey {
     -fx-image: url("/images/icons/ellipsis-h-grey.png");
 }
 
 #ellipsis-h-white {
     -fx-image: url("/images/icons/ellipsis-h-white.png");
+}
+
+#delete-bin-red {
+    -fx-image: url("/images/icons/delete-bin-red.png");
+}
+
+#delete-bin-red-lit-10 {
+    -fx-image: url("/images/icons/delete-bin-red-lit-10.png");
 }
 
 /* ------------------------------------------------------------------------------------ */
