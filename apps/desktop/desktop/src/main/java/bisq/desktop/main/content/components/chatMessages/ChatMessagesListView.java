@@ -19,6 +19,7 @@ package bisq.desktop.main.content.components.chatMessages;
 
 import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.*;
+import bisq.chat.bisqeasy.BisqEasyOfferMessage;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
@@ -325,7 +326,18 @@ public class ChatMessagesListView {
             userIdentityService.findUserIdentity(authorUserProfileId)
                     .ifPresent(authorUserIdentity -> {
                         if (authorUserIdentity.equals(userIdentityService.getSelectedUserIdentity())) {
-                            doDeleteMessage(chatMessage, authorUserIdentity);
+                            boolean isBisqEasyPublicChatMessageWithOffer =
+                                    chatMessage instanceof BisqEasyOfferbookMessage
+                                    && ((BisqEasyOfferMessage) chatMessage).hasBisqEasyOffer();
+                            if (isBisqEasyPublicChatMessageWithOffer) {
+                                new Popup().warning(Res.get("bisqEasy.offerbook.chatMessage.deleteOffer.confirmation"))
+                                        .actionButtonText(Res.get("confirmation.yes"))
+                                        .onAction(() -> doDeleteMessage(chatMessage, authorUserIdentity))
+                                        .closeButtonText(Res.get("confirmation.no"))
+                                        .show();
+                            } else {
+                                doDeleteMessage(chatMessage, authorUserIdentity);
+                            }
                         } else {
                             new Popup().warning(Res.get("chat.message.delete.differentUserProfile.warn"))
                                     .closeButtonText(Res.get("confirmation.no"))
