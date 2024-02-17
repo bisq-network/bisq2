@@ -954,11 +954,11 @@
     -fx-text-fill: -fx-light-text-color;
 }
 
-.dropdown-menu-popup .leave-chat-item .dropdown-menu-item-content .label,
-.dropdown-menu-popup .leave-chat-item:focused .dropdown-menu-item-content .label {
+.dropdown-menu-popup .red-menu-item .dropdown-menu-item-content .label,
+.dropdown-menu-popup .red-menu-item:focused .dropdown-menu-item-content .label {
     -fx-text-fill: -bisq2-red-lit-10;
 }
 
-.dropdown-menu-popup .leave-chat-item:hover .dropdown-menu-item-content .label {
+.dropdown-menu-popup .red-menu-item:hover .dropdown-menu-item-content .label {
     -fx-text-fill: -bisq2-red;
 }

@@ -20,6 +20,8 @@ package bisq.desktop.main.content.components.chatMessages.messages.BisqEasy;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.DropdownMenu;
+import bisq.desktop.components.controls.DropdownMenuItem;
 import bisq.desktop.main.content.components.chatMessages.ChatMessageListItem;
 import bisq.desktop.main.content.components.chatMessages.ChatMessagesListView;
 import bisq.desktop.main.content.components.chatMessages.messages.BubbleMessage;
@@ -27,14 +29,13 @@ import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
 public final class MyOfferMessage extends BubbleMessage {
-    private final Button removeOfferButton;
+    private DropdownMenuItem removeOffer;
     private Label copyIcon;
 
     public MyOfferMessage(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
@@ -42,29 +43,33 @@ public final class MyOfferMessage extends BubbleMessage {
                           ChatMessagesListView.Controller controller, ChatMessagesListView.Model model) {
         super(item, list, controller, model);
 
-        removeOfferButton = createAndGetRemoveOfferButton();
+        // Message
         message.setAlignment(Pos.CENTER_RIGHT);
-        messageBgHBox.getStyleClass().add("chat-message-bg-my-message");
-
-        VBox messageVBox = new VBox(message);
-
         message.maxWidthProperty().bind(list.widthProperty().subtract(160));
-        userProfileIcon.setSize(60);
-        userProfileIconVbox.setAlignment(Pos.CENTER_LEFT);
-        HBox.setMargin(userProfileIconVbox, new Insets(-5, 0, -5, 0));
+        VBox messageVBox = new VBox(message);
         HBox.setMargin(messageVBox, new Insets(0, -10, 0, 0));
 
-        removeOfferButton.setOnAction(e -> controller.onDeleteMessage(item.getChatMessage()));
+        // User profile icon
+        userProfileIcon.setSize(60);
+        userProfileIconVbox.setAlignment(Pos.CENTER_LEFT);
+        //HBox.setMargin(userProfileIconVbox, new Insets(-5, 0, -5, 0));
+        HBox.setMargin(userProfileIconVbox, new Insets(0, 0, 10, 0));
+
+        // Dropdown menu
+        DropdownMenu dropdownMenu = createAndGetDropdownMenu();
+
+        // Message background
+        HBox hBox = new HBox(15, messageVBox, userProfileIconVbox);
+        HBox dropdownMenuHBox = new HBox(Spacer.fillHBox(), dropdownMenu);
+        VBox vBox = new VBox(hBox, dropdownMenuHBox);
+        messageBgHBox.getChildren().setAll(vBox);
+        messageBgHBox.getStyleClass().add("chat-message-bg-my-message");
+        messageHBox.getChildren().setAll(Spacer.fillHBox(), messageBgHBox);
+
+        // Reactions
         reactionsHBox.getChildren().setAll(Spacer.fillHBox(), supportedLanguages, copyIcon);
         reactionsHBox.setAlignment(Pos.CENTER_RIGHT);
 
-        HBox.setMargin(userProfileIconVbox, new Insets(0, 0, 10, 0));
-        HBox hBox = new HBox(15, messageVBox, userProfileIconVbox);
-        HBox removeOfferButtonHBox = new HBox(Spacer.fillHBox(), removeOfferButton);
-        VBox vBox = new VBox(hBox, removeOfferButtonHBox);
-        messageBgHBox.getChildren().setAll(vBox);
-
-        messageHBox.getChildren().setAll(Spacer.fillHBox(), messageBgHBox);
         getChildren().setAll(userNameAndDateHBox, messageHBox, reactionsHBox);
     }
 
@@ -88,16 +93,21 @@ public final class MyOfferMessage extends BubbleMessage {
         copyIcon.setOnMouseClicked(e -> onCopyMessage(item.getChatMessage()));
     }
 
-    private Button createAndGetRemoveOfferButton() {
-        Button button = new Button(Res.get("offer.deleteOffer"));
-        button.getStyleClass().addAll("red-small-button", "no-background");
-        button.setVisible(item.isPublicChannel());
-        button.setManaged(item.isPublicChannel());
-        return button;
+    private DropdownMenu createAndGetDropdownMenu() {
+        removeOffer = new DropdownMenuItem(Res.get("offer.deleteOffer"));
+        removeOffer.setOnAction(e -> controller.onDeleteMessage(item.getChatMessage()));
+        removeOffer.getStyleClass().add("red-menu-item");
+
+        DropdownMenu dropdownMenu = new DropdownMenu("ellipsis-h", "ellipsis-h-white", true);
+        dropdownMenu.setVisible(item.isPublicChannel());
+        dropdownMenu.setManaged(item.isPublicChannel());
+        dropdownMenu.setTooltip(Res.get("chat.dropdownMenu.tooltip"));
+        dropdownMenu.addMenuItems(removeOffer);
+        return dropdownMenu;
     }
 
     @Override
     public void cleanup() {
-        removeOfferButton.setOnAction(null);
+        removeOffer.setOnAction(null);
     }
 }

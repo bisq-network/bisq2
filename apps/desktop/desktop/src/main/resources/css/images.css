@@ -178,6 +178,14 @@
     -fx-image: url("/images/icons/ellipsis-v-white.png");
 }
 
+#ellipsis-h {
+    -fx-image: url("/images/icons/ellipsis-h-grey.png");
+}
+
+#ellipsis-h-white {
+    -fx-image: url("/images/icons/ellipsis-h-white.png");
+}
+
 /* ------------------------------------------------------------------------------------ */
 /* Navigation */
 /* ------------------------------------------------------------------------------------ */
