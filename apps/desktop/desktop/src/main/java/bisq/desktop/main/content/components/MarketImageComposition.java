@@ -27,8 +27,8 @@ import java.util.stream.Stream;
 
 @Slf4j
 public class MarketImageComposition {
-    private static final List<String> MARKETS_WITH_IMAGE = List.of("bsq", "btc", "eur", "usd", "xmr", "any-base", "any-quote");
-    private static final Set<String> MARKETS_WITH_LOGOS = Stream.of("aed", "afn", "all", "amd", "aoa", "ars", "aud",
+    private static final List<String> CRYPTO_MARKETS_WITH_LOGO = List.of("bsq", "btc", "xmr");
+    private static final Set<String> FIAT_MARKETS_WITH_LOGO = Stream.of("aed", "afn", "all", "amd", "aoa", "ars", "aud",
                     "awg", "azn", "bam", "bbd", "bdt", "bgn", "bhd", "bif", "bmd", "bnd", "bob", "brl", "bsd", "btn", "bwp",
                     "byn", "bzd", "cad", "chf", "clp", "cny", "cop", "crc", "cup", "cve", "czk", "djf", "dkk", "dop", "dzd",
                     "egp", "ern", "etb", "eur", "fjd", "fkp", "gbp", "gel", "ghs", "gip", "gmd", "gnf", "gtq", "gyd", "hkd",
@@ -64,7 +64,7 @@ public class MarketImageComposition {
             StackPane.setAlignment(imageView, alignment);
             pane.getChildren().add(imageView);
 
-            if (MARKETS_WITH_IMAGE.contains(code)) {
+            if (CRYPTO_MARKETS_WITH_LOGO.contains(code) || FIAT_MARKETS_WITH_LOGO.contains(code)) {
                 imageView.setId("market-" + code);
             } else {
                 boolean isFiat = TradeCurrency.isFiat(code.toUpperCase());
@@ -101,6 +101,37 @@ public class MarketImageComposition {
         }).collect(Collectors.toList());
 
         return new Pair<>(pane, imageViews);
+    }
+
+    public static StackPane imageBoxForMarkets(String baseCurrencyCode, String quoteCurrencyCode) {
+        StackPane pane = new StackPane();
+        pane.setPrefWidth(61);
+
+        Stream<String> stream = baseCurrencyCode.equals("btc")
+                ? Stream.of(baseCurrencyCode, quoteCurrencyCode)
+                : Stream.of(quoteCurrencyCode, baseCurrencyCode);
+        stream.forEach(code -> {
+            if (quoteCurrencyCode.equals(code)) {
+                double radius = 18;
+                Circle circle = new Circle(radius);
+                circle.getStyleClass().add("quote-currency-market-logo");
+                StackPane.setAlignment(circle, Pos.CENTER);
+
+                Node node = createMarketLogo(code);
+                StackPane.setAlignment(node, Pos.CENTER);
+
+                StackPane quoteLogo = new StackPane();
+                quoteLogo.setMaxWidth(radius*2);
+                quoteLogo.getChildren().addAll(circle, node);
+                StackPane.setAlignment(quoteLogo, Pos.CENTER_RIGHT);
+                pane.getChildren().add(quoteLogo);
+            } else {
+                Node node = createMarketLogo(code);
+                StackPane.setAlignment(node, Pos.CENTER_LEFT);
+                pane.getChildren().add(node);
+            }
+        });
+        return pane;
     }
 
     public static StackPane getCurrencyIcon(String code) {
@@ -147,7 +178,7 @@ public class MarketImageComposition {
     public static Node createMarketLogo(String marketCode) {
         String market = marketCode.toLowerCase();
         String iconId = String.format("market-%s", market);
-        return MARKETS_WITH_LOGOS.contains(market)
+        return FIAT_MARKETS_WITH_LOGO.contains(market) || CRYPTO_MARKETS_WITH_LOGO.contains(market)
                 ? ImageUtil.getImageViewById(iconId)
                 : createMarketLogoPlaceholder(marketCode);
     }
@@ -157,7 +188,7 @@ public class MarketImageComposition {
         circle.setFill(Paint.valueOf("#FF0000"));
         circle.setEffect(createColorAdjust(marketCode));
 
-        Text text = new Text(marketCode.substring(0, Math.min(3, marketCode.length())));
+        Text text = new Text(marketCode.substring(0, Math.min(3, marketCode.length())).toUpperCase());
         Label label = new Label(text.getText(), new Circle(16, Color.TRANSPARENT));
         label.getStyleClass().add("fiat-code");
         label.setAlignment(Pos.CENTER);
