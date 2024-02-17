@@ -20,6 +20,7 @@ package bisq.desktop.main.content.components.chatMessages;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.desktop.main.content.components.chatMessages.messages.BisqEasy.MyOfferMessage;
+import bisq.desktop.main.content.components.chatMessages.messages.BisqEasy.PeerOfferMessage;
 import bisq.desktop.main.content.components.chatMessages.messages.Message;
 import bisq.desktop.main.content.components.chatMessages.messages.MyMessage;
 import bisq.desktop.main.content.components.chatMessages.messages.PeerMessage;
@@ -87,7 +88,11 @@ final class ChatMessageListCellFactory implements Callback<ListView<ChatMessageL
                             message = new MyMessage(item, list, controller, model);
                         }
                     } else {
-                        message = new PeerMessage(item, list, controller, model);
+                        if (item.isBisqEasyPublicChatMessageWithOffer()) {
+                            message = new PeerOfferMessage(item, list, controller, model);
+                        } else {
+                            message = new PeerMessage(item, list, controller, model);
+                        }
                     }
                 }
 
