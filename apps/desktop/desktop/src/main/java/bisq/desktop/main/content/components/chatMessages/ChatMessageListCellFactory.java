@@ -51,7 +51,6 @@ final class ChatMessageListCellFactory implements Callback<ListView<ChatMessageL
             private final static double CHAT_BOX_MAX_WIDTH = 1200;
 
             private final HBox cellHBox;
-            private ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> previousItem;
             private Subscription listWidthPropertyPin;
             private Message message;
 
@@ -102,8 +101,6 @@ final class ChatMessageListCellFactory implements Callback<ListView<ChatMessageL
 
                 setGraphic(cellHBox);
                 setAlignment(Pos.CENTER);
-
-                previousItem = item;
             }
 
             private void cleanup() {
