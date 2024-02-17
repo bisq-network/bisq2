@@ -52,7 +52,6 @@ public final class MyOfferMessage extends BubbleMessage {
         // User profile icon
         userProfileIcon.setSize(60);
         userProfileIconVbox.setAlignment(Pos.CENTER_LEFT);
-        //HBox.setMargin(userProfileIconVbox, new Insets(-5, 0, -5, 0));
         HBox.setMargin(userProfileIconVbox, new Insets(0, 0, 10, 0));
 
         // Dropdown menu
