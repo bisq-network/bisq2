@@ -45,7 +45,8 @@ final class ChatMessageListCellFactory implements Callback<ListView<ChatMessageL
     }
 
     @Override
-    public ListCell<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> call(ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list) {
+    public ListCell<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> call(
+            ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list) {
         return new ListCell<>() {
             private final static double CHAT_BOX_MAX_WIDTH = 1200;
 
@@ -64,38 +65,18 @@ final class ChatMessageListCellFactory implements Callback<ListView<ChatMessageL
             @Override
             public void updateItem(final ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item, boolean empty) {
                 super.updateItem(item, empty);
+
                 if (item == null || empty) {
                     cleanup();
                     return;
                 }
-
-                ChatMessage chatMessage = item.getChatMessage();
 
                 Node flow = this.getListView().lookup(".virtual-flow");
                 if (flow != null && !flow.isVisible()) {
                     return;
                 }
 
-                // TODO: Implement factory method
-                if (item.isSystemMessage()) {
-                    message = new SystemMessage(item);
-                } else {
-                    boolean isMyMessage = model.isMyMessage(chatMessage);
-                    if (isMyMessage) {
-                        if (item.isBisqEasyPublicChatMessageWithOffer()) {
-                            message = new MyOfferMessage(item, list, controller, model);
-                        } else {
-                            message = new MyMessage(item, list, controller, model);
-                        }
-                    } else {
-                        if (item.isBisqEasyPublicChatMessageWithOffer()) {
-                            message = new PeerOfferMessage(item, list, controller, model);
-                        } else {
-                            message = new PeerMessage(item, list, controller, model);
-                        }
-                    }
-                }
-
+                message = createMessage(item, list);
                 cellHBox.getChildren().setAll(message);
 
                 listWidthPropertyPin = EasyBind.subscribe(message.widthProperty(), width -> {
@@ -140,5 +121,23 @@ final class ChatMessageListCellFactory implements Callback<ListView<ChatMessageL
                 setGraphic(null);
             }
         };
+    }
+
+    private Message createMessage(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
+                                  ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list) {
+        if (item.isSystemMessage()) {
+            return new SystemMessage(item);
+        }
+
+        boolean isMyMessage = model.isMyMessage(item.getChatMessage());
+        if (isMyMessage) {
+            return item.isBisqEasyPublicChatMessageWithOffer()
+                    ? new MyOfferMessage(item, list, controller, model)
+                    : new MyMessage(item, list, controller, model);
+        } else {
+            return item.isBisqEasyPublicChatMessageWithOffer()
+                    ? new PeerOfferMessage(item, list, controller, model)
+                    : new PeerMessage(item, list, controller, model);
+        }
     }
 }
