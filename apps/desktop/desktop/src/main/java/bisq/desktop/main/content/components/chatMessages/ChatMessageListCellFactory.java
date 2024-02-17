@@ -34,7 +34,8 @@ import javafx.util.Callback;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-final class ChatMessageListCellFactory implements Callback<ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>>,
+final class ChatMessageListCellFactory
+        implements Callback<ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>>,
         ListCell<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>>> {
     private final ChatMessagesListView.Controller controller;
     private final ChatMessagesListView.Model model;
@@ -62,7 +63,8 @@ final class ChatMessageListCellFactory implements Callback<ListView<ChatMessageL
             }
 
             @Override
-            public void updateItem(final ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item, boolean empty) {
+            public void updateItem(final ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
+                                   boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item == null || empty) {
