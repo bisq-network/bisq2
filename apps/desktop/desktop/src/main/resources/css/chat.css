@@ -406,6 +406,16 @@
     -fx-background-color: none;
 }
 
+.system-message-labels {
+    -fx-font-size: 0.9em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.system-message-background {
+    -fx-background-color: rgba(36, 36, 36, 0.4); /* -bisq-dark-grey-30 */
+    -fx-padding: 25 0 25 0;
+}
+
 .chat-messages-badge.bisq-badge .badge-pane {
     -fx-background-color: transparent;
 }
@@ -417,6 +427,7 @@
 .chat-messages-badge.bisq-badge .badge-pane .label {
     -fx-text-fill: -fx-mid-text-color !important;
 }
+
 
 /*******************************************************************************
  * Chat guide                                                                  *

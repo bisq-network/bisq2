@@ -1,6 +1,7 @@
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_state;
 
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.common.encoding.Csv;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
@@ -67,26 +68,28 @@ public class OpenTradesUtils {
 
     public static void reportToMediator(BisqEasyOpenTradeChannel channel,
                                         BisqEasyContract contract,
-                                        MediationRequestService mediationRequestService) {
-        openDispute(channel, contract, mediationRequestService);
+                                        MediationRequestService mediationRequestService,
+                                        BisqEasyOpenTradeChannelService channelService) {
+        openDispute(channel, contract, mediationRequestService, channelService);
     }
 
     public static void requestMediation(BisqEasyOpenTradeChannel channel,
                                         BisqEasyContract contract,
-                                        MediationRequestService mediationRequestService) {
-        openDispute(channel, contract, mediationRequestService);
+                                        MediationRequestService mediationRequestService,
+                                        BisqEasyOpenTradeChannelService channelService) {
+        openDispute(channel, contract, mediationRequestService, channelService);
     }
 
-    private static void openDispute(BisqEasyOpenTradeChannel channel, BisqEasyContract contract, MediationRequestService mediationRequestService) {
+    private static void openDispute(BisqEasyOpenTradeChannel channel, BisqEasyContract contract,
+            MediationRequestService mediationRequestService, BisqEasyOpenTradeChannelService channelService) {
         Optional<UserProfile> mediator = channel.getMediator();
         if (mediator.isPresent()) {
             new Popup().headline(Res.get("bisqEasy.mediation.request.confirm.headline"))
                     .information(Res.get("bisqEasy.mediation.request.confirm.msg"))
                     .actionButtonText(Res.get("bisqEasy.mediation.request.confirm.openMediation"))
                     .onAction(() -> {
-                        //todo (Critical) should be handled with the solution how to treat system messages
-                        //String systemMessage = Res.get("bisqEasy.mediation.requester.systemMessage");
-                        // chatService.getBisqEasyPrivateTradeChatChannelService().sendSystemMessage(systemMessage, channel);
+                        String systemMessage = Res.get("bisqEasy.mediation.requester.systemMessage", channel.getMyUserIdentity().getUserName());
+                        channelService.sendSystemMessage(systemMessage, channel);
 
                         channel.setIsInMediation(true);
                         mediationRequestService.requestMediation(channel, contract);
@@ -100,5 +103,4 @@ public class OpenTradesUtils {
             new Popup().warning(Res.get("bisqEasy.mediation.request.feedback.noMediatorAvailable")).show();
         }
     }
-
 }

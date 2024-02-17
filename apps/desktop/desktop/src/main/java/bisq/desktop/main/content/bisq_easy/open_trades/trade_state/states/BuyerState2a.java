@@ -68,7 +68,8 @@ public class BuyerState2a extends BaseState {
         }
 
         private void onConfirmFiatSent() {
-            sendSystemMessage(Res.get("bisqEasy.tradeState.info.buyer.phase2a.systemMessage", model.getQuoteCode()));
+            sendSystemMessage(Res.get("bisqEasy.tradeState.info.buyer.phase2a.systemMessage",
+                    model.getChannel().getMyUserIdentity().getUserName(), model.getQuoteCode()));
             bisqEasyTradeService.buyerConfirmFiatSent(model.getBisqEasyTrade());
         }
     }

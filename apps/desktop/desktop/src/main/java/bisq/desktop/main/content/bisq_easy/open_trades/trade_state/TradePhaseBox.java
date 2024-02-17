@@ -18,7 +18,9 @@
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_state;
 
 import bisq.bisq_easy.NavigationTarget;
+import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.common.data.Triple;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
@@ -79,10 +81,12 @@ class TradePhaseBox {
         @Getter
         private final View view;
         private final MediationRequestService mediationRequestService;
+        private final BisqEasyOpenTradeChannelService channelService;
         private Pin bisqEasyTradeStatePin, isInMediationPin;
 
         private Controller(ServiceProvider serviceProvider) {
             mediationRequestService = serviceProvider.getSupportService().getMediationRequestService();
+            channelService = serviceProvider.getChatService().getBisqEasyOpenTradeChannelService();
 
             model = new Model();
             view = new View(model, this);
@@ -218,13 +222,13 @@ class TradePhaseBox {
         void onReportToMediator() {
             OpenTradesUtils.reportToMediator(model.getSelectedChannel(),
                     model.getBisqEasyTrade().getContract(),
-                    mediationRequestService);
+                    mediationRequestService, channelService);
         }
 
         void onRequestMediation() {
             OpenTradesUtils.requestMediation(model.getSelectedChannel(),
                     model.getBisqEasyTrade().getContract(),
-                    mediationRequestService);
+                    mediationRequestService, channelService);
         }
 
     }
