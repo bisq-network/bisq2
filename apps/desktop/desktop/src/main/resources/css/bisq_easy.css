@@ -170,6 +170,16 @@
     -fx-pref-width: 24;
 }
 
+.dropdown-menu-popup .dropdown-filter-menu-item .dropdown-menu-item-content .menu-item-icon,
+.dropdown-menu-popup .dropdown-filter-menu-item:hover .dropdown-menu-item-content .menu-item-icon {
+    -fx-opacity: 0;
+}
+
+.dropdown-menu-popup .dropdown-filter-menu-item .dropdown-menu-item-content:selected .menu-item-icon,
+.dropdown-menu-popup .dropdown-filter-menu-item:hover .dropdown-menu-item-content:selected .menu-item-icon {
+    -fx-opacity: 1;
+}
+
 .market-selection-list .column-header-background {
     -fx-max-height: 0;
     -fx-pref-height: 0;
