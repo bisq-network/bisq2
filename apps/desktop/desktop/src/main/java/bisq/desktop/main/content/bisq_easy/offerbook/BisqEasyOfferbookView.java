@@ -53,7 +53,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     private VBox marketSelectionList;
     private Subscription tableViewSelectionPin, selectedModelItemPin, marketSelectorHeaderIconPin, selectedMarketFilterPin;
     private Button createOfferButton;
-    private DropdownMenuItem sortByMostOffers, sortByNameAZ, sortByNameZA;
+    private DropdownSortByMenuItem sortByMostOffers, sortByNameAZ, sortByNameZA;
     private DropdownFilterMenuItem filterShowAll, filterWithOffers;
     private CheckBox hideUserMessagesCheckbox;
 
@@ -113,21 +113,31 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         marketSelectorHeaderIconPin = EasyBind.subscribe(model.getChannelIconNode(), this::updateMarketSelectorHeaderIcon);
         selectedMarketFilterPin = EasyBind.subscribe(getModel().getSelectedMarketFilter(), this::updateSelectedMarketFilter);
 
-        sortByMostOffers.setOnAction(e -> sortTableViewColumn(BisqEasyOfferbookUtil.SortByMarketActivity()));
-        sortByNameAZ.setOnAction(e -> sortTableViewColumn(BisqEasyOfferbookUtil.SortByMarketNameAsc()));
-        sortByNameZA.setOnAction(e -> sortTableViewColumn(BisqEasyOfferbookUtil.SortByMarketNameDesc()));
+        sortByMostOffers.setOnAction(e -> sortTableViewColumn(sortByMostOffers));
+        sortByNameAZ.setOnAction(e -> sortTableViewColumn(sortByNameAZ));
+        sortByNameZA.setOnAction(e -> sortTableViewColumn(sortByNameZA));
         filterWithOffers.setOnAction(e -> getModel().getSelectedMarketFilter().set(MarketFilter.WITH_OFFERS));
         filterShowAll.setOnAction(e -> getModel().getSelectedMarketFilter().set(MarketFilter.ALL));
 
         createOfferButton.setOnAction(e -> getController().onCreateOffer());
 
-        sortTableViewColumn(BisqEasyOfferbookUtil.SortByMarketActivity());
+        maybeSelectSorting();
     }
 
-    private void sortTableViewColumn(Comparator<MarketChannelItem> comparator) {
+    private void sortTableViewColumn(DropdownSortByMenuItem sortByMenuItem) {
         tableView.getSortOrder().clear();
-        marketLabelTableColumn.setComparator(comparator);
+        marketLabelTableColumn.setComparator(sortByMenuItem.getComparator());
         tableView.getSortOrder().add(marketLabelTableColumn);
+
+        ArrayList<DropdownSortByMenuItem> sortByMenuItems = new ArrayList<>(List.of(sortByMostOffers, sortByNameAZ, sortByNameZA));
+        sortByMenuItems.forEach(item -> item.updateSelection(item == sortByMenuItem));
+    }
+
+    private void maybeSelectSorting() {
+        ArrayList<DropdownSortByMenuItem> sortByMenuItems = new ArrayList<>(List.of(sortByMostOffers, sortByNameAZ, sortByNameZA));
+        if (sortByMenuItems.stream().noneMatch(DropdownSortByMenuItem::isSelected)) {
+            sortTableViewColumn(sortByMostOffers);
+        }
     }
 
     @Override
@@ -201,9 +211,12 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
 
         // Sorting options
         DropdownTitleMenuItem sortTitle = new DropdownTitleMenuItem(Res.get("bisqEasy.offerbook.dropdownMenu.sortTitle"));
-        sortByMostOffers = new DropdownMenuItem(Res.get("bisqEasy.offerbook.dropdownMenu.mostOffers"));
-        sortByNameAZ = new DropdownMenuItem(Res.get("bisqEasy.offerbook.dropdownMenu.nameAZ"));
-        sortByNameZA = new DropdownMenuItem(Res.get("bisqEasy.offerbook.dropdownMenu.nameZA"));
+        sortByMostOffers = new DropdownSortByMenuItem("check-grey", "check-white",
+                Res.get("bisqEasy.offerbook.dropdownMenu.mostOffers"), BisqEasyOfferbookUtil.SortByMarketActivity());
+        sortByNameAZ = new DropdownSortByMenuItem("check-grey", "check-white",
+                Res.get("bisqEasy.offerbook.dropdownMenu.nameAZ"), BisqEasyOfferbookUtil.SortByMarketNameAsc());
+        sortByNameZA = new DropdownSortByMenuItem("check-grey", "check-white",
+                Res.get("bisqEasy.offerbook.dropdownMenu.nameZA"), BisqEasyOfferbookUtil.SortByMarketNameDesc());
 
         // Separator
         SeparatorMenuItem separator = new SeparatorMenuItem();
@@ -285,12 +298,12 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         filterMenuItems.forEach(item -> item.updateSelection(marketFilter != null && marketFilter == item.getMarketFilter()));
     }
 
-    @Getter
     private static final class DropdownFilterMenuItem extends DropdownMenuItem {
         private static final PseudoClass SELECTED_PSEUDO_CLASS = PseudoClass.getPseudoClass("selected");
+        @Getter
         private final MarketFilter marketFilter;
 
-        public DropdownFilterMenuItem(String defaultIconId, String activeIconId, String text, MarketFilter marketFilter) {
+        DropdownFilterMenuItem(String defaultIconId, String activeIconId, String text, MarketFilter marketFilter) {
             super(defaultIconId, activeIconId, text);
 
             this.marketFilter = marketFilter;
@@ -300,6 +313,29 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
 
         void updateSelection(boolean isSelected) {
             getContent().pseudoClassStateChanged(SELECTED_PSEUDO_CLASS, isSelected);
+        }
+    }
+
+    private static final class DropdownSortByMenuItem extends DropdownMenuItem {
+        private static final PseudoClass SELECTED_PSEUDO_CLASS = PseudoClass.getPseudoClass("selected");
+        @Getter
+        private final Comparator<MarketChannelItem> comparator;
+
+        DropdownSortByMenuItem(String defaultIconId, String activeIconId, String text,
+                                      Comparator<MarketChannelItem> comparator) {
+            super(defaultIconId, activeIconId, text);
+
+            this.comparator = comparator;
+            getStyleClass().add("dropdown-sort-by-menu-item");
+            updateSelection(false);
+        }
+
+        void updateSelection(boolean isSelected) {
+            getContent().pseudoClassStateChanged(SELECTED_PSEUDO_CLASS, isSelected);
+        }
+
+        boolean isSelected() {
+            return getContent().getPseudoClassStates().contains(SELECTED_PSEUDO_CLASS);
         }
     }
 }
