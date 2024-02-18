@@ -951,7 +951,7 @@
 }
 
 .dropdown-menu-popup .menu-item:hover .dropdown-menu-item-content {
-    -fx-background-color: -bisq-dark-grey-30;
+    -fx-background-color: -bisq-dark-grey-50;
 }
 
 .dropdown-menu-popup .menu-item:hover .dropdown-menu-item-content .label {
