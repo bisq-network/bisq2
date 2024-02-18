@@ -901,6 +901,7 @@
     -fx-background-color: transparent;
     -fx-background-radius: 6;
     -fx-border-width: 0;
+    -fx-cursor: hand;
 }
 
 .dropdown-menu .label {
@@ -971,14 +972,17 @@
 .dropdown-menu-popup .separator:horizontal .line {
     -fx-border-color: -fx-mid-text-color transparent transparent transparent;
     -fx-border-insets: 1 0 0 0;
-    -fx-padding: 0 0 10 0;
+}
+
+.dropdown-menu-popup .separator:horizontal {
+    -fx-padding: 10 0 10 0;
 }
 
 /* Dropdown title menu item */
 .dropdown-menu-popup .menu-item .dropdown-title-menu-item,
 .dropdown-menu-popup .menu-item:hover .dropdown-title-menu-item {
     -fx-background-color: transparent;
-    -fx-padding: 0;
+    -fx-padding: 0 10 5 10;
     -fx-cursor: default;
     -fx-font-size: 1em;
     -fx-text-fill: -fx-mid-text-color;
