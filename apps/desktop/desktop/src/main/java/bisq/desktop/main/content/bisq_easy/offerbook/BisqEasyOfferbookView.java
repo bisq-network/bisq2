@@ -110,6 +110,9 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         sortByMostOffers.setOnAction(e -> sortTableViewColumn(BisqEasyOfferbookUtil.SortByMarketActivity()));
         sortByNameAZ.setOnAction(e -> sortTableViewColumn(BisqEasyOfferbookUtil.SortByMarketNameAsc()));
         sortByNameZA.setOnAction(e -> sortTableViewColumn(BisqEasyOfferbookUtil.SortByMarketNameDesc()));
+        filterWithOffers.setOnAction(e -> getModel().getSelectedMarketFilter().set(MarketFilter.WITH_OFFERS));
+        filterShowAll.setOnAction(e -> getModel().getSelectedMarketFilter().set(MarketFilter.ALL));
+
         createOfferButton.setOnAction(e -> getController().onCreateOffer());
 
         sortTableViewColumn(BisqEasyOfferbookUtil.SortByMarketActivity());
@@ -135,6 +138,8 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         sortByMostOffers.setOnAction(null);
         sortByNameAZ.setOnAction(null);
         sortByNameZA.setOnAction(null);
+        filterWithOffers.setOnAction(null);
+        filterShowAll.setOnAction(null);
         createOfferButton.setOnAction(null);
     }
 
