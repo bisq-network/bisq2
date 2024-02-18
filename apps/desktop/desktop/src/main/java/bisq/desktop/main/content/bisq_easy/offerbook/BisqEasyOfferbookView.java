@@ -21,6 +21,7 @@ import bisq.desktop.common.Layout;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.DropdownMenu;
 import bisq.desktop.components.controls.DropdownMenuItem;
+import bisq.desktop.components.controls.DropdownTitleMenuItem;
 import bisq.desktop.components.controls.SearchBox;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
@@ -48,8 +49,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     private VBox marketSelectionList;
     private Subscription tableViewSelectionPin, selectedModelItemPin, marketSelectorHeaderIconPin;
     private Button createOfferButton;
-    private DropdownMenu dropdownMenu;
-    private DropdownMenuItem offers, nameAZ, nameZA;
+    private DropdownMenuItem sortByMostOffers, sortByNameAZ, sortByNameZA, filterShowAll, filterWithOffers;
     private CheckBox hideUserMessagesCheckbox;
 
     public BisqEasyOfferbookView(BisqEasyOfferbookModel model,
@@ -107,9 +107,9 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         });
         marketSelectorHeaderIconPin = EasyBind.subscribe(model.getChannelIconNode(), this::updateMarketSelectorHeaderIcon);
 
-        offers.setOnAction(e -> sortTableViewColumn(BisqEasyOfferbookUtil.SortByMarketActivity()));
-        nameAZ.setOnAction(e -> sortTableViewColumn(BisqEasyOfferbookUtil.SortByMarketNameAsc()));
-        nameZA.setOnAction(e -> sortTableViewColumn(BisqEasyOfferbookUtil.SortByMarketNameDesc()));
+        sortByMostOffers.setOnAction(e -> sortTableViewColumn(BisqEasyOfferbookUtil.SortByMarketActivity()));
+        sortByNameAZ.setOnAction(e -> sortTableViewColumn(BisqEasyOfferbookUtil.SortByMarketNameAsc()));
+        sortByNameZA.setOnAction(e -> sortTableViewColumn(BisqEasyOfferbookUtil.SortByMarketNameDesc()));
         createOfferButton.setOnAction(e -> getController().onCreateOffer());
 
         sortTableViewColumn(BisqEasyOfferbookUtil.SortByMarketActivity());
@@ -132,9 +132,9 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         tableViewSelectionPin.unsubscribe();
         marketSelectorHeaderIconPin.unsubscribe();
 
-        offers.setOnAction(null);
-        nameAZ.setOnAction(null);
-        nameZA.setOnAction(null);
+        sortByMostOffers.setOnAction(null);
+        sortByNameAZ.setOnAction(null);
+        sortByNameZA.setOnAction(null);
         createOfferButton.setOnAction(null);
     }
 
@@ -157,17 +157,8 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
 
         marketSelectorSearchBox = new SearchBox();
         marketSelectorSearchBox.getStyleClass().add("market-selection-search-box");
-
-        dropdownMenu = new DropdownMenu("sort-grey", "sort-white", true);
-        dropdownMenu.setTooltip(Res.get("bisqEasy.offerbook.dropdownMenu.tooltip"));
-        dropdownMenu.getStyleClass().add("market-selection-dropdown-menu");
-        offers = new DropdownMenuItem(Res.get("bisqEasy.offerbook.dropdownMenu.offers"));
-        nameAZ = new DropdownMenuItem(Res.get("bisqEasy.offerbook.dropdownMenu.nameAZ"));
-        nameZA = new DropdownMenuItem(Res.get("bisqEasy.offerbook.dropdownMenu.nameZA"));
-        dropdownMenu.addMenuItems(offers, nameAZ, nameZA);
-
+        DropdownMenu dropdownMenu = createAndGetDropdownMenu();
         HBox subheader = new HBox(marketSelectorSearchBox, Spacer.fillHBox(), dropdownMenu);
-        dropdownMenu.setMaxWidth(Double.MAX_VALUE);
         subheader.setAlignment(Pos.CENTER);
         subheader.getStyleClass().add("market-selection-subheader");
 
@@ -189,6 +180,30 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         marketSelectionList.setMinWidth(210);
         marketSelectionList.setFillWidth(true);
         marketSelectionList.getStyleClass().add("chat-container");
+    }
+
+    private DropdownMenu createAndGetDropdownMenu() {
+        DropdownMenu dropdownMenu = new DropdownMenu("sort-grey", "sort-white", true);
+        dropdownMenu.setTooltip(Res.get("bisqEasy.offerbook.dropdownMenu.tooltip"));
+        dropdownMenu.getStyleClass().add("market-selection-dropdown-menu");
+
+        // Sorting options
+        DropdownTitleMenuItem sortTitle = new DropdownTitleMenuItem(Res.get("bisqEasy.offerbook.dropdownMenu.sortTitle"));
+        sortByMostOffers = new DropdownMenuItem(Res.get("bisqEasy.offerbook.dropdownMenu.mostOffers"));
+        sortByNameAZ = new DropdownMenuItem(Res.get("bisqEasy.offerbook.dropdownMenu.nameAZ"));
+        sortByNameZA = new DropdownMenuItem(Res.get("bisqEasy.offerbook.dropdownMenu.nameZA"));
+
+        // Separator
+        SeparatorMenuItem separator = new SeparatorMenuItem();
+
+        // Filter options
+        DropdownTitleMenuItem filterTitle = new DropdownTitleMenuItem(Res.get("bisqEasy.offerbook.dropdownMenu.filterTitle"));
+        filterWithOffers = new DropdownMenuItem(Res.get("bisqEasy.offerbook.dropdownMenu.withOffers"));
+        filterShowAll = new DropdownMenuItem(Res.get("bisqEasy.offerbook.dropdownMenu.all"));
+
+        dropdownMenu.addMenuItems(sortTitle, sortByMostOffers, sortByNameAZ, sortByNameZA, separator,
+                filterTitle, filterWithOffers, filterShowAll);
+        return dropdownMenu;
     }
 
     private Button createAndGetCreateOfferButton() {
