@@ -449,9 +449,9 @@ public class ChatMessagesListView {
                     "Not possible to leave a channel which is not a private chat.");
 
             new Popup().information(Res.get("chat.leave.info"))
-                    .actionButtonText(Res.get("confirmation.yes"))
+                    .actionButtonText(Res.get("confirmation.ok"))
                     .onAction(this::doLeaveChannel)
-                    .closeButtonText(Res.get("confirmation.no"))
+                    .closeButtonText(Res.get("action.close"))
                     .show();
         }
 
