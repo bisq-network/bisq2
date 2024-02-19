@@ -19,6 +19,7 @@ package bisq.desktop.components.controls;
 
 import bisq.desktop.common.utils.ImageUtil;
 import javafx.beans.value.WeakChangeListener;
+import javafx.collections.ObservableList;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -81,6 +82,10 @@ public class DropdownMenu extends HBox {
 
     public void addMenuItems(CustomMenuItem... items) {
         contextMenu.getItems().addAll(items);
+    }
+
+    public ObservableList<MenuItem> getMenuItems() {
+        return contextMenu.getItems();
     }
 
     public void clearMenuItems() {
