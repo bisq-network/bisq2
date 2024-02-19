@@ -702,7 +702,7 @@
 }
 
 #leave-chat-green {
-    -fx-image: url("/images/chat/leave-chat-red.png");
+    -fx-image: url("/images/chat/leave-chat-green.png");
 }
 
 #leave-chat-red {
