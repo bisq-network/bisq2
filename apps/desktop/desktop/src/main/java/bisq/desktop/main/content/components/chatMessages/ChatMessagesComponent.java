@@ -349,7 +349,7 @@ public class ChatMessagesComponent {
 
             if (model.selectedChannel.get() instanceof PublicChatChannel) {
                 List<UserIdentity> myUserProfilesInChannel = getMyUserProfilesInChannel();
-                if (myUserProfilesInChannel.size() > 0) {
+                if (!myUserProfilesInChannel.isEmpty()) {
                     UserIdentity lastUsedUserProfile = myUserProfilesInChannel.get(0);
                     if (!lastUsedUserProfile.equals(userIdentityService.getSelectedUserIdentity())) {
                         new Popup().warning(Res.get("chat.message.send.differentUserProfile.warn"))
