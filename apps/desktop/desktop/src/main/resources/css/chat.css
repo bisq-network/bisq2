@@ -420,6 +420,18 @@
     -fx-padding: 25 0 25 0;
 }
 
+.system-message-background .leave-chat-message,
+.system-message-background .leave-chat-message:visited {
+    -fx-text-fill: -bisq2-green;
+    -fx-underline: false;
+}
+
+.system-message-background .leave-chat-message:hover,
+.system-message-background .leave-chat-message:hover:visited {
+    -fx-text-fill: -bisq2-green;
+    -fx-underline: true;
+}
+
 .chat-messages-badge.bisq-badge .badge-pane {
     -fx-background-color: transparent;
 }

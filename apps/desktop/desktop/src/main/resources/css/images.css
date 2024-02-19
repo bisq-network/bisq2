@@ -701,6 +701,10 @@
     -fx-image: url("/images/chat/attach.png");
 }
 
+#leave-chat-green {
+    -fx-image: url("/images/chat/leave-chat-red.png");
+}
+
 #leave-chat-red {
     -fx-image: url("/images/chat/leave-chat-red.png");
 }

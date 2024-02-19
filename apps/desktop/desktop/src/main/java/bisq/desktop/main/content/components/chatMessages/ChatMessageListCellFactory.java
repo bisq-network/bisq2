@@ -19,12 +19,9 @@ package bisq.desktop.main.content.components.chatMessages;
 
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
+import bisq.desktop.main.content.components.chatMessages.messages.*;
 import bisq.desktop.main.content.components.chatMessages.messages.BisqEasy.MyOfferMessage;
 import bisq.desktop.main.content.components.chatMessages.messages.BisqEasy.PeerOfferMessage;
-import bisq.desktop.main.content.components.chatMessages.messages.Message;
-import bisq.desktop.main.content.components.chatMessages.messages.MyMessage;
-import bisq.desktop.main.content.components.chatMessages.messages.PeerMessage;
-import bisq.desktop.main.content.components.chatMessages.messages.SystemMessage;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -126,6 +123,10 @@ final class ChatMessageListCellFactory
                                   ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list) {
         if (item.isSystemMessage()) {
             return new SystemMessage(item);
+        }
+
+        if (item.isLeaveChatMessage()) {
+            return new LeaveChatMessage(item, controller);
         }
 
         boolean isMyMessage = model.isMyMessage(item.getChatMessage());

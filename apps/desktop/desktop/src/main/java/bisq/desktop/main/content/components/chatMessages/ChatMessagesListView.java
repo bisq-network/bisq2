@@ -27,6 +27,8 @@ import bisq.chat.common.CommonPublicChatChannel;
 import bisq.chat.common.CommonPublicChatChannelService;
 import bisq.chat.common.CommonPublicChatMessage;
 import bisq.chat.notifications.ChatNotificationService;
+import bisq.chat.priv.PrivateChatChannel;
+import bisq.chat.priv.PrivateChatChannelService;
 import bisq.chat.priv.PrivateChatMessage;
 import bisq.chat.pub.PublicChatChannel;
 import bisq.chat.pub.PublicChatMessage;
@@ -439,6 +441,21 @@ public class ChatMessagesListView {
 
         public void onCopyMessage(ChatMessage chatMessage) {
             ClipboardUtil.copyToClipboard(chatMessage.getText());
+        }
+
+        public void onLeaveChannel() {
+            ChatChannel<?> chatChannel = model.getSelectedChannel().get();
+            if (!(chatChannel instanceof PrivateChatChannel))
+                return;
+
+            chatService.findChatChannelService(chatChannel)
+                    .filter(service -> service instanceof PrivateChatChannelService)
+                    .map(service -> (PrivateChatChannelService<?, ?, ?>) service).stream()
+                    .findAny()
+                    .ifPresent(service -> {
+                        service.leaveChannel(chatChannel.getId());
+                        chatService.getChatChannelSelectionServices().get(model.getChatChannelDomain()).maybeSelectFirstChannel();
+                    });
         }
 
 
