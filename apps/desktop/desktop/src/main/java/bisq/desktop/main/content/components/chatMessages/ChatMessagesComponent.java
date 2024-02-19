@@ -25,8 +25,6 @@ import bisq.chat.*;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.common.CommonPublicChatChannel;
-import bisq.chat.priv.PrivateChatChannel;
-import bisq.chat.priv.PrivateChatChannelService;
 import bisq.chat.pub.PublicChatChannel;
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.common.observable.Pin;
@@ -43,8 +41,6 @@ import bisq.desktop.main.content.chat.ChatUtil;
 import bisq.desktop.main.content.components.ChatMentionPopupMenu;
 import bisq.desktop.main.content.components.CitationBlock;
 import bisq.desktop.main.content.components.UserProfileSelection;
-import bisq.desktop.main.content.components.chatMessages.ChatMessageListItem;
-import bisq.desktop.main.content.components.chatMessages.ChatMessagesListView;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.offer.bisq_easy.BisqEasyOffer;
@@ -222,7 +218,6 @@ public class ChatMessagesComponent {
 
                 boolean isBisqEasyPrivateTradeChatChannel = chatChannel instanceof BisqEasyOpenTradeChannel;
                 boolean isTwoPartyPrivateChatChannel = chatChannel instanceof TwoPartyPrivateChatChannel;
-                model.getLeaveChannelButtonVisible().set(false);
                 model.getOpenDisputeButtonVisible().set(isBisqEasyPrivateTradeChatChannel);
                 model.getSendBtcAddressButtonVisible().set(false);
                 model.getSendPaymentAccountButtonVisible().set(false);
@@ -238,8 +233,6 @@ public class ChatMessagesComponent {
                     }
                     inMediationPin = privateChannel.isInMediationObservable().addObserver(isInMediation ->
                             UIThread.run(() -> model.getOpenDisputeButtonVisible().set(!isInMediation && !privateChannel.isMediator())));
-                } else if (isTwoPartyPrivateChatChannel) {
-                    chatMessagesPin = chatChannel.getChatMessages().addObserver(() -> updateLeaveChannelButtonState((TwoPartyPrivateChatChannel) chatChannel));
                 }
 
                 accountsChanged();
@@ -321,17 +314,7 @@ public class ChatMessagesComponent {
                     model.getSendBtcAddressButtonVisible().set(walletService.isPresent());
                 }
             });
-            updateLeaveChannelButtonState(chatChannel);
         }
-
-        private void updateLeaveChannelButtonState(PrivateChatChannel<?> chatChannel) {
-            UIThread.run(() -> {
-                boolean peerLeft = chatChannel.getChatMessages().stream()
-                        .anyMatch(message -> message.getChatMessageType() == ChatMessageType.LEAVE);
-                model.getLeaveChannelButtonVisible().set(peerLeft);
-            });
-        }
-
 
         private void accountsChanged() {
             UIThread.run(() ->
@@ -358,21 +341,6 @@ public class ChatMessagesComponent {
         ///////////////////////////////////////////////////////////////////////////////////////////////////
         // UI handlers
         ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-        void onLeaveChannel() {
-            ChatChannel<?> chatChannel = model.getSelectedChannel().get();
-            if (!(chatChannel instanceof PrivateChatChannel))
-                return;
-
-            chatService.findChatChannelService(chatChannel)
-                    .filter(service -> service instanceof PrivateChatChannelService)
-                    .map(service -> (PrivateChatChannelService<?, ?, ?>) service).stream()
-                    .findAny()
-                    .ifPresent(service -> {
-                        service.leaveChannel(chatChannel.getId());
-                        chatService.getChatChannelSelectionServices().get(model.getChatChannelDomain()).maybeSelectFirstChannel();
-                    });
-        }
 
         private void onSendMessage(String text) {
             if (text == null || text.isEmpty()) {
@@ -477,7 +445,6 @@ public class ChatMessagesComponent {
 
     @Getter
     private static class Model implements bisq.desktop.common.view.Model {
-        private final BooleanProperty leaveChannelButtonVisible = new SimpleBooleanProperty();
         private final BooleanProperty openDisputeButtonVisible = new SimpleBooleanProperty();
         private final BooleanProperty sendBtcAddressButtonVisible = new SimpleBooleanProperty();
         private final BooleanProperty sendPaymentAccountButtonVisible = new SimpleBooleanProperty();
@@ -534,7 +501,6 @@ public class ChatMessagesComponent {
         private ChatMentionPopupMenu<UserProfile> userMentionPopup;
         private ChatMentionPopupMenu<ChatChannel<?>> channelMentionPopup;
         private Pane userProfileSelectionRoot;
-        private Button leaveChannelButton;
 
         private View(Model model,
                      Controller controller,
@@ -560,8 +526,6 @@ public class ChatMessagesComponent {
 
         @Override
         protected void onViewAttached() {
-            leaveChannelButton.visibleProperty().bind(model.getLeaveChannelButtonVisible());
-            leaveChannelButton.managedProperty().bind(model.getLeaveChannelButtonVisible());
             userProfileSelectionRoot.visibleProperty().bind(model.userProfileSelectionVisible);
             userProfileSelectionRoot.managedProperty().bind(model.userProfileSelectionVisible);
             inputField.textProperty().bindBidirectional(model.getTextInput());
@@ -589,7 +553,6 @@ public class ChatMessagesComponent {
                 controller.onSendMessage(inputField.getText().trim());
                 inputField.clear();
             });
-            leaveChannelButton.setOnAction(e -> controller.onLeaveChannel());
 
             userMentionPopup.setItems(model.mentionableUsers);
             channelMentionPopup.setItems(model.mentionableChatChannels);
@@ -599,8 +562,6 @@ public class ChatMessagesComponent {
 
         @Override
         protected void onViewDetached() {
-            leaveChannelButton.visibleProperty().unbind();
-            leaveChannelButton.managedProperty().unbind();
             userProfileSelectionRoot.visibleProperty().unbind();
             userProfileSelectionRoot.managedProperty().unbind();
             inputField.textProperty().unbindBidirectional(model.getTextInput());
@@ -610,18 +571,14 @@ public class ChatMessagesComponent {
 
             inputField.setOnKeyPressed(null);
             sendButton.setOnAction(null);
-            leaveChannelButton.setOnAction(null);
         }
 
         private VBox createAndGetBottomBar(UserProfileSelection userProfileSelection) {
             setUpUserProfileSelection(userProfileSelection);
             HBox sendMessageBox = createAndGetSendMessageBox();
 
-            // TODO: Remove this. We need a better solution for this use-case.
-            leaveChannelButton = createAndGetChatButton(Res.get("chat.leave"), 120);
-
             HBox bottomBar = new HBox(10);
-            bottomBar.getChildren().addAll(userProfileSelectionRoot, sendMessageBox, leaveChannelButton);
+            bottomBar.getChildren().addAll(userProfileSelectionRoot, sendMessageBox);
             bottomBar.setMaxWidth(CHAT_BOX_MAX_WIDTH);
             bottomBar.setPadding(new Insets(14, 20, 14, 20));
             bottomBar.setAlignment(Pos.BOTTOM_CENTER);
@@ -703,14 +660,5 @@ public class ChatMessagesComponent {
             messagesListView.managedProperty().unbind();
             userProfileSelectionRoot.disableProperty().unbind();
         }
-    }
-
-    private static Button createAndGetChatButton(String title, double width) {
-        Button button = new Button(title);
-        button.setStyle("-fx-label-padding: 0 -30 0 -30; -fx-background-radius: 8; -fx-border-radius: 8;");
-        button.setMinHeight(34);
-        button.setMinWidth(width);
-        button.getStyleClass().add("outlined-button");
-        return button;
     }
 }
