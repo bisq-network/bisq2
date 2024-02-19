@@ -15,7 +15,7 @@ public final class LeaveChatMessage extends SystemMessage {
 
         Hyperlink hyperlink = new Hyperlink(Res.get("chat.leave"));
         hyperlink.setGraphic(ImageUtil.getImageViewById("leave-chat-green"));
-        hyperlink.getStyleClass().add("leave-chat-message");
+        hyperlink.getStyleClass().addAll("system-message-labels", "leave-chat-message");
         hyperlink.setOnAction(e -> controller.onLeaveChannel());
         systemMessageBg.getChildren().setAll(message, hyperlink, dateTime);
     }

@@ -445,8 +445,20 @@ public class ChatMessagesListView {
 
         public void onLeaveChannel() {
             ChatChannel<?> chatChannel = model.getSelectedChannel().get();
-            if (!(chatChannel instanceof PrivateChatChannel))
-                return;
+            checkArgument(chatChannel instanceof PrivateChatChannel,
+                    "Not possible to leave a channel which is not a private chat.");
+
+            new Popup().information(Res.get("chat.leave.info"))
+                    .actionButtonText(Res.get("confirmation.yes"))
+                    .onAction(this::doLeaveChannel)
+                    .closeButtonText(Res.get("confirmation.no"))
+                    .show();
+        }
+
+        public void doLeaveChannel() {
+            ChatChannel<?> chatChannel = model.getSelectedChannel().get();
+            checkArgument(chatChannel instanceof PrivateChatChannel,
+                    "Not possible to leave a channel which is not a private chat.");
 
             chatService.findChatChannelService(chatChannel)
                     .filter(service -> service instanceof PrivateChatChannelService)
