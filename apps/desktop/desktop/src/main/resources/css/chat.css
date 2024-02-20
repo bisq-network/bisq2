@@ -392,17 +392,17 @@
 }
 
 .chat-messages-list-view .chat-message-list-cell-wo-scrollbar {
-    -fx-border-width: 0 20 0 20;
+    -fx-border-width: 0 20 0 21;
     -fx-border-color: transparent;
 }
 
 .chat-messages-list-view .chat-message-list-cell-w-scrollbar-max-width {
-    -fx-border-width: 0 12 0 28;
+    -fx-border-width: 0 12 0 29;
     -fx-border-color: transparent;
 }
 
 .chat-messages-list-view .chat-message-list-cell-w-scrollbar-full-width {
-    -fx-border-width: 0 6 0 20;
+    -fx-border-width: 0 6 0 21;
     -fx-border-color: transparent;
 }
 

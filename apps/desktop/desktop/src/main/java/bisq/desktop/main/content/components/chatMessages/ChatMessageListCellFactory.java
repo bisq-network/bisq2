@@ -47,6 +47,9 @@ final class ChatMessageListCellFactory
             ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list) {
         return new ListCell<>() {
             private final static double CHAT_BOX_MAX_WIDTH = 1200;
+            private final static String STYLE_CLASS_WITHOUT_SCROLLBAR = "chat-message-list-cell-wo-scrollbar";
+            private final static String STYLE_CLASS_WITH_SCROLLBAR_FULL_WIDTH = "chat-message-list-cell-w-scrollbar-full-width";
+            private final static String STYLE_CLASS_WITH_SCROLLBAR_MAX_WIDTH = "chat-message-list-cell-w-scrollbar-max-width";
 
             private final HBox cellHBox;
             private Subscription listWidthPropertyPin;
@@ -77,24 +80,20 @@ final class ChatMessageListCellFactory
                 message = createMessage(item, list);
                 cellHBox.getChildren().setAll(message);
 
-                listWidthPropertyPin = EasyBind.subscribe(message.widthProperty(), width -> {
-                    if (width == null) {
-                        return;
-                    }
-                    message.getStyleClass().clear();
-
-                    // List cell has no padding, so it must have the same width as list view (no scrollbar)
-                    if (width.doubleValue() == list.widthProperty().doubleValue()) {
-                        message.getStyleClass().add("chat-message-list-cell-wo-scrollbar");
+                listWidthPropertyPin = EasyBind.subscribe(widthProperty(), cellWidthProperty -> {
+                    if (cellWidthProperty == null || cellWidthProperty.doubleValue() == 0.0) {
                         return;
                     }
 
-                    if (width.doubleValue() < CHAT_BOX_MAX_WIDTH) {
-                        // List cell has different size as list view, therefore there's a scrollbar
-                        message.getStyleClass().add("chat-message-list-cell-w-scrollbar-full-width");
-                    } else {
-                        // FIXME (low prio): needs to take into account whether there's scrollbar
-                        message.getStyleClass().add("chat-message-list-cell-w-scrollbar-max-width");
+                    double listWidth = list.widthProperty().doubleValue();
+                    double cellWidth = cellWidthProperty.doubleValue();
+                    String messageStyleClass = getMessageStyleClass(listWidth, cellWidth);
+                    if (!message.getStyleClass().contains(messageStyleClass)) {
+                        message.getStyleClass().removeIf(style -> style.equals(STYLE_CLASS_WITHOUT_SCROLLBAR)
+                                || style.equals(STYLE_CLASS_WITH_SCROLLBAR_FULL_WIDTH)
+                                || style.equals(STYLE_CLASS_WITH_SCROLLBAR_MAX_WIDTH)
+                        );
+                        message.getStyleClass().add(messageStyleClass);
                     }
                 });
 
@@ -115,6 +114,20 @@ final class ChatMessageListCellFactory
                 }
 
                 setGraphic(null);
+            }
+
+            private String getMessageStyleClass(double listWidth, double cellWidth) {
+                // List and cell have the same width, therefore there isn't a scrollbar
+                if (listWidth == cellWidth) {
+                    return STYLE_CLASS_WITHOUT_SCROLLBAR;
+                }
+
+                // With scrollbar
+                if (cellWidth < CHAT_BOX_MAX_WIDTH) {
+                    return STYLE_CLASS_WITH_SCROLLBAR_FULL_WIDTH;
+                } else {
+                    return STYLE_CLASS_WITH_SCROLLBAR_MAX_WIDTH;
+                }
             }
         };
     }
