@@ -13,6 +13,7 @@ import javafx.scene.layout.VBox;
 public class SystemMessage extends Message {
     protected final ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item;
     protected final VBox systemMessageBg = new VBox();
+    protected final VBox contentVBox;
     protected final Label message, dateTime;
 
     public SystemMessage(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item) {
@@ -36,7 +37,11 @@ public class SystemMessage extends Message {
         setFillWidth(true);
         HBox.setHgrow(this, Priority.ALWAYS);
         setPadding(new Insets(0));
-        getChildren().setAll(systemMessageBg);
+
+        contentVBox = new VBox(systemMessageBg);
+        contentVBox.setMaxWidth(CHAT_BOX_MAX_WIDTH);
+        getChildren().setAll(contentVBox);
+        setAlignment(Pos.CENTER);
     }
 
     @Override

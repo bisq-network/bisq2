@@ -111,7 +111,8 @@ public final class MyMessage extends BubbleMessage {
 
         VBox.setMargin(deliveryStateHBox, new Insets(4, 0, -3, 0));
         messageHBox.getChildren().setAll(Spacer.fillHBox(), messageBgHBox);
-        getChildren().setAll(userNameAndDateHBox, messageHBox, editButtonsHBox, deliveryStateHBox);
+
+        contentVBox.getChildren().setAll(userNameAndDateHBox, messageHBox, editButtonsHBox, deliveryStateHBox);
     }
 
     @Override

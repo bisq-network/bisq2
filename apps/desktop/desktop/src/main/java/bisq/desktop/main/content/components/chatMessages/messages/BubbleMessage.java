@@ -53,6 +53,7 @@ public abstract class BubbleMessage extends Message {
     protected VBox userProfileIconVbox;
     protected final HBox reactionsHBox = new HBox(20);
     protected final VBox quotedMessageVBox;
+    protected final VBox contentVBox;
 
     public BubbleMessage(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
                          ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
@@ -77,6 +78,11 @@ public abstract class BubbleMessage extends Message {
 
         setFillWidth(true);
         HBox.setHgrow(this, Priority.ALWAYS);
+
+        contentVBox = new VBox();
+        contentVBox.setMaxWidth(CHAT_BOX_MAX_WIDTH);
+        getChildren().setAll(contentVBox);
+        setAlignment(Pos.CENTER);
     }
 
     protected void setUpUserNameAndDateTime() {
