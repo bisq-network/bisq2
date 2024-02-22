@@ -208,27 +208,27 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
 
     private DropdownMenu createAndGetSortAndFilterMarketsMenu() {
         DropdownMenu dropdownMenu = new DropdownMenu("sort-grey", "sort-white", true);
-        dropdownMenu.setTooltip(Res.get("bisqEasy.offerbook.dropdownMenu.tooltip"));
+        dropdownMenu.setTooltip(Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.tooltip"));
         dropdownMenu.getStyleClass().add("market-selection-dropdown-menu");
 
         // Sorting options
-        DropdownTitleMenuItem sortTitle = new DropdownTitleMenuItem(Res.get("bisqEasy.offerbook.dropdownMenu.sortTitle"));
+        DropdownTitleMenuItem sortTitle = new DropdownTitleMenuItem(Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.sortTitle"));
         sortByMostOffers = new DropdownSortByMenuItem("check-grey", "check-white",
-                Res.get("bisqEasy.offerbook.dropdownMenu.mostOffers"), BisqEasyOfferbookUtil.SortByMarketActivity());
+                Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.mostOffers"), BisqEasyOfferbookUtil.SortByMarketActivity());
         sortByNameAZ = new DropdownSortByMenuItem("check-grey", "check-white",
-                Res.get("bisqEasy.offerbook.dropdownMenu.nameAZ"), BisqEasyOfferbookUtil.SortByMarketNameAsc());
+                Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.nameAZ"), BisqEasyOfferbookUtil.SortByMarketNameAsc());
         sortByNameZA = new DropdownSortByMenuItem("check-grey", "check-white",
-                Res.get("bisqEasy.offerbook.dropdownMenu.nameZA"), BisqEasyOfferbookUtil.SortByMarketNameDesc());
+                Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.nameZA"), BisqEasyOfferbookUtil.SortByMarketNameDesc());
 
         // Separator
         SeparatorMenuItem separator = new SeparatorMenuItem();
 
         // Filter options
-        DropdownTitleMenuItem filterTitle = new DropdownTitleMenuItem(Res.get("bisqEasy.offerbook.dropdownMenu.filterTitle"));
+        DropdownTitleMenuItem filterTitle = new DropdownTitleMenuItem(Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.filterTitle"));
         filterWithOffers = new DropdownFilterMenuItem("check-grey", "check-white",
-                Res.get("bisqEasy.offerbook.dropdownMenu.withOffers"), MarketFilter.WITH_OFFERS);
+                Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.withOffers"), MarketFilter.WITH_OFFERS);
         filterShowAll = new DropdownFilterMenuItem("check-grey", "check-white",
-                Res.get("bisqEasy.offerbook.dropdownMenu.all"), MarketFilter.ALL);
+                Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.all"), MarketFilter.ALL);
 
         dropdownMenu.addMenuItems(sortTitle, sortByMostOffers, sortByNameAZ, sortByNameZA, separator,
                 filterTitle, filterWithOffers, filterShowAll);
