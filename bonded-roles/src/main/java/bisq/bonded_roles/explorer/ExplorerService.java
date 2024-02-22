@@ -54,7 +54,7 @@ public class ExplorerService {
     public static final class Config {
         public static Config from(com.typesafe.config.Config config) {
             return new Config(List.of(
-                    new Provider("https://mempool.emzy.de/", TransportType.CLEAR), // Only used for  dev testing, not bonded role
+                    new Provider("https://mempool.emzy.de/", TransportType.CLEAR), // Only used for  dev testing, not a bonded role
                     new Provider("http://runbtcx3wfygbq2wdde6qzjnpyrqn3gvbks7t5jdymmunxttdvvttpyd.onion/", TransportType.TOR) // Production node, bonded role
             ));
         }
