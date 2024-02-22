@@ -24,7 +24,7 @@ public class DropdownTitleMenuItem extends CustomMenuItem {
 
     public DropdownTitleMenuItem(String text) {
         Label label = new Label(text);
-        label.getStyleClass().add("dropdown-title-menu-item");
         setContent(label);
+        getStyleClass().add("dropdown-title-menu-item");
     }
 }

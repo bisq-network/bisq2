@@ -950,7 +950,7 @@
     -fx-font-family: "IBM Plex Sans";
 }
 
-.dropdown-menu-popup .menu-item:hover .dropdown-menu-item-content {
+.dropdown-menu-popup .menu-item:hover {
     -fx-background-color: -bisq-dark-grey-50;
 }
 
@@ -979,9 +979,12 @@
 }
 
 /* Dropdown title menu item */
-.dropdown-menu-popup .menu-item .dropdown-title-menu-item,
-.dropdown-menu-popup .menu-item:hover .dropdown-title-menu-item {
+.dropdown-menu-popup .dropdown-title-menu-item,
+.dropdown-menu-popup .dropdown-title-menu-item:hover {
     -fx-background-color: transparent;
+}
+
+.dropdown-menu-popup .dropdown-title-menu-item .label {
     -fx-padding: 0 10 5 10;
     -fx-cursor: default;
     -fx-font-size: 1em;
