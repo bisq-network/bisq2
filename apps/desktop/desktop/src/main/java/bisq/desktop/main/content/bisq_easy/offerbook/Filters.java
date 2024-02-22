@@ -21,14 +21,16 @@ import lombok.Getter;
 
 import java.util.function.Predicate;
 
-@Getter
-enum MarketFilter {
-    ALL(item -> true),
-    WITH_OFFERS(item -> item.getNumOffers().get() > 0);
+class Filters {
+    @Getter
+    enum Markets {
+        ALL(item -> true),
+        WITH_OFFERS(item -> item.getNumOffers().get() > 0);
 
-    private final Predicate<MarketChannelItem> predicate;
+        private final Predicate<MarketChannelItem> predicate;
 
-    MarketFilter(Predicate<MarketChannelItem> predicate) {
-        this.predicate = predicate;
+        Markets(Predicate<MarketChannelItem> predicate) {
+            this.predicate = predicate;
+        }
     }
 }

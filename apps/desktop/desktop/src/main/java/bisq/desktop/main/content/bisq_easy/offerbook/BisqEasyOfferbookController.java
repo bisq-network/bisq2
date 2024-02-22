@@ -107,7 +107,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         selectedMarketFilterPin = EasyBind.subscribe(model.getSelectedMarketFilter(), filter -> {
             if (filter == null) {
                 // By default, show only markets with offers
-                model.getSelectedMarketFilter().set(MarketFilter.WITH_OFFERS);
+                model.getSelectedMarketFilter().set(Filters.Markets.WITH_OFFERS);
                 model.getFilteredMarketChannelItems().setPredicate(model.getSelectedMarketFilter().get().getPredicate());
             } else {
                 model.getFilteredMarketChannelItems().setPredicate(filter.getPredicate());
