@@ -41,6 +41,7 @@ import java.util.concurrent.ExecutorService;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+// TODO We should support same registration model via oracle node as used with other nodes
 
 @Slf4j
 public class ExplorerService {
@@ -52,32 +53,9 @@ public class ExplorerService {
     @ToString
     public static final class Config {
         public static Config from(com.typesafe.config.Config config) {
-            // FIXME
-            //TODO (Critical) add production providers we use in release
-            //TODO (refactor, deferred) move to conf
             return new Config(List.of(
-                    //https://mempool.space/api/tx/15e10745f15593a899cef391191bdd3d7c12412cc4696b7bcb669d0feadc8521
-                    new Provider("https://mempool.emzy.de/", TransportType.CLEAR),
-                    new Provider("http://mempool4t6mypeemozyterviq3i5de4kpoua65r3qkn5i3kknu5l2cad.onion/", TransportType.TOR)
-
-                   /* new BlockchainExplorerService.Provider("https://mempool.space/tx/", "https://mempool.space/address/", "mempool.space (@wiz)", Transport.Type.CLEAR),
-                    new BlockchainExplorerService.Provider("http://mempoolhqx4isw62xs7abwphsq7ldayuidyx2v2oethdhhj6mlo2r6ad.onion/tx/", "http://mempoolhqx4isw62xs7abwphsq7ldayuidyx2v2oethdhhj6mlo2r6ad.onion/address/", "mempool.space Tor V3", Transport.Type.TOR),
-                    new BlockchainExplorerService.Provider("https://mempool.bisq.services/tx/", "https://mempool.bisq.services/address/", "mempool.bisq.services (@devinbileck)", Transport.Type.TOR),
-                    new BlockchainExplorerService.Provider("http://mempoolcutehjtynu4k4rd746acmssvj2vz4jbz4setb72clbpx2dfqd.onion/tx/", "http://mempoolcutehjtynu4k4rd746acmssvj2vz4jbz4setb72clbpx2dfqd.onion/address/", "mempool.bisq.services Tor V3", Transport.Type.TOR),
-                    new BlockchainExplorerService.Provider("https://blockstream.info/tx/", "https://blockstream.info/address/", "Blockstream.info", Transport.Type.TOR),
-                    new BlockchainExplorerService.Provider("http://explorerzydxu5ecjrkwceayqybizmpjjznk5izmitf2modhcusuqlid.onion/tx/", "http://explorerzydxu5ecjrkwceayqybizmpjjznk5izmitf2modhcusuqlid.onion/address/", "Blockstream.info Tor V3", Transport.Type.TOR),
-                    new BlockchainExplorerService.Provider("https://oxt.me/transaction/", "https://oxt.me/address/", "OXT", Transport.Type.TOR),
-                    new BlockchainExplorerService.Provider("https://bitaps.com/", "https://bitaps.com/", "Bitaps", Transport.Type.TOR),
-                    new BlockchainExplorerService.Provider("https://live.blockcypher.com/btc/tx/", "https://live.blockcypher.com/btc/address/", "Blockcypher", Transport.Type.TOR),
-                    new BlockchainExplorerService.Provider("https://tradeblock.com/bitcoin/tx/", "https://tradeblock.com/bitcoin/address/", "Tradeblock", Transport.Type.TOR),
-                    new BlockchainExplorerService.Provider("https://www.biteasy.com/transactions/", "https://www.biteasy.com/addresses/", "Biteasy", Transport.Type.TOR),
-                    new BlockchainExplorerService.Provider("https://www.blockonomics.co/api/tx?txid=", "https://www.blockonomics.co/#/search?q=", "Blockonomics", Transport.Type.TOR),
-                    new BlockchainExplorerService.Provider("http://chainflyer.bitflyer.jp/Transaction/", "http://chainflyer.bitflyer.jp/Address/", "Chainflyer", Transport.Type.TOR),
-                    new BlockchainExplorerService.Provider("https://www.smartbit.com.au/tx/", "https://www.smartbit.com.au/address/", "Smartbit", Transport.Type.TOR),
-                    new BlockchainExplorerService.Provider("https://chain.so/tx/BTC/", "https://chain.so/address/BTC/", "SoChain. Wow.", Transport.Type.TOR),
-                    new BlockchainExplorerService.Provider("https://blockchain.info/tx/", "https://blockchain.info/address/", "Blockchain.info", Transport.Type.TOR),
-                    new BlockchainExplorerService.Provider("https://insight.bitpay.com/tx/", "https://insight.bitpay.com/address/", "Insight", Transport.Type.TOR),
-                    new BlockchainExplorerService.Provider("https://blockchair.com/bitcoin/transaction/", "https://blockchair.com/bitcoin/address/", "Blockchair", Transport.Type.TOR)*/
+                    new Provider("https://mempool.emzy.de/", TransportType.CLEAR), // Only used for  dev testing, not bonded role
+                    new Provider("http://runbtcx3wfygbq2wdde6qzjnpyrqn3gvbks7t5jdymmunxttdvvttpyd.onion/", TransportType.TOR) // Production node, bonded role
             ));
         }
 
