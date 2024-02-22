@@ -51,9 +51,10 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     private VBox marketSelectionList;
     private Subscription tableViewSelectionPin, selectedModelItemPin, marketSelectorHeaderIconPin, selectedMarketFilterPin;
     private Button createOfferButton;
-    private DropdownMenu sortAndFilterMarketsMenu;
+    private DropdownMenu sortAndFilterMarketsMenu, filterMarketOffers;
     private DropdownSortByMenuItem sortByMostOffers, sortByNameAZ, sortByNameZA;
     private DropdownFilterMenuItem filterShowAll, filterWithOffers;
+    private DropdownMenuItem allOffers, myOffers, buyOffers, sellOffers;
     private CheckBox hideUserMessagesCheckbox;
 
     public BisqEasyOfferbookView(BisqEasyOfferbookModel model,
@@ -272,9 +273,10 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         hideUserMessagesCheckbox = new CheckBox();
         HBox checkbox = new HBox(5, label, hideUserMessagesCheckbox);
         checkbox.getStyleClass().add("market-selection-subheader-checkbox");
-        checkbox.setAlignment(Pos.CENTER);
 
-        HBox subheaderContent = new HBox(5, checkbox);
+        filterMarketOffers = createAndGetFilterMarketOffersMenu();
+
+        HBox subheaderContent = new HBox(5, filterMarketOffers, checkbox);
         subheaderContent.getStyleClass().add("market-selection-subheader-content");
         HBox.setHgrow(subheaderContent, Priority.ALWAYS);
 
@@ -288,6 +290,18 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         centerVBox.getChildren().addAll(titleHBox, Layout.hLine(), subheader, chatMessagesComponent);
         centerVBox.getStyleClass().add("bisq-easy-container");
         centerVBox.setAlignment(Pos.CENTER);
+    }
+
+    private DropdownMenu createAndGetFilterMarketOffersMenu() {
+        DropdownMenu dropdownMenu = new DropdownMenu("arrow-down", "arrow-down", false);
+
+        allOffers = new DropdownMenuItem(Res.get("bisqEasy.offerbook.dropdownMenu.filterMarketOffers.allOffers"));
+        myOffers = new DropdownMenuItem(Res.get("bisqEasy.offerbook.dropdownMenu.filterMarketOffers.myOffers"));
+        buyOffers = new DropdownMenuItem(Res.get("bisqEasy.offerbook.dropdownMenu.filterMarketOffers.buyOffers"));
+        sellOffers = new DropdownMenuItem(Res.get("bisqEasy.offerbook.dropdownMenu.filterMarketOffers.sellOffers"));
+        dropdownMenu.addMenuItems(allOffers, myOffers, buyOffers, sellOffers);
+
+        return dropdownMenu;
     }
 
     private void updateMarketSelectorHeaderIcon(Node node) {
