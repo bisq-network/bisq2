@@ -443,6 +443,14 @@ public class ChatMessagesListView {
         }
 
         public void onIgnoreUser(ChatMessage chatMessage) {
+            new Popup().warning(Res.get("chat.ignoreUser.warn"))
+                    .actionButtonText(Res.get("chat.ignoreUser.confirm"))
+                    .onAction(() -> doIgnoreUser(chatMessage))
+                    .closeButtonText(Res.get("action.cancel"))
+                    .show();
+        }
+
+        public void doIgnoreUser(ChatMessage chatMessage) {
             userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId())
                     .ifPresent(userProfileService::ignoreUserProfile);
         }
