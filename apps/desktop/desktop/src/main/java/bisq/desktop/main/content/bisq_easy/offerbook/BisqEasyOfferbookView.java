@@ -111,13 +111,13 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
             }
         });
         marketSelectorHeaderIconPin = EasyBind.subscribe(model.getChannelIconNode(), this::updateMarketSelectorHeaderIcon);
-        selectedMarketFilterPin = EasyBind.subscribe(getModel().getSelectedMarketFilter(), this::updateSelectedMarketFilter);
+        selectedMarketFilterPin = EasyBind.subscribe(getModel().getSelectedMarketsFilter(), this::updateSelectedMarketFilter);
 
         sortByMostOffers.setOnAction(e -> sortTableViewColumn(sortByMostOffers));
         sortByNameAZ.setOnAction(e -> sortTableViewColumn(sortByNameAZ));
         sortByNameZA.setOnAction(e -> sortTableViewColumn(sortByNameZA));
-        filterWithOffers.setOnAction(e -> getModel().getSelectedMarketFilter().set(Filters.Markets.WITH_OFFERS));
-        filterShowAll.setOnAction(e -> getModel().getSelectedMarketFilter().set(Filters.Markets.ALL));
+        filterWithOffers.setOnAction(e -> getModel().getSelectedMarketsFilter().set(Filters.Markets.WITH_OFFERS));
+        filterShowAll.setOnAction(e -> getModel().getSelectedMarketsFilter().set(Filters.Markets.ALL));
 
         createOfferButton.setOnAction(e -> getController().onCreateOffer());
 
