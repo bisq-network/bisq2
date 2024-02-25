@@ -25,6 +25,8 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 
 public class DropdownMenuItem extends CustomMenuItem {
+    private static final String ICON_CSS_STYLE = "menu-item-icon";
+
     private final HBox content;
     private final Label label;
     private ImageView defaultIcon, activeIcon, buttonIcon;
@@ -39,6 +41,8 @@ public class DropdownMenuItem extends CustomMenuItem {
         if (defaultIconId != null && activeIconId != null) {
             defaultIcon = ImageUtil.getImageViewById(defaultIconId);
             activeIcon = ImageUtil.getImageViewById(activeIconId);
+            defaultIcon.getStyleClass().add(ICON_CSS_STYLE);
+            activeIcon.getStyleClass().add(ICON_CSS_STYLE);
             buttonIcon = defaultIcon;
             content.getChildren().add(0, buttonIcon);
             attachListeners();

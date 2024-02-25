@@ -22,10 +22,7 @@ import javafx.beans.value.WeakChangeListener;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.Label;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.Tooltip;
+import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.stage.PopupWindow;
@@ -82,7 +79,7 @@ public class DropdownMenu extends HBox {
         }
     }
 
-    public void addMenuItems(DropdownMenuItem... items) {
+    public void addMenuItems(CustomMenuItem... items) {
         contextMenu.getItems().addAll(items);
     }
 

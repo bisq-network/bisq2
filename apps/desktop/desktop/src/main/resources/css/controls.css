@@ -896,10 +896,12 @@
  *                                                                             *
  ******************************************************************************/
 
+/* Dropdown main button */
 .dropdown-menu {
     -fx-background-color: transparent;
     -fx-background-radius: 6;
     -fx-border-width: 0;
+    -fx-cursor: hand;
 }
 
 .dropdown-menu .label {
@@ -916,6 +918,7 @@
     -fx-text-fill: -fx-light-text-color;
 }
 
+/* Dropdown popup */
 .dropdown-menu-popup {
     -fx-background-color: -bisq-dark-grey-40;
     -fx-background-radius: 6;
@@ -926,18 +929,20 @@
     -fx-effect: none;
 }
 
-.dropdown-menu-item-content {
-    -fx-background-color: transparent;
-    -fx-padding: 10;
-    -fx-cursor: hand;
-}
-
+/* Dropdown high level menu item */
 .dropdown-menu-popup .menu-item,
 .dropdown-menu-popup .menu-item:focused {
     -fx-padding: 0;
     -fx-background-color: transparent;
 }
 
+.dropdown-menu-popup .menu-item .dropdown-menu-item-content {
+    -fx-background-color: transparent;
+    -fx-padding: 10;
+    -fx-cursor: hand;
+}
+
+/* Dropdown menu item */
 .dropdown-menu-popup .menu-item .dropdown-menu-item-content .label,
 .dropdown-menu-popup .menu-item:focused .dropdown-menu-item-content .label {
     -fx-font-size: 1em;
@@ -945,14 +950,15 @@
     -fx-font-family: "IBM Plex Sans";
 }
 
-.dropdown-menu-popup .menu-item:hover {
-    -fx-background-color: -bisq-dark-grey-30;
+.dropdown-menu-popup .menu-item:hover .dropdown-menu-item-content {
+    -fx-background-color: -bisq-dark-grey-50;
 }
 
 .dropdown-menu-popup .menu-item:hover .dropdown-menu-item-content .label {
     -fx-text-fill: -fx-light-text-color;
 }
 
+/* Dropdown red menu item */
 .dropdown-menu-popup .red-menu-item .dropdown-menu-item-content .label,
 .dropdown-menu-popup .red-menu-item:focused .dropdown-menu-item-content .label {
     -fx-text-fill: -bisq2-red-lit-10;
@@ -960,4 +966,25 @@
 
 .dropdown-menu-popup .red-menu-item:hover .dropdown-menu-item-content .label {
     -fx-text-fill: -bisq2-red;
+}
+
+/* Separator */
+.dropdown-menu-popup .separator:horizontal .line {
+    -fx-border-color: -fx-mid-text-color transparent transparent transparent;
+    -fx-border-insets: 1 0 0 0;
+}
+
+.dropdown-menu-popup .separator:horizontal {
+    -fx-padding: 10 0 10 0;
+}
+
+/* Dropdown title menu item */
+.dropdown-menu-popup .menu-item .dropdown-title-menu-item,
+.dropdown-menu-popup .menu-item:hover .dropdown-title-menu-item {
+    -fx-background-color: transparent;
+    -fx-padding: 0 10 5 10;
+    -fx-cursor: default;
+    -fx-font-size: 1em;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-family: "IBM Plex Sans";
 }

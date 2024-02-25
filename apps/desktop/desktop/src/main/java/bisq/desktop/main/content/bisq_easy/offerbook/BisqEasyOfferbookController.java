@@ -52,7 +52,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
     private final BisqEasyOfferbookModel bisqEasyOfferbookModel;
     private Pin offerOnlySettingsPin, bisqEasyPrivateTradeChatChannelsPin, selectedChannelPin;
-    private Subscription marketSelectorSearchPin;
+    private Subscription marketSelectorSearchPin, selectedMarketFilterPin;
 
     public BisqEasyOfferbookController(ServiceProvider serviceProvider) {
         super(serviceProvider, ChatChannelDomain.BISQ_EASY_OFFERBOOK, NavigationTarget.BISQ_EASY_OFFERBOOK);
@@ -104,8 +104,17 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
             }
         });
 
-        updateMarketItemsPredicate();
+        selectedMarketFilterPin = EasyBind.subscribe(model.getSelectedMarketFilter(), filter -> {
+            if (filter == null) {
+                // By default, show only markets with offers
+                model.getSelectedMarketFilter().set(MarketFilter.WITH_OFFERS);
+                model.getFilteredMarketChannelItems().setPredicate(model.getSelectedMarketFilter().get().getPredicate());
+            } else {
+                model.getFilteredMarketChannelItems().setPredicate(filter.getPredicate());
+            }
+        });
 
+        updateMarketItemsPredicate();
         maybeSelectFirst();
     }
 
@@ -117,6 +126,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         bisqEasyPrivateTradeChatChannelsPin.unbind();
         selectedChannelPin.unbind();
         marketSelectorSearchPin.unsubscribe();
+        selectedMarketFilterPin.unsubscribe();
 
         resetSelectedChildTarget();
     }
@@ -134,7 +144,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
             if (chatChannel instanceof BisqEasyOfferbookChannel) {
                 BisqEasyOfferbookChannel channel = (BisqEasyOfferbookChannel) chatChannel;
 
-                // FIXME: marketChannelItems needs to be a hashmap
+                // FIXME (low prio): marketChannelItems needs to be a hashmap
                 model.getMarketChannelItems().stream()
                         .filter(item -> item.getChannel().equals(channel))
                         .findAny()

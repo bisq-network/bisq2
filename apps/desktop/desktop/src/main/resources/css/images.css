@@ -194,6 +194,15 @@
     -fx-image: url("/images/icons/delete-bin-red-lit-10.png");
 }
 
+#check-white {
+    -fx-image: url("/images/icons/check-white.png");
+}
+
+#check-grey {
+    -fx-image: url("/images/icons/check-grey.png");
+}
+
+
 /* ------------------------------------------------------------------------------------ */
 /* Navigation */
 /* ------------------------------------------------------------------------------------ */
