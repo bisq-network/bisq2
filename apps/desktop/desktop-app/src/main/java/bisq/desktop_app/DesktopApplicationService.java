@@ -138,7 +138,6 @@ public class DesktopApplicationService extends ApplicationService {
         offerService = new OfferService(networkService, identityService, persistenceService);
 
         chatService = new ChatService(persistenceService,
-                securityService,
                 networkService,
                 userService,
                 settingsService,

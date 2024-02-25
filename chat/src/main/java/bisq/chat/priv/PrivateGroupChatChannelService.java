@@ -21,7 +21,6 @@ import bisq.chat.ChatChannelDomain;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.persistence.PersistableStore;
-import bisq.security.pow.ProofOfWorkService;
 import bisq.user.UserService;
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,8 +34,7 @@ public abstract class PrivateGroupChatChannelService<
 
     public PrivateGroupChatChannelService(NetworkService networkService,
                                           UserService userService,
-                                          ProofOfWorkService proofOfWorkService,
                                           ChatChannelDomain chatChannelDomain) {
-        super(networkService, userService, proofOfWorkService, chatChannelDomain);
+        super(networkService, userService, chatChannelDomain);
     }
 }

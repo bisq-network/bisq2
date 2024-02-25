@@ -140,7 +140,6 @@ public class RestApiApplicationService extends ApplicationService {
         offerService = new OfferService(networkService, identityService, persistenceService);
 
         chatService = new ChatService(persistenceService,
-                securityService,
                 networkService,
                 userService,
                 settingsService,
