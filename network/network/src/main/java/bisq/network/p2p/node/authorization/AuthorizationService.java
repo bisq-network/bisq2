@@ -29,7 +29,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -51,9 +50,6 @@ public class AuthorizationService {
 
     private final List<AuthorizationTokenType> myPreferredAuthorizationTokenTypes; // Lower list index means higher preference
     private final Map<AuthorizationTokenType, AuthorizationTokenService<? extends AuthorizationToken>> supportedServices = new HashMap<>();
-
-    // Keep track of message counter per connection to avoid reuse of pow
-    private final Map<String, Set<Integer>> receivedMessageCountersByConnectionId = new ConcurrentHashMap<>();
 
     public AuthorizationService(Config config,
                                 HashCashProofOfWorkService hashCashProofOfWorkService,
