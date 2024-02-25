@@ -52,7 +52,8 @@ public class OracleNodeApplicationService extends ApplicationService {
         networkService = new NetworkService(networkServiceConfig,
                 persistenceService,
                 securityService.getKeyBundleService(),
-                securityService.getProofOfWorkService());
+                securityService.getHashCashService(),
+                securityService.getEquihashProofOfWorkService());
 
         identityService = new IdentityService(persistenceService,
                 securityService.getKeyBundleService(),

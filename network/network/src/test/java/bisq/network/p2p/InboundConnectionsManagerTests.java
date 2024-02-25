@@ -23,10 +23,12 @@ import bisq.network.common.Address;
 import bisq.network.common.TransportType;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.Capability;
+import bisq.network.p2p.node.Feature;
 import bisq.network.p2p.node.InboundConnectionsManager;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
+import bisq.network.p2p.node.authorization.AuthorizationTokenType;
 import bisq.network.p2p.node.envelope.NetworkEnvelopeSocketChannel;
 import bisq.network.p2p.node.envelope.parser.nio.ProtoBufMessageLengthWriter;
 import bisq.network.p2p.node.handshake.ConnectionHandshake;
@@ -250,11 +252,13 @@ public class InboundConnectionsManagerTests {
         AuthorizationToken token = authorizationService.createToken(request,
                 new NetworkLoad(),
                 myAddress.getFullAddress(),
-                0);
+                0, new ArrayList<>());
         return new NetworkEnvelope(token, request).toProto();
     }
 
     private AuthorizationService createAuthorizationService() {
-        return new AuthorizationService(new HashCashService());
+        return new AuthorizationService(new AuthorizationService.Config(List.of(AuthorizationTokenType.HASH_CASH)),
+                new HashCashService(),
+                Set.of(Feature.AUTHORIZATION_HASH_CASH));
     }
 }

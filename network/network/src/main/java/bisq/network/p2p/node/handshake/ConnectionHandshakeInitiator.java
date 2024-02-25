@@ -33,6 +33,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -72,7 +73,8 @@ public class ConnectionHandshakeInitiator {
         AuthorizationToken token = authorizationService.createToken(request,
                 NetworkLoad.INITIAL_LOAD,
                 peerAddress.getFullAddress(),
-                0);
+                0,
+                new ArrayList<>());
         return new NetworkEnvelope(token, request);
     }
 

@@ -41,6 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -205,7 +206,8 @@ public final class ConnectionHandshake {
             AuthorizationToken token = authorizationService.createToken(request,
                     NetworkLoad.INITIAL_LOAD,
                     peerAddress.getFullAddress(),
-                    0);
+                    0,
+                    new ArrayList<>());
             NetworkEnvelope requestNetworkEnvelope = new NetworkEnvelope(token, request);
             long ts = System.currentTimeMillis();
             networkEnvelopeSocket.send(requestNetworkEnvelope);
@@ -279,7 +281,8 @@ public final class ConnectionHandshake {
                         requestNetworkEnvelope);
             }
             Request request = (Request) requestNetworkEnvelope.getEnvelopePayloadMessage();
-            Address peerAddress = request.getCapability().getAddress();
+            Capability requestersCapability = request.getCapability();
+            Address peerAddress = requestersCapability.getAddress();
             if (banList.isBanned(peerAddress)) {
                 throw new ConnectionException("Peers address is in quarantine. request=" + request);
             }
@@ -303,17 +306,21 @@ public final class ConnectionHandshake {
                         ", Proof: " + Hex.encode(request.getAddressOwnershipProof().orElseThrow()));
             }
 
-            log.debug("Clients capability {}, load={}", request.getCapability(), request.getNetworkLoad());
+            log.debug("Clients capability {}, load={}", requestersCapability, request.getNetworkLoad());
             connectionMetrics.onReceived(requestNetworkEnvelope, deserializeTime);
 
             Response response = new Response(capability, myNetworkLoad);
-            AuthorizationToken token = authorizationService.createToken(response, request.getNetworkLoad(), peerAddress.getFullAddress(), 0);
+            AuthorizationToken token = authorizationService.createToken(response,
+                    request.getNetworkLoad(),
+                    peerAddress.getFullAddress(),
+                    0,
+                    requestersCapability.getFeatures());
             NetworkEnvelope responseNetworkEnvelope = new NetworkEnvelope(token, response);
             long startSendTs = System.currentTimeMillis();
             networkEnvelopeSocket.send(responseNetworkEnvelope);
             connectionMetrics.onSent(responseNetworkEnvelope, System.currentTimeMillis() - startSendTs);
             connectionMetrics.addRtt(System.currentTimeMillis() - ts);
-            return new Result(request.getCapability(), request.getNetworkLoad(), connectionMetrics);
+            return new Result(requestersCapability, request.getNetworkLoad(), connectionMetrics);
         } catch (Exception e) {
             try {
                 networkEnvelopeSocket.close();

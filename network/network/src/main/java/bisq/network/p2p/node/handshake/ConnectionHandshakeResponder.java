@@ -24,6 +24,7 @@ import bisq.network.common.Address;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.Capability;
 import bisq.network.p2p.node.ConnectionException;
+import bisq.network.p2p.node.Feature;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
 import bisq.network.p2p.node.envelope.NetworkEnvelopeSocketChannel;
@@ -65,14 +66,18 @@ public class ConnectionHandshakeResponder {
         verifyPeerIsNotBanned(request);
         verifyPoW(requestNetworkEnvelope);
 
-        Address peerAddress = request.getCapability().getAddress();
+        Capability requestersCapability = request.getCapability();
+        Address peerAddress = requestersCapability.getAddress();
         Address myAddress = capability.getAddress();
         if (!OnionAddressValidation.verify(myAddress, peerAddress, request.getSignatureDate(), request.getAddressOwnershipProof())) {
             throw new ConnectionException("Peer couldn't proof its onion address: " + peerAddress.getFullAddress() +
                     ", Proof: " + Hex.encode(request.getAddressOwnershipProof().orElseThrow()));
         }
 
-        NetworkEnvelope responseEnvelope = createResponseEnvelope(myNetworkLoad, request.getNetworkLoad(), peerAddress);
+        NetworkEnvelope responseEnvelope = createResponseEnvelope(myNetworkLoad,
+                request.getNetworkLoad(),
+                peerAddress,
+                requestersCapability.getFeatures());
 
         return new Pair<>(request, responseEnvelope);
     }
@@ -124,9 +129,16 @@ public class ConnectionHandshakeResponder {
         }
     }
 
-    private NetworkEnvelope createResponseEnvelope(NetworkLoad myNetworkLoad, NetworkLoad peerNetworkLoad, Address peerAddress) {
+    private NetworkEnvelope createResponseEnvelope(NetworkLoad myNetworkLoad,
+                                                   NetworkLoad peerNetworkLoad,
+                                                   Address peerAddress,
+                                                   List<Feature> requestersFeatures) {
         ConnectionHandshake.Response response = new ConnectionHandshake.Response(capability, myNetworkLoad);
-        AuthorizationToken token = authorizationService.createToken(response, peerNetworkLoad, peerAddress.getFullAddress(), 0);
+        AuthorizationToken token = authorizationService.createToken(response,
+                peerNetworkLoad,
+                peerAddress.getFullAddress(),
+                0,
+                requestersFeatures);
         return new NetworkEnvelope(token, response);
     }
 

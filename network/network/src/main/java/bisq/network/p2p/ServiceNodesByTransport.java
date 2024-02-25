@@ -42,7 +42,8 @@ import bisq.network.p2p.services.data.inventory.InventoryService;
 import bisq.network.p2p.services.peergroup.PeerGroupManager;
 import bisq.persistence.PersistenceService;
 import bisq.security.keys.KeyBundleService;
-import bisq.security.pow.ProofOfWorkService;
+import bisq.security.pow.EquihashProofOfWorkService;
+import bisq.security.pow.HashCashService;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.extern.slf4j.Slf4j;
 
@@ -73,17 +74,22 @@ public class ServiceNodesByTransport {
                                    Map<TransportType, PeerGroupManager.Config> peerGroupServiceConfigByTransport,
                                    Map<TransportType, Set<Address>> seedAddressesByTransport,
                                    InventoryService.Config inventoryServiceConfig,
+                                   AuthorizationService.Config authorizationServiceConfig,
                                    Set<TransportType> supportedTransportTypes,
                                    Set<Feature> features,
                                    KeyBundleService keyBundleService,
                                    PersistenceService persistenceService,
-                                   ProofOfWorkService proofOfWorkService,
+                                   HashCashService hashCashService,
+                                   EquihashProofOfWorkService equihashProofOfWorkService,
                                    Optional<DataService> dataService,
                                    Optional<MessageDeliveryStatusService> messageDeliveryStatusService,
                                    NetworkLoadSnapshot networkLoadSnapshot) {
         this.supportedTransportTypes = supportedTransportTypes;
 
-        authorizationService = new AuthorizationService(proofOfWorkService);
+        authorizationService = new AuthorizationService(authorizationServiceConfig,
+                hashCashService,
+                equihashProofOfWorkService,
+                features);
 
         supportedTransportTypes.forEach(transportType -> {
             TransportConfig transportConfig = configByTransportType.get(transportType);

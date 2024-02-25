@@ -59,7 +59,7 @@ public class CreateProfileController implements Controller {
 
     public CreateProfileController(ServiceProvider serviceProvider) {
         keyBundleService = serviceProvider.getSecurityService().getKeyBundleService();
-        proofOfWorkService = serviceProvider.getSecurityService().getProofOfWorkService();
+        proofOfWorkService = serviceProvider.getSecurityService().getHashCashService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         identityService = serviceProvider.getIdentityService();
         overlayController = OverlayController.getInstance();

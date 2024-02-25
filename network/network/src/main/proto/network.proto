@@ -20,9 +20,8 @@ enum Feature {
   FEATURE_UNSPECIFIED = 0;
   FEATURE_INVENTORY_HASH_SET = 1;
   FEATURE_INVENTORY_MINI_SKETCH = 2;
-  FEATURE_AUTHORIZATION_TOKEN_HASH_CASH = 3;
-  FEATURE_AUTHORIZATION_TOKEN_EQUI_HASH = 4;
-  FEATURE_AUTHORIZATION_TOKEN_BURNED_BSQ = 5;
+  FEATURE_AUTHORIZATION_HASH_CASH = 3;
+  FEATURE_AUTHORIZATION_EQUI_HASH = 4;
 }
 
 message Capability {
@@ -69,12 +68,29 @@ message Peer {
   sint64 created = 4;
 }
 
-enum AuthorizationType{
-  AUTHORIZATIONTYPE_UNSPECIFIED = 0;
-  AUTHORIZATIONTYPE_HASH_CASH = 1;
-  AUTHORIZATIONTYPE_EQUI_HASH = 2;
-  AUTHORIZATIONTYPE_BURNED_BSQ = 3;
+enum AuthorizationTokenType{
+  AUTHORIZATIONTOKENTYPE_UNSPECIFIED = 0;
+  AUTHORIZATIONTOKENTYPE_HASH_CASH = 1;
+  AUTHORIZATIONTOKENTYPE_EQUI_HASH = 2;
 }
+
+message HashCashToken {
+  security.ProofOfWork proofOfWork = 1;
+  sint32 messageCounter = 2;
+}
+message EquiHashToken {
+  security.ProofOfWork proofOfWork = 1;
+  sint32 messageCounter = 2;
+}
+message AuthorizationToken {
+  AuthorizationTokenType authorizationTokenType = 1;
+
+  oneof message {
+    HashCashToken hashCashToken = 10;
+    EquiHashToken equiHashToken = 11;
+  };
+}
+
 
 ////////////////////////////////////////////////////////////////////
 // NetworkMessages
@@ -281,11 +297,6 @@ message DataRequest {
 ////////////////////////////////////////////////////////////////////
 // NetworkEnvelope
 ////////////////////////////////////////////////////////////////////
-
-message AuthorizationToken {
-  security.ProofOfWork proofOfWork = 1;
-  sint32 messageCounter = 2;
-}
 
 message NetworkEnvelope {
   sint32 version = 1;

@@ -58,7 +58,8 @@ import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyBundle;
 import bisq.security.keys.KeyBundleService;
 import bisq.security.keys.PubKey;
-import bisq.security.pow.ProofOfWorkService;
+import bisq.security.pow.EquihashProofOfWorkService;
+import bisq.security.pow.HashCashService;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -109,7 +110,8 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     public NetworkService(NetworkServiceConfig config,
                           PersistenceService persistenceService,
                           KeyBundleService keyBundleService,
-                          ProofOfWorkService proofOfWorkService) {
+                          HashCashService hashCashService,
+                          EquihashProofOfWorkService equihashProofOfWorkService) {
         socks5ProxyAddress = config.getSocks5ProxyAddress();
         supportedTransportTypes = config.getSupportedTransportTypes();
         defaultPortByTransportType = config.getDefaultPortByTransportType();
@@ -136,11 +138,13 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                 config.getPeerGroupServiceConfigByTransport(),
                 config.getSeedAddressesByTransport(),
                 config.getInventoryServiceConfig(),
+                config.getAuthorizationServiceConfig(),
                 supportedTransportTypes,
                 config.getFeatures(),
                 keyBundleService,
                 persistenceService,
-                proofOfWorkService,
+                hashCashService,
+                equihashProofOfWorkService,
                 dataService,
                 messageDeliveryStatusService,
                 networkLoadSnapshot);

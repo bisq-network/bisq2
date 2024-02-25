@@ -221,7 +221,7 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
 
     private List<InventoryFilterType> toFilterTypes(List<Feature> features) {
         return features.stream()
-                .flatMap(feature -> InventoryFilter.fromFeature(feature).stream())
+                .flatMap(feature -> InventoryFilterType.fromFeature(feature).stream())
                 .collect(Collectors.toList());
     }
 }

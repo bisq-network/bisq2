@@ -76,7 +76,7 @@ public class ChatService implements Service {
                        SettingsService settingsService,
                        SendNotificationService sendNotificationService) {
         this.persistenceService = persistenceService;
-        this.proofOfWorkService = securityService.getProofOfWorkService();
+        this.proofOfWorkService = securityService.getHashCashService();
         this.networkService = networkService;
         this.userService = userService;
         this.userIdentityService = userService.getUserIdentityService();

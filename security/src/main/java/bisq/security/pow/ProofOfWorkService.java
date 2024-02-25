@@ -34,10 +34,6 @@ public abstract class ProofOfWorkService {
     public ProofOfWorkService() {
     }
 
-    public CompletableFuture<Boolean> initialize() {
-        return CompletableFuture.completedFuture(true);
-    }
-
     public abstract CompletableFuture<ProofOfWork> mint(byte[] payload, byte[] challenge, double difficulty);
 
     public abstract boolean verify(ProofOfWork proofOfWork);

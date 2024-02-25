@@ -23,8 +23,10 @@ import bisq.network.common.TransportType;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.Capability;
 import bisq.network.p2p.node.ConnectionException;
+import bisq.network.p2p.node.Feature;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
+import bisq.network.p2p.node.authorization.AuthorizationTokenType;
 import bisq.network.p2p.node.envelope.NetworkEnvelopeSocketChannel;
 import bisq.network.p2p.node.handshake.ConnectionHandshake;
 import bisq.network.p2p.node.handshake.ConnectionHandshakeResponder;
@@ -35,10 +37,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -68,7 +67,9 @@ public class ConnectionHandshakeResponderTest {
     }
 
     private AuthorizationService createAuthorizationService() {
-        return new AuthorizationService(new HashCashService());
+        return new AuthorizationService(new AuthorizationService.Config(List.of(AuthorizationTokenType.HASH_CASH)),
+                new HashCashService(),
+                Set.of(Feature.AUTHORIZATION_HASH_CASH));
     }
 
     @Test
@@ -96,7 +97,7 @@ public class ConnectionHandshakeResponderTest {
         AuthorizationToken token = authorizationService.createToken(request,
                 new NetworkLoad(),
                 Address.localHost(1234).toString(),
-                0);
+                0, new ArrayList<>());
         NetworkEnvelope requestNetworkEnvelope = new NetworkEnvelope(NetworkEnvelope.networkVersion + 1000, token, request);
         List<NetworkEnvelope> allEnvelopesToReceive = List.of(requestNetworkEnvelope);
         when(networkEnvelopeSocketChannel.receiveNetworkEnvelopes()).thenReturn(allEnvelopesToReceive);
@@ -111,7 +112,7 @@ public class ConnectionHandshakeResponderTest {
                 response,
                 new NetworkLoad(),
                 Address.localHost(1234).toString(),
-                0);
+                0, new ArrayList<>());
         NetworkEnvelope responseEnvelope = new NetworkEnvelope(token, response);
         List<NetworkEnvelope> allEnvelopesToReceive = List.of(responseEnvelope);
         when(networkEnvelopeSocketChannel.receiveNetworkEnvelopes()).thenReturn(allEnvelopesToReceive);
@@ -129,7 +130,7 @@ public class ConnectionHandshakeResponderTest {
         AuthorizationToken token = authorizationService.createToken(request,
                 new NetworkLoad(),
                 Address.localHost(1234).toString(),
-                0);
+                0, new ArrayList<>());
         NetworkEnvelope requestNetworkEnvelope = new NetworkEnvelope(token, request);
         List<NetworkEnvelope> allEnvelopesToReceive = List.of(requestNetworkEnvelope);
         when(networkEnvelopeSocketChannel.receiveNetworkEnvelopes()).thenReturn(allEnvelopesToReceive);
@@ -149,7 +150,7 @@ public class ConnectionHandshakeResponderTest {
         AuthorizationToken token = authorizationService.createToken(request,
                 new NetworkLoad(),
                 Address.localHost(1234).toString(),
-                5);
+                5, new ArrayList<>());
         NetworkEnvelope requestNetworkEnvelope = new NetworkEnvelope(token, request);
         List<NetworkEnvelope> allEnvelopesToReceive = List.of(requestNetworkEnvelope);
         when(networkEnvelopeSocketChannel.receiveNetworkEnvelopes()).thenReturn(allEnvelopesToReceive);
@@ -168,7 +169,7 @@ public class ConnectionHandshakeResponderTest {
         AuthorizationToken token = authorizationService.createToken(request,
                 new NetworkLoad(),
                 responderCapability.getAddress().getFullAddress(),
-                0);
+                0, new ArrayList<>());
         NetworkEnvelope requestNetworkEnvelope = new NetworkEnvelope(token, request);
         List<NetworkEnvelope> allEnvelopesToReceive = List.of(requestNetworkEnvelope);
         when(networkEnvelopeSocketChannel.receiveNetworkEnvelopes()).thenReturn(allEnvelopesToReceive);
@@ -186,7 +187,7 @@ public class ConnectionHandshakeResponderTest {
         AuthorizationToken token = authorizationService.createToken(request,
                 new NetworkLoad(),
                 responderCapability.getAddress().getFullAddress(),
-                0);
+                0, new ArrayList<>());
         return new NetworkEnvelope(token, request);
     }
 }

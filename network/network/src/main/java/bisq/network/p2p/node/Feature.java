@@ -10,9 +10,8 @@ import bisq.common.util.ProtobufUtils;
 public enum Feature implements ProtoEnum {
     INVENTORY_HASH_SET,
     INVENTORY_MINI_SKETCH,
-    AUTHORIZATION_TOKEN_HASH_CASH,
-    AUTHORIZATION_TOKEN_EQUI_HASH,
-    AUTHORIZATION_TOKEN_BURNED_BSQ;
+    AUTHORIZATION_HASH_CASH,
+    AUTHORIZATION_EQUI_HASH;
 
     @Override
     public bisq.network.protobuf.Feature toProto() {

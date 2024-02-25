@@ -23,11 +23,10 @@ import bisq.network.common.Address;
 import bisq.network.common.TransportType;
 import bisq.network.p2p.node.*;
 import bisq.network.p2p.node.authorization.AuthorizationService;
+import bisq.network.p2p.node.authorization.AuthorizationTokenType;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.network.p2p.services.peergroup.BanList;
-import bisq.persistence.PersistenceService;
-import bisq.security.SecurityService;
-import bisq.security.pow.ProofOfWorkService;
+import bisq.security.pow.HashCashService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 
@@ -35,10 +34,11 @@ import java.io.IOException;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.spi.SelectorProvider;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -114,7 +114,7 @@ public class OutboundConnectionsMultiplexerTest {
         assertThat(outboundConnectionChannel).isNotNull();
     }
 
-    private AuthorizationService createAuthorizationService() throws IOException {
+  /*  private AuthorizationService createAuthorizationService() throws IOException {
         Path persistenceBaseDir = Files.createTempDirectory(tmpDir, "persistence");
         String baseDir = persistenceBaseDir.toAbsolutePath().toString();
 
@@ -124,5 +124,11 @@ public class OutboundConnectionsMultiplexerTest {
 
         ProofOfWorkService proofOfWorkService = securityService.getProofOfWorkService();
         return new AuthorizationService(proofOfWorkService);
+    }*/
+
+    private AuthorizationService createAuthorizationService() {
+        return new AuthorizationService(new AuthorizationService.Config(List.of(AuthorizationTokenType.HASH_CASH)),
+                new HashCashService(),
+                Set.of(Feature.AUTHORIZATION_HASH_CASH));
     }
 }
