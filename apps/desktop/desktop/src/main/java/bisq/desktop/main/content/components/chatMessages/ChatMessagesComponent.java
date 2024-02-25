@@ -217,7 +217,6 @@ public class ChatMessagesComponent {
                 applyUserProfileOrChannelChange();
 
                 boolean isBisqEasyPrivateTradeChatChannel = chatChannel instanceof BisqEasyOpenTradeChannel;
-                boolean isTwoPartyPrivateChatChannel = chatChannel instanceof TwoPartyPrivateChatChannel;
                 model.getOpenDisputeButtonVisible().set(isBisqEasyPrivateTradeChatChannel);
                 model.getSendBtcAddressButtonVisible().set(false);
                 model.getSendPaymentAccountButtonVisible().set(false);
@@ -421,7 +420,7 @@ public class ChatMessagesComponent {
         private void maybeSwitchUserProfile() {
             if (model.userProfileSelectionVisible.get()) {
                 List<UserIdentity> myUserProfilesInChannel = getMyUserProfilesInChannel();
-                if (myUserProfilesInChannel.size() > 0) {
+                if (!myUserProfilesInChannel.isEmpty()) {
                     userIdentityService.selectChatUserIdentity(myUserProfilesInChannel.get(0));
                 }
             }
