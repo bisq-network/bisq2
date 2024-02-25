@@ -9,8 +9,8 @@ import bisq.network.p2p.node.authorization.AuthorizationToken;
 import bisq.network.p2p.node.authorization.AuthorizationTokenService;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.security.DigestUtil;
-import bisq.security.pow.HashCashService;
 import bisq.security.pow.ProofOfWork;
+import bisq.security.pow.hashcash.HashCashService;
 import com.google.common.base.Charsets;
 import lombok.extern.slf4j.Slf4j;
 

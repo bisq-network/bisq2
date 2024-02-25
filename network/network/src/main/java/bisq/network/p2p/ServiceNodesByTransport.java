@@ -42,8 +42,8 @@ import bisq.network.p2p.services.data.inventory.InventoryService;
 import bisq.network.p2p.services.peergroup.PeerGroupManager;
 import bisq.persistence.PersistenceService;
 import bisq.security.keys.KeyBundleService;
-import bisq.security.pow.EquihashProofOfWorkService;
-import bisq.security.pow.HashCashService;
+import bisq.security.pow.equihash.EquihashProofOfWorkService;
+import bisq.security.pow.hashcash.HashCashService;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.extern.slf4j.Slf4j;
 

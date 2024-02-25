@@ -22,8 +22,8 @@ import bisq.network.p2p.node.Feature;
 import bisq.network.p2p.node.authorization.token.equi_hash.EquiHashTokenService;
 import bisq.network.p2p.node.authorization.token.hash_cash.HashCashTokenService;
 import bisq.network.p2p.node.network_load.NetworkLoad;
-import bisq.security.pow.EquihashProofOfWorkService;
-import bisq.security.pow.HashCashService;
+import bisq.security.pow.equihash.EquihashProofOfWorkService;
+import bisq.security.pow.hashcash.HashCashService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

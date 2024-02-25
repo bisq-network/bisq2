@@ -29,7 +29,7 @@ import bisq.network.p2p.services.peergroup.keepalive.Ping;
 import bisq.network.p2p.services.peergroup.keepalive.Pong;
 import bisq.persistence.PersistenceService;
 import bisq.security.keys.KeyBundleService;
-import bisq.security.pow.HashCashService;
+import bisq.security.pow.hashcash.HashCashService;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;

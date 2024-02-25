@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.security.pow;
+package bisq.security.pow.equihash;
 
 import bisq.common.util.ByteArrayUtils;
 import com.google.common.annotations.VisibleForTesting;

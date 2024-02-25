@@ -30,7 +30,7 @@ import bisq.network.p2p.node.authorization.AuthorizationTokenType;
 import bisq.network.p2p.node.envelope.NetworkEnvelopeSocketChannel;
 import bisq.network.p2p.node.handshake.ConnectionHandshake;
 import bisq.network.p2p.node.network_load.NetworkLoad;
-import bisq.security.pow.HashCashService;
+import bisq.security.pow.hashcash.HashCashService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

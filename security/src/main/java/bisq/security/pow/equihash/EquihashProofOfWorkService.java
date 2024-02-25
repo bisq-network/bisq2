@@ -15,9 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.security.pow;
+package bisq.security.pow.equihash;
 
 import bisq.security.DigestUtil;
+import bisq.security.pow.ProofOfWork;
+import bisq.security.pow.ProofOfWorkService;
 import com.google.common.base.Charsets;
 import com.google.common.primitives.Bytes;
 import com.google.common.primitives.Longs;

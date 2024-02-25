@@ -20,8 +20,8 @@ package bisq.security;
 import bisq.common.application.Service;
 import bisq.persistence.PersistenceService;
 import bisq.security.keys.KeyBundleService;
-import bisq.security.pow.EquihashProofOfWorkService;
-import bisq.security.pow.HashCashService;
+import bisq.security.pow.equihash.EquihashProofOfWorkService;
+import bisq.security.pow.hashcash.HashCashService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

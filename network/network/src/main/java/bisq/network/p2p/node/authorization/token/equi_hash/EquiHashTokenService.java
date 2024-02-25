@@ -4,7 +4,7 @@ import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
 import bisq.network.p2p.node.authorization.AuthorizationTokenService;
 import bisq.network.p2p.node.network_load.NetworkLoad;
-import bisq.security.pow.EquihashProofOfWorkService;
+import bisq.security.pow.equihash.EquihashProofOfWorkService;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;

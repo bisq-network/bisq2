@@ -34,7 +34,7 @@ import bisq.network.p2p.node.envelope.parser.nio.ProtoBufMessageLengthWriter;
 import bisq.network.p2p.node.handshake.ConnectionHandshake;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.network.p2p.services.peergroup.BanList;
-import bisq.security.pow.HashCashService;
+import bisq.security.pow.hashcash.HashCashService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 
