@@ -24,12 +24,15 @@ import bisq.network.p2p.node.authorization.token.hash_cash.HashCashTokenService;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.security.pow.equihash.EquihashProofOfWorkService;
 import bisq.security.pow.hashcash.HashCashProofOfWorkService;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class AuthorizationService {
@@ -79,7 +82,7 @@ public class AuthorizationService {
                                           String peerAddress,
                                           int messageCounter,
                                           List<Feature> features) {
-        AuthorizationTokenType preferredAuthorizationTokenType = getPreferredAuthorizationType(features);
+        AuthorizationTokenType preferredAuthorizationTokenType = selectAuthorizationTokenType(features);
         return supportedServices.get(preferredAuthorizationTokenType).createToken(message,
                 networkLoad,
                 peerAddress,
@@ -114,7 +117,7 @@ public class AuthorizationService {
     }
 
     // Get first match with peers feature based on order of myPreferredFilterTypes
-    private AuthorizationTokenType getPreferredAuthorizationType(List<Feature> peersFeatures) {
+    private AuthorizationTokenType selectAuthorizationTokenType(List<Feature> peersFeatures) {
         List<AuthorizationTokenType> peersAuthorizationTokenTypes = toAuthorizationTypes(peersFeatures);
         return myPreferredAuthorizationTokenTypes.stream()
                 .filter(peersAuthorizationTokenTypes::contains)
@@ -122,7 +125,18 @@ public class AuthorizationService {
                 .orElse(AuthorizationTokenType.HASH_CASH);
     }
 
-    private List<AuthorizationTokenType> toAuthorizationTypes(List<Feature> features) {
+    @VisibleForTesting
+    static AuthorizationTokenType selectAuthorizationTokenType(List<AuthorizationTokenType> myPreferredAuthorizationTokenTypes,
+                                                               List<Feature> peersFeatures) {
+        checkArgument(!myPreferredAuthorizationTokenTypes.isEmpty(), "myPreferredAuthorizationTokenTypes must not be empty");
+        List<AuthorizationTokenType> peersAuthorizationTokenTypes = toAuthorizationTypes(peersFeatures);
+        return myPreferredAuthorizationTokenTypes.stream()
+                .filter(peersAuthorizationTokenTypes::contains)
+                .findFirst()
+                .orElse(myPreferredAuthorizationTokenTypes.get(0));
+    }
+
+    private static List<AuthorizationTokenType> toAuthorizationTypes(List<Feature> features) {
         return features.stream()
                 .flatMap(feature -> AuthorizationTokenType.fromFeature(feature).stream())
                 .collect(Collectors.toList());
