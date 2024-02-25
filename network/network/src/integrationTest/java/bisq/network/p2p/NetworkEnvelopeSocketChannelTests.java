@@ -30,7 +30,8 @@ import bisq.network.p2p.node.authorization.AuthorizationTokenType;
 import bisq.network.p2p.node.envelope.NetworkEnvelopeSocketChannel;
 import bisq.network.p2p.node.handshake.ConnectionHandshake;
 import bisq.network.p2p.node.network_load.NetworkLoad;
-import bisq.security.pow.hashcash.HashCashService;
+import bisq.security.pow.equihash.EquihashProofOfWorkService;
+import bisq.security.pow.hashcash.HashCashProofOfWorkService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -211,7 +212,8 @@ public class NetworkEnvelopeSocketChannelTests {
 
     private AuthorizationService createAuthorizationService() {
         return new AuthorizationService(new AuthorizationService.Config(List.of(AuthorizationTokenType.HASH_CASH)),
-                new HashCashService(),
+                new HashCashProofOfWorkService(),
+                new EquihashProofOfWorkService(),
                 Set.of(Feature.AUTHORIZATION_HASH_CASH));
     }
 

@@ -29,7 +29,8 @@ import bisq.network.p2p.services.peergroup.keepalive.Ping;
 import bisq.network.p2p.services.peergroup.keepalive.Pong;
 import bisq.persistence.PersistenceService;
 import bisq.security.keys.KeyBundleService;
-import bisq.security.pow.hashcash.HashCashService;
+import bisq.security.pow.equihash.EquihashProofOfWorkService;
+import bisq.security.pow.hashcash.HashCashProofOfWorkService;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -67,7 +68,8 @@ public abstract class BaseNodesByIdTest extends BaseNetworkTest {
 
     private AuthorizationService createAuthorizationService() {
         return new AuthorizationService(new AuthorizationService.Config(List.of(AuthorizationTokenType.HASH_CASH)),
-                new HashCashService(),
+                new HashCashProofOfWorkService(),
+                new EquihashProofOfWorkService(),
                 Set.of(Feature.AUTHORIZATION_HASH_CASH));
     }
 

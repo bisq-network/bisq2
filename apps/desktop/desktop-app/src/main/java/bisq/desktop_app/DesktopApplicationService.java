@@ -108,7 +108,7 @@ public class DesktopApplicationService extends ApplicationService {
                 getConfig("network")),
                 persistenceService,
                 securityService.getKeyBundleService(),
-                securityService.getHashCashService(),
+                securityService.getHashCashProofOfWorkService(),
                 securityService.getEquihashProofOfWorkService());
 
         identityService = new IdentityService(persistenceService,
@@ -129,7 +129,7 @@ public class DesktopApplicationService extends ApplicationService {
                 identityService,
                 networkService,
                 bondedRolesService,
-                securityService.getHashCashService());
+                securityService.getHashCashProofOfWorkService());
 
         settingsService = new SettingsService(persistenceService);
 

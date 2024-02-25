@@ -23,7 +23,7 @@ import bisq.network.p2p.node.authorization.token.equi_hash.EquiHashTokenService;
 import bisq.network.p2p.node.authorization.token.hash_cash.HashCashTokenService;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.security.pow.equihash.EquihashProofOfWorkService;
-import bisq.security.pow.hashcash.HashCashService;
+import bisq.security.pow.hashcash.HashCashProofOfWorkService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -53,7 +53,7 @@ public class AuthorizationService {
     private final Map<String, Set<Integer>> receivedMessageCountersByConnectionId = new ConcurrentHashMap<>();
 
     public AuthorizationService(Config config,
-                                HashCashService hashCashService,
+                                HashCashProofOfWorkService hashCashProofOfWorkService,
                                 EquihashProofOfWorkService equihashProofOfWorkService,
                                 Set<Feature> features) {
         myPreferredAuthorizationTokenTypes = config.getMyPreferredAuthorizationTokenTypes();
@@ -63,7 +63,7 @@ public class AuthorizationService {
                 .forEach(supportedFilterType -> {
                     switch (supportedFilterType) {
                         case HASH_CASH:
-                            supportedServices.put(supportedFilterType, new HashCashTokenService(hashCashService));
+                            supportedServices.put(supportedFilterType, new HashCashTokenService(hashCashProofOfWorkService));
                             break;
                         case EQUI_HASH:
                             supportedServices.put(supportedFilterType, new EquiHashTokenService(equihashProofOfWorkService));

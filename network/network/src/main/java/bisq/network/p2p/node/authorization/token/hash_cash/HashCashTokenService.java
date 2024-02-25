@@ -10,7 +10,7 @@ import bisq.network.p2p.node.authorization.AuthorizationTokenService;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.security.DigestUtil;
 import bisq.security.pow.ProofOfWork;
-import bisq.security.pow.hashcash.HashCashService;
+import bisq.security.pow.hashcash.HashCashProofOfWorkService;
 import com.google.common.base.Charsets;
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,11 +24,11 @@ public class HashCashTokenService extends AuthorizationTokenService<HashCashToke
     public final static int MAX_DIFFICULTY = 65536;  // Math.pow(2, 16) = 262144; 1000 ms on old CPU, 60 ms on high-end CPU
     public final static int DIFFICULTY_TOLERANCE = 50_000;
 
-    private final HashCashService proofOfWorkService;
+    private final HashCashProofOfWorkService proofOfWorkService;
     // Keep track of message counter per connection to avoid reuse of pow
     private final Map<String, Set<Integer>> receivedMessageCountersByConnectionId = new ConcurrentHashMap<>();
 
-    public HashCashTokenService(HashCashService proofOfWorkService) {
+    public HashCashTokenService(HashCashProofOfWorkService proofOfWorkService) {
         this.proofOfWorkService = proofOfWorkService;
     }
 

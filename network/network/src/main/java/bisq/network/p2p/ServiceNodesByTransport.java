@@ -43,7 +43,7 @@ import bisq.network.p2p.services.peergroup.PeerGroupManager;
 import bisq.persistence.PersistenceService;
 import bisq.security.keys.KeyBundleService;
 import bisq.security.pow.equihash.EquihashProofOfWorkService;
-import bisq.security.pow.hashcash.HashCashService;
+import bisq.security.pow.hashcash.HashCashProofOfWorkService;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.extern.slf4j.Slf4j;
 
@@ -79,7 +79,7 @@ public class ServiceNodesByTransport {
                                    Set<Feature> features,
                                    KeyBundleService keyBundleService,
                                    PersistenceService persistenceService,
-                                   HashCashService hashCashService,
+                                   HashCashProofOfWorkService hashCashProofOfWorkService,
                                    EquihashProofOfWorkService equihashProofOfWorkService,
                                    Optional<DataService> dataService,
                                    Optional<MessageDeliveryStatusService> messageDeliveryStatusService,
@@ -87,7 +87,7 @@ public class ServiceNodesByTransport {
         this.supportedTransportTypes = supportedTransportTypes;
 
         authorizationService = new AuthorizationService(authorizationServiceConfig,
-                hashCashService,
+                hashCashProofOfWorkService,
                 equihashProofOfWorkService,
                 features);
 

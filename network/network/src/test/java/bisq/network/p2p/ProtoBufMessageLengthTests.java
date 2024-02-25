@@ -32,7 +32,8 @@ import bisq.network.p2p.node.envelope.parser.nio.NioProtoBufInputStream;
 import bisq.network.p2p.node.envelope.parser.nio.ProtoBufMessageLengthWriter;
 import bisq.network.p2p.node.handshake.ConnectionHandshake;
 import bisq.network.p2p.node.network_load.NetworkLoad;
-import bisq.security.pow.hashcash.HashCashService;
+import bisq.security.pow.equihash.EquihashProofOfWorkService;
+import bisq.security.pow.hashcash.HashCashProofOfWorkService;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
@@ -103,7 +104,8 @@ public class ProtoBufMessageLengthTests {
 
     private AuthorizationService createAuthorizationService() {
         return new AuthorizationService(new AuthorizationService.Config(List.of(AuthorizationTokenType.HASH_CASH)),
-                new HashCashService(),
+                new HashCashProofOfWorkService(),
+                new EquihashProofOfWorkService(),
                 Set.of(Feature.AUTHORIZATION_HASH_CASH));
     }
 

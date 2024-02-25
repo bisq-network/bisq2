@@ -26,7 +26,8 @@ import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationTokenType;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.network.p2p.services.peergroup.BanList;
-import bisq.security.pow.hashcash.HashCashService;
+import bisq.security.pow.equihash.EquihashProofOfWorkService;
+import bisq.security.pow.hashcash.HashCashProofOfWorkService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 
@@ -128,7 +129,8 @@ public class OutboundConnectionsMultiplexerTest {
 
     private AuthorizationService createAuthorizationService() {
         return new AuthorizationService(new AuthorizationService.Config(List.of(AuthorizationTokenType.HASH_CASH)),
-                new HashCashService(),
+                new HashCashProofOfWorkService(),
+                new EquihashProofOfWorkService(),
                 Set.of(Feature.AUTHORIZATION_HASH_CASH));
     }
 }

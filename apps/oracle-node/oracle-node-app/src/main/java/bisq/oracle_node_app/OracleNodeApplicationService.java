@@ -52,7 +52,7 @@ public class OracleNodeApplicationService extends ApplicationService {
         networkService = new NetworkService(networkServiceConfig,
                 persistenceService,
                 securityService.getKeyBundleService(),
-                securityService.getHashCashService(),
+                securityService.getHashCashProofOfWorkService(),
                 securityService.getEquihashProofOfWorkService());
 
         identityService = new IdentityService(persistenceService,

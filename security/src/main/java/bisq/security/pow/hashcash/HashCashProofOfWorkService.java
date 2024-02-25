@@ -34,8 +34,8 @@ import java.util.concurrent.CompletableFuture;
  * See https://www.hashcash.org/papers/hashcash.pdf
  */
 @Slf4j
-public class HashCashService extends ProofOfWorkService {
-    public HashCashService() {
+public class HashCashProofOfWorkService extends ProofOfWorkService {
+    public HashCashProofOfWorkService() {
     }
 
     @Override
