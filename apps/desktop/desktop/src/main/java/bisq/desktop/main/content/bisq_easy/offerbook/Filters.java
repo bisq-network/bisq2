@@ -33,4 +33,11 @@ class Filters {
             this.predicate = predicate;
         }
     }
+
+    enum Offers {
+        ALL,
+        MINE,
+        BUY,
+        SELL;
+    }
 }
