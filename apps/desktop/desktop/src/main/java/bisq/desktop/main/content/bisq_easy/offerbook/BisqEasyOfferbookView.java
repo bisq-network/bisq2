@@ -53,6 +53,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     private VBox marketSelectionList;
     private Subscription tableViewSelectionPin, selectedModelItemPin, marketSelectorHeaderIconPin, selectedMarketFilterPin;
     private Button createOfferButton;
+    private DropdownMenu dropdownMenu;
     private DropdownSortByMenuItem sortByMostOffers, sortByNameAZ, sortByNameZA;
     private DropdownFilterMenuItem filterShowAll, filterWithOffers;
     private CheckBox hideUserMessagesCheckbox;
@@ -124,20 +125,22 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         maybeSelectSorting();
     }
 
+    private void maybeSelectSorting() {
+        boolean isSortingMethodSelected = dropdownMenu.getMenuItems().stream()
+                .filter(menuItem -> menuItem instanceof DropdownSortByMenuItem)
+                .anyMatch(menuItem -> ((DropdownSortByMenuItem) menuItem).isSelected());
+        if (!isSortingMethodSelected) {
+            sortTableViewColumn(sortByMostOffers);
+        }
+    }
+
     private void sortTableViewColumn(DropdownSortByMenuItem sortByMenuItem) {
         tableView.getSortOrder().clear();
         marketLabelTableColumn.setComparator(sortByMenuItem.getComparator());
         tableView.getSortOrder().add(marketLabelTableColumn);
-
-        ArrayList<DropdownSortByMenuItem> sortByMenuItems = new ArrayList<>(List.of(sortByMostOffers, sortByNameAZ, sortByNameZA));
-        sortByMenuItems.forEach(item -> item.updateSelection(item == sortByMenuItem));
-    }
-
-    private void maybeSelectSorting() {
-        ArrayList<DropdownSortByMenuItem> sortByMenuItems = new ArrayList<>(List.of(sortByMostOffers, sortByNameAZ, sortByNameZA));
-        if (sortByMenuItems.stream().noneMatch(DropdownSortByMenuItem::isSelected)) {
-            sortTableViewColumn(sortByMostOffers);
-        }
+        // Update dropdown state with new selection
+        dropdownMenu.getMenuItems().stream().filter(menuItem -> menuItem instanceof DropdownSortByMenuItem)
+                .forEach(menuItem -> ((DropdownSortByMenuItem) menuItem).updateSelection(menuItem == sortByMenuItem));
     }
 
     @Override
@@ -179,7 +182,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
 
         marketSelectorSearchBox = new SearchBox();
         marketSelectorSearchBox.getStyleClass().add("market-selection-search-box");
-        DropdownMenu dropdownMenu = createAndGetDropdownMenu();
+        dropdownMenu = createAndGetDropdownMenu();
         HBox subheader = new HBox(marketSelectorSearchBox, Spacer.fillHBox(), dropdownMenu);
         subheader.setAlignment(Pos.CENTER);
         subheader.getStyleClass().add("market-selection-subheader");
@@ -294,8 +297,15 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     }
 
     private void updateSelectedMarketFilter(MarketFilter marketFilter) {
-        ArrayList<DropdownFilterMenuItem> filterMenuItems = new ArrayList<>(List.of(filterShowAll, filterWithOffers));
-        filterMenuItems.forEach(item -> item.updateSelection(marketFilter != null && marketFilter == item.getMarketFilter()));
+        if (marketFilter == null) {
+            return;
+        }
+
+        dropdownMenu.getMenuItems().stream().filter(menuItem -> menuItem instanceof DropdownFilterMenuItem)
+                .forEach(menuItem -> {
+                    DropdownFilterMenuItem filterMenuItem = (DropdownFilterMenuItem) menuItem;
+                    filterMenuItem.updateSelection(marketFilter == filterMenuItem.getMarketFilter());
+                });
     }
 
     private static final class DropdownFilterMenuItem extends DropdownMenuItem {
