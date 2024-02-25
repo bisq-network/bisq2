@@ -919,7 +919,7 @@
 .dropdown-menu-popup {
     -fx-background-color: -bisq-dark-grey-40;
     -fx-background-radius: 6;
-    -fx-padding: 8 3 8 3;
+    -fx-padding: 8;
     -fx-border-color: -bisq-dark-grey-50;
     -fx-border-width: 1;
     -fx-border-radius: 6;
@@ -940,25 +940,24 @@
 
 .dropdown-menu-popup .menu-item .dropdown-menu-item-content .label,
 .dropdown-menu-popup .menu-item:focused .dropdown-menu-item-content .label {
-    -fx-padding: 0 5 0 5;
     -fx-font-size: 1em;
     -fx-text-fill: -fx-mid-text-color;
     -fx-font-family: "IBM Plex Sans";
 }
 
 .dropdown-menu-popup .menu-item:hover {
-    -fx-background-color: -bisq-dark-grey-20;
+    -fx-background-color: -bisq-dark-grey-30;
 }
 
 .dropdown-menu-popup .menu-item:hover .dropdown-menu-item-content .label {
     -fx-text-fill: -fx-light-text-color;
 }
 
-.dropdown-menu-popup .leave-chat-item .dropdown-menu-item-content .label,
-.dropdown-menu-popup .leave-chat-item:focused .dropdown-menu-item-content .label {
+.dropdown-menu-popup .red-menu-item .dropdown-menu-item-content .label,
+.dropdown-menu-popup .red-menu-item:focused .dropdown-menu-item-content .label {
     -fx-text-fill: -bisq2-red-lit-10;
 }
 
-.dropdown-menu-popup .leave-chat-item:hover .dropdown-menu-item-content .label {
+.dropdown-menu-popup .red-menu-item:hover .dropdown-menu-item-content .label {
     -fx-text-fill: -bisq2-red;
 }

@@ -150,7 +150,7 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
 
         leaveChatButton = new DropdownMenuItem("leave-chat-red-lit-10", "leave-chat-red",
                 Res.get("bisqEasy.privateChats.leave"));
-        leaveChatButton.getStyleClass().add("leave-chat-item");
+        leaveChatButton.getStyleClass().add("red-menu-item");
 
         headerDropdownMenu.clearMenuItems();
         headerDropdownMenu.addMenuItems(helpButton, leaveChatButton);

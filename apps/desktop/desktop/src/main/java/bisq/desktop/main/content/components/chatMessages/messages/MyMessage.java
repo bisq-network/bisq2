@@ -44,7 +44,6 @@ import org.fxmisc.easybind.Subscription;
 public final class MyMessage extends BubbleMessage {
     private final static String EDITED_POST_FIX = " " + Res.get("chat.message.wasEdited");
 
-    private final Button removeOfferButton;
     private final Label deliveryState;
     private final Subscription reactionsVisiblePropertyPin, messageDeliveryStatusIconPin;
     private Label editIcon, deleteIcon, copyIcon;
@@ -57,7 +56,6 @@ public final class MyMessage extends BubbleMessage {
                      ChatMessagesListView.Controller controller, ChatMessagesListView.Model model) {
         super(item, list, controller, model);
 
-        removeOfferButton = createAndGetRemoveOfferButton();
         quotedMessageVBox.setId("chat-message-quote-box-my-msg");
         setUpEditFunctionality();
         message.setAlignment(Pos.CENTER_RIGHT);
@@ -70,35 +68,15 @@ public final class MyMessage extends BubbleMessage {
 
         VBox messageVBox = new VBox(quotedMessageVBox, message, editInputField);
 
-        // TODO (refactor): Move this logic to BisqEasy package
-        if (item.isBisqEasyPublicChatMessageWithOffer()) {
-            message.maxWidthProperty().bind(list.widthProperty().subtract(160));
-            userProfileIcon.setSize(60);
-            userProfileIconVbox.setAlignment(Pos.CENTER_LEFT);
-            HBox.setMargin(userProfileIconVbox, new Insets(-5, 0, -5, 0));
-            HBox.setMargin(editInputField, new Insets(-4, -10, -15, 0));
-            HBox.setMargin(messageVBox, new Insets(0, -10, 0, 0));
-
-            removeOfferButton.setOnAction(e -> controller.onDeleteMessage(item.getChatMessage()));
-            reactionsHBox.getChildren().setAll(Spacer.fillHBox(), editIcon, supportedLanguages, copyIcon);
-            reactionsHBox.setAlignment(Pos.CENTER_RIGHT);
-
-            HBox.setMargin(userProfileIconVbox, new Insets(0, 0, 10, 0));
-            HBox hBox = new HBox(15, messageVBox, userProfileIconVbox);
-            HBox removeOfferButtonHBox = new HBox(Spacer.fillHBox(), removeOfferButton);
-            VBox vBox = new VBox(hBox, removeOfferButtonHBox);
-            messageBgHBox.getChildren().setAll(vBox);
-        } else {
-            message.maxWidthProperty().bind(list.widthProperty().subtract(140));
-            userProfileIcon.setSize(30);
-            userProfileIconVbox.setAlignment(Pos.TOP_LEFT);
-            HBox.setMargin(deleteIcon, new Insets(0, 10, 0, 0));
-            reactionsHBox.getChildren().setAll(Spacer.fillHBox(), editIcon, copyIcon, deleteIcon);
-            HBox.setMargin(messageVBox, new Insets(0, -15, 0, 0));
-            HBox.setMargin(userProfileIconVbox, new Insets(7.5, 0, -5, 5));
-            HBox.setMargin(editInputField, new Insets(6, -10, -25, 0));
-            messageBgHBox.getChildren().setAll(messageVBox, userProfileIconVbox);
-        }
+        message.maxWidthProperty().bind(list.widthProperty().subtract(140));
+        userProfileIcon.setSize(30);
+        userProfileIconVbox.setAlignment(Pos.TOP_LEFT);
+        HBox.setMargin(deleteIcon, new Insets(0, 10, 0, 0));
+        reactionsHBox.getChildren().setAll(Spacer.fillHBox(), editIcon, copyIcon, deleteIcon);
+        HBox.setMargin(messageVBox, new Insets(0, -15, 0, 0));
+        HBox.setMargin(userProfileIconVbox, new Insets(7.5, 0, -5, 5));
+        HBox.setMargin(editInputField, new Insets(6, -10, -25, 0));
+        messageBgHBox.getChildren().setAll(messageVBox, userProfileIconVbox);
 
         HBox.setMargin(deliveryState, new Insets(0, 10, 0, 0));
         HBox deliveryStateHBox = new HBox(Spacer.fillHBox(), reactionsHBox);
@@ -197,14 +175,6 @@ public final class MyMessage extends BubbleMessage {
         deleteIcon.setManaged(isPublicChannel);
     }
 
-    private Button createAndGetRemoveOfferButton() {
-        Button button = new Button(Res.get("offer.deleteOffer"));
-        button.getStyleClass().addAll("red-small-button", "no-background");
-        button.setVisible(item.isPublicChannel());
-        button.setManaged(item.isPublicChannel());
-        return button;
-    }
-
     private void handleEditBox() {
         saveEditButton.setOnAction(e -> {
             controller.onSaveEditedMessage(item.getChatMessage(), editInputField.getText());
@@ -223,9 +193,6 @@ public final class MyMessage extends BubbleMessage {
         editInputField.positionCaret(message.getText().length());
         editButtonsHBox.setVisible(true);
         editButtonsHBox.setManaged(true);
-        removeOfferButton.setVisible(false);
-        removeOfferButton.setManaged(false);
-
         message.setVisible(false);
         message.setManaged(false);
 
@@ -247,9 +214,6 @@ public final class MyMessage extends BubbleMessage {
         editInputField.setManaged(false);
         editButtonsHBox.setVisible(false);
         editButtonsHBox.setManaged(false);
-        removeOfferButton.setVisible(true);
-        removeOfferButton.setManaged(true);
-
         message.setVisible(true);
         message.setManaged(true);
         editInputField.setOnKeyPressed(null);
@@ -260,8 +224,6 @@ public final class MyMessage extends BubbleMessage {
         message.maxWidthProperty().unbind();
         editInputField.maxWidthProperty().unbind();
         deliveryState.getTooltip().textProperty().unbind();
-
-        removeOfferButton.setOnAction(null);
 
         saveEditButton.setOnAction(null);
         cancelEditButton.setOnAction(null);

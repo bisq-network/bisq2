@@ -48,7 +48,7 @@ public abstract class BaseChatView extends NavigationView<ScrollPane, BaseChatMo
     protected Pane chatUserOverviewRoot;
     protected Subscription channelIconPin, chatUserOverviewRootSubscription;
     protected final SearchBox searchBox = new SearchBox();
-    protected final DropdownMenu headerDropdownMenu = new DropdownMenu("ellipsis-v", "ellipsis-v-white", true);
+    protected final DropdownMenu headerDropdownMenu = new DropdownMenu("ellipsis-v-grey", "ellipsis-v-white", true);
 
     public BaseChatView(BaseChatModel model,
                         BaseChatController<?, ?> controller,

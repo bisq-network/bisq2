@@ -84,10 +84,6 @@ public class DropdownMenu extends HBox {
 
     public void addMenuItems(DropdownMenuItem... items) {
         contextMenu.getItems().addAll(items);
-
-        for (DropdownMenuItem item : items) {
-            contextMenu.getItems().add(item);
-        }
     }
 
     public void clearMenuItems() {
@@ -139,7 +135,7 @@ public class DropdownMenu extends HBox {
                 for (MenuItem item : contextMenu.getItems()) {
                     if (item instanceof DropdownMenuItem) {
                         DropdownMenuItem dropdownMenuItem = (DropdownMenuItem) item;
-                        dropdownMenuItem.updateWidth(contextMenu.getWidth() - 5); // Remove margins
+                        dropdownMenuItem.updateWidth(contextMenu.getWidth() - 18); // Remove margins
                     }
                 }
             }
