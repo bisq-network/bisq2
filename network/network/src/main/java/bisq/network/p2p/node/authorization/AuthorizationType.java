@@ -8,8 +8,8 @@ import bisq.common.util.ProtobufUtils;
  * like HashCash or EquiHash algorithms for proof of work, or different implementations for requesting inventory data.
  */
 public enum AuthorizationType implements ProtoEnum {
-    POW_HASH_CASH,
-    POW_EQUI_HASH,
+    HASH_CASH,
+    EQUI_HASH,
     BURNED_BSQ;
 
     @Override
