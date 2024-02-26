@@ -104,7 +104,12 @@ public class AuthorizationService {
                                 Optional<NetworkLoad> previousNetworkLoad,
                                 String connectionId,
                                 String myAddress) {
-        return supportedServices.get(authorizationToken.getAuthorizationTokenType()).isAuthorized(message,
+        AuthorizationTokenType authorizationTokenType = authorizationToken.getAuthorizationTokenType();
+        if (!supportedServices.containsKey(authorizationTokenType)) {
+            log.warn("Not supported authorizationTokenType {}", authorizationTokenType);
+            return false;
+        }
+        return supportedServices.get(authorizationTokenType).isAuthorized(message,
                 authorizationToken,
                 currentNetworkLoad,
                 previousNetworkLoad,
@@ -114,11 +119,7 @@ public class AuthorizationService {
 
     // Get first match with peers feature based on order of myPreferredFilterTypes
     private AuthorizationTokenType selectAuthorizationTokenType(List<Feature> peersFeatures) {
-        List<AuthorizationTokenType> peersAuthorizationTokenTypes = toAuthorizationTypes(peersFeatures);
-        return myPreferredAuthorizationTokenTypes.stream()
-                .filter(peersAuthorizationTokenTypes::contains)
-                .findFirst()
-                .orElse(AuthorizationTokenType.HASH_CASH);
+        return selectAuthorizationTokenType(myPreferredAuthorizationTokenTypes, peersFeatures);
     }
 
     @VisibleForTesting

@@ -105,11 +105,8 @@ public class ConnectionHandshakeResponder {
                 myAddress
         );
 
-        if (isAuthorized) {
-            log.debug("Peer {} passed PoW authorization.",
-                    ((ConnectionHandshake.Request) requestNetworkEnvelope.getEnvelopePayloadMessage()).getCapability().getAddress());
-        } else {
-            throw new ConnectionException("Request authorization failed. request=" + request);
+        if (!isAuthorized) {
+            throw new ConnectionException("Request authorization failed. AuthorizationToken=" + requestNetworkEnvelope.getAuthorizationToken());
         }
 
         log.debug("Clients capability {}, load={}", request.getCapability(), request.getNetworkLoad());

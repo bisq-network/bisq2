@@ -105,10 +105,6 @@ public class ConnectionHandshakeInitiator {
                 StringUtils.createUid(),
                 myCapability.getAddress().getFullAddress());
 
-        if (isAuthorized) {
-            log.info("Authorized PoW of outbound peer {}", response.getCapability().getAddress());
-        }
-
         if (!isAuthorized) {
             throw new ConnectionException("Response authorization failed. request=" + response);
         }

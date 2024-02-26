@@ -295,10 +295,8 @@ public final class ConnectionHandshake {
                     NetworkLoad.INITIAL_LOAD,
                     StringUtils.createUid(),
                     myAddress.getFullAddress());
-            if (isAuthorized) {
-                log.info("Peer {} proofed ownership of its onion address successfully.", peerAddress.getFullAddress());
-            } else {
-                throw new ConnectionException("Request authorization failed. request=" + request);
+            if (!isAuthorized) {
+                throw new ConnectionException("Authorization of inbound connection request failed. AuthorizationToken=" + requestNetworkEnvelope.getAuthorizationToken());
             }
 
             if (!OnionAddressValidation.verify(myAddress, peerAddress, request.getSignatureDate(), request.getAddressOwnershipProof())) {
