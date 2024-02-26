@@ -239,7 +239,7 @@ public final class ConnectionHandshake {
                     myAddress.getFullAddress());
 
             if (!isAuthorized) {
-                throw new ConnectionException("Request authorization failed. request=" + request);
+                throw new ConnectionException("ConnectionHandshake.Response authorization failed at outbound connection attempt. AuthorizationToken=" + responseNetworkEnvelope.getAuthorizationToken());
             }
 
             connectionMetrics.onReceived(responseNetworkEnvelope, deserializeTime);

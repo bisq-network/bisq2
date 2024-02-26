@@ -106,7 +106,7 @@ public class ConnectionHandshakeInitiator {
                 myCapability.getAddress().getFullAddress());
 
         if (!isAuthorized) {
-            throw new ConnectionException("Response authorization failed. request=" + response);
+            throw new ConnectionException("ConnectionHandshake.Response authorization failed. AuthorizationToken=" + responseNetworkEnvelope.getAuthorizationToken());
         }
 
         log.debug("Servers capability {}, load={}", response.getCapability(), response.getNetworkLoad());

@@ -106,7 +106,7 @@ public class ConnectionHandshakeResponder {
         );
 
         if (!isAuthorized) {
-            throw new ConnectionException("Request authorization failed. AuthorizationToken=" + requestNetworkEnvelope.getAuthorizationToken());
+            throw new ConnectionException("ConnectionHandshake.Request authorization failed. AuthorizationToken=" + requestNetworkEnvelope.getAuthorizationToken());
         }
 
         log.debug("Clients capability {}, load={}", request.getCapability(), request.getNetworkLoad());
