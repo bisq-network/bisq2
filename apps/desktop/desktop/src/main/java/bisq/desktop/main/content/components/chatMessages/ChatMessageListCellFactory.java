@@ -56,9 +56,7 @@ final class ChatMessageListCellFactory
             private Message message;
 
             {
-                cellHBox = new HBox(15);
-                cellHBox.setMaxWidth(CHAT_BOX_MAX_WIDTH);
-                cellHBox.setAlignment(Pos.CENTER);
+                cellHBox = new HBox();
                 cellHBox.setPadding(new Insets(15, 0, 15, 0));
             }
 
@@ -79,24 +77,7 @@ final class ChatMessageListCellFactory
 
                 message = createMessage(item, list);
                 cellHBox.getChildren().setAll(message);
-
-                listWidthPropertyPin = EasyBind.subscribe(widthProperty(), cellWidthProperty -> {
-                    if (cellWidthProperty == null || cellWidthProperty.doubleValue() == 0.0) {
-                        return;
-                    }
-
-                    double listWidth = list.widthProperty().doubleValue();
-                    double cellWidth = cellWidthProperty.doubleValue();
-                    String messageStyleClass = getMessageStyleClass(listWidth, cellWidth);
-                    if (!message.getStyleClass().contains(messageStyleClass)) {
-                        message.getStyleClass().removeIf(style -> style.equals(STYLE_CLASS_WITHOUT_SCROLLBAR)
-                                || style.equals(STYLE_CLASS_WITH_SCROLLBAR_FULL_WIDTH)
-                                || style.equals(STYLE_CLASS_WITH_SCROLLBAR_MAX_WIDTH)
-                        );
-                        message.getStyleClass().add(messageStyleClass);
-                    }
-                });
-
+                listWidthPropertyPin = EasyBind.subscribe(message.widthProperty(), w -> updateMessageStyle());
                 setGraphic(cellHBox);
                 setAlignment(Pos.CENTER);
             }
@@ -114,6 +95,17 @@ final class ChatMessageListCellFactory
                 }
 
                 setGraphic(null);
+            }
+
+            private void updateMessageStyle() {
+                String messageStyleClass = getMessageStyleClass(list.getWidth(), getWidth());
+                if (!message.getStyleClass().contains(messageStyleClass)) {
+                    message.getStyleClass().removeIf(style -> style.equals(STYLE_CLASS_WITHOUT_SCROLLBAR)
+                            || style.equals(STYLE_CLASS_WITH_SCROLLBAR_FULL_WIDTH)
+                            || style.equals(STYLE_CLASS_WITH_SCROLLBAR_MAX_WIDTH)
+                    );
+                    message.getStyleClass().add(messageStyleClass);
+                }
             }
 
             private String getMessageStyleClass(double listWidth, double cellWidth) {

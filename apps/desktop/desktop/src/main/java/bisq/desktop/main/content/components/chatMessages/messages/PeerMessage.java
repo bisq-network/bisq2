@@ -50,7 +50,8 @@ public class PeerMessage extends BubbleMessage {
         VBox.setMargin(userNameAndDateHBox, new Insets(-5, 0, -5, 10));
         messageHBox.getChildren().setAll(messageBgHBox, Spacer.fillHBox());
         reactionsHBox.getChildren().setAll(replyIcon, pmIcon, moreOptionsIcon, Spacer.fillHBox());
-        getChildren().setAll(userNameAndDateHBox, messageHBox, reactionsHBox);
+
+        contentVBox.getChildren().setAll(userNameAndDateHBox, messageHBox, reactionsHBox);
     }
 
     @Override
