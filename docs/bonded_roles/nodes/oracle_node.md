@@ -24,60 +24,7 @@ sudo apt-get install openjdk-11-jdk
 
 ### Check out and build Bisq 2
 
-```
-git clone https://github.com/bisq-network/bisq2.git
-cd bisq2
-./gradlew build --no-daemon
-```
-
-- Set up the `oracle` systemd service
-
-  - Create the `run_oracle.sh` launch script:
-  ```
-  #!/bin/bash
-  java -Xms1500M -Xmx2000M 
-	-Dapplication.oracleNode.privateKey=[YOUR PRIV KEY] \
-	-Dapplication.oracleNode.publicKey=[YOUR PUB KEY] \
-	-Dapplication.oracleNode.bisq1Bridge.httpService.url=http://localhost:[DAO-NODE PORT] \
-	-Dapplication.oracleNode.profileId=[YOUR PROFILE ID] \
-	-Dapplication.oracleNode.bondUserName=[YOUR BISQ1 BOND USER NAME] \
-	-Dapplication.oracleNode.signatureBase64=[SIG] \
-	-Dapplication.oracleNode.staticPublicKeysProvided=[true | false] \
-    -Dapplication.devMode=[true | false] \
-	-jar [PATH TO bisq2]/oracle_node_app/build/libs/oracle_node_app-2.0.0-all.jar
-  ```
-
-> _Noe:Only if you run a root node and your pub key is already added to releases as hard coded pub key you can set
-the `application.oracleNode.staticPublicKeysProvided` value to `true`. Set devMode to `true` in case you use the dev
-keys._
-
-- Set correct permissions: `sudo chmod +x /root/run_oracle.sh`
-
-- Add service `/etc/systemd/system/oracle.service`:
-
-  ```
-  [Unit]
-  Description=oracle
-  
-  [Service]
-  ExecStart=/root/run_oracle.sh
-  Restart=on-failure
-  
-  [Install]
-  WantedBy=multi-user.target
-  ```
-
-- Start/Restart/Stop the service:
-
-  ```
-  systemctl start oracle.service
-  systemctl restart oracle.service
-  systemctl stop oracle.service
-  ```
-
-- Check the logs: `journalctl --unit oracle -n 100 --no-pager` \
-  Or:
-  `tail -100 [USER]/.local/share/OracleNode/bisq.log`
+See: `https://github.com/bisq-network/bisq2/blob/main/apps/oracle-node/oracle-node-app/service-scripts/README.md`
 
 For running a localhost dev oracle node use following JVM arguments:
 
