@@ -19,10 +19,24 @@ package bisq.network.p2p.services.data.inventory.filter;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.util.ProtobufUtils;
+import bisq.network.p2p.node.Feature;
+
+import java.util.Optional;
 
 public enum InventoryFilterType implements ProtoEnum {
     HASH_SET,
     MINI_SKETCH;
+
+    public static Optional<InventoryFilterType> fromFeature(Feature feature) {
+        switch (feature) {
+            case INVENTORY_HASH_SET:
+                return Optional.of(HASH_SET);
+            case INVENTORY_MINI_SKETCH:
+                return Optional.of(MINI_SKETCH);
+            default:
+                return Optional.empty();
+        }
+    }
 
     @Override
     public bisq.network.protobuf.InventoryFilterType toProto() {

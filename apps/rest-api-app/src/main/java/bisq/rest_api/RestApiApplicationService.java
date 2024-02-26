@@ -110,7 +110,8 @@ public class RestApiApplicationService extends ApplicationService {
                 getConfig("network")),
                 persistenceService,
                 securityService.getKeyBundleService(),
-                securityService.getProofOfWorkService());
+                securityService.getHashCashProofOfWorkService(),
+                securityService.getEquihashProofOfWorkService());
 
         identityService = new IdentityService(persistenceService,
                 securityService.getKeyBundleService(),
@@ -130,7 +131,7 @@ public class RestApiApplicationService extends ApplicationService {
                 identityService,
                 networkService,
                 bondedRolesService,
-                securityService.getProofOfWorkService());
+                securityService.getHashCashProofOfWorkService());
 
         settingsService = new SettingsService(persistenceService);
 
@@ -139,7 +140,6 @@ public class RestApiApplicationService extends ApplicationService {
         offerService = new OfferService(networkService, identityService, persistenceService);
 
         chatService = new ChatService(persistenceService,
-                securityService,
                 networkService,
                 userService,
                 settingsService,

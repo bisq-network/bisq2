@@ -15,9 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.security.pow;
+package bisq.security.pow.hashcash;
 
 import bisq.security.DigestUtil;
+import bisq.security.pow.ProofOfWork;
+import bisq.security.pow.ProofOfWorkService;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.primitives.Longs;
 import lombok.extern.slf4j.Slf4j;
@@ -32,8 +34,8 @@ import java.util.concurrent.CompletableFuture;
  * See https://www.hashcash.org/papers/hashcash.pdf
  */
 @Slf4j
-public class HashCashService extends ProofOfWorkService {
-    public HashCashService() {
+public class HashCashProofOfWorkService extends ProofOfWorkService {
+    public HashCashProofOfWorkService() {
     }
 
     @Override

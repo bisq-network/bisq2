@@ -17,50 +17,72 @@
 
 package bisq.network.p2p.node.authorization;
 
-import bisq.common.application.DevMode;
-import bisq.common.encoding.Hex;
-import bisq.common.util.ByteArrayUtils;
-import bisq.common.util.MathUtils;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
+import bisq.network.p2p.node.Feature;
+import bisq.network.p2p.node.authorization.token.equi_hash.EquiHashTokenService;
+import bisq.network.p2p.node.authorization.token.hash_cash.HashCashTokenService;
 import bisq.network.p2p.node.network_load.NetworkLoad;
-import bisq.security.DigestUtil;
-import bisq.security.pow.ProofOfWork;
-import bisq.security.pow.ProofOfWorkService;
-import com.google.common.base.Charsets;
+import bisq.security.pow.equihash.EquihashProofOfWorkService;
+import bisq.security.pow.hashcash.HashCashProofOfWorkService;
+import com.google.common.annotations.VisibleForTesting;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.math.BigInteger;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class AuthorizationService {
-    public final static int MIN_DIFFICULTY = 128;  // Math.pow(2, 7) = 128; 3 ms on old CPU, 1 ms on high-end CPU
-    public final static int MAX_DIFFICULTY = 65536;  // Math.pow(2, 16) = 262144; 1000 ms on old CPU, 60 ms on high-end CPU
-    public final static int DIFFICULTY_TOLERANCE = 50_000;
+    @Getter
+    public static final class Config {
+        private final List<AuthorizationTokenType> myPreferredAuthorizationTokenTypes; // Lower list index means higher preference
 
-    private final ProofOfWorkService proofOfWorkService;
-    // Keep track of message counter per connection to avoid reuse of pow
-    private final Map<String, Set<Integer>> receivedMessageCountersByConnectionId = new ConcurrentHashMap<>();
+        public static Config from(com.typesafe.config.Config config) {
+            return new Config(new ArrayList<>(config.getEnumList(AuthorizationTokenType.class, "myPreferredAuthorizationTokenTypes")));
+        }
 
-    public AuthorizationService(ProofOfWorkService proofOfWorkService) {
-        this.proofOfWorkService = proofOfWorkService;
+        public Config(List<AuthorizationTokenType> myPreferredAuthorizationTokenTypes) {
+            this.myPreferredAuthorizationTokenTypes = myPreferredAuthorizationTokenTypes;
+        }
+    }
+
+    private final List<AuthorizationTokenType> myPreferredAuthorizationTokenTypes; // Lower list index means higher preference
+    private final Map<AuthorizationTokenType, AuthorizationTokenService<? extends AuthorizationToken>> supportedServices = new HashMap<>();
+
+    public AuthorizationService(Config config,
+                                HashCashProofOfWorkService hashCashProofOfWorkService,
+                                EquihashProofOfWorkService equihashProofOfWorkService,
+                                Set<Feature> features) {
+        myPreferredAuthorizationTokenTypes = config.getMyPreferredAuthorizationTokenTypes();
+
+        features.stream()
+                .flatMap(feature -> AuthorizationTokenType.fromFeature(feature).stream())
+                .forEach(supportedFilterType -> {
+                    switch (supportedFilterType) {
+                        case HASH_CASH:
+                            supportedServices.put(supportedFilterType, new HashCashTokenService(hashCashProofOfWorkService));
+                            break;
+                        case EQUI_HASH:
+                            supportedServices.put(supportedFilterType, new EquiHashTokenService(equihashProofOfWorkService));
+                            break;
+                        default:
+                            throw new IllegalArgumentException("Undefined filterType " + supportedFilterType);
+                    }
+                });
     }
 
     public AuthorizationToken createToken(EnvelopePayloadMessage message,
                                           NetworkLoad networkLoad,
                                           String peerAddress,
-                                          int messageCounter) {
-        long ts = System.currentTimeMillis();
-        double difficulty = calculateDifficulty(message, networkLoad);
-        byte[] challenge = getChallenge(peerAddress, messageCounter);
-        byte[] payload = getPayload(message);
-        AuthorizationToken token = proofOfWorkService.mint(payload, challenge, difficulty)
-                .thenApply(proofOfWork -> new AuthorizationToken(proofOfWork, messageCounter))
-                .join();
-        log.debug("Create token for {} took {} ms\n token={}, peersLoad={}, peerAddress={}",
-                message.getClass().getSimpleName(), System.currentTimeMillis() - ts, token, networkLoad, peerAddress);
-        return token;
+                                          int messageCounter,
+                                          List<Feature> features) {
+        AuthorizationTokenType preferredAuthorizationTokenType = selectAuthorizationTokenType(features);
+        return supportedServices.get(preferredAuthorizationTokenType).createToken(message,
+                networkLoad,
+                peerAddress,
+                messageCounter);
     }
 
     public boolean isAuthorized(EnvelopePayloadMessage message,
@@ -68,7 +90,12 @@ public class AuthorizationService {
                                 NetworkLoad currentNetworkLoad,
                                 String connectionId,
                                 String myAddress) {
-        return isAuthorized(message, authorizationToken, currentNetworkLoad, Optional.empty(), connectionId, myAddress);
+        return isAuthorized(message,
+                authorizationToken,
+                currentNetworkLoad,
+                Optional.empty(),
+                connectionId,
+                myAddress);
     }
 
     public boolean isAuthorized(EnvelopePayloadMessage message,
@@ -77,141 +104,38 @@ public class AuthorizationService {
                                 Optional<NetworkLoad> previousNetworkLoad,
                                 String connectionId,
                                 String myAddress) {
-        ProofOfWork proofOfWork = authorizationToken.getProofOfWork();
-        int messageCounter = authorizationToken.getMessageCounter();
-
-        // Verify that pow is not reused
-        Set<Integer> receivedMessageCounters;
-        if (receivedMessageCountersByConnectionId.containsKey(connectionId)) {
-            receivedMessageCounters = receivedMessageCountersByConnectionId.get(connectionId);
-            if (receivedMessageCounters.contains(messageCounter)) {
-                log.warn("Invalid receivedMessageCounters. We received the proofOfWork for that message already.");
-                return false;
-            }
-        } else {
-            receivedMessageCounters = new HashSet<>();
-            receivedMessageCountersByConnectionId.put(connectionId, receivedMessageCounters);
-        }
-        receivedMessageCounters.add(messageCounter);
-
-        // Verify payload
-        byte[] payload = getPayload(message);
-        if (!Arrays.equals(payload, proofOfWork.getPayload())) {
-            log.warn("Message payload not matching proof of work payload. " +
-                            "getPayload(message)={}; proofOfWork.getPayload()={}; " +
-                            "getPayload(message).length={}; proofOfWork.getPayload().length={}",
-                    Hex.encode(payload), Hex.encode(proofOfWork.getPayload()),
-                    payload.length, proofOfWork.getPayload().length);
+        AuthorizationTokenType authorizationTokenType = authorizationToken.getAuthorizationTokenType();
+        if (!supportedServices.containsKey(authorizationTokenType)) {
+            log.warn("Not supported authorizationTokenType {}", authorizationTokenType);
             return false;
         }
-
-        // Verify challenge
-        if (!Arrays.equals(getChallenge(myAddress, messageCounter), proofOfWork.getChallenge())) {
-            log.warn("Invalid challenge");
-            return false;
-        }
-
-        // Verify difficulty
-        if (isDifficultyInvalid(message, proofOfWork.getDifficulty(), currentNetworkLoad, previousNetworkLoad)) {
-            return false;
-        }
-        return proofOfWorkService.verify(proofOfWork);
+        return supportedServices.get(authorizationTokenType).isAuthorized(message,
+                authorizationToken,
+                currentNetworkLoad,
+                previousNetworkLoad,
+                connectionId,
+                myAddress);
     }
 
-    // We check the difficulty used for the proof of work if it matches the current network load or if available the
-    // previous network load. If the difference is inside a tolerance range we consider it still valid, but it should
-    // be investigated why that happens, thus we log those cases.
-    private boolean isDifficultyInvalid(EnvelopePayloadMessage message,
-                                        double proofOfWorkDifficulty,
-                                        NetworkLoad currentNetworkLoad,
-                                        Optional<NetworkLoad> previousNetworkLoad) {
-        log.debug("isDifficultyInvalid/currentNetworkLoad: message.getCostFactor()={}, networkLoad.getValue()={}",
-                message.getCostFactor(), currentNetworkLoad.getValue());
-        double expectedDifficulty = calculateDifficulty(message, currentNetworkLoad);
-        if (proofOfWorkDifficulty >= expectedDifficulty) {
-            // We don't want to call calculateDifficulty with the previousNetworkLoad if we are not in dev mode.
-            if (DevMode.isDevMode() && proofOfWorkDifficulty > expectedDifficulty && previousNetworkLoad.isPresent()) {
-                // Might be that the difficulty was using the previous network load
-                double expectedPreviousDifficulty = calculateDifficulty(message, previousNetworkLoad.get());
-                if (proofOfWorkDifficulty != expectedPreviousDifficulty) {
-                    log.warn("Unexpected high difficulty provided. This might be a bug (but valid as provided difficulty is larger as expected): " +
-                                    "expectedDifficulty={}; expectedPreviousDifficulty={}; proofOfWorkDifficulty={}",
-                            expectedDifficulty, expectedPreviousDifficulty, proofOfWorkDifficulty);
-                }
-            }
-            return false;
-        }
-
-        double missing = expectedDifficulty - proofOfWorkDifficulty;
-        double deviationToTolerance = MathUtils.roundDouble(missing / DIFFICULTY_TOLERANCE * 100, 2);
-        double deviationToExpectedDifficulty = MathUtils.roundDouble(missing / expectedDifficulty * 100, 2);
-        if (previousNetworkLoad.isEmpty()) {
-            log.debug("No previous network load available");
-            if (missing <= DIFFICULTY_TOLERANCE) {
-                log.info("Difficulty of current network load deviates from the proofOfWork difficulty but is inside the tolerated range.\n" +
-                                "deviationToTolerance={}%; deviationToExpectedDifficulty={}%; expectedDifficulty={}; proofOfWorkDifficulty={}; DIFFICULTY_TOLERANCE={}",
-                        deviationToTolerance, deviationToExpectedDifficulty, expectedDifficulty, proofOfWorkDifficulty, DIFFICULTY_TOLERANCE);
-                return false;
-            }
-
-            log.warn("Difficulty of current network load deviates from the proofOfWork difficulty and is outside the tolerated range.\n" +
-                            "deviationToTolerance={}%; deviationToExpectedDifficulty={}%; expectedDifficulty={}; proofOfWorkDifficulty={}; DIFFICULTY_TOLERANCE={}",
-                    deviationToTolerance, deviationToExpectedDifficulty, expectedDifficulty, proofOfWorkDifficulty, DIFFICULTY_TOLERANCE);
-            return true;
-        }
-
-        log.debug("isDifficultyInvalid/previousNetworkLoad: message.getCostFactor()={}, networkLoad.getValue()={}",
-                message.getCostFactor(), previousNetworkLoad.get().getValue());
-        double expectedPreviousDifficulty = calculateDifficulty(message, previousNetworkLoad.get());
-        if (proofOfWorkDifficulty >= expectedPreviousDifficulty) {
-            log.debug("Difficulty of previous network load is correct");
-            if (proofOfWorkDifficulty > expectedPreviousDifficulty) {
-                log.warn("Unexpected high difficulty provided. This might be a bug (but valid as provided difficulty is larger as expected): " +
-                                "expectedPreviousDifficulty={}; proofOfWorkDifficulty={}",
-                        expectedPreviousDifficulty, proofOfWorkDifficulty);
-            }
-            return false;
-        }
-
-        if (missing <= DIFFICULTY_TOLERANCE) {
-            log.info("Difficulty of current network load deviates from the proofOfWork difficulty but is inside the tolerated range.\n" +
-                            "deviationToTolerance={}%; deviationToExpectedDifficulty={}%; expectedDifficulty={}; proofOfWorkDifficulty={}; DIFFICULTY_TOLERANCE={}",
-                    deviationToTolerance, deviationToExpectedDifficulty, expectedDifficulty, proofOfWorkDifficulty, DIFFICULTY_TOLERANCE);
-            return false;
-        }
-
-        double missingUsingPrevious = expectedPreviousDifficulty - proofOfWorkDifficulty;
-        if (missingUsingPrevious <= DIFFICULTY_TOLERANCE) {
-            deviationToTolerance = MathUtils.roundDouble(missingUsingPrevious / DIFFICULTY_TOLERANCE * 100, 2);
-            deviationToExpectedDifficulty = MathUtils.roundDouble(missingUsingPrevious / expectedPreviousDifficulty * 100, 2);
-            log.info("Difficulty of previous network load deviates from the proofOfWork difficulty but is inside the tolerated range.\n" +
-                            "deviationToTolerance={}%; deviationToExpectedDifficulty={}%; expectedDifficulty={}; proofOfWorkDifficulty={}; DIFFICULTY_TOLERANCE={}",
-                    deviationToTolerance, deviationToExpectedDifficulty, expectedPreviousDifficulty, proofOfWorkDifficulty, DIFFICULTY_TOLERANCE);
-            return false;
-        }
-
-        log.warn("Difficulties of current and previous network load deviate from the proofOfWork difficulty and are outside the tolerated range.\n" +
-                        "deviationToTolerance={}%; deviationToExpectedDifficulty={}%; expectedDifficulty={}; proofOfWorkDifficulty={}; DIFFICULTY_TOLERANCE={}",
-                deviationToTolerance, deviationToExpectedDifficulty, expectedDifficulty, proofOfWorkDifficulty, DIFFICULTY_TOLERANCE);
-        return true;
+    // Get first match with peers feature based on order of myPreferredFilterTypes
+    private AuthorizationTokenType selectAuthorizationTokenType(List<Feature> peersFeatures) {
+        return selectAuthorizationTokenType(myPreferredAuthorizationTokenTypes, peersFeatures);
     }
 
-    private byte[] getPayload(EnvelopePayloadMessage message) {
-        return message.toProto().toByteArray();
+    @VisibleForTesting
+    static AuthorizationTokenType selectAuthorizationTokenType(List<AuthorizationTokenType> myPreferredAuthorizationTokenTypes,
+                                                               List<Feature> peersFeatures) {
+        checkArgument(!myPreferredAuthorizationTokenTypes.isEmpty(), "myPreferredAuthorizationTokenTypes must not be empty");
+        List<AuthorizationTokenType> peersAuthorizationTokenTypes = toAuthorizationTypes(peersFeatures);
+        return myPreferredAuthorizationTokenTypes.stream()
+                .filter(peersAuthorizationTokenTypes::contains)
+                .findFirst()
+                .orElse(myPreferredAuthorizationTokenTypes.get(0));
     }
 
-    private byte[] getChallenge(String peerAddress, int messageCounter) {
-        return DigestUtil.sha256(ByteArrayUtils.concat(peerAddress.getBytes(Charsets.UTF_8),
-                BigInteger.valueOf(messageCounter).toByteArray()));
-    }
-
-    private double calculateDifficulty(EnvelopePayloadMessage message, NetworkLoad networkLoad) {
-        double messageCostFactor = MathUtils.bounded(0.01, 1, message.getCostFactor());
-        double loadValue = MathUtils.bounded(0.01, 1, networkLoad.getValue());
-        double difficulty = MAX_DIFFICULTY * messageCostFactor + MAX_DIFFICULTY * loadValue;
-        log.debug("calculated difficulty={}, Math.pow(2, {}), messageCostFactor={}, loadValue={}",
-                difficulty, MathUtils.roundDouble(Math.log(difficulty) / MathUtils.LOG2, 2),
-                messageCostFactor, loadValue);
-        return MathUtils.bounded(MIN_DIFFICULTY, MAX_DIFFICULTY, difficulty);
+    private static List<AuthorizationTokenType> toAuthorizationTypes(List<Feature> features) {
+        return features.stream()
+                .flatMap(feature -> AuthorizationTokenType.fromFeature(feature).stream())
+                .collect(Collectors.toList());
     }
 }

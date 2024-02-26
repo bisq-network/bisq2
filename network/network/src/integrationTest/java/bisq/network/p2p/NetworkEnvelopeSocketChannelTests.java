@@ -23,14 +23,15 @@ import bisq.network.common.Address;
 import bisq.network.common.TransportType;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.Capability;
+import bisq.network.p2p.node.Feature;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
+import bisq.network.p2p.node.authorization.AuthorizationTokenType;
 import bisq.network.p2p.node.envelope.NetworkEnvelopeSocketChannel;
 import bisq.network.p2p.node.handshake.ConnectionHandshake;
 import bisq.network.p2p.node.network_load.NetworkLoad;
-import bisq.persistence.PersistenceService;
-import bisq.security.SecurityService;
-import bisq.security.pow.ProofOfWorkService;
+import bisq.security.pow.equihash.EquihashProofOfWorkService;
+import bisq.security.pow.hashcash.HashCashProofOfWorkService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -48,9 +49,9 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
 
 public class NetworkEnvelopeSocketChannelTests {
 
@@ -195,11 +196,11 @@ public class NetworkEnvelopeSocketChannelTests {
         AuthorizationToken token = authorizationService.createToken(request,
                 new NetworkLoad(),
                 responderCapability.getAddress().getFullAddress(),
-                0);
+                0, new ArrayList<>());
         return new NetworkEnvelope(token, request);
     }
 
-    private AuthorizationService createAuthorizationService() {
+   /* private AuthorizationService createAuthorizationService() {
         String baseDir = tmpDir.toAbsolutePath().toString();
         PersistenceService persistenceService = new PersistenceService(baseDir);
         SecurityService securityService = new SecurityService(persistenceService, mock(SecurityService.Config.class));
@@ -207,5 +208,13 @@ public class NetworkEnvelopeSocketChannelTests {
 
         ProofOfWorkService proofOfWorkService = securityService.getProofOfWorkService();
         return new AuthorizationService(proofOfWorkService);
+    }*/
+
+    private AuthorizationService createAuthorizationService() {
+        return new AuthorizationService(new AuthorizationService.Config(List.of(AuthorizationTokenType.HASH_CASH)),
+                new HashCashProofOfWorkService(),
+                new EquihashProofOfWorkService(),
+                Set.of(Feature.AUTHORIZATION_HASH_CASH));
     }
+
 }

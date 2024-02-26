@@ -326,7 +326,8 @@ public class Node implements Connection.Handler {
             AuthorizationToken token = authorizationService.createToken(envelopePayloadMessage,
                     connection.getPeersNetworkLoadSnapshot().getCurrentNetworkLoad(),
                     connection.getPeerAddress().getFullAddress(),
-                    connection.getSentMessageCounter().incrementAndGet());
+                    connection.getSentMessageCounter().incrementAndGet(),
+                    connection.getPeersCapability().getFeatures());
             return connection.send(envelopePayloadMessage, token);
         } catch (Throwable throwable) {
             if (connection.isRunning()) {
@@ -477,7 +478,9 @@ public class Node implements Connection.Handler {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void handleNetworkMessage(EnvelopePayloadMessage envelopePayloadMessage, AuthorizationToken authorizationToken, Connection connection) {
+    public void handleNetworkMessage(EnvelopePayloadMessage envelopePayloadMessage,
+                                     AuthorizationToken authorizationToken,
+                                     Connection connection) {
         if (isShutdown()) {
             return;
         }
@@ -511,7 +514,9 @@ public class Node implements Connection.Handler {
         }
     }
 
-    public void handleNetworkMessage(EnvelopePayloadMessage envelopePayloadMessage, AuthorizationToken authorizationToken, ConnectionChannel connection) {
+    public void handleNetworkMessage(EnvelopePayloadMessage envelopePayloadMessage,
+                                     AuthorizationToken authorizationToken,
+                                     ConnectionChannel connection) {
         if (isShutdown()) {
             return;
         }

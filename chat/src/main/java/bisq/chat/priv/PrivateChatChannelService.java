@@ -26,7 +26,6 @@ import bisq.network.identity.NetworkId;
 import bisq.network.identity.NetworkIdWithKeyPair;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.persistence.PersistableStore;
-import bisq.security.pow.ProofOfWorkService;
 import bisq.user.UserService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
@@ -44,15 +43,11 @@ public abstract class PrivateChatChannelService<
         C extends PrivateChatChannel<M>,
         S extends PersistableStore<S>
         > extends ChatChannelService<M, C, S> implements ConfidentialMessageService.Listener {
-    protected final ProofOfWorkService proofOfWorkService;
 
     public PrivateChatChannelService(NetworkService networkService,
                                      UserService userService,
-                                     ProofOfWorkService proofOfWorkService,
                                      ChatChannelDomain chatChannelDomain) {
         super(networkService, userService, chatChannelDomain);
-
-        this.proofOfWorkService = proofOfWorkService;
     }
 
 

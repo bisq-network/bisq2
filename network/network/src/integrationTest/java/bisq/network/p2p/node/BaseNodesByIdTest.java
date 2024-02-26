@@ -21,6 +21,7 @@ import bisq.network.identity.NetworkId;
 import bisq.network.p2p.BaseNetworkTest;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.authorization.AuthorizationService;
+import bisq.network.p2p.node.authorization.AuthorizationTokenType;
 import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
 import bisq.network.p2p.node.transport.TransportService;
 import bisq.network.p2p.services.peergroup.BanList;
@@ -28,9 +29,12 @@ import bisq.network.p2p.services.peergroup.keepalive.Ping;
 import bisq.network.p2p.services.peergroup.keepalive.Pong;
 import bisq.persistence.PersistenceService;
 import bisq.security.keys.KeyBundleService;
-import bisq.security.pow.HashCashService;
+import bisq.security.pow.equihash.EquihashProofOfWorkService;
+import bisq.security.pow.hashcash.HashCashProofOfWorkService;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -47,7 +51,12 @@ public abstract class BaseNodesByIdTest extends BaseNetworkTest {
         PersistenceService persistenceService = new PersistenceService("");
         KeyBundleService keyBundleService = new KeyBundleService(persistenceService, mock(KeyBundleService.Config.class));
 
-        NodesById nodesById = new NodesById(banList, nodeConfig, keyBundleService, transportService, new NetworkLoadSnapshot(), new AuthorizationService(new HashCashService()));
+        NodesById nodesById = new NodesById(banList,
+                nodeConfig,
+                keyBundleService,
+                transportService,
+                new NetworkLoadSnapshot(),
+                createAuthorizationService());
         long ts = System.currentTimeMillis();
         numNodes = 5;
         int numRepeats = 1;
@@ -55,6 +64,13 @@ public abstract class BaseNodesByIdTest extends BaseNetworkTest {
             doMessageRoundTrip(numNodes, nodesById, transportService);
         }
         log.error("MessageRoundTrip for {} nodes repeated {} times took {} ms", numNodes, numRepeats, System.currentTimeMillis() - ts);
+    }
+
+    private AuthorizationService createAuthorizationService() {
+        return new AuthorizationService(new AuthorizationService.Config(List.of(AuthorizationTokenType.HASH_CASH)),
+                new HashCashProofOfWorkService(),
+                new EquihashProofOfWorkService(),
+                Set.of(Feature.AUTHORIZATION_HASH_CASH));
     }
 
     private void doMessageRoundTrip(int numNodes, NodesById nodesById, TransportService transportService) throws InterruptedException {
@@ -137,7 +153,12 @@ public abstract class BaseNodesByIdTest extends BaseNetworkTest {
         TransportService transportService = TransportService.create(nodeConfig.getTransportType(), nodeConfig.getTransportConfig());
         PersistenceService persistenceService = new PersistenceService("");
         KeyBundleService keyBundleService = new KeyBundleService(persistenceService, mock(KeyBundleService.Config.class));
-        NodesById nodesById = new NodesById(banList, nodeConfig, keyBundleService, transportService, new NetworkLoadSnapshot(), new AuthorizationService(new HashCashService()));
+        NodesById nodesById = new NodesById(banList,
+                nodeConfig,
+                keyBundleService,
+                transportService,
+                new NetworkLoadSnapshot(),
+                createAuthorizationService());
         initializeServers(2, nodesById);
         nodesById.shutdown().join();
     }

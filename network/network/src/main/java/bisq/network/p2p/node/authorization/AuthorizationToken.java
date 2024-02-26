@@ -18,34 +18,36 @@
 package bisq.network.p2p.node.authorization;
 
 import bisq.common.proto.NetworkProto;
-import bisq.security.pow.ProofOfWork;
-import lombok.Data;
+import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.network.p2p.node.authorization.token.equi_hash.EquiHashToken;
+import bisq.network.p2p.node.authorization.token.hash_cash.HashCashToken;
+import lombok.Getter;
 
-@Data
-public final class AuthorizationToken implements NetworkProto {
-    private final ProofOfWork proofOfWork;
-    private final int messageCounter;
+public abstract class AuthorizationToken implements NetworkProto {
+    @Getter
+    protected final AuthorizationTokenType authorizationTokenType;
 
-    public AuthorizationToken(ProofOfWork proofOfWork, int messageCounter) {
-        this.proofOfWork = proofOfWork;
-        this.messageCounter = messageCounter;
-
-        verify();
+    public AuthorizationToken(AuthorizationTokenType authorizationTokenType) {
+        this.authorizationTokenType = authorizationTokenType;
     }
 
-    @Override
-    public void verify() {
-    }
-
-    @Override
-    public bisq.network.protobuf.AuthorizationToken toProto() {
+    public bisq.network.protobuf.AuthorizationToken.Builder getAuthorizationTokenBuilder() {
         return bisq.network.protobuf.AuthorizationToken.newBuilder()
-                .setProofOfWork(proofOfWork.toProto())
-                .setMessageCounter(messageCounter)
-                .build();
+                .setAuthorizationTokenType(authorizationTokenType.toProto());
     }
 
     public static AuthorizationToken fromProto(bisq.network.protobuf.AuthorizationToken proto) {
-        return new AuthorizationToken(ProofOfWork.fromProto(proto.getProofOfWork()), proto.getMessageCounter());
+        switch (proto.getMessageCase()) {
+            case HASHCASHTOKEN: {
+                return HashCashToken.fromProto(proto);
+            }
+            case EQUIHASHTOKEN: {
+                return EquiHashToken.fromProto(proto);
+            }
+        }
+        throw new UnresolvableProtobufMessageException(proto);
     }
+
+    @Override
+    abstract public bisq.network.protobuf.AuthorizationToken toProto();
 }

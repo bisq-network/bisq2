@@ -72,7 +72,7 @@ public class InventoryService {
         StorageService storageService = dataService.getStorageService();
 
         features.stream()
-                .flatMap(feature -> InventoryFilter.fromFeature(feature).stream())
+                .flatMap(feature -> InventoryFilterType.fromFeature(feature).stream())
                 .forEach(supportedFilterType -> {
                     switch (supportedFilterType) {
                         case HASH_SET:

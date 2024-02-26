@@ -20,8 +20,8 @@ package bisq.security;
 import bisq.common.application.Service;
 import bisq.persistence.PersistenceService;
 import bisq.security.keys.KeyBundleService;
-import bisq.security.pow.HashCashService;
-import bisq.security.pow.ProofOfWorkService;
+import bisq.security.pow.equihash.EquihashProofOfWorkService;
+import bisq.security.pow.hashcash.HashCashProofOfWorkService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -45,16 +45,18 @@ public class SecurityService implements Service {
     @Getter
     private final KeyBundleService keyBundleService;
     @Getter
-    private final ProofOfWorkService proofOfWorkService;
+    private final HashCashProofOfWorkService hashCashProofOfWorkService;
+    @Getter
+    private final EquihashProofOfWorkService equihashProofOfWorkService;
 
     public SecurityService(PersistenceService persistenceService, Config config) {
         keyBundleService = new KeyBundleService(persistenceService, KeyBundleService.Config.from(config.getKeyBundle()));
-        proofOfWorkService = new HashCashService();
+        hashCashProofOfWorkService = new HashCashProofOfWorkService();
+        equihashProofOfWorkService = new EquihashProofOfWorkService();
     }
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        proofOfWorkService.initialize();
         return keyBundleService.initialize();
     }
 
