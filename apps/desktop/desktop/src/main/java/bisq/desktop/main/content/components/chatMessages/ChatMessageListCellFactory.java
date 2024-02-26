@@ -123,11 +123,9 @@ final class ChatMessageListCellFactory
                 }
 
                 // With scrollbar
-                if (cellWidth < CHAT_BOX_MAX_WIDTH) {
-                    return STYLE_CLASS_WITH_SCROLLBAR_FULL_WIDTH;
-                } else {
-                    return STYLE_CLASS_WITH_SCROLLBAR_MAX_WIDTH;
-                }
+                return cellWidth < CHAT_BOX_MAX_WIDTH
+                    ? STYLE_CLASS_WITH_SCROLLBAR_FULL_WIDTH
+                    : STYLE_CLASS_WITH_SCROLLBAR_MAX_WIDTH;
             }
         };
     }
