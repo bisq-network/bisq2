@@ -12,7 +12,7 @@ application {
 
 javafx {
     version = "17.0.1"
-    modules = listOf("javafx.controls")
+    modules = listOf("javafx.controls", "javafx.media")
 }
 
 dependencies {
