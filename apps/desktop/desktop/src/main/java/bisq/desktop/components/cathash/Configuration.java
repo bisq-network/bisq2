@@ -57,10 +57,11 @@ public class Configuration {
     }
 
     public String[] convertToFacetParts(byte[] bucketValues) {
-        if (bucketValues.length != BUCKET_COUNT) throw new IllegalArgumentException();
+        if (bucketValues.length != BUCKET_COUNT) {
+            throw new IllegalArgumentException();
+        }
 
         String[] paths = new String[FACET_COUNT];
-
         for (int facet = 0; facet < FACET_COUNT; facet++) {
             int bucketValue = bucketValues[facet];
             paths[facet] = generatePath(FACET_PATH_TEMPLATES[facet], bucketValue);
