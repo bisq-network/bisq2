@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.components.robohash;
+package bisq.desktop.components.cathash;
 
 import bisq.common.data.ByteArray;
 import bisq.desktop.common.utils.ImageUtil;
@@ -28,7 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
 // Derived from https://github.com/neuhalje/android-robohash
 // Number of combinations: 3 * 15 * 15 * 15 * 15 * 15 * 15  = 34171875 (2 ^ 25)
 @Slf4j
-public class RoboHash {
+public class CatHash {
     private static final int MAX_CACHE_SIZE = 10000;
     private static final HandleFactory HANDLE_FACTORY = new HandleFactory();
     private static final ConcurrentHashMap<ByteArray, Image> CACHE = new ConcurrentHashMap<>();
@@ -61,7 +61,7 @@ public class RoboHash {
         long ts = System.currentTimeMillis();
         byte[] bucketValues = handle.bucketValues();
         String[] paths = configuration.convertToFacetParts(bucketValues);
-        log.debug("Generated paths for RoboHash image in {} ms", System.currentTimeMillis() - ts); // typically <1ms
+        log.debug("Generated paths for CatHash image in {} ms", System.currentTimeMillis() - ts); // typically <1ms
         return ImageUtil.composeImage(paths, configuration.width(), configuration.height());
     }
 }

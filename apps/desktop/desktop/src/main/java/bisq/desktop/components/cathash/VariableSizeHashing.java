@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.components.robohash;
+package bisq.desktop.components.cathash;
 
 import java.math.BigInteger;
 import java.util.UUID;

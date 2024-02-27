@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.chat.sidebar;
 
 import bisq.desktop.components.controls.BisqTooltip;
-import bisq.desktop.components.robohash.RoboHash;
+import bisq.desktop.components.cathash.CatHash;
 import bisq.i18n.Res;
 import bisq.user.banned.BannedUserService;
 import bisq.user.profile.UserProfile;
@@ -93,7 +93,7 @@ public class ChannelSidebarUserProfile implements Comparable<ChannelSidebarUserP
 
             String userName = userProfile.getUserName();
             model.userName.set(isUserProfileBanned() ? Res.get("user.userProfile.userName.banned", userName) : userName);
-            model.roboHashImage.set(RoboHash.getImage(userProfile.getPubKeyHash()));
+            model.roboHashImage.set(CatHash.getImage(userProfile.getPubKeyHash()));
         }
 
         @Override

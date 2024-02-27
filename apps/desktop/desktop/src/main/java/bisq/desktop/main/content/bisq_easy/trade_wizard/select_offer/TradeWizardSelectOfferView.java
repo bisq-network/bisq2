@@ -24,7 +24,7 @@ import bisq.common.monetary.PriceQuote;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.robohash.RoboHash;
+import bisq.desktop.components.cathash.CatHash;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.main.content.components.ReputationScoreDisplay;
@@ -249,7 +249,7 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
                         if (item != null && !empty) {
                             userName.setText(item.getMakerUserName());
                             item.getAuthorUserProfile().ifPresent(userProfile ->
-                                    roboIcon.setImage(RoboHash.getImage(userProfile.getPubKeyHash())));
+                                    roboIcon.setImage(CatHash.getImage(userProfile.getPubKeyHash())));
                             setGraphic(hBox);
                         } else {
                             setGraphic(null);
