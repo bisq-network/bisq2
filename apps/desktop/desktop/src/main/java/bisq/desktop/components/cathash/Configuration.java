@@ -24,14 +24,14 @@ public class Configuration {
     private final static String ROOT = "";
 
     private static final int BG0_COUNT = 15;
-    private static final int BG1_COUNT = 31;
+    private static final int BG1_COUNT = 15;
     private static final int EARS0_COUNT = 15;
     private static final int EARS1_COUNT = 2;
     private static final int FACE0_COUNT = 15;
-    private static final int FACE1_COUNT = 15;
+    private static final int FACE1_COUNT = 8;
     private static final int EYES0_COUNT = 15;
     private static final int NOSE0_COUNT = 5;
-    private static final int WHISKERS0_COUNT = 7;
+    private static final int WHISKERS0_COUNT = 6;
 
     private final static int BUCKET_COUNT = 9;
     private final static int FACET_COUNT = 9;
@@ -44,15 +44,15 @@ public class Configuration {
     static {
         String postFix = ".png";
         FACET_PATH_TEMPLATES = new String[]{
-                ROOT + "bg0/bg0_#ITEM#" + postFix,
-                ROOT + "bg1/bg1_#ITEM#" + postFix,
-                ROOT + "ears0/ears0_#ITEM#" + postFix,
-                ROOT + "ears1/ears1_#ITEM#" + postFix,
-                ROOT + "face0/face0_#ITEM#" + postFix,
-                ROOT + "face1/face1_#ITEM#" + postFix,
-                ROOT + "eyes0/eyes0_#ITEM#" + postFix,
-                ROOT + "nose0/nose0_#ITEM#" + postFix,
-                ROOT + "whiskers0/whiskers0_#ITEM#" + postFix,
+                ROOT + "bg0/#ITEM#" + postFix,
+                ROOT + "bg1/#ITEM#" + postFix,
+                ROOT + "ears0/#ITEM#" + postFix,
+                ROOT + "ears1/#ITEM#" + postFix,
+                ROOT + "face0/#ITEM#" + postFix,
+                ROOT + "face1/#ITEM#" + postFix,
+                ROOT + "eyes0/#ITEM#" + postFix,
+                ROOT + "nose0/#ITEM#" + postFix,
+                ROOT + "whiskers0/#ITEM#" + postFix,
         };
     }
 
@@ -70,7 +70,7 @@ public class Configuration {
     }
 
     private String generatePath(String facetPathTemplate, int bucketValue) {
-        return facetPathTemplate.replaceAll("#ITEM#", String.format("%03d", bucketValue));
+        return facetPathTemplate.replaceAll("#ITEM#", String.format("%02d", bucketValue));
     }
 
     public byte[] getBucketSizes() {
