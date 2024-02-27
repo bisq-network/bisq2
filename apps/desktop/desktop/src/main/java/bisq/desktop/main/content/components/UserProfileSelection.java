@@ -31,7 +31,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.overlay.Popup;
-import bisq.desktop.components.robohash.RoboHash;
+import bisq.desktop.components.cathash.CatHash;
 import bisq.i18n.Res;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
@@ -267,7 +267,7 @@ public class UserProfileSelection {
                             if (userIdentity != null) {
 
                                 userName.setText(comboBox.getConverter().toString(selected));
-                                icon.setImage(RoboHash.getImage(userIdentity.getPubKeyHash()));
+                                icon.setImage(CatHash.getImage(userIdentity.getPubKeyHash()));
                             }
                         }
                     });
@@ -373,7 +373,7 @@ public class UserProfileSelection {
                     super.updateItem(item, empty);
 
                     if (item != null && !empty) {
-                        imageView.setImage(RoboHash.getImage(item.userIdentity.getPubKeyHash()));
+                        imageView.setImage(CatHash.getImage(item.userIdentity.getPubKeyHash()));
                         label.setText(item.userIdentity.getUserName());
 
                         labelWidthListener = (observable, oldValue, newValue) -> {
@@ -463,7 +463,7 @@ public class UserProfileSelection {
                 if (newValue != null) {
                     UserIdentity userIdentity = newValue.userIdentity;
                     if (userIdentity != null) {
-                        imageView.setImage(RoboHash.getImage(userIdentity.getPubKeyHash()));
+                        imageView.setImage(CatHash.getImage(userIdentity.getPubKeyHash()));
                         label.setText(control.getConverter().toString(newValue));
                         buttonPane.layout();
                     }

@@ -26,7 +26,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
-import bisq.desktop.components.robohash.RoboHash;
+import bisq.desktop.components.cathash.CatHash;
 import bisq.i18n.Res;
 import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.presentation.formatters.TimeFormatter;
@@ -82,7 +82,7 @@ public class UserProfileController implements Controller {
                         model.getNickName().set(userProfile.getNickName());
                         model.getNymId().set(userProfile.getNym());
                         model.getProfileId().set(userProfile.getId());
-                        model.getRoboHash().set(RoboHash.getImage(userProfile.getPubKeyHash()));
+                        model.getRoboHash().set(CatHash.getImage(userProfile.getPubKeyHash()));
                         model.getStatement().set(userProfile.getStatement());
                         model.getTerms().set(userProfile.getTerms());
 

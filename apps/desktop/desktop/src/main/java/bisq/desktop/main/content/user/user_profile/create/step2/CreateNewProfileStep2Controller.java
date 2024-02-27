@@ -21,7 +21,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.components.overlay.Popup;
-import bisq.desktop.components.robohash.RoboHash;
+import bisq.desktop.components.cathash.CatHash;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.security.pow.ProofOfWork;
@@ -90,7 +90,7 @@ public class CreateNewProfileStep2Controller implements InitWithDataController<C
         model.setProofOfWork(data.getProofOfWork());
         model.getNickName().set(data.getNickName());
         model.getNym().set(data.getNym());
-        model.getRoboHashImage().set(RoboHash.getImage(data.getPubKeyHash()));
+        model.getRoboHashImage().set(CatHash.getImage(data.getPubKeyHash()));
     }
 
     @Override
