@@ -35,7 +35,7 @@ public class Configuration {
     private static final int FACE1_COUNT = 15;
     private static final int EYES0_COUNT = 15;
     private static final int NOSE0_COUNT = 5;
-    private static final int WHISKERS0_COUNT = 6;
+    private static final int WHISKERS0_COUNT = 7;
 
     private final static int BUCKET_COUNT = 9;
     private final static int FACET_COUNT = 9;
