@@ -14,56 +14,7 @@ to run a dev seed node.
 
 ## Install and run a Bisq 2 Seed node
 
-- Checkout and build Bisq 2
-
-```
-git clone https://github.com/bisq-network/bisq2.git
-cd bisq2
-./gradlew build
-```
-
-- Stop gradle as it remains running in background and consumes allocated memory (e.g. `killall java`)
-
-- Set up a systemd service
-
-  - Create the `run_seed.sh` launch script:
-  ```
-  #!/bin/bash
-  java -Xms2000M -Xmx3500M -jar [PATH TO bisq2]/seed_node_app/build/libs/seed_node_app-2.0.0-all.jar
-  ```
-
-  - Set correct permissions: `sudo chmod +x /root/run_seed.sh`
-
-  - Add service `/etc/systemd/system/seed.service`:
-  ```
-  [Unit]
-  Description=seed
-  
-  [Service]
-  ExecStart=/root/run_seed.sh
-  Restart=on-failure
-  
-  [Install]
-  WantedBy=multi-user.target
-  ```
-
-  - Start/Restart/Stop the service:
-  ```
-  systemctl start seed.service
-  systemctl restart seed.service
-  systemctl stop seed.service
-  ```
-
-  - Check the logs: `journalctl --unit seed -n 100 --no-pager` \
-    Or:
-    `tail -100 [USER]/.local/share/Bisq2_seed_node/bisq.log`
-
-For running a localhost dev seed node use following JVM arguments:
-```
-  -Dapplication.appName=bisq2_localhost_seed
-  -Dapplication.network.configByTransportType.clear.defaultNodePort=8000 
-  -Dapplication.network.supportedTransportTypes.0=CLEAR
-```
+See: `https://github.com/bisq-network/bisq2/blob/main/apps/seed-node-app/service-scripts/README.md`
 
 ## Register as seed node operator
 
