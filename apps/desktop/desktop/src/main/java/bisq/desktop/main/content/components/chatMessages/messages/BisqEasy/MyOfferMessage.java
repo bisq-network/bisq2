@@ -69,7 +69,7 @@ public final class MyOfferMessage extends BubbleMessage {
         reactionsHBox.getChildren().setAll(Spacer.fillHBox(), supportedLanguages, copyIcon);
         reactionsHBox.setAlignment(Pos.CENTER_RIGHT);
 
-        getChildren().setAll(userNameAndDateHBox, messageHBox, reactionsHBox);
+        contentVBox.getChildren().setAll(userNameAndDateHBox, messageHBox, reactionsHBox);
     }
 
     @Override
