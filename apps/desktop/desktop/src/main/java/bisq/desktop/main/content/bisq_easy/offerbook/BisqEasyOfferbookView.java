@@ -288,17 +288,18 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         Label label = new Label(Res.get("bisqEasy.topPane.filter.hideUserMessages"));
         hideUserMessagesCheckbox = new CheckBox();
         HBox checkbox = new HBox(5, label, hideUserMessagesCheckbox);
-        checkbox.getStyleClass().add("market-selection-subheader-checkbox");
+        checkbox.getStyleClass().add("offerbook-subheader-checkbox");
+        checkbox.setAlignment(Pos.CENTER);
 
         offersFilterMenu = createAndGetOffersFilterMenu();
 
-        HBox subheaderContent = new HBox(5, offersFilterMenu, checkbox);
-        subheaderContent.getStyleClass().add("market-selection-subheader-content");
+        HBox subheaderContent = new HBox(30, checkbox, offersFilterMenu);
+        subheaderContent.getStyleClass().add("offerbook-subheader-content");
         HBox.setHgrow(subheaderContent, Priority.ALWAYS);
 
         HBox subheader = new HBox(subheaderContent);
+        subheader.getStyleClass().add("offerbook-subheader");
         subheader.setAlignment(Pos.CENTER);
-        subheader.getStyleClass().add("market-selection-subheader");
 
         chatMessagesComponent.setMinWidth(700);
 
@@ -320,6 +321,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         sellOffers = new DropdownFilterMenuItem<>("check-grey", "check-white",
                 Res.get("bisqEasy.offerbook.dropdownMenu.filterMarketOffers.sellOffers"), Filters.Offers.SELL);
         dropdownMenu.addMenuItems(allOffers, myOffers, buyOffers, sellOffers);
+        dropdownMenu.getStyleClass().add("dropdown-offers-filter-menu");
 
         return dropdownMenu;
     }
