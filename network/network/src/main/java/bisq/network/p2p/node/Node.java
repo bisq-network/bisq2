@@ -107,8 +107,8 @@ public class Node implements Connection.Handler {
         private final Set<TransportType> supportedTransportTypes;
         private final Set<Feature> features;
         private final TransportConfig transportConfig;
-        private final int defaultNodeSocketTimeout;
-        private final int userNodeSocketTimeout;
+        private final int defaultNodeSocketTimeout; // in ms
+        private final int userNodeSocketTimeout; // in ms
 
         public Config(TransportType transportType,
                       Set<TransportType> supportedTransportTypes,
@@ -128,7 +128,7 @@ public class Node implements Connection.Handler {
     private final BanList banList;
     private final TransportService transportService;
     private final AuthorizationService authorizationService;
-    private final int socketTimeout;
+    private final int socketTimeout; // in ms
     private final Set<TransportType> supportedTransportTypes;
     private final Set<Feature> features;
     @Getter

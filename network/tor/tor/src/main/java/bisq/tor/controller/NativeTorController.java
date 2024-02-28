@@ -42,8 +42,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 public class NativeTorController implements BootstrapEventListener, HsDescUploadedEventListener {
-    private final int bootstrapTimeout;
-    private final int hsUploadTimeout;
+    private final int bootstrapTimeout; // in ms
+    private final int hsUploadTimeout;// in ms
     private final AtomicBoolean isRunning = new AtomicBoolean();
     private final CountDownLatch isBootstrappedCountdownLatch = new CountDownLatch(1);
     private final CountDownLatch isHsDescUploadedCountdownLatch = new CountDownLatch(1);
@@ -115,7 +115,7 @@ public class NativeTorController implements BootstrapEventListener, HsDescUpload
         hiddenServiceAddress.complete(result.serviceID);
 
         try {
-            boolean isSuccess = isHsDescUploadedCountdownLatch.await(hsUploadTimeout, TimeUnit.SECONDS);
+            boolean isSuccess = isHsDescUploadedCountdownLatch.await(hsUploadTimeout, TimeUnit.MILLISECONDS);
             if (isSuccess) {
                 removeHsDescUploadedEventListener();
             } else {
@@ -139,7 +139,7 @@ public class NativeTorController implements BootstrapEventListener, HsDescUpload
 
     public void waitUntilBootstrapped() {
         try {
-            boolean isSuccess = isBootstrappedCountdownLatch.await(bootstrapTimeout, TimeUnit.SECONDS);
+            boolean isSuccess = isBootstrappedCountdownLatch.await(bootstrapTimeout, TimeUnit.MILLISECONDS);
             if (isSuccess) {
                 removeBootstrapEventListener();
             } else {
@@ -178,7 +178,7 @@ public class NativeTorController implements BootstrapEventListener, HsDescUpload
     public void onHsDescUploaded(HsDescUploadedEvent uploadedEvent) {
         log.info("Tor HS_DESC event: {}", uploadedEvent);
         try {
-            String hsAddress = hiddenServiceAddress.get(hsUploadTimeout, TimeUnit.SECONDS);
+            String hsAddress = hiddenServiceAddress.get(hsUploadTimeout, TimeUnit.MILLISECONDS);
             if (hsAddress.equals(uploadedEvent.getHsAddress())) {
                 isHsDescUploadedCountdownLatch.countDown();
             } else {

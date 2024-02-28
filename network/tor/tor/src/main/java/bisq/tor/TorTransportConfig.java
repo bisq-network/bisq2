@@ -86,10 +86,10 @@ public class TorTransportConfig implements TransportConfig {
 
     private final Path dataDir;
     private final int defaultNodePort;
-    private final int bootstrapTimeout;
-    private final int hsUploadTimeout;
-    private final int defaultNodeSocketTimeout;
-    private final int userNodeSocketTimeout;
+    private final int bootstrapTimeout; // in ms
+    private final int hsUploadTimeout; // in ms
+    private final int defaultNodeSocketTimeout; // in ms
+    private final int userNodeSocketTimeout; // in ms
     private final boolean isTestNetwork;
     private final Set<DirectoryAuthority> directoryAuthorities;
     private final Map<String, String> torrcOverrides;
