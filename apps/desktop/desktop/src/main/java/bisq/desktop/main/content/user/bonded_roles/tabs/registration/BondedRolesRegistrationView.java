@@ -52,7 +52,7 @@ public abstract class BondedRolesRegistrationView<M extends BondedRolesRegistrat
     protected final OrderedList howInfo;
     private final Hyperlink showInfo, hideInfo;
     private final Text aboutInfo;
-    protected Subscription isCollapsedPin;
+    protected Subscription isExpandedPin;
 
     public BondedRolesRegistrationView(M model,
                                        C controller,
@@ -145,21 +145,22 @@ public abstract class BondedRolesRegistrationView<M extends BondedRolesRegistrat
         hideInfo.setOnMouseClicked(e -> controller.onCollapse());
         showInfo.setOnMouseClicked(e -> controller.onExpand());
         headerHBox.setOnMouseClicked(e -> controller.onHeaderClicked());
-        isCollapsedPin = EasyBind.subscribe(model.getIsCollapsed(),
-                isCollapsed -> {
-                    VBox.setMargin(headerHBox, new Insets(20, 0, isCollapsed ? -50 : 0, 0));
-                    aboutHeadline.setVisible(!isCollapsed);
-                    aboutInfo.setVisible(!isCollapsed);
-                    howHeadline.setVisible(!isCollapsed);
-                    howInfo.setVisible(!isCollapsed);
-                    hideInfo.setVisible(!isCollapsed);
+        isExpandedPin = EasyBind.subscribe(model.getIsExpanded(),
+                isExpanded -> {
+                    VBox.setMargin(headerHBox, new Insets(20, 0, isExpanded ? 0 : -50, 0));
+                    boolean isCollapsed = !isExpanded;
+                    aboutHeadline.setVisible(isExpanded);
+                    aboutInfo.setVisible(isExpanded);
+                    howHeadline.setVisible(isExpanded);
+                    howInfo.setVisible(isExpanded);
+                    hideInfo.setVisible(isExpanded);
                     showInfo.setVisible(isCollapsed);
 
-                    aboutHeadline.setManaged(!isCollapsed);
-                    aboutInfo.setManaged(!isCollapsed);
-                    howHeadline.setManaged(!isCollapsed);
-                    howInfo.setManaged(!isCollapsed);
-                    hideInfo.setManaged(!isCollapsed);
+                    aboutHeadline.setManaged(isExpanded);
+                    aboutInfo.setManaged(isExpanded);
+                    howHeadline.setManaged(isExpanded);
+                    howInfo.setManaged(isExpanded);
+                    hideInfo.setManaged(isExpanded);
                     showInfo.setManaged(isCollapsed);
 
                     // Hack to get the height of the scrollPane viewpoint updated.
@@ -188,6 +189,6 @@ public abstract class BondedRolesRegistrationView<M extends BondedRolesRegistrat
         showInfo.setOnMouseClicked(null);
         headerHBox.setOnMouseClicked(null);
 
-        isCollapsedPin.unsubscribe();
+        isExpandedPin.unsubscribe();
     }
 }

@@ -21,6 +21,8 @@ import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.bonded_role.BondedRole;
 import bisq.i18n.Res;
+import bisq.network.NetworkService;
+import bisq.network.common.Address;
 import bisq.network.common.AddressByTransportTypeMap;
 import bisq.user.UserService;
 import bisq.user.profile.UserProfile;
@@ -31,8 +33,10 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -52,8 +56,10 @@ public class BondedRolesListItem {
     @EqualsAndHashCode.Exclude
     private final String isBanned;
     private final boolean staticPublicKeysProvided;
+    private final boolean isRootNode;
+    private final boolean isRootSeedNode;
 
-    public BondedRolesListItem(BondedRole bondedRole, UserService userService) {
+    public BondedRolesListItem(BondedRole bondedRole, UserService userService, NetworkService networkService) {
         AuthorizedBondedRole authorizedBondedRoleData = bondedRole.getAuthorizedBondedRole();
         isBanned = bondedRole.isBanned() ? Res.get("confirmation.yes") : "";
         userProfile = userService.getUserProfileService().findUserProfile(authorizedBondedRoleData.getProfileId());
@@ -69,7 +75,17 @@ public class BondedRolesListItem {
         address = Joiner.on("\n").join(list);
         addressInfoJson = new GsonBuilder().setPrettyPrinting().create().toJson(addressByTransportTypeMap);
         staticPublicKeysProvided = authorizedBondedRoleData.staticPublicKeysProvided();
-        roleTypeString = staticPublicKeysProvided ?
+
+        Set<String> seedAddressesFromConfig = networkService.getSeedAddressesByTransportFromConfig().values().stream()
+                .flatMap(Collection::stream)
+                .map(Address::getFullAddress)
+                .collect(Collectors.toSet());
+        Set<String> bondedRoleAddresses = addressByTransportTypeMap.values().stream()
+                .map(Address::getFullAddress)
+                .collect(Collectors.toSet());
+        isRootSeedNode = bondedRoleAddresses.stream().anyMatch(seedAddressesFromConfig::contains);
+        isRootNode = staticPublicKeysProvided || isRootSeedNode;
+        roleTypeString = isRootNode ?
                 bondedRoleType.getDisplayString() + " (root)" :
                 bondedRoleType.getDisplayString();
         // oracleNodePublicKeyHash = authorizedBondedRoleData.getAuthorizedOracleNode().map(AuthorizedOracleNode::getPublicKeyHash).orElseGet(() -> Res.get("data.na"));

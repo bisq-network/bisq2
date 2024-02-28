@@ -106,9 +106,9 @@ public final class AuthorizedProofOfBurnData implements AuthorizedDistributedDat
     @Override
     public Set<String> getAuthorizedPublicKeys() {
         if (DevMode.isDevMode()) {
-            return DevMode.AUTHORIZED_DEV_PUBLIC_KEYS;
+            return AuthorizedPubKeys.DEV_PUB_KEYS;
         } else {
-            return AuthorizedPubKeys.KEYS;
+            return AuthorizedPubKeys.ORACLE_NODE_PUB_KEYS;
         }
     }
 

@@ -24,6 +24,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.view.Controller;
+import bisq.network.NetworkService;
 import bisq.user.UserService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -38,11 +39,13 @@ public abstract class BondedRolesController implements Controller {
     protected final AuthorizedBondedRolesService authorizedBondedRolesService;
     protected final ServiceProvider serviceProvider;
     protected final UserService userService;
+    private final NetworkService networkService;
     protected Pin bondedRolesPin;
 
     public BondedRolesController(ServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
         userService = serviceProvider.getUserService();
+        networkService = serviceProvider.getNetworkService();
         authorizedBondedRolesService = serviceProvider.getBondedRolesService().getAuthorizedBondedRolesService();
 
         model = createAndGetModel();
@@ -58,7 +61,7 @@ public abstract class BondedRolesController implements Controller {
     @Override
     public void onActivate() {
         bondedRolesPin = FxBindings.<BondedRole, BondedRolesListItem>bind(model.getBondedRolesListItems())
-                .map(data -> new BondedRolesListItem(data, userService))
+                .map(data -> new BondedRolesListItem(data, userService, networkService))
                 .to(authorizedBondedRolesService.getBondedRoles());
 
         model.getFilteredList().setPredicate(getPredicate());

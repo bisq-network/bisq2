@@ -1,33 +1,43 @@
-/*
- * This file is part of Bisq.
- *
- * Bisq is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or (at
- * your option) any later version.
- *
- * Bisq is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
- * License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
- */
-
 package bisq.bonded_roles;
 
 import java.util.Set;
 
+// FIXME
+// TODO (Critical) Production key not set yet - we use devMode key only yet
 public class AuthorizedPubKeys {
-    // FIXME
-    // TODO (Critical) add production keys
-    public static final Set<String> KEYS = Set.of(
-            // OracleNode1
-            "3056301006072a8648ce3d020106052b8104000a03420004b9f698d9644d01193eaa2e7a823570aeea50e4f96749305db523c010e998b3a8f2ef0a567bb9282e80ff66b6de8f0df39d242f609728def1dbaa6f1862429188",
-            // SeedNode1
-            "3056301006072a8648ce3d020106052b8104000a03420004f5bfe50bd68e2f1be3011555d8870a0485000b253eece24184165012b4689db56be1c871f35c0e2d544fdf0b330ca29a0d063a89a32004e8acd640045b0d4b23",
-            // SeedNode2
-            "3056301006072a8648ce3d020106052b8104000a0342000477df7862fdbd65c5d09c3e1a5d7a283642ed16a91d12cde7bbd6ed38d9bcd4f5d7a7285e851bf691f6ca5a6cff57d2e028362d07f86ae4f43947ef1b04d2f41c"
+
+    public static final Set<String> SECURITY_MANAGER_PUB_KEYS = Set.of(
+    );
+
+    public static final Set<String> RELEASE_MANAGER_PUB_KEYS = Set.of(
+    );
+
+    public static final Set<String> MODERATOR_PUB_KEYS = Set.of(
+    );
+
+    public static final Set<String> ORACLE_NODE_PUB_KEYS = Set.of(
+    );
+
+    // Not used yet, but maintain it for later usage
+    public static final Set<String> SEED_NODE_PUB_KEYS = Set.of(
+    );
+
+
+    /**
+     * Dev keys for authorized data
+     * privatekey1=30818d020100301006072a8648ce3d020106052b8104000a0476307402010104205b4479d165652fe5410419b1d03c937956be0e1c4f46e9fbe86c66776529d81ca00706052b8104000aa144034200043dd1f2f56593e62670282c245cb71d50b43985b308dd1c977632c3cde155427e4fad0899d7e7af110584182f7e55547d6e1469705567124a02ae2e8afa8e8091
+     * publicKey1=3056301006072a8648ce3d020106052b8104000a034200043dd1f2f56593e62670282c245cb71d50b43985b308dd1c977632c3cde155427e4fad0899d7e7af110584182f7e55547d6e1469705567124a02ae2e8afa8e8091
+     * <p>
+     * privatekey2=30818d020100301006072a8648ce3d020106052b8104000a0476307402010104201c6685cef332eecfddb253b601c0ed89e7c822d2d03c53d5a720a860b5dc9419a00706052b8104000aa144034200044b3a5f869a4a4346fb37ca70991ff55f3ef4f0ed3a31b51238aee75858af48fddaeafb11b9c59b3e9f551ee9022a767e5f39dcea2b4a96e1c610a5f1b1a1878e
+     * publicKey2=3056301006072a8648ce3d020106052b8104000a034200044b3a5f869a4a4346fb37ca70991ff55f3ef4f0ed3a31b51238aee75858af48fddaeafb11b9c59b3e9f551ee9022a767e5f39dcea2b4a96e1c610a5f1b1a1878e
+     * <p>
+     * privatekey3=30818d020100301006072a8648ce3d020106052b8104000a04763074020101042032ead243887ad39f4e1e6907c8e3e6a786eeb6e93323c2fb5a0adb1779e6d4f4a00706052b8104000aa14403420004fbbd94944049f0904d4a92d4dd13dcdce602d676eeafa0049f0181c1815fea24c01226f3a204c985132069dbac92ecadb454ead8c8f2059f7f60a0c3767a5b83
+     * publicKey3=3056301006072a8648ce3d020106052b8104000a03420004fbbd94944049f0904d4a92d4dd13dcdce602d676eeafa0049f0181c1815fea24c01226f3a204c985132069dbac92ecadb454ead8c8f2059f7f60a0c3767a5b83
+     * <p>
+     * privatekey4=30818d020100301006072a8648ce3d020106052b8104000a04763074020101042010c2ea3b2b1f1787f8a57d074e550b120cc04b326b43c545214434e474e5cde2a00706052b8104000aa14403420004170a828efbaa0316b7a59ec5a1e8033ca4c215b5e58b17b16f3e3cbfa5ec085f4bdb660c7b766ec5ba92b432265ba3ed3689c5d87118fbebe19e92b9228aca63
+     * publicKey4=3056301006072a8648ce3d020106052b8104000a03420004170a828efbaa0316b7a59ec5a1e8033ca4c215b5e58b17b16f3e3cbfa5ec085f4bdb660c7b766ec5ba92b432265ba3ed3689c5d87118fbebe19e92b9228aca63
+     */
+    public static final Set<String> DEV_PUB_KEYS = Set.of(
+            "3056301006072a8648ce3d020106052b8104000a034200043dd1f2f56593e62670282c245cb71d50b43985b308dd1c977632c3cde155427e4fad0899d7e7af110584182f7e55547d6e1469705567124a02ae2e8afa8e8091", "3056301006072a8648ce3d020106052b8104000a034200044b3a5f869a4a4346fb37ca70991ff55f3ef4f0ed3a31b51238aee75858af48fddaeafb11b9c59b3e9f551ee9022a767e5f39dcea2b4a96e1c610a5f1b1a1878e", "3056301006072a8648ce3d020106052b8104000a03420004fbbd94944049f0904d4a92d4dd13dcdce602d676eeafa0049f0181c1815fea24c01226f3a204c985132069dbac92ecadb454ead8c8f2059f7f60a0c3767a5b83", "3056301006072a8648ce3d020106052b8104000a03420004170a828efbaa0316b7a59ec5a1e8033ca4c215b5e58b17b16f3e3cbfa5ec085f4bdb660c7b766ec5ba92b432265ba3ed3689c5d87118fbebe19e92b9228aca63"
     );
 }
