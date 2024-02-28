@@ -311,6 +311,8 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
 
     private DropdownMenu createAndGetOffersFilterMenu() {
         DropdownMenu dropdownMenu = new DropdownMenu("arrow-down", "arrow-down", false);
+        dropdownMenu.setTooltip(Res.get("bisqEasy.offerbook.dropdownMenu.filterMarketOffers.tooltip"));
+        dropdownMenu.getStyleClass().add("dropdown-offers-filter-menu");
 
         allOffers = new DropdownFilterMenuItem<>("check-grey", "check-white",
                 Res.get("bisqEasy.offerbook.dropdownMenu.filterMarketOffers.allOffers"), Filters.Offers.ALL);
@@ -321,8 +323,6 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         sellOffers = new DropdownFilterMenuItem<>("check-grey", "check-white",
                 Res.get("bisqEasy.offerbook.dropdownMenu.filterMarketOffers.sellOffers"), Filters.Offers.SELL);
         dropdownMenu.addMenuItems(allOffers, myOffers, buyOffers, sellOffers);
-        dropdownMenu.getStyleClass().add("dropdown-offers-filter-menu");
-
         return dropdownMenu;
     }
 
