@@ -27,8 +27,6 @@ import java.util.concurrent.TimeoutException;
 
 @Slf4j
 public class TorTransportService implements TransportService {
-    public final static int DEFAULT_PORT = 9999;
-
     private static TorService torService;
 
     @Getter

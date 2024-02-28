@@ -41,6 +41,8 @@ public class TorTransportConfig implements TransportConfig {
         return new TorTransportConfig(
                 dataDir,
                 config.hasPath("defaultNodePort") ? config.getInt("defaultNodePort") : -1,
+                (int) TimeUnit.SECONDS.toMillis(config.getInt("bootstrapTimeout")),
+                (int) TimeUnit.SECONDS.toMillis(config.getInt("hsUploadTimeout")),
                 (int) TimeUnit.SECONDS.toMillis(config.getInt("defaultNodeSocketTimeout")),
                 (int) TimeUnit.SECONDS.toMillis(config.getInt("userNodeSocketTimeout")),
                 config.getBoolean("testNetwork"),
@@ -84,14 +86,18 @@ public class TorTransportConfig implements TransportConfig {
 
     private final Path dataDir;
     private final int defaultNodePort;
-    private final int defaultNodeSocketTimeout;
-    private final int userNodeSocketTimeout;
+    private final int bootstrapTimeout; // in ms
+    private final int hsUploadTimeout; // in ms
+    private final int defaultNodeSocketTimeout; // in ms
+    private final int userNodeSocketTimeout; // in ms
     private final boolean isTestNetwork;
     private final Set<DirectoryAuthority> directoryAuthorities;
     private final Map<String, String> torrcOverrides;
 
     public TorTransportConfig(Path dataDir,
                               int defaultNodePort,
+                              int bootstrapTimeout,
+                              int hsUploadTimeout,
                               int defaultNodeSocketTimeout,
                               int userNodeSocketTimeout,
                               boolean isTestNetwork,
@@ -99,6 +105,8 @@ public class TorTransportConfig implements TransportConfig {
                               Map<String, String> torrcOverrides) {
         this.dataDir = dataDir;
         this.defaultNodePort = defaultNodePort;
+        this.bootstrapTimeout = bootstrapTimeout;
+        this.hsUploadTimeout = hsUploadTimeout;
         this.defaultNodeSocketTimeout = defaultNodeSocketTimeout;
         this.userNodeSocketTimeout = userNodeSocketTimeout;
         this.isTestNetwork = isTestNetwork;
