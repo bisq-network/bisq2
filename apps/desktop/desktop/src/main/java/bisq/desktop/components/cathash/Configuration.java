@@ -44,15 +44,15 @@ public class Configuration {
     static {
         String postFix = ".png";
         FACET_PATH_TEMPLATES = new String[]{
-                ROOT + "bg0/#ITEM#" + postFix,
-                ROOT + "bg1/#ITEM#" + postFix,
-                ROOT + "ears0/#ITEM#" + postFix,
-                ROOT + "ears1/#ITEM#" + postFix,
-                ROOT + "face0/#ITEM#" + postFix,
-                ROOT + "face1/#ITEM#" + postFix,
-                ROOT + "eyes0/#ITEM#" + postFix,
-                ROOT + "nose0/#ITEM#" + postFix,
-                ROOT + "whiskers0/#ITEM#" + postFix,
+                ROOT + "bg0/NUM" + postFix,
+                ROOT + "bg1/NUM" + postFix,
+                ROOT + "ears0/NUM" + postFix,
+                ROOT + "ears1/NUM" + postFix,
+                ROOT + "face0/NUM" + postFix,
+                ROOT + "face1/NUM" + postFix,
+                ROOT + "eyes0/NUM" + postFix,
+                ROOT + "nose0/NUM" + postFix,
+                ROOT + "whiskers0/NUM" + postFix,
         };
     }
 
@@ -69,21 +69,8 @@ public class Configuration {
         return paths;
     }
 
-    public String[] convertToFacetParts(byte[] bucketValues) {
-        if (bucketValues.length != BUCKET_COUNT) {
-            throw new IllegalArgumentException();
-        }
-
-        String[] paths = new String[FACET_COUNT];
-        for (int facet = 0; facet < FACET_COUNT; facet++) {
-            int bucketValue = bucketValues[facet];
-            paths[facet] = generatePath(FACET_PATH_TEMPLATES[facet], bucketValue);
-        }
-        return paths;
-    }
-
     private String generatePath(String facetPathTemplate, int bucketValue) {
-        return facetPathTemplate.replaceAll("#ITEM#", String.format("%02d", bucketValue));
+        return facetPathTemplate.replaceAll("NUM", String.format("%02d", bucketValue));
     }
 
     public byte[] getBucketSizes() {
