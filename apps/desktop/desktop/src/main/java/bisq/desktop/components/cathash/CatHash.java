@@ -17,9 +17,10 @@
 
 package bisq.desktop.components.cathash;
 
-import bisq.common.data.ByteArray;
+import bisq.common.util.ByteArrayUtils;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.user.profile.UserProfile;
+import com.google.common.primitives.Longs;
 import javafx.scene.image.Image;
 import lombok.extern.slf4j.Slf4j;
 
@@ -42,7 +43,8 @@ public class CatHash {
     }
 
     public static Image getImage(byte[] pubKeyHash, long powSolution, boolean useCache) {
-        BigInteger input = new BigInteger(new ByteArray(pubKeyHash).getBytes()).add(BigInteger.valueOf(powSolution));
+        byte[] combined = ByteArrayUtils.concat(Longs.toByteArray(powSolution), pubKeyHash);
+        BigInteger input = new BigInteger(combined);
         if (useCache && CACHE.containsKey(input)) {
             return CACHE.get(input);
         }

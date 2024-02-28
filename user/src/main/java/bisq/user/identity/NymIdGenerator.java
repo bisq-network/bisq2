@@ -17,8 +17,10 @@
 
 package bisq.user.identity;
 
+import bisq.common.util.ByteArrayUtils;
 import bisq.common.util.FileUtils;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.primitives.Longs;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -36,13 +38,18 @@ import java.util.Scanner;
 public class NymIdGenerator {
     private static final BigInteger MAX_INTEGER = BigInteger.valueOf(Integer.MAX_VALUE);
     private static final String DEFAULT_SEPARATOR = "-";
+    private static final List<String> ADVERBS, ADJECTIVES, NOUNS;
 
-    public static String generate(byte[] hash, long powSolution) {
-        List<String> adverbs = read("adverbs.txt");
-        List<String> adjectives = read("adjectives.txt");
-        List<String> nouns = read("nouns.txt");
-        BigInteger input = new BigInteger(hash).add(BigInteger.valueOf(powSolution));
-        return generate(input, adverbs, adjectives, nouns, DEFAULT_SEPARATOR);
+    static {
+        ADVERBS = read("adverbs.txt");
+        ADJECTIVES = read("adjectives.txt");
+        NOUNS = read("nouns.txt");
+    }
+
+    public static String generate(byte[] pubKeyHash, long powSolution) {
+        byte[] combined = ByteArrayUtils.concat(Longs.toByteArray(powSolution), pubKeyHash);
+        BigInteger input = new BigInteger(combined);
+        return generate(input, ADVERBS, ADJECTIVES, NOUNS, DEFAULT_SEPARATOR);
     }
 
     @VisibleForTesting
