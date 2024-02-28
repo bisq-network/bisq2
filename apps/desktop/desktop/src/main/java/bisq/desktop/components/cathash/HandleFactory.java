@@ -22,8 +22,17 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class HandleFactory {
 
-    public Handle calculateHandle(byte[] data) {
+    Handle calculateHandle(byte[] data) {
         return new Handle(calculateHandleValue(data));
+    }
+
+    static byte[] bucketValues(long handle) {
+        int buckets = getSize(handle);
+        byte[] values = new byte[buckets];
+        for (int i = 0; i < buckets; i++) {
+            values[buckets - i - 1] = getNibbleAt(handle, i);
+        }
+        return values;
     }
 
     /**
@@ -34,7 +43,7 @@ public class HandleFactory {
      * @param data The distributed hash over the buckets
      * @return val The composite handle value, which encodes both the sequence of nibbles and the length of the data array
      */
-    static long calculateHandleValue(byte[] data) {
+    private static long calculateHandleValue(byte[] data) {
         // Check if the input array exceeds the maximum length of 14 bytes.
         // This limit ensures that the data can be encoded into a 64-bit long value without overflow.
         // Since 8 bits are reserved for length encoding only 56 bits can be used (14 * 4)
@@ -71,7 +80,7 @@ public class HandleFactory {
         return val;
     }
 
-    static byte getNibbleAt(long value, int index) {
+    private static byte getNibbleAt(long value, int index) {
         if (index < 0 || index > 15) {
             throw new IllegalArgumentException(String.format("index @%d", index));
         }
@@ -82,16 +91,7 @@ public class HandleFactory {
         return (byte) (maskedValue >> index * 4);
     }
 
-    static int getSize(long value) {
+    private static int getSize(long value) {
         return getNibbleAt(value, 14);
-    }
-
-    public static byte[] bucketValues(long handle) {
-        int buckets = getSize(handle);
-        byte[] values = new byte[buckets];
-        for (int i = 0; i < buckets; i++) {
-            values[buckets - i - 1] = getNibbleAt(handle, i);
-        }
-        return values;
     }
 }
