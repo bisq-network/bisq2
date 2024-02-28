@@ -17,11 +17,12 @@
 
 package bisq.desktop.components.cathash;
 
+import bisq.common.util.MathUtils;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class Configuration {
-    private static final String ROOT = "";
+public class BucketConfig {
+    static final String DIGIT = "#";
 
     private static final int BG0_COUNT = 16;
     private static final int BG1_COUNT = 16;
@@ -33,42 +34,42 @@ public class Configuration {
     private static final int NOSE0_COUNT = 6;
     private static final int WHISKERS0_COUNT = 7;
 
-    private static final int BUCKET_COUNT = 9;
-    private static final int FACET_COUNT = 9;
-
     private static final int[] BUCKET_SIZES = new int[]{BG0_COUNT, BG1_COUNT, EARS0_COUNT, EARS1_COUNT, FACE0_COUNT,
             FACE1_COUNT, EYES0_COUNT, NOSE0_COUNT, WHISKERS0_COUNT};
 
-    private static final String[] FACET_PATH_TEMPLATES;
+    private static final String[] PATH_TEMPLATES;
 
     static {
         String postFix = ".png";
-        FACET_PATH_TEMPLATES = new String[]{
-                ROOT + "bg0/NUM" + postFix,
-                ROOT + "bg1/NUM" + postFix,
-                ROOT + "ears0/NUM" + postFix,
-                ROOT + "ears1/NUM" + postFix,
-                ROOT + "face0/NUM" + postFix,
-                ROOT + "face1/NUM" + postFix,
-                ROOT + "eyes0/NUM" + postFix,
-                ROOT + "nose0/NUM" + postFix,
-                ROOT + "whiskers0/NUM" + postFix,
+        PATH_TEMPLATES = new String[]{
+                "bg0/" + DIGIT + postFix,
+                "bg1/" + DIGIT + postFix,
+                "ears0/" + DIGIT + postFix,
+                "ears1/" + DIGIT + postFix,
+                "face0/" + DIGIT + postFix,
+                "face1/" + DIGIT + postFix,
+                "eyes0/" + DIGIT + postFix,
+                "nose0/" + DIGIT + postFix,
+                "whiskers0/" + DIGIT + postFix
         };
-    }
 
-    static int getBucketCount() {
-        return BUCKET_COUNT;
-    }
-
-    static int getFacetCount() {
-        return FACET_COUNT;
+        long numCombinations = getNumCombinations();
+        log.info("Number of combinations: 2^{} = {}", MathUtils.getLog2(numCombinations), numCombinations);
     }
 
     static int[] getBucketSizes() {
         return BUCKET_SIZES;
     }
 
-    static String[] getFacetPathTemplates() {
-        return FACET_PATH_TEMPLATES;
+    static String[] getPathTemplates() {
+        return PATH_TEMPLATES;
+    }
+
+    static long getNumCombinations() {
+        long result = 1;
+        for (int bucketSize : BUCKET_SIZES) {
+            result *= bucketSize;
+        }
+        return result;
     }
 }
