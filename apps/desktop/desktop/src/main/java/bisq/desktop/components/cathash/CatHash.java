@@ -29,6 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
 // Number of combinations: 3 * 15 * 15 * 15 * 15 * 15 * 15  = 34171875 (2 ^ 25)
 @Slf4j
 public class CatHash {
+    private static final int SIZE = 300;
     private static final int MAX_CACHE_SIZE = 10000;
     private static final ConcurrentHashMap<ByteArray, Image> CACHE = new ConcurrentHashMap<>();
 
@@ -57,6 +58,6 @@ public class CatHash {
 
     private static Image imageFromIntegerBuckets(int[] integerBuckets, Configuration configuration) {
         String[] paths = configuration.integerBucketsToPaths(integerBuckets);
-        return ImageUtil.composeImage(paths, configuration.width(), configuration.height());
+        return ImageUtil.composeImage(paths, SIZE, SIZE);
     }
 }
