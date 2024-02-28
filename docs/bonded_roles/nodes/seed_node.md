@@ -53,12 +53,14 @@ For those who operate such a `root node` there are a few extra steps:
 1. Select the user profile you want to use for the registration.
 2. Click the `Show key pair` button below the input fields. This will add 2 fields, one for the public and one for the
    private key which has been created for that user profile.
-3. Copy the public key. Open `bisq.bonded_roles.AuthorizedPubKeys` class and add your pub key to the list of authorized
+3. Copy the public key. Open `bisq.seed_node.SeedNodeService` class and add your pub key to the list of authorized
    keys and make a GitHub pull request.
 4. Currently, the pub key is only used for oracle nodes not for seed nodes, but that might change in the future.
 5. After you have started the seed node copy the onion address (and/or I2P) and add it to the Bisq 2 config files. There
    are several config files for the different applications (desktop, seed, oracle, rest api). Add your network address
    to the `application.network.seedAddressByTransportType` entry and make a GitHub pull request.
+6. Register your seed node at the `Nodes/Seed Node` screen. Seed nodes which are added in the config files will be
+   marked as root nodes.
 
 > _Note: Seed nodes which are not included in the config are not used by first time users. Those seed nodes get
 distributed by the oracle node and only after the first start the users will receive those. Therefor root nodes have

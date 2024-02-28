@@ -172,7 +172,8 @@ For those who operate such a `root node` there are a few extra steps:
 1. Select the user profile you want to use for the registration.
 2. Click the `Show key pair` button below the input fields. This will add 2 fields, one for the public and one for the
    private key which has been created for that user profile.
-3. Copy the public key. Open `bisq.bonded_roles.AuthorizedPubKeys` class and add your pub key to the list of authorized
+3. Copy the public key. Open `bisq.bonded_roles.oracle.AuthorizedOracleNode` class and add your pub key to the list of
+   authorized
    keys and make a GitHub pull request.
 4. Use that key pair for the JVM arguments running the oracle node.
 5. Set the `application.oracleNode.staticPublicKeysProvided` value to true

@@ -17,7 +17,7 @@
 
 package bisq.user.reputation.data;
 
-import bisq.bonded_roles.AuthorizedPubKeys;
+import bisq.bonded_roles.oracle.AuthorizedOracleNode;
 import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -101,7 +101,7 @@ public final class AuthorizedSignedWitnessData implements AuthorizedDistributedD
         if (DevMode.isDevMode()) {
             return DevMode.AUTHORIZED_DEV_PUBLIC_KEYS;
         } else {
-            return AuthorizedPubKeys.KEYS;
+            return AuthorizedOracleNode.KEYS;
         }
     }
 

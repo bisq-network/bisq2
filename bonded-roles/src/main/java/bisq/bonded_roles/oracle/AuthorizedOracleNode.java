@@ -17,7 +17,6 @@
 
 package bisq.bonded_roles.oracle;
 
-import bisq.bonded_roles.AuthorizedPubKeys;
 import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -40,6 +39,11 @@ import static bisq.network.p2p.services.data.storage.MetaData.*;
 @EqualsAndHashCode
 @Getter
 public final class AuthorizedOracleNode implements AuthorizedDistributedData {
+    // FIXME
+    // TODO (Critical) add production keys
+    public static final Set<String> KEYS = Set.of(
+    );
+
     private final MetaData metaData = new MetaData(TTL_100_DAYS, HIGHEST_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_100);
     private final NetworkId networkId;
     private final String profileId;
@@ -118,7 +122,7 @@ public final class AuthorizedOracleNode implements AuthorizedDistributedData {
         if (DevMode.isDevMode()) {
             return DevMode.AUTHORIZED_DEV_PUBLIC_KEYS;
         } else {
-            return AuthorizedPubKeys.KEYS;
+            return KEYS;
         }
     }
 
