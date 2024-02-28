@@ -23,7 +23,7 @@ import bisq.chat.Citation;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
-import bisq.desktop.components.robohash.RoboHash;
+import bisq.desktop.components.cathash.CatHash;
 import bisq.i18n.Res;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
@@ -37,7 +37,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -93,7 +92,7 @@ public class CitationBlock {
             userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId()).ifPresent(author -> {
                 model.author = author;
                 model.userName.set(author.getUserName());
-                model.roboHashNode.set(RoboHash.getImage(author.getPubKeyHash()));
+                model.roboHashNode.set(CatHash.getImage(author.getPubKeyHash()));
                 model.citation.set(chatMessage.getText());
                 model.visible.set(true);
             });

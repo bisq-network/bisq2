@@ -103,7 +103,7 @@ public class ImageUtil {
         graphicsContext2D.clip();
 
         for (String path : paths) {
-            graphicsContext2D.drawImage(new Image("images/robohash/" + path), 0, 0, width, height);
+            graphicsContext2D.drawImage(new Image("images/cathash/" + path), 0, 0, width, height);
         }
         SnapshotParameters snapshotParameters = new SnapshotParameters();
         snapshotParameters.setFill(Color.TRANSPARENT);

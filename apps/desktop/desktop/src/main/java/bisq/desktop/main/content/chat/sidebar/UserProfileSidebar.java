@@ -29,7 +29,7 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqTooltip;
-import bisq.desktop.components.robohash.RoboHash;
+import bisq.desktop.components.cathash.CatHash;
 import bisq.desktop.main.content.components.ReportToModeratorWindow;
 import bisq.desktop.main.content.components.ReputationScoreDisplay;
 import bisq.i18n.Res;
@@ -129,7 +129,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             model.nickName.set(isUserProfileBanned() ? Res.get("user.userProfile.userName.banned", nickName) : nickName);
             model.nym.set(Res.get("chat.sideBar.userProfile.nym", userProfile.getNym()));
             model.userProfileIdString.set(Res.get("chat.sideBar.userProfile.id", userProfile.getId()));
-            model.roboHashNode.set(RoboHash.getImage(userProfile.getPubKeyHash()));
+            model.roboHashNode.set(CatHash.getImage(userProfile.getPubKeyHash()));
 
             model.addressByTransport.set(userProfile.getAddressByTransportDisplayString(26));
             model.addressByTransportTooltip.set(userProfile.getAddressByTransportDisplayString());

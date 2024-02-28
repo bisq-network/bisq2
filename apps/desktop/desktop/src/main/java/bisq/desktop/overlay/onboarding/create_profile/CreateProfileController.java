@@ -23,7 +23,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
-import bisq.desktop.components.robohash.RoboHash;
+import bisq.desktop.components.cathash.CatHash;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.identity.IdentityService;
@@ -198,7 +198,7 @@ public class CreateProfileController implements Controller {
 
     private void applyIdentityData(byte[] pubKeyHash, String nym) {
         model.getNym().set(nym);
-        model.getRoboHashImage().set(RoboHash.getImage(pubKeyHash));
+        model.getRoboHashImage().set(CatHash.getImage(pubKeyHash));
         model.getPowProgress().set(0);
         model.getRoboHashIconVisible().set(true);
         model.getReGenerateButtonDisabled().set(false);
