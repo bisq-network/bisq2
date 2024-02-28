@@ -56,7 +56,7 @@ public class Configuration {
         };
     }
 
-    public String[] integerBucketsToPaths(int[] integerBuckets) {
+    String[] integerBucketsToPaths(int[] integerBuckets) {
         if (integerBuckets.length != BUCKET_COUNT) {
             throw new IllegalArgumentException();
         }
@@ -69,19 +69,11 @@ public class Configuration {
         return paths;
     }
 
-    private String generatePath(String facetPathTemplate, int bucketValue) {
-        return facetPathTemplate.replaceAll("NUM", String.format("%02d", bucketValue));
-    }
-
-    public byte[] getBucketSizes() {
+    byte[] getBucketSizes() {
         return BUCKET_SIZES;
     }
 
-    public int width() {
-        return 300;
-    }
-
-    public int height() {
-        return 300;
+    private String generatePath(String facetPathTemplate, int bucketValue) {
+        return facetPathTemplate.replaceAll("NUM", String.format("%02d", bucketValue));
     }
 }
