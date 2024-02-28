@@ -65,7 +65,7 @@ public class UserService implements Service {
 
         bannedUserService = new BannedUserService(persistenceService, networkService);
 
-        userProfileService = new UserProfileService(persistenceService, networkService);
+        userProfileService = new UserProfileService(persistenceService, securityService, networkService);
 
         userIdentityService = new UserIdentityService(config.getUserIdentityConfig(),
                 persistenceService,

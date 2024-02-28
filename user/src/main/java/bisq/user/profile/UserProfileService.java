@@ -28,6 +28,8 @@ import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.security.SecurityService;
+import bisq.security.pow.hashcash.HashCashProofOfWorkService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -46,10 +48,13 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
     private final NetworkService networkService;
     @Getter
     private final Observable<Integer> numUserProfiles = new Observable<>();
+    private final HashCashProofOfWorkService hashCashProofOfWorkService;
 
     public UserProfileService(PersistenceService persistenceService,
+                              SecurityService securityService,
                               NetworkService networkService) {
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.SETTINGS, persistableStore);
+        hashCashProofOfWorkService = securityService.getHashCashProofOfWorkService();
         this.networkService = networkService;
         UserNameLookup.setUserProfileService(this);
     }
@@ -143,12 +148,28 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
     private void processUserProfileAdded(UserProfile userProfile) {
         Optional<UserProfile> optionalChatUser = findUserProfile(userProfile.getId());
         if (optionalChatUser.isEmpty() || !optionalChatUser.get().equals(userProfile)) {
-            synchronized (persistableStore) {
-                getUserProfileById().put(userProfile.getId(), userProfile);
+            if (verifyUserProfile(userProfile)) {
+                synchronized (persistableStore) {
+                    getUserProfileById().put(userProfile.getId(), userProfile);
+                }
+                numUserProfiles.set(getUserProfileById().values().size());
+                persist();
             }
-            numUserProfiles.set(getUserProfileById().values().size());
-            persist();
         }
+    }
+
+    private boolean verifyUserProfile(UserProfile userProfile) {
+        if (!Arrays.equals(userProfile.getProofOfWork().getPayload(), userProfile.getPubKeyHash())) {
+            log.warn("Payload of proof of work not matching pubKeyHash of user profile {}", userProfile);
+            return false;
+        }
+
+        if (!hashCashProofOfWorkService.verify(userProfile.getProofOfWork())) {
+            log.warn("Proof of work verification of user profile {} failed", userProfile);
+            return false;
+        }
+
+        return true;
     }
 
     private void processUserProfileRemoved(AuthenticatedData authenticatedData) {
