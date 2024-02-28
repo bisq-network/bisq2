@@ -27,7 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.util.Arrays;
-import java.util.concurrent.CompletableFuture;
 
 // TODO the scaling of the difficulty does not provide the expected results
 // Borrowed from: https://github.com/bisq-network/bisq
@@ -43,20 +42,18 @@ public class EquihashProofOfWorkService extends ProofOfWorkService {
     }
 
     @Override
-    public CompletableFuture<ProofOfWork> mint(byte[] payload, @Nullable byte[] challenge, double difficulty) {
+    public ProofOfWork mint(byte[] payload, @Nullable byte[] challenge, double difficulty) {
         double scaledDifficulty = scaledDifficulty(difficulty);
         log.debug("Got scaled & adjusted difficulty: {}", scaledDifficulty);
 
-        return CompletableFuture.supplyAsync(() -> {
-            long ts = System.currentTimeMillis();
-            byte[] seed = getSeed(payload, challenge);
-            byte[] solution = new Equihash(90, 5, scaledDifficulty).puzzle(seed).findSolution().serialize();
-            long counter = Longs.fromByteArray(Arrays.copyOf(solution, 8));
-            long duration = System.currentTimeMillis() - ts;
-            var proofOfWork = new ProofOfWork(payload, counter, challenge, difficulty, solution, duration);
-            log.debug("Completed minting proofOfWork: {}. {} iterations took {} ms.", proofOfWork, counter, duration);
-            return proofOfWork;
-        });
+        long ts = System.currentTimeMillis();
+        byte[] seed = getSeed(payload, challenge);
+        byte[] solution = new Equihash(90, 5, scaledDifficulty).puzzle(seed).findSolution().serialize();
+        long counter = Longs.fromByteArray(Arrays.copyOf(solution, 8));
+        long duration = System.currentTimeMillis() - ts;
+        var proofOfWork = new ProofOfWork(payload, counter, challenge, difficulty, solution, duration);
+        log.debug("Completed minting proofOfWork: {}. {} iterations took {} ms.", proofOfWork, counter, duration);
+        return proofOfWork;
     }
 
     private byte[] getSeed(byte[] payload, @Nullable byte[] challenge) {

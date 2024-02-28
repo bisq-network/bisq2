@@ -34,7 +34,13 @@ public abstract class ProofOfWorkService {
     public ProofOfWorkService() {
     }
 
-    public abstract CompletableFuture<ProofOfWork> mint(byte[] payload, byte[] challenge, double difficulty);
+    public CompletableFuture<ProofOfWork> mintAsync(byte[] payload,
+                                                    byte[] challenge,
+                                                    double difficulty) {
+        return CompletableFuture.supplyAsync(() -> mint(payload, challenge, difficulty));
+    }
+
+    public abstract ProofOfWork mint(byte[] payload, byte[] challenge, double difficulty);
 
     public abstract boolean verify(ProofOfWork proofOfWork);
 
@@ -44,8 +50,8 @@ public abstract class ProofOfWorkService {
 
     public abstract byte[] getChallenge(String itemId, String ownerId);
 
-    public CompletableFuture<ProofOfWork> mint(String itemId, String ownerId, double difficulty) {
-        return mint(asUtf8Bytes(itemId), getChallenge(itemId, ownerId), difficulty);
+    public CompletableFuture<ProofOfWork> mintAsync(String itemId, String ownerId, double difficulty) {
+        return mintAsync(asUtf8Bytes(itemId), getChallenge(itemId, ownerId), difficulty);
     }
 
     public CompletableFuture<ProofOfWork> mintNymProofOfWork(byte[] pubKeyHash) {
@@ -53,7 +59,7 @@ public abstract class ProofOfWorkService {
     }
 
     public CompletableFuture<ProofOfWork> mintNymProofOfWork(byte[] pubKeyHash, double nymDifficulty) {
-        return mint(pubKeyHash, null, nymDifficulty);
+        return mintAsync(pubKeyHash, null, nymDifficulty);
     }
 
     public boolean verify(ProofOfWork proofOfWork,
@@ -76,7 +82,7 @@ public abstract class ProofOfWorkService {
                     long ts = System.currentTimeMillis();
                     byte[] bytes = new byte[1024];
                     new Random().nextBytes(bytes);
-                    mint(bytes, null, diff).join();
+                    mintAsync(bytes, null, diff).join();
                     tsList.add(System.currentTimeMillis() - ts);
                 }
                 double average = tsList.stream().mapToLong(e -> e).average().getAsDouble();
