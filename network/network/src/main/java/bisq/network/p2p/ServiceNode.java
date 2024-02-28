@@ -63,7 +63,7 @@ import static java.util.concurrent.CompletableFuture.runAsync;
  * Creates nodesById, the default node and the services according to the Config.
  */
 @Slf4j
-public class ServiceNode {
+public class ServiceNode implements Node.Listener {
     @Getter
     public static final class Config {
         public static Config from(com.typesafe.config.Config config) {
@@ -126,6 +126,8 @@ public class ServiceNode {
     @Getter
     private Optional<DataNetworkService> dataNetworkService = Optional.empty();
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
+    private final Set<ConfidentialMessageService.Listener> confidentialMessageListeners = new CopyOnWriteArraySet<>();
+
     @Getter
     public Observable<State> state = new Observable<>(State.NEW);
 
@@ -152,8 +154,33 @@ public class ServiceNode {
 
         transportService = TransportService.create(transportType, nodeConfig.getTransportConfig());
         nodesById = new NodesById(banList, nodeConfig, keyBundleService, transportService, networkLoadSnapshot, authorizationService);
-
         peerGroupService = new PeerGroupService(persistenceService, transportType, peerGroupServiceConfig.getPeerGroupConfig(), seedNodeAddresses, banList);
+
+        nodesById.addNodeListener(this);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Node.Listener
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
+        confidentialMessageListeners.forEach(listener -> {
+            try {
+                listener.onMessage(envelopePayloadMessage);
+            } catch (Exception e) {
+                log.error("Calling onMessage at messageListener {} failed", listener, e);
+            }
+        });
+    }
+
+    @Override
+    public void onConnection(Connection connection) {
+    }
+
+    @Override
+    public void onDisconnect(Connection connection, CloseReason closeReason) {
     }
 
 
@@ -256,30 +283,12 @@ public class ServiceNode {
     }
 
     void addConfidentialMessageListener(ConfidentialMessageService.Listener listener) {
-        //todo (Critical) store nodeListener
-        nodesById.addNodeListener(new Node.Listener() {
-            @Override
-            public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
-                try {
-                    listener.onMessage(envelopePayloadMessage);
-                } catch (Exception e) {
-                    log.error("Calling onMessage at messageListener {} failed", listener, e);
-                }
-            }
-
-            @Override
-            public void onConnection(Connection connection) {
-            }
-
-            @Override
-            public void onDisconnect(Connection connection, CloseReason closeReason) {
-            }
-        });
+        confidentialMessageListeners.add(listener);
         confidentialMessageService.ifPresent(service -> service.addListener(listener));
     }
 
     void removeConfidentialMessageListener(ConfidentialMessageService.Listener listener) {
-        //todo (Critical) missing nodesById.removeNodeListener ?
+        confidentialMessageListeners.remove(listener);
         confidentialMessageService.ifPresent(service -> service.removeListener(listener));
     }
 
