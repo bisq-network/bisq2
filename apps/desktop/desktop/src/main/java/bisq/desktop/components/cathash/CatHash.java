@@ -46,18 +46,20 @@ public class CatHash {
             return CACHE.get(pubKeyHash);
         }
         BigInteger bigInteger = new BigInteger(pubKeyHash.getBytes());
-        Configuration configuration = new Configuration();
-        VariableSizeHashing hashing = new VariableSizeHashing(configuration.getBucketSizes());
-        int[] integerBuckets = hashing.createIntegerBuckets(bigInteger);
-        Image image = imageFromIntegerBuckets(integerBuckets, configuration);
+        int[] buckets = BucketGenerator.createBuckets(bigInteger, Configuration.getBucketSizes());
+        Image image = imageFromBuckets(buckets);
         if (useCache && CACHE.size() < MAX_CACHE_SIZE) {
             CACHE.put(pubKeyHash, image);
         }
         return image;
     }
 
-    private static Image imageFromIntegerBuckets(int[] integerBuckets, Configuration configuration) {
-        String[] paths = configuration.integerBucketsToPaths(integerBuckets);
+
+    private static Image imageFromBuckets(int[] integerBuckets) {
+        String[] paths = BucketGenerator.integerBucketsToPaths(integerBuckets,
+                Configuration.getBucketCount(),
+                Configuration.getFacetCount(),
+                Configuration.getFacetPathTemplates());
         return ImageUtil.composeImage(paths, SIZE, SIZE);
     }
 }
