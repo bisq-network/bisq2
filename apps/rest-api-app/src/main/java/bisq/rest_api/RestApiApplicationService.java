@@ -128,10 +128,10 @@ public class RestApiApplicationService extends ApplicationService {
 
         userService = new UserService(UserService.Config.from(getConfig("user")),
                 persistenceService,
+                securityService,
                 identityService,
                 networkService,
-                bondedRolesService,
-                securityService.getHashCashProofOfWorkService());
+                bondedRolesService);
 
         settingsService = new SettingsService(persistenceService);
 

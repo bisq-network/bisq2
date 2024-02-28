@@ -32,7 +32,9 @@ import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.security.AesSecretKey;
 import bisq.security.EncryptedData;
+import bisq.security.SecurityService;
 import bisq.security.pow.ProofOfWork;
+import bisq.security.pow.hashcash.HashCashProofOfWorkService;
 import bisq.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.ToString;
@@ -50,6 +52,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class UserIdentityService implements PersistenceClient<UserIdentityStore>, Service {
+    public final static int MINT_NYM_DIFFICULTY = 65536;  // Math.pow(2, 16) = 65536;
+
     @Getter
     @ToString
     public static final class Config {
@@ -69,8 +73,10 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     private final UserIdentityStore persistableStore = new UserIdentityStore();
     @Getter
     private final Persistence<UserIdentityStore> persistence;
+    private final HashCashProofOfWorkService hashCashProofOfWorkService;
     private final IdentityService identityService;
     private final NetworkService networkService;
+
     private final Object lock = new Object();
     private final Config config;
     @Getter
@@ -78,10 +84,12 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
 
     public UserIdentityService(Config config,
                                PersistenceService persistenceService,
+                               SecurityService securityService,
                                IdentityService identityService,
                                NetworkService networkService) {
         this.config = config;
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
+        hashCashProofOfWorkService = securityService.getHashCashProofOfWorkService();
         this.identityService = identityService;
         this.networkService = networkService;
     }
@@ -103,6 +111,10 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public CompletableFuture<ProofOfWork> mintNymProofOfWork(byte[] pubKeyHash) {
+        return hashCashProofOfWorkService.mint(pubKeyHash, null, MINT_NYM_DIFFICULTY);
+    }
 
     public CompletableFuture<AesSecretKey> deriveKeyFromPassword(CharSequence password) {
         return persistableStore.deriveKeyFromPassword(password)

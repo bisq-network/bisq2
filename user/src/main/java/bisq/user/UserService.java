@@ -22,7 +22,7 @@ import bisq.common.application.Service;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.persistence.PersistenceService;
-import bisq.security.pow.ProofOfWorkService;
+import bisq.security.SecurityService;
 import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfileService;
@@ -58,10 +58,10 @@ public class UserService implements Service {
 
     public UserService(Config config,
                        PersistenceService persistenceService,
+                       SecurityService securityService,
                        IdentityService identityService,
                        NetworkService networkService,
-                       BondedRolesService bondedRolesService,
-                       ProofOfWorkService proofOfWorkService) {
+                       BondedRolesService bondedRolesService) {
 
         bannedUserService = new BannedUserService(persistenceService, networkService);
 
@@ -69,6 +69,7 @@ public class UserService implements Service {
 
         userIdentityService = new UserIdentityService(config.getUserIdentityConfig(),
                 persistenceService,
+                securityService,
                 identityService,
                 networkService);
 

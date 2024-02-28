@@ -30,7 +30,6 @@ import bisq.identity.IdentityService;
 import bisq.security.DigestUtil;
 import bisq.security.keys.KeyBundleService;
 import bisq.security.pow.ProofOfWork;
-import bisq.security.pow.hashcash.HashCashProofOfWorkService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.NymIdGenerator;
 import bisq.user.profile.UserProfile;
@@ -51,8 +50,6 @@ public class CreateProfileController implements Controller {
     protected final CreateProfileView view;
     protected final UserIdentityService userIdentityService;
     protected final KeyBundleService keyBundleService;
-    // We do not support multiple proof of work types
-    protected final HashCashProofOfWorkService hashCashProofOfWorkService;
     protected final IdentityService identityService;
     private final OverlayController overlayController;
     protected Optional<CompletableFuture<ProofOfWork>> mintNymProofOfWorkFuture = Optional.empty();
@@ -60,7 +57,6 @@ public class CreateProfileController implements Controller {
 
     public CreateProfileController(ServiceProvider serviceProvider) {
         keyBundleService = serviceProvider.getSecurityService().getKeyBundleService();
-        hashCashProofOfWorkService = serviceProvider.getSecurityService().getHashCashProofOfWorkService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         identityService = serviceProvider.getIdentityService();
         overlayController = OverlayController.getInstance();
@@ -150,7 +146,7 @@ public class CreateProfileController implements Controller {
 
     private CompletableFuture<ProofOfWork> createProofOfWork(byte[] pubKeyHash) {
         long ts = System.currentTimeMillis();
-        return hashCashProofOfWorkService.mintNymProofOfWork(pubKeyHash)
+        return userIdentityService.mintNymProofOfWork(pubKeyHash)
                 .thenApply(proofOfWork -> {
                     long powDuration = System.currentTimeMillis() - ts;
                     log.info("Proof of work creation completed after {} ms", powDuration);
