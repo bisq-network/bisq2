@@ -103,6 +103,10 @@ public class ChatMessagesComponent {
         controller.chatMessagesListView.setSearchPredicate(predicate);
     }
 
+    public void setBisqEasyOffersFilerPredicate(Predicate<? super ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate) {
+        controller.chatMessagesListView.setBisqEasyOffersFilerPredicate(predicate);
+    }
+
     public void resetSelectedChatMessage() {
         controller.model.selectedChatMessage = null;
     }

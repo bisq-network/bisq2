@@ -39,7 +39,7 @@ public final class BisqEasyOfferbookModel extends ChatModel {
     private final ObjectProperty<MarketChannelItem> selectedMarketChannelItem = new SimpleObjectProperty<>();
     private final StringProperty marketSelectorSearchText = new SimpleStringProperty();
     private final ObjectProperty<Filters.Markets> selectedMarketsFilter = new SimpleObjectProperty<>();
-    private final ObjectProperty<Filters.Markets> selectedOffersFilter = new SimpleObjectProperty<>();
+    private final ObjectProperty<Filters.Offers> selectedOffersFilter = new SimpleObjectProperty<>();
     public BisqEasyOfferbookModel(ChatChannelDomain chatChannelDomain) {
         super(chatChannelDomain);
     }

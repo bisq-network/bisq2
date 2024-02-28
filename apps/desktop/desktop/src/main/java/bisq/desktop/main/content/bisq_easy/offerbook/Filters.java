@@ -17,13 +17,20 @@
 
 package bisq.desktop.main.content.bisq_easy.offerbook;
 
+import bisq.chat.ChatChannel;
+import bisq.chat.ChatMessage;
+import bisq.desktop.main.content.components.chatMessages.ChatMessageListItem;
 import lombok.Getter;
 
 import java.util.function.Predicate;
 
 class Filters {
+    interface FilterPredicate<T> {
+        Predicate<T> getPredicate();
+    }
+
     @Getter
-    enum Markets {
+    enum Markets implements FilterPredicate<MarketChannelItem> {
         ALL(item -> true),
         WITH_OFFERS(item -> item.getNumOffers().get() > 0);
 
@@ -34,10 +41,17 @@ class Filters {
         }
     }
 
-    enum Offers {
-        ALL,
-        MINE,
-        BUY,
-        SELL;
+    @Getter
+    enum Offers implements FilterPredicate<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> {
+        ALL(item -> true),
+        MINE(item -> !item.isBisqEasyPublicChatMessageWithOffer() || item.isBisqEasyPublicChatMessageWithMyOffer()),
+        BUY(item -> !item.isBisqEasyPublicChatMessageWithOffer() || item.isBisqEasyPublicChatMessageWithPeerBuyOffer()),
+        SELL(item -> !item.isBisqEasyPublicChatMessageWithOffer() || item.isBisqEasyPublicChatMessageWithPeerSellOffer());
+
+        private final Predicate<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate;
+
+        Offers(Predicate<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate) {
+            this.predicate = predicate;
+        }
     }
 }

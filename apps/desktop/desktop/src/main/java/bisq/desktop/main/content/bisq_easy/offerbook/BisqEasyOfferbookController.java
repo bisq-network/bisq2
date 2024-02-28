@@ -52,7 +52,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
     private final BisqEasyOfferbookModel bisqEasyOfferbookModel;
     private Pin offerOnlySettingsPin, bisqEasyPrivateTradeChatChannelsPin, selectedChannelPin;
-    private Subscription marketSelectorSearchPin, selectedMarketFilterPin;
+    private Subscription marketSelectorSearchPin, selectedMarketFilterPin, selectedOffersFilterPin;
 
     public BisqEasyOfferbookController(ServiceProvider serviceProvider) {
         super(serviceProvider, ChatChannelDomain.BISQ_EASY_OFFERBOOK, NavigationTarget.BISQ_EASY_OFFERBOOK);
@@ -114,6 +114,16 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
             }
         });
 
+        selectedOffersFilterPin = EasyBind.subscribe(model.getSelectedOffersFilter(), filter -> {
+            if (filter == null) {
+                // By default, show all offers
+                model.getSelectedOffersFilter().set(Filters.Offers.ALL);
+                chatMessagesComponent.setBisqEasyOffersFilerPredicate(model.getSelectedOffersFilter().get().getPredicate());
+            } else {
+                chatMessagesComponent.setBisqEasyOffersFilerPredicate(filter.getPredicate());
+            }
+        });
+
         updateMarketItemsPredicate();
         maybeSelectFirst();
     }
@@ -127,6 +137,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         selectedChannelPin.unbind();
         marketSelectorSearchPin.unsubscribe();
         selectedMarketFilterPin.unsubscribe();
+        selectedOffersFilterPin.unsubscribe();
 
         resetSelectedChildTarget();
     }
