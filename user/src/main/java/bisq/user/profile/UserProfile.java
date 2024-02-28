@@ -29,7 +29,6 @@ import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.security.DigestUtil;
 import bisq.security.pow.ProofOfWork;
-import bisq.user.NymIdGenerator;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.protobuf.InvalidProtocolBufferException;
