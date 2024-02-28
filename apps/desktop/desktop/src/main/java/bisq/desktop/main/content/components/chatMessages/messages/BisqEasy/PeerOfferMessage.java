@@ -46,7 +46,7 @@ public final class PeerOfferMessage extends PeerMessage {
         reactionsHBox.getChildren().setAll(replyIcon, pmIcon, moreOptionsIcon, supportedLanguages, Spacer.fillHBox());
 
         VBox.setMargin(userNameAndDateHBox, new Insets(-5, 0, 5, 10));
-        getChildren().setAll(userNameAndDateHBox, messageBgHBox, reactionsHBox);
+        contentVBox.getChildren().setAll(userNameAndDateHBox, messageBgHBox, reactionsHBox);
     }
 
     @Override
