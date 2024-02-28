@@ -48,8 +48,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 public class Bisq1BridgeHttpService implements Service {
-    //todo (Critical) set it to block height of launch date. We are not interested in txs published before
-    private static final int LAUNCH_BLOCK_HEIGHT = 827056; // block height on Jan 23 2024
+    private static final int LAUNCH_BLOCK_HEIGHT = 832353; // block height on Feb 28 2024
 
     @Getter
     @ToString
