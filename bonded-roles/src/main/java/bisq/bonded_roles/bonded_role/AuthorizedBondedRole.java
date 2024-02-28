@@ -17,6 +17,7 @@
 
 package bisq.bonded_roles.bonded_role;
 
+import bisq.bonded_roles.AuthorizedPubKeys;
 import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.oracle.AuthorizedOracleNode;
 import bisq.common.application.DevMode;
@@ -134,9 +135,9 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
     @Override
     public Set<String> getAuthorizedPublicKeys() {
         if (DevMode.isDevMode()) {
-            return DevMode.AUTHORIZED_DEV_PUBLIC_KEYS;
+            return AuthorizedPubKeys.DEV_PUB_KEYS;
         } else {
-            return AuthorizedOracleNode.KEYS;
+            return AuthorizedPubKeys.ORACLE_NODE_PUB_KEYS;
         }
     }
 

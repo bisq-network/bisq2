@@ -17,7 +17,7 @@
 
 package bisq.bonded_roles.market_price;
 
-import bisq.bonded_roles.oracle.AuthorizedOracleNode;
+import bisq.bonded_roles.AuthorizedPubKeys;
 import bisq.common.application.DevMode;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
@@ -104,9 +104,9 @@ public final class AuthorizedMarketPriceData implements AuthorizedDistributedDat
     @Override
     public Set<String> getAuthorizedPublicKeys() {
         if (DevMode.isDevMode()) {
-            return DevMode.AUTHORIZED_DEV_PUBLIC_KEYS;
+            return AuthorizedPubKeys.DEV_PUB_KEYS;
         } else {
-            return AuthorizedOracleNode.KEYS;
+            return AuthorizedPubKeys.ORACLE_NODE_PUB_KEYS;
         }
     }
 

@@ -17,7 +17,7 @@
 
 package bisq.user.reputation.data;
 
-import bisq.bonded_roles.oracle.AuthorizedOracleNode;
+import bisq.bonded_roles.AuthorizedPubKeys;
 import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -98,9 +98,9 @@ public final class AuthorizedTimestampData implements AuthorizedDistributedData 
     @Override
     public Set<String> getAuthorizedPublicKeys() {
         if (DevMode.isDevMode()) {
-            return DevMode.AUTHORIZED_DEV_PUBLIC_KEYS;
+            return AuthorizedPubKeys.DEV_PUB_KEYS;
         } else {
-            return AuthorizedOracleNode.KEYS;
+            return AuthorizedPubKeys.ORACLE_NODE_PUB_KEYS;
         }
     }
 

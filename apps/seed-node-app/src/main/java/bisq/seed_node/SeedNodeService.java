@@ -34,18 +34,11 @@ import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class SeedNodeService implements Service {
-    // FIXME
-    // TODO (Critical) add production keys
-    // This field is not used yet, but we should maintain it for potential later usage.
-    public static final Set<String> KEYS = Set.of(
-    );
-
     @Getter
     public static class Config {
         private final String privateKey;
