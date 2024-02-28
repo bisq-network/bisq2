@@ -21,25 +21,25 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class Configuration {
-    private final static String ROOT = "";
+    private static final String ROOT = "";
 
-    private static final int BG0_COUNT = 15;
-    private static final int BG1_COUNT = 15;
-    private static final int EARS0_COUNT = 15;
-    private static final int EARS1_COUNT = 2;
-    private static final int FACE0_COUNT = 15;
-    private static final int FACE1_COUNT = 8;
-    private static final int EYES0_COUNT = 15;
-    private static final int NOSE0_COUNT = 5;
-    private static final int WHISKERS0_COUNT = 6;
+    private static final int BG0_COUNT = 16;
+    private static final int BG1_COUNT = 16;
+    private static final int EARS0_COUNT = 16;
+    private static final int EARS1_COUNT = 3;
+    private static final int FACE0_COUNT = 16;
+    private static final int FACE1_COUNT = 9;
+    private static final int EYES0_COUNT = 16;
+    private static final int NOSE0_COUNT = 6;
+    private static final int WHISKERS0_COUNT = 7;
 
-    private final static int BUCKET_COUNT = 9;
-    private final static int FACET_COUNT = 9;
+    private static final int BUCKET_COUNT = 9;
+    private static final int FACET_COUNT = 9;
 
-    private final static byte[] BUCKET_SIZES = new byte[]{BG0_COUNT, BG1_COUNT, EARS0_COUNT, EARS1_COUNT, FACE0_COUNT,
+    private static final int[] BUCKET_SIZES = new int[]{BG0_COUNT, BG1_COUNT, EARS0_COUNT, EARS1_COUNT, FACE0_COUNT,
             FACE1_COUNT, EYES0_COUNT, NOSE0_COUNT, WHISKERS0_COUNT};
 
-    private final static String[] FACET_PATH_TEMPLATES;
+    private static final String[] FACET_PATH_TEMPLATES;
 
     static {
         String postFix = ".png";
@@ -56,24 +56,19 @@ public class Configuration {
         };
     }
 
-    String[] integerBucketsToPaths(int[] integerBuckets) {
-        if (integerBuckets.length != BUCKET_COUNT) {
-            throw new IllegalArgumentException();
-        }
-
-        String[] paths = new String[FACET_COUNT];
-        for (int facet = 0; facet < FACET_COUNT; facet++) {
-            int bucketValue = integerBuckets[facet];
-            paths[facet] = generatePath(FACET_PATH_TEMPLATES[facet], bucketValue);
-        }
-        return paths;
+    static int getBucketCount() {
+        return BUCKET_COUNT;
     }
 
-    byte[] getBucketSizes() {
+    static int getFacetCount() {
+        return FACET_COUNT;
+    }
+
+    static int[] getBucketSizes() {
         return BUCKET_SIZES;
     }
 
-    private String generatePath(String facetPathTemplate, int bucketValue) {
-        return facetPathTemplate.replaceAll("NUM", String.format("%02d", bucketValue));
+    static String[] getFacetPathTemplates() {
+        return FACET_PATH_TEMPLATES;
     }
 }
