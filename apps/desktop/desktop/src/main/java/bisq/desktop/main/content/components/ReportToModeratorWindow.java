@@ -148,6 +148,7 @@ public class ReportToModeratorWindow {
             Label info = new Label(Res.get("chat.reportToModerator.info"));
             info.setWrapText(true);
             info.getStyleClass().addAll("bisq-text-3");
+            info.setMinHeight(100);
 
             message = new MaterialTextArea(Res.get("chat.reportToModerator.message"), Res.get("chat.reportToModerator.message.prompt"));
             reportButton = new Button(Res.get("chat.reportToModerator.report"));
