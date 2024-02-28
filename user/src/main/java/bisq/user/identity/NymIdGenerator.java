@@ -20,7 +20,6 @@ package bisq.user.identity;
 import bisq.common.util.ByteArrayUtils;
 import bisq.common.util.FileUtils;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.primitives.Longs;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -46,8 +45,8 @@ public class NymIdGenerator {
         NOUNS = read("nouns.txt");
     }
 
-    public static String generate(byte[] pubKeyHash, long powSolution) {
-        byte[] combined = ByteArrayUtils.concat(Longs.toByteArray(powSolution), pubKeyHash);
+    public static String generate(byte[] pubKeyHash, byte[] powSolution) {
+        byte[] combined = ByteArrayUtils.concat(powSolution, pubKeyHash);
         BigInteger input = new BigInteger(combined);
         return generate(input, ADVERBS, ADJECTIVES, NOUNS, DEFAULT_SEPARATOR);
     }

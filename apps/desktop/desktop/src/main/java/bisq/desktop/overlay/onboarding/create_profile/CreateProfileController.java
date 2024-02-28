@@ -153,7 +153,7 @@ public class CreateProfileController implements Controller {
                     createSimulatedDelay(powDuration);
                     UIThread.run(() -> {
                         model.setProofOfWork(Optional.of(proofOfWork));
-                        long powSolution = proofOfWork.getCounter(); // For HashCash the solution is the counter as byte array
+                        byte[] powSolution = proofOfWork.getSolution();
                         String nym = NymIdGenerator.generate(pubKeyHash, powSolution);
                         Image image = CatHash.getImage(pubKeyHash, powSolution);
                         model.getNym().set(nym);

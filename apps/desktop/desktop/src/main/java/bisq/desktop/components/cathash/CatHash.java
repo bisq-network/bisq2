@@ -20,7 +20,6 @@ package bisq.desktop.components.cathash;
 import bisq.common.util.ByteArrayUtils;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.user.profile.UserProfile;
-import com.google.common.primitives.Longs;
 import javafx.scene.image.Image;
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,15 +34,15 @@ public class CatHash {
     private static final ConcurrentHashMap<BigInteger, Image> CACHE = new ConcurrentHashMap<>();
 
     public static Image getImage(UserProfile userProfile) {
-        return getImage(userProfile.getPubKeyHash(), userProfile.getProofOfWork().getCounter(), true);
+        return getImage(userProfile.getPubKeyHash(), userProfile.getProofOfWork().getSolution(), true);
     }
 
-    public static Image getImage(byte[] pubKeyHash, long powSolution) {
+    public static Image getImage(byte[] pubKeyHash, byte[] powSolution) {
         return getImage(pubKeyHash, powSolution, true);
     }
 
-    public static Image getImage(byte[] pubKeyHash, long powSolution, boolean useCache) {
-        byte[] combined = ByteArrayUtils.concat(Longs.toByteArray(powSolution), pubKeyHash);
+    public static Image getImage(byte[] pubKeyHash, byte[] powSolution, boolean useCache) {
+        byte[] combined = ByteArrayUtils.concat(powSolution, pubKeyHash);
         BigInteger input = new BigInteger(combined);
         if (useCache && CACHE.containsKey(input)) {
             return CACHE.get(input);

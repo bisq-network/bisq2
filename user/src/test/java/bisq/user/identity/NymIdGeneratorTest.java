@@ -144,7 +144,7 @@ public class NymIdGeneratorTest {
         // Feed random strings, expect no exceptions
         for (int i = 0; i < 3; i++) {
             byte[] hash = DigestUtil.RIPEMD160(StringUtils.createUid().getBytes(StandardCharsets.UTF_8));
-            log.debug(NymIdGenerator.generate(hash, 0));
+            log.debug(NymIdGenerator.generate(hash, new byte[]{}));
         }
 
         // Use truncated lists, fill a set and check if we get no duplications
