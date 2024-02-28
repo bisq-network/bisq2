@@ -106,6 +106,8 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     private final Persistence<NetworkServiceStore> persistence;
     @Getter
     private final Map<TransportType, CompletableFuture<Node>> initializedDefaultNodeByTransport = new HashMap<>();
+    @Getter
+    private final Map<TransportType, Set<Address>> seedAddressesByTransportFromConfig;
 
     public NetworkService(NetworkServiceConfig config,
                           PersistenceService persistenceService,
@@ -133,10 +135,11 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
 
         NetworkLoadSnapshot networkLoadSnapshot = new NetworkLoadSnapshot();
 
+        seedAddressesByTransportFromConfig = config.getSeedAddressesByTransport();
         serviceNodesByTransport = new ServiceNodesByTransport(config.getConfigByTransportType(),
                 config.getServiceNodeConfig(),
                 config.getPeerGroupServiceConfigByTransport(),
-                config.getSeedAddressesByTransport(),
+                seedAddressesByTransportFromConfig,
                 config.getInventoryServiceConfig(),
                 config.getAuthorizationServiceConfig(),
                 supportedTransportTypes,

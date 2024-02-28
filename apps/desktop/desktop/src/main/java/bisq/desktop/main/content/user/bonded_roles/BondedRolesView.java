@@ -98,7 +98,7 @@ public abstract class BondedRolesView<M extends BondedRolesModel, C extends Bond
 
                 if (item != null && !empty) {
                     userName.setText(item.getUserName());
-                    if (item.isStaticPublicKeysProvided()) {
+                    if (item.isRootNode()) {
                         userName.setTooltip(tooltip);
                         userName.setStyle("-fx-text-fill: -bisq2-green;");
                     } else {
