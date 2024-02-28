@@ -21,6 +21,7 @@ import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannelService;
+import bisq.common.application.DevMode;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
@@ -36,6 +37,7 @@ import bisq.offer.amount.spec.AmountSpecUtil;
 import bisq.offer.amount.spec.QuoteSideFixedAmountSpec;
 import bisq.offer.amount.spec.QuoteSideRangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.offer.options.OfferOptionUtil;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import bisq.offer.payment_method.PaymentMethodSpecUtil;
 import bisq.offer.price.PriceUtil;
@@ -319,17 +321,17 @@ public class TradeWizardAmountController implements Controller {
 
     private boolean filterOffers(BisqEasyOffer peersOffer) {
         try {
-            Optional<UserProfile> optionalAuthorUserProfile = userProfileService.findUserProfile(peersOffer.getMakersUserProfileId());
-            if (optionalAuthorUserProfile.isEmpty()) {
+            Optional<UserProfile> optionalMakersUserProfile = userProfileService.findUserProfile(peersOffer.getMakersUserProfileId());
+            if (optionalMakersUserProfile.isEmpty()) {
                 return false;
             }
-            UserProfile authorUserProfile = optionalAuthorUserProfile.get();
-            if (userProfileService.isChatUserIgnored(authorUserProfile)) {
+            UserProfile makersUserProfile = optionalMakersUserProfile.get();
+            if (userProfileService.isChatUserIgnored(makersUserProfile)) {
                 return false;
             }
             if (userIdentityService.getUserIdentities().stream()
                     .map(userIdentity -> userIdentity.getUserProfile().getId())
-                    .anyMatch(userProfileId -> userProfileId.equals(optionalAuthorUserProfile.get().getId()))) {
+                    .anyMatch(userProfileId -> userProfileId.equals(optionalMakersUserProfile.get().getId()))) {
                 return false;
             }
 
@@ -360,10 +362,20 @@ public class TradeWizardAmountController implements Controller {
                 return false;
             }
 
-            //todo (Critical)
-           /* if (reputationService.getReputationScore(senderUserProfile).getTotalScore() < myChatOffer.getRequiredTotalReputationScore()) {
-                return false;
-            }*/
+            if (!DevMode.isDevMode() && userIdentityService.getSelectedUserIdentity() != null) {
+                Optional<Long> requiredScore = OfferOptionUtil.findRequiredTotalReputationScore(peersOffer);
+                if (requiredScore.isPresent()) {
+                    long myScore = reputationService.getReputationScore(userIdentityService.getSelectedUserIdentity().getUserProfile()).getTotalScore();
+                    if (requiredScore.get() > myScore) {
+                        return false;
+                    }
+                }
+
+                long makersScore = reputationService.getReputationScore(makersUserProfile).getTotalScore();
+                if (settingsService.getMinRequiredReputationScore().get() > makersScore) {
+                    return false;
+                }
+            }
 
             return true;
         } catch (Throwable t) {
