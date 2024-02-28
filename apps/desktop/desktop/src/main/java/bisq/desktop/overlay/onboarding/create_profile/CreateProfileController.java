@@ -154,7 +154,7 @@ public class CreateProfileController implements Controller {
                 .thenApply(proofOfWork -> {
                     long powDuration = System.currentTimeMillis() - ts;
                     log.info("Proof of work creation completed after {} ms", powDuration);
-                    //createSimulatedDelay(powDuration);
+                    createSimulatedDelay(powDuration);
                     UIThread.run(() -> {
                         model.setProofOfWork(Optional.of(proofOfWork));
                         String nym = NymIdGenerator.fromHash(pubKeyHash);
