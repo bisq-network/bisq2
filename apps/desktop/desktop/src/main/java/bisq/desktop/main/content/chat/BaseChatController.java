@@ -30,8 +30,8 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
-import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.cathash.CatHash;
+import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.main.content.chat.sidebar.ChannelSidebar;
 import bisq.desktop.main.content.chat.sidebar.UserProfileSidebar;
 import bisq.desktop.main.content.components.chatMessages.ChatMessagesComponent;
@@ -147,7 +147,7 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
     protected void applyPeersIcon(PrivateChatChannel<?> privateChatChannel) {
         if (privateChatChannel instanceof TwoPartyPrivateChatChannel) {
             TwoPartyPrivateChatChannel twoPartyPrivateChatChannel = (TwoPartyPrivateChatChannel) privateChatChannel;
-            Image image = CatHash.getImage(twoPartyPrivateChatChannel.getPeer().getPubKeyHash());
+            Image image = CatHash.getImage(twoPartyPrivateChatChannel.getPeer());
             ImageView imageView = new ImageView(image);
             imageView.setFitWidth(35);
             imageView.setFitHeight(35);
@@ -167,13 +167,13 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
                     left = bisqEasyOpenTradeChannel.getPeer();
                     right = bisqEasyOpenTradeChannel.getMediator().get();
                 }
-                ImageView leftImageView = new ImageView(CatHash.getImage(left.getPubKeyHash()));
+                ImageView leftImageView = new ImageView(CatHash.getImage(left));
                 leftImageView.setFitWidth(35);
                 leftImageView.setFitHeight(35);
                 Button leftIconButton = BisqIconButton.createIconButton(leftImageView);
                 leftIconButton.setMouseTransparent(true);
 
-                ImageView rightImageView = new ImageView(CatHash.getImage(right.getPubKeyHash()));
+                ImageView rightImageView = new ImageView(CatHash.getImage(right));
                 rightImageView.setFitWidth(35);
                 rightImageView.setFitHeight(35);
                 Button rightIconButton = BisqIconButton.createIconButton(rightImageView);
@@ -184,7 +184,7 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
                 hBox.setAlignment(Pos.CENTER_LEFT);
                 model.getChannelIconNode().set(hBox);
             } else {
-                Image image = CatHash.getImage(bisqEasyOpenTradeChannel.getPeer().getPubKeyHash());
+                Image image = CatHash.getImage(bisqEasyOpenTradeChannel.getPeer());
                 ImageView imageView = new ImageView(image);
                 imageView.setFitWidth(35);
                 imageView.setFitHeight(35);

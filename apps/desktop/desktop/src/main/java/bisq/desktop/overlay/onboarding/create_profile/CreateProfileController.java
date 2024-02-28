@@ -33,6 +33,7 @@ import bisq.security.pow.ProofOfWork;
 import bisq.user.identity.NymIdGenerator;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
+import javafx.scene.image.Image;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -140,21 +141,26 @@ public class CreateProfileController implements Controller {
         model.setKeyPair(Optional.of(keyPair));
         byte[] pubKeyHash = DigestUtil.hash(keyPair.getPublic().getEncoded());
         model.setPubKeyHash(Optional.of(pubKeyHash));
-        // mintNymProofOfWork is executed on a ForkJoinPool thread
         mintNymProofOfWorkFuture = Optional.of(createProofOfWork(pubKeyHash));
     }
 
     private CompletableFuture<ProofOfWork> createProofOfWork(byte[] pubKeyHash) {
         long ts = System.currentTimeMillis();
-        return userIdentityService.mintNymProofOfWork(pubKeyHash)
+        return CompletableFuture.supplyAsync(() -> userIdentityService.mintNymProofOfWork(pubKeyHash))
                 .thenApply(proofOfWork -> {
                     long powDuration = System.currentTimeMillis() - ts;
                     log.info("Proof of work creation completed after {} ms", powDuration);
                     createSimulatedDelay(powDuration);
                     UIThread.run(() -> {
                         model.setProofOfWork(Optional.of(proofOfWork));
-                        String nym = NymIdGenerator.fromHash(pubKeyHash);
-                        applyIdentityData(pubKeyHash, nym);
+                        long powSolution = proofOfWork.getCounter(); // For HashCash the solution is the counter as byte array
+                        String nym = NymIdGenerator.generate(pubKeyHash, powSolution);
+                        Image image = CatHash.getImage(pubKeyHash, powSolution);
+                        model.getNym().set(nym);
+                        model.getRoboHashImage().set(image);
+                        model.getPowProgress().set(0);
+                        model.getRoboHashIconVisible().set(true);
+                        model.getReGenerateButtonDisabled().set(false);
                     });
                     return proofOfWork;
                 });
@@ -190,13 +196,5 @@ public class CreateProfileController implements Controller {
         model.getReGenerateButtonDisabled().set(true);
         model.getPowProgress().set(-1);
         model.getNym().set(Res.get("onboarding.createProfile.nym.generating"));
-    }
-
-    private void applyIdentityData(byte[] pubKeyHash, String nym) {
-        model.getNym().set(nym);
-        model.getRoboHashImage().set(CatHash.getImage(pubKeyHash));
-        model.getPowProgress().set(0);
-        model.getRoboHashIconVisible().set(true);
-        model.getReGenerateButtonDisabled().set(false);
     }
 }

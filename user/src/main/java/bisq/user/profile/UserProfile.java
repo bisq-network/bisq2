@@ -149,7 +149,7 @@ public final class UserProfile implements DistributedData {
 
     public String getNym() {
         if (nym == null) {
-            nym = NymIdGenerator.fromHash(getPubKeyHash());
+            nym = NymIdGenerator.generate(getPubKeyHash(), proofOfWork.getCounter());
         }
         return nym;
     }

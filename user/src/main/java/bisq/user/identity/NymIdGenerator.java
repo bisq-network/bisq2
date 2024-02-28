@@ -37,26 +37,27 @@ public class NymIdGenerator {
     private static final BigInteger MAX_INTEGER = BigInteger.valueOf(Integer.MAX_VALUE);
     private static final String DEFAULT_SEPARATOR = "-";
 
-    public static String fromHash(byte[] hash) {
+    public static String generate(byte[] hash, long powSolution) {
         List<String> adverbs = read("adverbs.txt");
         List<String> adjectives = read("adjectives.txt");
         List<String> nouns = read("nouns.txt");
-        return fromHash(new BigInteger(hash), adverbs, adjectives, nouns, DEFAULT_SEPARATOR);
+        BigInteger input = new BigInteger(hash).add(BigInteger.valueOf(powSolution));
+        return generate(input, adverbs, adjectives, nouns, DEFAULT_SEPARATOR);
     }
 
     @VisibleForTesting
-    static String fromHash(BigInteger hashAsBigInteger, List<String> adverbs, List<String> adjectives, List<String> nouns) {
-        return fromHash(hashAsBigInteger, adverbs, adjectives, nouns, "");
+    static String generate(BigInteger input, List<String> adverbs, List<String> adjectives, List<String> nouns) {
+        return generate(input, adverbs, adjectives, nouns, "");
     }
 
-    static String fromHash(BigInteger hashAsBigInteger, List<String> adverbs, List<String> adjectives, List<String> nouns, String separator) {
-        hashAsBigInteger = hashAsBigInteger.abs();
+    static String generate(BigInteger input, List<String> adverbs, List<String> adjectives, List<String> nouns, String separator) {
+        input = input.abs();
         BigInteger numAdjectives = BigInteger.valueOf(adjectives.size());
         BigInteger numNouns = BigInteger.valueOf(nouns.size());
         BigInteger appendixNumber = BigInteger.valueOf(1000);
 
-        BigInteger adverbIndex = hashAsBigInteger.divide(numAdjectives.multiply(numNouns).multiply(appendixNumber));
-        BigInteger remainderHash = hashAsBigInteger.subtract(adverbIndex.multiply(numAdjectives.multiply(numNouns.multiply(appendixNumber))));
+        BigInteger adverbIndex = input.divide(numAdjectives.multiply(numNouns).multiply(appendixNumber));
+        BigInteger remainderHash = input.subtract(adverbIndex.multiply(numAdjectives.multiply(numNouns.multiply(appendixNumber))));
         BigInteger adjectiveIndex = remainderHash.divide(numNouns.multiply(appendixNumber));
         BigInteger remainderAdverb = remainderHash.subtract(adjectiveIndex.multiply(numNouns).multiply(appendixNumber));
         BigInteger nounsIndex = remainderAdverb.divide(appendixNumber);

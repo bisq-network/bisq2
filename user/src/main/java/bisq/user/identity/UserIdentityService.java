@@ -112,7 +112,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<ProofOfWork> mintNymProofOfWork(byte[] pubKeyHash) {
+    public ProofOfWork mintNymProofOfWork(byte[] pubKeyHash) {
         return hashCashProofOfWorkService.mint(pubKeyHash, null, MINT_NYM_DIFFICULTY);
     }
 

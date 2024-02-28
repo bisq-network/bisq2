@@ -50,9 +50,7 @@ public class HashCashProofOfWorkService extends ProofOfWorkService {
         }
         while (numberOfLeadingZeros(hash) <= log2Difficulty);
         byte[] solution = Longs.toByteArray(counter);
-        ProofOfWork proofOfWork = new ProofOfWork(payload, counter, challenge, difficulty, solution,
-                System.currentTimeMillis() - ts);
-        return proofOfWork;
+        return new ProofOfWork(payload, counter, challenge, difficulty, solution, System.currentTimeMillis() - ts);
     }
 
     @Override
