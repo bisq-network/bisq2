@@ -22,8 +22,8 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
-import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.components.cathash.CatHash;
+import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.identity.IdentityService;
@@ -154,7 +154,7 @@ public class CreateProfileController implements Controller {
                 .thenApply(proofOfWork -> {
                     long powDuration = System.currentTimeMillis() - ts;
                     log.info("Proof of work creation completed after {} ms", powDuration);
-                    createSimulatedDelay(powDuration);
+                    //createSimulatedDelay(powDuration);
                     UIThread.run(() -> {
                         model.setProofOfWork(Optional.of(proofOfWork));
                         String nym = NymIdGenerator.fromHash(pubKeyHash);

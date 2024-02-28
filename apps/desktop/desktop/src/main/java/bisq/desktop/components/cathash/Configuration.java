@@ -56,6 +56,19 @@ public class Configuration {
         };
     }
 
+    public String[] integerBucketsToPaths(int[] integerBuckets) {
+        if (integerBuckets.length != BUCKET_COUNT) {
+            throw new IllegalArgumentException();
+        }
+
+        String[] paths = new String[FACET_COUNT];
+        for (int facet = 0; facet < FACET_COUNT; facet++) {
+            int bucketValue = integerBuckets[facet];
+            paths[facet] = generatePath(FACET_PATH_TEMPLATES[facet], bucketValue);
+        }
+        return paths;
+    }
+
     public String[] convertToFacetParts(byte[] bucketValues) {
         if (bucketValues.length != BUCKET_COUNT) {
             throw new IllegalArgumentException();

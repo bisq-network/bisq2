@@ -30,7 +30,6 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 public class CatHash {
     private static final int MAX_CACHE_SIZE = 10000;
-    private static final HandleFactory HANDLE_FACTORY = new HandleFactory();
     private static final ConcurrentHashMap<ByteArray, Image> CACHE = new ConcurrentHashMap<>();
 
     public static Image getImage(byte[] pubKeyHash) {
@@ -48,20 +47,16 @@ public class CatHash {
         BigInteger bigInteger = new BigInteger(pubKeyHash.getBytes());
         Configuration configuration = new Configuration();
         VariableSizeHashing hashing = new VariableSizeHashing(configuration.getBucketSizes());
-        byte[] data = hashing.createBuckets(bigInteger);
-        Handle handle = HANDLE_FACTORY.calculateHandle(data);
-        Image image = imageForHandle(handle, configuration);
+        int[] integerBuckets = hashing.createIntegerBuckets(bigInteger);
+        Image image = imageFromIntegerBuckets(integerBuckets, configuration);
         if (useCache && CACHE.size() < MAX_CACHE_SIZE) {
             CACHE.put(pubKeyHash, image);
         }
         return image;
     }
 
-    private static Image imageForHandle(Handle handle, Configuration configuration) {
-        long ts = System.currentTimeMillis();
-        byte[] bucketValues = handle.bucketValues();
-        String[] paths = configuration.convertToFacetParts(bucketValues);
-        log.debug("Generated paths for CatHash image in {} ms", System.currentTimeMillis() - ts); // typically <1ms
+    private static Image imageFromIntegerBuckets(int[] integerBuckets, Configuration configuration) {
+        String[] paths = configuration.integerBucketsToPaths(integerBuckets);
         return ImageUtil.composeImage(paths, configuration.width(), configuration.height());
     }
 }

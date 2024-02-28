@@ -67,4 +67,17 @@ public class VariableSizeHashing {
 
         return ret;
     }
+
+    public int[] createIntegerBuckets(BigInteger input) {
+        int currentBucket = 0;
+        int[] result = new int[bucketSizes.length];
+        while (currentBucket < bucketSizes.length) {
+            BigInteger[] divisorReminder = input.divideAndRemainder(BigInteger.valueOf(bucketSizes[currentBucket]));
+            input = divisorReminder[0];
+            long reminder = divisorReminder[1].longValue();
+            result[currentBucket] = (int) Math.abs(reminder % bucketSizes[currentBucket]);
+            currentBucket++;
+        }
+        return result;
+    }
 }
