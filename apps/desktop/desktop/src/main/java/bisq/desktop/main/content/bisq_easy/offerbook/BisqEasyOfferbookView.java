@@ -175,6 +175,10 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         sortByNameZA.setOnAction(null);
         filterWithOffers.setOnAction(null);
         filterShowAll.setOnAction(null);
+        allOffers.setOnAction(null);
+        myOffers.setOnAction(null);
+        buyOffers.setOnAction(null);
+        sellOffers.setOnAction(null);
         createOfferButton.setOnAction(null);
     }
 
