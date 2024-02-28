@@ -42,9 +42,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 public class NativeTorController implements BootstrapEventListener, HsDescUploadedEventListener {
-    private static final long BOOTSTRAP_TIMEOUT_SEC = 4 * 60;
-    private static final long HS_UPLOAD_TIMEOUT_SEC = 2 * 60;
-
+    private final int bootstrapTimeout;
+    private final int hsUploadTimeout;
     private final AtomicBoolean isRunning = new AtomicBoolean();
     private final CountDownLatch isBootstrappedCountdownLatch = new CountDownLatch(1);
     private final CountDownLatch isHsDescUploadedCountdownLatch = new CountDownLatch(1);
@@ -53,6 +52,11 @@ public class NativeTorController implements BootstrapEventListener, HsDescUpload
     private Optional<TorControlConnection> torControlConnection = Optional.empty();
     @Getter
     private final Observable<BootstrapEvent> bootstrapEvent = new Observable<>();
+
+    public NativeTorController(int bootstrapTimeout, int hsUploadTimeout) {
+        this.bootstrapTimeout = bootstrapTimeout;
+        this.hsUploadTimeout = hsUploadTimeout;
+    }
 
     public void connect(int controlPort, PasswordDigest controlConnectionSecret) {
         log.info("connect with controlPort {}", controlPort);
@@ -111,7 +115,7 @@ public class NativeTorController implements BootstrapEventListener, HsDescUpload
         hiddenServiceAddress.complete(result.serviceID);
 
         try {
-            boolean isSuccess = isHsDescUploadedCountdownLatch.await(HS_UPLOAD_TIMEOUT_SEC, TimeUnit.SECONDS);
+            boolean isSuccess = isHsDescUploadedCountdownLatch.await(hsUploadTimeout, TimeUnit.SECONDS);
             if (isSuccess) {
                 removeHsDescUploadedEventListener();
             } else {
@@ -135,7 +139,7 @@ public class NativeTorController implements BootstrapEventListener, HsDescUpload
 
     public void waitUntilBootstrapped() {
         try {
-            boolean isSuccess = isBootstrappedCountdownLatch.await(BOOTSTRAP_TIMEOUT_SEC, TimeUnit.SECONDS);
+            boolean isSuccess = isBootstrappedCountdownLatch.await(bootstrapTimeout, TimeUnit.SECONDS);
             if (isSuccess) {
                 removeBootstrapEventListener();
             } else {
@@ -174,7 +178,7 @@ public class NativeTorController implements BootstrapEventListener, HsDescUpload
     public void onHsDescUploaded(HsDescUploadedEvent uploadedEvent) {
         log.info("Tor HS_DESC event: {}", uploadedEvent);
         try {
-            String hsAddress = hiddenServiceAddress.get(HS_UPLOAD_TIMEOUT_SEC, TimeUnit.SECONDS);
+            String hsAddress = hiddenServiceAddress.get(hsUploadTimeout, TimeUnit.SECONDS);
             if (hsAddress.equals(uploadedEvent.getHsAddress())) {
                 isHsDescUploadedCountdownLatch.countDown();
             } else {
