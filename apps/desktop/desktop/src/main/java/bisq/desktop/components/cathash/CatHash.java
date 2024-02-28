@@ -26,7 +26,6 @@ import java.math.BigInteger;
 import java.util.concurrent.ConcurrentHashMap;
 
 // Derived from https://github.com/neuhalje/android-robohash
-// Number of combinations: 3 * 15 * 15 * 15 * 15 * 15 * 15  = 34171875 (2 ^ 25)
 @Slf4j
 public class CatHash {
     private static final int SIZE = 300;
@@ -45,21 +44,13 @@ public class CatHash {
         if (useCache && CACHE.containsKey(pubKeyHash)) {
             return CACHE.get(pubKeyHash);
         }
-        BigInteger bigInteger = new BigInteger(pubKeyHash.getBytes());
-        int[] buckets = BucketGenerator.createBuckets(bigInteger, Configuration.getBucketSizes());
-        Image image = imageFromBuckets(buckets);
+        BigInteger input = new BigInteger(pubKeyHash.getBytes());
+        int[] buckets = BucketEncoder.encode(input, BucketConfig.getBucketSizes());
+        String[] paths = BucketEncoder.toPaths(buckets, BucketConfig.getPathTemplates());
+        Image image = ImageUtil.composeImage(paths, SIZE, SIZE);
         if (useCache && CACHE.size() < MAX_CACHE_SIZE) {
             CACHE.put(pubKeyHash, image);
         }
         return image;
-    }
-
-
-    private static Image imageFromBuckets(int[] integerBuckets) {
-        String[] paths = BucketGenerator.integerBucketsToPaths(integerBuckets,
-                Configuration.getBucketCount(),
-                Configuration.getFacetCount(),
-                Configuration.getFacetPathTemplates());
-        return ImageUtil.composeImage(paths, SIZE, SIZE);
     }
 }
