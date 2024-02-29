@@ -56,7 +56,6 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -307,8 +306,6 @@ public class MarketPriceComponent {
     @Slf4j
     @EqualsAndHashCode
     private static class ListItem {
-        private static final long STALE_AGE = TimeUnit.MINUTES.toMillis(5);
-
         private final MarketPrice marketPrice;
         private final String price;
         private final String codes;
@@ -326,11 +323,11 @@ public class MarketPriceComponent {
         }
 
         public boolean isStale() {
-            return System.currentTimeMillis() - marketPrice.getTimestamp() > STALE_AGE;
+            return marketPrice.isStale();
         }
 
         public String getAgeInSeconds() {
-            return TimeFormatter.getAgeInSeconds(System.currentTimeMillis() - marketPrice.getTimestamp());
+            return TimeFormatter.getAgeInSeconds(marketPrice.getAge());
         }
 
         @Override
