@@ -8,7 +8,10 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.binding.StringExpression;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
-import javafx.scene.control.*;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
@@ -19,11 +22,11 @@ import java.util.List;
 public class BisqEasyOfferbookUtil {
     private static final List<Market> majorMarkets = MarketRepository.getMajorMarkets();
 
-    public static Comparator<MarketChannelItem> SortByNumOffers() {
+    public static Comparator<MarketChannelItem> sortByNumOffers() {
         return (lhs, rhs) -> Integer.compare(rhs.getNumOffers().get(), lhs.getNumOffers().get());
     }
 
-    public static Comparator<MarketChannelItem> SortByMajorMarkets() {
+    public static Comparator<MarketChannelItem> sortByMajorMarkets() {
         return (lhs, rhs) -> {
             int index1 = majorMarkets.indexOf(lhs.getMarket());
             int index2 = majorMarkets.indexOf(rhs.getMarket());
@@ -31,18 +34,18 @@ public class BisqEasyOfferbookUtil {
         };
     }
 
-    public static Comparator<MarketChannelItem> SortByMarketNameAsc() {
+    public static Comparator<MarketChannelItem> sortByMarketNameAsc() {
         return Comparator.comparing(MarketChannelItem::getMarketString);
     }
 
-    public static Comparator<MarketChannelItem> SortByMarketNameDesc() {
+    public static Comparator<MarketChannelItem> sortByMarketNameDesc() {
         return Comparator.comparing(MarketChannelItem::getMarketString).reversed();
     }
 
-    public static Comparator<MarketChannelItem> SortByMarketActivity() {
-        return (lhs, rhs) -> BisqEasyOfferbookUtil.SortByNumOffers()
-                .thenComparing(BisqEasyOfferbookUtil.SortByMajorMarkets())
-                .thenComparing(BisqEasyOfferbookUtil.SortByMarketNameAsc())
+    public static Comparator<MarketChannelItem> sortByMarketActivity() {
+        return (lhs, rhs) -> BisqEasyOfferbookUtil.sortByNumOffers()
+                .thenComparing(BisqEasyOfferbookUtil.sortByMajorMarkets())
+                .thenComparing(BisqEasyOfferbookUtil.sortByMarketNameAsc())
                 .compare(lhs, rhs);
     }
 
