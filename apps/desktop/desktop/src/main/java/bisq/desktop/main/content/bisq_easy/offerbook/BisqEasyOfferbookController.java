@@ -28,6 +28,7 @@ import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.currency.Market;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.ObservableArray;
+import bisq.common.util.ProtobufUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
@@ -36,6 +37,7 @@ import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardController;
 import bisq.desktop.main.content.chat.ChatController;
 import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import javafx.scene.layout.StackPane;
 import lombok.extern.slf4j.Slf4j;
@@ -54,7 +56,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
     private final BisqEasyOfferbookModel bisqEasyOfferbookModel;
     private Pin offerOnlySettingsPin, bisqEasyPrivateTradeChatChannelsPin, selectedChannelPin, marketPriceByCurrencyMapPin;
-    private Subscription marketSelectorSearchPin, selectedMarketFilterPin;
+    private Subscription marketSelectorSearchPin, selectedMarketFilterPin, selectedMarketSortTypePin;
 
     public BisqEasyOfferbookController(ServiceProvider serviceProvider) {
         super(serviceProvider, ChatChannelDomain.BISQ_EASY_OFFERBOOK, NavigationTarget.BISQ_EASY_OFFERBOOK);
@@ -95,10 +97,10 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         selectedChannelPin = FxBindings.subscribe(selectionService.getSelectedChannel(), this::selectedChannelChanged);
 
         marketSelectorSearchPin = EasyBind.subscribe(model.getMarketSelectorSearchText(), searchText -> {
-            if (searchText == null || searchText.isEmpty()) {
+            if (searchText == null || searchText.trim().isEmpty()) {
                 model.setSearchTextPredicate(item -> true);
             } else {
-                String search = searchText.toLowerCase();
+                String search = searchText.trim().toLowerCase();
                 model.setSearchTextPredicate(item ->
                         item != null &&
                                 (item.getMarket().getQuoteCurrencyCode().toLowerCase().contains(search) ||
@@ -108,15 +110,17 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
             updateMarketItemsPredicate();
         });
 
+        MarketFilter persistedMarketFilter = settingsService.getCookie().asString(CookieKey.MARKET_FILTER).map(name ->
+                        ProtobufUtils.enumFromProto(MarketFilter.class, name, MarketFilter.WITH_OFFERS))
+                .orElse(MarketFilter.WITH_OFFERS);
+        model.getSelectedMarketFilter().set(persistedMarketFilter);
+
         selectedMarketFilterPin = EasyBind.subscribe(model.getSelectedMarketFilter(), filter -> {
-            if (filter == null) {
-                // By default, show only markets with offers
-                model.getSelectedMarketFilter().set(MarketFilter.WITH_OFFERS);
-                model.setMarketFilterPredicate(model.getSelectedMarketFilter().get().getPredicate());
-            } else {
+            if (filter != null) {
                 model.setMarketFilterPredicate(filter.getPredicate());
+                settingsService.setCookie(CookieKey.MARKET_FILTER, model.getSelectedMarketFilter().get().name());
+                updateMarketItemsPredicate();
             }
-            updateMarketItemsPredicate();
         });
 
         marketPriceByCurrencyMapPin = marketPriceService.getMarketPriceByCurrencyMap().addObserver(() -> {
@@ -126,6 +130,19 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                 updateMarketItemsPredicate();
             });
         });
+
+        MarketSortType persistedMarketSortType = settingsService.getCookie().asString(CookieKey.MARKET_SORT_TYPE).map(name ->
+                        ProtobufUtils.enumFromProto(MarketSortType.class, name, MarketSortType.NUM_OFFERS))
+                .orElse(MarketSortType.NUM_OFFERS);
+        model.getSelectedMarketSortType().set(persistedMarketSortType);
+
+        selectedMarketSortTypePin = EasyBind.subscribe(model.getSelectedMarketSortType(), marketSortType -> {
+            if (marketSortType != null) {
+                settingsService.setCookie(CookieKey.MARKET_SORT_TYPE, marketSortType.name());
+            }
+        });
+
+        model.getSortedMarketChannelItems().setComparator(model.getSelectedMarketSortType().get().getComparator());
 
         updateMarketItemsPredicate();
         maybeSelectFirst();
@@ -141,6 +158,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         marketSelectorSearchPin.unsubscribe();
         selectedMarketFilterPin.unsubscribe();
         marketPriceByCurrencyMapPin.unbind();
+        selectedMarketSortTypePin.unsubscribe();
 
         resetSelectedChildTarget();
     }
@@ -200,6 +218,11 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
 
     void onCloseFilter() {
         bisqEasyOfferbookModel.getShowFilterOverlay().set(false);
+    }
+
+    void onSortMarkets(MarketSortType marketSortType) {
+        model.getSelectedMarketSortType().set(marketSortType);
+        model.getSortedMarketChannelItems().setComparator(marketSortType.getComparator());
     }
 
     private void updateMarketItemsPredicate() {
