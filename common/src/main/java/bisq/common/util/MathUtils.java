@@ -108,4 +108,8 @@ public class MathUtils {
                 "lowerBound must not be larger than upperBound");
         return Math.min(Math.max(value, lowerBound), upperBound);
     }
+
+    public static double getLog2(long value) {
+        return Math.log(value) / Math.log(2);
+    }
 }

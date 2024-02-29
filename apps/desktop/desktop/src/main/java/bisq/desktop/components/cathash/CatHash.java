@@ -26,11 +26,10 @@ import java.math.BigInteger;
 import java.util.concurrent.ConcurrentHashMap;
 
 // Derived from https://github.com/neuhalje/android-robohash
-// Number of combinations: 3 * 15 * 15 * 15 * 15 * 15 * 15  = 34171875 (2 ^ 25)
 @Slf4j
 public class CatHash {
+    private static final int SIZE = 300;
     private static final int MAX_CACHE_SIZE = 10000;
-    private static final HandleFactory HANDLE_FACTORY = new HandleFactory();
     private static final ConcurrentHashMap<ByteArray, Image> CACHE = new ConcurrentHashMap<>();
 
     public static Image getImage(byte[] pubKeyHash) {
@@ -45,23 +44,13 @@ public class CatHash {
         if (useCache && CACHE.containsKey(pubKeyHash)) {
             return CACHE.get(pubKeyHash);
         }
-        BigInteger bigInteger = new BigInteger(pubKeyHash.getBytes());
-        Configuration configuration = new Configuration();
-        VariableSizeHashing hashing = new VariableSizeHashing(configuration.getBucketSizes());
-        byte[] data = hashing.createBuckets(bigInteger);
-        Handle handle = HANDLE_FACTORY.calculateHandle(data);
-        Image image = imageForHandle(handle, configuration);
+        BigInteger input = new BigInteger(pubKeyHash.getBytes());
+        int[] buckets = BucketEncoder.encode(input, BucketConfig.getBucketSizes());
+        String[] paths = BucketEncoder.toPaths(buckets, BucketConfig.getPathTemplates());
+        Image image = ImageUtil.composeImage(paths, SIZE, SIZE);
         if (useCache && CACHE.size() < MAX_CACHE_SIZE) {
             CACHE.put(pubKeyHash, image);
         }
         return image;
-    }
-
-    private static Image imageForHandle(Handle handle, Configuration configuration) {
-        long ts = System.currentTimeMillis();
-        byte[] bucketValues = handle.bucketValues();
-        String[] paths = configuration.convertToFacetParts(bucketValues);
-        log.debug("Generated paths for CatHash image in {} ms", System.currentTimeMillis() - ts); // typically <1ms
-        return ImageUtil.composeImage(paths, configuration.width(), configuration.height());
     }
 }
