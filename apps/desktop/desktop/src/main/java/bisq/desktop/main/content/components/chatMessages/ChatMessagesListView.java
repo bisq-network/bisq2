@@ -126,6 +126,10 @@ public class ChatMessagesListView {
         controller.setSearchPredicate(predicate);
     }
 
+    public void setBisqEasyOffersFilerPredicate(Predicate<? super ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate) {
+        controller.setBisqEasyOffersFilerPredicate(predicate);
+    }
+
     public void refreshMessages() {
         controller.refreshMessages();
     }
@@ -291,6 +295,11 @@ public class ChatMessagesListView {
             applyPredicate();
         }
 
+        private void setBisqEasyOffersFilerPredicate(Predicate<? super ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate) {
+            model.setBisqEasyOffersFilerPredicate(Objects.requireNonNullElseGet(predicate, () -> e -> true));
+            applyPredicate();
+        }
+
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////
         // UI - delegate to client
@@ -443,6 +452,14 @@ public class ChatMessagesListView {
         }
 
         public void onIgnoreUser(ChatMessage chatMessage) {
+            new Popup().warning(Res.get("chat.ignoreUser.warn"))
+                    .actionButtonText(Res.get("chat.ignoreUser.confirm"))
+                    .onAction(() -> doIgnoreUser(chatMessage))
+                    .closeButtonText(Res.get("action.cancel"))
+                    .show();
+        }
+
+        public void doIgnoreUser(ChatMessage chatMessage) {
             userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId())
                     .ifPresent(userProfileService::ignoreUserProfile);
         }
@@ -560,7 +577,8 @@ public class ChatMessagesListView {
                         !userProfileService.getIgnoredUserProfileIds().contains(senderUserProfile.get().getId()) &&
                         userProfileService.findUserProfile(senderUserProfile.get().getId()).isPresent();
             };
-            model.filteredChatMessages.setPredicate(item -> model.getSearchPredicate().test(item) && predicate.test(item));
+            model.filteredChatMessages.setPredicate(item -> model.getSearchPredicate().test(item)
+                    && model.getBisqEasyOffersFilerPredicate().test(item) && predicate.test(item));
         }
 
         private <M extends ChatMessage, C extends ChatChannel<M>> Pin bindChatMessages(C channel) {
@@ -637,6 +655,8 @@ public class ChatMessagesListView {
         private final ChatChannelDomain chatChannelDomain;
         @Setter
         private Predicate<? super ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> searchPredicate = e -> true;
+        @Setter
+        private Predicate<? super ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> BisqEasyOffersFilerPredicate = e -> true;
 
         private boolean autoScrollToBottom;
         private int numReadMessages;

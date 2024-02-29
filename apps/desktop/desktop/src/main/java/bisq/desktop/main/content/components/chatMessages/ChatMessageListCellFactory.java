@@ -132,8 +132,7 @@ final class ChatMessageListCellFactory
             return new LeaveChatMessage(item, controller);
         }
 
-        boolean isMyMessage = model.isMyMessage(item.getChatMessage());
-        if (isMyMessage) {
+        if (item.isMyMessage()) {
             return item.isBisqEasyPublicChatMessageWithOffer()
                     ? new MyOfferMessage(item, list, controller, model)
                     : new MyMessage(item, list, controller, model);

@@ -69,6 +69,10 @@ public class DropdownMenuItem extends CustomMenuItem {
         content.setPrefWidth(width);
     }
 
+    public String getLabelText() {
+        return label.getText();
+    }
+
     private void attachListeners() {
         content.setOnMouseEntered(e -> updateIcon(activeIcon));
         content.setOnMouseExited(e -> updateIcon(defaultIcon));

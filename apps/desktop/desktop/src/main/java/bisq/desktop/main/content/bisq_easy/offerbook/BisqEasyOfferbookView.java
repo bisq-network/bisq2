@@ -17,6 +17,8 @@
 
 package bisq.desktop.main.content.bisq_easy.offerbook;
 
+import bisq.chat.ChatChannel;
+import bisq.chat.ChatMessage;
 import bisq.desktop.common.Layout;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.DropdownMenu;
@@ -26,6 +28,7 @@ import bisq.desktop.components.controls.SearchBox;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.main.content.chat.ChatView;
+import bisq.desktop.main.content.components.chatMessages.ChatMessageListItem;
 import bisq.i18n.Res;
 import javafx.css.PseudoClass;
 import javafx.geometry.Insets;
@@ -38,9 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.List;
 
 @Slf4j
 public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView, BisqEasyOfferbookModel> {
@@ -51,11 +52,14 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     private BisqTableView<MarketChannelItem> tableView;
     private BisqTableColumn<MarketChannelItem> marketLabelTableColumn;
     private VBox marketSelectionList;
-    private Subscription tableViewSelectionPin, selectedModelItemPin, marketSelectorHeaderIconPin, selectedMarketFilterPin;
+    private Subscription tableViewSelectionPin, selectedModelItemPin, marketSelectorHeaderIconPin, selectedMarketFilterPin,
+        selectedOffersFilterPin;
     private Button createOfferButton;
-    private DropdownMenu dropdownMenu;
+    private DropdownMenu sortAndFilterMarketsMenu, offersFilterMenu;
     private DropdownSortByMenuItem sortByMostOffers, sortByNameAZ, sortByNameZA;
-    private DropdownFilterMenuItem filterShowAll, filterWithOffers;
+    private DropdownFilterMenuItem<MarketChannelItem> filterShowAll, filterWithOffers;
+    private DropdownFilterMenuItem<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>>
+            allOffers, myOffers, buyOffers, sellOffers;
     private CheckBox hideUserMessagesCheckbox;
 
     public BisqEasyOfferbookView(BisqEasyOfferbookModel model,
@@ -112,21 +116,31 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
             }
         });
         marketSelectorHeaderIconPin = EasyBind.subscribe(model.getChannelIconNode(), this::updateMarketSelectorHeaderIcon);
-        selectedMarketFilterPin = EasyBind.subscribe(getModel().getSelectedMarketFilter(), this::updateSelectedMarketFilter);
+        selectedMarketFilterPin = EasyBind.subscribe(getModel().getSelectedMarketsFilter(), this::updateSelectedMarketFilter);
+        selectedOffersFilterPin = EasyBind.subscribe(getModel().getSelectedOffersFilter(), this::updateSelectedOffersFilter);
 
         sortByMostOffers.setOnAction(e -> sortTableViewColumn(sortByMostOffers));
         sortByNameAZ.setOnAction(e -> sortTableViewColumn(sortByNameAZ));
         sortByNameZA.setOnAction(e -> sortTableViewColumn(sortByNameZA));
-        filterWithOffers.setOnAction(e -> getModel().getSelectedMarketFilter().set(MarketFilter.WITH_OFFERS));
-        filterShowAll.setOnAction(e -> getModel().getSelectedMarketFilter().set(MarketFilter.ALL));
+        filterWithOffers.setOnAction(e -> getModel().getSelectedMarketsFilter().set(Filters.Markets.WITH_OFFERS));
+        filterShowAll.setOnAction(e -> getModel().getSelectedMarketsFilter().set(Filters.Markets.ALL));
+
+        allOffers.setOnAction(e -> setOffersFilter(allOffers));
+        myOffers.setOnAction(e -> setOffersFilter(myOffers));
+        buyOffers.setOnAction(e -> setOffersFilter(buyOffers));
+        sellOffers.setOnAction(e -> setOffersFilter(sellOffers));
 
         createOfferButton.setOnAction(e -> getController().onCreateOffer());
 
         maybeSelectSorting();
     }
 
+    private void setOffersFilter(DropdownFilterMenuItem<?> filterMenuItem) {
+        getModel().getSelectedOffersFilter().set((Filters.Offers) filterMenuItem.getFilter());
+    }
+
     private void maybeSelectSorting() {
-        boolean isSortingMethodSelected = dropdownMenu.getMenuItems().stream()
+        boolean isSortingMethodSelected = sortAndFilterMarketsMenu.getMenuItems().stream()
                 .filter(menuItem -> menuItem instanceof DropdownSortByMenuItem)
                 .anyMatch(menuItem -> ((DropdownSortByMenuItem) menuItem).isSelected());
         if (!isSortingMethodSelected) {
@@ -139,7 +153,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         marketLabelTableColumn.setComparator(sortByMenuItem.getComparator());
         tableView.getSortOrder().add(marketLabelTableColumn);
         // Update dropdown state with new selection
-        dropdownMenu.getMenuItems().stream().filter(menuItem -> menuItem instanceof DropdownSortByMenuItem)
+        sortAndFilterMarketsMenu.getMenuItems().stream().filter(menuItem -> menuItem instanceof DropdownSortByMenuItem)
                 .forEach(menuItem -> ((DropdownSortByMenuItem) menuItem).updateSelection(menuItem == sortByMenuItem));
     }
 
@@ -154,12 +168,17 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         tableViewSelectionPin.unsubscribe();
         marketSelectorHeaderIconPin.unsubscribe();
         selectedMarketFilterPin.unsubscribe();
+        selectedOffersFilterPin.unsubscribe();
 
         sortByMostOffers.setOnAction(null);
         sortByNameAZ.setOnAction(null);
         sortByNameZA.setOnAction(null);
         filterWithOffers.setOnAction(null);
         filterShowAll.setOnAction(null);
+        allOffers.setOnAction(null);
+        myOffers.setOnAction(null);
+        buyOffers.setOnAction(null);
+        sellOffers.setOnAction(null);
         createOfferButton.setOnAction(null);
     }
 
@@ -182,8 +201,8 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
 
         marketSelectorSearchBox = new SearchBox();
         marketSelectorSearchBox.getStyleClass().add("market-selection-search-box");
-        dropdownMenu = createAndGetDropdownMenu();
-        HBox subheader = new HBox(marketSelectorSearchBox, Spacer.fillHBox(), dropdownMenu);
+        sortAndFilterMarketsMenu = createAndGetSortAndFilterMarketsMenu();
+        HBox subheader = new HBox(marketSelectorSearchBox, Spacer.fillHBox(), sortAndFilterMarketsMenu);
         subheader.setAlignment(Pos.CENTER);
         subheader.getStyleClass().add("market-selection-subheader");
 
@@ -207,29 +226,29 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         marketSelectionList.getStyleClass().add("chat-container");
     }
 
-    private DropdownMenu createAndGetDropdownMenu() {
+    private DropdownMenu createAndGetSortAndFilterMarketsMenu() {
         DropdownMenu dropdownMenu = new DropdownMenu("sort-grey", "sort-white", true);
-        dropdownMenu.setTooltip(Res.get("bisqEasy.offerbook.dropdownMenu.tooltip"));
+        dropdownMenu.setTooltip(Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.tooltip"));
         dropdownMenu.getStyleClass().add("market-selection-dropdown-menu");
 
         // Sorting options
-        DropdownTitleMenuItem sortTitle = new DropdownTitleMenuItem(Res.get("bisqEasy.offerbook.dropdownMenu.sortTitle"));
+        DropdownTitleMenuItem sortTitle = new DropdownTitleMenuItem(Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.sortTitle"));
         sortByMostOffers = new DropdownSortByMenuItem("check-grey", "check-white",
-                Res.get("bisqEasy.offerbook.dropdownMenu.mostOffers"), BisqEasyOfferbookUtil.SortByMarketActivity());
+                Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.mostOffers"), BisqEasyOfferbookUtil.SortByMarketActivity());
         sortByNameAZ = new DropdownSortByMenuItem("check-grey", "check-white",
-                Res.get("bisqEasy.offerbook.dropdownMenu.nameAZ"), BisqEasyOfferbookUtil.SortByMarketNameAsc());
+                Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.nameAZ"), BisqEasyOfferbookUtil.SortByMarketNameAsc());
         sortByNameZA = new DropdownSortByMenuItem("check-grey", "check-white",
-                Res.get("bisqEasy.offerbook.dropdownMenu.nameZA"), BisqEasyOfferbookUtil.SortByMarketNameDesc());
+                Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.nameZA"), BisqEasyOfferbookUtil.SortByMarketNameDesc());
 
         // Separator
         SeparatorMenuItem separator = new SeparatorMenuItem();
 
         // Filter options
-        DropdownTitleMenuItem filterTitle = new DropdownTitleMenuItem(Res.get("bisqEasy.offerbook.dropdownMenu.filterTitle"));
-        filterWithOffers = new DropdownFilterMenuItem("check-grey", "check-white",
-                Res.get("bisqEasy.offerbook.dropdownMenu.withOffers"), MarketFilter.WITH_OFFERS);
-        filterShowAll = new DropdownFilterMenuItem("check-grey", "check-white",
-                Res.get("bisqEasy.offerbook.dropdownMenu.all"), MarketFilter.ALL);
+        DropdownTitleMenuItem filterTitle = new DropdownTitleMenuItem(Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.filterTitle"));
+        filterWithOffers = new DropdownFilterMenuItem<>("check-grey", "check-white",
+                Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.withOffers"), Filters.Markets.WITH_OFFERS);
+        filterShowAll = new DropdownFilterMenuItem<>("check-grey", "check-white",
+                Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.all"), Filters.Markets.ALL);
 
         dropdownMenu.addMenuItems(sortTitle, sortByMostOffers, sortByNameAZ, sortByNameZA, separator,
                 filterTitle, filterWithOffers, filterShowAll);
@@ -273,16 +292,18 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         Label label = new Label(Res.get("bisqEasy.topPane.filter.hideUserMessages"));
         hideUserMessagesCheckbox = new CheckBox();
         HBox checkbox = new HBox(5, label, hideUserMessagesCheckbox);
-        checkbox.getStyleClass().add("market-selection-subheader-checkbox");
+        checkbox.getStyleClass().add("offerbook-subheader-checkbox");
         checkbox.setAlignment(Pos.CENTER);
 
-        HBox subheaderContent = new HBox(5, checkbox);
-        subheaderContent.getStyleClass().add("market-selection-subheader-content");
+        offersFilterMenu = createAndGetOffersFilterMenu();
+
+        HBox subheaderContent = new HBox(30, checkbox, offersFilterMenu);
+        subheaderContent.getStyleClass().add("offerbook-subheader-content");
         HBox.setHgrow(subheaderContent, Priority.ALWAYS);
 
         HBox subheader = new HBox(subheaderContent);
+        subheader.getStyleClass().add("offerbook-subheader");
         subheader.setAlignment(Pos.CENTER);
-        subheader.getStyleClass().add("market-selection-subheader");
 
         chatMessagesComponent.setMinWidth(700);
 
@@ -292,31 +313,65 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         centerVBox.setAlignment(Pos.CENTER);
     }
 
+    private DropdownMenu createAndGetOffersFilterMenu() {
+        DropdownMenu dropdownMenu = new DropdownMenu("arrow-down", "arrow-down", false);
+        dropdownMenu.setTooltip(Res.get("bisqEasy.offerbook.dropdownMenu.filterMarketOffers.tooltip"));
+        dropdownMenu.getStyleClass().add("dropdown-offers-filter-menu");
+
+        allOffers = new DropdownFilterMenuItem<>("check-grey", "check-white",
+                Res.get("bisqEasy.offerbook.dropdownMenu.filterMarketOffers.allOffers"), Filters.Offers.ALL);
+        myOffers = new DropdownFilterMenuItem<>("check-grey", "check-white",
+                Res.get("bisqEasy.offerbook.dropdownMenu.filterMarketOffers.myOffers"), Filters.Offers.MINE);
+        buyOffers = new DropdownFilterMenuItem<>("check-grey", "check-white",
+                Res.get("bisqEasy.offerbook.dropdownMenu.filterMarketOffers.buyOffers"), Filters.Offers.BUY);
+        sellOffers = new DropdownFilterMenuItem<>("check-grey", "check-white",
+                Res.get("bisqEasy.offerbook.dropdownMenu.filterMarketOffers.sellOffers"), Filters.Offers.SELL);
+        dropdownMenu.addMenuItems(allOffers, myOffers, buyOffers, sellOffers);
+        return dropdownMenu;
+    }
+
     private void updateMarketSelectorHeaderIcon(Node node) {
         channelTitle.setGraphic(node);
     }
 
-    private void updateSelectedMarketFilter(MarketFilter marketFilter) {
+    private void updateSelectedMarketFilter(Filters.Markets marketFilter) {
         if (marketFilter == null) {
             return;
         }
 
-        dropdownMenu.getMenuItems().stream().filter(menuItem -> menuItem instanceof DropdownFilterMenuItem)
+        sortAndFilterMarketsMenu.getMenuItems().stream()
+                .filter(menuItem -> menuItem instanceof DropdownFilterMenuItem)
                 .forEach(menuItem -> {
-                    DropdownFilterMenuItem filterMenuItem = (DropdownFilterMenuItem) menuItem;
-                    filterMenuItem.updateSelection(marketFilter == filterMenuItem.getMarketFilter());
+                    DropdownFilterMenuItem<?> filterMenuItem = (DropdownFilterMenuItem<?>) menuItem;
+                    filterMenuItem.updateSelection(marketFilter == filterMenuItem.getFilter());
                 });
     }
 
-    private static final class DropdownFilterMenuItem extends DropdownMenuItem {
+    private void updateSelectedOffersFilter(Filters.Offers offersFilter) {
+        if (offersFilter == null) {
+            return;
+        }
+
+        offersFilterMenu.getMenuItems().stream()
+                .filter(menuItem -> menuItem instanceof DropdownFilterMenuItem)
+                .forEach(menuItem -> {
+                    DropdownFilterMenuItem<?> filterMenuItem = (DropdownFilterMenuItem<?>) menuItem;
+                    filterMenuItem.updateSelection(offersFilter == filterMenuItem.getFilter());
+                    if (offersFilter == filterMenuItem.getFilter()) {
+                        offersFilterMenu.setLabel(((DropdownFilterMenuItem<?>) menuItem).getLabelText());
+                    }
+                });
+    }
+
+    private static final class DropdownFilterMenuItem<T> extends DropdownMenuItem {
         private static final PseudoClass SELECTED_PSEUDO_CLASS = PseudoClass.getPseudoClass("selected");
         @Getter
-        private final MarketFilter marketFilter;
+        private final Filters.FilterPredicate<T> filter;
 
-        DropdownFilterMenuItem(String defaultIconId, String activeIconId, String text, MarketFilter marketFilter) {
+        DropdownFilterMenuItem(String defaultIconId, String activeIconId, String text, Filters.FilterPredicate<T> filter) {
             super(defaultIconId, activeIconId, text);
 
-            this.marketFilter = marketFilter;
+            this.filter = filter;
             getStyleClass().add("dropdown-filter-menu-item");
             updateSelection(false);
         }

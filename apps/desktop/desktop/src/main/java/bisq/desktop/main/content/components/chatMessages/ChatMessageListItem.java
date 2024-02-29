@@ -34,6 +34,7 @@ import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
+import bisq.offer.Direction;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.trade.Trade;
@@ -87,6 +88,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private final Set<Pin> mapPins = new HashSet<>();
     @EqualsAndHashCode.Exclude
     private final Set<Pin> statusPins = new HashSet<>();
+    private final UserIdentityService userIdentityService;
 
     public ChatMessageListItem(M chatMessage,
                                C chatChannel,
@@ -97,6 +99,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                                NetworkService networkService) {
         this.chatMessage = chatMessage;
         this.chatChannel = chatChannel;
+        this.userIdentityService = userIdentityService;
 
         if (chatMessage instanceof PrivateChatMessage) {
             senderUserProfile = Optional.of(((PrivateChatMessage) chatMessage).getSenderUserProfile());
@@ -247,6 +250,32 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     public String getSupportedLanguageCodesForTooltip(BisqEasyOfferbookMessage chatMessage) {
         String result = getSupportedLanguageCodes(chatMessage, "\n", LanguageRepository::getDisplayString);
         return result.isEmpty() ? "" : Res.get("chat.message.supportedLanguages") + "\n" + result;
+    }
+
+    public boolean isMyMessage() {
+        return chatMessage.isMyMessage(userIdentityService);
+    }
+
+    public boolean isBisqEasyPublicChatMessageWithMyOffer() {
+        return isBisqEasyPublicChatMessageWithOffer() && isMyMessage();
+    }
+
+    public boolean isBisqEasyPublicChatMessageWithPeerBuyOffer() {
+        return isBisqEasyPublicChatMessageWithOffer() && !isMyMessage() && hasBisqEasyOfferWithDirection(Direction.BUY);
+    }
+
+    public boolean isBisqEasyPublicChatMessageWithPeerSellOffer() {
+        return isBisqEasyPublicChatMessageWithOffer() && !isMyMessage() && hasBisqEasyOfferWithDirection(Direction.SELL);
+    }
+
+    private boolean hasBisqEasyOfferWithDirection(Direction direction) {
+        if (chatMessage instanceof BisqEasyOfferMessage) {
+            BisqEasyOfferMessage bisqEasyOfferMessage = (BisqEasyOfferMessage) chatMessage;
+            if (bisqEasyOfferMessage.hasBisqEasyOffer() && bisqEasyOfferMessage.getBisqEasyOffer().isPresent()) {
+                return bisqEasyOfferMessage.getBisqEasyOffer().get().getDirection() == direction;
+            }
+        }
+        return false;
     }
 
     private String getSupportedLanguageCodes(BisqEasyOfferbookMessage chatMessage, String separator, Function<String, String> toStringFunction) {

@@ -52,7 +52,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
     private final BisqEasyOfferbookModel bisqEasyOfferbookModel;
     private Pin offerOnlySettingsPin, bisqEasyPrivateTradeChatChannelsPin, selectedChannelPin;
-    private Subscription marketSelectorSearchPin, selectedMarketFilterPin;
+    private Subscription marketSelectorSearchPin, selectedMarketFilterPin, selectedOffersFilterPin;
 
     public BisqEasyOfferbookController(ServiceProvider serviceProvider) {
         super(serviceProvider, ChatChannelDomain.BISQ_EASY_OFFERBOOK, NavigationTarget.BISQ_EASY_OFFERBOOK);
@@ -104,13 +104,23 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
             }
         });
 
-        selectedMarketFilterPin = EasyBind.subscribe(model.getSelectedMarketFilter(), filter -> {
+        selectedMarketFilterPin = EasyBind.subscribe(model.getSelectedMarketsFilter(), filter -> {
             if (filter == null) {
                 // By default, show only markets with offers
-                model.getSelectedMarketFilter().set(MarketFilter.WITH_OFFERS);
-                model.getFilteredMarketChannelItems().setPredicate(model.getSelectedMarketFilter().get().getPredicate());
+                model.getSelectedMarketsFilter().set(Filters.Markets.WITH_OFFERS);
+                model.getFilteredMarketChannelItems().setPredicate(model.getSelectedMarketsFilter().get().getPredicate());
             } else {
                 model.getFilteredMarketChannelItems().setPredicate(filter.getPredicate());
+            }
+        });
+
+        selectedOffersFilterPin = EasyBind.subscribe(model.getSelectedOffersFilter(), filter -> {
+            if (filter == null) {
+                // By default, show all offers
+                model.getSelectedOffersFilter().set(Filters.Offers.ALL);
+                chatMessagesComponent.setBisqEasyOffersFilerPredicate(model.getSelectedOffersFilter().get().getPredicate());
+            } else {
+                chatMessagesComponent.setBisqEasyOffersFilerPredicate(filter.getPredicate());
             }
         });
 
@@ -127,6 +137,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         selectedChannelPin.unbind();
         marketSelectorSearchPin.unsubscribe();
         selectedMarketFilterPin.unsubscribe();
+        selectedOffersFilterPin.unsubscribe();
 
         resetSelectedChildTarget();
     }
