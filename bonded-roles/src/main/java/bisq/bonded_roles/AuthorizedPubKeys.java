@@ -17,11 +17,15 @@ public class AuthorizedPubKeys {
 
     public static final Set<String> ORACLE_NODE_PUB_KEYS = Set.of(
             // bond holder name: alvasw; profileId: c448de53ab54bec01729ffb82bf141ec235f20de
-            "3059301306072a8648ce3d020106082a8648ce3d030107034200040618b364d70fc7b38e6e249e4dbf4a665d3cf1b3578b32ce8f6e9606de376052d5b3b329a93e8f3ad15039ef67edf31e9b0e008961c751bbaf38fadd958975f6"
+            "3059301306072a8648ce3d020106082a8648ce3d030107034200040618b364d70fc7b38e6e249e4dbf4a665d3cf1b3578b32ce8f6e9606de376052d5b3b329a93e8f3ad15039ef67edf31e9b0e008961c751bbaf38fadd958975f6",
+            // bond holder name: HenrikJannsen; profileId: 13f3c162bb13b84c6b8b40527ec1ea089b9337cd
+            "3056301006072a8648ce3d020106052b8104000a034200044c383a7cb3aa24771a477dcb1217452abe382d73c7f9e48bfe424f673706079bb18c52cd6c6281202157e182685131e859aa15fdc32181a5328a5fece99bf92d"
     );
 
     // Not used yet, but maintain it for later usage
     public static final Set<String> SEED_NODE_PUB_KEYS = Set.of(
+            // bond holder name: HenrikJannsen; profileId: 13f3c162bb13b84c6b8b40527ec1ea089b9337cd
+            "3056301006072a8648ce3d020106052b8104000a034200044c383a7cb3aa24771a477dcb1217452abe382d73c7f9e48bfe424f673706079bb18c52cd6c6281202157e182685131e859aa15fdc32181a5328a5fece99bf92d"
     );
 
 
