@@ -50,16 +50,14 @@ public class HashCashProofOfWorkService extends ProofOfWorkService {
         }
         while (numberOfLeadingZeros(hash) <= log2Difficulty);
         byte[] solution = Longs.toByteArray(counter);
-        ProofOfWork proofOfWork = new ProofOfWork(payload, counter, challenge, difficulty, solution,
-                System.currentTimeMillis() - ts);
-        return proofOfWork;
+        return new ProofOfWork(payload, counter, challenge, difficulty, solution, System.currentTimeMillis() - ts);
     }
 
     @Override
     public boolean verify(ProofOfWork proofOfWork) {
         byte[] hash = toSha256Hash(proofOfWork.getPayload(),
                 proofOfWork.getChallenge(),
-                proofOfWork.getCounter());
+                proofOfWork.getSolution());
         return numberOfLeadingZeros(hash) > toNumLeadingZeros(proofOfWork.getDifficulty());
     }
 
@@ -90,9 +88,13 @@ public class HashCashProofOfWorkService extends ProofOfWorkService {
     }
 
     private static byte[] toSha256Hash(byte[] payload, byte[] challenge, long counter) {
+        return toSha256Hash(payload, challenge, Longs.toByteArray(counter));
+    }
+
+    private static byte[] toSha256Hash(byte[] payload, byte[] challenge, byte[] solution) {
         byte[] preImage = org.bouncycastle.util.Arrays.concatenate(payload,
                 challenge,
-                Longs.toByteArray(counter));
+                solution);
         return DigestUtil.sha256(preImage);
     }
 

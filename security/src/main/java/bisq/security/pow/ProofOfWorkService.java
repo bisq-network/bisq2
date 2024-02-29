@@ -29,8 +29,6 @@ import java.util.concurrent.CompletableFuture;
 // Borrowed from: https://github.com/bisq-network/bisq
 @Slf4j
 public abstract class ProofOfWorkService {
-    public final static int MINT_NYM_DIFFICULTY = 65536;  // Math.pow(2, 16) = 65536;
-
     public ProofOfWorkService() {
     }
 
@@ -52,14 +50,6 @@ public abstract class ProofOfWorkService {
 
     public CompletableFuture<ProofOfWork> mintAsync(String itemId, String ownerId, double difficulty) {
         return mintAsync(asUtf8Bytes(itemId), getChallenge(itemId, ownerId), difficulty);
-    }
-
-    public CompletableFuture<ProofOfWork> mintNymProofOfWork(byte[] pubKeyHash) {
-        return mintNymProofOfWork(pubKeyHash, MINT_NYM_DIFFICULTY);
-    }
-
-    public CompletableFuture<ProofOfWork> mintNymProofOfWork(byte[] pubKeyHash, double nymDifficulty) {
-        return mintAsync(pubKeyHash, null, nymDifficulty);
     }
 
     public boolean verify(ProofOfWork proofOfWork,

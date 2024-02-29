@@ -15,8 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.user;
+package bisq.user.identity;
 
+import bisq.common.util.ByteArrayUtils;
 import bisq.common.util.FileUtils;
 import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
@@ -36,27 +37,33 @@ import java.util.Scanner;
 public class NymIdGenerator {
     private static final BigInteger MAX_INTEGER = BigInteger.valueOf(Integer.MAX_VALUE);
     private static final String DEFAULT_SEPARATOR = "-";
+    private static final List<String> ADVERBS, ADJECTIVES, NOUNS;
 
-    public static String fromHash(byte[] hash) {
-        List<String> adverbs = read("adverbs.txt");
-        List<String> adjectives = read("adjectives.txt");
-        List<String> nouns = read("nouns.txt");
-        return fromHash(new BigInteger(hash), adverbs, adjectives, nouns, DEFAULT_SEPARATOR);
+    static {
+        ADVERBS = read("adverbs.txt");
+        ADJECTIVES = read("adjectives.txt");
+        NOUNS = read("nouns.txt");
+    }
+
+    public static String generate(byte[] pubKeyHash, byte[] powSolution) {
+        byte[] combined = ByteArrayUtils.concat(powSolution, pubKeyHash);
+        BigInteger input = new BigInteger(combined);
+        return generate(input, ADVERBS, ADJECTIVES, NOUNS, DEFAULT_SEPARATOR);
     }
 
     @VisibleForTesting
-    static String fromHash(BigInteger hashAsBigInteger, List<String> adverbs, List<String> adjectives, List<String> nouns) {
-        return fromHash(hashAsBigInteger, adverbs, adjectives, nouns, "");
+    static String generate(BigInteger input, List<String> adverbs, List<String> adjectives, List<String> nouns) {
+        return generate(input, adverbs, adjectives, nouns, "");
     }
 
-    static String fromHash(BigInteger hashAsBigInteger, List<String> adverbs, List<String> adjectives, List<String> nouns, String separator) {
-        hashAsBigInteger = hashAsBigInteger.abs();
+    static String generate(BigInteger input, List<String> adverbs, List<String> adjectives, List<String> nouns, String separator) {
+        input = input.abs();
         BigInteger numAdjectives = BigInteger.valueOf(adjectives.size());
         BigInteger numNouns = BigInteger.valueOf(nouns.size());
         BigInteger appendixNumber = BigInteger.valueOf(1000);
 
-        BigInteger adverbIndex = hashAsBigInteger.divide(numAdjectives.multiply(numNouns).multiply(appendixNumber));
-        BigInteger remainderHash = hashAsBigInteger.subtract(adverbIndex.multiply(numAdjectives.multiply(numNouns.multiply(appendixNumber))));
+        BigInteger adverbIndex = input.divide(numAdjectives.multiply(numNouns).multiply(appendixNumber));
+        BigInteger remainderHash = input.subtract(adverbIndex.multiply(numAdjectives.multiply(numNouns.multiply(appendixNumber))));
         BigInteger adjectiveIndex = remainderHash.divide(numNouns.multiply(appendixNumber));
         BigInteger remainderAdverb = remainderHash.subtract(adjectiveIndex.multiply(numNouns).multiply(appendixNumber));
         BigInteger nounsIndex = remainderAdverb.divide(appendixNumber);

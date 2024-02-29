@@ -20,8 +20,8 @@ package bisq.desktop.main.content.user.user_profile.create.step2;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.InitWithDataController;
-import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.components.cathash.CatHash;
+import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.security.pow.ProofOfWork;
@@ -90,7 +90,7 @@ public class CreateNewProfileStep2Controller implements InitWithDataController<C
         model.setProofOfWork(data.getProofOfWork());
         model.getNickName().set(data.getNickName());
         model.getNym().set(data.getNym());
-        model.getRoboHashImage().set(CatHash.getImage(data.getPubKeyHash()));
+        model.getRoboHashImage().set(CatHash.getImage(data.getPubKeyHash(), data.getProofOfWork().getSolution()));
     }
 
     @Override

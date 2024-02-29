@@ -17,8 +17,8 @@
 
 package bisq.desktop.main.content.components;
 
-import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.cathash.CatHash;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.user.profile.UserProfile;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
@@ -45,7 +45,7 @@ public class UserProfileIcon extends ImageView {
             tooltip = new BisqTooltip(userProfile.getTooltipString());
             tooltip.getStyleClass().add("medium-dark-tooltip");
             Tooltip.install(this, tooltip);
-            setImage(CatHash.getImage(userProfile.getPubKeyHash()));
+            setImage(CatHash.getImage(userProfile));
         } else {
             setImage(null);
             if (tooltip != null) {

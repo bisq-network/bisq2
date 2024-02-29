@@ -29,7 +29,7 @@ import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.security.DigestUtil;
 import bisq.security.pow.ProofOfWork;
-import bisq.user.NymIdGenerator;
+import bisq.user.identity.NymIdGenerator;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -149,7 +149,7 @@ public final class UserProfile implements DistributedData {
 
     public String getNym() {
         if (nym == null) {
-            nym = NymIdGenerator.fromHash(getPubKeyHash());
+            nym = NymIdGenerator.generate(getPubKeyHash(), proofOfWork.getSolution());
         }
         return nym;
     }
