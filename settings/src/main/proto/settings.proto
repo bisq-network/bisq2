@@ -41,16 +41,15 @@ message SettingsStore {
   Cookie cookie = 1;
   map<string, bool> dontShowAgainMap = 2;
   bool useAnimations = 3;
-  repeated common.Market markets = 4;
-  common.Market selectedMarket = 5;
-  sint64 minRequiredReputationScore = 6;
-  bool offersOnly = 7;
-  bool tradeRulesConfirmed = 8;
-  ChatNotificationType chatNotificationType = 9;
-  bool isTacAccepted = 10;
-  repeated string consumedAlertIds = 11;
-  bool closeMyOfferWhenTaken = 12;
-  string languageCode = 13;
-  bool preventStandbyMode = 14;
-  repeated string supportedLanguageCodes = 15;
+  common.Market selectedMarket = 4;
+  sint64 minRequiredReputationScore = 5;
+  bool offersOnly = 6;
+  bool tradeRulesConfirmed = 7;
+  ChatNotificationType chatNotificationType = 8;
+  bool isTacAccepted = 9;
+  repeated string consumedAlertIds = 10;
+  bool closeMyOfferWhenTaken = 11;
+  string languageCode = 12;
+  bool preventStandbyMode = 13;
+  repeated string supportedLanguageCodes = 14;
 }

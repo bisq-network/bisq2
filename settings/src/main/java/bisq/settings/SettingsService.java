@@ -71,7 +71,6 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         getMinRequiredReputationScore().addObserver(value -> persist());
         getCloseMyOfferWhenTaken().addObserver(value -> persist());
         getSupportedLanguageCodes().addObserver(this::persist);
-        getMarkets().addObserver(this::persist);
         getSelectedMarket().addObserver(value -> persist());
         getTradeRulesConfirmed().addObserver(value -> persist());
         getSupportedLanguageCodes().addObserver(this::persist);
@@ -111,10 +110,6 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
     public void onPersistedApplied(SettingsStore persisted) {
         LanguageRepository.setDefaultLanguage(getLanguageCode());
         Res.setLanguage(getLanguageCode());
-    }
-
-    public ObservableSet<Market> getMarkets() {
-        return persistableStore.markets;
     }
 
     public Observable<Market> getSelectedMarket() {
