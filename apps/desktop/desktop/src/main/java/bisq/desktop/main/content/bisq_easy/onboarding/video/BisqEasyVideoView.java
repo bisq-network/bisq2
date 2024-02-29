@@ -62,8 +62,8 @@ import org.fxmisc.easybind.monadic.MonadicBinding;
 
 @Slf4j
 public class BisqEasyVideoView extends View<StackPane, BisqEasyVideoModel, BisqEasyVideoController> implements FillStageView {
-    public static final double VIDEO_WIDTH = 1292;
-    public static final double VIDEO_HEIGHT = 875;
+    public static final double VIDEO_WIDTH = 2584;
+    public static final double VIDEO_HEIGHT = 1725;
     public static final double PADDING = 50;
     public static final double SLIDER_WIDTH = 59.5;
 
@@ -90,7 +90,7 @@ public class BisqEasyVideoView extends View<StackPane, BisqEasyVideoModel, BisqE
         mediaView = new MediaView();
 
         closeButton = new Button(Res.get("action.close"));
-        closeButton.getStyleClass().add("grey-transparent-outlined-button");
+        closeButton.getStyleClass().add("outlined-button");
 
         positionProgressBar = new ProgressBar(0);
         positionProgressBar.getStyleClass().add("video-progress-bar");
