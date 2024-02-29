@@ -44,7 +44,7 @@ public class PreferencesController implements Controller {
     private final ChatNotificationService chatNotificationService;
 
     private Pin chatNotificationTypePin, useAnimationsPin, getPreventStandbyModePin, offerOnlyPin,
-            closeMyOfferWhenTakenPin, getSupportedLanguageCodesPin, requiredTotalReputationScorePin;
+            closeMyOfferWhenTakenPin, getSupportedLanguageCodesPin, minRequiredReputationScorePin;
     private Subscription notifyForPreReleasePin, getUseTransientNotificationsPin;
 
     public PreferencesController(ServiceProvider serviceProvider) {
@@ -66,7 +66,7 @@ public class PreferencesController implements Controller {
                 .to(settingsService.getUseAnimations());
         getPreventStandbyModePin = FxBindings.bindBiDir(model.getPreventStandbyMode())
                 .to(settingsService.getPreventStandbyMode());
-        requiredTotalReputationScorePin = FxBindings.bindBiDir(model.getRequiredTotalReputationScore())
+        minRequiredReputationScorePin = FxBindings.bindBiDir(model.getMinRequiredReputationScore())
                 .to(settingsService.getMinRequiredReputationScore());
         offerOnlyPin = FxBindings.bindBiDir(model.getOfferOnly())
                 .to(settingsService.getOffersOnly());
@@ -94,7 +94,7 @@ public class PreferencesController implements Controller {
     public void onDeactivate() {
         chatNotificationTypePin.unbind();
         useAnimationsPin.unbind();
-        requiredTotalReputationScorePin.unbind();
+        minRequiredReputationScorePin.unbind();
         offerOnlyPin.unbind();
         closeMyOfferWhenTakenPin.unbind();
         getPreventStandbyModePin.unbind();
