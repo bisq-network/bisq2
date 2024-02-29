@@ -61,9 +61,9 @@ public class BisqEasyServiceUtil {
                 return false;
             }
             long makerAsSellersScore = reputationService.getReputationScore(optionalMakersUserProfile.get()).getTotalScore();
-            long myRequiredScore = settingsService.getMinRequiredReputationScore().get();
+            long myMinRequiredScore = settingsService.getMinRequiredReputationScore().get();
             // Maker as seller's score must be > than my required score (as buyer)
-            return makerAsSellersScore >= myRequiredScore;
+            return makerAsSellersScore >= myMinRequiredScore;
         } else {
             if (userIdentityService.getSelectedUserIdentity() == null) {
                 return false;

@@ -46,19 +46,24 @@ import bisq.desktop.components.controls.*;
 import bisq.desktop.components.list_view.ListViewUtil;
 import bisq.desktop.components.list_view.NoSelectionModel;
 import bisq.desktop.components.overlay.Popup;
+import bisq.desktop.main.content.bisq_easy.BisqEasyServiceUtil;
 import bisq.desktop.main.content.bisq_easy.take_offer.TakeOfferController;
 import bisq.desktop.main.content.chat.ChatUtil;
 import bisq.desktop.main.content.components.ReportToModeratorWindow;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
+import bisq.network.identity.NetworkId;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.offer.options.OfferOptionUtil;
 import bisq.settings.SettingsService;
+import bisq.trade.Trade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
+import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
@@ -322,21 +327,48 @@ public class ChatMessagesListView {
         // UI - handler
         ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-        public void onTakeOffer(BisqEasyOfferbookMessage chatMessage, boolean canTakeOffer) {
-            if (userIdentityService.getSelectedUserIdentity() == null ||
-                    bannedUserService.isUserProfileBanned(chatMessage.getAuthorUserProfileId()) ||
-                    bannedUserService.isUserProfileBanned(userIdentityService.getSelectedUserIdentity().getUserProfile())) {
-                return;
-            }
+        public void onTakeOffer(BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
+            checkArgument(bisqEasyOfferbookMessage.getBisqEasyOffer().isPresent(), "message must contain offer");
+            checkArgument(userIdentityService.getSelectedUserIdentity() != null,
+                    "userIdentityService.getSelectedUserIdentity() must not be null");
+            checkArgument(!model.isMyMessage(bisqEasyOfferbookMessage), "tradeChatMessage must not be mine");
 
-            if (!canTakeOffer) {
+            UserProfile userProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
+            NetworkId takerNetworkId = userProfile.getNetworkId();
+            BisqEasyOffer bisqEasyOffer = bisqEasyOfferbookMessage.getBisqEasyOffer().get();
+            String tradeId = Trade.createId(bisqEasyOffer.getId(), takerNetworkId.getId());
+            if (bisqEasyTradeService.tradeExists(tradeId)) {
                 new Popup().information(Res.get("chat.message.offer.offerAlreadyTaken.warn")).show();
                 return;
             }
-            checkArgument(!model.isMyMessage(chatMessage), "tradeChatMessage must not be mine");
-            checkArgument(chatMessage.getBisqEasyOffer().isPresent(), "message must contain offer");
 
-            BisqEasyOffer bisqEasyOffer = chatMessage.getBisqEasyOffer().get();
+            if (!BisqEasyServiceUtil.offerMatchesMinRequiredReputationScore(reputationService,
+                    settingsService,
+                    userIdentityService,
+                    userProfileService,
+                    bisqEasyOffer)) {
+                if (bisqEasyOffer.getDirection().isSell()) {
+                    long makerAsSellersScore = userProfileService.findUserProfile(bisqEasyOffer.getMakersUserProfileId())
+                            .map(reputationService::getReputationScore)
+                            .map(ReputationScore::getTotalScore)
+                            .orElse(0L);
+                    long myMinRequiredScore = settingsService.getMinRequiredReputationScore().get();
+                    new Popup().information(Res.get("chat.message.takeOffer.makersReputationScoreTooLow.warn",
+                            myMinRequiredScore, makerAsSellersScore)).show();
+                } else {
+                    long myScoreAsSeller = reputationService.getReputationScore(userIdentityService.getSelectedUserIdentity().getUserProfile()).getTotalScore();
+                    long offersRequiredScore = OfferOptionUtil.findRequiredTotalReputationScore(bisqEasyOffer).orElse(0L);
+                    new Popup().information(Res.get("chat.message.takeOffer.myReputationScoreTooLow.warn",
+                            offersRequiredScore, myScoreAsSeller)).show();
+                }
+                return;
+            }
+
+            if (bannedUserService.isUserProfileBanned(bisqEasyOfferbookMessage.getAuthorUserProfileId()) ||
+                    bannedUserService.isUserProfileBanned(userProfile)) {
+                return;
+            }
+
             Navigation.navigateTo(NavigationTarget.TAKE_OFFER, new TakeOfferController.InitData(bisqEasyOffer));
         }
 
@@ -347,7 +379,7 @@ public class ChatMessagesListView {
                         if (authorUserIdentity.equals(userIdentityService.getSelectedUserIdentity())) {
                             boolean isBisqEasyPublicChatMessageWithOffer =
                                     chatMessage instanceof BisqEasyOfferbookMessage
-                                    && ((BisqEasyOfferMessage) chatMessage).hasBisqEasyOffer();
+                                            && ((BisqEasyOfferMessage) chatMessage).hasBisqEasyOffer();
                             if (isBisqEasyPublicChatMessageWithOffer) {
                                 new Popup().warning(Res.get("bisqEasy.offerbook.chatMessage.deleteOffer.confirmation"))
                                         .actionButtonText(Res.get("confirmation.yes"))
@@ -616,8 +648,8 @@ public class ChatMessagesListView {
                             ChatMessage chatMessage = (ChatMessage) element;
                             Optional<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> toRemove =
                                     model.chatMessages.stream()
-                                    .filter(item -> item.getChatMessage().getId().equals(chatMessage.getId()))
-                                    .findAny();
+                                            .filter(item -> item.getChatMessage().getId().equals(chatMessage.getId()))
+                                            .findAny();
                             toRemove.ifPresent(item -> {
                                 item.dispose();
                                 model.chatMessages.remove(item);
