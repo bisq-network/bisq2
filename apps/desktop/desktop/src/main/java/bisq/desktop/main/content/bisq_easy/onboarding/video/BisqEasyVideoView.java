@@ -62,8 +62,8 @@ import org.fxmisc.easybind.monadic.MonadicBinding;
 
 @Slf4j
 public class BisqEasyVideoView extends View<StackPane, BisqEasyVideoModel, BisqEasyVideoController> implements FillStageView {
-    public static final double VIDEO_WIDTH = 1762; //1762 1177
-    public static final double VIDEO_HEIGHT = 1177; // 1292 875
+    public static final double VIDEO_WIDTH = 2584;
+    public static final double VIDEO_HEIGHT = 1725;
     public static final double PADDING = 50;
     public static final double SLIDER_WIDTH = 59.5;
 
