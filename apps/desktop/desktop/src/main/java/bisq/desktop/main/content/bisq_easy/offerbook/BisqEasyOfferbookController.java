@@ -56,7 +56,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
     private final BisqEasyOfferbookModel bisqEasyOfferbookModel;
     private Pin offerOnlySettingsPin, bisqEasyPrivateTradeChatChannelsPin, selectedChannelPin, marketPriceByCurrencyMapPin;
-    private Subscription marketSelectorSearchPin, selectedMarketFilterPin, selectedOffersFilterPin;
+    private Subscription marketSelectorSearchPin, selectedMarketFilterPin, selectedOffersFilterPin, selectedMarketSortTypePin;
 
     public BisqEasyOfferbookController(ServiceProvider serviceProvider) {
         super(serviceProvider, ChatChannelDomain.BISQ_EASY_OFFERBOOK, NavigationTarget.BISQ_EASY_OFFERBOOK);
@@ -141,6 +141,18 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
             }
         });
 
+        MarketSortType persistedMarketSortType = settingsService.getCookie().asString(CookieKey.MARKET_SORT_TYPE).map(name ->
+                        ProtobufUtils.enumFromProto(MarketSortType.class, name, MarketSortType.NUM_OFFERS))
+                .orElse(MarketSortType.NUM_OFFERS);
+        model.getSelectedMarketSortType().set(persistedMarketSortType);
+        selectedMarketSortTypePin = EasyBind.subscribe(model.getSelectedMarketSortType(), marketSortType -> {
+            if (marketSortType != null) {
+                settingsService.setCookie(CookieKey.MARKET_SORT_TYPE, marketSortType.name());
+            }
+        });
+
+        model.getSortedMarketChannelItems().setComparator(model.getSelectedMarketSortType().get().getComparator());
+
         maybeSelectFirst();
     }
 
@@ -155,6 +167,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         selectedMarketFilterPin.unsubscribe();
         selectedOffersFilterPin.unsubscribe();
         marketPriceByCurrencyMapPin.unbind();
+        selectedMarketSortTypePin.unsubscribe();
 
         resetSelectedChildTarget();
     }
@@ -214,6 +227,11 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
 
     void onCloseFilter() {
         bisqEasyOfferbookModel.getShowFilterOverlay().set(false);
+    }
+
+    void onSortMarkets(MarketSortType marketSortType) {
+        model.getSelectedMarketSortType().set(marketSortType);
+        model.getSortedMarketChannelItems().setComparator(marketSortType.getComparator());
     }
 
     private void updateFilteredMarketChannelItems() {
