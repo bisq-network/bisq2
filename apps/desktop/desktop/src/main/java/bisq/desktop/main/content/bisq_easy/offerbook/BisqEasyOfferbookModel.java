@@ -25,7 +25,10 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.function.Predicate;
 
 @Slf4j
 @Getter
@@ -39,6 +42,13 @@ public final class BisqEasyOfferbookModel extends ChatModel {
     private final ObjectProperty<MarketChannelItem> selectedMarketChannelItem = new SimpleObjectProperty<>();
     private final StringProperty marketSelectorSearchText = new SimpleStringProperty();
     private final ObjectProperty<MarketFilter> selectedMarketFilter = new SimpleObjectProperty<>();
+    @Setter
+    private Predicate<MarketChannelItem> marketPricePredicate = marketChannelItem -> true;
+    @Setter
+    private Predicate<MarketChannelItem> searchTextPredicate = marketChannelItem -> true;
+    @Setter
+    private Predicate<MarketChannelItem> marketFilterPredicate = marketChannelItem -> true;
+
     public BisqEasyOfferbookModel(ChatChannelDomain chatChannelDomain) {
         super(chatChannelDomain);
     }

@@ -31,16 +31,20 @@ import javafx.css.PseudoClass;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.SeparatorMenuItem;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.List;
 
 @Slf4j
 public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView, BisqEasyOfferbookModel> {
@@ -215,11 +219,11 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         // Sorting options
         DropdownTitleMenuItem sortTitle = new DropdownTitleMenuItem(Res.get("bisqEasy.offerbook.dropdownMenu.sortTitle"));
         sortByMostOffers = new DropdownSortByMenuItem("check-grey", "check-white",
-                Res.get("bisqEasy.offerbook.dropdownMenu.mostOffers"), BisqEasyOfferbookUtil.SortByMarketActivity());
+                Res.get("bisqEasy.offerbook.dropdownMenu.mostOffers"), BisqEasyOfferbookUtil.sortByMarketActivity());
         sortByNameAZ = new DropdownSortByMenuItem("check-grey", "check-white",
-                Res.get("bisqEasy.offerbook.dropdownMenu.nameAZ"), BisqEasyOfferbookUtil.SortByMarketNameAsc());
+                Res.get("bisqEasy.offerbook.dropdownMenu.nameAZ"), BisqEasyOfferbookUtil.sortByMarketNameAsc());
         sortByNameZA = new DropdownSortByMenuItem("check-grey", "check-white",
-                Res.get("bisqEasy.offerbook.dropdownMenu.nameZA"), BisqEasyOfferbookUtil.SortByMarketNameDesc());
+                Res.get("bisqEasy.offerbook.dropdownMenu.nameZA"), BisqEasyOfferbookUtil.sortByMarketNameDesc());
 
         // Separator
         SeparatorMenuItem separator = new SeparatorMenuItem();
