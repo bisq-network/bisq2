@@ -28,6 +28,7 @@ import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.currency.Market;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.ObservableArray;
+import bisq.common.util.ProtobufUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
@@ -36,6 +37,7 @@ import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardController;
 import bisq.desktop.main.content.chat.ChatController;
 import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import javafx.scene.layout.StackPane;
 import lombok.extern.slf4j.Slf4j;
@@ -108,9 +110,15 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
             updateFilteredMarketChannelItems();
         });
 
+        Filters.Markets persistedMarketsFilter = settingsService.getCookie().asString(CookieKey.MARKETS_FILTER).map(name ->
+                        ProtobufUtils.enumFromProto(Filters.Markets.class, name, Filters.Markets.WITH_OFFERS))
+                .orElse(Filters.Markets.WITH_OFFERS);
+        model.getSelectedMarketsFilter().set(persistedMarketsFilter);
+
         selectedMarketFilterPin = EasyBind.subscribe(model.getSelectedMarketsFilter(), filter -> {
             if (filter != null) {
                 model.setMarketFilterPredicate(filter.getPredicate());
+                settingsService.setCookie(CookieKey.MARKETS_FILTER, model.getSelectedMarketsFilter().get().name());
                 updateFilteredMarketChannelItems();
             }
         });
