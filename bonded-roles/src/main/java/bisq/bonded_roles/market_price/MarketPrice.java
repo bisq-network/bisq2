@@ -29,12 +29,16 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Getter
 @ToString
 @EqualsAndHashCode
 public final class MarketPrice implements NetworkProto {
+    private static final long INVALID_AGE = TimeUnit.HOURS.toMillis(12);
+    private static final long STALE_AGE = TimeUnit.MINUTES.toMillis(5);
+
     public enum Source {
         PERSISTED,
         PROPAGATED_IN_NETWORK,
@@ -85,5 +89,13 @@ public final class MarketPrice implements NetworkProto {
 
     public long getAge() {
         return System.currentTimeMillis() - timestamp;
+    }
+
+    public boolean isStale() {
+        return System.currentTimeMillis() - timestamp > STALE_AGE;
+    }
+
+    public boolean isValidDate() {
+        return System.currentTimeMillis() - timestamp < INVALID_AGE;
     }
 }

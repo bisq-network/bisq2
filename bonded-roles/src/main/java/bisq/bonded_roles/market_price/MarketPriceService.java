@@ -163,6 +163,7 @@ public class MarketPriceService implements Service, PersistenceClient<MarketPric
         persist();
     }
 
+    // Filters the new map for new entries or entries with a newer timestamp as the existing one.
     private Map<Market, MarketPrice> getMapOfNewEntries(Map<Market, MarketPrice> newMap) {
         Map<Market, MarketPrice> marketPriceByCurrencyMap = getMarketPriceByCurrencyMap();
         return newMap.entrySet().stream()
