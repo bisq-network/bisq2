@@ -49,12 +49,8 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView, BisqEasyOfferbookModel> {
-    private final BisqEasyOfferbookModel bisqEasyOfferbookModel;
-    private final BisqEasyOfferbookController bisqEasyOfferbookController;
     private SearchBox marketSelectorSearchBox;
-    private Label chatDomainTitle;
     private BisqTableView<MarketChannelItem> tableView;
-    private BisqTableColumn<MarketChannelItem> marketLabelTableColumn;
     private VBox marketSelectionList;
     private Subscription tableViewSelectionPin, selectedModelItemPin, marketSelectorHeaderIconPin, selectedMarketFilterPin, selectedOffersFilterPin, selectedMarketSortTypePin;
     private Button createOfferButton;
@@ -71,15 +67,13 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
                                  Pane channelSidebar) {
         super(model, controller, chatMessagesComponent, channelSidebar);
 
-        bisqEasyOfferbookController = controller;
-        bisqEasyOfferbookModel = model;
     }
 
     @Override
     protected void configTitleHBox() {
         super.configTitleHBox();
 
-        chatDomainTitle = new Label(Res.get("bisqEasy.offerbook"));
+        Label chatDomainTitle = new Label(Res.get("bisqEasy.offerbook"));
         chatDomainTitle.getStyleClass().add("chat-header-title");
 
         HBox headerTitle = new HBox(10, chatDomainTitle, channelDescription);
@@ -107,7 +101,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     protected void onViewAttached() {
         super.onViewAttached();
 
-        hideUserMessagesCheckbox.selectedProperty().bindBidirectional(bisqEasyOfferbookModel.getOfferOnly());
+        hideUserMessagesCheckbox.selectedProperty().bindBidirectional(getModel().getOfferOnly());
         marketSelectorSearchBox.textProperty().bindBidirectional(getModel().getMarketSelectorSearchText());
 
         selectedModelItemPin = EasyBind.subscribe(getModel().getSelectedMarketChannelItem(), selected -> {
@@ -146,7 +140,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     protected void onViewDetached() {
         super.onViewDetached();
 
-        hideUserMessagesCheckbox.selectedProperty().unbindBidirectional(bisqEasyOfferbookModel.getOfferOnly());
+        hideUserMessagesCheckbox.selectedProperty().unbindBidirectional(getModel().getOfferOnly());
         marketSelectorSearchBox.textProperty().unbindBidirectional(getModel().getMarketSelectorSearchText());
 
         selectedModelItemPin.unsubscribe();
@@ -266,7 +260,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
                 .isSortable(false)
                 .build();
 
-        marketLabelTableColumn = new BisqTableColumn.Builder<MarketChannelItem>()
+        BisqTableColumn<MarketChannelItem> marketLabelTableColumn = new BisqTableColumn.Builder<MarketChannelItem>()
                 .minWidth(100)
                 .left()
                 .setCellFactory(BisqEasyOfferbookUtil.getMarketLabelCellFactory())
@@ -333,10 +327,8 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
 
         sortAndFilterMarketsMenu.getMenuItems().stream()
                 .filter(menuItem -> menuItem instanceof DropdownFilterMenuItem)
-                .forEach(menuItem -> {
-                    DropdownFilterMenuItem<?> filterMenuItem = (DropdownFilterMenuItem<?>) menuItem;
-                    filterMenuItem.updateSelection(marketFilter == filterMenuItem.getFilter());
-                });
+                .map(menuItem -> (DropdownFilterMenuItem<?>) menuItem)
+                .forEach(menuItem -> menuItem.updateSelection(marketFilter == menuItem.getFilter()));
     }
 
     private void updateMarketSortType(MarketSortType marketSortType) {
