@@ -21,10 +21,15 @@ import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.desktop.ServiceProvider;
 import bisq.network.identity.NetworkId;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.offer.options.OfferOptionUtil;
+import bisq.settings.SettingsService;
 import bisq.trade.Trade;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.user.identity.UserIdentity;
+import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
+import bisq.user.profile.UserProfileService;
+import bisq.user.reputation.ReputationService;
 
 import java.util.Optional;
 
@@ -43,5 +48,30 @@ public class BisqEasyServiceUtil {
                 myUserIdentity.getUserProfile().getNetworkId();
         String tradeId = Trade.createId(bisqEasyOffer.getId(), takerNetworkId.getId());
         return serviceProvider.getTradeService().getBisqEasyTradeService().findTrade(tradeId);
+    }
+
+    public static boolean offerMatchesMinRequiredReputationScore(ReputationService reputationService,
+                                                                 SettingsService settingsService,
+                                                                 UserIdentityService userIdentityService,
+                                                                 UserProfileService userProfileService,
+                                                                 BisqEasyOffer peersOffer) {
+        if (peersOffer.getDirection().isSell()) {
+            Optional<UserProfile> optionalMakersUserProfile = userProfileService.findUserProfile(peersOffer.getMakersUserProfileId());
+            if (optionalMakersUserProfile.isEmpty()) {
+                return false;
+            }
+            long makerAsSellersScore = reputationService.getReputationScore(optionalMakersUserProfile.get()).getTotalScore();
+            long myRequiredScore = settingsService.getMinRequiredReputationScore().get();
+            // Maker as seller's score must be > than my required score (as buyer)
+            return makerAsSellersScore >= myRequiredScore;
+        } else {
+            if (userIdentityService.getSelectedUserIdentity() == null) {
+                return false;
+            }
+            // My score (as offer is a buy offer, I am the seller) must be > as offers required score
+            long myScoreAsSeller = reputationService.getReputationScore(userIdentityService.getSelectedUserIdentity().getUserProfile()).getTotalScore();
+            long offersRequiredScore = OfferOptionUtil.findRequiredTotalReputationScore(peersOffer).orElse(0L);
+            return myScoreAsSeller >= offersRequiredScore;
+        }
     }
 }

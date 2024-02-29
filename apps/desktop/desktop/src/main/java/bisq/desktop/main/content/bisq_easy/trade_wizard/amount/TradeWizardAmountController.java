@@ -21,13 +21,13 @@ import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannelService;
-import bisq.common.application.DevMode;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.main.content.bisq_easy.BisqEasyServiceUtil;
 import bisq.desktop.main.content.bisq_easy.components.AmountComponent;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
@@ -37,7 +37,6 @@ import bisq.offer.amount.spec.AmountSpecUtil;
 import bisq.offer.amount.spec.QuoteSideFixedAmountSpec;
 import bisq.offer.amount.spec.QuoteSideRangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.offer.options.OfferOptionUtil;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import bisq.offer.payment_method.PaymentMethodSpecUtil;
 import bisq.offer.price.PriceUtil;
@@ -230,9 +229,11 @@ public class TradeWizardAmountController implements Controller {
         applyAmountSpec();
 
         if (model.getDirection().isSell()) {
+            // Use sellers trade price
             String btcAmount = Res.get("bisqEasy.component.amount.baseSide.tooltip.seller.btcAmount") + "\n";
             maxOrFixAmountComponent.setTooltip(btcAmount + Res.get("bisqEasy.component.amount.baseSide.tooltip.price"));
         } else {
+            // Use best price of matching offer if any match found, otherwise market price.
             String btcAmount = Res.get("bisqEasy.component.amount.baseSide.tooltip.buyer.btcAmount") + "\n";
             if (!model.isCreateOfferMode()) {
                 applyBestOfferQuote();
@@ -319,6 +320,7 @@ public class TradeWizardAmountController implements Controller {
         }
     }
 
+    // Used for finding best price quote of available matching offers
     private boolean filterOffers(BisqEasyOffer peersOffer) {
         try {
             Optional<UserProfile> optionalMakersUserProfile = userProfileService.findUserProfile(peersOffer.getMakersUserProfileId());
@@ -362,19 +364,12 @@ public class TradeWizardAmountController implements Controller {
                 return false;
             }
 
-            if (!DevMode.isDevMode() && userIdentityService.getSelectedUserIdentity() != null) {
-                Optional<Long> requiredScore = OfferOptionUtil.findRequiredTotalReputationScore(peersOffer);
-                if (requiredScore.isPresent()) {
-                    long myScore = reputationService.getReputationScore(userIdentityService.getSelectedUserIdentity().getUserProfile()).getTotalScore();
-                    if (requiredScore.get() > myScore) {
-                        return false;
-                    }
-                }
-
-                long makersScore = reputationService.getReputationScore(makersUserProfile).getTotalScore();
-                if (settingsService.getMinRequiredReputationScore().get() > makersScore) {
-                    return false;
-                }
+            if (!BisqEasyServiceUtil.offerMatchesMinRequiredReputationScore(reputationService,
+                    settingsService,
+                    userIdentityService,
+                    userProfileService,
+                    peersOffer)) {
+                return false;
             }
 
             return true;
