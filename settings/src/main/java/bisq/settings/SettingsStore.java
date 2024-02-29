@@ -37,7 +37,6 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     final Cookie cookie;
     final Map<String, Boolean> dontShowAgainMap = new ConcurrentHashMap<>();
     final Observable<Boolean> useAnimations = new Observable<>();
-    final ObservableSet<Market> markets = new ObservableSet<>();
     final Observable<Market> selectedMarket = new Observable<>();
     final Observable<Long> minRequiredReputationScore = new Observable<>();
     final Observable<Boolean> offersOnly = new Observable<>();
@@ -54,7 +53,6 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
         this(new Cookie(),
                 new HashMap<>(),
                 true,
-                new HashSet<>(MarketRepository.getAllFiatMarkets()),
                 MarketRepository.getDefault(),
                 SettingsService.DEFAULT_MIN_REQUIRED_REPUTATION_SCORE,
                 false,
@@ -71,7 +69,6 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     public SettingsStore(Cookie cookie,
                          Map<String, Boolean> dontShowAgainMap,
                          boolean useAnimations,
-                         Set<Market> markets,
                          Market selectedMarket,
                          long requiredTotalReputationScore,
                          boolean offersOnly,
@@ -86,7 +83,6 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
         this.cookie = cookie;
         this.dontShowAgainMap.putAll(dontShowAgainMap);
         this.useAnimations.set(useAnimations);
-        this.markets.setAll(markets);
         this.selectedMarket.set(selectedMarket);
         this.minRequiredReputationScore.set(requiredTotalReputationScore);
         this.offersOnly.set(offersOnly);
@@ -106,7 +102,6 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 .setCookie(cookie.toProto())
                 .putAllDontShowAgainMap(dontShowAgainMap)
                 .setUseAnimations(useAnimations.get())
-                .addAllMarkets(markets.stream().map(Market::toProto).collect(Collectors.toList()))
                 .setSelectedMarket(selectedMarket.get().toProto())
                 .setMinRequiredReputationScore(minRequiredReputationScore.get())
                 .setOffersOnly(offersOnly.get())
@@ -126,7 +121,6 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 proto.getDontShowAgainMapMap().entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)),
                 proto.getUseAnimations(),
-                new ObservableSet<>(proto.getMarketsList().stream().map(Market::fromProto).collect(Collectors.toList())),
                 Market.fromProto(proto.getSelectedMarket()),
                 proto.getMinRequiredReputationScore(),
                 proto.getOffersOnly(),
@@ -156,7 +150,6 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
         return new SettingsStore(cookie,
                 dontShowAgainMap,
                 useAnimations.get(),
-                markets,
                 selectedMarket.get(),
                 minRequiredReputationScore.get(),
                 offersOnly.get(),
@@ -176,8 +169,6 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
             cookie.putAll(persisted.cookie.getMap());
             dontShowAgainMap.putAll(persisted.dontShowAgainMap);
             useAnimations.set(persisted.useAnimations.get());
-            markets.clear();
-            markets.addAll(persisted.markets);
             selectedMarket.set(persisted.selectedMarket.get());
             minRequiredReputationScore.set(persisted.minRequiredReputationScore.get());
             offersOnly.set(persisted.offersOnly.get());
