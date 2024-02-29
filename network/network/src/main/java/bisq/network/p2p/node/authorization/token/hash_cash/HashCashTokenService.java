@@ -33,16 +33,21 @@ public class HashCashTokenService extends AuthorizationTokenService<HashCashToke
     }
 
     @Override
-    public HashCashToken createToken(EnvelopePayloadMessage message, NetworkLoad networkLoad, String peerAddress, int messageCounter) {
+    public HashCashToken createToken(EnvelopePayloadMessage message,
+                                     NetworkLoad networkLoad,
+                                     String peerAddress,
+                                     int messageCounter) {
         long ts = System.currentTimeMillis();
         double difficulty = calculateDifficulty(message, networkLoad);
         byte[] challenge = getChallenge(peerAddress, messageCounter);
         byte[] payload = getPayload(message);
-        HashCashToken token = proofOfWorkService.mint(payload, challenge, difficulty)
-                .thenApply(proofOfWork -> new HashCashToken(proofOfWork, messageCounter))
-                .join();
-        log.debug("Create token for {} took {} ms\n token={}, peersLoad={}, peerAddress={}",
-                message.getClass().getSimpleName(), System.currentTimeMillis() - ts, token, networkLoad, peerAddress);
+        ProofOfWork proofOfWork = proofOfWorkService.mint(payload, challenge, difficulty);
+        HashCashToken token = new HashCashToken(proofOfWork, messageCounter);
+        log.info("Create HashCashToken for {} took {} ms\n" +
+                        "CostFactor={}; Load={}; Difficulty=2^{}={}",
+                message.getClass().getSimpleName(), System.currentTimeMillis() - ts,
+                message.getCostFactor(), networkLoad.getValue(),
+                MathUtils.roundDouble(Math.log(difficulty) / MathUtils.LOG2, 2), difficulty);
         return token;
     }
 
@@ -186,10 +191,7 @@ public class HashCashTokenService extends AuthorizationTokenService<HashCashToke
     private double calculateDifficulty(EnvelopePayloadMessage message, NetworkLoad networkLoad) {
         double messageCostFactor = MathUtils.bounded(0.01, 1, message.getCostFactor());
         double loadValue = MathUtils.bounded(0.01, 1, networkLoad.getValue());
-        double difficulty = MAX_DIFFICULTY * messageCostFactor + MAX_DIFFICULTY * loadValue;
-        log.debug("calculated difficulty={}, Math.pow(2, {}), messageCostFactor={}, loadValue={}",
-                difficulty, MathUtils.roundDouble(Math.log(difficulty) / MathUtils.LOG2, 2),
-                messageCostFactor, loadValue);
+        double difficulty = MAX_DIFFICULTY * messageCostFactor * loadValue;
         return MathUtils.bounded(MIN_DIFFICULTY, MAX_DIFFICULTY, difficulty);
     }
 }

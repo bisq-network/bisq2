@@ -25,13 +25,12 @@ import com.google.common.primitives.Longs;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * HashCash implementation for proof of work
  * It doubles required work by log2Difficulty increase (adding one leading zero).
  * <p>
- * See https://www.hashcash.org/papers/hashcash.pdf
+ * See <a href="https://www.hashcash.org/papers/hashcash.pdf">hashcash.pdf</a>
  */
 @Slf4j
 public class HashCashProofOfWorkService extends ProofOfWorkService {
@@ -39,24 +38,21 @@ public class HashCashProofOfWorkService extends ProofOfWorkService {
     }
 
     @Override
-    public CompletableFuture<ProofOfWork> mint(byte[] payload,
-                                               byte[] challenge,
-                                               double difficulty) {
-        return CompletableFuture.supplyAsync(() -> {
-            long ts = System.currentTimeMillis();
-            int log2Difficulty = toNumLeadingZeros(difficulty);
-            byte[] hash;
-            long counter = 0;
-            do {
-                hash = toSha256Hash(payload, challenge, ++counter);
-            }
-            while (numberOfLeadingZeros(hash) <= log2Difficulty);
-            byte[] solution = Longs.toByteArray(counter);
-            ProofOfWork proofOfWork = new ProofOfWork(payload, counter, challenge, difficulty, solution,
-                    System.currentTimeMillis() - ts);
-            log.debug("Completed minting proofOfWork: {}", proofOfWork);
-            return proofOfWork;
-        });
+    public ProofOfWork mint(byte[] payload,
+                            byte[] challenge,
+                            double difficulty) {
+        long ts = System.currentTimeMillis();
+        int log2Difficulty = toNumLeadingZeros(difficulty);
+        byte[] hash;
+        long counter = 0;
+        do {
+            hash = toSha256Hash(payload, challenge, ++counter);
+        }
+        while (numberOfLeadingZeros(hash) <= log2Difficulty);
+        byte[] solution = Longs.toByteArray(counter);
+        ProofOfWork proofOfWork = new ProofOfWork(payload, counter, challenge, difficulty, solution,
+                System.currentTimeMillis() - ts);
+        return proofOfWork;
     }
 
     @Override

@@ -78,7 +78,7 @@ public abstract class BaseState {
 
             long baseSideAmount = model.getBisqEasyTrade().getContract().getBaseSideAmount();
             long quoteSideAmount = model.getBisqEasyTrade().getContract().getQuoteSideAmount();
-            model.setFormattedBaseAmount(AmountFormatter.formatAmountWithCode(Coin.asBtcFromValue(baseSideAmount)));
+            model.setFormattedBaseAmount(AmountFormatter.formatAmountWithCode(Coin.asBtcFromValue(baseSideAmount), false));
             model.setFormattedQuoteAmount(AmountFormatter.formatAmountWithCode(Fiat.from(quoteSideAmount, bisqEasyOffer.getMarket().getQuoteCurrencyCode())));
         }
 

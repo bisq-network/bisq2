@@ -48,7 +48,7 @@ public class TorService implements Service {
 
     private final TorTransportConfig transportConfig;
     private final Path torDataDirPath;
-    private final NativeTorController nativeTorController = new NativeTorController();
+    private final NativeTorController nativeTorController;
     private final OnionServicePublishService onionServicePublishService;
 
     private final AtomicBoolean isRunning = new AtomicBoolean();
@@ -60,6 +60,8 @@ public class TorService implements Service {
     public TorService(TorTransportConfig transportConfig) {
         this.transportConfig = transportConfig;
         this.torDataDirPath = transportConfig.getDataDir();
+        nativeTorController = new NativeTorController(transportConfig.getBootstrapTimeout(),
+                transportConfig.getHsUploadTimeout());
         this.onionServicePublishService = new OnionServicePublishService(nativeTorController, torDataDirPath);
     }
 

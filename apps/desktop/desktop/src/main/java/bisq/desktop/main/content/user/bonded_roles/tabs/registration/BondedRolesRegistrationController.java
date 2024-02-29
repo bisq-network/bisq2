@@ -115,20 +115,20 @@ public abstract class BondedRolesRegistrationController implements Controller {
     }
 
     void onExpand() {
-        setIsCollapsed(false);
+        setIsExpanded(true);
     }
 
     void onCollapse() {
-        setIsCollapsed(true);
+        setIsExpanded(false);
     }
 
     void onHeaderClicked() {
-        setIsCollapsed(!model.getIsCollapsed().get());
+        setIsExpanded(!model.getIsExpanded().get());
     }
 
-    private void setIsCollapsed(boolean value) {
-        model.getIsCollapsed().set(value);
-        settingsService.setCookie(CookieKey.BONDED_ROLES_COLLAPSED, value);
+    private void setIsExpanded(boolean value) {
+        model.getIsExpanded().set(value);
+        settingsService.setCookie(CookieKey.BONDED_ROLES_EXPANDED, value);
     }
 
     protected void applyRequestRegistrationButtonDisabledBinding() {
