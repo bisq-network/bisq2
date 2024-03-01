@@ -54,6 +54,7 @@ public final class PeerOfferMessage extends PeerMessage {
         super.setUpPeerMessage();
 
         // User profile icon
+        userProfileIcon.setSize(60);
         userProfileIconVbox.setAlignment(Pos.CENTER_LEFT);
         HBox.setMargin(userProfileIconVbox, new Insets(-5, 0, -5, 0));
 
