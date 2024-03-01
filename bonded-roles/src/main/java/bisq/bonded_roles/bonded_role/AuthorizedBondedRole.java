@@ -49,7 +49,7 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
     private final BondedRoleType bondedRoleType;
     private final String bondUserName;
     private final String signatureBase64;
-    private final AddressByTransportTypeMap addressByTransportTypeMap;
+    private final Optional<AddressByTransportTypeMap> addressByTransportTypeMap;
     private final NetworkId networkId;
     // The oracle node which did the validation and publishing
     private final Optional<AuthorizedOracleNode> authorizingOracleNode;
@@ -60,7 +60,7 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
                                 BondedRoleType bondedRoleType,
                                 String bondUserName,
                                 String signatureBase64,
-                                AddressByTransportTypeMap addressByTransportTypeMap,
+                                Optional<AddressByTransportTypeMap> addressByTransportTypeMap,
                                 NetworkId networkId,
                                 Optional<AuthorizedOracleNode> authorizingOracleNode,
                                 boolean staticPublicKeysProvided) {
@@ -94,8 +94,8 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
                 .setBondUserName(bondUserName)
                 .setSignatureBase64(signatureBase64)
                 .setNetworkId(networkId.toProto())
-                .setAddressByTransportTypeMap(addressByTransportTypeMap.toProto())
                 .setStaticPublicKeysProvided(staticPublicKeysProvided);
+        addressByTransportTypeMap.ifPresent(e -> builder.setAddressByTransportTypeMap(e.toProto()));
         authorizingOracleNode.ifPresent(oracleNode -> builder.setAuthorizingOracleNode(oracleNode.toProto()));
         return builder.build();
     }
@@ -106,9 +106,13 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
                 BondedRoleType.fromProto(proto.getBondedRoleType()),
                 proto.getBondUserName(),
                 proto.getSignatureBase64(),
-                AddressByTransportTypeMap.fromProto(proto.getAddressByTransportTypeMap()),
+                proto.hasAddressByTransportTypeMap() ?
+                        Optional.of(AddressByTransportTypeMap.fromProto(proto.getAddressByTransportTypeMap())) :
+                        Optional.empty(),
                 NetworkId.fromProto(proto.getNetworkId()),
-                proto.hasAuthorizingOracleNode() ? Optional.of(AuthorizedOracleNode.fromProto(proto.getAuthorizingOracleNode())) : Optional.empty(),
+                proto.hasAuthorizingOracleNode() ?
+                        Optional.of(AuthorizedOracleNode.fromProto(proto.getAuthorizingOracleNode())) :
+                        Optional.empty(),
                 proto.getStaticPublicKeysProvided());
     }
 
@@ -149,16 +153,16 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
     @Override
     public String toString() {
         return "AuthorizedBondedRole{" +
-                "\r\n                    metaData=" + metaData +
+                "\r\n                    bondedRoleType=" + bondedRoleType +
                 ",\r\n                    profileId='" + profileId + '\'' +
                 ",\r\n                    authorizedPublicKey='" + authorizedPublicKey + '\'' +
-                ",\r\n                    bondedRoleType=" + bondedRoleType +
                 ",\r\n                    bondUserName='" + bondUserName + '\'' +
                 ",\r\n                    signature='" + signatureBase64 + '\'' +
                 ",\r\n                    networkId=" + networkId +
                 ",\r\n                    addressByTransportTypeMap=" + addressByTransportTypeMap +
                 ",\r\n                    authorizedOracleNode=" + authorizingOracleNode +
                 ",\r\n                    staticPublicKeysProvided=" + staticPublicKeysProvided +
+                ",\r\n                    metaData=" + metaData +
                 ",\r\n                    authorizedPublicKeys=" + getAuthorizedPublicKeys() +
                 "\r\n}";
     }

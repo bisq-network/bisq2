@@ -98,7 +98,7 @@ public class SeedNodeService implements Service {
                     BondedRoleType.SEED_NODE,
                     config.getBondUserName(),
                     config.getSignatureBase64(),
-                    networkId.getAddressByTransportTypeMap(),
+                    Optional.of(networkId.getAddressByTransportTypeMap()),
                     networkId,
                     Optional.empty(),
                     config.isStaticPublicKeysProvided());
