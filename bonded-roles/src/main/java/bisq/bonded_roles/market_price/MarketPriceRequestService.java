@@ -187,6 +187,7 @@ public class MarketPriceRequestService {
 
                 // We only use those market prices for which we have a market in the repository
                 Map<Market, MarketPrice> filtered = map.entrySet().stream()
+                        .filter(e -> e.getValue().isValidDate())
                         .filter(e -> MarketRepository.findAnyMarketByMarketCodes(e.getKey().getMarketCodes()).isPresent())
                         .collect(Collectors.toMap(e -> MarketRepository.findAnyMarketByMarketCodes(e.getKey().getMarketCodes()).orElseThrow(),
                                 Map.Entry::getValue));
@@ -227,8 +228,12 @@ public class MarketPriceRequestService {
                     MarketPrice marketPrice = new MarketPrice(priceQuote,
                             timestamp,
                             MarketPriceProvider.fromName(provider));
-                    marketPrice.setSource(MarketPrice.Source.REQUESTED_FROM_PRICE_NODE);
-                    map.put(priceQuote.getMarket(), marketPrice);
+                    if (marketPrice.isValidDate()) {
+                        marketPrice.setSource(MarketPrice.Source.REQUESTED_FROM_PRICE_NODE);
+                        map.put(priceQuote.getMarket(), marketPrice);
+                    } else {
+                        log.warn("We got an outdated market price. {}", marketPrice);
+                    }
                 }
             } catch (Throwable t) {
                 // We do not fail the whole request if one entry would be invalid
