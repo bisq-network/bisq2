@@ -53,7 +53,6 @@ public class MainController extends NavigationController {
     private final SettingsService settingsService;
     private final UpdaterService updaterService;
     private final ApplicationService.Config config;
-    private final NotificationPanelController notificationPanelController;
 
     public MainController(ServiceProvider serviceProvider) {
         super(NavigationTarget.MAIN);
@@ -66,7 +65,7 @@ public class MainController extends NavigationController {
 
         leftNavController = new LeftNavController(serviceProvider);
         TopPanelController topPanelController = new TopPanelController(serviceProvider);
-        notificationPanelController = new NotificationPanelController(serviceProvider);
+        NotificationPanelController notificationPanelController = new NotificationPanelController(serviceProvider);
         view = new MainView(model,
                 this,
                 leftNavController.getView().getRoot(),

@@ -17,36 +17,25 @@
 
 package bisq.bonded_roles.alert;
 
-import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
-import bisq.network.NetworkService;
-import bisq.network.p2p.services.data.DataService;
-import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
-import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class AlertService implements Service, DataService.Listener {
-    private final NetworkService networkService;
-    @Getter
-    private final ObservableSet<AuthorizedAlertData> authorizedAlertDataSet = new ObservableSet<>();
+public class AlertService implements Service {
 
     @Getter
     private final Observable<Boolean> hasNotificationSenderIdentity = new Observable<>();
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
 
-    public AlertService(NetworkService networkService, AuthorizedBondedRolesService authorizedBondedRolesService) {
-        this.networkService = networkService;
+    public AlertService(AuthorizedBondedRolesService authorizedBondedRolesService) {
         this.authorizedBondedRolesService = authorizedBondedRolesService;
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Service
@@ -54,42 +43,15 @@ public class AlertService implements Service, DataService.Listener {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        networkService.addDataServiceListener(this);
-        networkService.getDataService().ifPresent(service -> service.getAuthorizedData().forEach(this::onAuthorizedDataAdded));
         return CompletableFuture.completedFuture(true);
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        networkService.removeDataServiceListener(this);
         return CompletableFuture.completedFuture(true);
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // DataService.Listener
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
-        findAuthorizedDataOfAlertData(authorizedData).ifPresent(authorizedAlertDataSet::add);
-    }
-
-    @Override
-    public void onAuthorizedDataRemoved(AuthorizedData authorizedData) {
-        findAuthorizedDataOfAlertData(authorizedData).ifPresent(authorizedAlertDataSet::remove);
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    private Optional<AuthorizedAlertData> findAuthorizedDataOfAlertData(AuthorizedData authorizedData) {
-        AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
-        if (data instanceof AuthorizedAlertData &&
-                authorizedBondedRolesService.hasAuthorizedPubKey(authorizedData, BondedRoleType.SECURITY_MANAGER)) {
-            return Optional.of((AuthorizedAlertData) data);
-        }
-        return Optional.empty();
+    public ObservableSet<AuthorizedAlertData> getAuthorizedAlertDataSet() {
+        return authorizedBondedRolesService.getAuthorizedAlertDataSet();
     }
 }

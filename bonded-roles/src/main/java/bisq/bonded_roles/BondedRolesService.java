@@ -70,8 +70,8 @@ public class BondedRolesService implements Service {
         explorerService = new ExplorerService(ExplorerService.Config.from(config.getBlockchainExplorer()),
                 networkService,
                 version);
+        alertService = new AlertService(authorizedBondedRolesService);
 
-        alertService = new AlertService(networkService, authorizedBondedRolesService);
         releaseNotificationsService = new ReleaseNotificationsService(networkService, authorizedBondedRolesService);
     }
 
