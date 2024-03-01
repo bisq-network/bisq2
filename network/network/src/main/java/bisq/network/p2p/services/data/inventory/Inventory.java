@@ -62,8 +62,11 @@ public final class Inventory implements NetworkProto {
 
     @Override
     public void verify() {
-        // We limit the max serialized size but not the number of entries.
-        serializedSize.ifPresent(size -> checkArgument(size <= maxSize));
+        // In case maxSize is very small we ignore the check
+        if (maxSize > 10000) {
+            // We limit the max serialized size but not the number of entries.
+            serializedSize.ifPresent(size -> checkArgument(size <= maxSize));
+        }
     }
 
     @Override
