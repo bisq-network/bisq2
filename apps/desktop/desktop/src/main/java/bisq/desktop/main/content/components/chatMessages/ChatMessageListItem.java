@@ -77,7 +77,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private final String nickName;
     @EqualsAndHashCode.Exclude
     private final ReputationScore reputationScore;
-    private final boolean canTakeOffer;
+    private final boolean offerAlreadyTaken;
     @EqualsAndHashCode.Exclude
     private final StringProperty messageDeliveryStatusTooltip = new SimpleStringProperty();
     @EqualsAndHashCode.Exclude
@@ -124,12 +124,12 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                 NetworkId takerNetworkId = userProfile.getNetworkId();
                 BisqEasyOffer bisqEasyOffer = bisqEasyOfferbookMessage.getBisqEasyOffer().get();
                 String tradeId = Trade.createId(bisqEasyOffer.getId(), takerNetworkId.getId());
-                canTakeOffer = !bisqEasyTradeService.tradeExists(tradeId);
+                offerAlreadyTaken = bisqEasyTradeService.tradeExists(tradeId);
             } else {
-                canTakeOffer = false;
+                offerAlreadyTaken = false;
             }
         } else {
-            canTakeOffer = false;
+            offerAlreadyTaken = false;
         }
 
         mapPins.add(networkService.getMessageDeliveryStatusByMessageId().addObserver(new HashMapObserver<>() {

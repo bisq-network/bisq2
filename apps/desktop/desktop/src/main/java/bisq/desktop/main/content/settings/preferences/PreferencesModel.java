@@ -37,7 +37,7 @@ public class PreferencesModel implements Model {
     private boolean isUseTransientNotificationsVisible;
     private final BooleanProperty useAnimations = new SimpleBooleanProperty();
     private final BooleanProperty preventStandbyMode = new SimpleBooleanProperty();
-    private final LongProperty requiredTotalReputationScore = new SimpleLongProperty();
+    private final LongProperty minRequiredReputationScore = new SimpleLongProperty();
     private final BooleanProperty offerOnly = new SimpleBooleanProperty();
     private final BooleanProperty closeMyOfferWhenTaken = new SimpleBooleanProperty();
     @Setter

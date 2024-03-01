@@ -73,7 +73,6 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         getSupportedLanguageCodes().addObserver(this::persist);
         getSelectedMarket().addObserver(value -> persist());
         getTradeRulesConfirmed().addObserver(value -> persist());
-        getSupportedLanguageCodes().addObserver(this::persist);
         isInitialized = true;
 
         if (DevMode.isDevMode() &&

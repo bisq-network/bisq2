@@ -74,8 +74,8 @@ public final class PeerOfferMessage extends PeerMessage {
         // Take offer button
         takeOfferButton = new Button(Res.get("offer.takeOffer"));
         BisqEasyOfferbookMessage bisqEasyOfferbookMessage = (BisqEasyOfferbookMessage) item.getChatMessage();
-        takeOfferButton.setOnAction(e -> controller.onTakeOffer(bisqEasyOfferbookMessage, item.isCanTakeOffer()));
-        takeOfferButton.setDefaultButton(item.isCanTakeOffer());
+        takeOfferButton.setOnAction(e -> controller.onTakeOffer(bisqEasyOfferbookMessage));
+        takeOfferButton.setDefaultButton(!item.isOfferAlreadyTaken());
         takeOfferButton.setMinWidth(Control.USE_PREF_SIZE);
         HBox.setMargin(takeOfferButton, new Insets(0, 10, 0, 0));
 

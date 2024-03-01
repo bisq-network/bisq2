@@ -898,10 +898,12 @@ public abstract class Overlay<T extends Overlay<T>> {
             GridPane.setMargin(footerBox, new Insets(buttonDistance, 0, 0, 0));
             gridPane.getChildren().add(footerBox);
             for (int i = 0; i < messageHyperlinks.size(); i++) {
-                Label label = new Label(String.format("[%d]", i + 1));
+                Label enumeration = new Label(String.format("[%d]", i + 1));
+                enumeration.getStyleClass().add("overlay-message");
                 Hyperlink link = new Hyperlink(messageHyperlinks.get(i));
+                link.getStyleClass().add("overlay-message");
                 link.setOnAction(event -> Browser.open(link.getText()));
-                HBox hBox = new HBox(label, link);
+                HBox hBox = new HBox(5, enumeration, link);
                 hBox.setAlignment(Pos.CENTER_LEFT);
                 footerBox.getChildren().addAll(hBox);
             }

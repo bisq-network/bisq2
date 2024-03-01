@@ -28,6 +28,7 @@ import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.main.content.bisq_easy.BisqEasyServiceUtil;
 import bisq.i18n.Res;
 import bisq.network.identity.NetworkId;
 import bisq.offer.Direction;
@@ -36,7 +37,6 @@ import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.offer.options.OfferOptionUtil;
 import bisq.offer.payment_method.PaymentMethodSpec;
 import bisq.offer.payment_method.PaymentMethodSpecFormatter;
 import bisq.offer.payment_method.PaymentMethodSpecUtil;
@@ -293,19 +293,17 @@ public class TradeWizardSelectOfferController implements Controller {
         return item ->
         {
             try {
-                BisqEasyOffer bisqEasyOffer = item.getBisqEasyOffer();
+                BisqEasyOffer peersOffer = item.getBisqEasyOffer();
 
                 if (model.getMatchingOffers().isEmpty()) {
                     return false;
                 }
-                if (model.getDirection().equals(bisqEasyOffer.getDirection())) {
+                if (model.getDirection().equals(peersOffer.getDirection())) {
                     return false;
                 }
-
-                if (!model.getMarket().equals(bisqEasyOffer.getMarket())) {
+                if (!model.getMarket().equals(peersOffer.getMarket())) {
                     return false;
                 }
-
                 if (item.getAuthorUserProfile().isEmpty()) {
                     return false;
                 }
@@ -320,7 +318,6 @@ public class TradeWizardSelectOfferController implements Controller {
                     return false;
                 }
 
-
                 if (userIdentityService.getSelectedUserIdentity() == null ||
                         bannedUserService.isUserProfileBanned(userIdentityService.getSelectedUserIdentity().getUserProfile()) ||
                         bannedUserService.isNetworkIdBanned(makerUserProfile.getNetworkId()) ||
@@ -328,34 +325,33 @@ public class TradeWizardSelectOfferController implements Controller {
                     return false;
                 }
 
-
                 UserProfile myUserProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
                 NetworkId myNetworkId = myUserProfile.getNetworkId();
-                String tradeId = Trade.createId(bisqEasyOffer.getId(), myNetworkId.getId());
+                String tradeId = Trade.createId(peersOffer.getId(), myNetworkId.getId());
                 if (bisqEasyTradeService.tradeExists(tradeId)) {
                     return false;
                 }
 
-                Optional<Monetary> myQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, bisqEasyOffer);
-                Optional<Monetary> peersQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, bisqEasyOffer);
+                Optional<Monetary> myQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, peersOffer);
+                Optional<Monetary> peersQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, peersOffer);
                 if (myQuoteSideMinOrFixedAmount.orElseThrow().getValue() > peersQuoteSideMaxOrFixedAmount.orElseThrow().getValue()) {
                     return false;
                 }
 
-                Optional<Monetary> myQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, bisqEasyOffer);
-                Optional<Monetary> peersQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, bisqEasyOffer);
+                Optional<Monetary> myQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, peersOffer);
+                Optional<Monetary> peersQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, peersOffer);
                 if (myQuoteSideMaxOrFixedAmount.orElseThrow().getValue() < peersQuoteSideMinOrFixedAmount.orElseThrow().getValue()) {
                     return false;
                 }
 
-                List<String> paymentMethodNames = PaymentMethodSpecUtil.getPaymentMethodNames(bisqEasyOffer.getQuoteSidePaymentMethodSpecs());
-                List<String> quoteSidePaymentMethodNames = PaymentMethodSpecUtil.getPaymentMethodNames(bisqEasyOffer.getQuoteSidePaymentMethodSpecs());
+                List<String> paymentMethodNames = PaymentMethodSpecUtil.getPaymentMethodNames(peersOffer.getQuoteSidePaymentMethodSpecs());
+                List<String> quoteSidePaymentMethodNames = PaymentMethodSpecUtil.getPaymentMethodNames(peersOffer.getQuoteSidePaymentMethodSpecs());
                 if (quoteSidePaymentMethodNames.stream().noneMatch(paymentMethodNames::contains)) {
                     return false;
                 }
 
                 Set<FiatPaymentMethod> takersPaymentMethodSet = new HashSet<>(model.getFiatPaymentMethods());
-                List<FiatPaymentMethod> matchingFiatPaymentMethods = bisqEasyOffer.getQuoteSidePaymentMethodSpecs().stream()
+                List<FiatPaymentMethod> matchingFiatPaymentMethods = peersOffer.getQuoteSidePaymentMethodSpecs().stream()
                         .filter(e -> takersPaymentMethodSet.contains(e.getPaymentMethod()))
                         .map(PaymentMethodSpec::getPaymentMethod)
                         .collect(Collectors.toList());
@@ -363,22 +359,13 @@ public class TradeWizardSelectOfferController implements Controller {
                     return false;
                 }
 
-                if (bisqEasyOffer.getDirection().mirror().isBuy()) {
-                    long makersScore = reputationService.getReputationScore(makerUserProfile).getTotalScore();
-                    long myRequiredReputationScore = settingsService.getMinRequiredReputationScore().get();
-                    // Makers score must be > than my required score (as buyer)
-                    if (makersScore < myRequiredReputationScore) {
-                        return false;
-                    }
-                } else {
-                    // My score (as seller) must be > as offers required score
-                    long myScore = reputationService.getReputationScore(userIdentityService.getSelectedUserIdentity().getUserProfile()).getTotalScore();
-                    long offersRequiredReputationScore = OfferOptionUtil.findRequiredTotalReputationScore(bisqEasyOffer).orElse(0L);
-                    if (myScore < offersRequiredReputationScore) {
-                        return false;
-                    }
+                if (!BisqEasyServiceUtil.offerMatchesMinRequiredReputationScore(reputationService,
+                        settingsService,
+                        userIdentityService,
+                        userProfileService,
+                        peersOffer)) {
+                    return false;
                 }
-
 
                 return true;
             } catch (Throwable t) {

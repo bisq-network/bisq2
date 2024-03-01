@@ -55,7 +55,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
     private final RadioButton all, mention, off;
     private final ChangeListener<Toggle> notificationsToggleListener;
     private final AutoCompleteComboBox<String> languageSelection, supportedLanguagesComboBox;
-    private final MaterialTextField requiredTotalReputationScore;
+    private final MaterialTextField minRequiredReputationScore;
     private Subscription selectedNotificationTypePin, getSelectedLSupportedLanguageCodePin;
 
     public PreferencesView(PreferencesModel model, PreferencesController controller) {
@@ -186,12 +186,12 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
 
         offersOnlySwitch = new Switch(Res.get("bisqEasy.topPane.filter.offersOnly"));
         closeMyOfferWhenTaken = new Switch(Res.get("settings.preferences.trade.closeMyOfferWhenTaken"));
-        requiredTotalReputationScore = new MaterialTextField(Res.get("settings.preferences.trade.requiredTotalReputationScore"),
+        minRequiredReputationScore = new MaterialTextField(Res.get("settings.preferences.trade.requiredTotalReputationScore"),
                 null, Res.get("settings.preferences.trade.requiredTotalReputationScore.help"));
-        requiredTotalReputationScore.setMaxWidth(400);
-        requiredTotalReputationScore.setValidators(REPUTATION_SCORE_VALIDATOR);
+        minRequiredReputationScore.setMaxWidth(400);
+        minRequiredReputationScore.setValidators(REPUTATION_SCORE_VALIDATOR);
 
-        VBox tradeVBox = new VBox(10, requiredTotalReputationScore, offersOnlySwitch, closeMyOfferWhenTaken);
+        VBox tradeVBox = new VBox(10, minRequiredReputationScore, offersOnlySwitch, closeMyOfferWhenTaken);
 
         Insets insets = new Insets(0, 5, 0, 5);
         VBox.setMargin(languageSelection, insets);
@@ -222,7 +222,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         offersOnlySwitch.selectedProperty().bindBidirectional(model.getOfferOnly());
         closeMyOfferWhenTaken.selectedProperty().bindBidirectional(model.getCloseMyOfferWhenTaken());
 
-        Bindings.bindBidirectional(requiredTotalReputationScore.textProperty(), model.getRequiredTotalReputationScore(), new NumberStringConverter());
+        Bindings.bindBidirectional(minRequiredReputationScore.textProperty(), model.getMinRequiredReputationScore(), new NumberStringConverter());
 
         languageSelection.getSelectionModel().select(model.getSelectedLanguageCode());
         languageSelection.setOnChangeConfirmed(e -> {
@@ -262,7 +262,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         offersOnlySwitch.selectedProperty().unbindBidirectional(model.getOfferOnly());
         closeMyOfferWhenTaken.selectedProperty().unbindBidirectional(model.getCloseMyOfferWhenTaken());
 
-        Bindings.unbindBidirectional(requiredTotalReputationScore.textProperty(), model.getRequiredTotalReputationScore());
+        Bindings.unbindBidirectional(minRequiredReputationScore.textProperty(), model.getMinRequiredReputationScore());
 
         notificationsToggleGroup.selectedToggleProperty().removeListener(notificationsToggleListener);
         selectedNotificationTypePin.unsubscribe();
@@ -276,7 +276,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
 
         languageSelection.resetValidation();
         supportedLanguagesComboBox.resetValidation();
-        requiredTotalReputationScore.resetValidation();
+        minRequiredReputationScore.resetValidation();
     }
 
     private Region getLine() {

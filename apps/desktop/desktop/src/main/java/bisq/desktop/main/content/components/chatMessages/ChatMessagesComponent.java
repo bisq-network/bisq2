@@ -17,9 +17,6 @@
 
 package bisq.desktop.main.content.components.chatMessages;
 
-import bisq.account.AccountService;
-import bisq.account.accounts.Account;
-import bisq.account.payment_method.PaymentMethod;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.*;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
@@ -30,7 +27,6 @@ import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.Navigation;
@@ -42,14 +38,11 @@ import bisq.desktop.main.content.components.ChatMentionPopupMenu;
 import bisq.desktop.main.content.components.CitationBlock;
 import bisq.desktop.main.content.components.UserProfileSelection;
 import bisq.i18n.Res;
-import bisq.offer.Direction;
-import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.settings.SettingsService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
-import bisq.wallets.core.WalletService;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
@@ -66,8 +59,6 @@ import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
 import java.util.Comparator;
@@ -134,12 +125,8 @@ public class ChatMessagesComponent {
         private final UserProfileService userProfileService;
         private final SettingsService settingsService;
         private final ChatService chatService;
-        private final Optional<WalletService> walletService;
-        private final AccountService accountService;
 
-        private Pin selectedChannelPin, inMediationPin, chatMessagesPin,
-                selectedPaymentAccountPin, paymentAccountsPin, getUserIdentitiesPin;
-        private Subscription selectedPaymentAccountSubscription;
+        private Pin selectedChannelPin, chatMessagesPin, getUserIdentitiesPin;
 
         private Controller(ServiceProvider serviceProvider,
                            ChatChannelDomain chatChannelDomain,
@@ -150,8 +137,6 @@ public class ChatMessagesComponent {
             settingsService = serviceProvider.getSettingsService();
             userIdentityService = serviceProvider.getUserService().getUserIdentityService();
             userProfileService = serviceProvider.getUserService().getUserProfileService();
-            accountService = serviceProvider.getAccountService();
-            walletService = serviceProvider.getWalletService();
 
             citationBlock = new CitationBlock(serviceProvider);
 
@@ -173,7 +158,6 @@ public class ChatMessagesComponent {
         @Override
         public void onActivate() {
             model.mentionableUsers.setAll(userProfileService.getUserProfiles());
-            model.getPaymentAccounts().setAll(accountService.getAccounts());
             Optional.ofNullable(model.selectedChatMessage).ifPresent(this::showChatUserDetailsHandler);
 
             getUserIdentitiesPin = userIdentityService.getUserIdentities().addObserver(() -> UIThread.run(this::applyUserProfileOrChannelChange));
@@ -183,16 +167,6 @@ public class ChatMessagesComponent {
             }
             ChatChannelSelectionService selectionService = chatService.getChatChannelSelectionServices().get(model.getChatChannelDomain());
             selectedChannelPin = selectionService.getSelectedChannel().addObserver(this::selectedChannelChanged);
-
-            paymentAccountsPin = accountService.getAccounts().addObserver(this::accountsChanged);
-            selectedPaymentAccountPin = FxBindings.bind(model.selectedAccountProperty())
-                    .to(accountService.selectedAccountAsObservable());
-            selectedPaymentAccountSubscription = EasyBind.subscribe(model.selectedAccountProperty(),
-                    selectedAccount -> {
-                        if (selectedAccount != null) {
-                            accountService.setSelectedAccount(selectedAccount);
-                        }
-                    });
         }
 
         @Override
@@ -201,17 +175,11 @@ public class ChatMessagesComponent {
                 selectedChannelPin.unbind();
                 selectedChannelPin = null;
             }
-            selectedPaymentAccountPin.unbind();
             getUserIdentitiesPin.unbind();
-            paymentAccountsPin.unbind();
-            if (inMediationPin != null) {
-                inMediationPin.unbind();
-            }
             if (chatMessagesPin != null) {
                 chatMessagesPin.unbind();
             }
 
-            selectedPaymentAccountSubscription.unsubscribe();
             model.selectedChannel.set(null);
         }
 
@@ -219,26 +187,6 @@ public class ChatMessagesComponent {
             UIThread.run(() -> {
                 model.selectedChannel.set(chatChannel);
                 applyUserProfileOrChannelChange();
-
-                boolean isBisqEasyPrivateTradeChatChannel = chatChannel instanceof BisqEasyOpenTradeChannel;
-                model.getOpenDisputeButtonVisible().set(isBisqEasyPrivateTradeChatChannel);
-                model.getSendBtcAddressButtonVisible().set(false);
-                model.getSendPaymentAccountButtonVisible().set(false);
-
-                if (chatMessagesPin != null) {
-                    chatMessagesPin.unbind();
-                }
-                if (isBisqEasyPrivateTradeChatChannel) {
-                    chatMessagesPin = chatChannel.getChatMessages().addObserver(() -> privateTradeMessagesChanged((BisqEasyOpenTradeChannel) chatChannel));
-                    BisqEasyOpenTradeChannel privateChannel = (BisqEasyOpenTradeChannel) chatChannel;
-                    if (inMediationPin != null) {
-                        inMediationPin.unbind();
-                    }
-                    inMediationPin = privateChannel.isInMediationObservable().addObserver(isInMediation ->
-                            UIThread.run(() -> model.getOpenDisputeButtonVisible().set(!isInMediation && !privateChannel.isMediator())));
-                }
-
-                accountsChanged();
             });
         }
 
@@ -300,31 +248,6 @@ public class ChatMessagesComponent {
         ///////////////////////////////////////////////////////////////////////////////////////////////////
         // Change handlers from service or model
         ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-        private void privateTradeMessagesChanged(BisqEasyOpenTradeChannel chatChannel) {
-            UIThread.run(() -> {
-                BisqEasyOffer bisqEasyOffer = chatChannel.getBisqEasyOffer();
-                boolean isMaker = bisqEasyOffer.isMyOffer(userIdentityService.getMyUserProfileIds());
-                Direction usersDirection = isMaker ?
-                        bisqEasyOffer.getMakersDirection() :
-                        bisqEasyOffer.getTakersDirection();
-
-                if (usersDirection.isSell()) {
-                    model.getSendPaymentAccountButtonVisible().set(true);
-                    model.getSendBtcAddressButtonVisible().set(false);
-                } else {
-                    model.getSendPaymentAccountButtonVisible().set(false);
-                    model.getSendBtcAddressButtonVisible().set(walletService.isPresent());
-                }
-            });
-        }
-
-        private void accountsChanged() {
-            UIThread.run(() ->
-                    model.getPaymentAccountSelectionVisible().set(
-                            model.getSelectedChannel().get() instanceof BisqEasyOpenTradeChannel &&
-                                    accountService.getAccounts().size() > 1));
-        }
 
         private void applyUserProfileOrChannelChange() {
             boolean multipleProfiles = userIdentityService.getUserIdentities().size() > 1;
@@ -417,10 +340,6 @@ public class ChatMessagesComponent {
             citationBlock.close();
         }
 
-        private boolean isOfferAuthor(String offerAuthorUserProfileId) {
-            return userIdentityService.isUserIdentityPresent(offerAuthorUserProfileId);
-        }
-
         private void maybeSwitchUserProfile() {
             if (model.userProfileSelectionVisible.get()) {
                 List<UserIdentity> myUserProfilesInChannel = getMyUserProfilesInChannel();
@@ -448,19 +367,13 @@ public class ChatMessagesComponent {
 
     @Getter
     private static class Model implements bisq.desktop.common.view.Model {
-        private final BooleanProperty openDisputeButtonVisible = new SimpleBooleanProperty();
-        private final BooleanProperty sendBtcAddressButtonVisible = new SimpleBooleanProperty();
-        private final BooleanProperty sendPaymentAccountButtonVisible = new SimpleBooleanProperty();
-        private final BooleanProperty paymentAccountSelectionVisible = new SimpleBooleanProperty();
         private final BooleanProperty chatDialogEnabled = new SimpleBooleanProperty(true);
-        private final ObservableList<Account<?, ? extends PaymentMethod<?>>> paymentAccounts = FXCollections.observableArrayList();
-        private final ObjectProperty<Account<?, ? extends PaymentMethod<?>>> selectedAccount = new SimpleObjectProperty<>();
 
         private final ObjectProperty<ChatChannel<? extends ChatMessage>> selectedChannel = new SimpleObjectProperty<>();
         private final StringProperty textInput = new SimpleStringProperty("");
         private final BooleanProperty userProfileSelectionVisible = new SimpleBooleanProperty();
-        private final ObjectProperty<ChatMessage> moreOptionsVisibleMessage = new SimpleObjectProperty<>(null);
         private final ObservableList<UserProfile> mentionableUsers = FXCollections.observableArrayList();
+        // TODO mentionableChatChannels not filled with data
         private final ObservableList<ChatChannel<?>> mentionableChatChannels = FXCollections.observableArrayList();
         private final ChatChannelDomain chatChannelDomain;
         private final ChatService chatService;
@@ -476,19 +389,6 @@ public class ChatMessagesComponent {
             return chatService.findChatChannelService(chatChannel)
                     .map(service -> service.getChannelTitle(chatChannel))
                     .orElse("");
-        }
-
-        @Nullable
-        public Account<?, ? extends PaymentMethod<?>> getSelectedAccount() {
-            return selectedAccount.get();
-        }
-
-        public ObjectProperty<Account<?, ? extends PaymentMethod<?>>> selectedAccountProperty() {
-            return selectedAccount;
-        }
-
-        public void setSelectedAccount(Account<?, ? extends PaymentMethod<?>> selectedAccount) {
-            this.selectedAccount.set(selectedAccount);
         }
     }
 
