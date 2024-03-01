@@ -52,7 +52,7 @@ public final class PeerOfferMessage extends PeerMessage {
     @Override
     protected void setUpPeerMessage() {
         // User profile icon
-        userProfileIcon.setSize(70);
+        userProfileIcon.setSize(OFFER_MESSAGE_USER_ICON_SIZE);
 
         // Reputation
         Label reputationLabel = new Label(Res.get("chat.message.reputation").toUpperCase());

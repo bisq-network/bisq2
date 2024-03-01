@@ -48,7 +48,7 @@ public final class MyOfferMessage extends BubbleMessage {
         message.getStyleClass().add("chat-my-offer-message");
 
         // User profile icon
-        userProfileIcon.setSize(70);
+        userProfileIcon.setSize(OFFER_MESSAGE_USER_ICON_SIZE);
 
         // Dropdown menu
         DropdownMenu dropdownMenu = createAndGetDropdownMenu();
@@ -56,7 +56,7 @@ public final class MyOfferMessage extends BubbleMessage {
         // Wrappers
         HBox hBox = new HBox(15, message, userProfileIconVbox);
         hBox.setAlignment(Pos.CENTER);
-        VBox vBox = new VBox(hBox, dropdownMenu);
+        VBox vBox = new VBox(5, hBox, dropdownMenu);
         vBox.setAlignment(Pos.CENTER_RIGHT);
 
         // Message background
