@@ -25,15 +25,14 @@ import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Date;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Getter
-@ToString
 @EqualsAndHashCode
 public final class MarketPrice implements NetworkProto {
     private static final long INVALID_AGE = TimeUnit.HOURS.toMillis(12);
@@ -97,5 +96,15 @@ public final class MarketPrice implements NetworkProto {
 
     public boolean isValidDate() {
         return System.currentTimeMillis() - timestamp < INVALID_AGE;
+    }
+
+    @Override
+    public String toString() {
+        return "MarketPrice{" +
+                "priceQuote=" + priceQuote +
+                ", timestamp=" + new Date(timestamp) +
+                ", marketPriceProvider=" + marketPriceProvider +
+                ", source=" + source +
+                '}';
     }
 }

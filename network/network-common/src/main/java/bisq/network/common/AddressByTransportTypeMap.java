@@ -55,8 +55,10 @@ public final class AddressByTransportTypeMap implements Map<TransportType, Addre
 
     @Override
     public void verify() {
-        checkArgument(map.size() <= TransportType.values().length);
-        checkArgument(!map.isEmpty());
+        checkArgument(map.size() <= TransportType.values().length,
+                "map size must not be larger than TransportType.values().length");
+        checkArgument(!map.isEmpty(),
+                "map must not be empty");
     }
 
     @Override

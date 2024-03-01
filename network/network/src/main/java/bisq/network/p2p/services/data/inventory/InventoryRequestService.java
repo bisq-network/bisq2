@@ -187,7 +187,7 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
                                     });
                                 }
                                 if (throwable != null) {
-                                    log.warn("Inventory request failed. {}", throwable.getMessage());
+                                    log.warn("Inventory request failed.", throwable);
                                 }
                             });
                 })
