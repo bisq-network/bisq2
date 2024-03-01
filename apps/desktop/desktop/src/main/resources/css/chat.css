@@ -155,12 +155,7 @@
     -fx-font-family: "IBM Plex Sans Light";
 }
 
-.chat-message-bg-my-message {
-    -fx-background-color: -bisq-dark-grey-40;
-    -fx-background-radius: 8;
-}
-
-/* Peer Message */
+/* Peer Message Background */
 .chat-message-bg-peer-message,
 .chat-peer-offer-message-bg {
     -fx-background-color: -bisq-dark-grey-40;
@@ -169,7 +164,7 @@
 
 /* Peer Offer Message */
 .chat-peer-offer-message-bg {
-    -fx-padding: 30 30 20 20;
+    -fx-padding: 20 30 20 20;
 }
 
 .chat-peer-offer-message-bg .reputation .label {
@@ -178,17 +173,35 @@
 
 .chat-peer-offer-message {
     -fx-padding: 0 0 0 7;
-    -fx-line-spacing: 10px;
+    -fx-line-spacing: 7px;
 }
 
 .chat-peer-offer-message-bg .take-offer-button {
     -fx-padding: 5 30 5 30;
 }
-/* ... */
 
 .chat-peer-offer-message-bg .take-offer-button .text {
     -fx-font-size: 0.8em;
 }
+/* ... */
+
+/* My Message Background */
+.chat-message-bg-my-message,
+.chat-my-offer-message-bg {
+    -fx-background-color: #2c372b; /* -bisq2-green; saturation -70; lightness -60 */
+    -fx-background-radius: 8;
+}
+
+/* My Offer Message */
+.chat-my-offer-message {
+    -fx-padding: 0;
+    -fx-line-spacing: 7px;
+}
+
+.chat-my-offer-message-bg {
+    -fx-padding: 20 20 15 30;
+}
+/* ... */
 
 .create-offer-message-my-offer {
     -fx-background-color: -bisq-dark-grey-10;

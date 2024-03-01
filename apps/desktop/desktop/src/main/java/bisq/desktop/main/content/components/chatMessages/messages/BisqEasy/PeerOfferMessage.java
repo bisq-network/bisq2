@@ -52,8 +52,7 @@ public final class PeerOfferMessage extends PeerMessage {
     @Override
     protected void setUpPeerMessage() {
         // User profile icon
-        userProfileIcon.setSize(80);
-        userProfileIconVbox.setAlignment(Pos.CENTER_LEFT);
+        userProfileIcon.setSize(70);
 
         // Reputation
         Label reputationLabel = new Label(Res.get("chat.message.reputation").toUpperCase());
@@ -70,10 +69,12 @@ public final class PeerOfferMessage extends PeerMessage {
         takeOfferButton.setDefaultButton(!item.isOfferAlreadyTaken());
         takeOfferButton.getStyleClass().add("take-offer-button");
 
-        HBox hBox = new HBox(15, userProfileIconVbox, reputationVBox, message);
-        hBox.setAlignment(Pos.CENTER);
+        // Message
         message.getStyleClass().add("chat-peer-offer-message");
 
+        // Wrappers
+        HBox hBox = new HBox(15, userProfileIconVbox, reputationVBox, message);
+        hBox.setAlignment(Pos.CENTER);
         VBox vBox = new VBox(5, hBox, takeOfferButton);
         vBox.setAlignment(Pos.CENTER_RIGHT);
 

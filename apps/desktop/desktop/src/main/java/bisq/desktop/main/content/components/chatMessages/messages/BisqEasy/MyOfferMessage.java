@@ -29,6 +29,7 @@ import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Control;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.HBox;
@@ -44,32 +45,30 @@ public final class MyOfferMessage extends BubbleMessage {
         super(item, list, controller, model);
 
         // Message
-        message.setAlignment(Pos.CENTER_RIGHT);
-        message.maxWidthProperty().bind(list.widthProperty().subtract(160));
-        VBox messageVBox = new VBox(message);
-        HBox.setMargin(messageVBox, new Insets(0, -10, 0, 0));
+        message.getStyleClass().add("chat-my-offer-message");
 
         // User profile icon
-        userProfileIcon.setSize(60);
-        userProfileIconVbox.setAlignment(Pos.CENTER_LEFT);
-        HBox.setMargin(userProfileIconVbox, new Insets(0, 0, 10, 0));
+        userProfileIcon.setSize(70);
 
         // Dropdown menu
         DropdownMenu dropdownMenu = createAndGetDropdownMenu();
 
+        // Wrappers
+        HBox hBox = new HBox(15, message, userProfileIconVbox);
+        hBox.setAlignment(Pos.CENTER);
+        VBox vBox = new VBox(hBox, dropdownMenu);
+        vBox.setAlignment(Pos.CENTER_RIGHT);
+
         // Message background
-        HBox hBox = new HBox(15, messageVBox, userProfileIconVbox);
-        HBox dropdownMenuHBox = new HBox(Spacer.fillHBox(), dropdownMenu);
-        VBox vBox = new VBox(hBox, dropdownMenuHBox);
+        messageBgHBox.getStyleClass().add("chat-my-offer-message-bg");
         messageBgHBox.getChildren().setAll(vBox);
-        messageBgHBox.getStyleClass().add("chat-message-bg-my-message");
-        messageHBox.getChildren().setAll(Spacer.fillHBox(), messageBgHBox);
+        messageBgHBox.setMaxWidth(Control.USE_PREF_SIZE);
 
         // Reactions
         reactionsHBox.getChildren().setAll(Spacer.fillHBox(), supportedLanguages, copyIcon);
-        reactionsHBox.setAlignment(Pos.CENTER_RIGHT);
 
-        contentVBox.getChildren().setAll(userNameAndDateHBox, messageHBox, reactionsHBox);
+        contentVBox.setAlignment(Pos.CENTER_RIGHT);
+        contentVBox.getChildren().setAll(userNameAndDateHBox, messageBgHBox, reactionsHBox);
     }
 
     @Override
@@ -78,7 +77,7 @@ public final class MyOfferMessage extends BubbleMessage {
 
         userNameAndDateHBox = new HBox(10, dateTime, userName);
         userNameAndDateHBox.setAlignment(Pos.CENTER_RIGHT);
-        VBox.setMargin(userNameAndDateHBox, new Insets(-5, 10, -5, 0));
+        VBox.setMargin(userNameAndDateHBox, new Insets(0, 10, 5, 0));
     }
 
     @Override
