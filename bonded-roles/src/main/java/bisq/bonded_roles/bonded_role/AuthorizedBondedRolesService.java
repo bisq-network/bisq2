@@ -18,8 +18,6 @@
 package bisq.bonded_roles.bonded_role;
 
 import bisq.bonded_roles.BondedRoleType;
-import bisq.bonded_roles.alert.AlertType;
-import bisq.bonded_roles.alert.AuthorizedAlertData;
 import bisq.bonded_roles.oracle.AuthorizedOracleNode;
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
@@ -71,8 +69,6 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
     private final DataService.Listener initialDataServiceListener;
     private final Set<AuthorizedData> failedAuthorizedData = new CopyOnWriteArraySet<>();
     private Scheduler initialDataScheduler, reprocessScheduler;
-    @Getter
-    private final ObservableSet<AuthorizedAlertData> authorizedAlertDataSet = new ObservableSet<>();
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
 
     public AuthorizedBondedRolesService(NetworkService networkService,
@@ -173,15 +169,9 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
                 bondedRoles.add(new BondedRole(authorizedBondedRole));
                 if (authorizedBondedRole.getBondedRoleType() == BondedRoleType.SEED_NODE) {
                     networkService.addSeedNodeAddressByTransport(authorizedBondedRole.getAddressByTransportTypeMap().orElseThrow());
-                } else if (authorizedBondedRole.getBondedRoleType() == BondedRoleType.SECURITY_MANAGER) {
-                    networkService.getDataService().orElseThrow().getAuthorizedData()
-                            .filter(e -> e.getAuthorizedDistributedData() instanceof AuthorizedAlertData)
-                            .forEach(e -> onAuthorizedAlertData(e, (AuthorizedAlertData) e.getAuthorizedDistributedData(), true));
                 }
             });
             reProcessFailedAuthorizedData();
-        } else if (data instanceof AuthorizedAlertData) {
-            onAuthorizedAlertData(authorizedData, (AuthorizedAlertData) data, true);
         }
         listeners.forEach(listener -> {
             try {
@@ -190,17 +180,6 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
                 log.error("Error at onAuthorizedDataAdded", e);
             }
         });
-    }
-
-    private void onAuthorizedAlertData(AuthorizedData authorizedData, AuthorizedAlertData authorizedAlertData, boolean isAdded) {
-        if (hasAuthorizedPubKey(authorizedData, BondedRoleType.SECURITY_MANAGER)) {
-            if (isAdded) {
-                authorizedAlertDataSet.add(authorizedAlertData);
-            } else {
-                authorizedAlertDataSet.remove(authorizedAlertData);
-            }
-            maybeApplyBannedState(authorizedAlertData, isAdded);
-        }
     }
 
     @Override
@@ -215,13 +194,7 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
                 if (authorizedBondedRole.getBondedRoleType() == BondedRoleType.SEED_NODE) {
                     networkService.removeSeedNodeAddressByTransport(authorizedBondedRole.getAddressByTransportTypeMap().orElseThrow());
                 }
-
-                networkService.getDataService().orElseThrow().getAuthorizedData()
-                        .filter(e -> e.getAuthorizedDistributedData() instanceof AuthorizedAlertData)
-                        .forEach(e -> onAuthorizedAlertData(e, (AuthorizedAlertData) e.getAuthorizedDistributedData(), false));
             });
-        } else if (data instanceof AuthorizedAlertData) {
-            onAuthorizedAlertData(authorizedData, (AuthorizedAlertData) data, false);
         }
         listeners.forEach(listener -> {
             try {
@@ -325,14 +298,4 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
             return Optional.empty();
         }
     }
-
-    private void maybeApplyBannedState(AuthorizedAlertData alertData, boolean value) {
-        if (alertData.getAlertType() == AlertType.BAN && alertData.getBannedRole().isPresent()) {
-            bondedRoles.stream()
-                    .filter(bondedRole -> bondedRole.getAuthorizedBondedRole().equals(alertData.getBannedRole().get()))
-                    .findAny()
-                    .ifPresent(bondedRole -> bondedRole.setIsBanned(value));
-        }
-    }
-
 }
