@@ -100,6 +100,8 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
         networkService.addDataServiceListener(initialDataServiceListener);
+        // It can be that there are no new data received from the inventory request, so we apply the existing data
+        applyInitialData();
         return CompletableFuture.completedFuture(true);
     }
 
