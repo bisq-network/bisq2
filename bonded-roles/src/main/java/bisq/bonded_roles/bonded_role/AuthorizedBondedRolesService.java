@@ -62,6 +62,12 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
         networkService.getDataService()
                 .ifPresent(dataService -> {
                     dataService.getAuthorizedData()
+                            .filter(e -> !(e.getAuthorizedDistributedData() instanceof AuthorizedBondedRole))
+                            .forEach(this::onAuthorizedDataAdded);
+                });
+        networkService.getDataService()
+                .ifPresent(dataService -> {
+                    dataService.getAuthorizedData()
                             .filter(e -> e.getAuthorizedDistributedData() instanceof AuthorizedBondedRole)
                             .sorted((o1, o2) -> {
                                 // We want to process oracle nodes first, as otherwise validation would fail
@@ -73,7 +79,6 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
         networkService.addDataServiceListener(this);
         return CompletableFuture.completedFuture(true);
     }
-
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
@@ -168,7 +173,7 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
                         return match;
                     });
             if (matchFound) {
-                log.debug("authorizedPublicKey provided by a bonded role. data={}", data);
+                log.info("authorizedPublicKey provided by a bonded role. data={}", data);
             } else {
                 log.warn("authorizedPublicKey is not matching any key from our authorizedBondedRolesPubKeys and does not provide a matching static key. data={}", data);
             }
