@@ -12,6 +12,7 @@ dependencies {
     implementation(project(":offer"))
     implementation(project(":settings"))
     implementation(project(":presentation"))
+    implementation(project(":bonded-roles"))
 
     implementation("network:network")
     implementation("network:network-identity")

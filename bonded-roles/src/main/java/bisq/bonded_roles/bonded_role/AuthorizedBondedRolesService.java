@@ -49,9 +49,18 @@ import java.util.stream.Stream;
  * To reduce risks for out of order processing, we delay initial processing and process the data types in the
  * correct dependency order. If validation fails we add the AuthorizedData into a queue for later reprocessing
  * when we receive relevant AuthorizedData which might fulfill the missing dependency.
+ * <p>
+ * Other classes which process AuthorizedData should use the AuthorizedBondedRolesService.Listener to get notified
+ * on new AuthorizedData so that they take benefit of the implemented handling for out or order data.
  */
 @Slf4j
 public class AuthorizedBondedRolesService implements Service, DataService.Listener {
+    public interface Listener {
+        void onAuthorizedDataAdded(AuthorizedData authorizedData);
+
+        void onAuthorizedDataRemoved(AuthorizedData authorizedData);
+    }
+
     private final NetworkService networkService;
     private final boolean ignoreSecurityManager;
     @Getter
@@ -64,6 +73,7 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
     private Scheduler initialDataScheduler, reprocessScheduler;
     @Getter
     private final ObservableSet<AuthorizedAlertData> authorizedAlertDataSet = new ObservableSet<>();
+    private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
 
     public AuthorizedBondedRolesService(NetworkService networkService,
                                         boolean ignoreSecurityManager) {
@@ -173,6 +183,13 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
         } else if (data instanceof AuthorizedAlertData) {
             onAuthorizedAlertData(authorizedData, (AuthorizedAlertData) data, true);
         }
+        listeners.forEach(listener -> {
+            try {
+                listener.onAuthorizedDataAdded(authorizedData);
+            } catch (Exception e) {
+                log.error("Error at onAuthorizedDataAdded", e);
+            }
+        });
     }
 
     private void onAuthorizedAlertData(AuthorizedData authorizedData, AuthorizedAlertData authorizedAlertData, boolean isAdded) {
@@ -206,6 +223,13 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
         } else if (data instanceof AuthorizedAlertData) {
             onAuthorizedAlertData(authorizedData, (AuthorizedAlertData) data, false);
         }
+        listeners.forEach(listener -> {
+            try {
+                listener.onAuthorizedDataRemoved(authorizedData);
+            } catch (Exception e) {
+                log.error("Error at onAuthorizedDataAdded", e);
+            }
+        });
     }
 
 
@@ -268,6 +292,14 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
             }
             return matchFound;
         }
+    }
+
+    public void addListener(Listener listener) {
+        listeners.add(listener);
+    }
+
+    public void removeListener(Listener listener) {
+        listeners.remove(listener);
     }
 
     private void reProcessFailedAuthorizedData() {

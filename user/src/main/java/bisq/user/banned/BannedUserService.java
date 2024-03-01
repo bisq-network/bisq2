@@ -17,11 +17,11 @@
 
 package bisq.user.banned;
 
+import bisq.bonded_roles.BondedRoleType;
+import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.application.Service;
 import bisq.common.observable.collection.ObservableSet;
-import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
-import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
@@ -34,17 +34,17 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class BannedUserService implements PersistenceClient<BannedUserStore>, Service, DataService.Listener {
+public class BannedUserService implements PersistenceClient<BannedUserStore>, Service, AuthorizedBondedRolesService.Listener {
     @Getter
     private final BannedUserStore persistableStore = new BannedUserStore();
     @Getter
     private final Persistence<BannedUserStore> persistence;
-    private final NetworkService networkService;
+    private final AuthorizedBondedRolesService authorizedBondedRolesService;
 
     public BannedUserService(PersistenceService persistenceService,
-                             NetworkService networkService) {
+                             AuthorizedBondedRolesService authorizedBondedRolesService) {
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.CACHE, persistableStore);
-        this.networkService = networkService;
+        this.authorizedBondedRolesService = authorizedBondedRolesService;
     }
 
 
@@ -54,37 +54,40 @@ public class BannedUserService implements PersistenceClient<BannedUserStore>, Se
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        networkService.getDataService().ifPresent(service -> service.getAuthorizedData().forEach(this::onAuthorizedDataAdded));
-        networkService.addDataServiceListener(this);
+        authorizedBondedRolesService.addListener(this);
         return CompletableFuture.completedFuture(true);
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        networkService.removeDataServiceListener(this);
+        authorizedBondedRolesService.removeListener(this);
         return CompletableFuture.completedFuture(true);
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // DataService.Listener
+    // AuthorizedBondedRolesService.Listener
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
         if (authorizedData.getAuthorizedDistributedData() instanceof BannedUserProfileData) {
-            BannedUserProfileData bannedUserProfileData = (BannedUserProfileData) authorizedData.getAuthorizedDistributedData();
-            getBannedUserProfileDataSet().add(bannedUserProfileData);
-            persist();
+            if (isAuthorized(authorizedData)) {
+                BannedUserProfileData bannedUserProfileData = (BannedUserProfileData) authorizedData.getAuthorizedDistributedData();
+                getBannedUserProfileDataSet().add(bannedUserProfileData);
+                persist();
+            }
         }
     }
 
     @Override
     public void onAuthorizedDataRemoved(AuthorizedData authorizedData) {
         if (authorizedData.getAuthorizedDistributedData() instanceof BannedUserProfileData) {
-            BannedUserProfileData bannedUserProfileData = (BannedUserProfileData) authorizedData.getAuthorizedDistributedData();
-            getBannedUserProfileDataSet().remove(bannedUserProfileData);
-            persist();
+            if (isAuthorized(authorizedData)) {
+                BannedUserProfileData bannedUserProfileData = (BannedUserProfileData) authorizedData.getAuthorizedDistributedData();
+                getBannedUserProfileDataSet().remove(bannedUserProfileData);
+                persist();
+            }
         }
     }
 
@@ -108,5 +111,9 @@ public class BannedUserService implements PersistenceClient<BannedUserStore>, Se
     public boolean isNetworkIdBanned(NetworkId networkId) {
         return getBannedUserProfileDataSet().stream()
                 .anyMatch(e -> e.getUserProfile().getNetworkId().equals(networkId));
+    }
+
+    private boolean isAuthorized(AuthorizedData authorizedData) {
+        return authorizedBondedRolesService.hasAuthorizedPubKey(authorizedData, BondedRoleType.MODERATOR);
     }
 }

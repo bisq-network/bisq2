@@ -63,7 +63,8 @@ public class UserService implements Service {
                        NetworkService networkService,
                        BondedRolesService bondedRolesService) {
 
-        bannedUserService = new BannedUserService(persistenceService, networkService);
+        bannedUserService = new BannedUserService(persistenceService,
+                bondedRolesService.getAuthorizedBondedRolesService());
 
         userProfileService = new UserProfileService(persistenceService, securityService, networkService);
 
