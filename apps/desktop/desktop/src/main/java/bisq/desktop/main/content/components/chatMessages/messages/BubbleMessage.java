@@ -182,7 +182,7 @@ public abstract class BubbleMessage extends Message {
         label.maxWidthProperty().unbind();
         label.setWrapText(true);
         label.setPadding(new Insets(10));
-        label.getStyleClass().addAll("text-fill-white", "normal-text", "font-default");
+        label.getStyleClass().addAll("text-fill-white", "medium-text", "font-default");
         label.setText(item.getMessage());
         return label;
     }

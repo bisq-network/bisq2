@@ -12,6 +12,10 @@
     -fx-font-size: 0.769em;
 }
 
+.medium-text {
+    -fx-font-size: 1.05em !important;
+}
+
 .normal-text {
     -fx-font-size: 1.1em !important;
 }

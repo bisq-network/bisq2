@@ -51,37 +51,37 @@ public final class PeerOfferMessage extends PeerMessage {
 
     @Override
     protected void setUpPeerMessage() {
-        super.setUpPeerMessage();
-
         // User profile icon
-        userProfileIcon.setSize(60);
+        userProfileIcon.setSize(80);
         userProfileIconVbox.setAlignment(Pos.CENTER_LEFT);
-        HBox.setMargin(userProfileIconVbox, new Insets(-5, 0, -5, 0));
-
-        // Message
-        message.maxWidthProperty().bind(list.widthProperty().subtract(430));
-        VBox messageVBox = new VBox(quotedMessageVBox, message);
-        HBox.setMargin(messageVBox, new Insets(0, 0, 0, -10));
 
         // Reputation
         Label reputationLabel = new Label(Res.get("chat.message.reputation").toUpperCase());
-        reputationLabel.getStyleClass().add("bisq-text-7");
         ReputationScoreDisplay reputationScoreDisplay = new ReputationScoreDisplay();
         reputationScoreDisplay.setReputationScore(item.getReputationScore());
         VBox reputationVBox = new VBox(4, reputationLabel, reputationScoreDisplay);
-        reputationVBox.setAlignment(Pos.CENTER_LEFT);
-        HBox.setMargin(reputationVBox, new Insets(-5, 10, 0, 0));
+        reputationVBox.setAlignment(Pos.CENTER);
+        reputationVBox.getStyleClass().add("reputation");
 
         // Take offer button
         takeOfferButton = new Button(Res.get("offer.takeOffer"));
         BisqEasyOfferbookMessage bisqEasyOfferbookMessage = (BisqEasyOfferbookMessage) item.getChatMessage();
         takeOfferButton.setOnAction(e -> controller.onTakeOffer(bisqEasyOfferbookMessage));
         takeOfferButton.setDefaultButton(!item.isOfferAlreadyTaken());
-        takeOfferButton.setMinWidth(Control.USE_PREF_SIZE);
-        HBox.setMargin(takeOfferButton, new Insets(0, 10, 0, 0));
+        takeOfferButton.getStyleClass().add("take-offer-button");
+
+        HBox hBox = new HBox(15, userProfileIconVbox, reputationVBox, message);
+        hBox.setAlignment(Pos.CENTER);
+        message.getStyleClass().add("chat-peer-offer-message");
+
+        VBox vBox = new VBox(5, hBox, takeOfferButton);
+        vBox.setAlignment(Pos.CENTER_RIGHT);
 
         // Message background
-        messageBgHBox.getChildren().setAll(userProfileIconVbox, messageVBox, Spacer.fillHBox(), reputationVBox, takeOfferButton);
+        messageBgHBox.getStyleClass().add("chat-peer-offer-message-bg");
+        messageBgHBox.getChildren().setAll(vBox);
+        messageBgHBox.setAlignment(Pos.CENTER_LEFT);
+        messageBgHBox.setMaxWidth(Control.USE_PREF_SIZE);
     }
 
     @Override

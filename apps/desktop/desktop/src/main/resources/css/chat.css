@@ -160,9 +160,34 @@
     -fx-background-radius: 8;
 }
 
-.chat-message-bg-peer-message {
+/* Peer Message */
+.chat-message-bg-peer-message,
+.chat-peer-offer-message-bg {
     -fx-background-color: -bisq-dark-grey-40;
     -fx-background-radius: 8;
+}
+
+/* Peer Offer Message */
+.chat-peer-offer-message-bg {
+    -fx-padding: 30 30 20 20;
+}
+
+.chat-peer-offer-message-bg .reputation .label {
+    -fx-font-size: 0.9em;
+}
+
+.chat-peer-offer-message {
+    -fx-padding: 0 0 0 7;
+    -fx-line-spacing: 10px;
+}
+
+.chat-peer-offer-message-bg .take-offer-button {
+    -fx-padding: 5 30 5 30;
+}
+/* ... */
+
+.chat-peer-offer-message-bg .take-offer-button .text {
+    -fx-font-size: 0.8em;
 }
 
 .create-offer-message-my-offer {
