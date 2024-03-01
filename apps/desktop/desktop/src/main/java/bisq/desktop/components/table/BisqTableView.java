@@ -19,6 +19,7 @@ package bisq.desktop.components.table;
 
 import bisq.desktop.common.threading.UIThread;
 import javafx.beans.value.ChangeListener;
+import javafx.beans.value.WeakChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
@@ -53,7 +54,10 @@ public class BisqTableView<T> extends TableView<T> {
     public BisqTableView(SortedList<T> sortedList) {
         super(sortedList);
 
-        sortedList.comparatorProperty().bind(comparatorProperty());
+        comparatorProperty().addListener(new WeakChangeListener<>((observable, oldValue, newValue) -> {
+            sortedList.setComparator(newValue);
+        }));
+
         setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
     }
 
