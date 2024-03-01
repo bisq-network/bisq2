@@ -152,6 +152,7 @@ public class OracleNodeService implements Service {
 
         timestampService = new TimestampService(persistenceService,
                 networkService,
+                authorizedBondedRolesService,
                 authorizedPrivateKey,
                 authorizedPublicKey,
                 staticPublicKeysProvided);

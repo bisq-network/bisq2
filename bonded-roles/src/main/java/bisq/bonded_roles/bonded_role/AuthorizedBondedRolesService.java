@@ -56,7 +56,8 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
     public interface Listener {
         void onAuthorizedDataAdded(AuthorizedData authorizedData);
 
-        void onAuthorizedDataRemoved(AuthorizedData authorizedData);
+        default void onAuthorizedDataRemoved(AuthorizedData authorizedData) {
+        }
     }
 
     private final NetworkService networkService;

@@ -113,6 +113,11 @@ public class BannedUserService implements PersistenceClient<BannedUserStore>, Se
                 .anyMatch(e -> e.getUserProfile().getNetworkId().equals(networkId));
     }
 
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
     private boolean isAuthorized(AuthorizedData authorizedData) {
         return authorizedBondedRolesService.hasAuthorizedPubKey(authorizedData, BondedRoleType.MODERATOR);
     }

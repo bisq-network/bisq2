@@ -66,13 +66,13 @@ public class BondedRolesService implements Service {
     public BondedRolesService(Config config, Version version, PersistenceService persistenceService, NetworkService networkService) {
         authorizedBondedRolesService = new AuthorizedBondedRolesService(networkService, config.isIgnoreSecurityManager());
         bondedRoleRegistrationService = new BondedRoleRegistrationService(networkService, authorizedBondedRolesService);
-        marketPriceService = new MarketPriceService(config.getMarketPrice(), version, persistenceService, networkService);
+        marketPriceService = new MarketPriceService(config.getMarketPrice(), version, persistenceService, networkService, authorizedBondedRolesService);
         explorerService = new ExplorerService(ExplorerService.Config.from(config.getBlockchainExplorer()),
                 networkService,
                 version);
         alertService = new AlertService(authorizedBondedRolesService);
 
-        releaseNotificationsService = new ReleaseNotificationsService(networkService, authorizedBondedRolesService);
+        releaseNotificationsService = new ReleaseNotificationsService(authorizedBondedRolesService);
     }
 
 

@@ -54,7 +54,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 @Getter
 @Slf4j
-public class AccountAgeService extends SourceReputationService<AuthorizedAccountAgeData> implements PersistenceClient<AccountAgeStore> {
+public class AccountAgeService extends SourceReputationService<AuthorizedAccountAgeData> implements PersistenceClient<AccountAgeStore>, AuthorizedBondedRolesService.Listener {
     public static final long WEIGHT = 2;
     public static final long MAX_DAYS_AGE_SCORE = 2000;
 
@@ -105,14 +105,16 @@ public class AccountAgeService extends SourceReputationService<AuthorizedAccount
     @Override
     public void onAuthorizedDataRemoved(AuthorizedData authorizedData) {
         if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedAccountAgeData) {
-            AuthorizedAccountAgeData data = (AuthorizedAccountAgeData) authorizedData.getAuthorizedDistributedData();
-            String userProfileId = data.getProfileId();
-            userProfileService.findUserProfile(userProfileId)
-                    .map(this::getUserProfileKey)
-                    .ifPresent(dataSetByHash::remove);
-            if (scoreByUserProfileId.containsKey(userProfileId)) {
-                scoreByUserProfileId.remove(userProfileId);
-                userProfileIdOfUpdatedScore.set(userProfileId);
+            if (isAuthorized(authorizedData)) {
+                AuthorizedAccountAgeData data = (AuthorizedAccountAgeData) authorizedData.getAuthorizedDistributedData();
+                String userProfileId = data.getProfileId();
+                userProfileService.findUserProfile(userProfileId)
+                        .map(this::getUserProfileKey)
+                        .ifPresent(dataSetByHash::remove);
+                if (scoreByUserProfileId.containsKey(userProfileId)) {
+                    scoreByUserProfileId.remove(userProfileId);
+                    userProfileIdOfUpdatedScore.set(userProfileId);
+                }
             }
         }
     }
