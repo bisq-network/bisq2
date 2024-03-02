@@ -950,7 +950,7 @@
     -fx-font-family: "IBM Plex Sans";
 }
 
-.dropdown-menu-popup .menu-item:hover {
+.dropdown-menu-popup .menu-item:hover .dropdown-menu-item-content {
     -fx-background-color: -bisq-dark-grey-50;
 }
 

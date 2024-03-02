@@ -18,6 +18,7 @@
 package bisq.desktop.components.controls;
 
 import bisq.desktop.common.utils.ImageUtil;
+import javafx.beans.value.ChangeListener;
 import javafx.beans.value.WeakChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.Bounds;
@@ -36,6 +37,7 @@ public class DropdownMenu extends HBox {
     private final ImageView defaultIcon, activeIcon;
     private final ContextMenu contextMenu = new ContextMenu();
     private ImageView buttonIcon;
+    private ChangeListener<Number> widthPropertyChangeListener;
     private boolean isFirstRun = false;
 
     public DropdownMenu(String defaultIconId, String activeIconId, boolean useIconOnly) {
@@ -129,7 +131,7 @@ public class DropdownMenu extends HBox {
             updateIcon(defaultIcon);
         });
 
-        contextMenu.widthProperty().addListener(new WeakChangeListener<Number>((observable, oldValue, newValue) -> {
+        widthPropertyChangeListener = (observable, oldValue, newValue) -> {
             if (newValue.doubleValue() > INITIAL_WIDTH && !isFirstRun) {
                 isFirstRun = true;
                 // Once the contextMenu has calculated the width on the first render time we update the items
@@ -141,7 +143,8 @@ public class DropdownMenu extends HBox {
                     }
                 }
             }
-        }));
+        };
+        contextMenu.widthProperty().addListener(new WeakChangeListener<>(widthPropertyChangeListener));
     }
 
     private void updateIcon(ImageView newIcon) {
