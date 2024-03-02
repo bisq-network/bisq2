@@ -18,6 +18,7 @@
 package bisq.desktop.components.controls;
 
 import bisq.desktop.common.utils.ImageUtil;
+import javafx.geometry.Pos;
 import javafx.scene.control.CustomMenuItem;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
@@ -34,6 +35,7 @@ public class DropdownMenuItem extends CustomMenuItem {
         label = new Label(text);
         content = new HBox(8, label);
         content.getStyleClass().add("dropdown-menu-item-content");
+        content.setAlignment(Pos.CENTER_LEFT);
         setContent(content);
 
         if (defaultIconId != null && activeIconId != null) {
