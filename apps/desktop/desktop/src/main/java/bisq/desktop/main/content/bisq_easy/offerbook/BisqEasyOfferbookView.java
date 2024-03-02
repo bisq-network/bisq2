@@ -61,6 +61,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     private DropdownFilterMenuItem<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>>
             allOffers, myOffers, buyOffers, sellOffers, allReputations, fiveStars, atLeastFourStars, atLeastThreeStars,
             atLeastTwoStars, atLeastOneStar;
+    private DropdownTitleMenuItem atLeastTitle;
     private CheckBox hideUserMessagesCheckbox;
 
     public BisqEasyOfferbookView(BisqEasyOfferbookModel model,
@@ -353,6 +354,8 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         fiveStars = new DropdownFilterMenuItem<>("check-grey", "check-white",
                 Res.get("bisqEasy.offerbook.dropdownMenu.filterOffersByPeerReputation.fiveStars"),
                 Filters.PeerReputation.FIVE_STARS);
+        atLeastTitle = new DropdownTitleMenuItem(
+                Res.get("bisqEasy.offerbook.dropdownMenu.filterOffersByPeerReputation.atLeastTitle"));
         atLeastFourStars = new DropdownFilterMenuItem<>("check-grey", "check-white",
                 Res.get("bisqEasy.offerbook.dropdownMenu.filterOffersByPeerReputation.atLeastFourStars"),
                 Filters.PeerReputation.AT_LEAST_FOUR_STARS);
@@ -366,8 +369,8 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
                 Res.get("bisqEasy.offerbook.dropdownMenu.filterOffersByPeerReputation.atLeastOneStar"),
                 Filters.PeerReputation.AT_LEAST_ONE_STAR);
 
-        dropdownMenu.addMenuItems(allReputations, fiveStars, atLeastFourStars, atLeastThreeStars, atLeastTwoStars,
-                atLeastOneStar);
+        dropdownMenu.addMenuItems(fiveStars, atLeastTitle, atLeastFourStars, atLeastThreeStars, atLeastTwoStars,
+                atLeastOneStar, allReputations);
         return dropdownMenu;
     }
 
@@ -408,9 +411,27 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
                     DropdownFilterMenuItem<?> filterMenuItem = (DropdownFilterMenuItem<?>) menuItem;
                     filterMenuItem.updateSelection(selectedFilter == filterMenuItem.getFilter());
                     if (selectedFilter == filterMenuItem.getFilter()) {
-                        dropdownMenu.setLabel(((DropdownFilterMenuItem<?>) menuItem).getLabelText());
+                        String menuItemLabel = ((DropdownFilterMenuItem<?>) menuItem).getLabelText();
+                        if (selectedFilter instanceof Filters.PeerReputation) {
+                            menuItemLabel = createPeerReputationLabel((Filters.PeerReputation) selectedFilter, menuItemLabel);
+                        }
+                        dropdownMenu.setLabel(menuItemLabel);
                     }
                 });
+    }
+
+    private String createPeerReputationLabel(Filters.PeerReputation filter, String label) {
+        switch (filter) {
+            case AT_LEAST_FOUR_STARS:
+            case AT_LEAST_THREE_STARS:
+            case AT_LEAST_TWO_STARS:
+            case AT_LEAST_ONE_STAR:
+                return String.format("%s %s", atLeastTitle.getLabelText().replace(":", ""), label);
+            case FIVE_STARS:
+            case ALL:
+            default:
+                return label;
+        }
     }
 
     private static final class DropdownFilterMenuItem<T> extends DropdownMenuItem {
