@@ -135,8 +135,8 @@ public class ChatMessagesListView {
         controller.setBisqEasyOffersFilerPredicate(predicate);
     }
 
-    public void setBisqEasyReputationsFilerPredicate(Predicate<? super ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate) {
-        controller.setBisqEasyReputationsFilerPredicate(predicate);
+    public void setBisqEasyPeerReputationFilterPredicate(Predicate<? super ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate) {
+        controller.setBisqEasyPeerReputationFilterPredicate(predicate);
     }
 
     public void refreshMessages() {
@@ -309,8 +309,8 @@ public class ChatMessagesListView {
             applyPredicate();
         }
 
-        private void setBisqEasyReputationsFilerPredicate(Predicate<? super ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate) {
-            model.setBisqEasyReputationsFilerPredicate(Objects.requireNonNullElseGet(predicate, () -> e -> true));
+        private void setBisqEasyPeerReputationFilterPredicate(Predicate<? super ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate) {
+            model.setBisqEasyPeerReputationFilterPredicate(Objects.requireNonNullElseGet(predicate, () -> e -> true));
             applyPredicate();
         }
 
@@ -620,7 +620,7 @@ public class ChatMessagesListView {
             };
             model.filteredChatMessages.setPredicate(item -> model.getSearchPredicate().test(item)
                     && model.getBisqEasyOffersFilerPredicate().test(item)
-                    && model.getBisqEasyReputationsFilerPredicate().test(item)
+                    && model.getBisqEasyPeerReputationFilterPredicate().test(item)
                     && predicate.test(item));
         }
 
@@ -701,7 +701,7 @@ public class ChatMessagesListView {
         @Setter
         private Predicate<? super ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> BisqEasyOffersFilerPredicate = e -> true;
         @Setter
-        private Predicate<? super ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> BisqEasyReputationsFilerPredicate = e -> true;
+        private Predicate<? super ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> BisqEasyPeerReputationFilterPredicate = e -> true;
 
         private boolean autoScrollToBottom;
         private int numReadMessages;

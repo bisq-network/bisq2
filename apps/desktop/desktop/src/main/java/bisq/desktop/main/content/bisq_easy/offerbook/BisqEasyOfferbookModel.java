@@ -43,7 +43,7 @@ public final class BisqEasyOfferbookModel extends ChatModel {
     private final StringProperty marketSelectorSearchText = new SimpleStringProperty();
     private final ObjectProperty<Filters.Markets> selectedMarketsFilter = new SimpleObjectProperty<>();
     private final ObjectProperty<Filters.OfferType> selectedOfferTypeFilter = new SimpleObjectProperty<>();
-    private final ObjectProperty<Filters.OfferReputations> selectedReputationsFilter = new SimpleObjectProperty<>();
+    private final ObjectProperty<Filters.PeerReputation> selectedPeerReputationFilter = new SimpleObjectProperty<>();
     private final ObjectProperty<MarketSortType> selectedMarketSortType = new SimpleObjectProperty<>(MarketSortType.NUM_OFFERS);
 
     @Setter

@@ -57,7 +57,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     private final BisqEasyOfferbookModel bisqEasyOfferbookModel;
     private Pin offerOnlySettingsPin, bisqEasyPrivateTradeChatChannelsPin, selectedChannelPin, marketPriceByCurrencyMapPin;
     private Subscription marketSelectorSearchPin, selectedMarketFilterPin, selectedOffersFilterPin, selectedMarketSortTypePin,
-            selectedReputationsFilterPin;
+            selectedPeerReputationFilterPin;
 
     public BisqEasyOfferbookController(ServiceProvider serviceProvider) {
         super(serviceProvider, ChatChannelDomain.BISQ_EASY_OFFERBOOK, NavigationTarget.BISQ_EASY_OFFERBOOK);
@@ -142,13 +142,13 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
             }
         });
 
-        selectedReputationsFilterPin = EasyBind.subscribe(model.getSelectedReputationsFilter(), filter -> {
+        selectedPeerReputationFilterPin = EasyBind.subscribe(model.getSelectedPeerReputationFilter(), filter -> {
             if (filter == null) {
                 // By default, show all offers (with any reputation)
-                model.getSelectedReputationsFilter().set(Filters.OfferReputations.ALL);
-                chatMessagesComponent.setBisqEasyReputationsFilterPredicate(model.getSelectedReputationsFilter().get().getPredicate());
+                model.getSelectedPeerReputationFilter().set(Filters.PeerReputation.ALL);
+                chatMessagesComponent.setBisqEasyPeerReputationFilterPredicate(model.getSelectedPeerReputationFilter().get().getPredicate());
             } else {
-                chatMessagesComponent.setBisqEasyReputationsFilterPredicate(filter.getPredicate());
+                chatMessagesComponent.setBisqEasyPeerReputationFilterPredicate(filter.getPredicate());
             }
         });
 
@@ -177,7 +177,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         marketSelectorSearchPin.unsubscribe();
         selectedMarketFilterPin.unsubscribe();
         selectedOffersFilterPin.unsubscribe();
-        selectedReputationsFilterPin.unsubscribe();
+        selectedPeerReputationFilterPin.unsubscribe();
         marketPriceByCurrencyMapPin.unbind();
         selectedMarketSortTypePin.unsubscribe();
 
