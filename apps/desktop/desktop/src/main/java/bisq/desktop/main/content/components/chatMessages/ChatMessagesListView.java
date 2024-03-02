@@ -131,8 +131,8 @@ public class ChatMessagesListView {
         controller.setSearchPredicate(predicate);
     }
 
-    public void setBisqEasyOffersFilerPredicate(Predicate<? super ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate) {
-        controller.setBisqEasyOffersFilerPredicate(predicate);
+    public void setBisqEasyOfferDirectionOrOwnerFilterPredicate(Predicate<? super ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate) {
+        controller.setBisqEasyOfferDirectionOrOwnerFilterPredicate(predicate);
     }
 
     public void setBisqEasyPeerReputationFilterPredicate(Predicate<? super ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate) {
@@ -304,8 +304,8 @@ public class ChatMessagesListView {
             applyPredicate();
         }
 
-        private void setBisqEasyOffersFilerPredicate(Predicate<? super ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate) {
-            model.setBisqEasyOffersFilerPredicate(Objects.requireNonNullElseGet(predicate, () -> e -> true));
+        private void setBisqEasyOfferDirectionOrOwnerFilterPredicate(Predicate<? super ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate) {
+            model.setBisqEasyOfferDirectionOrOwnerFilterPredicate(Objects.requireNonNullElseGet(predicate, () -> e -> true));
             applyPredicate();
         }
 
@@ -619,7 +619,7 @@ public class ChatMessagesListView {
                         userProfileService.findUserProfile(senderUserProfile.get().getId()).isPresent();
             };
             model.filteredChatMessages.setPredicate(item -> model.getSearchPredicate().test(item)
-                    && model.getBisqEasyOffersFilerPredicate().test(item)
+                    && model.getBisqEasyOfferDirectionOrOwnerFilterPredicate().test(item)
                     && model.getBisqEasyPeerReputationFilterPredicate().test(item)
                     && predicate.test(item));
         }
@@ -699,7 +699,7 @@ public class ChatMessagesListView {
         @Setter
         private Predicate<? super ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> searchPredicate = e -> true;
         @Setter
-        private Predicate<? super ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> BisqEasyOffersFilerPredicate = e -> true;
+        private Predicate<? super ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> BisqEasyOfferDirectionOrOwnerFilterPredicate = e -> true;
         @Setter
         private Predicate<? super ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> BisqEasyPeerReputationFilterPredicate = e -> true;
 
