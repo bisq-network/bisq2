@@ -41,7 +41,8 @@ import javafx.scene.layout.VBox;
 import java.util.Optional;
 
 public abstract class BubbleMessage extends Message {
-    protected final static double CHAT_MESSAGE_BOX_MAX_WIDTH = 630;
+    protected static final double CHAT_MESSAGE_BOX_MAX_WIDTH = 630;
+    protected static final double OFFER_MESSAGE_USER_ICON_SIZE = 70;
 
     protected final ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item;
     protected final ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list;
@@ -182,7 +183,7 @@ public abstract class BubbleMessage extends Message {
         label.maxWidthProperty().unbind();
         label.setWrapText(true);
         label.setPadding(new Insets(10));
-        label.getStyleClass().addAll("text-fill-white", "normal-text", "font-default");
+        label.getStyleClass().addAll("text-fill-white", "medium-text", "font-default");
         label.setText(item.getMessage());
         return label;
     }

@@ -493,7 +493,7 @@ public class ChatMessagesComponent {
 
         private HBox createAndGetSendMessageBox() {
             inputField.setPromptText(Res.get("chat.message.input.prompt"));
-            inputField.getStyleClass().addAll("chat-input-field", "normal-text");
+            inputField.getStyleClass().addAll("chat-input-field", "medium-text");
             inputField.setPadding(new Insets(5, 0, 5, 5));
             HBox.setMargin(inputField, new Insets(0, 0, 1.5, 0));
             HBox.setHgrow(inputField, Priority.ALWAYS);
