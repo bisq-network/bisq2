@@ -98,6 +98,10 @@ public class ChatMessagesComponent {
         controller.chatMessagesListView.setBisqEasyOffersFilerPredicate(predicate);
     }
 
+    public void setBisqEasyReputationsFilterPredicate(Predicate<? super ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate) {
+        controller.chatMessagesListView.setBisqEasyReputationsFilerPredicate(predicate);
+    }
+
     public void resetSelectedChatMessage() {
         controller.model.selectedChatMessage = null;
     }

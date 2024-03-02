@@ -54,4 +54,20 @@ class Filters {
             this.predicate = predicate;
         }
     }
+
+    @Getter
+    enum Reputations implements FilterPredicate<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> {
+        ALL(item -> true),
+        FIVE_STARS(item -> !item.isBisqEasyPublicChatMessageWithPeerOffer() || item.getReputationStarCount() == 5),
+        AT_LEAST_FOUR_STARS(item -> !item.isBisqEasyPublicChatMessageWithPeerOffer() || item.getReputationStarCount() >= 4),
+        AT_LEAST_THREE_STARS(item -> !item.isBisqEasyPublicChatMessageWithPeerOffer() || item.getReputationStarCount() >= 3),
+        AT_LEAST_TWO_STARS(item -> !item.isBisqEasyPublicChatMessageWithPeerOffer() || item.getReputationStarCount() >= 2),
+        AT_LEAST_ONE_STAR(item -> !item.isBisqEasyPublicChatMessageWithPeerOffer() || item.getReputationStarCount() >= 1);
+
+        private final Predicate<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate;
+
+        Reputations(Predicate<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate) {
+            this.predicate = predicate;
+        }
+    }
 }
