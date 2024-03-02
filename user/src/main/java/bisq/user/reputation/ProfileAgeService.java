@@ -86,14 +86,16 @@ public class ProfileAgeService extends SourceReputationService<AuthorizedTimesta
     @Override
     public void onAuthorizedDataRemoved(AuthorizedData authorizedData) {
         if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedTimestampData) {
-            AuthorizedTimestampData timestampData = (AuthorizedTimestampData) authorizedData.getAuthorizedDistributedData();
-            String userProfileId = timestampData.getProfileId();
-            userProfileService.findUserProfile(userProfileId)
-                    .map(this::getUserProfileKey)
-                    .ifPresent(dataSetByHash::remove);
-            if (scoreByUserProfileId.containsKey(userProfileId)) {
-                scoreByUserProfileId.remove(userProfileId);
-                userProfileIdOfUpdatedScore.set(userProfileId);
+            if (isAuthorized(authorizedData)) {
+                AuthorizedTimestampData timestampData = (AuthorizedTimestampData) authorizedData.getAuthorizedDistributedData();
+                String userProfileId = timestampData.getProfileId();
+                userProfileService.findUserProfile(userProfileId)
+                        .map(this::getUserProfileKey)
+                        .ifPresent(dataSetByHash::remove);
+                if (scoreByUserProfileId.containsKey(userProfileId)) {
+                    scoreByUserProfileId.remove(userProfileId);
+                    userProfileIdOfUpdatedScore.set(userProfileId);
+                }
             }
         }
     }

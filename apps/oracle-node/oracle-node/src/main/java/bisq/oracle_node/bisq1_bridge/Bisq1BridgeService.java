@@ -32,7 +32,6 @@ import bisq.identity.Identity;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
-import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.oracle_node.bisq1_bridge.dto.BondedReputationDto;
@@ -68,7 +67,8 @@ import java.util.concurrent.TimeUnit;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class Bisq1BridgeService implements Service, ConfidentialMessageService.Listener, DataService.Listener, PersistenceClient<Bisq1BridgeStore> {
+public class Bisq1BridgeService implements Service, ConfidentialMessageService.Listener,
+        AuthorizedBondedRolesService.Listener, PersistenceClient<Bisq1BridgeStore> {
     @Getter
     public static class Config {
         private final com.typesafe.config.Config httpService;
@@ -132,10 +132,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
         return httpService.initialize()
                 .whenComplete((result, throwable) -> {
                     networkService.addConfidentialMessageListener(this);
-                    networkService.getDataService()
-                            .ifPresent(dataService -> dataService.getAuthorizedData()
-                                    .forEach(this::onAuthorizedDataAdded));
-                    networkService.addDataServiceListener(this);
+                    authorizedBondedRolesService.addListener(this);
                     requestDoaDataScheduler = Scheduler.run(this::requestDoaData).periodically(0, 5, TimeUnit.SECONDS);
                     republishAuthorizedBondedRolesScheduler = Scheduler.run(this::republishAuthorizedBondedRoles).after(5, TimeUnit.SECONDS);
                 });
@@ -149,8 +146,8 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
         if (republishAuthorizedBondedRolesScheduler != null) {
             republishAuthorizedBondedRolesScheduler.stop();
         }
-        networkService.removeDataServiceListener(this);
         networkService.removeConfidentialMessageListener(this);
+        authorizedBondedRolesService.removeListener(this);
         return httpService.shutdown();
     }
 
@@ -177,7 +174,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // DataService.Listener
+    // AuthorizedBondedRolesService.Listener
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -186,7 +183,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
         if (data instanceof AuthorizedAlertData) {
             AuthorizedAlertData authorizedAlertData = (AuthorizedAlertData) data;
             if (authorizedAlertData.getAlertType() == AlertType.BAN &&
-                    authorizedBondedRolesService.hasAuthorizedPubKey(authorizedData, BondedRoleType.SECURITY_MANAGER) &&
+                    isAuthorized(authorizedData) &&
                     authorizedAlertData.getBannedRole().isPresent()) {
                 BondedRoleType bannedBondedRoleType = authorizedAlertData.getBannedRole().get().getBondedRoleType();
                 authorizedBondedRolesService.getAuthorizedBondedRoleStream()
@@ -206,14 +203,13 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
         }
     }
 
-    @Override
-    public void onAuthorizedDataRemoved(AuthorizedData authorizedData) {
-    }
-
-
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private boolean isAuthorized(AuthorizedData authorizedData) {
+        return authorizedBondedRolesService.hasAuthorizedPubKey(authorizedData, BondedRoleType.SECURITY_MANAGER);
+    }
 
     private CompletableFuture<List<ProofOfBurnDto>> requestProofOfBurnTxs() {
         return httpService.requestProofOfBurnTxs();

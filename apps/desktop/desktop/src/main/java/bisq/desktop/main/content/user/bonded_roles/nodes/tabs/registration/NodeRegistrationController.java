@@ -44,6 +44,7 @@ import java.nio.file.Path;
 import java.security.KeyPair;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -71,9 +72,9 @@ public class NodeRegistrationController extends BondedRolesRegistrationControlle
         super.onActivate();
 
         addressInfoPin = EasyBind.subscribe(getNodesRegistrationModel().getAddressInfoJson(), addressInfo -> {
-            model.getAddressByNetworkType().clear();
             if (addressInfo != null) {
-                model.getAddressByNetworkType().putAll(addressByNetworkTypeFromJson(addressInfo));
+                AddressByTransportTypeMap map = addressByNetworkTypeFromJson(addressInfo);
+                model.setAddressByNetworkType(Optional.of(new AddressByTransportTypeMap(map)));
             }
         });
     }

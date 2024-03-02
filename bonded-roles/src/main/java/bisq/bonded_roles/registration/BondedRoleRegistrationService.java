@@ -30,6 +30,7 @@ import bisq.network.identity.NetworkIdWithKeyPair;
 import bisq.security.DigestUtil;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -70,7 +71,7 @@ public class BondedRoleRegistrationService implements Service {
                                                  BondedRoleType bondedRoleType,
                                                  String bondUserName,
                                                  String signatureBase64,
-                                                 AddressByTransportTypeMap addressByTransportTypeMap,
+                                                 Optional<AddressByTransportTypeMap> addressByTransportTypeMap,
                                                  NetworkIdWithKeyPair senderNetworkIdWithKeyPair,
                                                  boolean isCancellationRequest) {
         ObservableSet<AuthorizedOracleNode> authorizedOracleNodes = authorizedBondedRolesService.getAuthorizedOracleNodes();
@@ -91,7 +92,11 @@ public class BondedRoleRegistrationService implements Service {
                 networkId,
                 isCancellationRequest);
         authorizedOracleNodes.forEach(oracleNode ->
-                networkService.confidentialSend(request, oracleNode.getNetworkId(), senderNetworkIdWithKeyPair));
+        {
+            NetworkId oracleNodeNetworkId = oracleNode.getNetworkId();
+            log.info("Send BondedRoleRegistrationRequest to oracleNode {}.\nBondedRoleRegistrationRequest={}", oracleNodeNetworkId, request);
+            networkService.confidentialSend(request, oracleNodeNetworkId, senderNetworkIdWithKeyPair);
+        });
         return true;
     }
 }

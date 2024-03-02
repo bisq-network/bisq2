@@ -21,6 +21,7 @@ import bisq.common.proto.NetworkProto;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
 import java.util.Map;
@@ -33,6 +34,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 /**
  * Wrapper for a (sorted) TreeMap for the address by transport type map and for convenient protobuf methods.
  */
+@Slf4j
 @EqualsAndHashCode
 @ToString
 @Getter
@@ -55,8 +57,9 @@ public final class AddressByTransportTypeMap implements Map<TransportType, Addre
 
     @Override
     public void verify() {
-        checkArgument(map.size() <= TransportType.values().length);
-        checkArgument(!map.isEmpty());
+        checkArgument(map.size() <= TransportType.values().length,
+                "map size must not be larger than TransportType.values().length");
+        checkArgument(!map.isEmpty(), "map must not be empty");
     }
 
     @Override

@@ -17,6 +17,8 @@
 
 package bisq.bonded_roles.market_price;
 
+import bisq.bonded_roles.BondedRoleType;
+import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.application.Service;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
@@ -26,9 +28,7 @@ import bisq.common.observable.Pin;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.util.Version;
 import bisq.network.NetworkService;
-import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
-import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
@@ -49,20 +49,21 @@ import java.util.stream.Collectors;
  */
 
 @Slf4j
-public class MarketPriceService implements Service, PersistenceClient<MarketPriceStore>, DataService.Listener {
+public class MarketPriceService implements Service, PersistenceClient<MarketPriceStore>, AuthorizedBondedRolesService.Listener {
     @Getter
     private final MarketPriceStore persistableStore = new MarketPriceStore();
     @Getter
     private final Persistence<MarketPriceStore> persistence;
-    private final NetworkService networkService;
+    private final AuthorizedBondedRolesService authorizedBondedRolesService;
     private final MarketPriceRequestService marketPriceRequestService;
     private Pin marketPriceByCurrencyMapPin;
 
     public MarketPriceService(com.typesafe.config.Config marketPrice,
                               Version version,
                               PersistenceService persistenceService,
-                              NetworkService networkService) {
-        this.networkService = networkService;
+                              NetworkService networkService,
+                              AuthorizedBondedRolesService authorizedBondedRolesService) {
+        this.authorizedBondedRolesService = authorizedBondedRolesService;
         marketPriceRequestService = new MarketPriceRequestService(MarketPriceRequestService.Config.from(marketPrice),
                 version,
                 networkService);
@@ -77,16 +78,12 @@ public class MarketPriceService implements Service, PersistenceClient<MarketPric
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
 
-        networkService.addDataServiceListener(this);
+        authorizedBondedRolesService.addListener(this);
 
         setSelectedMarket(MarketRepository.getDefault());
 
         marketPriceByCurrencyMapPin = marketPriceRequestService.getMarketPriceByCurrencyMap().addObserver(() ->
                 applyNewMap(marketPriceRequestService.getMarketPriceByCurrencyMap()));
-
-        networkService.getDataService()
-                .ifPresent(dataService -> dataService.getAuthorizedData()
-                        .forEach(this::onAuthorizedDataAdded));
 
         return marketPriceRequestService.initialize();
     }
@@ -94,29 +91,26 @@ public class MarketPriceService implements Service, PersistenceClient<MarketPric
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
         marketPriceByCurrencyMapPin.unbind();
-        networkService.removeDataServiceListener(this);
+        authorizedBondedRolesService.removeListener(this);
         return marketPriceRequestService.shutdown();
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // DataService.Listener
+    // AuthorizedBondedRolesService.Listener
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
-        AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
-        if (data instanceof AuthorizedMarketPriceData) {
-            AuthorizedMarketPriceData authorizedMarketPriceData = (AuthorizedMarketPriceData) data;
-            Map<Market, MarketPrice> map = authorizedMarketPriceData.getMarketPriceByCurrencyMap().entrySet().stream()
-                    .peek(e -> e.getValue().setSource(MarketPrice.Source.PROPAGATED_IN_NETWORK))
-                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-            applyNewMap(map);
+        if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedMarketPriceData) {
+            if (isAuthorized(authorizedData)) {
+                AuthorizedMarketPriceData authorizedMarketPriceData = (AuthorizedMarketPriceData) authorizedData.getAuthorizedDistributedData();
+                Map<Market, MarketPrice> map = authorizedMarketPriceData.getMarketPriceByCurrencyMap().entrySet().stream()
+                        .peek(e -> e.getValue().setSource(MarketPrice.Source.PROPAGATED_IN_NETWORK))
+                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                applyNewMap(map);
+            }
         }
-    }
-
-    @Override
-    public void onAuthorizedDataRemoved(AuthorizedData authorizedData) {
     }
 
 
@@ -149,6 +143,14 @@ public class MarketPriceService implements Service, PersistenceClient<MarketPric
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private boolean isAuthorized(AuthorizedData authorizedData) {
+        // The oracle node runs the MarketPricePropagationService. The BondedRoleType.MARKET_PRICE_NODE runs
+        // the market price node which is used for requests from user apps or the MarketPricePropagationService.
+        // AuthorizedMarketPriceData provide better resilience for market price data, specially at startup in case the
+        // request to the market price node fails.
+        return authorizedBondedRolesService.hasAuthorizedPubKey(authorizedData, BondedRoleType.ORACLE_NODE);
+    }
 
     private void applyNewMap(Map<Market, MarketPrice> newMap) {
         if (newMap.isEmpty()) {

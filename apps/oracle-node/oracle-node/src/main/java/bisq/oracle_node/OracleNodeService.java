@@ -152,6 +152,7 @@ public class OracleNodeService implements Service {
 
         timestampService = new TimestampService(persistenceService,
                 networkService,
+                authorizedBondedRolesService,
                 authorizedPrivateKey,
                 authorizedPublicKey,
                 staticPublicKeysProvided);
@@ -196,7 +197,7 @@ public class OracleNodeService implements Service {
                     BondedRoleType.ORACLE_NODE,
                     bondUserName,
                     signatureBase64,
-                    identityService.getOrCreateDefaultIdentity().getNetworkId().getAddressByTransportTypeMap(),
+                    Optional.of(identityService.getOrCreateDefaultIdentity().getNetworkId().getAddressByTransportTypeMap()),
                     networkId,
                     Optional.of(authorizedOracleNode),
                     staticPublicKeysProvided);

@@ -6,6 +6,6 @@ import "network_common.proto";
 import "security.proto";
 
 message NetworkId {
-  .network.common.AddressByTransportTypeMap addressByNetworkTypeMap = 1;
+  network.common.AddressByTransportTypeMap addressByNetworkTypeMap = 1;
   security.PubKey pubKey = 2;
 }

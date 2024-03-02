@@ -68,22 +68,31 @@ public class BondedRolesListItem {
         bondUserName = authorizedBondedRoleData.getBondUserName();
         signature = authorizedBondedRoleData.getSignatureBase64();
         bondedRoleType = authorizedBondedRoleData.getBondedRoleType();
-        AddressByTransportTypeMap addressByTransportTypeMap = authorizedBondedRoleData.getAddressByTransportTypeMap();
-        List<String> list = addressByTransportTypeMap.entrySet().stream()
-                .map(e -> e.getKey().name() + ": " + e.getValue().getFullAddress())
-                .collect(Collectors.toList());
-        address = Joiner.on("\n").join(list);
-        addressInfoJson = new GsonBuilder().setPrettyPrinting().create().toJson(addressByTransportTypeMap);
         staticPublicKeysProvided = authorizedBondedRoleData.staticPublicKeysProvided();
 
-        Set<String> seedAddressesFromConfig = networkService.getSeedAddressesByTransportFromConfig().values().stream()
-                .flatMap(Collection::stream)
-                .map(Address::getFullAddress)
-                .collect(Collectors.toSet());
-        Set<String> bondedRoleAddresses = addressByTransportTypeMap.values().stream()
-                .map(Address::getFullAddress)
-                .collect(Collectors.toSet());
-        isRootSeedNode = bondedRoleAddresses.stream().anyMatch(seedAddressesFromConfig::contains);
+        Optional<AddressByTransportTypeMap> addressByTransportTypeMap = authorizedBondedRoleData.getAddressByTransportTypeMap();
+        if (addressByTransportTypeMap.isPresent()) {
+            AddressByTransportTypeMap addressMap = addressByTransportTypeMap.get();
+            List<String> list = addressMap.entrySet().stream()
+                    .map(e -> e.getKey().name() + ": " + e.getValue().getFullAddress())
+                    .collect(Collectors.toList());
+            address = Joiner.on("\n").join(list);
+            addressInfoJson = new GsonBuilder().setPrettyPrinting().create().toJson(addressMap);
+
+            Set<String> bondedRoleAddresses = addressMap.values().stream()
+                    .map(Address::getFullAddress)
+                    .collect(Collectors.toSet());
+            Set<String> seedAddressesFromConfig = networkService.getSeedAddressesByTransportFromConfig().values().stream()
+                    .flatMap(Collection::stream)
+                    .map(Address::getFullAddress)
+                    .collect(Collectors.toSet());
+            isRootSeedNode = bondedRoleAddresses.stream().anyMatch(seedAddressesFromConfig::contains);
+        } else {
+            address = "";
+            addressInfoJson = "";
+            isRootSeedNode = false;
+        }
+
         isRootNode = staticPublicKeysProvided || isRootSeedNode;
         roleTypeString = isRootNode ?
                 bondedRoleType.getDisplayString() + " (root)" :

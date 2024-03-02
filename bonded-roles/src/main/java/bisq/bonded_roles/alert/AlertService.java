@@ -22,31 +22,24 @@ import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
-import bisq.network.NetworkService;
-import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
-import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class AlertService implements Service, DataService.Listener {
-    private final NetworkService networkService;
-    @Getter
-    private final ObservableSet<AuthorizedAlertData> authorizedAlertDataSet = new ObservableSet<>();
+public class AlertService implements Service, AuthorizedBondedRolesService.Listener {
 
     @Getter
     private final Observable<Boolean> hasNotificationSenderIdentity = new Observable<>();
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
+    @Getter
+    private final ObservableSet<AuthorizedAlertData> authorizedAlertDataSet = new ObservableSet<>();
 
-    public AlertService(NetworkService networkService, AuthorizedBondedRolesService authorizedBondedRolesService) {
-        this.networkService = networkService;
+    public AlertService(AuthorizedBondedRolesService authorizedBondedRolesService) {
         this.authorizedBondedRolesService = authorizedBondedRolesService;
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Service
@@ -54,42 +47,53 @@ public class AlertService implements Service, DataService.Listener {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        networkService.addDataServiceListener(this);
-        networkService.getDataService().ifPresent(service -> service.getAuthorizedData().forEach(this::onAuthorizedDataAdded));
+        authorizedBondedRolesService.addListener(this);
         return CompletableFuture.completedFuture(true);
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        networkService.removeDataServiceListener(this);
+        authorizedBondedRolesService.removeListener(this);
         return CompletableFuture.completedFuture(true);
     }
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // DataService.Listener
+    // AuthorizedBondedRolesService.Listener
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
-        findAuthorizedDataOfAlertData(authorizedData).ifPresent(authorizedAlertDataSet::add);
+        if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedAlertData) {
+            if (isAuthorized(authorizedData)) {
+                AuthorizedAlertData authorizedAlertData = (AuthorizedAlertData) authorizedData.getAuthorizedDistributedData();
+                authorizedAlertDataSet.add(authorizedAlertData);
+                maybeApplyBannedState(authorizedAlertData, true);
+            }
+        }
     }
 
     @Override
     public void onAuthorizedDataRemoved(AuthorizedData authorizedData) {
-        findAuthorizedDataOfAlertData(authorizedData).ifPresent(authorizedAlertDataSet::remove);
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    private Optional<AuthorizedAlertData> findAuthorizedDataOfAlertData(AuthorizedData authorizedData) {
-        AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
-        if (data instanceof AuthorizedAlertData &&
-                authorizedBondedRolesService.hasAuthorizedPubKey(authorizedData, BondedRoleType.SECURITY_MANAGER)) {
-            return Optional.of((AuthorizedAlertData) data);
+        if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedAlertData) {
+            if (isAuthorized(authorizedData)) {
+                AuthorizedAlertData authorizedAlertData = (AuthorizedAlertData) authorizedData.getAuthorizedDistributedData();
+                authorizedAlertDataSet.remove(authorizedAlertData);
+                maybeApplyBannedState(authorizedAlertData, false);
+            }
         }
-        return Optional.empty();
     }
+
+    private boolean isAuthorized(AuthorizedData authorizedData) {
+        return authorizedBondedRolesService.hasAuthorizedPubKey(authorizedData, BondedRoleType.SECURITY_MANAGER);
+    }
+
+    private void maybeApplyBannedState(AuthorizedAlertData authorizedAlertData, boolean wasAdded) {
+        if (authorizedAlertData.getAlertType() == AlertType.BAN && authorizedAlertData.getBannedRole().isPresent()) {
+            authorizedBondedRolesService.getBondedRoles().stream()
+                    .filter(bondedRole -> bondedRole.getAuthorizedBondedRole().equals(authorizedAlertData.getBannedRole().get()))
+                    .findAny()
+                    .ifPresent(bondedRole -> bondedRole.setIsBanned(wasAdded));
+        }
+    }
+
 }

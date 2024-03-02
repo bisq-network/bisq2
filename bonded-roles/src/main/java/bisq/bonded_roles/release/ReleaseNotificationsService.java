@@ -22,19 +22,14 @@ import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
-import bisq.network.NetworkService;
-import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
-import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class ReleaseNotificationsService implements Service, DataService.Listener {
-    private final NetworkService networkService;
+public class ReleaseNotificationsService implements Service, AuthorizedBondedRolesService.Listener {
     @Getter
     private final ObservableSet<ReleaseNotification> releaseNotifications = new ObservableSet<>();
 
@@ -42,8 +37,7 @@ public class ReleaseNotificationsService implements Service, DataService.Listene
     private final Observable<Boolean> hasNotificationSenderIdentity = new Observable<>();
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
 
-    public ReleaseNotificationsService(NetworkService networkService, AuthorizedBondedRolesService authorizedBondedRolesService) {
-        this.networkService = networkService;
+    public ReleaseNotificationsService(AuthorizedBondedRolesService authorizedBondedRolesService) {
         this.authorizedBondedRolesService = authorizedBondedRolesService;
     }
 
@@ -54,42 +48,46 @@ public class ReleaseNotificationsService implements Service, DataService.Listene
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        networkService.addDataServiceListener(this);
-        networkService.getDataService().ifPresent(service -> service.getAuthorizedData().forEach(this::onAuthorizedDataAdded));
+        authorizedBondedRolesService.addListener(this);
         return CompletableFuture.completedFuture(true);
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        networkService.removeDataServiceListener(this);
+        authorizedBondedRolesService.removeListener(this);
         return CompletableFuture.completedFuture(true);
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // DataService.Listener
+    // AuthorizedBondedRolesService.Listener
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
-        findAuthorizedDataOfAlertData(authorizedData).ifPresent(releaseNotifications::add);
+        if (authorizedData.getAuthorizedDistributedData() instanceof ReleaseNotification) {
+            if (isAuthorized(authorizedData)) {
+                ReleaseNotification releaseNotification = (ReleaseNotification) authorizedData.getAuthorizedDistributedData();
+                releaseNotifications.add(releaseNotification);
+            }
+        }
     }
 
     @Override
     public void onAuthorizedDataRemoved(AuthorizedData authorizedData) {
-        findAuthorizedDataOfAlertData(authorizedData).ifPresent(releaseNotifications::remove);
+        if (authorizedData.getAuthorizedDistributedData() instanceof ReleaseNotification) {
+            if (isAuthorized(authorizedData)) {
+                ReleaseNotification releaseNotification = (ReleaseNotification) authorizedData.getAuthorizedDistributedData();
+                releaseNotifications.remove(releaseNotification);
+            }
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private Optional<ReleaseNotification> findAuthorizedDataOfAlertData(AuthorizedData authorizedData) {
-        AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
-        if (data instanceof ReleaseNotification &&
-                authorizedBondedRolesService.hasAuthorizedPubKey(authorizedData, BondedRoleType.RELEASE_MANAGER)) {
-            return Optional.of((ReleaseNotification) data);
-        }
-        return Optional.empty();
+    private boolean isAuthorized(AuthorizedData authorizedData) {
+        return authorizedBondedRolesService.hasAuthorizedPubKey(authorizedData, BondedRoleType.RELEASE_MANAGER);
     }
 }
