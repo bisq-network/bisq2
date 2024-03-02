@@ -338,7 +338,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         sellOffers = new DropdownFilterMenuItem<>("check-grey", "check-white",
                 Res.get("bisqEasy.offerbook.dropdownMenu.filterOffersByDirectionOrOwner.sellOffers"), Filters.OfferDirectionOrOwner.SELL);
 
-        dropdownMenu.addMenuItems(allOffers, myOffers, buyOffers, sellOffers);
+        dropdownMenu.addMenuItems(sellOffers, buyOffers, myOffers, allOffers);
         return dropdownMenu;
     }
 
