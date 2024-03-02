@@ -129,7 +129,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             model.nickName.set(isUserProfileBanned() ? Res.get("user.userProfile.userName.banned", nickName) : nickName);
             model.nym.set(Res.get("chat.sideBar.userProfile.nym", userProfile.getNym()));
             model.userProfileIdString.set(Res.get("chat.sideBar.userProfile.id", userProfile.getId()));
-            model.roboHashNode.set(CatHash.getImage(userProfile));
+            model.catHashNode.set(CatHash.getImage(userProfile));
 
             model.addressByTransport.set(userProfile.getAddressByTransportDisplayString(26));
             model.addressByTransportTooltip.set(userProfile.getAddressByTransportDisplayString());
@@ -195,7 +195,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
         private Optional<Consumer<UserProfile>> mentionUserHandler = Optional.empty();
         private Optional<Consumer<UserProfile>> sendPrivateMessageHandler = Optional.empty();
         private Optional<Runnable> ignoreUserStateHandler = Optional.empty();
-        private final ObjectProperty<Image> roboHashNode = new SimpleObjectProperty<>();
+        private final ObjectProperty<Image> catHashNode = new SimpleObjectProperty<>();
         private final StringProperty nickName = new SimpleStringProperty();
         private final StringProperty nym = new SimpleStringProperty();
         private final StringProperty addressByTransport = new SimpleStringProperty();
@@ -218,14 +218,14 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
 
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
-        private final ImageView roboIconImageView;
+        private final ImageView catIconImageView;
         private final Label nickName, botId, userProfileId, addressByTransport, statement, totalReputationScore, profileAge;
         private final Hyperlink privateMsg, mention, ignore, report;
         private final VBox statementBox, termsBox, optionsVBox;
         private final ReputationScoreDisplay reputationScoreDisplay;
         private final TextArea terms;
         private final Button closeButton;
-        private Subscription roboHashNodeSubscription;
+        private Subscription catHashNodeSubscription;
 
         private View(Model model, Controller controller) {
             super(new VBox(15), model, controller);
@@ -249,9 +249,9 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
                 nickName.getStyleClass().add("error");
             }
 
-            roboIconImageView = new ImageView();
-            roboIconImageView.setFitWidth(100);
-            roboIconImageView.setFitHeight(100);
+            catIconImageView = new ImageView();
+            catIconImageView.setFitWidth(100);
+            catIconImageView.setFitHeight(100);
 
             botId = new Label();
             botId.getStyleClass().add("chat-side-bar-user-profile-details");
@@ -316,7 +316,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             VBox.setMargin(addressByTransport, new Insets(-10, 0, 0, 0));
             VBox.setMargin(reputationBox, new Insets(4, 0, 0, 0));
             root.getChildren().addAll(header,
-                    nickName, roboIconImageView, botId, userProfileId, addressByTransport,
+                    nickName, catIconImageView, botId, userProfileId, addressByTransport,
                     reputationBox, totalReputationScoreBox, profileAgeBox, statementBox, termsBox,
                     optionsVBox);
         }
@@ -343,13 +343,13 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             privateMsg.visibleProperty().bind(model.isPeer);
             privateMsg.managedProperty().bind(model.isPeer);
 
-            roboHashNodeSubscription = EasyBind.subscribe(model.roboHashNode, roboIcon -> {
-                if (roboIcon != null) {
-                    roboIconImageView.setImage(roboIcon);
+            catHashNodeSubscription = EasyBind.subscribe(model.catHashNode, catIcon -> {
+                if (catIcon != null) {
+                    catIconImageView.setImage(catIcon);
                 }
             });
 
-            roboHashNodeSubscription = EasyBind.subscribe(model.reputationScore, reputationScore -> {
+            catHashNodeSubscription = EasyBind.subscribe(model.reputationScore, reputationScore -> {
                 if (reputationScore != null) {
                     reputationScoreDisplay.setReputationScore(reputationScore);
                     totalReputationScore.setText(String.valueOf(reputationScore.getTotalScore()));
@@ -385,7 +385,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             privateMsg.visibleProperty().unbind();
             privateMsg.managedProperty().unbind();
 
-            roboHashNodeSubscription.unsubscribe();
+            catHashNodeSubscription.unsubscribe();
 
             privateMsg.setOnAction(null);
             mention.setOnAction(null);

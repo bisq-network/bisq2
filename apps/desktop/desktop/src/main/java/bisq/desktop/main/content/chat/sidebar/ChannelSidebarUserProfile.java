@@ -55,8 +55,8 @@ public class ChannelSidebarUserProfile implements Comparable<ChannelSidebarUserP
         return controller.view.getRoot();
     }
 
-    public ImageView getRoboIcon() {
-        return controller.view.getRoboIcon();
+    public ImageView getCatIcon() {
+        return controller.view.getCatIcon();
     }
 
     public boolean isIgnored() {
@@ -93,7 +93,7 @@ public class ChannelSidebarUserProfile implements Comparable<ChannelSidebarUserP
 
             String userName = userProfile.getUserName();
             model.userName.set(isUserProfileBanned() ? Res.get("user.userProfile.userName.banned", userName) : userName);
-            model.roboHashImage.set(CatHash.getImage(userProfile));
+            model.catHashImage.set(CatHash.getImage(userProfile));
         }
 
         @Override
@@ -108,7 +108,7 @@ public class ChannelSidebarUserProfile implements Comparable<ChannelSidebarUserP
     private static class Model implements bisq.desktop.common.view.Model {
         private final UserProfile userProfile;
         private boolean ignored;
-        private final ObjectProperty<Image> roboHashImage = new SimpleObjectProperty<>();
+        private final ObjectProperty<Image> catHashImage = new SimpleObjectProperty<>();
         private final StringProperty userName = new SimpleStringProperty();
 
         private Model(UserProfile userProfile) {
@@ -119,9 +119,9 @@ public class ChannelSidebarUserProfile implements Comparable<ChannelSidebarUserP
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
         @Getter
-        private final ImageView roboIcon;
+        private final ImageView catIcon;
         private final Label userName;
-        private Subscription roboHashNodeSubscription;
+        private Subscription catHashNodeSubscription;
 
         private View(Model model, Controller controller) {
             super(new HBox(10), model, controller);
@@ -141,10 +141,10 @@ public class ChannelSidebarUserProfile implements Comparable<ChannelSidebarUserP
             String tooltipString = banPrefix + model.userProfile.getTooltipString();
             Tooltip.install(userName, new BisqTooltip(tooltipString));
 
-            roboIcon = new ImageView();
-            roboIcon.setFitWidth(37.5);
-            roboIcon.setFitHeight(37.5);
-            Tooltip.install(roboIcon, new BisqTooltip(tooltipString));
+            catIcon = new ImageView();
+            catIcon.setFitWidth(37.5);
+            catIcon.setFitHeight(37.5);
+            Tooltip.install(catIcon, new BisqTooltip(tooltipString));
             if (isUserProfileBanned) {
                 // coloring icon red
                 /*Blend blush = new Blend(BlendMode.MULTIPLY,
@@ -154,19 +154,19 @@ public class ChannelSidebarUserProfile implements Comparable<ChannelSidebarUserP
                                 37.5,
                                 37.5,
                                 Color.RED));
-                roboIcon.setClip(new Circle(18.75, 18.75, 18.75));
-                roboIcon.setEffect(blush);*/
+                catIcon.setClip(new Circle(18.75, 18.75, 18.75));
+                catIcon.setEffect(blush);*/
             }
 
-            root.getChildren().addAll(roboIcon, userName);
+            root.getChildren().addAll(catIcon, userName);
         }
 
         @Override
         protected void onViewAttached() {
             userName.textProperty().bind(model.userName);
-            roboHashNodeSubscription = EasyBind.subscribe(model.roboHashImage, image -> {
+            catHashNodeSubscription = EasyBind.subscribe(model.catHashImage, image -> {
                 if (image != null) {
-                    this.roboIcon.setImage(image);
+                    this.catIcon.setImage(image);
                 }
             });
         }
@@ -174,7 +174,7 @@ public class ChannelSidebarUserProfile implements Comparable<ChannelSidebarUserP
         @Override
         protected void onViewDetached() {
             userName.textProperty().unbind();
-            roboHashNodeSubscription.unsubscribe();
+            catHashNodeSubscription.unsubscribe();
         }
     }
 }

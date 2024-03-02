@@ -38,7 +38,7 @@ public class CreateNewProfileStep2Model implements Model {
     private final StringProperty nym = new SimpleStringProperty();
     private final StringProperty terms = new SimpleStringProperty();
     private final StringProperty statement = new SimpleStringProperty();
-    private final ObjectProperty<Image> roboHashImage = new SimpleObjectProperty<>();
+    private final ObjectProperty<Image> catHashImage = new SimpleObjectProperty<>();
     private final BooleanProperty createProfileButtonDisabled = new SimpleBooleanProperty();
     private final DoubleProperty createProfileProgress = new SimpleDoubleProperty();
     private final BooleanProperty isEditable = new SimpleBooleanProperty();

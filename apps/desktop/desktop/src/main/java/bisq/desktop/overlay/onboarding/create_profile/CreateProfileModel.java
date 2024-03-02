@@ -38,9 +38,9 @@ public class CreateProfileModel implements Model {
 
     private final StringProperty nickName = new SimpleStringProperty();
     private final StringProperty nym = new SimpleStringProperty();
-    private final ObjectProperty<Image> roboHashImage = new SimpleObjectProperty<>();
+    private final ObjectProperty<Image> catHashImage = new SimpleObjectProperty<>();
     private final BooleanProperty reGenerateButtonDisabled = new SimpleBooleanProperty();
-    private final BooleanProperty roboHashIconVisible = new SimpleBooleanProperty();
+    private final BooleanProperty catHashIconVisible = new SimpleBooleanProperty();
     private final DoubleProperty powProgress = new SimpleDoubleProperty();
     private final BooleanProperty createProfileButtonDisabled = new SimpleBooleanProperty();
     private final DoubleProperty createProfileProgress = new SimpleDoubleProperty();

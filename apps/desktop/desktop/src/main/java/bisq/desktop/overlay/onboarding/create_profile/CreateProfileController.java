@@ -157,9 +157,9 @@ public class CreateProfileController implements Controller {
                         String nym = NymIdGenerator.generate(pubKeyHash, powSolution);
                         Image image = CatHash.getImage(pubKeyHash, powSolution);
                         model.getNym().set(nym);
-                        model.getRoboHashImage().set(image);
+                        model.getCatHashImage().set(image);
                         model.getPowProgress().set(0);
-                        model.getRoboHashIconVisible().set(true);
+                        model.getCatHashIconVisible().set(true);
                         model.getReGenerateButtonDisabled().set(false);
                     });
                     return proofOfWork;
@@ -191,8 +191,8 @@ public class CreateProfileController implements Controller {
     }
 
     private void setPreGenerateState() {
-        model.getRoboHashImage().set(null);
-        model.getRoboHashIconVisible().set(false);
+        model.getCatHashImage().set(null);
+        model.getCatHashIconVisible().set(false);
         model.getReGenerateButtonDisabled().set(true);
         model.getPowProgress().set(-1);
         model.getNym().set(Res.get("onboarding.createProfile.nym.generating"));

@@ -90,7 +90,7 @@ public class CreateNewProfileStep2Controller implements InitWithDataController<C
         model.setProofOfWork(data.getProofOfWork());
         model.getNickName().set(data.getNickName());
         model.getNym().set(data.getNym());
-        model.getRoboHashImage().set(CatHash.getImage(data.getPubKeyHash(), data.getProofOfWork().getSolution()));
+        model.getCatHashImage().set(CatHash.getImage(data.getPubKeyHash(), data.getProofOfWork().getSolution()));
     }
 
     @Override

@@ -96,7 +96,7 @@ public class KeyBundleService implements PersistenceClient<KeyBundleStore> {
     }
 
     // When a user creates a new profile we generate only the keypair until the user choose to use that.
-    // The user can re-create many keyPairs until they are satisfied with the generated nym and robosat image
+    // The user can re-create many keyPairs until they are satisfied with the generated nym and cathash image
     public KeyPair generateKeyPair() {
         try {
             return KeyGeneration.generateKeyPair();
