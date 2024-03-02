@@ -259,6 +259,10 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         return chatMessage.isMyMessage(userIdentityService);
     }
 
+    public boolean isPeerMessage() {
+        return !isMyMessage();
+    }
+
     public boolean isBisqEasyPublicChatMessageWithMyOffer() {
         return isBisqEasyPublicChatMessageWithOffer() && isMyMessage();
     }

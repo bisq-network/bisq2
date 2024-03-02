@@ -132,11 +132,11 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
             });
         });
 
-        selectedOffersFilterPin = EasyBind.subscribe(model.getSelectedOffersFilter(), filter -> {
+        selectedOffersFilterPin = EasyBind.subscribe(model.getSelectedOfferTypeFilter(), filter -> {
             if (filter == null) {
                 // By default, show all offers
-                model.getSelectedOffersFilter().set(Filters.Offers.ALL);
-                chatMessagesComponent.setBisqEasyOffersFilerPredicate(model.getSelectedOffersFilter().get().getPredicate());
+                model.getSelectedOfferTypeFilter().set(Filters.OfferType.ALL);
+                chatMessagesComponent.setBisqEasyOffersFilerPredicate(model.getSelectedOfferTypeFilter().get().getPredicate());
             } else {
                 chatMessagesComponent.setBisqEasyOffersFilerPredicate(filter.getPredicate());
             }
@@ -144,8 +144,8 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
 
         selectedReputationsFilterPin = EasyBind.subscribe(model.getSelectedReputationsFilter(), filter -> {
             if (filter == null) {
-                // By default, show all offers
-                model.getSelectedReputationsFilter().set(Filters.Reputations.ALL);
+                // By default, show all offers (with any reputation)
+                model.getSelectedReputationsFilter().set(Filters.OfferReputations.ALL);
                 chatMessagesComponent.setBisqEasyReputationsFilterPredicate(model.getSelectedReputationsFilter().get().getPredicate());
             } else {
                 chatMessagesComponent.setBisqEasyReputationsFilterPredicate(filter.getPredicate());
