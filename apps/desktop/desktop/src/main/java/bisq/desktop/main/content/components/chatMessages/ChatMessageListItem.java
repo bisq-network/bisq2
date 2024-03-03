@@ -78,6 +78,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private final String nickName;
     @EqualsAndHashCode.Exclude
     private final ReputationScore reputationScore;
+    @EqualsAndHashCode.Exclude
     private final ReputationScoreDisplay reputationScoreDisplay = new ReputationScoreDisplay();
     private final boolean offerAlreadyTaken;
     @EqualsAndHashCode.Exclude
