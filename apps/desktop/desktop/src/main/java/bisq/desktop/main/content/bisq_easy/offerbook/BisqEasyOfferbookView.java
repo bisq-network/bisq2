@@ -211,7 +211,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         header.getStyleClass().add("chat-header-title");
 
         marketSelectorSearchBox = new SearchBox();
-        marketSelectorSearchBox.getStyleClass().add("market-selection-search-box");
+        marketSelectorSearchBox.getStyleClass().add("offerbook-search-box");
         sortAndFilterMarketsMenu = createAndGetSortAndFilterMarketsMenu();
         HBox subheader = new HBox(marketSelectorSearchBox, Spacer.fillHBox(), sortAndFilterMarketsMenu);
         subheader.setAlignment(Pos.CENTER);
@@ -311,8 +311,10 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
 
         filterOffersByPeerReputationMenu = createAndGetPeerReputationFilterMenu();
         filterOffersByDirectionOrOwnerMenu = createAndGetOfferDirectionOrOwnerFilterMenu();
-        
-        HBox subheaderContent = new HBox(30, checkbox, filterOffersByPeerReputationMenu, filterOffersByDirectionOrOwnerMenu);
+
+        searchBox.getStyleClass().add("offerbook-search-box");
+        HBox subheaderContent = new HBox(30, searchBox, Spacer.fillHBox(), checkbox,
+                filterOffersByPeerReputationMenu, filterOffersByDirectionOrOwnerMenu);
         subheaderContent.getStyleClass().add("offerbook-subheader-content");
         HBox.setHgrow(subheaderContent, Priority.ALWAYS);
 
