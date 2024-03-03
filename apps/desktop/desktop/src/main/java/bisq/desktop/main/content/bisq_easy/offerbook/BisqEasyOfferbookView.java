@@ -78,17 +78,18 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
 
         marketPrice = new Label();
         HBox marketDescription = new HBox(5, channelDescription, marketPrice);
+        channelDescription.getStyleClass().add("offerbook-channel-market-code");
+        marketPrice.getStyleClass().addAll("chat-header-description", "offerbook-channel-market-price");
+
         VBox titleAndDescription = new VBox(channelTitle, marketDescription);
-        channelTitle.getStyleClass().add("chat-header-title");
+        channelTitle.getStyleClass().add("offerbook-channel-title");
 
         channelHeaderIcon = new Label();
         HBox headerTitle = new HBox(10, channelHeaderIcon, titleAndDescription);
         headerTitle.setAlignment(Pos.CENTER_LEFT);
-        headerTitle.setPadding(new Insets(7, 0, 0, 0));
         HBox.setHgrow(headerTitle, Priority.ALWAYS);
 
         createOfferButton = createAndGetCreateOfferButton();
-
         titleHBox.getChildren().setAll(headerTitle, createOfferButton, headerDropdownMenu);
     }
 
@@ -272,12 +273,6 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     private Button createAndGetCreateOfferButton() {
         Button createOfferButton = new Button(Res.get("offer.createOffer"));
         createOfferButton.getStyleClass().addAll("create-offer-button", "normal-text");
-        createOfferButton.setMinWidth(170);
-
-        double height = 42;
-        createOfferButton.setMinHeight(height);
-        createOfferButton.setMaxHeight(height);
-        createOfferButton.setPrefHeight(height);
         return createOfferButton;
     }
 
