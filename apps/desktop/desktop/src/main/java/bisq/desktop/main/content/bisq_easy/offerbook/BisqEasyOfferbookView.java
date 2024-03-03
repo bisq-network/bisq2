@@ -52,7 +52,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     private SearchBox marketSelectorSearchBox;
     private BisqTableView<MarketChannelItem> tableView;
     private VBox marketSelectionList;
-    private Subscription tableViewSelectionPin, selectedModelItemPin, marketSelectorHeaderIconPin, selectedMarketFilterPin,
+    private Subscription tableViewSelectionPin, selectedModelItemPin, channelHeaderIconPin, selectedMarketFilterPin,
             selectedOfferDirectionOrOwnerFilterPin, selectedPeerReputationFilterPin, selectedMarketSortTypePin;
     private Button createOfferButton;
     private DropdownMenu sortAndFilterMarketsMenu, filterOffersByDirectionOrOwnerMenu, filterOffersByPeerReputationMenu;
@@ -63,6 +63,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
             atLeastTwoStars, atLeastOneStar;
     private DropdownTitleMenuItem atLeastTitle;
     private CheckBox hideUserMessagesCheckbox;
+    private Label channelHeaderIcon, marketPrice;
 
     public BisqEasyOfferbookView(BisqEasyOfferbookModel model,
                                  BisqEasyOfferbookController controller,
@@ -75,11 +76,14 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     protected void configTitleHBox() {
         super.configTitleHBox();
 
-        Label chatDomainTitle = new Label(Res.get("bisqEasy.offerbook"));
-        chatDomainTitle.getStyleClass().add("chat-header-title");
+        marketPrice = new Label();
+        HBox marketDescription = new HBox(5, channelDescription, marketPrice);
+        VBox titleAndDescription = new VBox(channelTitle, marketDescription);
+        channelTitle.getStyleClass().add("chat-header-title");
 
-        HBox headerTitle = new HBox(10, chatDomainTitle, channelDescription);
-        headerTitle.setAlignment(Pos.BASELINE_LEFT);
+        channelHeaderIcon = new Label();
+        HBox headerTitle = new HBox(10, channelHeaderIcon, titleAndDescription);
+        headerTitle.setAlignment(Pos.CENTER_LEFT);
         headerTitle.setPadding(new Insets(7, 0, 0, 0));
         HBox.setHgrow(headerTitle, Priority.ALWAYS);
 
@@ -105,6 +109,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
 
         hideUserMessagesCheckbox.selectedProperty().bindBidirectional(getModel().getOfferOnly());
         marketSelectorSearchBox.textProperty().bindBidirectional(getModel().getMarketSelectorSearchText());
+        marketPrice.textProperty().bind(getModel().getMarketPrice());
 
         selectedModelItemPin = EasyBind.subscribe(getModel().getSelectedMarketChannelItem(), selected -> {
             tableView.getSelectionModel().select(selected);
@@ -114,7 +119,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
                 getController().onSelectMarketChannelItem(item);
             }
         });
-        marketSelectorHeaderIconPin = EasyBind.subscribe(model.getChannelIconNode(), this::updateMarketSelectorHeaderIcon);
+        channelHeaderIconPin = EasyBind.subscribe(model.getChannelIconNode(), this::updateChannelHeaderIcon);
         selectedMarketFilterPin = EasyBind.subscribe(getModel().getSelectedMarketsFilter(), this::updateSelectedMarketFilter);
         selectedOfferDirectionOrOwnerFilterPin = EasyBind.subscribe(getModel().getSelectedOfferDirectionOrOwnerFilter(), filter ->
                 updateSelectedFilterInDropdownMenu(filter, filterOffersByDirectionOrOwnerMenu));
@@ -158,10 +163,11 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
 
         hideUserMessagesCheckbox.selectedProperty().unbindBidirectional(getModel().getOfferOnly());
         marketSelectorSearchBox.textProperty().unbindBidirectional(getModel().getMarketSelectorSearchText());
+        marketPrice.textProperty().unbind();
 
         selectedModelItemPin.unsubscribe();
         tableViewSelectionPin.unsubscribe();
-        marketSelectorHeaderIconPin.unsubscribe();
+        channelHeaderIconPin.unsubscribe();
         selectedMarketFilterPin.unsubscribe();
         selectedOfferDirectionOrOwnerFilterPin.unsubscribe();
         selectedPeerReputationFilterPin.unsubscribe();
@@ -194,8 +200,8 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     }
 
     private void addMarketSelectionList() {
-        channelTitle.setGraphicTextGap(8);
-        HBox header = new HBox(channelTitle);
+        Label marketSelectionTitle = new Label(Res.get("bisqEasy.offerbook.markets"));
+        HBox header = new HBox(marketSelectionTitle);
         header.setMinHeight(HEADER_HEIGHT);
         header.setMaxHeight(HEADER_HEIGHT);
         header.setAlignment(Pos.CENTER_LEFT);
@@ -374,8 +380,8 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         return dropdownMenu;
     }
 
-    private void updateMarketSelectorHeaderIcon(Node node) {
-        channelTitle.setGraphic(node);
+    private void updateChannelHeaderIcon(Node node) {
+        channelHeaderIcon.setGraphic(node);
     }
 
     private void updateSelectedMarketFilter(Filters.Markets marketFilter) {

@@ -37,6 +37,7 @@ import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardController;
 import bisq.desktop.main.content.chat.ChatController;
 import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.presentation.formatters.PriceFormatter;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import javafx.scene.layout.StackPane;
@@ -206,15 +207,20 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                 model.getSearchText().set("");
                 resetSelectedChildTarget();
 
-                String description = ((BisqEasyOfferbookChannel) chatChannel).getDescription();
-                String oneLineDescription = description.replace("\n", " ");
-                model.getChannelDescription().set(oneLineDescription);
+                String description = channel.getDescription();
+                String channelTitle = description.replace("\n", " ").replaceAll("\\s*\\([^)]*\\)", "");
+                model.getChannelTitle().set(channelTitle);
 
-                Market market = ((BisqEasyOfferbookChannel) chatChannel).getMarket();
+                String marketSpecs = channel.getDisplayString();
+                model.getChannelDescription().set(marketSpecs);
+
+                Market market = channel.getMarket();
                 StackPane marketsImage = MarketImageComposition.imageBoxForMarkets(
                         market.getBaseCurrencyCode().toLowerCase(),
                         market.getQuoteCurrencyCode().toLowerCase());
                 model.getChannelIconNode().set(marketsImage);
+
+                updateMarketPrice();
             }
         });
     }
@@ -244,6 +250,16 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     void onSortMarkets(MarketSortType marketSortType) {
         model.getSelectedMarketSortType().set(marketSortType);
         model.getSortedMarketChannelItems().setComparator(marketSortType.getComparator());
+    }
+
+    private void updateMarketPrice() {
+        Market selectedMarket = getModel().getSelectedMarketChannelItem().get().getMarket();
+        if (selectedMarket != null) {
+            marketPriceService
+                    .findMarketPrice(selectedMarket)
+                    .ifPresent(marketPrice ->
+                            model.getMarketPrice().set(PriceFormatter.format(marketPrice.getPriceQuote(), true)));
+        }
     }
 
     private void updateFilteredMarketChannelItems() {
