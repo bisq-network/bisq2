@@ -87,7 +87,9 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         headerTitle.setPadding(new Insets(7, 0, 0, 0));
         HBox.setHgrow(headerTitle, Priority.ALWAYS);
 
-        titleHBox.getChildren().setAll(headerTitle, searchBox, headerDropdownMenu);
+        createOfferButton = createAndGetCreateOfferButton();
+
+        titleHBox.getChildren().setAll(headerTitle, createOfferButton, headerDropdownMenu);
     }
 
     @Override
@@ -223,12 +225,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         configTableView();
         VBox.setVgrow(tableView, Priority.ALWAYS);
 
-        createOfferButton = createAndGetCreateOfferButton();
-        HBox offerButtonContainer = new HBox(createOfferButton);
-        offerButtonContainer.setAlignment(Pos.CENTER);
-        offerButtonContainer.setPadding(new Insets(14, 20, 14, 20));
-
-        marketSelectionList = new VBox(header, Layout.hLine(), subheader, tableView, offerButtonContainer);
+        marketSelectionList = new VBox(header, Layout.hLine(), subheader, tableView);
         marketSelectionList.setPrefWidth(210);
         marketSelectionList.setMinWidth(210);
         marketSelectionList.setFillWidth(true);
