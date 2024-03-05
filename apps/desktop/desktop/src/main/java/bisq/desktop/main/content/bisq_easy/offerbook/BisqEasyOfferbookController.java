@@ -244,14 +244,6 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         Navigation.navigateTo(NavigationTarget.TRADE_WIZARD, new TradeWizardController.InitData(true));
     }
 
-    void onToggleFilter() {
-        bisqEasyOfferbookModel.getShowFilterOverlay().set(!bisqEasyOfferbookModel.getShowFilterOverlay().get());
-    }
-
-    void onCloseFilter() {
-        bisqEasyOfferbookModel.getShowFilterOverlay().set(false);
-    }
-
     void onSortMarkets(MarketSortType marketSortType) {
         model.getSelectedMarketSortType().set(marketSortType);
         model.getSortedMarketChannelItems().setComparator(marketSortType.getComparator());
