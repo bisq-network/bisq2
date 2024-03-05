@@ -21,10 +21,15 @@ import javafx.scene.control.CustomMenuItem;
 import javafx.scene.control.Label;
 
 public class DropdownTitleMenuItem extends CustomMenuItem {
+    private final Label label;
 
     public DropdownTitleMenuItem(String text) {
-        Label label = new Label(text);
+        label = new Label(text);
         setContent(label);
         getStyleClass().add("dropdown-title-menu-item");
+    }
+
+    public String getLabelText() {
+        return label.getText();
     }
 }

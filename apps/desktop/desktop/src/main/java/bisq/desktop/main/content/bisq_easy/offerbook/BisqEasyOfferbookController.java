@@ -56,7 +56,8 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
     private final BisqEasyOfferbookModel bisqEasyOfferbookModel;
     private Pin offerOnlySettingsPin, bisqEasyPrivateTradeChatChannelsPin, selectedChannelPin, marketPriceByCurrencyMapPin;
-    private Subscription marketSelectorSearchPin, selectedMarketFilterPin, selectedOffersFilterPin, selectedMarketSortTypePin;
+    private Subscription marketSelectorSearchPin, selectedMarketFilterPin, selectedOfferDirectionOrOwnerFilterPin,
+            selectedPeerReputationFilterPin, selectedMarketSortTypePin;
 
     public BisqEasyOfferbookController(ServiceProvider serviceProvider) {
         super(serviceProvider, ChatChannelDomain.BISQ_EASY_OFFERBOOK, NavigationTarget.BISQ_EASY_OFFERBOOK);
@@ -131,13 +132,23 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
             });
         });
 
-        selectedOffersFilterPin = EasyBind.subscribe(model.getSelectedOffersFilter(), filter -> {
+        selectedOfferDirectionOrOwnerFilterPin = EasyBind.subscribe(model.getSelectedOfferDirectionOrOwnerFilter(), filter -> {
             if (filter == null) {
-                // By default, show all offers
-                model.getSelectedOffersFilter().set(Filters.Offers.ALL);
-                chatMessagesComponent.setBisqEasyOffersFilerPredicate(model.getSelectedOffersFilter().get().getPredicate());
+                // By default, show all offers (any direction or owner)
+                model.getSelectedOfferDirectionOrOwnerFilter().set(Filters.OfferDirectionOrOwner.ALL);
+                chatMessagesComponent.setBisqEasyOfferDirectionOrOwnerFilterPredicate(model.getSelectedOfferDirectionOrOwnerFilter().get().getPredicate());
             } else {
-                chatMessagesComponent.setBisqEasyOffersFilerPredicate(filter.getPredicate());
+                chatMessagesComponent.setBisqEasyOfferDirectionOrOwnerFilterPredicate(filter.getPredicate());
+            }
+        });
+
+        selectedPeerReputationFilterPin = EasyBind.subscribe(model.getSelectedPeerReputationFilter(), filter -> {
+            if (filter == null) {
+                // By default, show all offers (with any reputation)
+                model.getSelectedPeerReputationFilter().set(Filters.PeerReputation.ALL);
+                chatMessagesComponent.setBisqEasyPeerReputationFilterPredicate(model.getSelectedPeerReputationFilter().get().getPredicate());
+            } else {
+                chatMessagesComponent.setBisqEasyPeerReputationFilterPredicate(filter.getPredicate());
             }
         });
 
@@ -165,7 +176,8 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         selectedChannelPin.unbind();
         marketSelectorSearchPin.unsubscribe();
         selectedMarketFilterPin.unsubscribe();
-        selectedOffersFilterPin.unsubscribe();
+        selectedOfferDirectionOrOwnerFilterPin.unsubscribe();
+        selectedPeerReputationFilterPin.unsubscribe();
         marketPriceByCurrencyMapPin.unbind();
         selectedMarketSortTypePin.unsubscribe();
 

@@ -29,6 +29,10 @@ class Filters {
         Predicate<T> getPredicate();
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // MARKETS' FILTERS
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
     @Getter
     enum Markets implements FilterPredicate<MarketChannelItem> {
         ALL(item -> true),
@@ -41,8 +45,13 @@ class Filters {
         }
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // OFFERS' FILTERS
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
     @Getter
-    enum Offers implements FilterPredicate<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> {
+    enum OfferDirectionOrOwner implements FilterPredicate<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> {
         ALL(item -> true),
         MINE(item -> !item.isBisqEasyPublicChatMessageWithOffer() || item.isBisqEasyPublicChatMessageWithMyOffer()),
         BUY(item -> !item.isBisqEasyPublicChatMessageWithOffer() || item.isBisqEasyPublicChatMessageWithPeerBuyOffer()),
@@ -50,7 +59,28 @@ class Filters {
 
         private final Predicate<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate;
 
-        Offers(Predicate<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate) {
+        OfferDirectionOrOwner(Predicate<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate) {
+            this.predicate = predicate;
+        }
+    }
+
+    @Getter
+    enum PeerReputation implements FilterPredicate<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> {
+        ALL(item -> true),
+        FIVE_STARS(item -> !item.isBisqEasyPublicChatMessageWithOffer()
+                || (item.isPeerMessage() && item.getReputationStarCount() == 5)),
+        AT_LEAST_FOUR_STARS(item -> !item.isBisqEasyPublicChatMessageWithOffer()
+                || (item.isPeerMessage() && item.getReputationStarCount() >= 4)),
+        AT_LEAST_THREE_STARS(item -> !item.isBisqEasyPublicChatMessageWithOffer()
+                || (item.isPeerMessage() && item.getReputationStarCount() >= 3)),
+        AT_LEAST_TWO_STARS(item -> !item.isBisqEasyPublicChatMessageWithOffer()
+                || (item.isPeerMessage() && item.getReputationStarCount() >= 2)),
+        AT_LEAST_ONE_STAR(item -> !item.isBisqEasyPublicChatMessageWithOffer()
+                || (item.isPeerMessage() && item.getReputationStarCount() >= 1));
+
+        private final Predicate<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate;
+
+        PeerReputation(Predicate<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate) {
             this.predicate = predicate;
         }
     }

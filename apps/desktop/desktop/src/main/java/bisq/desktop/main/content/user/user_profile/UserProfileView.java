@@ -65,7 +65,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
     private final Button createNewProfileButton, deleteButton, saveButton;
     private final SplitPane deleteWrapper;
     private final MaterialTextField nymId, profileId, profileAge, reputationScoreField, statement;
-    private final ImageView roboIconImageView;
+    private final ImageView catIconImageView;
     private final MaterialTextArea terms;
     private final VBox formVBox;
     private final AutoCompleteComboBox<UserIdentity> comboBox;
@@ -79,10 +79,10 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         root.setAlignment(Pos.TOP_LEFT);
         root.setPadding(new Insets(20, 40, 40, 40));
 
-        roboIconImageView = new ImageView();
-        roboIconImageView.setFitWidth(125);
-        roboIconImageView.setFitHeight(125);
-        root.getChildren().add(roboIconImageView);
+        catIconImageView = new ImageView();
+        catIconImageView.setFitWidth(125);
+        catIconImageView.setFitHeight(125);
+        root.getChildren().add(catIconImageView);
 
         formVBox = new VBox(25);
         HBox.setHgrow(formVBox, Priority.ALWAYS);
@@ -156,7 +156,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         reputationScoreField.textProperty().bind(model.getReputationScoreValue());
         statement.textProperty().bindBidirectional(model.getStatement());
         terms.textProperty().bindBidirectional(model.getTerms());
-        roboIconImageView.imageProperty().bind(model.getRoboHash());
+        catIconImageView.imageProperty().bind(model.getCatHash());
 
         useDeleteTooltipPin = EasyBind.subscribe(model.getUseDeleteTooltip(), useDeleteTooltip ->
                 deleteWrapper.setTooltip(useDeleteTooltip ? deleteTooltip : null));
@@ -239,7 +239,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         reputationScoreField.textProperty().unbind();
         statement.textProperty().unbindBidirectional(model.getStatement());
         terms.textProperty().unbindBidirectional(model.getTerms());
-        roboIconImageView.imageProperty().unbind();
+        catIconImageView.imageProperty().unbind();
         saveButton.disableProperty().unbind();
         deleteButton.disableProperty().unbind();
         deleteWrapper.tooltipProperty().unbind();
