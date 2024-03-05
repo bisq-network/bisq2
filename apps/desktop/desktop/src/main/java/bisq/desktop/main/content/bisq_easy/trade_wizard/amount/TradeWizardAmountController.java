@@ -61,6 +61,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @Slf4j
 public class TradeWizardAmountController implements Controller {
     private final TradeWizardAmountModel model;
@@ -269,6 +271,11 @@ public class TradeWizardAmountController implements Controller {
 
         if (model.getIsMinAmountEnabled().get()) {
             Long minAmount = getAmountValue(minAmountComponent.getQuoteSideAmount());
+            checkNotNull(minAmount);
+            if (maxOrFixAmount.compareTo(minAmount) < 0) {
+                minAmountComponent.setQuoteSideAmount(maxOrFixAmountComponent.getQuoteSideAmount().get());
+                minAmount = getAmountValue(minAmountComponent.getQuoteSideAmount());
+            }
             applyRangeOrFixedAmountSpec(minAmount, maxOrFixAmount);
         } else {
             applyFixedAmountSpec(maxOrFixAmount);
