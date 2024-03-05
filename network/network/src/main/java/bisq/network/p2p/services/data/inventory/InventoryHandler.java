@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.data.inventory;
 
 import bisq.common.encoding.Hex;
+import bisq.common.util.ByteUnit;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
@@ -86,7 +87,8 @@ class InventoryHandler implements Connection.Listener {
 
     private void printReceivedInventory(InventoryResponse response) {
         Map<String, List<String>> details = new HashMap<>();
-        response.getInventory().getEntries()
+        Inventory inventory = response.getInventory();
+        inventory.getEntries()
                 .forEach(entry -> {
                     String key = entry.getClass().getSimpleName();
                     String data = null;
@@ -123,8 +125,9 @@ class InventoryHandler implements Connection.Listener {
             report = "No items received";
         }
         log.info("\n##########################################################################################\n" +
-                "Inventory from: " + connection.getPeerAddress() + "\n" +
+                "Inventory from: " + connection.getPeerAddress() + "; size=" + ByteUnit.BYTE.toKB((double) inventory.getSerializedSize().orElse(0)) + "\n" +
                 report +
+                "isMaxSizeReached=" + inventory.isMaxSizeReached() + "\n" +
                 "\n##########################################################################################");
     }
 
