@@ -183,6 +183,8 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         selectedMarketSortTypePin.unsubscribe();
 
         resetSelectedChildTarget();
+
+        model.getMarketChannelItems().forEach(MarketChannelItem::cleanUp);
     }
 
     @Override
@@ -202,7 +204,10 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                 model.getMarketChannelItems().stream()
                         .filter(item -> item.getChannel().equals(channel))
                         .findAny()
-                        .ifPresent(item -> model.getSelectedMarketChannelItem().set(item));
+                        .ifPresent(item -> {
+                            model.getSelectedMarketChannelItem().set(item);
+                            updateSelectedMarketChannelItem(item);
+                        });
 
                 model.getSearchText().set("");
                 resetSelectedChildTarget();
@@ -287,5 +292,9 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                 !model.getSortedMarketChannelItems().isEmpty()) {
             selectionService.selectChannel(model.getSortedMarketChannelItems().get(0).getChannel());
         }
+    }
+
+    private void updateSelectedMarketChannelItem(MarketChannelItem selectedItem) {
+        model.getMarketChannelItems().forEach(item -> item.getSelected().set(item == selectedItem));
     }
 }
