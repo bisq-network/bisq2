@@ -212,6 +212,11 @@
     -fx-opacity: 1;
 }
 
+.dropdown-menu-popup .dropdown-filter-menu-item .dropdown-menu-item-content:selected .label,
+.dropdown-menu-popup .dropdown-sort-by-menu-item .dropdown-menu-item-content:selected .label {
+    -fx-text-fill: -fx-light-text-color;
+}
+
 .market-selection-list .column-header-background {
     -fx-max-height: 0;
     -fx-pref-height: 0;
