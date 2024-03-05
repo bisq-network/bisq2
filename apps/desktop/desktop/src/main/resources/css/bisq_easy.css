@@ -244,6 +244,11 @@
 }
 
 .market-selection-list .market-name .text {
+    -fx-fill: -fx-mid-text-color !important;
+    -fx-text-fill: -fx-mid-text-color !important;
+}
+
+.market-selection-list .market-name-selected .text {
     -fx-fill: -fx-light-text-color !important;
     -fx-text-fill: -fx-light-text-color !important;
 }
