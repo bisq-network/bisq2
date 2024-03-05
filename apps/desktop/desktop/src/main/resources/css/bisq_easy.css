@@ -107,6 +107,20 @@
  * Offerbook                                                           *
  ******************************************************************************/
 
+.offerbook-channel-title {
+    -fx-font-size: 1.2em;
+    -fx-padding: 3 0 0 0;
+}
+
+.offerbook-channel-market-code {
+    -fx-font-family: "IBM Plex Sans Medium";
+    -fx-padding: -3 0 0 0;
+}
+
+.offerbook-channel-market-price {
+    -fx-padding: -3 0 0 0;
+}
+
 .market-selection {
     -fx-text-fill: -fx-light-text-color !important;
 }
@@ -128,7 +142,7 @@
     -fx-padding: 0 12 0 7;
 }
 
-.market-selection-search-box {
+.offerbook-search-box {
     -fx-background-radius: 0;
     -fx-background-color: -bisq-dark-grey-30;
     -fx-border-color: transparent;
@@ -138,7 +152,7 @@
     -fx-max-width: 160;
 }
 
-.market-selection-search-box .search-text-field {
+.offerbook-search-box .search-text-field {
     -fx-padding: 0 5 0 8;
 }
 
@@ -235,7 +249,7 @@
     -fx-background-radius: 8;
     -fx-border-color: transparent;
     -fx-border-radius: 8;
-    -fx-padding: 2 4 4 4;
+    -fx-padding: 4 50 4 50;
     -fx-cursor: hand;
 }
 
