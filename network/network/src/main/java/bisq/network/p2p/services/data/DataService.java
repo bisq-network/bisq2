@@ -194,6 +194,9 @@ public class DataService implements StorageService.Listener {
                         if (dataStorageResult.isSuccess()) {
                             return new BroadcastResult(broadcasters.stream().map(broadcaster -> broadcaster.broadcast(request)));
                         } else {
+                            if (dataStorageResult.isSevereFailure()) {
+                                log.warn("addAuthenticatedData failed with severe error. Result={}", dataStorageResult);
+                            }
                             return new BroadcastResult();
                         }
                     } catch (GeneralSecurityException e) {

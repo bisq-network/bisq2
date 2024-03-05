@@ -30,6 +30,7 @@ import bisq.common.observable.Pin;
 import bisq.common.observable.map.HashMapObserver;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.main.content.components.ReputationScoreDisplay;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
@@ -77,6 +78,8 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private final String nickName;
     @EqualsAndHashCode.Exclude
     private final ReputationScore reputationScore;
+    @EqualsAndHashCode.Exclude
+    private final ReputationScoreDisplay reputationScoreDisplay = new ReputationScoreDisplay();
     private final boolean offerAlreadyTaken;
     @EqualsAndHashCode.Exclude
     private final StringProperty messageDeliveryStatusTooltip = new SimpleStringProperty();
@@ -116,6 +119,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         nickName = senderUserProfile.map(UserProfile::getNickName).orElse("");
 
         reputationScore = senderUserProfile.flatMap(reputationService::findReputationScore).orElse(ReputationScore.NONE);
+        reputationScoreDisplay.setReputationScore(reputationScore);
 
         if (chatMessage instanceof BisqEasyOfferbookMessage) {
             BisqEasyOfferbookMessage bisqEasyOfferbookMessage = (BisqEasyOfferbookMessage) chatMessage;
@@ -256,16 +260,28 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         return chatMessage.isMyMessage(userIdentityService);
     }
 
+    public boolean isPeerMessage() {
+        return !isMyMessage();
+    }
+
     public boolean isBisqEasyPublicChatMessageWithMyOffer() {
         return isBisqEasyPublicChatMessageWithOffer() && isMyMessage();
     }
 
+    public boolean isBisqEasyPublicChatMessageWithPeerOffer() {
+        return isBisqEasyPublicChatMessageWithOffer() && !isMyMessage();
+    }
+
     public boolean isBisqEasyPublicChatMessageWithPeerBuyOffer() {
-        return isBisqEasyPublicChatMessageWithOffer() && !isMyMessage() && hasBisqEasyOfferWithDirection(Direction.BUY);
+        return isBisqEasyPublicChatMessageWithPeerOffer() && hasBisqEasyOfferWithDirection(Direction.BUY);
     }
 
     public boolean isBisqEasyPublicChatMessageWithPeerSellOffer() {
-        return isBisqEasyPublicChatMessageWithOffer() && !isMyMessage() && hasBisqEasyOfferWithDirection(Direction.SELL);
+        return isBisqEasyPublicChatMessageWithPeerOffer() && hasBisqEasyOfferWithDirection(Direction.SELL);
+    }
+
+    public int getReputationStarCount() {
+        return reputationScoreDisplay.getNumberOfStars();
     }
 
     private boolean hasBisqEasyOfferWithDirection(Direction direction) {

@@ -21,7 +21,6 @@ import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.main.content.components.ReputationScoreDisplay;
 import bisq.desktop.main.content.components.chatMessages.ChatMessageListItem;
 import bisq.desktop.main.content.components.chatMessages.ChatMessagesListView;
 import bisq.desktop.main.content.components.chatMessages.messages.PeerMessage;
@@ -56,9 +55,7 @@ public final class PeerOfferMessage extends PeerMessage {
 
         // Reputation
         Label reputationLabel = new Label(Res.get("chat.message.reputation").toUpperCase());
-        ReputationScoreDisplay reputationScoreDisplay = new ReputationScoreDisplay();
-        reputationScoreDisplay.setReputationScore(item.getReputationScore());
-        VBox reputationVBox = new VBox(4, reputationLabel, reputationScoreDisplay);
+        VBox reputationVBox = new VBox(4, reputationLabel, item.getReputationScoreDisplay());
         reputationVBox.setAlignment(Pos.CENTER);
         reputationVBox.getStyleClass().add("reputation");
 

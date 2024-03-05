@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class CreateNewProfileStep2View extends View<VBox, CreateNewProfileStep2Model, CreateNewProfileStep2Controller> {
-    private final ImageView roboIconView;
+    private final ImageView catIconView;
     private final MaterialTextField statement;
     private final MaterialTextArea terms;
     private final Button saveButton, cancelButton;
@@ -62,19 +62,19 @@ public class CreateNewProfileStep2View extends View<VBox, CreateNewProfileStep2M
         nickName.getStyleClass().addAll("bisq-text-9", "font-semi-bold");
         nickName.setAlignment(Pos.TOP_CENTER);
 
-        roboIconView = new ImageView();
-        roboIconView.setFitWidth(128);
-        roboIconView.setFitHeight(128);
+        catIconView = new ImageView();
+        catIconView.setFitWidth(128);
+        catIconView.setFitHeight(128);
 
         nym = new Label();
         nym.getStyleClass().addAll("bisq-text-7");
         nym.setAlignment(Pos.TOP_CENTER);
 
         int width = 250;
-        VBox roboVBox = new VBox(8, nickName, roboIconView, nym);
-        roboVBox.setAlignment(Pos.TOP_CENTER);
-        roboVBox.setPrefWidth(width);
-        roboVBox.setPrefHeight(200);
+        VBox catVBox = new VBox(8, nickName, catIconView, nym);
+        catVBox.setAlignment(Pos.TOP_CENTER);
+        catVBox.setPrefWidth(width);
+        catVBox.setPrefHeight(200);
 
         statement = new MaterialTextField(Res.get("user.userProfile.new.statement"), Res.get("user.userProfile.new.statement.prompt"));
         statement.setPrefWidth(width);
@@ -90,7 +90,7 @@ public class CreateNewProfileStep2View extends View<VBox, CreateNewProfileStep2M
         fieldsAndButtonsVBox.setAlignment(Pos.CENTER);
 
         HBox.setMargin(fieldsAndButtonsVBox, new Insets(-55, 0, 0, 0));
-        HBox centerHBox = new HBox(10, roboVBox, fieldsAndButtonsVBox);
+        HBox centerHBox = new HBox(10, catVBox, fieldsAndButtonsVBox);
         centerHBox.setAlignment(Pos.TOP_CENTER);
 
         cancelButton = new Button(Res.get("action.cancel"));
@@ -112,7 +112,7 @@ public class CreateNewProfileStep2View extends View<VBox, CreateNewProfileStep2M
 
     @Override
     protected void onViewAttached() {
-        roboIconView.imageProperty().bind(model.getRoboHashImage());
+        catIconView.imageProperty().bind(model.getCatHashImage());
         nickName.textProperty().bind(model.getNickName());
         nym.textProperty().bind(model.getNym());
         terms.textProperty().bindBidirectional(model.getTerms());
@@ -123,7 +123,7 @@ public class CreateNewProfileStep2View extends View<VBox, CreateNewProfileStep2M
 
     @Override
     protected void onViewDetached() {
-        roboIconView.imageProperty().unbind();
+        catIconView.imageProperty().unbind();
         nickName.textProperty().unbind();
         nym.textProperty().unbind();
         terms.textProperty().unbindBidirectional(model.getTerms());

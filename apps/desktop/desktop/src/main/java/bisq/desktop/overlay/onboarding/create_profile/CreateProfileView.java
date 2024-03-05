@@ -39,7 +39,7 @@ public class CreateProfileView extends View<VBox, CreateProfileModel, CreateProf
     protected final Button regenerateButton;
     protected final Button createProfileButton;
     protected final Label nym;
-    protected final ImageView roboIconView;
+    protected final ImageView catIconView;
     protected final ProgressIndicator powProgressIndicator;
     protected final MaterialTextField nickname;
     protected final ProgressIndicator createProfileIndicator;
@@ -66,12 +66,12 @@ public class CreateProfileView extends View<VBox, CreateProfileModel, CreateProf
         nickname = new MaterialTextField(Res.get("onboarding.createProfile.nickName"), Res.get("onboarding.createProfile.nickName.prompt"));
         nickname.setMaxWidth(315);
 
-        roboIconView = new ImageView();
-        roboIconView.setCursor(Cursor.HAND);
+        catIconView = new ImageView();
+        catIconView.setCursor(Cursor.HAND);
         int size = 120;
-        roboIconView.setFitWidth(size);
-        roboIconView.setFitHeight(size);
-        Tooltip.install(roboIconView, new BisqTooltip(Res.get("onboarding.createProfile.regenerate")));
+        catIconView.setFitWidth(size);
+        catIconView.setFitHeight(size);
+        Tooltip.install(catIconView, new BisqTooltip(Res.get("onboarding.createProfile.regenerate")));
 
         int indicatorSize = size / 2;
         powProgressIndicator = new ProgressIndicator();
@@ -79,10 +79,10 @@ public class CreateProfileView extends View<VBox, CreateProfileModel, CreateProf
         powProgressIndicator.setMaxSize(indicatorSize, indicatorSize);
         powProgressIndicator.setOpacity(0.5);
 
-        StackPane roboIconPane = new StackPane();
-        roboIconPane.setMinSize(size, size);
-        roboIconPane.setMaxSize(size, size);
-        roboIconPane.getChildren().addAll(powProgressIndicator, roboIconView);
+        StackPane catIconPane = new StackPane();
+        catIconPane.setMinSize(size, size);
+        catIconPane.setMaxSize(size, size);
+        catIconPane.getChildren().addAll(powProgressIndicator, catIconView);
 
         Label titleLabel = new Label(Res.get("onboarding.createProfile.nym").toUpperCase());
         titleLabel.getStyleClass().add("bisq-text-4");
@@ -94,8 +94,8 @@ public class CreateProfileView extends View<VBox, CreateProfileModel, CreateProf
         nymBox.setAlignment(Pos.CENTER);
 
 
-        VBox roboVBox = new VBox(8, roboIconPane, nymBox);
-        roboVBox.setAlignment(Pos.CENTER);
+        VBox catVBox = new VBox(8, catIconPane, nymBox);
+        catVBox.setAlignment(Pos.CENTER);
 
         regenerateButton = new Button(Res.get("onboarding.createProfile.regenerate"));
 
@@ -125,24 +125,24 @@ public class CreateProfileView extends View<VBox, CreateProfileModel, CreateProf
                 headlineLabel,
                 subtitleLabel,
                 nickname,
-                roboVBox,
+                catVBox,
                 buttons
         );
     }
 
     @Override
     protected void onViewAttached() {
-        roboIconView.imageProperty().bind(model.getRoboHashImage());
-        roboIconView.managedProperty().bind(model.getRoboHashIconVisible());
-        roboIconView.visibleProperty().bind(model.getRoboHashIconVisible());
-        powProgressIndicator.managedProperty().bind(model.getRoboHashIconVisible().not());
-        powProgressIndicator.visibleProperty().bind(model.getRoboHashIconVisible().not());
+        catIconView.imageProperty().bind(model.getCatHashImage());
+        catIconView.managedProperty().bind(model.getCatHashIconVisible());
+        catIconView.visibleProperty().bind(model.getCatHashIconVisible());
+        powProgressIndicator.managedProperty().bind(model.getCatHashIconVisible().not());
+        powProgressIndicator.visibleProperty().bind(model.getCatHashIconVisible().not());
         powProgressIndicator.progressProperty().bind(model.getPowProgress());
 
         nym.textProperty().bind(model.getNym());
-        nym.disableProperty().bind(model.getRoboHashIconVisible().not());
+        nym.disableProperty().bind(model.getCatHashIconVisible().not());
         regenerateButton.disableProperty().bind(model.getReGenerateButtonDisabled());
-        roboIconView.mouseTransparentProperty().bind(model.getReGenerateButtonDisabled());
+        catIconView.mouseTransparentProperty().bind(model.getReGenerateButtonDisabled());
         nickname.mouseTransparentProperty().bind(model.getReGenerateButtonDisabled());
 
         nickname.textProperty().bindBidirectional(model.getNickName());
@@ -157,7 +157,7 @@ public class CreateProfileView extends View<VBox, CreateProfileModel, CreateProf
         feedbackLabel.visibleProperty().bind(model.getCreateProfileProgress().lessThan(0));
 
         regenerateButton.setOnMouseClicked(e -> controller.onRegenerate());
-        roboIconView.setOnMouseClicked(e -> controller.onRegenerate());
+        catIconView.setOnMouseClicked(e -> controller.onRegenerate());
         createProfileButton.setOnMouseClicked(e -> {
             controller.onCreateUserProfile();
             root.requestFocus();
@@ -168,9 +168,9 @@ public class CreateProfileView extends View<VBox, CreateProfileModel, CreateProf
 
     @Override
     protected void onViewDetached() {
-        roboIconView.imageProperty().unbind();
-        roboIconView.managedProperty().unbind();
-        roboIconView.visibleProperty().unbind();
+        catIconView.imageProperty().unbind();
+        catIconView.managedProperty().unbind();
+        catIconView.visibleProperty().unbind();
         powProgressIndicator.managedProperty().unbind();
         powProgressIndicator.visibleProperty().unbind();
         powProgressIndicator.progressProperty().unbind();
@@ -180,7 +180,7 @@ public class CreateProfileView extends View<VBox, CreateProfileModel, CreateProf
         nym.textProperty().unbind();
         nym.disableProperty().unbind();
         regenerateButton.disableProperty().unbind();
-        roboIconView.mouseTransparentProperty().unbind();
+        catIconView.mouseTransparentProperty().unbind();
         nickname.mouseTransparentProperty().unbind();
 
         nickname.textProperty().unbindBidirectional(model.getNickName());
@@ -192,7 +192,7 @@ public class CreateProfileView extends View<VBox, CreateProfileModel, CreateProf
         createProfileIndicator.progressProperty().unbind();
 
         regenerateButton.setOnMouseClicked(null);
-        roboIconView.setOnMouseClicked(null);
+        catIconView.setOnMouseClicked(null);
         createProfileButton.setOnMouseClicked(null);
     }
 }

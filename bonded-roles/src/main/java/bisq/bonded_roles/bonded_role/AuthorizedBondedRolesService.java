@@ -237,7 +237,7 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
                                     bondedRole.getBondedRoleType(),
                                     data.getClass().getSimpleName());
                         } else {
-                            log.warn("No authorizedPublicKey found in our list of bonded roles.\n" +
+                            log.debug("No authorizedPublicKey found in our list of bonded roles.\n" +
                                             "bondedRole.getAuthorizedPublicKey()={}\n" +
                                             "authorizedDataPubKey={}\n" +
                                             "data={}",

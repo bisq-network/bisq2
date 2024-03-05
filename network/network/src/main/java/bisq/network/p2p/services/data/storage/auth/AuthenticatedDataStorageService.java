@@ -22,6 +22,7 @@ import bisq.common.timer.Scheduler;
 import bisq.common.util.StringUtils;
 import bisq.network.p2p.services.data.storage.DataStorageResult;
 import bisq.network.p2p.services.data.storage.DataStorageService;
+import bisq.network.p2p.services.data.storage.DataStore;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.persistence.PersistenceService;
 import bisq.security.DigestUtil;
@@ -54,6 +55,11 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
     public AuthenticatedDataStorageService(PersistenceService persistenceService, String storeName, String storeKey) {
         super(persistenceService, storeName, storeKey);
         scheduler = Scheduler.run(this::pruneExpired).periodically(60, TimeUnit.SECONDS);
+    }
+
+    @Override
+    public void onPersistedApplied(DataStore<AuthenticatedDataRequest> persisted) {
+        pruneInvalidAuthorizedData();
     }
 
     @Override
@@ -298,6 +304,31 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                     });
                 }
             });
+        }
+    }
+
+    private void pruneInvalidAuthorizedData() {
+        Map<ByteArray, AuthenticatedDataRequest> invalidAuthorizedData = persistableStore.getMap().entrySet().stream()
+                .filter(entry -> {
+                    AuthenticatedDataRequest request = entry.getValue();
+                    if (request instanceof AddAuthenticatedDataRequest) {
+                        AddAuthenticatedDataRequest addAuthenticatedDataRequest = (AddAuthenticatedDataRequest) request;
+                        AuthenticatedData authenticatedData = addAuthenticatedDataRequest.getAuthenticatedSequentialData().getAuthenticatedData();
+                        if (authenticatedData instanceof AuthorizedData) {
+                            AuthorizedData authorizedData = (AuthorizedData) authenticatedData;
+                            return authorizedData.isNotAuthorized();
+                        }
+                    }
+                    return false;
+                })
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        if (!invalidAuthorizedData.isEmpty()) {
+            invalidAuthorizedData.forEach((key, value) -> {
+                log.warn("We prune the AddAuthenticatedDataRequest with an invalid AuthorizedData. {}",
+                        StringUtils.truncate(value.toString(), 3000));
+                persistableStore.getMap().remove(key);
+            });
+            persist();
         }
     }
 }

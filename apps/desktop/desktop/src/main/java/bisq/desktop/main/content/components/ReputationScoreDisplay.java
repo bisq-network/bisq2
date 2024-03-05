@@ -28,6 +28,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Slf4j
 public class ReputationScoreDisplay extends HBox {
@@ -36,7 +38,9 @@ public class ReputationScoreDisplay extends HBox {
     private static final double STAR_HEIGHT = 11;
     private static final double OPACITY = 0.2;
     private static final String DEFAULT_ACCEPT_STAR_ID = "star-green";
-    private final List<ImageView> stars;
+    private static final int STAR_SYSTEM = 5; // 5-star system
+
+    private final List<ImageView> stars = IntStream.range(0, STAR_SYSTEM).mapToObj(i -> getDefaultStar()).collect(Collectors.toList());
     private final Tooltip tooltip = new BisqTooltip();
     private ReputationScore reputationScore;
     private String acceptStarId = DEFAULT_ACCEPT_STAR_ID;
@@ -55,7 +59,6 @@ public class ReputationScoreDisplay extends HBox {
         tooltip.setWrapText(true);
         Tooltip.install(this, tooltip);
 
-        stars = List.of(getDefaultStar(), getDefaultStar(), getDefaultStar(), getDefaultStar(), getDefaultStar());
         getChildren().addAll(stars);
     }
 
@@ -83,11 +86,10 @@ public class ReputationScoreDisplay extends HBox {
     }
 
     private void applyReputationScore() {
-        double relativeScore = reputationScore != null ? reputationScore.getRelativeScore() : 0;
-        int target = (int) Math.floor(stars.size() * relativeScore);
-        for (int i = 0; i < stars.size(); i++) {
+        int starsToFill = calculateStars();
+        for (int i = 0; i < STAR_SYSTEM; i++) {
             ImageView imageView = stars.get(i);
-            if (i < target) {
+            if (i < starsToFill) {
                 imageView.setOpacity(1);
                 imageView.setId(acceptStarId);
             } else {
@@ -102,10 +104,18 @@ public class ReputationScoreDisplay extends HBox {
         return reputationScore != null ? reputationScore.getTooltipString() : "";
     }
 
+    public int getNumberOfStars() {
+        return calculateStars();
+    }
+
     private ImageView getDefaultStar() {
         ImageView imageView = ImageUtil.getImageViewById("star-white");
         imageView.setOpacity(OPACITY);
         return imageView;
     }
 
+    private int calculateStars() {
+        double relativeScore = reputationScore != null ? reputationScore.getRelativeScore() : 0;
+        return (int) Math.floor(STAR_SYSTEM * relativeScore);
+    }
 }

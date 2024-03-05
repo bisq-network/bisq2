@@ -92,7 +92,7 @@ public class CitationBlock {
             userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId()).ifPresent(author -> {
                 model.author = author;
                 model.userName.set(author.getUserName());
-                model.roboHashNode.set(CatHash.getImage(author));
+                model.catHashNode.set(CatHash.getImage(author));
                 model.citation.set(chatMessage.getText());
                 model.visible.set(true);
             });
@@ -115,7 +115,7 @@ public class CitationBlock {
     private static class Model implements bisq.desktop.common.view.Model {
         private final BooleanProperty visible = new SimpleBooleanProperty();
         private final StringProperty citation = new SimpleStringProperty("");
-        private final ObjectProperty<Image> roboHashNode = new SimpleObjectProperty<>();
+        private final ObjectProperty<Image> catHashNode = new SimpleObjectProperty<>();
         private final StringProperty userName = new SimpleStringProperty();
         private UserProfile author;
 
@@ -125,11 +125,11 @@ public class CitationBlock {
 
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
-        private final ImageView roboIconImageView;
+        private final ImageView catIconImageView;
         private final Label userName;
         private final Button closeButton;
         private final Label citation;
-        private Subscription roboHashNodeSubscription;
+        private Subscription catHashNodeSubscription;
 
         private View(Model model, Controller controller) {
             super(new VBox(), model, controller);
@@ -155,10 +155,10 @@ public class CitationBlock {
             userName.getStyleClass().add("font-medium");
             userName.setStyle("-fx-text-fill: -bisq-mid-grey-30");
 
-            roboIconImageView = new ImageView();
-            roboIconImageView.setFitWidth(25);
-            roboIconImageView.setFitHeight(25);
-            HBox userBox = new HBox(15, roboIconImageView, userName);
+            catIconImageView = new ImageView();
+            catIconImageView.setFitWidth(25);
+            catIconImageView.setFitHeight(25);
+            HBox userBox = new HBox(15, catIconImageView, userName);
             VBox.setMargin(userBox, new Insets(0, 0, 0, 0));
             citation = new Label();
             citation.setWrapText(true);
@@ -173,9 +173,9 @@ public class CitationBlock {
             root.managedProperty().bind(model.visible);
             userName.textProperty().bind(model.userName);
             citation.textProperty().bind(model.citation);
-            roboHashNodeSubscription = EasyBind.subscribe(model.roboHashNode, roboIcon -> {
-                if (roboIcon != null) {
-                    roboIconImageView.setImage(roboIcon);
+            catHashNodeSubscription = EasyBind.subscribe(model.catHashNode, catIcon -> {
+                if (catIcon != null) {
+                    catIconImageView.setImage(catIcon);
                 }
             });
 
@@ -186,7 +186,7 @@ public class CitationBlock {
         protected void onViewDetached() {
             userName.textProperty().unbind();
             citation.textProperty().unbind();
-            roboHashNodeSubscription.unsubscribe();
+            catHashNodeSubscription.unsubscribe();
             closeButton.setOnAction(null);
         }
     }

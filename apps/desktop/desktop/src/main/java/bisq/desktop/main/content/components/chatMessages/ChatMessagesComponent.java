@@ -94,8 +94,12 @@ public class ChatMessagesComponent {
         controller.chatMessagesListView.setSearchPredicate(predicate);
     }
 
-    public void setBisqEasyOffersFilerPredicate(Predicate<? super ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate) {
-        controller.chatMessagesListView.setBisqEasyOffersFilerPredicate(predicate);
+    public void setBisqEasyOfferDirectionOrOwnerFilterPredicate(Predicate<? super ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate) {
+        controller.chatMessagesListView.setBisqEasyOfferDirectionOrOwnerFilterPredicate(predicate);
+    }
+
+    public void setBisqEasyPeerReputationFilterPredicate(Predicate<? super ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate) {
+        controller.chatMessagesListView.setBisqEasyPeerReputationFilterPredicate(predicate);
     }
 
     public void resetSelectedChatMessage() {

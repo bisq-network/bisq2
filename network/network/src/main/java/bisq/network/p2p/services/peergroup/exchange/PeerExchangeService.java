@@ -130,7 +130,7 @@ public class PeerExchangeService implements Node.Listener {
                 StringUtils.truncate(candidates.stream()
                         .map(Address::toString)
                         .collect(Collectors.toList())
-                        .toString(), 100));
+                        .toString(), 2000));
 
         scheduler.ifPresent(Scheduler::stop);
         resultFuture = new CompletableFuture<>();

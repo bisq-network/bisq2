@@ -4,7 +4,7 @@
 
    ```sh
    git clone https://github.com/bisq-network/bisq2
-   cd bisq
+   cd bisq2
    ```
 
 2. **Build Bisq**

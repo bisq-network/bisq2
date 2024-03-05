@@ -27,7 +27,6 @@ enum MarketSortType {
     ASC(BisqEasyOfferbookUtil.sortByMarketNameAsc()),
     DESC(BisqEasyOfferbookUtil.sortByMarketNameDesc());
 
-    @Getter
     private final Comparator<MarketChannelItem> comparator;
 
     MarketSortType(Comparator<MarketChannelItem> comparator) {
