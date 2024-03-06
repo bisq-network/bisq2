@@ -183,6 +183,8 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         selectedMarketSortTypePin.unsubscribe();
 
         resetSelectedChildTarget();
+
+        model.getMarketChannelItems().forEach(MarketChannelItem::cleanUp);
     }
 
     @Override
@@ -202,7 +204,10 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                 model.getMarketChannelItems().stream()
                         .filter(item -> item.getChannel().equals(channel))
                         .findAny()
-                        .ifPresent(item -> model.getSelectedMarketChannelItem().set(item));
+                        .ifPresent(item -> {
+                            model.getSelectedMarketChannelItem().set(item);
+                            updateSelectedMarketChannelItem(item);
+                        });
 
                 model.getSearchText().set("");
                 resetSelectedChildTarget();
@@ -237,14 +242,6 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         checkArgument(chatChannel instanceof BisqEasyOfferbookChannel,
                 "channel must be instanceof BisqEasyPublicChatChannel at onCreateOfferButtonClicked");
         Navigation.navigateTo(NavigationTarget.TRADE_WIZARD, new TradeWizardController.InitData(true));
-    }
-
-    void onToggleFilter() {
-        bisqEasyOfferbookModel.getShowFilterOverlay().set(!bisqEasyOfferbookModel.getShowFilterOverlay().get());
-    }
-
-    void onCloseFilter() {
-        bisqEasyOfferbookModel.getShowFilterOverlay().set(false);
     }
 
     void onSortMarkets(MarketSortType marketSortType) {
@@ -287,5 +284,9 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                 !model.getSortedMarketChannelItems().isEmpty()) {
             selectionService.selectChannel(model.getSortedMarketChannelItems().get(0).getChannel());
         }
+    }
+
+    private void updateSelectedMarketChannelItem(MarketChannelItem selectedItem) {
+        model.getMarketChannelItems().forEach(item -> item.getSelected().set(item == selectedItem));
     }
 }

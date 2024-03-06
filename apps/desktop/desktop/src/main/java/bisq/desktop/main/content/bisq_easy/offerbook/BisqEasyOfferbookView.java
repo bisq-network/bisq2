@@ -241,16 +241,13 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         // Sorting options
         DropdownTitleMenuItem sortTitle = new DropdownTitleMenuItem(
                 Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.sortTitle"));
-        sortByMostOffers = new DropdownSortByMenuItem("check-grey",
-                "check-white",
+        sortByMostOffers = new DropdownSortByMenuItem("check-white", "check-white",
                 Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.mostOffers"),
                 MarketSortType.NUM_OFFERS);
-        sortByNameAZ = new DropdownSortByMenuItem("check-grey",
-                "check-white",
+        sortByNameAZ = new DropdownSortByMenuItem("check-white", "check-white",
                 Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.nameAZ"),
                 MarketSortType.ASC);
-        sortByNameZA = new DropdownSortByMenuItem("check-grey",
-                "check-white",
+        sortByNameZA = new DropdownSortByMenuItem("check-white", "check-white",
                 Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.nameZA"),
                 MarketSortType.DESC);
 
@@ -260,9 +257,9 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         // Filter options
         DropdownTitleMenuItem filterTitle = new DropdownTitleMenuItem(
                 Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.filterTitle"));
-        filterWithOffers = new DropdownFilterMenuItem<>("check-grey", "check-white",
+        filterWithOffers = new DropdownFilterMenuItem<>("check-white", "check-white",
                 Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.withOffers"), Filters.Markets.WITH_OFFERS);
-        filterShowAll = new DropdownFilterMenuItem<>("check-grey", "check-white",
+        filterShowAll = new DropdownFilterMenuItem<>("check-white", "check-white",
                 Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.all"), Filters.Markets.ALL);
 
         dropdownMenu.addMenuItems(sortTitle, sortByMostOffers, sortByNameAZ, sortByNameZA, separator, filterTitle,
@@ -330,13 +327,13 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         dropdownMenu.setTooltip(Res.get("bisqEasy.offerbook.dropdownMenu.filterOffersByDirectionOrOwner.tooltip"));
         dropdownMenu.getStyleClass().add("dropdown-offers-filter-menu");
 
-        allOffers = new DropdownFilterMenuItem<>("check-grey", "check-white",
+        allOffers = new DropdownFilterMenuItem<>("check-white", "check-white",
                 Res.get("bisqEasy.offerbook.dropdownMenu.filterOffersByDirectionOrOwner.allOffers"), Filters.OfferDirectionOrOwner.ALL);
-        myOffers = new DropdownFilterMenuItem<>("check-grey", "check-white",
+        myOffers = new DropdownFilterMenuItem<>("check-white", "check-white",
                 Res.get("bisqEasy.offerbook.dropdownMenu.filterOffersByDirectionOrOwner.myOffers"), Filters.OfferDirectionOrOwner.MINE);
-        buyOffers = new DropdownFilterMenuItem<>("check-grey", "check-white",
+        buyOffers = new DropdownFilterMenuItem<>("check-white", "check-white",
                 Res.get("bisqEasy.offerbook.dropdownMenu.filterOffersByDirectionOrOwner.buyOffers"), Filters.OfferDirectionOrOwner.BUY);
-        sellOffers = new DropdownFilterMenuItem<>("check-grey", "check-white",
+        sellOffers = new DropdownFilterMenuItem<>("check-white", "check-white",
                 Res.get("bisqEasy.offerbook.dropdownMenu.filterOffersByDirectionOrOwner.sellOffers"), Filters.OfferDirectionOrOwner.SELL);
 
         dropdownMenu.addMenuItems(sellOffers, buyOffers, myOffers, allOffers);
@@ -348,24 +345,24 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         dropdownMenu.setTooltip(Res.get("bisqEasy.offerbook.dropdownMenu.filterOffersByPeerReputation.tooltip"));
         dropdownMenu.getStyleClass().add("dropdown-offers-filter-menu");
 
-        allReputations = new DropdownFilterMenuItem<>("check-grey", "check-white",
+        allReputations = new DropdownFilterMenuItem<>("check-white", "check-white",
                 Res.get("bisqEasy.offerbook.dropdownMenu.filterOffersByPeerReputation.allReputations"),
                 Filters.PeerReputation.ALL);
-        fiveStars = new DropdownFilterMenuItem<>("check-grey", "check-white",
+        fiveStars = new DropdownFilterMenuItem<>("check-white", "check-white",
                 Res.get("bisqEasy.offerbook.dropdownMenu.filterOffersByPeerReputation.fiveStars"),
                 Filters.PeerReputation.FIVE_STARS);
         atLeastTitle = new DropdownTitleMenuItem(
                 Res.get("bisqEasy.offerbook.dropdownMenu.filterOffersByPeerReputation.atLeastTitle"));
-        atLeastFourStars = new DropdownFilterMenuItem<>("check-grey", "check-white",
+        atLeastFourStars = new DropdownFilterMenuItem<>("check-white", "check-white",
                 Res.get("bisqEasy.offerbook.dropdownMenu.filterOffersByPeerReputation.atLeastFourStars"),
                 Filters.PeerReputation.AT_LEAST_FOUR_STARS);
-        atLeastThreeStars = new DropdownFilterMenuItem<>("check-grey", "check-white",
+        atLeastThreeStars = new DropdownFilterMenuItem<>("check-white", "check-white",
                 Res.get("bisqEasy.offerbook.dropdownMenu.filterOffersByPeerReputation.atLeastThreeStars"),
                 Filters.PeerReputation.AT_LEAST_THREE_STARS);
-        atLeastTwoStars = new DropdownFilterMenuItem<>("check-grey", "check-white",
+        atLeastTwoStars = new DropdownFilterMenuItem<>("check-white", "check-white",
                 Res.get("bisqEasy.offerbook.dropdownMenu.filterOffersByPeerReputation.atLeastTwoStars"),
                 Filters.PeerReputation.AT_LEAST_TWO_STARS);
-        atLeastOneStar = new DropdownFilterMenuItem<>("check-grey", "check-white",
+        atLeastOneStar = new DropdownFilterMenuItem<>("check-white", "check-white",
                 Res.get("bisqEasy.offerbook.dropdownMenu.filterOffersByPeerReputation.atLeastOneStar"),
                 Filters.PeerReputation.AT_LEAST_ONE_STAR);
 

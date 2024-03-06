@@ -35,7 +35,6 @@ import java.util.function.Predicate;
 public final class BisqEasyOfferbookModel extends ChatModel {
     private final BooleanProperty offerOnly = new SimpleBooleanProperty();
     private final BooleanProperty isTradeChannelVisible = new SimpleBooleanProperty();
-    private final BooleanProperty showFilterOverlay = new SimpleBooleanProperty(); // TODO: remove this
     private final ObservableList<MarketChannelItem> marketChannelItems = FXCollections.observableArrayList();
     private final FilteredList<MarketChannelItem> filteredMarketChannelItems = new FilteredList<>(marketChannelItems);
     private final SortedList<MarketChannelItem> sortedMarketChannelItems = new SortedList<>(filteredMarketChannelItems);
