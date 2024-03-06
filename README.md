@@ -40,16 +40,7 @@ in [the Bisq wiki](https://bisq.wiki/Bisq_Easy).
 2. **Install Dependencies:**
    See our [Installation Guide](./docs/dev/build.md) for detailed instructions.
 
-3. **Run seed node:**
-   ```bash
-   ./gradlew apps:seed-node-app:run \
-    -Dapplication.appName=bisq2_seed1 \
-    -Dapplication.network.configByTransportType.clear.defaultNodePort=8000 \
-    -Dapplication.network.supportedTransportTypes.0=CLEAR \
-    -Dapplication.network.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
-    -Dapplication.network.seedAddressByTransportType.clear.1=127.0.0.1:8001
-   ```
-4. **Run desktop client:**
+3. **Run desktop client:**
    ```bash
    ./gradlew desktop:desktop-app:run
    ```
