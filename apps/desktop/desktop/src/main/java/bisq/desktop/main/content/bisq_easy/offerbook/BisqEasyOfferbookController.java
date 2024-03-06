@@ -46,6 +46,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.lang.ref.WeakReference;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -134,7 +135,9 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
             });
         });
 
-        model.getMarketChannelItems().addListener((ListChangeListener<? super MarketChannelItem>) c -> updateFilteredMarketChannelItems());
+        model.getMarketChannelItems().addListener(new WeakReference<>(
+                (ListChangeListener<? super MarketChannelItem>) c -> updateFilteredMarketChannelItems()
+        ).get());
 
         selectedOfferDirectionOrOwnerFilterPin = EasyBind.subscribe(model.getSelectedOfferDirectionOrOwnerFilter(), filter -> {
             if (filter == null) {
