@@ -3,6 +3,10 @@ package bisq.network.p2p.services.confidential.resend;
 import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
 import bisq.common.observable.map.HashMapObserver;
+import bisq.common.timer.Scheduler;
+import bisq.network.NetworkService;
+import bisq.network.identity.NetworkIdWithKeyPair;
+import bisq.network.p2p.node.transport.BootstrapState;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatusService;
 import bisq.persistence.DbSubDirectory;
@@ -15,20 +19,24 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Getter
 public class ResendMessageService implements PersistenceClient<ResendMessageStore> {
     private final ResendMessageStore persistableStore = new ResendMessageStore();
     private final Persistence<ResendMessageStore> persistence;
+    private final NetworkService networkService;
     private final MessageDeliveryStatusService messageDeliveryStatusService;
     private final Map<String, Pin> messageDeliveryStatusPinByMessageId = new HashMap<>();
     private Pin messageDeliveryStatusByMessageIdPin;
 
     public ResendMessageService(PersistenceService persistenceService,
+                                NetworkService networkService,
                                 MessageDeliveryStatusService messageDeliveryStatusService) {
 
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
+        this.networkService = networkService;
         this.messageDeliveryStatusService = messageDeliveryStatusService;
     }
 
@@ -53,6 +61,12 @@ public class ResendMessageService implements PersistenceClient<ResendMessageStor
                     public void clear() {
                     }
                 });
+
+        networkService.getBootstrapInfoByTransportType().forEach((key, value) -> {
+            if (value.getBootstrapState().get() == BootstrapState.CONNECTED_TO_PEERS) {
+                Scheduler.run(this::resendMessageAllFailedMessages).after(10, TimeUnit.SECONDS);
+            }
+        });
     }
 
     public void shutdown() {
@@ -88,6 +102,18 @@ public class ResendMessageService implements PersistenceClient<ResendMessageStor
             }
         }
         persist();
+    }
+
+    public void resendMessage(String messageId) {
+        synchronized (this) {
+            findResendMessageData(messageId).ifPresent(data -> {
+                log.info("Resending message which previously failed");
+                NetworkIdWithKeyPair senderNetworkIdWithKeyPair = new NetworkIdWithKeyPair(data.getSenderNetworkId(), data.getSenderKeyPair());
+                networkService.confidentialSend(data.getEnvelopePayloadMessage(),
+                        data.getReceiverNetworkId(),
+                        senderNetworkIdWithKeyPair);
+            });
+        }
     }
 
 
@@ -127,5 +153,9 @@ public class ResendMessageService implements PersistenceClient<ResendMessageStor
                 .map(Map.Entry::getValue)
                 .filter(data -> data.getId().equals(messageId))
                 .findAny();
+    }
+
+    private void resendMessageAllFailedMessages() {
+        persistableStore.getResendMessageDataByMessageId().keySet().forEach(this::resendMessage);
     }
 }

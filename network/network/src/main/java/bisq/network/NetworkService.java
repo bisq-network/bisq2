@@ -101,7 +101,9 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     private final Optional<DataService> dataService;
     @Getter
     private final ServiceNodesByTransport serviceNodesByTransport;
+    @Getter
     private final Optional<MessageDeliveryStatusService> messageDeliveryStatusService;
+    @Getter
     private final Optional<ResendMessageService> resendMessageService;
     private final Optional<NetworkLoadService> monitorService;
     @Getter
@@ -136,7 +138,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                 Optional.empty();
         resendMessageService = supportedServices.contains(ServiceNode.SupportedService.ACK) &&
                 supportedServices.contains(ServiceNode.SupportedService.CONFIDENTIAL) ?
-                Optional.of(new ResendMessageService(persistenceService, messageDeliveryStatusService.orElseThrow())) :
+                Optional.of(new ResendMessageService(persistenceService, this, messageDeliveryStatusService.orElseThrow())) :
                 Optional.empty();
 
         NetworkLoadSnapshot networkLoadSnapshot = new NetworkLoadSnapshot();

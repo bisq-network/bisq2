@@ -55,6 +55,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.text.DateFormat;
 import java.util.*;
 import java.util.function.Function;
@@ -85,6 +86,12 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private final StringProperty messageDeliveryStatusTooltip = new SimpleStringProperty();
     @EqualsAndHashCode.Exclude
     private final ObjectProperty<AwesomeIcon> messageDeliveryStatusIcon = new SimpleObjectProperty<>();
+    @EqualsAndHashCode.Exclude
+    @Nullable
+    private MessageDeliveryStatus messageDeliveryStatus;
+    @EqualsAndHashCode.Exclude
+    @Nullable
+    private String messageId;
     @EqualsAndHashCode.Exclude
     private Optional<String> messageDeliveryStatusIconColor = Optional.empty();
     @EqualsAndHashCode.Exclude
@@ -138,12 +145,14 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
 
         mapPins.add(networkService.getMessageDeliveryStatusByMessageId().addObserver(new HashMapObserver<>() {
             @Override
-            public void put(String key, Observable<MessageDeliveryStatus> value) {
-                if (key.equals(chatMessage.getId())) {
+            public void put(String messageId, Observable<MessageDeliveryStatus> value) {
+                if (messageId.equals(chatMessage.getId())) {
                     // Delay to avoid ConcurrentModificationException
                     UIThread.runOnNextRenderFrame(() -> {
                         statusPins.add(value.addObserver(status -> {
                             UIThread.run(() -> {
+                                messageDeliveryStatus = status;
+                                ChatMessageListItem.this.messageId = messageId;
                                 if (status != null) {
                                     messageDeliveryStatusIconColor = Optional.empty();
                                     messageDeliveryStatusTooltip.set(Res.get("chat.message.deliveryState." + status.name()));
@@ -181,7 +190,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                                         case FAILED:
                                             // -bisq2-red: #d02c1f;
                                             messageDeliveryStatusIconColor = Optional.of("#d02c1f");
-                                            messageDeliveryStatusIcon.set(AwesomeIcon.EXCLAMATION_SIGN);
+                                            messageDeliveryStatusIcon.set(AwesomeIcon.REFRESH);
                                             break;
                                     }
                                 }

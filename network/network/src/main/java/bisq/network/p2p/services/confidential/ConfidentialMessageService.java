@@ -144,18 +144,17 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public SendConfidentialMessageResult send(EnvelopePayloadMessage envelopePayloadMessage,
+                                              NetworkId receiverNetworkId,
                                               Address address,
                                               PubKey receiverPubKey,
                                               KeyPair senderKeyPair,
                                               NetworkId senderNetworkId) {
-        log.debug("Send message to {}", address);
         // Set connecting state
         SendConfidentialMessageResult result = new SendConfidentialMessageResult(MessageDeliveryStatus.CONNECTING);
 
         if (envelopePayloadMessage instanceof AckRequestingMessage) {
             resendMessageService.ifPresent(service -> service.handleResendMessageData(new ResendMessageData((AckRequestingMessage) envelopePayloadMessage,
-                    address,
-                    receiverPubKey,
+                    receiverNetworkId,
                     senderKeyPair,
                     senderNetworkId,
                     MessageDeliveryStatus.CONNECTING)));
@@ -185,8 +184,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
         if (envelopePayloadMessage instanceof AckRequestingMessage) {
             MessageDeliveryStatus messageDeliveryStatus = result.getMessageDeliveryStatus();
             resendMessageService.ifPresent(service -> service.handleResendMessageData(new ResendMessageData((AckRequestingMessage) envelopePayloadMessage,
-                    address,
-                    receiverPubKey,
+                    receiverNetworkId,
                     senderKeyPair,
                     senderNetworkId,
                     messageDeliveryStatus)));

@@ -53,6 +53,7 @@ import bisq.desktop.main.content.components.ReportToModeratorWindow;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
+import bisq.network.p2p.services.confidential.resend.ResendMessageService;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.options.OfferOptionUtil;
 import bisq.settings.SettingsService;
@@ -159,6 +160,7 @@ public class ChatMessagesListView {
         private final BisqEasyTradeService bisqEasyTradeService;
         private final BannedUserService bannedUserService;
         private final NetworkService networkService;
+        private final Optional<ResendMessageService> resendMessageService;
         private Pin selectedChannelPin, chatMessagesPin, offerOnlySettingsPin;
         private Subscription selectedChannelSubscription, focusSubscription, scrollValuePin, scrollBarVisiblePin;
 
@@ -176,6 +178,7 @@ public class ChatMessagesListView {
             bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
             bannedUserService = serviceProvider.getUserService().getBannedUserService();
             networkService = serviceProvider.getNetworkService();
+            resendMessageService = serviceProvider.getNetworkService().getResendMessageService();
             this.mentionUserHandler = mentionUserHandler;
             this.showChatUserDetailsHandler = showChatUserDetailsHandler;
             this.replyHandler = replyHandler;
@@ -683,6 +686,10 @@ public class ChatMessagesListView {
             return userProfileService.findUserProfile(userProfileId)
                     .map(UserProfile::getUserName)
                     .orElse(Res.get("data.na"));
+        }
+
+        public void onResendMessage(String messageId) {
+            resendMessageService.ifPresent(service -> service.resendMessage(messageId));
         }
     }
 

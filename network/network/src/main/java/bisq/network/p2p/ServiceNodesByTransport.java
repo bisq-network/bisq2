@@ -194,6 +194,7 @@ public class ServiceNodesByTransport {
             if (map.containsKey(transportType)) {
                 ServiceNode serviceNode = map.get(transportType);
                 SendConfidentialMessageResult result = serviceNode.confidentialSend(envelopePayloadMessage,
+                        receiverNetworkId,
                         address,
                         receiverNetworkId.getPubKey(),
                         senderKeyPair,

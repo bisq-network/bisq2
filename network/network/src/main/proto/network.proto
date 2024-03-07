@@ -339,11 +339,10 @@ message MessageDeliveryStatusStore {
 
 message ResendMessageData {
   EnvelopePayloadMessage envelopePayloadMessage = 1;
-  network.common.Address address = 2;
-  security.PubKey receiverPubKey = 3;
-  security.KeyPair senderKeyPair = 4;
-  network.identity.NetworkId senderNetworkId = 5;
-  MessageDeliveryStatus messageDeliveryStatus = 6;
+  network.identity.NetworkId receiverNetworkId = 2;
+  security.KeyPair senderKeyPair = 3;
+  network.identity.NetworkId senderNetworkId = 4;
+  MessageDeliveryStatus messageDeliveryStatus = 5;
 }
 
 message ResendMessageStore {

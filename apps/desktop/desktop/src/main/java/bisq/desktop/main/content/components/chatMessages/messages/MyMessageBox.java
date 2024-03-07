@@ -27,6 +27,7 @@ import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.main.content.components.chatMessages.ChatMessageListItem;
 import bisq.desktop.main.content.components.chatMessages.ChatMessagesListView;
 import bisq.i18n.Res;
+import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
@@ -96,14 +97,22 @@ public final class MyMessageBox extends BubbleMessageBox {
         });
 
         messageDeliveryStatusIconPin = EasyBind.subscribe(item.getMessageDeliveryStatusIcon(), icon -> {
-                deliveryState.setManaged(icon != null);
-                deliveryState.setVisible(icon != null);
-                if (icon != null) {
-                    AwesomeDude.setIcon(deliveryState, icon, AwesomeDude.DEFAULT_ICON_SIZE);
-                    item.getMessageDeliveryStatusIconColor().ifPresent(color ->
-                            Icons.setAwesomeIconColor(deliveryState, color));
+                    deliveryState.setManaged(icon != null);
+                    deliveryState.setVisible(icon != null);
+                    if (icon != null) {
+                        AwesomeDude.setIcon(deliveryState, icon, AwesomeDude.DEFAULT_ICON_SIZE);
+                        item.getMessageDeliveryStatusIconColor().ifPresent(color ->
+                                Icons.setAwesomeIconColor(deliveryState, color));
+
+                        boolean allowResend = item.getMessageDeliveryStatus() == MessageDeliveryStatus.FAILED;
+                        if (allowResend) {
+                            deliveryState.setOnMouseClicked(e -> controller.onResendMessage(item.getMessageId()));
+                        } else {
+                            deliveryState.setOnMouseClicked(null);
+                        }
+                        deliveryState.setCursor(allowResend ? Cursor.HAND : null);
+                    }
                 }
-            }
         );
 
         deliveryState.getTooltip().textProperty().bind(item.getMessageDeliveryStatusTooltip());
