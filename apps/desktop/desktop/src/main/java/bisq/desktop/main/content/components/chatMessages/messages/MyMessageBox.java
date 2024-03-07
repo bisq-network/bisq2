@@ -41,7 +41,7 @@ import javafx.scene.layout.VBox;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-public final class MyMessage extends BubbleMessage {
+public final class MyMessageBox extends BubbleMessageBox {
     private final static String EDITED_POST_FIX = " " + Res.get("chat.message.wasEdited");
 
     private final Label deliveryState;
@@ -51,9 +51,9 @@ public final class MyMessage extends BubbleMessage {
     private Button saveEditButton, cancelEditButton;
     private HBox editButtonsHBox;
 
-    public MyMessage(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
-                     ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
-                     ChatMessagesListView.Controller controller, ChatMessagesListView.Model model) {
+    public MyMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
+                        ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
+                        ChatMessagesListView.Controller controller, ChatMessagesListView.Model model) {
         super(item, list, controller, model);
 
         quotedMessageVBox.setId("chat-message-quote-box-my-msg");

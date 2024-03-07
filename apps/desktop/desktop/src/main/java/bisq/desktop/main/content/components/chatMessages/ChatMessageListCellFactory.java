@@ -19,13 +19,14 @@ package bisq.desktop.main.content.components.chatMessages;
 
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
+import bisq.desktop.main.content.components.chatMessages.messages.BisqEasy.MyOfferMessageBox;
+import bisq.desktop.main.content.components.chatMessages.messages.BisqEasy.PeerOfferMessageBox;
 import bisq.desktop.main.content.components.chatMessages.messages.*;
-import bisq.desktop.main.content.components.chatMessages.messages.BisqEasy.MyOfferMessage;
-import bisq.desktop.main.content.components.chatMessages.messages.BisqEasy.PeerOfferMessage;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.control.*;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
 import javafx.scene.layout.HBox;
 import javafx.util.Callback;
 import org.fxmisc.easybind.EasyBind;
@@ -53,7 +54,7 @@ final class ChatMessageListCellFactory
 
             private final HBox cellHBox;
             private Subscription listWidthPropertyPin;
-            private Message message;
+            private MessageBox messageBox;
 
             {
                 cellHBox = new HBox();
@@ -75,16 +76,16 @@ final class ChatMessageListCellFactory
                     return;
                 }
 
-                message = createMessage(item, list);
-                cellHBox.getChildren().setAll(message);
-                listWidthPropertyPin = EasyBind.subscribe(message.widthProperty(), w -> updateMessageStyle());
+                messageBox = createMessage(item, list);
+                cellHBox.getChildren().setAll(messageBox);
+                listWidthPropertyPin = EasyBind.subscribe(messageBox.widthProperty(), w -> updateMessageStyle());
                 setGraphic(cellHBox);
                 setAlignment(Pos.CENTER);
             }
 
             private void cleanup() {
-                if (message != null) {
-                    message.cleanup();
+                if (messageBox != null) {
+                    messageBox.cleanup();
                 }
 
                 cellHBox.setOnMouseEntered(null);
@@ -99,12 +100,12 @@ final class ChatMessageListCellFactory
 
             private void updateMessageStyle() {
                 String messageStyleClass = getMessageStyleClass(list.getWidth(), getWidth());
-                if (!message.getStyleClass().contains(messageStyleClass)) {
-                    message.getStyleClass().removeIf(style -> style.equals(STYLE_CLASS_WITHOUT_SCROLLBAR)
+                if (!messageBox.getStyleClass().contains(messageStyleClass)) {
+                    messageBox.getStyleClass().removeIf(style -> style.equals(STYLE_CLASS_WITHOUT_SCROLLBAR)
                             || style.equals(STYLE_CLASS_WITH_SCROLLBAR_FULL_WIDTH)
                             || style.equals(STYLE_CLASS_WITH_SCROLLBAR_MAX_WIDTH)
                     );
-                    message.getStyleClass().add(messageStyleClass);
+                    messageBox.getStyleClass().add(messageStyleClass);
                 }
             }
 
@@ -122,24 +123,24 @@ final class ChatMessageListCellFactory
         };
     }
 
-    private Message createMessage(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
-                                  ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list) {
+    private MessageBox createMessage(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
+                                     ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list) {
         if (item.isSystemMessage()) {
-            return new SystemMessage(item);
+            return new SystemMessageBox(item);
         }
 
         if (item.isLeaveChatMessage()) {
-            return new LeaveChatMessage(item, controller);
+            return new LeaveChatMessageBox(item, controller);
         }
 
         if (item.isMyMessage()) {
             return item.isBisqEasyPublicChatMessageWithOffer()
-                    ? new MyOfferMessage(item, list, controller, model)
-                    : new MyMessage(item, list, controller, model);
+                    ? new MyOfferMessageBox(item, list, controller, model)
+                    : new MyMessageBox(item, list, controller, model);
         } else {
             return item.isBisqEasyPublicChatMessageWithOffer()
-                    ? new PeerOfferMessage(item, list, controller, model)
-                    : new PeerMessage(item, list, controller, model);
+                    ? new PeerOfferMessageBox(item, list, controller, model)
+                    : new PeerMessageBox(item, list, controller, model);
         }
     }
 }

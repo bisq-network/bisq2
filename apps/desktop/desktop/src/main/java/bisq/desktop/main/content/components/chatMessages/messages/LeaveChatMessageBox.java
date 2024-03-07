@@ -25,9 +25,9 @@ import bisq.desktop.main.content.components.chatMessages.ChatMessagesListView;
 import bisq.i18n.Res;
 import javafx.scene.control.Hyperlink;
 
-public final class LeaveChatMessage extends SystemMessage {
-    public LeaveChatMessage(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
-                            ChatMessagesListView.Controller controller) {
+public final class LeaveChatMessageBox extends SystemMessageBox {
+    public LeaveChatMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
+                               ChatMessagesListView.Controller controller) {
         super(item);
 
         Hyperlink hyperlink = new Hyperlink(Res.get("chat.leave"));

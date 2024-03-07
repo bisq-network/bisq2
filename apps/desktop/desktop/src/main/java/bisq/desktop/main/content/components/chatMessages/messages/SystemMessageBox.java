@@ -10,13 +10,13 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
-public class SystemMessage extends Message {
+public class SystemMessageBox extends MessageBox {
     protected final ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item;
     protected final VBox systemMessageBg = new VBox();
     protected final VBox contentVBox;
     protected final Label message, dateTime;
 
-    public SystemMessage(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item) {
+    public SystemMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item) {
         this.item = item;
 
         message = new Label(item.getMessage());

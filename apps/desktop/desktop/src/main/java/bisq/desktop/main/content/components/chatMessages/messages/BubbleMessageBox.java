@@ -40,7 +40,7 @@ import javafx.scene.layout.VBox;
 
 import java.util.Optional;
 
-public abstract class BubbleMessage extends Message {
+public abstract class BubbleMessageBox extends MessageBox {
     protected static final double CHAT_MESSAGE_BOX_MAX_WIDTH = 630;
     protected static final double OFFER_MESSAGE_USER_ICON_SIZE = 70;
 
@@ -55,9 +55,10 @@ public abstract class BubbleMessage extends Message {
     protected HBox userNameAndDateHBox, messageBgHBox, messageHBox;
     protected VBox userProfileIconVbox;
 
-    public BubbleMessage(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
-                         ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
-                         ChatMessagesListView.Controller controller, ChatMessagesListView.Model model) {
+    public BubbleMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
+                            ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
+                            ChatMessagesListView.Controller controller,
+                            ChatMessagesListView.Model model) {
         this.item = item;
         this.list = list;
         this.controller = controller;
