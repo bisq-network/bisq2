@@ -113,8 +113,8 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         });
 
         Filters.Markets persistedMarketsFilter = settingsService.getCookie().asString(CookieKey.MARKETS_FILTER).map(name ->
-                        ProtobufUtils.enumFromProto(Filters.Markets.class, name, Filters.Markets.WITH_OFFERS))
-                .orElse(Filters.Markets.WITH_OFFERS);
+                        ProtobufUtils.enumFromProto(Filters.Markets.class, name, Filters.Markets.ALL))
+                .orElse(Filters.Markets.ALL);
         model.getSelectedMarketsFilter().set(persistedMarketsFilter);
 
         selectedMarketFilterPin = EasyBind.subscribe(model.getSelectedMarketsFilter(), filter -> {
