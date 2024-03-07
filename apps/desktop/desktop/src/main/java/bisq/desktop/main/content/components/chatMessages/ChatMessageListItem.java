@@ -61,7 +61,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static bisq.chat.ChatMessageType.LEAVE;
-import static bisq.chat.ChatMessageType.SYSTEM_MESSAGE;
+import static bisq.chat.ChatMessageType.PROTOCOL_LOG_MESSAGE;
 import static bisq.desktop.main.content.components.chatMessages.ChatMessagesComponent.View.EDITED_POST_FIX;
 
 @Slf4j
@@ -238,8 +238,8 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         return chatChannel instanceof PublicChatChannel;
     }
 
-    public boolean isSystemMessage() {
-        return chatMessage.getChatMessageType() == SYSTEM_MESSAGE;
+    public boolean isProtocolLogMessage() {
+        return chatMessage.getChatMessageType() == PROTOCOL_LOG_MESSAGE;
     }
 
     public boolean isLeaveChatMessage() {

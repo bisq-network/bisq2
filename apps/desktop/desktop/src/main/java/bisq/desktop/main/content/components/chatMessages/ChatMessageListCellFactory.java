@@ -21,7 +21,8 @@ import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.desktop.main.content.bisq_easy.offerbook.MyOfferMessageBox;
 import bisq.desktop.main.content.bisq_easy.offerbook.PeerOfferMessageBox;
-import bisq.desktop.main.content.bisq_easy.open_trades.SystemMessageBox;
+import bisq.desktop.main.content.bisq_easy.open_trades.MyProtocolLogMessageBox;
+import bisq.desktop.main.content.bisq_easy.open_trades.PeerProtocolLogMessageBox;
 import bisq.desktop.main.content.components.chatMessages.messages.LeaveChatMessageBox;
 import bisq.desktop.main.content.components.chatMessages.messages.MessageBox;
 import bisq.desktop.main.content.components.chatMessages.messages.MyMessageBox;
@@ -121,30 +122,34 @@ final class ChatMessageListCellFactory
 
                 // With scrollbar
                 return cellWidth < CHAT_BOX_MAX_WIDTH
-                    ? STYLE_CLASS_WITH_SCROLLBAR_FULL_WIDTH
-                    : STYLE_CLASS_WITH_SCROLLBAR_MAX_WIDTH;
+                        ? STYLE_CLASS_WITH_SCROLLBAR_FULL_WIDTH
+                        : STYLE_CLASS_WITH_SCROLLBAR_MAX_WIDTH;
             }
         };
     }
 
     private MessageBox createMessage(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
                                      ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list) {
-        if (item.isSystemMessage()) {
-            return new SystemMessageBox(item);
-        }
-
         if (item.isLeaveChatMessage()) {
             return new LeaveChatMessageBox(item, controller);
         }
 
         if (item.isMyMessage()) {
-            return item.isBisqEasyPublicChatMessageWithOffer()
-                    ? new MyOfferMessageBox(item, list, controller, model)
-                    : new MyMessageBox(item, list, controller, model);
+            if (item.isProtocolLogMessage()) {
+                return new MyProtocolLogMessageBox(item);
+            } else {
+                return item.isBisqEasyPublicChatMessageWithOffer()
+                        ? new MyOfferMessageBox(item, list, controller, model)
+                        : new MyMessageBox(item, list, controller, model);
+            }
         } else {
-            return item.isBisqEasyPublicChatMessageWithOffer()
-                    ? new PeerOfferMessageBox(item, list, controller, model)
-                    : new PeerMessageBox(item, list, controller, model);
+            if (item.isProtocolLogMessage()) {
+                return new PeerProtocolLogMessageBox(item);
+            } else {
+                return item.isBisqEasyPublicChatMessageWithOffer()
+                        ? new PeerOfferMessageBox(item, list, controller, model)
+                        : new PeerMessageBox(item, list, controller, model);
+            }
         }
     }
 }
