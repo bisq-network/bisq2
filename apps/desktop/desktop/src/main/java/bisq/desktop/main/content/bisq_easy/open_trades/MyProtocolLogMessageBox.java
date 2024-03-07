@@ -8,8 +8,10 @@ import bisq.desktop.main.content.components.chatMessages.ChatMessageListItem;
 import bisq.desktop.main.content.components.chatMessages.ChatMessagesListView;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
 import de.jensd.fx.fontawesome.AwesomeDude;
+import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.control.Label;
+import javafx.scene.layout.HBox;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
@@ -25,7 +27,10 @@ public class MyProtocolLogMessageBox extends PeerProtocolLogMessageBox {
         deliveryState.setCursor(Cursor.HAND);
         deliveryState.setTooltip(new BisqTooltip(true));
 
-        systemMessageBg.getChildren().add(deliveryState);
+        systemMessageBg.getChildren().remove(message);
+        HBox hBox = new HBox(10, message, deliveryState);
+        hBox.setAlignment(Pos.CENTER);
+        systemMessageBg.getChildren().add(0, hBox);
 
         deliveryState.getTooltip().textProperty().bind(item.getMessageDeliveryStatusTooltip());
 
