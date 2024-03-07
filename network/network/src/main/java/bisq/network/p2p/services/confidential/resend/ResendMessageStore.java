@@ -23,34 +23,41 @@ import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 final class ResendMessageStore implements PersistableStore<ResendMessageStore> {
-    private final Set<ResendMessageData> resendMessageDataSet = new HashSet<>();
+    private final Map<String, ResendMessageData> resendMessageDataByMessageId = new HashMap<>();
 
     ResendMessageStore() {
     }
 
-    ResendMessageStore(Set<ResendMessageData> resendMessageDataSet) {
-        this.resendMessageDataSet.addAll(resendMessageDataSet);
+    ResendMessageStore(Map<String, ResendMessageData> resendMessageDataByMessageId) {
+        this.resendMessageDataByMessageId.putAll(resendMessageDataByMessageId);
     }
 
     @Override
-    public bisq.network.protobuf.MessageDeliveryStatusStore toProto() {
-        return null; // TODO
+    public bisq.network.protobuf.ResendMessageStore toProto() {
+        return bisq.network.protobuf.ResendMessageStore.newBuilder()
+                .putAllResendMessageDataByMessageId(resendMessageDataByMessageId.entrySet().stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey,
+                                e -> e.getValue().toProto())))
+                .build();
     }
 
-    public static PersistableStore<?> fromProto(bisq.network.protobuf.MessageDeliveryStatusStore proto) {
-        return null;// TODO
+    public static PersistableStore<?> fromProto(bisq.network.protobuf.ResendMessageStore proto) {
+        return new ResendMessageStore(proto.getResendMessageDataByMessageIdMap().entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey,
+                        e -> ResendMessageData.fromProto(e.getValue()))));
     }
 
     @Override
     public ProtoResolver<PersistableStore<?>> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.network.protobuf.MessageDeliveryStatusStore.class)); // TODO
+                return fromProto(any.unpack(bisq.network.protobuf.ResendMessageStore.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }
@@ -59,16 +66,16 @@ final class ResendMessageStore implements PersistableStore<ResendMessageStore> {
 
     @Override
     public void applyPersisted(ResendMessageStore persisted) {
-        resendMessageDataSet.clear();
-        resendMessageDataSet.addAll(persisted.getResendMessageDataSet());
+        resendMessageDataByMessageId.clear();
+        resendMessageDataByMessageId.putAll(persisted.getResendMessageDataByMessageId());
     }
 
     @Override
     public ResendMessageStore getClone() {
-        return new ResendMessageStore(resendMessageDataSet);
+        return new ResendMessageStore(resendMessageDataByMessageId);
     }
 
-    Set<ResendMessageData> getResendMessageDataSet() {
-        return resendMessageDataSet;
+    Map<String, ResendMessageData> getResendMessageDataByMessageId() {
+        return resendMessageDataByMessageId;
     }
 }

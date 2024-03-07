@@ -136,7 +136,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                 Optional.empty();
         resendMessageService = supportedServices.contains(ServiceNode.SupportedService.ACK) &&
                 supportedServices.contains(ServiceNode.SupportedService.CONFIDENTIAL) ?
-                Optional.of(new ResendMessageService(persistenceService, keyBundleService, this)) :
+                Optional.of(new ResendMessageService(persistenceService, messageDeliveryStatusService.orElseThrow())) :
                 Optional.empty();
 
         NetworkLoadSnapshot networkLoadSnapshot = new NetworkLoadSnapshot();
@@ -190,6 +190,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                 .thenApply(node -> {
                     if (node != null) {
                         messageDeliveryStatusService.ifPresent(MessageDeliveryStatusService::initialize);
+                        resendMessageService.ifPresent(ResendMessageService::initialize);
                         monitorService.ifPresent(NetworkLoadService::initialize);
                         return true;
                     } else {
@@ -201,6 +202,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
         messageDeliveryStatusService.ifPresent(MessageDeliveryStatusService::shutdown);
+        resendMessageService.ifPresent(ResendMessageService::shutdown);
         monitorService.ifPresent(NetworkLoadService::shutdown);
         dataService.ifPresent(DataService::shutdown);
         return serviceNodesByTransport.shutdown()

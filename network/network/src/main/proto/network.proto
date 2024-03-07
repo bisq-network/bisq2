@@ -337,6 +337,18 @@ message MessageDeliveryStatusStore {
   map<string, MessageDeliveryStatus> messageDeliveryStatusByMessageId = 1;
 }
 
+message ResendMessageData {
+  EnvelopePayloadMessage envelopePayloadMessage = 1;
+  network.common.Address address = 2;
+  security.PubKey receiverPubKey = 3;
+  security.KeyPair senderKeyPair = 4;
+  network.identity.NetworkId senderNetworkId = 5;
+  MessageDeliveryStatus messageDeliveryStatus = 6;
+}
+
+message ResendMessageStore {
+  map<string, ResendMessageData> resendMessageDataByMessageId = 1;
+}
 
 message PeerGroupStore {
   repeated Peer persistedPeers = 1;

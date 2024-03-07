@@ -29,6 +29,7 @@ import bisq.network.p2p.node.NodesById;
 import bisq.network.p2p.services.confidential.ack.AckRequestingMessage;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatusService;
+import bisq.network.p2p.services.confidential.resend.ResendMessageData;
 import bisq.network.p2p.services.confidential.resend.ResendMessageService;
 import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.network.p2p.services.data.DataService;
@@ -150,7 +151,17 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
         log.debug("Send message to {}", address);
         // Set connecting state
         SendConfidentialMessageResult result = new SendConfidentialMessageResult(MessageDeliveryStatus.CONNECTING);
-        onResult(envelopePayloadMessage, result);
+
+        if (envelopePayloadMessage instanceof AckRequestingMessage) {
+            resendMessageService.ifPresent(service -> service.handleResendMessageData(new ResendMessageData((AckRequestingMessage) envelopePayloadMessage,
+                    address,
+                    receiverPubKey,
+                    senderKeyPair,
+                    senderNetworkId,
+                    MessageDeliveryStatus.CONNECTING)));
+        }
+
+        handleResult(envelopePayloadMessage, result);
 
         // We try to get a connection. If it fails we store in mailbox in case envelopePayloadMessage is a MailboxMessage
         try {
@@ -171,8 +182,17 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
             result = handleSendMessageException(envelopePayloadMessage, receiverPubKey, senderKeyPair, exception, confidentialMessage);
         }
 
+        if (envelopePayloadMessage instanceof AckRequestingMessage) {
+            MessageDeliveryStatus messageDeliveryStatus = result.getMessageDeliveryStatus();
+            resendMessageService.ifPresent(service -> service.handleResendMessageData(new ResendMessageData((AckRequestingMessage) envelopePayloadMessage,
+                    address,
+                    receiverPubKey,
+                    senderKeyPair,
+                    senderNetworkId,
+                    messageDeliveryStatus)));
+        }
 
-        onResult(envelopePayloadMessage, result);
+        handleResult(envelopePayloadMessage, result);
         return result;
 
     }
@@ -205,7 +225,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private void onResult(EnvelopePayloadMessage envelopePayloadMessage, SendConfidentialMessageResult result) {
+    private void handleResult(EnvelopePayloadMessage envelopePayloadMessage, SendConfidentialMessageResult result) {
         if (envelopePayloadMessage instanceof AckRequestingMessage) {
             messageDeliveryStatusService.ifPresent(service -> {
                 String messageId = ((AckRequestingMessage) envelopePayloadMessage).getId();
