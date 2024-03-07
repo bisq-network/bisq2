@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.components.chatMessages.messages.BisqEasy;
+package bisq.desktop.main.content.components.chatMessages.messages.bisq_easy;
 
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;

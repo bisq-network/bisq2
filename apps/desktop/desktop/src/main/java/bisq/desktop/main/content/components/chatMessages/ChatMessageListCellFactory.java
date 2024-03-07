@@ -19,9 +19,9 @@ package bisq.desktop.main.content.components.chatMessages;
 
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
-import bisq.desktop.main.content.components.chatMessages.messages.BisqEasy.MyOfferMessageBox;
-import bisq.desktop.main.content.components.chatMessages.messages.BisqEasy.PeerOfferMessageBox;
 import bisq.desktop.main.content.components.chatMessages.messages.*;
+import bisq.desktop.main.content.components.chatMessages.messages.bisq_easy.MyOfferMessageBox;
+import bisq.desktop.main.content.components.chatMessages.messages.bisq_easy.PeerOfferMessageBox;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
