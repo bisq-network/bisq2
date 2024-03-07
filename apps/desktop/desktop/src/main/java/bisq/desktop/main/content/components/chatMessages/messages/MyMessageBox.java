@@ -105,12 +105,14 @@ public final class MyMessageBox extends BubbleMessageBox {
                                 Icons.setAwesomeIconColor(deliveryState, color));
 
                         boolean allowResend = item.getMessageDeliveryStatus() == MessageDeliveryStatus.FAILED;
-                        if (allowResend) {
-                            deliveryState.setOnMouseClicked(e -> controller.onResendMessage(item.getMessageId()));
+                        String messageId = item.getMessageId();
+                        if (allowResend && controller.canResendMessage(messageId)) {
+                            deliveryState.setOnMouseClicked(e -> controller.onResendMessage(messageId));
+                            deliveryState.setCursor(Cursor.HAND);
                         } else {
                             deliveryState.setOnMouseClicked(null);
+                            deliveryState.setCursor(null);
                         }
-                        deliveryState.setCursor(allowResend ? Cursor.HAND : null);
                     }
                 }
         );

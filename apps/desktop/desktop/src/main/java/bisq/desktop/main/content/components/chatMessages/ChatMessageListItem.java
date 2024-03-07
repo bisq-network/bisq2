@@ -35,6 +35,7 @@ import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
+import bisq.network.p2p.services.confidential.resend.ResendMessageService;
 import bisq.offer.Direction;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.presentation.formatters.DateFormatter;
@@ -106,7 +107,8 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                                ReputationService reputationService,
                                BisqEasyTradeService bisqEasyTradeService,
                                UserIdentityService userIdentityService,
-                               NetworkService networkService) {
+                               NetworkService networkService,
+                               Optional<ResendMessageService> resendMessageService) {
         this.chatMessage = chatMessage;
         this.chatChannel = chatChannel;
         this.userIdentityService = userIdentityService;
@@ -173,13 +175,13 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                                             messageDeliveryStatusIcon.set(AwesomeIcon.OK_SIGN);
                                             break;
                                         case TRY_ADD_TO_MAILBOX:
-                                            // -bisq2-yellow: #d0831f;
-                                            messageDeliveryStatusIconColor = Optional.of("#d0831f");
+                                            // -bisq2-yellow-dim-30: #915b15;
+                                            messageDeliveryStatusIconColor = Optional.of("#915b15");
                                             messageDeliveryStatusIcon.set(AwesomeIcon.SHARE_SIGN);
                                             break;
                                         case ADDED_TO_MAILBOX:
-                                            // -bisq2-yellow: #d0831f;
-                                            messageDeliveryStatusIconColor = Optional.of("#d0831f");
+                                            // -bisq2-yellow-dim-30: #915b15;
+                                            messageDeliveryStatusIconColor = Optional.of("#915b15");
                                             messageDeliveryStatusIcon.set(AwesomeIcon.CLOUD_UPLOAD);
                                             break;
                                         case MAILBOX_MSG_RECEIVED:
@@ -188,10 +190,18 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                                             messageDeliveryStatusIcon.set(AwesomeIcon.CLOUD_DOWNLOAD);
                                             break;
                                         case FAILED:
-                                            // -bisq2-red: #d02c1f;
-                                            messageDeliveryStatusIconColor = Optional.of("#d02c1f");
-                                            messageDeliveryStatusIcon.set(AwesomeIcon.REFRESH);
-                                            break;
+                                            if (resendMessageService.map(service -> service.canResendMessage(messageId)).orElse(false)) {
+                                                // -bisq2-yellow: #d0831f;
+                                                messageDeliveryStatusIconColor = Optional.of("#d0831f");
+                                                messageDeliveryStatusIcon.set(AwesomeIcon.REFRESH);
+                                                messageDeliveryStatusTooltip.set(Res.get("chat.message.deliveryState." + status.name()) + " " + Res.get("chat.message.resendMessage"));
+                                                break;
+                                            } else {
+                                                // -bisq2-red: #d23246;
+                                                messageDeliveryStatusIconColor = Optional.of("#d23246");
+                                                messageDeliveryStatusIcon.set(AwesomeIcon.EXCLAMATION_SIGN);
+                                                break;
+                                            }
                                     }
                                 }
                             });

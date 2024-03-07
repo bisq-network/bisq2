@@ -631,8 +631,15 @@ public class ChatMessagesListView {
             // We clear and fill the list at channel change. The addObserver triggers the add method for each item,
             // but as we have a contains() check there it will not have any effect.
             model.chatMessages.clear();
-            model.chatMessages.addAll(channel.getChatMessages().stream().map(chatMessage -> new ChatMessageListItem<>(chatMessage, channel, userProfileService, reputationService,
-                            bisqEasyTradeService, userIdentityService, networkService))
+            model.chatMessages.addAll(channel.getChatMessages().stream()
+                    .map(chatMessage -> new ChatMessageListItem<>(chatMessage,
+                            channel,
+                            userProfileService,
+                            reputationService,
+                            bisqEasyTradeService,
+                            userIdentityService,
+                            networkService,
+                            resendMessageService))
                     .collect(Collectors.toSet()));
             maybeScrollDownOnNewItemAdded();
 
@@ -644,8 +651,14 @@ public class ChatMessagesListView {
                     // @namloan Could you re-test the performance issues with testing if using UIThread.run makes a difference?
                     // There have been many changes in the meantime, so maybe the performance issue was fixed by other changes.
                     UIThread.runOnNextRenderFrame(() -> {
-                        ChatMessageListItem<M, C> item = new ChatMessageListItem<>(chatMessage, channel, userProfileService, reputationService,
-                                bisqEasyTradeService, userIdentityService, networkService);
+                        ChatMessageListItem<M, C> item = new ChatMessageListItem<>(chatMessage,
+                                channel,
+                                userProfileService,
+                                reputationService,
+                                bisqEasyTradeService,
+                                userIdentityService,
+                                networkService,
+                                resendMessageService);
                         // As long as we use runOnNextRenderFrame we need to check to avoid adding duplicates
                         // The model is updated async in stages, verify that messages belong to the selected channel
                         if (!model.chatMessages.contains(item) && channel.equals(model.selectedChannel.get())) {
@@ -690,6 +703,10 @@ public class ChatMessagesListView {
 
         public void onResendMessage(String messageId) {
             resendMessageService.ifPresent(service -> service.resendMessage(messageId));
+        }
+
+        public boolean canResendMessage(String messageId) {
+            return resendMessageService.map(service -> service.canResendMessage(messageId)).orElse(false);
         }
     }
 

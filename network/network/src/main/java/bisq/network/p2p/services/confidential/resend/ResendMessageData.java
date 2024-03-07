@@ -11,6 +11,7 @@ import lombok.Getter;
 import lombok.ToString;
 
 import java.security.KeyPair;
+import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -18,12 +19,15 @@ import static com.google.common.base.Preconditions.checkArgument;
 @EqualsAndHashCode
 @ToString
 public class ResendMessageData implements NetworkProto {
+    private static final long MAX_AGE = TimeUnit.DAYS.toMillis(2);
+
     public static ResendMessageData from(ResendMessageData data, MessageDeliveryStatus messageDeliveryStatus) {
         return new ResendMessageData(data.getAckRequestingMessage(),
                 data.getReceiverNetworkId(),
                 data.getSenderKeyPair(),
                 data.getSenderNetworkId(),
-                messageDeliveryStatus);
+                messageDeliveryStatus,
+                data.getDate());
     }
 
     private final EnvelopePayloadMessage envelopePayloadMessage;
@@ -31,18 +35,21 @@ public class ResendMessageData implements NetworkProto {
     private final KeyPair senderKeyPair;
     private final NetworkId senderNetworkId;
     private final MessageDeliveryStatus messageDeliveryStatus;
+    private final long date;
 
     public ResendMessageData(AckRequestingMessage ackRequestingMessage,
                              NetworkId receiverNetworkId,
                              KeyPair senderKeyPair,
                              NetworkId senderNetworkId,
-                             MessageDeliveryStatus messageDeliveryStatus) {
+                             MessageDeliveryStatus messageDeliveryStatus,
+                             long date) {
 
         this((EnvelopePayloadMessage) ackRequestingMessage,
                 receiverNetworkId,
                 senderKeyPair,
                 senderNetworkId,
-                messageDeliveryStatus);
+                messageDeliveryStatus,
+                date);
 
     }
 
@@ -50,12 +57,14 @@ public class ResendMessageData implements NetworkProto {
                               NetworkId receiverNetworkId,
                               KeyPair senderKeyPair,
                               NetworkId senderNetworkId,
-                              MessageDeliveryStatus messageDeliveryStatus) {
+                              MessageDeliveryStatus messageDeliveryStatus,
+                              long date) {
         this.envelopePayloadMessage = envelopePayloadMessage;
         this.receiverNetworkId = receiverNetworkId;
         this.senderKeyPair = senderKeyPair;
         this.senderNetworkId = senderNetworkId;
         this.messageDeliveryStatus = messageDeliveryStatus;
+        this.date = date;
 
         verify();
     }
@@ -74,6 +83,7 @@ public class ResendMessageData implements NetworkProto {
                 .setSenderKeyPair(KeyPairProtoUtil.toProto(senderKeyPair))
                 .setSenderNetworkId(senderNetworkId.toProto())
                 .setMessageDeliveryStatus(messageDeliveryStatus.toProto())
+                .setDate(date)
                 .build();
     }
 
@@ -82,7 +92,8 @@ public class ResendMessageData implements NetworkProto {
                 NetworkId.fromProto(proto.getReceiverNetworkId()),
                 KeyPairProtoUtil.fromProto(proto.getSenderKeyPair()),
                 NetworkId.fromProto(proto.getSenderNetworkId()),
-                MessageDeliveryStatus.fromProto(proto.getMessageDeliveryStatus())
+                MessageDeliveryStatus.fromProto(proto.getMessageDeliveryStatus()),
+                proto.getDate()
         );
     }
 
@@ -92,5 +103,9 @@ public class ResendMessageData implements NetworkProto {
 
     public AckRequestingMessage getAckRequestingMessage() {
         return (AckRequestingMessage) envelopePayloadMessage;
+    }
+
+    public boolean isExpired() {
+        return System.currentTimeMillis() - date > MAX_AGE;
     }
 }

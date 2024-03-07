@@ -371,8 +371,8 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         return httpClientsByTransport.getHttpClient(url, userAgent, transportType, socksProxy, socks5ProxyAddress);
     }
 
-    public Map<TransportType, Observable<Node.State>> getNodeStateByTransportType() {
-        return serviceNodesByTransport.getNodeStateByTransportType();
+    public Map<TransportType, Observable<Node.State>> getDefaultNodeStateByTransportType() {
+        return serviceNodesByTransport.getDefaultNodeStateByTransportType();
     }
 
     public Map<TransportType, BootstrapInfo> getBootstrapInfoByTransportType() {

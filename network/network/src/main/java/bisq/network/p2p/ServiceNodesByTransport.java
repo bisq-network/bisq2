@@ -248,7 +248,7 @@ public class ServiceNodesByTransport {
                 });
     }
 
-    public Map<TransportType, Observable<Node.State>> getNodeStateByTransportType() {
+    public Map<TransportType, Observable<Node.State>> getDefaultNodeStateByTransportType() {
         return map.entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().getDefaultNode().getObservableState()));
     }

@@ -28,7 +28,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
-final class ResendMessageStore implements PersistableStore<ResendMessageStore> {
+public final class ResendMessageStore implements PersistableStore<ResendMessageStore> {
     private final Map<String, ResendMessageData> resendMessageDataByMessageId = new HashMap<>();
 
     ResendMessageStore() {

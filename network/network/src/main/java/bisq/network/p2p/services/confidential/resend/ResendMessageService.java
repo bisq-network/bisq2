@@ -6,7 +6,7 @@ import bisq.common.observable.map.HashMapObserver;
 import bisq.common.timer.Scheduler;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkIdWithKeyPair;
-import bisq.network.p2p.node.transport.BootstrapState;
+import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatusService;
 import bisq.persistence.DbSubDirectory;
@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Getter
@@ -27,7 +28,7 @@ public class ResendMessageService implements PersistenceClient<ResendMessageStor
     private final NetworkService networkService;
     private final MessageDeliveryStatusService messageDeliveryStatusService;
     private final Map<String, Pin> messageDeliveryStatusPinByMessageId = new HashMap<>();
-    private final Set<Pin> bootstrapStatePins = new HashSet<>();
+    private final Set<Pin> nodeStatePins = new HashSet<>();
     private Pin messageDeliveryStatusByMessageIdPin;
 
     public ResendMessageService(PersistenceService persistenceService,
@@ -37,6 +38,13 @@ public class ResendMessageService implements PersistenceClient<ResendMessageStor
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
         this.networkService = networkService;
         this.messageDeliveryStatusService = messageDeliveryStatusService;
+    }
+
+    @Override
+    public ResendMessageStore prunePersisted(ResendMessageStore persisted) {
+        return new ResendMessageStore(persisted.getResendMessageDataByMessageId().entrySet().stream()
+                .filter(e -> !e.getValue().isExpired())
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
     }
 
     public void initialize() {
@@ -61,9 +69,9 @@ public class ResendMessageService implements PersistenceClient<ResendMessageStor
                     }
                 });
 
-        networkService.getBootstrapInfoByTransportType().forEach((key, value) -> {
-            bootstrapStatePins.add(value.getBootstrapState().addObserver(bootstrapState -> {
-                if (bootstrapState == BootstrapState.CONNECTED_TO_PEERS) {
+        networkService.getDefaultNodeStateByTransportType().forEach((key, value) -> {
+            nodeStatePins.add(value.addObserver(state -> {
+                if (state == Node.State.RUNNING) {
                     Scheduler.run(this::resendMessageAllFailedMessages).after(10, TimeUnit.SECONDS);
                 }
             }));
@@ -74,7 +82,7 @@ public class ResendMessageService implements PersistenceClient<ResendMessageStor
         messageDeliveryStatusByMessageIdPin.unbind();
         messageDeliveryStatusPinByMessageId.values().forEach(Pin::unbind);
         messageDeliveryStatusPinByMessageId.clear();
-        bootstrapStatePins.forEach(Pin::unbind);
+        nodeStatePins.forEach(Pin::unbind);
     }
 
 
@@ -118,6 +126,10 @@ public class ResendMessageService implements PersistenceClient<ResendMessageStor
         }
     }
 
+    public boolean canResendMessage(String messageId) {
+        return findResendMessageData(messageId).isPresent();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -153,6 +165,7 @@ public class ResendMessageService implements PersistenceClient<ResendMessageStor
     private Optional<ResendMessageData> findResendMessageData(String messageId) {
         return persistableStore.getResendMessageDataByMessageId().entrySet().stream()
                 .filter(entry -> entry.getKey().equals(messageId))
+                .filter(entry -> !entry.getValue().isExpired())
                 .map(Map.Entry::getValue)
                 .filter(data -> data.getId().equals(messageId))
                 .findAny();

@@ -343,6 +343,7 @@ message ResendMessageData {
   security.KeyPair senderKeyPair = 3;
   network.identity.NetworkId senderNetworkId = 4;
   MessageDeliveryStatus messageDeliveryStatus = 5;
+  sint64 date = 6;
 }
 
 message ResendMessageStore {

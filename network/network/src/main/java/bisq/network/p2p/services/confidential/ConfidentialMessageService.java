@@ -153,11 +153,13 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
         SendConfidentialMessageResult result = new SendConfidentialMessageResult(MessageDeliveryStatus.CONNECTING);
 
         if (envelopePayloadMessage instanceof AckRequestingMessage) {
-            resendMessageService.ifPresent(service -> service.handleResendMessageData(new ResendMessageData((AckRequestingMessage) envelopePayloadMessage,
+            AckRequestingMessage ackRequestingMessage = (AckRequestingMessage) envelopePayloadMessage;
+            resendMessageService.ifPresent(service -> service.handleResendMessageData(new ResendMessageData(ackRequestingMessage,
                     receiverNetworkId,
                     senderKeyPair,
                     senderNetworkId,
-                    MessageDeliveryStatus.CONNECTING)));
+                    MessageDeliveryStatus.CONNECTING,
+                    System.currentTimeMillis())));
         }
 
         handleResult(envelopePayloadMessage, result);
@@ -182,12 +184,14 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
         }
 
         if (envelopePayloadMessage instanceof AckRequestingMessage) {
+            AckRequestingMessage ackRequestingMessage = (AckRequestingMessage) envelopePayloadMessage;
             MessageDeliveryStatus messageDeliveryStatus = result.getMessageDeliveryStatus();
-            resendMessageService.ifPresent(service -> service.handleResendMessageData(new ResendMessageData((AckRequestingMessage) envelopePayloadMessage,
+            resendMessageService.ifPresent(service -> service.handleResendMessageData(new ResendMessageData(ackRequestingMessage,
                     receiverNetworkId,
                     senderKeyPair,
                     senderNetworkId,
-                    messageDeliveryStatus)));
+                    messageDeliveryStatus,
+                    System.currentTimeMillis())));
         }
 
         handleResult(envelopePayloadMessage, result);
