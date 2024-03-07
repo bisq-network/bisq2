@@ -20,6 +20,7 @@ package bisq.desktop.main.content.components.chatMessages.messages;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.desktop.common.utils.ImageUtil;
+import bisq.desktop.main.content.bisq_easy.open_trades.SystemMessageBox;
 import bisq.desktop.main.content.components.chatMessages.ChatMessageListItem;
 import bisq.desktop.main.content.components.chatMessages.ChatMessagesListView;
 import bisq.i18n.Res;
