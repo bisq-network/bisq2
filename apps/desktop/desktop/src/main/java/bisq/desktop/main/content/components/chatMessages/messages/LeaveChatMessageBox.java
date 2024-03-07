@@ -29,7 +29,7 @@ import javafx.scene.control.Hyperlink;
 public final class LeaveChatMessageBox extends MyProtocolLogMessageBox {
     public LeaveChatMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
                                ChatMessagesListView.Controller controller) {
-        super(item);
+        super(item, controller);
 
         Hyperlink hyperlink = new Hyperlink(Res.get("chat.leave"));
         hyperlink.setGraphic(ImageUtil.getImageViewById("leave-chat-green"));

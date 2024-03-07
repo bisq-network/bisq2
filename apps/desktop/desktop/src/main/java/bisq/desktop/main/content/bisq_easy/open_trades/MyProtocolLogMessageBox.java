@@ -5,6 +5,8 @@ import bisq.chat.ChatMessage;
 import bisq.desktop.common.Icons;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.main.content.components.chatMessages.ChatMessageListItem;
+import bisq.desktop.main.content.components.chatMessages.ChatMessagesListView;
+import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import javafx.scene.Cursor;
 import javafx.scene.control.Label;
@@ -15,7 +17,8 @@ public class MyProtocolLogMessageBox extends PeerProtocolLogMessageBox {
     protected final Label deliveryState;
     private final Subscription messageDeliveryStatusIconPin;
 
-    public MyProtocolLogMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item) {
+    public MyProtocolLogMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
+                                   ChatMessagesListView.Controller controller) {
         super(item);
 
         deliveryState = new Label();
@@ -33,6 +36,14 @@ public class MyProtocolLogMessageBox extends PeerProtocolLogMessageBox {
                         AwesomeDude.setIcon(deliveryState, icon, AwesomeDude.DEFAULT_ICON_SIZE);
                         item.getMessageDeliveryStatusIconColor().ifPresent(color ->
                                 Icons.setAwesomeIconColor(deliveryState, color));
+
+                        boolean allowResend = item.getMessageDeliveryStatus() == MessageDeliveryStatus.FAILED;
+                        if (allowResend) {
+                            deliveryState.setOnMouseClicked(e -> controller.onResendMessage(item.getMessageId()));
+                        } else {
+                            deliveryState.setOnMouseClicked(null);
+                        }
+                        deliveryState.setCursor(allowResend ? Cursor.HAND : null);
                     }
                 }
         );

@@ -136,7 +136,7 @@ final class ChatMessageListCellFactory
 
         if (item.isMyMessage()) {
             if (item.isProtocolLogMessage()) {
-                return new MyProtocolLogMessageBox(item);
+                return new MyProtocolLogMessageBox(item, controller);
             } else {
                 return item.isBisqEasyPublicChatMessageWithOffer()
                         ? new MyOfferMessageBox(item, list, controller, model)
