@@ -148,58 +148,49 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                                               KeyPair senderKeyPair,
                                               NetworkId senderNetworkId) {
         log.debug("Send message to {}", address);
+        // Set connecting state
         SendConfidentialMessageResult result = new SendConfidentialMessageResult(MessageDeliveryStatus.CONNECTING);
         onResult(envelopePayloadMessage, result);
+
+        // We try to get a connection. If it fails we store in mailbox in case envelopePayloadMessage is a MailboxMessage
         try {
             // Node gets initialized at higher level services
             nodesById.assertNodeIsInitialized(senderNetworkId);
             Connection connection = nodesById.getConnection(senderNetworkId, address);
-            return send(envelopePayloadMessage, connection, receiverPubKey, senderKeyPair, senderNetworkId);
-        } catch (Throwable throwable) {
-            if (envelopePayloadMessage instanceof MailboxMessage) {
-                log.info("Message could not be sent because of {}.\n" +
-                        "We send the message as mailbox message.", throwable.getMessage());
-                ConfidentialMessage confidentialMessage = getConfidentialMessage(envelopePayloadMessage, receiverPubKey, senderKeyPair);
-                result = storeMailBoxMessage(((MailboxMessage) envelopePayloadMessage).getMetaData(),
-                        confidentialMessage, receiverPubKey, senderKeyPair);
-            } else {
-                log.warn("Sending of networkMessage failed and networkMessage is not type of MailboxMessage. networkMessage={}", envelopePayloadMessage);
-                result = new SendConfidentialMessageResult(MessageDeliveryStatus.FAILED).setErrorMsg("Sending proto failed and proto is not type of MailboxMessage. Exception=" + throwable);
+
+            // We got a valid connection and try to send the message. If send fails we store in mailbox in case envelopePayloadMessage is a MailboxMessage
+            ConfidentialMessage confidentialMessage = getConfidentialMessage(envelopePayloadMessage, receiverPubKey, senderKeyPair);
+            try {
+                nodesById.send(senderNetworkId, confidentialMessage, connection);
+                result = new SendConfidentialMessageResult(MessageDeliveryStatus.SENT);
+            } catch (Exception exception) {
+                result = handleSendMessageException(envelopePayloadMessage, receiverPubKey, senderKeyPair, exception, confidentialMessage);
             }
-            onResult(envelopePayloadMessage, result);
-            return result;
+        } catch (Exception exception) {
+            ConfidentialMessage confidentialMessage = getConfidentialMessage(envelopePayloadMessage, receiverPubKey, senderKeyPair);
+            result = handleSendMessageException(envelopePayloadMessage, receiverPubKey, senderKeyPair, exception, confidentialMessage);
         }
+
+
+        onResult(envelopePayloadMessage, result);
+        return result;
+
     }
 
-    private SendConfidentialMessageResult send(EnvelopePayloadMessage envelopePayloadMessage,
-                                               Connection connection,
-                                               PubKey receiverPubKey,
-                                               KeyPair senderKeyPair,
-                                               NetworkId senderNetworkId) {
-        log.debug("Send message to {}", connection);
-        ConfidentialMessage confidentialMessage = getConfidentialMessage(envelopePayloadMessage, receiverPubKey, senderKeyPair);
+    private SendConfidentialMessageResult handleSendMessageException(EnvelopePayloadMessage envelopePayloadMessage, PubKey receiverPubKey, KeyPair senderKeyPair, Exception exception, ConfidentialMessage confidentialMessage) {
         SendConfidentialMessageResult result;
-        try {
-            // Node gets initialized at higher level services
-            nodesById.assertNodeIsInitialized(senderNetworkId);
-            nodesById.send(senderNetworkId, confidentialMessage, connection);
-            result = new SendConfidentialMessageResult(MessageDeliveryStatus.SENT);
-            onResult(envelopePayloadMessage, result);
-            return result;
-        } catch (Throwable throwable) {
-            if (envelopePayloadMessage instanceof MailboxMessage) {
-                log.info("Message could not be sent because of {}.\n" +
-                        "We send the message as mailbox message.", throwable.getMessage());
-                result = storeMailBoxMessage(((MailboxMessage) envelopePayloadMessage).getMetaData(),
-                        confidentialMessage, receiverPubKey, senderKeyPair);
-            } else {
-                log.warn("Sending message failed and message is not type of MailboxMessage. message={}", envelopePayloadMessage);
-                result = new SendConfidentialMessageResult(MessageDeliveryStatus.FAILED).setErrorMsg("Sending proto failed and proto is not type of MailboxMessage. Exception=" + throwable);
-            }
-            onResult(envelopePayloadMessage, result);
-            return result;
+        if (envelopePayloadMessage instanceof MailboxMessage) {
+            log.info("Message could not be sent because of {}.\n" +
+                    "We send the message as mailbox message.", exception.getMessage());
+            result = storeMailBoxMessage(((MailboxMessage) envelopePayloadMessage).getMetaData(),
+                    confidentialMessage, receiverPubKey, senderKeyPair);
+        } else {
+            log.warn("Sending message failed and message is not type of MailboxMessage. message={}", envelopePayloadMessage);
+            result = new SendConfidentialMessageResult(MessageDeliveryStatus.FAILED).setErrorMsg("Sending proto failed and proto is not type of MailboxMessage. Exception=" + exception);
         }
+        return result;
     }
+
 
     public void addListener(Listener listener) {
         listeners.add(listener);
