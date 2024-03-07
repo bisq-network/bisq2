@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.components.chatMessages.messages.bisq_easy;
+package bisq.desktop.main.content.bisq_easy.offerbook;
 
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
