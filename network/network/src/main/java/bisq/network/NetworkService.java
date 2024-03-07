@@ -43,6 +43,7 @@ import bisq.network.p2p.node.transport.BootstrapInfo;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatusService;
+import bisq.network.p2p.services.confidential.resend.ResendMessageService;
 import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.DistributedData;
@@ -101,6 +102,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     @Getter
     private final ServiceNodesByTransport serviceNodesByTransport;
     private final Optional<MessageDeliveryStatusService> messageDeliveryStatusService;
+    private final Optional<ResendMessageService> resendMessageService;
     private final Optional<NetworkLoadService> monitorService;
     @Getter
     private final Persistence<NetworkServiceStore> persistence;
@@ -132,6 +134,10 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                 supportedServices.contains(ServiceNode.SupportedService.CONFIDENTIAL) ?
                 Optional.of(new MessageDeliveryStatusService(persistenceService, keyBundleService, this)) :
                 Optional.empty();
+        resendMessageService = supportedServices.contains(ServiceNode.SupportedService.ACK) &&
+                supportedServices.contains(ServiceNode.SupportedService.CONFIDENTIAL) ?
+                Optional.of(new ResendMessageService(persistenceService, keyBundleService, this)) :
+                Optional.empty();
 
         NetworkLoadSnapshot networkLoadSnapshot = new NetworkLoadSnapshot();
 
@@ -150,6 +156,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                 equihashProofOfWorkService,
                 dataService,
                 messageDeliveryStatusService,
+                resendMessageService,
                 networkLoadSnapshot);
 
         monitorService = supportedServices.contains(ServiceNode.SupportedService.DATA) &&

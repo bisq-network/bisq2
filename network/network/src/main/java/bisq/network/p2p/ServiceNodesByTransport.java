@@ -37,6 +37,7 @@ import bisq.network.p2p.node.transport.BootstrapInfo;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.confidential.SendConfidentialMessageResult;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatusService;
+import bisq.network.p2p.services.confidential.resend.ResendMessageService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.inventory.InventoryService;
 import bisq.network.p2p.services.peergroup.PeerGroupManager;
@@ -83,6 +84,7 @@ public class ServiceNodesByTransport {
                                    EquihashProofOfWorkService equihashProofOfWorkService,
                                    Optional<DataService> dataService,
                                    Optional<MessageDeliveryStatusService> messageDeliveryStatusService,
+                                   Optional<ResendMessageService> resendMessageService,
                                    NetworkLoadSnapshot networkLoadSnapshot) {
         this.supportedTransportTypes = supportedTransportTypes;
 
@@ -109,6 +111,7 @@ public class ServiceNodesByTransport {
                     inventoryServiceConfig,
                     dataService,
                     messageDeliveryStatusService,
+                    resendMessageService,
                     keyBundleService,
                     persistenceService,
                     authorizationService,
