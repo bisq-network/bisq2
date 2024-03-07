@@ -2,50 +2,45 @@ package bisq.desktop.main.content.bisq_easy.open_trades;
 
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
+import bisq.desktop.common.Icons;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.main.content.components.chatMessages.ChatMessageListItem;
-import bisq.desktop.main.content.components.chatMessages.messages.MessageBox;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
+import de.jensd.fx.fontawesome.AwesomeDude;
+import javafx.scene.Cursor;
 import javafx.scene.control.Label;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
-public class MyProtocolLogMessageBox extends MessageBox {
-    protected final ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item;
-    protected final VBox systemMessageBg = new VBox();
-    protected final VBox contentVBox;
-    protected final Label message, dateTime;
+public class MyProtocolLogMessageBox extends PeerProtocolLogMessageBox {
+    protected final Label deliveryState;
+    private final Subscription messageDeliveryStatusIconPin;
 
     public MyProtocolLogMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item) {
-        this.item = item;
+        super(item);
 
-        message = new Label(item.getMessage());
-        message.getStyleClass().addAll("text-fill-white", "system-message-labels");
-        message.setAlignment(Pos.CENTER);
-        message.setWrapText(true);
+        deliveryState = new Label();
+        deliveryState.setCursor(Cursor.HAND);
+        deliveryState.setTooltip(new BisqTooltip(true));
 
-        dateTime = new Label(item.getDate());
-        dateTime.getStyleClass().addAll("text-fill-grey-dimmed", "system-message-labels");
+        systemMessageBg.getChildren().add(deliveryState);
 
-        systemMessageBg.setSpacing(5);
-        systemMessageBg.getChildren().addAll(message, dateTime);
-        systemMessageBg.setFillWidth(true);
-        systemMessageBg.setAlignment(Pos.CENTER);
-        systemMessageBg.getStyleClass().add("system-message-background");
-        HBox.setHgrow(systemMessageBg, Priority.ALWAYS);
+        deliveryState.getTooltip().textProperty().bind(item.getMessageDeliveryStatusTooltip());
 
-        setFillWidth(true);
-        HBox.setHgrow(this, Priority.ALWAYS);
-        setPadding(new Insets(0));
-
-        contentVBox = new VBox(systemMessageBg);
-        contentVBox.setMaxWidth(CHAT_BOX_MAX_WIDTH);
-        getChildren().setAll(contentVBox);
-        setAlignment(Pos.CENTER);
+        messageDeliveryStatusIconPin = EasyBind.subscribe(item.getMessageDeliveryStatusIcon(), icon -> {
+                    deliveryState.setManaged(icon != null);
+                    deliveryState.setVisible(icon != null);
+                    if (icon != null) {
+                        AwesomeDude.setIcon(deliveryState, icon, AwesomeDude.DEFAULT_ICON_SIZE);
+                        item.getMessageDeliveryStatusIconColor().ifPresent(color ->
+                                Icons.setAwesomeIconColor(deliveryState, color));
+                    }
+                }
+        );
     }
 
     @Override
     public void cleanup() {
+        deliveryState.getTooltip().textProperty().unbind();
+        messageDeliveryStatusIconPin.unsubscribe();
     }
 }
