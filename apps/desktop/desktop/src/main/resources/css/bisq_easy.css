@@ -217,6 +217,34 @@
     -fx-text-fill: -fx-light-text-color;
 }
 
+.market-selection-applied-filters {
+    -fx-pref-height: 35;
+    -fx-padding: 5;
+}
+
+.market-selection-applied-filters .filter-display-hint {
+    -fx-background-color: transparent;
+    -fx-border-color: -bisq-mid-grey-20;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-min-height: 20;
+    -fx-pref-height: 20;
+    -fx-max-height: 20;
+    -fx-padding: 0 0 0 5;
+}
+
+.market-selection-applied-filters .filter-display-hint:hover {
+    -fx-border-color: -bisq-white;
+}
+
+.market-selection-applied-filters .filter-display-hint:hover .label {
+    -fx-text-fill: -bisq-white;
+}
+
+.market-selection-applied-filters .filter-display-hint .label {
+    -fx-text-fill: -fx-mid-text-color;
+}
+
 .market-selection-list .column-header-background {
     -fx-max-height: 0;
     -fx-pref-height: 0;

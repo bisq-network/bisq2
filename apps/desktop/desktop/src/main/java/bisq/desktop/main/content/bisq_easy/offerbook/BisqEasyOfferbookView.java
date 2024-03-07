@@ -20,6 +20,7 @@ package bisq.desktop.main.content.bisq_easy.offerbook;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.desktop.common.Layout;
+import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.DropdownMenu;
 import bisq.desktop.components.controls.DropdownMenuItem;
@@ -33,11 +34,13 @@ import bisq.i18n.Res;
 import javafx.css.PseudoClass;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.SeparatorMenuItem;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
@@ -63,7 +66,9 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
             atLeastTwoStars, atLeastOneStar;
     private DropdownTitleMenuItem atLeastTitle;
     private CheckBox hideUserMessagesCheckbox;
-    private Label channelHeaderIcon, marketPrice;
+    private Label channelHeaderIcon, marketPrice, removeWithOffersFilter;
+    private HBox withOffersDisplayHint;
+    private ImageView defaultCloseIcon, activeCloseIcon;
 
     public BisqEasyOfferbookView(BisqEasyOfferbookModel model,
                                  BisqEasyOfferbookController controller,
@@ -113,6 +118,8 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         hideUserMessagesCheckbox.selectedProperty().bindBidirectional(getModel().getOfferOnly());
         marketSelectorSearchBox.textProperty().bindBidirectional(getModel().getMarketSelectorSearchText());
         marketPrice.textProperty().bind(getModel().getMarketPrice());
+        withOffersDisplayHint.visibleProperty().bind(getModel().getSelectedMarketsFilter().isEqualTo(Filters.Markets.WITH_OFFERS));
+        withOffersDisplayHint.managedProperty().bind(getModel().getSelectedMarketsFilter().isEqualTo(Filters.Markets.WITH_OFFERS));
 
         selectedModelItemPin = EasyBind.subscribe(getModel().getSelectedMarketChannelItem(), selected -> {
             tableView.getSelectionModel().select(selected);
@@ -150,6 +157,10 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         atLeastOneStar.setOnAction(e -> setPeerReputationFilter(atLeastOneStar));
 
         createOfferButton.setOnAction(e -> getController().onCreateOffer());
+
+        removeWithOffersFilter.setOnMouseClicked(e -> getModel().getSelectedMarketsFilter().set(Filters.Markets.ALL));
+        withOffersDisplayHint.setOnMouseEntered(e -> removeWithOffersFilter.setGraphic(activeCloseIcon));
+        withOffersDisplayHint.setOnMouseExited(e -> removeWithOffersFilter.setGraphic(defaultCloseIcon));
     }
 
     private void setOfferDirectionOrOwnerFilter(DropdownFilterMenuItem<?> filterMenuItem) {
@@ -167,6 +178,8 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         hideUserMessagesCheckbox.selectedProperty().unbindBidirectional(getModel().getOfferOnly());
         marketSelectorSearchBox.textProperty().unbindBidirectional(getModel().getMarketSelectorSearchText());
         marketPrice.textProperty().unbind();
+        withOffersDisplayHint.visibleProperty().unbind();
+        withOffersDisplayHint.managedProperty().unbind();
 
         selectedModelItemPin.unsubscribe();
         tableViewSelectionPin.unsubscribe();
@@ -192,6 +205,10 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         atLeastTwoStars.setOnAction(null);
         atLeastOneStar.setOnAction(null);
         createOfferButton.setOnAction(null);
+
+        removeWithOffersFilter.setOnMouseClicked(null);
+        withOffersDisplayHint.setOnMouseEntered(null);
+        withOffersDisplayHint.setOnMouseExited(null);
     }
 
     private BisqEasyOfferbookModel getModel() {
@@ -218,6 +235,12 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         subheader.setAlignment(Pos.CENTER);
         subheader.getStyleClass().add("market-selection-subheader");
 
+        setUpWithOffersFiltersDisplayHint();
+        HBox appliedFiltersSection = new HBox(withOffersDisplayHint);
+        appliedFiltersSection.setAlignment(Pos.CENTER_RIGHT);
+        appliedFiltersSection.getStyleClass().add("market-selection-applied-filters");
+        HBox.setHgrow(appliedFiltersSection, Priority.ALWAYS);
+
         tableView = new BisqTableView<>(getModel().getSortedMarketChannelItems());
         tableView.getStyleClass().add("market-selection-list");
         tableView.allowVerticalScrollbar();
@@ -226,11 +249,28 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         configTableView();
         VBox.setVgrow(tableView, Priority.ALWAYS);
 
-        marketSelectionList = new VBox(header, Layout.hLine(), subheader, tableView);
+        marketSelectionList = new VBox(header, Layout.hLine(), subheader, appliedFiltersSection, tableView);
         marketSelectionList.setPrefWidth(210);
         marketSelectionList.setMinWidth(210);
         marketSelectionList.setFillWidth(true);
         marketSelectionList.getStyleClass().add("chat-container");
+    }
+
+    private void setUpWithOffersFiltersDisplayHint() {
+        Label withOffersLabel = new Label(Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.withOffers"));
+        withOffersLabel.getStyleClass().add("small-text");
+        removeWithOffersFilter = new Label();
+        defaultCloseIcon = ImageUtil.getImageViewById("close");
+        defaultCloseIcon.setScaleX(0.4);
+        defaultCloseIcon.setScaleY(0.4);
+        activeCloseIcon = ImageUtil.getImageViewById("close-white");
+        activeCloseIcon.setScaleX(0.4);
+        activeCloseIcon.setScaleY(0.4);
+        removeWithOffersFilter.setGraphic(defaultCloseIcon);
+        removeWithOffersFilter.setCursor(Cursor.HAND);
+        withOffersDisplayHint = new HBox(withOffersLabel, removeWithOffersFilter);
+        withOffersDisplayHint.setAlignment(Pos.CENTER);
+        withOffersDisplayHint.getStyleClass().add("filter-display-hint");
     }
 
     private DropdownMenu createAndGetSortAndFilterMarketsMenu() {
