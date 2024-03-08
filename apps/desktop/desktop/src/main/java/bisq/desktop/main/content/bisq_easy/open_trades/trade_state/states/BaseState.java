@@ -86,12 +86,15 @@ public abstract class BaseState {
         public void onDeactivate() {
         }
 
-        protected Optional<String> findUsersAccountData() {
-            return Optional.ofNullable(accountService.getSelectedAccount()).stream()
-                    .filter(account -> account instanceof UserDefinedFiatAccount)
-                    .map(account -> (UserDefinedFiatAccount) account)
-                    .map(account -> account.getAccountPayload().getAccountData())
-                    .findFirst();
+        protected Optional<String> findUsersAccountData()
+        {
+            return accountService
+                .getSelectedAccount()
+                .stream()
+                .filter(UserDefinedFiatAccount.class::isInstance)
+                .map(UserDefinedFiatAccount.class::cast)
+                .map(account -> account.getAccountPayload().getAccountData())
+                .findFirst();
         }
 
         protected void sendSystemMessage(String message) {

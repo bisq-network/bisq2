@@ -124,7 +124,7 @@ public class PaymentAccountsView extends View<VBox, PaymentAccountsModel, Paymen
 
         accountSelection.setOnChangeConfirmed(e -> {
             if (accountSelection.getSelectionModel().getSelectedItem() == null) {
-                accountSelection.getSelectionModel().select(model.getSelectedAccount());
+                accountSelection.getSelectionModel().select(model.getSelectedAccount().orElse(null));
                 return;
             }
             controller.onSelectAccount(accountSelection.getSelectionModel().getSelectedItem());
@@ -154,7 +154,7 @@ public class PaymentAccountsView extends View<VBox, PaymentAccountsModel, Paymen
     @Override
     protected void onViewDetached() {
         headline.textProperty().unbind();
-        accountData.textProperty().unbindBidirectional(model.getAccountData());
+        accountData.textProperty().unbindBidirectional(model.getAccountData().orElse(null));
         saveButton.disableProperty().unbind();
         deletedButton.disableProperty().unbind();
 

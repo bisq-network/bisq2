@@ -11,7 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 import java.util.Optional;
 
-//fixme (low prio) use Optional instead of Nullable
 @EqualsAndHashCode(callSuper = true)
 @Setter
 @Getter
@@ -23,10 +22,8 @@ public abstract class BankAccountPayload extends CountryBasedAccountPayload {
     protected String branchId;
     protected String accountNr;
     protected String accountType;
-    @Nullable
     protected String holderTaxId;
     protected String bankId;
-    @Nullable
     protected String nationalAccountId;
 
     protected BankAccountPayload(String id,
@@ -60,13 +57,9 @@ public abstract class BankAccountPayload extends CountryBasedAccountPayload {
         NetworkDataValidation.validateText(branchId, 30);
         NetworkDataValidation.validateText(accountNr, 30);
         NetworkDataValidation.validateText(accountType, 20);
-        if (holderTaxId != null) {
-            NetworkDataValidation.validateText(holderTaxId, 50);
-        }
+        getHolderTaxId().ifPresent(taxId ->  NetworkDataValidation.validateText(taxId, 50));
         NetworkDataValidation.validateText(bankId, 50);
-        if (nationalAccountId != null) {
-            NetworkDataValidation.validateText(nationalAccountId, 50);
-        }
+        getNationalAccountId().ifPresent(accId ->  NetworkDataValidation.validateText(nationalAccountId, 50));
     }
 
     protected bisq.account.protobuf.BankAccountPayload.Builder getBankAccountPayloadBuilder() {
@@ -78,8 +71,8 @@ public abstract class BankAccountPayload extends CountryBasedAccountPayload {
                 .setAccountType(accountType)
                 .setBranchId(branchId)
                 .setBankId(bankId);
-        Optional.ofNullable(holderTaxId).ifPresent(builder::setHolderTaxId);
-        Optional.ofNullable(nationalAccountId).ifPresent(builder::setNationalAccountId);
+        getHolderTaxId().ifPresent(builder::setHolderTaxId);
+        getNationalAccountId().ifPresent(builder::setNationalAccountId);
         return builder;
     }
 
@@ -97,4 +90,15 @@ public abstract class BankAccountPayload extends CountryBasedAccountPayload {
         }
         throw new UnresolvableProtobufMessageException(proto);
     }
+
+    private Optional<String> getHolderTaxId()
+    {
+        return Optional.ofNullable(this.holderTaxId);
+    }
+
+    private Optional<String> getNationalAccountId()
+    {
+        return Optional.ofNullable(this.nationalAccountId);
+    }
+
 }

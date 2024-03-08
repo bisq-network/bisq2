@@ -29,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.Optional;
 
 @Getter
 @Slf4j
@@ -43,9 +44,8 @@ public class PaymentAccountsModel implements Model {
     private final SortedList<Account<?, ? extends PaymentMethod<?>>> sortedAccounts = new SortedList<>(accounts);
 
     // selectedAccount
-    @Nullable
-    public Account<?, ? extends PaymentMethod<?>> getSelectedAccount() {
-        return selectedAccount.get();
+    public Optional<Account<?, ? extends PaymentMethod<?>>> getSelectedAccount() {
+        return Optional.ofNullable(selectedAccount.get());
     }
 
     public ObjectProperty<Account<?, ? extends PaymentMethod<?>>> selectedAccountProperty() {
@@ -57,9 +57,8 @@ public class PaymentAccountsModel implements Model {
     }
 
     // accountData
-    @Nullable
-    public String getAccountData() {
-        return accountData.get();
+    public Optional<String> getAccountData() {
+        return Optional.ofNullable(accountData.get());
     }
 
     public StringProperty accountDataProperty() {
