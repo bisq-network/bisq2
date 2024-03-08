@@ -34,6 +34,7 @@ import bisq.network.p2p.node.transport.TransportService;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.confidential.SendConfidentialMessageResult;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatusService;
+import bisq.network.p2p.services.confidential.resend.ResendMessageService;
 import bisq.network.p2p.services.data.DataNetworkService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.inventory.InventoryService;
@@ -106,6 +107,7 @@ public class ServiceNode implements Node.Listener {
     private final PeerGroupService peerGroupService;
     private final InventoryService.Config inventoryServiceConfig;
     private final Optional<MessageDeliveryStatusService> messageDeliveryStatusService;
+    private final Optional<ResendMessageService> resendMessageService;
     private final KeyBundleService keyBundleService;
     private final Set<Address> seedNodeAddresses;
 
@@ -137,6 +139,7 @@ public class ServiceNode implements Node.Listener {
                 InventoryService.Config inventoryServiceConfig,
                 Optional<DataService> dataService,
                 Optional<MessageDeliveryStatusService> messageDeliveryStatusService,
+                Optional<ResendMessageService> resendMessageService,
                 KeyBundleService keyBundleService,
                 PersistenceService persistenceService,
                 AuthorizationService authorizationService,
@@ -149,6 +152,7 @@ public class ServiceNode implements Node.Listener {
         this.inventoryServiceConfig = inventoryServiceConfig;
         this.messageDeliveryStatusService = messageDeliveryStatusService;
         this.dataService = dataService;
+        this.resendMessageService = resendMessageService;
         this.keyBundleService = keyBundleService;
         this.seedNodeAddresses = seedNodeAddresses;
 
@@ -215,7 +219,11 @@ public class ServiceNode implements Node.Listener {
                 Optional.empty();
 
         confidentialMessageService = supportedServices.contains(SupportedService.CONFIDENTIAL) ?
-                Optional.of(new ConfidentialMessageService(nodesById, keyBundleService, dataService, messageDeliveryStatusService)) :
+                Optional.of(new ConfidentialMessageService(nodesById,
+                        keyBundleService,
+                        dataService,
+                        messageDeliveryStatusService,
+                        resendMessageService)) :
                 Optional.empty();
 
         setState(State.INITIALIZING);
@@ -270,12 +278,13 @@ public class ServiceNode implements Node.Listener {
     }
 
     SendConfidentialMessageResult confidentialSend(EnvelopePayloadMessage envelopePayloadMessage,
+                                                   NetworkId receiverNetworkId,
                                                    Address address,
                                                    PubKey receiverPubKey,
                                                    KeyPair senderKeyPair,
                                                    NetworkId senderNetworkId) {
         checkArgument(confidentialMessageService.isPresent(), "ConfidentialMessageService not present at confidentialSend");
-        return confidentialMessageService.get().send(envelopePayloadMessage, address, receiverPubKey, senderKeyPair, senderNetworkId);
+        return confidentialMessageService.get().send(envelopePayloadMessage, receiverNetworkId, address, receiverPubKey, senderKeyPair, senderNetworkId);
     }
 
     Connection send(NetworkId senderNetworkId, EnvelopePayloadMessage envelopePayloadMessage, Address address) {

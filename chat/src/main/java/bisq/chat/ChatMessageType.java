@@ -24,7 +24,7 @@ public enum ChatMessageType implements ProtoEnum {
     TEXT,
     LEAVE,
     TAKE_BISQ_EASY_OFFER,
-    SYSTEM_MESSAGE;
+    PROTOCOL_LOG_MESSAGE;
 
     @Override
     public bisq.chat.protobuf.ChatMessageType toProto() {

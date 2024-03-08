@@ -43,6 +43,7 @@ import bisq.network.p2p.node.transport.BootstrapInfo;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatusService;
+import bisq.network.p2p.services.confidential.resend.ResendMessageService;
 import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.DistributedData;
@@ -100,7 +101,10 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     private final Optional<DataService> dataService;
     @Getter
     private final ServiceNodesByTransport serviceNodesByTransport;
+    @Getter
     private final Optional<MessageDeliveryStatusService> messageDeliveryStatusService;
+    @Getter
+    private final Optional<ResendMessageService> resendMessageService;
     private final Optional<NetworkLoadService> monitorService;
     @Getter
     private final Persistence<NetworkServiceStore> persistence;
@@ -132,6 +136,10 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                 supportedServices.contains(ServiceNode.SupportedService.CONFIDENTIAL) ?
                 Optional.of(new MessageDeliveryStatusService(persistenceService, keyBundleService, this)) :
                 Optional.empty();
+        resendMessageService = supportedServices.contains(ServiceNode.SupportedService.ACK) &&
+                supportedServices.contains(ServiceNode.SupportedService.CONFIDENTIAL) ?
+                Optional.of(new ResendMessageService(persistenceService, this, messageDeliveryStatusService.orElseThrow())) :
+                Optional.empty();
 
         NetworkLoadSnapshot networkLoadSnapshot = new NetworkLoadSnapshot();
 
@@ -150,6 +158,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                 equihashProofOfWorkService,
                 dataService,
                 messageDeliveryStatusService,
+                resendMessageService,
                 networkLoadSnapshot);
 
         monitorService = supportedServices.contains(ServiceNode.SupportedService.DATA) &&
@@ -183,6 +192,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                 .thenApply(node -> {
                     if (node != null) {
                         messageDeliveryStatusService.ifPresent(MessageDeliveryStatusService::initialize);
+                        resendMessageService.ifPresent(ResendMessageService::initialize);
                         monitorService.ifPresent(NetworkLoadService::initialize);
                         return true;
                     } else {
@@ -194,6 +204,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
         messageDeliveryStatusService.ifPresent(MessageDeliveryStatusService::shutdown);
+        resendMessageService.ifPresent(ResendMessageService::shutdown);
         monitorService.ifPresent(NetworkLoadService::shutdown);
         dataService.ifPresent(DataService::shutdown);
         return serviceNodesByTransport.shutdown()
@@ -360,8 +371,8 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         return httpClientsByTransport.getHttpClient(url, userAgent, transportType, socksProxy, socks5ProxyAddress);
     }
 
-    public Map<TransportType, Observable<Node.State>> getNodeStateByTransportType() {
-        return serviceNodesByTransport.getNodeStateByTransportType();
+    public Map<TransportType, Observable<Node.State>> getDefaultNodeStateByTransportType() {
+        return serviceNodesByTransport.getDefaultNodeStateByTransportType();
     }
 
     public Map<TransportType, BootstrapInfo> getBootstrapInfoByTransportType() {

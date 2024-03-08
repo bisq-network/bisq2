@@ -152,7 +152,7 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
 
     public CompletableFuture<SendMessageResult> sendSystemMessage(String text,
                                                                   BisqEasyOpenTradeChannel channel) {
-        return sendMessage(text, Optional.empty(), ChatMessageType.SYSTEM_MESSAGE, channel);
+        return sendMessage(text, Optional.empty(), ChatMessageType.PROTOCOL_LOG_MESSAGE, channel);
     }
 
     public CompletableFuture<SendMessageResult> sendTextMessage(String text,
@@ -218,7 +218,7 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
                 new Date().getTime(),
                 false,
                 channel.getMediator(),
-                ChatMessageType.SYSTEM_MESSAGE,
+                ChatMessageType.PROTOCOL_LOG_MESSAGE,
                 Optional.empty());
         channel.addChatMessage(systemMessage);
     }
