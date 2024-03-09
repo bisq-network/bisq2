@@ -108,8 +108,8 @@ public class NetworkLoadService {
                 .sum();
         long networkDatabaseSize = dataRequests.stream().mapToLong(e -> e.toProto().getSerializedSize()).sum();
 
-        StringBuilder sb = new StringBuilder("\n\n##########################################################################################");
-        sb.append("\nNetwork statistics").append(("\n##########################################################################################"))
+        StringBuilder sb = new StringBuilder("\n\n////////////////////////////////////////////////////////////////////////////////////////////////////");
+        sb.append("\nNetwork statistics").append(("\n////////////////////////////////////////////////////////////////////////////////////////////////////"))
                 .append("\nNumber of Connections: ").append(numConnections)
                 .append("\nNumber of messages sent in last hour: ").append(numMessagesSentOfLastHour)
                 .append("\nNumber of messages received in last hour: ").append(numMessagesReceivedOfLastHour)
@@ -118,7 +118,7 @@ public class NetworkLoadService {
                 .append("\nData received in last hour: ").append(ByteUnit.BYTE.toKB(receivedBytesOfLastHour)).append(" KB")
                 .append("\nTime for message sending in last hour: ").append(spentSendMessageTimeOfLastHour / 1000d).append(" sec.")
                 .append("\nTime for message deserializing in last hour: ").append(deserializeTimeOfLastHour / 1000d).append(" sec.")
-                .append("\n##########################################################################################\n");
+                .append("\n////////////////////////////////////////////////////////////////////////////////////////////////////\n");
         log.info(sb.toString());
 
         double MAX_NUM_CON = 30;

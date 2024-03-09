@@ -17,7 +17,6 @@
 
 package bisq.network.p2p.services.data.inventory;
 
-import bisq.common.encoding.Hex;
 import bisq.common.util.ByteUnit;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
@@ -27,14 +26,14 @@ import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.data.inventory.filter.InventoryFilter;
 import bisq.network.p2p.services.data.storage.append.AddAppendOnlyDataRequest;
 import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
-import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
-import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
-import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static java.util.concurrent.CompletableFuture.runAsync;
@@ -86,48 +85,46 @@ class InventoryHandler implements Connection.Listener {
     }
 
     private void printReceivedInventory(InventoryResponse response) {
-        Map<String, List<String>> details = new HashMap<>();
+        Map<String, Map<String, AtomicInteger>> dataRequestMap = new HashMap<>();
         Inventory inventory = response.getInventory();
         inventory.getEntries()
-                .forEach(entry -> {
-                    String key = entry.getClass().getSimpleName();
-                    String data = null;
-                    if (entry instanceof AddAuthenticatedDataRequest) {
-                        AddAuthenticatedDataRequest addRequest = (AddAuthenticatedDataRequest) entry;
-                        data = addRequest.getAuthenticatedSequentialData().getAuthenticatedData().getDistributedData().getClass().getSimpleName();
-                    } else if (entry instanceof RemoveAuthenticatedDataRequest) {
-                        RemoveAuthenticatedDataRequest removeRequest = (RemoveAuthenticatedDataRequest) entry;
-                        data = Hex.encode(removeRequest.getHash());
-                        key += ": Hashes";
-                    } else if (entry instanceof AddMailboxRequest) {
-                        AddMailboxRequest addRequest = (AddMailboxRequest) entry;
-                        data = addRequest.getMailboxSequentialData().getMailboxData().getConfidentialMessage().getReceiverKeyId();
-                        key += ": ReceiverKeyIds";
-                    } else if (entry instanceof RemoveMailboxRequest) {
-                        RemoveMailboxRequest removeRequest = (RemoveMailboxRequest) entry;
-                        data = Hex.encode(removeRequest.getHash());
-                        key += ": Hashes";
-                    } else if (entry instanceof AddAppendOnlyDataRequest) {
-                        AddAppendOnlyDataRequest addRequest = (AddAppendOnlyDataRequest) entry;
-                        data = addRequest.getAppendOnlyData().getClass().getSimpleName();
+                .forEach(dataRequest -> {
+                    String dataRequestName = dataRequest.getClass().getSimpleName();
+                    String payloadName = dataRequest.getClass().getSimpleName();
+                    if (dataRequest instanceof AddAuthenticatedDataRequest) {
+                        AddAuthenticatedDataRequest addRequest = (AddAuthenticatedDataRequest) dataRequest;
+                        payloadName = addRequest.getAuthenticatedSequentialData().getAuthenticatedData().getDistributedData().getClass().getSimpleName();
+                    } else if (dataRequest instanceof AddAppendOnlyDataRequest) {
+                        AddAppendOnlyDataRequest addRequest = (AddAppendOnlyDataRequest) dataRequest;
+                        payloadName = addRequest.getAppendOnlyData().getClass().getSimpleName();
                     }
-                    if (data != null) {
-                        details.putIfAbsent(key, new ArrayList<>());
-                        List<String> list = details.get(key);
-                        list.add(data);
-                        details.put(key, list);
-                    }
-                });
+                    dataRequestMap.putIfAbsent(dataRequestName, new HashMap<>());
+                    Map<String, AtomicInteger> payloadMap = dataRequestMap.get(dataRequestName);
+                    dataRequestMap.put(dataRequestName, payloadMap);
+                    String payloadKey = dataRequestName.equals(payloadName) ?
+                            dataRequestName :
+                            dataRequestName + "." + payloadName;
 
-        String report = details.entrySet().stream().map(e -> e.getValue().size() + " " + e.getKey() + ": " + e.getValue())
+                    payloadMap.putIfAbsent(payloadKey, new AtomicInteger());
+                    AtomicInteger counter = payloadMap.get(payloadKey);
+                    counter.incrementAndGet();
+                });
+        String report = dataRequestMap.values().stream()
+                .map(payloadMap -> payloadMap.entrySet().stream()
+                        .map(entry -> String.format("%4d item(s) of %s", entry.getValue().get(), entry.getKey()))
+                        .collect(Collectors.joining("\n")))
                 .collect(Collectors.joining("\n"));
+
         if (report.isEmpty()) {
             report = "No items received";
         }
+        String maxSizeReached = inventory.isMaxSizeReached() ? "; \nResponse got truncated because max size was reached" : "";
+        String size = ByteUnit.BYTE.toKB((double) inventory.getSerializedSize().orElse(0)) + " KB";
         log.info("\n##########################################################################################\n" +
-                "Inventory from: " + connection.getPeerAddress() + "; size=" + ByteUnit.BYTE.toKB((double) inventory.getSerializedSize().orElse(0)) + "\n" +
+                "Received " + size + " of inventory data from: " + connection.getPeerAddress().getFullAddress() +
+                maxSizeReached +
+                "\n##########################################################################################\n" +
                 report +
-                "isMaxSizeReached=" + inventory.isMaxSizeReached() + "\n" +
                 "\n##########################################################################################");
     }
 

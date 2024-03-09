@@ -36,12 +36,11 @@ import java.util.concurrent.TimeUnit;
  */
 @EqualsAndHashCode
 @ToString
+@Getter
 public final class MailboxData implements StorageData {
     public final static long MAX_TLL = TimeUnit.DAYS.toMillis(15);
 
-    @Getter
     private final ConfidentialMessage confidentialMessage;
-    @Getter
     private final MetaData metaData;
 
     public MailboxData(ConfidentialMessage confidentialMessage, MetaData metaData) {
