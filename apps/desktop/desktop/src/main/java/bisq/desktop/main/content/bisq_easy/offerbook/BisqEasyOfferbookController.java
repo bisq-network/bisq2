@@ -27,6 +27,7 @@ import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.currency.Market;
 import bisq.common.observable.Pin;
+import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.observable.collection.ObservableArray;
 import bisq.common.util.ProtobufUtils;
 import bisq.desktop.ServiceProvider;
@@ -41,6 +42,7 @@ import bisq.presentation.formatters.PriceFormatter;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import javafx.collections.ListChangeListener;
+import javafx.collections.SetChangeListener;
 import javafx.scene.layout.StackPane;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -58,9 +60,12 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     private final MarketPriceService marketPriceService;
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
     private final BisqEasyOfferbookModel bisqEasyOfferbookModel;
-    private Pin offerOnlySettingsPin, bisqEasyPrivateTradeChatChannelsPin, selectedChannelPin, marketPriceByCurrencyMapPin;
+    private Pin offerOnlySettingsPin, bisqEasyPrivateTradeChatChannelsPin, selectedChannelPin,
+            marketPriceByCurrencyMapPin, favouriteMarketsPin;
     private Subscription marketSelectorSearchPin, selectedMarketFilterPin, selectedOfferDirectionOrOwnerFilterPin,
-            selectedPeerReputationFilterPin, selectedMarketSortTypePin;
+            selectedPeerReputationFilterPin, selectedMarketSortTypePin, favouriteMarketsSubscription;
+    private CollectionObserver<Market> favouriteMarketsObserver;
+    private SetChangeListener<Market> favouriteMarketsListener;
 
     public BisqEasyOfferbookController(ServiceProvider serviceProvider) {
         super(serviceProvider, ChatChannelDomain.BISQ_EASY_OFFERBOOK, NavigationTarget.BISQ_EASY_OFFERBOOK);
@@ -169,6 +174,43 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
             }
         });
 
+        favouriteMarketsObserver = new CollectionObserver<>() {
+            @Override
+            public void add(Market market) {
+                model.getFavouriteMarkets().add(market);
+            }
+
+            @Override
+            public void remove(Object element) {
+                if (element instanceof Market) {
+                    model.getFavouriteMarkets().remove((Market) element);
+                }
+            }
+
+            @Override
+            public void clear() {
+                model.getFavouriteMarkets().clear();
+            }
+        };
+        favouriteMarketsPin = settingsService.getFavouriteMarkets().addObserver(favouriteMarketsObserver);
+
+        favouriteMarketsListener = change -> {
+            if (change.wasAdded()) {
+                Market market = change.getElementAdded();
+                model.getMarketChannelItems().forEach(item -> item.getIsFavourite().set(market.equals(item.getMarket())));
+            }
+
+            if (change.wasRemoved()) {
+                Market market = change.getElementRemoved();
+                model.getMarketChannelItems().forEach(item -> {
+                    if (market.equals(item.getMarket()) && item.getIsFavourite().get()) {
+                        item.getIsFavourite().set(false);
+                    }
+                });
+            }
+        };
+        model.getFavouriteMarkets().addListener(favouriteMarketsListener);
+
         model.getSortedMarketChannelItems().setComparator(model.getSelectedMarketSortType().get().getComparator());
 
         maybeSelectFirst();
@@ -187,6 +229,8 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         selectedPeerReputationFilterPin.unsubscribe();
         marketPriceByCurrencyMapPin.unbind();
         selectedMarketSortTypePin.unsubscribe();
+        favouriteMarketsPin.unbind();
+        model.getFavouriteMarkets().removeListener(favouriteMarketsListener);
 
         resetSelectedChildTarget();
     }
