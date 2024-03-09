@@ -19,7 +19,7 @@ package bisq.desktop.main.content.components.chatMessages.messages;
 
 import javafx.scene.layout.VBox;
 
-public abstract class Message extends VBox {
+public abstract class MessageBox extends VBox {
     protected final static double CHAT_BOX_MAX_WIDTH = 1160;
 
     public abstract void cleanup();

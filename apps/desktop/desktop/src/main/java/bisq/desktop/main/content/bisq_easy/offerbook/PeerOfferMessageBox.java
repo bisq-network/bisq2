@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.components.chatMessages.messages.BisqEasy;
+package bisq.desktop.main.content.bisq_easy.offerbook;
 
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
@@ -23,7 +23,7 @@ import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.main.content.components.chatMessages.ChatMessageListItem;
 import bisq.desktop.main.content.components.chatMessages.ChatMessagesListView;
-import bisq.desktop.main.content.components.chatMessages.messages.PeerMessage;
+import bisq.desktop.main.content.components.chatMessages.messages.PeerMessageBox;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -34,12 +34,12 @@ import javafx.scene.control.ListView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
-public final class PeerOfferMessage extends PeerMessage {
+public final class PeerOfferMessageBox extends PeerMessageBox {
     private Button takeOfferButton;
 
-    public PeerOfferMessage(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
-                            ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
-                            ChatMessagesListView.Controller controller, ChatMessagesListView.Model model) {
+    public PeerOfferMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
+                               ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
+                               ChatMessagesListView.Controller controller, ChatMessagesListView.Model model) {
         super(item, list, controller, model);
 
         reactionsHBox.getChildren().setAll(replyIcon, pmIcon, moreOptionsIcon, supportedLanguages, Spacer.fillHBox());

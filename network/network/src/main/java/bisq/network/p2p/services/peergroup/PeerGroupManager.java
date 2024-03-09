@@ -239,8 +239,7 @@ public class PeerGroupManager {
             maybeCreateConnections();
             maybeRemoveReportedPeers();
             maybeRemovePersistedPeers();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        } catch (InterruptedException ignore) {
         }
     }
 

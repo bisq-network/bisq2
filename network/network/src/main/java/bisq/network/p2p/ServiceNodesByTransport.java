@@ -37,6 +37,7 @@ import bisq.network.p2p.node.transport.BootstrapInfo;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.confidential.SendConfidentialMessageResult;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatusService;
+import bisq.network.p2p.services.confidential.resend.ResendMessageService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.inventory.InventoryService;
 import bisq.network.p2p.services.peergroup.PeerGroupManager;
@@ -83,6 +84,7 @@ public class ServiceNodesByTransport {
                                    EquihashProofOfWorkService equihashProofOfWorkService,
                                    Optional<DataService> dataService,
                                    Optional<MessageDeliveryStatusService> messageDeliveryStatusService,
+                                   Optional<ResendMessageService> resendMessageService,
                                    NetworkLoadSnapshot networkLoadSnapshot) {
         this.supportedTransportTypes = supportedTransportTypes;
 
@@ -109,6 +111,7 @@ public class ServiceNodesByTransport {
                     inventoryServiceConfig,
                     dataService,
                     messageDeliveryStatusService,
+                    resendMessageService,
                     keyBundleService,
                     persistenceService,
                     authorizationService,
@@ -191,6 +194,7 @@ public class ServiceNodesByTransport {
             if (map.containsKey(transportType)) {
                 ServiceNode serviceNode = map.get(transportType);
                 SendConfidentialMessageResult result = serviceNode.confidentialSend(envelopePayloadMessage,
+                        receiverNetworkId,
                         address,
                         receiverNetworkId.getPubKey(),
                         senderKeyPair,
@@ -244,7 +248,7 @@ public class ServiceNodesByTransport {
                 });
     }
 
-    public Map<TransportType, Observable<Node.State>> getNodeStateByTransportType() {
+    public Map<TransportType, Observable<Node.State>> getDefaultNodeStateByTransportType() {
         return map.entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().getDefaultNode().getObservableState()));
     }

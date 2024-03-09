@@ -22,8 +22,11 @@ import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.currency.Market;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.main.content.components.MarketImageComposition;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.scene.CacheHint;
 import javafx.scene.Node;
 import javafx.scene.effect.ColorAdjust;
@@ -39,6 +42,10 @@ public class MarketChannelItem {
     private final Market market;
     private final Node marketLogo;
     private final IntegerProperty numOffers = new SimpleIntegerProperty(0);
+    private final BooleanProperty selected = new SimpleBooleanProperty(false);
+    private final ChangeListener<Boolean> selectedChangeListener;
+    private final ColorAdjust defaultColorAdjust = new ColorAdjust();
+    private final ColorAdjust selectedColorAdjust = new ColorAdjust();
 
     public MarketChannelItem(BisqEasyOfferbookChannel channel) {
         this.channel = channel;
@@ -46,12 +53,23 @@ public class MarketChannelItem {
         marketLogo = MarketImageComposition.createMarketLogo(market.getQuoteCurrencyCode());
         marketLogo.setCache(true);
         marketLogo.setCacheHint(CacheHint.SPEED);
-        ColorAdjust colorAdjust = new ColorAdjust();
-        colorAdjust.setBrightness(-0.1);
-        marketLogo.setEffect(colorAdjust);
+
+        setUpColorAdjustments();
+        selectedChangeListener = (observable, oldValue, newValue) ->
+                marketLogo.setEffect(newValue ? selectedColorAdjust : defaultColorAdjust);
+        selected.addListener(selectedChangeListener);
+        marketLogo.setEffect(defaultColorAdjust);
 
         channel.getChatMessages().addObserver(new WeakReference<Runnable>(this::updateNumOffers).get());
         updateNumOffers();
+    }
+
+    private void setUpColorAdjustments() {
+        defaultColorAdjust.setBrightness(-0.6);
+        defaultColorAdjust.setSaturation(-0.33);
+        defaultColorAdjust.setContrast(-0.1);
+
+        selectedColorAdjust.setBrightness(-0.1);
     }
 
     private void updateNumOffers() {
@@ -70,5 +88,9 @@ public class MarketChannelItem {
     @Override
     public String toString() {
         return market.toString();
+    }
+
+    public void cleanUp() {
+        selected.removeListener(selectedChangeListener);
     }
 }

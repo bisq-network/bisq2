@@ -44,6 +44,9 @@ public class Observable<S> implements ReadOnlyObservable<S> {
     }
 
     public void set(S value) {
+        if ((this.value == null && value == null) || (this.value != null && this.value.equals(value))) {
+            return;
+        }
         this.value = value;
         observers.forEach(observer -> observer.accept(value));
     }

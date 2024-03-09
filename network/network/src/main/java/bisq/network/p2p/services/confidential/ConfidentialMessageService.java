@@ -29,6 +29,8 @@ import bisq.network.p2p.node.NodesById;
 import bisq.network.p2p.services.confidential.ack.AckRequestingMessage;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatusService;
+import bisq.network.p2p.services.confidential.resend.ResendMessageData;
+import bisq.network.p2p.services.confidential.resend.ResendMessageService;
 import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -66,16 +68,19 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
     private final KeyBundleService keyBundleService;
     private final Optional<DataService> dataService;
     private final Optional<MessageDeliveryStatusService> messageDeliveryStatusService;
+    private final Optional<ResendMessageService> resendMessageService;
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
 
     public ConfidentialMessageService(NodesById nodesById,
                                       KeyBundleService keyBundleService,
                                       Optional<DataService> dataService,
-                                      Optional<MessageDeliveryStatusService> messageDeliveryStatusService) {
+                                      Optional<MessageDeliveryStatusService> messageDeliveryStatusService,
+                                      Optional<ResendMessageService> resendMessageService) {
         this.nodesById = nodesById;
         this.keyBundleService = keyBundleService;
         this.dataService = dataService;
         this.messageDeliveryStatusService = messageDeliveryStatusService;
+        this.resendMessageService = resendMessageService;
 
         nodesById.addNodeListener(this);
         dataService.ifPresent(service -> service.addListener(this));
@@ -139,63 +144,75 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public SendConfidentialMessageResult send(EnvelopePayloadMessage envelopePayloadMessage,
+                                              NetworkId receiverNetworkId,
                                               Address address,
                                               PubKey receiverPubKey,
                                               KeyPair senderKeyPair,
                                               NetworkId senderNetworkId) {
-        log.debug("Send message to {}", address);
+        // Set connecting state
         SendConfidentialMessageResult result = new SendConfidentialMessageResult(MessageDeliveryStatus.CONNECTING);
-        onResult(envelopePayloadMessage, result);
+
+        if (envelopePayloadMessage instanceof AckRequestingMessage) {
+            AckRequestingMessage ackRequestingMessage = (AckRequestingMessage) envelopePayloadMessage;
+            resendMessageService.ifPresent(service -> service.handleResendMessageData(new ResendMessageData(ackRequestingMessage,
+                    receiverNetworkId,
+                    senderKeyPair,
+                    senderNetworkId,
+                    MessageDeliveryStatus.CONNECTING,
+                    System.currentTimeMillis())));
+        }
+
+        handleResult(envelopePayloadMessage, result);
+
+        // We try to get a connection. If it fails we store in mailbox in case envelopePayloadMessage is a MailboxMessage
         try {
             // Node gets initialized at higher level services
             nodesById.assertNodeIsInitialized(senderNetworkId);
             Connection connection = nodesById.getConnection(senderNetworkId, address);
-            return send(envelopePayloadMessage, connection, receiverPubKey, senderKeyPair, senderNetworkId);
-        } catch (Throwable throwable) {
-            if (envelopePayloadMessage instanceof MailboxMessage) {
-                log.info("Message could not be sent because of {}.\n" +
-                        "We send the message as mailbox message.", throwable.getMessage());
-                ConfidentialMessage confidentialMessage = getConfidentialMessage(envelopePayloadMessage, receiverPubKey, senderKeyPair);
-                result = storeMailBoxMessage(((MailboxMessage) envelopePayloadMessage).getMetaData(),
-                        confidentialMessage, receiverPubKey, senderKeyPair);
-            } else {
-                log.warn("Sending of networkMessage failed and networkMessage is not type of MailboxMessage. networkMessage={}", envelopePayloadMessage);
-                result = new SendConfidentialMessageResult(MessageDeliveryStatus.FAILED).setErrorMsg("Sending proto failed and proto is not type of MailboxMessage. Exception=" + throwable);
+
+            // We got a valid connection and try to send the message. If send fails we store in mailbox in case envelopePayloadMessage is a MailboxMessage
+            ConfidentialMessage confidentialMessage = getConfidentialMessage(envelopePayloadMessage, receiverPubKey, senderKeyPair);
+            try {
+                nodesById.send(senderNetworkId, confidentialMessage, connection);
+                result = new SendConfidentialMessageResult(MessageDeliveryStatus.SENT);
+            } catch (Exception exception) {
+                result = handleSendMessageException(envelopePayloadMessage, receiverPubKey, senderKeyPair, exception, confidentialMessage);
             }
-            onResult(envelopePayloadMessage, result);
-            return result;
+        } catch (Exception exception) {
+            ConfidentialMessage confidentialMessage = getConfidentialMessage(envelopePayloadMessage, receiverPubKey, senderKeyPair);
+            result = handleSendMessageException(envelopePayloadMessage, receiverPubKey, senderKeyPair, exception, confidentialMessage);
         }
+
+        if (envelopePayloadMessage instanceof AckRequestingMessage) {
+            AckRequestingMessage ackRequestingMessage = (AckRequestingMessage) envelopePayloadMessage;
+            MessageDeliveryStatus messageDeliveryStatus = result.getMessageDeliveryStatus();
+            resendMessageService.ifPresent(service -> service.handleResendMessageData(new ResendMessageData(ackRequestingMessage,
+                    receiverNetworkId,
+                    senderKeyPair,
+                    senderNetworkId,
+                    messageDeliveryStatus,
+                    System.currentTimeMillis())));
+        }
+
+        handleResult(envelopePayloadMessage, result);
+        return result;
+
     }
 
-    private SendConfidentialMessageResult send(EnvelopePayloadMessage envelopePayloadMessage,
-                                               Connection connection,
-                                               PubKey receiverPubKey,
-                                               KeyPair senderKeyPair,
-                                               NetworkId senderNetworkId) {
-        log.debug("Send message to {}", connection);
-        ConfidentialMessage confidentialMessage = getConfidentialMessage(envelopePayloadMessage, receiverPubKey, senderKeyPair);
+    private SendConfidentialMessageResult handleSendMessageException(EnvelopePayloadMessage envelopePayloadMessage, PubKey receiverPubKey, KeyPair senderKeyPair, Exception exception, ConfidentialMessage confidentialMessage) {
         SendConfidentialMessageResult result;
-        try {
-            // Node gets initialized at higher level services
-            nodesById.assertNodeIsInitialized(senderNetworkId);
-            nodesById.send(senderNetworkId, confidentialMessage, connection);
-            result = new SendConfidentialMessageResult(MessageDeliveryStatus.SENT);
-            onResult(envelopePayloadMessage, result);
-            return result;
-        } catch (Throwable throwable) {
-            if (envelopePayloadMessage instanceof MailboxMessage) {
-                log.info("Message could not be sent because of {}.\n" +
-                        "We send the message as mailbox message.", throwable.getMessage());
-                result = storeMailBoxMessage(((MailboxMessage) envelopePayloadMessage).getMetaData(),
-                        confidentialMessage, receiverPubKey, senderKeyPair);
-            } else {
-                log.warn("Sending message failed and message is not type of MailboxMessage. message={}", envelopePayloadMessage);
-                result = new SendConfidentialMessageResult(MessageDeliveryStatus.FAILED).setErrorMsg("Sending proto failed and proto is not type of MailboxMessage. Exception=" + throwable);
-            }
-            onResult(envelopePayloadMessage, result);
-            return result;
+        if (envelopePayloadMessage instanceof MailboxMessage) {
+            log.info("Message could not be sent because of {}.\n" +
+                    "We send the message as mailbox message.", exception.getMessage());
+            result = storeMailBoxMessage(((MailboxMessage) envelopePayloadMessage).getMetaData(),
+                    confidentialMessage, receiverPubKey, senderKeyPair);
+        } else {
+            log.warn("Sending message failed and message is not type of MailboxMessage. message={}", envelopePayloadMessage);
+            result = new SendConfidentialMessageResult(MessageDeliveryStatus.FAILED).setErrorMsg("Sending proto failed and proto is not type of MailboxMessage. Exception=" + exception);
         }
+        return result;
     }
+
 
     public void addListener(Listener listener) {
         listeners.add(listener);
@@ -210,7 +227,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private void onResult(EnvelopePayloadMessage envelopePayloadMessage, SendConfidentialMessageResult result) {
+    private void handleResult(EnvelopePayloadMessage envelopePayloadMessage, SendConfidentialMessageResult result) {
         if (envelopePayloadMessage instanceof AckRequestingMessage) {
             messageDeliveryStatusService.ifPresent(service -> {
                 String messageId = ((AckRequestingMessage) envelopePayloadMessage).getId();

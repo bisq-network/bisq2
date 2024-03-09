@@ -35,6 +35,7 @@ import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
+import bisq.network.p2p.services.confidential.resend.ResendMessageService;
 import bisq.offer.Direction;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.presentation.formatters.DateFormatter;
@@ -55,13 +56,14 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.text.DateFormat;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static bisq.chat.ChatMessageType.LEAVE;
-import static bisq.chat.ChatMessageType.SYSTEM_MESSAGE;
+import static bisq.chat.ChatMessageType.PROTOCOL_LOG_MESSAGE;
 import static bisq.desktop.main.content.components.chatMessages.ChatMessagesComponent.View.EDITED_POST_FIX;
 
 @Slf4j
@@ -86,6 +88,12 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     @EqualsAndHashCode.Exclude
     private final ObjectProperty<AwesomeIcon> messageDeliveryStatusIcon = new SimpleObjectProperty<>();
     @EqualsAndHashCode.Exclude
+    @Nullable
+    private MessageDeliveryStatus messageDeliveryStatus;
+    @EqualsAndHashCode.Exclude
+    @Nullable
+    private String messageId;
+    @EqualsAndHashCode.Exclude
     private Optional<String> messageDeliveryStatusIconColor = Optional.empty();
     @EqualsAndHashCode.Exclude
     private final Set<Pin> mapPins = new HashSet<>();
@@ -99,7 +107,8 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                                ReputationService reputationService,
                                BisqEasyTradeService bisqEasyTradeService,
                                UserIdentityService userIdentityService,
-                               NetworkService networkService) {
+                               NetworkService networkService,
+                               Optional<ResendMessageService> resendMessageService) {
         this.chatMessage = chatMessage;
         this.chatChannel = chatChannel;
         this.userIdentityService = userIdentityService;
@@ -138,12 +147,14 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
 
         mapPins.add(networkService.getMessageDeliveryStatusByMessageId().addObserver(new HashMapObserver<>() {
             @Override
-            public void put(String key, Observable<MessageDeliveryStatus> value) {
-                if (key.equals(chatMessage.getId())) {
+            public void put(String messageId, Observable<MessageDeliveryStatus> value) {
+                if (messageId.equals(chatMessage.getId())) {
                     // Delay to avoid ConcurrentModificationException
                     UIThread.runOnNextRenderFrame(() -> {
                         statusPins.add(value.addObserver(status -> {
                             UIThread.run(() -> {
+                                messageDeliveryStatus = status;
+                                ChatMessageListItem.this.messageId = messageId;
                                 if (status != null) {
                                     messageDeliveryStatusIconColor = Optional.empty();
                                     messageDeliveryStatusTooltip.set(Res.get("chat.message.deliveryState." + status.name()));
@@ -164,13 +175,13 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                                             messageDeliveryStatusIcon.set(AwesomeIcon.OK_SIGN);
                                             break;
                                         case TRY_ADD_TO_MAILBOX:
-                                            // -bisq2-yellow: #d0831f;
-                                            messageDeliveryStatusIconColor = Optional.of("#d0831f");
+                                            // -bisq2-yellow-dim-30: #915b15;
+                                            messageDeliveryStatusIconColor = Optional.of("#915b15");
                                             messageDeliveryStatusIcon.set(AwesomeIcon.SHARE_SIGN);
                                             break;
                                         case ADDED_TO_MAILBOX:
-                                            // -bisq2-yellow: #d0831f;
-                                            messageDeliveryStatusIconColor = Optional.of("#d0831f");
+                                            // -bisq2-yellow-dim-30: #915b15;
+                                            messageDeliveryStatusIconColor = Optional.of("#915b15");
                                             messageDeliveryStatusIcon.set(AwesomeIcon.CLOUD_UPLOAD);
                                             break;
                                         case MAILBOX_MSG_RECEIVED:
@@ -179,10 +190,18 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                                             messageDeliveryStatusIcon.set(AwesomeIcon.CLOUD_DOWNLOAD);
                                             break;
                                         case FAILED:
-                                            // -bisq2-red: #d02c1f;
-                                            messageDeliveryStatusIconColor = Optional.of("#d02c1f");
-                                            messageDeliveryStatusIcon.set(AwesomeIcon.EXCLAMATION_SIGN);
-                                            break;
+                                            if (resendMessageService.map(service -> service.canResendMessage(messageId)).orElse(false)) {
+                                                // -bisq2-yellow: #d0831f;
+                                                messageDeliveryStatusIconColor = Optional.of("#d0831f");
+                                                messageDeliveryStatusIcon.set(AwesomeIcon.REFRESH);
+                                                messageDeliveryStatusTooltip.set(Res.get("chat.message.deliveryState." + status.name()) + " " + Res.get("chat.message.resendMessage"));
+                                                break;
+                                            } else {
+                                                // -bisq2-red: #d23246;
+                                                messageDeliveryStatusIconColor = Optional.of("#d23246");
+                                                messageDeliveryStatusIcon.set(AwesomeIcon.EXCLAMATION_SIGN);
+                                                break;
+                                            }
                                     }
                                 }
                             });
@@ -238,8 +257,8 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         return chatChannel instanceof PublicChatChannel;
     }
 
-    public boolean isSystemMessage() {
-        return chatMessage.getChatMessageType() == SYSTEM_MESSAGE;
+    public boolean isProtocolLogMessage() {
+        return chatMessage.getChatMessageType() == PROTOCOL_LOG_MESSAGE;
     }
 
     public boolean isLeaveChatMessage() {

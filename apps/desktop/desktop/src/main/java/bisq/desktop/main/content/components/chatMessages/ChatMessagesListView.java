@@ -53,6 +53,7 @@ import bisq.desktop.main.content.components.ReportToModeratorWindow;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
+import bisq.network.p2p.services.confidential.resend.ResendMessageService;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.options.OfferOptionUtil;
 import bisq.settings.SettingsService;
@@ -159,6 +160,7 @@ public class ChatMessagesListView {
         private final BisqEasyTradeService bisqEasyTradeService;
         private final BannedUserService bannedUserService;
         private final NetworkService networkService;
+        private final Optional<ResendMessageService> resendMessageService;
         private Pin selectedChannelPin, chatMessagesPin, offerOnlySettingsPin;
         private Subscription selectedChannelSubscription, focusSubscription, scrollValuePin, scrollBarVisiblePin;
 
@@ -176,6 +178,7 @@ public class ChatMessagesListView {
             bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
             bannedUserService = serviceProvider.getUserService().getBannedUserService();
             networkService = serviceProvider.getNetworkService();
+            resendMessageService = serviceProvider.getNetworkService().getResendMessageService();
             this.mentionUserHandler = mentionUserHandler;
             this.showChatUserDetailsHandler = showChatUserDetailsHandler;
             this.replyHandler = replyHandler;
@@ -628,8 +631,15 @@ public class ChatMessagesListView {
             // We clear and fill the list at channel change. The addObserver triggers the add method for each item,
             // but as we have a contains() check there it will not have any effect.
             model.chatMessages.clear();
-            model.chatMessages.addAll(channel.getChatMessages().stream().map(chatMessage -> new ChatMessageListItem<>(chatMessage, channel, userProfileService, reputationService,
-                            bisqEasyTradeService, userIdentityService, networkService))
+            model.chatMessages.addAll(channel.getChatMessages().stream()
+                    .map(chatMessage -> new ChatMessageListItem<>(chatMessage,
+                            channel,
+                            userProfileService,
+                            reputationService,
+                            bisqEasyTradeService,
+                            userIdentityService,
+                            networkService,
+                            resendMessageService))
                     .collect(Collectors.toSet()));
             maybeScrollDownOnNewItemAdded();
 
@@ -641,8 +651,14 @@ public class ChatMessagesListView {
                     // @namloan Could you re-test the performance issues with testing if using UIThread.run makes a difference?
                     // There have been many changes in the meantime, so maybe the performance issue was fixed by other changes.
                     UIThread.runOnNextRenderFrame(() -> {
-                        ChatMessageListItem<M, C> item = new ChatMessageListItem<>(chatMessage, channel, userProfileService, reputationService,
-                                bisqEasyTradeService, userIdentityService, networkService);
+                        ChatMessageListItem<M, C> item = new ChatMessageListItem<>(chatMessage,
+                                channel,
+                                userProfileService,
+                                reputationService,
+                                bisqEasyTradeService,
+                                userIdentityService,
+                                networkService,
+                                resendMessageService);
                         // As long as we use runOnNextRenderFrame we need to check to avoid adding duplicates
                         // The model is updated async in stages, verify that messages belong to the selected channel
                         if (!model.chatMessages.contains(item) && channel.equals(model.selectedChannel.get())) {
@@ -683,6 +699,14 @@ public class ChatMessagesListView {
             return userProfileService.findUserProfile(userProfileId)
                     .map(UserProfile::getUserName)
                     .orElse(Res.get("data.na"));
+        }
+
+        public void onResendMessage(String messageId) {
+            resendMessageService.ifPresent(service -> service.resendMessage(messageId));
+        }
+
+        public boolean canResendMessage(String messageId) {
+            return resendMessageService.map(service -> service.canResendMessage(messageId)).orElse(false);
         }
     }
 

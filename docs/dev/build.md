@@ -51,39 +51,51 @@ In that configuration the desktop app connects to the public seed nodes via the 
 The default data directory is: `Bisq2`
 
 For development, you might want to customize the options and use localhost instead of Tor. In that case you need to run
-your own seed node as well.
+your own seed node as well. Bisq 2 use **JVM arguments** and has only limited support for **program arguments** (see
+below).
 
-For running a development seed node on localhost use:
+### Running a development seed node with *JVM arguments*
 
+First create the gradle installer script for the seed-node-app:
+`./gradlew :apps:seed-node-app:installDist`
+
+Pass the JVM arguments to the installer script:
 ```sh
-./gradlew apps:seed-node-app:run \
-    -Dapplication.appName=bisq2_seed1 \
+JAVA_OPTS="-Dapplication.appName=bisq2_seed1 \
     -Dapplication.network.configByTransportType.clear.defaultNodePort=8000 \
     -Dapplication.network.supportedTransportTypes.0=CLEAR \
     -Dapplication.network.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
-    -Dapplication.network.seedAddressByTransportType.clear.1=127.0.0.1:8001
+    -Dapplication.network.seedAddressByTransportType.clear.1=127.0.0.1:8001" \
+    apps/seed-node-app/build/install/seed-node-app/bin/seed-node-app
 ```
 
 Optionally you can run a second seed node at port 8001:
 
 ```sh
-./gradlew apps:seed-node-app:run \
-    -Dapplication.appName=bisq2_seed1 \
+JAVA_OPTS="-Dapplication.appName=bisq2_seed1 \
     -Dapplication.network.configByTransportType.clear.defaultNodePort=8001 \
     -Dapplication.network.supportedTransportTypes.0=CLEAR \
     -Dapplication.network.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
-    -Dapplication.network.seedAddressByTransportType.clear.1=127.0.0.1:8001
+    -Dapplication.network.seedAddressByTransportType.clear.1=127.0.0.1:8001" \
+    apps/seed-node-app/build/install/seed-node-app/bin/seed-node-app
 ```
 
-For running a development desktop application on localhost use:
+### Running a development desktop application with *JVM arguments*:
 
+First create the gradle installer script for the desktop-app:
+`./gradlew :desktop:desktop-app:installDist`
+
+Pass the JVM arguments to the installer script:
 ```sh
-./gradlew desktop:desktop-app:run \
-    -Dapplication.appName=bisq2_Alice_clear \
+JAVA_OPTS="-Dapplication.appName=bisq2_Alice_clear \
     -Dapplication.network.supportedTransportTypes.0=CLEAR \
     -Dapplication.network.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
-    -Dapplication.network.seedAddressByTransportType.clear.1=127.0.0.1:8001
+    -Dapplication.network.seedAddressByTransportType.clear.1=127.0.0.1:8001" \
+    apps/desktop/desktop-app/build/install/desktop-app/bin/desktop-app
 ```
+
+Optionally you can pass that data directory as *program argument* as follows:
+`apps/desktop/desktop-app/build/install/desktop-app/bin/desktop-app --data-dir=<data_dir>`
 
 You likely want to run a second desktop application for testing the trade use case with 2 traders (e.g. Alice and Bob).
 Just change the `-Dapplication.appName` to something like `bisq2_Bob_clear` in the above configuration.

@@ -27,6 +27,7 @@ import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.main.content.components.chatMessages.ChatMessageListItem;
 import bisq.desktop.main.content.components.chatMessages.ChatMessagesListView;
 import bisq.i18n.Res;
+import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
@@ -41,7 +42,7 @@ import javafx.scene.layout.VBox;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-public final class MyMessage extends BubbleMessage {
+public final class MyMessageBox extends BubbleMessageBox {
     private final static String EDITED_POST_FIX = " " + Res.get("chat.message.wasEdited");
 
     private final Label deliveryState;
@@ -51,9 +52,9 @@ public final class MyMessage extends BubbleMessage {
     private Button saveEditButton, cancelEditButton;
     private HBox editButtonsHBox;
 
-    public MyMessage(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
-                     ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
-                     ChatMessagesListView.Controller controller, ChatMessagesListView.Model model) {
+    public MyMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
+                        ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
+                        ChatMessagesListView.Controller controller, ChatMessagesListView.Model model) {
         super(item, list, controller, model);
 
         quotedMessageVBox.setId("chat-message-quote-box-my-msg");
@@ -96,14 +97,24 @@ public final class MyMessage extends BubbleMessage {
         });
 
         messageDeliveryStatusIconPin = EasyBind.subscribe(item.getMessageDeliveryStatusIcon(), icon -> {
-                deliveryState.setManaged(icon != null);
-                deliveryState.setVisible(icon != null);
-                if (icon != null) {
-                    AwesomeDude.setIcon(deliveryState, icon, AwesomeDude.DEFAULT_ICON_SIZE);
-                    item.getMessageDeliveryStatusIconColor().ifPresent(color ->
-                            Icons.setAwesomeIconColor(deliveryState, color));
+                    deliveryState.setManaged(icon != null);
+                    deliveryState.setVisible(icon != null);
+                    if (icon != null) {
+                        AwesomeDude.setIcon(deliveryState, icon, AwesomeDude.DEFAULT_ICON_SIZE);
+                        item.getMessageDeliveryStatusIconColor().ifPresent(color ->
+                                Icons.setAwesomeIconColor(deliveryState, color));
+
+                        boolean allowResend = item.getMessageDeliveryStatus() == MessageDeliveryStatus.FAILED;
+                        String messageId = item.getMessageId();
+                        if (allowResend && controller.canResendMessage(messageId)) {
+                            deliveryState.setOnMouseClicked(e -> controller.onResendMessage(messageId));
+                            deliveryState.setCursor(Cursor.HAND);
+                        } else {
+                            deliveryState.setOnMouseClicked(null);
+                            deliveryState.setCursor(null);
+                        }
+                    }
                 }
-            }
         );
 
         deliveryState.getTooltip().textProperty().bind(item.getMessageDeliveryStatusTooltip());
