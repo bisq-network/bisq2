@@ -77,6 +77,7 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         getLanguageCode().addObserver(value -> persist());
         getDifficultyAdjustmentFactor().addObserver(value -> persist());
         getIgnoreDiffAdjustmentFromSecManager().addObserver(value -> persist());
+        getFavouriteMarkets().addObserver(this::persist);
         isInitialized = true;
 
         if (DevMode.isDevMode() &&
@@ -173,6 +174,10 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
 
     public Observable<String> getLanguageCode() {
         return persistableStore.languageCode;
+    }
+
+    public ObservableSet<Market> getFavouriteMarkets() {
+        return persistableStore.favouriteMarkets;
     }
 
 

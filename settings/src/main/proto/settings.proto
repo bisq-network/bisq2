@@ -54,4 +54,5 @@ message SettingsStore {
   repeated string supportedLanguageCodes = 14;
   double difficultyAdjustmentFactor = 15;
   bool ignoreDiffAdjustmentFromSecManager = 16;
+  repeated common.Market favouriteMarkets = 17;
 }
