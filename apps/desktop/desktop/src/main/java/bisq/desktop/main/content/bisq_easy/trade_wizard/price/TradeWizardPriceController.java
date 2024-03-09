@@ -164,18 +164,15 @@ public class TradeWizardPriceController implements Controller {
         model.getPercentageAsString().set(formatToPercentWithSymbol(percentage));
     }
 
-
     //todo add validator and give feedback
     private boolean isQuoteValid(PriceQuote priceQuote) {
         double percentage = getPercentage(priceQuote);
-        if (percentage >= -0.1 && percentage <= 0.5) {
-            return true;
-        }
-        return false;
+        return percentage >= -0.1 && percentage <= 0.5;
     }
 
     private double getPercentage(PriceQuote priceQuote) {
-        Optional<Double> optionalPercentage = PriceSpecUtil.createFloatPriceSpec(marketPriceService, priceQuote).map(FloatPriceSpec::getPercentage);
+        Optional<Double> optionalPercentage = PriceSpecUtil.createFloatPriceSpec(marketPriceService, priceQuote)
+                .map(FloatPriceSpec::getPercentage);
         if (optionalPercentage.isEmpty()) {
             log.error("optionalPercentage not present");
         }

@@ -46,6 +46,7 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
 
     public TradeWizardPriceView(TradeWizardPriceModel model, TradeWizardPriceController controller, PriceInput priceInput) {
         super(new VBox(10), model, controller);
+
         this.priceInput = priceInput;
 
         root.setAlignment(Pos.TOP_CENTER);
@@ -90,17 +91,10 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
             Node firstChild = useFixPrice ? priceInput.getRoot() : percentage;
             Node lastChild = useFixPrice ? percentage : priceInput.getRoot();
             fieldsBox.getChildren().addAll(firstChild, lastChild);
-            if (useFixPrice) {
-                percentage.setEditable(false);
-                percentage.deselect();
-                priceInput.setEditable(true);
-                priceInput.requestFocus();
-            } else {
-                priceInput.setEditable(false);
-                priceInput.deselect();
-                percentage.setEditable(true);
-                percentage.requestFocus();
-            }
+            priceInput.setEditable(false);
+            priceInput.deselect();
+            percentage.setEditable(true);
+            percentage.requestFocus();
         });
 
         // Needed to trigger focusOut event on amount components
