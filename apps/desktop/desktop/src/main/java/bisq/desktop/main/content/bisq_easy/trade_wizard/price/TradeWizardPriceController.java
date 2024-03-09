@@ -72,6 +72,7 @@ public class TradeWizardPriceController implements Controller {
     }
 
     public void reset() {
+        priceInput.reset();
         model.reset();
     }
 

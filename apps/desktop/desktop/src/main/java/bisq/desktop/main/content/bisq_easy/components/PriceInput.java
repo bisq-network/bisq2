@@ -195,6 +195,7 @@ public class PriceInput {
 
         public void reset() {
             priceQuote.set(null);
+            priceString.set(null);
             market = null;
             isFocused = false;
             description.set(null);
