@@ -2,6 +2,7 @@ package bisq.desktop.main.content.bisq_easy.offerbook;
 
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
+import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.i18n.Res;
 import javafx.beans.binding.Bindings;
@@ -9,7 +10,9 @@ import javafx.beans.binding.StringExpression;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.control.*;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import org.fxmisc.easybind.EasyBind;
@@ -54,8 +57,10 @@ public class BisqEasyOfferbookUtil {
             private final Label marketName = new Label();
             private final Label marketCode = new Label();
             private final Label numOffers = new Label();
+            private final ImageView star = ImageUtil.getImageViewById("star-white");
             private final HBox hBox = new HBox(10, marketCode, numOffers);
             private final VBox vBox = new VBox(0, marketName, hBox);
+            private final HBox container = new HBox(10, vBox, star);
             private final Tooltip tooltip = new BisqTooltip();
             private Subscription selectedPin;
 
@@ -65,6 +70,8 @@ public class BisqEasyOfferbookUtil {
                 hBox.setAlignment(Pos.CENTER_LEFT);
                 vBox.setAlignment(Pos.CENTER_LEFT);
                 Tooltip.install(vBox, tooltip);
+
+                star.prefWidth(Region.USE_COMPUTED_SIZE);
             }
 
             @Override
@@ -93,10 +100,13 @@ public class BisqEasyOfferbookUtil {
                         selectedPin = EasyBind.subscribe(newRow.selectedProperty(), item::updateMarketLogoEffect);
                     }
 
+                    star.setOnMouseClicked(e -> item.addAsFavourite());
+
                     setGraphic(vBox);
                 } else {
                     numOffers.textProperty().unbind();
                     tooltip.textProperty().unbind();
+                    star.setOnMouseClicked(null);
 
                     setGraphic(null);
                 }

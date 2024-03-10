@@ -210,11 +210,14 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
             }
 
             updateFilteredMarketChannelItems();
+            updateFavouriteMarketChannelItems();
         };
         model.getFavouriteMarkets().addListener(favouriteMarketsListener);
 
         model.getSortedMarketChannelItems().setComparator(model.getSelectedMarketSortType().get().getComparator());
 
+        updateFilteredMarketChannelItems();
+        updateFavouriteMarketChannelItems();
         maybeSelectFirst();
     }
 
@@ -312,6 +315,10 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                         model.getMarketSearchTextPredicate().test(item) &&
                         model.getMarketPricePredicate().test(item) &&
                         !model.getFavouriteMarkets().contains(item.getMarket()));
+    }
+
+    private void updateFavouriteMarketChannelItems() {
+        model.getFavouriteMarketChannelItems().setPredicate(item -> model.getFavouriteMarkets().contains(item.getMarket()));
     }
 
     private boolean isMaker(BisqEasyOffer bisqEasyOffer) {

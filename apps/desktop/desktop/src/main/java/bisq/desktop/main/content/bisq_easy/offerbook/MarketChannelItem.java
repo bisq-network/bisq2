@@ -22,6 +22,7 @@ import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.currency.Market;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.main.content.components.MarketImageComposition;
+import bisq.settings.FavouriteMarketsService;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -84,5 +85,13 @@ public class MarketChannelItem {
     @Override
     public String toString() {
         return market.toString();
+    }
+
+    public void addAsFavourite() {
+        FavouriteMarketsService.addFavourite(getMarket());
+    }
+
+    public void removeFromFavourites() {
+        FavouriteMarketsService.removeFavourite(getMarket());
     }
 }

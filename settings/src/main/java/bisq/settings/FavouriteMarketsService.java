@@ -23,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class FavouriteMarketsService {
-    private static final int MAX_ALLOWED_FAVOURITES = 10;
+    private static final int MAX_ALLOWED_FAVOURITES = 5;
 
     public static boolean isFavourite(Market market) {
         return SettingsService.getInstance().getFavouriteMarkets().contains(market);
