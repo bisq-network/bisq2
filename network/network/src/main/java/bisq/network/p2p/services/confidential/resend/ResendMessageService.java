@@ -159,7 +159,10 @@ public class ResendMessageService implements PersistenceClient<ResendMessageStor
     }
 
     public boolean canResendMessage(String messageId) {
-        return findResendMessageData(messageId).isPresent();
+        return Optional.ofNullable(persistableStore.getNumResendsByMessageId().get(messageId))
+                .map(AtomicInteger::get)
+                .orElse(0) <= MAX_RESENDS &&
+                findResendMessageData(messageId).isPresent();
     }
 
 
