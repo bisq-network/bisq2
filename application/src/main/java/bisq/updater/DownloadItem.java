@@ -65,6 +65,7 @@ public class DownloadItem {
     private final String urlPath;
     private final File destinationFile;
     private final String sourceFileName;
+    @ToString.Exclude
     private final Observable<Double> progress = new Observable<>(-1d);
 
     private DownloadItem(String urlPath, File destinationFile, String sourceFileName) {
