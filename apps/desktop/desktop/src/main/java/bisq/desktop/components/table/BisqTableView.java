@@ -55,7 +55,12 @@ public class BisqTableView<T> extends TableView<T> {
         super(sortedList);
 
         comparatorProperty().addListener(new WeakChangeListener<>((observable, oldValue, newValue) -> {
-            sortedList.setComparator(newValue);
+            try {
+                sortedList.setComparator(newValue);
+            } catch (Exception ignore) {
+                // When a column is added to the sortOrder we get called but there is no item data yet set, thus causing
+                // a NullPointerException.
+            }
         }));
 
         setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
@@ -160,7 +165,7 @@ public class BisqTableView<T> extends TableView<T> {
                 TableRow<T> newRow = getTableRow();
                 if (newRow != null) {
                     selectedPin = EasyBind.subscribe(newRow.selectedProperty(), isSelected ->
-                        setId(isSelected ? "selection-marker" : null)
+                            setId(isSelected ? "selection-marker" : null)
                     );
                 }
             }
