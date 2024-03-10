@@ -65,7 +65,7 @@ public class DesktopAppLauncher {
     private static final String FINGER_PRINT_HENRIK_JANNSEN = "387C8307"; // B8A5 D214 ADFA A387 A14C  8BCF 02AA 2BAE 387C 8307
 
     private static final String VERSION = "2.0.0";
-    private static final String APP_NAME = "Bisq 2";
+    private static final String APP_NAME = "Bisq2";
     private static final List<String> KEY_IDS = List.of(FINGER_PRINT_ALEJANDRO_GARCIA, FINGER_PRINT_HENRIK_JANNSEN);
     private final Options options;
 
