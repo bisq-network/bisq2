@@ -38,6 +38,10 @@ public class LogSetup {
     }
 
     public static void setup(String fileName) {
+        // We return in case we get called multiple times if app is used from shell apps (e.g. DesktopAppLauncher)
+        if (logbackLogger != null) {
+            return;
+        }
         LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
 
         RollingFileAppender<ILoggingEvent> appender = new RollingFileAppender<>();
