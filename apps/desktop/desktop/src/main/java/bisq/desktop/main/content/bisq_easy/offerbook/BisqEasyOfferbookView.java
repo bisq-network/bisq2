@@ -53,7 +53,7 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView, BisqEasyOfferbookModel> {
     private SearchBox marketSelectorSearchBox;
-    private BisqTableView<MarketChannelItem> tableView;
+    private BisqTableView<MarketChannelItem> marketsTableView, favouritesTableView;
     private VBox marketSelectionList;
     private Subscription tableViewSelectionPin, selectedModelItemPin, channelHeaderIconPin, selectedMarketFilterPin,
             selectedOfferDirectionOrOwnerFilterPin, selectedPeerReputationFilterPin, selectedMarketSortTypePin,
@@ -123,9 +123,9 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         withOffersDisplayHint.managedProperty().bind(getModel().getSelectedMarketsFilter().isEqualTo(Filters.Markets.WITH_OFFERS));
 
         selectedModelItemPin = EasyBind.subscribe(getModel().getSelectedMarketChannelItem(), selected -> {
-            tableView.getSelectionModel().select(selected);
+            marketsTableView.getSelectionModel().select(selected);
         });
-        tableViewSelectionPin = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(), item -> {
+        tableViewSelectionPin = EasyBind.subscribe(marketsTableView.getSelectionModel().selectedItemProperty(), item -> {
             if (item != null) {
                 getController().onSelectMarketChannelItem(item);
             }
@@ -247,15 +247,15 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         appliedFiltersSection.getStyleClass().add("market-selection-applied-filters");
         HBox.setHgrow(appliedFiltersSection, Priority.ALWAYS);
 
-        tableView = new BisqTableView<>(getModel().getSortedMarketChannelItems());
-        tableView.getStyleClass().add("market-selection-list");
-        tableView.allowVerticalScrollbar();
-        tableView.hideHorizontalScrollbar();
-        tableView.setFixedCellSize(53);
+        marketsTableView = new BisqTableView<>(getModel().getSortedMarketChannelItems());
+        marketsTableView.getStyleClass().add("market-selection-list");
+        marketsTableView.allowVerticalScrollbar();
+        marketsTableView.hideHorizontalScrollbar();
+        marketsTableView.setFixedCellSize(53);
         configTableView();
-        VBox.setVgrow(tableView, Priority.ALWAYS);
+        VBox.setVgrow(marketsTableView, Priority.ALWAYS);
 
-        marketSelectionList = new VBox(header, Layout.hLine(), subheader, appliedFiltersSection, tableView);
+        marketSelectionList = new VBox(header, Layout.hLine(), subheader, appliedFiltersSection, marketsTableView);
         marketSelectionList.setPrefWidth(210);
         marketSelectionList.setMinWidth(210);
         marketSelectionList.setFillWidth(true);
@@ -332,9 +332,9 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
                 .setCellFactory(BisqEasyOfferbookUtil.getMarketLabelCellFactory())
                 .build();
 
-        tableView.getColumns().add(tableView.getSelectionMarkerColumn());
-        tableView.getColumns().add(marketLogoTableColumn);
-        tableView.getColumns().add(marketLabelTableColumn);
+        marketsTableView.getColumns().add(marketsTableView.getSelectionMarkerColumn());
+        marketsTableView.getColumns().add(marketLogoTableColumn);
+        marketsTableView.getColumns().add(marketLabelTableColumn);
     }
 
     private void addChatBox() {
