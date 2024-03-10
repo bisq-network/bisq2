@@ -75,8 +75,6 @@ public abstract class ApplicationService implements Service {
             Path appDataDir = dataDir.orElse(
                     OsUtils.getUserDataDir().resolve(appName)
             );
-            log.info("Use application directory {}", appDataDir);
-
             return new Config(appDataDir,
                     appName,
                     config.getString("version"),
@@ -139,6 +137,8 @@ public abstract class ApplicationService implements Service {
 
         LogSetup.setup(dataDir.resolve("bisq").toString());
         LogSetup.setLevel(Level.INFO);
+        log.info("Data directory: {}", config.getBaseDir());
+        log.info("Version: {}", config.getVersion());
 
         DevMode.setDevMode(config.isDevMode());
 

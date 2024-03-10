@@ -42,6 +42,9 @@ public class LogSetup {
         if (logbackLogger != null) {
             return;
         }
+
+        System.out.println(AsciiLogo.getAsciiLogo());
+
         LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
 
         RollingFileAppender<ILoggingEvent> appender = new RollingFileAppender<>();
@@ -74,8 +77,6 @@ public class LogSetup {
         logbackLogger = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
         logbackLogger.addAppender(appender);
         logbackLogger.setLevel(DEFAULT_LOG_LEVEL);
-
-        logbackLogger.info(AsciiLogo.getAsciiLogo());
     }
 
     public static void setCustomLogLevel(String pattern, Level logLevel) {
