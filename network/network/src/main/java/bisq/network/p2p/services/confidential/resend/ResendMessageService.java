@@ -166,8 +166,9 @@ public class ResendMessageService implements PersistenceClient<ResendMessageStor
                                     resendMessageDataByMessageId.put(messageId, ResendMessageData.from(data, status));
                                     persist();
                                 });
-                    } else if (MessageDeliveryStatus.MAILBOX_MSG_RECEIVED == status) {
-                        // The MAILBOX_MSG_RECEIVED is set when an AckMessage is processed
+                    } else if (MessageDeliveryStatus.ACK_RECEIVED == status ||
+                            MessageDeliveryStatus.MAILBOX_MSG_RECEIVED == status) {
+                        // The MAILBOX_MSG_RECEIVED or ACK_RECEIVED is set when an AckMessage is processed
                         resendMessageDataByMessageId.remove(resendMessageData.getId());
                         persist();
                         messageDeliveryStatusPinByMessageId.get(messageId).unbind();
