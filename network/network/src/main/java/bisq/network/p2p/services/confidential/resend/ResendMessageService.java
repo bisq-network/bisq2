@@ -35,16 +35,21 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Getter
 public class ResendMessageService implements PersistenceClient<ResendMessageStore> {
+    private static final long RESEND_INTERVAL = TimeUnit.MINUTES.toMillis(2);
+    private static final int MAX_RESENDS = 2;
+
     private final ResendMessageStore persistableStore = new ResendMessageStore();
     private final Persistence<ResendMessageStore> persistence;
     private final NetworkService networkService;
     private final MessageDeliveryStatusService messageDeliveryStatusService;
     private final Map<String, Pin> messageDeliveryStatusPinByMessageId = new HashMap<>();
+    private final Map<String, Scheduler> schedulerByMessageId = new HashMap<>();
     private final Set<Pin> nodeStatePins = new HashSet<>();
     private Pin messageDeliveryStatusByMessageIdPin;
 
@@ -61,7 +66,8 @@ public class ResendMessageService implements PersistenceClient<ResendMessageStor
     public ResendMessageStore prunePersisted(ResendMessageStore persisted) {
         return new ResendMessageStore(persisted.getResendMessageDataByMessageId().entrySet().stream()
                 .filter(e -> !e.getValue().isExpired())
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)),
+                persisted.getNumResendsByMessageId());
     }
 
     public void initialize() {
@@ -89,6 +95,11 @@ public class ResendMessageService implements PersistenceClient<ResendMessageStor
         networkService.getDefaultNodeStateByTransportType().forEach((key, value) -> {
             nodeStatePins.add(value.addObserver(state -> {
                 if (state == Node.State.RUNNING) {
+                    // We get messages with CONNECTING, SENT or TRY_ADD_TO_MAILBOX converted to FAILED and thus
+                    // get a resend triggered. After 1 sec after init we get the state update and a 15 sec scheduler
+                    // for resend gets started. We delay here 10 sec. and filter out those which got already scheduled.
+                    // For messages which have been in FAILED and no change got triggered we run the resend if the
+                    // MAX_RESENDS has not got exceeded.
                     Scheduler.run(this::resendMessageAllFailedMessages).after(10, TimeUnit.SECONDS);
                 }
             }));
@@ -100,6 +111,8 @@ public class ResendMessageService implements PersistenceClient<ResendMessageStor
         messageDeliveryStatusPinByMessageId.values().forEach(Pin::unbind);
         messageDeliveryStatusPinByMessageId.clear();
         nodeStatePins.forEach(Pin::unbind);
+        schedulerByMessageId.values().forEach(Scheduler::stop);
+        schedulerByMessageId.clear();
     }
 
 
@@ -110,37 +123,39 @@ public class ResendMessageService implements PersistenceClient<ResendMessageStor
     public void handleResendMessageData(ResendMessageData resendMessageData) {
         MessageDeliveryStatus messageDeliveryStatus = resendMessageData.getMessageDeliveryStatus();
         String messageId = resendMessageData.getId();
-        synchronized (this) {
-            switch (messageDeliveryStatus) {
-                case CONNECTING:
-                    persistableStore.getResendMessageDataByMessageId().put(messageId, resendMessageData);
-                    persist();
-                    break;
-                case ACK_RECEIVED:
-                case MAILBOX_MSG_RECEIVED:
-                    persistableStore.getResendMessageDataByMessageId().remove(messageId);
-                    persist();
-                    break;
-                case SENT:
-                case TRY_ADD_TO_MAILBOX:
-                case ADDED_TO_MAILBOX:
-                case FAILED:
-                    break;
-            }
+        switch (messageDeliveryStatus) {
+            case CONNECTING:
+            case SENT:
+            case TRY_ADD_TO_MAILBOX:
+                persistableStore.getResendMessageDataByMessageId().put(messageId, resendMessageData);
+                persist();
+                restartResendTimer(resendMessageData);
+                break;
+            case FAILED:
+                persistableStore.getResendMessageDataByMessageId().put(messageId, resendMessageData);
+                persist();
+                restartResendTimer(resendMessageData, TimeUnit.SECONDS.toMillis(15));
+                break;
+
+            // We will not get the following states from the client, but we handle it in case client code changes later
+            case ACK_RECEIVED:
+            case ADDED_TO_MAILBOX:
+            case MAILBOX_MSG_RECEIVED:
+                persistableStore.getResendMessageDataByMessageId().remove(messageId);
+                persistableStore.getNumResendsByMessageId().remove(messageId);
+                if (messageDeliveryStatusPinByMessageId.containsKey(messageId)) {
+                    messageDeliveryStatusPinByMessageId.get(messageId).unbind();
+                    messageDeliveryStatusPinByMessageId.remove(messageId);
+                }
+                persist();
+                stopResendTimer(resendMessageData);
+                break;
         }
         persist();
     }
 
     public void resendMessage(String messageId) {
-        synchronized (this) {
-            findResendMessageData(messageId).ifPresent(data -> {
-                log.info("Resending message which previously failed");
-                NetworkIdWithKeyPair senderNetworkIdWithKeyPair = new NetworkIdWithKeyPair(data.getSenderNetworkId(), data.getSenderKeyPair());
-                networkService.confidentialSend(data.getEnvelopePayloadMessage(),
-                        data.getReceiverNetworkId(),
-                        senderNetworkIdWithKeyPair);
-            });
-        }
+        findResendMessageData(messageId).ifPresent(this::resendMessage);
     }
 
     public boolean canResendMessage(String messageId) {
@@ -152,28 +167,62 @@ public class ResendMessageService implements PersistenceClient<ResendMessageStor
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+    private void resendMessage(ResendMessageData data) {
+        String messageId = data.getId();
+        persistableStore.getNumResendsByMessageId().putIfAbsent(messageId, new AtomicInteger(1));
+        AtomicInteger numResends = persistableStore.getNumResendsByMessageId().get(messageId);
+        if (numResends.get() > MAX_RESENDS) {
+            log.warn("Do not resend message with ID {} because we have already sent {} times", messageId, MAX_RESENDS);
+            return;
+        } else {
+            numResends.getAndIncrement();
+        }
+        persist();
+
+        log.info("Resending message with ID {}; status={}", messageId, data.getMessageDeliveryStatus());
+        NetworkIdWithKeyPair senderNetworkIdWithKeyPair = new NetworkIdWithKeyPair(data.getSenderNetworkId(), data.getSenderKeyPair());
+        networkService.confidentialSend(data.getEnvelopePayloadMessage(),
+                data.getReceiverNetworkId(),
+                senderNetworkIdWithKeyPair);
+    }
+
     private void handleMessageDeliveryStatusUpdate(String messageId, Observable<MessageDeliveryStatus> messageDeliveryStatus) {
         findResendMessageData(messageId).ifPresent(resendMessageData -> {
             Optional.ofNullable(messageDeliveryStatusPinByMessageId.get(messageId)).ifPresent(Pin::unbind);
             Pin pin = messageDeliveryStatus.addObserver(status -> {
-                synchronized (this) {
-                    Map<String, ResendMessageData> resendMessageDataByMessageId = persistableStore.getResendMessageDataByMessageId();
-                    if (MessageDeliveryStatus.ADDED_TO_MAILBOX == status) {
-                        // We get the ADDED_TO_MAILBOX state once we have broadcast successfully after the
-                        // TRY_ADD_TO_MAILBOX state was set. We update the existing data with the new status
-                        Optional.ofNullable(resendMessageDataByMessageId.get(messageId))
-                                .ifPresent(data -> {
-                                    resendMessageDataByMessageId.put(messageId, ResendMessageData.from(data, status));
-                                    persist();
-                                });
-                    } else if (MessageDeliveryStatus.ACK_RECEIVED == status ||
-                            MessageDeliveryStatus.MAILBOX_MSG_RECEIVED == status) {
-                        // The MAILBOX_MSG_RECEIVED or ACK_RECEIVED is set when an AckMessage is processed
-                        resendMessageDataByMessageId.remove(resendMessageData.getId());
+                Map<String, ResendMessageData> resendMessageDataByMessageId = persistableStore.getResendMessageDataByMessageId();
+                ResendMessageData updatedResendMessageData = ResendMessageData.from(resendMessageData, status);
+                switch (status) {
+                    case CONNECTING:
+                    case SENT:
+                    case TRY_ADD_TO_MAILBOX:
+                        break;
+
+                    case FAILED:
+                        persistableStore.getResendMessageDataByMessageId().put(messageId, updatedResendMessageData);
                         persist();
+                        restartResendTimer(updatedResendMessageData, TimeUnit.SECONDS.toMillis(15));
+                        break;
+
+                    case ADDED_TO_MAILBOX:
+                        // We get the ADDED_TO_MAILBOX state once we have broadcast successfully after the
+                        // TRY_ADD_TO_MAILBOX state was set.
+                        // We do not try to resend as it's in the mailbox system. Though we keep the data in case
+                        // we want to resend later manually in case the peer never received it.
+                        resendMessageDataByMessageId.put(messageId, updatedResendMessageData);
+                        persist();
+                        stopResendTimer(updatedResendMessageData);
+                        break;
+                    case ACK_RECEIVED:
+                    case MAILBOX_MSG_RECEIVED:
+                        persistableStore.getResendMessageDataByMessageId().remove(messageId);
+                        persistableStore.getNumResendsByMessageId().remove(messageId);
+                        persist();
+                        stopResendTimer(updatedResendMessageData);
+
                         messageDeliveryStatusPinByMessageId.get(messageId).unbind();
                         messageDeliveryStatusPinByMessageId.remove(messageId);
-                    }
+                        break;
                 }
             });
             messageDeliveryStatusPinByMessageId.put(messageId, pin);
@@ -190,6 +239,39 @@ public class ResendMessageService implements PersistenceClient<ResendMessageStor
     }
 
     private void resendMessageAllFailedMessages() {
-        persistableStore.getResendMessageDataByMessageId().keySet().forEach(this::resendMessage);
+        persistableStore.getResendMessageDataByMessageId().values().stream()
+                .filter(e -> !schedulerByMessageId.containsKey(e.getId())) // If we have a resend scheduled we skip it
+                .filter(e -> !e.getMessageDeliveryStatus().isReceived() &&
+                        e.getMessageDeliveryStatus() != MessageDeliveryStatus.ADDED_TO_MAILBOX)
+                .forEach(this::resendMessage);
+    }
+
+    private void restartResendTimer(ResendMessageData resendMessageData) {
+        restartResendTimer(resendMessageData, RESEND_INTERVAL);
+    }
+
+    private void restartResendTimer(ResendMessageData resendMessageData, long interval) {
+        String messageId = resendMessageData.getId();
+        log.debug("restartResendTimer {}; status={}", messageId, resendMessageData.getMessageDeliveryStatus());
+        if (schedulerByMessageId.containsKey(messageId)) {
+            schedulerByMessageId.get(messageId).stop();
+        }
+        if (resendMessageData.getMessageDeliveryStatus().isReceived() ||
+                resendMessageData.getMessageDeliveryStatus() == MessageDeliveryStatus.ADDED_TO_MAILBOX) {
+            log.warn("We got called startResendTimer with an unexpected messageDeliveryStatus: {}",
+                    resendMessageData.getMessageDeliveryStatus());
+            return;
+        }
+        Scheduler scheduler = Scheduler.run(() -> resendMessage(resendMessageData)).after(interval);
+        schedulerByMessageId.put(messageId, scheduler);
+    }
+
+    private void stopResendTimer(ResendMessageData resendMessageData) {
+        String messageId = resendMessageData.getId();
+        if (schedulerByMessageId.containsKey(messageId)) {
+            Scheduler scheduler = schedulerByMessageId.get(messageId);
+            scheduler.stop();
+            schedulerByMessageId.remove(messageId);
+        }
     }
 }
