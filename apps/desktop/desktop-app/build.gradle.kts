@@ -3,6 +3,7 @@ plugins {
     id("bisq.gradle.desktop.regtest.BisqDesktopRegtestPlugin")
     application
     alias(libs.plugins.openjfx)
+    alias(libs.plugins.shadow)
 }
 
 application {
