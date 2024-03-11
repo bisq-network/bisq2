@@ -258,7 +258,9 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
                 }
             } else {
                 failedAuthorizedData.add(authorizedData);
-                log.warn("hasAuthorizedPubKey failed for AuthorizedDistributedData={}, {}",
+                // TODO Set log level for to debug for now, as too many logs are printed.
+                //  Once the TTL has cleared the old data we can change back to warn level.
+                log.debug("hasAuthorizedPubKey failed for AuthorizedDistributedData={}, {}",
                         data.getClass().getSimpleName(), StringUtils.truncate(data.toString(), 200));
                 log.debug("AuthorizedPublicKey is not matching any key from our authorizedBondedRolesPubKeys and does " +
                                 "not provide a matching static key.\n" +
