@@ -12,6 +12,7 @@ import bisq.security.DigestUtil;
 import bisq.security.pow.ProofOfWork;
 import bisq.security.pow.hashcash.HashCashProofOfWorkService;
 import com.google.common.base.Charsets;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigInteger;
@@ -21,12 +22,18 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 public class HashCashTokenService extends AuthorizationTokenService<HashCashToken> {
     public final static int MIN_DIFFICULTY = 128;  // Math.pow(2, 7) = 128; 3 ms on old CPU, 1 ms on high-end CPU
-    public final static int MAX_DIFFICULTY = 65536;  // Math.pow(2, 16) = 262144; 1000 ms on old CPU, 60 ms on high-end CPU
+    public final static int MAX_DIFFICULTY = 65536;  // Math.pow(2, 16) = 262144; 1000 ms on old CPU, 60-140 ms on high-end CPU
     public final static int DIFFICULTY_TOLERANCE = 50_000;
 
     private final HashCashProofOfWorkService proofOfWorkService;
     // Keep track of message counter per connection to avoid reuse of pow
     private final Map<String, Set<Integer>> receivedMessageCountersByConnectionId = new ConcurrentHashMap<>();
+    @Getter
+    private double accumulatedPoWDuration;
+    @Getter
+    private final List<Long> aggregatedPoWDuration = new ArrayList<>();
+    @Getter
+    private final List<Double> aggregatedNetworkLoadValues = new ArrayList<>();
 
     public HashCashTokenService(HashCashProofOfWorkService proofOfWorkService) {
         this.proofOfWorkService = proofOfWorkService;
@@ -43,9 +50,27 @@ public class HashCashTokenService extends AuthorizationTokenService<HashCashToke
         byte[] payload = getPayload(message);
         ProofOfWork proofOfWork = proofOfWorkService.mint(payload, challenge, difficulty);
         HashCashToken token = new HashCashToken(proofOfWork, messageCounter);
-        log.info("Create HashCashToken for {} took {} ms\n" +
+        long duration = System.currentTimeMillis() - ts;
+        accumulatedPoWDuration += duration;
+        aggregatedPoWDuration.add(duration);
+        aggregatedNetworkLoadValues.add(networkLoad.getValue());
+        int size = aggregatedPoWDuration.size();
+        if (size % 100 == 0) {
+            log.info("Total time used for PoW: {} sec; Average time/message used for PoW: {} ms; Average network load value: {}; Number of messages: {}",
+                    MathUtils.roundDouble(accumulatedPoWDuration / 1000, 2),
+                    MathUtils.roundDouble(aggregatedPoWDuration.stream().mapToLong(e -> e).average().orElse(0D), 2),
+                    MathUtils.roundDouble(aggregatedNetworkLoadValues.stream().mapToDouble(e -> e).average().orElse(0D), 4),
+                    size
+            );
+            if (aggregatedPoWDuration.size() > 100_000) {
+                log.warn("aggregatedPoWDuration is getting too large. We clear the list.");
+                aggregatedPoWDuration.clear();
+                aggregatedNetworkLoadValues.clear();
+            }
+        }
+        log.debug("Create HashCashToken for {} took {} ms\n" +
                         "CostFactor={}; Load={}; Difficulty=2^{}={}",
-                message.getClass().getSimpleName(), System.currentTimeMillis() - ts,
+                message.getClass().getSimpleName(), duration,
                 message.getCostFactor(), networkLoad.getValue(),
                 MathUtils.roundDouble(Math.log(difficulty) / MathUtils.LOG2, 2), difficulty);
         return token;
