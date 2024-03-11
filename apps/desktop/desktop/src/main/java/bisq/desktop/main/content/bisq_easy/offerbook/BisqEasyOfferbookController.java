@@ -40,11 +40,13 @@ import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
+import javafx.collections.ListChangeListener;
 import javafx.scene.layout.StackPane;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.lang.ref.WeakReference;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -132,6 +134,10 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                 updateFilteredMarketChannelItems();
             });
         });
+
+        model.getMarketChannelItems().addListener(new WeakReference<>(
+                (ListChangeListener<? super MarketChannelItem>) c -> updateFilteredMarketChannelItems()
+        ).get());
 
         selectedOfferDirectionOrOwnerFilterPin = EasyBind.subscribe(model.getSelectedOfferDirectionOrOwnerFilter(), filter -> {
             if (filter == null) {
