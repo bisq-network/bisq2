@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.trade_wizard.market;
 
+import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatMessage;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
@@ -48,6 +49,7 @@ public class TradeWizardMarketController implements Controller {
     private final Runnable onNextHandler;
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
     private final BisqEasyOfferbookSelectionService bisqEasyOfferbookSelectionService;
+    private final MarketPriceService marketPriceService;
     private Subscription searchTextPin;
 
     public TradeWizardMarketController(ServiceProvider serviceProvider, Runnable onNextHandler) {
@@ -55,6 +57,7 @@ public class TradeWizardMarketController implements Controller {
         chatService = serviceProvider.getChatService();
         bisqEasyOfferbookChannelService = chatService.getBisqEasyOfferbookChannelService();
         bisqEasyOfferbookSelectionService = chatService.getBisqEasyOfferbookChannelSelectionService();
+        marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         model = new TradeWizardMarketModel();
         view = new TradeWizardMarketView(model, this);
     }
@@ -88,6 +91,7 @@ public class TradeWizardMarketController implements Controller {
         }
 
         model.getListItems().setAll(MarketRepository.getAllFiatMarkets().stream()
+                .filter(market -> marketPriceService.getMarketPriceByCurrencyMap().containsKey(market))
                 .map(market -> {
                     Set<BisqEasyOfferbookMessage> allMessages = bisqEasyOfferbookChannelService.getChannels().stream()
                             .filter(channel -> channel.getMarket().equals(market))
