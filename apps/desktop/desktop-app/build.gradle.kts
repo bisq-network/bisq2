@@ -3,11 +3,14 @@ plugins {
     id("bisq.gradle.desktop.regtest.BisqDesktopRegtestPlugin")
     application
     alias(libs.plugins.openjfx)
+    alias(libs.plugins.shadow)
 }
 
 application {
     mainClass.set("bisq.desktop_app.DesktopApp")
 }
+
+version = "2.0.0"
 
 javafx {
     version = "17.0.1"

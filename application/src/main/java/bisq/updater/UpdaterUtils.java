@@ -52,7 +52,7 @@ public class UpdaterUtils {
     }
 
     public static String getJarFileName(String version) {
-        return "desktop_app-" + version + "-all.jar";
+        return "desktop-app-" + version + "-all.jar";
     }
 
     public static Optional<String> readVersionFromVersionFile(String userDataDir) {
