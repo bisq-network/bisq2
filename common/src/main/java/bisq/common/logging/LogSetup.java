@@ -38,6 +38,13 @@ public class LogSetup {
     }
 
     public static void setup(String fileName) {
+        // We return in case we get called multiple times if app is used from shell apps (e.g. DesktopAppLauncher)
+        if (logbackLogger != null) {
+            return;
+        }
+
+        System.out.println(AsciiLogo.getAsciiLogo());
+
         LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
 
         RollingFileAppender<ILoggingEvent> appender = new RollingFileAppender<>();
@@ -70,8 +77,6 @@ public class LogSetup {
         logbackLogger = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
         logbackLogger.addAppender(appender);
         logbackLogger.setLevel(DEFAULT_LOG_LEVEL);
-
-        logbackLogger.info(AsciiLogo.getAsciiLogo());
     }
 
     public static void setCustomLogLevel(String pattern, Level logLevel) {

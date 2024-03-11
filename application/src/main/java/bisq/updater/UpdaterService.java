@@ -191,6 +191,7 @@ public class UpdaterService implements Service {
         return CompletableFuture.supplyAsync(() -> {
             for (DownloadItem downloadItem : downloadItemList) {
                 try {
+                    log.info("Download {}", downloadItem);
                     FileUtils.downloadFile(new URL(downloadItem.getUrlPath()), downloadItem.getDestinationFile(), downloadItem.getProgress());
                 } catch (Exception e) {
                     e.printStackTrace();
