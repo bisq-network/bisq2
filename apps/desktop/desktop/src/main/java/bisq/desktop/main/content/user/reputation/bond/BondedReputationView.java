@@ -64,7 +64,7 @@ public class BondedReputationView extends TabView<BondedReputationModel, BondedR
         closeButton.setOnAction(e -> controller.onClose());
 
         root.setPrefWidth(OverlayModel.WIDTH);
-        root.setPrefHeight(OverlayModel.HEIGHT + 10);
+        root.setPrefHeight(OverlayModel.HEIGHT + 80);
     }
 
     @Override

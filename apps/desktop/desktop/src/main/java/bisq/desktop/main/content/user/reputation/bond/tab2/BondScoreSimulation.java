@@ -94,7 +94,7 @@ public class BondScoreSimulation {
             Label simHeadline = new Label(Res.get("user.reputation.sim.headline"));
             simHeadline.getStyleClass().addAll("bisq-text-1");
             amount = getInputField("user.reputation.sim.burnAmount");
-            int width = 195;
+            int width = 380;
             amount.setMinWidth(width);
             amount.setMaxWidth(width);
             score = getField(Res.get("user.reputation.sim.score"));

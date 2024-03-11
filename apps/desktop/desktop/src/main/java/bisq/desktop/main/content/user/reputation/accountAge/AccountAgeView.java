@@ -64,7 +64,7 @@ public class AccountAgeView extends TabView<AccountAgeModel, AccountAgeControlle
         closeButton.setOnAction(e -> controller.onClose());
 
         root.setPrefWidth(OverlayModel.WIDTH);
-        root.setPrefHeight(OverlayModel.HEIGHT + 10);
+        root.setPrefHeight(OverlayModel.HEIGHT + 90);
     }
 
     @Override
