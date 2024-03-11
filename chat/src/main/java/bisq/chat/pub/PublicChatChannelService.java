@@ -50,8 +50,6 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        log.info("initialize");
-
         maybeAddDefaultChannels();
 
         networkService.addDataServiceListener(this);
@@ -65,7 +63,6 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        log.info("shutdown");
         networkService.removeDataServiceListener(this);
         return CompletableFuture.completedFuture(true);
     }

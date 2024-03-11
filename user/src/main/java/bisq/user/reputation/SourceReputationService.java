@@ -78,13 +78,11 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
     }
 
     public CompletableFuture<Boolean> initialize() {
-        log.info("initialize");
         authorizedBondedRolesService.addListener(this);
         return CompletableFuture.completedFuture(true);
     }
 
     public CompletableFuture<Boolean> shutdown() {
-        log.info("shutdown");
         authorizedBondedRolesService.removeListener(this);
         return CompletableFuture.completedFuture(true);
     }

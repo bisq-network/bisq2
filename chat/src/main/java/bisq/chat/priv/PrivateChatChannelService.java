@@ -57,14 +57,12 @@ public abstract class PrivateChatChannelService<
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        log.info("initialize");
         networkService.addConfidentialMessageListener(this);
         return CompletableFuture.completedFuture(true);
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        log.info("shutdown");
         networkService.removeConfidentialMessageListener(this);
         return CompletableFuture.completedFuture(true);
     }

@@ -54,13 +54,10 @@ public abstract class ChatChannelSelectionService implements PersistenceClient<C
     }
 
     public CompletableFuture<Boolean> initialize() {
-        log.info("initialize");
-
         return CompletableFuture.completedFuture(true);
     }
 
     public CompletableFuture<Boolean> shutdown() {
-        log.info("shutdown");
         return CompletableFuture.completedFuture(true);
     }
 
