@@ -348,6 +348,7 @@ message ResendMessageData {
 
 message ResendMessageStore {
   map<string, ResendMessageData> resendMessageDataByMessageId = 1;
+  map<string, sint32> numResendsByMessageId = 2;
 }
 
 message PeerGroupStore {

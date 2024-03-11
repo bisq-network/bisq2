@@ -23,19 +23,22 @@ import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @Slf4j
 public final class ResendMessageStore implements PersistableStore<ResendMessageStore> {
-    private final Map<String, ResendMessageData> resendMessageDataByMessageId = new HashMap<>();
+    private final Map<String, ResendMessageData> resendMessageDataByMessageId = new ConcurrentHashMap<>();
+    private final Map<String, AtomicInteger> numResendsByMessageId = new ConcurrentHashMap<>();
 
     ResendMessageStore() {
     }
 
-    ResendMessageStore(Map<String, ResendMessageData> resendMessageDataByMessageId) {
+    ResendMessageStore(Map<String, ResendMessageData> resendMessageDataByMessageId, Map<String, AtomicInteger> numResendsByMessageId) {
         this.resendMessageDataByMessageId.putAll(resendMessageDataByMessageId);
+        this.numResendsByMessageId.putAll(numResendsByMessageId);
     }
 
     @Override
@@ -44,13 +47,19 @@ public final class ResendMessageStore implements PersistableStore<ResendMessageS
                 .putAllResendMessageDataByMessageId(resendMessageDataByMessageId.entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey,
                                 e -> e.getValue().toProto())))
+                .putAllNumResendsByMessageId(numResendsByMessageId.entrySet().stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey,
+                                e -> e.getValue().get())))
                 .build();
     }
 
     public static PersistableStore<?> fromProto(bisq.network.protobuf.ResendMessageStore proto) {
         return new ResendMessageStore(proto.getResendMessageDataByMessageIdMap().entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey,
-                        e -> ResendMessageData.fromProto(e.getValue()))));
+                        e -> ResendMessageData.fromProto(e.getValue()))),
+                proto.getNumResendsByMessageIdMap().entrySet().stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey,
+                                e -> new AtomicInteger(e.getValue()))));
     }
 
     @Override
@@ -68,14 +77,20 @@ public final class ResendMessageStore implements PersistableStore<ResendMessageS
     public void applyPersisted(ResendMessageStore persisted) {
         resendMessageDataByMessageId.clear();
         resendMessageDataByMessageId.putAll(persisted.getResendMessageDataByMessageId());
+        numResendsByMessageId.clear();
+        numResendsByMessageId.putAll(persisted.getNumResendsByMessageId());
     }
 
     @Override
     public ResendMessageStore getClone() {
-        return new ResendMessageStore(resendMessageDataByMessageId);
+        return new ResendMessageStore(resendMessageDataByMessageId, numResendsByMessageId);
     }
 
     Map<String, ResendMessageData> getResendMessageDataByMessageId() {
         return resendMessageDataByMessageId;
+    }
+
+    Map<String, AtomicInteger> getNumResendsByMessageId() {
+        return numResendsByMessageId;
     }
 }

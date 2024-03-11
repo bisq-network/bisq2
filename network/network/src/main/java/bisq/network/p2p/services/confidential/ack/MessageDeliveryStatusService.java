@@ -19,6 +19,7 @@ package bisq.network.p2p.services.confidential.ack;
 
 import bisq.common.observable.Observable;
 import bisq.common.observable.map.ObservableHashMap;
+import bisq.common.timer.Scheduler;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
 import bisq.network.identity.NetworkIdWithKeyPair;
@@ -43,6 +44,8 @@ import java.util.stream.Collectors;
  * relevant delivery state of all transports.
  * This service depends on the ConfidentialMessageService is only enabled if the ServiceNode.Service.ACK and
  * the ServiceNode.Service.CONFIDENTIAL are set in the config.
+ * <br/>
+ * TODO Clean up outdated data or remove. We could add a second map with dateByMessageID and remove old data
  */
 @Slf4j
 @Getter
@@ -63,7 +66,7 @@ public class MessageDeliveryStatusService implements PersistenceClient<MessageDe
     }
 
     public void initialize() {
-        checkPending();
+        Scheduler.run(this::checkPending).after(1000);
 
         networkService.addConfidentialMessageListener(this);
     }
@@ -174,7 +177,10 @@ public class MessageDeliveryStatusService implements PersistenceClient<MessageDe
                         e.getValue().get() == MessageDeliveryStatus.SENT ||
                         e.getValue().get() == MessageDeliveryStatus.TRY_ADD_TO_MAILBOX)
                 .collect(Collectors.toSet());
-        pendingItems.forEach(e -> persistableStore.getMessageDeliveryStatusByMessageId().get(e.getKey()).set(MessageDeliveryStatus.FAILED));
-        persist();
+        if (!pendingItems.isEmpty()) {
+            log.warn("We have pending messages which have not been successfully sent. pendingItems={}", pendingItems);
+            pendingItems.forEach(e -> persistableStore.getMessageDeliveryStatusByMessageId().get(e.getKey()).set(MessageDeliveryStatus.FAILED));
+            persist();
+        }
     }
 }
