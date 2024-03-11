@@ -26,18 +26,23 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Slf4j
-final class MessageDeliveryStatusStore implements PersistableStore<MessageDeliveryStatusStore> {
+public final class MessageDeliveryStatusStore implements PersistableStore<MessageDeliveryStatusStore> {
     private final ObservableHashMap<String, Observable<MessageDeliveryStatus>> messageDeliveryStatusByMessageId = new ObservableHashMap<>();
+    private final Map<String, Long> creationDateByMessageId = new ConcurrentHashMap<>();
 
     MessageDeliveryStatusStore() {
     }
 
-    MessageDeliveryStatusStore(Map<String, Observable<MessageDeliveryStatus>> messageDeliveryStatusByMessageId) {
+    MessageDeliveryStatusStore(Map<String, Observable<MessageDeliveryStatus>> messageDeliveryStatusByMessageId,
+                               Map<String, Long> creationDateByMessageId) {
         this.messageDeliveryStatusByMessageId.clear();
         this.messageDeliveryStatusByMessageId.putAll(messageDeliveryStatusByMessageId);
+        this.creationDateByMessageId.clear();
+        this.creationDateByMessageId.putAll(creationDateByMessageId);
     }
 
     @Override
@@ -45,12 +50,17 @@ final class MessageDeliveryStatusStore implements PersistableStore<MessageDelive
         return bisq.network.protobuf.MessageDeliveryStatusStore.newBuilder()
                 .putAllMessageDeliveryStatusByMessageId(messageDeliveryStatusByMessageId.entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().get().toProto())))
+                .putAllCreationDateByMessageId(creationDateByMessageId.entrySet().stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)))
                 .build();
     }
 
     public static PersistableStore<?> fromProto(bisq.network.protobuf.MessageDeliveryStatusStore proto) {
-        return new MessageDeliveryStatusStore(proto.getMessageDeliveryStatusByMessageIdMap().entrySet().stream().collect(Collectors.toMap(e -> e.getKey(),
-                e -> new Observable<>(MessageDeliveryStatus.fromProto(e.getValue())))));
+        return new MessageDeliveryStatusStore(proto.getMessageDeliveryStatusByMessageIdMap().entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey,
+                        e -> new Observable<>(MessageDeliveryStatus.fromProto(e.getValue())))),
+                proto.getCreationDateByMessageIdMap().entrySet().stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
     }
 
     @Override
@@ -68,14 +78,20 @@ final class MessageDeliveryStatusStore implements PersistableStore<MessageDelive
     public void applyPersisted(MessageDeliveryStatusStore persisted) {
         messageDeliveryStatusByMessageId.clear();
         messageDeliveryStatusByMessageId.putAll(persisted.getMessageDeliveryStatusByMessageId());
+        creationDateByMessageId.clear();
+        creationDateByMessageId.putAll(persisted.getCreationDateByMessageId());
     }
 
     @Override
     public MessageDeliveryStatusStore getClone() {
-        return new MessageDeliveryStatusStore(messageDeliveryStatusByMessageId);
+        return new MessageDeliveryStatusStore(messageDeliveryStatusByMessageId, creationDateByMessageId);
     }
 
     ObservableHashMap<String, Observable<MessageDeliveryStatus>> getMessageDeliveryStatusByMessageId() {
         return messageDeliveryStatusByMessageId;
+    }
+
+    Map<String, Long> getCreationDateByMessageId() {
+        return creationDateByMessageId;
     }
 }

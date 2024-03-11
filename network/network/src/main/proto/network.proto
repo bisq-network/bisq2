@@ -335,6 +335,7 @@ message NetworkServiceStore {
 
 message MessageDeliveryStatusStore {
   map<string, MessageDeliveryStatus> messageDeliveryStatusByMessageId = 1;
+  map<string, sint64> creationDateByMessageId = 2;
 }
 
 message ResendMessageData {
