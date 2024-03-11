@@ -26,21 +26,21 @@ import java.util.Optional;
 
 public class PriceSpecUtil {
     public static Optional<FixPriceSpec> findFixPriceSpec(PriceSpec priceSpec) {
-        return priceSpec instanceof FixPriceSpec ?
-                Optional.of((FixPriceSpec) priceSpec) :
-                Optional.empty();
+        return priceSpec instanceof FixPriceSpec
+                ? Optional.of((FixPriceSpec) priceSpec)
+                : Optional.empty();
     }
 
     public static Optional<FloatPriceSpec> findFloatPriceSpec(PriceSpec priceSpec) {
-        return priceSpec instanceof FloatPriceSpec ?
-                Optional.of((FloatPriceSpec) priceSpec) :
-                Optional.empty();
+        return priceSpec instanceof FloatPriceSpec
+                ? Optional.of((FloatPriceSpec) priceSpec)
+                : Optional.empty();
     }
 
     public static Optional<MarketPriceSpec> findMarketPriceSpec(PriceSpec priceSpec) {
-        return priceSpec instanceof MarketPriceSpec ?
-                Optional.of((MarketPriceSpec) priceSpec) :
-                Optional.empty();
+        return priceSpec instanceof MarketPriceSpec
+                ? Optional.of((MarketPriceSpec) priceSpec)
+                : Optional.empty();
     }
 
     public static Optional<FloatPriceSpec> createFloatPriceSpec(MarketPriceService marketPriceService, PriceQuote priceQuote) {
