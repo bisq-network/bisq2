@@ -65,8 +65,8 @@ public class MarketChannelItem {
     }
 
     private void setUpColorAdjustments() {
-        defaultColorAdjust.setBrightness(-0.6);
-        defaultColorAdjust.setSaturation(-0.33);
+        defaultColorAdjust.setBrightness(-0.4);
+        defaultColorAdjust.setSaturation(-0.2);
         defaultColorAdjust.setContrast(-0.1);
 
         selectedColorAdjust.setBrightness(-0.1);

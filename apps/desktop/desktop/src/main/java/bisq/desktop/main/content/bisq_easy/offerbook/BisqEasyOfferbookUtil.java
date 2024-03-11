@@ -15,8 +15,6 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
 import java.util.List;
@@ -53,59 +51,44 @@ public class BisqEasyOfferbookUtil {
 
     public static Callback<TableColumn<MarketChannelItem, MarketChannelItem>,
             TableCell<MarketChannelItem, MarketChannelItem>> getMarketLabelCellFactory() {
-        return column -> {
-            return new TableCell<>() {
-                private final Label marketName = new Label();
-                private final Label marketCode = new Label();
-                private final Label numOffers = new Label();
-                private final HBox hBox = new HBox(10, marketCode, numOffers);
-                private final VBox vBox = new VBox(0, marketName, hBox);
-                private final Tooltip tooltip = new BisqTooltip();
-                private Subscription selectedMarketPin;
+        return column -> new TableCell<>() {
+            private final Label marketName = new Label();
+            private final Label marketCode = new Label();
+            private final Label numOffers = new Label();
+            private final HBox hBox = new HBox(10, marketCode, numOffers);
+            private final VBox vBox = new VBox(0, marketName, hBox);
+            private final Tooltip tooltip = new BisqTooltip();
 
-                {
-                    setCursor(Cursor.HAND);
-                    hBox.setAlignment(Pos.CENTER_LEFT);
-                    vBox.setAlignment(Pos.CENTER_LEFT);
-                    Tooltip.install(vBox, tooltip);
-                }
+            {
+                setCursor(Cursor.HAND);
+                marketName.getStyleClass().add("market-name");
+                hBox.setAlignment(Pos.CENTER_LEFT);
+                vBox.setAlignment(Pos.CENTER_LEFT);
+                Tooltip.install(vBox, tooltip);
+            }
 
-                @Override
-                protected void updateItem(MarketChannelItem item, boolean empty) {
-                    super.updateItem(item, empty);
+            @Override
+            protected void updateItem(MarketChannelItem item, boolean empty) {
+                super.updateItem(item, empty);
+                if (item != null && !empty) {
+                    marketName.setText(item.getMarket().getQuoteCurrencyName());
+                    marketCode.setText(item.getMarket().getQuoteCurrencyCode());
+                    StringExpression formattedNumOffers = Bindings.createStringBinding(() ->
+                            BisqEasyOfferbookUtil.getFormattedOfferNumber(item.getNumOffers().get()), item.getNumOffers());
+                    numOffers.textProperty().bind(formattedNumOffers);
+                    StringExpression formattedTooltip = Bindings.createStringBinding(() ->
+                            BisqEasyOfferbookUtil.getFormattedTooltip(item.getNumOffers().get(), item.getMarket().getQuoteCurrencyName()), item.getNumOffers());
+                    tooltip.textProperty().bind(formattedTooltip);
+                    tooltip.setStyle("-fx-text-fill: -fx-dark-text-color;");
 
-                    if (selectedMarketPin != null) {
-                        selectedMarketPin.unsubscribe();
-                        selectedMarketPin = null;
-                    }
+                    setGraphic(vBox);
+                } else {
                     numOffers.textProperty().unbind();
                     tooltip.textProperty().unbind();
-                    updateStyleClass(false);
 
-                    if (item != null && !empty) {
-                        selectedMarketPin = EasyBind.subscribe(item.getSelected(), this::updateStyleClass);
-                        marketName.setText(item.getMarket().getQuoteCurrencyName());
-                        marketCode.setText(item.getMarket().getQuoteCurrencyCode());
-                        StringExpression formattedNumOffers = Bindings.createStringBinding(() ->
-                                BisqEasyOfferbookUtil.getFormattedOfferNumber(item.getNumOffers().get()), item.getNumOffers());
-                        numOffers.textProperty().bind(formattedNumOffers);
-                        StringExpression formattedTooltip = Bindings.createStringBinding(() ->
-                                BisqEasyOfferbookUtil.getFormattedTooltip(item.getNumOffers().get(),
-                                        item.getMarket().getQuoteCurrencyName()), item.getNumOffers());
-                        tooltip.textProperty().bind(formattedTooltip);
-                        tooltip.setStyle("-fx-text-fill: -fx-dark-text-color;");
-
-                        setGraphic(vBox);
-                    } else {
-                        setGraphic(null);
-                    }
+                    setGraphic(null);
                 }
-
-                private void updateStyleClass(boolean isSelected) {
-                    marketName.getStyleClass().removeAll("market-name", "market-name-selected");
-                    marketName.getStyleClass().add(isSelected ? "market-name-selected" : "market-name");
-                }
-            };
+            }
         };
     }
 

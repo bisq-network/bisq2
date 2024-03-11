@@ -66,6 +66,7 @@ public final class MyMessageBox extends BubbleMessageBox {
         deliveryState = new Label();
         deliveryState.setCursor(Cursor.HAND);
         deliveryState.setTooltip(new BisqTooltip(true));
+        deliveryState.getStyleClass().add("medium-text");
 
         VBox messageVBox = new VBox(quotedMessageVBox, message, editInputField);
 
