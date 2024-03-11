@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public class NetworkLoadService {
-    private static final long INITIAL_DELAY = TimeUnit.SECONDS.toSeconds(5);
+    private static final long INITIAL_DELAY = TimeUnit.SECONDS.toSeconds(15);
     private static final long INTERVAL = TimeUnit.MINUTES.toSeconds(3);
 
     private final ServiceNodesByTransport serviceNodesByTransport;
