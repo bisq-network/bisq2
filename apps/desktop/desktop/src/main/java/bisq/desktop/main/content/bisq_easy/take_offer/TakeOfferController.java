@@ -136,6 +136,7 @@ public class TakeOfferController extends NavigationController implements InitWit
         overlayController.setEnterKeyHandler(null);
         overlayController.getApplicationRoot().addEventHandler(KeyEvent.KEY_PRESSED, onKeyPressedHandler);
 
+        model.getSelectedChildTarget().set(model.getChildTargets().get(0));
         model.getBackButtonText().set(Res.get("action.back"));
         model.getNextButtonVisible().set(true);
         tradePriceSpecPin = EasyBind.subscribe(takeOfferPriceController.getPriceSpec(),
@@ -148,10 +149,7 @@ public class TakeOfferController extends NavigationController implements InitWit
         takersQuoteSideAmountPin = EasyBind.subscribe(takeOfferAmountController.getTakersQuoteSideAmount(),
                 takeOfferReviewController::setTakersQuoteSideAmount);
         methodNamePin = EasyBind.subscribe(takeOfferPaymentController.getSelectedFiatPaymentMethodSpec(),
-                spec -> {
-                    takeOfferReviewController.setFiatPaymentMethodSpec(spec);
-                    updateNextButtonDisabledState();
-                });
+                spec -> takeOfferReviewController.setFiatPaymentMethodSpec(spec));
     }
 
     @Override
@@ -173,7 +171,6 @@ public class TakeOfferController extends NavigationController implements InitWit
                 Res.get("action.next"));
         model.getShowProgressBox().set(!isTakeOfferReview);
         setMainButtonsVisibleState(true);
-        updateNextButtonDisabledState();
         model.getTakeOfferButtonVisible().set(isTakeOfferReview);
         model.getNextButtonVisible().set(!isTakeOfferReview);
     }
@@ -215,11 +212,22 @@ public class TakeOfferController extends NavigationController implements InitWit
     void onNext() {
         int nextIndex = model.getCurrentIndex().get() + 1;
         if (nextIndex < model.getChildTargets().size()) {
+            if (model.getSelectedChildTarget().get() == NavigationTarget.TAKE_OFFER_PRICE) {
+                if (!takeOfferPriceController.isValid()) {
+                    takeOfferPriceController.handleInvalidInput();
+                    return;
+                }
+            } else if (model.getSelectedChildTarget().get() == NavigationTarget.TAKE_OFFER_PAYMENT) {
+                if (!takeOfferPaymentController.isValid()) {
+                    takeOfferPaymentController.handleInvalidInput();
+                    return;
+                }
+            }
             model.setAnimateRightOut(false);
             model.getCurrentIndex().set(nextIndex);
             NavigationTarget nextTarget = model.getChildTargets().get(nextIndex);
+            model.getSelectedChildTarget().set(nextTarget);
             Navigation.navigateTo(nextTarget);
-            updateNextButtonDisabledState();
         }
     }
 
@@ -229,8 +237,8 @@ public class TakeOfferController extends NavigationController implements InitWit
             model.setAnimateRightOut(true);
             model.getCurrentIndex().set(prevIndex);
             NavigationTarget nextTarget = model.getChildTargets().get(prevIndex);
+            model.getSelectedChildTarget().set(nextTarget);
             Navigation.navigateTo(nextTarget);
-            updateNextButtonDisabledState();
         }
     }
 
@@ -254,16 +262,7 @@ public class TakeOfferController extends NavigationController implements InitWit
     }
 
     private void closeAndNavigateTo(NavigationTarget NavigationTarget) {
-        //reset();
         OverlayController.hide(() -> Navigation.navigateTo(NavigationTarget));
-    }
-
-    private void updateNextButtonDisabledState() {
-        if (NavigationTarget.TAKE_OFFER_PAYMENT == model.getNavigationTarget()) {
-            model.getNextButtonDisabled().set(takeOfferPaymentController.getSelectedFiatPaymentMethodSpec().get() == null);
-        } else {
-            model.getNextButtonDisabled().set(false);
-        }
     }
 
     private void setMainButtonsVisibleState(boolean value) {

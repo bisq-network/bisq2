@@ -43,14 +43,18 @@ public class PriceSpecUtil {
                 : Optional.empty();
     }
 
-    public static Optional<FloatPriceSpec> createFloatPriceSpec(MarketPriceService marketPriceService, PriceQuote priceQuote) {
+    public static Optional<Double> createFloatPriceAsPercentage(MarketPriceService marketPriceService, PriceQuote priceQuote) {
         return marketPriceService.findMarketPrice(priceQuote.getMarket())
                 .map(MarketPrice::getPriceQuote).stream()
                 .map(marketPrice -> {
                     double exact = (double) priceQuote.getValue() / (double) marketPrice.getValue() - 1;
                     return MathUtils.roundDouble(exact, 4);
                 })
-                .map(FloatPriceSpec::new)
                 .findAny();
+    }
+
+    public static Optional<FloatPriceSpec> createFloatPriceSpec(MarketPriceService marketPriceService, PriceQuote priceQuote) {
+        return createFloatPriceAsPercentage(marketPriceService, priceQuote)
+                .map(FloatPriceSpec::new);
     }
 }

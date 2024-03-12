@@ -278,8 +278,16 @@ public class TradeWizardController extends NavigationController implements InitW
             nextIndex++;
         }
         if (nextIndex < model.getChildTargets().size()) {
-            if (isPaymentMethodsScreen() && validatePaymentMethods()) {
-                return;
+            if (model.getSelectedChildTarget().get() == NavigationTarget.TRADE_WIZARD_PRICE) {
+                if (!tradeWizardPriceController.isValid()) {
+                    tradeWizardPriceController.handleInvalidInput();
+                    return;
+                }
+            } else if (model.getSelectedChildTarget().get() == NavigationTarget.TRADE_WIZARD_PAYMENT_METHOD) {
+                if (!tradeWizardPaymentMethodController.isValid()) {
+                    tradeWizardPaymentMethodController.handleInvalidInput();
+                    return;
+                }
             }
             model.setAnimateRightOut(false);
             model.getCurrentIndex().set(nextIndex);
@@ -293,18 +301,6 @@ public class TradeWizardController extends NavigationController implements InitW
     void onKeyPressed(KeyEvent keyEvent) {
         KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onClose);
         KeyHandlerUtil.handleEnterKeyEvent(keyEvent, this::onNext);
-    }
-
-    private boolean isPaymentMethodsScreen() {
-        return model.getSelectedChildTarget().get() == NavigationTarget.TRADE_WIZARD_PAYMENT_METHOD;
-    }
-
-    private boolean validatePaymentMethods() {
-        if (tradeWizardPaymentMethodController.getCustomFiatPaymentMethodNameNotEmpty()) {
-            tradeWizardPaymentMethodController.tryAddCustomPaymentMethodAndNavigateNext();
-            return true;
-        }
-        return !tradeWizardPaymentMethodController.validateSelectedPaymentMethods();
     }
 
     void onBack() {

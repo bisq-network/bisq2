@@ -46,7 +46,7 @@ public class PriceUtil {
      * @return The quote representing the offset from market price
      */
     public static PriceQuote fromMarketPriceMarkup(PriceQuote marketPrice, double percentage) {
-        checkArgument(percentage >= -1, "Offset must > -1");
+        checkArgument(percentage >= -1, "Percentage must not be lower than -100%");
         double price = marketPrice.asDouble() * (1 + percentage);
         return PriceQuote.fromPrice(price, marketPrice.getBaseSideMonetary().getCode(), marketPrice.getQuoteSideMonetary().getCode());
     }

@@ -25,7 +25,6 @@ import bisq.desktop.main.content.bisq_easy.components.PriceInput;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.control.ToggleButton;
@@ -87,14 +86,19 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         useFixPriceToggle.setSelected(model.getUseFixPrice().get());
         useFixPriceToggle.setOnAction(e -> controller.onToggleUseFixPrice());
         useFixPricePin = EasyBind.subscribe(model.getUseFixPrice(), useFixPrice -> {
-            fieldsBox.getChildren().clear();
-            Node firstChild = useFixPrice ? priceInput.getRoot() : percentage;
-            Node lastChild = useFixPrice ? percentage : priceInput.getRoot();
-            fieldsBox.getChildren().addAll(firstChild, lastChild);
-            priceInput.setEditable(false);
-            priceInput.deselect();
-            percentage.setEditable(true);
-            percentage.requestFocus();
+            if (useFixPrice) {
+                fieldsBox.getChildren().setAll(priceInput.getRoot(), percentage);
+                priceInput.requestFocus();
+                priceInput.setEditable(true);
+                percentage.deselect();
+                percentage.setEditable(false);
+            } else {
+                fieldsBox.getChildren().setAll(percentage, priceInput.getRoot());
+                priceInput.deselect();
+                priceInput.setEditable(false);
+                percentage.requestFocus();
+                percentage.setEditable(true);
+            }
         });
 
         // Needed to trigger focusOut event on amount components
