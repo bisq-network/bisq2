@@ -45,7 +45,8 @@ public final class FloatPriceSpec implements PriceSpec {
 
     @Override
     public void verify() {
-        checkArgument(percentage >= -1 && percentage <= 1);
+        checkArgument(percentage >= -1 && percentage <= 1,
+                "Percentage must be in the range of -100% - 100%");
     }
 
     @Override
