@@ -18,8 +18,7 @@
 package bisq.desktop.components.cathash;
 
 import java.math.BigInteger;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Optional;
 
 public class BucketEncoder {
     /**
@@ -40,16 +39,15 @@ public class BucketEncoder {
         return result;
     }
 
-    static String[] toPaths(int[] buckets, Map<String, BucketConfig.PathTemplateEncoding> pathTemplatesWithEncoding) {
-        String[] paths = new String[pathTemplatesWithEncoding.size()];
-        AtomicInteger idx = new AtomicInteger(0);
-        pathTemplatesWithEncoding.forEach((path, encoding) -> {
-            Integer shapeNumber = encoding.shapeIdx != null ? buckets[encoding.shapeIdx] : null;
-            int itemNumber = buckets[encoding.itemIdx];
-            paths[idx.getAndIncrement()] = shapeNumber != null
-                    ? generatePath(path, shapeNumber, itemNumber)
-                    : generatePath(path, itemNumber);
-        });
+    static String[] toPaths(int[] buckets, BucketConfig.PathDetails[] pathTemplates) {
+        String[] paths = new String[pathTemplates.length];
+        for (int i = 0; i < paths.length; ++i) {
+            String path = pathTemplates[i].getPath();
+            Optional<Integer> shapeIdx = pathTemplates[i].getShapeIdx();
+            int itemIdx = pathTemplates[i].getItemIdx();
+            paths[i] = shapeIdx.map(idx -> generatePath(path, buckets[idx], buckets[itemIdx]))
+                    .orElseGet(() -> generatePath(path, buckets[itemIdx]));
+        }
         return paths;
     }
 
