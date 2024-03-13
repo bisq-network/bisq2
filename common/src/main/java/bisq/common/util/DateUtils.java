@@ -22,7 +22,7 @@ import java.util.GregorianCalendar;
 import java.util.TimeZone;
 
 public class DateUtils {
-    public final static Date LAUNCH_DATE = DateUtils.getUTCDate(2022, GregorianCalendar.MARCH, 22);
+    public final static Date LAUNCH_DATE = DateUtils.getUTCDate(2024, GregorianCalendar.MARCH, 13);
 
     public static Date getUTCDate(int year, int month, int dayOfMonth) {
         GregorianCalendar calendar = new GregorianCalendar(year, month, dayOfMonth);

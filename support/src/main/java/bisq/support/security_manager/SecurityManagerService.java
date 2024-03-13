@@ -18,10 +18,11 @@
 package bisq.support.security_manager;
 
 import bisq.bonded_roles.BondedRolesService;
-import bisq.bonded_roles.alert.AlertType;
-import bisq.bonded_roles.alert.AuthorizedAlertData;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
+import bisq.bonded_roles.security_manager.alert.AlertType;
+import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
+import bisq.bonded_roles.security_manager.difficulty_adjustment.AuthorizedDifficultyAdjustmentData;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.util.StringUtils;
@@ -122,9 +123,29 @@ public class SecurityManagerService implements Service {
     }
 
     public CompletableFuture<Boolean> removeAlert(AuthorizedAlertData authorizedAlertData, KeyPair ownerKeyPair) {
-        return networkService.removeAuthorizedData(authorizedAlertData,
-                        ownerKeyPair,
-                        ownerKeyPair.getPublic())
+        return networkService.removeAuthorizedData(authorizedAlertData, ownerKeyPair, ownerKeyPair.getPublic())
+                .thenApply(broadCastDataResult -> true);
+    }
+
+    public CompletableFuture<Boolean> publishDifficultyAdjustment(double difficultyAdjustmentFactor) {
+        UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
+        String profileId = userIdentity.getId();
+        KeyPair keyPair = userIdentity.getIdentity().getKeyBundle().getKeyPair();
+        PublicKey authorizedPublicKey = keyPair.getPublic();
+        PrivateKey authorizedPrivateKey = keyPair.getPrivate();
+        AuthorizedDifficultyAdjustmentData data = new AuthorizedDifficultyAdjustmentData(new Date().getTime(),
+                difficultyAdjustmentFactor,
+                profileId,
+                staticPublicKeysProvided);
+        return networkService.publishAuthorizedData(data,
+                        keyPair,
+                        authorizedPrivateKey,
+                        authorizedPublicKey)
+                .thenApply(broadCastDataResult -> true);
+    }
+
+    public CompletableFuture<Boolean> removeDifficultyAdjustment(AuthorizedDifficultyAdjustmentData data, KeyPair ownerKeyPair) {
+        return networkService.removeAuthorizedData(data, ownerKeyPair, ownerKeyPair.getPublic())
                 .thenApply(broadCastDataResult -> true);
     }
 }

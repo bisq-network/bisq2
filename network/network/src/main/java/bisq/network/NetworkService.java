@@ -105,7 +105,8 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     private final Optional<MessageDeliveryStatusService> messageDeliveryStatusService;
     @Getter
     private final Optional<ResendMessageService> resendMessageService;
-    private final Optional<NetworkLoadService> monitorService;
+    @Getter
+    private final Optional<NetworkLoadService> networkLoadService;
     @Getter
     private final Persistence<NetworkServiceStore> persistence;
     @Getter
@@ -161,7 +162,8 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                 resendMessageService,
                 networkLoadSnapshot);
 
-        monitorService = supportedServices.contains(ServiceNode.SupportedService.DATA) &&
+
+        networkLoadService = supportedServices.contains(ServiceNode.SupportedService.DATA) &&
                 supportedServices.contains(ServiceNode.SupportedService.PEER_GROUP) &&
                 supportedServices.contains(ServiceNode.SupportedService.MONITOR) ?
                 Optional.of(new NetworkLoadService(serviceNodesByTransport, dataService.orElseThrow(), networkLoadSnapshot)) :
@@ -193,7 +195,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                     if (node != null) {
                         messageDeliveryStatusService.ifPresent(MessageDeliveryStatusService::initialize);
                         resendMessageService.ifPresent(ResendMessageService::initialize);
-                        monitorService.ifPresent(NetworkLoadService::initialize);
+                        networkLoadService.ifPresent(NetworkLoadService::initialize);
                         return true;
                     } else {
                         return false;
@@ -205,7 +207,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         log.info("shutdown");
         messageDeliveryStatusService.ifPresent(MessageDeliveryStatusService::shutdown);
         resendMessageService.ifPresent(ResendMessageService::shutdown);
-        monitorService.ifPresent(NetworkLoadService::shutdown);
+        networkLoadService.ifPresent(NetworkLoadService::shutdown);
         dataService.ifPresent(DataService::shutdown);
         return serviceNodesByTransport.shutdown()
                 .thenApply(list -> list.stream().filter(e -> e).count() == supportedTransportTypes.size());

@@ -20,20 +20,113 @@ package bisq.desktop.components.controls.validator;
 import javafx.scene.control.TextInputControl;
 import javafx.util.StringConverter;
 import javafx.util.converter.NumberStringConverter;
+import lombok.Getter;
+
+import java.util.Optional;
 
 public class NumberValidator extends ValidatorBase {
 
     private static final StringConverter<Number> NUMBER_STRING_CONVERTER = new NumberStringConverter();
+    @Getter
+    private Optional<Number> minValue = Optional.empty();
+    @Getter
+    private Optional<Number> maxValue = Optional.empty();
+    @Getter
+    private Optional<Number> numberValue = Optional.empty();
 
     public NumberValidator(String message) {
         super(message);
+    }
+
+    public NumberValidator(String message, Number minValue, Number maxValue) {
+        super(message);
+        this.minValue = Optional.of(minValue);
+        this.maxValue = Optional.of(maxValue);
+    }
+
+    public void setMinValue(Number minValue) {
+        this.minValue = Optional.of(minValue);
+    }
+
+    public void setMaxValue(Number maxValue) {
+        this.maxValue = Optional.of(maxValue);
     }
 
     @Override
     protected void eval() {
         var textField = (TextInputControl) srcControl.get();
         try {
-            NUMBER_STRING_CONVERTER.fromString(textField.getText());
+            Number value = NUMBER_STRING_CONVERTER.fromString(textField.getText());
+            numberValue = Optional.of(value);
+
+            if (minValue.isPresent()) {
+                if (value instanceof Double) {
+                    if (value.doubleValue() < minValue.get().doubleValue()) {
+                        hasErrors.set(true);
+                        return;
+                    }
+                } else if (value instanceof Float) {
+                    if (value.floatValue() < minValue.get().floatValue()) {
+                        hasErrors.set(true);
+                        return;
+                    }
+                } else if (value instanceof Long) {
+                    if (value.longValue() < minValue.get().longValue()) {
+                        hasErrors.set(true);
+                        return;
+                    }
+                } else if (value instanceof Integer) {
+                    if (value.intValue() < minValue.get().intValue()) {
+                        hasErrors.set(true);
+                        return;
+                    }
+                } else if (value instanceof Short) {
+                    if (value.shortValue() < minValue.get().shortValue()) {
+                        hasErrors.set(true);
+                        return;
+                    }
+                } else if (value instanceof Byte) {
+                    if (value.byteValue() < minValue.get().byteValue()) {
+                        hasErrors.set(true);
+                        return;
+                    }
+                }
+            }
+
+            if (maxValue.isPresent()) {
+                if (value instanceof Double) {
+                    if (value.doubleValue() > maxValue.get().doubleValue()) {
+                        hasErrors.set(true);
+                        return;
+                    }
+                } else if (value instanceof Float) {
+                    if (value.floatValue() > maxValue.get().floatValue()) {
+                        hasErrors.set(true);
+                        return;
+                    }
+                } else if (value instanceof Long) {
+                    if (value.longValue() > maxValue.get().longValue()) {
+                        hasErrors.set(true);
+                        return;
+                    }
+                } else if (value instanceof Integer) {
+                    if (value.intValue() > maxValue.get().intValue()) {
+                        hasErrors.set(true);
+                        return;
+                    }
+                } else if (value instanceof Short) {
+                    if (value.shortValue() > maxValue.get().shortValue()) {
+                        hasErrors.set(true);
+                        return;
+                    }
+                } else if (value instanceof Byte) {
+                    if (value.byteValue() > maxValue.get().byteValue()) {
+                        hasErrors.set(true);
+                        return;
+                    }
+                }
+            }
+
             hasErrors.set(false);
         } catch (Exception e) {
             hasErrors.set(true);

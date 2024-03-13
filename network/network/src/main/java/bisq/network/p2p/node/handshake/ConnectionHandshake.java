@@ -204,7 +204,7 @@ public final class ConnectionHandshake {
             Request request = new Request(capability, signature, myNetworkLoad, signatureDate);
             // As we do not know he peers load yet, we use the NetworkLoad.INITIAL_LOAD
             AuthorizationToken token = authorizationService.createToken(request,
-                    NetworkLoad.INITIAL_LOAD,
+                    NetworkLoad.INITIAL_NETWORK_LOAD,
                     peerAddress.getFullAddress(),
                     0,
                     new ArrayList<>());
@@ -292,7 +292,7 @@ public final class ConnectionHandshake {
             // AuthorizationToken.
             boolean isAuthorized = authorizationService.isAuthorized(request,
                     requestNetworkEnvelope.getAuthorizationToken(),
-                    NetworkLoad.INITIAL_LOAD,
+                    NetworkLoad.INITIAL_NETWORK_LOAD,
                     StringUtils.createUid(),
                     myAddress.getFullAddress());
             if (!isAuthorized) {

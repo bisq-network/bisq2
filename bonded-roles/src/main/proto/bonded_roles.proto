@@ -82,6 +82,13 @@ message ReleaseNotification {
   bool staticPublicKeysProvided = 8;
 }
 
+message AuthorizedDifficultyAdjustmentData {
+  sint64 date = 1;
+  double difficultyAdjustmentFactor = 2;
+  string securityManagerProfileId = 3;
+  bool staticPublicKeysProvided = 4;
+}
+
 enum MarketPriceProvider {
   MARKETPRICEPROVIDER_UNSPECIFIED = 0;
   MARKETPRICEPROVIDER_BISQAGGREGATE = 1;

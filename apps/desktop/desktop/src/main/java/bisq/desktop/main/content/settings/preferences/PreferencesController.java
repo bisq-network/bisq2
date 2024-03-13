@@ -17,12 +17,14 @@
 
 package bisq.desktop.main.content.settings.preferences;
 
+import bisq.bonded_roles.security_manager.difficulty_adjustment.DifficultyAdjustmentService;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.locale.LanguageRepository;
 import bisq.common.observable.Pin;
 import bisq.common.util.OsUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
@@ -42,14 +44,18 @@ public class PreferencesController implements Controller {
     private final PreferencesModel model;
     private final SettingsService settingsService;
     private final ChatNotificationService chatNotificationService;
+    private final DifficultyAdjustmentService difficultyAdjustmentService;
 
-    private Pin chatNotificationTypePin, useAnimationsPin, getPreventStandbyModePin, offerOnlyPin,
-            closeMyOfferWhenTakenPin, getSupportedLanguageCodesPin, minRequiredReputationScorePin;
-    private Subscription notifyForPreReleasePin, getUseTransientNotificationsPin;
+    private Pin chatNotificationTypePin, useAnimationsPin, preventStandbyModePin, offerOnlyPin, closeMyOfferWhenTakenPin,
+            supportedLanguageCodesPin, minRequiredReputationScorePin, ignoreDiffAdjustmentFromSecManagerPin,
+            mostRecentValueOrDefaultPin, difficultyAdjustmentFactorPin;
+    private Subscription notifyForPreReleasePin, useTransientNotificationsPin,
+            difficultyAdjustmentFactorDescriptionTextPin;
 
     public PreferencesController(ServiceProvider serviceProvider) {
         settingsService = serviceProvider.getSettingsService();
         chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
+        difficultyAdjustmentService = serviceProvider.getBondedRolesService().getDifficultyAdjustmentService();
         model = new PreferencesModel();
         view = new PreferencesView(model, this);
     }
@@ -57,14 +63,14 @@ public class PreferencesController implements Controller {
     @Override
     public void onActivate() {
         model.getLanguageCodes().setAll(LanguageRepository.I18N_CODES);
-        model.setSelectedLanguageCode(settingsService.getLanguageCode());
+        model.setSelectedLanguageCode(settingsService.getLanguageCode().get());
         model.getSupportedLanguageCodes().setAll(LanguageRepository.CODES);
 
         chatNotificationTypePin = FxBindings.bindBiDir(model.getChatNotificationType())
                 .to(settingsService.getChatNotificationType());
         useAnimationsPin = FxBindings.bindBiDir(model.getUseAnimations())
                 .to(settingsService.getUseAnimations());
-        getPreventStandbyModePin = FxBindings.bindBiDir(model.getPreventStandbyMode())
+        preventStandbyModePin = FxBindings.bindBiDir(model.getPreventStandbyMode())
                 .to(settingsService.getPreventStandbyMode());
         minRequiredReputationScorePin = FxBindings.bindBiDir(model.getMinRequiredReputationScore())
                 .to(settingsService.getMinRequiredReputationScore());
@@ -72,8 +78,32 @@ public class PreferencesController implements Controller {
                 .to(settingsService.getOffersOnly());
         closeMyOfferWhenTakenPin = FxBindings.bindBiDir(model.getCloseMyOfferWhenTaken())
                 .to(settingsService.getCloseMyOfferWhenTaken());
-        getSupportedLanguageCodesPin = FxBindings.<String, String>bind(model.getSelectedSupportedLanguageCodes())
+        supportedLanguageCodesPin = FxBindings.<String, String>bind(model.getSelectedSupportedLanguageCodes())
                 .to(settingsService.getSupportedLanguageCodes());
+        ignoreDiffAdjustmentFromSecManagerPin = FxBindings.bindBiDir(model.getIgnoreDiffAdjustmentFromSecManager())
+                .to(settingsService.getIgnoreDiffAdjustmentFromSecManager());
+        model.getDifficultyAdjustmentFactorEditable().bind(model.getIgnoreDiffAdjustmentFromSecManager());
+
+        difficultyAdjustmentFactorDescriptionTextPin = EasyBind.subscribe(model.getIgnoreDiffAdjustmentFromSecManager(),
+                value -> {
+                    if (value) {
+                        model.getDifficultyAdjustmentFactorDescriptionText().set(Res.get("settings.preferences.network.difficultyAdjustmentFactor.description.self"));
+                        if (mostRecentValueOrDefaultPin != null) {
+                            mostRecentValueOrDefaultPin.unbind();
+                        }
+                        difficultyAdjustmentFactorPin = FxBindings.bindBiDir(model.getDifficultyAdjustmentFactor())
+                                .to(settingsService.getDifficultyAdjustmentFactor());
+                    } else {
+                        model.getDifficultyAdjustmentFactorDescriptionText().set(Res.get("settings.preferences.network.difficultyAdjustmentFactor.description.fromSecManager"));
+
+                        if (difficultyAdjustmentFactorPin != null) {
+                            difficultyAdjustmentFactorPin.unbind();
+                        }
+                        mostRecentValueOrDefaultPin = difficultyAdjustmentService.getMostRecentValueOrDefault()
+                                .addObserver(mostRecentValueOrDefault ->
+                                        UIThread.run(() -> model.getDifficultyAdjustmentFactor().set(mostRecentValueOrDefault)));
+                    }
+                });
 
         model.getNotifyForPreRelease().set(settingsService.getCookie().asBoolean(CookieKey.NOTIFY_FOR_PRE_RELEASE).orElse(false));
         notifyForPreReleasePin = EasyBind.subscribe(model.getNotifyForPreRelease(),
@@ -83,7 +113,7 @@ public class PreferencesController implements Controller {
         if (OsUtils.isLinux()) {
             model.setUseTransientNotificationsVisible(true);
             model.getUseTransientNotifications().set(settingsService.getCookie().asBoolean(CookieKey.USE_TRANSIENT_NOTIFICATIONS).orElse(true));
-            getUseTransientNotificationsPin = EasyBind.subscribe(model.getUseTransientNotifications(),
+            useTransientNotificationsPin = EasyBind.subscribe(model.getUseTransientNotifications(),
                     value -> settingsService.setCookie(CookieKey.USE_TRANSIENT_NOTIFICATIONS, value));
         }
 
@@ -97,17 +127,26 @@ public class PreferencesController implements Controller {
         minRequiredReputationScorePin.unbind();
         offerOnlyPin.unbind();
         closeMyOfferWhenTakenPin.unbind();
-        getPreventStandbyModePin.unbind();
-        getSupportedLanguageCodesPin.unbind();
+        preventStandbyModePin.unbind();
+        supportedLanguageCodesPin.unbind();
+        ignoreDiffAdjustmentFromSecManagerPin.unbind();
+        model.getDifficultyAdjustmentFactorEditable().unbind();
         notifyForPreReleasePin.unsubscribe();
-        if (getUseTransientNotificationsPin != null) {
-            getUseTransientNotificationsPin.unsubscribe();
+        difficultyAdjustmentFactorDescriptionTextPin.unsubscribe();
+        if (useTransientNotificationsPin != null) {
+            useTransientNotificationsPin.unsubscribe();
+        }
+        if (difficultyAdjustmentFactorPin != null) {
+            difficultyAdjustmentFactorPin.unbind();
+        }
+        if (mostRecentValueOrDefaultPin != null) {
+            mostRecentValueOrDefaultPin.unbind();
         }
     }
 
     void onSelectLanguage(String languageCode) {
         model.setSelectedLanguageCode(languageCode);
-        settingsService.setLanguageCode(languageCode);
+        settingsService.getLanguageCode().set(languageCode);
         new Popup().feedback(Res.get("settings.preferences.language.restart")).useShutDownButton().show();
     }
 

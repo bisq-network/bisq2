@@ -40,6 +40,10 @@ public class PreferencesModel implements Model {
     private final LongProperty minRequiredReputationScore = new SimpleLongProperty();
     private final BooleanProperty offerOnly = new SimpleBooleanProperty();
     private final BooleanProperty closeMyOfferWhenTaken = new SimpleBooleanProperty();
+    private final DoubleProperty difficultyAdjustmentFactor = new SimpleDoubleProperty();
+    private final BooleanProperty difficultyAdjustmentFactorEditable = new SimpleBooleanProperty();
+    private final StringProperty difficultyAdjustmentFactorDescriptionText = new SimpleStringProperty();
+    private final BooleanProperty ignoreDiffAdjustmentFromSecManager = new SimpleBooleanProperty();
     @Setter
     private String selectedLanguageCode;
     private final StringProperty selectedLSupportedLanguageCode = new SimpleStringProperty();

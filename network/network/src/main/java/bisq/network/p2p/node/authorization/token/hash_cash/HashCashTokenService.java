@@ -18,11 +18,15 @@ import lombok.extern.slf4j.Slf4j;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 @Slf4j
 public class HashCashTokenService extends AuthorizationTokenService<HashCashToken> {
-    public final static int MIN_DIFFICULTY = 128;  // Math.pow(2, 7) = 128; 3 ms on old CPU, 1 ms on high-end CPU
-    public final static int MAX_DIFFICULTY = 65536;  // Math.pow(2, 16) = 262144; 1000 ms on old CPU, 60-140 ms on high-end CPU
+    public final static double MIN_MESSAGE_COST = 0.01;
+    public final static double MIN_LOAD = 0.01;
+    public final static int MIN_DIFFICULTY = 128;  // 2^7 = 128; 3 ms on old CPU, 1 ms on high-end CPU. Would result in an average time of 1-5 ms on high-end CPU
+    public final static int TARGET_DIFFICULTY = 65536;  // 2^16 = 262144; 1000 ms on old CPU, 60-140 ms on high-end CPU. Would result in an average time of 100-150 ms on high-end CPU
+    public final static int MAX_DIFFICULTY = 1048576;  // 2^20 = 1048576; Would result in an average time 0.5-2 sec on high-end CPU
     public final static int DIFFICULTY_TOLERANCE = 50_000;
 
     private final HashCashProofOfWorkService proofOfWorkService;
@@ -31,9 +35,9 @@ public class HashCashTokenService extends AuthorizationTokenService<HashCashToke
     @Getter
     private double accumulatedPoWDuration;
     @Getter
-    private final List<Long> aggregatedPoWDuration = new ArrayList<>();
+    private final List<Long> aggregatedPoWDuration = new CopyOnWriteArrayList<>();
     @Getter
-    private final List<Double> aggregatedNetworkLoadValues = new ArrayList<>();
+    private final List<Double> aggregatedNetworkLoadValues = new CopyOnWriteArrayList<>();
 
     public HashCashTokenService(HashCashProofOfWorkService proofOfWorkService) {
         this.proofOfWorkService = proofOfWorkService;
@@ -53,7 +57,7 @@ public class HashCashTokenService extends AuthorizationTokenService<HashCashToke
         long duration = System.currentTimeMillis() - ts;
         accumulatedPoWDuration += duration;
         aggregatedPoWDuration.add(duration);
-        aggregatedNetworkLoadValues.add(networkLoad.getValue());
+        aggregatedNetworkLoadValues.add(networkLoad.getLoad());
         int size = aggregatedPoWDuration.size();
         if (size % 100 == 0) {
             log.info("Total time used for PoW: {} sec; Average time/message used for PoW: {} ms; Average network load value: {}; Number of messages: {}",
@@ -68,11 +72,16 @@ public class HashCashTokenService extends AuthorizationTokenService<HashCashToke
                 aggregatedNetworkLoadValues.clear();
             }
         }
-        log.debug("Create HashCashToken for {} took {} ms\n" +
-                        "CostFactor={}; Load={}; Difficulty=2^{}={}",
+        log.debug("Create HashCashToken for {} took {} ms" +
+                        "\ncostFactor={}" +
+                        "\ngetPayload(message)={}" +
+                        "\nnetworkLoad={}" +
+                        "\nhashCashToken={}",
                 message.getClass().getSimpleName(), duration,
-                message.getCostFactor(), networkLoad.getValue(),
-                MathUtils.roundDouble(Math.log(difficulty) / MathUtils.LOG2, 2), difficulty);
+                message.getCostFactor(),
+                Hex.encode(payload),
+                networkLoad,
+                token);
         return token;
     }
 
@@ -134,7 +143,7 @@ public class HashCashTokenService extends AuthorizationTokenService<HashCashToke
                                         NetworkLoad currentNetworkLoad,
                                         Optional<NetworkLoad> previousNetworkLoad) {
         log.debug("isDifficultyInvalid/currentNetworkLoad: message.getCostFactor()={}, networkLoad.getValue()={}",
-                message.getCostFactor(), currentNetworkLoad.getValue());
+                message.getCostFactor(), currentNetworkLoad.getLoad());
         double expectedDifficulty = calculateDifficulty(message, currentNetworkLoad);
         if (proofOfWorkDifficulty >= expectedDifficulty) {
             // We don't want to call calculateDifficulty with the previousNetworkLoad if we are not in dev mode.
@@ -169,7 +178,7 @@ public class HashCashTokenService extends AuthorizationTokenService<HashCashToke
         }
 
         log.debug("isDifficultyInvalid/previousNetworkLoad: message.getCostFactor()={}, networkLoad.getValue()={}",
-                message.getCostFactor(), previousNetworkLoad.get().getValue());
+                message.getCostFactor(), previousNetworkLoad.get().getLoad());
         double expectedPreviousDifficulty = calculateDifficulty(message, previousNetworkLoad.get());
         if (proofOfWorkDifficulty >= expectedPreviousDifficulty) {
             log.debug("Difficulty of previous network load is correct");
@@ -205,7 +214,7 @@ public class HashCashTokenService extends AuthorizationTokenService<HashCashToke
     }
 
     private byte[] getPayload(EnvelopePayloadMessage message) {
-        return message.toProto().toByteArray();
+        return message.serialize();
     }
 
     private byte[] getChallenge(String peerAddress, int messageCounter) {
@@ -214,9 +223,9 @@ public class HashCashTokenService extends AuthorizationTokenService<HashCashToke
     }
 
     private double calculateDifficulty(EnvelopePayloadMessage message, NetworkLoad networkLoad) {
-        double messageCostFactor = MathUtils.bounded(0.01, 1, message.getCostFactor());
-        double loadValue = MathUtils.bounded(0.01, 1, networkLoad.getValue());
-        double difficulty = MAX_DIFFICULTY * messageCostFactor * loadValue;
+        double messageCostFactor = MathUtils.bounded(MIN_MESSAGE_COST, 1, message.getCostFactor());
+        double load = MathUtils.bounded(MIN_LOAD, 1, networkLoad.getLoad());
+        double difficulty = TARGET_DIFFICULTY * messageCostFactor * load * networkLoad.getDifficultyAdjustmentFactor();
         return MathUtils.bounded(MIN_DIFFICULTY, MAX_DIFFICULTY, difficulty);
     }
 }

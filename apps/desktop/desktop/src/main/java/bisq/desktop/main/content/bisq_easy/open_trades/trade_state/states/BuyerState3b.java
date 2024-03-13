@@ -196,7 +196,7 @@ public class BuyerState3b extends BaseState {
 
             skipButton.defaultButtonProperty().bind(model.isConfirmed);
             btcBalance.textProperty().bind(model.getBtcBalance());
-            btcBalance.helpHelpProperty().bind(model.getConfirmationState());
+            btcBalance.helpProperty().bind(model.getConfirmationState());
 
             skipButton.setOnAction(e -> controller.onSkip());
             txId.getIconButton().setOnAction(e -> controller.openExplorer());
@@ -210,7 +210,7 @@ public class BuyerState3b extends BaseState {
 
             skipButton.defaultButtonProperty().unbind();
             btcBalance.textProperty().unbind();
-            btcBalance.helpHelpProperty().unbind();
+            btcBalance.helpProperty().unbind();
 
             skipButton.setOnAction(null);
             txId.getIconButton().setOnAction(null);

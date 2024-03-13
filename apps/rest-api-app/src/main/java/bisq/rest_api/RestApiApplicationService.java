@@ -60,7 +60,6 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 @Getter
 @Slf4j
 public class RestApiApplicationService extends ApplicationService {
-
     public enum State {
         INITIALIZE_APP,
         INITIALIZE_NETWORK,
@@ -215,6 +214,11 @@ public class RestApiApplicationService extends ApplicationService {
                     if (throwable == null) {
                         if (success) {
                             setState(State.APP_INITIALIZED);
+
+                            bondedRolesService.getDifficultyAdjustmentService().getMostRecentValueOrDefault().addObserver(mostRecentValueOrDefault -> {
+                                networkService.getNetworkLoadService().ifPresent(service -> service.setDifficultyAdjustmentFactor(mostRecentValueOrDefault));
+                            });
+
                             log.info("ApplicationService initialized");
                         } else {
                             setState(State.FAILED);

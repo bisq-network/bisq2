@@ -17,12 +17,13 @@
 
 package bisq.bonded_roles;
 
-import bisq.bonded_roles.alert.AlertService;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.bonded_roles.explorer.ExplorerService;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.bonded_roles.registration.BondedRoleRegistrationService;
 import bisq.bonded_roles.release.ReleaseNotificationsService;
+import bisq.bonded_roles.security_manager.alert.AlertService;
+import bisq.bonded_roles.security_manager.difficulty_adjustment.DifficultyAdjustmentService;
 import bisq.common.application.Service;
 import bisq.common.util.Version;
 import bisq.network.NetworkService;
@@ -61,6 +62,7 @@ public class BondedRolesService implements Service {
     private final MarketPriceService marketPriceService;
     private final ExplorerService explorerService;
     private final AlertService alertService;
+    private final DifficultyAdjustmentService difficultyAdjustmentService;
     private final ReleaseNotificationsService releaseNotificationsService;
 
     public BondedRolesService(Config config, Version version, PersistenceService persistenceService, NetworkService networkService) {
@@ -71,7 +73,7 @@ public class BondedRolesService implements Service {
                 networkService,
                 version);
         alertService = new AlertService(authorizedBondedRolesService);
-
+        difficultyAdjustmentService = new DifficultyAdjustmentService(authorizedBondedRolesService);
         releaseNotificationsService = new ReleaseNotificationsService(authorizedBondedRolesService);
     }
 
@@ -82,21 +84,23 @@ public class BondedRolesService implements Service {
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        return authorizedBondedRolesService.initialize()
+        return difficultyAdjustmentService.initialize()
+                .thenCompose(result -> alertService.initialize())
                 .thenCompose(result -> bondedRoleRegistrationService.initialize())
                 .thenCompose(result -> marketPriceService.initialize())
                 .thenCompose(result -> explorerService.initialize())
-                .thenCompose(result -> alertService.initialize())
-                .thenCompose(result -> releaseNotificationsService.initialize());
+                .thenCompose(result -> releaseNotificationsService.initialize())
+                .thenCompose(result -> authorizedBondedRolesService.initialize());
     }
 
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
         return authorizedBondedRolesService.shutdown()
+                .thenCompose(result -> difficultyAdjustmentService.shutdown())
+                .thenCompose(result -> alertService.shutdown())
                 .thenCompose(result -> bondedRoleRegistrationService.shutdown())
                 .thenCompose(result -> marketPriceService.shutdown())
                 .thenCompose(result -> explorerService.shutdown())
-                .thenCompose(result -> alertService.shutdown())
                 .thenCompose(result -> releaseNotificationsService.shutdown());
     }
 }

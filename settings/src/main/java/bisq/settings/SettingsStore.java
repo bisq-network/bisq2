@@ -24,6 +24,7 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
@@ -42,12 +43,14 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     final Observable<Boolean> offersOnly = new Observable<>();
     final Observable<Boolean> tradeRulesConfirmed = new Observable<>();
     final Observable<ChatNotificationType> chatNotificationType = new Observable<>(ChatNotificationType.MENTION);
-    final Set<String> consumedAlertIds;
-    boolean isTacAccepted;
+    final ObservableSet<String> consumedAlertIds = new ObservableSet<>();
+    final Observable<Boolean> isTacAccepted = new Observable<>();
     final Observable<Boolean> closeMyOfferWhenTaken = new Observable<>();
     final Observable<Boolean> preventStandbyMode = new Observable<>();
-    String languageCode;
+    final Observable<String> languageCode = new Observable<>();
     final ObservableSet<String> supportedLanguageCodes = new ObservableSet<>();
+    final Observable<Double> difficultyAdjustmentFactor = new Observable<>();
+    final Observable<Boolean> ignoreDiffAdjustmentFromSecManager = new Observable<>();
 
     public SettingsStore() {
         this(new Cookie(),
@@ -63,7 +66,9 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 true,
                 LanguageRepository.getDefaultLanguage(),
                 true,
-                Set.of(LanguageRepository.getDefaultLanguage()));
+                Set.of(LanguageRepository.getDefaultLanguage()),
+                NetworkLoad.DEFAULT_DIFFICULTY_ADJUSTMENT,
+                false);
     }
 
     public SettingsStore(Cookie cookie,
@@ -79,7 +84,9 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                          boolean closeMyOfferWhenTaken,
                          String languageCode,
                          boolean preventStandbyMode,
-                         Set<String> supportedLanguageCodes) {
+                         Set<String> supportedLanguageCodes,
+                         double difficultyAdjustmentFactor,
+                         boolean ignoreDiffAdjustmentFromSecManager) {
         this.cookie = cookie;
         this.dontShowAgainMap.putAll(dontShowAgainMap);
         this.useAnimations.set(useAnimations);
@@ -88,12 +95,14 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
         this.offersOnly.set(offersOnly);
         this.tradeRulesConfirmed.set(tradeRulesConfirmed);
         this.chatNotificationType.set(chatNotificationType);
-        this.isTacAccepted = isTacAccepted;
-        this.consumedAlertIds = consumedAlertIds;
+        this.isTacAccepted.set(isTacAccepted);
+        this.consumedAlertIds.setAll(consumedAlertIds);
         this.closeMyOfferWhenTaken.set(closeMyOfferWhenTaken);
-        this.languageCode = languageCode;
+        this.languageCode.set(languageCode);
         this.preventStandbyMode.set(preventStandbyMode);
         this.supportedLanguageCodes.setAll(supportedLanguageCodes);
+        this.difficultyAdjustmentFactor.set(difficultyAdjustmentFactor);
+        this.ignoreDiffAdjustmentFromSecManager.set(ignoreDiffAdjustmentFromSecManager);
     }
 
     @Override
@@ -107,12 +116,14 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 .setOffersOnly(offersOnly.get())
                 .setTradeRulesConfirmed(tradeRulesConfirmed.get())
                 .setChatNotificationType(chatNotificationType.get().toProto())
-                .setIsTacAccepted(isTacAccepted)
-                .addAllConsumedAlertIds(consumedAlertIds)
+                .setIsTacAccepted(isTacAccepted.get())
+                .addAllConsumedAlertIds(new ArrayList<>(consumedAlertIds))
                 .setCloseMyOfferWhenTaken(closeMyOfferWhenTaken.get())
-                .setLanguageCode(languageCode)
+                .setLanguageCode(languageCode.get())
                 .setPreventStandbyMode(preventStandbyMode.get())
                 .addAllSupportedLanguageCodes(new ArrayList<>(supportedLanguageCodes))
+                .setDifficultyAdjustmentFactor(difficultyAdjustmentFactor.get())
+                .setIgnoreDiffAdjustmentFromSecManager(ignoreDiffAdjustmentFromSecManager.get())
                 .build();
     }
 
@@ -131,7 +142,9 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 proto.getCloseMyOfferWhenTaken(),
                 proto.getLanguageCode(),
                 proto.getPreventStandbyMode(),
-                new HashSet<>(proto.getSupportedLanguageCodesList()));
+                new HashSet<>(proto.getSupportedLanguageCodesList()),
+                proto.getDifficultyAdjustmentFactor(),
+                proto.getIgnoreDiffAdjustmentFromSecManager());
     }
 
     @Override
@@ -155,12 +168,14 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 offersOnly.get(),
                 tradeRulesConfirmed.get(),
                 chatNotificationType.get(),
-                isTacAccepted,
-                consumedAlertIds,
+                isTacAccepted.get(),
+                new HashSet<>(consumedAlertIds),
                 closeMyOfferWhenTaken.get(),
-                languageCode,
+                languageCode.get(),
                 preventStandbyMode.get(),
-                new HashSet<>(supportedLanguageCodes));
+                new HashSet<>(supportedLanguageCodes),
+                difficultyAdjustmentFactor.get(),
+                ignoreDiffAdjustmentFromSecManager.get());
     }
 
     @Override
@@ -174,13 +189,14 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
             offersOnly.set(persisted.offersOnly.get());
             tradeRulesConfirmed.set(persisted.tradeRulesConfirmed.get());
             chatNotificationType.set(persisted.chatNotificationType.get());
-            isTacAccepted = persisted.isTacAccepted;
-            consumedAlertIds.clear();
-            consumedAlertIds.addAll(persisted.consumedAlertIds);
+            isTacAccepted.set(persisted.isTacAccepted.get());
+            consumedAlertIds.setAll(persisted.consumedAlertIds);
             closeMyOfferWhenTaken.set(persisted.closeMyOfferWhenTaken.get());
-            languageCode = persisted.languageCode;
+            languageCode.set(persisted.languageCode.get());
             preventStandbyMode.set(persisted.preventStandbyMode.get());
             supportedLanguageCodes.setAll(persisted.supportedLanguageCodes);
+            difficultyAdjustmentFactor.set(persisted.difficultyAdjustmentFactor.get());
+            ignoreDiffAdjustmentFromSecManager.set(persisted.ignoreDiffAdjustmentFromSecManager.get());
         } catch (Exception e) {
             log.error("Exception at applyPersisted", e);
         }

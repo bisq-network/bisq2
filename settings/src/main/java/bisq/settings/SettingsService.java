@@ -33,7 +33,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -64,15 +63,20 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
         // If used with FxBindings.bindBiDir we need to trigger persist call
+        getIsTacAccepted().addObserver(value -> persist());
         getOffersOnly().addObserver(value -> persist());
         getChatNotificationType().addObserver(value -> persist());
         getUseAnimations().addObserver(value -> persist());
         getPreventStandbyMode().addObserver(value -> persist());
         getMinRequiredReputationScore().addObserver(value -> persist());
         getCloseMyOfferWhenTaken().addObserver(value -> persist());
+        getConsumedAlertIds().addObserver(this::persist);
         getSupportedLanguageCodes().addObserver(this::persist);
         getSelectedMarket().addObserver(value -> persist());
         getTradeRulesConfirmed().addObserver(value -> persist());
+        getLanguageCode().addObserver(value -> persist());
+        getDifficultyAdjustmentFactor().addObserver(value -> persist());
+        getIgnoreDiffAdjustmentFromSecManager().addObserver(value -> persist());
         isInitialized = true;
 
         if (DevMode.isDevMode() &&
@@ -85,7 +89,6 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
     }
 
     public CompletableFuture<Boolean> shutdown() {
-        log.info("shutdown");
         return CompletableFuture.completedFuture(true);
     }
 
@@ -107,20 +110,17 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
 
     @Override
     public void onPersistedApplied(SettingsStore persisted) {
-        LanguageRepository.setDefaultLanguage(getLanguageCode());
-        Res.setLanguage(getLanguageCode());
+        LanguageRepository.setDefaultLanguage(getLanguageCode().get());
+        Res.setLanguage(getLanguageCode().get());
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Getters for Observable
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public Observable<Market> getSelectedMarket() {
         return persistableStore.selectedMarket;
-    }
-
-    public Cookie getCookie() {
-        return persistableStore.cookie;
-    }
-
-    public Map<String, Boolean> getDontShowAgainMap() {
-        return persistableStore.dontShowAgainMap;
     }
 
     public Observable<Boolean> getUseAnimations() {
@@ -143,26 +143,24 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         return persistableStore.preventStandbyMode;
     }
 
+    public Observable<Boolean> getIgnoreDiffAdjustmentFromSecManager() {
+        return persistableStore.ignoreDiffAdjustmentFromSecManager;
+    }
+
+    public Observable<Double> getDifficultyAdjustmentFactor() {
+        return persistableStore.difficultyAdjustmentFactor;
+    }
+
     public Observable<ChatNotificationType> getChatNotificationType() {
         return persistableStore.chatNotificationType;
     }
 
-    public void setTacAccepted(boolean value) {
-        persistableStore.isTacAccepted = value;
-        persist();
-    }
-
-    public boolean isTacAccepted() {
+    public Observable<Boolean> getIsTacAccepted() {
         return persistableStore.isTacAccepted;
     }
 
-    public void setLanguageCode(String value) {
-        persistableStore.languageCode = value;
-        persist();
-    }
-
-    public String getLanguageCode() {
-        return persistableStore.languageCode;
+    public ObservableSet<String> getConsumedAlertIds() {
+        return persistableStore.consumedAlertIds;
     }
 
     public ObservableSet<String> getSupportedLanguageCodes() {
@@ -173,13 +171,26 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         return persistableStore.closeMyOfferWhenTaken;
     }
 
-    public void addConsumedAlertId(String alertId) {
-        persistableStore.consumedAlertIds.add(alertId);
-        persist();
+    public Observable<String> getLanguageCode() {
+        return persistableStore.languageCode;
     }
 
-    public Set<String> getConsumedAlertIds() {
-        return persistableStore.consumedAlertIds;
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // DontShowAgainMap
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public Map<String, Boolean> getDontShowAgainMap() {
+        return persistableStore.dontShowAgainMap;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Cookie
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public Cookie getCookie() {
+        return persistableStore.cookie;
     }
 
     public void setCookie(CookieKey key, boolean value) {
@@ -224,16 +235,6 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
     public void setCookie(CookieKey key, String subKey, String value) {
         key.setSubKey(subKey);
         setCookie(key, value);
-    }
-
-    public void setOffersOnly(boolean value) {
-        persistableStore.offersOnly.set(value);
-        persist();
-    }
-
-    public void setTradeRulesConfirmed(boolean value) {
-        persistableStore.tradeRulesConfirmed.set(value);
-        persist();
     }
 
     private void updateCookieChangedFlag() {

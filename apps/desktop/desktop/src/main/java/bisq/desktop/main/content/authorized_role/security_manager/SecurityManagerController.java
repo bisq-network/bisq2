@@ -17,12 +17,14 @@
 
 package bisq.desktop.main.content.authorized_role.security_manager;
 
-import bisq.bonded_roles.alert.AlertService;
-import bisq.bonded_roles.alert.AlertType;
-import bisq.bonded_roles.alert.AuthorizedAlertData;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.bonded_roles.bonded_role.BondedRole;
+import bisq.bonded_roles.security_manager.alert.AlertService;
+import bisq.bonded_roles.security_manager.alert.AlertType;
+import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
+import bisq.bonded_roles.security_manager.difficulty_adjustment.AuthorizedDifficultyAdjustmentData;
+import bisq.bonded_roles.security_manager.difficulty_adjustment.DifficultyAdjustmentService;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
@@ -32,6 +34,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.authorized_role.info.RoleInfo;
 import bisq.i18n.Res;
+import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.support.security_manager.SecurityManagerService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
@@ -56,14 +59,16 @@ public class SecurityManagerController implements Controller {
     private final AlertService alertService;
     private final UserProfileService userProfileService;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
-    private Pin userIdentityPin, alertsPin, bondedRoleSetPin;
-    private Subscription messagePin, requireVersionForTradingPin, minVersionPin, selectedBondedRolePin;
+    private final DifficultyAdjustmentService difficultyAdjustmentService;
+    private Pin userIdentityPin, alertsPin, bondedRoleSetPin, difficultyAdjustmentListItemsPin;
+    private Subscription messagePin, requireVersionForTradingPin, minVersionPin, selectedBondedRolePin, difficultyAdjustmentPin;
 
     public SecurityManagerController(ServiceProvider serviceProvider) {
         securityManagerService = serviceProvider.getSupportService().getSecurityManagerService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         userProfileService = serviceProvider.getUserService().getUserProfileService();
         alertService = serviceProvider.getBondedRolesService().getAlertService();
+        difficultyAdjustmentService = serviceProvider.getBondedRolesService().getDifficultyAdjustmentService();
         authorizedBondedRolesService = serviceProvider.getBondedRolesService().getAuthorizedBondedRolesService();
         RoleInfo roleInfo = new RoleInfo(serviceProvider);
         model = new SecurityManagerModel();
@@ -88,17 +93,27 @@ public class SecurityManagerController implements Controller {
         bondedRoleSetPin = FxBindings.<BondedRole, SecurityManagerView.BondedRoleListItem>bind(model.getBondedRoleListItems())
                 .map(bondedRole -> new SecurityManagerView.BondedRoleListItem(bondedRole, this))
                 .to(authorizedBondedRolesService.getBondedRoles());
+
+        difficultyAdjustmentListItemsPin = FxBindings.<AuthorizedDifficultyAdjustmentData, SecurityManagerView.DifficultyAdjustmentListItem>bind(model.getDifficultyAdjustmentListItems())
+                .map(authorizedBondedRole -> new SecurityManagerView.DifficultyAdjustmentListItem(authorizedBondedRole, this))
+                .to(difficultyAdjustmentService.getAuthorizedDifficultyAdjustmentDataSet());
+
+        difficultyAdjustmentPin = EasyBind.subscribe(model.getDifficultyAdjustmentFactor(), difficultyAdjustmentFactor ->
+                model.getDifficultyAdjustmentFactorButtonDisabled().set(difficultyAdjustmentFactor == null ||
+                        !isValidDifficultyAdjustmentFactor(difficultyAdjustmentFactor.doubleValue())));
     }
 
     @Override
     public void onDeactivate() {
         userIdentityPin.unbind();
         bondedRoleSetPin.unbind();
+        alertsPin.unbind();
+        difficultyAdjustmentListItemsPin.unbind();
         messagePin.unsubscribe();
         requireVersionForTradingPin.unsubscribe();
         minVersionPin.unsubscribe();
         selectedBondedRolePin.unsubscribe();
-        alertsPin.unbind();
+        difficultyAdjustmentPin.unsubscribe();
     }
 
     void onSelectAlertType(AlertType alertType) {
@@ -174,6 +189,39 @@ public class SecurityManagerController implements Controller {
                 .map(UserProfile::getNickName)
                 .orElse(Res.get("data.na"));
         return Res.get("authorizedRole.securityManager.alert.table.bannedRole.value", roleType, nickName, profileId);
+    }
+
+    void onPublishDifficultyAdjustmentFactor() {
+        double difficultyAdjustmentFactor = model.getDifficultyAdjustmentFactor().get();
+        if (isValidDifficultyAdjustmentFactor(difficultyAdjustmentFactor)) {
+            securityManagerService.publishDifficultyAdjustment(difficultyAdjustmentFactor)
+                    .whenComplete((result, throwable) -> {
+                        UIThread.run(() -> {
+                            if (throwable != null) {
+                                new Popup().error(throwable).show();
+                            } else {
+                                model.getDifficultyAdjustmentFactor().set(difficultyAdjustmentService.getMostRecentValueOrDefault().get());
+                            }
+                        });
+                    });
+        }
+    }
+
+    private static boolean isValidDifficultyAdjustmentFactor(double difficultyAdjustmentFactor) {
+        return difficultyAdjustmentFactor >= 0 && difficultyAdjustmentFactor <= NetworkLoad.MAX_DIFFICULTY_ADJUSTMENT;
+    }
+
+    boolean isRemoveButtonVisible(AuthorizedDifficultyAdjustmentData data) {
+        if (userIdentityService.getSelectedUserIdentity() == null) {
+            return false;
+        }
+        return userIdentityService.getSelectedUserIdentity().getId().equals(data.getSecurityManagerProfileId());
+    }
+
+    void onRemoveDifficultyAdjustmentData(SecurityManagerView.DifficultyAdjustmentListItem item) {
+        UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
+        securityManagerService.removeDifficultyAdjustment(item.getData(), userIdentity.getNetworkIdWithKeyPair().getKeyPair());
+        model.getDifficultyAdjustmentFactor().set(difficultyAdjustmentService.getMostRecentValueOrDefault().get());
     }
 
     private void applySelectAlertType(AlertType alertType) {

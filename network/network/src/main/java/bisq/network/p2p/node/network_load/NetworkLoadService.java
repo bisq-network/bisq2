@@ -26,6 +26,7 @@ import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.data.DataRequest;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.StorageService;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -42,6 +43,8 @@ public class NetworkLoadService {
     private final ServiceNodesByTransport serviceNodesByTransport;
     private final NetworkLoadSnapshot networkLoadSnapshot;
     private final StorageService storageService;
+    @Setter
+    private double difficultyAdjustmentFactor = NetworkLoad.DEFAULT_DIFFICULTY_ADJUSTMENT;
     private Optional<Scheduler> updateNetworkLoadScheduler = Optional.empty();
 
     public NetworkLoadService(ServiceNodesByTransport serviceNodesByTransport,
@@ -53,6 +56,7 @@ public class NetworkLoadService {
     }
 
     public void initialize() {
+        log.info("initialize");
         updateNetworkLoadScheduler = Optional.of(Scheduler.run(this::updateNetworkLoad)
                 .periodically(INITIAL_DELAY, INTERVAL, TimeUnit.SECONDS)
                 .name("NetworkLoadExchangeService.updateNetworkLoadScheduler"));
@@ -68,7 +72,7 @@ public class NetworkLoadService {
                 .collect(Collectors.toList());
 
         double load = calculateLoad(getAllConnectionMetrics(), dataRequests);
-        NetworkLoad networkLoad = new NetworkLoad(load);
+        NetworkLoad networkLoad = new NetworkLoad(load, difficultyAdjustmentFactor);
         networkLoadSnapshot.updateNetworkLoad(networkLoad);
     }
 
