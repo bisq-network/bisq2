@@ -19,8 +19,8 @@ package bisq.desktop.main;
 
 import bisq.application.ApplicationService;
 import bisq.bisq_easy.NavigationTarget;
-import bisq.bonded_roles.security_manager.AlertService;
-import bisq.bonded_roles.security_manager.AuthorizedAlertData;
+import bisq.bonded_roles.security_manager.alert.AlertService;
+import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;

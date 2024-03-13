@@ -22,7 +22,7 @@ import bisq.bonded_roles.market_price.AuthorizedMarketPriceData;
 import bisq.bonded_roles.oracle.AuthorizedOracleNode;
 import bisq.bonded_roles.registration.BondedRoleRegistrationRequest;
 import bisq.bonded_roles.release.ReleaseNotification;
-import bisq.bonded_roles.security_manager.AuthorizedAlertData;
+import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
 import bisq.chat.ChatMessage;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeMessage;

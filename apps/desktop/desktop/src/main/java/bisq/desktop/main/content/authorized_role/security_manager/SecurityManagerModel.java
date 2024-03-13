@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.authorized_role.security_manager;
 
-import bisq.bonded_roles.security_manager.AlertType;
+import bisq.bonded_roles.security_manager.alert.AlertType;
 import bisq.desktop.common.view.Model;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
