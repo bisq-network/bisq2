@@ -21,8 +21,7 @@ import bisq.common.util.MathUtils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 public class BucketConfig {
@@ -39,8 +38,6 @@ public class BucketConfig {
     private static final Bucket EYES = new Bucket(16, 7);
     private static final Bucket NOSE = new Bucket(6, 8);
     private static final Bucket WHISKERS = new Bucket(7, 9);
-
-    // Shape picker
     private static final Bucket BODY_SHAPE = new Bucket(2, 10);
     private static final Bucket CHEST_SHAPE = new Bucket(2, 11);
     private static final Bucket EARS_SHAPE = new Bucket(2, 12);
@@ -63,31 +60,24 @@ public class BucketConfig {
             FACE_SHAPE.getCount()
     };
 
-    private static final Map<String, PathTemplateEncoding> PATH_TEMPLATES_WITH_ENCODING;
+    private static final PathDetails[] PATH_TEMPLATES;
 
     static {
         String postFix = ".png";
-        PATH_TEMPLATES_WITH_ENCODING = new LinkedHashMap<>();
-
-        PATH_TEMPLATES_WITH_ENCODING.put("bg/bg_0/" + DIGIT + postFix, new PathTemplateEncoding(BG.getIdx()));
-        PATH_TEMPLATES_WITH_ENCODING.put("bg/bg_1/" + DIGIT + postFix, new PathTemplateEncoding(BG_OVERLAY.getIdx()));
-        PATH_TEMPLATES_WITH_ENCODING.put("body/body" + SHAPE_NUMBER + "/" + DIGIT + postFix,
-                new PathTemplateEncoding(BODY_AND_FACE.getIdx(), BODY_SHAPE.getIdx()));
-        PATH_TEMPLATES_WITH_ENCODING.put("chest/chest" + SHAPE_NUMBER + "_0/" + DIGIT + postFix,
-                new PathTemplateEncoding(CHEST_AND_EARS.getIdx(), CHEST_SHAPE.getIdx()));
-        PATH_TEMPLATES_WITH_ENCODING.put("chest/chest" + SHAPE_NUMBER + "_1/" + DIGIT + postFix,
-                new PathTemplateEncoding(CHEST_OVERLAY.getIdx(), CHEST_SHAPE.getIdx()));
-        PATH_TEMPLATES_WITH_ENCODING.put("ears/ears" + SHAPE_NUMBER + "_0/" + DIGIT + postFix,
-                new PathTemplateEncoding(CHEST_AND_EARS.getIdx(), EARS_SHAPE.getIdx()));
-        PATH_TEMPLATES_WITH_ENCODING.put("ears/ears" + SHAPE_NUMBER + "_1/" + DIGIT + postFix,
-                new PathTemplateEncoding(EARS_OVERLAY.getIdx(), EARS_SHAPE.getIdx()));
-        PATH_TEMPLATES_WITH_ENCODING.put("face/face" + SHAPE_NUMBER + "_0/" + DIGIT + postFix,
-                new PathTemplateEncoding(BODY_AND_FACE.getIdx(), FACE_SHAPE.getIdx()));
-        PATH_TEMPLATES_WITH_ENCODING.put("face/face" + SHAPE_NUMBER + "_1/" + DIGIT + postFix,
-                new PathTemplateEncoding(FACE_OVERLAY.getIdx(), FACE_SHAPE.getIdx()));
-        PATH_TEMPLATES_WITH_ENCODING.put("eyes/" + DIGIT + postFix, new PathTemplateEncoding(EYES.getIdx()));
-        PATH_TEMPLATES_WITH_ENCODING.put("nose/" + DIGIT + postFix, new PathTemplateEncoding(NOSE.getIdx()));
-        PATH_TEMPLATES_WITH_ENCODING.put("whiskers/" + DIGIT + postFix, new PathTemplateEncoding(WHISKERS.getIdx()));
+        PATH_TEMPLATES = new PathDetails[]{
+                new PathDetails("bg/bg_0/" + DIGIT + postFix, BG.getIdx()),
+                new PathDetails("bg/bg_1/" + DIGIT + postFix, BG_OVERLAY.getIdx()),
+                new PathDetails("body/body" + SHAPE_NUMBER + "/" + DIGIT + postFix, BODY_AND_FACE.getIdx(), BODY_SHAPE.getIdx()),
+                new PathDetails("chest/chest" + SHAPE_NUMBER + "_0/" + DIGIT + postFix, CHEST_AND_EARS.getIdx(), CHEST_SHAPE.getIdx()),
+                new PathDetails("chest/chest" + SHAPE_NUMBER + "_1/" + DIGIT + postFix, CHEST_OVERLAY.getIdx(), CHEST_SHAPE.getIdx()),
+                new PathDetails("ears/ears" + SHAPE_NUMBER + "_0/" + DIGIT + postFix, CHEST_AND_EARS.getIdx(), EARS_SHAPE.getIdx()),
+                new PathDetails("ears/ears" + SHAPE_NUMBER + "_1/" + DIGIT + postFix, EARS_OVERLAY.getIdx(), EARS_SHAPE.getIdx()),
+                new PathDetails("face/face" + SHAPE_NUMBER + "_0/" + DIGIT + postFix, BODY_AND_FACE.getIdx(), FACE_SHAPE.getIdx()),
+                new PathDetails("face/face" + SHAPE_NUMBER + "_1/" + DIGIT + postFix, FACE_OVERLAY.getIdx(), FACE_SHAPE.getIdx()),
+                new PathDetails("eyes/" + DIGIT + postFix, EYES.getIdx()),
+                new PathDetails("nose/" + DIGIT + postFix, NOSE.getIdx()),
+                new PathDetails("whiskers/" + DIGIT + postFix, WHISKERS.getIdx())
+        };
 
         long numCombinations = getNumCombinations();
         log.info("Number of combinations: 2^{} = {}", MathUtils.getLog2(numCombinations), numCombinations);
@@ -97,8 +87,8 @@ public class BucketConfig {
         return BUCKET_SIZES;
     }
 
-    static Map<String, PathTemplateEncoding> getPathTemplatesWithEncoding() {
-        return PATH_TEMPLATES_WITH_ENCODING;
+    static PathDetails[] getPathTemplates() {
+        return PATH_TEMPLATES;
     }
 
     static long getNumCombinations() {
@@ -121,17 +111,19 @@ public class BucketConfig {
     }
 
     @Getter
-    static class PathTemplateEncoding {
-        Integer itemIdx;
-        Integer shapeIdx;
+    static class PathDetails {
+        String path;
+        int itemIdx;
+        Optional<Integer> shapeIdx;
 
-        public PathTemplateEncoding(Integer itemIdx) {
-            this(itemIdx, null);
+        public PathDetails(String path, Integer itemIdx) {
+            this(path, itemIdx, null);
         }
 
-        public PathTemplateEncoding(Integer itemIdx, Integer shapeIdx) {
+        public PathDetails(String path, Integer itemIdx, Integer shapeIdx) {
+            this.path = path;
             this.itemIdx = itemIdx;
-            this.shapeIdx = shapeIdx;
+            this.shapeIdx = Optional.ofNullable(shapeIdx);
         }
     }
 }

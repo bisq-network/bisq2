@@ -49,7 +49,7 @@ public class CatHash {
         }
 
         int[] buckets = BucketEncoder.encode(input, BucketConfig.getBucketSizes());
-        String[] paths = BucketEncoder.toPaths(buckets, BucketConfig.getPathTemplatesWithEncoding());
+        String[] paths = BucketEncoder.toPaths(buckets, BucketConfig.getPathTemplates());
         Image image = ImageUtil.composeImage(paths, SIZE, SIZE);
         if (useCache && CACHE.size() < MAX_CACHE_SIZE) {
             CACHE.put(input, image);
