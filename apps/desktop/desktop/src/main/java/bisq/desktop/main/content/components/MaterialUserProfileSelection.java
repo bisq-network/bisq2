@@ -103,7 +103,7 @@ public class MaterialUserProfileSelection extends Pane {
         descriptionLabel.textProperty().addListener(new WeakReference<ChangeListener<String>>((observable, oldValue, newValue) ->
                 update()).get());
 
-        helpHelpProperty().addListener(new WeakReference<ChangeListener<String>>((observable, oldValue, newValue) ->
+        helpProperty().addListener(new WeakReference<ChangeListener<String>>((observable, oldValue, newValue) ->
                 update()).get());
         disabledProperty().addListener(new WeakReference<ChangeListener<Boolean>>((observable, oldValue, newValue) ->
                 update()).get());
@@ -155,7 +155,7 @@ public class MaterialUserProfileSelection extends Pane {
         helpLabel.setText(value);
     }
 
-    public final StringProperty helpHelpProperty() {
+    public final StringProperty helpProperty() {
         return helpLabel.textProperty();
     }
 
@@ -295,8 +295,8 @@ public class MaterialUserProfileSelection extends Pane {
         if (StringUtils.isNotEmpty(descriptionLabel.getText())) {
             Transitions.animateLayoutY(descriptionLabel, 6.5, Transitions.DEFAULT_DURATION / 6d, null);
         }
-        helpLabel.setVisible(StringUtils.isNotEmpty(helpHelpProperty().get()));
-        helpLabel.setManaged(StringUtils.isNotEmpty(helpHelpProperty().get()));
+        helpLabel.setVisible(StringUtils.isNotEmpty(helpProperty().get()));
+        helpLabel.setManaged(StringUtils.isNotEmpty(helpProperty().get()));
 
         descriptionLabel.getStyleClass().remove("material-text-field-description-read-only");
         userProfileSelectionRoot.getStyleClass().remove("material-text-field-read-only");

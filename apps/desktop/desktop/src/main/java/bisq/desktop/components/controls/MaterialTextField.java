@@ -130,7 +130,7 @@ public class MaterialTextField extends Pane {
 
         promptTextProperty().addListener(new WeakReference<ChangeListener<String>>((observable, oldValue, newValue) ->
                 update()).get());
-        helpHelpProperty().addListener(new WeakReference<ChangeListener<String>>((observable, oldValue, newValue) ->
+        helpProperty().addListener(new WeakReference<ChangeListener<String>>((observable, oldValue, newValue) ->
                 update()).get());
         textInputControl.editableProperty().addListener(new WeakReference<ChangeListener<Boolean>>((observable, oldValue, newValue) ->
                 update()).get());
@@ -290,7 +290,7 @@ public class MaterialTextField extends Pane {
         helpLabel.setText(value);
     }
 
-    public final StringProperty helpHelpProperty() {
+    public final StringProperty helpProperty() {
         return helpLabel.textProperty();
     }
 
@@ -465,8 +465,8 @@ public class MaterialTextField extends Pane {
                 Transitions.animateLayoutY(descriptionLabel, 16.5, Transitions.DEFAULT_DURATION / 6d, null);
             }
         }
-        helpLabel.setVisible(StringUtils.isNotEmpty(helpHelpProperty().get()));
-        helpLabel.setManaged(StringUtils.isNotEmpty(helpHelpProperty().get()));
+        helpLabel.setVisible(StringUtils.isNotEmpty(helpProperty().get()));
+        helpLabel.setManaged(StringUtils.isNotEmpty(helpProperty().get()));
 
         descriptionLabel.getStyleClass().remove("material-text-field-description-read-only");
         textInputControl.getStyleClass().remove("material-text-field-read-only");
