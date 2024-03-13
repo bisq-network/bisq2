@@ -13,7 +13,8 @@ import "google/protobuf/any.proto";
 ////////////////////////////////////////////////////////////////////
 
 message NetworkLoad {
-  double value = 1;
+  double load = 1;
+  double difficultyAdjustmentFactor = 2;
 }
 
 enum Feature {
