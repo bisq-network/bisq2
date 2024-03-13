@@ -27,6 +27,7 @@ import bisq.desktop.components.controls.Switch;
 import bisq.desktop.components.controls.validator.NumberValidator;
 import bisq.desktop.components.controls.validator.ValidatorBase;
 import bisq.i18n.Res;
+import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.settings.ChatNotificationType;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
@@ -47,15 +48,18 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
 
     private static final ValidatorBase REPUTATION_SCORE_VALIDATOR =
             new NumberValidator(Res.get("settings.preferences.trade.requiredTotalReputationScore.invalid"));
+    private static final ValidatorBase DIFFICULTY_ADJUSTMENT_FACTOR_VALIDATOR =
+            new NumberValidator(Res.get("settings.preferences.network.difficultyAdjustmentFactor.invalid", NetworkLoad.MAX_DIFFICULTY_ADJUSTMENT),
+                    0, NetworkLoad.MAX_DIFFICULTY_ADJUSTMENT);
 
     private final Button resetDontShowAgain, clearNotifications, addLanguageButton;
     private final Switch useAnimations, preventStandbyMode, offersOnlySwitch, closeMyOfferWhenTaken, notifyForPreRelease,
-            useTransientNotifications;
+            useTransientNotifications, ignoreDiffAdjustFromSecManagerSwitch;
     private final ToggleGroup notificationsToggleGroup = new ToggleGroup();
     private final RadioButton all, mention, off;
     private final ChangeListener<Toggle> notificationsToggleListener;
     private final AutoCompleteComboBox<String> languageSelection, supportedLanguagesComboBox;
-    private final MaterialTextField minRequiredReputationScore;
+    private final MaterialTextField minRequiredReputationScore, difficultyAdjustmentFactor;
     private Subscription selectedNotificationTypePin, getSelectedLSupportedLanguageCodePin;
 
     public PreferencesView(PreferencesModel model, PreferencesController controller) {
@@ -193,6 +197,19 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
 
         VBox tradeVBox = new VBox(10, minRequiredReputationScore, offersOnlySwitch, closeMyOfferWhenTaken);
 
+
+        // Network
+        Label networkHeadline = new Label(Res.get("settings.preferences.network.headline"));
+        networkHeadline.getStyleClass().add("large-thin-headline");
+
+        difficultyAdjustmentFactor = new MaterialTextField();
+        difficultyAdjustmentFactor.setMaxWidth(400);
+        difficultyAdjustmentFactor.setValidators(DIFFICULTY_ADJUSTMENT_FACTOR_VALIDATOR);
+        ignoreDiffAdjustFromSecManagerSwitch = new Switch(Res.get("settings.preferences.network.ignoreDifficultyAdjustmentFactorFromSecManager"));
+
+        VBox networkVBox = new VBox(10, difficultyAdjustmentFactor, ignoreDiffAdjustFromSecManagerSwitch);
+
+
         Insets insets = new Insets(0, 5, 0, 5);
         VBox.setMargin(languageSelection, insets);
         VBox.setMargin(supportedLanguageGridPane, insets);
@@ -203,7 +220,8 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
                 supportedLanguagesHeadline, getLine(), supportedLanguageGridPane,
                 notificationsHeadline, getLine(), notificationsVBox,
                 displayHeadline, getLine(), displayVBox,
-                tradeHeadline, getLine(), tradeVBox);
+                tradeHeadline, getLine(), tradeVBox,
+                networkHeadline, getLine(), networkVBox);
 
         notificationsToggleListener = (observable, oldValue, newValue) -> controller.onSetChatNotificationType((ChatNotificationType) newValue.getUserData());
     }
@@ -220,9 +238,13 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         useAnimations.selectedProperty().bindBidirectional(model.getUseAnimations());
         preventStandbyMode.selectedProperty().bindBidirectional(model.getPreventStandbyMode());
         offersOnlySwitch.selectedProperty().bindBidirectional(model.getOfferOnly());
+        ignoreDiffAdjustFromSecManagerSwitch.selectedProperty().bindBidirectional(model.getIgnoreDiffAdjustmentFromSecManager());
         closeMyOfferWhenTaken.selectedProperty().bindBidirectional(model.getCloseMyOfferWhenTaken());
 
         Bindings.bindBidirectional(minRequiredReputationScore.textProperty(), model.getMinRequiredReputationScore(), new NumberStringConverter());
+        Bindings.bindBidirectional(difficultyAdjustmentFactor.textProperty(), model.getDifficultyAdjustmentFactor(), new NumberStringConverter());
+        difficultyAdjustmentFactor.descriptionProperty().bind(model.getDifficultyAdjustmentFactorDescriptionText());
+        difficultyAdjustmentFactor.getTextInputControl().editableProperty().bind(model.getDifficultyAdjustmentFactorEditable());
 
         languageSelection.getSelectionModel().select(model.getSelectedLanguageCode());
         languageSelection.setOnChangeConfirmed(e -> {
@@ -260,9 +282,13 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         useAnimations.selectedProperty().unbindBidirectional(model.getUseAnimations());
         preventStandbyMode.selectedProperty().unbindBidirectional(model.getPreventStandbyMode());
         offersOnlySwitch.selectedProperty().unbindBidirectional(model.getOfferOnly());
+        ignoreDiffAdjustFromSecManagerSwitch.selectedProperty().unbindBidirectional(model.getIgnoreDiffAdjustmentFromSecManager());
         closeMyOfferWhenTaken.selectedProperty().unbindBidirectional(model.getCloseMyOfferWhenTaken());
 
         Bindings.unbindBidirectional(minRequiredReputationScore.textProperty(), model.getMinRequiredReputationScore());
+        Bindings.unbindBidirectional(difficultyAdjustmentFactor.textProperty(), model.getDifficultyAdjustmentFactor());
+        difficultyAdjustmentFactor.getTextInputControl().editableProperty().unbind();
+        difficultyAdjustmentFactor.descriptionProperty().unbind();
 
         notificationsToggleGroup.selectedToggleProperty().removeListener(notificationsToggleListener);
         selectedNotificationTypePin.unsubscribe();
@@ -277,6 +303,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         languageSelection.resetValidation();
         supportedLanguagesComboBox.resetValidation();
         minRequiredReputationScore.resetValidation();
+        difficultyAdjustmentFactor.resetValidation();
     }
 
     private Region getLine() {

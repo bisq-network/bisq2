@@ -175,6 +175,7 @@ public class MaterialTextField extends Pane {
         validationControl.setValidators(validators);
     }
 
+    // TODO add custom errorLabel and not reuse helpLabel as it would cause an exception when binding at the helpLabel is used
     public boolean validate() {
         isValid.set(validationControl.validate());
         selectionLine.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, !isValid.get());

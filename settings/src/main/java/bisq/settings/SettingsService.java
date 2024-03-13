@@ -76,6 +76,7 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         getTradeRulesConfirmed().addObserver(value -> persist());
         getLanguageCode().addObserver(value -> persist());
         getDifficultyAdjustmentFactor().addObserver(value -> persist());
+        getIgnoreDiffAdjustmentFromSecManager().addObserver(value -> persist());
         isInitialized = true;
 
         if (DevMode.isDevMode() &&
@@ -140,6 +141,10 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
 
     public Observable<Boolean> getPreventStandbyMode() {
         return persistableStore.preventStandbyMode;
+    }
+
+    public Observable<Boolean> getIgnoreDiffAdjustmentFromSecManager() {
+        return persistableStore.ignoreDiffAdjustmentFromSecManager;
     }
 
     public Observable<Double> getDifficultyAdjustmentFactor() {

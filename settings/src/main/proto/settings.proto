@@ -53,4 +53,5 @@ message SettingsStore {
   bool preventStandbyMode = 13;
   repeated string supportedLanguageCodes = 14;
   double difficultyAdjustmentFactor = 15;
+  bool ignoreDiffAdjustmentFromSecManager = 16;
 }
