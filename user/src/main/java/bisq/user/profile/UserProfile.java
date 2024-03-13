@@ -55,7 +55,8 @@ public final class UserProfile implements DistributedData {
     public static final int MAX_LENGTH_STATEMENT = 100;
 
     public static UserProfile from(UserProfile userProfile, String terms, String statement) {
-        return new UserProfile(userProfile.getNickName(), userProfile.getProofOfWork(), userProfile.getNetworkId(), terms, statement);
+        return new UserProfile(userProfile.getNickName(), userProfile.getProofOfWork(), userProfile.getAvatarVersion(),
+                userProfile.getNetworkId(), terms, statement);
     }
 
     // We give a bit longer TTL than the chat messages to ensure the chat user is available as long the messages are 
@@ -63,6 +64,7 @@ public final class UserProfile implements DistributedData {
     private final String nickName;
     // We need the proofOfWork for verification of the nym and cathash icon
     private final ProofOfWork proofOfWork;
+    private final String avatarVersion;
     private final NetworkId networkId;
     private final String terms;
     private final String statement;
@@ -73,11 +75,13 @@ public final class UserProfile implements DistributedData {
 
     public UserProfile(String nickName,
                        ProofOfWork proofOfWork,
+                       String avatarVersion,
                        NetworkId networkId,
                        String terms,
                        String statement) {
         this.nickName = nickName;
         this.proofOfWork = proofOfWork;
+        this.avatarVersion = avatarVersion;
         this.networkId = networkId;
         this.terms = terms;
         this.statement = statement;
@@ -98,6 +102,7 @@ public final class UserProfile implements DistributedData {
                 .setNickName(nickName)
                 .setTerms(terms)
                 .setStatement(statement)
+                .setAvatarVersion(avatarVersion)
                 .setProofOfWork(proofOfWork.toProto())
                 .setNetworkId(networkId.toProto())
                 .build();
@@ -106,6 +111,7 @@ public final class UserProfile implements DistributedData {
     public static UserProfile fromProto(bisq.user.protobuf.UserProfile proto) {
         return new UserProfile(proto.getNickName(),
                 ProofOfWork.fromProto(proto.getProofOfWork()),
+                proto.getAvatarVersion(),
                 NetworkId.fromProto(proto.getNetworkId()),
                 proto.getTerms(),
                 proto.getStatement());

@@ -34,26 +34,40 @@ public class CatHash {
     private static final ConcurrentHashMap<BigInteger, Image> CACHE = new ConcurrentHashMap<>();
 
     public static Image getImage(UserProfile userProfile) {
-        return getImage(userProfile.getPubKeyHash(), userProfile.getProofOfWork().getSolution(), true);
+        return getImage(userProfile.getPubKeyHash(), userProfile.getProofOfWork().getSolution(),
+                userProfile.getAvatarVersion(), true);
     }
 
-    public static Image getImage(byte[] pubKeyHash, byte[] powSolution) {
-        return getImage(pubKeyHash, powSolution, true);
+    public static Image getImage(byte[] pubKeyHash, byte[] powSolution, String avatarVersion) {
+        return getImage(pubKeyHash, powSolution, avatarVersion, true);
     }
 
-    public static Image getImage(byte[] pubKeyHash, byte[] powSolution, boolean useCache) {
+    public static Image getImage(byte[] pubKeyHash, byte[] powSolution, String avatarVersion, boolean useCache) {
         byte[] combined = ByteArrayUtils.concat(powSolution, pubKeyHash);
         BigInteger input = new BigInteger(combined);
         if (useCache && CACHE.containsKey(input)) {
             return CACHE.get(input);
         }
 
-        int[] buckets = BucketEncoder.encode(input, BucketConfig.getBucketSizes());
-        String[] paths = BucketEncoder.toPaths(buckets, BucketConfig.getPathTemplates());
+        BucketConfig bucketConfig = getBucketConfig(avatarVersion);
+        int[] buckets = BucketEncoder.encode(input, bucketConfig.getBucketSizes());
+        String[] paths = BucketEncoder.toPaths(buckets, bucketConfig.getPathTemplates());
         Image image = ImageUtil.composeImage(paths, SIZE, SIZE);
         if (useCache && CACHE.size() < MAX_CACHE_SIZE) {
             CACHE.put(input, image);
         }
         return image;
+    }
+
+    public static String currentAvatarsVersion() {
+        return BucketConfig.CURRENT_VERSION;
+    }
+
+    private static BucketConfig getBucketConfig(String avatarVersion) {
+        switch (avatarVersion) {
+            case "v1":
+            default:
+                return new BucketConfigV1();
+        }
     }
 }

@@ -17,87 +17,20 @@
 
 package bisq.desktop.components.cathash;
 
-import bisq.common.util.MathUtils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
 @Slf4j
-public class BucketConfig {
+public abstract class BucketConfig {
+    static final String CURRENT_VERSION = "v1";
     static final String DIGIT = "#";
     static final String SHAPE_NUMBER = "#SHAPE_NUMBER#";
 
-    private static final Bucket BG = new Bucket(16, 0);
-    private static final Bucket BG_OVERLAY = new Bucket(32, 1);
-    private static final Bucket BODY_AND_FACE = new Bucket(16, 2);
-    private static final Bucket CHEST_AND_EARS = new Bucket(16, 3);
-    private static final Bucket CHEST_OVERLAY = new Bucket(3, 4);
-    private static final Bucket EARS_OVERLAY = new Bucket(3, 5);
-    private static final Bucket FACE_OVERLAY = new Bucket(17, 6);
-    private static final Bucket EYES = new Bucket(16, 7);
-    private static final Bucket NOSE = new Bucket(6, 8);
-    private static final Bucket WHISKERS = new Bucket(7, 9);
-    private static final Bucket BODY_SHAPE = new Bucket(2, 10);
-    private static final Bucket CHEST_SHAPE = new Bucket(2, 11);
-    private static final Bucket EARS_SHAPE = new Bucket(2, 12);
-    private static final Bucket FACE_SHAPE = new Bucket(5, 13);
+    abstract int[] getBucketSizes();
 
-    private static final int[] BUCKET_SIZES = new int[]{
-            BG.getCount(),
-            BG_OVERLAY.getCount(),
-            BODY_AND_FACE.getCount(),
-            CHEST_AND_EARS.getCount(),
-            CHEST_OVERLAY.getCount(),
-            EARS_OVERLAY.getCount(),
-            FACE_OVERLAY.getCount(),
-            EYES.getCount(),
-            NOSE.getCount(),
-            WHISKERS.getCount(),
-            BODY_SHAPE.getCount(),
-            CHEST_SHAPE.getCount(),
-            EARS_SHAPE.getCount(),
-            FACE_SHAPE.getCount()
-    };
-
-    private static final PathDetails[] PATH_TEMPLATES;
-
-    static {
-        String postFix = ".png";
-        PATH_TEMPLATES = new PathDetails[]{
-                new PathDetails("bg/bg_0/" + DIGIT + postFix, BG.getIdx()),
-                new PathDetails("bg/bg_1/" + DIGIT + postFix, BG_OVERLAY.getIdx()),
-                new PathDetails("body/body" + SHAPE_NUMBER + "/" + DIGIT + postFix, BODY_AND_FACE.getIdx(), BODY_SHAPE.getIdx()),
-                new PathDetails("chest/chest" + SHAPE_NUMBER + "_0/" + DIGIT + postFix, CHEST_AND_EARS.getIdx(), CHEST_SHAPE.getIdx()),
-                new PathDetails("chest/chest" + SHAPE_NUMBER + "_1/" + DIGIT + postFix, CHEST_OVERLAY.getIdx(), CHEST_SHAPE.getIdx()),
-                new PathDetails("ears/ears" + SHAPE_NUMBER + "_0/" + DIGIT + postFix, CHEST_AND_EARS.getIdx(), EARS_SHAPE.getIdx()),
-                new PathDetails("ears/ears" + SHAPE_NUMBER + "_1/" + DIGIT + postFix, EARS_OVERLAY.getIdx(), EARS_SHAPE.getIdx()),
-                new PathDetails("face/face" + SHAPE_NUMBER + "_0/" + DIGIT + postFix, BODY_AND_FACE.getIdx(), FACE_SHAPE.getIdx()),
-                new PathDetails("face/face" + SHAPE_NUMBER + "_1/" + DIGIT + postFix, FACE_OVERLAY.getIdx(), FACE_SHAPE.getIdx()),
-                new PathDetails("eyes/" + DIGIT + postFix, EYES.getIdx()),
-                new PathDetails("nose/" + DIGIT + postFix, NOSE.getIdx()),
-                new PathDetails("whiskers/" + DIGIT + postFix, WHISKERS.getIdx())
-        };
-
-        long numCombinations = getNumCombinations();
-        log.info("Number of combinations: 2^{} = {}", MathUtils.getLog2(numCombinations), numCombinations);
-    }
-
-    static int[] getBucketSizes() {
-        return BUCKET_SIZES;
-    }
-
-    static PathDetails[] getPathTemplates() {
-        return PATH_TEMPLATES;
-    }
-
-    static long getNumCombinations() {
-        long result = 1;
-        for (int bucketSize : BUCKET_SIZES) {
-            result *= bucketSize;
-        }
-        return result;
-    }
+    abstract PathDetails[] getPathTemplates();
 
     @Getter
     static class Bucket {

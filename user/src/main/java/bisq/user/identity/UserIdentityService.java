@@ -174,11 +174,12 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
                                                                           KeyPair keyPair,
                                                                           byte[] pubKeyHash,
                                                                           ProofOfWork proofOfWork,
+                                                                          String avatarVersion,
                                                                           String terms,
                                                                           String statement) {
         String identityTag = nickName + "-" + Hex.encode(pubKeyHash);
         return identityService.createNewActiveIdentity(identityTag, keyPair)
-                .thenApply(identity -> createUserIdentity(nickName, proofOfWork, terms, statement, identity))
+                .thenApply(identity -> createUserIdentity(nickName, proofOfWork, avatarVersion, terms, statement, identity))
                 .thenApply(userIdentity -> {
                     publishPublicUserProfile(userIdentity.getUserProfile(), userIdentity.getIdentity().getNetworkIdWithKeyPair().getKeyPair());
                     return userIdentity;
@@ -315,12 +316,14 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
 
     private UserIdentity createUserIdentity(String nickName,
                                             ProofOfWork proofOfWork,
+                                            String avatarVersion,
                                             String terms,
                                             String statement,
                                             Identity identity) {
         checkArgument(nickName.equals(nickName.trim()) && !nickName.isEmpty(),
                 "Nickname must not have leading or trailing spaces and must not be empty.");
-        UserProfile userProfile = new UserProfile(nickName, proofOfWork, identity.getNetworkIdWithKeyPair().getNetworkId(), terms, statement);
+        UserProfile userProfile = new UserProfile(nickName, proofOfWork, avatarVersion,
+                identity.getNetworkIdWithKeyPair().getNetworkId(), terms, statement);
         UserIdentity userIdentity = new UserIdentity(identity, userProfile);
 
         synchronized (lock) {
