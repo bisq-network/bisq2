@@ -50,6 +50,8 @@ public class CatHash {
         }
 
         BucketConfig bucketConfig = getBucketConfig(avatarVersion);
+        log.info("Getting user avatar image using class {}", bucketConfig.getClass().getName());
+
         int[] buckets = BucketEncoder.encode(input, bucketConfig.getBucketSizes());
         String[] paths = BucketEncoder.toPaths(buckets, bucketConfig.getPathTemplates());
         Image image = ImageUtil.composeImage(paths, SIZE, SIZE);
@@ -64,10 +66,17 @@ public class CatHash {
     }
 
     private static BucketConfig getBucketConfig(String avatarVersion) {
+        BucketConfig bucketConfig;
         switch (avatarVersion) {
-            case "v1":
-            default:
-                return new BucketConfigV1();
+            case "v1": {
+                bucketConfig = new BucketConfigV1();
+                log.info("Creating v1 BucketConfig: {}", bucketConfig.getClass().getName());
+            }
+            default: {
+                bucketConfig = new BucketConfigV1();
+                log.info("Falling to default BucketConfig: {}", bucketConfig.getClass().getName());
+            }
         }
+        return bucketConfig;
     }
 }

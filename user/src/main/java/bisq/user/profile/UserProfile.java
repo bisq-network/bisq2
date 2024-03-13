@@ -211,6 +211,7 @@ public final class UserProfile implements DistributedData {
         return "UserProfile{" +
                 "\r\n                    nickName='" + nickName + '\'' +
                 ",\r\n                    proofOfWork=" + proofOfWork +
+                ",\r\n                    avatarVersion=" + avatarVersion +
                 ",\r\n                    networkId=" + networkId +
                 ",\r\n                    terms='" + terms + '\'' +
                 ",\r\n                    statement='" + statement + '\'' +
