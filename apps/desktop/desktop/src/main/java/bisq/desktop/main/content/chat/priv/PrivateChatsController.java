@@ -21,6 +21,8 @@ import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessage;
+import bisq.chat.notifications.ChatNotification;
+import bisq.chat.notifications.ChatNotificationService;
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.chat.two_party.TwoPartyPrivateChatChannelService;
 import bisq.common.observable.Pin;
@@ -39,8 +41,9 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public abstract class PrivateChatsController extends ChatController<PrivateChatsView, PrivateChatsModel> {
     private final TwoPartyPrivateChatChannelService channelService;
+    private final ChatNotificationService chatNotificationService;
     private final ReputationService reputationService;
-    private Pin channelItemPin, channelsPin;
+    private Pin channelItemPin, channelsPin, changedChatNotificationPin;
     private Subscription openPrivateChatsPin;
 
     public PrivateChatsController(ServiceProvider serviceProvider,
@@ -49,6 +52,7 @@ public abstract class PrivateChatsController extends ChatController<PrivateChats
         super(serviceProvider, chatChannelDomain, navigationTarget);
 
         channelService = chatService.getTwoPartyPrivateChatChannelServices().get(chatChannelDomain);
+        chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
         reputationService = serviceProvider.getUserService().getReputationService();
     }
 
@@ -71,6 +75,9 @@ public abstract class PrivateChatsController extends ChatController<PrivateChats
         openPrivateChatsPin = EasyBind.subscribe(model.getNoOpenChats(),
                 noOpenChats -> chatMessagesComponent.enableChatDialog(!noOpenChats));
 
+        chatNotificationService.getNotConsumedNotifications().forEach(this::handleNotification);
+        changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(this::handleNotification);
+
         maybeSelectFirst();
     }
 
@@ -83,6 +90,7 @@ public abstract class PrivateChatsController extends ChatController<PrivateChats
         model.getListItems().clear();
         resetSelectedChildTarget();
         openPrivateChatsPin.unsubscribe();
+        changedChatNotificationPin.unbind();
     }
 
     @Override
@@ -154,5 +162,34 @@ public abstract class PrivateChatsController extends ChatController<PrivateChats
                 !model.getSortedList().isEmpty()) {
             selectionService.selectChannel(model.getSortedList().get(0).getChannel());
         }
+    }
+
+    private void handleNotification(ChatNotification notification) {
+        if (notification == null || notification.getChatChannelDomain() != model.getChatChannelDomain()) {
+            return;
+        }
+
+        String channelId = notification.getChatChannelId();
+        if (isPrivateChannel(channelId)) {
+            handlePrivateNotification();
+        }
+    }
+
+    private boolean isPrivateChannel(String channelId) {
+        return channelService.findChannel(channelId).isPresent();
+    }
+
+    private void handlePrivateNotification() {
+        UIThread.run(() -> {
+            channelService.getChannels().stream()
+                    .filter(channel -> channel.getChatChannelDomain() == model.getChatChannelDomain())
+                    .forEach(channel -> {
+                                long numNotifications = chatNotificationService.getNotConsumedNotifications(channel.getId()).count();
+                                model.getFilteredList().stream().filter(listItem -> listItem.getChannel() == channel).findAny().ifPresent(
+                                        listItem -> listItem.setNumNotifications(numNotifications)
+                                );
+                            }
+                    );
+        });
     }
 }

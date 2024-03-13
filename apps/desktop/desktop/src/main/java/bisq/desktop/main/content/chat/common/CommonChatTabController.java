@@ -52,8 +52,7 @@ public final class CommonChatTabController extends ContentTabController<CommonCh
     private final CommonPublicChatChannelService commonPublicChatChannelService;
     private final TwoPartyPrivateChatChannelService twoPartyPrivateChatChannelService;
     private final CommonChannelSelectionService chatChannelSelectionService;
-    private Pin selectedChannelPin;
-    private Pin changedChatNotificationPin;
+    private Pin selectedChannelPin, changedChatNotificationPin;
 
     public CommonChatTabController(ServiceProvider serviceProvider, ChatChannelDomain chatChannelDomain, NavigationTarget navigationTarget) {
         super(new CommonChatTabModel(chatChannelDomain), navigationTarget, serviceProvider);

@@ -413,6 +413,9 @@
     -fx-padding: 0 0 0 13;
 }
 
+.private-chats-selection-list .user-profile-table-cell .bisq-badge {
+    -fx-padding: 0 13 0 0;
+}
 
 /*******************************************************************************
  *                                                                             *

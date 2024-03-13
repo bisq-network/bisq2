@@ -70,6 +70,7 @@ public class BisqEasyOfferbookUtil {
             @Override
             protected void updateItem(MarketChannelItem item, boolean empty) {
                 super.updateItem(item, empty);
+
                 if (item != null && !empty) {
                     marketName.setText(item.getMarket().getQuoteCurrencyName());
                     marketCode.setText(item.getMarket().getQuoteCurrencyCode());
