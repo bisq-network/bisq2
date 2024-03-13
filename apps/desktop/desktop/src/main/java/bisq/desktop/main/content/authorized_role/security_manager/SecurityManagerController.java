@@ -96,7 +96,7 @@ public class SecurityManagerController implements Controller {
 
         difficultyAdjustmentListItemsPin = FxBindings.<AuthorizedDifficultyAdjustmentData, SecurityManagerView.DifficultyAdjustmentListItem>bind(model.getDifficultyAdjustmentListItems())
                 .map(authorizedBondedRole -> new SecurityManagerView.DifficultyAdjustmentListItem(authorizedBondedRole, this))
-                .to(difficultyAdjustmentService.getAuthorizedDifficultyAdjustmentDataList());
+                .to(difficultyAdjustmentService.getAuthorizedDifficultyAdjustmentDataSet());
 
         difficultyAdjustmentPin = EasyBind.subscribe(model.getDifficultyAdjustmentFactor(), difficultyAdjustmentFactor ->
                 model.getDifficultyAdjustmentFactorButtonDisabled().set(difficultyAdjustmentFactor == null ||

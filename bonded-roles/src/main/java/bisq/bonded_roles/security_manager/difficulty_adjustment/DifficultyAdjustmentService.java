@@ -44,7 +44,7 @@ public class DifficultyAdjustmentService implements Service, AuthorizedBondedRol
     private final Observable<Double> mostRecentValueOrDefault = new Observable<>();
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
     @Getter
-    private final ObservableSet<AuthorizedDifficultyAdjustmentData> authorizedDifficultyAdjustmentDataList = new ObservableSet<>();
+    private final ObservableSet<AuthorizedDifficultyAdjustmentData> authorizedDifficultyAdjustmentDataSet = new ObservableSet<>();
 
     public DifficultyAdjustmentService(AuthorizedBondedRolesService authorizedBondedRolesService) {
         this.authorizedBondedRolesService = authorizedBondedRolesService;
@@ -76,7 +76,7 @@ public class DifficultyAdjustmentService implements Service, AuthorizedBondedRol
         if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedDifficultyAdjustmentData) {
             if (isAuthorized(authorizedData)) {
                 AuthorizedDifficultyAdjustmentData authorizedDifficultyAdjustmentData = (AuthorizedDifficultyAdjustmentData) authorizedData.getAuthorizedDistributedData();
-                authorizedDifficultyAdjustmentDataList.add(authorizedDifficultyAdjustmentData);
+                authorizedDifficultyAdjustmentDataSet.add(authorizedDifficultyAdjustmentData);
                 updateMostRecentValueOrDefault();
             }
         }
@@ -87,7 +87,7 @@ public class DifficultyAdjustmentService implements Service, AuthorizedBondedRol
         if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedDifficultyAdjustmentData) {
             if (isAuthorized(authorizedData)) {
                 AuthorizedDifficultyAdjustmentData authorizedDifficultyAdjustmentData = (AuthorizedDifficultyAdjustmentData) authorizedData.getAuthorizedDistributedData();
-                authorizedDifficultyAdjustmentDataList.remove(authorizedDifficultyAdjustmentData);
+                authorizedDifficultyAdjustmentDataSet.remove(authorizedDifficultyAdjustmentData);
                 updateMostRecentValueOrDefault();
             }
         }
@@ -99,7 +99,7 @@ public class DifficultyAdjustmentService implements Service, AuthorizedBondedRol
 
 
     private void updateMostRecentValueOrDefault() {
-        double value = authorizedDifficultyAdjustmentDataList.stream()
+        double value = authorizedDifficultyAdjustmentDataSet.stream()
                 .sorted(Comparator.comparingLong(AuthorizedDifficultyAdjustmentData::getDate).reversed())
                 .map(AuthorizedDifficultyAdjustmentData::getDifficultyAdjustmentFactor)
                 .findFirst()

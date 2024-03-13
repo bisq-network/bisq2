@@ -74,8 +74,8 @@ public class HashCashTokenService extends AuthorizationTokenService<HashCashToke
         }
         log.debug("Create HashCashToken for {} took {} ms" +
                         "\ncostFactor={}" +
-                        "\nnetworkLoad={}" +
                         "\ngetPayload(message)={}" +
+                        "\nnetworkLoad={}" +
                         "\nhashCashToken={}",
                 message.getClass().getSimpleName(), duration,
                 message.getCostFactor(),

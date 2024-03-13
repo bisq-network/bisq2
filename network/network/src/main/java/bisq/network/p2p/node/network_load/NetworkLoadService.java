@@ -56,6 +56,7 @@ public class NetworkLoadService {
     }
 
     public void initialize() {
+        log.info("initialize");
         updateNetworkLoadScheduler = Optional.of(Scheduler.run(this::updateNetworkLoad)
                 .periodically(INITIAL_DELAY, INTERVAL, TimeUnit.SECONDS)
                 .name("NetworkLoadExchangeService.updateNetworkLoadScheduler"));
