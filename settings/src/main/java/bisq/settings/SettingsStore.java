@@ -24,6 +24,7 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
@@ -48,6 +49,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     final Observable<Boolean> preventStandbyMode = new Observable<>();
     String languageCode;
     final ObservableSet<String> supportedLanguageCodes = new ObservableSet<>();
+    final Observable<Double> difficultyAdjustmentFactor = new Observable<>();
 
     public SettingsStore() {
         this(new Cookie(),
@@ -63,7 +65,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 true,
                 LanguageRepository.getDefaultLanguage(),
                 true,
-                Set.of(LanguageRepository.getDefaultLanguage()));
+                Set.of(LanguageRepository.getDefaultLanguage()),
+                NetworkLoad.DEFAULT_DIFFICULTY_ADJUSTMENT);
     }
 
     public SettingsStore(Cookie cookie,
@@ -79,7 +82,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                          boolean closeMyOfferWhenTaken,
                          String languageCode,
                          boolean preventStandbyMode,
-                         Set<String> supportedLanguageCodes) {
+                         Set<String> supportedLanguageCodes,
+                         double difficultyAdjustmentFactor) {
         this.cookie = cookie;
         this.dontShowAgainMap.putAll(dontShowAgainMap);
         this.useAnimations.set(useAnimations);
@@ -94,6 +98,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
         this.languageCode = languageCode;
         this.preventStandbyMode.set(preventStandbyMode);
         this.supportedLanguageCodes.setAll(supportedLanguageCodes);
+        this.difficultyAdjustmentFactor.set(difficultyAdjustmentFactor);
     }
 
     @Override
@@ -113,6 +118,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 .setLanguageCode(languageCode)
                 .setPreventStandbyMode(preventStandbyMode.get())
                 .addAllSupportedLanguageCodes(new ArrayList<>(supportedLanguageCodes))
+                .setDifficultyAdjustmentFactor(difficultyAdjustmentFactor.get())
                 .build();
     }
 
@@ -131,7 +137,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 proto.getCloseMyOfferWhenTaken(),
                 proto.getLanguageCode(),
                 proto.getPreventStandbyMode(),
-                new HashSet<>(proto.getSupportedLanguageCodesList()));
+                new HashSet<>(proto.getSupportedLanguageCodesList()),
+                proto.getDifficultyAdjustmentFactor());
     }
 
     @Override
@@ -160,7 +167,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 closeMyOfferWhenTaken.get(),
                 languageCode,
                 preventStandbyMode.get(),
-                new HashSet<>(supportedLanguageCodes));
+                new HashSet<>(supportedLanguageCodes),
+                difficultyAdjustmentFactor.get());
     }
 
     @Override
@@ -181,6 +189,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
             languageCode = persisted.languageCode;
             preventStandbyMode.set(persisted.preventStandbyMode.get());
             supportedLanguageCodes.setAll(persisted.supportedLanguageCodes);
+            difficultyAdjustmentFactor.set(persisted.difficultyAdjustmentFactor.get());
         } catch (Exception e) {
             log.error("Exception at applyPersisted", e);
         }

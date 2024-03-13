@@ -73,6 +73,7 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         getSupportedLanguageCodes().addObserver(this::persist);
         getSelectedMarket().addObserver(value -> persist());
         getTradeRulesConfirmed().addObserver(value -> persist());
+        getDifficultyAdjustmentFactor().addObserver(value -> persist());
         isInitialized = true;
 
         if (DevMode.isDevMode() &&
@@ -141,6 +142,10 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
 
     public Observable<Boolean> getPreventStandbyMode() {
         return persistableStore.preventStandbyMode;
+    }
+
+    public Observable<Double> getDifficultyAdjustmentFactor() {
+        return persistableStore.difficultyAdjustmentFactor;
     }
 
     public Observable<ChatNotificationType> getChatNotificationType() {
