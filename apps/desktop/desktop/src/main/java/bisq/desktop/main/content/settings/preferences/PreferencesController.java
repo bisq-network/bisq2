@@ -17,12 +17,14 @@
 
 package bisq.desktop.main.content.settings.preferences;
 
+import bisq.bonded_roles.security_manager.difficulty_adjustment.DifficultyAdjustmentService;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.locale.LanguageRepository;
 import bisq.common.observable.Pin;
 import bisq.common.util.OsUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
@@ -42,15 +44,18 @@ public class PreferencesController implements Controller {
     private final PreferencesModel model;
     private final SettingsService settingsService;
     private final ChatNotificationService chatNotificationService;
+    private final DifficultyAdjustmentService difficultyAdjustmentService;
 
     private Pin chatNotificationTypePin, useAnimationsPin, preventStandbyModePin, offerOnlyPin, closeMyOfferWhenTakenPin,
             supportedLanguageCodesPin, minRequiredReputationScorePin, ignoreDiffAdjustmentFromSecManagerPin,
-            difficultyAdjustmentFactorPin;
-    private Subscription notifyForPreReleasePin, useTransientNotificationsPin, difficultyAdjustmentFactorDescriptionTextPin;
+            mostRecentValueOrDefaultPin, difficultyAdjustmentFactorPin;
+    private Subscription notifyForPreReleasePin, useTransientNotificationsPin,
+            difficultyAdjustmentFactorDescriptionTextPin;
 
     public PreferencesController(ServiceProvider serviceProvider) {
         settingsService = serviceProvider.getSettingsService();
         chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
+        difficultyAdjustmentService = serviceProvider.getBondedRolesService().getDifficultyAdjustmentService();
         model = new PreferencesModel();
         view = new PreferencesView(model, this);
     }
@@ -77,16 +82,26 @@ public class PreferencesController implements Controller {
                 .to(settingsService.getSupportedLanguageCodes());
         ignoreDiffAdjustmentFromSecManagerPin = FxBindings.bindBiDir(model.getIgnoreDiffAdjustmentFromSecManager())
                 .to(settingsService.getIgnoreDiffAdjustmentFromSecManager());
-        difficultyAdjustmentFactorPin = FxBindings.bindBiDir(model.getDifficultyAdjustmentFactor())
-                .to(settingsService.getDifficultyAdjustmentFactor());
         model.getDifficultyAdjustmentFactorEditable().bind(model.getIgnoreDiffAdjustmentFromSecManager());
 
         difficultyAdjustmentFactorDescriptionTextPin = EasyBind.subscribe(model.getIgnoreDiffAdjustmentFromSecManager(),
                 value -> {
                     if (value) {
                         model.getDifficultyAdjustmentFactorDescriptionText().set(Res.get("settings.preferences.network.difficultyAdjustmentFactor.description.self"));
+                        if (mostRecentValueOrDefaultPin != null) {
+                            mostRecentValueOrDefaultPin.unbind();
+                        }
+                        difficultyAdjustmentFactorPin = FxBindings.bindBiDir(model.getDifficultyAdjustmentFactor())
+                                .to(settingsService.getDifficultyAdjustmentFactor());
                     } else {
                         model.getDifficultyAdjustmentFactorDescriptionText().set(Res.get("settings.preferences.network.difficultyAdjustmentFactor.description.fromSecManager"));
+
+                        if (difficultyAdjustmentFactorPin != null) {
+                            difficultyAdjustmentFactorPin.unbind();
+                        }
+                        mostRecentValueOrDefaultPin = difficultyAdjustmentService.getMostRecentValueOrDefault()
+                                .addObserver(mostRecentValueOrDefault ->
+                                        UIThread.run(() -> model.getDifficultyAdjustmentFactor().set(mostRecentValueOrDefault)));
                     }
                 });
 
@@ -115,12 +130,17 @@ public class PreferencesController implements Controller {
         preventStandbyModePin.unbind();
         supportedLanguageCodesPin.unbind();
         ignoreDiffAdjustmentFromSecManagerPin.unbind();
-        difficultyAdjustmentFactorPin.unbind();
         model.getDifficultyAdjustmentFactorEditable().unbind();
         notifyForPreReleasePin.unsubscribe();
         difficultyAdjustmentFactorDescriptionTextPin.unsubscribe();
         if (useTransientNotificationsPin != null) {
             useTransientNotificationsPin.unsubscribe();
+        }
+        if (difficultyAdjustmentFactorPin != null) {
+            difficultyAdjustmentFactorPin.unbind();
+        }
+        if (mostRecentValueOrDefaultPin != null) {
+            mostRecentValueOrDefaultPin.unbind();
         }
     }
 

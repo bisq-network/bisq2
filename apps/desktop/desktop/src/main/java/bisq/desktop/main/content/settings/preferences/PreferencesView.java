@@ -45,7 +45,6 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class PreferencesView extends View<VBox, PreferencesModel, PreferencesController> {
-
     private static final ValidatorBase REPUTATION_SCORE_VALIDATOR =
             new NumberValidator(Res.get("settings.preferences.trade.requiredTotalReputationScore.invalid"));
     private static final ValidatorBase DIFFICULTY_ADJUSTMENT_FACTOR_VALIDATOR =
