@@ -17,12 +17,12 @@
 
 package bisq.bonded_roles;
 
-import bisq.bonded_roles.alert.AlertService;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.bonded_roles.explorer.ExplorerService;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.bonded_roles.registration.BondedRoleRegistrationService;
 import bisq.bonded_roles.release.ReleaseNotificationsService;
+import bisq.bonded_roles.security_manager.AlertService;
 import bisq.common.application.Service;
 import bisq.common.util.Version;
 import bisq.network.NetworkService;

@@ -17,12 +17,12 @@
 
 package bisq.desktop.main.content.authorized_role.security_manager;
 
-import bisq.bonded_roles.alert.AlertService;
-import bisq.bonded_roles.alert.AlertType;
-import bisq.bonded_roles.alert.AuthorizedAlertData;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.bonded_roles.bonded_role.BondedRole;
+import bisq.bonded_roles.security_manager.AlertService;
+import bisq.bonded_roles.security_manager.AlertType;
+import bisq.bonded_roles.security_manager.AuthorizedAlertData;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;

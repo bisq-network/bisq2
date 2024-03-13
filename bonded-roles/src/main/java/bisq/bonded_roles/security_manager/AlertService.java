@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.bonded_roles.alert;
+package bisq.bonded_roles.security_manager;
 
 import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;

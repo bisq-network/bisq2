@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.bonded_roles.alert;
+package bisq.bonded_roles.security_manager;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.util.ProtobufUtils;
