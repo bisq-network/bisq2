@@ -33,9 +33,11 @@ import bisq.security.keys.KeyBundleService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -45,11 +47,12 @@ import java.util.stream.Collectors;
  * This service depends on the ConfidentialMessageService is only enabled if the ServiceNode.Service.ACK and
  * the ServiceNode.Service.CONFIDENTIAL are set in the config.
  * <br/>
- * TODO Clean up outdated data or remove. We could add a second map with dateByMessageID and remove old data
  */
 @Slf4j
 @Getter
 public class MessageDeliveryStatusService implements PersistenceClient<MessageDeliveryStatusStore>, ConfidentialMessageService.Listener {
+    private static final long MAX_AGE = TimeUnit.DAYS.toMillis(30);
+
     private final MessageDeliveryStatusStore persistableStore = new MessageDeliveryStatusStore();
     private final Persistence<MessageDeliveryStatusStore> persistence;
     private final KeyBundleService keyBundleService;
@@ -63,6 +66,19 @@ public class MessageDeliveryStatusService implements PersistenceClient<MessageDe
         this.networkService = networkService;
 
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.SETTINGS, persistableStore);
+    }
+
+    @Override
+    public MessageDeliveryStatusStore prunePersisted(MessageDeliveryStatusStore persisted) {
+        long cutOffDate = System.currentTimeMillis() - MAX_AGE;
+        Map<String, Long> creationDateByMessageId = new HashMap<>(persisted.getCreationDateByMessageId());
+        Map<String, Observable<MessageDeliveryStatus>> prunedMessageDeliveryStatusByMessageId = persisted.getMessageDeliveryStatusByMessageId().entrySet().stream()
+                .filter(e -> creationDateByMessageId.containsKey(e.getKey()) && creationDateByMessageId.get(e.getKey()) > cutOffDate)
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        Map<String, Long> prunedCreationDateByMessageId = persisted.getCreationDateByMessageId().entrySet().stream()
+                .filter(e -> creationDateByMessageId.containsKey(e.getKey()) && creationDateByMessageId.get(e.getKey()) > cutOffDate)
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        return new MessageDeliveryStatusStore(prunedMessageDeliveryStatusByMessageId, prunedCreationDateByMessageId);
     }
 
     public void initialize() {
@@ -108,6 +124,7 @@ public class MessageDeliveryStatusService implements PersistenceClient<MessageDe
 
                 observableStatus.set(status);
             } else {
+                persistableStore.getCreationDateByMessageId().putIfAbsent(messageId, System.currentTimeMillis());
                 messageDeliveryStatusByMessageId.put(messageId, new Observable<>(status));
             }
             log.info("Persist MessageDeliveryStatus {} with message ID {}",
@@ -146,6 +163,7 @@ public class MessageDeliveryStatusService implements PersistenceClient<MessageDe
                     observableStatus.set(MessageDeliveryStatus.MAILBOX_MSG_RECEIVED);
                 }
             } else {
+                persistableStore.getCreationDateByMessageId().putIfAbsent(messageId, System.currentTimeMillis());
                 messageDeliveryStatusByMessageId.put(messageId, new Observable<>(MessageDeliveryStatus.ACK_RECEIVED));
             }
             log.info("Received AckMessage for message with ID {} and set status to {}",
