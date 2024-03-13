@@ -28,7 +28,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @ToString
 @EqualsAndHashCode
 public final class NetworkLoad implements NetworkProto {
-    public final static NetworkLoad INITIAL_LOAD = new NetworkLoad();
+    public final static NetworkLoad INITIAL_NETWORK_LOAD = new NetworkLoad();
 
     private final double value;
 

@@ -100,7 +100,7 @@ public class ConnectionHandshakeResponder {
         boolean isAuthorized = authorizationService.isAuthorized(
                 request,
                 requestNetworkEnvelope.getAuthorizationToken(),
-                NetworkLoad.INITIAL_LOAD,
+                NetworkLoad.INITIAL_NETWORK_LOAD,
                 StringUtils.createUid(),
                 myAddress
         );

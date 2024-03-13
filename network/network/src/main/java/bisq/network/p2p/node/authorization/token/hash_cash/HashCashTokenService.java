@@ -21,9 +21,13 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 public class HashCashTokenService extends AuthorizationTokenService<HashCashToken> {
-    public final static int MIN_DIFFICULTY = 128;  // Math.pow(2, 7) = 128; 3 ms on old CPU, 1 ms on high-end CPU
-    public final static int MAX_DIFFICULTY = 65536;  // Math.pow(2, 16) = 262144; 1000 ms on old CPU, 60-140 ms on high-end CPU
+    public final static double MIN_MESSAGE_COST = 0.01;
+    public final static double MIN_LOAD = 0.01;
+    public final static int MIN_DIFFICULTY = 128;  // 2^7 = 128; 3 ms on old CPU, 1 ms on high-end CPU. Would result in an average time of 1-5 ms on high-end CPU
+    public final static int TARGET_DIFFICULTY = 65536;  // 2^16 = 262144; 1000 ms on old CPU, 60-140 ms on high-end CPU. Would result in an average time of 100-150 ms on high-end CPU
+    public final static int MAX_DIFFICULTY = 1048576;  // 2^20 = 1048576; Would result in an average time 0.5-2 sec on high-end CPU
     public final static int DIFFICULTY_TOLERANCE = 50_000;
+
 
     private final HashCashProofOfWorkService proofOfWorkService;
     // Keep track of message counter per connection to avoid reuse of pow
@@ -214,9 +218,9 @@ public class HashCashTokenService extends AuthorizationTokenService<HashCashToke
     }
 
     private double calculateDifficulty(EnvelopePayloadMessage message, NetworkLoad networkLoad) {
-        double messageCostFactor = MathUtils.bounded(0.01, 1, message.getCostFactor());
-        double loadValue = MathUtils.bounded(0.01, 1, networkLoad.getValue());
-        double difficulty = MAX_DIFFICULTY * messageCostFactor * loadValue;
+        double messageCostFactor = MathUtils.bounded(MIN_MESSAGE_COST, 1, message.getCostFactor());
+        double loadValue = MathUtils.bounded(MIN_LOAD, 1, networkLoad.getValue());
+        double difficulty = TARGET_DIFFICULTY * messageCostFactor * loadValue;
         return MathUtils.bounded(MIN_DIFFICULTY, MAX_DIFFICULTY, difficulty);
     }
 }

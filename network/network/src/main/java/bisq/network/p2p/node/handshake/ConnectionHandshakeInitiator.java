@@ -71,7 +71,7 @@ public class ConnectionHandshakeInitiator {
         ConnectionHandshake.Request request = new ConnectionHandshake.Request(myCapability, optionalProof, myNetworkLoad, proof.getSignatureDate());
         // As we do not know he peers load yet, we use the NetworkLoad.INITIAL_LOAD
         AuthorizationToken token = authorizationService.createToken(request,
-                NetworkLoad.INITIAL_LOAD,
+                NetworkLoad.INITIAL_NETWORK_LOAD,
                 peerAddress.getFullAddress(),
                 0,
                 new ArrayList<>());
