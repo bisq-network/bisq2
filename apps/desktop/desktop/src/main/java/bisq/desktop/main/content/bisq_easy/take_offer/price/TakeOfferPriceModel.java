@@ -18,12 +18,15 @@
 package bisq.desktop.main.content.bisq_easy.take_offer.price;
 
 import bisq.common.currency.Market;
+import bisq.common.monetary.PriceQuote;
 import bisq.desktop.common.view.Model;
 import bisq.offer.price.spec.MarketPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
 import javafx.beans.property.*;
 import lombok.Getter;
 import lombok.Setter;
+
+import javax.annotation.Nullable;
 
 @Getter
 public class TakeOfferPriceModel implements Model {
@@ -34,11 +37,19 @@ public class TakeOfferPriceModel implements Model {
     private final StringProperty priceAsString = new SimpleStringProperty();
     private final BooleanProperty useFixPrice = new SimpleBooleanProperty();
     private final ObjectProperty<PriceSpec> priceSpec = new SimpleObjectProperty<>(new MarketPriceSpec());
+    private final StringProperty invalidPriceErrorMessage = new SimpleStringProperty();
+    @Nullable
+    @Setter
+    private PriceQuote lastValidPriceQuote;
 
     public void reset() {
         market = null;
+        percentage.set(0d);
         percentageAsString.set(null);
         priceAsString.set(null);
+        useFixPrice.set(false);
         priceSpec.set(new MarketPriceSpec());
+        invalidPriceErrorMessage.set(null);
+        lastValidPriceQuote = null;
     }
 }

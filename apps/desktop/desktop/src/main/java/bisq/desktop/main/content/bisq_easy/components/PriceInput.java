@@ -23,6 +23,7 @@ import bisq.common.monetary.PriceQuote;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.controls.MaterialTextField;
+import bisq.desktop.components.controls.validator.deprecated.InputValidator;
 import bisq.desktop.components.controls.validator.deprecated.PriceValidator;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.PriceFormatter;
@@ -89,6 +90,10 @@ public class PriceInput {
         controller.view.textInput.setEditable(value);
     }
 
+    public ReadOnlyObjectProperty<InputValidator.ValidationResult> getValidationResult() {
+        return controller.model.validationResult;
+    }
+
     private static class Controller implements bisq.desktop.common.view.Controller {
         private final Model model;
         @Getter
@@ -120,6 +125,7 @@ public class PriceInput {
 
         @Override
         public void onActivate() {
+            model.validationResult.set(null);
             updateFromMarketPrice();
 
             marketPricePin = marketPriceService.getMarketPriceByCurrencyMap().addObserver(() -> {
@@ -141,16 +147,16 @@ public class PriceInput {
         }
 
         private void onPriceInput(String price) {
-            if (model.isFocused) {
+            if (model.isFocused || price == null || price.isEmpty() || model.market == null) {
                 return;
             }
-            if (price == null ||
-                    price.isEmpty() ||
-                    model.market == null ||
-                    !validator.validate(price).isValid) {
-                onQuoteChanged(model.priceQuote.get());
+
+            InputValidator.ValidationResult validationResult = validator.validate(price);
+            model.validationResult.set(validationResult);
+            if (!validationResult.isValid) {
                 return;
             }
+
             try {
                 PriceQuote priceQuote = PriceParser.parse(price, model.market);
                 checkArgument(priceQuote.getValue() > 0);
@@ -189,6 +195,7 @@ public class PriceInput {
         private boolean isFocused;
         private final StringProperty description = new SimpleStringProperty();
         private boolean isEditable = true;
+        private final ObjectProperty<InputValidator.ValidationResult> validationResult = new SimpleObjectProperty<>();
 
         private Model() {
         }

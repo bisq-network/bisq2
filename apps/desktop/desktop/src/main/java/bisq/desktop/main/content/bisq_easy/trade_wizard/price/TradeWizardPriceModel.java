@@ -18,12 +18,15 @@
 package bisq.desktop.main.content.bisq_easy.trade_wizard.price;
 
 import bisq.common.currency.Market;
+import bisq.common.monetary.PriceQuote;
 import bisq.desktop.common.view.Model;
 import bisq.offer.price.spec.MarketPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
 import javafx.beans.property.*;
 import lombok.Getter;
 import lombok.Setter;
+
+import javax.annotation.Nullable;
 
 @Getter
 public class TradeWizardPriceModel implements Model {
@@ -34,6 +37,10 @@ public class TradeWizardPriceModel implements Model {
     private final StringProperty priceAsString = new SimpleStringProperty();
     private final BooleanProperty useFixPrice = new SimpleBooleanProperty();
     private final ObjectProperty<PriceSpec> priceSpec = new SimpleObjectProperty<>(new MarketPriceSpec());
+    private final StringProperty invalidPriceErrorMessage = new SimpleStringProperty();
+    @Nullable
+    @Setter
+    private PriceQuote lastValidPriceQuote;
 
     public void reset() {
         market = null;
@@ -42,5 +49,7 @@ public class TradeWizardPriceModel implements Model {
         priceAsString.set(null);
         useFixPrice.set(false);
         priceSpec.set(new MarketPriceSpec());
+        invalidPriceErrorMessage.set(null);
+        lastValidPriceQuote = null;
     }
 }

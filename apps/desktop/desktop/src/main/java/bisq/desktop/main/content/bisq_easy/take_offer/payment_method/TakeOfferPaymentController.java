@@ -20,11 +20,13 @@ package bisq.desktop.main.content.bisq_easy.take_offer.payment_method;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import bisq.offer.payment_method.PaymentMethodSpec;
 import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.scene.layout.Region;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -67,6 +69,16 @@ public class TakeOfferPaymentController implements Controller {
      */
     public ReadOnlyObjectProperty<FiatPaymentMethodSpec> getSelectedFiatPaymentMethodSpec() {
         return model.getSelectedSpec();
+    }
+
+    public boolean isValid() {
+        return model.getSelectedSpec().get() != null;
+    }
+
+    public void handleInvalidInput() {
+        new Popup().invalid(Res.get("bisqEasy.takeOffer.paymentMethod.noneSelected"))
+                .owner((Region) view.getRoot().getParent().getParent())
+                .show();
     }
 
     @Override

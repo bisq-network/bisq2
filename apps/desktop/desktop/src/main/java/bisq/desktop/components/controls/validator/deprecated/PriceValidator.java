@@ -25,17 +25,16 @@ import lombok.extern.slf4j.Slf4j;
 @Deprecated
 public class PriceValidator extends InputValidator {
     public ValidationResult validate(String value) {
-       /* ValidationResult result = super.validate(value);
-        if (!result.isValid) {
-            return result;
-        }*/
+        if (value == null) {
+            return new ValidationResult(false, Res.get("validation.invalid"));
+        }
         if (value.isEmpty()) {
             return new ValidationResult(true);
         }
         try {
             Double.parseDouble(value);
             return new ValidationResult(true);
-        } catch (Throwable error) {
+        } catch (Exception error) {
             return new ValidationResult(false, Res.get("validation.invalid"));
         }
     }

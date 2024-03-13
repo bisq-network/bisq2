@@ -59,18 +59,22 @@ public class TradeWizardPaymentMethodController implements Controller {
         view = new TradeWizardPaymentMethodView(model, this);
     }
 
-    public boolean validateSelectedPaymentMethods() {
-        if(model.getSelectedFiatPaymentMethods().isEmpty()) {
-            new Popup().invalid(Res.get("bisqEasy.tradeWizard.paymentMethod.warn.noPaymentMethodSelected"))
-                    .owner((Region) view.getRoot().getParent().getParent())
-                    .show();
-            return false;
-        }
-        return true;
-    }
-
     public ObservableList<FiatPaymentMethod> getFiatPaymentMethods() {
         return model.getSelectedFiatPaymentMethods();
+    }
+
+    public boolean isValid() {
+        if (getCustomFiatPaymentMethodNameNotEmpty()) {
+            tryAddCustomPaymentMethodAndNavigateNext();
+            return true;
+        }
+        return !model.getSelectedFiatPaymentMethods().isEmpty();
+    }
+
+    public void handleInvalidInput() {
+        new Popup().invalid(Res.get("bisqEasy.tradeWizard.paymentMethod.warn.noPaymentMethodSelected"))
+                .owner((Region) view.getRoot().getParent().getParent())
+                .show();
     }
 
     public boolean getCustomFiatPaymentMethodNameNotEmpty() {
