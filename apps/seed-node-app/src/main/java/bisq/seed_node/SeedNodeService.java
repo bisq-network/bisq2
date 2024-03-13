@@ -78,7 +78,10 @@ public class SeedNodeService implements Service {
     private final Optional<Config> optionalConfig;
     private Scheduler startupScheduler, scheduler;
 
-    public SeedNodeService(Optional<Config> optionalConfig, NetworkService networkService, IdentityService identityService, KeyBundleService keyBundleService) {
+    public SeedNodeService(Optional<Config> optionalConfig,
+                           NetworkService networkService,
+                           IdentityService identityService,
+                           KeyBundleService keyBundleService) {
         this.optionalConfig = optionalConfig;
         this.networkService = networkService;
         this.identityService = identityService;

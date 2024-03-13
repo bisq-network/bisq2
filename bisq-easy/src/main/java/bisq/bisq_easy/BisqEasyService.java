@@ -21,6 +21,7 @@ import bisq.account.AccountService;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
+import bisq.common.observable.Pin;
 import bisq.contract.ContractService;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
@@ -62,6 +63,7 @@ public class BisqEasyService implements Service {
     private final TradeService tradeService;
     private final UserIdentityService userIdentityService;
     private final BisqEasyNotificationsService bisqEasyNotificationsService;
+    private Pin difficultyAdjustmentFactorPin, ignoreDiffAdjustmentFromSecManagerPin, mostRecentValueOrDefaultPin;
 
     public BisqEasyService(PersistenceService persistenceService,
                            SecurityService securityService,
@@ -106,11 +108,18 @@ public class BisqEasyService implements Service {
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
+        difficultyAdjustmentFactorPin = settingsService.getDifficultyAdjustmentFactor().addObserver(e -> applyDifficultyAdjustmentFactor());
+        ignoreDiffAdjustmentFromSecManagerPin = settingsService.getIgnoreDiffAdjustmentFromSecManager().addObserver(e -> applyDifficultyAdjustmentFactor());
+        mostRecentValueOrDefaultPin = bondedRolesService.getDifficultyAdjustmentService().getMostRecentValueOrDefault().addObserver(e -> applyDifficultyAdjustmentFactor());
         return bisqEasyNotificationsService.initialize();
     }
 
+
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
+        difficultyAdjustmentFactorPin.unbind();
+        ignoreDiffAdjustmentFromSecManagerPin.unbind();
+        mostRecentValueOrDefaultPin.unbind();
         return bisqEasyNotificationsService.shutdown();
     }
 
@@ -124,5 +133,15 @@ public class BisqEasyService implements Service {
             return CompletableFuture.failedFuture(new RuntimeException("Deleting userProfile is not permitted"));
         }
         return userIdentityService.deleteUserIdentity(userIdentity);
+    }
+
+    private void applyDifficultyAdjustmentFactor() {
+        networkService.getNetworkLoadService().ifPresent(service -> {
+            if (settingsService.getIgnoreDiffAdjustmentFromSecManager().get()) {
+                service.setDifficultyAdjustmentFactor(settingsService.getDifficultyAdjustmentFactor().get());
+            } else {
+                service.setDifficultyAdjustmentFactor(bondedRolesService.getDifficultyAdjustmentService().getMostRecentValueOrDefault().get());
+            }
+        });
     }
 }

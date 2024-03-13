@@ -30,6 +30,11 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Comparator;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * We do not apply the mostRecentValueOrDefault to NetworkLoadService.difficultyAdjustmentFactor here as different
+ * application can use different strategies. E.g. Desktop allow the user to ignore the value from the security manager
+ * and use a user defined value from settings.
+ */
 @Slf4j
 public class DifficultyAdjustmentService implements Service, AuthorizedBondedRolesService.Listener {
 
@@ -94,11 +99,11 @@ public class DifficultyAdjustmentService implements Service, AuthorizedBondedRol
 
 
     private void updateMostRecentValueOrDefault() {
-        mostRecentValueOrDefault.set(authorizedDifficultyAdjustmentDataList.stream()
+        double value = authorizedDifficultyAdjustmentDataList.stream()
                 .sorted(Comparator.comparingLong(AuthorizedDifficultyAdjustmentData::getDate).reversed())
                 .map(AuthorizedDifficultyAdjustmentData::getDifficultyAdjustmentFactor)
                 .findFirst()
-                .orElse(NetworkLoad.DEFAULT_DIFFICULTY_ADJUSTMENT));
+                .orElse(NetworkLoad.DEFAULT_DIFFICULTY_ADJUSTMENT);
+        mostRecentValueOrDefault.set(value);
     }
-
 }
