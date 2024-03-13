@@ -18,17 +18,23 @@
 package bisq.network.p2p.node.network_load;
 
 import bisq.common.proto.NetworkProto;
+import bisq.common.util.DateUtils;
 import bisq.common.util.MathUtils;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.util.Date;
+import java.util.GregorianCalendar;
+
 @Getter
 @EqualsAndHashCode
 @ToString
 public final class NetworkLoad implements NetworkProto {
+    public final static Date DIFFICULTY_ADJUSTMENT_ACTIVATION_DATE = DateUtils.getUTCDate(2024, GregorianCalendar.MARCH, 30);
+
     public final static double INITIAL_LOAD = 0.1;
-    public final static double DEFAULT_DIFFICULTY_ADJUSTMENT = 0;
+    public final static double DEFAULT_DIFFICULTY_ADJUSTMENT = 1;
     public final static double MAX_DIFFICULTY_ADJUSTMENT = 160000; // 1048576/65536/0.01/0.01=160000
     public final static NetworkLoad INITIAL_NETWORK_LOAD = new NetworkLoad();
 
@@ -61,13 +67,28 @@ public final class NetworkLoad implements NetworkProto {
 
     @Override
     public bisq.network.protobuf.NetworkLoad toProto() {
-        return bisq.network.protobuf.NetworkLoad.newBuilder()
-                .setLoad(load)
-                .setDifficultyAdjustmentFactor(difficultyAdjustmentFactor)
-                .build();
+        if (new Date().after(DIFFICULTY_ADJUSTMENT_ACTIVATION_DATE)) {
+            return bisq.network.protobuf.NetworkLoad.newBuilder()
+                    .setLoad(load)
+                    .setDifficultyAdjustmentFactor(difficultyAdjustmentFactor)
+                    .build();
+        } else {
+            // The hash of the payload used for PoW would change if we would add the difficultyAdjustmentFactor
+            // and would result in a failure of the PoW check and would make it impossible to connect to not updated
+            // nodes.
+            return bisq.network.protobuf.NetworkLoad.newBuilder()
+                    .setLoad(load)
+                    .build();
+        }
     }
 
     public static NetworkLoad fromProto(bisq.network.protobuf.NetworkLoad proto) {
-        return new NetworkLoad(proto.getLoad(), proto.getDifficultyAdjustmentFactor());
+        double difficultyAdjustmentFactor = proto.getDifficultyAdjustmentFactor();
+        // We would get a 0 value while we do not set the difficultyAdjustmentFactor in `toProto`.
+        // To avoid warn logs if too high difficulty provided we set it to 1 so that it has no effect.
+        if (new Date().before(DIFFICULTY_ADJUSTMENT_ACTIVATION_DATE)) {
+            difficultyAdjustmentFactor = 1;
+        }
+        return new NetworkLoad(proto.getLoad(), difficultyAdjustmentFactor);
     }
 }

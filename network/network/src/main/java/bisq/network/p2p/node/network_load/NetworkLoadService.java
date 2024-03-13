@@ -68,7 +68,7 @@ public class NetworkLoadService {
                 .collect(Collectors.toList());
 
         double load = calculateLoad(getAllConnectionMetrics(), dataRequests);
-        double adjustmentFactor = 0; //todo
+        double adjustmentFactor = 1; //todo
         NetworkLoad networkLoad = new NetworkLoad(load, adjustmentFactor);
         networkLoadSnapshot.updateNetworkLoad(networkLoad);
     }
