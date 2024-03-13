@@ -72,9 +72,6 @@ public final class BucketConfigV1 extends BucketConfig {
                 new PathDetails("nose/" + DIGIT + postFix, NOSE.getIdx()),
                 new PathDetails("whiskers/" + DIGIT + postFix, WHISKERS.getIdx())
         };
-
-        long numCombinations = getNumCombinations();
-        log.info("Number of combinations: 2^{} = {}", MathUtils.getLog2(numCombinations), numCombinations);
     }
 
     @Override
@@ -85,13 +82,5 @@ public final class BucketConfigV1 extends BucketConfig {
     @Override
     PathDetails[] getPathTemplates() {
         return PATH_TEMPLATES;
-    }
-
-    static long getNumCombinations() {
-        long result = 1;
-        for (int bucketSize : BUCKET_SIZES) {
-            result *= bucketSize;
-        }
-        return result;
     }
 }
