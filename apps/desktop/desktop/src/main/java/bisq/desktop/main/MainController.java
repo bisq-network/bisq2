@@ -103,7 +103,7 @@ public class MainController extends NavigationController {
                     if (settingsService.getConsumedAlertIds().contains(authorizedAlertData.getId())) {
                         return;
                     }
-                    settingsService.addConsumedAlertId(authorizedAlertData.getId());
+                    settingsService.getConsumedAlertIds().add(authorizedAlertData.getId());
                     Optional<String> optionalMessage = authorizedAlertData.getMessage();
                     switch (authorizedAlertData.getAlertType()) {
                         case INFO:

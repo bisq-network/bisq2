@@ -143,7 +143,7 @@ public class DesktopController extends NavigationController {
         // We show the splash screen as background also if we show the 'unlock' or 'tac' overlay screens
         Navigation.navigateTo(NavigationTarget.SPLASH);
 
-        if (!settingsService.isTacAccepted()) {
+        if (!settingsService.getIsTacAccepted().get()) {
             UIThread.runOnNextRenderFrame(() -> Navigation.navigateTo(NavigationTarget.TAC,
                     new TacController.InitData(this::maybeShowLockScreen)));
         } else {

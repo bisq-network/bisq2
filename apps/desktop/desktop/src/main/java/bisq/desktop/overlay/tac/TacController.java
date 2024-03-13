@@ -58,7 +58,7 @@ public class TacController implements InitWithDataController<TacController.InitD
 
     @Override
     public void onActivate() {
-        model.getTacConfirmed().set(settingsService.isTacAccepted());
+        model.getTacConfirmed().set(settingsService.getIsTacAccepted().get());
 
         overlayController.setEnterKeyHandler(null);
         overlayController.setUseEscapeKeyHandler(false);
@@ -74,7 +74,7 @@ public class TacController implements InitWithDataController<TacController.InitD
 
     void onConfirm(boolean selected) {
         model.getTacConfirmed().set(selected);
-        settingsService.setTacAccepted(selected);
+        settingsService.getIsTacAccepted().set(selected);
         if (selected) {
             overlayController.setEnterKeyHandler(this::onAccept);
         } else {
@@ -91,7 +91,7 @@ public class TacController implements InitWithDataController<TacController.InitD
     }
 
     void onReject() {
-        settingsService.setTacAccepted(false);
+        settingsService.getIsTacAccepted().set(false);
         onQuit();
     }
 }

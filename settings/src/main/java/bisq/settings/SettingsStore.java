@@ -43,11 +43,11 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     final Observable<Boolean> offersOnly = new Observable<>();
     final Observable<Boolean> tradeRulesConfirmed = new Observable<>();
     final Observable<ChatNotificationType> chatNotificationType = new Observable<>(ChatNotificationType.MENTION);
-    final Set<String> consumedAlertIds;
-    boolean isTacAccepted;
+    final ObservableSet<String> consumedAlertIds = new ObservableSet<>();
+    final Observable<Boolean> isTacAccepted = new Observable<>();
     final Observable<Boolean> closeMyOfferWhenTaken = new Observable<>();
     final Observable<Boolean> preventStandbyMode = new Observable<>();
-    String languageCode;
+    final Observable<String> languageCode = new Observable<>();
     final ObservableSet<String> supportedLanguageCodes = new ObservableSet<>();
     final Observable<Double> difficultyAdjustmentFactor = new Observable<>();
 
@@ -92,10 +92,10 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
         this.offersOnly.set(offersOnly);
         this.tradeRulesConfirmed.set(tradeRulesConfirmed);
         this.chatNotificationType.set(chatNotificationType);
-        this.isTacAccepted = isTacAccepted;
-        this.consumedAlertIds = consumedAlertIds;
+        this.isTacAccepted.set(isTacAccepted);
+        this.consumedAlertIds.setAll(consumedAlertIds);
         this.closeMyOfferWhenTaken.set(closeMyOfferWhenTaken);
-        this.languageCode = languageCode;
+        this.languageCode.set(languageCode);
         this.preventStandbyMode.set(preventStandbyMode);
         this.supportedLanguageCodes.setAll(supportedLanguageCodes);
         this.difficultyAdjustmentFactor.set(difficultyAdjustmentFactor);
@@ -112,10 +112,10 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 .setOffersOnly(offersOnly.get())
                 .setTradeRulesConfirmed(tradeRulesConfirmed.get())
                 .setChatNotificationType(chatNotificationType.get().toProto())
-                .setIsTacAccepted(isTacAccepted)
-                .addAllConsumedAlertIds(consumedAlertIds)
+                .setIsTacAccepted(isTacAccepted.get())
+                .addAllConsumedAlertIds(new ArrayList<>(consumedAlertIds))
                 .setCloseMyOfferWhenTaken(closeMyOfferWhenTaken.get())
-                .setLanguageCode(languageCode)
+                .setLanguageCode(languageCode.get())
                 .setPreventStandbyMode(preventStandbyMode.get())
                 .addAllSupportedLanguageCodes(new ArrayList<>(supportedLanguageCodes))
                 .setDifficultyAdjustmentFactor(difficultyAdjustmentFactor.get())
@@ -162,10 +162,10 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 offersOnly.get(),
                 tradeRulesConfirmed.get(),
                 chatNotificationType.get(),
-                isTacAccepted,
-                consumedAlertIds,
+                isTacAccepted.get(),
+                new HashSet<>(consumedAlertIds),
                 closeMyOfferWhenTaken.get(),
-                languageCode,
+                languageCode.get(),
                 preventStandbyMode.get(),
                 new HashSet<>(supportedLanguageCodes),
                 difficultyAdjustmentFactor.get());
@@ -182,11 +182,10 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
             offersOnly.set(persisted.offersOnly.get());
             tradeRulesConfirmed.set(persisted.tradeRulesConfirmed.get());
             chatNotificationType.set(persisted.chatNotificationType.get());
-            isTacAccepted = persisted.isTacAccepted;
-            consumedAlertIds.clear();
-            consumedAlertIds.addAll(persisted.consumedAlertIds);
+            isTacAccepted.set(persisted.isTacAccepted.get());
+            consumedAlertIds.setAll(persisted.consumedAlertIds);
             closeMyOfferWhenTaken.set(persisted.closeMyOfferWhenTaken.get());
-            languageCode = persisted.languageCode;
+            languageCode.set(persisted.languageCode.get());
             preventStandbyMode.set(persisted.preventStandbyMode.get());
             supportedLanguageCodes.setAll(persisted.supportedLanguageCodes);
             difficultyAdjustmentFactor.set(persisted.difficultyAdjustmentFactor.get());

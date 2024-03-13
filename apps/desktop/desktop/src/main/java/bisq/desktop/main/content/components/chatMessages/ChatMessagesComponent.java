@@ -320,7 +320,7 @@ public class ChatMessagesComponent {
                 if (settingsService.getOffersOnly().get()) {
                     new Popup().information(Res.get("chat.message.send.offerOnly.warn"))
                             .actionButtonText(Res.get("confirmation.yes"))
-                            .onAction(() -> settingsService.setOffersOnly(false))
+                            .onAction(() -> settingsService.getOffersOnly().set(false))
                             .closeButtonText(Res.get("confirmation.no"))
                             .dontShowAgainId(dontShowAgainId)
                             .show();
