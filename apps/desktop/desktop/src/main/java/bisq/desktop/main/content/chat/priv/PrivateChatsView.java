@@ -21,6 +21,7 @@ import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.Badge;
 import bisq.desktop.components.controls.DropdownMenuItem;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
@@ -202,6 +203,8 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
 
     private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getTradePeerCellFactory() {
         return column -> new TableCell<>() {
+            private final HBox hBox = new HBox(5);
+
             @Override
             public void updateItem(final ListItem item, boolean empty) {
                 super.updateItem(item, empty);
@@ -210,7 +213,9 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
                     UserProfileDisplay userProfileDisplay = new UserProfileDisplay(item.getChannel().getPeer());
                     userProfileDisplay.setReputationScore(item.getReputationScore());
                     getStyleClass().add("user-profile-table-cell");
-                    setGraphic(userProfileDisplay);
+                    hBox.getChildren().setAll(userProfileDisplay, Spacer.fillHBox(), item.getNumMessagesBadge());
+
+                    setGraphic(hBox);
                 } else {
                     setGraphic(null);
                 }
@@ -269,6 +274,8 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
         private final long totalReputationScore, profileAge;
         private final String totalReputationScoreString, profileAgeString;
         private final ReputationScore reputationScore;
+        @EqualsAndHashCode.Exclude
+        private final Badge numMessagesBadge;
 
         public ListItem(TwoPartyPrivateChatChannel channel, ReputationService reputationService) {
             this.channel = channel;
@@ -286,6 +293,12 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
             profileAgeString = optionalProfileAge
                     .map(TimeFormatter::formatAgeInDays)
                     .orElse(Res.get("data.na"));
+
+            numMessagesBadge = new Badge(null, Pos.CENTER_RIGHT);
+        }
+
+        public void setNumNotifications(long numNotifications) {
+            numMessagesBadge.setText(numNotifications == 0 ? "" : String.valueOf(numNotifications));
         }
     }
 }

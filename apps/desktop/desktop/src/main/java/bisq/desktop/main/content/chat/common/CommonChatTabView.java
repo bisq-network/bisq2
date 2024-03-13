@@ -42,6 +42,7 @@ final class CommonChatTabView extends ContentTabView<CommonChatTabModel, CommonC
     protected void onChildView(View<? extends Parent, ? extends Model, ? extends Controller> oldValue,
                                View<? extends Parent, ? extends Model, ? extends Controller> newValue) {
         super.onChildView(oldValue, newValue);
+
         controller.onSelected(model.getNavigationTarget());
     }
 }
