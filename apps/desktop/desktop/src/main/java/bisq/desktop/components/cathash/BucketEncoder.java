@@ -18,6 +18,8 @@
 package bisq.desktop.components.cathash;
 
 import java.math.BigInteger;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class BucketEncoder {
     /**
@@ -38,13 +40,23 @@ public class BucketEncoder {
         return result;
     }
 
-    static String[] toPaths(int[] buckets, String[] pathTemplates) {
-        String[] paths = new String[buckets.length];
-        for (int facet = 0; facet < buckets.length; facet++) {
-            int bucketValue = buckets[facet];
-            paths[facet] = generatePath(pathTemplates[facet], bucketValue);
-        }
+    static String[] toPaths(int[] buckets, Map<String, BucketConfig.PathTemplateEncoding> pathTemplatesWithEncoding) {
+        String[] paths = new String[pathTemplatesWithEncoding.size()];
+        AtomicInteger idx = new AtomicInteger(0);
+        pathTemplatesWithEncoding.forEach((path, encoding) -> {
+            Integer shapeNumber = encoding.shapeIdx != null ? buckets[encoding.shapeIdx] : null;
+            int itemNumber = buckets[encoding.itemIdx];
+            paths[idx.getAndIncrement()] = shapeNumber != null
+                    ? generatePath(path, shapeNumber, itemNumber)
+                    : generatePath(path, itemNumber);
+        });
         return paths;
+    }
+
+    private static String generatePath(String pathTemplate, int shapeNumber, int index) {
+        return pathTemplate
+                .replaceAll(BucketConfig.SHAPE_NUMBER, String.format("%1d", shapeNumber))
+                .replaceAll(BucketConfig.DIGIT, String.format("%02d", index));
     }
 
     private static String generatePath(String pathTemplate, int index) {

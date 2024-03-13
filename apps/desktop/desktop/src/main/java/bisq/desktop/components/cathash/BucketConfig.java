@@ -18,40 +18,76 @@
 package bisq.desktop.components.cathash;
 
 import bisq.common.util.MathUtils;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @Slf4j
 public class BucketConfig {
     static final String DIGIT = "#";
+    static final String SHAPE_NUMBER = "#SHAPE_NUMBER#";
 
-    private static final int BG0_COUNT = 16;
-    private static final int BG1_COUNT = 16;
-    private static final int EARS0_COUNT = 16;
-    private static final int EARS1_COUNT = 3;
-    private static final int FACE0_COUNT = 16;
-    private static final int FACE1_COUNT = 9;
-    private static final int EYES0_COUNT = 16;
-    private static final int NOSE0_COUNT = 6;
-    private static final int WHISKERS0_COUNT = 7;
+    private static final Bucket BG = new Bucket(16, 0);
+    private static final Bucket BG_OVERLAY = new Bucket(32, 1);
+    private static final Bucket BODY_AND_FACE = new Bucket(16, 2);
+    private static final Bucket CHEST_AND_EARS = new Bucket(16, 3);
+    private static final Bucket CHEST_OVERLAY = new Bucket(3, 4);
+    private static final Bucket EARS_OVERLAY = new Bucket(3, 5);
+    private static final Bucket FACE_OVERLAY = new Bucket(17, 6);
+    private static final Bucket EYES = new Bucket(16, 7);
+    private static final Bucket NOSE = new Bucket(6, 8);
+    private static final Bucket WHISKERS = new Bucket(7, 9);
 
-    private static final int[] BUCKET_SIZES = new int[]{BG0_COUNT, BG1_COUNT, EARS0_COUNT, EARS1_COUNT, FACE0_COUNT,
-            FACE1_COUNT, EYES0_COUNT, NOSE0_COUNT, WHISKERS0_COUNT};
+    // Shape picker
+    private static final Bucket BODY_SHAPE = new Bucket(2, 10);
+    private static final Bucket CHEST_SHAPE = new Bucket(2, 11);
+    private static final Bucket EARS_SHAPE = new Bucket(2, 12);
+    private static final Bucket FACE_SHAPE = new Bucket(5, 13);
 
-    private static final String[] PATH_TEMPLATES;
+    private static final int[] BUCKET_SIZES = new int[]{
+            BG.getCount(),
+            BG_OVERLAY.getCount(),
+            BODY_AND_FACE.getCount(),
+            CHEST_AND_EARS.getCount(),
+            CHEST_OVERLAY.getCount(),
+            EARS_OVERLAY.getCount(),
+            FACE_OVERLAY.getCount(),
+            EYES.getCount(),
+            NOSE.getCount(),
+            WHISKERS.getCount(),
+            BODY_SHAPE.getCount(),
+            CHEST_SHAPE.getCount(),
+            EARS_SHAPE.getCount(),
+            FACE_SHAPE.getCount()
+    };
+
+    private static final Map<String, PathTemplateEncoding> PATH_TEMPLATES_WITH_ENCODING;
 
     static {
         String postFix = ".png";
-        PATH_TEMPLATES = new String[]{
-                "bg0/" + DIGIT + postFix,
-                "bg1/" + DIGIT + postFix,
-                "ears0/" + DIGIT + postFix,
-                "ears1/" + DIGIT + postFix,
-                "face0/" + DIGIT + postFix,
-                "face1/" + DIGIT + postFix,
-                "eyes0/" + DIGIT + postFix,
-                "nose0/" + DIGIT + postFix,
-                "whiskers0/" + DIGIT + postFix
-        };
+        PATH_TEMPLATES_WITH_ENCODING = new LinkedHashMap<>();
+
+        PATH_TEMPLATES_WITH_ENCODING.put("bg/bg_0/" + DIGIT + postFix, new PathTemplateEncoding(BG.getIdx()));
+        PATH_TEMPLATES_WITH_ENCODING.put("bg/bg_1/" + DIGIT + postFix, new PathTemplateEncoding(BG_OVERLAY.getIdx()));
+        PATH_TEMPLATES_WITH_ENCODING.put("body/body" + SHAPE_NUMBER + "/" + DIGIT + postFix,
+                new PathTemplateEncoding(BODY_AND_FACE.getIdx(), BODY_SHAPE.getIdx()));
+        PATH_TEMPLATES_WITH_ENCODING.put("chest/chest" + SHAPE_NUMBER + "_0/" + DIGIT + postFix,
+                new PathTemplateEncoding(CHEST_AND_EARS.getIdx(), CHEST_SHAPE.getIdx()));
+        PATH_TEMPLATES_WITH_ENCODING.put("chest/chest" + SHAPE_NUMBER + "_1/" + DIGIT + postFix,
+                new PathTemplateEncoding(CHEST_OVERLAY.getIdx(), CHEST_SHAPE.getIdx()));
+        PATH_TEMPLATES_WITH_ENCODING.put("ears/ears" + SHAPE_NUMBER + "_0/" + DIGIT + postFix,
+                new PathTemplateEncoding(CHEST_AND_EARS.getIdx(), EARS_SHAPE.getIdx()));
+        PATH_TEMPLATES_WITH_ENCODING.put("ears/ears" + SHAPE_NUMBER + "_1/" + DIGIT + postFix,
+                new PathTemplateEncoding(EARS_OVERLAY.getIdx(), EARS_SHAPE.getIdx()));
+        PATH_TEMPLATES_WITH_ENCODING.put("face/face" + SHAPE_NUMBER + "_0/" + DIGIT + postFix,
+                new PathTemplateEncoding(BODY_AND_FACE.getIdx(), FACE_SHAPE.getIdx()));
+        PATH_TEMPLATES_WITH_ENCODING.put("face/face" + SHAPE_NUMBER + "_1/" + DIGIT + postFix,
+                new PathTemplateEncoding(FACE_OVERLAY.getIdx(), FACE_SHAPE.getIdx()));
+        PATH_TEMPLATES_WITH_ENCODING.put("eyes/" + DIGIT + postFix, new PathTemplateEncoding(EYES.getIdx()));
+        PATH_TEMPLATES_WITH_ENCODING.put("nose/" + DIGIT + postFix, new PathTemplateEncoding(NOSE.getIdx()));
+        PATH_TEMPLATES_WITH_ENCODING.put("whiskers/" + DIGIT + postFix, new PathTemplateEncoding(WHISKERS.getIdx()));
 
         long numCombinations = getNumCombinations();
         log.info("Number of combinations: 2^{} = {}", MathUtils.getLog2(numCombinations), numCombinations);
@@ -61,8 +97,8 @@ public class BucketConfig {
         return BUCKET_SIZES;
     }
 
-    static String[] getPathTemplates() {
-        return PATH_TEMPLATES;
+    static Map<String, PathTemplateEncoding> getPathTemplatesWithEncoding() {
+        return PATH_TEMPLATES_WITH_ENCODING;
     }
 
     static long getNumCombinations() {
@@ -71,5 +107,31 @@ public class BucketConfig {
             result *= bucketSize;
         }
         return result;
+    }
+
+    @Getter
+    static class Bucket {
+        int count;
+        int idx;
+
+        public Bucket(int count, int idx) {
+            this.count = count;
+            this.idx = idx;
+        }
+    }
+
+    @Getter
+    static class PathTemplateEncoding {
+        Integer itemIdx;
+        Integer shapeIdx;
+
+        public PathTemplateEncoding(Integer itemIdx) {
+            this(itemIdx, null);
+        }
+
+        public PathTemplateEncoding(Integer itemIdx, Integer shapeIdx) {
+            this.itemIdx = itemIdx;
+            this.shapeIdx = shapeIdx;
+        }
     }
 }
