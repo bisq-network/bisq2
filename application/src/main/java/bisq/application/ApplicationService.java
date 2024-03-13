@@ -25,6 +25,7 @@ import bisq.common.locale.LanguageRepository;
 import bisq.common.locale.LocaleRepository;
 import bisq.common.logging.LogSetup;
 import bisq.common.util.FileUtils;
+import bisq.common.util.MemoryReport;
 import bisq.common.util.OsUtils;
 import bisq.common.util.Version;
 import bisq.i18n.Res;
@@ -139,6 +140,8 @@ public abstract class ApplicationService implements Service {
         LogSetup.setLevel(Level.INFO);
         log.info("Data directory: {}", config.getBaseDir());
         log.info("Version: {}", config.getVersion());
+
+        MemoryReport.printPeriodically();
 
         DevMode.setDevMode(config.isDevMode());
 

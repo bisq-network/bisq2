@@ -91,7 +91,7 @@ class SoundPlayer implements PreventStandbyMode {
                 }
             }
         } catch (Exception e) {
-            log.error(e.toString());
+            log.error("playSound failed", e);
         }
     }
 

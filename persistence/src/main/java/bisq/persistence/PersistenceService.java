@@ -19,6 +19,7 @@ package bisq.persistence;
 
 import bisq.common.proto.PersistableProto;
 import bisq.common.util.CompletableFutureUtils;
+import com.google.common.base.Joiner;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,6 +27,7 @@ import java.io.File;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class PersistenceService {
@@ -64,6 +66,12 @@ public class PersistenceService {
     }
 
     public CompletableFuture<Boolean> readAllPersisted() {
+        List<String> storagePaths = clients.stream()
+                .map(persistenceClient -> persistenceClient.getPersistence().getStorePath()
+                        .toAbsolutePath().toString())
+                .sorted()
+                .collect(Collectors.toList());
+        log.info("Read persisted data from:\n{}", Joiner.on("\n").join(storagePaths));
         return CompletableFutureUtils.allOf(clients.stream()
                         .map(persistenceClient -> persistenceClient.readPersisted()
                                 .whenComplete((optionalResult, throwable) -> {
@@ -71,13 +79,12 @@ public class PersistenceService {
                                             .toAbsolutePath().toString();
                                     if (throwable == null) {
                                         if (optionalResult.isPresent()) {
-                                            log.info("Read persisted data from {}", storagePath);
+                                            log.debug("Read persisted data from {}", storagePath);
                                         } else {
                                             log.debug("No persisted data at {} found", storagePath);
                                         }
                                     } else {
-                                        log.error("Error at read persisted data from: {}", storagePath);
-                                        throwable.printStackTrace();
+                                        log.error("Error at read persisted data from: {}", storagePath, throwable);
                                     }
                                 })))
                 .thenApply(list -> true);

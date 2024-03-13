@@ -22,6 +22,7 @@ import bisq.common.util.FileUtils;
 import bisq.common.util.OsUtils;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.Browser;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.FileChooserUtil;
 import bisq.desktop.common.view.Controller;
@@ -129,26 +130,26 @@ public class UtilsController implements Controller {
     }
 
     void onOpenLicense() {
-        OsUtils.browse("https://github.com/bisq-network/bisq2/blob/main/LICENSE");
+        Browser.open("https://github.com/bisq-network/bisq2/blob/main/LICENSE");
     }
 
     void onOpenWebpage() {
-        OsUtils.browse("https://bisq.network/");
+        Browser.open("https://bisq.network/");
     }
 
     void onOpenDao() {
-        OsUtils.browse("https://bisq.network/dao");
+        Browser.open("https://bisq.network/dao");
     }
 
     void onOpenSourceCode() {
-        OsUtils.browse("https://github.com/bisq-network/bisq2");
+        Browser.open("https://github.com/bisq-network/bisq2");
     }
 
     void onOpenContribute() {
-        OsUtils.browse("https://bisq.wiki/Contributor_checklist");
+        Browser.open("https://bisq.wiki/Contributor_checklist");
     }
 
     void onOpenCommunity() {
-        OsUtils.browse("https://matrix.to/#/%23bisq:bitcoin.kyoto");
+        Browser.open("https://matrix.to/#/%23bisq:bitcoin.kyoto");
     }
 }

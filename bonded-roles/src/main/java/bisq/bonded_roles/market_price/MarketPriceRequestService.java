@@ -235,10 +235,9 @@ public class MarketPriceRequestService {
                         log.warn("We got an outdated market price. {}", marketPrice);
                     }
                 }
-            } catch (Throwable t) {
+            } catch (Exception e) {
                 // We do not fail the whole request if one entry would be invalid
-                log.warn("Market price conversion failed: {} ", obj);
-                t.printStackTrace();
+                log.warn("Market price conversion failed: {} ", obj, e);
             }
         });
         return map;

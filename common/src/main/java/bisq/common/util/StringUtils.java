@@ -205,4 +205,11 @@ public class StringUtils {
 
         return result;
     }
+
+    public static String formatBytes(long size) {
+        if (size <= 0) return "0 B";
+        String[] units = new String[]{"B", "kB", "MB", "GB", "TB"};
+        int digitGroups = (int) (Math.log10(size) / Math.log10(1024));
+        return new DecimalFormat("#,##0.###").format(size / Math.pow(1024, digitGroups)) + " " + units[digitGroups];
+    }
 }

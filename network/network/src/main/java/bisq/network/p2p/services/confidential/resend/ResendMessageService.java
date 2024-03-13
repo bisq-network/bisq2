@@ -223,7 +223,7 @@ public class ResendMessageService implements PersistenceClient<ResendMessageStor
                         persist();
                         stopResendTimer(updatedResendMessageData);
 
-                        messageDeliveryStatusPinByMessageId.get(messageId).unbind();
+                        Optional.ofNullable(messageDeliveryStatusPinByMessageId.get(messageId)).ifPresent(Pin::unbind);
                         messageDeliveryStatusPinByMessageId.remove(messageId);
                         break;
                 }
