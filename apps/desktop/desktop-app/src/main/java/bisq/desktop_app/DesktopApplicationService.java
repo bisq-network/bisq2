@@ -255,6 +255,7 @@ public class DesktopApplicationService extends ApplicationService {
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
+        log.info("shutdown");
         // We shut down services in opposite order as they are initialized
         return supplyAsync(() -> bisqEasyService.shutdown()
                 .thenCompose(result -> updaterService.shutdown())

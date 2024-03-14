@@ -103,7 +103,7 @@ public class SeedNodeApplicationService extends ApplicationService {
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-
+        log.info("shutdown");
         // We shut down services in opposite order as they are initialized
         return supplyAsync(() -> seedNodeService.shutdown()
                 .thenCompose(result -> bondedRolesService.shutdown())
