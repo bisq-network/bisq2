@@ -255,14 +255,15 @@ public class DesktopApplicationService extends ApplicationService {
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
+        log.info("shutdown");
         // We shut down services in opposite order as they are initialized
         return supplyAsync(() -> bisqEasyService.shutdown()
                 .thenCompose(result -> updaterService.shutdown())
                 .thenCompose(result -> tradeService.shutdown())
                 .thenCompose(result -> supportService.shutdown())
+                .thenCompose(result -> sendNotificationService.shutdown())
                 .thenCompose(result -> chatService.shutdown())
                 .thenCompose(result -> offerService.shutdown())
-                .thenCompose(result -> sendNotificationService.shutdown())
                 .thenCompose(result -> settingsService.shutdown())
                 .thenCompose(result -> userService.shutdown())
                 .thenCompose(result -> contractService.shutdown())
@@ -270,13 +271,20 @@ public class DesktopApplicationService extends ApplicationService {
                 .thenCompose(result -> bondedRolesService.shutdown())
                 .thenCompose(result -> identityService.shutdown())
                 .thenCompose(result -> networkService.shutdown())
-                .thenCompose(result -> {
-                    return walletService.map(Service::shutdown)
-                            .orElse(CompletableFuture.completedFuture(true));
-                })
+                .thenCompose(result -> walletService.map(Service::shutdown)
+                        .orElse(CompletableFuture.completedFuture(true)))
                 .thenCompose(result -> securityService.shutdown())
                 .orTimeout(10, TimeUnit.SECONDS)
-                .handle((result, throwable) -> throwable == null && result != null && result)
+                .handle((result, throwable) -> {
+                    if (throwable != null) {
+                        log.error("Error at shutdown", throwable);
+                        return false;
+                    } else if (!result) {
+                        log.error("Shutdown resulted with false");
+                        return false;
+                    }
+                    return true;
+                })
                 .join());
     }
 

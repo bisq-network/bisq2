@@ -95,7 +95,9 @@ public class Bisq1BridgeHttpService implements Service {
 
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
-        httpClient.shutdown();
+        if (httpClient != null) {
+            httpClient.shutdown();
+        }
         executorService.shutdownNow();
         return CompletableFuture.completedFuture(true);
     }

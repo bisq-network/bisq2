@@ -116,10 +116,11 @@ public class BisqEasyService implements Service {
 
 
     public CompletableFuture<Boolean> shutdown() {
-        log.info("shutdown");
-        difficultyAdjustmentFactorPin.unbind();
-        ignoreDiffAdjustmentFromSecManagerPin.unbind();
-        mostRecentValueOrDefaultPin.unbind();
+        if (difficultyAdjustmentFactorPin != null) {
+            difficultyAdjustmentFactorPin.unbind();
+            ignoreDiffAdjustmentFromSecManagerPin.unbind();
+            mostRecentValueOrDefaultPin.unbind();
+        }
         return bisqEasyNotificationsService.shutdown();
     }
 

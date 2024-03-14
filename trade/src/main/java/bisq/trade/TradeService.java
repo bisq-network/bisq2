@@ -85,7 +85,6 @@ public class TradeService implements Service, ServiceProvider {
     }
 
     public CompletableFuture<Boolean> shutdown() {
-        log.info("shutdown");
         return bisqEasyTradeService.shutdown();
     }
 }

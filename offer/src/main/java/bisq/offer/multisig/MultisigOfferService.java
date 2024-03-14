@@ -75,7 +75,6 @@ public class MultisigOfferService implements Service {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<Boolean> initialize() {
-        log.info("initialize");
         offersObserverPin = offerMessageService.getOffers().addObserver(offersObserver);
 
         republishMyOffers();
@@ -86,7 +85,6 @@ public class MultisigOfferService implements Service {
     }
 
     public CompletableFuture<Boolean> shutdown() {
-        log.info("shutdown");
         offersObserverPin.unbind();
         return removeAllOfferFromNetwork().thenCompose(e -> myMultisigOffersService.shutdown());
     }

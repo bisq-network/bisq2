@@ -155,7 +155,6 @@ public class ChatService implements Service {
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        log.info("shutdown");
         List<CompletableFuture<Boolean>> list = new ArrayList<>(List.of(bisqEasyOfferbookChannelService.shutdown(),
                 bisqEasyOpenTradeChannelService.shutdown()));
         list.addAll(commonPublicChatChannelServices.values().stream()

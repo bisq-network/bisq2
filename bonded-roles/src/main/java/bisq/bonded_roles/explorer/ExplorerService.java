@@ -118,7 +118,6 @@ public class ExplorerService {
     }
 
     public CompletableFuture<Boolean> shutdown() {
-        log.info("shutdown");
         shutdownStarted = true;
         return httpClient.map(BaseHttpClient::shutdown)
                 .orElse(CompletableFuture.completedFuture(true));

@@ -102,7 +102,6 @@ public class ElectrumWalletService implements WalletService, ElectrumNotifyApi.L
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        log.info("shutdown");
         return CompletableFuture.supplyAsync(() -> {
             wallet.shutdown();
             electrumProcess.shutdown();

@@ -18,7 +18,11 @@ public abstract class Executable<T extends ApplicationService> implements ShutDo
         // No other shutdown hooks should be used in any client code
         // Using sun.misc.Signal to handle SIGINT events is not recommended as it is an
         // internal API and adds OS specific dependencies.
-        Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            if (!shutDownStarted) {
+                shutdown();
+            }
+        }));
 
         applicationService = createApplicationService(args);
         applicationService.readAllPersisted().join();

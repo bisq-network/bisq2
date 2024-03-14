@@ -43,13 +43,11 @@ public class PocOfferService implements Service {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<Boolean> initialize() {
-        log.info("initialize");
         return openOfferService.initialize()
                 .thenCompose(result -> offerBookService.initialize());
     }
 
     public CompletableFuture<Boolean> shutdown() {
-        log.info("shutdown");
         return openOfferService.shutdown().thenApply(list -> true);
     }
 }

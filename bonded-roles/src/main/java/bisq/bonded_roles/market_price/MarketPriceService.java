@@ -89,8 +89,9 @@ public class MarketPriceService implements Service, PersistenceClient<MarketPric
     }
 
     public CompletableFuture<Boolean> shutdown() {
-        log.info("shutdown");
-        marketPriceByCurrencyMapPin.unbind();
+        if (marketPriceByCurrencyMapPin != null) {
+            marketPriceByCurrencyMapPin.unbind();
+        }
         authorizedBondedRolesService.removeListener(this);
         return marketPriceRequestService.shutdown();
     }

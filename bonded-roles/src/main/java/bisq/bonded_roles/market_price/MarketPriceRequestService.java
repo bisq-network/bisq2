@@ -143,7 +143,6 @@ public class MarketPriceRequestService {
     }
 
     public CompletableFuture<Boolean> shutdown() {
-        log.info("shutdown");
         shutdownStarted = true;
         if (scheduler != null) {
             scheduler.stop();

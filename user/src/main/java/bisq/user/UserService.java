@@ -96,7 +96,6 @@ public class UserService implements Service {
     }
 
     public CompletableFuture<Boolean> shutdown() {
-        log.info("shutdown");
         return userProfileService.shutdown()
                 .thenCompose(result -> userIdentityService.shutdown())
                 .thenCompose(result -> reputationService.shutdown())

@@ -50,7 +50,6 @@ public class SendNotificationService implements Service {
     }
 
     public CompletableFuture<Boolean> shutdown() {
-        log.info("shutdown");
         return CompletableFuture.completedFuture(true);
     }
 

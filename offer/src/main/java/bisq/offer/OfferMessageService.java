@@ -54,7 +54,6 @@ public class OfferMessageService implements Service, DataService.Listener {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<Boolean> initialize() {
-        log.info("initialize");
         networkService.addDataServiceListener(this);
         networkService.getDataService().ifPresent(dataService ->
                 dataService.getAuthenticatedData().forEach(this::onAuthenticatedDataAdded));
@@ -62,7 +61,6 @@ public class OfferMessageService implements Service, DataService.Listener {
     }
 
     public CompletableFuture<Boolean> shutdown() {
-        log.info("shutdown");
         networkService.removeDataServiceListener(this);
         return CompletableFuture.completedFuture(true);
     }

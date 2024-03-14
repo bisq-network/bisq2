@@ -108,7 +108,6 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     }
 
     public CompletableFuture<Boolean> shutdown() {
-        log.info("shutdown");
         if (rePublishUserProfilesExecutor != null) {
             ExecutorFactory.shutdownAndAwaitTermination(rePublishUserProfilesExecutor);
         }

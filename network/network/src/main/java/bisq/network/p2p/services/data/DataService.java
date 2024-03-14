@@ -83,7 +83,6 @@ public class DataService implements StorageService.Listener {
     }
 
     public void shutdown() {
-        log.info("shutdown");
         storageService.removeListener(this);
         listeners.clear();
         broadcasters.clear();
