@@ -46,6 +46,8 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class CreateProfileController implements Controller {
+    private static final String CURRENT_AVATARS_VERSION = CatHash.currentAvatarsVersion();
+
     protected final CreateProfileModel model;
     @Getter
     protected final CreateProfileView view;
@@ -119,6 +121,7 @@ public class CreateProfileController implements Controller {
                         model.getKeyPair().orElseThrow(),
                         model.getPubKeyHash().orElseThrow(),
                         model.getProofOfWork().orElseThrow(),
+                        CURRENT_AVATARS_VERSION,
                         "",
                         "")
                 .whenComplete((chatUserIdentity, throwable) -> UIThread.run(() -> {
@@ -155,7 +158,7 @@ public class CreateProfileController implements Controller {
                         model.setProofOfWork(Optional.of(proofOfWork));
                         byte[] powSolution = proofOfWork.getSolution();
                         String nym = NymIdGenerator.generate(pubKeyHash, powSolution);
-                        Image image = CatHash.getImage(pubKeyHash, powSolution);
+                        Image image = CatHash.getImage(pubKeyHash, powSolution, CURRENT_AVATARS_VERSION);
                         model.getNym().set(nym);
                         model.getCatHashImage().set(image);
                         model.getPowProgress().set(0);

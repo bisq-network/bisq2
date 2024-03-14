@@ -128,5 +128,7 @@ public class CreateNewProfileStep2View extends View<VBox, CreateNewProfileStep2M
         nym.textProperty().unbind();
         terms.textProperty().unbindBidirectional(model.getTerms());
         statement.textProperty().unbindBidirectional(model.getStatement());
+        saveButton.setOnAction(null);
+        cancelButton.setOnAction(null);
     }
 }

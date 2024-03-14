@@ -56,6 +56,7 @@ public class UserProfileDisplay extends HBox {
 
     public UserProfileDisplay(@Nullable UserProfile userProfile, double size) {
         super(10);
+
         setAlignment(Pos.CENTER_LEFT);
 
         userProfileIcon = new UserProfileIcon(size);

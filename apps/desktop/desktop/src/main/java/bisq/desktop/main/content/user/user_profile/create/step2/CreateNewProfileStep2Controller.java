@@ -38,6 +38,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class CreateNewProfileStep2Controller implements InitWithDataController<CreateNewProfileStep2Controller.InitData> {
+    private static final String CURRENT_AVATARS_VERSION = CatHash.currentAvatarsVersion();
+
     @Getter
     @ToString
     @EqualsAndHashCode
@@ -90,7 +92,7 @@ public class CreateNewProfileStep2Controller implements InitWithDataController<C
         model.setProofOfWork(data.getProofOfWork());
         model.getNickName().set(data.getNickName());
         model.getNym().set(data.getNym());
-        model.getCatHashImage().set(CatHash.getImage(data.getPubKeyHash(), data.getProofOfWork().getSolution()));
+        model.getCatHashImage().set(CatHash.getImage(data.getPubKeyHash(), data.getProofOfWork().getSolution(), CURRENT_AVATARS_VERSION));
     }
 
     @Override
@@ -133,6 +135,7 @@ public class CreateNewProfileStep2Controller implements InitWithDataController<C
                         model.getKeyPair(),
                         model.getPubKeyHash(),
                         model.getProofOfWork(),
+                        CURRENT_AVATARS_VERSION,
                         model.getTerms().get(),
                         model.getStatement().get())
                 .whenComplete((chatUserIdentity, throwable) -> UIThread.run(() -> {
