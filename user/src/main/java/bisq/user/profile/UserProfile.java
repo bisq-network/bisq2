@@ -64,7 +64,7 @@ public final class UserProfile implements DistributedData {
     private final String nickName;
     // We need the proofOfWork for verification of the nym and cathash icon
     private final ProofOfWork proofOfWork;
-    private final String avatarVersion;
+    private final int avatarVersion;
     private final NetworkId networkId;
     private final String terms;
     private final String statement;
@@ -75,7 +75,7 @@ public final class UserProfile implements DistributedData {
 
     public UserProfile(String nickName,
                        ProofOfWork proofOfWork,
-                       String avatarVersion,
+                       int avatarVersion,
                        NetworkId networkId,
                        String terms,
                        String statement) {

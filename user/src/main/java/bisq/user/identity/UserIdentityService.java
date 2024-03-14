@@ -173,7 +173,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
                                                                           KeyPair keyPair,
                                                                           byte[] pubKeyHash,
                                                                           ProofOfWork proofOfWork,
-                                                                          String avatarVersion,
+                                                                          int avatarVersion,
                                                                           String terms,
                                                                           String statement) {
         String identityTag = nickName + "-" + Hex.encode(pubKeyHash);
@@ -315,7 +315,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
 
     private UserIdentity createUserIdentity(String nickName,
                                             ProofOfWork proofOfWork,
-                                            String avatarVersion,
+                                            int avatarVersion,
                                             String terms,
                                             String statement,
                                             Identity identity) {

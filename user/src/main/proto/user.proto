@@ -30,7 +30,7 @@ message UserProfile {
   security.ProofOfWork proofOfWork = 3;
   string terms = 4;
   string statement = 5;
-  string avatarVersion = 6;
+  sint32 avatarVersion = 6;
 }
 
 message UserIdentity {

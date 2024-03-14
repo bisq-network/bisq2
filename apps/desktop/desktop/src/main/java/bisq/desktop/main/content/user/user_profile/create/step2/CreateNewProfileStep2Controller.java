@@ -38,7 +38,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class CreateNewProfileStep2Controller implements InitWithDataController<CreateNewProfileStep2Controller.InitData> {
-    private static final String CURRENT_AVATARS_VERSION = CatHash.currentAvatarsVersion();
+    private static final int CURRENT_AVATARS_VERSION = CatHash.currentAvatarsVersion();
 
     @Getter
     @ToString
