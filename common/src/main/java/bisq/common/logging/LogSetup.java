@@ -43,8 +43,6 @@ public class LogSetup {
             return;
         }
 
-        System.out.println(AsciiLogo.getAsciiLogo());
-
         LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
 
         RollingFileAppender<ILoggingEvent> appender = new RollingFileAppender<>();

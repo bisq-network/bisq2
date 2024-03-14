@@ -53,7 +53,6 @@ public class ClearNetHttpClient extends BaseHttpClient {
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        log.info("shutdown");
         if (connection == null) {
             hasPendingRequest = false;
             return CompletableFuture.completedFuture(true);

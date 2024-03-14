@@ -67,7 +67,6 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
     }
 
     public CompletableFuture<Boolean> shutdown() {
-        log.info("shutdown");
         networkService.removeDataServiceListener(this);
         return CompletableFuture.completedFuture(true);
     }

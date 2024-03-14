@@ -107,7 +107,9 @@ public class ResendMessageService implements PersistenceClient<ResendMessageStor
     }
 
     public void shutdown() {
-        messageDeliveryStatusByMessageIdPin.unbind();
+        if (messageDeliveryStatusByMessageIdPin != null) {
+            messageDeliveryStatusByMessageIdPin.unbind();
+        }
         messageDeliveryStatusPinByMessageId.values().forEach(Pin::unbind);
         messageDeliveryStatusPinByMessageId.clear();
         nodeStatePins.forEach(Pin::unbind);

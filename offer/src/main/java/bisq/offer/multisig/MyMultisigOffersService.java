@@ -46,14 +46,10 @@ public class MyMultisigOffersService implements PersistenceClient<MyMultisigOffe
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<Boolean> initialize() {
-        log.info("initialize");
-
-
         return CompletableFuture.completedFuture(true);
     }
 
     public CompletableFuture<Boolean> shutdown() {
-        log.info("shutdown");
         return CompletableFuture.completedFuture(true);
     }
 

@@ -65,7 +65,7 @@ public class TorTransportService implements TransportService {
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        log.info("Shutdown tor.");
+        log.info("shutdown");
         if (startBootstrapProgressUpdater != null) {
             startBootstrapProgressUpdater.stop();
             startBootstrapProgressUpdater = null;

@@ -102,7 +102,6 @@ public class ReputationService implements Service {
     }
 
     public CompletableFuture<Boolean> shutdown() {
-        log.info("shutdown");
         return proofOfBurnService.shutdown()
                 .thenCompose(r -> bondedReputationService.shutdown())
                 .thenCompose(r -> accountAgeService.shutdown())

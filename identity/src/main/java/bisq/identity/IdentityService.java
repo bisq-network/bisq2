@@ -106,7 +106,6 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Servic
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        log.info("shutdown");
         return CompletableFuture.completedFuture(true);
     }
 

@@ -94,7 +94,6 @@ public class BondedRolesService implements Service {
     }
 
     public CompletableFuture<Boolean> shutdown() {
-        log.info("shutdown");
         return authorizedBondedRolesService.shutdown()
                 .thenCompose(result -> difficultyAdjustmentService.shutdown())
                 .thenCompose(result -> alertService.shutdown())

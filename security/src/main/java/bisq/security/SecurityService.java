@@ -62,7 +62,6 @@ public class SecurityService implements Service {
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        log.info("shutdown");
         return CompletableFuture.completedFuture(true);
     }
 }

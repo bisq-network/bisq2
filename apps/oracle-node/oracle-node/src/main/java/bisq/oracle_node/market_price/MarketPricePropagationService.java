@@ -55,7 +55,9 @@ public class MarketPricePropagationService implements Service {
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        marketPriceByCurrencyMapPin.unbind();
+        if (marketPriceByCurrencyMapPin != null) {
+            marketPriceByCurrencyMapPin.unbind();
+        }
         return marketPriceRequestService.shutdown();
     }
 

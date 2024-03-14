@@ -103,6 +103,7 @@ public class SeedNodeApplicationService extends ApplicationService {
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
+
         // We shut down services in opposite order as they are initialized
         return supplyAsync(() -> seedNodeService.shutdown()
                 .thenCompose(result -> bondedRolesService.shutdown())
@@ -111,7 +112,16 @@ public class SeedNodeApplicationService extends ApplicationService {
                 .thenCompose(result -> networkService.shutdown())
                 .thenCompose(result -> securityService.shutdown())
                 .orTimeout(10, TimeUnit.SECONDS)
-                .handle((result, throwable) -> throwable == null)
+                .handle((result, throwable) -> {
+                    if (throwable != null) {
+                        log.error("Error at shutdown", throwable);
+                        return false;
+                    } else if (!result) {
+                        log.error("Shutdown resulted with false");
+                        return false;
+                    }
+                    return true;
+                })
                 .join());
     }
 }

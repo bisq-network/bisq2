@@ -23,6 +23,7 @@ import bisq.common.currency.FiatCurrencyRepository;
 import bisq.common.locale.CountryRepository;
 import bisq.common.locale.LanguageRepository;
 import bisq.common.locale.LocaleRepository;
+import bisq.common.logging.AsciiLogo;
 import bisq.common.logging.LogSetup;
 import bisq.common.util.FileUtils;
 import bisq.common.util.MemoryReport;
@@ -138,6 +139,7 @@ public abstract class ApplicationService implements Service {
 
         LogSetup.setup(dataDir.resolve("bisq").toString());
         LogSetup.setLevel(Level.INFO);
+        log.info(AsciiLogo.getAsciiLogo());
         log.info("Data directory: {}", config.getBaseDir());
         log.info("Version: {}", config.getVersion());
 

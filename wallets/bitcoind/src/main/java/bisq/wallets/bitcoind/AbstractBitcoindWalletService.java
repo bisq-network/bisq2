@@ -103,7 +103,6 @@ public abstract class AbstractBitcoindWalletService<T extends Wallet & ZmqWallet
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        log.info("shutdown");
         return CompletableFuture.supplyAsync(() -> {
             zmqConnection.ifPresent(ZmqConnection::shutdown);
             wallet.ifPresent(Wallet::shutdown);
