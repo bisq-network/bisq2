@@ -205,12 +205,15 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
 
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
-        messageDeliveryStatusService.ifPresent(MessageDeliveryStatusService::shutdown);
-        resendMessageService.ifPresent(ResendMessageService::shutdown);
-        networkLoadService.ifPresent(NetworkLoadService::shutdown);
-        dataService.ifPresent(DataService::shutdown);
-        return serviceNodesByTransport.shutdown()
-                .thenApply(list -> list.stream().filter(e -> e).count() == supportedTransportTypes.size());
+        return CompletableFuture.supplyAsync(() -> {
+                    messageDeliveryStatusService.ifPresent(MessageDeliveryStatusService::shutdown);
+                    resendMessageService.ifPresent(ResendMessageService::shutdown);
+                    networkLoadService.ifPresent(NetworkLoadService::shutdown);
+                    dataService.ifPresent(DataService::shutdown);
+                    return true;
+                })
+                .thenCompose(result -> serviceNodesByTransport.shutdown()
+                        .thenApply(list -> list.stream().filter(e -> e).count() == supportedTransportTypes.size()));
     }
 
 
