@@ -10,7 +10,7 @@ application {
     mainClass.set("bisq.desktop_app.DesktopApp")
 }
 
-version = "2.0.0"
+version = "2.0.1"
 
 javafx {
     version = "17.0.1"
