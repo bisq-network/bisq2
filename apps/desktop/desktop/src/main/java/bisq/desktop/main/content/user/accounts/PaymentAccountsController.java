@@ -25,6 +25,7 @@ import bisq.account.payment_method.PaymentMethod;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.i18n.Res;
@@ -61,13 +62,15 @@ public class PaymentAccountsController implements Controller {
         model.getSortedAccounts().setComparator(Comparator.comparing(Account::getAccountName));
 
         accountsPin = accountService.getAccounts().addObserver(() -> {
-            model.setAllAccounts(accountService.getAccounts());
-            maybeSelectFirstAccount();
-            model.getNoAccountsSetup().set(!accountService.hasAccounts());
-            model.getHeadline().set(accountService.hasAccounts() ?
-                    Res.get("user.paymentAccounts.headline") :
-                    Res.get("user.paymentAccounts.noAccounts.headline")
-            );
+            UIThread.run(() -> {
+                model.setAllAccounts(accountService.getAccounts());
+                maybeSelectFirstAccount();
+                model.getNoAccountsSetup().set(!accountService.hasAccounts());
+                model.getHeadline().set(accountService.hasAccounts() ?
+                        Res.get("user.paymentAccounts.headline") :
+                        Res.get("user.paymentAccounts.noAccounts.headline")
+                );
+            });
         });
 
         selectedAccountPin = FxBindings.bind(model.selectedAccountProperty())
