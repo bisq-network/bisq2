@@ -106,10 +106,12 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
         if (shutdownInProcessPopup != null) {
             return;
         }
-        shutdownInProcessPopup = new Popup()
-                .headline(Res.get("action.shutDown"))
-                .feedback(Res.get("popup.shutdown", DesktopApplicationService.SHUTDOWN_TIMEOUT_SEC));
-        shutdownInProcessPopup.hideCloseButton().show();
+        UIThread.run(() -> {
+            shutdownInProcessPopup = new Popup()
+                    .headline(Res.get("action.shutDown"))
+                    .feedback(Res.get("popup.shutdown", DesktopApplicationService.SHUTDOWN_TIMEOUT_SEC));
+            shutdownInProcessPopup.hideCloseButton().show();
+        });
     }
 
     @Override
