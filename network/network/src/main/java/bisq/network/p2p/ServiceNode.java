@@ -55,7 +55,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.CompletableFuture.runAsync;
@@ -245,8 +244,6 @@ public class ServiceNode implements Node.Listener {
         inventoryService.ifPresent(InventoryService::shutdown);
         confidentialMessageService.ifPresent(ConfidentialMessageService::shutdown);
         return nodesById.shutdown()
-                .orTimeout(10, TimeUnit.SECONDS)
-                .handle((result, throwable) -> throwable == null && result)
                 .thenCompose(result -> transportService.shutdown())
                 .whenComplete((result, throwable) -> setState(State.TERMINATED));
     }
