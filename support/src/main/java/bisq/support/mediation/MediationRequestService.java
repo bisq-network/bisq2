@@ -143,7 +143,7 @@ public class MediationRequestService implements Service, ConfidentialMessageServ
             index = 0;
         } else {
             String combined = makersProfileId + takersProfileId;
-            int space = Ints.fromByteArray(DigestUtil.hash(combined.getBytes(StandardCharsets.UTF_8)));
+            int space = Math.abs(Ints.fromByteArray(DigestUtil.hash(combined.getBytes(StandardCharsets.UTF_8))));
             index = space % mediators.size();
         }
         ArrayList<AuthorizedBondedRole> list = new ArrayList<>(mediators);
