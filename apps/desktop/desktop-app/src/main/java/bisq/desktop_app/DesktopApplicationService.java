@@ -26,6 +26,7 @@ import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.util.CompletableFutureUtils;
+import bisq.common.util.ExceptionUtil;
 import bisq.contract.ContractService;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.State;
@@ -63,10 +64,17 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 @Slf4j
 public class DesktopApplicationService extends ApplicationService {
+    public static final long STARTUP_TIMEOUT_SEC = 300;
+    public static final long SHUTDOWN_TIMEOUT_SEC = 10;
+
     @Getter
     private final ServiceProvider serviceProvider;
     @Getter
     private final Observable<State> state = new Observable<>(State.INITIALIZE_APP);
+    @Getter
+    private final Observable<String> shutDownErrorMessage = new Observable<>();
+    @Getter
+    private final Observable<String> startupErrorMessage = new Observable<>();
 
     private final SecurityService securityService;
     private final Optional<WalletService> walletService;
@@ -235,7 +243,7 @@ public class DesktopApplicationService extends ApplicationService {
                 .thenCompose(result -> tradeService.initialize())
                 .thenCompose(result -> updaterService.initialize())
                 .thenCompose(result -> bisqEasyService.initialize())
-                .orTimeout(5, TimeUnit.MINUTES)
+                .orTimeout(STARTUP_TIMEOUT_SEC, TimeUnit.SECONDS)
                 .handle((result, throwable) -> {
                     if (throwable == null) {
                         if (result != null && result) {
@@ -243,10 +251,12 @@ public class DesktopApplicationService extends ApplicationService {
                             log.info("ApplicationService initialized");
                             return true;
                         } else {
-                            log.error("Initializing applicationService failed");
+                            startupErrorMessage.set("Initializing applicationService failed with result=false");
+                            log.error(startupErrorMessage.get());
                         }
                     } else {
                         log.error("Initializing applicationService failed", throwable);
+                        startupErrorMessage.set(ExceptionUtil.getMessageOrToString(throwable));
                     }
                     setState(State.FAILED);
                     return false;
@@ -274,13 +284,15 @@ public class DesktopApplicationService extends ApplicationService {
                 .thenCompose(result -> walletService.map(Service::shutdown)
                         .orElse(CompletableFuture.completedFuture(true)))
                 .thenCompose(result -> securityService.shutdown())
-                .orTimeout(10, TimeUnit.SECONDS)
+                .orTimeout(SHUTDOWN_TIMEOUT_SEC, TimeUnit.SECONDS)
                 .handle((result, throwable) -> {
                     if (throwable != null) {
                         log.error("Error at shutdown", throwable);
+                        shutDownErrorMessage.set(ExceptionUtil.getMessageOrToString(throwable));
                         return false;
                     } else if (!result) {
-                        log.error("Shutdown resulted with false");
+                        shutDownErrorMessage.set("Shutdown failed with result=false");
+                        log.error(startupErrorMessage.get());
                         return false;
                     }
                     return true;
