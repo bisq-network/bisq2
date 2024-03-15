@@ -99,10 +99,12 @@ public class UpdaterService implements Service {
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        if (executorService != null) {
-            ExecutorFactory.shutdownAndAwaitTermination(executorService, 100);
-        }
-        return CompletableFuture.completedFuture(true);
+        return CompletableFuture.supplyAsync(() -> {
+            if (executorService != null) {
+                ExecutorFactory.shutdownAndAwaitTermination(executorService, 100);
+            }
+            return true;
+        });
     }
 
 

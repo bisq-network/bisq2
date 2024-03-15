@@ -70,8 +70,7 @@ public class TorTransportService implements TransportService {
             startBootstrapProgressUpdater.stop();
             startBootstrapProgressUpdater = null;
         }
-        torService.shutdown().join();
-        return CompletableFuture.completedFuture(true);
+        return torService.shutdown();
     }
 
     @Override

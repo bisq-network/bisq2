@@ -85,24 +85,24 @@ public class SellerState1 extends BaseState {
 
             model.getSortedAccounts().setComparator(Comparator.comparing(Account::getAccountName));
 
-            accountsPin = accountService.getAccounts().addObserver(() -> {
-                List<UserDefinedFiatAccount> accounts = accountService.getAccounts().stream()
-                        .filter(account -> account instanceof UserDefinedFiatAccount)
-                        .map(account -> (UserDefinedFiatAccount) account)
-                        .collect(Collectors.toList());
-                model.setAllAccounts(accounts);
-                model.getAccountSelectionVisible().set(accounts.size() > 1);
-                maybeSelectFirstAccount();
-            });
-            selectedAccountPin = accountService.selectedAccountAsObservable().addObserver(account -> {
-                UIThread.run(() -> {
-                    if (account instanceof UserDefinedFiatAccount) {
-                        UserDefinedFiatAccount userDefinedFiatAccount = (UserDefinedFiatAccount) account;
-                        model.selectedAccountProperty().set(userDefinedFiatAccount);
-                        model.getPaymentAccountData().set(userDefinedFiatAccount.getAccountPayload().getAccountData());
-                    }
-                });
-            });
+            accountsPin = accountService.getAccounts().addObserver(() ->
+                    UIThread.run(() -> {
+                        List<UserDefinedFiatAccount> accounts = accountService.getAccounts().stream()
+                                .filter(account -> account instanceof UserDefinedFiatAccount)
+                                .map(account -> (UserDefinedFiatAccount) account)
+                                .collect(Collectors.toList());
+                        model.setAllAccounts(accounts);
+                        model.getAccountSelectionVisible().set(accounts.size() > 1);
+                        maybeSelectFirstAccount();
+                    }));
+            selectedAccountPin = accountService.selectedAccountAsObservable().addObserver(account ->
+                    UIThread.run(() -> {
+                        if (account instanceof UserDefinedFiatAccount) {
+                            UserDefinedFiatAccount userDefinedFiatAccount = (UserDefinedFiatAccount) account;
+                            model.selectedAccountProperty().set(userDefinedFiatAccount);
+                            model.getPaymentAccountData().set(userDefinedFiatAccount.getAccountPayload().getAccountData());
+                        }
+                    }));
 
             model.getButtonDisabled().bind(model.getPaymentAccountData().isEmpty());
             findUsersAccountData().ifPresent(accountData -> model.getPaymentAccountData().set(accountData));

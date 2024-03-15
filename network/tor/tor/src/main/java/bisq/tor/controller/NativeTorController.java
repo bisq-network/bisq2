@@ -151,6 +151,7 @@ public class NativeTorController implements BootstrapEventListener, HsDescUpload
     }
 
     public void shutdown() {
+        log.info("Send SHUTDOWN signal to tor control");
         boolean canShutdown = isRunning.compareAndSet(true, false);
         if (!canShutdown) {
             return;

@@ -405,7 +405,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     public T error(String message) {
         type = Type.ERROR;
         showReportErrorButtons();
-        width = 1100;
+        width = 800;
         if (headline == null)
             this.headline = Res.get("popup.headline.error");
         processMessage(message);

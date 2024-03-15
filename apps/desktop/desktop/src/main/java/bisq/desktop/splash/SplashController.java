@@ -50,9 +50,9 @@ public class SplashController implements Controller {
 
     @Override
     public void onActivate() {
-        applicationServiceStatePin = applicationServiceState.addObserver(state -> {
-            UIThread.run(() -> model.getApplicationServiceState().set(Res.get("splash.applicationServiceState." + state.name())));
-        });
+        applicationServiceStatePin = applicationServiceState.addObserver(state ->
+                UIThread.run(() -> model.getApplicationServiceState().set(Res.get("splash.applicationServiceState." + state.name())))
+        );
 
         if (networkService.getSupportedTransportTypes().contains(TransportType.CLEAR)) {
             model.getBootstrapStateDisplays().add(new BootstrapStateDisplay(TransportType.CLEAR, serviceProvider));

@@ -19,8 +19,10 @@ package bisq.desktop_app;
 
 import bisq.application.Executable;
 import bisq.desktop.DesktopController;
+import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.overlay.Popup;
+import bisq.i18n.Res;
 import javafx.application.Application;
 import javafx.application.Platform;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +35,8 @@ import static bisq.common.util.OsUtils.EXIT_FAILURE;
 public class DesktopExecutable extends Executable<DesktopApplicationService> {
     @Nullable
     private DesktopController desktopController;
+    @Nullable
+    private Popup shutdownInProcessPopup;
 
     public DesktopExecutable(String[] args) {
         super(args);
@@ -55,7 +59,9 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
                     if (throwable == null) {
                         try {
                             log.info("Java FX Application launched");
-                            desktopController = new DesktopController(applicationService.getState(), applicationService.getServiceProvider(),
+                            setupStartupAndShutdownErrorHandlers();
+                            desktopController = new DesktopController(applicationService.getState(),
+                                    applicationService.getServiceProvider(),
                                     applicationData,
                                     this::onApplicationLaunched);
                             desktopController.init();
@@ -96,10 +102,71 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
     }
 
     @Override
+    protected void notifyAboutShutdown() {
+        if (shutdownInProcessPopup != null) {
+            return;
+        }
+        try {
+            UIThread.run(() -> {
+                shutdownInProcessPopup = new Popup()
+                        .headline(Res.get("action.shutDown"))
+                        .feedback(Res.get("popup.shutdown", DesktopApplicationService.SHUTDOWN_TIMEOUT_SEC));
+                shutdownInProcessPopup.hideCloseButton().show();
+            });
+        } catch (Exception ignore) {
+        }
+    }
+
+    @Override
     protected void exitJvm() {
+        if (applicationService.getShutDownErrorMessage().get() == null) {
+            doExit();
+        }
+        // If we have an error popup we leave it to the user to close it and shutdown the app by clicking the shutdown button
+    }
+
+    private void doExit() {
         log.info("Exiting JavaFX Platform");
         Platform.exit();
-
         super.exitJvm();
+    }
+
+    private void setupStartupAndShutdownErrorHandlers() {
+        applicationService.getStartupErrorMessage().addObserver(errorMessage -> {
+            if (errorMessage != null) {
+                UIThread.run(() ->
+                        new Popup().error(Res.get("popup.startup.error", errorMessage))
+                                .closeButtonText(Res.get("action.shutDown"))
+                                .onClose(this::doExit)
+                                .show()
+                );
+            }
+        });
+        applicationService.getShutDownErrorMessage().addObserver(errorMessage -> {
+            if (errorMessage != null) {
+                UIThread.run(() -> {
+                    if (shutdownInProcessPopup != null) {
+                        shutdownInProcessPopup.hide();
+                        shutdownInProcessPopup = null;
+                    }
+                    Popup popup = new Popup();
+                    popup.error(Res.get("popup.shutdown.error", errorMessage))
+                            .closeButtonText(Res.get("action.shutDown"))
+                            .onClose(this::doExit)
+                            .show();
+                    // The error popup allow to report to GH, in that case we get closed the error popup.
+                    // We leave the app open and reset the shutDownStarted flag, so that at another
+                    // shutdown action shut down can happen. Only when the user clicks the close
+                    // button we actually shut down.
+                    popup.getIsHiddenProperty().addListener((observableValue, oldValue, newValue) -> {
+                        if (newValue) {
+                            shutDownStarted = false;
+                        }
+                    });
+                    // We reset the error so that it can get triggered again our error popup in case the user shutdown again.
+                    UIScheduler.run(() -> applicationService.getShutDownErrorMessage().set(null)).after(1000);
+                });
+            }
+        });
     }
 }

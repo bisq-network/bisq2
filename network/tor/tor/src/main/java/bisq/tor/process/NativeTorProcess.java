@@ -92,11 +92,14 @@ public class NativeTorProcess {
     }
 
     public void waitUntilExited() {
+        log.info("Wait until tor process has exited");
         process.ifPresent(process -> {
             try {
-                boolean isSuccess = process.waitFor(2, TimeUnit.MINUTES);
+                boolean isSuccess = process.waitFor(5, TimeUnit.SECONDS);
                 if (!isSuccess) {
-                    throw new CouldNotWaitForTorShutdownException("Tor still running after 2 minutes timeout.");
+                    throw new CouldNotWaitForTorShutdownException("Tor process has not exited after 5 seconds.");
+                } else {
+                    log.info("Tor process has exited successfully");
                 }
             } catch (InterruptedException e) {
                 throw new CouldNotWaitForTorShutdownException(e);

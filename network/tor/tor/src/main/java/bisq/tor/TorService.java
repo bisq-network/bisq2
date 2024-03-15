@@ -106,9 +106,12 @@ public class TorService implements Service {
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        nativeTorController.shutdown();
-        torProcess.ifPresent(NativeTorProcess::waitUntilExited);
-        return CompletableFuture.completedFuture(true);
+        log.info("shutdown");
+        return CompletableFuture.supplyAsync(() -> {
+            nativeTorController.shutdown();
+            torProcess.ifPresent(NativeTorProcess::waitUntilExited);
+            return true;
+        });
     }
 
     public Observable<BootstrapEvent> getBootstrapEvent() {

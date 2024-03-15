@@ -37,13 +37,20 @@ public abstract class Executable<T extends ApplicationService> implements ShutDo
             return;
         }
         shutDownStarted = true;
+        notifyAboutShutdown();
         if (applicationService != null) {
             applicationService.shutdown()
                     .thenRun(() -> {
                         shutDownHandlers.forEach(Runnable::run);
                         exitJvm();
                     });
+        } else {
+            shutDownHandlers.forEach(Runnable::run);
+            exitJvm();
         }
+    }
+
+    protected void notifyAboutShutdown() {
     }
 
     protected void exitJvm() {
