@@ -17,11 +17,10 @@
 
 package bisq.desktop.components.cathash;
 
-import bisq.common.util.MathUtils;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public final class BucketConfigV1 extends BucketConfig {
+public final class BucketConfigV0 extends BucketConfig {
     private static final Bucket BG = new Bucket(16, 0);
     private static final Bucket BG_OVERLAY = new Bucket(32, 1);
     private static final Bucket BODY_AND_FACE = new Bucket(16, 2);
