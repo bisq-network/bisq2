@@ -43,11 +43,13 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 @Slf4j
 public class InventoryRequestService implements Node.Listener, PeerGroupManager.Listener {
     private static final long TIMEOUT = TimeUnit.SECONDS.toMillis(120);
+    private static final long REPEAT_REQUEST_PERIOD = TimeUnit.MINUTES.toMillis(10);
 
     private final Node node;
     private final PeerGroupManager peerGroupManager;
@@ -56,7 +58,8 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
     private final Map<InventoryFilterType, FilterService<? extends InventoryFilter>> supportedFilterServices;
     private final List<InventoryFilterType> myPreferredInventoryFilterTypes;
     private final Map<String, InventoryHandler> requestHandlerMap = new ConcurrentHashMap<>();
-    private boolean requestsPending;
+    private final AtomicBoolean requestsPending = new AtomicBoolean();
+    private final AtomicBoolean allDataReceived = new AtomicBoolean();
 
     public InventoryRequestService(Node node,
                                    PeerGroupManager peerGroupManager,
@@ -129,21 +132,44 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private void requestInventory() {
-        if (!requestsPending && peerGroupManager.getState().get() == PeerGroupManager.State.RUNNING) {
-            requestsPending = true;
-            CompletableFutureUtils.allOf(requestFromPeers())
-                    .whenComplete((list, throwable) -> {
-                        if (list != null) {
-                            // Repeat requests until we have received all data
-                            if (list.stream().noneMatch(Inventory::noDataMissing)) {
-                                requestsPending = false;
-                                Scheduler.run(this::requestInventory).after(1000);
-                            }
-                        }
-                    });
-        } else {
-            Scheduler.run(this::requestInventory).after(2000);
+        if (allDataReceived.get()) {
+            return;
         }
+        if (peerGroupManager.getState().get() != PeerGroupManager.State.RUNNING) {
+            // Not ready yet, lets try again later
+            Scheduler.run(this::requestInventory).after(5000);
+            return;
+        }
+
+        if (requestsPending.get()) {
+            return;
+        }
+
+        requestsPending.set(true);
+        CompletableFutureUtils.allOf(requestFromPeers())
+                .whenComplete((list, throwable) -> {
+                    requestsPending.set(false);
+                    if (throwable != null) {
+                        log.error("requestFromPeers failed", throwable);
+                    } else if (list == null) {
+                        log.error("requestFromPeers completed with result list = null");
+                    } else {
+                        // Repeat requests until we have received all data
+                        if (list.stream().noneMatch(Inventory::noDataMissing)) {
+                            // We still miss data, so repeat requests
+                            Scheduler.run(this::requestInventory).after(1000);
+                        } else {
+                            // We got all data
+                            allDataReceived.set(true);
+
+                            // We request again in 10 minutes to be sure that potentially missed data gets received.
+                            Scheduler.run(() -> {
+                                allDataReceived.set(false);
+                                requestInventory();
+                            }).after(REPEAT_REQUEST_PERIOD);
+                        }
+                    }
+                });
     }
 
     private List<CompletableFuture<Inventory>> requestFromPeers() {
