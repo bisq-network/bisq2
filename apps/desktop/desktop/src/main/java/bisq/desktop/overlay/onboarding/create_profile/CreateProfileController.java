@@ -46,7 +46,7 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class CreateProfileController implements Controller {
-    private static final String CURRENT_AVATARS_VERSION = CatHash.currentAvatarsVersion();
+    private static final int CURRENT_AVATARS_VERSION = CatHash.currentAvatarsVersion();
 
     protected final CreateProfileModel model;
     @Getter

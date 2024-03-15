@@ -38,11 +38,11 @@ public class CatHash {
                 userProfile.getAvatarVersion(), true);
     }
 
-    public static Image getImage(byte[] pubKeyHash, byte[] powSolution, String avatarVersion) {
+    public static Image getImage(byte[] pubKeyHash, byte[] powSolution, int avatarVersion) {
         return getImage(pubKeyHash, powSolution, avatarVersion, true);
     }
 
-    public static Image getImage(byte[] pubKeyHash, byte[] powSolution, String avatarVersion, boolean useCache) {
+    public static Image getImage(byte[] pubKeyHash, byte[] powSolution, int avatarVersion, boolean useCache) {
         byte[] combined = ByteArrayUtils.concat(powSolution, pubKeyHash);
         BigInteger input = new BigInteger(combined);
         if (useCache && CACHE.containsKey(input)) {
@@ -61,14 +61,14 @@ public class CatHash {
         return image;
     }
 
-    public static String currentAvatarsVersion() {
+    public static int currentAvatarsVersion() {
         return BucketConfig.CURRENT_VERSION;
     }
 
-    private static BucketConfig getBucketConfig(String avatarVersion) {
+    private static BucketConfig getBucketConfig(int avatarVersion) {
         BucketConfig bucketConfig;
         switch (avatarVersion) {
-            case "v1": {
+            case 0: {
                 bucketConfig = new BucketConfigV1();
                 log.info("Creating v1 BucketConfig: {}", bucketConfig.getClass().getName());
             }

@@ -24,7 +24,7 @@ import java.util.Optional;
 
 @Slf4j
 public abstract class BucketConfig {
-    static final String CURRENT_VERSION = "v1";
+    static final int CURRENT_VERSION = 0;
     static final String DIGIT = "#";
     static final String SHAPE_NUMBER = "#SHAPE_NUMBER#";
 
