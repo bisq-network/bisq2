@@ -58,6 +58,8 @@ public final class BisqEasyOfferbookModel extends ChatModel {
     private Predicate<MarketChannelItem> marketSearchTextPredicate = marketChannelItem -> true;
     @Setter
     private Predicate<MarketChannelItem> marketFilterPredicate = marketChannelItem -> true;
+    @Setter
+    private DoubleProperty favouritesTableViewHeight = new SimpleDoubleProperty(0);
 
     public BisqEasyOfferbookModel(ChatChannelDomain chatChannelDomain) {
         super(chatChannelDomain);

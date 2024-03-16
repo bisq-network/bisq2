@@ -44,6 +44,7 @@ import bisq.settings.SettingsService;
 import javafx.collections.ListChangeListener;
 import javafx.collections.SetChangeListener;
 import javafx.scene.layout.StackPane;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -56,6 +57,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public final class BisqEasyOfferbookController extends ChatController<BisqEasyOfferbookView, BisqEasyOfferbookModel> {
+    private static final double MARKET_SELECTION_LIST_CELL_HEIGHT = 53;
+
     private final SettingsService settingsService;
     private final MarketPriceService marketPriceService;
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
@@ -319,6 +322,9 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
 
     private void updateFavouriteMarketChannelItems() {
         model.getFavouriteMarketChannelItems().setPredicate(item -> model.getFavouriteMarkets().contains(item.getMarket()));
+        double padding = 15;
+        double tableViewHeight = (model.getFavouriteMarketChannelItems().size() * MARKET_SELECTION_LIST_CELL_HEIGHT) + padding;
+        model.getFavouritesTableViewHeight().set(tableViewHeight);
     }
 
     private boolean isMaker(BisqEasyOffer bisqEasyOffer) {
@@ -339,5 +345,9 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                 !model.getSortedMarketChannelItems().isEmpty()) {
             selectionService.selectChannel(model.getSortedMarketChannelItems().get(0).getChannel());
         }
+    }
+
+    double getMarketSelectionListCellHeight() {
+        return MARKET_SELECTION_LIST_CELL_HEIGHT;
     }
 }
