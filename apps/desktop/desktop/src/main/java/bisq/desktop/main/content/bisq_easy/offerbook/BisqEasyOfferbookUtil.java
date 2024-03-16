@@ -105,7 +105,6 @@ public class BisqEasyOfferbookUtil {
             }
 
             private void updateMarketLogoEffect(MarketChannelItem item, boolean isSelected) {
-                item.getMarketLogo().setEffect(null);
                 item.getMarketLogo().setEffect(isSelected
                         ? MarketChannelItem.SELECTED_COLOR_ADJUST
                         : MarketChannelItem.DEFAULT_COLOR_ADJUST);
