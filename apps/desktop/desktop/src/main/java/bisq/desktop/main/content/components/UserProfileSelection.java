@@ -38,6 +38,7 @@ import bisq.user.identity.UserIdentityService;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -76,7 +77,7 @@ public class UserProfileSelection {
     }
 
     public void setIsLeftAligned(boolean isLeftAligned) {
-        controller.model.isLeftAligned.set(isLeftAligned);
+        controller.model.getIsLeftAligned().set(isLeftAligned);
     }
 
     public void setMaxComboBoxWidth(int width) {
@@ -109,10 +110,8 @@ public class UserProfileSelection {
         private final View view;
         private final UserIdentityService userIdentityService;
         private final Map<ChatChannelDomain, ChatChannelSelectionService> chatChannelSelectionServices;
-        private Pin selectedUserProfilePin;
-        private Pin userProfilesPin;
-        private Pin chatChannelSelectionPin;
-        private Pin navigationPin;
+        private Pin selectedUserProfilePin, userProfilesPin, chatChannelSelectionPin, navigationPin, isPrivateChannelPin;
+        private ListChangeListener<ListItem> listChangeListener;
 
         private Controller(ServiceProvider serviceProvider, int iconSize, boolean useMaterialStyle) {
             this.userIdentityService = serviceProvider.getUserService().getUserIdentityService();
@@ -125,19 +124,24 @@ public class UserProfileSelection {
         @Override
         public void onActivate() {
             selectedUserProfilePin = FxBindings.subscribe(userIdentityService.getSelectedUserIdentityObservable(),
-                    userProfile -> UIThread.run(() -> model.selectedUserProfile.set(new ListItem(userProfile))));
-            userProfilesPin = FxBindings.<UserIdentity, ListItem>bind(model.userProfiles)
+                    userProfile -> UIThread.run(() -> model.getSelectedUserProfile().set(new ListItem(userProfile))));
+            userProfilesPin = FxBindings.<UserIdentity, ListItem>bind(model.getUserProfiles())
                     .map(ListItem::new)
                     .to(userIdentityService.getUserIdentities());
 
             navigationPin = Navigation.getCurrentNavigationTarget().addObserver(this::navigationTargetChanged);
+
+            listChangeListener = (ListChangeListener.Change<? extends ListItem> change) -> updateShouldUseComboBox();
+            model.getUserProfiles().addListener(listChangeListener);
+            isPrivateChannelPin = FxBindings.subscribe(model.getIsPrivateChannel(), isPrivate -> updateShouldUseComboBox());
         }
 
         @Override
         public void onDeactivate() {
             // Need to clear list otherwise we get issues with binding when multiple 
             // instances are used.
-            model.userProfiles.clear();
+            model.getUserProfiles().clear();
+            model.getUserProfiles().removeListener(listChangeListener);
 
             selectedUserProfilePin.unbind();
             userProfilesPin.unbind();
@@ -145,6 +149,7 @@ public class UserProfileSelection {
             if (chatChannelSelectionPin != null) {
                 chatChannelSelectionPin.unbind();
             }
+            isPrivateChannelPin.unbind();
         }
 
         private void onSelected(ListItem selectedItem) {
@@ -152,11 +157,11 @@ public class UserProfileSelection {
                 UserIdentity selectedUserIdentity = userIdentityService.getSelectedUserIdentity();
                 // To make sure a different user is never selected for a private channel it's safest to keep this check
                 // even though the combobox should be disabled
-                if (model.isPrivateChannel.get() && selectedUserIdentity != null) {
+                if (model.getIsPrivateChannel().get() && selectedUserIdentity != null) {
                     new Popup().warning(Res.get("chat.privateChannel.changeUserProfile.warn", selectedUserIdentity.getUserProfile().getUserName()))
                             .onClose(() -> {
-                                model.selectedUserProfile.set(null);
-                                model.selectedUserProfile.set(new ListItem(selectedUserIdentity));
+                                model.getSelectedUserProfile().set(null);
+                                model.getSelectedUserProfile().set(new ListItem(selectedUserIdentity));
                             })
                             .show();
                 } else {
@@ -185,7 +190,7 @@ public class UserProfileSelection {
             if (chatChannelSelectionPin != null) {
                 chatChannelSelectionPin.unbind();
             }
-            model.isPrivateChannel.set(false);
+            model.getIsPrivateChannel().set(false);
             switch (navigationTarget) {
                 //case BISQ_EASY:
                 case BISQ_EASY_OFFERBOOK:
@@ -213,19 +218,24 @@ public class UserProfileSelection {
         }
 
         private void selectedChannelChanged(ChatChannel<? extends ChatMessage> channel) {
-            UIThread.run(() -> model.isPrivateChannel.set(channel instanceof PrivateChatChannel));
+            UIThread.run(() -> model.getIsPrivateChannel().set(channel instanceof PrivateChatChannel));
+        }
+
+        private void updateShouldUseComboBox() {
+            model.getShouldUseComboBox().set(!model.getIsPrivateChannel().get() && model.getUserProfiles().size() > 1);
         }
     }
 
+    @Slf4j
+    @Getter
     private static class Model implements bisq.desktop.common.view.Model {
         private final ObjectProperty<ListItem> selectedUserProfile = new SimpleObjectProperty<>();
         private final ObservableList<ListItem> userProfiles = FXCollections.observableArrayList();
         private final DoubleProperty comboBoxWidth = new SimpleDoubleProperty();
         private final BooleanProperty isLeftAligned = new SimpleBooleanProperty();
         private final Observable<Boolean> isPrivateChannel = new Observable<>(false);
+        private final Observable<Boolean> shouldUseComboBox = new Observable<>(false);
 
-        private Model() {
-        }
     }
 
     @Slf4j
@@ -241,7 +251,8 @@ public class UserProfileSelection {
         private View(Model model, Controller controller, int iconSize, boolean useMaterialStyle) {
             super(new Pane(), model, controller);
 
-            comboBox = new UserProfileComboBox(model.userProfiles, Res.get("user.userProfile.comboBox.description"), iconSize, useMaterialStyle);
+            comboBox = new UserProfileComboBox(model.getUserProfiles(), Res.get("user.userProfile.comboBox.description"),
+                    iconSize, useMaterialStyle);
             comboBox.setLayoutY(UserProfileComboBox.Y_OFFSET);
 
             userName = new Label();
@@ -259,7 +270,7 @@ public class UserProfileSelection {
         @Override
         protected void onViewAttached() {
             comboBox.setOnChangeConfirmed(e -> controller.onSelected(comboBox.getSelectionModel().getSelectedItem()));
-            selectedUserProfilePin = EasyBind.subscribe(model.selectedUserProfile,
+            selectedUserProfilePin = EasyBind.subscribe(model.getSelectedUserProfile(),
                     selected -> {
                         UIThread.runOnNextRenderFrame(() -> comboBox.getSelectionModel().select(selected));
                         if (selected != null) {
@@ -271,7 +282,7 @@ public class UserProfileSelection {
                             }
                         }
                     });
-            isLeftAlignedPin = EasyBind.subscribe(model.isLeftAligned, isLeftAligned -> {
+            isLeftAlignedPin = EasyBind.subscribe(model.getIsLeftAligned(), isLeftAligned -> {
                 comboBox.setIsLeftAligned(isLeftAligned);
                 if (!isLeftAligned) {
                     HBox.setMargin(userName, new Insets(-2, 0, 0, 0));
@@ -283,15 +294,9 @@ public class UserProfileSelection {
                     userName.toBack();
                 }
             });
-            comboBoxWidthPin = EasyBind.subscribe(model.comboBoxWidth, w -> comboBox.setComboBoxWidth(w.doubleValue()));
+            comboBoxWidthPin = EasyBind.subscribe(model.getComboBoxWidth(), w -> comboBox.setComboBoxWidth(w.doubleValue()));
 
-            isComboBoxPin = FxBindings.subscribe(model.isPrivateChannel, isPrivate -> {
-                boolean isComboBox = model.userProfiles.size() > 1 && !isPrivate;
-                comboBox.setManaged(isComboBox);
-                comboBox.setVisible(isComboBox);
-                userNameAndIcon.setManaged(!isComboBox);
-                userNameAndIcon.setVisible(!isComboBox);
-            });
+            isComboBoxPin = FxBindings.subscribe(model.getShouldUseComboBox(), this::updateShouldUseComboBox);
         }
 
         @Override
@@ -308,6 +313,13 @@ public class UserProfileSelection {
 
         public void setConverter(StringConverter<ListItem> value) {
             comboBox.setConverter(value);
+        }
+
+        private void updateShouldUseComboBox(boolean isComboBox) {
+            comboBox.setManaged(isComboBox);
+            comboBox.setVisible(isComboBox);
+            userNameAndIcon.setManaged(!isComboBox);
+            userNameAndIcon.setVisible(!isComboBox);
         }
     }
 
