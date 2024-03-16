@@ -267,14 +267,14 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         HBox.setHgrow(appliedFiltersSection, Priority.ALWAYS);
 
         favouritesTableView = new BisqTableView<>(getModel().getFavouriteMarketChannelItems());
-        favouritesTableView.getStyleClass().addAll("market-selection-list", "market-favourites-list");
+        favouritesTableView.getStyleClass().addAll("market-selection-list", "favourites-list");
         favouritesTableView.hideVerticalScrollbar();
         favouritesTableView.hideHorizontalScrollbar();
         favouritesTableView.setFixedCellSize(getController().getMarketSelectionListCellHeight());
         configTableView(favouritesTableView);
 
         marketsTableView = new BisqTableView<>(getModel().getSortedMarketChannelItems());
-        marketsTableView.getStyleClass().addAll("market-selection-list", "all-markets-list");
+        marketsTableView.getStyleClass().addAll("market-selection-list", "markets-list");
         marketsTableView.allowVerticalScrollbar();
         marketsTableView.hideHorizontalScrollbar();
         marketsTableView.setFixedCellSize(getController().getMarketSelectionListCellHeight());

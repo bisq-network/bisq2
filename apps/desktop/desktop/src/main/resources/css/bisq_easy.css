@@ -282,17 +282,17 @@
     /*-fx-padding: 0 3 0 0;*/
 }
 
-.market-favourites-list {
+.favourites-list {
     -fx-padding: 0 0 10 0;
     -fx-border-width: 0 0 1 0;
     -fx-border-color: -bisq-dark-grey-50;
 }
 
-.all-markets-list .favourite-label {
+.markets-list .favourite-label {
     -fx-opacity: 0;
 }
 
-.all-markets-list .table-row-cell:hover .favourite-label {
+.markets-list .table-row-cell:hover .favourite-label {
     -fx-opacity: 1;
 }
 
