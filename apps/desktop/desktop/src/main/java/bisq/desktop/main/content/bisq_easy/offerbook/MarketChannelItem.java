@@ -26,7 +26,6 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.value.ChangeListener;
 import javafx.scene.CacheHint;
 import javafx.scene.Node;
 import javafx.scene.effect.ColorAdjust;
@@ -38,14 +37,14 @@ import java.lang.ref.WeakReference;
 @EqualsAndHashCode
 @Getter
 public class MarketChannelItem {
+    static final ColorAdjust DEFAULT_COLOR_ADJUST = new ColorAdjust();
+    static final ColorAdjust SELECTED_COLOR_ADJUST = new ColorAdjust();
+
     private final BisqEasyOfferbookChannel channel;
     private final Market market;
     private final Node marketLogo;
     private final IntegerProperty numOffers = new SimpleIntegerProperty(0);
     private final BooleanProperty selected = new SimpleBooleanProperty(false);
-    private final ChangeListener<Boolean> selectedChangeListener;
-    private final ColorAdjust defaultColorAdjust = new ColorAdjust();
-    private final ColorAdjust selectedColorAdjust = new ColorAdjust();
 
     public MarketChannelItem(BisqEasyOfferbookChannel channel) {
         this.channel = channel;
@@ -55,21 +54,20 @@ public class MarketChannelItem {
         marketLogo.setCacheHint(CacheHint.SPEED);
 
         setUpColorAdjustments();
-        selectedChangeListener = (observable, oldValue, newValue) ->
-                marketLogo.setEffect(newValue ? selectedColorAdjust : defaultColorAdjust);
-        selected.addListener(selectedChangeListener);
-        marketLogo.setEffect(defaultColorAdjust);
+
+        //selected.addListener(selectedChangeListener);
+        marketLogo.setEffect(DEFAULT_COLOR_ADJUST);
 
         channel.getChatMessages().addObserver(new WeakReference<Runnable>(this::updateNumOffers).get());
         updateNumOffers();
     }
 
     private void setUpColorAdjustments() {
-        defaultColorAdjust.setBrightness(-0.4);
-        defaultColorAdjust.setSaturation(-0.2);
-        defaultColorAdjust.setContrast(-0.1);
+        DEFAULT_COLOR_ADJUST.setBrightness(-0.4);
+        DEFAULT_COLOR_ADJUST.setSaturation(-0.2);
+        DEFAULT_COLOR_ADJUST.setContrast(-0.1);
 
-        selectedColorAdjust.setBrightness(-0.1);
+        SELECTED_COLOR_ADJUST.setBrightness(-0.1);
     }
 
     private void updateNumOffers() {
@@ -91,6 +89,9 @@ public class MarketChannelItem {
     }
 
     public void cleanUp() {
-        selected.removeListener(selectedChangeListener);
+//        if (selectedChangeListener != null) {
+//            selected.removeListener(selectedChangeListener);
+//            selectedChangeListener = null;
+//        }
     }
 }

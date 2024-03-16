@@ -8,13 +8,12 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.binding.StringExpression;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.Tooltip;
+import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
 import java.util.List;
@@ -58,6 +57,7 @@ public class BisqEasyOfferbookUtil {
             private final HBox hBox = new HBox(10, marketCode, numOffers);
             private final VBox vBox = new VBox(0, marketName, hBox);
             private final Tooltip tooltip = new BisqTooltip();
+            private Subscription selectedPin;
 
             {
                 setCursor(Cursor.HAND);
@@ -71,6 +71,11 @@ public class BisqEasyOfferbookUtil {
             protected void updateItem(MarketChannelItem item, boolean empty) {
                 super.updateItem(item, empty);
 
+                // Clean up previous row
+                if (getTableRow() != null && selectedPin != null) {
+                    selectedPin.unsubscribe();
+                }
+
                 if (item != null && !empty) {
                     marketName.setText(item.getMarket().getQuoteCurrencyName());
                     marketCode.setText(item.getMarket().getQuoteCurrencyCode());
@@ -82,13 +87,28 @@ public class BisqEasyOfferbookUtil {
                     tooltip.textProperty().bind(formattedTooltip);
                     tooltip.setStyle("-fx-text-fill: -fx-dark-text-color;");
 
+                    // Set up new row
+                    TableRow<MarketChannelItem> newRow = getTableRow();
+                    if (newRow != null) {
+                        selectedPin = EasyBind.subscribe(newRow.selectedProperty(), isSelected ->
+                                updateMarketLogoEffect(item, isSelected));
+                    }
+
                     setGraphic(vBox);
                 } else {
                     numOffers.textProperty().unbind();
                     tooltip.textProperty().unbind();
+                    selectedPin.unsubscribe();
 
                     setGraphic(null);
                 }
+            }
+
+            private void updateMarketLogoEffect(MarketChannelItem item, boolean isSelected) {
+                item.getMarketLogo().setEffect(null);
+                item.getMarketLogo().setEffect(isSelected
+                        ? MarketChannelItem.SELECTED_COLOR_ADJUST
+                        : MarketChannelItem.DEFAULT_COLOR_ADJUST);
             }
         };
     }
