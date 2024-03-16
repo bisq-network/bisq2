@@ -34,11 +34,11 @@ public class BisqEasyOfferbookUtil {
     }
 
     public static Comparator<MarketChannelItem> sortByMarketNameAsc() {
-        return Comparator.comparing(MarketChannelItem::getMarketString);
+        return Comparator.comparing(MarketChannelItem::toString);
     }
 
     public static Comparator<MarketChannelItem> sortByMarketNameDesc() {
-        return Comparator.comparing(MarketChannelItem::getMarketString).reversed();
+        return Comparator.comparing(MarketChannelItem::toString).reversed();
     }
 
     public static Comparator<MarketChannelItem> sortByMarketActivity() {
