@@ -78,7 +78,9 @@ public class BisqEasyOfferbookUtil {
                         ? Res.get("bisqEasy.offerbook.marketListCell.favourites.tooltip.removeFromFavourites")
                         : Res.get("bisqEasy.offerbook.marketListCell.favourites.tooltip.addToFavourites"));
                 favouriteTooltip.setStyle("-fx-text-fill: -fx-dark-text-color;");
-                star = ImageUtil.getImageViewById(isFavouritesTableView ? "star-green" : "star-grey");
+                star = ImageUtil.getImageViewById(isFavouritesTableView
+                        ? "favourites-star-yellow"
+                        : "favourites-star-grey-hollow");
                 favouriteLabel.setGraphic(star);
                 favouriteLabel.getStyleClass().add("favourite-label");
                 Tooltip.install(favouriteLabel, favouriteTooltip);
