@@ -37,7 +37,7 @@ import java.lang.ref.WeakReference;
 
 @EqualsAndHashCode
 @Getter
-public class MarketChannelItem {
+class MarketChannelItem {
     private static final ColorAdjust DEFAULT_COLOR_ADJUST = new ColorAdjust();
     private static final ColorAdjust SELECTED_COLOR_ADJUST = new ColorAdjust();
 
@@ -47,7 +47,7 @@ public class MarketChannelItem {
     private final IntegerProperty numOffers = new SimpleIntegerProperty(0);
     private final BooleanProperty isFavourite = new SimpleBooleanProperty(false);
 
-    public MarketChannelItem(BisqEasyOfferbookChannel channel) {
+    MarketChannelItem(BisqEasyOfferbookChannel channel) {
         this.channel = channel;
         market = channel.getMarket();
         marketLogo = MarketImageComposition.createMarketLogo(market.getQuoteCurrencyCode());
@@ -87,11 +87,23 @@ public class MarketChannelItem {
         return market.toString();
     }
 
-    public void addAsFavourite() {
+    void toggleFavourite() {
+        if (isFavourite()) {
+            removeFromFavourites();
+        } else {
+            addAsFavourite();
+        }
+    }
+
+    private boolean isFavourite() {
+        return FavouriteMarketsService.isFavourite(getMarket());
+    }
+
+    private void addAsFavourite() {
         FavouriteMarketsService.addFavourite(getMarket());
     }
 
-    public void removeFromFavourites() {
+    private void removeFromFavourites() {
         FavouriteMarketsService.removeFavourite(getMarket());
     }
 }

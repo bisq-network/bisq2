@@ -278,6 +278,7 @@
     /*-fx-background-color: blue;*/
     -fx-alignment: center;
     -fx-min-width: 30;
+    /*-fx-min-height: 50;*/
     /*-fx-padding: 0 3 0 0;*/
 }
 
@@ -285,6 +286,14 @@
     -fx-padding: 0 0 10 0;
     -fx-border-width: 0 0 1 0;
     -fx-border-color: -bisq-dark-grey-50;
+}
+
+.all-markets-list .favourite-label {
+    -fx-opacity: 0;
+}
+
+.all-markets-list .table-row-cell:hover .favourite-label {
+    -fx-opacity: 1;
 }
 
 .create-offer-button {

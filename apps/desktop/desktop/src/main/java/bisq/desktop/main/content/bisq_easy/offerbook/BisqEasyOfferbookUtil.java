@@ -13,7 +13,6 @@ import javafx.scene.Cursor;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import org.fxmisc.easybind.EasyBind;
@@ -23,13 +22,13 @@ import java.util.Comparator;
 import java.util.List;
 
 public class BisqEasyOfferbookUtil {
-    private static final List<Market> majorMarkets = MarketRepository.getMajorMarkets();
+    static final List<Market> majorMarkets = MarketRepository.getMajorMarkets();
 
-    public static Comparator<MarketChannelItem> sortByNumOffers() {
+    static Comparator<MarketChannelItem> sortByNumOffers() {
         return (lhs, rhs) -> Integer.compare(rhs.getNumOffers().get(), lhs.getNumOffers().get());
     }
 
-    public static Comparator<MarketChannelItem> sortByMajorMarkets() {
+    static Comparator<MarketChannelItem> sortByMajorMarkets() {
         return (lhs, rhs) -> {
             int index1 = majorMarkets.indexOf(lhs.getMarket());
             int index2 = majorMarkets.indexOf(rhs.getMarket());
@@ -37,33 +36,34 @@ public class BisqEasyOfferbookUtil {
         };
     }
 
-    public static Comparator<MarketChannelItem> sortByMarketNameAsc() {
+    static Comparator<MarketChannelItem> sortByMarketNameAsc() {
         return Comparator.comparing(MarketChannelItem::toString);
     }
 
-    public static Comparator<MarketChannelItem> sortByMarketNameDesc() {
+    static Comparator<MarketChannelItem> sortByMarketNameDesc() {
         return Comparator.comparing(MarketChannelItem::toString).reversed();
     }
 
-    public static Comparator<MarketChannelItem> sortByMarketActivity() {
+    static Comparator<MarketChannelItem> sortByMarketActivity() {
         return (lhs, rhs) -> BisqEasyOfferbookUtil.sortByNumOffers()
                 .thenComparing(BisqEasyOfferbookUtil.sortByMajorMarkets())
                 .thenComparing(BisqEasyOfferbookUtil.sortByMarketNameAsc())
                 .compare(lhs, rhs);
     }
 
-    public static Callback<TableColumn<MarketChannelItem, MarketChannelItem>,
-            TableCell<MarketChannelItem, MarketChannelItem>> getMarketLabelCellFactory() {
+    static Callback<TableColumn<MarketChannelItem, MarketChannelItem>,
+            TableCell<MarketChannelItem, MarketChannelItem>> getMarketLabelCellFactory(boolean isFavouritesTableView) {
         return column -> new TableCell<>() {
             private final Label marketName = new Label();
             private final Label marketCode = new Label();
             private final Label numOffers = new Label();
             private final Label favouriteLabel = new Label();
-            private final ImageView star = ImageUtil.getImageViewById("star-grey");
+            private final ImageView star;
             private final HBox hBox = new HBox(10, marketCode, numOffers);
             private final VBox vBox = new VBox(0, marketName, hBox);
             private final HBox container = new HBox(0, vBox, Spacer.fillHBox(), favouriteLabel);
-            private final Tooltip tooltip = new BisqTooltip();
+            private final Tooltip marketDetailsTooltip = new BisqTooltip();
+            private final Tooltip favouriteTooltip = new BisqTooltip();
             private Subscription selectedPin;
 
             {
@@ -71,10 +71,17 @@ public class BisqEasyOfferbookUtil {
                 marketName.getStyleClass().add("market-name");
                 hBox.setAlignment(Pos.CENTER_LEFT);
                 vBox.setAlignment(Pos.CENTER_LEFT);
-                Tooltip.install(vBox, tooltip);
+                Tooltip.install(vBox, marketDetailsTooltip);
+                marketDetailsTooltip.setStyle("-fx-text-fill: -fx-dark-text-color;");
 
+                favouriteTooltip.textProperty().set(isFavouritesTableView
+                        ? Res.get("bisqEasy.offerbook.marketListCell.favourites.tooltip.removeFromFavourites")
+                        : Res.get("bisqEasy.offerbook.marketListCell.favourites.tooltip.addToFavourites"));
+                favouriteTooltip.setStyle("-fx-text-fill: -fx-dark-text-color;");
+                star = ImageUtil.getImageViewById(isFavouritesTableView ? "star-green" : "star-grey");
                 favouriteLabel.setGraphic(star);
                 favouriteLabel.getStyleClass().add("favourite-label");
+                Tooltip.install(favouriteLabel, favouriteTooltip);
 
                 container.setAlignment(Pos.CENTER_LEFT);
             }
@@ -96,8 +103,7 @@ public class BisqEasyOfferbookUtil {
                     numOffers.textProperty().bind(formattedNumOffers);
                     StringExpression formattedTooltip = Bindings.createStringBinding(() ->
                             BisqEasyOfferbookUtil.getFormattedTooltip(item.getNumOffers().get(), item.getMarket().getQuoteCurrencyName()), item.getNumOffers());
-                    tooltip.textProperty().bind(formattedTooltip);
-                    tooltip.setStyle("-fx-text-fill: -fx-dark-text-color;");
+                    marketDetailsTooltip.textProperty().bind(formattedTooltip);
 
                     // Set up new row
                     TableRow<MarketChannelItem> newRow = getTableRow();
@@ -105,12 +111,13 @@ public class BisqEasyOfferbookUtil {
                         selectedPin = EasyBind.subscribe(newRow.selectedProperty(), item::updateMarketLogoEffect);
                     }
 
-                    favouriteLabel.setOnMouseClicked(e -> item.addAsFavourite());
+                    favouriteLabel.setOnMouseClicked(e -> item.toggleFavourite());
 
                     setGraphic(container);
                 } else {
                     numOffers.textProperty().unbind();
-                    tooltip.textProperty().unbind();
+                    marketDetailsTooltip.textProperty().unbind();
+
                     favouriteLabel.setOnMouseClicked(null);
 
                     setGraphic(null);
@@ -119,7 +126,7 @@ public class BisqEasyOfferbookUtil {
         };
     }
 
-    public static Callback<TableColumn<MarketChannelItem, MarketChannelItem>,
+    static Callback<TableColumn<MarketChannelItem, MarketChannelItem>,
             TableCell<MarketChannelItem, MarketChannelItem>> getMarketLogoCellFactory() {
         return column -> new TableCell<>() {
             {

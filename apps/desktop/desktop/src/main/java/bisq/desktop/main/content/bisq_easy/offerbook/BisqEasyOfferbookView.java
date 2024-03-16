@@ -265,7 +265,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         configTableView(favouritesTableView);
 
         marketsTableView = new BisqTableView<>(getModel().getSortedMarketChannelItems());
-        marketsTableView.getStyleClass().add("market-selection-list");
+        marketsTableView.getStyleClass().addAll("market-selection-list", "all-markets-list");
         marketsTableView.allowVerticalScrollbar();
         marketsTableView.hideHorizontalScrollbar();
         marketsTableView.setFixedCellSize(getController().getMarketSelectionListCellHeight());
@@ -347,7 +347,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         BisqTableColumn<MarketChannelItem> marketLabelTableColumn = new BisqTableColumn.Builder<MarketChannelItem>()
                 .minWidth(100)
                 .left()
-                .setCellFactory(BisqEasyOfferbookUtil.getMarketLabelCellFactory())
+                .setCellFactory(BisqEasyOfferbookUtil.getMarketLabelCellFactory(tableView.equals(favouritesTableView)))
                 .build();
 
         tableView.getColumns().add(tableView.getSelectionMarkerColumn());
