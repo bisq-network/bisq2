@@ -161,7 +161,8 @@ public class UserProfileSelection {
                 // To make sure a different user is never selected for a private channel it's safest to keep this check
                 // even though the combobox should be disabled
                 if (model.getIsPrivateChannel().get() && selectedUserIdentity != null) {
-                    new Popup().warning(Res.get("chat.privateChannel.changeUserProfile.warn", selectedUserIdentity.getUserProfile().getUserName()))
+                    new Popup().warning(Res.get("chat.privateChannel.changeUserProfile.warn",
+                                    selectedUserIdentity.getUserProfile().getUserName()))
                             .onClose(() -> {
                                 model.getSelectedUserProfile().set(null);
                                 model.getSelectedUserProfile().set(new ListItem(selectedUserIdentity));
