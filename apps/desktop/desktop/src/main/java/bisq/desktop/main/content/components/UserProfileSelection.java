@@ -141,7 +141,10 @@ public class UserProfileSelection {
             // Need to clear list otherwise we get issues with binding when multiple 
             // instances are used.
             model.getUserProfiles().clear();
-            model.getUserProfiles().removeListener(listChangeListener);
+            if (listChangeListener != null) {
+                model.getUserProfiles().removeListener(listChangeListener);
+                listChangeListener = null;
+            }
 
             selectedUserProfilePin.unbind();
             userProfilesPin.unbind();
