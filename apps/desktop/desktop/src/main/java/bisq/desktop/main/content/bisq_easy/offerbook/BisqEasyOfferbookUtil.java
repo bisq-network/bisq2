@@ -90,8 +90,7 @@ public class BisqEasyOfferbookUtil {
                     // Set up new row
                     TableRow<MarketChannelItem> newRow = getTableRow();
                     if (newRow != null) {
-                        selectedPin = EasyBind.subscribe(newRow.selectedProperty(), isSelected ->
-                                updateMarketLogoEffect(item, isSelected));
+                        selectedPin = EasyBind.subscribe(newRow.selectedProperty(), item::updateMarketLogoEffect);
                     }
 
                     setGraphic(vBox);
@@ -102,12 +101,6 @@ public class BisqEasyOfferbookUtil {
 
                     setGraphic(null);
                 }
-            }
-
-            private void updateMarketLogoEffect(MarketChannelItem item, boolean isSelected) {
-                item.getMarketLogo().setEffect(isSelected
-                        ? MarketChannelItem.SELECTED_COLOR_ADJUST
-                        : MarketChannelItem.DEFAULT_COLOR_ADJUST);
             }
         };
     }

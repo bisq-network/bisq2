@@ -35,8 +35,8 @@ import java.lang.ref.WeakReference;
 @EqualsAndHashCode
 @Getter
 public class MarketChannelItem {
-    static final ColorAdjust DEFAULT_COLOR_ADJUST = new ColorAdjust();
-    static final ColorAdjust SELECTED_COLOR_ADJUST = new ColorAdjust();
+    private static final ColorAdjust DEFAULT_COLOR_ADJUST = new ColorAdjust();
+    private static final ColorAdjust SELECTED_COLOR_ADJUST = new ColorAdjust();
 
     private final BisqEasyOfferbookChannel channel;
     private final Market market;
@@ -70,8 +70,12 @@ public class MarketChannelItem {
             int numOffers = (int) channel.getChatMessages().stream()
                     .filter(BisqEasyOfferbookMessage::hasBisqEasyOffer)
                     .count();
-            this.getNumOffers().set(numOffers);
+            getNumOffers().set(numOffers);
         });
+    }
+
+    void updateMarketLogoEffect(boolean isSelectedMarket) {
+        getMarketLogo().setEffect(isSelectedMarket ? SELECTED_COLOR_ADJUST : DEFAULT_COLOR_ADJUST);
     }
 
     @Override
