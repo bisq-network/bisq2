@@ -53,9 +53,9 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     private SearchBox marketSelectorSearchBox;
     private BisqTableView<MarketChannelItem> marketsTableView, favouritesTableView;
     private VBox marketSelectionList;
-    private Subscription tableViewSelectionPin, selectedModelItemPin, channelHeaderIconPin, selectedMarketFilterPin,
+    private Subscription marketsTableViewSelectionPin, selectedModelItemPin, channelHeaderIconPin, selectedMarketFilterPin,
             selectedOfferDirectionOrOwnerFilterPin, selectedPeerReputationFilterPin, selectedMarketSortTypePin,
-            marketSelectorSearchPin, favouritesTableViewHeightPin;
+            marketSelectorSearchPin, favouritesTableViewHeightPin, favouritesTableViewSelectionPin;
     private Button createOfferButton;
     private DropdownMenu sortAndFilterMarketsMenu, filterOffersByDirectionOrOwnerMenu, filterOffersByPeerReputationMenu;
     private DropdownSortByMenuItem sortByMostOffers, sortByNameAZ, sortByNameZA;
@@ -123,15 +123,23 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         favouritesTableView.managedProperty().bind(Bindings.isNotEmpty(getModel().getFavouriteMarketChannelItems()));
 
         selectedModelItemPin = EasyBind.subscribe(getModel().getSelectedMarketChannelItem(), selected -> {
+            marketsTableView.getSelectionModel().clearSelection();
             marketsTableView.getSelectionModel().select(selected);
+            favouritesTableView.getSelectionModel().clearSelection();
+            favouritesTableView.getSelectionModel().select(selected);
         });
-        tableViewSelectionPin = EasyBind.subscribe(marketsTableView.getSelectionModel().selectedItemProperty(), item -> {
+        marketsTableViewSelectionPin = EasyBind.subscribe(marketsTableView.getSelectionModel().selectedItemProperty(), item -> {
             if (item != null) {
                 getController().onSelectMarketChannelItem(item);
             }
         });
         marketSelectorSearchPin = EasyBind.subscribe(getModel().getMarketSelectorSearchText(), searchText -> {
             marketsTableView.getSelectionModel().select(getModel().getSelectedMarketChannelItem().get());
+        });
+        favouritesTableViewSelectionPin = EasyBind.subscribe(favouritesTableView.getSelectionModel().selectedItemProperty(), item -> {
+            if (item != null) {
+                getController().onSelectMarketChannelItem(item);
+            }
         });
 
         channelHeaderIconPin = EasyBind.subscribe(model.getChannelIconNode(), this::updateChannelHeaderIcon);
@@ -196,8 +204,9 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         favouritesTableView.managedProperty().unbind();
 
         selectedModelItemPin.unsubscribe();
-        tableViewSelectionPin.unsubscribe();
+        marketsTableViewSelectionPin.unsubscribe();
         marketSelectorSearchPin.unsubscribe();
+        favouritesTableViewSelectionPin.unsubscribe();
         channelHeaderIconPin.unsubscribe();
         selectedMarketFilterPin.unsubscribe();
         selectedOfferDirectionOrOwnerFilterPin.unsubscribe();
