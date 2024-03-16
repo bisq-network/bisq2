@@ -97,7 +97,6 @@ public class BisqEasyOfferbookUtil {
                 } else {
                     numOffers.textProperty().unbind();
                     tooltip.textProperty().unbind();
-                    selectedPin.unsubscribe();
 
                     setGraphic(null);
                 }
