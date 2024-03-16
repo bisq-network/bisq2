@@ -22,9 +22,7 @@ import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.currency.Market;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.main.content.components.MarketImageComposition;
-import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.scene.CacheHint;
 import javafx.scene.Node;
@@ -44,7 +42,6 @@ public class MarketChannelItem {
     private final Market market;
     private final Node marketLogo;
     private final IntegerProperty numOffers = new SimpleIntegerProperty(0);
-    private final BooleanProperty selected = new SimpleBooleanProperty(false);
 
     public MarketChannelItem(BisqEasyOfferbookChannel channel) {
         this.channel = channel;
@@ -54,8 +51,6 @@ public class MarketChannelItem {
         marketLogo.setCacheHint(CacheHint.SPEED);
 
         setUpColorAdjustments();
-
-        //selected.addListener(selectedChangeListener);
         marketLogo.setEffect(DEFAULT_COLOR_ADJUST);
 
         channel.getChatMessages().addObserver(new WeakReference<Runnable>(this::updateNumOffers).get());
@@ -86,12 +81,5 @@ public class MarketChannelItem {
     @Override
     public String toString() {
         return market.toString();
-    }
-
-    public void cleanUp() {
-//        if (selectedChangeListener != null) {
-//            selected.removeListener(selectedChangeListener);
-//            selectedChangeListener = null;
-//        }
     }
 }
