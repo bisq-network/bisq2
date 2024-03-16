@@ -38,6 +38,7 @@ import bisq.user.identity.UserIdentityService;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -235,6 +236,7 @@ public class UserProfileSelection {
         private final HBox userNameAndIcon;
         private final Label userName;
         private final ImageView icon;
+        private final ListChangeListener<ListItem> listChangeListener;
         private Subscription selectedUserProfilePin, isLeftAlignedPin, comboBoxWidthPin;
         private Pin isComboBoxPin;
 
@@ -254,6 +256,8 @@ public class UserProfileSelection {
             userNameAndIcon.setAlignment(Pos.CENTER);
             root.getChildren().setAll(comboBox, userNameAndIcon);
             root.setPrefHeight(60);
+
+            listChangeListener = change -> updateComboBoxVisibility();
         }
 
         @Override
@@ -285,13 +289,8 @@ public class UserProfileSelection {
             });
             comboBoxWidthPin = EasyBind.subscribe(model.comboBoxWidth, w -> comboBox.setComboBoxWidth(w.doubleValue()));
 
-            isComboBoxPin = FxBindings.subscribe(model.isPrivateChannel, isPrivate -> {
-                boolean isComboBox = model.userProfiles.size() > 1 && !isPrivate;
-                comboBox.setManaged(isComboBox);
-                comboBox.setVisible(isComboBox);
-                userNameAndIcon.setManaged(!isComboBox);
-                userNameAndIcon.setVisible(!isComboBox);
-            });
+            model.userProfiles.addListener(listChangeListener);
+            isComboBoxPin = FxBindings.subscribe(model.isPrivateChannel, isPrivate -> updateComboBoxVisibility());
         }
 
         @Override
@@ -300,6 +299,7 @@ public class UserProfileSelection {
             isLeftAlignedPin.unsubscribe();
             comboBoxWidthPin.unsubscribe();
             isComboBoxPin.unbind();
+            model.userProfiles.removeListener(listChangeListener);
         }
 
         public void setMaxComboBoxWidth(int width) {
@@ -308,6 +308,14 @@ public class UserProfileSelection {
 
         public void setConverter(StringConverter<ListItem> value) {
             comboBox.setConverter(value);
+        }
+
+        private void updateComboBoxVisibility() {
+            boolean isComboBox = model.userProfiles.size() > 1 && !model.isPrivateChannel.get();
+            comboBox.setManaged(isComboBox);
+            comboBox.setVisible(isComboBox);
+            userNameAndIcon.setManaged(!isComboBox);
+            userNameAndIcon.setVisible(!isComboBox);
         }
     }
 
