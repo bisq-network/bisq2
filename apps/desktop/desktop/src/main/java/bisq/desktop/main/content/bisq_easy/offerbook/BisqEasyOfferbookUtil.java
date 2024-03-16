@@ -102,7 +102,7 @@ public class BisqEasyOfferbookUtil {
 
                     star.setOnMouseClicked(e -> item.addAsFavourite());
 
-                    setGraphic(vBox);
+                    setGraphic(container);
                 } else {
                     numOffers.textProperty().unbind();
                     tooltip.textProperty().unbind();
