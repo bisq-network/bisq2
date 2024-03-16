@@ -32,6 +32,7 @@ import bisq.desktop.main.content.chat.ChatView;
 import bisq.desktop.main.content.components.chatMessages.ChatMessageListItem;
 import bisq.i18n.Res;
 import javafx.beans.binding.Bindings;
+import javafx.collections.ListChangeListener;
 import javafx.css.PseudoClass;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -50,6 +51,7 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView, BisqEasyOfferbookModel> {
+    private final ListChangeListener<MarketChannelItem> listChangeListener;
     private SearchBox marketSelectorSearchBox;
     private BisqTableView<MarketChannelItem> marketsTableView, favouritesTableView;
     private VBox marketSelectionList;
@@ -74,6 +76,8 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
                                  VBox chatMessagesComponent,
                                  Pane channelSidebar) {
         super(model, controller, chatMessagesComponent, channelSidebar);
+
+        listChangeListener = change -> updateTableViewSelection(getModel().getSelectedMarketChannelItem().get());
     }
 
     @Override
@@ -122,12 +126,8 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         favouritesTableView.visibleProperty().bind(Bindings.isNotEmpty(getModel().getFavouriteMarketChannelItems()));
         favouritesTableView.managedProperty().bind(Bindings.isNotEmpty(getModel().getFavouriteMarketChannelItems()));
 
-        selectedModelItemPin = EasyBind.subscribe(getModel().getSelectedMarketChannelItem(), selected -> {
-            marketsTableView.getSelectionModel().clearSelection();
-            marketsTableView.getSelectionModel().select(selected);
-            favouritesTableView.getSelectionModel().clearSelection();
-            favouritesTableView.getSelectionModel().select(selected);
-        });
+        selectedModelItemPin = EasyBind.subscribe(getModel().getSelectedMarketChannelItem(), this::updateTableViewSelection);
+
         marketsTableViewSelectionPin = EasyBind.subscribe(marketsTableView.getSelectionModel().selectedItemProperty(), item -> {
             if (item != null) {
                 getController().onSelectMarketChannelItem(item);
@@ -141,6 +141,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
                 getController().onSelectMarketChannelItem(item);
             }
         });
+        getModel().getFavouriteMarketChannelItems().addListener(listChangeListener);
 
         channelHeaderIconPin = EasyBind.subscribe(model.getChannelIconNode(), this::updateChannelHeaderIcon);
         selectedMarketFilterPin = EasyBind.subscribe(getModel().getSelectedMarketsFilter(), this::updateSelectedMarketFilter);
@@ -177,6 +178,13 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         removeWithOffersFilter.setOnMouseClicked(e -> getModel().getSelectedMarketsFilter().set(Filters.Markets.ALL));
         withOffersDisplayHint.setOnMouseEntered(e -> removeWithOffersFilter.setGraphic(activeCloseIcon));
         withOffersDisplayHint.setOnMouseExited(e -> removeWithOffersFilter.setGraphic(defaultCloseIcon));
+    }
+
+    private void updateTableViewSelection(MarketChannelItem selectedItem) {
+        marketsTableView.getSelectionModel().clearSelection();
+        marketsTableView.getSelectionModel().select(selectedItem);
+        favouritesTableView.getSelectionModel().clearSelection();
+        favouritesTableView.getSelectionModel().select(selectedItem);
     }
 
     private void updateFavouritesTableViewHeight(double height) {
@@ -234,6 +242,8 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         removeWithOffersFilter.setOnMouseClicked(null);
         withOffersDisplayHint.setOnMouseEntered(null);
         withOffersDisplayHint.setOnMouseExited(null);
+
+        getModel().getFavouriteMarketChannelItems().removeListener(listChangeListener);
     }
 
     private BisqEasyOfferbookModel getModel() {
