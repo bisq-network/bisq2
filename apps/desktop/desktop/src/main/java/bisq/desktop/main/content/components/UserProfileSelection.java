@@ -110,12 +110,13 @@ public class UserProfileSelection {
         private final View view;
         private final UserIdentityService userIdentityService;
         private final Map<ChatChannelDomain, ChatChannelSelectionService> chatChannelSelectionServices;
+        private final ListChangeListener<ListItem> listChangeListener;
         private Pin selectedUserProfilePin, userProfilesPin, chatChannelSelectionPin, navigationPin, isPrivateChannelPin;
-        private ListChangeListener<ListItem> listChangeListener;
 
         private Controller(ServiceProvider serviceProvider, int iconSize, boolean useMaterialStyle) {
             this.userIdentityService = serviceProvider.getUserService().getUserIdentityService();
             chatChannelSelectionServices = serviceProvider.getChatService().getChatChannelSelectionServices();
+            listChangeListener = change -> updateShouldUseComboBox();
 
             model = new Model();
             view = new View(model, this, iconSize, useMaterialStyle);
@@ -131,7 +132,6 @@ public class UserProfileSelection {
 
             navigationPin = Navigation.getCurrentNavigationTarget().addObserver(this::navigationTargetChanged);
 
-            listChangeListener = (ListChangeListener.Change<? extends ListItem> change) -> updateShouldUseComboBox();
             model.getUserProfiles().addListener(listChangeListener);
             isPrivateChannelPin = FxBindings.subscribe(model.getIsPrivateChannel(), isPrivate -> updateShouldUseComboBox());
         }
@@ -141,10 +141,7 @@ public class UserProfileSelection {
             // Need to clear list otherwise we get issues with binding when multiple 
             // instances are used.
             model.getUserProfiles().clear();
-            if (listChangeListener != null) {
-                model.getUserProfiles().removeListener(listChangeListener);
-                listChangeListener = null;
-            }
+            model.getUserProfiles().removeListener(listChangeListener);
 
             selectedUserProfilePin.unbind();
             userProfilesPin.unbind();
