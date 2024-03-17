@@ -36,6 +36,7 @@ import java.util.concurrent.TimeUnit;
 public class WaitingAnimation extends StackPane {
     public static final int INTERVAL = 1000;
 
+    private final ImageView spinningCircle;
     private ImageView waitingStateIcon;
     private WaitingState waitingState;
     private final RotateTransition rotate;
@@ -46,14 +47,11 @@ public class WaitingAnimation extends StackPane {
     private UIScheduler uiScheduler;
 
     public WaitingAnimation(WaitingState waitingState) {
-        this();
         setState(waitingState);
-    }
 
-    public WaitingAnimation() {
         setAlignment(Pos.CENTER);
-        ImageView spinningCircle = ImageUtil.getImageViewById("spinning-circle");
 
+        spinningCircle = ImageUtil.getImageViewById(getSpinningCircleIconId(waitingState));
         spinningCircle.setFitHeight(78);
         spinningCircle.setFitWidth(78);
         spinningCircle.setPreserveRatio(true);
@@ -106,15 +104,15 @@ public class WaitingAnimation extends StackPane {
         }
 
         if (waitingState != null) {
-            waitingStateIcon = ImageUtil.getImageViewById(getIconId(waitingState));
+            waitingStateIcon = ImageUtil.getImageViewById(getWaitingStateIconId(waitingState));
             getChildren().add(waitingStateIcon);
         }
     }
 
-    private String getIconId(WaitingState waitingState) {
+    private String getWaitingStateIconId(WaitingState waitingState) {
         switch (waitingState) {
-            case TAKE_OFFER:
-                return "take-offer";
+            case TAKE_BISQ_EASY_OFFER:
+                return "take-bisq-easy-offer";
             case ACCOUNT_DATA:
                 return "account-data";
             case FIAT_PAYMENT:
@@ -130,6 +128,10 @@ public class WaitingAnimation extends StackPane {
             default:
                 throw new IllegalArgumentException("Unknown WaitingState: " + waitingState);
         }
+    }
+
+    private String getSpinningCircleIconId(WaitingState waitingState) {
+        return waitingState == WaitingState.TAKE_BISQ_EASY_OFFER ? "take-bisq-easy-offer-circle" : "spinning-circle";
     }
 
     public void play() {

@@ -244,19 +244,19 @@ public class TakeOfferReviewController implements Controller {
         );
 
         bisqEasyTradeService.takeOffer(bisqEasyTrade);
+        model.getTakeOfferStatus().set(TakeOfferReviewModel.TakeOfferStatus.SENT);
 
         BisqEasyContract contract = bisqEasyTrade.getContract();
-        model.getShowSendTakeOfferMessageFeedback().set(true);
+
         mainButtonsVisibleHandler.accept(false);
         bisqEasyOpenTradeChannelService.sendTakeOfferMessage(bisqEasyTrade.getId(), bisqEasyOffer, contract.getMediator())
                 .thenAccept(result -> UIThread.run(() -> {
                     // In case the user has switched to another market we want to select that market in the offer book
-                    ChatChannelSelectionService chatChannelSelectionService = chatService.getChatChannelSelectionService(ChatChannelDomain.BISQ_EASY_OFFERBOOK);
+                    ChatChannelSelectionService chatChannelSelectionService =
+                            chatService.getChatChannelSelectionService(ChatChannelDomain.BISQ_EASY_OFFERBOOK);
                     bisqEasyOfferbookChannelService.findChannel(contract.getOffer().getMarket())
                             .ifPresent(chatChannelSelectionService::selectChannel);
-
-                    model.getShowSendTakeOfferMessageFeedback().set(false);
-                    model.getShowTakeOfferSuccess().set(true);
+                    model.getTakeOfferStatus().set(TakeOfferReviewModel.TakeOfferStatus.SUCCESS);
                 }));
     }
 
@@ -311,23 +311,16 @@ public class TakeOfferReviewController implements Controller {
 
     private void applyPriceDetails(PriceSpec priceSpec, Market market) {
         Optional<MarketPrice> marketPrice = marketPriceService.findMarketPrice(market);
-        if (marketPrice.isPresent()) {
-            model.setMarketPrice(marketPrice.get().getPriceQuote().getValue());
-        }
+        marketPrice.ifPresent(price -> model.setMarketPrice(price.getPriceQuote().getValue()));
         Optional<PriceQuote> marketPriceQuote = marketPrice.map(MarketPrice::getPriceQuote);
-        String marketPriceAsString = marketPriceQuote
-                .map(PriceFormatter::formatWithCode)
-                .orElse(Res.get("data.na"));
+        String marketPriceAsString = marketPriceQuote.map(PriceFormatter::formatWithCode).orElse(Res.get("data.na"));
         Optional<Double> percentFromMarketPrice;
         percentFromMarketPrice = PriceUtil.findPercentFromMarketPrice(marketPriceService, priceSpec, market);
         double percent = percentFromMarketPrice.orElse(0d);
-        if ((priceSpec instanceof FloatPriceSpec || priceSpec instanceof MarketPriceSpec)
-                && percent == 0) {
+        if ((priceSpec instanceof FloatPriceSpec || priceSpec instanceof MarketPriceSpec) && percent == 0) {
             model.setPriceDetails(Res.get("bisqEasy.tradeWizard.review.priceDetails.seller", marketPriceAsString));
         } else {
-            String aboveOrBelow = percent > 0 ?
-                    Res.get("offer.price.above") :
-                    Res.get("offer.price.below");
+            String aboveOrBelow = percent > 0 ? Res.get("offer.price.above") : Res.get("offer.price.below");
             String percentAsString = percentFromMarketPrice.map(Math::abs).map(PercentageFormatter::formatToPercentWithSymbol)
                     .orElse(Res.get("data.na"));
             if (priceSpec instanceof FloatPriceSpec) {
@@ -335,7 +328,8 @@ public class TakeOfferReviewController implements Controller {
                         percentAsString, aboveOrBelow, marketPriceAsString));
             } else {
                 if (percent == 0) {
-                    model.setPriceDetails(Res.get("bisqEasy.tradeWizard.review.priceDetails.seller.fix.atMarket", marketPriceAsString));
+                    model.setPriceDetails(Res.get("bisqEasy.tradeWizard.review.priceDetails.seller.fix.atMarket",
+                            marketPriceAsString));
                 } else {
                     model.setPriceDetails(Res.get("bisqEasy.tradeWizard.review.priceDetails.seller.fix",
                             percentAsString, aboveOrBelow, marketPriceAsString));

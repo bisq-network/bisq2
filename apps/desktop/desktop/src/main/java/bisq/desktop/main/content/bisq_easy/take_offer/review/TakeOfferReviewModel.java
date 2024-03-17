@@ -24,8 +24,8 @@ import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.user.profile.UserProfile;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -49,8 +49,7 @@ class TakeOfferReviewModel implements Model {
     private Monetary takersQuoteSideAmount;
     @Setter
     private PriceSpec sellersPriceSpec;
-    private final BooleanProperty showSendTakeOfferMessageFeedback = new SimpleBooleanProperty();
-    private final BooleanProperty showTakeOfferSuccess = new SimpleBooleanProperty();
+    private final ObjectProperty<TakeOfferStatus> takeOfferStatus = new SimpleObjectProperty<>(TakeOfferStatus.NOT_STARTED);
     @Setter
     private String price;
     @Setter
@@ -63,4 +62,10 @@ class TakeOfferReviewModel implements Model {
     private String feeDetails;
     @Setter
     private long marketPrice;
+
+    enum TakeOfferStatus {
+        NOT_STARTED,
+        SENT,
+        SUCCESS
+    }
 }

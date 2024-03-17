@@ -26,7 +26,9 @@ import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import lombok.Getter;
@@ -66,7 +68,6 @@ class TradeWizardReviewModel implements Model {
     private BisqEasyOfferbookMessage myOfferMessage;
     @Setter
     private String headline;
-    private final BooleanProperty showSendTakeOfferMessageFeedback = new SimpleBooleanProperty();
     @Setter
     private String headerPaymentMethod;
     @Setter
@@ -90,7 +91,7 @@ class TradeWizardReviewModel implements Model {
     private String feeDetails;
     private final ObservableList<FiatPaymentMethod> takersPaymentMethods = FXCollections.observableArrayList();
     private final BooleanProperty showCreateOfferSuccess = new SimpleBooleanProperty();
-    private final BooleanProperty showTakeOfferSuccess = new SimpleBooleanProperty();
+    private final ObjectProperty<TakeOfferStatus> takeOfferStatus = new SimpleObjectProperty<>(TakeOfferStatus.NOT_STARTED);
     @Setter
     private long marketPrice;
 
@@ -120,7 +121,13 @@ class TradeWizardReviewModel implements Model {
         feeDetails = null;
         takersPaymentMethods.clear();
         showCreateOfferSuccess.set(false);
-        showTakeOfferSuccess.set(false);
+        takeOfferStatus.set(TakeOfferStatus.NOT_STARTED);
         marketPrice = 0;
+    }
+
+    enum TakeOfferStatus {
+        NOT_STARTED,
+        SENT,
+        SUCCESS
     }
 }
