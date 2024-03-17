@@ -170,21 +170,16 @@ public class TradeStateController implements Controller {
 
     void onInterruptTrade() {
         BisqEasyTrade trade = model.getBisqEasyTrade().get();
-        boolean isSeller = trade.isSeller();
-        String part2;
         String message;
         switch (model.getTradeCloseType()) {
             case REJECT:
-                part2 = Res.get("bisqEasy.openTrades.rejectTrade.warning.part2");
-                message = isSeller ?
-                        Res.get("bisqEasy.openTrades.rejectTrade.warning.seller", part2) :
-                        Res.get("bisqEasy.openTrades.rejectTrade.warning.buyer", part2);
+                message = Res.get("bisqEasy.openTrades.rejectTrade.warning");
                 break;
             case CANCEL:
-                part2 = Res.get("bisqEasy.openTrades.cancelTrade.warning.part2");
-                message = isSeller ?
-                        Res.get("bisqEasy.openTrades.cancelTrade.warning.seller", part2) :
-                        Res.get("bisqEasy.openTrades.cancelTrade.warning.buyer", part2);
+                String part2 = Res.get("bisqEasy.openTrades.cancelTrade.warning.part2");
+                message = trade.isSeller()
+                        ? Res.get("bisqEasy.openTrades.cancelTrade.warning.seller", part2)
+                        : Res.get("bisqEasy.openTrades.cancelTrade.warning.buyer", part2);
                 break;
             case COMPLETED:
                 // We hide close button at the top-pane at the complete screen
