@@ -42,7 +42,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     final Observable<Long> minRequiredReputationScore = new Observable<>();
     final Observable<Boolean> offersOnly = new Observable<>();
     final Observable<Boolean> tradeRulesConfirmed = new Observable<>();
-    final Observable<ChatNotificationType> chatNotificationType = new Observable<>(ChatNotificationType.MENTION);
+    final Observable<ChatNotificationType> chatNotificationType = new Observable<>();
     final ObservableSet<String> consumedAlertIds = new ObservableSet<>();
     final Observable<Boolean> isTacAccepted = new Observable<>();
     final Observable<Boolean> closeMyOfferWhenTaken = new Observable<>();
@@ -61,7 +61,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 SettingsService.DEFAULT_MIN_REQUIRED_REPUTATION_SCORE,
                 false,
                 false,
-                ChatNotificationType.MENTION,
+                ChatNotificationType.ALL,
                 false,
                 new HashSet<>(),
                 true,
