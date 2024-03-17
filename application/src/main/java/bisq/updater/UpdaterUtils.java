@@ -48,7 +48,7 @@ public class UpdaterUtils {
     }
 
     public static String getInstallerFileName(String version) {
-        return "Bisq 2-" + version + OsUtils.getInstallerExtension();
+        return "Bisq-" + version + OsUtils.getInstallerExtension();
     }
 
     public static String getJarFileName(String version) {
