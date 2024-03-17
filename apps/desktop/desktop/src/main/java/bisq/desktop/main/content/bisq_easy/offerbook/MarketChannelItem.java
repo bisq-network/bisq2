@@ -22,11 +22,8 @@ import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.currency.Market;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.main.content.components.MarketImageComposition;
-import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.value.ChangeListener;
 import javafx.scene.CacheHint;
 import javafx.scene.Node;
 import javafx.scene.effect.ColorAdjust;
@@ -38,14 +35,13 @@ import java.lang.ref.WeakReference;
 @EqualsAndHashCode
 @Getter
 public class MarketChannelItem {
+    private static final ColorAdjust DEFAULT_COLOR_ADJUST = new ColorAdjust();
+    private static final ColorAdjust SELECTED_COLOR_ADJUST = new ColorAdjust();
+
     private final BisqEasyOfferbookChannel channel;
     private final Market market;
     private final Node marketLogo;
     private final IntegerProperty numOffers = new SimpleIntegerProperty(0);
-    private final BooleanProperty selected = new SimpleBooleanProperty(false);
-    private final ChangeListener<Boolean> selectedChangeListener;
-    private final ColorAdjust defaultColorAdjust = new ColorAdjust();
-    private final ColorAdjust selectedColorAdjust = new ColorAdjust();
 
     public MarketChannelItem(BisqEasyOfferbookChannel channel) {
         this.channel = channel;
@@ -55,21 +51,18 @@ public class MarketChannelItem {
         marketLogo.setCacheHint(CacheHint.SPEED);
 
         setUpColorAdjustments();
-        selectedChangeListener = (observable, oldValue, newValue) ->
-                marketLogo.setEffect(newValue ? selectedColorAdjust : defaultColorAdjust);
-        selected.addListener(selectedChangeListener);
-        marketLogo.setEffect(defaultColorAdjust);
+        marketLogo.setEffect(DEFAULT_COLOR_ADJUST);
 
         channel.getChatMessages().addObserver(new WeakReference<Runnable>(this::updateNumOffers).get());
         updateNumOffers();
     }
 
     private void setUpColorAdjustments() {
-        defaultColorAdjust.setBrightness(-0.4);
-        defaultColorAdjust.setSaturation(-0.2);
-        defaultColorAdjust.setContrast(-0.1);
+        DEFAULT_COLOR_ADJUST.setBrightness(-0.4);
+        DEFAULT_COLOR_ADJUST.setSaturation(-0.2);
+        DEFAULT_COLOR_ADJUST.setContrast(-0.1);
 
-        selectedColorAdjust.setBrightness(-0.1);
+        SELECTED_COLOR_ADJUST.setBrightness(-0.1);
     }
 
     private void updateNumOffers() {
@@ -77,20 +70,16 @@ public class MarketChannelItem {
             int numOffers = (int) channel.getChatMessages().stream()
                     .filter(BisqEasyOfferbookMessage::hasBisqEasyOffer)
                     .count();
-            this.getNumOffers().set(numOffers);
+            getNumOffers().set(numOffers);
         });
     }
 
-    public String getMarketString() {
-        return market.toString();
+    void updateMarketLogoEffect(boolean isSelectedMarket) {
+        getMarketLogo().setEffect(isSelectedMarket ? SELECTED_COLOR_ADJUST : DEFAULT_COLOR_ADJUST);
     }
 
     @Override
     public String toString() {
         return market.toString();
-    }
-
-    public void cleanUp() {
-        selected.removeListener(selectedChangeListener);
     }
 }
