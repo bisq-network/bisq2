@@ -59,6 +59,8 @@ import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
 import java.util.Comparator;
@@ -215,6 +217,10 @@ public class ChatMessagesComponent {
         private void replyHandler(ChatMessage chatMessage) {
             if (!chatMessage.isMyMessage(userIdentityService)) {
                 citationBlock.reply(chatMessage);
+                // To ensure that we trigger an update we set it to null first (and don't use a
+                // BooleanProperty but ObjectProperty<Boolean>
+                model.getFocusInputTextField().set(null);
+                model.getFocusInputTextField().set(true);
             }
         }
 
@@ -376,6 +382,7 @@ public class ChatMessagesComponent {
         private final ObjectProperty<ChatChannel<? extends ChatMessage>> selectedChannel = new SimpleObjectProperty<>();
         private final StringProperty textInput = new SimpleStringProperty("");
         private final BooleanProperty userProfileSelectionVisible = new SimpleBooleanProperty();
+        private final ObjectProperty<Boolean> focusInputTextField = new SimpleObjectProperty<>();
         private final ObservableList<UserProfile> mentionableUsers = FXCollections.observableArrayList();
         // TODO mentionableChatChannels not filled with data
         private final ObservableList<ChatChannel<?>> mentionableChatChannels = FXCollections.observableArrayList();
@@ -408,6 +415,7 @@ public class ChatMessagesComponent {
         private ChatMentionPopupMenu<UserProfile> userMentionPopup;
         private ChatMentionPopupMenu<ChatChannel<?>> channelMentionPopup;
         private Pane userProfileSelectionRoot;
+        private Subscription focusInputTextFieldPin;
 
         private View(Model model,
                      Controller controller,
@@ -465,6 +473,12 @@ public class ChatMessagesComponent {
             channelMentionPopup.setItems(model.mentionableChatChannels);
 
             createChatDialogEnabledSubscription();
+
+            focusInputTextFieldPin = EasyBind.subscribe(model.getFocusInputTextField(), focusInputTextField -> {
+                if (focusInputTextField != null && focusInputTextField) {
+                    inputField.requestFocus();
+                }
+            });
         }
 
         @Override
@@ -474,6 +488,7 @@ public class ChatMessagesComponent {
             inputField.textProperty().unbindBidirectional(model.getTextInput());
             userMentionPopup.filterProperty().unbind();
             channelMentionPopup.filterProperty().unbind();
+            focusInputTextFieldPin.unsubscribe();
             removeChatDialogEnabledSubscription();
 
             inputField.setOnKeyPressed(null);
