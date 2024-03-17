@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.components;
 
+import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.ImageUtil;
 import javafx.animation.FadeTransition;
 import javafx.animation.RotateTransition;
@@ -29,8 +30,12 @@ import javafx.scene.layout.StackPane;
 import javafx.util.Duration;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.concurrent.TimeUnit;
+
 @Slf4j
 public class WaitingAnimation extends StackPane {
+    public static final int INTERVAL = 1000;
+
     private ImageView waitingStateIcon;
     private WaitingState waitingState;
     private final RotateTransition rotate;
@@ -38,6 +43,7 @@ public class WaitingAnimation extends StackPane {
     private Scene scene;
     private ChangeListener<Scene> sceneListener;
     private ChangeListener<Boolean> focusListener;
+    private UIScheduler uiScheduler;
 
     public WaitingAnimation(WaitingState waitingState) {
         this();
@@ -54,11 +60,11 @@ public class WaitingAnimation extends StackPane {
 
         getChildren().add(spinningCircle);
 
-        fadeTransition = new FadeTransition(Duration.millis(1000), spinningCircle);
+        fadeTransition = new FadeTransition(Duration.millis(INTERVAL), spinningCircle);
         fadeTransition.setFromValue(0);
         fadeTransition.setToValue(1);
 
-        rotate = new RotateTransition(Duration.millis(1000), spinningCircle);
+        rotate = new RotateTransition(Duration.millis(INTERVAL), spinningCircle);
         rotate.setByAngle(360);
 
         sceneListener = (observable, oldValue, newValue) -> {
@@ -107,6 +113,8 @@ public class WaitingAnimation extends StackPane {
 
     private String getIconId(WaitingState waitingState) {
         switch (waitingState) {
+            case TAKE_OFFER:
+                return "take-offer";
             case ACCOUNT_DATA:
                 return "account-data";
             case FIAT_PAYMENT:
@@ -129,8 +137,21 @@ public class WaitingAnimation extends StackPane {
         fadeTransition.play();
     }
 
+    public void playIndefinitely() {
+        playRepeated(0, 4 * INTERVAL, TimeUnit.MILLISECONDS, Long.MAX_VALUE);
+    }
+
+    public void playRepeated(long initialDelay, long delay, TimeUnit timeUnit, long cycles) {
+        stop();
+        uiScheduler = UIScheduler.run((this::play)).repeated(initialDelay, delay, timeUnit, cycles);
+    }
+
     public void stop() {
         rotate.stop();
         fadeTransition.stop();
+        if (uiScheduler != null) {
+            uiScheduler.stop();
+            uiScheduler = null;
+        }
     }
 }

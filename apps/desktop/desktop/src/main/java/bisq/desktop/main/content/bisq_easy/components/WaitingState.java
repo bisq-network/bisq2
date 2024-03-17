@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.components;
 
 public enum WaitingState {
+    TAKE_OFFER,
     ACCOUNT_DATA,
     FIAT_PAYMENT,
     FIAT_PAYMENT_CONFIRMATION,

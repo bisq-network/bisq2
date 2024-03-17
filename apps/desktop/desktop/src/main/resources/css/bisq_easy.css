@@ -654,6 +654,26 @@
     -fx-font-family: "IBM Plex Sans Light";
 }
 
+.trade-wizard-take-offer-send-message-headline {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 1.7em;
+}
+
+.trade-wizard-take-offer-send-message-sub-headline {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 1.1em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.trade-wizard-take-offer-send-message-info {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-size: 1em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
 
 /*******************************************************************************
  * TradeWizardMarketView.tableView                                                       *

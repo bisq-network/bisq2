@@ -456,6 +456,8 @@ public class TradeWizardReviewController implements Controller {
         );
 
         BisqEasyContract contract = bisqEasyTrade.getContract();
+        model.getShowSendTakeOfferMessageFeedback().set(true);
+        mainButtonsVisibleHandler.accept(false);
         bisqEasyOpenTradeChannelService.sendTakeOfferMessage(bisqEasyTrade.getId(), bisqEasyOffer, contract.getMediator())
                 .thenAccept(result -> UIThread.run(() -> {
 
@@ -464,8 +466,8 @@ public class TradeWizardReviewController implements Controller {
                     bisqEasyOfferbookChannelService.findChannel(contract.getOffer().getMarket())
                             .ifPresent(chatChannelSelectionService::selectChannel);
 
+                    model.getShowSendTakeOfferMessageFeedback().set(false);
                     model.getShowTakeOfferSuccess().set(true);
-                    mainButtonsVisibleHandler.accept(false);
                 }));
     }
 

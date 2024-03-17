@@ -49,7 +49,7 @@ class TakeOfferReviewModel implements Model {
     private Monetary takersQuoteSideAmount;
     @Setter
     private PriceSpec sellersPriceSpec;
-
+    private final BooleanProperty showSendTakeOfferMessageFeedback = new SimpleBooleanProperty();
     private final BooleanProperty showTakeOfferSuccess = new SimpleBooleanProperty();
     @Setter
     private String price;
