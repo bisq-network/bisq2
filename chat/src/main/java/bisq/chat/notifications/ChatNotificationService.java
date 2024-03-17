@@ -212,7 +212,7 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
     }
 
     private void consumeNotification(ChatNotification notification) {
-        if (notification.isConsumed()) {
+        if (notification.getIsConsumed().get()) {
             return;
         }
         boolean hadChange;
@@ -221,6 +221,7 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
                 notification.setConsumed(true);
                 persistableStore.getNotifications().add(notification);
                 hadChange = true;
+                changedNotification.set(notification);
             } else {
                 hadChange = persistableStore.getNotConsumedNotifications()
                         .filter(e -> e.equals(notification))
@@ -232,6 +233,10 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
                         .orElse(false);
             }
             if (hadChange) {
+                // If we changed the consumed state we need to trigger an update of the observable by setting it to null
+                // first as the isConsumed field is excluded from EqualsAndHashCode and thus would not trigger
+                // notifications of observers.
+                changedNotification.set(null);
                 changedNotification.set(notification);
             }
         }
@@ -242,7 +247,7 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
 
     private boolean isConsumed(ChatNotification notification) {
         synchronized (persistableStore) {
-            return persistableStore.findNotification(notification).map(ChatNotification::isConsumed).orElse(false);
+            return persistableStore.findNotification(notification).map(e -> e.getIsConsumed().get()).orElse(false);
         }
     }
 
@@ -280,7 +285,8 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
 
     private <M extends ChatMessage> void onMessageAdded(ChatChannel<M> chatChannel, M chatMessage) {
         String id = ChatNotification.createId(chatChannel.getId(), chatMessage.getId());
-        ChatNotification chatNotification = createNotification(id, chatChannel, chatMessage);
+        ChatNotification chatNotification = persistableStore.findNotification(id)
+                .orElseGet(() -> createNotification(id, chatChannel, chatMessage));
 
         // At first start-up when user has not setup their profile yet, we set all notifications as consumed
         if (!userIdentityService.hasUserIdentities()) {

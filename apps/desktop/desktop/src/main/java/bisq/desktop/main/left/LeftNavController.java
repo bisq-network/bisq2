@@ -89,11 +89,9 @@ public class LeftNavController implements Controller {
     }
 
     public void setNavigationTarget(NavigationTarget navigationTarget) {
-        // We subscribe once we get the content target
-        if (changedChatNotificationPin == null && navigationTarget == NavigationTarget.CONTENT) {
+        if (changedChatNotificationPin == null) {
             chatNotificationService.getNotConsumedNotifications().forEach(this::handleNotifications); // **
             changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(this::handleNotifications);
-
         }
 
         NavigationTarget supportedNavigationTarget;
