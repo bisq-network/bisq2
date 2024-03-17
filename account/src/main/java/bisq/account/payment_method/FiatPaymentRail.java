@@ -55,7 +55,8 @@ public enum FiatPaymentRail implements PaymentRail {
             List.of("AUD", "CAD", "EUR", "GBP", "INR", "JPY", "SAR", "SEK", "SGD", "TRY", "USD")),
     CASH_DEPOSIT(),
     UPI(new ArrayList<>(), List.of("INR")),
-    BIZUM(List.of("ES"), List.of("EUR"));
+    BIZUM(List.of("ES"), List.of("EUR")),
+    CASH_APP(List.of("US"), List.of("USD"));
 
     @Getter
     @EqualsAndHashCode.Exclude

@@ -78,6 +78,9 @@ public abstract class AccountPayload implements NetworkProto {
             case INTERACETRANSFERACCOUNTPAYLOAD: {
                 return InteracETransferAccountPayload.fromProto(proto);
             }
+            case CASHAPPACCOUNTPAYLOAD: {
+                return CashAppAccountPayload.fromProto(proto);
+            }
             case MESSAGE_NOT_SET: {
                 throw new UnresolvableProtobufMessageException(proto);
             }
