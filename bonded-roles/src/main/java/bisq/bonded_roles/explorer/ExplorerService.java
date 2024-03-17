@@ -21,6 +21,7 @@ import bisq.bonded_roles.explorer.dto.Tx;
 import bisq.common.data.Pair;
 import bisq.common.observable.Observable;
 import bisq.common.threading.ExecutorFactory;
+import bisq.common.util.CollectionUtil;
 import bisq.common.util.ExceptionUtil;
 import bisq.common.util.Version;
 import bisq.network.NetworkService;
@@ -32,22 +33,18 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
 
-import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 // TODO We should support same registration model via oracle node as used with other nodes
 
 @Slf4j
 public class ExplorerService {
     public static final ExecutorService POOL = ExecutorFactory.newFixedThreadPool("BlockExplorerService.pool", 3);
-
-    private volatile boolean shutdownStarted;
 
     @Getter
     @ToString
@@ -63,12 +60,6 @@ public class ExplorerService {
 
         public Config(List<Provider> providers) {
             this.providers = providers;
-        }
-    }
-
-    private static class PendingRequestException extends Exception {
-        public PendingRequestException() {
-            super("We have a pending request");
         }
     }
 
@@ -95,21 +86,35 @@ public class ExplorerService {
         }
     }
 
-
-    private final ArrayList<Provider> providers;
     @Getter
     private final Observable<Provider> selectedProvider = new Observable<>();
-    private Optional<BaseHttpClient> httpClient = Optional.empty();
     private final NetworkService networkService;
     private final String userAgent;
-
+    private final Map<TransportType, List<Provider>> supportedProvidersByTransportType;
+    private volatile boolean shutdownStarted;
 
     public ExplorerService(Config conf, NetworkService networkService, Version version) {
-        providers = new ArrayList<>(conf.providers);
-        checkArgument(providers.size() > 0);
-        selectedProvider.set(providers.get(0));
         this.networkService = networkService;
         userAgent = "bisq-v2/" + version.toString();
+
+        Set<TransportType> supportedTransportTypes = networkService.getSupportedTransportTypes();
+        supportedProvidersByTransportType = new HashMap<>();
+        conf.providers.stream()
+                .filter(provider -> supportedTransportTypes.contains(provider.getTransportType()))
+                .forEach(provider -> {
+                    TransportType transportType = provider.getTransportType();
+                    supportedProvidersByTransportType.putIfAbsent(transportType, new ArrayList<>());
+                    supportedProvidersByTransportType.get(transportType).add(provider);
+                });
+
+        if (supportedProvidersByTransportType.isEmpty()) {
+            log.warn("No providers set up for supported transport types {}. " +
+                            "conf.providers={}; supportedProvidersByTransportType={}",
+                    supportedTransportTypes, conf.providers, supportedProvidersByTransportType);
+        } else {
+            Provider provider = getRandomProvider(supportedProvidersByTransportType);
+            selectedProvider.set(provider);
+        }
     }
 
     public CompletableFuture<Boolean> initialize() {
@@ -119,27 +124,37 @@ public class ExplorerService {
 
     public CompletableFuture<Boolean> shutdown() {
         shutdownStarted = true;
-        return httpClient.map(BaseHttpClient::shutdown)
-                .orElse(CompletableFuture.completedFuture(true));
+        return CompletableFuture.completedFuture(true);
     }
 
     public CompletableFuture<Tx> requestTx(String txId) {
-        Provider provider = selectedProvider.get();
-        BaseHttpClient httpClient = networkService.getHttpClient(provider.baseUrl, userAgent, provider.transportType);
-
         return CompletableFuture.supplyAsync(() -> {
+            Provider provider = selectedProvider.get();
+            checkNotNull(provider, "No provider was selected");
+            BaseHttpClient client = networkService.getHttpClient(provider.baseUrl, userAgent, provider.transportType);
             long ts = System.currentTimeMillis();
             String param = provider.getApiPath() + provider.getTxPath() + txId;
             try {
-                String json = httpClient.get(param, Optional.of(new Pair<>("User-Agent", userAgent)));
-                log.info("Requesting tx from {} took {} ms", httpClient.getBaseUrl() + param, System.currentTimeMillis() - ts);
+                String json = client.get(param, Optional.of(new Pair<>("User-Agent", userAgent)));
+                log.info("Requesting tx from {} took {} ms", client.getBaseUrl() + param, System.currentTimeMillis() - ts);
                 return new ObjectMapper().readValue(json, Tx.class);
-            } catch (IOException e) {
+            } catch (Exception e) {
                 if (!shutdownStarted) {
                     log.warn(ExceptionUtil.getMessageOrToString(e));
                 }
                 throw new RuntimeException(e);
+            } finally {
+                // select random provider for next call
+                selectedProvider.set(getRandomProvider(supportedProvidersByTransportType));
+                client.shutdown();
             }
         }, POOL);
+    }
+
+    private static Provider getRandomProvider(Map<TransportType, List<Provider>> supportedProvidersByTransportType) {
+        List<Provider> allProviders = supportedProvidersByTransportType.values().stream()
+                .flatMap(Collection::stream)
+                .collect(Collectors.toList());
+        return CollectionUtil.getRandomElement(allProviders);
     }
 }
