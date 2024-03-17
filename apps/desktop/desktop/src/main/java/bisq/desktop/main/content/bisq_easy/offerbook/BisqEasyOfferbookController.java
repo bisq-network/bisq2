@@ -27,6 +27,7 @@ import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.currency.Market;
 import bisq.common.observable.Pin;
+import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.observable.collection.ObservableArray;
 import bisq.common.util.ProtobufUtils;
 import bisq.desktop.ServiceProvider;
@@ -41,6 +42,7 @@ import bisq.presentation.formatters.PriceFormatter;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import javafx.collections.ListChangeListener;
+import javafx.collections.SetChangeListener;
 import javafx.scene.layout.StackPane;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -54,11 +56,15 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public final class BisqEasyOfferbookController extends ChatController<BisqEasyOfferbookView, BisqEasyOfferbookModel> {
+    private static final double MARKET_SELECTION_LIST_CELL_HEIGHT = 53;
+
     private final SettingsService settingsService;
     private final MarketPriceService marketPriceService;
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
     private final BisqEasyOfferbookModel bisqEasyOfferbookModel;
-    private Pin offerOnlySettingsPin, bisqEasyPrivateTradeChatChannelsPin, selectedChannelPin, marketPriceByCurrencyMapPin;
+    private final SetChangeListener<Market> favouriteMarketsListener;
+    private Pin offerOnlySettingsPin, bisqEasyPrivateTradeChatChannelsPin, selectedChannelPin,
+            marketPriceByCurrencyMapPin, favouriteMarketsPin;
     private Subscription marketSelectorSearchPin, selectedMarketFilterPin, selectedOfferDirectionOrOwnerFilterPin,
             selectedPeerReputationFilterPin, selectedMarketSortTypePin;
 
@@ -69,6 +75,24 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         settingsService = serviceProvider.getSettingsService();
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         bisqEasyOfferbookModel = getModel();
+        favouriteMarketsListener = change -> {
+            if (change.wasAdded()) {
+                Market market = change.getElementAdded();
+                model.getMarketChannelItems().forEach(item -> item.getIsFavourite().set(market.equals(item.getMarket())));
+            }
+
+            if (change.wasRemoved()) {
+                Market market = change.getElementRemoved();
+                model.getMarketChannelItems().forEach(item -> {
+                    if (market.equals(item.getMarket()) && item.getIsFavourite().get()) {
+                        item.getIsFavourite().set(false);
+                    }
+                });
+            }
+
+            updateFilteredMarketChannelItems();
+            updateFavouriteMarketChannelItems();
+        };
 
         createMarketChannels();
     }
@@ -169,8 +193,32 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
             }
         });
 
+        CollectionObserver<Market> favouriteMarketsObserver = new CollectionObserver<>() {
+            @Override
+            public void add(Market market) {
+                model.getFavouriteMarkets().add(market);
+            }
+
+            @Override
+            public void remove(Object element) {
+                if (element instanceof Market) {
+                    model.getFavouriteMarkets().remove((Market) element);
+                }
+            }
+
+            @Override
+            public void clear() {
+                model.getFavouriteMarkets().clear();
+            }
+        };
+        favouriteMarketsPin = settingsService.getFavouriteMarkets().addObserver(favouriteMarketsObserver);
+
+        model.getFavouriteMarkets().addListener(favouriteMarketsListener);
+
         model.getSortedMarketChannelItems().setComparator(model.getSelectedMarketSortType().get().getComparator());
 
+        updateFilteredMarketChannelItems();
+        updateFavouriteMarketChannelItems();
         maybeSelectFirst();
     }
 
@@ -187,6 +235,8 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         selectedPeerReputationFilterPin.unsubscribe();
         marketPriceByCurrencyMapPin.unbind();
         selectedMarketSortTypePin.unsubscribe();
+        favouriteMarketsPin.unbind();
+        model.getFavouriteMarkets().removeListener(favouriteMarketsListener);
 
         resetSelectedChildTarget();
     }
@@ -264,7 +314,15 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         model.getFilteredMarketChannelItems().setPredicate(item ->
                 model.getMarketFilterPredicate().test(item) &&
                         model.getMarketSearchTextPredicate().test(item) &&
-                        model.getMarketPricePredicate().test(item));
+                        model.getMarketPricePredicate().test(item) &&
+                        !model.getFavouriteMarkets().contains(item.getMarket()));
+    }
+
+    private void updateFavouriteMarketChannelItems() {
+        model.getFavouriteMarketChannelItems().setPredicate(item -> model.getFavouriteMarkets().contains(item.getMarket()));
+        double padding = 15;
+        double tableViewHeight = (model.getFavouriteMarketChannelItems().size() * MARKET_SELECTION_LIST_CELL_HEIGHT) + padding;
+        model.getFavouritesTableViewHeight().set(tableViewHeight);
     }
 
     private boolean isMaker(BisqEasyOffer bisqEasyOffer) {
@@ -285,5 +343,9 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                 !model.getSortedMarketChannelItems().isEmpty()) {
             selectionService.selectChannel(model.getSortedMarketChannelItems().get(0).getChannel());
         }
+    }
+
+    double getMarketSelectionListCellHeight() {
+        return MARKET_SELECTION_LIST_CELL_HEIGHT;
     }
 }

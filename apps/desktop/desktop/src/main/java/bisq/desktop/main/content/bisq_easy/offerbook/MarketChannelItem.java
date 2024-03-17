@@ -22,7 +22,10 @@ import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.currency.Market;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.main.content.components.MarketImageComposition;
+import bisq.settings.FavouriteMarketsService;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.scene.CacheHint;
 import javafx.scene.Node;
@@ -34,7 +37,7 @@ import java.lang.ref.WeakReference;
 
 @EqualsAndHashCode
 @Getter
-public class MarketChannelItem {
+class MarketChannelItem {
     private static final ColorAdjust DEFAULT_COLOR_ADJUST = new ColorAdjust();
     private static final ColorAdjust SELECTED_COLOR_ADJUST = new ColorAdjust();
 
@@ -42,8 +45,9 @@ public class MarketChannelItem {
     private final Market market;
     private final Node marketLogo;
     private final IntegerProperty numOffers = new SimpleIntegerProperty(0);
+    private final BooleanProperty isFavourite = new SimpleBooleanProperty(false);
 
-    public MarketChannelItem(BisqEasyOfferbookChannel channel) {
+    MarketChannelItem(BisqEasyOfferbookChannel channel) {
         this.channel = channel;
         market = channel.getMarket();
         marketLogo = MarketImageComposition.createMarketLogo(market.getQuoteCurrencyCode());
@@ -81,5 +85,25 @@ public class MarketChannelItem {
     @Override
     public String toString() {
         return market.toString();
+    }
+
+    void toggleFavourite() {
+        if (isFavourite()) {
+            removeFromFavourites();
+        } else {
+            addAsFavourite();
+        }
+    }
+
+    private boolean isFavourite() {
+        return FavouriteMarketsService.isFavourite(getMarket());
+    }
+
+    private void addAsFavourite() {
+        FavouriteMarketsService.addFavourite(getMarket());
+    }
+
+    private void removeFromFavourites() {
+        FavouriteMarketsService.removeFavourite(getMarket());
     }
 }

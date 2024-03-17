@@ -51,6 +51,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     final ObservableSet<String> supportedLanguageCodes = new ObservableSet<>();
     final Observable<Double> difficultyAdjustmentFactor = new Observable<>();
     final Observable<Boolean> ignoreDiffAdjustmentFromSecManager = new Observable<>();
+    final ObservableSet<Market> favouriteMarkets = new ObservableSet<>();
 
     public SettingsStore() {
         this(new Cookie(),
@@ -68,7 +69,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 true,
                 Set.of(LanguageRepository.getDefaultLanguage()),
                 NetworkLoad.DEFAULT_DIFFICULTY_ADJUSTMENT,
-                false);
+                false,
+                new HashSet<>());
     }
 
     public SettingsStore(Cookie cookie,
@@ -86,7 +88,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                          boolean preventStandbyMode,
                          Set<String> supportedLanguageCodes,
                          double difficultyAdjustmentFactor,
-                         boolean ignoreDiffAdjustmentFromSecManager) {
+                         boolean ignoreDiffAdjustmentFromSecManager,
+                         Set<Market> favouriteMarkets) {
         this.cookie = cookie;
         this.dontShowAgainMap.putAll(dontShowAgainMap);
         this.useAnimations.set(useAnimations);
@@ -103,6 +106,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
         this.supportedLanguageCodes.setAll(supportedLanguageCodes);
         this.difficultyAdjustmentFactor.set(difficultyAdjustmentFactor);
         this.ignoreDiffAdjustmentFromSecManager.set(ignoreDiffAdjustmentFromSecManager);
+        this.favouriteMarkets.setAll(favouriteMarkets);
     }
 
     @Override
@@ -124,6 +128,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 .addAllSupportedLanguageCodes(new ArrayList<>(supportedLanguageCodes))
                 .setDifficultyAdjustmentFactor(difficultyAdjustmentFactor.get())
                 .setIgnoreDiffAdjustmentFromSecManager(ignoreDiffAdjustmentFromSecManager.get())
+                .addAllFavouriteMarkets(favouriteMarkets.stream().map(Market::toProto).collect(Collectors.toList()))
                 .build();
     }
 
@@ -144,7 +149,9 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 proto.getPreventStandbyMode(),
                 new HashSet<>(proto.getSupportedLanguageCodesList()),
                 proto.getDifficultyAdjustmentFactor(),
-                proto.getIgnoreDiffAdjustmentFromSecManager());
+                proto.getIgnoreDiffAdjustmentFromSecManager(),
+                new HashSet<>(proto.getFavouriteMarketsList().stream()
+                        .map(Market::fromProto).collect(Collectors.toSet())));
     }
 
     @Override
@@ -175,7 +182,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 preventStandbyMode.get(),
                 new HashSet<>(supportedLanguageCodes),
                 difficultyAdjustmentFactor.get(),
-                ignoreDiffAdjustmentFromSecManager.get());
+                ignoreDiffAdjustmentFromSecManager.get(),
+                favouriteMarkets);
     }
 
     @Override
@@ -197,6 +205,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
             supportedLanguageCodes.setAll(persisted.supportedLanguageCodes);
             difficultyAdjustmentFactor.set(persisted.difficultyAdjustmentFactor.get());
             ignoreDiffAdjustmentFromSecManager.set(persisted.ignoreDiffAdjustmentFromSecManager.get());
+            favouriteMarkets.setAll(persisted.favouriteMarkets);
         } catch (Exception e) {
             log.error("Exception at applyPersisted", e);
         }

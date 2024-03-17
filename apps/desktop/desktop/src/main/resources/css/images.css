@@ -660,6 +660,38 @@
     -fx-image: url("/images/icons/star-grey.png");
 }
 
+#favourites-star-green {
+    -fx-image: url("/images/icons/favourites/star-green.png");
+}
+
+#favourites-star-green-hollow {
+    -fx-image: url("/images/icons/favourites/star-green-hollow.png");
+}
+
+#favourites-star-white {
+    -fx-image: url("/images/icons/favourites/star-white.png");
+}
+
+#favourites-star-white-hollow {
+    -fx-image: url("/images/icons/favourites/star-white-hollow.png");
+}
+
+#favourites-star-grey {
+    -fx-image: url("/images/icons/favourites/star-grey.png");
+}
+
+#favourites-star-grey-hollow {
+    -fx-image: url("/images/icons/favourites/star-grey-hollow.png");
+}
+
+#favourites-star-yellow {
+    -fx-image: url("/images/icons/favourites/star-yellow.png");
+}
+
+#favourites-star-yellow-hollow {
+    -fx-image: url("/images/icons/favourites/star-yellow-hollow.png");
+}
+
 #scroll-down-white {
     -fx-image: url("/images/icons/scroll-down-white.png");
 }

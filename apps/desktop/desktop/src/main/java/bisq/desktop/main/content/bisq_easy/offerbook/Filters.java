@@ -36,6 +36,7 @@ class Filters {
     @Getter
     enum Markets implements FilterPredicate<MarketChannelItem> {
         ALL(item -> true),
+        FAVOURITES(item -> item.getIsFavourite().get()),
         WITH_OFFERS(item -> item.getNumOffers().get() > 0);
 
         private final Predicate<MarketChannelItem> predicate;

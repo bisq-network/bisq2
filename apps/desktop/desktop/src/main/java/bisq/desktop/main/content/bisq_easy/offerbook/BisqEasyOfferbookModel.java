@@ -18,11 +18,13 @@
 package bisq.desktop.main.content.bisq_easy.offerbook;
 
 import bisq.chat.ChatChannelDomain;
+import bisq.common.currency.Market;
 import bisq.desktop.main.content.chat.ChatModel;
 import javafx.beans.Observable;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.ObservableSet;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import lombok.Getter;
@@ -47,6 +49,8 @@ public final class BisqEasyOfferbookModel extends ChatModel {
     private final ObjectProperty<Filters.PeerReputation> selectedPeerReputationFilter = new SimpleObjectProperty<>();
     private final ObjectProperty<MarketSortType> selectedMarketSortType = new SimpleObjectProperty<>(MarketSortType.NUM_OFFERS);
     private final StringProperty marketPrice = new SimpleStringProperty();
+    private final ObservableSet<Market> favouriteMarkets = FXCollections.observableSet();
+    private final FilteredList<MarketChannelItem> favouriteMarketChannelItems = new FilteredList<>(marketChannelItems);
 
     @Setter
     private Predicate<MarketChannelItem> marketPricePredicate = marketChannelItem -> true;
@@ -54,6 +58,8 @@ public final class BisqEasyOfferbookModel extends ChatModel {
     private Predicate<MarketChannelItem> marketSearchTextPredicate = marketChannelItem -> true;
     @Setter
     private Predicate<MarketChannelItem> marketFilterPredicate = marketChannelItem -> true;
+    @Setter
+    private DoubleProperty favouritesTableViewHeight = new SimpleDoubleProperty(0);
 
     public BisqEasyOfferbookModel(ChatChannelDomain chatChannelDomain) {
         super(chatChannelDomain);
