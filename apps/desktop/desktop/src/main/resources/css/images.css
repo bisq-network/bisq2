@@ -559,6 +559,10 @@
     -fx-image: url("/images/payment/Bizum.png");
 }
 
+#CASH_APP {
+    -fx-image: url("/images/payment/CashApp.png");
+}
+
 /* Onboarding icons*/
 #info-circle-solid {
     -fx-image: url("/images/onboarding/info-circle-solid.png");

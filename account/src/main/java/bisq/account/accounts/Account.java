@@ -95,6 +95,9 @@ public abstract class Account<P extends AccountPayload, M extends PaymentMethod<
             case INTERACETRANSFERACCOUNT: {
                 return InteracETransferAccount.fromProto(proto);
             }
+            case CASHAPPACCOUNT: {
+                return CashAppAccount.fromProto(proto);
+            }
             case MESSAGE_NOT_SET: {
                 throw new UnresolvableProtobufMessageException(proto);
             }

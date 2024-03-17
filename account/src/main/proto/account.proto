@@ -79,6 +79,7 @@ message AccountPayload {
     USPostalMoneyOrderAccountPayload usPostalMoneyOrderAccountPayload = 25;
     CashByMailAccountPayload cashByMailAccountPayload = 26;
     InteracETransferAccountPayload interacETransferAccountPayload = 27;
+    CashAppAccountPayload cashAppAccountPayload = 28;
   }
 }
 message UserDefinedFiatAccountPayload {
@@ -193,6 +194,10 @@ message BizumAccountPayload {
   string mobileNr = 1;
 }
 
+message CashAppAccountPayload {
+  string cashTag = 1;
+}
+
 // Account
 message Account {
   sint64 creationDate = 1;
@@ -211,6 +216,7 @@ message Account {
     USPostalMoneyOrderAccount usPostalMoneyOrderAccount = 25;
     CashByMailAccount cashByMailAccount = 26;
     InteracETransferAccount interacETransferAccount = 27;
+    CashAppAccount cashAppAccount = 28;
   }
 }
 
@@ -285,6 +291,9 @@ message UpiAccount {
 }
 
 message BizumAccount {
+}
+
+message CashAppAccount {
 }
 
 message AccountStore {
