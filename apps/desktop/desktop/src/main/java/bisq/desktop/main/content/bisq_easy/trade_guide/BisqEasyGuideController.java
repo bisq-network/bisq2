@@ -26,6 +26,7 @@ import bisq.desktop.main.content.bisq_easy.trade_guide.rules.BisqEasyGuideRulesC
 import bisq.desktop.main.content.bisq_easy.trade_guide.security.BisqEasyGuideSecurityController;
 import bisq.desktop.main.content.bisq_easy.trade_guide.welcome.BisqEasyGuideWelcomeController;
 import bisq.desktop.overlay.OverlayController;
+import bisq.settings.SettingsService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,16 +37,20 @@ public class BisqEasyGuideController extends TabController<BisqEasyGuideModel> {
     @Getter
     private final BisqEasyGuideView view;
     private final ServiceProvider serviceProvider;
+    private final SettingsService settingsService;
 
     public BisqEasyGuideController(ServiceProvider serviceProvider) {
         super(new BisqEasyGuideModel(), NavigationTarget.BISQ_EASY_GUIDE);
 
         this.serviceProvider = serviceProvider;
+        settingsService = serviceProvider.getSettingsService();
+
         view = new BisqEasyGuideView(model, this);
     }
 
     @Override
     public void onActivate() {
+        model.setTradeRulesConfirmed(settingsService.getTradeRulesConfirmed().get());
     }
 
     @Override
@@ -75,9 +80,5 @@ public class BisqEasyGuideController extends TabController<BisqEasyGuideModel> {
 
     void onClose() {
         OverlayController.hide();
-    }
-
-    public void onQuit() {
-         serviceProvider.getShutDownHandler().shutdown();
     }
 }
