@@ -28,6 +28,7 @@ import bisq.desktop.main.content.bisq_easy.components.WaitingState;
 import bisq.desktop.main.content.bisq_easy.take_offer.TakeOfferView;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardView;
 import bisq.i18n.Res;
+import javafx.animation.PauseTransition;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -36,6 +37,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.layout.*;
 import javafx.scene.text.TextAlignment;
+import javafx.util.Duration;
 import javafx.util.StringConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -50,7 +52,7 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
     private final Label headline, detailsHeadline,
             paymentMethod, paymentMethodDescription, fee, feeDetails,
             priceDetails, priceDescription;
-    private final VBox sendTakeOfferMessageFeedback, createOfferSuccess, takeOfferSuccess;
+    private final VBox takeOfferStatus, sendTakeOfferMessageFeedback, createOfferSuccess, takeOfferSuccess;
     private final Button createOfferSuccessButton, takeOfferSuccessButton;
     private final GridPane content;
     private final StackPane paymentMethodValuePane;
@@ -59,7 +61,8 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
     @Nullable
     private ComboBox<FiatPaymentMethod> paymentMethodsComboBox;
     private WaitingAnimation takeOfferSendMessageWaitingAnimation;
-    private Subscription showSendTakeOfferMessageFeedbackPin, showCreateOfferSuccessPin, showTakeOfferSuccessPin;
+    private Subscription showCreateOfferSuccessPin, takeOfferStatusPin;
+    private boolean minWaitingTimePassed = false;
 
     TradeWizardReviewView(TradeWizardReviewModel model, TradeWizardReviewController controller, HBox reviewDataDisplay) {
         super(new StackPane(), model, controller);
@@ -164,6 +167,9 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
         createOfferSuccess = new VBox(20);
         configCreateOfferSuccess();
 
+        takeOfferStatus = new VBox();
+        takeOfferStatus.setVisible(false);
+
         sendTakeOfferMessageFeedback = new VBox(20);
         configSendTakeOfferMessageFeedback();
 
@@ -173,9 +179,8 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
 
         StackPane.setMargin(content, new Insets(40));
         StackPane.setMargin(createOfferSuccess, new Insets(-TradeWizardView.TOP_PANE_HEIGHT, 0, 0, 0));
-        StackPane.setMargin(takeOfferSuccess, new Insets(-TakeOfferView.TOP_PANE_HEIGHT, 0, 0, 0));
-        StackPane.setMargin(sendTakeOfferMessageFeedback, new Insets(-TakeOfferView.TOP_PANE_HEIGHT, 0, 0, 0));
-        root.getChildren().addAll(content, createOfferSuccess, sendTakeOfferMessageFeedback, takeOfferSuccess);
+        StackPane.setMargin(takeOfferStatus, new Insets(-TakeOfferView.TOP_PANE_HEIGHT, 0, 0, 0));
+        root.getChildren().addAll(content, createOfferSuccess, takeOfferStatus);
     }
 
     @Override
@@ -206,29 +211,7 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
                     }
                 });
 
-        showSendTakeOfferMessageFeedbackPin = EasyBind.subscribe(model.getShowSendTakeOfferMessageFeedback(),
-                show -> {
-                    sendTakeOfferMessageFeedback.setVisible(show);
-                    if (show) {
-                        Transitions.blurStrong(content, 0);
-                        Transitions.slideInTop(sendTakeOfferMessageFeedback, 450);
-                        takeOfferSendMessageWaitingAnimation.playIndefinitely();
-                    } else {
-                        Transitions.removeEffect(content);
-                        takeOfferSendMessageWaitingAnimation.stop();
-                    }
-                });
-
-        showTakeOfferSuccessPin = EasyBind.subscribe(model.getShowTakeOfferSuccess(),
-                show -> {
-                    takeOfferSuccess.setVisible(show);
-                    if (show) {
-                        Transitions.blurStrong(content, 0);
-                        Transitions.slideInTop(takeOfferSuccess, 450);
-                    } else {
-                        Transitions.removeEffect(content);
-                    }
-                });
+        takeOfferStatusPin = EasyBind.subscribe(model.getTakeOfferStatus(), this::showTakeOfferStatusFeedback);
 
         if (model.getTakersPaymentMethods().size() > 1) {
             paymentMethodsComboBox = new ComboBox<>(model.getTakersPaymentMethods());
@@ -273,13 +256,40 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
         takeOfferSuccessButton.setOnAction(null);
 
         showCreateOfferSuccessPin.unsubscribe();
-        showTakeOfferSuccessPin.unsubscribe();
-        showSendTakeOfferMessageFeedbackPin.unsubscribe();
+        takeOfferStatusPin.unsubscribe();
 
         takeOfferSendMessageWaitingAnimation.stop();
 
         if (paymentMethodsComboBox != null) {
             paymentMethodsComboBox.setOnAction(null);
+        }
+    }
+
+    private void showTakeOfferStatusFeedback(TradeWizardReviewModel.TakeOfferStatus status) {
+        if (status == TradeWizardReviewModel.TakeOfferStatus.SENT) {
+            takeOfferStatus.getChildren().setAll(sendTakeOfferMessageFeedback, Spacer.fillVBox());
+            takeOfferStatus.setVisible(true);
+
+            Transitions.blurStrong(content, 0);
+            Transitions.slideInTop(takeOfferStatus, 450);
+            takeOfferSendMessageWaitingAnimation.playIndefinitely();
+
+            PauseTransition delay = new PauseTransition(Duration.seconds(8));
+            delay.setOnFinished(e -> {
+                minWaitingTimePassed = true;
+                if (model.getTakeOfferStatus().get() == TradeWizardReviewModel.TakeOfferStatus.SUCCESS) {
+                    takeOfferStatus.getChildren().setAll(takeOfferSuccess, Spacer.fillVBox());
+                    takeOfferSendMessageWaitingAnimation.stop();
+                }
+            });
+            delay.play();
+        } else if (status == TradeWizardReviewModel.TakeOfferStatus.SUCCESS && minWaitingTimePassed) {
+            takeOfferStatus.getChildren().setAll(takeOfferSuccess, Spacer.fillVBox());
+            takeOfferSendMessageWaitingAnimation.stop();
+        } else if (status == TradeWizardReviewModel.TakeOfferStatus.NOT_STARTED) {
+            takeOfferStatus.getChildren().clear();
+            takeOfferStatus.setVisible(false);
+            Transitions.removeEffect(content);
         }
     }
 
@@ -304,36 +314,30 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
     private void configSendTakeOfferMessageFeedback() {
         VBox contentBox = getFeedbackContentBox();
 
-        sendTakeOfferMessageFeedback.setVisible(false);
         sendTakeOfferMessageFeedback.setAlignment(Pos.TOP_CENTER);
 
         Label headlineLabel = new Label(Res.get("bisqEasy.takeOffer.review.sendTakeOfferMessageFeedback.headline"));
         headlineLabel.getStyleClass().add("trade-wizard-take-offer-send-message-headline");
+        takeOfferSendMessageWaitingAnimation = new WaitingAnimation(WaitingState.TAKE_BISQ_EASY_OFFER);
+        HBox title = new HBox(10, takeOfferSendMessageWaitingAnimation, headlineLabel);
+        title.setAlignment(Pos.CENTER);
 
-        WrappingText subtitleLabel = new WrappingText(Res.get("bisqEasy.takeOffer.review.sendTakeOfferMessageFeedback.subTitle"), "trade-wizard-take-offer-send-message-sub-headline");
-        WrappingText info = new WrappingText(Res.get("bisqEasy.takeOffer.review.sendTakeOfferMessageFeedback.info"), "trade-wizard-take-offer-send-message-info");
-        takeOfferSendMessageWaitingAnimation = new WaitingAnimation(WaitingState.TAKE_OFFER);
+        WrappingText subtitleLabel = new WrappingText(Res.get("bisqEasy.takeOffer.review.sendTakeOfferMessageFeedback.subTitle"),
+                "trade-wizard-take-offer-send-message-sub-headline");
+        WrappingText info = new WrappingText(Res.get("bisqEasy.takeOffer.review.sendTakeOfferMessageFeedback.info"),
+                "trade-wizard-take-offer-send-message-info");
+        VBox subtitle = new VBox(10, subtitleLabel, info);
+        subtitleLabel.setTextAlignment(TextAlignment.CENTER);
+        info.setTextAlignment(TextAlignment.CENTER);
+        subtitle.setAlignment(Pos.CENTER);
 
-        HBox waitingInfo = createWaitingInfo(takeOfferSendMessageWaitingAnimation, subtitleLabel, info);
-        VBox.setMargin(waitingInfo, new Insets(0, 0, 30, 0));
-        contentBox.getChildren().addAll(headlineLabel, waitingInfo);
+        contentBox.getChildren().addAll(title, subtitle);
         sendTakeOfferMessageFeedback.getChildren().addAll(contentBox, Spacer.fillVBox());
-    }
-
-    private HBox createWaitingInfo(WaitingAnimation animation, WrappingText headline, WrappingText info) {
-        animation.setAlignment(Pos.CENTER);
-        VBox text = new VBox(headline, info);
-        text.setAlignment(Pos.CENTER_LEFT);
-        text.setSpacing(10);
-        HBox waitingInfo = new HBox(animation, text);
-        waitingInfo.setSpacing(20);
-        return waitingInfo;
     }
 
     private void configTakeOfferSuccess() {
         VBox contentBox = getFeedbackContentBox();
 
-        takeOfferSuccess.setVisible(false);
         takeOfferSuccess.setAlignment(Pos.TOP_CENTER);
 
         Label headlineLabel = new Label(Res.get("bisqEasy.tradeWizard.review.takeOfferSuccess.headline"));

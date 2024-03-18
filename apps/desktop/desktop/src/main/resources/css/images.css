@@ -142,8 +142,12 @@
     -fx-image: url("/images/waitingstates/spinning-circle.png");
 }
 
-#take-offer {
-    -fx-image: url("/images/waitingstates/take-offer.png");
+#take-bisq-easy-offer {
+    -fx-image: url("/images/waitingstates/bisq-easy.png");
+}
+
+#take-bisq-easy-offer-circle {
+    -fx-image: url("/images/waitingstates/bisq-easy-circle.png");
 }
 
 #account-data {
