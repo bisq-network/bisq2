@@ -473,6 +473,13 @@
     -fx-underline: true;
 }
 
+.scroll-down-bg {
+    -fx-min-height: 38;
+    -fx-max-height: 38;
+    -fx-pref-height: 38;
+    -fx-background-color: linear-gradient(to top, rgba(28, 28, 28, 1) 0%, rgba(28, 28, 28, 0.9) 40%, rgba(28, 28, 28, 0) 100%); /* -bisq-dark-grey-20 */
+}
+
 .chat-messages-badge.bisq-badge .badge-pane {
     -fx-background-color: transparent;
 }
