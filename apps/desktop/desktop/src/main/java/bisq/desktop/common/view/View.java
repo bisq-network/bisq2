@@ -34,6 +34,7 @@ public abstract class View<R extends Region, M extends Model, C extends Controll
     protected final C controller;
     private final ChangeListener<Scene> sceneChangeListener;
     private ChangeListener<Window> windowChangeListener;
+    private boolean isViewAttached;
 
     public View(R root, M model, C controller) {
         checkNotNull(root, "Root must not be null");
@@ -55,7 +56,8 @@ public abstract class View<R extends Region, M extends Model, C extends Controll
             } else {
                 // For overlays, we need to wait until window is available
                 windowChangeListener = (observable, oldWindow, newWindow) -> {
-                    if (newWindow != null) {
+                    // As we get called with a delay it might be that the root scene has already changed to null.
+                    if (newWindow != null && root.getScene() != null) {
                         onViewAttachedPrivate();
                     } else {
                         onViewDetachedPrivate();
@@ -82,8 +84,14 @@ public abstract class View<R extends Region, M extends Model, C extends Controll
     }
 
     private void onViewDetachedPrivate() {
+        // In case we have an overlay we might get called before the onViewAttachedPrivate was called in the windowChangeListener
+        // We avoid that call as it could lead to null pointers in the onViewDetached methods.
+        if (!isViewAttached) {
+            return;
+        }
         controller.onDeactivateInternal();
         onViewDetachedInternal();
+        isViewAttached = false;
     }
 
     private void onViewAttachedPrivate() {
@@ -91,6 +99,7 @@ public abstract class View<R extends Region, M extends Model, C extends Controll
         // correct state.
         controller.onActivateInternal();
         onViewAttachedInternal();
+        isViewAttached = true;
     }
 
     // The internal methods should be only used by framework classes (e.g. TabView)
