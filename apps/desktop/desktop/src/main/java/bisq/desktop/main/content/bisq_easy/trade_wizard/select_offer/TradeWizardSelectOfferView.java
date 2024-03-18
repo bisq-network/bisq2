@@ -67,7 +67,6 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
     private final Label headlineLabel, subtitleLabel;
     private Button goBackButton, browseOfferbookButton;
     private boolean isTableViewConfigured;
-    private Subscription tableViewSelectionPin;
 
     TradeWizardSelectOfferView(TradeWizardSelectOfferModel model, TradeWizardSelectOfferController controller) {
         super(new VBox(10), model, controller);
@@ -134,12 +133,6 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
 
         headlineLabel.setText(model.getHeadline());
         subtitleLabel.setText(model.getSubHeadLine());
-
-        tableViewSelectionPin = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(), item -> {
-            if (item != null) {
-                controller.onSelectRow(item);
-            }
-        });
     }
 
     @Override
@@ -150,8 +143,6 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
         if (browseOfferbookButton != null) {
             browseOfferbookButton.setOnAction(null);
         }
-
-        tableViewSelectionPin.unsubscribe();
     }
 
     private Pair<VBox, Button> getBoxPair(String title, String info) {
@@ -272,17 +263,22 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
                 return new TableCell<>() {
                     private final ReputationScoreDisplay reputationScoreDisplay = new ReputationScoreDisplay();
                     private Subscription selectedItemPin;
+                    private TableRow<ListItem> tableRow;
+
+                    {
+                        reputationScoreDisplay.setAlignment(Pos.CENTER);
+                    }
 
                     @Override
                     public void updateItem(final ListItem item, boolean empty) {
                         super.updateItem(item, empty);
 
-                        {
-                            reputationScoreDisplay.setAlignment(Pos.CENTER);
-                        }
-
                         if (item != null && !empty) {
-                            getTableRow().setOnMouseClicked(e -> reputationScoreDisplay.useWhiteAcceptStar());
+                            tableRow = getTableRow();
+                            tableRow.setOnMouseClicked(e -> {
+                                reputationScoreDisplay.useWhiteAcceptStar();
+                                controller.onSelectRow(item);
+                            });
 
                             selectedItemPin = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(),
                                     selectedItem -> {
@@ -296,10 +292,14 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
                             reputationScoreDisplay.setReputationScore(item.getReputationScore());
                             setGraphic(reputationScoreDisplay);
                         } else {
-                            setGraphic(null);
+                            if (tableRow != null) {
+                                tableRow.setOnMouseClicked(null);
+                                tableRow = null;
+                            }
                             if (selectedItemPin != null) {
                                 selectedItemPin.unsubscribe();
                             }
+                            setGraphic(null);
                         }
                     }
                 };
