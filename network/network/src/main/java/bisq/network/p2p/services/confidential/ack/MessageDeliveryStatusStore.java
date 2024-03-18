@@ -25,6 +25,7 @@ import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -84,7 +85,7 @@ public final class MessageDeliveryStatusStore implements PersistableStore<Messag
 
     @Override
     public MessageDeliveryStatusStore getClone() {
-        return new MessageDeliveryStatusStore(messageDeliveryStatusByMessageId, creationDateByMessageId);
+        return new MessageDeliveryStatusStore(new HashMap<>(messageDeliveryStatusByMessageId), new HashMap<>(creationDateByMessageId));
     }
 
     ObservableHashMap<String, Observable<MessageDeliveryStatus>> getMessageDeliveryStatusByMessageId() {

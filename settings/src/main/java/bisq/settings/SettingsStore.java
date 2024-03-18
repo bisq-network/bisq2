@@ -168,7 +168,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     @Override
     public SettingsStore getClone() {
         return new SettingsStore(cookie,
-                dontShowAgainMap,
+                new HashMap<>(dontShowAgainMap),
                 useAnimations.get(),
                 selectedMarket.get(),
                 minRequiredReputationScore.get(),
@@ -183,7 +183,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 new HashSet<>(supportedLanguageCodes),
                 difficultyAdjustmentFactor.get(),
                 ignoreDiffAdjustmentFromSecManager.get(),
-                favouriteMarkets);
+                new HashSet<>(favouriteMarkets));
     }
 
     @Override

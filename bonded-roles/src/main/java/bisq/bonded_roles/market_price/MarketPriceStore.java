@@ -27,6 +27,7 @@ import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -74,7 +75,7 @@ public final class MarketPriceStore implements PersistableStore<MarketPriceStore
 
     @Override
     public MarketPriceStore getClone() {
-        return new MarketPriceStore(marketPriceByCurrencyMap, selectedMarket.get());
+        return new MarketPriceStore(new HashMap<>(marketPriceByCurrencyMap), selectedMarket.get());
     }
 
     @Override

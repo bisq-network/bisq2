@@ -25,6 +25,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -71,7 +72,7 @@ public final class TimestampStore implements PersistableStore<TimestampStore> {
 
     @Override
     public TimestampStore getClone() {
-        return new TimestampStore(timestampsByProfileId);
+        return new TimestampStore(new HashMap<>(timestampsByProfileId));
     }
 
     @Override

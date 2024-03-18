@@ -69,7 +69,7 @@ public final class SignedWitnessStore implements PersistableStore<SignedWitnessS
 
     @Override
     public SignedWitnessStore getClone() {
-        return new SignedWitnessStore(jsonRequests, lastRequested);
+        return new SignedWitnessStore(new HashSet<>(jsonRequests), lastRequested);
     }
 
     @Override

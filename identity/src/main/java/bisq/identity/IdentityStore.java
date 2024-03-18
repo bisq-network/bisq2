@@ -23,9 +23,7 @@ import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
@@ -79,7 +77,7 @@ public final class IdentityStore implements PersistableStore<IdentityStore> {
 
     @Override
     public IdentityStore getClone() {
-        return new IdentityStore(defaultIdentity, activeIdentityByTag, retired);
+        return new IdentityStore(defaultIdentity, new HashMap<>(activeIdentityByTag), new HashSet<>(retired));
     }
 
     @Override

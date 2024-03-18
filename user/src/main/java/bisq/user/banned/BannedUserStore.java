@@ -68,7 +68,7 @@ public final class BannedUserStore implements PersistableStore<BannedUserStore> 
 
     @Override
     public BannedUserStore getClone() {
-        return new BannedUserStore(bannedUserProfileDataSet);
+        return new BannedUserStore(new HashSet<>(bannedUserProfileDataSet));
     }
 
     @Override

@@ -24,6 +24,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -44,7 +45,7 @@ public final class MultisigTradeStore implements PersistableStore<MultisigTradeS
 
     @Override
     public MultisigTradeStore getClone() {
-        return new MultisigTradeStore(tradeById);
+        return new MultisigTradeStore(new HashMap<>(tradeById));
     }
 
     @Override

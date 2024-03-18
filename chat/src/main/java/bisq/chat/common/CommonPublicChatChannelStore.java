@@ -24,6 +24,7 @@ import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -70,7 +71,7 @@ public class CommonPublicChatChannelStore implements PersistableStore<CommonPubl
 
     @Override
     public CommonPublicChatChannelStore getClone() {
-        return new CommonPublicChatChannelStore(channels);
+        return new CommonPublicChatChannelStore(new ArrayList<>(channels));
     }
 
     public void setAll(List<CommonPublicChatChannel> privateDiscussionChannels) {

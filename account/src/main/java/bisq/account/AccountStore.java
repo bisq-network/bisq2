@@ -79,7 +79,7 @@ public final class AccountStore implements PersistableStore<AccountStore> {
 
     @Override
     public AccountStore getClone() {
-        return new AccountStore(accountByName, Optional.ofNullable(selectedAccount.get()));
+        return new AccountStore(new HashMap<>(accountByName), Optional.ofNullable(selectedAccount.get()));
     }
 
     @Override

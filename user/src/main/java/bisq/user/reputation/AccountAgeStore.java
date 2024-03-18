@@ -69,7 +69,7 @@ public final class AccountAgeStore implements PersistableStore<AccountAgeStore> 
 
     @Override
     public AccountAgeStore getClone() {
-        return new AccountAgeStore(jsonRequests, lastRequested);
+        return new AccountAgeStore(new HashSet<>(jsonRequests), lastRequested);
     }
 
     @Override

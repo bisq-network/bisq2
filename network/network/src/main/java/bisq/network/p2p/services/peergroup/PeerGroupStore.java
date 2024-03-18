@@ -24,6 +24,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
@@ -66,7 +67,7 @@ public final class PeerGroupStore implements PersistableStore<PeerGroupStore> {
 
     @Override
     public PeerGroupStore getClone() {
-        return new PeerGroupStore(persistedPeers);
+        return new PeerGroupStore(new HashSet<>(persistedPeers));
     }
 
     @Override
