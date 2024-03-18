@@ -60,9 +60,6 @@ public class BisqEasyGuideRulesController implements Controller {
     void onConfirm(boolean selected) {
         settingsService.getTradeRulesConfirmed().set(selected);
         model.getTradeRulesConfirmed().set(selected);
-       /* if (selected) {
-            OverlayController.hide();
-        }*/
     }
 
     void onClose() {
