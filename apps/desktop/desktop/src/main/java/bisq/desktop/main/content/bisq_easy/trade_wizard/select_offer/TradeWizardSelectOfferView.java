@@ -85,14 +85,16 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
         tableView = new BisqTableView<>(model.getSortedList());
         tableView.getStyleClass().add("bisq-easy-trade-wizard-select-offer");
         tableView.setMinWidth(TABLE_WIDTH);
-        tableView.setMaxWidth(tableView.getMinWidth());
         // fits 4 rows
         tableView.setMaxHeight(262); // 4 * 55 (row height) + 40 (header height) + 2 (border)
+
+        VBox tableContainer = new VBox(tableView);
+        tableContainer.getStyleClass().add("matching-offers-table-container");
 
         noMatchingOffersBox = new HBox(25);
 
         VBox.setMargin(noMatchingOffersBox, new Insets(10, 0, 0, 0));
-        root.getChildren().addAll(Spacer.fillVBox(), headlineLabel, subtitleLabel, tableView, noMatchingOffersBox, Spacer.fillVBox());
+        root.getChildren().addAll(Spacer.fillVBox(), headlineLabel, subtitleLabel, tableContainer, noMatchingOffersBox, Spacer.fillVBox());
     }
 
     @Override
@@ -232,7 +234,7 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
 
                     {
                         userName.setId("chat-user-name");
-                        int size = 20;
+                        int size = 30;
                         catIcon.setFitWidth(size);
                         catIcon.setFitHeight(size);
                         StackPane catIconWithRing = ImageUtil.addRingToNode(catIcon, size, 1.5, "-bisq-dark-grey-50");
@@ -269,6 +271,7 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
                     @Override
                     public void updateItem(final ListItem item, boolean empty) {
                         super.updateItem(item, empty);
+
                         if (item != null && !empty) {
                             getTableRow().setOnMouseClicked(e -> reputationScoreDisplay.useWhiteAcceptStar());
 
