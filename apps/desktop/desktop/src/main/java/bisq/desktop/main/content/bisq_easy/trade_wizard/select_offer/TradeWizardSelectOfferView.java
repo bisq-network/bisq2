@@ -60,9 +60,9 @@ import java.util.Optional;
 
 @Slf4j
 class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel, TradeWizardSelectOfferController> {
-    private final static int TABLE_WIDTH = 800;
-    private final HBox noMatchingOffersBox;
+    private static final int TABLE_WIDTH = 800;
 
+    private final HBox noMatchingOffersBox;
     private final BisqTableView<ListItem> tableView;
     private final Label headlineLabel, subtitleLabel;
     private Button goBackButton, browseOfferbookButton;
@@ -170,9 +170,7 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
         }
 
         // Maker 
-        String peer = model.getDirection() == Direction.BUY ?
-                Res.get("offer.seller") :
-                Res.get("offer.buyer");
+        String peer = model.getDirection() == Direction.BUY ? Res.get("offer.seller") : Res.get("offer.buyer");
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(peer)
                 .left()
@@ -203,9 +201,9 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
         }
 
         // BTC amount
-        String baseAmountTitle = model.getDirection().isBuy() ?
-                Res.get("bisqEasy.tradeWizard.review.table.baseAmount.buyer") :
-                Res.get("bisqEasy.tradeWizard.review.table.baseAmount.seller");
+        String baseAmountTitle = model.getDirection().isBuy()
+                ? Res.get("bisqEasy.tradeWizard.review.table.baseAmount.buyer")
+                : Res.get("bisqEasy.tradeWizard.review.table.baseAmount.seller");
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(baseAmountTitle)
                 .minWidth(160)
@@ -262,8 +260,6 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
 
     private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getReputationCellFactory() {
         return new Callback<>() {
-
-
             @Override
             public TableCell<ListItem, ListItem> call(TableColumn<ListItem, ListItem> column) {
                 return new TableCell<>() {
@@ -301,7 +297,6 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
 
     private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getSelectButtonCellFactory() {
         return column -> new TableCell<>() {
-
             private final Button button = new Button(Res.get("bisqEasy.tradeWizard.selectOffer.table.select"));
             private TableRow<ListItem> tableRow;
             private Subscription selectedItemPin;
