@@ -66,7 +66,7 @@ class TradeWizardReviewModel implements Model {
     private BisqEasyOfferbookMessage myOfferMessage;
     @Setter
     private String headline;
-
+    private final BooleanProperty showSendTakeOfferMessageFeedback = new SimpleBooleanProperty();
     @Setter
     private String headerPaymentMethod;
     @Setter
