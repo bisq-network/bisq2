@@ -31,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -163,7 +164,7 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
     @Override
     public UserIdentityStore getClone() {
         return new UserIdentityStore(getSelectedUserIdentityId(),
-                userIdentities,
+                new HashSet<>(userIdentities),
                 encryptedData,
                 scryptParameters,
                 aesSecretKey,

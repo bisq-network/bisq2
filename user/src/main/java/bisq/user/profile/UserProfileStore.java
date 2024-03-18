@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Getter
 public final class UserProfileStore implements PersistableStore<UserProfileStore> {
-    private final Map<String, Set<String>> nymsByNickName = new HashMap<>();
+    private final Map<String, Set<String>> nymsByNickName = new ConcurrentHashMap<>();
     private final ObservableSet<String> ignoredUserProfileIds = new ObservableSet<>();
     private final Map<String, UserProfile> userProfileById = new ConcurrentHashMap<>();
 
@@ -92,7 +92,7 @@ public final class UserProfileStore implements PersistableStore<UserProfileStore
 
     @Override
     public UserProfileStore getClone() {
-        return new UserProfileStore(nymsByNickName, ignoredUserProfileIds, userProfileById);
+        return new UserProfileStore(new HashMap<>(nymsByNickName), new HashSet<>(ignoredUserProfileIds), new HashMap<>(userProfileById));
     }
 
     @Override

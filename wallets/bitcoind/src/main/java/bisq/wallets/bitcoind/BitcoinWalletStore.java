@@ -76,7 +76,7 @@ public final class BitcoinWalletStore implements PersistableStore<BitcoinWalletS
 
     @Override
     public BitcoinWalletStore getClone() {
-        return new BitcoinWalletStore(rpcConfig, receiveAddresses);
+        return new BitcoinWalletStore(rpcConfig, new HashSet<>(receiveAddresses));
     }
 
     @Override

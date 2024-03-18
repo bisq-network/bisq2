@@ -23,6 +23,7 @@ import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -83,7 +84,7 @@ public final class ResendMessageStore implements PersistableStore<ResendMessageS
 
     @Override
     public ResendMessageStore getClone() {
-        return new ResendMessageStore(resendMessageDataByMessageId, numResendsByMessageId);
+        return new ResendMessageStore(new HashMap<>(resendMessageDataByMessageId), new HashMap<>(numResendsByMessageId));
     }
 
     Map<String, ResendMessageData> getResendMessageDataByMessageId() {

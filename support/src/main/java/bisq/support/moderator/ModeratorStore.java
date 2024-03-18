@@ -68,13 +68,12 @@ public final class ModeratorStore implements PersistableStore<ModeratorStore> {
 
     @Override
     public ModeratorStore getClone() {
-        return new ModeratorStore(reportToModeratorMessages);
+        return new ModeratorStore(new HashSet<>(reportToModeratorMessages));
     }
 
     @Override
     public void applyPersisted(ModeratorStore persisted) {
-        reportToModeratorMessages.clear();
-        reportToModeratorMessages.addAll(persisted.getReportToModeratorMessages());
+        reportToModeratorMessages.setAll(persisted.getReportToModeratorMessages());
     }
 
     ObservableSet<ReportToModeratorMessage> getReportToModeratorMessages() {

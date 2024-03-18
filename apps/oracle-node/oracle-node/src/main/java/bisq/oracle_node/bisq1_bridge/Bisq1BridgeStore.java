@@ -26,6 +26,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
@@ -86,7 +87,7 @@ public final class Bisq1BridgeStore implements PersistableStore<Bisq1BridgeStore
 
     @Override
     public Bisq1BridgeStore getClone() {
-        return new Bisq1BridgeStore(accountAgeRequests, signedWitnessRequests);
+        return new Bisq1BridgeStore(new HashSet<>(accountAgeRequests), new HashSet<>(signedWitnessRequests));
     }
 
     @Override

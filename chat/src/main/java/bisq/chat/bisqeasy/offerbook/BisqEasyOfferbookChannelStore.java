@@ -24,6 +24,7 @@ import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -69,6 +70,6 @@ public class BisqEasyOfferbookChannelStore implements PersistableStore<BisqEasyO
 
     @Override
     public BisqEasyOfferbookChannelStore getClone() {
-        return new BisqEasyOfferbookChannelStore(channels);
+        return new BisqEasyOfferbookChannelStore(new ArrayList<>(channels));
     }
 }
