@@ -86,7 +86,7 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
         tableView.getStyleClass().add("bisq-easy-trade-wizard-select-offer");
         tableView.setMinWidth(TABLE_WIDTH);
         // fits 4 rows
-        tableView.setMaxHeight(262); // 4 * 55 (row height) + 40 (header height) + 2 (border)
+        tableView.setMaxHeight(260); // 4 * 55 (row height) + 40 (header height)
 
         VBox tableContainer = new VBox(tableView);
         tableContainer.getStyleClass().add("matching-offers-table-container");

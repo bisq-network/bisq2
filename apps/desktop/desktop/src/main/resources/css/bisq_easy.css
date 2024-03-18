@@ -730,10 +730,13 @@
 
 .matching-offers-table-container {
     -fx-background-color: -bisq-dark-grey-20;
+    -fx-border-width: 0 0 5px 0;
+    -fx-border-color: -bisq-dark-grey-20;
 }
 
-.bisq-easy-trade-wizard-select-trade.table-view {
-    -fx-font-size: 1.15em;
+.bisq-easy-trade-wizard-select-offer.table-view {
+    -fx-background-insets: 0;
+    -fx-padding: 0;
 }
 
 .bisq-easy-trade-wizard-select-offer.table-view .column-header {
@@ -750,6 +753,11 @@
 
 .bisq-easy-trade-wizard-select-offer.table-view .table-row-cell {
     -fx-pref-height: 55px;
+    -fx-border-width: 0;
+}
+
+.bisq-easy-trade-wizard-select-offer.table-view .table-cell {
+    -fx-padding: 0;
 }
 
 /* the text property from list view need to set to apply the color to the button label */
