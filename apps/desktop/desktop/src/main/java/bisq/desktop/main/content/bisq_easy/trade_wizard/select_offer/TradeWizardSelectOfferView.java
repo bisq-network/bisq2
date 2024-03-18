@@ -67,6 +67,7 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
     private final Label headlineLabel, subtitleLabel;
     private Button goBackButton, browseOfferbookButton;
     private boolean isTableViewConfigured;
+    private Subscription tableViewSelectionPin;
 
     TradeWizardSelectOfferView(TradeWizardSelectOfferModel model, TradeWizardSelectOfferController controller) {
         super(new VBox(10), model, controller);
@@ -133,6 +134,12 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
 
         headlineLabel.setText(model.getHeadline());
         subtitleLabel.setText(model.getSubHeadLine());
+
+        tableViewSelectionPin = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(), item -> {
+            if (item != null) {
+                controller.onSelectRow(item);
+            }
+        });
     }
 
     @Override
@@ -143,6 +150,8 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
         if (browseOfferbookButton != null) {
             browseOfferbookButton.setOnAction(null);
         }
+
+        tableViewSelectionPin.unsubscribe();
     }
 
     private Pair<VBox, Button> getBoxPair(String title, String info) {
@@ -170,6 +179,9 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
         if (isTableViewConfigured) {
             return;
         }
+
+        // Selection marker
+        tableView.getColumns().add(tableView.getSelectionMarkerColumn());
 
         // Maker 
         String peer = model.getDirection() == Direction.BUY ? Res.get("offer.seller") : Res.get("offer.buyer");
@@ -213,15 +225,8 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
                 .comparator(Comparator.comparing(ListItem::getBaseAmountAsLong))
                 .build());
 
-        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
-                .minWidth(170)
-                .isSortable(false)
-                .setCellFactory(getSelectButtonCellFactory())
-                .right()
-                .build());
         isTableViewConfigured = true;
     }
-
 
     private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getMakerCellFactory() {
         return new Callback<>() {
@@ -239,7 +244,7 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
                         catIcon.setFitHeight(size);
                         StackPane catIconWithRing = ImageUtil.addRingToNode(catIcon, size, 1.5, "-bisq-dark-grey-50");
                         hBox = new HBox(10, catIconWithRing, userName);
-                        hBox.setAlignment(Pos.CENTER_LEFT);
+                        hBox.setAlignment(Pos.CENTER);
                     }
 
                     @Override
@@ -272,6 +277,10 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
                     public void updateItem(final ListItem item, boolean empty) {
                         super.updateItem(item, empty);
 
+                        {
+                            reputationScoreDisplay.setAlignment(Pos.CENTER);
+                        }
+
                         if (item != null && !empty) {
                             getTableRow().setOnMouseClicked(e -> reputationScoreDisplay.useWhiteAcceptStar());
 
@@ -294,77 +303,6 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
                         }
                     }
                 };
-            }
-        };
-    }
-
-    private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getSelectButtonCellFactory() {
-        return column -> new TableCell<>() {
-            private final Button button = new Button(Res.get("bisqEasy.tradeWizard.selectOffer.table.select"));
-            private TableRow<ListItem> tableRow;
-            private Subscription selectedItemPin;
-
-            {
-                button.setMinWidth(160);
-                button.setMaxWidth(160);
-            }
-
-            @Override
-            public void updateItem(final ListItem item, boolean empty) {
-                super.updateItem(item, empty);
-
-                if (item != null && !empty) {
-                    button.setOnAction(e -> {
-                        tableView.getSelectionModel().select(item);
-                        controller.onSelect(item);
-                    });
-
-                    tableRow = getTableRow();
-                    tableRow.setOnMouseEntered(e -> {
-                        if (!tableRow.isSelected()) {
-                            button.setVisible(true);
-                            button.getStyleClass().remove("white-button");
-                            button.getStyleClass().add("outlined-button");
-                        }
-                    });
-                    tableRow.setOnMouseExited(e -> {
-                        button.getStyleClass().remove("outlined-button");
-                        if (!tableRow.isSelected()) {
-                            button.setVisible(tableView.getSelectionModel().getSelectedItem() == null);
-                            button.getStyleClass().remove("white-button");
-                        }
-                    });
-                    tableRow.setOnMouseClicked(e -> controller.onSelectRow(item));
-
-                    selectedItemPin = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(),
-                            selectedItem -> {
-                                if (item.equals(selectedItem)) {
-                                    button.setVisible(true);
-                                    button.getStyleClass().remove("outlined-button");
-                                    button.getStyleClass().add("white-button");
-                                    button.setText(Res.get("bisqEasy.tradeWizard.selectOffer.table.reviewTakeOffer"));
-                                } else {
-                                    button.setVisible(selectedItem == null);
-                                    button.getStyleClass().remove("white-button");
-                                    button.setText(Res.get("bisqEasy.tradeWizard.selectOffer.table.select"));
-                                }
-                            });
-
-                    setGraphic(button);
-                } else {
-                    button.setOnAction(null);
-                    if (tableRow != null) {
-                        tableRow.setOnMouseEntered(null);
-                        tableRow.setOnMouseExited(null);
-                        tableRow.setOnMouseClicked(null);
-                        tableRow = null;
-                    }
-                    if (selectedItemPin != null) {
-                        selectedItemPin.unsubscribe();
-                        selectedItemPin = null;
-                    }
-                    setGraphic(null);
-                }
             }
         };
     }
