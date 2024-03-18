@@ -744,6 +744,10 @@
     -fx-alignment: center;
 }
 
+.bisq-easy-trade-wizard-select-offer.table-view .table-row-cell:hover {
+    -fx-cursor: hand;
+}
+
 .bisq-easy-trade-wizard-select-offer.table-view .table-row-cell {
     -fx-pref-height: 55px;
 }
