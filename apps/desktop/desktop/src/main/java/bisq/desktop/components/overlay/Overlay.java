@@ -65,8 +65,8 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
 import javafx.util.Duration;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -75,6 +75,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+@EqualsAndHashCode
 @Slf4j
 public abstract class Overlay<T extends Overlay<T>> {
     protected final static double DEFAULT_WIDTH = 668;
@@ -151,11 +152,6 @@ public abstract class Overlay<T extends Overlay<T>> {
     protected boolean useBgEffect = true;
     @Getter
     protected BooleanProperty isHiddenProperty = new SimpleBooleanProperty();
-
-    // Used when a priority queue is used for displaying order of popups. Higher numbers mean lower priority
-    @Setter
-    @Getter
-    protected Integer displayOrderPriority = Integer.MAX_VALUE;
 
     protected boolean useAnimation = true;
 

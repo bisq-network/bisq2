@@ -18,11 +18,15 @@
 package bisq.desktop.components.overlay;
 
 import bisq.desktop.common.threading.UIScheduler;
+import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashSet;
 import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 
+@EqualsAndHashCode(callSuper = true)
 public class Popup extends Overlay<Popup> {
 
     public Popup() {
@@ -50,7 +54,7 @@ public class Popup extends Overlay<Popup> {
     @Slf4j
     private static class Manager {
         private static final Queue<Popup> popups = new LinkedBlockingQueue<>(5);
-        private static Popup displayedPopup;
+        private static final Set<Popup> displayedPopups = new HashSet<>();
 
         private static void queueForDisplay(Popup popup) {
             boolean result = popups.offer(popup);
@@ -62,21 +66,18 @@ public class Popup extends Overlay<Popup> {
         }
 
         private static void onHidden(Popup popup) {
-            if (displayedPopup == null || displayedPopup == popup) {
-                displayedPopup = null;
-                UIScheduler.run(Manager::displayNext).after(100);
-            } else {
-                log.warn("We got a isHidden called with a wrong popup.\n\t" +
-                        "popup (argument)=" + popup + "\n\tdisplayedPopup=" + displayedPopup);
+            boolean wasRemoved = displayedPopups.remove(popup);
+            if (!wasRemoved) {
+                log.warn("We got a isHidden called with a popup to existing in our displayedPopups.");
             }
+            UIScheduler.run(Manager::displayNext).after(100);
         }
 
         private static void displayNext() {
-            if (displayedPopup == null) {
-                if (!popups.isEmpty()) {
-                    displayedPopup = popups.poll();
-                    displayedPopup.onReadyForDisplay();
-                }
+            Popup popup = popups.poll();
+            if (popup != null) {
+                popup.onReadyForDisplay();
+                displayedPopups.add(popup);
             }
         }
     }
