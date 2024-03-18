@@ -45,7 +45,7 @@ public class Browser {
     public static void open(String url) {
         String id = "hyperlinks.openInBrowser";
         if (DontShowAgainService.showAgain(id)) {
-            new Popup().attention(Res.get("hyperlinks.openInBrowser.attention", url))
+            new Popup().feedback(Res.get("hyperlinks.openInBrowser.attention", url))
                     .closeButtonText(Res.get("hyperlinks.openInBrowser.no"))
                     .onClose(() -> {
                         settingsService.setCookie(CookieKey.PERMIT_OPENING_BROWSER, false);
