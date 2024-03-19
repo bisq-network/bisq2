@@ -188,7 +188,9 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     }
 
     private void updateFavouritesTableViewHeight(double height) {
+        favouritesTableView.setMinHeight(height);
         favouritesTableView.setPrefHeight(height);
+        favouritesTableView.setMaxHeight(height);
     }
 
     private void setOfferDirectionOrOwnerFilter(DropdownFilterMenuItem<?> filterMenuItem) {

@@ -320,7 +320,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
 
     private void updateFavouriteMarketChannelItems() {
         model.getFavouriteMarketChannelItems().setPredicate(item -> model.getFavouriteMarkets().contains(item.getMarket()));
-        double padding = 15;
+        double padding = 21;
         double tableViewHeight = (model.getFavouriteMarketChannelItems().size() * MARKET_SELECTION_LIST_CELL_HEIGHT) + padding;
         model.getFavouritesTableViewHeight().set(tableViewHeight);
     }

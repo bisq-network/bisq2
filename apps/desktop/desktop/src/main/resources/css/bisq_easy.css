@@ -285,6 +285,7 @@
 .favourites-list {
     -fx-padding: 0 0 10 0;
     -fx-border-width: 0 0 1 0;
+    -fx-border-insets: 0 0 10 0;
     -fx-border-color: -bisq-dark-grey-50;
 }
 
