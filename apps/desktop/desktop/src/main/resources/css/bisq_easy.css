@@ -217,12 +217,18 @@
     -fx-text-fill: -fx-light-text-color;
 }
 
-.market-selection-applied-filters {
+.market-selection-no-filters {
+    -fx-padding: 10 0 0 0;
+}
+
+.market-selection-show-applied-filters {
+    -fx-min-height: 35;
     -fx-pref-height: 35;
+    -fx-max-height: 35;
     -fx-padding: 5;
 }
 
-.market-selection-applied-filters .filter-display-hint {
+.market-selection-show-applied-filters .filter-display-hint {
     -fx-background-color: transparent;
     -fx-border-color: -bisq-mid-grey-20;
     -fx-border-width: 1;
@@ -233,15 +239,15 @@
     -fx-padding: 0 0 0 5;
 }
 
-.market-selection-applied-filters .filter-display-hint:hover {
+.market-selection-show-applied-filters .filter-display-hint:hover {
     -fx-border-color: -bisq-white;
 }
 
-.market-selection-applied-filters .filter-display-hint:hover .label {
+.market-selection-show-applied-filters .filter-display-hint:hover .label {
     -fx-text-fill: -bisq-white;
 }
 
-.market-selection-applied-filters .filter-display-hint .label {
+.market-selection-show-applied-filters .filter-display-hint .label {
     -fx-text-fill: -fx-mid-text-color;
 }
 

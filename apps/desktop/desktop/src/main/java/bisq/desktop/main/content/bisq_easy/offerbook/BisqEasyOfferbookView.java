@@ -57,7 +57,8 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     private VBox marketSelectionList;
     private Subscription marketsTableViewSelectionPin, selectedModelItemPin, channelHeaderIconPin, selectedMarketFilterPin,
             selectedOfferDirectionOrOwnerFilterPin, selectedPeerReputationFilterPin, selectedMarketSortTypePin,
-            marketSelectorSearchPin, favouritesTableViewHeightPin, favouritesTableViewSelectionPin;
+            marketSelectorSearchPin, favouritesTableViewHeightPin, favouritesTableViewSelectionPin,
+            shouldShowAppliedFiltersPin;
     private Button createOfferButton;
     private DropdownMenu sortAndFilterMarketsMenu, filterOffersByDirectionOrOwnerMenu, filterOffersByPeerReputationMenu;
     private DropdownSortByMenuItem sortByMostOffers, sortByNameAZ, sortByNameZA;
@@ -68,7 +69,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     private DropdownTitleMenuItem atLeastTitle;
     private CheckBox hideUserMessagesCheckbox;
     private Label channelHeaderIcon, marketPrice, removeWithOffersFilter;
-    private HBox withOffersDisplayHint;
+    private HBox appliedFiltersSection, withOffersDisplayHint;
     private ImageView defaultCloseIcon, activeCloseIcon;
 
     public BisqEasyOfferbookView(BisqEasyOfferbookModel model,
@@ -127,7 +128,6 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         favouritesTableView.managedProperty().bind(Bindings.isNotEmpty(getModel().getFavouriteMarketChannelItems()));
 
         selectedModelItemPin = EasyBind.subscribe(getModel().getSelectedMarketChannelItem(), this::updateTableViewSelection);
-
         marketsTableViewSelectionPin = EasyBind.subscribe(marketsTableView.getSelectionModel().selectedItemProperty(), item -> {
             if (item != null) {
                 getController().onSelectMarketChannelItem(item);
@@ -150,9 +150,10 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         selectedPeerReputationFilterPin = EasyBind.subscribe(getModel().getSelectedPeerReputationFilter(), filter ->
                 updateSelectedFilterInDropdownMenu(filter, filterOffersByPeerReputationMenu));
         selectedMarketSortTypePin = EasyBind.subscribe(getModel().getSelectedMarketSortType(), this::updateMarketSortType);
-
         favouritesTableViewHeightPin = EasyBind.subscribe(getModel().getFavouritesTableViewHeight(),
                 height -> updateFavouritesTableViewHeight(height.doubleValue()));
+        shouldShowAppliedFiltersPin = EasyBind.subscribe(getModel().getShouldShowAppliedFilters(),
+                this::updateAppliedFiltersSectionStyles);
 
         sortByMostOffers.setOnAction(e -> getController().onSortMarkets(MarketSortType.NUM_OFFERS));
         sortByNameAZ.setOnAction(e -> getController().onSortMarkets(MarketSortType.ASC));
@@ -223,6 +224,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         selectedPeerReputationFilterPin.unsubscribe();
         selectedMarketSortTypePin.unsubscribe();
         favouritesTableViewHeightPin.unsubscribe();
+        shouldShowAppliedFiltersPin.unsubscribe();
 
         sortByMostOffers.setOnAction(null);
         sortByNameAZ.setOnAction(null);
@@ -273,9 +275,8 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         subheader.getStyleClass().add("market-selection-subheader");
 
         setUpWithOffersFiltersDisplayHint();
-        HBox appliedFiltersSection = new HBox(withOffersDisplayHint);
+        appliedFiltersSection = new HBox(withOffersDisplayHint);
         appliedFiltersSection.setAlignment(Pos.CENTER_RIGHT);
-        appliedFiltersSection.getStyleClass().add("market-selection-applied-filters");
         HBox.setHgrow(appliedFiltersSection, Priority.ALWAYS);
 
         favouritesTableView = new BisqTableView<>(getModel().getFavouriteMarketChannelItems());
@@ -500,6 +501,13 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
                         dropdownMenu.setLabel(menuItemLabel);
                     }
                 });
+    }
+
+    private void updateAppliedFiltersSectionStyles(boolean shouldShowAppliedFilters) {
+        appliedFiltersSection.getStyleClass().clear();
+        appliedFiltersSection.getStyleClass().add(shouldShowAppliedFilters
+                ? "market-selection-show-applied-filters"
+                : "market-selection-no-filters");
     }
 
     private String createPeerReputationLabel(Filters.PeerReputation filter, String label) {
