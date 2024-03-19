@@ -149,7 +149,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                 settingsService.setCookie(CookieKey.MARKETS_FILTER, model.getSelectedMarketsFilter().get().name());
                 updateFilteredMarketChannelItems();
             }
-            model.getShouldShowAppliedFilters().set(filter == Filters.Markets.WITH_OFFERS);
+            model.getShouldShowAppliedFilters().set(filter == Filters.Markets.WITH_OFFERS || filter == Filters.Markets.FAVOURITES);
         });
 
         marketPriceByCurrencyMapPin = marketPriceService.getMarketPriceByCurrencyMap().addObserver(() -> {
