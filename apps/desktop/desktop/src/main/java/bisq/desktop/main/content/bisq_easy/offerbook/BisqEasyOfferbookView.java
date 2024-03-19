@@ -326,6 +326,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         marketsTableView.allowVerticalScrollbar();
         marketsTableView.hideHorizontalScrollbar();
         marketsTableView.setFixedCellSize(getController().getMarketSelectionListCellHeight());
+        marketsTableView.setPlaceholder(new Label());
         configTableView(marketsTableView);
         VBox.setVgrow(marketsTableView, Priority.ALWAYS);
 
