@@ -178,10 +178,6 @@ public abstract class Connection {
         return !isStopped();
     }
 
-    public Address getPeersAddress() {
-        return getPeersCapability().getAddress();
-    }
-
     public long getCreated() {
         return getConnectionMetrics().getCreated();
     }
@@ -195,7 +191,7 @@ public abstract class Connection {
     }
     @Override
     public String toString() {
-        return "'" + getClass().getSimpleName() + " [peerAddress=" + getPeersAddress() +
+        return "'" + getClass().getSimpleName() + " [peerAddress=" + getPeerAddress() +
                 ", keyId=" + getId() + "]'";
     }
 
@@ -302,7 +298,7 @@ public abstract class Connection {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private String getThreadNameId() {
-        return StringUtils.truncate(getPeersAddress().toString() + "-" + id.substring(0, 8));
+        return StringUtils.truncate(getPeerAddress().toString() + "-" + id.substring(0, 8));
     }
 
     private boolean isInputStreamActive() {
