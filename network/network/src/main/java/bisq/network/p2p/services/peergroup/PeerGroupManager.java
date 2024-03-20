@@ -20,6 +20,8 @@ package bisq.network.p2p.services.peergroup;
 import bisq.common.timer.Scheduler;
 import bisq.network.NetworkService;
 import bisq.network.common.Address;
+import bisq.network.identity.NetworkId;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
@@ -46,7 +48,7 @@ import static java.util.concurrent.TimeUnit.HOURS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 @Slf4j
-public class PeerGroupManager {
+public class PeerGroupManager implements Node.Listener {
     public enum State {
         NEW,
         STARTING,
@@ -123,7 +125,7 @@ public class PeerGroupManager {
     private final KeepAliveService keepAliveService;
     private final NetworkLoadExchangeService networkLoadExchangeService;
     private Optional<Scheduler> scheduler = Optional.empty();
-
+    private Optional<Scheduler> maybeCreateConnectionsScheduler = Optional.empty();
 
     @Getter
     public AtomicReference<PeerGroupManager.State> state = new AtomicReference<>(PeerGroupManager.State.NEW);
@@ -161,16 +163,38 @@ public class PeerGroupManager {
 
     public void initialize() {
         // blocking
+        node.addListener(this);
         Failsafe.with(retryPolicy).run(this::doInitialize);
     }
 
     public void shutdown() {
         setState(State.STOPPING);
+        node.removeListener(this);
         peerExchangeService.shutdown();
         keepAliveService.shutdown();
         networkLoadExchangeService.shutdown();
         scheduler.ifPresent(Scheduler::stop);
+        maybeCreateConnectionsScheduler.ifPresent(Scheduler::stop);
         setState(State.TERMINATED);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Node.Listener
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
+    }
+
+    @Override
+    public void onConnection(Connection connection) {
+    }
+
+    @Override
+    public void onDisconnect(Connection connection, CloseReason closeReason) {
+        maybeCreateConnectionsScheduler.ifPresent(Scheduler::stop);
+        maybeCreateConnectionsScheduler = Optional.of(Scheduler.run(this::maybeCreateConnections).after(2000));
     }
 
     private void doInitialize() {
@@ -236,6 +260,8 @@ public class PeerGroupManager {
             Thread.sleep(100);
             maybeCloseExceedingConnections();
             Thread.sleep(100);
+            maybeCreateConnectionsScheduler.ifPresent(Scheduler::stop);
+            maybeCreateConnectionsScheduler = Optional.empty();
             maybeCreateConnections();
             maybeRemoveReportedPeers();
             maybeRemovePersistedPeers();
