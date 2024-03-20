@@ -46,7 +46,7 @@ public class ConnectionMetrics {
     private final List<Long> rrtList = new CopyOnWriteArrayList<>();
 
     public ConnectionMetrics() {
-        created = new Date().getTime();
+        created = System.currentTimeMillis();
     }
 
     public Date getCreationDate() {

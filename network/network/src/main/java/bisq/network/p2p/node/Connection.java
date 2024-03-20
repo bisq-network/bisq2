@@ -35,6 +35,8 @@ import javax.annotation.Nullable;
 import java.io.EOFException;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.Future;
@@ -52,6 +54,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 @Slf4j
 public abstract class Connection {
+    public static Comparator<Connection> comparingDateDescending() {
+        return comparingDate().reversed();
+    }
+
+    public static Comparator<Connection> comparingDate() {
+        return Comparator.comparingLong(Connection::getCreated);
+    }
+
     protected interface Handler {
         void handleNetworkMessage(EnvelopePayloadMessage envelopePayloadMessage,
                                   AuthorizationToken authorizationToken,
@@ -168,9 +178,24 @@ public abstract class Connection {
         return !isStopped();
     }
 
+    public Address getPeersAddress() {
+        return getPeersCapability().getAddress();
+    }
+
+    public long getCreated() {
+        return getConnectionMetrics().getCreated();
+    }
+
+    public Date getCreationDate() {
+        return getConnectionMetrics().getCreationDate();
+    }
+
+    public boolean createdBefore(long date) {
+        return getCreated() < date;
+    }
     @Override
     public String toString() {
-        return "'" + getClass().getSimpleName() + " [peerAddress=" + getPeersCapability().getAddress() +
+        return "'" + getClass().getSimpleName() + " [peerAddress=" + getPeersAddress() +
                 ", keyId=" + getId() + "]'";
     }
 
@@ -277,7 +302,7 @@ public abstract class Connection {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private String getThreadNameId() {
-        return StringUtils.truncate(getPeersCapability().getAddress().toString() + "-" + id.substring(0, 8));
+        return StringUtils.truncate(getPeersAddress().toString() + "-" + id.substring(0, 8));
     }
 
     private boolean isInputStreamActive() {
