@@ -112,7 +112,8 @@ public class PeerExchangeStrategy {
 
     boolean shouldRedoInitialPeerExchange(int numSuccess, int numRequests) {
         int numFailed = numRequests - numSuccess;
-        return numFailed > numRequests / 2 ||
+        int maxFailures = numRequests / 2;
+        return numFailed > maxFailures ||
                 peerGroupService.getAllConnectedPeers(node).count() < peerGroupService.getTargetNumConnectedPeers() ||
                 peerGroupService.getReportedPeers().size() < peerGroupService.getMinNumReportedPeers();
     }
@@ -172,6 +173,7 @@ public class PeerExchangeStrategy {
     private List<Address> getPersistedAddresses() {
         return peerGroupService.getPersistedPeers().stream()
                 .filter(this::isValidNonSeedPeer)
+                .filter(this::isNotOutDated)
                 .sorted(Comparator.comparing(Peer::getDate))
                 .limit(config.getNumPersistedPeersAtBoostrap())
                 .map(Peer::getAddress)
@@ -211,7 +213,7 @@ public class PeerExchangeStrategy {
         Set<Peer> filtered = reportedPeers.stream()
                 .filter(peer -> notSameAddress(reporterAddress, peer))
                 .filter(this::isValidNonSeedPeer)
-                .filter(this::isNotAged)
+                .filter(this::isNotOutDated)
                 .sorted(Comparator.comparing(Peer::getDate).reversed())
                 .limit(REPORTED_PEERS_LIMIT)
                 .collect(Collectors.toSet());
@@ -242,7 +244,7 @@ public class PeerExchangeStrategy {
         return isValidNonSeedPeer(peer.getAddress());
     }
 
-    private boolean isNotAged(Peer peer) {
+    private boolean isNotOutDated(Peer peer) {
         return peer.getAge() < MAX_AGE;
     }
 
@@ -267,7 +269,7 @@ public class PeerExchangeStrategy {
     private Stream<Peer> getReportedPeers() {
         return peerGroupService.getReportedPeers().stream()
                 .filter(this::isValidNonSeedPeer)
-                .filter(this::isNotAged)
+                .filter(this::isNotOutDated)
                 .sorted(Comparator.comparing(Peer::getDate).reversed());
     }
 
