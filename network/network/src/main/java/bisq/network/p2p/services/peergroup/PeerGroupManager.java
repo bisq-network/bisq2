@@ -310,9 +310,10 @@ public class PeerGroupManager implements Node.Listener {
 
     private void maybeCloseAgedConnections() {
         log.debug("{} called maybeCloseAgedConnections", node);
+        long maxAgeDate = System.currentTimeMillis() - config.getMaxAge();
         node.getAllActiveConnections()
                 .filter(this::allowDisconnect)
-                .filter(connection -> connection.getConnectionMetrics().getAge() > config.getMaxAge())
+                .filter(connection -> connection.createdBefore(maxAgeDate))
                 .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as the connection age " +
                                 "is too old.",
                         node, connection.getPeerAddress()))
