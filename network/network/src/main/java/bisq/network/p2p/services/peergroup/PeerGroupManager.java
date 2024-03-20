@@ -174,7 +174,7 @@ public class PeerGroupManager {
     }
 
     private void doInitialize() {
-        log.info("Node {} called initialize", node);
+        log.info("{} called initialize", node);
         String nodeInfo = node.getNodeInfo();
         State state = getState().get();
         switch (state) {
@@ -223,7 +223,7 @@ public class PeerGroupManager {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private void doHouseKeeping() {
-        log.debug("Node {} called runBlockingTasks", node);
+        log.debug("{} called runBlockingTasks", node);
         try {
             closeBanned();
             maybeCloseDuplicateConnections();
@@ -244,7 +244,7 @@ public class PeerGroupManager {
     }
 
     private void closeBanned() {
-        log.debug("Node {} called closeBanned", node);
+        log.debug("{} called closeBanned", node);
         node.getAllActiveConnections()
                 .filter(Connection::isRunning)
                 .filter(connection -> banList.isBanned(connection.getPeerAddress()))
@@ -256,7 +256,7 @@ public class PeerGroupManager {
      * Remove duplicate connections (inbound connections which have an outbound connection with the same address)
      */
     private void maybeCloseDuplicateConnections() {
-        log.debug("Node {} called maybeCloseDuplicateConnections", node);
+        log.debug("{} called maybeCloseDuplicateConnections", node);
         Set<Address> outboundAddresses = node.getActiveOutboundConnections()
                 .map(Connection::getPeerAddress)
                 .collect(Collectors.toSet());
@@ -270,7 +270,7 @@ public class PeerGroupManager {
     }
 
     private void maybeCloseConnectionsToSeeds() {
-        log.debug("Node {} called maybeCloseConnectionsToSeeds", node);
+        log.debug("{} called maybeCloseConnectionsToSeeds", node);
         Comparator<Connection> comparator = peerGroupService.getConnectionAgeComparator().reversed(); // reversed as we use skip
         node.getAllActiveConnections()
                 .filter(this::mayDisconnect)
@@ -284,7 +284,7 @@ public class PeerGroupManager {
     }
 
     private void maybeCloseAgedConnections() {
-        log.debug("Node {} called maybeCloseAgedConnections", node);
+        log.debug("{} called maybeCloseAgedConnections", node);
         node.getAllActiveConnections()
                 .filter(this::mayDisconnect)
                 .filter(connection -> connection.getConnectionMetrics().getAge() > config.getMaxAge())
@@ -296,7 +296,7 @@ public class PeerGroupManager {
     }
 
     private void maybeCloseExceedingInboundConnections() {
-        log.debug("Node {} called maybeCloseExceedingInboundConnections", node);
+        log.debug("{} called maybeCloseExceedingInboundConnections", node);
         Comparator<Connection> comparator = peerGroupService.getConnectionAgeComparator().reversed();
         node.getActiveInboundConnections()
                 .filter(this::mayDisconnect)
@@ -309,7 +309,7 @@ public class PeerGroupManager {
     }
 
     private void maybeCloseExceedingConnections() {
-        log.debug("Node {} called maybeCloseExceedingConnections", node);
+        log.debug("{} called maybeCloseExceedingConnections", node);
         Comparator<Connection> comparator = peerGroupService.getConnectionAgeComparator().reversed();
         node.getAllActiveConnections()
                 .filter(this::mayDisconnect)
@@ -322,13 +322,13 @@ public class PeerGroupManager {
     }
 
     private void maybeCreateConnections() {
-        log.debug("Node {} called maybeCreateConnections", node);
+        log.debug("{} called maybeCreateConnections", node);
         int minNumConnectedPeers = peerGroupService.getMinNumConnectedPeers();
         // We want to have at least 40% of our minNumConnectedPeers as outbound connections 
         if (getMissingOutboundConnections() <= 0) {
             // We have enough outbound connections, lets check if we have sufficient connections in total
             if (node.getNumConnections() >= minNumConnectedPeers) {
-                log.debug("Node {} has sufficient connections", node);
+                log.debug("{} has sufficient connections", node);
                 CompletableFuture.completedFuture(null);
                 return;
             }

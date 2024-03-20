@@ -77,12 +77,12 @@ public class PeerExchangeService implements Node.Listener {
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
         if (envelopePayloadMessage instanceof PeerExchangeRequest) {
             PeerExchangeRequest request = (PeerExchangeRequest) envelopePayloadMessage;
-            //log.debug("Node {} received PeerExchangeRequest with myPeers {}", node, request.peers());
+            //log.debug("{} received PeerExchangeRequest with myPeers {}", node, request.peers());
             Address peerAddress = connection.getPeerAddress();
             List<Peer> myPeers = new ArrayList<>(peerExchangeStrategy.getPeersForReporting(peerAddress));
             peerExchangeStrategy.addReportedPeers(new HashSet<>(request.getPeers()), peerAddress);
             NETWORK_IO_POOL.submit(() -> node.send(new PeerExchangeResponse(request.getNonce(), myPeers), connection));
-            log.debug("Node {} sent PeerExchangeResponse with my myPeers {}", node, myPeers);
+            log.debug("{} sent PeerExchangeResponse with my myPeers {}", node, myPeers);
         }
     }
 
@@ -126,7 +126,7 @@ public class PeerExchangeService implements Node.Listener {
                     "was not completed"));
         }
 
-        log.info("Node {} starts peer exchange with: {}", node,
+        log.info("{} starts peer exchange with: {}", node,
                 StringUtils.truncate(candidates.stream()
                         .map(Address::toString)
                         .collect(Collectors.toList())
@@ -157,10 +157,10 @@ public class PeerExchangeService implements Node.Listener {
                         }
 
                         if (numFailures.get() + numSuccess.get() == candidates.size()) {
-                            log.info("Node {} completed peer exchange to {} candidates. {} requests successfully completed.",
+                            log.info("{} completed peer exchange to {} candidates. {} requests successfully completed.",
                                     node, candidates.size(), numSuccess);
                             if (peerExchangeStrategy.shouldRedoInitialPeerExchange(numSuccess.get(), candidates.size())) {
-                                log.info("Node {} repeats the initial peer exchange after {} sec as it has not reached sufficient connections " +
+                                log.info("{} repeats the initial peer exchange after {} sec as it has not reached sufficient connections " +
                                         "or received sufficient peers", node, doInitialPeerExchangeDelaySec);
                                 scheduler.ifPresent(Scheduler::stop);
                                 scheduler = Optional.of(Scheduler.run(this::startInitialPeerExchange)
@@ -204,7 +204,7 @@ public class PeerExchangeService implements Node.Listener {
 
             // We request and wait for response
             Set<Peer> reportedPeers = handler.request(myPeers).join();
-            log.info("Node {} completed peer exchange with {} and received {} reportedPeers.",
+            log.info("{} completed peer exchange with {} and received {} reportedPeers.",
                     node, peerAddress, reportedPeers.size());
             peerExchangeStrategy.addReportedPeers(reportedPeers, peerAddress);
             requestHandlerMap.remove(key);
@@ -216,7 +216,7 @@ public class PeerExchangeService implements Node.Listener {
                     requestHandlerMap.remove(key);
                 }
             }
-            log.debug("Node {} failed to do a peer exchange with {}.",
+            log.debug("{} failed to do a peer exchange with {}.",
                     node, peerAddress, throwable);
             return false;
         }
