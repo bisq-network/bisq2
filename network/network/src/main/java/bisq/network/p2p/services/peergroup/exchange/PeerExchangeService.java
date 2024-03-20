@@ -103,8 +103,8 @@ public class PeerExchangeService implements Node.Listener {
         return doPeerExchange(peerExchangeStrategy.getAddressesForInitialPeerExchange()).orTimeout(2, MINUTES);
     }
 
-    public void startFurtherPeerExchange() {
-        doPeerExchange(peerExchangeStrategy.getAddressesForFurtherPeerExchange()).orTimeout(2, MINUTES);
+    public void extendPeerGroup() {
+        doPeerExchange(peerExchangeStrategy.getAddressesForExtendingPeerGroup()).orTimeout(2, MINUTES);
     }
 
     /**

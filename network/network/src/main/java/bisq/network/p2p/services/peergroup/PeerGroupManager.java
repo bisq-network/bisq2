@@ -261,7 +261,7 @@ public class PeerGroupManager {
                 .map(Connection::getPeerAddress)
                 .collect(Collectors.toSet());
         node.getActiveInboundConnections()
-                .filter(this::mayDisconnect)
+                .filter(this::allowDisconnect)
                 .filter(inbound -> outboundAddresses.contains(inbound.getPeerAddress()))
                 .peek(inbound -> log.info("{} -> {}: Send CloseConnectionMessage as we have an " +
                                 "outbound connection with the same address.",
@@ -273,7 +273,7 @@ public class PeerGroupManager {
         log.debug("{} called maybeCloseConnectionsToSeeds", node);
         Comparator<Connection> comparator = peerGroupService.getConnectionAgeComparator().reversed(); // reversed as we use skip
         node.getAllActiveConnections()
-                .filter(this::mayDisconnect)
+                .filter(this::allowDisconnect)
                 .filter(peerGroupService::isSeed)
                 .sorted(comparator)
                 .skip(config.getMaxSeeds())
@@ -286,7 +286,7 @@ public class PeerGroupManager {
     private void maybeCloseAgedConnections() {
         log.debug("{} called maybeCloseAgedConnections", node);
         node.getAllActiveConnections()
-                .filter(this::mayDisconnect)
+                .filter(this::allowDisconnect)
                 .filter(connection -> connection.getConnectionMetrics().getAge() > config.getMaxAge())
                 .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as the connection age " +
                                 "is too old.",
@@ -299,7 +299,7 @@ public class PeerGroupManager {
         log.debug("{} called maybeCloseExceedingInboundConnections", node);
         Comparator<Connection> comparator = peerGroupService.getConnectionAgeComparator().reversed();
         node.getActiveInboundConnections()
-                .filter(this::mayDisconnect)
+                .filter(this::allowDisconnect)
                 .sorted(comparator)
                 .skip(peerGroupService.getMaxInboundConnections())
                 .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as we have too many inbound connections.",
@@ -312,7 +312,7 @@ public class PeerGroupManager {
         log.debug("{} called maybeCloseExceedingConnections", node);
         Comparator<Connection> comparator = peerGroupService.getConnectionAgeComparator().reversed();
         node.getAllActiveConnections()
-                .filter(this::mayDisconnect)
+                .filter(this::allowDisconnect)
                 .sorted(comparator)
                 .skip(peerGroupService.getMaxNumConnectedPeers())
                 .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as we have too many connections.",
@@ -338,7 +338,7 @@ public class PeerGroupManager {
         // The calculation how many connections we need is done inside PeerExchangeService/PeerExchangeStrategy
         log.info("We have not sufficient connections and call peerExchangeService.doFurtherPeerExchange");
         // It is an async call. We do not wait for the result.
-        peerExchangeService.startFurtherPeerExchange();
+        peerExchangeService.extendPeerGroup();
     }
 
     private void maybeRemoveReportedPeers() {
@@ -390,11 +390,11 @@ public class PeerGroupManager {
     // Utils
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private boolean mayDisconnect(Connection connection) {
-        return notBootstrapping(connection) && connection.isRunning();
+    private boolean allowDisconnect(Connection connection) {
+        return isNotBootstrapping(connection) && connection.isRunning();
     }
 
-    private boolean notBootstrapping(Connection connection) {
+    private boolean isNotBootstrapping(Connection connection) {
         return connection.getConnectionMetrics().getAge() > config.getBootstrapTime();
     }
 
