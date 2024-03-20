@@ -17,7 +17,6 @@
 
 package bisq.network.p2p.services.peergroup;
 
-import bisq.common.util.MathUtils;
 import bisq.network.common.Address;
 import bisq.network.common.TransportType;
 import bisq.network.p2p.node.Connection;
@@ -44,17 +43,20 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
     @Getter
     public static class Config {
         private final int minNumConnectedPeers;
+        private final int minNumOutboundConnectedPeers;
         private final int maxNumConnectedPeers;
         private final int minNumReportedPeers;
 
         public Config() {
-            this(8, 12, 1);
+            this(8, 3, 12, 1);
         }
 
         public Config(int minNumConnectedPeers,
+                      int minNumOutboundConnectedPeers,
                       int maxNumConnectedPeers,
                       int minNumReportedPeers) {
             this.minNumConnectedPeers = minNumConnectedPeers;
+            this.minNumOutboundConnectedPeers = minNumOutboundConnectedPeers;
             this.maxNumConnectedPeers = maxNumConnectedPeers;
             this.minNumReportedPeers = minNumReportedPeers;
         }
@@ -62,6 +64,7 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
         public static Config from(com.typesafe.config.Config typesafeConfig) {
             return new PeerGroupService.Config(
                     typesafeConfig.getInt("minNumConnectedPeers"),
+                    typesafeConfig.getInt("minNumOutboundConnectedPeers"),
                     typesafeConfig.getInt("maxNumConnectedPeers"),
                     typesafeConfig.getInt("minNumReportedPeers"));
         }
@@ -136,7 +139,7 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
     }
 
     public int getMinOutboundConnections() {
-        return MathUtils.roundDoubleToInt(config.getMinNumConnectedPeers() * 0.4);
+        return config.getMinNumOutboundConnectedPeers();
     }
 
     public int getMaxInboundConnections() {
