@@ -297,11 +297,10 @@ public class PeerGroupManager implements Node.Listener {
 
     private void maybeCloseConnectionsToSeeds() {
         log.debug("{} called maybeCloseConnectionsToSeeds", node);
-        Comparator<Connection> comparator = peerGroupService.getConnectionAgeComparator().reversed(); // reversed as we use skip
         node.getAllActiveConnections()
                 .filter(this::allowDisconnect)
                 .filter(peerGroupService::isSeed)
-                .sorted(comparator)
+                .sorted(Connection.comparingDateDescending()) // As we use skip we sort by descending creationDate so that we close the oldest connections
                 .skip(config.getMaxSeeds())
                 .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as we have too " +
                                 "many connections to seeds.",
@@ -323,10 +322,9 @@ public class PeerGroupManager implements Node.Listener {
 
     private void maybeCloseExceedingInboundConnections() {
         log.debug("{} called maybeCloseExceedingInboundConnections", node);
-        Comparator<Connection> comparator = peerGroupService.getConnectionAgeComparator().reversed();
         node.getActiveInboundConnections()
                 .filter(this::allowDisconnect)
-                .sorted(comparator)
+                .sorted(Connection.comparingDateDescending()) // As we use skip we sort by descending creationDate so that we close the oldest connections
                 .skip(peerGroupService.getMaxInboundConnections())
                 .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as we have too many inbound connections.",
                         node, connection.getPeersCapability().getAddress()))
@@ -336,10 +334,9 @@ public class PeerGroupManager implements Node.Listener {
 
     private void maybeCloseExceedingConnections() {
         log.debug("{} called maybeCloseExceedingConnections", node);
-        Comparator<Connection> comparator = peerGroupService.getConnectionAgeComparator().reversed();
         node.getAllActiveConnections()
                 .filter(this::allowDisconnect)
-                .sorted(comparator)
+                .sorted(Connection.comparingDateDescending()) // As we use skip we sort by descending creationDate so that we close the oldest connections
                 .skip(peerGroupService.getMaxNumConnectedPeers())
                 .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as we have too many connections.",
                         node, connection.getPeersCapability().getAddress()))

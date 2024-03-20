@@ -29,7 +29,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Stream;
@@ -144,10 +143,6 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
 
     public int getMaxInboundConnections() {
         return config.getMaxNumConnectedPeers() - getMinOutboundConnections();
-    }
-
-    public Comparator<Connection> getConnectionAgeComparator() {
-        return Comparator.comparing(connection -> connection.getConnectionMetrics().getCreationDate());
     }
 
 
