@@ -174,7 +174,7 @@ public class PeerExchangeStrategy {
         return peerGroupService.getPersistedPeers().stream()
                 .filter(this::isValidNonSeedPeer)
                 .filter(this::isNotOutDated)
-                .sorted(Comparator.comparing(Peer::getDate))
+                .sorted(Comparator.comparing(Peer::getDate).reversed())
                 .limit(config.getNumPersistedPeersAtBoostrap())
                 .map(Peer::getAddress)
                 .collect(Collectors.toList());
