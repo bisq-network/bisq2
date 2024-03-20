@@ -116,9 +116,39 @@
     -fx-background-color: -bisq-dark-grey-20;
 }
 
+/*******************************************************************************
+ * AlertBanner                                                                 *
+ ******************************************************************************/
+
+.alert-banner {
+    -fx-fill: -bisq-dark-grey-50;
+    -fx-text-fill: -bisq-dark-grey-50;
+    -fx-font-size: 1.15em;
+    -fx-font-family: "IBM Plex Sans";
+}
+
+.info-banner,
+.warn-banner,
+.emergency-banner {
+    -fx-background-radius: 8;
+    -fx-border-color: transparent;
+}
+
+.info-banner {
+    -fx-background-color: -bisq-mid-grey-10;
+}
+
+.warn-banner {
+    -fx-background-color: -bisq2-yellow-dim-50;
+}
+
+.emergency-banner {
+    -fx-background-color: -bisq2-red-dim-50;
+}
+
 
 /*******************************************************************************
- * NotificationPane                                                              *
+ * NotificationPane                                                            *
  ******************************************************************************/
 
 .notification-pane {

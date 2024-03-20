@@ -20,6 +20,7 @@ package bisq.desktop.main;
 import bisq.application.ApplicationService;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.security_manager.alert.AlertService;
+import bisq.bonded_roles.security_manager.alert.AlertType;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.desktop.ServiceProvider;
@@ -28,6 +29,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.components.overlay.Popup;
+import bisq.desktop.main.alert.AlertBannerController;
 import bisq.desktop.main.content.ContentController;
 import bisq.desktop.main.left.LeftNavController;
 import bisq.desktop.main.notification.NotificationPanelController;
@@ -53,6 +55,7 @@ public class MainController extends NavigationController {
     private final SettingsService settingsService;
     private final UpdaterService updaterService;
     private final ApplicationService.Config config;
+    private final AlertBannerController alertBannerController;
 
     public MainController(ServiceProvider serviceProvider) {
         super(NavigationTarget.MAIN);
@@ -66,11 +69,13 @@ public class MainController extends NavigationController {
         leftNavController = new LeftNavController(serviceProvider);
         TopPanelController topPanelController = new TopPanelController(serviceProvider);
         NotificationPanelController notificationPanelController = new NotificationPanelController(serviceProvider);
+        alertBannerController = new AlertBannerController();
         view = new MainView(model,
                 this,
                 leftNavController.getView().getRoot(),
                 topPanelController.getView().getRoot(),
-                notificationPanelController.getView().getRoot());
+                notificationPanelController.getView().getRoot(),
+                alertBannerController.getView().getRoot());
     }
 
     @Override
@@ -105,18 +110,12 @@ public class MainController extends NavigationController {
                     }
                     settingsService.getConsumedAlertIds().add(authorizedAlertData.getId());
                     Optional<String> optionalMessage = authorizedAlertData.getMessage();
-                    switch (authorizedAlertData.getAlertType()) {
-                        case INFO:
-                            optionalMessage.ifPresentOrElse(message -> new Popup().attention(message).show(),
-                                    () -> log.warn("optionalMessage not present"));
-                            break;
-                        case WARN:
-                        case EMERGENCY:
-                            optionalMessage.ifPresentOrElse(message -> new Popup().warning(message).show(),
-                                    () -> log.warn("optionalMessage not present"));
-                            break;
-                        case BAN:
-                            break;
+
+                    if (optionalMessage.isPresent()) {
+                        log.info("Showing alert with message {}", optionalMessage.get());
+                        alertBannerController.showAlert(optionalMessage.get(), authorizedAlertData.getAlertType());
+                    } else {
+                        log.warn("optionalMessage not present");
                     }
                 });
             }

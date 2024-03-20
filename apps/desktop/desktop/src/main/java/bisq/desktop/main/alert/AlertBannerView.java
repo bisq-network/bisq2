@@ -15,71 +15,60 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.notification;
+package bisq.desktop.main.alert;
 
+import bisq.bonded_roles.security_manager.alert.AlertType;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import javafx.animation.Timeline;
+import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
-import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
+import javafx.scene.layout.*;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class NotificationPanelView extends View<BorderPane, NotificationPanelModel, NotificationPanelController> {
+public class AlertBannerView extends View<BorderPane, AlertBannerModel, AlertBannerController> {
     public static final int DURATION = Transitions.DEFAULT_DURATION / 2;
 
-    private final Label notificationHeadline;
+    Label content = new Label();
     private final Button closeButton;
-    private final Hyperlink hyperlink;
+    private final HBox banner;
+    private final ChangeListener<Number> contentHeightListener;
     private Timeline slideInRightTimeline, slideOutTopTimeline;
-    private Subscription isVisiblePin;
+    private Subscription isVisiblePin, alertTypePin;
 
-    public NotificationPanelView(NotificationPanelModel model,
-                                 NotificationPanelController controller) {
+    public AlertBannerView(AlertBannerModel model, AlertBannerController controller) {
         super(new BorderPane(), model, controller);
 
         root.setManaged(false);
         root.setVisible(false);
 
-        notificationHeadline = new Label();
-        notificationHeadline.getStyleClass().add("notification-headline");
+        content.setWrapText(true);
 
-        closeButton = BisqIconButton.createIconButton("close-black");
+        closeButton = BisqIconButton.createIconButton("close-white");
 
-        hyperlink = new Hyperlink();
-        hyperlink.getStyleClass().add("notification-hyperlink");
+        banner = new HBox(content, Spacer.fillHBox(), closeButton);
+        banner.setAlignment(Pos.TOP_CENTER);
+        banner.setPadding(new Insets(10, 10, 10, 15));
 
-        HBox.setMargin(hyperlink, new Insets(5, 0, 5, 0));
+        contentHeightListener = ((observable, oldValue, newValue) -> banner.setMinHeight(newValue.doubleValue() + 25)); // padding = 25
 
-        Label separator = new Label("|");
-        separator.getStyleClass().add("notification-headline");
-        HBox notificationContent = new HBox(10, notificationHeadline, separator, hyperlink);
-        notificationContent.setAlignment(Pos.CENTER);
-
-        HBox notificationHBox = new HBox(notificationContent, Spacer.fillHBox(), closeButton);
-        notificationHBox.setPadding(new Insets(0, 10, 0, 15));
-        notificationHBox.getStyleClass().add("notification-box");
-        notificationHBox.setAlignment(Pos.CENTER);
-
-        root.setCenter(notificationHBox);
+        root.setCenter(banner);
         root.setPadding(new Insets(20, 40, 20, 40));
     }
 
     @Override
     protected void onViewAttached() {
-        notificationHeadline.textProperty().bind(model.getHeadline());
-        hyperlink.textProperty().bind(model.getButtonText());
+        content.textProperty().bind(model.getMessage());
 
-        isVisiblePin = EasyBind.subscribe(model.getIsNotificationVisible(), isVisible -> {
+        isVisiblePin = EasyBind.subscribe(model.getIsAlertVisible(), isVisible -> {
             if (slideInRightTimeline != null) {
                 slideInRightTimeline.stop();
                 slideInRightTimeline = null;
@@ -110,18 +99,35 @@ public class NotificationPanelView extends View<BorderPane, NotificationPanelMod
             }
         });
 
+        alertTypePin = EasyBind.subscribe(model.getAlertType(), this::addAlertTypeStyleClass);
+
+        content.heightProperty().addListener(contentHeightListener);
+
         closeButton.setOnAction(e -> controller.onClose());
-        hyperlink.setOnAction(e -> controller.onNavigateToTarget());
     }
 
     @Override
     protected void onViewDetached() {
-        notificationHeadline.textProperty().unbind();
-        hyperlink.textProperty().unbind();
+        content.textProperty().unbind();
 
         isVisiblePin.unsubscribe();
+        alertTypePin.unsubscribe();
+
+        content.heightProperty().removeListener(contentHeightListener);
 
         closeButton.setOnAction(null);
-        hyperlink.setOnAction(null);
+    }
+
+    private void addAlertTypeStyleClass(AlertType alertType) {
+        banner.getStyleClass().clear();
+        String alertTypeClass;
+        if (alertType == AlertType.INFO) {
+            alertTypeClass = "info-banner";
+        } else if (alertType == AlertType.WARN) {
+            alertTypeClass = "warn-banner";
+        } else {
+            alertTypeClass = "emergency-banner";
+        }
+        banner.getStyleClass().addAll("alert-banner", alertTypeClass);
     }
 }
