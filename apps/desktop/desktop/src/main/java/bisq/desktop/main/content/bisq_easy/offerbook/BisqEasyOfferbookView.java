@@ -508,7 +508,6 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
                 .map(menuItem -> (DropdownFilterMenuItem<?>) menuItem)
                 .forEach(menuItem -> menuItem.updateSelection(marketFilter == menuItem.getFilter()));
 
-        favouritesTableView.getSelectionModel().select(getModel().getSelectedMarketChannelItem().get());
         marketsTableView.getSelectionModel().select(getModel().getSelectedMarketChannelItem().get());
     }
 
