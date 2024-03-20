@@ -304,7 +304,7 @@ public class PeerGroupManager implements Node.Listener {
                 .skip(config.getMaxSeeds())
                 .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as we have too " +
                                 "many connections to seeds.",
-                        node, connection.getPeersCapability().getAddress()))
+                        node, connection.getPeerAddress()))
                 .forEach(connection -> node.closeConnectionGracefully(connection, CloseReason.TOO_MANY_CONNECTIONS_TO_SEEDS));
     }
 
@@ -315,7 +315,7 @@ public class PeerGroupManager implements Node.Listener {
                 .filter(connection -> connection.getConnectionMetrics().getAge() > config.getMaxAge())
                 .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as the connection age " +
                                 "is too old.",
-                        node, connection.getPeersCapability().getAddress()))
+                        node, connection.getPeerAddress()))
                 .forEach(connection -> node.closeConnectionGracefully(connection, CloseReason.AGED_CONNECTION));
 
     }
@@ -327,7 +327,7 @@ public class PeerGroupManager implements Node.Listener {
                 .sorted(Connection.comparingDateDescending()) // As we use skip we sort by descending creationDate so that we close the oldest connections
                 .skip(peerGroupService.getMaxInboundConnections())
                 .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as we have too many inbound connections.",
-                        node, connection.getPeersCapability().getAddress()))
+                        node, connection.getPeerAddress()))
                 .forEach(connection -> node.closeConnectionGracefully(connection, CloseReason.TOO_MANY_INBOUND_CONNECTIONS));
 
     }
@@ -339,7 +339,7 @@ public class PeerGroupManager implements Node.Listener {
                 .sorted(Connection.comparingDateDescending()) // As we use skip we sort by descending creationDate so that we close the oldest connections
                 .skip(peerGroupService.getMaxNumConnectedPeers())
                 .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as we have too many connections.",
-                        node, connection.getPeersCapability().getAddress()))
+                        node, connection.getPeerAddress()))
                 .forEach(connection -> node.closeConnectionGracefully(connection, CloseReason.TOO_MANY_CONNECTIONS));
 
     }
