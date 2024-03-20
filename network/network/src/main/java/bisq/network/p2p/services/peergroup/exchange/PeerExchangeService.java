@@ -100,11 +100,37 @@ public class PeerExchangeService implements Node.Listener {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<Void> startInitialPeerExchange() {
-        return doPeerExchange(peerExchangeStrategy.getAddressesForInitialPeerExchange()).orTimeout(2, MINUTES);
+        List<Address> candidates = peerExchangeStrategy.getAddressesForInitialPeerExchange();
+        log.info("startInitialPeerExchange {}", candidates);
+        return doPeerExchange(candidates)
+                .orTimeout(2, MINUTES)
+                .whenComplete((nil, throwable) -> {
+                    if (throwable != null) {
+                        if (resultFuture != null) {
+                            resultFuture.completeExceptionally(throwable);
+
+                            scheduler.ifPresent(Scheduler::stop);
+                            scheduler = Optional.of(Scheduler.run(this::startInitialPeerExchange)
+                                    .after(doInitialPeerExchangeDelaySec, TimeUnit.SECONDS)
+                                    .name("PeerExchangeService.scheduler-" + StringUtils.truncate(node.toString(), 10)));
+                            doInitialPeerExchangeDelaySec = Math.min(20, doInitialPeerExchangeDelaySec * 2);
+                        }
+                    }
+                });
     }
 
-    public void extendPeerGroup() {
-        doPeerExchange(peerExchangeStrategy.getAddressesForExtendingPeerGroup()).orTimeout(2, MINUTES);
+    public CompletableFuture<Void> extendPeerGroup() {
+        List<Address> candidates = peerExchangeStrategy.getAddressesForExtendingPeerGroup();
+        log.info("extendPeerGroup {}", candidates);
+        return doPeerExchange(candidates)
+                .orTimeout(2, MINUTES)
+                .whenComplete((nil, throwable) -> {
+                    if (throwable != null) {
+                        if (resultFuture != null) {
+                            resultFuture.completeExceptionally(throwable);
+                        }
+                    }
+                });
     }
 
     /**

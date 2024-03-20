@@ -210,15 +210,15 @@ public class PeerExchangeStrategy {
     }
 
     void addReportedPeers(Set<Peer> reportedPeers, Address reporterAddress) {
-        Set<Peer> filtered = reportedPeers.stream()
+        Set<Peer> peers = reportedPeers.stream()
                 .filter(peer -> notSameAddress(reporterAddress, peer))
                 .filter(this::isValidNonSeedPeer)
                 .filter(this::isNotOutDated)
                 .sorted()
                 .limit(REPORTED_PEERS_LIMIT)
                 .collect(Collectors.toSet());
-        peerGroupService.addReportedPeers(filtered);
-        peerGroupService.addPersistedPeers(filtered);
+        peerGroupService.addReportedPeers(peers);
+        peerGroupService.addPersistedPeers(peers);
     }
 
 
