@@ -174,7 +174,7 @@ public class PeerExchangeStrategy {
         return peerGroupService.getPersistedPeers().stream()
                 .filter(this::isValidNonSeedPeer)
                 .filter(this::isNotOutDated)
-                .sorted(Comparator.comparing(Peer::getDate).reversed())
+                .sorted()
                 .limit(config.getNumPersistedPeersAtBoostrap())
                 .map(Peer::getAddress)
                 .collect(Collectors.toList());
@@ -214,7 +214,7 @@ public class PeerExchangeStrategy {
                 .filter(peer -> notSameAddress(reporterAddress, peer))
                 .filter(this::isValidNonSeedPeer)
                 .filter(this::isNotOutDated)
-                .sorted(Comparator.comparing(Peer::getDate).reversed())
+                .sorted()
                 .limit(REPORTED_PEERS_LIMIT)
                 .collect(Collectors.toSet());
         peerGroupService.addReportedPeers(filtered);
@@ -263,14 +263,14 @@ public class PeerExchangeStrategy {
     private Stream<Peer> getAllConnectedPeers() {
         return peerGroupService.getAllConnectedPeers(node)
                 .filter(this::isValidNonSeedPeer)
-                .sorted(Comparator.comparing(Peer::getDate).reversed());
+                .sorted();
     }
 
     private Stream<Peer> getReportedPeers() {
         return peerGroupService.getReportedPeers().stream()
                 .filter(this::isValidNonSeedPeer)
                 .filter(this::isNotOutDated)
-                .sorted(Comparator.comparing(Peer::getDate).reversed());
+                .sorted();
     }
 
     private List<Address> getShuffled(Collection<Address> addresses) {
