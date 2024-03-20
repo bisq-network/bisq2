@@ -40,6 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -213,7 +214,11 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
                                     });
                                 }
                                 if (throwable != null) {
-                                    log.warn("Inventory request failed.", throwable);
+                                    if (throwable instanceof CancellationException) {
+                                        log.debug("Inventory request failed.", throwable);
+                                    } else {
+                                        log.info("Inventory request failed.", throwable);
+                                    }
                                 }
                             });
                 })
