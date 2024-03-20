@@ -318,7 +318,6 @@ public class PeerGroupManager implements Node.Listener {
                                 "is too old.",
                         node, connection.getPeerAddress()))
                 .forEach(connection -> node.closeConnectionGracefully(connection, CloseReason.AGED_CONNECTION));
-
     }
 
     private void maybeCloseExceedingInboundConnections() {
@@ -330,7 +329,6 @@ public class PeerGroupManager implements Node.Listener {
                 .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as we have too many inbound connections.",
                         node, connection.getPeerAddress()))
                 .forEach(connection -> node.closeConnectionGracefully(connection, CloseReason.TOO_MANY_INBOUND_CONNECTIONS));
-
     }
 
     private void maybeCloseExceedingConnections() {
@@ -342,13 +340,11 @@ public class PeerGroupManager implements Node.Listener {
                 .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as we have too many connections.",
                         node, connection.getPeerAddress()))
                 .forEach(connection -> node.closeConnectionGracefully(connection, CloseReason.TOO_MANY_CONNECTIONS));
-
     }
 
     private void maybeCreateConnections() {
         log.debug("{} called maybeCreateConnections", node);
         int minNumConnectedPeers = peerGroupService.getMinNumConnectedPeers();
-        // We want to have at least 40% of our minNumConnectedPeers as outbound connections 
         if (getMissingOutboundConnections() <= 0) {
             // We have enough outbound connections, lets check if we have sufficient connections in total
             if (node.getNumConnections() >= minNumConnectedPeers) {
@@ -370,9 +366,9 @@ public class PeerGroupManager implements Node.Listener {
         int exceeding = reportedPeers.size() - config.getMaxReported();
         if (exceeding > 0) {
             reportedPeers.sort(Comparator.comparing(Peer::getDate));
-            List<Peer> candidates = reportedPeers.subList(0, Math.min(exceeding, reportedPeers.size()));
-            log.info("Remove {} reported peers: {}", candidates.size(), candidates);
-            peerGroupService.removeReportedPeers(candidates);
+            List<Peer> outDated = reportedPeers.subList(0, Math.min(exceeding, reportedPeers.size()));
+            log.info("Remove {} reported peers: {}", outDated.size(), outDated);
+            peerGroupService.removeReportedPeers(outDated);
         }
     }
 
@@ -381,9 +377,9 @@ public class PeerGroupManager implements Node.Listener {
         int exceeding = persistedPeers.size() - config.getMaxPersisted();
         if (exceeding > 0) {
             persistedPeers.sort(Comparator.comparing(Peer::getDate));
-            List<Peer> candidates = persistedPeers.subList(0, Math.min(exceeding, persistedPeers.size()));
-            log.info("Remove {} persisted peers: {}", candidates.size(), candidates);
-            peerGroupService.removePersistedPeers(candidates);
+            List<Peer> outDated = persistedPeers.subList(0, Math.min(exceeding, persistedPeers.size()));
+            log.info("Remove {} persisted peers: {}", outDated.size(), outDated);
+            peerGroupService.removePersistedPeers(outDated);
         }
     }
 
@@ -425,5 +421,4 @@ public class PeerGroupManager implements Node.Listener {
     private int getMissingOutboundConnections() {
         return peerGroupService.getMinOutboundConnections() - (int) node.getActiveOutboundConnections().count();
     }
-
 }
