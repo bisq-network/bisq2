@@ -20,9 +20,6 @@ package bisq.desktop.main;
 import bisq.application.ApplicationService;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.security_manager.alert.AlertService;
-import bisq.bonded_roles.security_manager.alert.AlertType;
-import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
-import bisq.common.observable.collection.CollectionObserver;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
@@ -51,7 +48,6 @@ public class MainController extends NavigationController {
     private final MainView view;
     private final ServiceProvider serviceProvider;
     private final LeftNavController leftNavController;
-    private final AlertService alertService;
     private final SettingsService settingsService;
     private final UpdaterService updaterService;
     private final ApplicationService.Config config;
@@ -62,14 +58,14 @@ public class MainController extends NavigationController {
 
         this.serviceProvider = serviceProvider;
         settingsService = serviceProvider.getSettingsService();
-        alertService = serviceProvider.getBondedRolesService().getAlertService();
+        AlertService alertService = serviceProvider.getBondedRolesService().getAlertService();
         updaterService = serviceProvider.getUpdaterService();
         config = serviceProvider.getConfig();
 
         leftNavController = new LeftNavController(serviceProvider);
         TopPanelController topPanelController = new TopPanelController(serviceProvider);
         NotificationPanelController notificationPanelController = new NotificationPanelController(serviceProvider);
-        alertBannerController = new AlertBannerController();
+        alertBannerController = new AlertBannerController(settingsService, alertService);
         view = new MainView(model,
                 this,
                 leftNavController.getView().getRoot(),
@@ -97,37 +93,6 @@ public class MainController extends NavigationController {
                 }
             }
         }
-
-        alertService.getAuthorizedAlertDataSet().addObserver(new CollectionObserver<>() {
-            @Override
-            public void add(AuthorizedAlertData authorizedAlertData) {
-                if (authorizedAlertData == null) {
-                    return;
-                }
-                UIThread.run(() -> {
-                    if (settingsService.getConsumedAlertIds().contains(authorizedAlertData.getId())) {
-                        return;
-                    }
-                    settingsService.getConsumedAlertIds().add(authorizedAlertData.getId());
-                    Optional<String> optionalMessage = authorizedAlertData.getMessage();
-
-                    if (optionalMessage.isPresent()) {
-                        log.info("Showing alert with message {}", optionalMessage.get());
-                        alertBannerController.showAlert(optionalMessage.get(), authorizedAlertData.getAlertType());
-                    } else {
-                        log.warn("optionalMessage not present");
-                    }
-                });
-            }
-
-            @Override
-            public void remove(Object element) {
-            }
-
-            @Override
-            public void clear() {
-            }
-        });
 
         updaterService.getReleaseNotification().addObserver(releaseNotification -> {
             if (releaseNotification == null) {

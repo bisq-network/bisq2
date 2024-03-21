@@ -18,16 +18,27 @@
 package bisq.desktop.main.alert;
 
 import bisq.bonded_roles.security_manager.alert.AlertType;
+import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
 import bisq.desktop.common.view.Model;
 import javafx.beans.property.*;
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 public class AlertBannerModel implements Model {
+    @Setter
+    private AuthorizedAlertData displayedAuthorizedAlertData;
     private final BooleanProperty isAlertVisible = new SimpleBooleanProperty();
     private final StringProperty message = new SimpleStringProperty();
     private final ObjectProperty<AlertType> alertType = new SimpleObjectProperty<>();
 
     public AlertBannerModel() {
+    }
+
+    void reset() {
+        displayedAuthorizedAlertData = null;
+        isAlertVisible.set(false);
+        message.set(null);
+        alertType.set(null);
     }
 }
