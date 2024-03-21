@@ -124,7 +124,7 @@
     -fx-fill: -fx-light-text-color;
     -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 2em;
-    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-family: "IBM Plex Sans Medium";
 }
 
 .alert-banner-message {
@@ -146,7 +146,7 @@
 }
 
 .warn-banner {
-    -fx-background-color: -bisq2-yellow-dim-50;
+    -fx-background-color: -bisq2-yellow-dim-20;
 }
 
 .emergency-banner {

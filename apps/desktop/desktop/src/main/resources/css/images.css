@@ -210,6 +210,10 @@
     -fx-image: url("/images/icons/check-grey.png");
 }
 
+#bisq-broadcast-white {
+    -fx-image: url("/images/icons/bisq-broadcast-white.png");
+}
+
 
 /* ------------------------------------------------------------------------------------ */
 /* Navigation */
