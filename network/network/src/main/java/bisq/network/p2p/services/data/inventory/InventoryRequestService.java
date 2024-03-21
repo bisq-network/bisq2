@@ -40,10 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
@@ -151,7 +148,12 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
                 .whenComplete((list, throwable) -> {
                     requestsPending.set(false);
                     if (throwable != null) {
-                        log.error("requestFromPeers failed", throwable);
+                        if (throwable instanceof CompletionException &&
+                                throwable.getCause() instanceof CancellationException) {
+                            log.debug("requestFromPeers failed", throwable);
+                        } else {
+                            log.error("requestFromPeers failed", throwable);
+                        }
                     } else if (list == null) {
                         log.error("requestFromPeers completed with result list = null");
                     } else {
