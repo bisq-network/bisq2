@@ -139,7 +139,8 @@ public class SecurityManagerController implements Controller {
         Optional<AuthorizedBondedRole> bannedRole = bondedRoleListItem == null ? Optional.empty() :
                 Optional.ofNullable(bondedRoleListItem.getBondedRole().getAuthorizedBondedRole());
         securityManagerService.publishAlert(model.getSelectedAlertType().get(),
-                        StringUtils.toOptional(model.getMessage().get()),
+                        StringUtils.toOptional(model.getHeadline().get()),
+                        StringUtils.toOptional(message),
                         model.getHaltTrading().get(),
                         model.getRequireVersionForTrading().get(),
                         StringUtils.toOptional(model.getMinVersion().get()),
@@ -150,6 +151,7 @@ public class SecurityManagerController implements Controller {
                             new Popup().error(throwable).show();
                         } else {
                             model.getSelectedAlertType().set(null);
+                            model.getHeadline().set(null);
                             model.getMessage().set(null);
                             model.getHaltTrading().set(false);
                             model.getRequireVersionForTrading().set(false);
@@ -241,6 +243,7 @@ public class SecurityManagerController implements Controller {
                 model.getHaltTrading().set(false);
                 model.getRequireVersionForTrading().set(false);
                 model.getMinVersion().set(null);
+                model.getHeadline().set(null);
                 model.getMessage().set(null);
                 break;
         }

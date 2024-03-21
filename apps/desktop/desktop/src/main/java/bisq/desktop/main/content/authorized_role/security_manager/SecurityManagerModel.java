@@ -42,6 +42,7 @@ public class SecurityManagerModel implements Model {
     private final ObservableList<BondedRoleListItem> bondedRoleListItems = FXCollections.observableArrayList();
     private final StringProperty actionButtonText = new SimpleStringProperty();
     private final BooleanProperty actionButtonDisabled = new SimpleBooleanProperty();
+    private final StringProperty headline = new SimpleStringProperty();
     private final StringProperty message = new SimpleStringProperty();
     private final StringProperty minVersion = new SimpleStringProperty();
     private final BooleanProperty haltTrading = new SimpleBooleanProperty();
