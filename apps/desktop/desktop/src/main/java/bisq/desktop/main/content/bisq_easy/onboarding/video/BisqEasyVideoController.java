@@ -18,8 +18,12 @@
 package bisq.desktop.main.content.bisq_easy.onboarding.video;
 
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.Browser;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.overlay.OverlayController;
+import bisq.i18n.Res;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import lombok.Getter;
@@ -52,5 +56,24 @@ public class BisqEasyVideoController implements Controller {
 
     void onCompleted() {
         settingsService.setCookie(CookieKey.BISQ_EASY_VIDEO_OPENED, true);
+    }
+
+    public void onHandleVideoPlayerError(Exception e) {
+        UIThread.runOnNextRenderFrame(this::onClose);
+
+        // If OS does not support mp4 we get an exception
+        log.warn("mp4 not supported", e);
+
+        String videoUrl = "https://bisq.network/bisq-easy";
+        if (Browser.hyperLinksGetCopiesWithoutPopup()) {
+            // User has set don't show again flag for popup and set to not open browser.
+            // We would only copy the link but user might be confused that nothing visually happened,
+            // so we show a popup.
+            new Popup().headline(Res.get("video.mp4NotSupported.warning.headline"))
+                    .warning(Res.get("video.mp4NotSupported.warning", videoUrl))
+                    .show();
+        } else {
+            Browser.open(videoUrl);
+        }
     }
 }
