@@ -130,7 +130,7 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
         Optional<Monetary> amount = getAmount(takersOffer, takersContract);
         checkArgument(amount.isPresent(), "No market price available for validation.");
 
-        double tolerancePercentage = 0.01;
+        double tolerancePercentage = 0.03;
         long tolerance = (long) (amount.get().getValue() * tolerancePercentage);
         long minAmountWithTolerance = amount.get().getValue() - tolerance;
         long maxAmountWithTolerance = amount.get().getValue() + tolerance;
