@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.components.chatMessages;
 
+import bisq.bisq_easy.BisqEasyService;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.*;
 import bisq.chat.bisqeasy.BisqEasyOfferMessage;
@@ -161,6 +162,7 @@ public class ChatMessagesListView {
         private final BannedUserService bannedUserService;
         private final NetworkService networkService;
         private final Optional<ResendMessageService> resendMessageService;
+        private final BisqEasyService bisqEasyService;
         private Pin selectedChannelPin, chatMessagesPin, offerOnlySettingsPin;
         private Subscription selectedChannelSubscription, focusSubscription, scrollValuePin, scrollBarVisiblePin;
 
@@ -175,6 +177,7 @@ public class ChatMessagesListView {
             userProfileService = serviceProvider.getUserService().getUserProfileService();
             reputationService = serviceProvider.getUserService().getReputationService();
             settingsService = serviceProvider.getSettingsService();
+            bisqEasyService = serviceProvider.getBisqEasyService();
             bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
             bannedUserService = serviceProvider.getUserService().getBannedUserService();
             networkService = serviceProvider.getNetworkService();
@@ -355,7 +358,7 @@ public class ChatMessagesListView {
             }
 
             if (!BisqEasyServiceUtil.offerMatchesMinRequiredReputationScore(reputationService,
-                    settingsService,
+                    bisqEasyService,
                     userIdentityService,
                     userProfileService,
                     bisqEasyOffer)) {
@@ -364,7 +367,7 @@ public class ChatMessagesListView {
                             .map(reputationService::getReputationScore)
                             .map(ReputationScore::getTotalScore)
                             .orElse(0L);
-                    long myMinRequiredScore = settingsService.getMinRequiredReputationScore().get();
+                    long myMinRequiredScore = bisqEasyService.getMinRequiredReputationScore().get();
                     new Popup().information(Res.get("chat.message.takeOffer.makersReputationScoreTooLow.warn",
                             myMinRequiredScore, makerAsSellersScore)).show();
                 } else {

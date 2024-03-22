@@ -22,6 +22,7 @@ import bisq.desktop.common.view.Model;
 import bisq.desktop.main.content.authorized_role.security_manager.SecurityManagerView.AlertListItem;
 import bisq.desktop.main.content.authorized_role.security_manager.SecurityManagerView.BondedRoleListItem;
 import bisq.desktop.main.content.authorized_role.security_manager.SecurityManagerView.DifficultyAdjustmentListItem;
+import bisq.desktop.main.content.authorized_role.security_manager.SecurityManagerView.MinRequiredReputationScoreListItem;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -33,8 +34,11 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 public class SecurityManagerModel implements Model {
     private final DoubleProperty difficultyAdjustmentFactor = new SimpleDoubleProperty();
+    private final LongProperty minRequiredReputationScore = new SimpleLongProperty();
     private final BooleanProperty difficultyAdjustmentFactorButtonDisabled = new SimpleBooleanProperty();
+    private final BooleanProperty minRequiredReputationScoreButtonDisabled = new SimpleBooleanProperty();
     private final ObservableList<DifficultyAdjustmentListItem> difficultyAdjustmentListItems = FXCollections.observableArrayList();
+    private final ObservableList<MinRequiredReputationScoreListItem> minRequiredReputationScoreListItems = FXCollections.observableArrayList();
 
     private final ObjectProperty<AlertType> selectedAlertType = new SimpleObjectProperty<>();
     private final ObservableList<AlertType> alertTypes = FXCollections.observableArrayList();

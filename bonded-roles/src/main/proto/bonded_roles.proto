@@ -90,6 +90,13 @@ message AuthorizedDifficultyAdjustmentData {
   bool staticPublicKeysProvided = 4;
 }
 
+message AuthorizedMinRequiredReputationScoreData {
+  sint64 date = 1;
+  sint64 minRequiredReputationScore = 2;
+  string securityManagerProfileId = 3;
+  bool staticPublicKeysProvided = 4;
+}
+
 enum MarketPriceProvider {
   MARKETPRICEPROVIDER_UNSPECIFIED = 0;
   MARKETPRICEPROVIDER_BISQAGGREGATE = 1;

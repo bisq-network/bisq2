@@ -55,4 +55,5 @@ message SettingsStore {
   double difficultyAdjustmentFactor = 15;
   bool ignoreDiffAdjustmentFromSecManager = 16;
   repeated common.Market favouriteMarkets = 17;
+  bool ignoreMinRequiredReputationScoreFromSecManager = 18;
 }

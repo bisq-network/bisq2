@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.trade_wizard.amount;
 
 import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannelService;
@@ -75,11 +76,13 @@ public class TradeWizardAmountController implements Controller {
     private final UserProfileService userProfileService;
     private final ReputationService reputationService;
     private final UserIdentityService userIdentityService;
+    private final BisqEasyService bisqEasyService;
     private Subscription isMinAmountEnabledPin, maxOrFixAmountCompBaseSideAmountPin, minAmountCompBaseSideAmountPin,
             maxAmountCompQuoteSideAmountPin, minAmountCompQuoteSideAmountPin;
 
     public TradeWizardAmountController(ServiceProvider serviceProvider) {
         settingsService = serviceProvider.getSettingsService();
+        bisqEasyService = serviceProvider.getBisqEasyService();
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         userProfileService = serviceProvider.getUserService().getUserProfileService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
@@ -372,7 +375,7 @@ public class TradeWizardAmountController implements Controller {
             }
 
             if (!BisqEasyServiceUtil.offerMatchesMinRequiredReputationScore(reputationService,
-                    settingsService,
+                    bisqEasyService,
                     userIdentityService,
                     userProfileService,
                     peersOffer)) {

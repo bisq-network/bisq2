@@ -24,6 +24,7 @@ import bisq.bonded_roles.registration.BondedRoleRegistrationService;
 import bisq.bonded_roles.release.ReleaseNotificationsService;
 import bisq.bonded_roles.security_manager.alert.AlertService;
 import bisq.bonded_roles.security_manager.difficulty_adjustment.DifficultyAdjustmentService;
+import bisq.bonded_roles.security_manager.min_reputation_score.MinRequiredReputationScoreService;
 import bisq.common.application.Service;
 import bisq.common.util.Version;
 import bisq.network.NetworkService;
@@ -63,6 +64,7 @@ public class BondedRolesService implements Service {
     private final ExplorerService explorerService;
     private final AlertService alertService;
     private final DifficultyAdjustmentService difficultyAdjustmentService;
+    private final MinRequiredReputationScoreService minRequiredReputationScoreService;
     private final ReleaseNotificationsService releaseNotificationsService;
 
     public BondedRolesService(Config config, Version version, PersistenceService persistenceService, NetworkService networkService) {
@@ -74,9 +76,9 @@ public class BondedRolesService implements Service {
                 version);
         alertService = new AlertService(authorizedBondedRolesService);
         difficultyAdjustmentService = new DifficultyAdjustmentService(authorizedBondedRolesService);
+        minRequiredReputationScoreService = new MinRequiredReputationScoreService(authorizedBondedRolesService);
         releaseNotificationsService = new ReleaseNotificationsService(authorizedBondedRolesService);
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Service
@@ -85,6 +87,7 @@ public class BondedRolesService implements Service {
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
         return difficultyAdjustmentService.initialize()
+                .thenCompose(result -> minRequiredReputationScoreService.initialize())
                 .thenCompose(result -> alertService.initialize())
                 .thenCompose(result -> bondedRoleRegistrationService.initialize())
                 .thenCompose(result -> marketPriceService.initialize())
@@ -96,6 +99,7 @@ public class BondedRolesService implements Service {
     public CompletableFuture<Boolean> shutdown() {
         return authorizedBondedRolesService.shutdown()
                 .thenCompose(result -> difficultyAdjustmentService.shutdown())
+                .thenCompose(result -> minRequiredReputationScoreService.shutdown())
                 .thenCompose(result -> alertService.shutdown())
                 .thenCompose(result -> bondedRoleRegistrationService.shutdown())
                 .thenCompose(result -> marketPriceService.shutdown())

@@ -38,6 +38,9 @@ public class PreferencesModel implements Model {
     private final BooleanProperty useAnimations = new SimpleBooleanProperty();
     private final BooleanProperty preventStandbyMode = new SimpleBooleanProperty();
     private final LongProperty minRequiredReputationScore = new SimpleLongProperty();
+    private final BooleanProperty minRequiredReputationScoreEditable = new SimpleBooleanProperty();
+    private final StringProperty minRequiredReputationScoreDescriptionText = new SimpleStringProperty();
+    private final BooleanProperty ignoreMinRequiredReputationScoreFromSecManager = new SimpleBooleanProperty();
     private final BooleanProperty offerOnly = new SimpleBooleanProperty();
     private final BooleanProperty closeMyOfferWhenTaken = new SimpleBooleanProperty();
     private final DoubleProperty difficultyAdjustmentFactor = new SimpleDoubleProperty();

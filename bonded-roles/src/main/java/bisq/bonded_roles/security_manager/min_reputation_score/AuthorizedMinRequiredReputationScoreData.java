@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.bonded_roles.security_manager.difficulty_adjustment;
+package bisq.bonded_roles.security_manager.min_reputation_score;
 
 import bisq.bonded_roles.AuthorizedPubKeys;
 import bisq.common.application.DevMode;
@@ -40,19 +40,19 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
 @ToString
 @EqualsAndHashCode
 @Getter
-public final class AuthorizedDifficultyAdjustmentData implements AuthorizedDistributedData {
+public final class AuthorizedMinRequiredReputationScoreData implements AuthorizedDistributedData {
     private final MetaData metaData = new MetaData(TTL_100_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
     private final long date;
-    private final double difficultyAdjustmentFactor;
+    private final long minRequiredReputationScore;
     private final String securityManagerProfileId;
     private final boolean staticPublicKeysProvided;
 
-    public AuthorizedDifficultyAdjustmentData(long date,
-                                              double difficultyAdjustmentFactor,
-                                              String securityManagerProfileId,
-                                              boolean staticPublicKeysProvided) {
+    public AuthorizedMinRequiredReputationScoreData(long date,
+                                                    long minRequiredReputationScore,
+                                                    String securityManagerProfileId,
+                                                    boolean staticPublicKeysProvided) {
         this.date = date;
-        this.difficultyAdjustmentFactor = difficultyAdjustmentFactor;
+        this.minRequiredReputationScore = minRequiredReputationScore;
         this.securityManagerProfileId = securityManagerProfileId;
         this.staticPublicKeysProvided = staticPublicKeysProvided;
 
@@ -66,18 +66,18 @@ public final class AuthorizedDifficultyAdjustmentData implements AuthorizedDistr
     }
 
     @Override
-    public bisq.bonded_roles.protobuf.AuthorizedDifficultyAdjustmentData toProto() {
-        bisq.bonded_roles.protobuf.AuthorizedDifficultyAdjustmentData.Builder builder = bisq.bonded_roles.protobuf.AuthorizedDifficultyAdjustmentData.newBuilder()
+    public bisq.bonded_roles.protobuf.AuthorizedMinRequiredReputationScoreData toProto() {
+        bisq.bonded_roles.protobuf.AuthorizedMinRequiredReputationScoreData.Builder builder = bisq.bonded_roles.protobuf.AuthorizedMinRequiredReputationScoreData.newBuilder()
                 .setDate(date)
-                .setDifficultyAdjustmentFactor(difficultyAdjustmentFactor)
+                .setMinRequiredReputationScore(minRequiredReputationScore)
                 .setSecurityManagerProfileId(securityManagerProfileId)
                 .setStaticPublicKeysProvided(staticPublicKeysProvided);
         return builder.build();
     }
 
-    public static AuthorizedDifficultyAdjustmentData fromProto(bisq.bonded_roles.protobuf.AuthorizedDifficultyAdjustmentData proto) {
-        return new AuthorizedDifficultyAdjustmentData(proto.getDate(),
-                proto.getDifficultyAdjustmentFactor(),
+    public static AuthorizedMinRequiredReputationScoreData fromProto(bisq.bonded_roles.protobuf.AuthorizedMinRequiredReputationScoreData proto) {
+        return new AuthorizedMinRequiredReputationScoreData(proto.getDate(),
+                proto.getMinRequiredReputationScore(),
                 proto.getSecurityManagerProfileId(),
                 proto.getStaticPublicKeysProvided());
     }
@@ -85,7 +85,7 @@ public final class AuthorizedDifficultyAdjustmentData implements AuthorizedDistr
     public static ProtoResolver<DistributedData> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.bonded_roles.protobuf.AuthorizedDifficultyAdjustmentData.class));
+                return fromProto(any.unpack(bisq.bonded_roles.protobuf.AuthorizedMinRequiredReputationScoreData.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }

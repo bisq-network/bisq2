@@ -21,6 +21,7 @@ import bisq.account.AccountService;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
+import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
 import bisq.contract.ContractService;
 import bisq.identity.IdentityService;
@@ -63,7 +64,10 @@ public class BisqEasyService implements Service {
     private final TradeService tradeService;
     private final UserIdentityService userIdentityService;
     private final BisqEasyNotificationsService bisqEasyNotificationsService;
-    private Pin difficultyAdjustmentFactorPin, ignoreDiffAdjustmentFromSecManagerPin, mostRecentValueOrDefaultPin;
+    private final Observable<Long> minRequiredReputationScore = new Observable<>();
+    private Pin difficultyAdjustmentFactorPin, ignoreDiffAdjustmentFromSecManagerPin,
+            mostRecentDiffAdjustmentValueOrDefaultPin, minRequiredReputationScorePin,
+            ignoreMinRequiredReputationScoreFromSecManagerPin, mostRecentMinRequiredReputationScoreOrDefaultPin;
 
     public BisqEasyService(PersistenceService persistenceService,
                            SecurityService securityService,
@@ -110,7 +114,12 @@ public class BisqEasyService implements Service {
         log.info("initialize");
         difficultyAdjustmentFactorPin = settingsService.getDifficultyAdjustmentFactor().addObserver(e -> applyDifficultyAdjustmentFactor());
         ignoreDiffAdjustmentFromSecManagerPin = settingsService.getIgnoreDiffAdjustmentFromSecManager().addObserver(e -> applyDifficultyAdjustmentFactor());
-        mostRecentValueOrDefaultPin = bondedRolesService.getDifficultyAdjustmentService().getMostRecentValueOrDefault().addObserver(e -> applyDifficultyAdjustmentFactor());
+        mostRecentDiffAdjustmentValueOrDefaultPin = bondedRolesService.getDifficultyAdjustmentService().getMostRecentValueOrDefault().addObserver(e -> applyDifficultyAdjustmentFactor());
+
+        minRequiredReputationScorePin = settingsService.getMinRequiredReputationScore().addObserver(e -> applyMinRequiredReputationScore());
+        ignoreMinRequiredReputationScoreFromSecManagerPin = settingsService.getIgnoreMinRequiredReputationScoreFromSecManager().addObserver(e -> applyMinRequiredReputationScore());
+        mostRecentMinRequiredReputationScoreOrDefaultPin = bondedRolesService.getMinRequiredReputationScoreService().getMostRecentValueOrDefault().addObserver(e -> applyMinRequiredReputationScore());
+
         return bisqEasyNotificationsService.initialize();
     }
 
@@ -119,7 +128,10 @@ public class BisqEasyService implements Service {
         if (difficultyAdjustmentFactorPin != null) {
             difficultyAdjustmentFactorPin.unbind();
             ignoreDiffAdjustmentFromSecManagerPin.unbind();
-            mostRecentValueOrDefaultPin.unbind();
+            mostRecentDiffAdjustmentValueOrDefaultPin.unbind();
+            minRequiredReputationScorePin.unbind();
+            ignoreMinRequiredReputationScoreFromSecManagerPin.unbind();
+            mostRecentMinRequiredReputationScoreOrDefaultPin.unbind();
         }
         return bisqEasyNotificationsService.shutdown();
     }
@@ -144,5 +156,13 @@ public class BisqEasyService implements Service {
                 service.setDifficultyAdjustmentFactor(bondedRolesService.getDifficultyAdjustmentService().getMostRecentValueOrDefault().get());
             }
         });
+    }
+
+    private void applyMinRequiredReputationScore() {
+        if (settingsService.getIgnoreMinRequiredReputationScoreFromSecManager().get()) {
+            minRequiredReputationScore.set(settingsService.getMinRequiredReputationScore().get());
+        } else {
+            minRequiredReputationScore.set(bondedRolesService.getMinRequiredReputationScoreService().getMostRecentValueOrDefault().get());
+        }
     }
 }

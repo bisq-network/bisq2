@@ -29,6 +29,7 @@ import bisq.desktop.components.controls.validator.ValidatorBase;
 import bisq.i18n.Res;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.settings.ChatNotificationType;
+import bisq.user.reputation.ReputationScore;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
@@ -46,14 +47,16 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public class PreferencesView extends View<VBox, PreferencesModel, PreferencesController> {
     private static final ValidatorBase REPUTATION_SCORE_VALIDATOR =
-            new NumberValidator(Res.get("settings.preferences.trade.requiredTotalReputationScore.invalid"));
+            new NumberValidator(Res.get("settings.preferences.trade.minReputationScore.invalid", ReputationScore.MAX_VALUE),
+                    0, ReputationScore.MAX_VALUE);
     private static final ValidatorBase DIFFICULTY_ADJUSTMENT_FACTOR_VALIDATOR =
             new NumberValidator(Res.get("settings.preferences.network.difficultyAdjustmentFactor.invalid", NetworkLoad.MAX_DIFFICULTY_ADJUSTMENT),
                     0, NetworkLoad.MAX_DIFFICULTY_ADJUSTMENT);
 
     private final Button resetDontShowAgain, clearNotifications, addLanguageButton;
     private final Switch useAnimations, preventStandbyMode, offersOnlySwitch, closeMyOfferWhenTaken, notifyForPreRelease,
-            useTransientNotifications, ignoreDiffAdjustFromSecManagerSwitch;
+            useTransientNotifications, ignoreDiffAdjustFromSecManagerSwitch,
+            ignoreMinRequiredReputationScoreFromSecManagerSwitch;
     private final ToggleGroup notificationsToggleGroup = new ToggleGroup();
     private final RadioButton all, mention, off;
     private final ChangeListener<Toggle> notificationsToggleListener;
@@ -193,8 +196,13 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
                 null, Res.get("settings.preferences.trade.requiredTotalReputationScore.help"));
         minRequiredReputationScore.setMaxWidth(400);
         minRequiredReputationScore.setValidators(REPUTATION_SCORE_VALIDATOR);
+        ignoreMinRequiredReputationScoreFromSecManagerSwitch = new Switch(Res.get("settings.preferences.network.minReputationScore.ignoreValueFromSecManager"));
 
-        VBox tradeVBox = new VBox(10, minRequiredReputationScore, offersOnlySwitch, closeMyOfferWhenTaken);
+        VBox tradeVBox = new VBox(10,
+                closeMyOfferWhenTaken,
+                offersOnlySwitch,
+                minRequiredReputationScore, ignoreMinRequiredReputationScoreFromSecManagerSwitch
+        );
 
 
         // Network
@@ -204,7 +212,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         difficultyAdjustmentFactor = new MaterialTextField();
         difficultyAdjustmentFactor.setMaxWidth(400);
         difficultyAdjustmentFactor.setValidators(DIFFICULTY_ADJUSTMENT_FACTOR_VALIDATOR);
-        ignoreDiffAdjustFromSecManagerSwitch = new Switch(Res.get("settings.preferences.network.ignoreDifficultyAdjustmentFactorFromSecManager"));
+        ignoreDiffAdjustFromSecManagerSwitch = new Switch(Res.get("settings.preferences.network.difficultyAdjustmentFactor.ignoreValueFromSecManager"));
 
         VBox networkVBox = new VBox(10, difficultyAdjustmentFactor, ignoreDiffAdjustFromSecManagerSwitch);
 
@@ -238,9 +246,13 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         preventStandbyMode.selectedProperty().bindBidirectional(model.getPreventStandbyMode());
         offersOnlySwitch.selectedProperty().bindBidirectional(model.getOfferOnly());
         ignoreDiffAdjustFromSecManagerSwitch.selectedProperty().bindBidirectional(model.getIgnoreDiffAdjustmentFromSecManager());
+        ignoreMinRequiredReputationScoreFromSecManagerSwitch.selectedProperty().bindBidirectional(model.getIgnoreMinRequiredReputationScoreFromSecManager());
         closeMyOfferWhenTaken.selectedProperty().bindBidirectional(model.getCloseMyOfferWhenTaken());
 
         Bindings.bindBidirectional(minRequiredReputationScore.textProperty(), model.getMinRequiredReputationScore(), new NumberStringConverter());
+        minRequiredReputationScore.descriptionProperty().bind(model.getMinRequiredReputationScoreDescriptionText());
+        minRequiredReputationScore.getTextInputControl().editableProperty().bind(model.getMinRequiredReputationScoreEditable());
+
         Bindings.bindBidirectional(difficultyAdjustmentFactor.textProperty(), model.getDifficultyAdjustmentFactor(), new NumberStringConverter());
         difficultyAdjustmentFactor.descriptionProperty().bind(model.getDifficultyAdjustmentFactorDescriptionText());
         difficultyAdjustmentFactor.getTextInputControl().editableProperty().bind(model.getDifficultyAdjustmentFactorEditable());
@@ -282,9 +294,13 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         preventStandbyMode.selectedProperty().unbindBidirectional(model.getPreventStandbyMode());
         offersOnlySwitch.selectedProperty().unbindBidirectional(model.getOfferOnly());
         ignoreDiffAdjustFromSecManagerSwitch.selectedProperty().unbindBidirectional(model.getIgnoreDiffAdjustmentFromSecManager());
+        ignoreMinRequiredReputationScoreFromSecManagerSwitch.selectedProperty().unbindBidirectional(model.getIgnoreMinRequiredReputationScoreFromSecManager());
         closeMyOfferWhenTaken.selectedProperty().unbindBidirectional(model.getCloseMyOfferWhenTaken());
 
         Bindings.unbindBidirectional(minRequiredReputationScore.textProperty(), model.getMinRequiredReputationScore());
+        minRequiredReputationScore.getTextInputControl().editableProperty().unbind();
+        minRequiredReputationScore.descriptionProperty().unbind();
+
         Bindings.unbindBidirectional(difficultyAdjustmentFactor.textProperty(), model.getDifficultyAdjustmentFactor());
         difficultyAdjustmentFactor.getTextInputControl().editableProperty().unbind();
         difficultyAdjustmentFactor.descriptionProperty().unbind();

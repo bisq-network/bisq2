@@ -23,6 +23,7 @@ import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.bonded_roles.security_manager.alert.AlertType;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
 import bisq.bonded_roles.security_manager.difficulty_adjustment.AuthorizedDifficultyAdjustmentData;
+import bisq.bonded_roles.security_manager.min_reputation_score.AuthorizedMinRequiredReputationScoreData;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.util.StringUtils;
@@ -146,7 +147,30 @@ public class SecurityManagerService implements Service {
                 .thenApply(broadCastDataResult -> true);
     }
 
+    public CompletableFuture<Boolean> publishMinRequiredReputationScore(long minRequiredReputationScore) {
+        UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
+        String profileId = userIdentity.getId();
+        KeyPair keyPair = userIdentity.getIdentity().getKeyBundle().getKeyPair();
+        PublicKey authorizedPublicKey = keyPair.getPublic();
+        PrivateKey authorizedPrivateKey = keyPair.getPrivate();
+        AuthorizedMinRequiredReputationScoreData data = new AuthorizedMinRequiredReputationScoreData(new Date().getTime(),
+                minRequiredReputationScore,
+                profileId,
+                staticPublicKeysProvided);
+        return networkService.publishAuthorizedData(data,
+                        keyPair,
+                        authorizedPrivateKey,
+                        authorizedPublicKey)
+                .thenApply(broadCastDataResult -> true);
+    }
+
     public CompletableFuture<Boolean> removeDifficultyAdjustment(AuthorizedDifficultyAdjustmentData data, KeyPair ownerKeyPair) {
+        return networkService.removeAuthorizedData(data, ownerKeyPair, ownerKeyPair.getPublic())
+                .thenApply(broadCastDataResult -> true);
+    }
+
+    public CompletableFuture<Boolean> removeMinRequiredReputationScore(AuthorizedMinRequiredReputationScoreData data,
+                                                                       KeyPair ownerKeyPair) {
         return networkService.removeAuthorizedData(data, ownerKeyPair, ownerKeyPair.getPublic())
                 .thenApply(broadCastDataResult -> true);
     }

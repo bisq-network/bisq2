@@ -52,6 +52,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     final Observable<Double> difficultyAdjustmentFactor = new Observable<>();
     final Observable<Boolean> ignoreDiffAdjustmentFromSecManager = new Observable<>();
     final ObservableSet<Market> favouriteMarkets = new ObservableSet<>();
+    final Observable<Boolean> ignoreMinRequiredReputationScoreFromSecManager = new Observable<>();
 
     public SettingsStore() {
         this(new Cookie(),
@@ -70,7 +71,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 Set.of(LanguageRepository.getDefaultLanguage()),
                 NetworkLoad.DEFAULT_DIFFICULTY_ADJUSTMENT,
                 false,
-                new HashSet<>());
+                new HashSet<>(),
+                false);
     }
 
     public SettingsStore(Cookie cookie,
@@ -89,7 +91,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                          Set<String> supportedLanguageCodes,
                          double difficultyAdjustmentFactor,
                          boolean ignoreDiffAdjustmentFromSecManager,
-                         Set<Market> favouriteMarkets) {
+                         Set<Market> favouriteMarkets,
+                         boolean ignoreMinRequiredReputationScoreFromSecManager) {
         this.cookie = cookie;
         this.dontShowAgainMap.putAll(dontShowAgainMap);
         this.useAnimations.set(useAnimations);
@@ -107,6 +110,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
         this.difficultyAdjustmentFactor.set(difficultyAdjustmentFactor);
         this.ignoreDiffAdjustmentFromSecManager.set(ignoreDiffAdjustmentFromSecManager);
         this.favouriteMarkets.setAll(favouriteMarkets);
+        this.ignoreMinRequiredReputationScoreFromSecManager.set(ignoreMinRequiredReputationScoreFromSecManager);
     }
 
     @Override
@@ -129,6 +133,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 .setDifficultyAdjustmentFactor(difficultyAdjustmentFactor.get())
                 .setIgnoreDiffAdjustmentFromSecManager(ignoreDiffAdjustmentFromSecManager.get())
                 .addAllFavouriteMarkets(favouriteMarkets.stream().map(Market::toProto).collect(Collectors.toList()))
+                .setIgnoreMinRequiredReputationScoreFromSecManager(ignoreMinRequiredReputationScoreFromSecManager.get())
                 .build();
     }
 
@@ -151,7 +156,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 proto.getDifficultyAdjustmentFactor(),
                 proto.getIgnoreDiffAdjustmentFromSecManager(),
                 new HashSet<>(proto.getFavouriteMarketsList().stream()
-                        .map(Market::fromProto).collect(Collectors.toSet())));
+                        .map(Market::fromProto).collect(Collectors.toSet())),
+                proto.getIgnoreMinRequiredReputationScoreFromSecManager());
     }
 
     @Override
@@ -183,7 +189,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 new HashSet<>(supportedLanguageCodes),
                 difficultyAdjustmentFactor.get(),
                 ignoreDiffAdjustmentFromSecManager.get(),
-                new HashSet<>(favouriteMarkets));
+                new HashSet<>(favouriteMarkets),
+                ignoreMinRequiredReputationScoreFromSecManager.get());
     }
 
     @Override
@@ -206,6 +213,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
             difficultyAdjustmentFactor.set(persisted.difficultyAdjustmentFactor.get());
             ignoreDiffAdjustmentFromSecManager.set(persisted.ignoreDiffAdjustmentFromSecManager.get());
             favouriteMarkets.setAll(persisted.favouriteMarkets);
+            ignoreMinRequiredReputationScoreFromSecManager.set(persisted.ignoreMinRequiredReputationScoreFromSecManager.get());
         } catch (Exception e) {
             log.error("Exception at applyPersisted", e);
         }
