@@ -19,6 +19,7 @@ package bisq.desktop.main.alert;
 
 import bisq.bonded_roles.security_manager.alert.AlertType;
 import bisq.desktop.common.Transitions;
+import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
@@ -28,6 +29,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -57,6 +59,12 @@ public class AlertBannerView extends View<BorderPane, AlertBannerModel, AlertBan
         message.setWrapText(true);
 
         closeButton = BisqIconButton.createIconButton("close-white");
+
+        ImageView broadcastIcon = ImageUtil.getImageViewById("bisq-broadcast-white");
+        headline.setGraphic(broadcastIcon);
+        headline.setGraphicTextGap(20);
+
+        message.setPadding(new Insets(0, 0, 0, 5));
 
         contentVBox = new VBox(10, headline, message);
         banner = new HBox(contentVBox, Spacer.fillHBox(), closeButton);
