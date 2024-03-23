@@ -19,39 +19,40 @@ package bisq.network.p2p.services.peergroup;
 
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.network.common.Address;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-@Getter
 @Slf4j
 public final class PeerGroupStore implements PersistableStore<PeerGroupStore> {
-    private final Set<Peer> persistedPeers = new CopyOnWriteArraySet<>();
+    private final Map<Address, Peer> persistedPeersByAddress = new ConcurrentHashMap<>();
 
     public PeerGroupStore() {
     }
 
-    private PeerGroupStore(Set<Peer> persistedPeers) {
-        this.persistedPeers.addAll(persistedPeers);
+    private PeerGroupStore(Map<Address, Peer> persistedPeersByAddress) {
+        this.persistedPeersByAddress.putAll(persistedPeersByAddress);
     }
 
     @Override
     public bisq.network.protobuf.PeerGroupStore toProto() {
-        return bisq.network.protobuf.PeerGroupStore.newBuilder().addAllPersistedPeers(persistedPeers.stream()
+        return bisq.network.protobuf.PeerGroupStore.newBuilder().addAllPersistedPeers(persistedPeersByAddress.values().stream()
                         .map(Peer::toProto)
                         .collect(Collectors.toSet()))
                 .build();
     }
 
     public static PeerGroupStore fromProto(bisq.network.protobuf.PeerGroupStore proto) {
-        return new PeerGroupStore(proto.getPersistedPeersList().stream()
-                .map(Peer::fromProto).collect(Collectors.toSet()));
+        Map<Address, Peer> persistedPeersById = proto.getPersistedPeersList().stream()
+                .map(Peer::fromProto)
+                .collect(Collectors.toMap(Peer::getAddress, e -> e));
+        return new PeerGroupStore(persistedPeersById);
     }
 
     @Override
@@ -67,12 +68,16 @@ public final class PeerGroupStore implements PersistableStore<PeerGroupStore> {
 
     @Override
     public PeerGroupStore getClone() {
-        return new PeerGroupStore(new HashSet<>(persistedPeers));
+        return new PeerGroupStore(new HashMap<>(persistedPeersByAddress));
     }
 
     @Override
     public void applyPersisted(PeerGroupStore persisted) {
-        persistedPeers.clear();
-        persistedPeers.addAll(persisted.getPersistedPeers());
+        persistedPeersByAddress.clear();
+        persistedPeersByAddress.putAll(persisted.getPersistedPeersByAddress());
+    }
+
+    Map<Address, Peer> getPersistedPeersByAddress() {
+        return persistedPeersByAddress;
     }
 }

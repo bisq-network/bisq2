@@ -20,6 +20,8 @@ package bisq.network.p2p.services.peergroup;
 import bisq.common.timer.Scheduler;
 import bisq.network.NetworkService;
 import bisq.network.common.Address;
+import bisq.network.identity.NetworkId;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
@@ -46,7 +48,7 @@ import static java.util.concurrent.TimeUnit.HOURS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 @Slf4j
-public class PeerGroupManager {
+public class PeerGroupManager implements Node.Listener {
     public enum State {
         NEW,
         STARTING,
@@ -123,7 +125,7 @@ public class PeerGroupManager {
     private final KeepAliveService keepAliveService;
     private final NetworkLoadExchangeService networkLoadExchangeService;
     private Optional<Scheduler> scheduler = Optional.empty();
-
+    private Optional<Scheduler> maybeCreateConnectionsScheduler = Optional.empty();
 
     @Getter
     public AtomicReference<PeerGroupManager.State> state = new AtomicReference<>(PeerGroupManager.State.NEW);
@@ -161,20 +163,42 @@ public class PeerGroupManager {
 
     public void initialize() {
         // blocking
+        node.addListener(this);
         Failsafe.with(retryPolicy).run(this::doInitialize);
     }
 
     public void shutdown() {
         setState(State.STOPPING);
+        node.removeListener(this);
         peerExchangeService.shutdown();
         keepAliveService.shutdown();
         networkLoadExchangeService.shutdown();
         scheduler.ifPresent(Scheduler::stop);
+        maybeCreateConnectionsScheduler.ifPresent(Scheduler::stop);
         setState(State.TERMINATED);
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Node.Listener
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
+    }
+
+    @Override
+    public void onConnection(Connection connection) {
+    }
+
+    @Override
+    public void onDisconnect(Connection connection, CloseReason closeReason) {
+        maybeCreateConnectionsScheduler.ifPresent(Scheduler::stop);
+        maybeCreateConnectionsScheduler = Optional.of(Scheduler.run(this::maybeCreateConnections).after(2000));
+    }
+
     private void doInitialize() {
-        log.info("Node {} called initialize", node);
+        log.info("{} called initialize", node);
         String nodeInfo = node.getNodeInfo();
         State state = getState().get();
         switch (state) {
@@ -223,7 +247,7 @@ public class PeerGroupManager {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private void doHouseKeeping() {
-        log.debug("Node {} called runBlockingTasks", node);
+        log.debug("{} called runBlockingTasks", node);
         try {
             closeBanned();
             maybeCloseDuplicateConnections();
@@ -236,6 +260,8 @@ public class PeerGroupManager {
             Thread.sleep(100);
             maybeCloseExceedingConnections();
             Thread.sleep(100);
+            maybeCreateConnectionsScheduler.ifPresent(Scheduler::stop);
+            maybeCreateConnectionsScheduler = Optional.empty();
             maybeCreateConnections();
             maybeRemoveReportedPeers();
             maybeRemovePersistedPeers();
@@ -244,7 +270,7 @@ public class PeerGroupManager {
     }
 
     private void closeBanned() {
-        log.debug("Node {} called closeBanned", node);
+        log.debug("{} called closeBanned", node);
         node.getAllActiveConnections()
                 .filter(Connection::isRunning)
                 .filter(connection -> banList.isBanned(connection.getPeerAddress()))
@@ -256,12 +282,12 @@ public class PeerGroupManager {
      * Remove duplicate connections (inbound connections which have an outbound connection with the same address)
      */
     private void maybeCloseDuplicateConnections() {
-        log.debug("Node {} called maybeCloseDuplicateConnections", node);
+        log.debug("{} called maybeCloseDuplicateConnections", node);
         Set<Address> outboundAddresses = node.getActiveOutboundConnections()
                 .map(Connection::getPeerAddress)
                 .collect(Collectors.toSet());
         node.getActiveInboundConnections()
-                .filter(this::mayDisconnect)
+                .filter(this::allowDisconnect)
                 .filter(inbound -> outboundAddresses.contains(inbound.getPeerAddress()))
                 .peek(inbound -> log.info("{} -> {}: Send CloseConnectionMessage as we have an " +
                                 "outbound connection with the same address.",
@@ -270,65 +296,59 @@ public class PeerGroupManager {
     }
 
     private void maybeCloseConnectionsToSeeds() {
-        log.debug("Node {} called maybeCloseConnectionsToSeeds", node);
-        Comparator<Connection> comparator = peerGroupService.getConnectionAgeComparator().reversed(); // reversed as we use skip
+        log.debug("{} called maybeCloseConnectionsToSeeds", node);
         node.getAllActiveConnections()
-                .filter(this::mayDisconnect)
+                .filter(this::allowDisconnect)
                 .filter(peerGroupService::isSeed)
-                .sorted(comparator)
+                .sorted(Connection.comparingDateDescending()) // As we use skip we sort by descending creationDate so that we close the oldest connections
                 .skip(config.getMaxSeeds())
                 .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as we have too " +
                                 "many connections to seeds.",
-                        node, connection.getPeersCapability().getAddress()))
+                        node, connection.getPeerAddress()))
                 .forEach(connection -> node.closeConnectionGracefully(connection, CloseReason.TOO_MANY_CONNECTIONS_TO_SEEDS));
     }
 
     private void maybeCloseAgedConnections() {
-        log.debug("Node {} called maybeCloseAgedConnections", node);
+        log.debug("{} called maybeCloseAgedConnections", node);
+        long maxAgeDate = System.currentTimeMillis() - config.getMaxAge();
         node.getAllActiveConnections()
-                .filter(this::mayDisconnect)
-                .filter(connection -> connection.getConnectionMetrics().getAge() > config.getMaxAge())
+                .filter(this::allowDisconnect)
+                .filter(connection -> connection.createdBefore(maxAgeDate))
                 .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as the connection age " +
                                 "is too old.",
-                        node, connection.getPeersCapability().getAddress()))
+                        node, connection.getPeerAddress()))
                 .forEach(connection -> node.closeConnectionGracefully(connection, CloseReason.AGED_CONNECTION));
-
     }
 
     private void maybeCloseExceedingInboundConnections() {
-        log.debug("Node {} called maybeCloseExceedingInboundConnections", node);
-        Comparator<Connection> comparator = peerGroupService.getConnectionAgeComparator().reversed();
+        log.debug("{} called maybeCloseExceedingInboundConnections", node);
         node.getActiveInboundConnections()
-                .filter(this::mayDisconnect)
-                .sorted(comparator)
+                .filter(this::allowDisconnect)
+                .sorted(Connection.comparingDateDescending()) // As we use skip we sort by descending creationDate so that we close the oldest connections
                 .skip(peerGroupService.getMaxInboundConnections())
                 .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as we have too many inbound connections.",
-                        node, connection.getPeersCapability().getAddress()))
+                        node, connection.getPeerAddress()))
                 .forEach(connection -> node.closeConnectionGracefully(connection, CloseReason.TOO_MANY_INBOUND_CONNECTIONS));
-
     }
 
     private void maybeCloseExceedingConnections() {
-        log.debug("Node {} called maybeCloseExceedingConnections", node);
-        Comparator<Connection> comparator = peerGroupService.getConnectionAgeComparator().reversed();
+        log.debug("{} called maybeCloseExceedingConnections", node);
         node.getAllActiveConnections()
-                .filter(this::mayDisconnect)
-                .sorted(comparator)
+                .filter(this::allowDisconnect)
+                .sorted(Connection.comparingDateDescending()) // As we use skip we sort by descending creationDate so that we close the oldest connections
                 .skip(peerGroupService.getMaxNumConnectedPeers())
                 .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as we have too many connections.",
-                        node, connection.getPeersCapability().getAddress()))
+                        node, connection.getPeerAddress()))
                 .forEach(connection -> node.closeConnectionGracefully(connection, CloseReason.TOO_MANY_CONNECTIONS));
-
     }
 
     private void maybeCreateConnections() {
-        log.debug("Node {} called maybeCreateConnections", node);
+        log.debug("{} called maybeCreateConnections", node);
         int minNumConnectedPeers = peerGroupService.getMinNumConnectedPeers();
-        // We want to have at least 40% of our minNumConnectedPeers as outbound connections 
         if (getMissingOutboundConnections() <= 0) {
             // We have enough outbound connections, lets check if we have sufficient connections in total
             if (node.getNumConnections() >= minNumConnectedPeers) {
-                log.debug("Node {} has sufficient connections", node);
+                log.debug("{} has sufficient connections", node);
                 CompletableFuture.completedFuture(null);
                 return;
             }
@@ -338,7 +358,7 @@ public class PeerGroupManager {
         // The calculation how many connections we need is done inside PeerExchangeService/PeerExchangeStrategy
         log.info("We have not sufficient connections and call peerExchangeService.doFurtherPeerExchange");
         // It is an async call. We do not wait for the result.
-        peerExchangeService.startFurtherPeerExchange();
+        peerExchangeService.extendPeerGroup();
     }
 
     private void maybeRemoveReportedPeers() {
@@ -346,9 +366,9 @@ public class PeerGroupManager {
         int exceeding = reportedPeers.size() - config.getMaxReported();
         if (exceeding > 0) {
             reportedPeers.sort(Comparator.comparing(Peer::getDate));
-            List<Peer> candidates = reportedPeers.subList(0, Math.min(exceeding, reportedPeers.size()));
-            log.info("Remove {} reported peers: {}", candidates.size(), candidates);
-            peerGroupService.removeReportedPeers(candidates);
+            List<Peer> outDated = reportedPeers.subList(0, Math.min(exceeding, reportedPeers.size()));
+            log.info("Remove {} reported peers: {}", outDated.size(), outDated);
+            peerGroupService.removeReportedPeers(outDated);
         }
     }
 
@@ -357,9 +377,9 @@ public class PeerGroupManager {
         int exceeding = persistedPeers.size() - config.getMaxPersisted();
         if (exceeding > 0) {
             persistedPeers.sort(Comparator.comparing(Peer::getDate));
-            List<Peer> candidates = persistedPeers.subList(0, Math.min(exceeding, persistedPeers.size()));
-            log.info("Remove {} persisted peers: {}", candidates.size(), candidates);
-            peerGroupService.removePersistedPeers(candidates);
+            List<Peer> outDated = persistedPeers.subList(0, Math.min(exceeding, persistedPeers.size()));
+            log.info("Remove {} persisted peers: {}", outDated.size(), outDated);
+            peerGroupService.removePersistedPeers(outDated);
         }
     }
 
@@ -390,16 +410,15 @@ public class PeerGroupManager {
     // Utils
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private boolean mayDisconnect(Connection connection) {
-        return notBootstrapping(connection) && connection.isRunning();
+    private boolean allowDisconnect(Connection connection) {
+        return isNotBootstrapping(connection) && connection.isRunning();
     }
 
-    private boolean notBootstrapping(Connection connection) {
+    private boolean isNotBootstrapping(Connection connection) {
         return connection.getConnectionMetrics().getAge() > config.getBootstrapTime();
     }
 
     private int getMissingOutboundConnections() {
         return peerGroupService.getMinOutboundConnections() - (int) node.getActiveOutboundConnections().count();
     }
-
 }

@@ -78,7 +78,7 @@ class InventoryHandler implements Connection.Listener {
                 connection.getConnectionMetrics().addRtt(System.currentTimeMillis() - ts);
                 future.complete(response.getInventory());
             } else {
-                log.warn("Node {} received InventoryResponse from {} with invalid nonce {}. Request nonce was {}. Connection={}",
+                log.warn("{} received InventoryResponse from {} with invalid nonce {}. Request nonce was {}. Connection={}",
                         node, connection.getPeerAddress(), response.getRequestNonce(), nonce, connection.getId());
             }
         }

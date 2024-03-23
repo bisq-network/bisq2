@@ -96,15 +96,15 @@ public class PeerExchangeStrategy {
 
     // After bootstrap, we might want to add more connections and use the peer exchange protocol for that.
     // We do not want to use seed nodes or already existing connections in that case.
-    List<Address> getAddressesForFurtherPeerExchange() {
-        List<Address> candidates = getCandidates(getPriorityListForFurtherPeerExchange());
+    List<Address> getAddressesForExtendingPeerGroup() {
+        List<Address> candidates = getCandidates(getPriorityListForExtendingPeerGroup());
         if (candidates.isEmpty()) {
             // It can be that we don't have peers anymore which we have not already connected in the past.
             // We reset the usedAddresses and try again. It is likely that some peers have different peers to 
             // send now.
             log.debug("We reset the usedAddresses and try again to connect to peers we tried in the past.");
             usedAddresses.clear();
-            candidates = getCandidates(getPriorityListForFurtherPeerExchange());
+            candidates = getCandidates(getPriorityListForExtendingPeerGroup());
         }
         usedAddresses.addAll(candidates);
         return candidates;
@@ -112,7 +112,8 @@ public class PeerExchangeStrategy {
 
     boolean shouldRedoInitialPeerExchange(int numSuccess, int numRequests) {
         int numFailed = numRequests - numSuccess;
-        return numFailed > numRequests / 2 ||
+        int maxFailures = numRequests / 2;
+        return numFailed > maxFailures ||
                 peerGroupService.getAllConnectedPeers(node).count() < peerGroupService.getTargetNumConnectedPeers() ||
                 peerGroupService.getReportedPeers().size() < peerGroupService.getMinNumReportedPeers();
     }
@@ -148,7 +149,7 @@ public class PeerExchangeStrategy {
         return priorityList;
     }
 
-    private List<Address> getPriorityListForFurtherPeerExchange() {
+    private List<Address> getPriorityListForExtendingPeerGroup() {
         List<Address> priorityList = new ArrayList<>(getReportedPeerAddresses());
         priorityList.addAll(getPersistedAddresses());
         return priorityList;
@@ -172,7 +173,8 @@ public class PeerExchangeStrategy {
     private List<Address> getPersistedAddresses() {
         return peerGroupService.getPersistedPeers().stream()
                 .filter(this::isValidNonSeedPeer)
-                .sorted(Comparator.comparing(Peer::getDate))
+                .filter(this::isNotOutDated)
+                .sorted()
                 .limit(config.getNumPersistedPeersAtBoostrap())
                 .map(Peer::getAddress)
                 .collect(Collectors.toList());
@@ -208,15 +210,15 @@ public class PeerExchangeStrategy {
     }
 
     void addReportedPeers(Set<Peer> reportedPeers, Address reporterAddress) {
-        Set<Peer> filtered = reportedPeers.stream()
+        Set<Peer> peers = reportedPeers.stream()
                 .filter(peer -> notSameAddress(reporterAddress, peer))
                 .filter(this::isValidNonSeedPeer)
-                .filter(this::isNotAged)
-                .sorted(Comparator.comparing(Peer::getDate).reversed())
+                .filter(this::isNotOutDated)
+                .sorted()
                 .limit(REPORTED_PEERS_LIMIT)
                 .collect(Collectors.toSet());
-        peerGroupService.addReportedPeers(filtered);
-        peerGroupService.addPersistedPeers(filtered);
+        peerGroupService.addReportedPeers(peers);
+        peerGroupService.addPersistedPeers(peers);
     }
 
 
@@ -242,7 +244,7 @@ public class PeerExchangeStrategy {
         return isValidNonSeedPeer(peer.getAddress());
     }
 
-    private boolean isNotAged(Peer peer) {
+    private boolean isNotOutDated(Peer peer) {
         return peer.getAge() < MAX_AGE;
     }
 
@@ -261,14 +263,14 @@ public class PeerExchangeStrategy {
     private Stream<Peer> getAllConnectedPeers() {
         return peerGroupService.getAllConnectedPeers(node)
                 .filter(this::isValidNonSeedPeer)
-                .sorted(Comparator.comparing(Peer::getDate).reversed());
+                .sorted();
     }
 
     private Stream<Peer> getReportedPeers() {
         return peerGroupService.getReportedPeers().stream()
                 .filter(this::isValidNonSeedPeer)
-                .filter(this::isNotAged)
-                .sorted(Comparator.comparing(Peer::getDate).reversed());
+                .filter(this::isNotOutDated)
+                .sorted();
     }
 
     private List<Address> getShuffled(Collection<Address> addresses) {
