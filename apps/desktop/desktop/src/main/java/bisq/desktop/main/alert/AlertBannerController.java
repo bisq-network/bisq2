@@ -18,15 +18,18 @@
 package bisq.desktop.main.alert;
 
 import bisq.bonded_roles.security_manager.alert.AlertService;
+import bisq.bonded_roles.security_manager.alert.AlertType;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.settings.SettingsService;
+import javafx.collections.ListChangeListener;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Comparator;
 import java.util.Optional;
 
 @Slf4j
@@ -36,6 +39,7 @@ public class AlertBannerController implements Controller {
     private final AlertBannerView view;
     private final SettingsService settingsService;
     private final AlertService alertService;
+    private final ListChangeListener<AuthorizedAlertData> listChangeListener;
     private Pin authorizedAlertDataSetPin;
 
     public AlertBannerController(SettingsService settingsService, AlertService alertService) {
@@ -43,55 +47,75 @@ public class AlertBannerController implements Controller {
         this.alertService = alertService;
         model = new AlertBannerModel();
         view = new AlertBannerView(model, this);
+
+        model.getSortedList().setComparator(Comparator.comparing(AuthorizedAlertData::getAlertType).reversed());
+
+        listChangeListener = change -> {
+            change.next();
+            if (change.wasAdded()) {
+                AuthorizedAlertData newItem = model.getSortedList().get(0);
+                AuthorizedAlertData displayed = model.getDisplayedAuthorizedAlertData();
+                if (displayed == null || newItem.getAlertType().ordinal() >= displayed.getAlertType().ordinal()) {
+                    add(newItem);
+                }
+            } else if (change.wasRemoved()) {
+                change.getRemoved().stream()
+                        .filter(e -> e.equals(model.getDisplayedAuthorizedAlertData()))
+                        .findFirst()
+                        .ifPresent(e -> handleRemove());
+            }
+        };
     }
 
     @Override
     public void onActivate() {
+        updatePredicate();
+
         authorizedAlertDataSetPin = alertService.getAuthorizedAlertDataSet().addObserver(new CollectionObserver<>() {
             @Override
             public void add(AuthorizedAlertData authorizedAlertData) {
                 if (authorizedAlertData == null) {
                     return;
                 }
-                UIThread.run(() -> addAlert(authorizedAlertData));
+                UIThread.run(() -> model.getObservableList().add(authorizedAlertData));
             }
 
             @Override
             public void remove(Object element) {
                 if (element instanceof AuthorizedAlertData) {
-                    UIThread.run(() -> removeAlert((AuthorizedAlertData) element));
+                    UIThread.run(() -> model.getObservableList().remove((AuthorizedAlertData) element));
                 }
             }
 
             @Override
             public void clear() {
-                UIThread.run(() -> removeAllAlerts());
+                UIThread.run(() -> model.getObservableList().clear());
             }
         });
 
-        settingsService.getTradeRulesConfirmed().addObserver(e -> {
-
-        });
+        model.getSortedList().addListener(listChangeListener);
+        model.getSortedList().stream().findFirst().ifPresent(this::add);
     }
-
 
     @Override
     public void onDeactivate() {
         authorizedAlertDataSetPin.unbind();
+        model.getSortedList().removeListener(listChangeListener);
     }
 
+    void onClose() {
+        settingsService.getConsumedAlertIds().add(model.getDisplayedAuthorizedAlertData().getId());
+        updatePredicate();
+        handleRemove();
+    }
 
-    private void addAlert(AuthorizedAlertData authorizedAlertData) {
-        if (settingsService.getConsumedAlertIds().contains(authorizedAlertData.getId())) {
-            model.getIsAlertVisible().set(false);
-            return;
-        }
-
+    private void add(AuthorizedAlertData authorizedAlertData) {
         model.setDisplayedAuthorizedAlertData(authorizedAlertData);
         Optional<String> optionalMessage = authorizedAlertData.getMessage();
 
         if (optionalMessage.isPresent()) {
             log.info("Showing alert with message {}", optionalMessage.get());
+            model.getHeadline().set(authorizedAlertData.getHeadline().orElseThrow());
             model.getMessage().set(authorizedAlertData.getMessage().orElseThrow());
             model.getAlertType().set(authorizedAlertData.getAlertType());
             model.getIsAlertVisible().set(true);
@@ -101,16 +125,14 @@ public class AlertBannerController implements Controller {
         }
     }
 
-    private void removeAlert(AuthorizedAlertData data) {
+    private void handleRemove() {
         model.reset();
+        model.getSortedList().stream().findFirst().ifPresent(this::add);
     }
 
-    private void removeAllAlerts() {
-        model.reset();
-    }
-
-    void onClose() {
-        settingsService.getConsumedAlertIds().add(model.getDisplayedAuthorizedAlertData().getId());
-        model.reset();
+    private void updatePredicate() {
+        model.getFilteredList().setPredicate(authorizedAlertData ->
+                !settingsService.getConsumedAlertIds().contains(authorizedAlertData.getId()) &&
+                        authorizedAlertData.getAlertType() != AlertType.BAN);
     }
 }

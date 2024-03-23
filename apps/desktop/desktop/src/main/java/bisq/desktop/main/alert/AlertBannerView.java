@@ -28,7 +28,9 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.layout.*;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -36,11 +38,13 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public class AlertBannerView extends View<BorderPane, AlertBannerModel, AlertBannerController> {
     public static final int DURATION = Transitions.DEFAULT_DURATION / 2;
+    private final VBox contentVBox;
 
-    Label content = new Label();
+    Label headline = new Label();
+    Label message = new Label();
     private final Button closeButton;
     private final HBox banner;
-    private final ChangeListener<Number> contentHeightListener;
+    private final ChangeListener<Number> heightListener;
     private Timeline slideInRightTimeline, slideOutTopTimeline;
     private Subscription isVisiblePin, alertTypePin;
 
@@ -50,15 +54,16 @@ public class AlertBannerView extends View<BorderPane, AlertBannerModel, AlertBan
         root.setManaged(false);
         root.setVisible(false);
 
-        content.setWrapText(true);
+        message.setWrapText(true);
 
         closeButton = BisqIconButton.createIconButton("close-white");
 
-        banner = new HBox(content, Spacer.fillHBox(), closeButton);
+        contentVBox = new VBox(10, headline, message);
+        banner = new HBox(contentVBox, Spacer.fillHBox(), closeButton);
         banner.setAlignment(Pos.TOP_CENTER);
         banner.setPadding(new Insets(10, 10, 10, 15));
 
-        contentHeightListener = ((observable, oldValue, newValue) -> banner.setMinHeight(newValue.doubleValue() + 25)); // padding = 25
+        heightListener = ((observable, oldValue, newValue) -> banner.setMinHeight(contentVBox.getHeight() + 25)); // padding = 25
 
         root.setCenter(banner);
         root.setPadding(new Insets(20, 40, 20, 40));
@@ -66,7 +71,8 @@ public class AlertBannerView extends View<BorderPane, AlertBannerModel, AlertBan
 
     @Override
     protected void onViewAttached() {
-        content.textProperty().bind(model.getMessage());
+        headline.textProperty().bind(model.getHeadline());
+        message.textProperty().bind(model.getMessage());
 
         isVisiblePin = EasyBind.subscribe(model.getIsAlertVisible(), isVisible -> {
             if (slideInRightTimeline != null) {
@@ -99,27 +105,37 @@ public class AlertBannerView extends View<BorderPane, AlertBannerModel, AlertBan
             }
         });
 
-        alertTypePin = EasyBind.subscribe(model.getAlertType(), this::addAlertTypeStyleClass);
+        alertTypePin = EasyBind.subscribe(model.getAlertType(), alertType -> {
+            if (alertType != null) {
+                addAlertTypeStyleClass(alertType);
+            }
+        });
 
-        content.heightProperty().addListener(contentHeightListener);
+        message.heightProperty().addListener(heightListener);
 
         closeButton.setOnAction(e -> controller.onClose());
     }
 
     @Override
     protected void onViewDetached() {
-        content.textProperty().unbind();
+        headline.textProperty().unbind();
+        message.textProperty().unbind();
 
         isVisiblePin.unsubscribe();
         alertTypePin.unsubscribe();
 
-        content.heightProperty().removeListener(contentHeightListener);
+        message.heightProperty().removeListener(heightListener);
 
         closeButton.setOnAction(null);
     }
 
     private void addAlertTypeStyleClass(AlertType alertType) {
-        banner.getStyleClass().clear();
+        headline.getStyleClass().clear();
+        headline.getStyleClass().add("alert-banner-headline");
+
+        message.getStyleClass().clear();
+        message.getStyleClass().add("alert-banner-message");
+
         String alertTypeClass;
         if (alertType == AlertType.INFO) {
             alertTypeClass = "info-banner";
@@ -128,6 +144,8 @@ public class AlertBannerView extends View<BorderPane, AlertBannerModel, AlertBan
         } else {
             alertTypeClass = "emergency-banner";
         }
-        banner.getStyleClass().addAll("alert-banner", alertTypeClass);
+
+        banner.getStyleClass().clear();
+        banner.getStyleClass().add(alertTypeClass);
     }
 }

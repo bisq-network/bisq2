@@ -23,6 +23,7 @@ import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
+import bisq.i18n.Res;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
@@ -49,6 +50,7 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
     private final String id;
     private final long date;
     private final AlertType alertType;
+    private final Optional<String> headline;
     private final Optional<String> message;
     private final boolean haltTrading;
     private final boolean requireVersionForTrading;
@@ -60,6 +62,7 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
     public AuthorizedAlertData(String id,
                                long date,
                                AlertType alertType,
+                               Optional<String> headline,
                                Optional<String> message,
                                boolean haltTrading,
                                boolean requireVersionForTrading,
@@ -70,6 +73,7 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
         this.id = id;
         this.date = date;
         this.alertType = alertType;
+        this.headline = headline;
         this.message = message;
         this.haltTrading = haltTrading;
         this.requireVersionForTrading = requireVersionForTrading;
@@ -101,22 +105,30 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
                 .setSecurityManagerProfileId(securityManagerProfileId)
                 .setStaticPublicKeysProvided(staticPublicKeysProvided);
         message.ifPresent(builder::setMessage);
+        headline.ifPresent(builder::setHeadline);
         minVersion.ifPresent(builder::setMinVersion);
         bannedRole.ifPresent(authorizedBondedRole -> builder.setBannedRole(authorizedBondedRole.toProto()));
         return builder.build();
     }
 
     public static AuthorizedAlertData fromProto(bisq.bonded_roles.protobuf.AuthorizedAlertData proto) {
+        AlertType alertType = AlertType.fromProto(proto.getAlertType());
         return new AuthorizedAlertData(proto.getId(),
                 proto.getDate(),
-                AlertType.fromProto(proto.getAlertType()),
+                alertType,
+                proto.hasHeadline() ? Optional.of(proto.getHeadline()) : getDefaultHeadline(alertType),
                 proto.hasMessage() ? Optional.of(proto.getMessage()) : Optional.empty(),
                 proto.getHaltTrading(),
                 proto.getRequireVersionForTrading(),
                 proto.hasMinVersion() ? Optional.of(proto.getMinVersion()) : Optional.empty(),
                 proto.hasBannedRole() ? Optional.of(AuthorizedBondedRole.fromProto(proto.getBannedRole())) : Optional.empty(),
                 proto.getSecurityManagerProfileId(),
-                proto.getStaticPublicKeysProvided());
+                proto.getStaticPublicKeysProvided()
+        );
+    }
+
+    private static Optional<String> getDefaultHeadline(AlertType alertType) {
+        return Optional.of(Res.get("authorizedRole.securityManager.alertType." + alertType.name()));
     }
 
     public static ProtoResolver<DistributedData> getResolver() {

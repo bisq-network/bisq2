@@ -63,7 +63,7 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
 
     private final Button difficultyAdjustmentButton, sendAlertButton;
     private final MaterialTextArea message;
-    private final MaterialTextField minVersion, difficultyAdjustmentFactor;
+    private final MaterialTextField headline, minVersion, difficultyAdjustmentFactor;
     private final AutoCompleteComboBox<AlertType> alertTypeSelection;
     private final AutoCompleteComboBox<BondedRoleListItem> bondedRoleSelection;
     private final CheckBox haltTradingCheckBox, requireVersionForTradingCheckBox;
@@ -78,24 +78,6 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
         root.setPadding(new Insets(0, 40, 40, 40));
         root.setAlignment(Pos.TOP_LEFT);
 
-        // difficultyAdjustment
-        Label difficultyAdjustmentHeadline = new Label(Res.get("authorizedRole.securityManager.difficultyAdjustment.headline"));
-        difficultyAdjustmentHeadline.getStyleClass().add("large-thin-headline");
-
-        difficultyAdjustmentFactor = new MaterialTextField(Res.get("authorizedRole.securityManager.difficultyAdjustment.description"));
-        difficultyAdjustmentFactor.setMaxWidth(400);
-        difficultyAdjustmentFactor.setValidators(DIFFICULTY_ADJUSTMENT_FACTOR_VALIDATOR);
-
-        difficultyAdjustmentButton = new Button(Res.get("authorizedRole.securityManager.difficultyAdjustment.button"));
-        difficultyAdjustmentButton.setDefaultButton(true);
-
-        Label difficultyAdjustmentTableHeadline = new Label(Res.get("authorizedRole.securityManager.difficultyAdjustment.table.headline"));
-        difficultyAdjustmentTableHeadline.getStyleClass().add("large-thin-headline");
-
-        difficultyAdjustmentTableView = new BisqTableView<>(model.getDifficultyAdjustmentListItems());
-        difficultyAdjustmentTableView.setFixHeight(200);
-        difficultyAdjustmentTableView.getStyleClass().add("user-bonded-roles-table-view");
-        configDifficultyAdjustmentTableView();
 
         // alerts
         Label alertHeadline = new Label(Res.get("authorizedRole.securityManager.alert.headline"));
@@ -129,6 +111,7 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
             }
         });
 
+        headline = new MaterialTextField(Res.get("authorizedRole.securityManager.alert.message.headline"));
         message = new MaterialTextArea(Res.get("authorizedRole.securityManager.alert.message"));
 
         haltTradingCheckBox = new CheckBox(Res.get("authorizedRole.securityManager.emergency.haltTrading"));
@@ -152,6 +135,27 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
         alertTableView.getStyleClass().add("user-bonded-roles-table-view");
         configAlertTableView();
 
+
+        // difficultyAdjustment
+        Label difficultyAdjustmentHeadline = new Label(Res.get("authorizedRole.securityManager.difficultyAdjustment.headline"));
+        difficultyAdjustmentHeadline.getStyleClass().add("large-thin-headline");
+
+        difficultyAdjustmentFactor = new MaterialTextField(Res.get("authorizedRole.securityManager.difficultyAdjustment.description"));
+        difficultyAdjustmentFactor.setMaxWidth(400);
+        difficultyAdjustmentFactor.setValidators(DIFFICULTY_ADJUSTMENT_FACTOR_VALIDATOR);
+
+        difficultyAdjustmentButton = new Button(Res.get("authorizedRole.securityManager.difficultyAdjustment.button"));
+        difficultyAdjustmentButton.setDefaultButton(true);
+
+        Label difficultyAdjustmentTableHeadline = new Label(Res.get("authorizedRole.securityManager.difficultyAdjustment.table.headline"));
+        difficultyAdjustmentTableHeadline.getStyleClass().add("large-thin-headline");
+
+        difficultyAdjustmentTableView = new BisqTableView<>(model.getDifficultyAdjustmentListItems());
+        difficultyAdjustmentTableView.setFixHeight(200);
+        difficultyAdjustmentTableView.getStyleClass().add("user-bonded-roles-table-view");
+        configDifficultyAdjustmentTableView();
+
+        // Role info
         roleInfo.setPadding(new Insets(0));
 
         VBox.setMargin(difficultyAdjustmentButton, new Insets(0, 0, 10, 0));
@@ -162,14 +166,16 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
         VBox.setVgrow(difficultyAdjustmentTableView, Priority.NEVER);
         VBox.setVgrow(alertTableView, Priority.NEVER);
         this.root.getChildren().addAll(
-                difficultyAdjustmentHeadline, difficultyAdjustmentFactor, difficultyAdjustmentButton,
-                difficultyAdjustmentTableHeadline, difficultyAdjustmentTableView,
                 alertHeadline,
-                alertTypeSelection, message,
+                alertTypeSelection, headline, message,
                 haltTradingCheckBox, requireVersionForTradingHBox,
                 bondedRoleSelection,
                 sendAlertButton,
                 alertTableHeadline, alertTableView,
+
+                difficultyAdjustmentHeadline, difficultyAdjustmentFactor, difficultyAdjustmentButton,
+                difficultyAdjustmentTableHeadline, difficultyAdjustmentTableView,
+
                 roleInfo);
     }
 
@@ -187,6 +193,10 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
 
         bondedRoleSelection.visibleProperty().bind(model.getSelectedAlertType().isEqualTo(AlertType.BAN));
         bondedRoleSelection.managedProperty().bind(bondedRoleSelection.visibleProperty());
+
+        headline.textProperty().bindBidirectional(model.getHeadline());
+        headline.visibleProperty().bind(bondedRoleSelection.visibleProperty().not());
+        headline.managedProperty().bind(headline.visibleProperty());
 
         message.textProperty().bindBidirectional(model.getMessage());
         message.visibleProperty().bind(bondedRoleSelection.visibleProperty().not());
@@ -236,6 +246,9 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
         bondedRoleSelection.visibleProperty().unbind();
         bondedRoleSelection.managedProperty().unbind();
 
+        headline.textProperty().unbindBidirectional(model.getHeadline());
+        headline.visibleProperty().unbind();
+        headline.managedProperty().unbind();
 
         message.textProperty().unbindBidirectional(model.getMessage());
         message.visibleProperty().unbind();

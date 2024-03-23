@@ -21,14 +21,27 @@ import bisq.bonded_roles.security_manager.alert.AlertType;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
 import bisq.desktop.common.view.Model;
 import javafx.beans.property.*;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Getter
 public class AlertBannerModel implements Model {
+    private final ObservableList<AuthorizedAlertData> observableList = FXCollections.observableArrayList();
+    private final FilteredList<AuthorizedAlertData> filteredList = new FilteredList<>(observableList);
+    private final SortedList<AuthorizedAlertData> sortedList = new SortedList<>(filteredList);
+    private final Set<AuthorizedAlertData> displayedAlerts = new HashSet<>();
+
     @Setter
     private AuthorizedAlertData displayedAuthorizedAlertData;
     private final BooleanProperty isAlertVisible = new SimpleBooleanProperty();
+    private final StringProperty headline = new SimpleStringProperty();
     private final StringProperty message = new SimpleStringProperty();
     private final ObjectProperty<AlertType> alertType = new SimpleObjectProperty<>();
 
@@ -38,6 +51,7 @@ public class AlertBannerModel implements Model {
     void reset() {
         displayedAuthorizedAlertData = null;
         isAlertVisible.set(false);
+        headline.set(null);
         message.set(null);
         alertType.set(null);
     }

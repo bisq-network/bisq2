@@ -95,6 +95,7 @@ public class SecurityManagerService implements Service {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<Boolean> publishAlert(AlertType alertType,
+                                                   Optional<String> headline,
                                                    Optional<String> message,
                                                    boolean haltTrading,
                                                    boolean requireVersionForTrading,
@@ -108,6 +109,7 @@ public class SecurityManagerService implements Service {
         AuthorizedAlertData authorizedAlertData = new AuthorizedAlertData(StringUtils.createUid(),
                 new Date().getTime(),
                 alertType,
+                headline,
                 message,
                 haltTrading,
                 requireVersionForTrading,
