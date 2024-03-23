@@ -48,7 +48,7 @@ public class BisqEasyBtcAddressMessageHandler extends TradeMessageHandler<BisqEa
 
         checkArgument(StringUtils.isNotEmpty(message.getBtcAddress()));
         // We leave it flexible so that users can use other than a BTC address data as btcAddress
-        checkArgument(message.getBtcAddress().length() <= 100);
+        checkArgument(message.getBtcAddress().length() <= 1000);
         checkNotNull(message.getBisqEasyOffer());
     }
 
