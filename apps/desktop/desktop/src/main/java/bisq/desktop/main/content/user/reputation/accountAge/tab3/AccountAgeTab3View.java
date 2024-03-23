@@ -23,6 +23,7 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.i18n.Res;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
@@ -43,7 +44,7 @@ public class AccountAgeTab3View extends View<VBox, AccountAgeTab3Model, AccountA
                               Pane userProfileSelection) {
         super(new VBox(), model, controller);
 
-        root.setSpacing(20);
+        root.setSpacing(5);
         root.setAlignment(Pos.TOP_LEFT);
         root.getStyleClass().add("account-age");
 
@@ -54,6 +55,7 @@ public class AccountAgeTab3View extends View<VBox, AccountAgeTab3Model, AccountA
 
         requestCertificateButton = new Button(Res.get("user.reputation.request"));
         requestCertificateButton.getStyleClass().add("outlined-button");
+        VBox.setMargin(requestCertificateButton, new Insets(-5, 0, 15, 0));
 
         backButton = new Button(Res.get("action.back"));
 
@@ -101,8 +103,10 @@ public class AccountAgeTab3View extends View<VBox, AccountAgeTab3Model, AccountA
     private VBox createAndGetStepOne(Pane userProfileSelection) {
         Label title = createAndGetStepLabel(Res.get("user.reputation.accountAge.import.step1.title"));
         Label instruction = createAndGetStepInstructionLabel(Res.get("user.reputation.accountAge.import.step1.instruction"));
+        VBox.setMargin(userProfileSelection, new Insets(0, 0, -10, -15));
         VBox vBox = new VBox(title, instruction, userProfileSelection, Layout.hLine());
         vBox.getStyleClass().add("import-step");
+        VBox.setMargin(vBox, new Insets(20, 0, 0, 0));
         return vBox;
     }
 
@@ -112,6 +116,8 @@ public class AccountAgeTab3View extends View<VBox, AccountAgeTab3Model, AccountA
         pubKeyHash = new MaterialTextField(Res.get("user.reputation.accountAge.import.step2.profileId"), "");
         pubKeyHash.setEditable(false);
         pubKeyHash.showCopyIcon();
+        pubKeyHash.getStyleClass().add("material-field");
+        VBox.setMargin(pubKeyHash, new Insets(10, 0, 15, 2));
         VBox vBox = new VBox(title, instruction, pubKeyHash, Layout.hLine());
         vBox.getStyleClass().add("import-step");
         return vBox;
@@ -122,6 +128,7 @@ public class AccountAgeTab3View extends View<VBox, AccountAgeTab3Model, AccountA
         Label instructionOne = createAndGetStepInstructionLabel(Res.get("user.reputation.accountAge.import.step3.instruction1"));
         Label instructionTwo = createAndGetStepInstructionLabel(Res.get("user.reputation.accountAge.import.step3.instruction2"));
         Label instructionThree = createAndGetStepInstructionLabel(Res.get("user.reputation.accountAge.import.step3.instruction3"));
+        VBox.setMargin(instructionThree, new Insets(0, 0, 15, 0));
         VBox vBox = new VBox(title, instructionOne, instructionTwo, instructionThree, Layout.hLine());
         vBox.getStyleClass().add("import-step");
         return vBox;
@@ -132,6 +139,8 @@ public class AccountAgeTab3View extends View<VBox, AccountAgeTab3Model, AccountA
         Label instruction = createAndGetStepInstructionLabel(Res.get("user.reputation.accountAge.import.step4.instruction"));
         signedMessage = new MaterialTextField(Res.get("user.reputation.accountAge.import.step4.signedMessage"));
         signedMessage.setEditable(true);
+        signedMessage.getStyleClass().add("material-field");
+        VBox.setMargin(signedMessage, new Insets(10, 0, 15, 2));
         UIThread.runOnNextRenderFrame(signedMessage::requestFocus);
         VBox vBox = new VBox(title, instruction, signedMessage);
         vBox.getStyleClass().add("import-step");
