@@ -22,6 +22,7 @@ import bisq.common.data.Triple;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.GridPaneUtil;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.main.notification.NotificationPanelView;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
@@ -29,6 +30,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -72,6 +74,9 @@ public class DashboardView extends View<ScrollPane, DashboardModel, DashboardCon
         Pair<VBox, Label> usersPair = getValueBox(Res.get("dashboard.activeUsers"));
         VBox activeUsers = usersPair.getFirst();
         activeUsersLabel = usersPair.getSecond();
+        BisqTooltip tooltip = new BisqTooltip(Res.get("dashboard.activeUsers.tooltip"));
+        tooltip.setId("large-tooltip");
+        Tooltip.install(activeUsers, tooltip);
 
         HBox.setMargin(marketPrice, new Insets(0, -100, 0, -30));
         HBox hBox = new HBox(16, marketPrice, offersOnline, activeUsers);
