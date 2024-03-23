@@ -72,11 +72,14 @@ public class AccountAgeTab3Controller implements Controller {
                     });
                 }
         );
+
+        model.getRequestCertificateButtonDisabled().bind(model.getSignedMessage().isEmpty());
     }
 
     @Override
     public void onDeactivate() {
         selectedUserProfilePin.unbind();
+        model.getRequestCertificateButtonDisabled().unbind();
     }
 
     void onBack() {
@@ -96,27 +99,20 @@ public class AccountAgeTab3Controller implements Controller {
     }
 
     public void onRequestAuthorization() {
-        ClipboardUtil.getClipboardString().ifPresent(clipboard -> {
-            if (clipboard.startsWith(PREFIX)) {
-                String json = clipboard.replace(PREFIX, "");
-                boolean success = accountAgeService.requestAuthorization(json);
-                if (success) {
-                    new Popup().information(Res.get("user.reputation.request.success"))
-                            .animationType(Overlay.AnimationType.SlideDownFromCenterTop)
-                            .transitionsType(Transitions.Type.LIGHT_BLUR_LIGHT)
-                            .owner(parentView.getRoot())
-                            .onClose(this::onClose)
-                            .show();
-                    return;
-                }
-            }
+        String signedMessage = String.valueOf(model.getSignedMessage());
+        // Question: do we still need the prefix?
+        if (signedMessage.startsWith(PREFIX)) {
+            signedMessage = signedMessage.replace(PREFIX, "");
+        }
 
-            new Popup().warning(Res.get("user.reputation.request.error", StringUtils.truncate(clipboard)))
+        boolean success = accountAgeService.requestAuthorization(signedMessage);
+        if (success) {
+            new Popup().information(Res.get("user.reputation.request.success"))
                     .animationType(Overlay.AnimationType.SlideDownFromCenterTop)
                     .transitionsType(Transitions.Type.LIGHT_BLUR_LIGHT)
                     .owner(parentView.getRoot())
                     .onClose(this::onClose)
                     .show();
-        });
+        }
     }
 }
