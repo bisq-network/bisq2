@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.user.bonded_roles.nodes;
 
+import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.overlay.Popup;
@@ -133,6 +134,8 @@ public class NodesView extends BondedRolesView<NodesModel, NodesController> {
                     icon.setOnAction(e -> new Popup()
                             .headline(Res.get("user.bondedRoles.table.columns.node.address.popup.headline"))
                             .message(item.getAddressInfoJson())
+                            .onAction(() -> ClipboardUtil.copyToClipboard(item.getAddressInfoJson()))
+                            .actionButtonText(Res.get("action.copyToClipboard"))
                             .show());
                     setGraphic(hBox);
                 } else {
