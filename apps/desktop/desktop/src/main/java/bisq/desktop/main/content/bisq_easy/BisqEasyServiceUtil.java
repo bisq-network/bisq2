@@ -125,13 +125,8 @@ public class BisqEasyServiceUtil {
             priceInfo = "";
         }
 
-        String directionString = Res.get("offer." + direction.name().toLowerCase()).toUpperCase();
         boolean hasAmountRange = amountSpec instanceof RangeAmountSpec;
         String quoteAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, amountSpec, priceSpec, market, hasAmountRange, true);
-        return Res.get("bisqEasy.tradeWizard.review.chatMessage",
-                directionString,
-                quoteAmountAsString,
-                paymentMethodNames,
-                priceInfo);
+        return Res.get("bisqEasy.tradeWizard.review.chatMessage", quoteAmountAsString, paymentMethodNames, priceInfo);
     }
 }
