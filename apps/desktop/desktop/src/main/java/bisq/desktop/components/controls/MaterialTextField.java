@@ -56,10 +56,8 @@ public class MaterialTextField extends Pane {
     protected final TextInputControl textInputControl;
     @Getter
     protected final Label helpLabel = new Label();
-
     @Getter
     protected final Label errorLabel = new Label();
-
     @Getter
     private final BisqIconButton iconButton = new BisqIconButton();
     private ChangeListener<Number> iconButtonHeightListener;
@@ -125,9 +123,6 @@ public class MaterialTextField extends Pane {
         errorLabel.setLayoutX(16);
         errorLabel.getStyleClass().add("material-text-field-help");
         errorLabel.setMouseTransparent(true);
-//        if (StringUtils.isNotEmpty(help)) {
-//            errorLabel.setText(help);
-//        }
 
         getChildren().addAll(bg, line, selectionLine, descriptionLabel, textInputControl, iconButton, helpLabel,errorLabel);
 
@@ -185,7 +180,6 @@ public class MaterialTextField extends Pane {
     public void setValidators(ValidatorBase... validators) {
         validationControl.setValidators(validators);
     }
-
 
     public boolean validate() {
         isValid.set(validationControl.validate());
