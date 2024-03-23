@@ -21,6 +21,7 @@ import bisq.common.data.Pair;
 import bisq.common.data.Triple;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.GridPaneUtil;
+import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.main.notification.NotificationPanelView;
@@ -31,6 +32,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Tooltip;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -39,6 +41,8 @@ import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
+
+import java.util.Optional;
 
 @Slf4j
 public class DashboardView extends View<ScrollPane, DashboardModel, DashboardController> {
@@ -71,12 +75,10 @@ public class DashboardView extends View<ScrollPane, DashboardModel, DashboardCon
         VBox offersOnline = offersPair.getFirst();
         offersOnlineLabel = offersPair.getSecond();
 
-        Pair<VBox, Label> usersPair = getValueBox(Res.get("dashboard.activeUsers"));
+        Pair<VBox, Label> usersPair = getValueBox(Res.get("dashboard.activeUsers"),
+                Optional.of(Res.get("dashboard.activeUsers.tooltip")));
         VBox activeUsers = usersPair.getFirst();
         activeUsersLabel = usersPair.getSecond();
-        BisqTooltip tooltip = new BisqTooltip(Res.get("dashboard.activeUsers.tooltip"));
-        tooltip.setId("large-tooltip");
-        Tooltip.install(activeUsers, tooltip);
 
         HBox.setMargin(marketPrice, new Insets(0, -100, 0, -30));
         HBox hBox = new HBox(16, marketPrice, offersOnline, activeUsers);
@@ -199,13 +201,28 @@ public class DashboardView extends View<ScrollPane, DashboardModel, DashboardCon
     }
 
     private Pair<VBox, Label> getValueBox(String title) {
+        return getValueBox(title, Optional.empty());
+    }
+
+    private Pair<VBox, Label> getValueBox(String title, Optional<String> tooltipText) {
         Label titleLabel = new Label(title);
         titleLabel.getStyleClass().addAll("bisq-text-7", "bisq-text-grey-9");
+        HBox titleHBox = new HBox(titleLabel);
+        titleHBox.setAlignment(Pos.CENTER);
+
+        if (tooltipText.isPresent()) {
+            ImageView tooltipIcon = ImageUtil.getImageViewById("info");
+            tooltipIcon.setOpacity(0.6);
+            BisqTooltip tooltip = new BisqTooltip(tooltipText.get());
+            Tooltip.install(tooltipIcon, tooltip);
+            titleHBox.getChildren().add(tooltipIcon);
+            titleHBox.setSpacing(5);
+        }
 
         Label valueLabel = new Label();
         valueLabel.getStyleClass().add("bisq-text-headline-3");
 
-        VBox box = new VBox(titleLabel, valueLabel);
+        VBox box = new VBox(titleHBox, valueLabel);
         box.setAlignment(Pos.TOP_CENTER);
         HBox.setHgrow(box, Priority.ALWAYS);
         return new Pair<>(box, valueLabel);
