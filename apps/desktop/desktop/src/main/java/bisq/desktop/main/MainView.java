@@ -34,12 +34,13 @@ public class MainView extends NavigationView<HBox, MainModel, MainController> {
                     MainController controller,
                     AnchorPane leftNav,
                     HBox topPanel,
-                    BorderPane notificationPanel) {
+                    BorderPane notificationPanel,
+                    BorderPane alertBanner) {
         super(new HBox(), model, controller);
 
         anchorPane = new AnchorPane();
         VBox.setVgrow(anchorPane, Priority.ALWAYS);
-        VBox vBox = new VBox(topPanel, notificationPanel, anchorPane);
+        VBox vBox = new VBox(topPanel, notificationPanel, alertBanner, anchorPane);
         vBox.setFillWidth(true);
         HBox.setHgrow(vBox, Priority.ALWAYS);
 
