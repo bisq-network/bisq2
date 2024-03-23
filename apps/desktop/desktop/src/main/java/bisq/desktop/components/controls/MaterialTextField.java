@@ -56,6 +56,10 @@ public class MaterialTextField extends Pane {
     protected final TextInputControl textInputControl;
     @Getter
     protected final Label helpLabel = new Label();
+
+    @Getter
+    protected final Label errorLabel = new Label();
+
     @Getter
     private final BisqIconButton iconButton = new BisqIconButton();
     private ChangeListener<Number> iconButtonHeightListener;
@@ -118,7 +122,14 @@ public class MaterialTextField extends Pane {
             helpLabel.setText(help);
         }
 
-        getChildren().addAll(bg, line, selectionLine, descriptionLabel, textInputControl, iconButton, helpLabel);
+        errorLabel.setLayoutX(16);
+        errorLabel.getStyleClass().add("material-text-field-help");
+        errorLabel.setMouseTransparent(true);
+        if (StringUtils.isNotEmpty(help)) {
+            errorLabel.setText(help);
+        }
+
+        getChildren().addAll(bg, line, selectionLine, descriptionLabel, textInputControl, iconButton, helpLabel,errorLabel);
 
         widthProperty().addListener(new WeakReference<ChangeListener<Number>>((observable, oldValue, newValue) ->
                 onWidthChanged((double) newValue)).get());
@@ -181,12 +192,12 @@ public class MaterialTextField extends Pane {
         selectionLine.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, !isValid.get());
         descriptionLabel.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, !isValid.get());
         getActiveValidator().ifPresentOrElse(validator -> {
-                    helpLabel.setText(validator.getMessage());
-                    helpLabel.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, true);
+                    errorLabel.setText(validator.getMessage());
+                    errorLabel.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, true);
                 },
                 () -> {
-                    helpLabel.setText("");
-                    helpLabel.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, false);
+                    errorLabel.setText("");
+                    errorLabel.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, false);
                 });
         return isValid.get();
     }
@@ -196,8 +207,8 @@ public class MaterialTextField extends Pane {
         isValid.set(false);
         selectionLine.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, false);
         descriptionLabel.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, false);
-        helpLabel.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, false);
-        helpLabel.setText("");
+        errorLabel.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, false);
+        errorLabel.setText("");
     }
 
     private final BooleanProperty isValid = new SimpleBooleanProperty();
@@ -432,6 +443,7 @@ public class MaterialTextField extends Pane {
         selectionLine.setLayoutY(getBgHeight() - 2);
         textInputControl.setLayoutY(getFieldLayoutY());
         helpLabel.setLayoutY(getBgHeight() + 3.5);
+        errorLabel.setLayoutY(getBgHeight() + 3.5);
     }
 
     private void layoutIconButton() {
@@ -465,6 +477,7 @@ public class MaterialTextField extends Pane {
                 Transitions.animateLayoutY(descriptionLabel, 16.5, Transitions.DEFAULT_DURATION / 6d, null);
             }
         }
+
         helpLabel.setVisible(StringUtils.isNotEmpty(helpProperty().get()));
         helpLabel.setManaged(StringUtils.isNotEmpty(helpProperty().get()));
 
