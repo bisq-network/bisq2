@@ -125,9 +125,9 @@ public class MaterialTextField extends Pane {
         errorLabel.setLayoutX(16);
         errorLabel.getStyleClass().add("material-text-field-help");
         errorLabel.setMouseTransparent(true);
-        if (StringUtils.isNotEmpty(help)) {
-            errorLabel.setText(help);
-        }
+//        if (StringUtils.isNotEmpty(help)) {
+//            errorLabel.setText(help);
+//        }
 
         getChildren().addAll(bg, line, selectionLine, descriptionLabel, textInputControl, iconButton, helpLabel,errorLabel);
 
@@ -186,7 +186,7 @@ public class MaterialTextField extends Pane {
         validationControl.setValidators(validators);
     }
 
-    // TODO add custom errorLabel and not reuse helpLabel as it would cause an exception when binding at the helpLabel is used
+
     public boolean validate() {
         isValid.set(validationControl.validate());
         selectionLine.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, !isValid.get());
@@ -194,10 +194,14 @@ public class MaterialTextField extends Pane {
         getActiveValidator().ifPresentOrElse(validator -> {
                     errorLabel.setText(validator.getMessage());
                     errorLabel.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, true);
+                    helpLabel.setOpacity(0);
+                    helpLabel.setDisable(true);
                 },
                 () -> {
                     errorLabel.setText("");
                     errorLabel.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, false);
+                    helpLabel.setOpacity(1);
+                    helpLabel.setDisable(false);
                 });
         return isValid.get();
     }
@@ -417,6 +421,7 @@ public class MaterialTextField extends Pane {
             double iconWidth = iconButton.isVisible() ? 25 : 0;
             textInputControl.setPrefWidth(width - 2 * textInputControl.getLayoutX() - iconWidth);
             helpLabel.setPrefWidth(width - 2 * helpLabel.getLayoutX());
+            errorLabel.setPrefWidth(width - 2 * errorLabel.getLayoutX());
         }
     }
 
