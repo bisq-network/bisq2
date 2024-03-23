@@ -18,11 +18,25 @@
 package bisq.desktop.main.content.bisq_easy;
 
 import bisq.bisq_easy.BisqEasyService;
+import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.common.currency.Market;
 import bisq.desktop.ServiceProvider;
+import bisq.i18n.Res;
 import bisq.network.identity.NetworkId;
+import bisq.offer.Direction;
+import bisq.offer.amount.OfferAmountFormatter;
+import bisq.offer.amount.spec.AmountSpec;
+import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.options.OfferOptionUtil;
+import bisq.offer.payment_method.PaymentMethodSpecFormatter;
+import bisq.offer.price.spec.FixPriceSpec;
+import bisq.offer.price.spec.FloatPriceSpec;
+import bisq.offer.price.spec.PriceSpec;
+import bisq.presentation.formatters.PercentageFormatter;
+import bisq.presentation.formatters.PriceFormatter;
 import bisq.trade.Trade;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.user.identity.UserIdentity;
@@ -31,6 +45,7 @@ import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationService;
 
+import java.util.List;
 import java.util.Optional;
 
 public class BisqEasyServiceUtil {
@@ -73,5 +88,53 @@ public class BisqEasyServiceUtil {
             long offersRequiredScore = OfferOptionUtil.findRequiredTotalReputationScore(peersOffer).orElse(0L);
             return myScoreAsSeller >= offersRequiredScore;
         }
+    }
+
+    public static String createOfferBookMessageText(MarketPriceService marketPriceService,
+                                                    Direction direction,
+                                                    Market market,
+                                                    List<FiatPaymentMethod> fiatPaymentMethods,
+                                                    AmountSpec amountSpec,
+                                                    PriceSpec priceSpec) {
+        String paymentMethodNames = PaymentMethodSpecFormatter.fromPaymentMethods(fiatPaymentMethods);
+        return createOfferBookMessageText(marketPriceService,
+                direction,
+                market,
+                paymentMethodNames,
+                amountSpec,
+                priceSpec);
+    }
+
+    public static String createOfferBookMessageText(MarketPriceService marketPriceService,
+                                                    Direction direction,
+                                                    Market market,
+                                                    String paymentMethodNames,
+                                                    AmountSpec amountSpec,
+                                                    PriceSpec priceSpec) {
+        String priceInfo;
+        if (direction.isSell()) {
+            if (priceSpec instanceof FixPriceSpec) {
+                FixPriceSpec fixPriceSpec = (FixPriceSpec) priceSpec;
+                String price = PriceFormatter.formatWithCode(fixPriceSpec.getPriceQuote());
+                priceInfo = Res.get("bisqEasy.tradeWizard.review.chatMessage.fixPrice", price);
+            } else if (priceSpec instanceof FloatPriceSpec) {
+                FloatPriceSpec floatPriceSpec = (FloatPriceSpec) priceSpec;
+                String percent = PercentageFormatter.formatToPercentWithSymbol(floatPriceSpec.getPercentage());
+                priceInfo = Res.get("bisqEasy.tradeWizard.review.chatMessage.floatPrice", percent);
+            } else {
+                priceInfo = Res.get("bisqEasy.tradeWizard.review.chatMessage.marketPrice");
+            }
+        } else {
+            priceInfo = "";
+        }
+
+        String directionString = Res.get("offer." + direction.name().toLowerCase()).toUpperCase();
+        boolean hasAmountRange = amountSpec instanceof RangeAmountSpec;
+        String quoteAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, amountSpec, priceSpec, market, hasAmountRange, true);
+        return Res.get("bisqEasy.tradeWizard.review.chatMessage",
+                directionString,
+                quoteAmountAsString,
+                paymentMethodNames,
+                priceInfo);
     }
 }

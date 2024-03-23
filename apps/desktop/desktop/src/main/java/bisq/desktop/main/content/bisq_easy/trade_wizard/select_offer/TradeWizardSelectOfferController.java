@@ -39,13 +39,8 @@ import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.payment_method.PaymentMethodSpec;
-import bisq.offer.payment_method.PaymentMethodSpecFormatter;
 import bisq.offer.payment_method.PaymentMethodSpecUtil;
-import bisq.offer.price.spec.FixPriceSpec;
-import bisq.offer.price.spec.FloatPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
-import bisq.presentation.formatters.PercentageFormatter;
-import bisq.presentation.formatters.PriceFormatter;
 import bisq.settings.SettingsService;
 import bisq.trade.Trade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
@@ -161,55 +156,39 @@ public class TradeWizardSelectOfferController implements Controller {
 
     @Override
     public void onActivate() {
-        UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
-        String priceInfo;
-        PriceSpec priceSpec = model.getPriceSpec();
         Direction direction = model.getDirection();
-        if (direction.isSell()) {
-            if (priceSpec instanceof FixPriceSpec) {
-                FixPriceSpec fixPriceSpec = (FixPriceSpec) priceSpec;
-                String price = PriceFormatter.formatWithCode(fixPriceSpec.getPriceQuote());
-                priceInfo = Res.get("bisqEasy.tradeWizard.review.chatMessage.fixPrice", price);
-            } else if (priceSpec instanceof FloatPriceSpec) {
-                FloatPriceSpec floatPriceSpec = (FloatPriceSpec) priceSpec;
-                String percent = PercentageFormatter.formatToPercentWithSymbol(floatPriceSpec.getPercentage());
-                priceInfo = Res.get("bisqEasy.tradeWizard.review.chatMessage.floatPrice", percent);
-            } else {
-                priceInfo = Res.get("bisqEasy.tradeWizard.review.chatMessage.marketPrice");
-            }
-        } else {
-            priceInfo = "";
-        }
-
-        String directionString = Res.get("offer." + direction.name().toLowerCase()).toUpperCase();
+        Market market = model.getMarket();
         AmountSpec amountSpec = model.getAmountSpec();
+        PriceSpec priceSpec = model.getPriceSpec();
+        List<FiatPaymentMethod> fiatPaymentMethods = model.getFiatPaymentMethods();
+
         boolean hasAmountRange = amountSpec instanceof RangeAmountSpec;
-        String quoteAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, amountSpec, model.getPriceSpec(), model.getMarket(), hasAmountRange, true);
+        String quoteAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, amountSpec, priceSpec, market, hasAmountRange, true);
         model.setQuoteAmountAsString(quoteAmountAsString);
+        model.setQuoteAmountAsString(OfferAmountFormatter.formatQuoteAmount(marketPriceService,
+                amountSpec,
+                priceSpec,
+                market,
+                hasAmountRange,
+                true));
 
-
-        String paymentMethodNames = PaymentMethodSpecFormatter.fromPaymentMethods(model.getFiatPaymentMethods());
-        String chatMessageText = Res.get("bisqEasy.tradeWizard.review.chatMessage",
-                directionString,
-                quoteAmountAsString,
-                paymentMethodNames,
-                priceInfo);
-
+        String chatMessageText = BisqEasyServiceUtil.createOfferBookMessageText(marketPriceService, direction, market, fiatPaymentMethods, amountSpec, priceSpec);
         model.setMyOfferText(chatMessageText);
 
+        UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
         BisqEasyOffer bisqEasyOffer = new BisqEasyOffer(
                 userIdentity.getUserProfile().getNetworkId(),
                 direction,
-                model.getMarket(),
+                market,
                 amountSpec,
                 priceSpec,
-                new ArrayList<>(model.getFiatPaymentMethods()),
+                new ArrayList<>(fiatPaymentMethods),
                 userIdentity.getUserProfile().getTerms(),
                 bisqEasyService.getMinRequiredReputationScore().get(),
                 new ArrayList<>(settingsService.getSupportedLanguageCodes()));
         model.setBisqEasyOffer(bisqEasyOffer);
 
-        Optional<BisqEasyOfferbookChannel> optionalChannel = bisqEasyOfferbookChannelService.findChannel(model.getMarket());
+        Optional<BisqEasyOfferbookChannel> optionalChannel = bisqEasyOfferbookChannelService.findChannel(market);
         if (optionalChannel.isPresent()) {
             BisqEasyOfferbookChannel channel = optionalChannel.get();
             model.setSelectedChannel(channel);
@@ -242,7 +221,7 @@ public class TradeWizardSelectOfferController implements Controller {
         model.getIsBackButtonHighlighted().set(!showOffers);
 
         if (showOffers) {
-            model.setHeadline(model.getDirection().isBuy() ?
+            model.setHeadline(direction.isBuy() ?
                     Res.get("bisqEasy.tradeWizard.selectOffer.headline.buyer", quoteAmountAsString) :
                     Res.get("bisqEasy.tradeWizard.selectOffer.headline.seller", quoteAmountAsString));
             model.setSubHeadLine(Res.get("bisqEasy.tradeWizard.selectOffer.subHeadline"));

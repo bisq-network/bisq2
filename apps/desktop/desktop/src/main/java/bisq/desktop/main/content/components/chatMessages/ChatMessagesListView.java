@@ -19,6 +19,8 @@ package bisq.desktop.main.content.components.chatMessages;
 
 import bisq.bisq_easy.BisqEasyService;
 import bisq.bisq_easy.NavigationTarget;
+import bisq.bonded_roles.market_price.MarketPriceService;
+import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.*;
 import bisq.chat.bisqeasy.BisqEasyOfferMessage;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
@@ -163,6 +165,7 @@ public class ChatMessagesListView {
         private final NetworkService networkService;
         private final Optional<ResendMessageService> resendMessageService;
         private final BisqEasyService bisqEasyService;
+        private final MarketPriceService marketPriceService;
         private Pin selectedChannelPin, chatMessagesPin, offerOnlySettingsPin;
         private Subscription selectedChannelSubscription, focusSubscription, scrollValuePin, scrollBarVisiblePin;
 
@@ -182,6 +185,7 @@ public class ChatMessagesListView {
             bannedUserService = serviceProvider.getUserService().getBannedUserService();
             networkService = serviceProvider.getNetworkService();
             resendMessageService = serviceProvider.getNetworkService().getResendMessageService();
+            marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
             this.mentionUserHandler = mentionUserHandler;
             this.showChatUserDetailsHandler = showChatUserDetailsHandler;
             this.replyHandler = replyHandler;
@@ -637,6 +641,7 @@ public class ChatMessagesListView {
             model.chatMessages.addAll(channel.getChatMessages().stream()
                     .map(chatMessage -> new ChatMessageListItem<>(chatMessage,
                             channel,
+                            marketPriceService,
                             userProfileService,
                             reputationService,
                             bisqEasyTradeService,
@@ -656,6 +661,7 @@ public class ChatMessagesListView {
                     UIThread.runOnNextRenderFrame(() -> {
                         ChatMessageListItem<M, C> item = new ChatMessageListItem<>(chatMessage,
                                 channel,
+                                marketPriceService,
                                 userProfileService,
                                 reputationService,
                                 bisqEasyTradeService,
