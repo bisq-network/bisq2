@@ -100,7 +100,6 @@ public class AccountAgeTab3Controller implements Controller {
 
     public void onRequestAuthorization() {
         String signedMessage = String.valueOf(model.getSignedMessage());
-        // Question: do we still need the prefix?
         if (signedMessage.startsWith(PREFIX)) {
             signedMessage = signedMessage.replace(PREFIX, "");
         }
