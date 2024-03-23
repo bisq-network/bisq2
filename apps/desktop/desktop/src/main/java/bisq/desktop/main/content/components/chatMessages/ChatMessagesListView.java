@@ -755,6 +755,7 @@ public class ChatMessagesListView {
         private final BisqTooltip scrollDownTooltip;
         private final Label placeholderTitle = new Label("");
         private final Label placeholderDescription = new Label("");
+        private final Pane scrollDownBackground;
         private Optional<ScrollBar> scrollBar = Optional.empty();
         private Subscription hasUnreadMessagesPin, showScrolledDownButtonPin;
         private Timeline fadeInScrollDownBadgeTimeline;
@@ -774,22 +775,25 @@ public class ChatMessagesListView {
             listView.setSelectionModel(new NoSelectionModel<>());
             VBox.setVgrow(listView, Priority.ALWAYS);
 
-            scrollDownImageView = new ImageView();
+            scrollDownBackground = new Pane();
+            scrollDownBackground.getStyleClass().add("scroll-down-bg");
 
+            scrollDownImageView = new ImageView();
             scrollDownBadge = new Badge(scrollDownImageView);
             scrollDownBadge.setMaxSize(25, 25);
             scrollDownBadge.getStyleClass().add("chat-messages-badge");
             scrollDownBadge.setPosition(Pos.BOTTOM_RIGHT);
-            scrollDownBadge.setBadgeInsets(new Insets(20, 10, 0, 50));
+            scrollDownBadge.setBadgeInsets(new Insets(20, 10, -2, 55));
             scrollDownBadge.setCursor(Cursor.HAND);
 
             scrollDownTooltip = new BisqTooltip(Res.get("chat.listView.scrollDown"));
             Tooltip.install(scrollDownBadge, scrollDownTooltip);
 
             StackPane.setAlignment(scrollDownBadge, Pos.BOTTOM_CENTER);
-            StackPane.setMargin(scrollDownBadge, new Insets(0, 0, 10, 0));
+            StackPane.setAlignment(scrollDownBackground, Pos.BOTTOM_CENTER);
+            StackPane.setMargin(scrollDownBackground, new Insets(0, 15, 0, 0));
             root.setAlignment(Pos.CENTER);
-            root.getChildren().addAll(listView, scrollDownBadge);
+            root.getChildren().addAll(listView, scrollDownBackground, scrollDownBadge);
         }
 
         @Override
@@ -808,6 +812,9 @@ public class ChatMessagesListView {
                     log.error("scrollBar is empty");
                 }
             });
+
+            scrollDownBackground.visibleProperty().bind(model.getShowScrolledDownButton());
+            scrollDownBackground.managedProperty().bind(model.getShowScrolledDownButton());
 
             scrollDownBadge.textProperty().bind(model.numUnReadMessages);
 
@@ -853,6 +860,8 @@ public class ChatMessagesListView {
         protected void onViewDetached() {
             scrollBar.ifPresent(scrollbar -> scrollbar.valueProperty().unbindBidirectional(model.getScrollValue()));
             model.scrollBarVisible.unbind();
+            scrollDownBackground.visibleProperty().unbind();
+            scrollDownBackground.managedProperty().unbind();
             scrollDownBadge.textProperty().unbind();
             hasUnreadMessagesPin.unsubscribe();
             showScrolledDownButtonPin.unsubscribe();
