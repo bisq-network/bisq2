@@ -24,7 +24,6 @@ import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannelService;
-import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.ServiceProvider;
@@ -45,7 +44,6 @@ import bisq.settings.SettingsService;
 import bisq.trade.Trade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.user.banned.BannedUserService;
-import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
@@ -55,12 +53,13 @@ import javafx.beans.property.ReadOnlyObjectProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class TradeWizardSelectOfferController implements Controller {
@@ -145,11 +144,6 @@ public class TradeWizardSelectOfferController implements Controller {
         }
     }
 
-    public void setIsMinAmountEnabled(boolean isMinAmountEnabled) {
-        model.setMinAmountEnabled(isMinAmountEnabled);
-        resetSelectedOffer();
-    }
-
     public void reset() {
         model.reset();
     }
@@ -160,49 +154,13 @@ public class TradeWizardSelectOfferController implements Controller {
         Market market = model.getMarket();
         AmountSpec amountSpec = model.getAmountSpec();
         PriceSpec priceSpec = model.getPriceSpec();
-        List<FiatPaymentMethod> fiatPaymentMethods = model.getFiatPaymentMethods();
 
         boolean hasAmountRange = amountSpec instanceof RangeAmountSpec;
         String quoteAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, amountSpec, priceSpec, market, hasAmountRange, true);
-        model.setQuoteAmountAsString(quoteAmountAsString);
-        model.setQuoteAmountAsString(OfferAmountFormatter.formatQuoteAmount(marketPriceService,
-                amountSpec,
-                priceSpec,
-                market,
-                hasAmountRange,
-                true));
-
-        String chatMessageText = BisqEasyServiceUtil.createOfferBookMessageText(marketPriceService, direction, market, fiatPaymentMethods, amountSpec, priceSpec);
-        model.setMyOfferText(chatMessageText);
-
-        UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
-        BisqEasyOffer bisqEasyOffer = new BisqEasyOffer(
-                userIdentity.getUserProfile().getNetworkId(),
-                direction,
-                market,
-                amountSpec,
-                priceSpec,
-                new ArrayList<>(fiatPaymentMethods),
-                userIdentity.getUserProfile().getTerms(),
-                bisqEasyService.getMinRequiredReputationScore().get(),
-                new ArrayList<>(settingsService.getSupportedLanguageCodes()));
-        model.setBisqEasyOffer(bisqEasyOffer);
 
         Optional<BisqEasyOfferbookChannel> optionalChannel = bisqEasyOfferbookChannelService.findChannel(market);
         if (optionalChannel.isPresent()) {
             BisqEasyOfferbookChannel channel = optionalChannel.get();
-            model.setSelectedChannel(channel);
-
-            BisqEasyOfferbookMessage myOfferMessage = new BisqEasyOfferbookMessage(channel.getId(),
-                    userIdentity.getUserProfile().getId(),
-                    Optional.of(bisqEasyOffer),
-                    Optional.of(chatMessageText),
-                    Optional.empty(),
-                    new Date().getTime(),
-                    false);
-
-            model.setMyOfferMessage(myOfferMessage);
-
             model.getMatchingOffers().setAll(channel.getChatMessages().stream()
                     .filter(chatMessage -> chatMessage.getBisqEasyOffer().isPresent())
                     .map(chatMessage -> new TradeWizardSelectOfferView.ListItem(chatMessage.getBisqEasyOffer().get(),

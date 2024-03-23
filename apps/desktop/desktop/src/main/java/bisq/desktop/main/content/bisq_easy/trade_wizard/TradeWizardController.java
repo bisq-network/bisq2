@@ -76,9 +76,8 @@ public class TradeWizardController extends NavigationController implements InitW
     private final TradeWizardReviewController tradeWizardReviewController;
     private final EventHandler<KeyEvent> onKeyPressedHandler = this::onKeyPressed;
     private final ListChangeListener<FiatPaymentMethod> paymentMethodsListener;
-    private Subscription directionPin, marketPin, amountSpecPin,
-            isMinAmountEnabledPin, priceSpecPin,
-            selectedBisqEasyOfferPin, isBackButtonHighlightedPin;
+    private Subscription directionPin, marketPin, amountSpecPin, priceSpecPin, selectedBisqEasyOfferPin,
+            isBackButtonHighlightedPin;
 
     public TradeWizardController(ServiceProvider serviceProvider) {
         super(NavigationTarget.TRADE_WIZARD);
@@ -158,10 +157,6 @@ public class TradeWizardController extends NavigationController implements InitW
                 amountSpec -> {
                     tradeWizardSelectOfferController.setAmountSpec(amountSpec);
                 });
-        isMinAmountEnabledPin = EasyBind.subscribe(tradeWizardAmountController.getIsMinAmountEnabled(),
-                isMinAmountEnabled -> {
-                    tradeWizardSelectOfferController.setIsMinAmountEnabled(isMinAmountEnabled);
-                });
         priceSpecPin = EasyBind.subscribe(tradeWizardPriceController.getPriceSpec(),
                 priceSpec -> {
                     tradeWizardAmountController.setPriceSpec(priceSpec);
@@ -187,7 +182,6 @@ public class TradeWizardController extends NavigationController implements InitW
         directionPin.unsubscribe();
         marketPin.unsubscribe();
         amountSpecPin.unsubscribe();
-        isMinAmountEnabledPin.unsubscribe();
         priceSpecPin.unsubscribe();
         selectedBisqEasyOfferPin.unsubscribe();
         isBackButtonHighlightedPin.unsubscribe();

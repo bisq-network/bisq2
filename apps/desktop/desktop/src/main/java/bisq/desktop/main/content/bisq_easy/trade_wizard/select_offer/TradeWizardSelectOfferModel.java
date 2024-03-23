@@ -18,8 +18,6 @@
 package bisq.desktop.main.content.bisq_easy.trade_wizard.select_offer;
 
 import bisq.account.payment_method.FiatPaymentMethod;
-import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
-import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.currency.Market;
 import bisq.desktop.common.view.Model;
 import bisq.offer.Direction;
@@ -44,8 +42,6 @@ import java.util.List;
 @Getter
 class TradeWizardSelectOfferModel implements Model {
     @Setter
-    private BisqEasyOfferbookChannel selectedChannel;
-    @Setter
     private Direction direction;
     @Setter
     private Market market;
@@ -55,16 +51,6 @@ class TradeWizardSelectOfferModel implements Model {
     private PriceSpec priceSpec = new MarketPriceSpec();
     @Setter
     private AmountSpec amountSpec;
-    @Setter
-    private boolean isMinAmountEnabled;
-    @Setter
-    private BisqEasyOffer bisqEasyOffer;
-    @Setter
-    private BisqEasyOfferbookMessage myOfferMessage;
-    @Setter
-    private String quoteAmountAsString;
-    @Setter
-    private String myOfferText;
     @Setter
     private String headline;
     @Setter
@@ -79,17 +65,11 @@ class TradeWizardSelectOfferModel implements Model {
     private final BooleanProperty isBackButtonHighlighted = new SimpleBooleanProperty();
 
     void reset() {
-        selectedChannel = null;
         direction = null;
         market = null;
         fiatPaymentMethods.clear();
         priceSpec = new MarketPriceSpec();
         amountSpec = null;
-        isMinAmountEnabled = false;
-        bisqEasyOffer = null;
-        myOfferMessage = null;
-        quoteAmountAsString = null;
-        myOfferText = null;
         headline = null;
         subHeadLine = null;
         selectedItem = null;
