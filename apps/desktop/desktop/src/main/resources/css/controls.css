@@ -744,13 +744,6 @@
     -fx-font-size: 0.85em;
 }
 
-#large-tooltip {
-    -fx-font-size: 1.2em;
-    -fx-font-family: "IBM Plex Sans Light";
-    -fx-text-fill: -fx-dark-text-color;
-    -fx-padding: 0.3em;
-}
-
 
 /*******************************************************************************
  *                                                                             *
