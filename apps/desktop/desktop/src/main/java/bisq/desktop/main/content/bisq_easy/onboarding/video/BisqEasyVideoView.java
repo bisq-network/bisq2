@@ -18,7 +18,6 @@
 package bisq.desktop.main.content.bisq_easy.onboarding.video;
 
 import bisq.common.data.Pair;
-import bisq.common.util.ExceptionUtil;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.ImageUtil;
@@ -26,7 +25,6 @@ import bisq.desktop.common.view.FillStageView;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
-import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.TimeFormatter;
@@ -55,6 +53,8 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 import org.fxmisc.easybind.monadic.MonadicBinding;
 
+import javax.annotation.Nullable;
+
 /**
  * This view is not following strictly the MVC patters (doing too much in the View). Reason is that lot of the relevant data
  * comes from the MediaPlayer and animations. But could be considered to clean that all up...
@@ -68,6 +68,7 @@ public class BisqEasyVideoView extends View<StackPane, BisqEasyVideoModel, BisqE
     public static final double SLIDER_WIDTH = 59.5;
 
     private final MediaView mediaView;
+    @Nullable
     private MediaPlayer mediaPlayer;
     private final Label timeInfo;
     private final Slider positionSlider, volumeSlider;
@@ -294,16 +295,13 @@ public class BisqEasyVideoView extends View<StackPane, BisqEasyVideoModel, BisqE
                 }
             });
         } catch (Exception e) {
-            // If OS does not support mp4 we get an exception
-            log.error("mp4 not supported", e);
-            new Popup().warning(Res.get("video.mp4NotSupported.warning", ExceptionUtil.getRootCauseMessage(e))).show();
+            controller.onHandleVideoPlayerError(e);
         }
     }
 
     @Override
     protected void onViewDetached() {
         model.setMediaPlayerPausedBySeek(false);
-        model.setLastPositionBeforeClose(mediaPlayer.getCurrentTime().toMillis());
 
         playButton.visibleProperty().unbind();
         playButton.managedProperty().unbind();
@@ -327,6 +325,7 @@ public class BisqEasyVideoView extends View<StackPane, BisqEasyVideoModel, BisqE
         windowSizePin.unsubscribe();
 
         if (mediaPlayer != null) {
+            model.setLastPositionBeforeClose(mediaPlayer.getCurrentTime().toMillis());
             mediaPlayer.volumeProperty().unbindBidirectional(volumeSlider.valueProperty());
             mediaPlayer.setOnEndOfMedia(null);
             mediaPlayer.dispose();

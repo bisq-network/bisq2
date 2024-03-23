@@ -29,6 +29,7 @@ import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.components.containers.BisqGridPane;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.BusyAnimation;
 import bisq.i18n.Res;
 import bisq.settings.DontShowAgainService;
@@ -109,7 +110,9 @@ public abstract class Overlay<T extends Overlay<T>> {
     public enum Type {
         UNDEFINED(AnimationType.ScaleFromCenter),
 
-        NOTIFICATION(AnimationType.SlideFromRightTop),
+        // NOTIFICATION(AnimationType.SlideFromRightTop),
+        // TODO https://github.com/bisq-network/bisq2/issues/1883
+        NOTIFICATION(AnimationType.SlideDownFromCenterTop, Transitions.Type.LIGHT_BLUR_LIGHT),
 
         BACKGROUND_INFO(AnimationType.SlideDownFromCenterTop),
         FEEDBACK(AnimationType.SlideDownFromCenterTop),
@@ -323,6 +326,12 @@ public abstract class Overlay<T extends Overlay<T>> {
         type = Type.BACKGROUND_INFO;
         if (headline == null)
             this.headline = Res.get("popup.headline.backgroundInfo");
+        processMessage(message);
+        return cast();
+    }
+
+    public T notify(String message) {
+        type = Type.NOTIFICATION;
         processMessage(message);
         return cast();
     }
@@ -798,12 +807,15 @@ public abstract class Overlay<T extends Overlay<T>> {
             headlineIcon.setVisible(true);
             headlineLabel.getStyleClass().add("overlay-headline");
             switch (type) {
+                case NOTIFICATION:
+                    headlineIcon.setManaged(false);
+                    headlineIcon.setVisible(false);
+                    break;
                 case INFORMATION:
                 case BACKGROUND_INFO:
                 case INSTRUCTION:
                 case CONFIRMATION:
                 case FEEDBACK:
-                case NOTIFICATION:
                 case ATTENTION:
                     Icons.getIconForLabel(AwesomeIcon.INFO_SIGN, headlineIcon, "1.8em");
                     headlineLabel.getStyleClass().add("overlay-headline-information");
@@ -899,6 +911,10 @@ public abstract class Overlay<T extends Overlay<T>> {
                 Hyperlink link = new Hyperlink(messageHyperlinks.get(i));
                 link.getStyleClass().add("overlay-message");
                 link.setOnAction(event -> Browser.open(link.getText()));
+                String tooltipText = Browser.hyperLinksGetCopiesWithoutPopup()
+                        ? Res.get("popup.hyperlink.copy.tooltip", link.getText())
+                        : Res.get("popup.hyperlink.openInBrowser.tooltip", link.getText());
+                link.setTooltip(new BisqTooltip(tooltipText));
                 HBox hBox = new HBox(5, enumeration, link);
                 hBox.setAlignment(Pos.CENTER_LEFT);
                 footerBox.getChildren().addAll(hBox);
