@@ -24,6 +24,7 @@ import bisq.bonded_roles.registration.BondedRoleRegistrationRequest;
 import bisq.bonded_roles.release.ReleaseNotification;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
 import bisq.bonded_roles.security_manager.difficulty_adjustment.AuthorizedDifficultyAdjustmentData;
+import bisq.bonded_roles.security_manager.min_reputation_score.AuthorizedMinRequiredReputationScoreData;
 import bisq.chat.ChatMessage;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeMessage;
@@ -57,6 +58,7 @@ public class ResolverConfig {
         DistributedDataResolver.addResolver("bonded_roles.AuthorizedBondedRole", AuthorizedBondedRole.getResolver());
         DistributedDataResolver.addResolver("bonded_roles.AuthorizedAlertData", AuthorizedAlertData.getResolver());
         DistributedDataResolver.addResolver("bonded_roles.AuthorizedDifficultyAdjustmentData", AuthorizedDifficultyAdjustmentData.getResolver());
+        DistributedDataResolver.addResolver("bonded_roles.AuthorizedMinRequiredReputationScoreData", AuthorizedMinRequiredReputationScoreData.getResolver());
         DistributedDataResolver.addResolver("bonded_roles.ReleaseNotification", ReleaseNotification.getResolver());
         DistributedDataResolver.addResolver("bonded_roles.AuthorizedMarketPriceData", AuthorizedMarketPriceData.getResolver());
         DistributedDataResolver.addResolver("user.AuthorizedProofOfBurnData", AuthorizedProofOfBurnData.getResolver());

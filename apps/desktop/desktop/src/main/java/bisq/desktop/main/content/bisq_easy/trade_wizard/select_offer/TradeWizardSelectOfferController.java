@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.trade_wizard.select_offer;
 
 import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.bisq_easy.BisqEasyService;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatService;
@@ -82,6 +83,7 @@ public class TradeWizardSelectOfferController implements Controller {
     private final MarketPriceService marketPriceService;
     private final BannedUserService bannedUserService;
     private final BisqEasyTradeService bisqEasyTradeService;
+    private final BisqEasyService bisqEasyService;
 
     public TradeWizardSelectOfferController(ServiceProvider serviceProvider,
                                             Runnable onBackHandler,
@@ -94,6 +96,7 @@ public class TradeWizardSelectOfferController implements Controller {
         bisqEasyOfferbookChannelService = chatService.getBisqEasyOfferbookChannelService();
         reputationService = serviceProvider.getUserService().getReputationService();
         settingsService = serviceProvider.getSettingsService();
+        bisqEasyService = serviceProvider.getBisqEasyService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         userProfileService = serviceProvider.getUserService().getUserProfileService();
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
@@ -202,7 +205,7 @@ public class TradeWizardSelectOfferController implements Controller {
                 priceSpec,
                 new ArrayList<>(model.getFiatPaymentMethods()),
                 userIdentity.getUserProfile().getTerms(),
-                settingsService.getMinRequiredReputationScore().get(),
+                bisqEasyService.getMinRequiredReputationScore().get(),
                 new ArrayList<>(settingsService.getSupportedLanguageCodes()));
         model.setBisqEasyOffer(bisqEasyOffer);
 
@@ -360,7 +363,7 @@ public class TradeWizardSelectOfferController implements Controller {
                 }
 
                 if (!BisqEasyServiceUtil.offerMatchesMinRequiredReputationScore(reputationService,
-                        settingsService,
+                        bisqEasyService,
                         userIdentityService,
                         userProfileService,
                         peersOffer)) {

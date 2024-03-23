@@ -17,12 +17,12 @@
 
 package bisq.desktop.main.content.bisq_easy;
 
+import bisq.bisq_easy.BisqEasyService;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.desktop.ServiceProvider;
 import bisq.network.identity.NetworkId;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.options.OfferOptionUtil;
-import bisq.settings.SettingsService;
 import bisq.trade.Trade;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.user.identity.UserIdentity;
@@ -51,7 +51,7 @@ public class BisqEasyServiceUtil {
     }
 
     public static boolean offerMatchesMinRequiredReputationScore(ReputationService reputationService,
-                                                                 SettingsService settingsService,
+                                                                 BisqEasyService bisqEasyService,
                                                                  UserIdentityService userIdentityService,
                                                                  UserProfileService userProfileService,
                                                                  BisqEasyOffer peersOffer) {
@@ -61,7 +61,7 @@ public class BisqEasyServiceUtil {
                 return false;
             }
             long makerAsSellersScore = reputationService.getReputationScore(optionalMakersUserProfile.get()).getTotalScore();
-            long myMinRequiredScore = settingsService.getMinRequiredReputationScore().get();
+            long myMinRequiredScore = bisqEasyService.getMinRequiredReputationScore().get();
             // Maker as seller's score must be > than my required score (as buyer)
             return makerAsSellersScore >= myMinRequiredScore;
         } else {

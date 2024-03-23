@@ -15,14 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.bonded_roles.security_manager.difficulty_adjustment;
+package bisq.bonded_roles.security_manager.min_reputation_score;
 
 import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
-import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -30,22 +29,21 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Comparator;
 import java.util.concurrent.CompletableFuture;
 
-/**
- * We do not apply the mostRecentValueOrDefault to NetworkLoadService.difficultyAdjustmentFactor here as different
- * application can use different strategies. E.g. Desktop allow the user to ignore the value from the security manager
- * and use a user defined value from settings.
- */
 @Slf4j
-public class DifficultyAdjustmentService implements Service, AuthorizedBondedRolesService.Listener {
+public class MinRequiredReputationScoreService implements Service, AuthorizedBondedRolesService.Listener {
+    public final static long DEFAULT_MIN_REPUTATION_SCORE = 10_000;
     @Getter
-    private final Observable<Double> mostRecentValueOrDefault = new Observable<>();
+    private final Observable<Boolean> hasNotificationSenderIdentity = new Observable<>();
+    @Getter
+    private final Observable<Long> mostRecentValueOrDefault = new Observable<>();
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
     @Getter
-    private final ObservableSet<AuthorizedDifficultyAdjustmentData> authorizedDifficultyAdjustmentDataSet = new ObservableSet<>();
+    private final ObservableSet<AuthorizedMinRequiredReputationScoreData> authorizedMinRequiredReputationScoreDataSet = new ObservableSet<>();
 
-    public DifficultyAdjustmentService(AuthorizedBondedRolesService authorizedBondedRolesService) {
+    public MinRequiredReputationScoreService(AuthorizedBondedRolesService authorizedBondedRolesService) {
         this.authorizedBondedRolesService = authorizedBondedRolesService;
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Service
@@ -64,16 +62,17 @@ public class DifficultyAdjustmentService implements Service, AuthorizedBondedRol
         return CompletableFuture.completedFuture(true);
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // AuthorizedBondedRolesService.Listener
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
-        if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedDifficultyAdjustmentData) {
+        if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedMinRequiredReputationScoreData) {
             if (isAuthorized(authorizedData)) {
-                AuthorizedDifficultyAdjustmentData authorizedDifficultyAdjustmentData = (AuthorizedDifficultyAdjustmentData) authorizedData.getAuthorizedDistributedData();
-                authorizedDifficultyAdjustmentDataSet.add(authorizedDifficultyAdjustmentData);
+                AuthorizedMinRequiredReputationScoreData authorizedMinRequiredReputationScoreData = (AuthorizedMinRequiredReputationScoreData) authorizedData.getAuthorizedDistributedData();
+                authorizedMinRequiredReputationScoreDataSet.add(authorizedMinRequiredReputationScoreData);
                 updateMostRecentValueOrDefault();
             }
         }
@@ -81,10 +80,10 @@ public class DifficultyAdjustmentService implements Service, AuthorizedBondedRol
 
     @Override
     public void onAuthorizedDataRemoved(AuthorizedData authorizedData) {
-        if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedDifficultyAdjustmentData) {
+        if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedMinRequiredReputationScoreData) {
             if (isAuthorized(authorizedData)) {
-                AuthorizedDifficultyAdjustmentData authorizedDifficultyAdjustmentData = (AuthorizedDifficultyAdjustmentData) authorizedData.getAuthorizedDistributedData();
-                authorizedDifficultyAdjustmentDataSet.remove(authorizedDifficultyAdjustmentData);
+                AuthorizedMinRequiredReputationScoreData authorizedMinRequiredReputationScoreData = (AuthorizedMinRequiredReputationScoreData) authorizedData.getAuthorizedDistributedData();
+                authorizedMinRequiredReputationScoreDataSet.remove(authorizedMinRequiredReputationScoreData);
                 updateMostRecentValueOrDefault();
             }
         }
@@ -94,13 +93,12 @@ public class DifficultyAdjustmentService implements Service, AuthorizedBondedRol
         return authorizedBondedRolesService.hasAuthorizedPubKey(authorizedData, BondedRoleType.SECURITY_MANAGER);
     }
 
-
     private void updateMostRecentValueOrDefault() {
-        double value = authorizedDifficultyAdjustmentDataSet.stream()
-                .sorted(Comparator.comparingLong(AuthorizedDifficultyAdjustmentData::getDate).reversed())
-                .map(AuthorizedDifficultyAdjustmentData::getDifficultyAdjustmentFactor)
+        long value = authorizedMinRequiredReputationScoreDataSet.stream()
+                .sorted(Comparator.comparingLong(AuthorizedMinRequiredReputationScoreData::getDate).reversed())
+                .map(AuthorizedMinRequiredReputationScoreData::getMinRequiredReputationScore)
                 .findFirst()
-                .orElse(NetworkLoad.DEFAULT_DIFFICULTY_ADJUSTMENT);
+                .orElse(DEFAULT_MIN_REPUTATION_SCORE);
         mostRecentValueOrDefault.set(value);
     }
 }

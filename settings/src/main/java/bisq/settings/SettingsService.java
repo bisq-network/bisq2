@@ -78,10 +78,11 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         getDifficultyAdjustmentFactor().addObserver(value -> persist());
         getIgnoreDiffAdjustmentFromSecManager().addObserver(value -> persist());
         getFavouriteMarkets().addObserver(this::persist);
+        getIgnoreMinRequiredReputationScoreFromSecManager().addObserver(value -> persist());
         isInitialized = true;
 
-        if (DevMode.isDevMode() &&
-                getMinRequiredReputationScore().get() == DEFAULT_MIN_REQUIRED_REPUTATION_SCORE) {
+        if (DevMode.isDevMode() && getMinRequiredReputationScore().get() == DEFAULT_MIN_REQUIRED_REPUTATION_SCORE) {
+            getIgnoreMinRequiredReputationScoreFromSecManager().set(true);
             getMinRequiredReputationScore().set(0L);
             log.info("In dev mode we set getMinRequiredReputationScore to 0 if it was the default value of {}",
                     DEFAULT_MIN_REQUIRED_REPUTATION_SCORE);
@@ -146,6 +147,10 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
 
     public Observable<Boolean> getIgnoreDiffAdjustmentFromSecManager() {
         return persistableStore.ignoreDiffAdjustmentFromSecManager;
+    }
+
+    public Observable<Boolean> getIgnoreMinRequiredReputationScoreFromSecManager() {
+        return persistableStore.ignoreMinRequiredReputationScoreFromSecManager;
     }
 
     public Observable<Double> getDifficultyAdjustmentFactor() {
