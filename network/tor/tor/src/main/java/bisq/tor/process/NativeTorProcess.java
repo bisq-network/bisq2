@@ -58,7 +58,7 @@ public class NativeTorProcess {
         );
 
         Map<String, String> environment = processBuilder.environment();
-        environment.put("LD_PRELOAD", computeLdPreloadVariable());
+        environment.put("LD_PRELOAD", LdPreload.computeLdPreloadVariable(torDataDirPath));
 
         processBuilder.redirectError(ProcessBuilder.Redirect.DISCARD);
         processBuilder.redirectOutput(ProcessBuilder.Redirect.DISCARD);
