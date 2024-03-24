@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.components.chatMessages;
 
+import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.chat.Citation;
@@ -30,6 +31,7 @@ import bisq.common.observable.Pin;
 import bisq.common.observable.map.HashMapObserver;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.main.content.bisq_easy.BisqEasyServiceUtil;
 import bisq.desktop.main.content.components.ReputationScoreDisplay;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
@@ -38,6 +40,7 @@ import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
 import bisq.network.p2p.services.confidential.resend.ResendMessageService;
 import bisq.offer.Direction;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.offer.payment_method.PaymentMethodSpecFormatter;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.trade.Trade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
@@ -99,10 +102,12 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private final Set<Pin> mapPins = new HashSet<>();
     @EqualsAndHashCode.Exclude
     private final Set<Pin> statusPins = new HashSet<>();
+    private final MarketPriceService marketPriceService;
     private final UserIdentityService userIdentityService;
 
     public ChatMessageListItem(M chatMessage,
                                C chatChannel,
+                               MarketPriceService marketPriceService,
                                UserProfileService userProfileService,
                                ReputationService reputationService,
                                BisqEasyTradeService bisqEasyTradeService,
@@ -111,6 +116,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                                Optional<ResendMessageService> resendMessageService) {
         this.chatMessage = chatMessage;
         this.chatChannel = chatChannel;
+        this.marketPriceService = marketPriceService;
         this.userIdentityService = userIdentityService;
 
         if (chatMessage instanceof PrivateChatMessage) {
@@ -118,8 +124,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         } else {
             senderUserProfile = userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId());
         }
-        String editPostFix = chatMessage.isWasEdited() ? EDITED_POST_FIX : "";
-        message = chatMessage.getText() + editPostFix;
+
         citation = chatMessage.getCitation();
         date = DateFormatter.formatDateTime(new Date(chatMessage.getDate()), DateFormat.MEDIUM, DateFormat.SHORT,
                 true, " " + Res.get("temporal.at") + " ");
@@ -130,8 +135,10 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         reputationScore = senderUserProfile.flatMap(reputationService::findReputationScore).orElse(ReputationScore.NONE);
         reputationScoreDisplay.setReputationScore(reputationScore);
 
-        if (chatMessage instanceof BisqEasyOfferbookMessage) {
+        if (chatMessage instanceof BisqEasyOfferbookMessage &&
+                ((BisqEasyOfferbookMessage) chatMessage).hasBisqEasyOffer()) {
             BisqEasyOfferbookMessage bisqEasyOfferbookMessage = (BisqEasyOfferbookMessage) chatMessage;
+            message = getLocalizedOfferbookMessage(bisqEasyOfferbookMessage);
             if (userIdentityService.getSelectedUserIdentity() != null && bisqEasyOfferbookMessage.getBisqEasyOffer().isPresent()) {
                 UserProfile userProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
                 NetworkId takerNetworkId = userProfile.getNetworkId();
@@ -142,6 +149,9 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                 offerAlreadyTaken = false;
             }
         } else {
+            // Normal chat message or BisqEasyOfferbookMessage without offer
+            String editPostFix = chatMessage.isWasEdited() ? EDITED_POST_FIX : "";
+            message = chatMessage.getText() + editPostFix;
             offerAlreadyTaken = false;
         }
 
@@ -223,6 +233,17 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
             public void clear() {
             }
         }));
+    }
+
+    private String getLocalizedOfferbookMessage(BisqEasyOfferbookMessage chatMessage) {
+        BisqEasyOffer bisqEasyOffer = chatMessage.getBisqEasyOffer().orElseThrow();
+        String fiatPaymentMethods = PaymentMethodSpecFormatter.fromPaymentMethodSpecs(bisqEasyOffer.getQuoteSidePaymentMethodSpecs());
+        return BisqEasyServiceUtil.createOfferBookMessageText(marketPriceService,
+                bisqEasyOffer.getDirection(),
+                bisqEasyOffer.getMarket(),
+                fiatPaymentMethods,
+                bisqEasyOffer.getAmountSpec(),
+                bisqEasyOffer.getPriceSpec());
     }
 
     @Override
