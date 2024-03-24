@@ -185,11 +185,11 @@
 }
 
 .chat-peer-offer-message-bg .sell-btc-button {
-    -fx-background-color: -bisq2-red-dim-10;
+    -fx-background-color: -bisq2-red-dim-20;
 }
 
 .chat-peer-offer-message-bg .buy-btc-button {
-    -fx-background-color: -bisq2-yellow-dim-10;
+    -fx-background-color: -bisq2-green-dim-40;
 }
 /* ... */
 
