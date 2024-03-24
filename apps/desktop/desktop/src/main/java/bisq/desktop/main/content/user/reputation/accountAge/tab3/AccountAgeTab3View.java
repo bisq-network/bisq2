@@ -21,6 +21,7 @@ import bisq.desktop.common.Layout;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
@@ -37,7 +38,8 @@ import lombok.extern.slf4j.Slf4j;
 public class AccountAgeTab3View extends View<VBox, AccountAgeTab3Model, AccountAgeTab3Controller> {
     private final Button closeButton, backButton, requestCertificateButton;
     private final Hyperlink learnMore;
-    private MaterialTextField pubKeyHash, signedMessage;
+    private MaterialTextField pubKeyHash;
+    private MaterialTextArea signedMessage;
 
     public AccountAgeTab3View(AccountAgeTab3Model model,
                               AccountAgeTab3Controller controller,
@@ -137,7 +139,7 @@ public class AccountAgeTab3View extends View<VBox, AccountAgeTab3Model, AccountA
     private VBox createAndGetStepFour() {
         Label title = createAndGetStepLabel(Res.get("user.reputation.accountAge.import.step4.title"));
         Label instruction = createAndGetStepInstructionLabel(Res.get("user.reputation.accountAge.import.step4.instruction"));
-        signedMessage = new MaterialTextField(Res.get("user.reputation.accountAge.import.step4.signedMessage"));
+        signedMessage = new MaterialTextArea(Res.get("user.reputation.accountAge.import.step4.signedMessage"));
         signedMessage.setEditable(true);
         signedMessage.getStyleClass().add("material-field");
         VBox.setMargin(signedMessage, new Insets(10, 0, 15, 2));
