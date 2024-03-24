@@ -83,6 +83,7 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
         this.staticPublicKeysProvided = staticPublicKeysProvided;
 
         verify();
+        toProto();
     }
 
     @Override
@@ -105,7 +106,16 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
                 .setSecurityManagerProfileId(securityManagerProfileId)
                 .setStaticPublicKeysProvided(staticPublicKeysProvided);
         message.ifPresent(builder::setMessage);
-        headline.ifPresent(builder::setHeadline);
+        headline.ifPresent(headline -> {
+            // We only set the headline if defaultHeadline is present (not AlertType.BAN) and
+            // if headline is not same as defaultHeadline (for being backward compatible with old data which did not
+            // contain the headline field). As nice side effect we save a few bytes if headline is default.
+            getDefaultHeadline(alertType).ifPresent(defaultHeadline -> {
+                if (!headline.equals(defaultHeadline)) {
+                    builder.setHeadline(headline);
+                }
+            });
+        });
         minVersion.ifPresent(builder::setMinVersion);
         bannedRole.ifPresent(authorizedBondedRole -> builder.setBannedRole(authorizedBondedRole.toProto()));
         return builder.build();
@@ -128,7 +138,11 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
     }
 
     private static Optional<String> getDefaultHeadline(AlertType alertType) {
-        return Optional.of(Res.get("authorizedRole.securityManager.alertType." + alertType.name()));
+        if (alertType == AlertType.BAN) {
+            return Optional.empty();
+        } else {
+            return Optional.of(Res.get("authorizedRole.securityManager.alertType." + alertType.name()));
+        }
     }
 
     public static ProtoResolver<DistributedData> getResolver() {
