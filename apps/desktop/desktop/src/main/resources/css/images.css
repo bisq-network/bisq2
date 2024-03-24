@@ -214,6 +214,18 @@
     -fx-image: url("/images/icons/bisq-broadcast-white.png");
 }
 
+#chevron-drop-menu-green {
+    -fx-image: url("/images/icons/chevron-drop-menu-green.png");
+}
+
+#chevron-drop-menu-white {
+    -fx-image: url("/images/icons/chevron-drop-menu-white.png");
+}
+
+#chevron-drop-menu-grey {
+    -fx-image: url("/images/icons/chevron-drop-menu-grey.png");
+}
+
 
 /* ------------------------------------------------------------------------------------ */
 /* Navigation */

@@ -446,7 +446,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     }
 
     private DropdownMenu createAndGetOfferDirectionOrOwnerFilterMenu() {
-        DropdownMenu dropdownMenu = new DropdownMenu("arrow-down", "arrow-down", false);
+        DropdownMenu dropdownMenu = new DropdownMenu("chevron-drop-menu-grey", "chevron-drop-menu-white", false);
         dropdownMenu.setTooltip(Res.get("bisqEasy.offerbook.dropdownMenu.filterOffersByDirectionOrOwner.tooltip"));
         dropdownMenu.getStyleClass().add("dropdown-offers-filter-menu");
 
@@ -464,7 +464,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     }
 
     private DropdownMenu createAndGetPeerReputationFilterMenu() {
-        DropdownMenu dropdownMenu = new DropdownMenu("arrow-down", "arrow-down", false);
+        DropdownMenu dropdownMenu = new DropdownMenu("chevron-drop-menu-grey", "chevron-drop-menu-white", false);
         dropdownMenu.setTooltip(Res.get("bisqEasy.offerbook.dropdownMenu.filterOffersByPeerReputation.tooltip"));
         dropdownMenu.getStyleClass().add("dropdown-offers-filter-menu");
 
