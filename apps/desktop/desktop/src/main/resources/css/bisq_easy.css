@@ -236,7 +236,7 @@
     -fx-min-height: 20;
     -fx-pref-height: 20;
     -fx-max-height: 20;
-    -fx-padding: 0 0 0 5;
+    -fx-padding: 0 5 0 5;
 }
 
 .market-selection-show-applied-filters .filter-display-hint:hover {

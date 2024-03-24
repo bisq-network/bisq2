@@ -226,6 +226,22 @@
     -fx-image: url("/images/icons/chevron-drop-menu-grey.png");
 }
 
+#close-mini-black {
+    -fx-image: url("/images/icons/close-mini-black.png");
+}
+
+#close-mini-white {
+    -fx-image: url("/images/icons/close-mini-white.png");
+}
+
+#close-mini-grey {
+    -fx-image: url("/images/icons/close-mini-grey.png");
+}
+
+#close-mini-green {
+    -fx-image: url("/images/icons/close-mini-green.png");
+}
+
 
 /* ------------------------------------------------------------------------------------ */
 /* Navigation */
