@@ -110,6 +110,7 @@ public class PriceInput {
         }
 
         public void setMarket(Market market) {
+            model.reset();
             model.market = market;
             updateFromMarketPrice();
         }
