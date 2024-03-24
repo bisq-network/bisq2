@@ -140,7 +140,8 @@ public class TradeWizardReviewController implements Controller {
                                       AmountSpec amountSpec,
                                       PriceSpec priceSpec) {
         model.setCreateOfferMode(true);
-        String chatMessageText = BisqEasyServiceUtil.createOfferBookMessageText(marketPriceService,
+        String chatMessageText = BisqEasyServiceUtil.createOfferBookMessageText(true,
+                marketPriceService,
                 direction,
                 market,
                 fiatPaymentMethods,

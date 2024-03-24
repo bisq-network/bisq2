@@ -90,14 +90,16 @@ public class BisqEasyServiceUtil {
         }
     }
 
-    public static String createOfferBookMessageText(MarketPriceService marketPriceService,
+    public static String createOfferBookMessageText(boolean isMyMessage,
+                                                    MarketPriceService marketPriceService,
                                                     Direction direction,
                                                     Market market,
                                                     List<FiatPaymentMethod> fiatPaymentMethods,
                                                     AmountSpec amountSpec,
                                                     PriceSpec priceSpec) {
         String paymentMethodNames = PaymentMethodSpecFormatter.fromPaymentMethods(fiatPaymentMethods);
-        return createOfferBookMessageText(marketPriceService,
+        return createOfferBookMessageText(isMyMessage,
+                marketPriceService,
                 direction,
                 market,
                 paymentMethodNames,
@@ -105,7 +107,8 @@ public class BisqEasyServiceUtil {
                 priceSpec);
     }
 
-    public static String createOfferBookMessageText(MarketPriceService marketPriceService,
+    public static String createOfferBookMessageText(boolean isMyMessage,
+                                                    MarketPriceService marketPriceService,
                                                     Direction direction,
                                                     Market market,
                                                     String paymentMethodNames,
@@ -128,13 +131,22 @@ public class BisqEasyServiceUtil {
             priceInfo = "";
         }
 
-        String directionString = Res.get("offer." + direction.name().toLowerCase()).toUpperCase();
+        String directionStringFromUserPerspective = isMyMessage
+                ? Res.get("offer." + direction.name().toLowerCase()).toUpperCase()
+                : Res.get("offer." + direction.mirror().name().toLowerCase()).toUpperCase();
         boolean hasAmountRange = amountSpec instanceof RangeAmountSpec;
         String quoteAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, amountSpec, priceSpec, market, hasAmountRange, true);
-        return Res.get("bisqEasy.tradeWizard.review.chatMessage",
-                directionString,
+
+        return Res.get(getMessageTextKey(isMyMessage),
+                directionStringFromUserPerspective,
                 quoteAmountAsString,
                 paymentMethodNames,
                 priceInfo);
+    }
+
+    private static String getMessageTextKey(boolean isMyMessage) {
+        return isMyMessage
+                ? "bisqEasy.tradeWizard.review.chatMessage.myMessage"
+                : "bisqEasy.tradeWizard.review.chatMessage.peerMessage";
     }
 }
