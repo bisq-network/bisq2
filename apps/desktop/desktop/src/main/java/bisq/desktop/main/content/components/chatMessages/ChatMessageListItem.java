@@ -135,7 +135,8 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         reputationScore = senderUserProfile.flatMap(reputationService::findReputationScore).orElse(ReputationScore.NONE);
         reputationScoreDisplay.setReputationScore(reputationScore);
 
-        if (chatMessage instanceof BisqEasyOfferbookMessage) {
+        if (chatMessage instanceof BisqEasyOfferbookMessage &&
+                ((BisqEasyOfferbookMessage) chatMessage).hasBisqEasyOffer()) {
             BisqEasyOfferbookMessage bisqEasyOfferbookMessage = (BisqEasyOfferbookMessage) chatMessage;
             message = getLocalizedOfferbookMessage(bisqEasyOfferbookMessage);
             if (userIdentityService.getSelectedUserIdentity() != null && bisqEasyOfferbookMessage.getBisqEasyOffer().isPresent()) {
@@ -148,6 +149,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                 offerAlreadyTaken = false;
             }
         } else {
+            // Normal chat message or BisqEasyOfferbookMessage without offer
             String editPostFix = chatMessage.isWasEdited() ? EDITED_POST_FIX : "";
             message = chatMessage.getText() + editPostFix;
             offerAlreadyTaken = false;
