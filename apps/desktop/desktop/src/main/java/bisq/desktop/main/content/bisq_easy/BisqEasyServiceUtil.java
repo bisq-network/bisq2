@@ -137,16 +137,19 @@ public class BisqEasyServiceUtil {
         boolean hasAmountRange = amountSpec instanceof RangeAmountSpec;
         String quoteAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, amountSpec, priceSpec, market, hasAmountRange, true);
 
-        return Res.get(getMessageTextKey(isMyMessage),
+        return Res.get(getMessageTextKey(isMyMessage, direction),
                 directionStringFromUserPerspective,
                 quoteAmountAsString,
                 paymentMethodNames,
                 priceInfo);
     }
 
-    private static String getMessageTextKey(boolean isMyMessage) {
-        return isMyMessage
-                ? "bisqEasy.tradeWizard.review.chatMessage.myMessage"
-                : "bisqEasy.tradeWizard.review.chatMessage.peerMessage";
+    private static String getMessageTextKey(boolean isMyMessage, Direction direction) {
+        if (isMyMessage) {
+            return "bisqEasy.tradeWizard.review.chatMessage.myMessage";
+        }
+        return direction == Direction.BUY
+                ? "bisqEasy.tradeWizard.review.chatMessage.peerMessage.buy"
+                : "bisqEasy.tradeWizard.review.chatMessage.peerMessage.sell";
     }
 }
