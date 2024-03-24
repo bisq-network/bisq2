@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Payment account                                                              *
+ * Payment account                                                             *
  ******************************************************************************/
 
 .user-payment-account-no-data {
@@ -24,15 +24,34 @@
 }
 
 /*******************************************************************************
- * Reputation                                                  *
+ * Reputation                                                                  *
  ******************************************************************************/
 
 .user-reputation-table-view {
     -fx-background-color: -bisq-dark-grey-20;
 }
 
+.account-age .import-step .step-title {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Medium";
+    -fx-font-size: 0.93em;
+}
+
+.account-age .import-step .step-instruction {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 0.9em;
+    -fx-padding: 2 0 0 2;
+}
+
+.account-age .import-step .material-field {
+    -fx-font-size: 0.9em;
+}
+
 /*******************************************************************************
- * Bonded roles                                                  *
+ * Bonded roles                                                                *
  ******************************************************************************/
 
 .user-bonded-roles-info-headline {
