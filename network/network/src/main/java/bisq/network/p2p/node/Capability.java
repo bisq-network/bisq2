@@ -74,11 +74,8 @@ public final class Capability implements NetworkProto {
         List<TransportType> supportedTransportTypes = proto.getSupportedTransportTypesList().stream()
                 .map(e -> ProtobufUtils.enumFromProto(TransportType.class, e))
                 .collect(Collectors.toList());
-        List<Feature> features = proto.getFeaturesList().stream()
-                .map(Feature::fromProto)
-                .collect(Collectors.toList());
         return new Capability(Address.fromProto(proto.getAddress()),
                 supportedTransportTypes,
-                features);
+                ProtobufUtils.fromProtoEnumList(Feature.class, proto.getFeaturesList()));
     }
 }
