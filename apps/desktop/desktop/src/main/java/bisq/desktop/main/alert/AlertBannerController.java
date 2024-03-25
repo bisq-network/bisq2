@@ -87,7 +87,7 @@ public class AlertBannerController implements Controller {
             }
         });
 
-        isAlertVisiblePin = EasyBind.subscribe(model.getIsAlertVisible(), this::updateIsNotificationBannerVisible);
+        isAlertVisiblePin = EasyBind.subscribe(model.getIsAlertVisible(), this::updateIsAlertBannerVisible);
 
         model.getSortedList().addListener(listChangeListener);
         model.getSortedList().stream().findFirst().ifPresent(this::add);
@@ -125,7 +125,7 @@ public class AlertBannerController implements Controller {
         model.getSortedList().stream().findFirst().ifPresent(this::add);
     }
 
-    private void updateIsNotificationBannerVisible(boolean isVisible) {
-        alertNotificationsService.getIsNotificationBannerVisible().set(isVisible);
+    private void updateIsAlertBannerVisible(boolean isVisible) {
+        alertNotificationsService.getIsAlertBannerVisible().set(isVisible);
     }
 }

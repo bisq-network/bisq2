@@ -24,7 +24,6 @@ import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.settings.SettingsService;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.CompletableFuture;
@@ -34,7 +33,7 @@ public class AlertNotificationsService implements Service {
     private final SettingsService settingsService;
     private final AlertService alertService;
     @Getter
-    private final Observable<Boolean> isNotificationBannerVisible = new Observable<>(false);
+    private final Observable<Boolean> isAlertBannerVisible = new Observable<>(false);
     private Pin authorizedAlertDataSetPin;
     @Getter
     private final ObservableSet<AuthorizedAlertData> unconsumedAlerts = new ObservableSet<>();
