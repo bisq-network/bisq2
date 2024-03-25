@@ -63,7 +63,7 @@ public class LogSetup {
 
         PatternLayoutEncoder encoder = new PatternLayoutEncoder();
         encoder.setContext(loggerContext);
-        encoder.setPattern("%d{MMM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{15}: %msg %xEx%n");
+        encoder.setPattern("%d{MMM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{15}: %mask(%msg) %xEx%n");
         encoder.setCharset(Charsets.UTF_8);
         encoder.start();
 
