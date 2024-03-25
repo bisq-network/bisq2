@@ -35,7 +35,8 @@ public class AlertNotificationsService implements Service {
     @Getter
     private final Observable<Boolean> isNotificationBannerVisible = new Observable<>();
     private Pin authorizedAlertDataSetPin, unconsumedAlertsPin;
-    private ObservableSet<AuthorizedAlertData> unconsumedAlerts;
+    @Getter
+    private final ObservableSet<AuthorizedAlertData> unconsumedAlerts = new ObservableSet<>();
 
     public AlertNotificationsService(SettingsService settingsService, AlertService alertService) {
         this.settingsService = settingsService;

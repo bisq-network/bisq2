@@ -17,14 +17,12 @@
 
 package bisq.desktop.main.alert;
 
-import bisq.bonded_roles.security_manager.alert.AlertService;
-import bisq.bonded_roles.security_manager.alert.AlertType;
+import bisq.bonded_roles.security_manager.alert.AlertNotificationsService;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
-import bisq.settings.SettingsService;
 import javafx.collections.ListChangeListener;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -37,14 +35,12 @@ public class AlertBannerController implements Controller {
     private final AlertBannerModel model;
     @Getter
     private final AlertBannerView view;
-    private final SettingsService settingsService;
-    private final AlertService alertService;
+    private final AlertNotificationsService alertNotificationsService;
     private final ListChangeListener<AuthorizedAlertData> listChangeListener;
-    private Pin authorizedAlertDataSetPin;
+    private Pin unconsumedAlertsPin;
 
-    public AlertBannerController(SettingsService settingsService, AlertService alertService) {
-        this.settingsService = settingsService;
-        this.alertService = alertService;
+    public AlertBannerController(AlertNotificationsService alertNotificationsService) {
+        this.alertNotificationsService = alertNotificationsService;
         model = new AlertBannerModel();
         view = new AlertBannerView(model, this);
 
@@ -69,14 +65,9 @@ public class AlertBannerController implements Controller {
 
     @Override
     public void onActivate() {
-        updatePredicate();
-
-        authorizedAlertDataSetPin = alertService.getAuthorizedAlertDataSet().addObserver(new CollectionObserver<>() {
+        unconsumedAlertsPin = alertNotificationsService.getUnconsumedAlerts().addObserver(new CollectionObserver<>() {
             @Override
             public void add(AuthorizedAlertData authorizedAlertData) {
-                if (authorizedAlertData == null) {
-                    return;
-                }
                 UIThread.run(() -> model.getObservableList().add(authorizedAlertData));
             }
 
@@ -99,13 +90,12 @@ public class AlertBannerController implements Controller {
 
     @Override
     public void onDeactivate() {
-        authorizedAlertDataSetPin.unbind();
+        unconsumedAlertsPin.unbind();
         model.getSortedList().removeListener(listChangeListener);
     }
 
     void onClose() {
-        settingsService.getConsumedAlertIds().add(model.getDisplayedAuthorizedAlertData().getId());
-        updatePredicate();
+        alertNotificationsService.dismissAlert(model.getDisplayedAuthorizedAlertData());
         handleRemove();
     }
 
@@ -128,11 +118,5 @@ public class AlertBannerController implements Controller {
     private void handleRemove() {
         model.reset();
         model.getSortedList().stream().findFirst().ifPresent(this::add);
-    }
-
-    private void updatePredicate() {
-        model.getFilteredList().setPredicate(authorizedAlertData ->
-                !settingsService.getConsumedAlertIds().contains(authorizedAlertData.getId()) &&
-                        authorizedAlertData.getAlertType() != AlertType.BAN);
     }
 }

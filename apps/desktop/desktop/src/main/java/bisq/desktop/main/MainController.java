@@ -19,7 +19,7 @@ package bisq.desktop.main;
 
 import bisq.application.ApplicationService;
 import bisq.bisq_easy.NavigationTarget;
-import bisq.bonded_roles.security_manager.alert.AlertService;
+import bisq.bonded_roles.security_manager.alert.AlertNotificationsService;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
@@ -31,7 +31,6 @@ import bisq.desktop.main.content.ContentController;
 import bisq.desktop.main.left.LeftNavController;
 import bisq.desktop.main.notification.NotificationPanelController;
 import bisq.desktop.main.top.TopPanelController;
-import bisq.settings.SettingsService;
 import bisq.updater.UpdaterService;
 import bisq.updater.UpdaterUtils;
 import lombok.Getter;
@@ -48,24 +47,21 @@ public class MainController extends NavigationController {
     private final MainView view;
     private final ServiceProvider serviceProvider;
     private final LeftNavController leftNavController;
-    private final SettingsService settingsService;
     private final UpdaterService updaterService;
     private final ApplicationService.Config config;
-    private final AlertBannerController alertBannerController;
 
     public MainController(ServiceProvider serviceProvider) {
         super(NavigationTarget.MAIN);
 
         this.serviceProvider = serviceProvider;
-        settingsService = serviceProvider.getSettingsService();
-        AlertService alertService = serviceProvider.getBondedRolesService().getAlertService();
+        AlertNotificationsService alertNotificationsService = serviceProvider.getAlertNotificationsService();
         updaterService = serviceProvider.getUpdaterService();
         config = serviceProvider.getConfig();
 
         leftNavController = new LeftNavController(serviceProvider);
         TopPanelController topPanelController = new TopPanelController(serviceProvider);
         NotificationPanelController notificationPanelController = new NotificationPanelController(serviceProvider);
-        alertBannerController = new AlertBannerController(settingsService, alertService);
+        AlertBannerController alertBannerController = new AlertBannerController(alertNotificationsService);
         view = new MainView(model,
                 this,
                 leftNavController.getView().getRoot(),

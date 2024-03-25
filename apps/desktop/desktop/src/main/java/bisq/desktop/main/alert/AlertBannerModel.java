@@ -34,8 +34,7 @@ import java.util.Set;
 @Getter
 public class AlertBannerModel implements Model {
     private final ObservableList<AuthorizedAlertData> observableList = FXCollections.observableArrayList();
-    private final FilteredList<AuthorizedAlertData> filteredList = new FilteredList<>(observableList);
-    private final SortedList<AuthorizedAlertData> sortedList = new SortedList<>(filteredList);
+    private final SortedList<AuthorizedAlertData> sortedList = new SortedList<>(observableList);
 
     @Setter
     private AuthorizedAlertData displayedAuthorizedAlertData;
