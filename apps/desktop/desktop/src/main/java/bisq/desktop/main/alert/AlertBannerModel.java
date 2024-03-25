@@ -36,7 +36,6 @@ public class AlertBannerModel implements Model {
     private final ObservableList<AuthorizedAlertData> observableList = FXCollections.observableArrayList();
     private final FilteredList<AuthorizedAlertData> filteredList = new FilteredList<>(observableList);
     private final SortedList<AuthorizedAlertData> sortedList = new SortedList<>(filteredList);
-    private final Set<AuthorizedAlertData> displayedAlerts = new HashSet<>();
 
     @Setter
     private AuthorizedAlertData displayedAuthorizedAlertData;
