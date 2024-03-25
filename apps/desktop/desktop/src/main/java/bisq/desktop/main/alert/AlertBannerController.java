@@ -26,6 +26,8 @@ import bisq.desktop.common.view.Controller;
 import javafx.collections.ListChangeListener;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
 import java.util.Optional;
@@ -38,6 +40,7 @@ public class AlertBannerController implements Controller {
     private final AlertNotificationsService alertNotificationsService;
     private final ListChangeListener<AuthorizedAlertData> listChangeListener;
     private Pin unconsumedAlertsPin;
+    private Subscription isAlertVisiblePin;
 
     public AlertBannerController(AlertNotificationsService alertNotificationsService) {
         this.alertNotificationsService = alertNotificationsService;
@@ -84,6 +87,8 @@ public class AlertBannerController implements Controller {
             }
         });
 
+        isAlertVisiblePin = EasyBind.subscribe(model.getIsAlertVisible(), this::updateIsNotificationBannerVisible);
+
         model.getSortedList().addListener(listChangeListener);
         model.getSortedList().stream().findFirst().ifPresent(this::add);
     }
@@ -91,6 +96,9 @@ public class AlertBannerController implements Controller {
     @Override
     public void onDeactivate() {
         unconsumedAlertsPin.unbind();
+
+        isAlertVisiblePin.unsubscribe();
+
         model.getSortedList().removeListener(listChangeListener);
     }
 
@@ -109,14 +117,15 @@ public class AlertBannerController implements Controller {
             model.getMessage().set(authorizedAlertData.getMessage().orElseThrow());
             model.getAlertType().set(authorizedAlertData.getAlertType());
             model.getIsAlertVisible().set(true);
-        } else {
-            log.warn("optionalMessage not present");
-            model.getIsAlertVisible().set(false);
         }
     }
 
     private void handleRemove() {
         model.reset();
         model.getSortedList().stream().findFirst().ifPresent(this::add);
+    }
+
+    private void updateIsNotificationBannerVisible(boolean isVisible) {
+        alertNotificationsService.getIsNotificationBannerVisible().set(isVisible);
     }
 }
