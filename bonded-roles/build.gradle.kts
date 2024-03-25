@@ -8,6 +8,7 @@ dependencies {
     implementation(project(":security"))
     implementation(project(":i18n"))
     implementation(project(":identity"))
+    implementation(project(":settings"))
 
     implementation("network:network-common")
     implementation("network:network-identity")

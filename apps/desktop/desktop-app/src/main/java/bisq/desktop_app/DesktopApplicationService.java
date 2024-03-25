@@ -22,6 +22,7 @@ import bisq.application.ApplicationService;
 import bisq.application.ShutDownHandler;
 import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
+import bisq.bonded_roles.security_manager.alert.AlertNotificationsService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
@@ -47,6 +48,7 @@ import bisq.wallets.core.WalletService;
 import bisq.wallets.electrum.ElectrumWalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.checkerframework.checker.units.qual.A;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -92,6 +94,7 @@ public class DesktopApplicationService extends ApplicationService {
     private final TradeService tradeService;
     private final UpdaterService updaterService;
     private final BisqEasyService bisqEasyService;
+    private final AlertNotificationsService alertNotificationsService;
 
     public DesktopApplicationService(String[] args, ShutDownHandler shutDownHandler) {
         super("desktop", args);
@@ -179,6 +182,8 @@ public class DesktopApplicationService extends ApplicationService {
                 sendNotificationService,
                 tradeService);
 
+        alertNotificationsService = new AlertNotificationsService(settingsService, bondedRolesService.getAlertService());
+
         // TODO (refactor, low prio): Not sure if ServiceProvider is still needed as we added BisqEasyService which exposes most of the services.
         serviceProvider = new ServiceProvider(shutDownHandler,
                 getConfig(),
@@ -198,7 +203,8 @@ public class DesktopApplicationService extends ApplicationService {
                 sendNotificationService,
                 tradeService,
                 updaterService,
-                bisqEasyService);
+                bisqEasyService,
+                alertNotificationsService);
     }
 
     @Override
@@ -243,6 +249,7 @@ public class DesktopApplicationService extends ApplicationService {
                 .thenCompose(result -> tradeService.initialize())
                 .thenCompose(result -> updaterService.initialize())
                 .thenCompose(result -> bisqEasyService.initialize())
+                .thenCompose(result -> alertNotificationsService.initialize())
                 .orTimeout(STARTUP_TIMEOUT_SEC, TimeUnit.SECONDS)
                 .handle((result, throwable) -> {
                     if (throwable == null) {
@@ -274,6 +281,7 @@ public class DesktopApplicationService extends ApplicationService {
                 .thenCompose(result -> sendNotificationService.shutdown())
                 .thenCompose(result -> chatService.shutdown())
                 .thenCompose(result -> offerService.shutdown())
+                .thenCompose(result -> alertNotificationsService.shutdown())
                 .thenCompose(result -> settingsService.shutdown())
                 .thenCompose(result -> userService.shutdown())
                 .thenCompose(result -> contractService.shutdown())

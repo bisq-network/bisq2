@@ -26,6 +26,7 @@ import bisq.application.ApplicationService;
 import bisq.application.ShutDownHandler;
 import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
+import bisq.bonded_roles.security_manager.alert.AlertNotificationsService;
 import bisq.chat.ChatService;
 import bisq.contract.ContractService;
 import bisq.identity.IdentityService;
@@ -67,6 +68,7 @@ public class ServiceProvider {
     private final TradeService tradeService;
     private final UpdaterService updaterService;
     private final BisqEasyService bisqEasyService;
+    private final AlertNotificationsService alertNotificationsService;
 
     public ServiceProvider(ShutDownHandler shutDownHandler,
                            ApplicationService.Config config,
@@ -86,7 +88,8 @@ public class ServiceProvider {
                            SendNotificationService sendNotificationService,
                            TradeService tradeService,
                            UpdaterService updaterService,
-                           BisqEasyService bisqEasyService) {
+                           BisqEasyService bisqEasyService,
+                           AlertNotificationsService alertNotificationsService) {
         this.shutDownHandler = shutDownHandler;
         this.config = config;
         this.persistenceService = persistenceService;
@@ -106,5 +109,6 @@ public class ServiceProvider {
         this.tradeService = tradeService;
         this.updaterService = updaterService;
         this.bisqEasyService = bisqEasyService;
+        this.alertNotificationsService = alertNotificationsService;
     }
 }

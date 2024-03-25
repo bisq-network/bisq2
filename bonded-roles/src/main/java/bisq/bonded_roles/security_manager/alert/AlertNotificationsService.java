@@ -18,17 +18,83 @@
 package bisq.bonded_roles.security_manager.alert;
 
 import bisq.common.application.Service;
+import bisq.common.observable.Observable;
+import bisq.common.observable.Pin;
+import bisq.common.observable.collection.CollectionObserver;
+import bisq.common.observable.collection.ObservableSet;
+import bisq.settings.SettingsService;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.CompletableFuture;
 
+@Slf4j
 public class AlertNotificationsService implements Service {
+    private final SettingsService settingsService;
+    private final AlertService alertService;
+    @Getter
+    private final Observable<Boolean> isNotificationBannerVisible = new Observable<>();
+    private Pin authorizedAlertDataSetPin, unconsumedAlertsPin;
+    private ObservableSet<AuthorizedAlertData> unconsumedAlerts;
+
+    public AlertNotificationsService(SettingsService settingsService, AlertService alertService) {
+        this.settingsService = settingsService;
+        this.alertService = alertService;
+    }
+
     @Override
     public CompletableFuture<Boolean> initialize() {
-        return null;
+        log.info("initialize");
+
+        authorizedAlertDataSetPin = alertService.getAuthorizedAlertDataSet().addObserver(new CollectionObserver<>() {
+            @Override
+            public void add(AuthorizedAlertData authorizedAlertData) {
+                if (authorizedAlertData == null) {
+                    return;
+                }
+
+                if (shouldProcessAlert(authorizedAlertData)) {
+                    unconsumedAlerts.add(authorizedAlertData);
+                }
+            }
+
+            @Override
+            public void remove(Object element) {
+                if (element instanceof AuthorizedAlertData) {
+                    unconsumedAlerts.remove((AuthorizedAlertData) element);
+                }
+            }
+
+            @Override
+            public void clear() {
+                unconsumedAlerts.clear();
+            }
+        });
+
+        unconsumedAlertsPin = unconsumedAlerts.addObserver(this::updateIsNotificationBannerVisible);
+
+        return CompletableFuture.completedFuture(true);
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        return null;
+        authorizedAlertDataSetPin.unbind();
+        unconsumedAlertsPin.unbind();
+
+        return CompletableFuture.completedFuture(true);
+    }
+
+    public void dismissAlert(AuthorizedAlertData authorizedAlertData) {
+        settingsService.getConsumedAlertIds().add(authorizedAlertData.getId());
+        unconsumedAlerts.remove(authorizedAlertData);
+    }
+
+    private void updateIsNotificationBannerVisible() {
+        isNotificationBannerVisible.set(!unconsumedAlerts.isEmpty());
+    }
+
+    private boolean shouldProcessAlert(AuthorizedAlertData authorizedAlertData) {
+        return authorizedAlertData.getAlertType() != AlertType.BAN
+                && !settingsService.getConsumedAlertIds().contains(authorizedAlertData.getId());
     }
 }
