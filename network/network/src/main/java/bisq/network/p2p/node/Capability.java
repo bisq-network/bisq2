@@ -36,6 +36,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @ToString
 @EqualsAndHashCode
 public final class Capability implements NetworkProto {
+
     private final Address address;
     private final List<TransportType> supportedTransportTypes;
     @ExcludeForHash
