@@ -42,8 +42,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.net.Socket;
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -201,7 +201,7 @@ public final class ConnectionHandshake {
     }
 
     // Client side protocol
-    public Result start(NetworkLoad myNetworkLoad, Address peerAddress) {
+    public Result start(NetworkLoad myNetworkLoad, Set<Feature> features, Address peerAddress) {
         try {
             ConnectionMetrics connectionMetrics = new ConnectionMetrics();
 
@@ -215,7 +215,7 @@ public final class ConnectionHandshake {
                     NetworkLoad.INITIAL_NETWORK_LOAD,
                     peerAddress.getFullAddress(),
                     0,
-                    List.of(Feature.AUTHORIZATION_HASH_CASH));
+                    features);
             NetworkEnvelope requestNetworkEnvelope = new NetworkEnvelope(token, request);
             long ts = System.currentTimeMillis();
             networkEnvelopeSocket.send(requestNetworkEnvelope);

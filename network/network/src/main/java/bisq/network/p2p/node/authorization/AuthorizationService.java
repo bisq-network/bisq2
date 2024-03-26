@@ -81,6 +81,14 @@ public class AuthorizationService {
                                           NetworkLoad networkLoad,
                                           String peerAddress,
                                           int messageCounter,
+                                          Set<Feature> features) {
+        return createToken(message, networkLoad, peerAddress, messageCounter, new ArrayList<>(features));
+    }
+
+    public AuthorizationToken createToken(EnvelopePayloadMessage message,
+                                          NetworkLoad networkLoad,
+                                          String peerAddress,
+                                          int messageCounter,
                                           List<Feature> features) {
         AuthorizationTokenType preferredAuthorizationTokenType = selectAuthorizationTokenType(features);
         return supportedServices.get(preferredAuthorizationTokenType).createToken(message,
