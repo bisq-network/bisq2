@@ -8,12 +8,15 @@ import java.util.Optional;
 
 public enum AuthorizationTokenType implements ProtoEnum {
     HASH_CASH,
-    EQUI_HASH;
+    EQUI_HASH,
+    HASH_CASH_V2;
 
     public static Optional<AuthorizationTokenType> fromFeature(Feature feature) {
         switch (feature) {
             case AUTHORIZATION_HASH_CASH:
                 return Optional.of(AuthorizationTokenType.HASH_CASH);
+            case AUTHORIZATION_HASH_CASH_V2:
+                return Optional.of(AuthorizationTokenType.HASH_CASH_V2);
             case AUTHORIZATION_EQUI_HASH:
                 return Optional.of(AuthorizationTokenType.EQUI_HASH);
             default:

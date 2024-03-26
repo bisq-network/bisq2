@@ -11,7 +11,8 @@ public enum Feature implements ProtoEnum {
     INVENTORY_HASH_SET,
     INVENTORY_MINI_SKETCH,
     AUTHORIZATION_HASH_CASH,
-    AUTHORIZATION_EQUI_HASH;
+    AUTHORIZATION_EQUI_HASH,
+    AUTHORIZATION_HASH_CASH_V2;
 
     @Override
     public bisq.network.protobuf.Feature toProto() {
