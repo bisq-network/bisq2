@@ -17,9 +17,11 @@
 
 package bisq.desktop.main.alert;
 
+import bisq.bisq_easy.BisqEasyNotificationsService;
 import bisq.bonded_roles.security_manager.alert.AlertNotificationsService;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
 import bisq.common.observable.Pin;
+import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import lombok.Getter;
@@ -34,10 +36,12 @@ public class AlertBannerController implements Controller {
     @Getter
     private final AlertBannerView view;
     private final AlertNotificationsService alertNotificationsService;
-    private Pin unconsumedAlertsPin;
+    private final BisqEasyNotificationsService bisqEasyNotificationsService;
+    private Pin unconsumedAlertsPin, isBisqEasyNotificationVisiblePin;
 
-    public AlertBannerController(AlertNotificationsService alertNotificationsService) {
-        this.alertNotificationsService = alertNotificationsService;
+    public AlertBannerController(ServiceProvider serviceProvider) {
+        alertNotificationsService = serviceProvider.getAlertNotificationsService();
+        bisqEasyNotificationsService = serviceProvider.getBisqEasyService().getBisqEasyNotificationsService();
         model = new AlertBannerModel();
         view = new AlertBannerView(model, this);
     }
@@ -45,11 +49,14 @@ public class AlertBannerController implements Controller {
     @Override
     public void onActivate() {
         unconsumedAlertsPin = alertNotificationsService.getUnconsumedAlerts().addObserver(this::showAlertBanner);
+        isBisqEasyNotificationVisiblePin = bisqEasyNotificationsService.getIsNotificationPanelVisible().addObserver(
+                this::updateIsBisqEasyNotificationVisible);
     }
 
     @Override
     public void onDeactivate() {
         unconsumedAlertsPin.unbind();
+        isBisqEasyNotificationVisiblePin.unbind();
     }
 
     void onClose() {
@@ -80,5 +87,9 @@ public class AlertBannerController implements Controller {
         authorizedAlertData.getMessage().ifPresent(message -> model.getMessage().set(message));
         model.getAlertType().set(authorizedAlertData.getAlertType());
         model.getIsAlertVisible().set(true);
+    }
+
+    private void updateIsBisqEasyNotificationVisible(boolean isVisible) {
+        model.getIsBisqEasyNotificationVisible().set(isVisible);
     }
 }

@@ -54,14 +54,13 @@ public class MainController extends NavigationController {
         super(NavigationTarget.MAIN);
 
         this.serviceProvider = serviceProvider;
-        AlertNotificationsService alertNotificationsService = serviceProvider.getAlertNotificationsService();
         updaterService = serviceProvider.getUpdaterService();
         config = serviceProvider.getConfig();
 
         leftNavController = new LeftNavController(serviceProvider);
         TopPanelController topPanelController = new TopPanelController(serviceProvider);
         NotificationPanelController notificationPanelController = new NotificationPanelController(serviceProvider);
-        AlertBannerController alertBannerController = new AlertBannerController(alertNotificationsService);
+        AlertBannerController alertBannerController = new AlertBannerController(serviceProvider);
         view = new MainView(model,
                 this,
                 leftNavController.getView().getRoot(),
