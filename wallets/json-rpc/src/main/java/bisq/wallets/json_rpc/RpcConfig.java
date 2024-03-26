@@ -31,12 +31,16 @@ public final class RpcConfig implements PersistableProto {
 
     @Override
     public bisq.wallets.protobuf.RpcConfig toProto() {
+        return getBuilder().build();
+    }
+
+    @Override
+    public bisq.wallets.protobuf.RpcConfig.Builder getBuilder() {
         return bisq.wallets.protobuf.RpcConfig.newBuilder()
                 .setHostname(hostname)
                 .setPort(port)
                 .setUser(user)
-                .setPassword(password)
-                .build();
+                .setPassword(password);
     }
 
     public static RpcConfig fromProto(bisq.wallets.protobuf.RpcConfig proto) {
