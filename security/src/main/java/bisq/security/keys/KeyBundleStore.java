@@ -55,12 +55,16 @@ public final class KeyBundleStore implements PersistableStore<KeyBundleStore> {
 
     @Override
     public bisq.security.protobuf.KeyBundleStore toProto() {
+        return getBuilder().build();
+    }
+
+    @Override
+    public bisq.security.protobuf.KeyBundleStore.Builder getBuilder() {
         return bisq.security.protobuf.KeyBundleStore.newBuilder()
                 .setSecretUid(secretUid)
                 .putAllKeyBundleById(keyBundleById.entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey,
-                                entry -> entry.getValue().toProto())))
-                .build();
+                                entry -> entry.getValue().toProto())));
     }
 
     public static KeyBundleStore fromProto(bisq.security.protobuf.KeyBundleStore proto) {

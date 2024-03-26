@@ -68,13 +68,17 @@ public class ScryptParameters implements PersistableProto {
 
     @Override
     public bisq.security.protobuf.ScryptParameters toProto() {
+        return getBuilder().build();
+    }
+
+    @Override
+    public bisq.security.protobuf.ScryptParameters.Builder getBuilder() {
         return bisq.security.protobuf.ScryptParameters.newBuilder()
                 .setSalt(ByteString.copyFrom(salt))
                 .setCost(cost)
                 .setBlockSize(blockSize)
                 .setParallelization(parallelization)
-                .setKeyLength(keyLength)
-                .build();
+                .setKeyLength(keyLength);
     }
 
     public static ScryptParameters fromProto(bisq.security.protobuf.ScryptParameters proto) {

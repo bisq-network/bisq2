@@ -40,11 +40,16 @@ public final class EncryptedData implements PersistableProto {
         this.cipherText = cipherText;
     }
 
+    @Override
     public bisq.security.protobuf.EncryptedData toProto() {
+        return getBuilder().build();
+    }
+
+    @Override
+    public bisq.security.protobuf.EncryptedData.Builder getBuilder() {
         return bisq.security.protobuf.EncryptedData.newBuilder()
                 .setIv(ByteString.copyFrom(iv))
-                .setCipherText(ByteString.copyFrom(cipherText))
-                .build();
+                .setCipherText(ByteString.copyFrom(cipherText));
     }
 
     public static EncryptedData fromProto(bisq.security.protobuf.EncryptedData proto) {

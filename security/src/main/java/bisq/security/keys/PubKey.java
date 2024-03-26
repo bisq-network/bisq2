@@ -61,10 +61,14 @@ public final class PubKey implements NetworkProto {
 
     @Override
     public bisq.security.protobuf.PubKey toProto() {
+        return getBuilder().build();
+    }
+
+    @Override
+    public bisq.security.protobuf.PubKey.Builder getBuilder() {
         return bisq.security.protobuf.PubKey.newBuilder()
                 .setPublicKey(ByteString.copyFrom(publicKey.getEncoded()))
-                .setKeyId(keyId)
-                .build();
+                .setKeyId(keyId);
     }
 
     public static PubKey fromProto(bisq.security.protobuf.PubKey proto) {

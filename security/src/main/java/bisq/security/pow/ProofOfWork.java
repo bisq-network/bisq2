@@ -79,15 +79,19 @@ public final class ProofOfWork implements NetworkProto {
 
     @Override
     public bisq.security.protobuf.ProofOfWork toProto() {
+        return getBuilder().build();
+    }
+
+    @Override
+    public bisq.security.protobuf.ProofOfWork.Builder getBuilder() {
         bisq.security.protobuf.ProofOfWork.Builder builder = bisq.security.protobuf.ProofOfWork.newBuilder()
                 .setPayload(ByteString.copyFrom(payload))
                 .setCounter(counter)
                 .setDifficulty(difficulty)
                 .setSolution(ByteString.copyFrom(solution))
                 .setDuration(duration);
-
         Optional.ofNullable(challenge).ifPresent(challenge -> builder.setChallenge(ByteString.copyFrom(challenge)));
-        return builder.build();
+        return builder;
     }
 
     public static ProofOfWork fromProto(bisq.security.protobuf.ProofOfWork proto) {

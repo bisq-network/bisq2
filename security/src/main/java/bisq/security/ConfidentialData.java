@@ -61,12 +61,16 @@ public final class ConfidentialData implements NetworkProto {
 
     @Override
     public bisq.security.protobuf.ConfidentialData toProto() {
+        return getBuilder().build();
+    }
+
+    @Override
+    public bisq.security.protobuf.ConfidentialData.Builder getBuilder() {
         return bisq.security.protobuf.ConfidentialData.newBuilder()
                 .setSenderPublicKey(ByteString.copyFrom(senderPublicKey))
                 .setIv(ByteString.copyFrom(iv))
                 .setCipherText(ByteString.copyFrom(cipherText))
-                .setSignature(ByteString.copyFrom(signature))
-                .build();
+                .setSignature(ByteString.copyFrom(signature));
     }
 
     public static ConfidentialData fromProto(bisq.security.protobuf.ConfidentialData proto) {
