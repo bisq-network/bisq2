@@ -51,8 +51,8 @@ public class HashCashV2TokenService extends AuthorizationTokenService<HashCashV2
         long ts = System.currentTimeMillis();
         double difficulty = calculateDifficulty(message, networkLoad);
         byte[] challenge = getChallenge(peerAddress, messageCounter);
-        byte[] payload = getPayload(message);
-        ProofOfWork proofOfWork = proofOfWorkService.mint(payload, challenge, difficulty);
+        byte[] hash = getHash(message);
+        ProofOfWork proofOfWork = proofOfWorkService.mint(hash, challenge, difficulty);
         HashCashV2Token token = new HashCashV2Token(proofOfWork, messageCounter);
         long duration = System.currentTimeMillis() - ts;
         accumulatedPoWDuration += duration;
@@ -74,12 +74,12 @@ public class HashCashV2TokenService extends AuthorizationTokenService<HashCashV2
         }
         log.debug("Create HashCashV2Token for {} took {} ms" +
                         "\ncostFactor={}" +
-                        "\ngetPayload(message)={}" +
+                        "\ngetHash(message)={}" +
                         "\nnetworkLoad={}" +
                         "\nhashCashToken={}",
                 message.getClass().getSimpleName(), duration,
                 message.getCostFactor(),
-                Hex.encode(payload),
+                Hex.encode(hash),
                 networkLoad,
                 token);
         return token;
@@ -110,14 +110,14 @@ public class HashCashV2TokenService extends AuthorizationTokenService<HashCashV2
         }
         receivedMessageCounters.add(messageCounter);
 
-        // Verify payload
-        byte[] payload = getPayload(message);
-        if (!Arrays.equals(payload, proofOfWork.getPayload())) {
-            log.warn("Message payload not matching proof of work payload. " +
-                            "getPayload(message)={}; proofOfWork.getPayload()={}; " +
-                            "getPayload(message).length={}; proofOfWork.getPayload().length={}",
-                    Hex.encode(payload), Hex.encode(proofOfWork.getPayload()),
-                    payload.length, proofOfWork.getPayload().length);
+        // Verify hash
+        byte[] hash = getHash(message);
+        if (!Arrays.equals(hash, proofOfWork.getPayload())) {
+            log.warn("Message hash not matching proof of work hash. " +
+                            "getHash(message)={}; proofOfWork.getPayload()={}; " +
+                            "getHash(message).length={}; proofOfWork.getPayload().length={}",
+                    Hex.encode(hash), Hex.encode(proofOfWork.getPayload()),
+                    hash.length, proofOfWork.getPayload().length);
             return false;
         }
 
@@ -212,7 +212,7 @@ public class HashCashV2TokenService extends AuthorizationTokenService<HashCashV2
         return true;
     }
 
-    private byte[] getPayload(EnvelopePayloadMessage message) {
+    private byte[] getHash(EnvelopePayloadMessage message) {
         return DigestUtil.hash(message.serializeForHash());
     }
 
