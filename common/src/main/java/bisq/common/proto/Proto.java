@@ -37,7 +37,11 @@ import java.util.stream.Collectors;
  * If a map is needed we can use the TreeMap as it provides a deterministic order.
  */
 public interface Proto {
-    Message.Builder getBuilder();
+    //Message.Builder getBuilder();
+    // TODO temp for dev
+    default Message.Builder getBuilder() {
+        return null;
+    }
 
     default Message toProto() {
         return getBuilder().build();
