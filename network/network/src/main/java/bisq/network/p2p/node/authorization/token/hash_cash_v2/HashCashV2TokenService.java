@@ -213,7 +213,7 @@ public class HashCashV2TokenService extends AuthorizationTokenService<HashCashV2
     }
 
     private byte[] getPayload(EnvelopePayloadMessage message) {
-        return DigestUtil.hash(message.serialize());
+        return DigestUtil.hash(message.serializeForHash());
     }
 
     private byte[] getChallenge(String peerAddress, int messageCounter) {
