@@ -91,6 +91,11 @@ public class AuthorizationServiceTest {
         result = AuthorizationService.selectAuthorizationTokenType(myPreferredAuthorizationTokenTypes, peersFeatures);
         assertEquals(AuthorizationTokenType.EQUI_HASH, result);
 
+        peersFeatures = List.of(Feature.AUTHORIZATION_EQUI_HASH, Feature.AUTHORIZATION_HASH_CASH);
+        myPreferredAuthorizationTokenTypes = List.of(AuthorizationTokenType.HASH_CASH_V2);
+        result = AuthorizationService.selectAuthorizationTokenType(myPreferredAuthorizationTokenTypes, peersFeatures);
+        assertEquals(AuthorizationTokenType.EQUI_HASH, result);
+
 
         // Multiple myPreferredAuthorizationTokenTypes and peersFeatures
         peersFeatures = List.of(Feature.AUTHORIZATION_HASH_CASH, Feature.AUTHORIZATION_EQUI_HASH);
