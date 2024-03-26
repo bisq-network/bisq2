@@ -34,11 +34,16 @@ public final class StringLongPair implements PersistableProto {
         this.value = value;
     }
 
+    @Override
     public bisq.common.protobuf.StringLongPair toProto() {
+        return getBuilder().build();
+    }
+
+    @Override
+    public bisq.common.protobuf.StringLongPair.Builder getBuilder() {
         return bisq.common.protobuf.StringLongPair.newBuilder()
                 .setKey(key)
-                .setValue(value)
-                .build();
+                .setValue(value);
     }
 
     public static StringLongPair fromProto(bisq.common.protobuf.StringLongPair proto) {

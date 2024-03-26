@@ -41,12 +41,17 @@ public final class Country implements PersistableProto {
         this.region = region;
     }
 
-    public bisq.common.protobuf.Country toProto() {
+    @Override
+    public bisq.common.protobuf.Country.Builder getBuilder() {
         return bisq.common.protobuf.Country.newBuilder()
                 .setCode(code)
                 .setName(name)
-                .setRegion(region.toProto())
-                .build();
+                .setRegion(region.toProto());
+    }
+
+    @Override
+    public bisq.common.protobuf.Country toProto() {
+        return getBuilder().build();
     }
 
     public static Country fromProto(bisq.common.protobuf.Country proto) {
