@@ -22,6 +22,7 @@ import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.network.p2p.services.data.storage.DistributedData;
+import bisq.network.protobuf.EnvelopePayloadMessage;
 import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
@@ -98,12 +99,17 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
 
     @Override
     public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
+        return getBuilder().build();
+    }
+
+    @Override
+    public EnvelopePayloadMessage.Builder getBuilder() {
         return getNetworkMessageBuilder().setDataRequest(getDataRequestBuilder().setAddAuthenticatedDataRequest(
                 bisq.network.protobuf.AddAuthenticatedDataRequest.newBuilder()
                         .setAuthenticatedSequentialData(authenticatedSequentialData.toProto())
                         .setSignature(ByteString.copyFrom(signature))
                         .setOwnerPublicKeyBytes(ByteString.copyFrom(ownerPublicKeyBytes)))
-        ).build();
+        );
     }
 
     public static AddAuthenticatedDataRequest fromProto(bisq.network.protobuf.AddAuthenticatedDataRequest proto) {

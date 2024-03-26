@@ -71,10 +71,14 @@ public final class Inventory implements NetworkProto {
 
     @Override
     public bisq.network.protobuf.Inventory toProto() {
+        return getBuilder().build();
+    }
+
+    @Override
+    public bisq.network.protobuf.Inventory.Builder getBuilder() {
         return bisq.network.protobuf.Inventory.newBuilder()
                 .addAllEntries(entries.stream().map(e -> e.toProto().getDataRequest()).collect(Collectors.toList()))
-                .setMaxSizeReached(maxSizeReached)
-                .build();
+                .setMaxSizeReached(maxSizeReached);
     }
 
     public static Inventory fromProto(bisq.network.protobuf.Inventory proto) {

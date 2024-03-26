@@ -43,10 +43,14 @@ public final class NetworkId implements NetworkProto {
 
     @Override
     public bisq.network.identity.protobuf.NetworkId toProto() {
+        return getBuilder().build();
+    }
+
+    @Override
+    public bisq.network.identity.protobuf.NetworkId.Builder getBuilder() {
         return bisq.network.identity.protobuf.NetworkId.newBuilder()
                 .setAddressByNetworkTypeMap(addressByTransportTypeMap.toProto())
-                .setPubKey(pubKey.toProto())
-                .build();
+                .setPubKey(pubKey.toProto());
     }
 
     public static NetworkId fromProto(bisq.network.identity.protobuf.NetworkId proto) {

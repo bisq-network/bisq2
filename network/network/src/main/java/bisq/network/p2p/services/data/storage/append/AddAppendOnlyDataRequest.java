@@ -20,6 +20,7 @@ package bisq.network.p2p.services.data.storage.append;
 import bisq.common.util.MathUtils;
 import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.network.p2p.services.data.storage.DistributedData;
+import bisq.network.protobuf.EnvelopePayloadMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -44,13 +45,18 @@ public final class AddAppendOnlyDataRequest implements AddDataRequest {
 
     @Override
     public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
+        return getBuilder().build();
+    }
+
+    @Override
+    public EnvelopePayloadMessage.Builder getBuilder() {
         return getNetworkMessageBuilder()
                 .setDataRequest(getDataRequestBuilder()
                         .setAddAppendOnlyDataRequest(
                                 bisq.network.protobuf.AddAppendOnlyDataRequest.newBuilder()
                                         .setAppendOnlyData(appendOnlyData.toAny())
                         )
-                ).build();
+                );
     }
 
     public static AddAppendOnlyDataRequest fromProto(bisq.network.protobuf.AddAppendOnlyDataRequest proto) {

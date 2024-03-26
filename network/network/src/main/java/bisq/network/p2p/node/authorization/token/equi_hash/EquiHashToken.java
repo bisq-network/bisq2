@@ -59,11 +59,15 @@ public final class EquiHashToken extends AuthorizationToken {
 
     @Override
     public bisq.network.protobuf.AuthorizationToken toProto() {
+        return getBuilder().build();
+    }
+
+    @Override
+    public bisq.network.protobuf.AuthorizationToken.Builder getBuilder() {
         return getAuthorizationTokenBuilder().setEquiHashToken(
-                        bisq.network.protobuf.EquiHashToken.newBuilder()
-                                .setProofOfWork(proofOfWork.toProto())
-                                .setMessageCounter(messageCounter))
-                .build();
+                bisq.network.protobuf.EquiHashToken.newBuilder()
+                        .setProofOfWork(proofOfWork.toProto())
+                        .setMessageCounter(messageCounter));
     }
 
     public static EquiHashToken fromProto(bisq.network.protobuf.AuthorizationToken proto) {

@@ -44,14 +44,18 @@ public final class ResendMessageStore implements PersistableStore<ResendMessageS
 
     @Override
     public bisq.network.protobuf.ResendMessageStore toProto() {
+        return getBuilder().build();
+    }
+
+    @Override
+    public bisq.network.protobuf.ResendMessageStore.Builder getBuilder() {
         return bisq.network.protobuf.ResendMessageStore.newBuilder()
                 .putAllResendMessageDataByMessageId(resendMessageDataByMessageId.entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey,
                                 e -> e.getValue().toProto())))
                 .putAllNumResendsByMessageId(numResendsByMessageId.entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey,
-                                e -> e.getValue().get())))
-                .build();
+                                e -> e.getValue().get())));
     }
 
     public static PersistableStore<?> fromProto(bisq.network.protobuf.ResendMessageStore proto) {

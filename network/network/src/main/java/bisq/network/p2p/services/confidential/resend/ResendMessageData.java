@@ -94,14 +94,18 @@ public class ResendMessageData implements NetworkProto {
 
     @Override
     public bisq.network.protobuf.ResendMessageData toProto() {
+        return getBuilder().build();
+    }
+
+    @Override
+    public bisq.network.protobuf.ResendMessageData.Builder getBuilder() {
         return bisq.network.protobuf.ResendMessageData.newBuilder()
                 .setEnvelopePayloadMessage(envelopePayloadMessage.toProto())
                 .setReceiverNetworkId(receiverNetworkId.toProto())
                 .setSenderKeyPair(KeyPairProtoUtil.toProto(senderKeyPair))
                 .setSenderNetworkId(senderNetworkId.toProto())
                 .setMessageDeliveryStatus(messageDeliveryStatus.toProto())
-                .setDate(date)
-                .build();
+                .setDate(date);
     }
 
     public static ResendMessageData fromProto(bisq.network.protobuf.ResendMessageData proto) {
