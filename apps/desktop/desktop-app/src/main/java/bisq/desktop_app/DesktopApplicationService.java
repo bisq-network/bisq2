@@ -48,7 +48,6 @@ import bisq.wallets.core.WalletService;
 import bisq.wallets.electrum.ElectrumWalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.checkerframework.checker.units.qual.A;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
