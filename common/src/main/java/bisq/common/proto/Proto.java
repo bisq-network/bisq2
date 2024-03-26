@@ -20,6 +20,8 @@ package bisq.common.proto;
 import bisq.common.annotation.ExcludeForHash;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.Message;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
@@ -40,6 +42,10 @@ public interface Proto {
     //Message.Builder getBuilder();
     // TODO temp for dev
     default Message.Builder getBuilder() {
+        return getBuilder(false);
+    }
+
+    default Message.Builder getBuilder(boolean doExclude) {
         return null;
     }
 
@@ -52,7 +58,11 @@ public interface Proto {
     }
 
     default byte[] serializeForHash() {
-        return removeExcluded(getBuilder()).build().toByteArray();
+        Message.Builder builder = getBuilder(true);
+        if (builder == null) {
+            builder = getBuilder();
+        }
+        return filter(builder, true).build().toByteArray();
     }
 
     default Set<String> getExcludedFields() {
@@ -69,13 +79,20 @@ public interface Proto {
      * @param builder The builder we transform by clearing the ExcludeForHash annotated fields.
      * @return Builder with the fields annotated with ExcludeForHash cleared.
      */
-    default Message.Builder removeExcluded(Message.Builder builder) {
-        Set<String> excludedFields = getExcludedFields();
-        for (Descriptors.FieldDescriptor fieldDesc : builder.getAllFields().keySet()) {
-            if (excludedFields.contains(fieldDesc.getName())) {
-                builder.clearField(fieldDesc);
+    default <B extends Message.Builder> B filter(B builder, boolean doExclude) {
+        if (doExclude) {
+            Set<String> excludedFields = getExcludedFields();
+            for (Descriptors.FieldDescriptor fieldDesc : builder.getAllFields().keySet()) {
+                if (excludedFields.contains(fieldDesc.getName())) {
+                    builder.clearField(fieldDesc);
+                    getLogger().warn("ExcludeForHash {}.{}", getClass().getSimpleName(), fieldDesc.getName());
+                }
             }
         }
         return builder;
+    }
+
+    private Logger getLogger() {
+        return LoggerFactory.getLogger(this.getClass().getSimpleName());
     }
 }

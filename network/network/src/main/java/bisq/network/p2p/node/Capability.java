@@ -36,7 +36,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 @ToString
 @EqualsAndHashCode
 public final class Capability implements NetworkProto {
-
     private final Address address;
     private final List<TransportType> supportedTransportTypes;
     @ExcludeForHash
@@ -61,20 +60,25 @@ public final class Capability implements NetworkProto {
     }
 
     @Override
-    public bisq.network.protobuf.Capability.Builder getBuilder() {
-        return bisq.network.protobuf.Capability.newBuilder()
-                .setAddress(address.toProto())
+    public bisq.network.protobuf.Capability.Builder getBuilder(boolean doExclude) {
+        return filter(bisq.network.protobuf.Capability.newBuilder()
+                .setAddress(address.getBuilder(doExclude))
                 .addAllSupportedTransportTypes(supportedTransportTypes.stream()
                         .map(Enum::name)
                         .collect(Collectors.toList()))
                 .addAllFeatures(features.stream()
                         .map(Feature::toProto)
-                        .collect(Collectors.toList()));
+                        .collect(Collectors.toList())), doExclude);
     }
 
     @Override
     public bisq.network.protobuf.Capability toProto() {
-        return getBuilder().build();
+        return getBuilder(false).build();
+    }
+
+    @Override
+    public bisq.network.protobuf.Capability.Builder getBuilder() {
+        return getBuilder(false);
     }
 
     public static Capability fromProto(bisq.network.protobuf.Capability proto) {

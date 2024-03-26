@@ -74,14 +74,14 @@ public final class Address implements NetworkProto, Comparable<Address> {
 
     @Override
     public bisq.network.common.protobuf.Address toProto() {
-        return getBuilder().build();
+        return getBuilder(false).build();
     }
 
     @Override
-    public bisq.network.common.protobuf.Address.Builder getBuilder() {
-        return bisq.network.common.protobuf.Address.newBuilder()
+    public bisq.network.common.protobuf.Address.Builder getBuilder(boolean doExclude) {
+        return filter(bisq.network.common.protobuf.Address.newBuilder()
                 .setHost(host)
-                .setPort(port);
+                .setPort(port), doExclude);
     }
 
     public static Address fromProto(bisq.network.common.protobuf.Address proto) {
