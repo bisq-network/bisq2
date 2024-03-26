@@ -30,7 +30,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Slf4j
-public final class TimestampStore  implements PersistableStore<TimestampStore> {
+public final class TimestampStore implements PersistableStore<TimestampStore> {
     @Getter
     private final Map<String, Long> timestampsByProfileId = new ConcurrentHashMap<>();
 
@@ -43,12 +43,16 @@ public final class TimestampStore  implements PersistableStore<TimestampStore> {
 
     @Override
     public bisq.persistence.protobuf.TimestampStore toProto() {
+        return getBuilder().build();
+    }
+
+    @Override
+    public bisq.persistence.protobuf.TimestampStore.Builder getBuilder() {
         return bisq.persistence.protobuf.TimestampStore.newBuilder()
                 .addAllStringLongPairs(timestampsByProfileId.entrySet().stream()
                         .map(entry -> new StringLongPair(entry.getKey(), entry.getValue()))
                         .map(StringLongPair::toProto)
-                        .collect(Collectors.toSet()))
-                .build();
+                        .collect(Collectors.toSet()));
     }
 
     public static TimestampStore fromProto(bisq.persistence.protobuf.TimestampStore proto) {
