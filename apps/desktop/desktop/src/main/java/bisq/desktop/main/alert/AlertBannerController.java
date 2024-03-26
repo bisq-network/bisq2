@@ -71,11 +71,8 @@ public class AlertBannerController implements Controller {
         UIThread.run(() -> {
             Optional<AuthorizedAlertData> mostRelevantAlert = alertNotificationsService.getUnconsumedAlerts().stream()
                         .max(Comparator.comparing(AuthorizedAlertData::getAlertType).thenComparing(AuthorizedAlertData::getDate));
-            if (mostRelevantAlert.isPresent()) {
-                if (!mostRelevantAlert.get().equals(model.getDisplayedAuthorizedAlertData())) {
-                    // Only show incoming alert effect if newly added alert is more relevant than current one
-                    model.reset();
-                }
+            if (mostRelevantAlert.isPresent() && !mostRelevantAlert.get().equals(model.getDisplayedAuthorizedAlertData())) {
+                model.reset();
                 add(mostRelevantAlert.get());
             }
         });
