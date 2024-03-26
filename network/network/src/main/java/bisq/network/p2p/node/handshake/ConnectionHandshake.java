@@ -25,6 +25,7 @@ import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.Capability;
 import bisq.network.p2p.node.ConnectionException;
+import bisq.network.p2p.node.Feature;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
 import bisq.network.p2p.node.envelope.NetworkEnvelopeSocket;
@@ -41,7 +42,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.net.Socket;
-import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -214,7 +215,7 @@ public final class ConnectionHandshake {
                     NetworkLoad.INITIAL_NETWORK_LOAD,
                     peerAddress.getFullAddress(),
                     0,
-                    new ArrayList<>());
+                    List.of(Feature.AUTHORIZATION_HASH_CASH));
             NetworkEnvelope requestNetworkEnvelope = new NetworkEnvelope(token, request);
             long ts = System.currentTimeMillis();
             networkEnvelopeSocket.send(requestNetworkEnvelope);
