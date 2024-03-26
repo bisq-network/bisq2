@@ -28,15 +28,17 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.CompletableFuture;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @Slf4j
 public class AlertNotificationsService implements Service {
     private final SettingsService settingsService;
     private final AlertService alertService;
     @Getter
-    private final Observable<Boolean> isAlertBannerVisible = new Observable<>(false);
-    private Pin authorizedAlertDataSetPin;
-    @Getter
     private final ObservableSet<AuthorizedAlertData> unconsumedAlerts = new ObservableSet<>();
+    @Getter
+    private final Observable<Boolean> isAlertBannerVisible = new Observable<>(false);
+    private Pin authorizedAlertDataSetPin, unconsumedAlertsPin;
 
     public AlertNotificationsService(SettingsService settingsService, AlertService alertService) {
         this.settingsService = settingsService;
@@ -72,17 +74,21 @@ public class AlertNotificationsService implements Service {
             }
         });
 
+        unconsumedAlertsPin = unconsumedAlerts.addObserver(this::updateIsNotificationBannerVisible);
+
         return CompletableFuture.completedFuture(true);
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
         authorizedAlertDataSetPin.unbind();
+        unconsumedAlertsPin.unbind();
 
         return CompletableFuture.completedFuture(true);
     }
 
     public void dismissAlert(AuthorizedAlertData authorizedAlertData) {
+        checkNotNull(authorizedAlertData, "Cannot dismiss alert because it's null.");
         settingsService.getConsumedAlertIds().add(authorizedAlertData.getId());
         unconsumedAlerts.remove(authorizedAlertData);
     }
@@ -91,5 +97,9 @@ public class AlertNotificationsService implements Service {
         return authorizedAlertData.getAlertType() != AlertType.BAN
                 && !settingsService.getConsumedAlertIds().contains(authorizedAlertData.getId())
                 && authorizedAlertData.getMessage().isPresent();
+    }
+
+    private void updateIsNotificationBannerVisible() {
+        isAlertBannerVisible.set(!unconsumedAlerts.isEmpty());
     }
 }
