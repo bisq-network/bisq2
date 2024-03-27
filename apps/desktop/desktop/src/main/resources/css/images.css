@@ -214,6 +214,34 @@
     -fx-image: url("/images/icons/bisq-broadcast-white.png");
 }
 
+#chevron-drop-menu-green {
+    -fx-image: url("/images/icons/chevron-drop-menu-green.png");
+}
+
+#chevron-drop-menu-white {
+    -fx-image: url("/images/icons/chevron-drop-menu-white.png");
+}
+
+#chevron-drop-menu-grey {
+    -fx-image: url("/images/icons/chevron-drop-menu-grey.png");
+}
+
+#close-mini-black {
+    -fx-image: url("/images/icons/close-mini-black.png");
+}
+
+#close-mini-white {
+    -fx-image: url("/images/icons/close-mini-white.png");
+}
+
+#close-mini-grey {
+    -fx-image: url("/images/icons/close-mini-grey.png");
+}
+
+#close-mini-green {
+    -fx-image: url("/images/icons/close-mini-green.png");
+}
+
 
 /* ------------------------------------------------------------------------------------ */
 /* Navigation */

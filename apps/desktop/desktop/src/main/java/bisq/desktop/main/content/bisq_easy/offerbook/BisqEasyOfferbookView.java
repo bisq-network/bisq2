@@ -289,23 +289,14 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         subheader.setAlignment(Pos.CENTER);
         subheader.getStyleClass().add("market-selection-subheader");
 
-        // TODO: Introduce new icons with proper scale
-        withOffersRemoveFilterDefaultIcon = ImageUtil.getImageViewById("close");
-        withOffersRemoveFilterDefaultIcon.setScaleX(0.4);
-        withOffersRemoveFilterDefaultIcon.setScaleY(0.4);
-        withOffersRemoveFilterActiveIcon = ImageUtil.getImageViewById("close-white");
-        withOffersRemoveFilterActiveIcon.setScaleX(0.4);
-        withOffersRemoveFilterActiveIcon.setScaleY(0.4);
+        withOffersRemoveFilterDefaultIcon = ImageUtil.getImageViewById("close-mini-grey");
+        withOffersRemoveFilterActiveIcon = ImageUtil.getImageViewById("close-mini-white");
         removeWithOffersFilter = createAndGetRemoveFilterLabel(withOffersRemoveFilterDefaultIcon);
         withOffersDisplayHint = createAndGetDisplayHintHBox(
                 Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.withOffers"), removeWithOffersFilter);
 
-        favouritesRemoveFilterDefaultIcon = ImageUtil.getImageViewById("close");
-        favouritesRemoveFilterDefaultIcon.setScaleX(0.4);
-        favouritesRemoveFilterDefaultIcon.setScaleY(0.4);
-        favouritesRemoveFilterActiveIcon = ImageUtil.getImageViewById("close-white");
-        favouritesRemoveFilterActiveIcon.setScaleX(0.4);
-        favouritesRemoveFilterActiveIcon.setScaleY(0.4);
+        favouritesRemoveFilterDefaultIcon = ImageUtil.getImageViewById("close-mini-grey");
+        favouritesRemoveFilterActiveIcon = ImageUtil.getImageViewById("close-mini-white");
         removeFavouritesFilter = createAndGetRemoveFilterLabel(favouritesRemoveFilterDefaultIcon);
         onlyFavouritesDisplayHint = createAndGetDisplayHintHBox(
                 Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.favourites"), removeFavouritesFilter);
@@ -348,7 +339,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     private HBox createAndGetDisplayHintHBox(String labelText, Label removeFilter) {
         Label label = new Label(labelText);
         label.getStyleClass().add("small-text");
-        HBox displayHintHBox = new HBox(label, removeFilter);
+        HBox displayHintHBox = new HBox(5, label, removeFilter);
         displayHintHBox.setAlignment(Pos.CENTER);
         displayHintHBox.getStyleClass().add("filter-display-hint");
         return displayHintHBox;
@@ -446,7 +437,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     }
 
     private DropdownMenu createAndGetOfferDirectionOrOwnerFilterMenu() {
-        DropdownMenu dropdownMenu = new DropdownMenu("arrow-down", "arrow-down", false);
+        DropdownMenu dropdownMenu = new DropdownMenu("chevron-drop-menu-grey", "chevron-drop-menu-white", false);
         dropdownMenu.setTooltip(Res.get("bisqEasy.offerbook.dropdownMenu.filterOffersByDirectionOrOwner.tooltip"));
         dropdownMenu.getStyleClass().add("dropdown-offers-filter-menu");
 
@@ -464,7 +455,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     }
 
     private DropdownMenu createAndGetPeerReputationFilterMenu() {
-        DropdownMenu dropdownMenu = new DropdownMenu("arrow-down", "arrow-down", false);
+        DropdownMenu dropdownMenu = new DropdownMenu("chevron-drop-menu-grey", "chevron-drop-menu-white", false);
         dropdownMenu.setTooltip(Res.get("bisqEasy.offerbook.dropdownMenu.filterOffersByPeerReputation.tooltip"));
         dropdownMenu.getStyleClass().add("dropdown-offers-filter-menu");
 
