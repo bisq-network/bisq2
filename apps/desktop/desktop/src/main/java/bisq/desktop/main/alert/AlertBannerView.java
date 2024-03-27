@@ -40,15 +40,17 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public class AlertBannerView extends View<BorderPane, AlertBannerModel, AlertBannerController> {
     public static final int DURATION = Transitions.DEFAULT_DURATION / 2;
-    private final VBox contentVBox;
+    public static final Insets DEFAULT_PADDING = new Insets(20, 40, 20, 40);
+    public static final Insets PADDING_WITH_NOTIFICATION = new Insets(0, 40, 20, 40);
 
-    Label headline = new Label();
-    Label message = new Label();
+    private final VBox contentVBox;
     private final Button closeButton;
     private final HBox banner;
     private final ChangeListener<Number> heightListener;
+    Label headline = new Label();
+    Label message = new Label();
     private Timeline slideInRightTimeline, slideOutTopTimeline;
-    private Subscription isVisiblePin, alertTypePin;
+    private Subscription isVisiblePin, alertTypePin, isBisqEasyNotificationVisiblePin;
 
     public AlertBannerView(AlertBannerModel model, AlertBannerController controller) {
         super(new BorderPane(), model, controller);
@@ -74,7 +76,7 @@ public class AlertBannerView extends View<BorderPane, AlertBannerModel, AlertBan
         heightListener = ((observable, oldValue, newValue) -> banner.setMinHeight(contentVBox.getHeight() + 25)); // padding = 25
 
         root.setCenter(banner);
-        root.setPadding(new Insets(20, 40, 20, 40));
+        root.setPadding(DEFAULT_PADDING);
     }
 
     @Override
@@ -119,6 +121,9 @@ public class AlertBannerView extends View<BorderPane, AlertBannerModel, AlertBan
             }
         });
 
+        isBisqEasyNotificationVisiblePin = EasyBind.subscribe(model.getIsBisqEasyNotificationVisible(), isVisible ->
+            root.setPadding(isVisible ? PADDING_WITH_NOTIFICATION : DEFAULT_PADDING));
+
         message.heightProperty().addListener(heightListener);
 
         closeButton.setOnAction(e -> controller.onClose());
@@ -131,6 +136,7 @@ public class AlertBannerView extends View<BorderPane, AlertBannerModel, AlertBan
 
         isVisiblePin.unsubscribe();
         alertTypePin.unsubscribe();
+        isBisqEasyNotificationVisiblePin.unsubscribe();
 
         message.heightProperty().removeListener(heightListener);
 
