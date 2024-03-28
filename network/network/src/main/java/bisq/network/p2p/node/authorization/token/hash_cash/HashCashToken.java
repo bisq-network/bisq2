@@ -55,11 +55,15 @@ public final class HashCashToken extends AuthorizationToken {
 
     @Override
     public bisq.network.protobuf.AuthorizationToken toProto() {
+        return getBuilder().build();
+    }
+
+    @Override
+    public bisq.network.protobuf.AuthorizationToken.Builder getBuilder() {
         return getAuthorizationTokenBuilder().setHashCashToken(
-                        bisq.network.protobuf.HashCashToken.newBuilder()
-                                .setProofOfWork(proofOfWork.toProto())
-                                .setMessageCounter(messageCounter))
-                .build();
+                bisq.network.protobuf.HashCashToken.newBuilder()
+                        .setProofOfWork(proofOfWork.toProto())
+                        .setMessageCounter(messageCounter));
     }
 
     public static HashCashToken fromProto(bisq.network.protobuf.AuthorizationToken proto) {

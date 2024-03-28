@@ -68,12 +68,16 @@ public final class Peer implements NetworkProto, Comparable<Peer> {
 
     @Override
     public bisq.network.protobuf.Peer toProto() {
+        return getBuilder().build();
+    }
+
+    @Override
+    public bisq.network.protobuf.Peer.Builder getBuilder() {
         return bisq.network.protobuf.Peer.newBuilder()
                 .setCapability(capability.toProto())
                 .setNetworkLoad(networkLoad.toProto())
                 .setIsOutboundConnection(isOutboundConnection)
-                .setCreated(created)
-                .build();
+                .setCreated(created);
     }
 
     public static Peer fromProto(bisq.network.protobuf.Peer proto) {

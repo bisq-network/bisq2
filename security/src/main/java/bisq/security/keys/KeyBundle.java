@@ -33,12 +33,16 @@ public class KeyBundle implements PersistableProto {
 
     @Override
     public bisq.security.protobuf.KeyBundle toProto() {
+        return getBuilder().build();
+    }
+
+    @Override
+    public bisq.security.protobuf.KeyBundle.Builder getBuilder() {
         return bisq.security.protobuf.KeyBundle.newBuilder()
                 .setKeyId(keyId)
                 .setKeyPair(KeyPairProtoUtil.toProto(getKeyPair()))
-                .setTorKeyPair(torKeyPair.toProto())
                 /* .setI2PKeyPair(i2PKeyPair.toProto())*/
-                .build();
+                .setTorKeyPair(torKeyPair.toProto());
     }
 
     public static KeyBundle fromProto(bisq.security.protobuf.KeyBundle proto) {

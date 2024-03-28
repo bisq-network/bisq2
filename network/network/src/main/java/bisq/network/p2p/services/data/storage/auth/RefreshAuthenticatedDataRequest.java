@@ -22,6 +22,7 @@ import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.DataRequest;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.protobuf.EnvelopePayloadMessage;
 import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
@@ -98,14 +99,18 @@ public final class RefreshAuthenticatedDataRequest implements DataRequest {
 
     @Override
     public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
+        return getBuilder().build();
+    }
+
+    @Override
+    public EnvelopePayloadMessage.Builder getBuilder() {
         return getNetworkMessageBuilder().setDataRequest(getDataRequestBuilder().setRefreshAuthenticatedDataRequest(
-                        bisq.network.protobuf.RefreshAuthenticatedDataRequest.newBuilder()
-                                .setMetaData(metaData.toProto())
-                                .setHash(ByteString.copyFrom(hash))
-                                .setOwnerPublicKeyBytes(ByteString.copyFrom(ownerPublicKeyBytes))
-                                .setSequenceNumber(sequenceNumber)
-                                .setSignature(ByteString.copyFrom(signature))))
-                .build();
+                bisq.network.protobuf.RefreshAuthenticatedDataRequest.newBuilder()
+                        .setMetaData(metaData.toProto())
+                        .setHash(ByteString.copyFrom(hash))
+                        .setOwnerPublicKeyBytes(ByteString.copyFrom(ownerPublicKeyBytes))
+                        .setSequenceNumber(sequenceNumber)
+                        .setSignature(ByteString.copyFrom(signature))));
     }
 
     public static RefreshAuthenticatedDataRequest fromProto(bisq.network.protobuf.RefreshAuthenticatedDataRequest proto) {

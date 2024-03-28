@@ -20,6 +20,7 @@ package bisq.network.p2p.services.data.storage.mailbox;
 import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.AddDataRequest;
+import bisq.network.protobuf.EnvelopePayloadMessage;
 import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
@@ -87,12 +88,16 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
 
     @Override
     public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
+        return getBuilder().build();
+    }
+
+    @Override
+    public EnvelopePayloadMessage.Builder getBuilder() {
         return getNetworkMessageBuilder().setDataRequest(getDataRequestBuilder().setAddMailboxRequest(
-                        bisq.network.protobuf.AddMailboxRequest.newBuilder()
-                                .setMailboxSequentialData(mailboxSequentialData.toProto())
-                                .setSignature(ByteString.copyFrom(signature))
-                                .setSenderPublicKeyBytes(ByteString.copyFrom(senderPublicKeyBytes))))
-                .build();
+                bisq.network.protobuf.AddMailboxRequest.newBuilder()
+                        .setMailboxSequentialData(mailboxSequentialData.toProto())
+                        .setSignature(ByteString.copyFrom(signature))
+                        .setSenderPublicKeyBytes(ByteString.copyFrom(senderPublicKeyBytes))));
     }
 
     public static AddMailboxRequest fromProto(bisq.network.protobuf.AddMailboxRequest proto) {
