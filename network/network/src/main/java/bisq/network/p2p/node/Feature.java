@@ -18,6 +18,8 @@ public enum Feature implements ProtoEnum {
         return bisq.network.protobuf.Feature.valueOf(getProtobufEnumPrefix() + name());
     }
 
+    // Not used. Feature is used as list in Capability thus we use ProtobufUtils.fromProtoEnumList.
+    // Still keep fromProto for following convention and potential future usage.
     public static Feature fromProto(bisq.network.protobuf.Feature proto) {
         return ProtobufUtils.enumFromProto(Feature.class, proto.name());
     }

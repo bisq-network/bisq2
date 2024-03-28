@@ -22,25 +22,31 @@ import com.google.common.base.Enums;
 import com.google.protobuf.Any;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkArgument;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class ProtobufUtils {
     @Nullable
     public static <E extends Enum<E>> E enumFromProto(Class<E> enumType, String name) {
         String info = "Enum type= " + enumType.getSimpleName() + "; name=" + name;
-        checkNotNull(name, "Enum name must not be null. "+info);
-        checkArgument(!name.endsWith("_UNSPECIFIED"), "Unspecified enum. "+info);
+        checkNotNull(name, "Enum name must not be null. " + info);
+        checkArgument(!name.endsWith("_UNSPECIFIED"), "Unspecified enum. " + info);
 
         //Remove prefix from enum name. Since enum is based on the enum's class name, we use that to extract the prefix
-        String enumName = name.replace(ProtoEnum.getProtobufEnumPrefix(enumType),"");
+        String enumName = name.replace(ProtoEnum.getProtobufEnumPrefix(enumType), "");
         E result = Enums.getIfPresent(enumType, enumName).orNull();
-        checkNotNull(result, "Enum could not be resolved. "+info);
+        checkNotNull(result, "Enum could not be resolved. " + info);
         return result;
     }
 
@@ -55,7 +61,7 @@ public class ProtobufUtils {
             return fallBack;
         }
         //Remove prefix from enum name. Since enum is based on the enum's class name, we use that to extract the prefix
-        String enumName = name.replace(ProtoEnum.getProtobufEnumPrefix(enumType),"");
+        String enumName = name.replace(ProtoEnum.getProtobufEnumPrefix(enumType), "");
         E result = Enums.getIfPresent(enumType, enumName).orNull();
         if (result == null) {
             log.error("Enum could not be resolved. We use the fallback value instead. {}", info);
@@ -80,5 +86,27 @@ public class ProtobufUtils {
         try (ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes)) {
             return Any.parseDelimitedFrom(inputStream);
         }
+    }
+
+    // Convert list of proto enums to a stream of Enums. If the enumFromProto fails we skip the enum.
+    public static <E extends Enum<E>, P> Stream<E> fromProtoEnumStream(Class<E> enumType, List<P> proto) {
+        return proto.stream()
+                .map(enumProto -> {
+                    try {
+                        return enumFromProto(enumType, ((Enum<?>) enumProto).name());
+                    } catch (Exception e) {
+                        log.warn("Could not resolve enum for proto {}.", enumProto, e);
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull);
+    }
+
+    public static <E extends Enum<E>, P> List<E> fromProtoEnumList(Class<E> enumType, List<P> proto) {
+        return fromProtoEnumStream(enumType, proto).collect(Collectors.toList());
+    }
+
+    public static <E extends Enum<E>, P> Set<E> fromProtoEnumSet(Class<E> enumType, List<P> proto) {
+        return fromProtoEnumStream(enumType, proto).collect(Collectors.toSet());
     }
 }
