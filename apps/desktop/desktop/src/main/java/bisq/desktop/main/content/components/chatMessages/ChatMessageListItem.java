@@ -238,7 +238,8 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private String getLocalizedOfferbookMessage(BisqEasyOfferbookMessage chatMessage) {
         BisqEasyOffer bisqEasyOffer = chatMessage.getBisqEasyOffer().orElseThrow();
         String fiatPaymentMethods = PaymentMethodSpecFormatter.fromPaymentMethodSpecs(bisqEasyOffer.getQuoteSidePaymentMethodSpecs());
-        return BisqEasyServiceUtil.createOfferBookMessageText(marketPriceService,
+        return BisqEasyServiceUtil.createOfferBookMessageText(isMyMessage(),
+                marketPriceService,
                 bisqEasyOffer.getDirection(),
                 bisqEasyOffer.getMarket(),
                 fiatPaymentMethods,

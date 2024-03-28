@@ -25,6 +25,7 @@ import bisq.desktop.main.content.components.chatMessages.ChatMessageListItem;
 import bisq.desktop.main.content.components.chatMessages.ChatMessagesListView;
 import bisq.desktop.main.content.components.chatMessages.messages.PeerMessageBox;
 import bisq.i18n.Res;
+import bisq.offer.Direction;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -33,6 +34,8 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 public final class PeerOfferMessageBox extends PeerMessageBox {
     private Button takeOfferButton;
@@ -60,11 +63,7 @@ public final class PeerOfferMessageBox extends PeerMessageBox {
         reputationVBox.getStyleClass().add("reputation");
 
         // Take offer button
-        takeOfferButton = new Button(Res.get("offer.takeOffer"));
-        BisqEasyOfferbookMessage bisqEasyOfferbookMessage = (BisqEasyOfferbookMessage) item.getChatMessage();
-        takeOfferButton.setOnAction(e -> controller.onTakeOffer(bisqEasyOfferbookMessage));
-        takeOfferButton.setDefaultButton(!item.isOfferAlreadyTaken());
-        takeOfferButton.getStyleClass().add("take-offer-button");
+        takeOfferButton = createAndGetTakeOfferButton();
 
         // Message
         message.getStyleClass().add("chat-peer-offer-message");
@@ -80,6 +79,20 @@ public final class PeerOfferMessageBox extends PeerMessageBox {
         messageBgHBox.getChildren().setAll(vBox);
         messageBgHBox.setAlignment(Pos.CENTER_LEFT);
         messageBgHBox.setMaxWidth(Control.USE_PREF_SIZE);
+    }
+
+    private Button createAndGetTakeOfferButton() {
+        BisqEasyOfferbookMessage bisqEasyOfferbookMessage = (BisqEasyOfferbookMessage) item.getChatMessage();
+        checkArgument(bisqEasyOfferbookMessage.getBisqEasyOffer().isPresent(),
+                "Bisq Easy Offerbook message must contain an offer");
+
+        boolean isBuy = bisqEasyOfferbookMessage.getBisqEasyOffer().get().getDirection() == Direction.BUY;
+        Button button = new Button(isBuy ? Res.get("offer.takeOffer.sell") : Res.get("offer.takeOffer.buy"));
+        button.getStyleClass().add("take-offer-button");
+        button.getStyleClass().add(isBuy ? "sell-btc-button" : "buy-btc-button");
+        button.setOnAction(e -> controller.onTakeOffer(bisqEasyOfferbookMessage));
+        button.setDefaultButton(!item.isOfferAlreadyTaken());
+        return button;
     }
 
     @Override

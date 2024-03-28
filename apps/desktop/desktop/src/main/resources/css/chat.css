@@ -177,11 +177,19 @@
 }
 
 .chat-peer-offer-message-bg .take-offer-button {
-    -fx-padding: 5 30 5 30;
+    -fx-padding: 2.5 30 2.5 30;
 }
 
 .chat-peer-offer-message-bg .take-offer-button .text {
-    -fx-font-size: 0.8em;
+    -fx-font-size: 0.9em;
+}
+
+.chat-peer-offer-message-bg .sell-btc-button {
+    -fx-background-color: -bisq2-red-dim-30;
+}
+
+.chat-peer-offer-message-bg .buy-btc-button {
+    -fx-background-color: -bisq2-green-dim-40;
 }
 /* ... */
 
