@@ -36,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 import java.util.Set;
 
-import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
+import static bisq.network.p2p.services.data.storage.MetaData.HIGHEST_PRIORITY;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
 
 @Slf4j
@@ -46,7 +46,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
 public final class AuthorizedAlertData implements AuthorizedDistributedData {
     public final static int MAX_MESSAGE_LENGTH = 1000;
 
-    private final MetaData metaData = new MetaData(TTL_30_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    private final MetaData metaData = new MetaData(TTL_30_DAYS, HIGHEST_PRIORITY, getClass().getSimpleName());
     private final String id;
     private final long date;
     private final AlertType alertType;
