@@ -33,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Set;
 
-import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
+import static bisq.network.p2p.services.data.storage.MetaData.HIGHEST_PRIORITY;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
 
 @Slf4j
@@ -41,7 +41,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
 @EqualsAndHashCode
 @Getter
 public final class AuthorizedMinRequiredReputationScoreData implements AuthorizedDistributedData {
-    private final MetaData metaData = new MetaData(TTL_100_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    private final MetaData metaData = new MetaData(TTL_100_DAYS, HIGHEST_PRIORITY, getClass().getSimpleName());
     private final long date;
     private final long minRequiredReputationScore;
     private final String securityManagerProfileId;
