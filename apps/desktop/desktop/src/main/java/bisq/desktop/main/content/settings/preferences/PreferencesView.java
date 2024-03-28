@@ -214,7 +214,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         difficultyAdjustmentFactor.setValidators(DIFFICULTY_ADJUSTMENT_FACTOR_VALIDATOR);
         ignoreDiffAdjustFromSecManagerSwitch = new Switch(Res.get("settings.preferences.network.difficultyAdjustmentFactor.ignoreValueFromSecManager"));
 
-        VBox networkVBox = new VBox(10, difficultyAdjustmentFactor, ignoreDiffAdjustFromSecManagerSwitch);
+        VBox networkVBox = new VBox(20, difficultyAdjustmentFactor, ignoreDiffAdjustFromSecManagerSwitch);
 
 
         Insets insets = new Insets(0, 5, 0, 5);
