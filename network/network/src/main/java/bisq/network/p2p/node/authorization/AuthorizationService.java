@@ -21,6 +21,7 @@ import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.Feature;
 import bisq.network.p2p.node.authorization.token.equi_hash.EquiHashTokenService;
 import bisq.network.p2p.node.authorization.token.hash_cash.HashCashTokenService;
+import bisq.network.p2p.node.authorization.token.hash_cash_v2.HashCashV2TokenService;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.security.pow.equihash.EquihashProofOfWorkService;
 import bisq.security.pow.hashcash.HashCashProofOfWorkService;
@@ -67,10 +68,21 @@ public class AuthorizationService {
                         case EQUI_HASH:
                             supportedServices.put(supportedFilterType, new EquiHashTokenService(equihashProofOfWorkService));
                             break;
+                        case HASH_CASH_V2:
+                            supportedServices.put(supportedFilterType, new HashCashV2TokenService(hashCashProofOfWorkService));
+                            break;
                         default:
                             throw new IllegalArgumentException("Undefined filterType " + supportedFilterType);
                     }
                 });
+    }
+
+    public AuthorizationToken createToken(EnvelopePayloadMessage message,
+                                          NetworkLoad networkLoad,
+                                          String peerAddress,
+                                          int messageCounter,
+                                          Set<Feature> features) {
+        return createToken(message, networkLoad, peerAddress, messageCounter, new ArrayList<>(features));
     }
 
     public AuthorizationToken createToken(EnvelopePayloadMessage message,

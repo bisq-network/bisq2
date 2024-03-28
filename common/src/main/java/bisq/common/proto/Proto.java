@@ -17,7 +17,16 @@
 
 package bisq.common.proto;
 
+import bisq.common.annotation.ExcludeForHash;
+import com.google.protobuf.Descriptors;
 import com.google.protobuf.Message;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Interface for any object which gets serialized using protobuf.
@@ -30,9 +39,60 @@ import com.google.protobuf.Message;
  * If a map is needed we can use the TreeMap as it provides a deterministic order.
  */
 public interface Proto {
-    Message toProto();
+    //Message.Builder getBuilder();
+    // TODO temp for dev
+    default Message.Builder getBuilder() {
+        return getBuilder(false);
+    }
+
+    default Message.Builder getBuilder(boolean doExclude) {
+        return null;
+    }
+
+    default Message toProto() {
+        return getBuilder().build();
+    }
 
     default byte[] serialize() {
         return toProto().toByteArray();
+    }
+
+    default byte[] serializeForHash() {
+        Message.Builder builder = getBuilder(true);
+        if (builder == null) {
+            builder = getBuilder();
+        }
+        return filter(builder, true).build().toByteArray();
+    }
+
+    default Set<String> getExcludedFields() {
+        return Arrays.stream(getClass().getDeclaredFields())
+                .peek(field -> field.setAccessible(true))
+                .filter(field -> field.isAnnotationPresent(ExcludeForHash.class))
+                .map(Field::getName)
+                .collect(Collectors.toSet());
+    }
+
+    /**
+     * Requires that the name of the java fields is the same as the name of the proto definition.
+     *
+     * @param builder The builder we transform by clearing the ExcludeForHash annotated fields.
+     * @return Builder with the fields annotated with ExcludeForHash cleared.
+     */
+    default <B extends Message.Builder> B filter(B builder, boolean doExclude) {
+        if (doExclude) {
+            Set<String> excludedFields = getExcludedFields();
+            for (Descriptors.FieldDescriptor fieldDesc : builder.getAllFields().keySet()) {
+                if (excludedFields.contains(fieldDesc.getName())) {
+                    builder.clearField(fieldDesc);
+                    getLogger().warn("ExcludeForHash {}.{}", getClass().getSimpleName(), fieldDesc.getName());
+                }
+            }
+        }
+        return builder;
+    }
+
+    private Logger getLogger() {
+        return LoggerFactory.getLogger(this.getClass().getSimpleName());
     }
 }

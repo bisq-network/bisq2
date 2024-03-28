@@ -3,6 +3,7 @@ package bisq.network.p2p.services.confidential.ack;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
+import bisq.network.protobuf.EnvelopePayloadMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -37,8 +38,13 @@ public final class AckMessage implements MailboxMessage {
 
     @Override
     public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
+        return getBuilder().build();
+    }
+
+    @Override
+    public EnvelopePayloadMessage.Builder getBuilder() {
         return getNetworkMessageBuilder().setAckMessage(
-                bisq.network.protobuf.AckMessage.newBuilder().setId(id)).build();
+                bisq.network.protobuf.AckMessage.newBuilder().setId(id));
     }
 
     public static AckMessage fromProto(bisq.network.protobuf.AckMessage proto) {

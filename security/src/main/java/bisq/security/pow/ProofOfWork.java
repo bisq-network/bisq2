@@ -35,8 +35,13 @@ import java.util.Optional;
 @Getter
 @EqualsAndHashCode
 public final class ProofOfWork implements NetworkProto {
-    // payload is usually the pubKeyHash
-    private final byte[] payload;       // message of 1000 chars has about 1300 bytes
+    // For HashCashTokens we used the serialized message data, thus it was called payload, and
+    // it could become quite large (e.g. inventory request with 2MB size limit)
+    // We fixed that design mistake with HashCashV2Token and using the hash of the protobuf data.
+    // With that we will get a fixes size of 20 bytes. Once the HashCashToken is not used anymore we can rename
+    // the field to hash and change the verify methods to expect 20 bytes.
+    private final byte[] payload;
+
     private final long counter;
     // If challenge does not make sense we set it null
     // Challenge need to be hashed to 256 bits
@@ -79,15 +84,19 @@ public final class ProofOfWork implements NetworkProto {
 
     @Override
     public bisq.security.protobuf.ProofOfWork toProto() {
+        return getBuilder().build();
+    }
+
+    @Override
+    public bisq.security.protobuf.ProofOfWork.Builder getBuilder() {
         bisq.security.protobuf.ProofOfWork.Builder builder = bisq.security.protobuf.ProofOfWork.newBuilder()
                 .setPayload(ByteString.copyFrom(payload))
                 .setCounter(counter)
                 .setDifficulty(difficulty)
                 .setSolution(ByteString.copyFrom(solution))
                 .setDuration(duration);
-
         Optional.ofNullable(challenge).ifPresent(challenge -> builder.setChallenge(ByteString.copyFrom(challenge)));
-        return builder.build();
+        return builder;
     }
 
     public static ProofOfWork fromProto(bisq.security.protobuf.ProofOfWork proto) {

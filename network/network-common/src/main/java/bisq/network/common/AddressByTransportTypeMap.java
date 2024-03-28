@@ -64,11 +64,15 @@ public final class AddressByTransportTypeMap implements Map<TransportType, Addre
 
     @Override
     public bisq.network.common.protobuf.AddressByTransportTypeMap toProto() {
+        return getBuilder().build();
+    }
+
+    @Override
+    public bisq.network.common.protobuf.AddressByTransportTypeMap.Builder getBuilder() {
         return bisq.network.common.protobuf.AddressByTransportTypeMap.newBuilder()
                 .putAllAddressByTransportType(map.entrySet().stream()
                         .collect(Collectors.toMap(e -> e.getKey().name(),
-                                e -> e.getValue().toProto())))
-                .build();
+                                e -> e.getValue().toProto())));
     }
 
     public static AddressByTransportTypeMap fromProto(bisq.network.common.protobuf.AddressByTransportTypeMap proto) {

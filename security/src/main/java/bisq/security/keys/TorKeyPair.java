@@ -32,11 +32,15 @@ public class TorKeyPair implements PersistableProto {
 
     @Override
     public bisq.security.protobuf.TorKeyPair toProto() {
+        return getBuilder().build();
+    }
+
+    @Override
+    public bisq.security.protobuf.TorKeyPair.Builder getBuilder() {
         return bisq.security.protobuf.TorKeyPair.newBuilder()
                 .setPrivateKey(ByteString.copyFrom(privateKey))
                 .setPublicKey(ByteString.copyFrom(publicKey))
-                .setOnionAddress(onionAddress)
-                .build();
+                .setOnionAddress(onionAddress);
     }
 
     public static TorKeyPair fromProto(bisq.security.protobuf.TorKeyPair proto) {

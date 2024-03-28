@@ -53,9 +53,13 @@ public final class MiniSketchFilter extends InventoryFilter {
 
     @Override
     public bisq.network.protobuf.InventoryFilter toProto() {
+        return getBuilder().build();
+    }
+
+    @Override
+    public bisq.network.protobuf.InventoryFilter.Builder getBuilder() {
         return getInventoryFilterBuilder().setMiniSketchFilter(
-                        bisq.network.protobuf.MiniSketchFilter.newBuilder())
-                .build();
+                bisq.network.protobuf.MiniSketchFilter.newBuilder());
     }
 
     public static MiniSketchFilter fromProto(bisq.network.protobuf.InventoryFilter proto) {

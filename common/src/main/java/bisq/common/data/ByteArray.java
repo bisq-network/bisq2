@@ -33,8 +33,14 @@ public final class ByteArray implements PersistableProto, Comparable<ByteArray> 
         this.bytes = bytes;
     }
 
+    @Override
     public bisq.common.protobuf.ByteArray toProto() {
-        return bisq.common.protobuf.ByteArray.newBuilder().setBytes(ByteString.copyFrom(bytes)).build();
+        return getBuilder().build();
+    }
+
+    @Override
+    public bisq.common.protobuf.ByteArray.Builder getBuilder() {
+        return bisq.common.protobuf.ByteArray.newBuilder().setBytes(ByteString.copyFrom(bytes));
     }
 
     public static ByteArray fromProto(bisq.common.protobuf.ByteArray proto) {

@@ -76,10 +76,15 @@ public final class AuthorizedData extends AuthenticatedData {
 
     @Override
     public bisq.network.protobuf.AuthenticatedData toProto() {
+        return getBuilder().build();
+    }
+
+    @Override
+    public bisq.network.protobuf.AuthenticatedData.Builder getBuilder() {
         bisq.network.protobuf.AuthorizedData.Builder builder = bisq.network.protobuf.AuthorizedData.newBuilder()
                 .setAuthorizedPublicKeyBytes(ByteString.copyFrom(authorizedPublicKeyBytes));
         signature.ifPresent(signature -> builder.setSignature(ByteString.copyFrom(signature)));
-        return getAuthenticatedDataBuilder().setAuthorizedData(builder).build();
+        return getAuthenticatedDataBuilder().setAuthorizedData(builder);
     }
 
     public static AuthorizedData fromProto(bisq.network.protobuf.AuthenticatedData proto) {

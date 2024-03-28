@@ -24,9 +24,13 @@ public final class CloseConnectionMessage implements EnvelopePayloadMessage {
 
     @Override
     public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
-        var builder = bisq.network.protobuf.CloseConnectionMessage.newBuilder()
-                .setCloseReason(closeReason.name());
-        return getNetworkMessageBuilder().setCloseConnectionMessage(builder).build();
+        return getBuilder().build();
+    }
+
+    @Override
+    public bisq.network.protobuf.EnvelopePayloadMessage.Builder getBuilder() {
+        return getNetworkMessageBuilder().setCloseConnectionMessage(bisq.network.protobuf.CloseConnectionMessage.newBuilder()
+                .setCloseReason(closeReason.name()));
     }
 
     public static CloseConnectionMessage fromProto(bisq.network.protobuf.CloseConnectionMessage proto) {

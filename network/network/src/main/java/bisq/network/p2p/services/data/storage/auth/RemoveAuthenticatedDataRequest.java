@@ -22,6 +22,7 @@ import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.RemoveDataRequest;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.protobuf.EnvelopePayloadMessage;
 import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
@@ -116,15 +117,19 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
 
     @Override
     public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
+        return getBuilder().build();
+    }
+
+    @Override
+    public EnvelopePayloadMessage.Builder getBuilder() {
         return getNetworkMessageBuilder().setDataRequest(getDataRequestBuilder().setRemoveAuthenticatedDataRequest(
-                        bisq.network.protobuf.RemoveAuthenticatedDataRequest.newBuilder()
-                                .setMetaData(metaData.toProto())
-                                .setHash(ByteString.copyFrom(hash))
-                                .setOwnerPublicKeyBytes(ByteString.copyFrom(ownerPublicKeyBytes))
-                                .setSequenceNumber(sequenceNumber)
-                                .setSignature(ByteString.copyFrom(signature))
-                                .setCreated(created)))
-                .build();
+                bisq.network.protobuf.RemoveAuthenticatedDataRequest.newBuilder()
+                        .setMetaData(metaData.toProto())
+                        .setHash(ByteString.copyFrom(hash))
+                        .setOwnerPublicKeyBytes(ByteString.copyFrom(ownerPublicKeyBytes))
+                        .setSequenceNumber(sequenceNumber)
+                        .setSignature(ByteString.copyFrom(signature))
+                        .setCreated(created)));
     }
 
     public static RemoveAuthenticatedDataRequest fromProto(bisq.network.protobuf.RemoveAuthenticatedDataRequest proto) {

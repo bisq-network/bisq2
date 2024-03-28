@@ -42,10 +42,14 @@ public final class PeerGroupStore implements PersistableStore<PeerGroupStore> {
 
     @Override
     public bisq.network.protobuf.PeerGroupStore toProto() {
+        return getBuilder().build();
+    }
+
+    @Override
+    public bisq.network.protobuf.PeerGroupStore.Builder getBuilder() {
         return bisq.network.protobuf.PeerGroupStore.newBuilder().addAllPersistedPeers(persistedPeersByAddress.values().stream()
-                        .map(Peer::toProto)
-                        .collect(Collectors.toSet()))
-                .build();
+                .map(Peer::toProto)
+                .collect(Collectors.toSet()));
     }
 
     public static PeerGroupStore fromProto(bisq.network.protobuf.PeerGroupStore proto) {

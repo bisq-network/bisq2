@@ -56,13 +56,17 @@ public final class Market implements NetworkProto, PersistableProto, Comparable<
     }
 
     @Override
-    public bisq.common.protobuf.Market toProto() {
+    public bisq.common.protobuf.Market.Builder getBuilder() {
         return bisq.common.protobuf.Market.newBuilder()
                 .setBaseCurrencyCode(baseCurrencyCode)
                 .setQuoteCurrencyCode(quoteCurrencyCode)
                 .setBaseCurrencyName(baseCurrencyName)
-                .setQuoteCurrencyName(quoteCurrencyName)
-                .build();
+                .setQuoteCurrencyName(quoteCurrencyName);
+    }
+
+    @Override
+    public bisq.common.protobuf.Market toProto() {
+        return getBuilder().build();
     }
 
     public static Market fromProto(bisq.common.protobuf.Market proto) {
