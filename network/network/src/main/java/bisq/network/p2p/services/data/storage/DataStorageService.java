@@ -48,6 +48,7 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
 
     public DataStorageService(PersistenceService persistenceService, String storeName, String storeKey) {
         super();
+
         this.storeKey = storeKey;
         String storageFileName = StringUtils.camelCaseToSnakeCase(storeKey + STORE_POST_FIX);
         subDirectory = DbSubDirectory.NETWORK_DB.getDbPath() + File.separator + storeName;
@@ -58,11 +59,6 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
     }
 
     public void shutdown() {
-    }
-
-    @Override
-    protected long getMaxWriteRateInMs() {
-        return 1000;
     }
 
     @Override
