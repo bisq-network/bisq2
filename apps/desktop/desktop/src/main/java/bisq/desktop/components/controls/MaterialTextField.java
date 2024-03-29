@@ -62,6 +62,8 @@ public class MaterialTextField extends Pane {
     private final BisqIconButton iconButton = new BisqIconButton();
     private ChangeListener<Number> iconButtonHeightListener;
 
+    private String globalHelpText = "";
+
     public MaterialTextField() {
         this(null, null, null);
     }
@@ -118,6 +120,7 @@ public class MaterialTextField extends Pane {
         helpLabel.setMouseTransparent(true);
         if (StringUtils.isNotEmpty(help)) {
             helpLabel.setText(help);
+            globalHelpText = help;
         }
 
         errorLabel.setLayoutX(16);
@@ -134,6 +137,8 @@ public class MaterialTextField extends Pane {
         descriptionLabel.textProperty().addListener(new WeakReference<ChangeListener<String>>((observable, oldValue, newValue) ->
                 update()).get());
 
+//        errorProperty().addListener(new WeakReference<ChangeListener<String>>((observable, oldValue, newValue) ->
+//                update()).get());
         promptTextProperty().addListener(new WeakReference<ChangeListener<String>>((observable, oldValue, newValue) ->
                 update()).get());
         helpProperty().addListener(new WeakReference<ChangeListener<String>>((observable, oldValue, newValue) ->
@@ -188,14 +193,16 @@ public class MaterialTextField extends Pane {
         getActiveValidator().ifPresentOrElse(validator -> {
                     errorLabel.setText(validator.getMessage());
                     errorLabel.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, true);
-                    helpLabel.setOpacity(0);
-                    helpLabel.setDisable(true);
+                    helpLabel.setManaged(false);
+                    helpLabel.setVisible(false);
+                    helpLabel.setText("");
                 },
                 () -> {
                     errorLabel.setText("");
                     errorLabel.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, false);
-                    helpLabel.setOpacity(1);
-                    helpLabel.setDisable(false);
+                    helpLabel.setManaged(true);
+                    helpLabel.setVisible(true);
+                    helpLabel.setText(globalHelpText);
                 });
         return isValid.get();
     }
@@ -301,6 +308,22 @@ public class MaterialTextField extends Pane {
 
     public final StringProperty helpProperty() {
         return helpLabel.textProperty();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Error
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public String getErrorText() {
+        return errorLabel.getText();
+    }
+
+    public void setErrorText(String value) {
+        errorLabel.setText(value);
+    }
+
+    public final StringProperty errorProperty() {
+        return errorLabel.textProperty();
     }
 
 
@@ -541,7 +564,9 @@ public class MaterialTextField extends Pane {
     protected double computeMinHeight(double width) {
         if (helpLabel.isManaged()) {
             return helpLabel.getLayoutY() + helpLabel.getHeight();
-        } else {
+        } else if(errorLabel.isManaged()){
+            return errorLabel.getLayoutY() + errorLabel.getHeight();
+        }else{
             return getBgHeight();
         }
     }
