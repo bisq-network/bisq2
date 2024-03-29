@@ -61,7 +61,6 @@ public class MaterialTextField extends Pane {
     @Getter
     private final BisqIconButton iconButton = new BisqIconButton();
     private ChangeListener<Number> iconButtonHeightListener;
-
     private String globalHelpText = "";
 
     public MaterialTextField() {
@@ -136,9 +135,6 @@ public class MaterialTextField extends Pane {
                 onInputTextFieldFocus(newValue)).get());
         descriptionLabel.textProperty().addListener(new WeakReference<ChangeListener<String>>((observable, oldValue, newValue) ->
                 update()).get());
-
-//        errorProperty().addListener(new WeakReference<ChangeListener<String>>((observable, oldValue, newValue) ->
-//                update()).get());
         promptTextProperty().addListener(new WeakReference<ChangeListener<String>>((observable, oldValue, newValue) ->
                 update()).get());
         helpProperty().addListener(new WeakReference<ChangeListener<String>>((observable, oldValue, newValue) ->
