@@ -126,7 +126,7 @@ public class MaterialTextField extends Pane {
         errorLabel.getStyleClass().add("material-text-field-help");
         errorLabel.setMouseTransparent(true);
 
-        getChildren().addAll(bg, line, selectionLine, descriptionLabel, textInputControl, iconButton, helpLabel,errorLabel);
+        getChildren().addAll(bg, line, selectionLine, descriptionLabel, textInputControl, iconButton, helpLabel, errorLabel);
 
         widthProperty().addListener(new WeakReference<ChangeListener<Number>>((observable, oldValue, newValue) ->
                 onWidthChanged((double) newValue)).get());
@@ -560,9 +560,9 @@ public class MaterialTextField extends Pane {
     protected double computeMinHeight(double width) {
         if (helpLabel.isManaged()) {
             return helpLabel.getLayoutY() + helpLabel.getHeight();
-        } else if(errorLabel.isManaged()){
+        } else if (errorLabel.isManaged()) {
             return errorLabel.getLayoutY() + errorLabel.getHeight();
-        }else{
+        } else {
             return getBgHeight();
         }
     }
