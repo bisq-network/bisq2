@@ -1,4 +1,4 @@
-package bisq.desktop.main.content.chat.chat_messages;
+package bisq.desktop.main.content.chat.message_container;
 
 import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.*;

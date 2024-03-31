@@ -32,7 +32,7 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.components.cathash.CatHash;
 import bisq.desktop.components.controls.BisqIconButton;
-import bisq.desktop.main.content.chat.chat_messages.ChatMessageContainerController;
+import bisq.desktop.main.content.chat.message_container.ChatMessageContainerController;
 import bisq.desktop.main.content.chat.sidebar.ChannelSidebar;
 import bisq.desktop.main.content.chat.sidebar.UserProfileSidebar;
 import bisq.i18n.Res;

@@ -67,7 +67,7 @@ import java.util.stream.Collectors;
 
 import static bisq.chat.ChatMessageType.LEAVE;
 import static bisq.chat.ChatMessageType.PROTOCOL_LOG_MESSAGE;
-import static bisq.desktop.main.content.chat.chat_messages.ChatMessageContainerView.EDITED_POST_FIX;
+import static bisq.desktop.main.content.chat.message_container.ChatMessageContainerView.EDITED_POST_FIX;
 
 @Slf4j
 @Getter
