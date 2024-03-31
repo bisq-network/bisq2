@@ -18,6 +18,7 @@
 package bisq.desktop;
 
 import bisq.bisq_easy.NavigationTarget;
+import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.observable.Observable;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.Transitions;
@@ -44,6 +45,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.stage.Screen;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
 
 import java.util.Optional;
 
@@ -67,6 +69,7 @@ public class DesktopController extends NavigationController {
     protected final Runnable onActivatedHandler;
     private SplashController splashController;
     private final UserIdentityService userIdentityService;
+    private final ChatNotificationService chatNotificationService;
     private final ServiceProvider serviceProvider;
     private PreventStandbyModeService preventStandbyModeService;
 
@@ -85,6 +88,7 @@ public class DesktopController extends NavigationController {
 
         settingsService = serviceProvider.getSettingsService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
+        chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
     }
 
     public void init() {
@@ -107,6 +111,8 @@ public class DesktopController extends NavigationController {
         view.showStage();
 
         new OverlayController(serviceProvider, viewRoot);
+
+        EasyBind.subscribe(viewRoot.getScene().getWindow().focusedProperty(), chatNotificationService::setApplicationFocussed);
     }
 
     private void setInitialScreenSize() {
