@@ -25,7 +25,8 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.main.content.components.chat_messages.ChatMessageListItem;
-import bisq.desktop.main.content.components.chat_messages.list_view.ChatMessagesListView;
+import bisq.desktop.main.content.components.chat_messages.list_view.ChatMessagesListController;
+import bisq.desktop.main.content.components.chat_messages.list_view.ChatMessagesListModel;
 import bisq.i18n.Res;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
 import de.jensd.fx.fontawesome.AwesomeDude;
@@ -54,7 +55,7 @@ public final class MyMessageBox extends BubbleMessageBox {
 
     public MyMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
                         ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
-                        ChatMessagesListView.Controller controller, ChatMessagesListView.Model model) {
+                        ChatMessagesListController controller, ChatMessagesListModel model) {
         super(item, list, controller, model);
 
         quotedMessageVBox.setId("chat-message-quote-box-my-msg");

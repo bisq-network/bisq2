@@ -25,7 +25,8 @@ import bisq.desktop.components.controls.BisqPopup;
 import bisq.desktop.components.controls.BisqPopupMenu;
 import bisq.desktop.components.controls.BisqPopupMenuItem;
 import bisq.desktop.main.content.components.chat_messages.ChatMessageListItem;
-import bisq.desktop.main.content.components.chat_messages.list_view.ChatMessagesListView;
+import bisq.desktop.main.content.components.chat_messages.list_view.ChatMessagesListController;
+import bisq.desktop.main.content.components.chat_messages.list_view.ChatMessagesListModel;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
@@ -44,7 +45,7 @@ public class PeerMessageBox extends BubbleMessageBox {
 
     public PeerMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
                           ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
-                          ChatMessagesListView.Controller controller, ChatMessagesListView.Model model) {
+                          ChatMessagesListController controller, ChatMessagesListModel model) {
         super(item, list, controller, model);
 
         setUpPeerMessage();

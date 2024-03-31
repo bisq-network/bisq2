@@ -26,7 +26,8 @@ import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.desktop.main.content.components.chat_messages.ChatMessageListItem;
-import bisq.desktop.main.content.components.chat_messages.list_view.ChatMessagesListView;
+import bisq.desktop.main.content.components.chat_messages.list_view.ChatMessagesListController;
+import bisq.desktop.main.content.components.chat_messages.list_view.ChatMessagesListModel;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -46,8 +47,8 @@ public abstract class BubbleMessageBox extends MessageBox {
 
     protected final ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item;
     protected final ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list;
-    protected final ChatMessagesListView.Controller controller;
-    protected final ChatMessagesListView.Model model;
+    protected final ChatMessagesListController controller;
+    protected final ChatMessagesListModel model;
     protected final UserProfileIcon userProfileIcon = new UserProfileIcon(60);
     protected final HBox reactionsHBox = new HBox(20);
     protected final VBox quotedMessageVBox, contentVBox;
@@ -57,8 +58,8 @@ public abstract class BubbleMessageBox extends MessageBox {
 
     public BubbleMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
                             ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
-                            ChatMessagesListView.Controller controller,
-                            ChatMessagesListView.Model model) {
+                            ChatMessagesListController controller,
+                            ChatMessagesListModel model) {
         this.item = item;
         this.list = list;
         this.controller = controller;

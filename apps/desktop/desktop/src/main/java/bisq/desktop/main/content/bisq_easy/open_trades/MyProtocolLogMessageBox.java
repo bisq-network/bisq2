@@ -22,7 +22,7 @@ import bisq.chat.ChatMessage;
 import bisq.desktop.common.Icons;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.main.content.components.chat_messages.ChatMessageListItem;
-import bisq.desktop.main.content.components.chat_messages.list_view.ChatMessagesListView;
+import bisq.desktop.main.content.components.chat_messages.list_view.ChatMessagesListController;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import javafx.geometry.Pos;
@@ -37,7 +37,7 @@ public class MyProtocolLogMessageBox extends PeerProtocolLogMessageBox {
     private final Subscription messageDeliveryStatusIconPin;
 
     public MyProtocolLogMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
-                                   ChatMessagesListView.Controller controller) {
+                                   ChatMessagesListController controller) {
         super(item);
 
         deliveryState = new Label();

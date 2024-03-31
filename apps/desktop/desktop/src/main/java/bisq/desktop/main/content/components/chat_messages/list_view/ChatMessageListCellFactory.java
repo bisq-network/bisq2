@@ -41,10 +41,10 @@ import org.fxmisc.easybind.Subscription;
 final class ChatMessageListCellFactory
         implements Callback<ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>>,
         ListCell<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>>> {
-    private final ChatMessagesListView.Controller controller;
-    private final ChatMessagesListView.Model model;
+    private final ChatMessagesListController controller;
+    private final ChatMessagesListModel model;
 
-    public ChatMessageListCellFactory(ChatMessagesListView.Controller controller, ChatMessagesListView.Model model) {
+    public ChatMessageListCellFactory(ChatMessagesListController controller, ChatMessagesListModel model) {
         this.controller = controller;
         this.model = model;
     }

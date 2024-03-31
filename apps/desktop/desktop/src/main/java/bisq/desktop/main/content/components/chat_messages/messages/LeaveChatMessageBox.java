@@ -22,13 +22,13 @@ import bisq.chat.ChatMessage;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.main.content.bisq_easy.open_trades.MyProtocolLogMessageBox;
 import bisq.desktop.main.content.components.chat_messages.ChatMessageListItem;
-import bisq.desktop.main.content.components.chat_messages.list_view.ChatMessagesListView;
+import bisq.desktop.main.content.components.chat_messages.list_view.ChatMessagesListController;
 import bisq.i18n.Res;
 import javafx.scene.control.Hyperlink;
 
 public final class LeaveChatMessageBox extends MyProtocolLogMessageBox {
     public LeaveChatMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
-                               ChatMessagesListView.Controller controller) {
+                               ChatMessagesListController controller) {
         super(item, controller);
 
         Hyperlink hyperlink = new Hyperlink(Res.get("chat.leave"));
