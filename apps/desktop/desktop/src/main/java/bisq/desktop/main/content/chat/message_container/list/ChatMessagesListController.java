@@ -143,7 +143,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
         });
 
         layoutChildrenDonePin = EasyBind.subscribe(model.getLayoutChildrenDone(), layoutChildrenDone -> {
-            UIThread.runOnNextRenderFrame(this::handleScrollValueChanged);
+            handleScrollValueChanged();
         });
 
         applyScrollValue(1);
@@ -191,6 +191,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
             model.getChatMessages().forEach(ChatMessageListItem::dispose);
             model.getChatMessages().clear();
             model.getChatMessageIds().clear();
+            model.setAutoScrollToBottom(true);
 
             if (channel instanceof BisqEasyOfferbookChannel) {
                 chatMessagesPin = bindChatMessages((BisqEasyOfferbookChannel) channel);
