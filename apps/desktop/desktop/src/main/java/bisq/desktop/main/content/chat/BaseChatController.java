@@ -34,7 +34,7 @@ import bisq.desktop.components.cathash.CatHash;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.main.content.chat.sidebar.ChannelSidebar;
 import bisq.desktop.main.content.chat.sidebar.UserProfileSidebar;
-import bisq.desktop.main.content.components.chat_messages.ChatMessagesComponent;
+import bisq.desktop.main.content.components.chat_messages.ChatMessageContainerController;
 import bisq.i18n.Res;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
@@ -68,7 +68,7 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
     protected final UserIdentityService userIdentityService;
     protected final UserProfileService userProfileService;
     protected final ChannelSidebar channelSidebar;
-    protected final ChatMessagesComponent chatMessagesComponent;
+    protected final ChatMessageContainerController chatMessageContainerController;
     protected Subscription searchTextPin;
 
     public BaseChatController(ServiceProvider serviceProvider, ChatChannelDomain chatChannelDomain, NavigationTarget host) {
@@ -79,13 +79,13 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         userProfileService = serviceProvider.getUserService().getUserProfileService();
 
-        chatMessagesComponent = new ChatMessagesComponent(serviceProvider,
+        chatMessageContainerController = new ChatMessageContainerController(serviceProvider,
                 chatChannelDomain,
                 this::openUserProfileSidebar);
         channelSidebar = new ChannelSidebar(serviceProvider,
                 () -> {
                     doCloseSideBar();
-                    chatMessagesComponent.resetSelectedChatMessage();
+                    chatMessageContainerController.resetSelectedChatMessage();
                 },
                 this::openUserProfileSidebar);
 
@@ -110,12 +110,12 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
                 model.getSelectedChannel(),
                 () -> {
                     doCloseSideBar();
-                    chatMessagesComponent.resetSelectedChatMessage();
+                    chatMessageContainerController.resetSelectedChatMessage();
                 });
         model.getSideBarWidth().set(userProfileSidebar.getRoot().getMinWidth());
-        userProfileSidebar.setOnSendPrivateMessageHandler(chatMessagesComponent::createAndSelectTwoPartyPrivateChatChannel);
-        userProfileSidebar.setIgnoreUserStateHandler(chatMessagesComponent::refreshMessages);
-        userProfileSidebar.setOnMentionUserHandler(chatMessagesComponent::mentionUser);
+        userProfileSidebar.setOnSendPrivateMessageHandler(chatMessageContainerController::createAndSelectTwoPartyPrivateChatChannel);
+        userProfileSidebar.setIgnoreUserStateHandler(chatMessageContainerController::refreshMessages);
+        userProfileSidebar.setOnMentionUserHandler(chatMessageContainerController::mentionUser);
         model.setChatUserDetails(Optional.of(userProfileSidebar));
         model.getChatUserDetailsRoot().set(userProfileSidebar.getRoot());
     }
@@ -197,7 +197,7 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
     protected void onToggleChannelInfo() {
         boolean visible = !model.getChannelSidebarVisible().get();
         doCloseSideBar();
-        chatMessagesComponent.resetSelectedChatMessage();
+        chatMessageContainerController.resetSelectedChatMessage();
         model.getChannelSidebarVisible().set(visible);
         model.getSideBarVisible().set(visible);
         if (visible) {
@@ -247,7 +247,7 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
     private void showChannelInfo() {
         channelSidebar.setChannel(model.getSelectedChannel());
         channelSidebar.setOnUndoIgnoreChatUser(() -> {
-            chatMessagesComponent.refreshMessages();
+            chatMessageContainerController.refreshMessages();
             channelSidebar.setChannel(model.getSelectedChannel());
         });
     }
