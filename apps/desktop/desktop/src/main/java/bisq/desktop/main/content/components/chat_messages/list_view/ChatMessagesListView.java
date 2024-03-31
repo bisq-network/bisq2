@@ -8,7 +8,6 @@ import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.list_view.ListViewUtil;
 import bisq.desktop.components.list_view.NoSelectionModel;
 import bisq.desktop.main.content.chat.ChatUtil;
-import bisq.desktop.main.content.components.chat_messages.ChatMessageListItem;
 import bisq.i18n.Res;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;

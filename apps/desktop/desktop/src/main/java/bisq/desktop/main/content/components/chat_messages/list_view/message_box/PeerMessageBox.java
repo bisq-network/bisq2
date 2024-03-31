@@ -24,7 +24,7 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqPopup;
 import bisq.desktop.components.controls.BisqPopupMenu;
 import bisq.desktop.components.controls.BisqPopupMenuItem;
-import bisq.desktop.main.content.components.chat_messages.ChatMessageListItem;
+import bisq.desktop.main.content.components.chat_messages.list_view.ChatMessageListItem;
 import bisq.desktop.main.content.components.chat_messages.list_view.ChatMessagesListController;
 import bisq.desktop.main.content.components.chat_messages.list_view.ChatMessagesListModel;
 import bisq.i18n.Res;

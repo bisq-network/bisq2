@@ -23,7 +23,6 @@ import bisq.desktop.main.content.bisq_easy.offerbook.MyOfferMessageBox;
 import bisq.desktop.main.content.bisq_easy.offerbook.PeerOfferMessageBox;
 import bisq.desktop.main.content.bisq_easy.open_trades.MyProtocolLogMessageBox;
 import bisq.desktop.main.content.bisq_easy.open_trades.PeerProtocolLogMessageBox;
-import bisq.desktop.main.content.components.chat_messages.ChatMessageListItem;
 import bisq.desktop.main.content.components.chat_messages.list_view.message_box.LeaveChatMessageBox;
 import bisq.desktop.main.content.components.chat_messages.list_view.message_box.MessageBox;
 import bisq.desktop.main.content.components.chat_messages.list_view.message_box.MyMessageBox;

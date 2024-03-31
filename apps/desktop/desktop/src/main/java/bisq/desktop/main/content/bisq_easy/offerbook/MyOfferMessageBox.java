@@ -22,7 +22,7 @@ import bisq.chat.ChatMessage;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.DropdownMenu;
 import bisq.desktop.components.controls.DropdownMenuItem;
-import bisq.desktop.main.content.components.chat_messages.ChatMessageListItem;
+import bisq.desktop.main.content.components.chat_messages.list_view.ChatMessageListItem;
 import bisq.desktop.main.content.components.chat_messages.list_view.ChatMessagesListController;
 import bisq.desktop.main.content.components.chat_messages.list_view.ChatMessagesListModel;
 import bisq.desktop.main.content.components.chat_messages.list_view.message_box.BubbleMessageBox;

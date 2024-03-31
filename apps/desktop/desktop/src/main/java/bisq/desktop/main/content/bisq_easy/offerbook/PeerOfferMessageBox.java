@@ -21,7 +21,7 @@ import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.main.content.components.chat_messages.ChatMessageListItem;
+import bisq.desktop.main.content.components.chat_messages.list_view.ChatMessageListItem;
 import bisq.desktop.main.content.components.chat_messages.list_view.ChatMessagesListController;
 import bisq.desktop.main.content.components.chat_messages.list_view.ChatMessagesListModel;
 import bisq.desktop.main.content.components.chat_messages.list_view.message_box.PeerMessageBox;

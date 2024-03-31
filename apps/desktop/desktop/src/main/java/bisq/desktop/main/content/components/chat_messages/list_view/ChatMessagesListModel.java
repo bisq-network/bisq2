@@ -3,7 +3,6 @@ package bisq.desktop.main.content.components.chat_messages.list_view;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessage;
-import bisq.desktop.main.content.components.chat_messages.ChatMessageListItem;
 import bisq.user.identity.UserIdentityService;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;

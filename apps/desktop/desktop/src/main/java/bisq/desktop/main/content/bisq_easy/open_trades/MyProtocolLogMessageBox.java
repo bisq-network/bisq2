@@ -21,7 +21,7 @@ import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.desktop.common.Icons;
 import bisq.desktop.components.controls.BisqTooltip;
-import bisq.desktop.main.content.components.chat_messages.ChatMessageListItem;
+import bisq.desktop.main.content.components.chat_messages.list_view.ChatMessageListItem;
 import bisq.desktop.main.content.components.chat_messages.list_view.ChatMessagesListController;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
 import de.jensd.fx.fontawesome.AwesomeDude;

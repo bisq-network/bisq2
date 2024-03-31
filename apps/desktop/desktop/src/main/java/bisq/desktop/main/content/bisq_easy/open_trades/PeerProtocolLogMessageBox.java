@@ -19,7 +19,7 @@ package bisq.desktop.main.content.bisq_easy.open_trades;
 
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
-import bisq.desktop.main.content.components.chat_messages.ChatMessageListItem;
+import bisq.desktop.main.content.components.chat_messages.list_view.ChatMessageListItem;
 import bisq.desktop.main.content.components.chat_messages.list_view.message_box.MessageBox;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
