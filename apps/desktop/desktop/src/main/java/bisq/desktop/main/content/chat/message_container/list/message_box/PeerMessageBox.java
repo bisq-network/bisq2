@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.chat.message_container.list_view.message_box;
+package bisq.desktop.main.content.chat.message_container.list.message_box;
 
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
@@ -24,9 +24,9 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqPopup;
 import bisq.desktop.components.controls.BisqPopupMenu;
 import bisq.desktop.components.controls.BisqPopupMenuItem;
-import bisq.desktop.main.content.chat.message_container.list_view.ChatMessageListItem;
-import bisq.desktop.main.content.chat.message_container.list_view.ChatMessagesListController;
-import bisq.desktop.main.content.chat.message_container.list_view.ChatMessagesListModel;
+import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
+import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
+import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListModel;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;

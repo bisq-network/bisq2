@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.chat.message_container.list_view;
+package bisq.desktop.main.content.chat.message_container.list;
 
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatChannel;
