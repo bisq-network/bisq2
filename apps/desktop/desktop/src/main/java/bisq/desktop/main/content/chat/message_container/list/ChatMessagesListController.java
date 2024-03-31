@@ -169,6 +169,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
 
         model.getChatMessages().forEach(ChatMessageListItem::dispose);
         model.getChatMessages().clear();
+        model.getChatMessageIds().clear();
     }
 
     private void selectedChannelChanged(ChatChannel<? extends ChatMessage> channel) {
@@ -183,6 +184,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
             // Clear and call dispose on the current messages when we change the channel.
             model.getChatMessages().forEach(ChatMessageListItem::dispose);
             model.getChatMessages().clear();
+            model.getChatMessageIds().clear();
 
             if (channel instanceof BisqEasyOfferbookChannel) {
                 chatMessagesPin = bindChatMessages((BisqEasyOfferbookChannel) channel);
@@ -228,6 +230,10 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
 
     public void refreshMessages() {
         model.getChatMessages().setAll(new ArrayList<>(model.getChatMessages()));
+        model.getChatMessageIds().clear();
+        model.getChatMessageIds().addAll(model.getChatMessages().stream()
+                .map(e -> e.getChatMessage().getId())
+                .collect(Collectors.toSet()));
     }
 
     public void setSearchPredicate(Predicate<? super ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate) {
@@ -559,8 +565,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
     private <M extends ChatMessage, C extends ChatChannel<M>> Pin bindChatMessages(C channel) {
         // We clear and fill the list at channel change. The addObserver triggers the add method for each item,
         // but as we have a contains() check there it will not have any effect.
-        model.getChatMessages().clear();
-        model.getChatMessages().addAll(channel.getChatMessages().stream()
+        model.getChatMessages().setAll(channel.getChatMessages().stream()
                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage,
                         channel,
                         marketPriceService,
@@ -571,12 +576,19 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                         networkService,
                         resendMessageService))
                 .collect(Collectors.toSet()));
+        model.getChatMessageIds().clear();
+        model.getChatMessageIds().addAll(model.getChatMessages().stream()
+                .map(e -> e.getChatMessage().getId())
+                .collect(Collectors.toSet()));
         maybeScrollDownOnNewItemAdded();
 
         return channel.getChatMessages().addObserver(new CollectionObserver<>() {
             @Override
             public void add(M chatMessage) {
                 UIThread.run(() -> {
+                    if (model.getChatMessageIds().contains(chatMessage.getId())) {
+                        return;
+                    }
                     ChatMessageListItem<M, C> item = new ChatMessageListItem<>(chatMessage,
                             channel,
                             marketPriceService,
@@ -586,12 +598,8 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                             userIdentityService,
                             networkService,
                             resendMessageService);
-                    // As long as we use runOnNextRenderFrame we need to check to avoid adding duplicates
-                    // The model is updated async in stages, verify that messages belong to the selected channel
-                    if (!model.getChatMessages().contains(item) && channel.equals(model.getSelectedChannel().get())) {
-                        model.getChatMessages().add(item);
-                        maybeScrollDownOnNewItemAdded();
-                    }
+                    model.getChatMessages().add(item);
+                    maybeScrollDownOnNewItemAdded();
                 });
             }
 
@@ -607,6 +615,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                         toRemove.ifPresent(item -> {
                             item.dispose();
                             model.getChatMessages().remove(item);
+                            model.getChatMessageIds().remove(item.getChatMessage().getId());
                         });
                     });
                 }
@@ -617,6 +626,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                 UIThread.run(() -> {
                     model.getChatMessages().forEach(ChatMessageListItem::dispose);
                     model.getChatMessages().clear();
+                    model.getChatMessageIds().clear();
                 });
             }
         });

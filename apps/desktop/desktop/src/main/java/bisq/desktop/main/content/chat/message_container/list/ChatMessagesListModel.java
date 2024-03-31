@@ -12,6 +12,8 @@ import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.Predicate;
 
 @Getter
@@ -21,6 +23,7 @@ public class ChatMessagesListModel implements bisq.desktop.common.view.Model {
     private final ObservableList<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> chatMessages = FXCollections.observableArrayList();
     private final FilteredList<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> filteredChatMessages = new FilteredList<>(chatMessages);
     private final SortedList<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> sortedChatMessages = new SortedList<>(filteredChatMessages);
+    private final Set<String> chatMessageIds = new HashSet<>();
     private final BooleanProperty isPublicChannel = new SimpleBooleanProperty();
     private final ObjectProperty<ChatMessage> selectedChatMessageForMoreOptionsPopup = new SimpleObjectProperty<>(null);
     private final ChatChannelDomain chatChannelDomain;
