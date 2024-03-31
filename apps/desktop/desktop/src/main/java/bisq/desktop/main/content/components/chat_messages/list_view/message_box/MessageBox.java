@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.components.chat_messages.list_view.messages;
+package bisq.desktop.main.content.components.chat_messages.list_view.message_box;
 
 import javafx.scene.layout.VBox;
 

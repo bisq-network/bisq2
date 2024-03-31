@@ -25,7 +25,7 @@ import bisq.desktop.components.controls.DropdownMenuItem;
 import bisq.desktop.main.content.components.chat_messages.ChatMessageListItem;
 import bisq.desktop.main.content.components.chat_messages.list_view.ChatMessagesListController;
 import bisq.desktop.main.content.components.chat_messages.list_view.ChatMessagesListModel;
-import bisq.desktop.main.content.components.chat_messages.list_view.messages.BubbleMessageBox;
+import bisq.desktop.main.content.components.chat_messages.list_view.message_box.BubbleMessageBox;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
