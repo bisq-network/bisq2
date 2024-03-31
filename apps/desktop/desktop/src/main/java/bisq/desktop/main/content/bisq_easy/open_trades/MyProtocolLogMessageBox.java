@@ -22,7 +22,7 @@ import bisq.chat.ChatMessage;
 import bisq.desktop.common.Icons;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.main.content.components.chat_messages.ChatMessageListItem;
-import bisq.desktop.main.content.components.chat_messages.ChatMessagesListView;
+import bisq.desktop.main.content.components.chat_messages.list_view.ChatMessagesListView;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import javafx.geometry.Pos;

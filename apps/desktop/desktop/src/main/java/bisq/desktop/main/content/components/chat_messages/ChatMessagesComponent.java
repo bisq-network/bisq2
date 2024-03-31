@@ -37,6 +37,7 @@ import bisq.desktop.main.content.chat.ChatUtil;
 import bisq.desktop.main.content.components.ChatMentionPopupMenu;
 import bisq.desktop.main.content.components.CitationBlock;
 import bisq.desktop.main.content.components.UserProfileSelection;
+import bisq.desktop.main.content.components.chat_messages.list_view.ChatMessagesListView;
 import bisq.i18n.Res;
 import bisq.settings.SettingsService;
 import bisq.user.identity.UserIdentity;

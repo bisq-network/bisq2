@@ -22,7 +22,7 @@ import bisq.chat.ChatMessage;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.main.content.bisq_easy.open_trades.MyProtocolLogMessageBox;
 import bisq.desktop.main.content.components.chat_messages.ChatMessageListItem;
-import bisq.desktop.main.content.components.chat_messages.ChatMessagesListView;
+import bisq.desktop.main.content.components.chat_messages.list_view.ChatMessagesListView;
 import bisq.i18n.Res;
 import javafx.scene.control.Hyperlink;
 

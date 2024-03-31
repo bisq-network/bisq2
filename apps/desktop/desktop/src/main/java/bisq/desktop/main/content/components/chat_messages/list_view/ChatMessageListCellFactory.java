@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.components.chat_messages;
+package bisq.desktop.main.content.components.chat_messages.list_view;
 
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
@@ -23,6 +23,7 @@ import bisq.desktop.main.content.bisq_easy.offerbook.MyOfferMessageBox;
 import bisq.desktop.main.content.bisq_easy.offerbook.PeerOfferMessageBox;
 import bisq.desktop.main.content.bisq_easy.open_trades.MyProtocolLogMessageBox;
 import bisq.desktop.main.content.bisq_easy.open_trades.PeerProtocolLogMessageBox;
+import bisq.desktop.main.content.components.chat_messages.ChatMessageListItem;
 import bisq.desktop.main.content.components.chat_messages.messages.LeaveChatMessageBox;
 import bisq.desktop.main.content.components.chat_messages.messages.MessageBox;
 import bisq.desktop.main.content.components.chat_messages.messages.MyMessageBox;

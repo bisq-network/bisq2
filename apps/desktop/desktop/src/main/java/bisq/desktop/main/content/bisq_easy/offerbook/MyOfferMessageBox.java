@@ -23,7 +23,7 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.DropdownMenu;
 import bisq.desktop.components.controls.DropdownMenuItem;
 import bisq.desktop.main.content.components.chat_messages.ChatMessageListItem;
-import bisq.desktop.main.content.components.chat_messages.ChatMessagesListView;
+import bisq.desktop.main.content.components.chat_messages.list_view.ChatMessagesListView;
 import bisq.desktop.main.content.components.chat_messages.messages.BubbleMessageBox;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;

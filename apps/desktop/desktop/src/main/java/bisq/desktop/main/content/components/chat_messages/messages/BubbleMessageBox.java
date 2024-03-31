@@ -26,7 +26,7 @@ import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.desktop.main.content.components.chat_messages.ChatMessageListItem;
-import bisq.desktop.main.content.components.chat_messages.ChatMessagesListView;
+import bisq.desktop.main.content.components.chat_messages.list_view.ChatMessagesListView;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;

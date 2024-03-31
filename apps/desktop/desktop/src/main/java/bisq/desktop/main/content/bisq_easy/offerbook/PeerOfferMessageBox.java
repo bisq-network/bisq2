@@ -22,7 +22,7 @@ import bisq.chat.ChatMessage;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.main.content.components.chat_messages.ChatMessageListItem;
-import bisq.desktop.main.content.components.chat_messages.ChatMessagesListView;
+import bisq.desktop.main.content.components.chat_messages.list_view.ChatMessagesListView;
 import bisq.desktop.main.content.components.chat_messages.messages.PeerMessageBox;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
