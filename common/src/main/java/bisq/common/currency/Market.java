@@ -22,8 +22,10 @@ import bisq.common.proto.PersistableProto;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
+@Slf4j
 @Getter
 @EqualsAndHashCode
 public final class Market implements NetworkProto, PersistableProto, Comparable<Market> {
@@ -32,7 +34,9 @@ public final class Market implements NetworkProto, PersistableProto, Comparable<
 
     private final String baseCurrencyCode;
     private final String quoteCurrencyCode;
+    @EqualsAndHashCode.Exclude
     private final String baseCurrencyName;
+    @EqualsAndHashCode.Exclude
     private final String quoteCurrencyName;
 
     public Market(String baseCurrencyCode,
