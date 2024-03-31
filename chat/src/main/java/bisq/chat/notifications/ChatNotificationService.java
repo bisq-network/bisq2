@@ -75,6 +75,7 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
     @Getter
     private final Observable<ChatNotification> changedNotification = new Observable<>();
     private final Map<String, Pin> chatMessagesByChannelIdPins = new ConcurrentHashMap<>();
+    private final long startUpDateTime = System.currentTimeMillis();
 
     public ChatNotificationService(PersistenceService persistenceService,
                                    ChatService chatService,
@@ -347,7 +348,7 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
 
         if (shouldSendNotification) {
             addNotification(chatNotification);
-            sendNotificationService.send(chatNotification);
+            maybeSendSystemNotification(chatNotification);
         } else {
             consumeNotification(chatNotification);
         }
@@ -379,5 +380,18 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
                 chatChannel,
                 chatMessage,
                 senderUserProfile);
+    }
+
+    private void maybeSendSystemNotification(ChatNotification chatNotification) {
+        if (isReceivedAfterStartUp(chatNotification)) {
+            log.debug("Sending system notification since message was received after start-up time");
+            sendNotificationService.send(chatNotification);
+        } else {
+            log.debug("Avoiding system notification for notifications sent while user was offline");
+        }
+    }
+
+    private boolean isReceivedAfterStartUp(ChatNotification chatNotification) {
+        return chatNotification.getDate() > startUpDateTime;
     }
 }

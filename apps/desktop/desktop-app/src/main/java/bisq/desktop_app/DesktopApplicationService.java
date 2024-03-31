@@ -243,7 +243,7 @@ public class DesktopApplicationService extends ApplicationService {
                 .thenCompose(result -> settingsService.initialize())
                 .thenCompose(result -> offerService.initialize())
                 .thenCompose(result -> chatService.initialize())
-                .thenCompose(result -> sendNotificationService.initialize()) // We initialize after chatService to avoid flooding the notification center
+                .thenCompose(result -> sendNotificationService.initialize())
                 .thenCompose(result -> supportService.initialize())
                 .thenCompose(result -> tradeService.initialize())
                 .thenCompose(result -> updaterService.initialize())
