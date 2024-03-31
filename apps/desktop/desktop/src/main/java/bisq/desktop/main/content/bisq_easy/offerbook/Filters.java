@@ -19,7 +19,7 @@ package bisq.desktop.main.content.bisq_easy.offerbook;
 
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
-import bisq.desktop.main.content.components.chat_messages.list_view.ChatMessageListItem;
+import bisq.desktop.main.content.chat.list_view.ChatMessageListItem;
 import lombok.Getter;
 
 import java.util.function.Predicate;
