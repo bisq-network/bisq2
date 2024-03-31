@@ -24,7 +24,7 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.main.content.components.chat_messages.ChatMessageListItem;
 import bisq.desktop.main.content.components.chat_messages.list_view.ChatMessagesListController;
 import bisq.desktop.main.content.components.chat_messages.list_view.ChatMessagesListModel;
-import bisq.desktop.main.content.components.chat_messages.messages.PeerMessageBox;
+import bisq.desktop.main.content.components.chat_messages.list_view.messages.PeerMessageBox;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;

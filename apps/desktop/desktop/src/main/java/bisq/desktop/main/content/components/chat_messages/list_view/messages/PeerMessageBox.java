@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.components.chat_messages.messages;
+package bisq.desktop.main.content.components.chat_messages.list_view.messages;
 
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
@@ -49,7 +49,7 @@ public class PeerMessageBox extends BubbleMessageBox {
         super(item, list, controller, model);
 
         setUpPeerMessage();
-        VBox.setMargin(userNameAndDateHBox, new Insets(-5, 0, -5, 10));
+        setMargin(userNameAndDateHBox, new Insets(-5, 0, -5, 10));
         messageHBox.getChildren().setAll(messageBgHBox, Spacer.fillHBox());
         reactionsHBox.getChildren().setAll(replyIcon, pmIcon, moreOptionsIcon, Spacer.fillHBox());
 
