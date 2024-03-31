@@ -20,6 +20,7 @@ package bisq.desktop.main.content.bisq_easy.take_offer.amount;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
+import bisq.common.monetary.PriceQuote;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.bisq_easy.components.AmountComponent;
@@ -101,7 +102,13 @@ public class TakeOfferAmountController implements Controller {
     public void setTradePriceSpec(PriceSpec priceSpec) {
         // priceSpec from price view in case we are the seller
         if (priceSpec != null && model.getBisqEasyOffer() != null && model.getBisqEasyOffer().getTakersDirection().isSell()) {
-            PriceUtil.findQuote(marketPriceService, priceSpec, model.getBisqEasyOffer().getMarket()).ifPresent(amountComponent::setQuote);
+            Market market = model.getBisqEasyOffer().getMarket();
+            Optional<PriceQuote> priceQuote = PriceUtil.findQuote(marketPriceService, priceSpec, market);
+            if (priceQuote.isPresent()) {
+                amountComponent.setQuote(priceQuote.get());
+            } else {
+                log.warn("Could not find price quote for market {}", market);
+            }
         }
     }
 
