@@ -4,6 +4,7 @@ import bisq.common.application.DevMode;
 import bisq.common.encoding.Hex;
 import bisq.common.util.ByteArrayUtils;
 import bisq.common.util.MathUtils;
+import bisq.common.util.StringUtils;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
 import bisq.network.p2p.node.authorization.AuthorizationTokenService;
@@ -117,7 +118,7 @@ public class HashCashTokenService extends AuthorizationTokenService<HashCashToke
             log.warn("Message payload not matching proof of work payload. " +
                             "getPayload(message)={}; proofOfWork.getPayload()={}; " +
                             "getPayload(message).length={}; proofOfWork.getPayload().length={}",
-                    Hex.encode(payload), Hex.encode(proofOfWork.getPayload()),
+                    StringUtils.truncate(Hex.encode(payload), 200), StringUtils.truncate(Hex.encode(proofOfWork.getPayload()), 200),
                     payload.length, proofOfWork.getPayload().length);
             return false;
         }
