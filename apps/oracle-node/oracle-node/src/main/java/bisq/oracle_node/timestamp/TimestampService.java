@@ -19,7 +19,6 @@ package bisq.oracle_node.timestamp;
 
 import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
-import bisq.bonded_roles.release.ReleaseNotification;
 import bisq.common.application.Service;
 import bisq.identity.Identity;
 import bisq.network.NetworkService;
@@ -114,7 +113,7 @@ public class TimestampService implements Service, PersistenceClient<TimestampSto
 
     @Override
     public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
-        if (authorizedData.getAuthorizedDistributedData() instanceof ReleaseNotification) {
+        if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedTimestampData) {
             if (isAuthorized(authorizedData)) {
                 AuthorizedTimestampData authorizedTimestampData = (AuthorizedTimestampData) authorizedData.getAuthorizedDistributedData();
                 // We might get data published from other oracle nodes and put it into our local store.
