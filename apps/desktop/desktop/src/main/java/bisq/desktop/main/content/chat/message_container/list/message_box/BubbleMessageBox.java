@@ -38,9 +38,11 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
+@Slf4j
 public abstract class BubbleMessageBox extends MessageBox {
     protected static final double CHAT_MESSAGE_BOX_MAX_WIDTH = 630;
     protected static final double OFFER_MESSAGE_USER_ICON_SIZE = 70;
@@ -117,10 +119,6 @@ public abstract class BubbleMessageBox extends MessageBox {
     protected void addReactionsHandlers() {
     }
 
-    protected void hideReactionsBox() {
-        reactionsHBox.setVisible(false);
-    }
-
     private void addOnMouseEventHandlers() {
         setOnMouseEntered(e -> {
             if (model.getSelectedChatMessageForMoreOptionsPopup().get() != null) {
@@ -132,11 +130,16 @@ public abstract class BubbleMessageBox extends MessageBox {
 
         setOnMouseExited(e -> {
             if (model.getSelectedChatMessageForMoreOptionsPopup().get() == null) {
-                hideReactionsBox();
                 dateTime.setVisible(false);
                 reactionsHBox.setVisible(false);
             }
         });
+    }
+
+    @Override
+    public void cleanup() {
+        setOnMouseEntered(null);
+        setOnMouseExited(null);
     }
 
     private Label createAndGetSupportedLanguagesLabel() {

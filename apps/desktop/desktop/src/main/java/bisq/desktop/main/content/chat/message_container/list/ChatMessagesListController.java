@@ -88,7 +88,8 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
     private final BisqEasyService bisqEasyService;
     private final MarketPriceService marketPriceService;
     private Pin selectedChannelPin, chatMessagesPin, offerOnlySettingsPin;
-    private Subscription selectedChannelSubscription, focusSubscription, scrollValuePin, scrollBarVisiblePin;
+    private Subscription selectedChannelSubscription, focusSubscription, scrollValuePin, scrollBarVisiblePin,
+            layoutChildrenDonePin;
 
     public ChatMessagesListController(ServiceProvider serviceProvider,
                                       Consumer<UserProfile> mentionUserHandler,
@@ -141,6 +142,10 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
             }
         });
 
+        layoutChildrenDonePin = EasyBind.subscribe(model.getLayoutChildrenDone(), layoutChildrenDone -> {
+            UIThread.runOnNextRenderFrame(this::handleScrollValueChanged);
+        });
+
         applyScrollValue(1);
     }
 
@@ -164,6 +169,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
             selectedChannelSubscription.unsubscribe();
         }
 
+        layoutChildrenDonePin.unsubscribe();
         scrollValuePin.unsubscribe();
         scrollBarVisiblePin.unsubscribe();
 
@@ -480,6 +486,11 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
 
     private void applyScrollValue(double scrollValue) {
         model.getScrollValue().set(scrollValue);
+        handleScrollValueChanged();
+    }
+
+    private void handleScrollValueChanged() {
+        double scrollValue = model.getScrollValue().get();
         model.getHasUnreadMessages().set(model.getNumReadMessages() < model.getChatMessages().size());
         boolean isAtBottom = scrollValue == 1d;
         model.getShowScrolledDownButton().set(!isAtBottom && model.getScrollBarVisible().get());

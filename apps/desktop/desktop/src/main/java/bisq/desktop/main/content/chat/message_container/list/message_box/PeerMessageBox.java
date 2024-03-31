@@ -79,7 +79,7 @@ public class PeerMessageBox extends BubbleMessageBox {
     protected void addReactionsHandlers() {
         ChatMessage chatMessage = item.getChatMessage();
         moreOptionsIcon.setOnMouseClicked(e -> onOpenMoreOptions(pmIcon, chatMessage, () -> {
-            hideReactionsBox();
+            reactionsHBox.setVisible(false);
             model.getSelectedChatMessageForMoreOptionsPopup().set(null);
         }));
         replyIcon.setOnMouseClicked(e -> controller.onReply(chatMessage));
@@ -134,6 +134,8 @@ public class PeerMessageBox extends BubbleMessageBox {
 
     @Override
     public void cleanup() {
+        super.cleanup();
+
         message.maxWidthProperty().unbind();
 
         userName.setOnMouseClicked(null);
