@@ -500,6 +500,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
         applyScrollValue(1);
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -575,11 +576,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
         return channel.getChatMessages().addObserver(new CollectionObserver<>() {
             @Override
             public void add(M chatMessage) {
-                // TODO (low prio) Delaying to the next render frame can cause duplicated items in case we get the channel
-                //  change called 2 times in short interval (should be avoid as well).
-                // @namloan Could you re-test the performance issues with testing if using UIThread.run makes a difference?
-                // There have been many changes in the meantime, so maybe the performance issue was fixed by other changes.
-                UIThread.runOnNextRenderFrame(() -> {
+                UIThread.run(() -> {
                     ChatMessageListItem<M, C> item = new ChatMessageListItem<>(chatMessage,
                             channel,
                             marketPriceService,
@@ -601,7 +598,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
             @Override
             public void remove(Object element) {
                 if (element instanceof ChatMessage) {
-                    UIThread.runOnNextRenderFrame(() -> {
+                    UIThread.run(() -> {
                         ChatMessage chatMessage = (ChatMessage) element;
                         Optional<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> toRemove =
                                 model.getChatMessages().stream()
@@ -617,7 +614,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
 
             @Override
             public void clear() {
-                UIThread.runOnNextRenderFrame(() -> {
+                UIThread.run(() -> {
                     model.getChatMessages().forEach(ChatMessageListItem::dispose);
                     model.getChatMessages().clear();
                 });
