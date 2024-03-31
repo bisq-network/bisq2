@@ -1,4 +1,4 @@
-package bisq.desktop.main.content.components.chat_messages;
+package bisq.desktop.main.content.chat.chat_messages;
 
 import bisq.chat.ChatChannel;
 import bisq.common.util.StringUtils;
