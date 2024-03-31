@@ -15,11 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.components.chatMessages;
+package bisq.desktop.main.content.components.chat_messages;
 
 import bisq.bisq_easy.BisqEasyService;
 import bisq.bisq_easy.NavigationTarget;
-import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.*;
 import bisq.chat.bisqeasy.BisqEasyOfferMessage;
