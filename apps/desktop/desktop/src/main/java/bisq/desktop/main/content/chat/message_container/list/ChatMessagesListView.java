@@ -13,6 +13,8 @@ import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
@@ -28,6 +30,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -35,7 +38,19 @@ import org.fxmisc.easybind.Subscription;
 import java.util.Optional;
 
 @Slf4j
-public class ChatMessagesListView extends bisq.desktop.common.view.View<StackPane, ChatMessagesListModel, ChatMessagesListController> {
+public class ChatMessagesListView extends bisq.desktop.common.view.View<ChatMessagesListView.CustomStackPane, ChatMessagesListModel, ChatMessagesListController> {
+    @Getter
+    public static class CustomStackPane extends StackPane {
+        private final BooleanProperty layoutChildrenDone = new SimpleBooleanProperty();
+
+        @Override
+        protected void layoutChildren() {
+            layoutChildrenDone.set(false);
+            super.layoutChildren();
+            layoutChildrenDone.set(true);
+        }
+    }
+
     private final ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> listView;
     private final ImageView scrollDownImageView;
     private final Badge scrollDownBadge;
@@ -48,7 +63,7 @@ public class ChatMessagesListView extends bisq.desktop.common.view.View<StackPan
     private Timeline fadeInScrollDownBadgeTimeline;
 
     public ChatMessagesListView(ChatMessagesListModel model, ChatMessagesListController controller) {
-        super(new StackPane(), model, controller);
+        super(new CustomStackPane(), model, controller);
 
         listView = new ListView<>(model.getSortedChatMessages());
         listView.getStyleClass().add("chat-messages-list-view");
@@ -130,6 +145,7 @@ public class ChatMessagesListView extends bisq.desktop.common.view.View<StackPan
                 scrollDownTooltip.setText(Res.get("chat.listView.scrollDown"));
             }
         });
+        model.getLayoutChildrenDone().bind(root.getLayoutChildrenDone());
 
         scrollDownBadge.setOnMouseClicked(e -> controller.onScrollToBottom());
 
@@ -150,6 +166,7 @@ public class ChatMessagesListView extends bisq.desktop.common.view.View<StackPan
         scrollDownBackground.visibleProperty().unbind();
         scrollDownBackground.managedProperty().unbind();
         scrollDownBadge.textProperty().unbind();
+        model.getLayoutChildrenDone().unbind();
         hasUnreadMessagesPin.unsubscribe();
         showScrolledDownButtonPin.unsubscribe();
 

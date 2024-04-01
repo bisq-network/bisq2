@@ -34,9 +34,11 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.HBox;
 import javafx.util.Callback;
+import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+@Slf4j
 final class ChatMessageListCellFactory
         implements Callback<ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>>,
         ListCell<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>>> {
@@ -57,13 +59,13 @@ final class ChatMessageListCellFactory
             private final static String STYLE_CLASS_WITH_SCROLLBAR_FULL_WIDTH = "chat-message-list-cell-w-scrollbar-full-width";
             private final static String STYLE_CLASS_WITH_SCROLLBAR_MAX_WIDTH = "chat-message-list-cell-w-scrollbar-max-width";
 
-            private final HBox cellHBox;
+            private final HBox cellHBox = new HBox();
             private Subscription listWidthPropertyPin;
             private MessageBox messageBox;
 
             {
-                cellHBox = new HBox();
                 cellHBox.setPadding(new Insets(15, 0, 15, 0));
+                setAlignment(Pos.CENTER);
             }
 
             @Override
@@ -78,6 +80,7 @@ final class ChatMessageListCellFactory
 
                 Node flow = this.getListView().lookup(".virtual-flow");
                 if (flow != null && !flow.isVisible()) {
+                    cleanup();
                     return;
                 }
 
@@ -85,16 +88,12 @@ final class ChatMessageListCellFactory
                 cellHBox.getChildren().setAll(messageBox);
                 listWidthPropertyPin = EasyBind.subscribe(messageBox.widthProperty(), w -> updateMessageStyle());
                 setGraphic(cellHBox);
-                setAlignment(Pos.CENTER);
             }
 
             private void cleanup() {
                 if (messageBox != null) {
                     messageBox.cleanup();
                 }
-
-                cellHBox.setOnMouseEntered(null);
-                cellHBox.setOnMouseExited(null);
 
                 if (listWidthPropertyPin != null) {
                     listWidthPropertyPin.unsubscribe();

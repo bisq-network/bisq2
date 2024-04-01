@@ -88,7 +88,8 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
     private final BisqEasyService bisqEasyService;
     private final MarketPriceService marketPriceService;
     private Pin selectedChannelPin, chatMessagesPin, offerOnlySettingsPin;
-    private Subscription selectedChannelSubscription, focusSubscription, scrollValuePin, scrollBarVisiblePin;
+    private Subscription selectedChannelSubscription, focusSubscription, scrollValuePin, scrollBarVisiblePin,
+            layoutChildrenDonePin;
 
     public ChatMessagesListController(ServiceProvider serviceProvider,
                                       Consumer<UserProfile> mentionUserHandler,
@@ -141,6 +142,10 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
             }
         });
 
+        layoutChildrenDonePin = EasyBind.subscribe(model.getLayoutChildrenDone(), layoutChildrenDone -> {
+            handleScrollValueChanged();
+        });
+
         applyScrollValue(1);
     }
 
@@ -164,11 +169,13 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
             selectedChannelSubscription.unsubscribe();
         }
 
+        layoutChildrenDonePin.unsubscribe();
         scrollValuePin.unsubscribe();
         scrollBarVisiblePin.unsubscribe();
 
         model.getChatMessages().forEach(ChatMessageListItem::dispose);
         model.getChatMessages().clear();
+        model.getChatMessageIds().clear();
     }
 
     private void selectedChannelChanged(ChatChannel<? extends ChatMessage> channel) {
@@ -183,6 +190,8 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
             // Clear and call dispose on the current messages when we change the channel.
             model.getChatMessages().forEach(ChatMessageListItem::dispose);
             model.getChatMessages().clear();
+            model.getChatMessageIds().clear();
+            model.setAutoScrollToBottom(true);
 
             if (channel instanceof BisqEasyOfferbookChannel) {
                 chatMessagesPin = bindChatMessages((BisqEasyOfferbookChannel) channel);
@@ -228,6 +237,10 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
 
     public void refreshMessages() {
         model.getChatMessages().setAll(new ArrayList<>(model.getChatMessages()));
+        model.getChatMessageIds().clear();
+        model.getChatMessageIds().addAll(model.getChatMessages().stream()
+                .map(e -> e.getChatMessage().getId())
+                .collect(Collectors.toSet()));
     }
 
     public void setSearchPredicate(Predicate<? super ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate) {
@@ -474,6 +487,11 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
 
     private void applyScrollValue(double scrollValue) {
         model.getScrollValue().set(scrollValue);
+        handleScrollValueChanged();
+    }
+
+    private void handleScrollValueChanged() {
+        double scrollValue = model.getScrollValue().get();
         model.getHasUnreadMessages().set(model.getNumReadMessages() < model.getChatMessages().size());
         boolean isAtBottom = scrollValue == 1d;
         model.getShowScrolledDownButton().set(!isAtBottom && model.getScrollBarVisible().get());
@@ -499,6 +517,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
     void onScrollToBottom() {
         applyScrollValue(1);
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -558,8 +577,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
     private <M extends ChatMessage, C extends ChatChannel<M>> Pin bindChatMessages(C channel) {
         // We clear and fill the list at channel change. The addObserver triggers the add method for each item,
         // but as we have a contains() check there it will not have any effect.
-        model.getChatMessages().clear();
-        model.getChatMessages().addAll(channel.getChatMessages().stream()
+        model.getChatMessages().setAll(channel.getChatMessages().stream()
                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage,
                         channel,
                         marketPriceService,
@@ -570,16 +588,19 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                         networkService,
                         resendMessageService))
                 .collect(Collectors.toSet()));
+        model.getChatMessageIds().clear();
+        model.getChatMessageIds().addAll(model.getChatMessages().stream()
+                .map(e -> e.getChatMessage().getId())
+                .collect(Collectors.toSet()));
         maybeScrollDownOnNewItemAdded();
 
         return channel.getChatMessages().addObserver(new CollectionObserver<>() {
             @Override
             public void add(M chatMessage) {
-                // TODO (low prio) Delaying to the next render frame can cause duplicated items in case we get the channel
-                //  change called 2 times in short interval (should be avoid as well).
-                // @namloan Could you re-test the performance issues with testing if using UIThread.run makes a difference?
-                // There have been many changes in the meantime, so maybe the performance issue was fixed by other changes.
-                UIThread.runOnNextRenderFrame(() -> {
+                UIThread.run(() -> {
+                    if (model.getChatMessageIds().contains(chatMessage.getId())) {
+                        return;
+                    }
                     ChatMessageListItem<M, C> item = new ChatMessageListItem<>(chatMessage,
                             channel,
                             marketPriceService,
@@ -589,19 +610,15 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                             userIdentityService,
                             networkService,
                             resendMessageService);
-                    // As long as we use runOnNextRenderFrame we need to check to avoid adding duplicates
-                    // The model is updated async in stages, verify that messages belong to the selected channel
-                    if (!model.getChatMessages().contains(item) && channel.equals(model.getSelectedChannel().get())) {
-                        model.getChatMessages().add(item);
-                        maybeScrollDownOnNewItemAdded();
-                    }
+                    model.getChatMessages().add(item);
+                    maybeScrollDownOnNewItemAdded();
                 });
             }
 
             @Override
             public void remove(Object element) {
                 if (element instanceof ChatMessage) {
-                    UIThread.runOnNextRenderFrame(() -> {
+                    UIThread.run(() -> {
                         ChatMessage chatMessage = (ChatMessage) element;
                         Optional<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> toRemove =
                                 model.getChatMessages().stream()
@@ -610,6 +627,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                         toRemove.ifPresent(item -> {
                             item.dispose();
                             model.getChatMessages().remove(item);
+                            model.getChatMessageIds().remove(item.getChatMessage().getId());
                         });
                     });
                 }
@@ -617,9 +635,10 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
 
             @Override
             public void clear() {
-                UIThread.runOnNextRenderFrame(() -> {
+                UIThread.run(() -> {
                     model.getChatMessages().forEach(ChatMessageListItem::dispose);
                     model.getChatMessages().clear();
+                    model.getChatMessageIds().clear();
                 });
             }
         });

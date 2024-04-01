@@ -235,6 +235,8 @@ public final class MyMessageBox extends BubbleMessageBox {
 
     @Override
     public void cleanup() {
+        super.cleanup();
+
         message.maxWidthProperty().unbind();
         editInputField.maxWidthProperty().unbind();
         deliveryState.getTooltip().textProperty().unbind();
