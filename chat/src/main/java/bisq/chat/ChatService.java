@@ -84,7 +84,7 @@ public class ChatService implements Service {
                 userIdentityService,
                 userProfileService);
 
-        //BISQ_EASY
+        // BISQ_EASY
         bisqEasyOfferbookChannelService = new BisqEasyOfferbookChannelService(persistenceService,
                 networkService,
                 userService);
