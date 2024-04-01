@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.components.chatMessages;
+package bisq.desktop.main.content.components.chat_messages;
 
 import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.*;
@@ -34,6 +34,8 @@ import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.chat.ChatUtil;
+import bisq.desktop.main.content.chat.list_view.ChatMessageListItem;
+import bisq.desktop.main.content.chat.list_view.ChatMessagesListController;
 import bisq.desktop.main.content.components.ChatMentionPopupMenu;
 import bisq.desktop.main.content.components.CitationBlock;
 import bisq.desktop.main.content.components.UserProfileSelection;
@@ -93,15 +95,15 @@ public class ChatMessagesComponent {
     }
 
     public void setSearchPredicate(Predicate<? super ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate) {
-        controller.chatMessagesListView.setSearchPredicate(predicate);
+        controller.chatMessagesListController.setSearchPredicate(predicate);
     }
 
     public void setBisqEasyOfferDirectionOrOwnerFilterPredicate(Predicate<? super ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate) {
-        controller.chatMessagesListView.setBisqEasyOfferDirectionOrOwnerFilterPredicate(predicate);
+        controller.chatMessagesListController.setBisqEasyOfferDirectionOrOwnerFilterPredicate(predicate);
     }
 
     public void setBisqEasyPeerReputationFilterPredicate(Predicate<? super ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate) {
-        controller.chatMessagesListView.setBisqEasyPeerReputationFilterPredicate(predicate);
+        controller.chatMessagesListController.setBisqEasyPeerReputationFilterPredicate(predicate);
     }
 
     public void resetSelectedChatMessage() {
@@ -113,7 +115,7 @@ public class ChatMessagesComponent {
     }
 
     public void refreshMessages() {
-        controller.chatMessagesListView.refreshMessages();
+        controller.chatMessagesListController.refreshMessages();
     }
 
     public void enableChatDialog(boolean isEnabled) {
@@ -127,7 +129,7 @@ public class ChatMessagesComponent {
         private final Consumer<UserProfile> openUserProfileSidebarHandler;
         private final UserIdentityService userIdentityService;
         private final CitationBlock citationBlock;
-        private final ChatMessagesListView chatMessagesListView;
+        private final ChatMessagesListController chatMessagesListController;
         private final UserProfileService userProfileService;
         private final SettingsService settingsService;
         private final ChatService chatService;
@@ -148,7 +150,7 @@ public class ChatMessagesComponent {
 
             UserProfileSelection userProfileSelection = new UserProfileSelection(serviceProvider);
 
-            chatMessagesListView = new ChatMessagesListView(serviceProvider,
+            chatMessagesListController = new ChatMessagesListController(serviceProvider,
                     this::mentionUserHandler,
                     this::showChatUserDetailsHandler,
                     this::replyHandler,
@@ -156,7 +158,7 @@ public class ChatMessagesComponent {
 
             model = new Model(chatChannelDomain, chatService);
             view = new View(model, this,
-                    chatMessagesListView.getRoot(),
+                    chatMessagesListController.getView().getRoot(),
                     citationBlock.getRoot(),
                     userProfileSelection);
         }

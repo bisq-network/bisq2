@@ -21,9 +21,10 @@ import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.main.content.components.chatMessages.ChatMessageListItem;
-import bisq.desktop.main.content.components.chatMessages.ChatMessagesListView;
-import bisq.desktop.main.content.components.chatMessages.messages.PeerMessageBox;
+import bisq.desktop.main.content.chat.list_view.ChatMessageListItem;
+import bisq.desktop.main.content.chat.list_view.ChatMessagesListController;
+import bisq.desktop.main.content.chat.list_view.ChatMessagesListModel;
+import bisq.desktop.main.content.chat.list_view.message_box.PeerMessageBox;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -39,7 +40,7 @@ public final class PeerOfferMessageBox extends PeerMessageBox {
 
     public PeerOfferMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
                                ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
-                               ChatMessagesListView.Controller controller, ChatMessagesListView.Model model) {
+                               ChatMessagesListController controller, ChatMessagesListModel model) {
         super(item, list, controller, model);
 
         reactionsHBox.getChildren().setAll(replyIcon, pmIcon, moreOptionsIcon, supportedLanguages, Spacer.fillHBox());

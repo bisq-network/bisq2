@@ -15,20 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.components.chatMessages.messages;
+package bisq.desktop.main.content.chat.list_view.message_box;
 
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.main.content.bisq_easy.open_trades.MyProtocolLogMessageBox;
-import bisq.desktop.main.content.components.chatMessages.ChatMessageListItem;
-import bisq.desktop.main.content.components.chatMessages.ChatMessagesListView;
+import bisq.desktop.main.content.chat.list_view.ChatMessageListItem;
+import bisq.desktop.main.content.chat.list_view.ChatMessagesListController;
 import bisq.i18n.Res;
 import javafx.scene.control.Hyperlink;
 
 public final class LeaveChatMessageBox extends MyProtocolLogMessageBox {
     public LeaveChatMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
-                               ChatMessagesListView.Controller controller) {
+                               ChatMessagesListController controller) {
         super(item, controller);
 
         Hyperlink hyperlink = new Hyperlink(Res.get("chat.leave"));

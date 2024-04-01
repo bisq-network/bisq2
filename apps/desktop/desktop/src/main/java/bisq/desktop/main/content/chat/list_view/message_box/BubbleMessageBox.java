@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.components.chatMessages.messages;
+package bisq.desktop.main.content.chat.list_view.message_box;
 
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
@@ -24,9 +24,10 @@ import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.desktop.common.Icons;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.components.controls.BisqTooltip;
+import bisq.desktop.main.content.chat.list_view.ChatMessageListItem;
+import bisq.desktop.main.content.chat.list_view.ChatMessagesListController;
+import bisq.desktop.main.content.chat.list_view.ChatMessagesListModel;
 import bisq.desktop.main.content.components.UserProfileIcon;
-import bisq.desktop.main.content.components.chatMessages.ChatMessageListItem;
-import bisq.desktop.main.content.components.chatMessages.ChatMessagesListView;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -46,8 +47,8 @@ public abstract class BubbleMessageBox extends MessageBox {
 
     protected final ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item;
     protected final ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list;
-    protected final ChatMessagesListView.Controller controller;
-    protected final ChatMessagesListView.Model model;
+    protected final ChatMessagesListController controller;
+    protected final ChatMessagesListModel model;
     protected final UserProfileIcon userProfileIcon = new UserProfileIcon(60);
     protected final HBox reactionsHBox = new HBox(20);
     protected final VBox quotedMessageVBox, contentVBox;
@@ -57,8 +58,8 @@ public abstract class BubbleMessageBox extends MessageBox {
 
     public BubbleMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
                             ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
-                            ChatMessagesListView.Controller controller,
-                            ChatMessagesListView.Model model) {
+                            ChatMessagesListController controller,
+                            ChatMessagesListModel model) {
         this.item = item;
         this.list = list;
         this.controller = controller;

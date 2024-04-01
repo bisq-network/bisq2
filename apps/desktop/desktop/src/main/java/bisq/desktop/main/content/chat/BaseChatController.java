@@ -34,7 +34,7 @@ import bisq.desktop.components.cathash.CatHash;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.main.content.chat.sidebar.ChannelSidebar;
 import bisq.desktop.main.content.chat.sidebar.UserProfileSidebar;
-import bisq.desktop.main.content.components.chatMessages.ChatMessagesComponent;
+import bisq.desktop.main.content.components.chat_messages.ChatMessagesComponent;
 import bisq.i18n.Res;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
