@@ -64,7 +64,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     private final BisqEasyOfferbookModel bisqEasyOfferbookModel;
     private final SetChangeListener<Market> favouriteMarketsListener;
     private Pin offerOnlySettingsPin, bisqEasyPrivateTradeChatChannelsPin, selectedChannelPin,
-            marketPriceByCurrencyMapPin, favouriteMarketsPin;
+            marketPriceByCurrencyMapPin, favouriteMarketsPin, listOffersSettingsPin;
     private Subscription marketSelectorSearchPin, selectedMarketFilterPin, selectedOfferDirectionOrOwnerFilterPin,
             selectedPeerReputationFilterPin, selectedMarketSortTypePin;
 
@@ -117,6 +117,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         model.getMarketSelectorSearchText().set("");
 
         offerOnlySettingsPin = FxBindings.bindBiDir(model.getOfferOnly()).to(settingsService.getOffersOnly());
+        listOffersSettingsPin = FxBindings.bindBiDir(model.getListOffers()).to(settingsService.getListOffers());
 
         ObservableArray<BisqEasyOpenTradeChannel> bisqEasyOpenTradeChannels = chatService.getBisqEasyOpenTradeChannelService().getChannels();
         bisqEasyPrivateTradeChatChannelsPin = bisqEasyOpenTradeChannels.addObserver(() ->
@@ -228,6 +229,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         super.onDeactivate();
 
         offerOnlySettingsPin.unbind();
+        listOffersSettingsPin.unbind();
         bisqEasyPrivateTradeChatChannelsPin.unbind();
         selectedChannelPin.unbind();
         marketSelectorSearchPin.unsubscribe();

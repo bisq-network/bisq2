@@ -70,7 +70,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
             allOffers, myOffers, buyOffers, sellOffers, allReputations, fiveStars, atLeastFourStars, atLeastThreeStars,
             atLeastTwoStars, atLeastOneStar;
     private DropdownTitleMenuItem atLeastTitle;
-    private CheckBox hideUserMessagesCheckbox;
+    private CheckBox hideUserMessagesCheckbox, listOffersCheckBox;
     private Label channelHeaderIcon, marketPrice, removeWithOffersFilter, removeFavouritesFilter;
     private HBox appliedFiltersSection, withOffersDisplayHint, onlyFavouritesDisplayHint;
     private ImageView withOffersRemoveFilterDefaultIcon, withOffersRemoveFilterActiveIcon,
@@ -124,6 +124,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         super.onViewAttached();
 
         hideUserMessagesCheckbox.selectedProperty().bindBidirectional(getModel().getOfferOnly());
+        listOffersCheckBox.selectedProperty().bindBidirectional(getModel().getListOffers());
         marketSelectorSearchBox.textProperty().bindBidirectional(getModel().getMarketSelectorSearchText());
         marketPrice.textProperty().bind(getModel().getMarketPrice());
         withOffersDisplayHint.visibleProperty().bind(getModel().getSelectedMarketsFilter().isEqualTo(Filters.Markets.WITH_OFFERS));
@@ -218,6 +219,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         super.onViewDetached();
 
         hideUserMessagesCheckbox.selectedProperty().unbindBidirectional(getModel().getOfferOnly());
+        listOffersCheckBox.selectedProperty().unbindBidirectional(getModel().getListOffers());
         marketSelectorSearchBox.textProperty().unbindBidirectional(getModel().getMarketSelectorSearchText());
         marketPrice.textProperty().unbind();
         withOffersDisplayHint.visibleProperty().unbind();
@@ -418,11 +420,17 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         checkbox.getStyleClass().add("offerbook-subheader-checkbox");
         checkbox.setAlignment(Pos.CENTER);
 
+        Label listOffersLabel = new Label(Res.get("bisqEasy.topPane.filter.listOffers"));
+        listOffersCheckBox = new CheckBox();
+        HBox listOffersHBox = new HBox(5, listOffersLabel, listOffersCheckBox);
+        listOffersHBox.getStyleClass().add("offerbook-subheader-checkbox");
+        listOffersHBox.setAlignment(Pos.CENTER);
+
         filterOffersByPeerReputationMenu = createAndGetPeerReputationFilterMenu();
         filterOffersByDirectionOrOwnerMenu = createAndGetOfferDirectionOrOwnerFilterMenu();
 
         searchBox.getStyleClass().add("offerbook-search-box");
-        HBox subheaderContent = new HBox(30, searchBox, Spacer.fillHBox(), checkbox,
+        HBox subheaderContent = new HBox(30, searchBox, Spacer.fillHBox(), listOffersHBox, checkbox,
                 filterOffersByPeerReputationMenu, filterOffersByDirectionOrOwnerMenu);
         subheaderContent.getStyleClass().add("offerbook-subheader-content");
         HBox.setHgrow(subheaderContent, Priority.ALWAYS);

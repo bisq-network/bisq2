@@ -65,6 +65,7 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         // If used with FxBindings.bindBiDir we need to trigger persist call
         getIsTacAccepted().addObserver(value -> persist());
         getOffersOnly().addObserver(value -> persist());
+        getListOffers().addObserver(value -> persist());
         getChatNotificationType().addObserver(value -> persist());
         getUseAnimations().addObserver(value -> persist());
         getPreventStandbyMode().addObserver(value -> persist());
@@ -135,6 +136,10 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
 
     public Observable<Boolean> getOffersOnly() {
         return persistableStore.offersOnly;
+    }
+
+    public Observable<Boolean> getListOffers() {
+        return persistableStore.listOffers;
     }
 
     public Observable<Boolean> getTradeRulesConfirmed() {

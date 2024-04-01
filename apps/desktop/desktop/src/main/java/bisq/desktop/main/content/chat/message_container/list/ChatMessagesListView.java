@@ -52,6 +52,7 @@ public class ChatMessagesListView extends bisq.desktop.common.view.View<ChatMess
     }
 
     private final ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> listView;
+    private final ChatOfferTable chatOfferTable;
     private final ImageView scrollDownImageView;
     private final Badge scrollDownBadge;
     private final BisqTooltip scrollDownTooltip;
@@ -59,7 +60,7 @@ public class ChatMessagesListView extends bisq.desktop.common.view.View<ChatMess
     private final Label placeholderDescription = new Label("");
     private final Pane scrollDownBackground;
     private Optional<ScrollBar> scrollBar = Optional.empty();
-    private Subscription hasUnreadMessagesPin, showScrolledDownButtonPin;
+    private Subscription hasUnreadMessagesPin, showScrolledDownButtonPin, listOffersPin;
     private Timeline fadeInScrollDownBadgeTimeline;
 
     public ChatMessagesListView(ChatMessagesListModel model, ChatMessagesListController controller) {
@@ -67,6 +68,8 @@ public class ChatMessagesListView extends bisq.desktop.common.view.View<ChatMess
 
         listView = new ListView<>(model.getSortedChatMessages());
         listView.getStyleClass().add("chat-messages-list-view");
+
+        chatOfferTable = new ChatOfferTable(controller, model);
 
         VBox placeholder = ChatUtil.createEmptyChatPlaceholder(placeholderTitle, placeholderDescription);
         listView.setPlaceholder(placeholder);
@@ -95,7 +98,15 @@ public class ChatMessagesListView extends bisq.desktop.common.view.View<ChatMess
         StackPane.setAlignment(scrollDownBackground, Pos.BOTTOM_CENTER);
         StackPane.setMargin(scrollDownBackground, new Insets(0, 15, 0, 0));
         root.setAlignment(Pos.CENTER);
-        root.getChildren().addAll(listView, scrollDownBackground, scrollDownBadge);
+        setMessageView(model.getListOffers().get());
+    }
+
+    private void setMessageView(boolean listOffers) {
+        if (listOffers) {
+            root.getChildren().setAll(chatOfferTable.getTableView(), scrollDownBackground, scrollDownBadge);
+        } else {
+            root.getChildren().setAll(listView, scrollDownBackground, scrollDownBadge);
+        }
     }
 
     @Override
@@ -157,6 +168,7 @@ public class ChatMessagesListView extends bisq.desktop.common.view.View<ChatMess
             placeholderTitle.setText("");
             placeholderDescription.setText("");
         }
+        listOffersPin = EasyBind.subscribe(model.getListOffers(), this::setMessageView);
     }
 
     @Override
@@ -169,6 +181,7 @@ public class ChatMessagesListView extends bisq.desktop.common.view.View<ChatMess
         model.getLayoutChildrenDone().unbind();
         hasUnreadMessagesPin.unsubscribe();
         showScrolledDownButtonPin.unsubscribe();
+        listOffersPin.unsubscribe();
 
         scrollDownBadge.setOnMouseClicked(null);
         if (fadeInScrollDownBadgeTimeline != null) {

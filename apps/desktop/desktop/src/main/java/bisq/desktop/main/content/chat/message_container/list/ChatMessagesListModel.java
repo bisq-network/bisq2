@@ -44,6 +44,7 @@ public class ChatMessagesListModel implements bisq.desktop.common.view.Model {
     private final BooleanProperty showScrolledDownButton = new SimpleBooleanProperty();
     private final BooleanProperty scrollBarVisible = new SimpleBooleanProperty();
     private final DoubleProperty scrollValue = new SimpleDoubleProperty();
+    private final BooleanProperty listOffers = new SimpleBooleanProperty();
 
     public ChatMessagesListModel(UserIdentityService userIdentityService,
                                  ChatChannelDomain chatChannelDomain) {

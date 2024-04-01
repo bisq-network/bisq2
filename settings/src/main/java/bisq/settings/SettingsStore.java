@@ -41,6 +41,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     final Observable<Market> selectedMarket = new Observable<>();
     final Observable<Long> minRequiredReputationScore = new Observable<>();
     final Observable<Boolean> offersOnly = new Observable<>();
+    final Observable<Boolean> listOffers = new Observable<>();
     final Observable<Boolean> tradeRulesConfirmed = new Observable<>();
     final Observable<ChatNotificationType> chatNotificationType = new Observable<>();
     final ObservableSet<String> consumedAlertIds = new ObservableSet<>();
@@ -72,6 +73,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 NetworkLoad.DEFAULT_DIFFICULTY_ADJUSTMENT,
                 false,
                 new HashSet<>(),
+                false,
                 false);
     }
 
@@ -92,13 +94,15 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                          double difficultyAdjustmentFactor,
                          boolean ignoreDiffAdjustmentFromSecManager,
                          Set<Market> favouriteMarkets,
-                         boolean ignoreMinRequiredReputationScoreFromSecManager) {
+                         boolean ignoreMinRequiredReputationScoreFromSecManager,
+                         boolean listOffers) {
         this.cookie = cookie;
         this.dontShowAgainMap.putAll(dontShowAgainMap);
         this.useAnimations.set(useAnimations);
         this.selectedMarket.set(selectedMarket);
         this.minRequiredReputationScore.set(requiredTotalReputationScore);
         this.offersOnly.set(offersOnly);
+        this.listOffers.set(listOffers);
         this.tradeRulesConfirmed.set(tradeRulesConfirmed);
         this.chatNotificationType.set(chatNotificationType);
         this.isTacAccepted.set(isTacAccepted);
@@ -122,6 +126,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 .setSelectedMarket(selectedMarket.get().toProto())
                 .setMinRequiredReputationScore(minRequiredReputationScore.get())
                 .setOffersOnly(offersOnly.get())
+                .setListOffers(listOffers.get())
                 .setTradeRulesConfirmed(tradeRulesConfirmed.get())
                 .setChatNotificationType(chatNotificationType.get().toProto())
                 .setIsTacAccepted(isTacAccepted.get())
@@ -157,7 +162,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 proto.getIgnoreDiffAdjustmentFromSecManager(),
                 new HashSet<>(proto.getFavouriteMarketsList().stream()
                         .map(Market::fromProto).collect(Collectors.toSet())),
-                proto.getIgnoreMinRequiredReputationScoreFromSecManager());
+                proto.getIgnoreMinRequiredReputationScoreFromSecManager(),
+                proto.getListOffers());
     }
 
     @Override
@@ -190,7 +196,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 difficultyAdjustmentFactor.get(),
                 ignoreDiffAdjustmentFromSecManager.get(),
                 new HashSet<>(favouriteMarkets),
-                ignoreMinRequiredReputationScoreFromSecManager.get());
+                ignoreMinRequiredReputationScoreFromSecManager.get(),
+                listOffers.get());
     }
 
     @Override
@@ -202,6 +209,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
             selectedMarket.set(persisted.selectedMarket.get());
             minRequiredReputationScore.set(persisted.minRequiredReputationScore.get());
             offersOnly.set(persisted.offersOnly.get());
+            listOffers.set(persisted.listOffers.get());
             tradeRulesConfirmed.set(persisted.tradeRulesConfirmed.get());
             chatNotificationType.set(persisted.chatNotificationType.get());
             isTacAccepted.set(persisted.isTacAccepted.get());

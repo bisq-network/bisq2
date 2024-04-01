@@ -87,7 +87,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
     private final Optional<ResendMessageService> resendMessageService;
     private final BisqEasyService bisqEasyService;
     private final MarketPriceService marketPriceService;
-    private Pin selectedChannelPin, chatMessagesPin, offerOnlySettingsPin;
+    private Pin selectedChannelPin, chatMessagesPin, offerOnlySettingsPin, listOffersPin;
     private Subscription selectedChannelSubscription, focusSubscription, scrollValuePin, scrollBarVisiblePin,
             layoutChildrenDonePin;
 
@@ -121,6 +121,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
         model.getSortedChatMessages().setComparator(ChatMessageListItem::compareTo);
 
         offerOnlySettingsPin = FxBindings.subscribe(settingsService.getOffersOnly(), offerOnly -> UIThread.run(this::applyPredicate));
+        listOffersPin = FxBindings.subscribe(settingsService.getListOffers(), listOffers -> model.getListOffers().set(listOffers));
 
         if (selectedChannelPin != null) {
             selectedChannelPin.unbind();
@@ -167,6 +168,9 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
         }
         if (selectedChannelSubscription != null) {
             selectedChannelSubscription.unsubscribe();
+        }
+        if (listOffersPin != null) {
+            listOffersPin.unbind();
         }
 
         layoutChildrenDonePin.unsubscribe();

@@ -793,6 +793,23 @@
     -fx-border-color: -bisq2-green;
 }
 
+/*******************************************************************************
+ * ChatOfferTable.tableView                                          *
+ ******************************************************************************/
+
+.bisq-easy-offer-book-table-view .table-row-cell {
+    -fx-pref-height: 55px;
+    -fx-border-width: 0;
+    -fx-background-color: -bisq-dark-grey-20;
+}
+
+.bisq-easy-offer-book-table-view.table-view .table-cell {
+    -fx-padding: 0 0 0 10;
+}
+
+.bisq-easy-offer-book-table-view .table-row-cell:own-offer {
+    -fx-opacity: 0.5;
+}
 
 /*******************************************************************************
  * Chat                                                              *

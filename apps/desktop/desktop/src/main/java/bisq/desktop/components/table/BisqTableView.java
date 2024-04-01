@@ -66,6 +66,10 @@ public class BisqTableView<T> extends TableView<T> {
         setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
     }
 
+    public void bindSort() {
+        ((SortedList<T>) getItems()).comparatorProperty().bind(comparatorProperty());
+    }
+
     public void setPlaceholderText(String placeHolderText) {
         setPlaceholder(new Label(placeHolderText));
     }
