@@ -28,7 +28,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.main.content.components.chat_messages.ChatMessagesComponent;
+import bisq.desktop.main.content.chat.message_container.ChatMessageContainerController;
 import bisq.support.mediation.MediationCase;
 import bisq.support.mediation.MediationRequest;
 import bisq.support.mediation.MediatorService;
@@ -55,7 +55,7 @@ public class MediatorController implements Controller {
     protected final ChatService chatService;
     protected final UserIdentityService userIdentityService;
     protected final UserProfileService userProfileService;
-    protected final ChatMessagesComponent chatMessagesComponent;
+    protected final ChatMessageContainerController chatMessageContainerController;
 
     private final BisqEasyOpenTradeChannelService channelService;
     private final BisqEasyOpenTradeSelectionService selectionService;
@@ -75,12 +75,12 @@ public class MediatorController implements Controller {
         mediatorService = serviceProvider.getSupportService().getMediatorService();
         bisqEasyOpenTradeChannelService = chatService.getBisqEasyOpenTradeChannelService();
 
-        chatMessagesComponent = new ChatMessagesComponent(serviceProvider, ChatChannelDomain.BISQ_EASY_OPEN_TRADES, e -> {
+        chatMessageContainerController = new ChatMessageContainerController(serviceProvider, ChatChannelDomain.BISQ_EASY_OPEN_TRADES, e -> {
         });
         mediationCaseHeader = new MediationCaseHeader(serviceProvider, this::updateFilteredList, this::updateFilteredList);
 
         model = new MediatorModel();
-        view = new MediatorView(model, this, mediationCaseHeader.getRoot(), chatMessagesComponent.getRoot());
+        view = new MediatorView(model, this, mediationCaseHeader.getRoot(), chatMessageContainerController.getView().getRoot());
 
         itemListener = observable -> update();
     }

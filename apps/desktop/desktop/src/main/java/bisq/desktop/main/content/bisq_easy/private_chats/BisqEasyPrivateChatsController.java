@@ -44,7 +44,7 @@ public final class BisqEasyPrivateChatsController extends PrivateChatsController
     public BisqEasyPrivateChatsView createAndGetView() {
         return new BisqEasyPrivateChatsView((BisqEasyPrivateChatsModel) model,
                 this,
-                chatMessagesComponent.getRoot(),
+                chatMessageContainerController.getView().getRoot(),
                 channelSidebar.getRoot());
     }
 }

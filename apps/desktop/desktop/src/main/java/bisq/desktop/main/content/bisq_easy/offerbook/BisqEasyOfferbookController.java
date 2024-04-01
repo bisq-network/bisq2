@@ -106,7 +106,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     public BisqEasyOfferbookView createAndGetView() {
         return new BisqEasyOfferbookView(model,
                 this,
-                chatMessagesComponent.getRoot(),
+                chatMessageContainerController.getView().getRoot(),
                 channelSidebar.getRoot());
     }
 
@@ -168,9 +168,9 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
             if (filter == null) {
                 // By default, show all offers (any direction or owner)
                 model.getSelectedOfferDirectionOrOwnerFilter().set(Filters.OfferDirectionOrOwner.ALL);
-                chatMessagesComponent.setBisqEasyOfferDirectionOrOwnerFilterPredicate(model.getSelectedOfferDirectionOrOwnerFilter().get().getPredicate());
+                chatMessageContainerController.setBisqEasyOfferDirectionOrOwnerFilterPredicate(model.getSelectedOfferDirectionOrOwnerFilter().get().getPredicate());
             } else {
-                chatMessagesComponent.setBisqEasyOfferDirectionOrOwnerFilterPredicate(filter.getPredicate());
+                chatMessageContainerController.setBisqEasyOfferDirectionOrOwnerFilterPredicate(filter.getPredicate());
             }
         });
 
@@ -178,9 +178,9 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
             if (filter == null) {
                 // By default, show all offers (with any reputation)
                 model.getSelectedPeerReputationFilter().set(Filters.PeerReputation.ALL);
-                chatMessagesComponent.setBisqEasyPeerReputationFilterPredicate(model.getSelectedPeerReputationFilter().get().getPredicate());
+                chatMessageContainerController.setBisqEasyPeerReputationFilterPredicate(model.getSelectedPeerReputationFilter().get().getPredicate());
             } else {
-                chatMessagesComponent.setBisqEasyPeerReputationFilterPredicate(filter.getPredicate());
+                chatMessageContainerController.setBisqEasyPeerReputationFilterPredicate(filter.getPredicate());
             }
         });
 

@@ -29,7 +29,7 @@ import bisq.desktop.components.controls.SearchBox;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.main.content.chat.ChatView;
-import bisq.desktop.main.content.chat.list_view.ChatMessageListItem;
+import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.i18n.Res;
 import javafx.beans.binding.Bindings;
 import javafx.collections.ListChangeListener;

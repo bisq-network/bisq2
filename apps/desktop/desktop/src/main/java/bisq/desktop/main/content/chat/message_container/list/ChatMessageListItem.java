@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.chat.list_view;
+package bisq.desktop.main.content.chat.message_container.list;
 
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatChannel;
@@ -67,7 +67,7 @@ import java.util.stream.Collectors;
 
 import static bisq.chat.ChatMessageType.LEAVE;
 import static bisq.chat.ChatMessageType.PROTOCOL_LOG_MESSAGE;
-import static bisq.desktop.main.content.components.chat_messages.ChatMessagesComponent.View.EDITED_POST_FIX;
+import static bisq.desktop.main.content.chat.message_container.ChatMessageContainerView.EDITED_POST_FIX;
 
 @Slf4j
 @Getter

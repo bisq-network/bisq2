@@ -19,8 +19,8 @@ package bisq.desktop.main.content.bisq_easy.open_trades;
 
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
-import bisq.desktop.main.content.chat.list_view.ChatMessageListItem;
-import bisq.desktop.main.content.chat.list_view.message_box.MessageBox;
+import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
+import bisq.desktop.main.content.chat.message_container.list.message_box.MessageBox;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;

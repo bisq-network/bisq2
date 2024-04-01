@@ -15,14 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.chat.list_view.message_box;
+package bisq.desktop.main.content.chat.message_container.list.message_box;
 
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.main.content.bisq_easy.open_trades.MyProtocolLogMessageBox;
-import bisq.desktop.main.content.chat.list_view.ChatMessageListItem;
-import bisq.desktop.main.content.chat.list_view.ChatMessagesListController;
+import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
+import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
 import bisq.i18n.Res;
 import javafx.scene.control.Hyperlink;
 
