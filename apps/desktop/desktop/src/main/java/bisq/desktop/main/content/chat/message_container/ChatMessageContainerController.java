@@ -66,7 +66,7 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
                 this::replyHandler,
                 chatChannelDomain);
 
-        model = new ChatMessageContainerModel(chatChannelDomain, chatService);
+        model = new ChatMessageContainerModel(chatChannelDomain);
         view = new ChatMessageContainerView(model, this,
                 chatMessagesListController.getView().getRoot(),
                 citationBlock.getRoot(),
