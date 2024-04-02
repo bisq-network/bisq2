@@ -5,7 +5,7 @@ import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.main.content.chat.ChatUtil;
-import bisq.desktop.main.content.components.ChatMentionPopupMenu;
+import bisq.desktop.main.content.chat.message_container.components.ChatMentionPopupMenu;
 import bisq.desktop.main.content.components.UserProfileSelection;
 import bisq.i18n.Res;
 import bisq.user.profile.UserProfile;
