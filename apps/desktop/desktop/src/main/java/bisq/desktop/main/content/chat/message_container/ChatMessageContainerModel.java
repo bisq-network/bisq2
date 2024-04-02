@@ -14,17 +14,14 @@ import javax.annotation.Nullable;
 
 @Getter
 public class ChatMessageContainerModel implements bisq.desktop.common.view.Model {
-    private final BooleanProperty chatDialogEnabled = new SimpleBooleanProperty(true);
-
+    private final ChatChannelDomain chatChannelDomain;
+    private final ChatService chatService;
     private final ObjectProperty<ChatChannel<? extends ChatMessage>> selectedChannel = new SimpleObjectProperty<>();
     private final StringProperty textInput = new SimpleStringProperty("");
     private final BooleanProperty userProfileSelectionVisible = new SimpleBooleanProperty();
     private final ObjectProperty<Boolean> focusInputTextField = new SimpleObjectProperty<>();
     private final ObservableList<UserProfile> mentionableUsers = FXCollections.observableArrayList();
-    // TODO mentionableChatChannels not filled with data
-    private final ObservableList<ChatChannel<?>> mentionableChatChannels = FXCollections.observableArrayList();
-    private final ChatChannelDomain chatChannelDomain;
-    private final ChatService chatService;
+    private final BooleanProperty chatDialogEnabled = new SimpleBooleanProperty(true);
     @Nullable
     private ChatMessage selectedChatMessage;
     private final IntegerProperty caretPosition = new SimpleIntegerProperty();
@@ -32,12 +29,6 @@ public class ChatMessageContainerModel implements bisq.desktop.common.view.Model
     public ChatMessageContainerModel(ChatChannelDomain chatChannelDomain, ChatService chatService) {
         this.chatChannelDomain = chatChannelDomain;
         this.chatService = chatService;
-    }
-
-    String getChannelTitle(ChatChannel<?> chatChannel) {
-        return chatService.findChatChannelService(chatChannel)
-                .map(service -> service.getChannelTitle(chatChannel))
-                .orElse("");
     }
 
     public void setSelectedChatMessage(@Nullable ChatMessage selectedChatMessage) {

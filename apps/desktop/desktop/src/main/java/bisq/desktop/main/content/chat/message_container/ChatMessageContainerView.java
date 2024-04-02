@@ -1,6 +1,5 @@
 package bisq.desktop.main.content.chat.message_container;
 
-import bisq.chat.ChatChannel;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqTextArea;
@@ -34,7 +33,6 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
     private final Pane messagesListView;
     private final VBox emptyMessageList;
     private ChatMentionPopupMenu<UserProfile> userMentionPopup;
-    private ChatMentionPopupMenu<ChatChannel<?>> channelMentionPopup;
     private Pane userProfileSelectionRoot;
     private Subscription focusInputTextFieldPin, caretPositionPin;
 
@@ -69,10 +67,6 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
                 () -> StringUtils.deriveWordStartingWith(inputField.getText(), '@'),
                 inputField.textProperty()
         ));
-        channelMentionPopup.filterProperty().bind(Bindings.createStringBinding(
-                () -> StringUtils.deriveWordStartingWith(inputField.getText(), '#'),
-                inputField.textProperty()
-        ));
 
         caretPositionPin = EasyBind.subscribe(model.getCaretPosition(), position -> {
             if (position != null) {
@@ -97,7 +91,6 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
         });
 
         userMentionPopup.setItems(model.getMentionableUsers());
-        channelMentionPopup.setItems(model.getMentionableChatChannels());
 
         createChatDialogEnabledSubscription();
 
@@ -114,7 +107,6 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
         userProfileSelectionRoot.managedProperty().unbind();
         inputField.textProperty().unbindBidirectional(model.getTextInput());
         userMentionPopup.filterProperty().unbind();
-        channelMentionPopup.filterProperty().unbind();
         focusInputTextFieldPin.unsubscribe();
         caretPositionPin.unsubscribe();
         removeChatDialogEnabledSubscription();
@@ -164,10 +156,6 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
         userMentionPopup = new ChatMentionPopupMenu<>(inputField);
         userMentionPopup.setItemDisplayConverter(UserProfile::getUserName);
         userMentionPopup.setSelectionHandler(controller::onListUserNames);
-
-        channelMentionPopup = new ChatMentionPopupMenu<>(inputField);
-        channelMentionPopup.setItemDisplayConverter(model::getChannelTitle);
-        channelMentionPopup.setSelectionHandler(controller::onListChannels);
     }
 
     private void setUpUserProfileSelection(UserProfileSelection userProfileSelection) {
