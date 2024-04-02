@@ -17,6 +17,7 @@
 
 package bisq.desktop.splash;
 
+import bisq.common.util.Version;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.splash.temp.BootstrapStateDisplay;
 import javafx.beans.property.DoubleProperty;
@@ -31,6 +32,11 @@ import java.util.List;
 @Getter
 public class SplashModel implements Model {
     private final StringProperty applicationServiceState = new SimpleStringProperty();
+    private final String version;
     private final DoubleProperty progress = new SimpleDoubleProperty();
     private final List<BootstrapStateDisplay> bootstrapStateDisplays = new ArrayList<>();
+
+    public SplashModel(Version version) {
+        this.version = "v" + version.getVersionAsString();
+    }
 }
