@@ -27,6 +27,7 @@ public class ChatMessageContainerModel implements bisq.desktop.common.view.Model
     private final ChatService chatService;
     @Nullable
     private ChatMessage selectedChatMessage;
+    private final IntegerProperty caretPosition = new SimpleIntegerProperty();
 
     public ChatMessageContainerModel(ChatChannelDomain chatChannelDomain, ChatService chatService) {
         this.chatChannelDomain = chatChannelDomain;

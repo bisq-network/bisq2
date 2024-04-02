@@ -208,7 +208,7 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
     void onListUserNames(UserProfile user) {
         String content = model.getTextInput().get().replaceAll("@[a-zA-Z\\d]*$", "@" + user.getUserName() + " ");
         model.getTextInput().set(content);
-        view.getInputField().positionCaret(content.length()); //todo dont call on view
+        model.getCaretPosition().set(content.length());
     }
 
     void onListChannels(ChatChannel<?> chatChannel) {
@@ -217,7 +217,7 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
                 .orElse("");
         String content = model.getTextInput().get().replaceAll("#[a-zA-Z\\d]*$", "#" + channelTitle + " ");
         model.getTextInput().set(content);
-        view.getInputField().positionCaret(content.length()); //todo dont call on view
+        model.getCaretPosition().set(content.length());
     }
 
 

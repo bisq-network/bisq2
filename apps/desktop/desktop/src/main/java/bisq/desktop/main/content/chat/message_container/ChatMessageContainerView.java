@@ -21,7 +21,6 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -30,15 +29,14 @@ import org.fxmisc.easybind.Subscription;
 public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox, ChatMessageContainerModel, ChatMessageContainerController> {
     private final static double CHAT_BOX_MAX_WIDTH = 1200;
     public final static String EDITED_POST_FIX = " " + Res.get("chat.message.wasEdited");
-    @Getter
-    private final BisqTextArea inputField = new BisqTextArea(); //todo remove accessor
+    private final BisqTextArea inputField = new BisqTextArea();
     private final Button sendButton = new Button();
     private final Pane messagesListView;
     private final VBox emptyMessageList;
     private ChatMentionPopupMenu<UserProfile> userMentionPopup;
     private ChatMentionPopupMenu<ChatChannel<?>> channelMentionPopup;
     private Pane userProfileSelectionRoot;
-    private Subscription focusInputTextFieldPin;
+    private Subscription focusInputTextFieldPin, caretPositionPin;
 
     public ChatMessageContainerView(ChatMessageContainerModel model,
                                     ChatMessageContainerController controller,
@@ -76,6 +74,12 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
                 inputField.textProperty()
         ));
 
+        caretPositionPin = EasyBind.subscribe(model.getCaretPosition(), position -> {
+            if (position != null) {
+                inputField.positionCaret(position.intValue());
+            }
+        });
+
         inputField.setOnKeyPressed(event -> {
             if (event.getCode() == KeyCode.ENTER) {
                 event.consume();
@@ -112,6 +116,7 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
         userMentionPopup.filterProperty().unbind();
         channelMentionPopup.filterProperty().unbind();
         focusInputTextFieldPin.unsubscribe();
+        caretPositionPin.unsubscribe();
         removeChatDialogEnabledSubscription();
 
         inputField.setOnKeyPressed(null);
