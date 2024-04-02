@@ -12,6 +12,7 @@ import bisq.i18n.Res;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
+import javafx.animation.PauseTransition;
 import javafx.animation.Timeline;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -109,7 +110,7 @@ public class ChatMessagesListView extends bisq.desktop.common.view.View<ChatMess
             if (scrollBar.isPresent()) {
                 scrollBar.get().valueProperty().bindBidirectional(model.getScrollValue());
                 model.getScrollBarVisible().bind(scrollBar.get().visibleProperty());
-                controller.onScrollToBottom();
+                scrollToBottomWithPauseTransition();
             } else {
                 log.error("scrollBar is empty");
             }
@@ -147,7 +148,7 @@ public class ChatMessagesListView extends bisq.desktop.common.view.View<ChatMess
         });
         model.getLayoutChildrenDone().bind(root.getLayoutChildrenDone());
 
-        scrollDownBadge.setOnMouseClicked(e -> controller.onScrollToBottom());
+        scrollDownBadge.setOnMouseClicked(e -> scrollToBottomWithPauseTransition());
 
         if (ChatUtil.isCommonChat(model.getChatChannelDomain()) && model.getIsPublicChannel().get()) {
             placeholderTitle.setText(Res.get("chat.messagebox.noChats.placeholder.title"));
@@ -161,7 +162,7 @@ public class ChatMessagesListView extends bisq.desktop.common.view.View<ChatMess
 
     @Override
     protected void onViewDetached() {
-        scrollBar.ifPresent(scrollbar -> scrollbar.valueProperty().unbindBidirectional(model.getScrollValue()));
+        //scrollBar.ifPresent(scrollbar -> scrollbar.valueProperty().unbindBidirectional(model.getScrollValue()));
         model.getScrollBarVisible().unbind();
         scrollDownBackground.visibleProperty().unbind();
         scrollDownBackground.managedProperty().unbind();
@@ -199,5 +200,21 @@ public class ChatMessagesListView extends bisq.desktop.common.view.View<ChatMess
                 new KeyValue(scrollDownBadge.opacityProperty(), 1, Interpolator.EASE_OUT)
         ));
         fadeInScrollDownBadgeTimeline.play();
+    }
+
+    private void scrollToBottomWithPauseTransition() {
+        PauseTransition pause = new PauseTransition(Duration.millis(200));
+        pause.setOnFinished(event -> {
+            scrollToBottom();
+            controller.onScrollToBottom();
+        });
+        pause.play();
+        scrollToBottom();
+    }
+
+    private void scrollToBottom() {
+        if (!model.getFilteredChatMessages().isEmpty()) {
+            listView.scrollTo(model.getFilteredChatMessages().size() - 1);
+        }
     }
 }
