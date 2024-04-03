@@ -2,73 +2,128 @@ package bisq.desktop.main.content.chat.message_container.components;
 
 import bisq.common.util.StringUtils;
 import bisq.desktop.components.controls.BisqPopup;
+import bisq.desktop.components.controls.BisqTextArea;
+import bisq.user.profile.UserProfile;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-import javafx.scene.Node;
+import javafx.beans.value.ChangeListener;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import javafx.scene.control.Button;
-import javafx.scene.layout.VBox;
-import lombok.Setter;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
+import javafx.util.Callback;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
-import java.util.Collection;
-import java.util.List;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
-public class ChatMentionPopupMenu<T> extends BisqPopup {
-    @Setter
-    private ToStringConverter<T> itemDisplayConverter;
+@Slf4j
+public class ChatMentionPopupMenu extends BisqPopup {
+    private final BisqTextArea inputField;
+    private final Consumer<UserProfile> userProfileSelectedHandler;
+    private final StringProperty filter = new SimpleStringProperty();
+    @Getter
+    private final ObservableList<ListItem> observableList = FXCollections.observableArrayList();
+    private final FilteredList<ListItem> filteredList = new FilteredList<>(observableList);
+    private final SortedList<ListItem> sortedList = new SortedList<>(filteredList);
+    private final ListView<ListItem> listView = new ListView<>(sortedList);
+    private final ChangeListener<String> filterChangeListener;
 
-    @Setter
-    private Consumer<T> selectionHandler;
+    public ChatMentionPopupMenu(BisqTextArea inputField, Consumer<UserProfile> userProfileSelectedHandler) {
+        super();
+        this.inputField = inputField;
+        this.userProfileSelectedHandler = userProfileSelectedHandler;
 
-    @Setter
-    private Collection<T> items;
+        sortedList.setComparator(ListItem::compareTo);
+        listView.getStyleClass().add("chat-mention-list-view");
+        listView.setPrefWidth(600);
+        listView.setCellFactory(getCellFactory());
 
-    private final StringProperty filter = new SimpleStringProperty(null);
-
-    public ChatMentionPopupMenu(Node owner) {
-        getStyleClass().add("chat-mention-popup-menu");
         setAlignment(Alignment.LEFT);
-        setContentNode(new VBox());
+        setContentNode(listView);
 
-        filterProperty().addListener((ev, prev, current) -> {
-            if (current != null) {
-                updateItems(current);
-
-                if (prev == null) {
-                    show(owner);
+        filterChangeListener = (observableValue, oldValue, newValue) -> {
+            if (newValue != null) {
+                filteredList.setPredicate(item -> item.matchUserName(newValue));
+                listView.setPrefHeight(Math.min(600, 20 + filteredList.size() * ListItem.CELL_HEIGHT));
+                if (oldValue == null) {
+                    show(inputField);
                 }
             } else {
                 hide();
             }
-        });
+        };
     }
 
-    public StringProperty filterProperty() {
-        return filter;
+    public void init() {
+        filter.addListener(filterChangeListener);
+        filter.bind(Bindings.createStringBinding(
+                () -> StringUtils.deriveWordStartingWith(inputField.getText(), '@'),
+                inputField.textProperty()));
     }
 
-    private void updateItems(String filter) {
-        List<Button> buttons = items
-                .stream()
-                .filter(p -> StringUtils.containsIgnoreCase(itemDisplayConverter.toString(p), filter))
-                .map(item -> {
-                    Button button = new Button(itemDisplayConverter.toString(item));
-                    button.getStyleClass().add("chat-mention-popup-menu-item");
-                    button.setMaxWidth(Double.MAX_VALUE);
-
-                    button.setOnAction(evt -> {
-                        selectionHandler.accept(item);
-                        hide();
-                    });
-                    return button;
-                })
-                .collect(Collectors.toList());
-
-        ((VBox) contentNode).getChildren().setAll(buttons);
+    public void cleanup() {
+        filter.removeListener(filterChangeListener);
+        filter.unbind();
     }
 
-    public interface ToStringConverter<T> {
-        String toString(T object);
+    private Callback<ListView<ListItem>, ListCell<ListItem>> getCellFactory() {
+        return new Callback<>() {
+            @Override
+            public ListCell<ListItem> call(ListView<ListItem> listItemListView) {
+                return new ListCell<>() {
+                    private final Button button = new Button();
+
+                    {
+                        button.getStyleClass().add("chat-mention-list-button");
+                        button.setMaxWidth(Double.MAX_VALUE);
+                    }
+
+                    @Override
+                    public void updateItem(ListItem item, boolean empty) {
+                        super.updateItem(item, empty);
+
+                        if (item != null && !empty) {
+                            button.setText(item.getUserName());
+                            button.setOnAction(e -> {
+                                userProfileSelectedHandler.accept(item.getUserProfile());
+                                hide();
+                            });
+
+                            setGraphic(button);
+                        } else {
+                            button.setOnAction(null);
+                            setGraphic(null);
+                        }
+                    }
+                };
+            }
+        };
+    }
+
+    @Getter
+    public static class ListItem implements Comparable<ListItem> {
+        public static final double CELL_HEIGHT = 30;
+
+        private final UserProfile userProfile;
+        private final String userName;
+
+        public ListItem(UserProfile userProfile) {
+            this.userProfile = userProfile;
+            userName = userProfile.getUserName();
+        }
+
+        public boolean matchUserName(String searchString) {
+            return StringUtils.containsIgnoreCase(userName, searchString);
+        }
+
+        @Override
+        public int compareTo(ListItem o) {
+            return userName.toLowerCase().compareTo(o.getUserName().toLowerCase());
+        }
     }
 }

@@ -46,16 +46,18 @@ public class CreateNewProfileStep1Controller extends CreateProfileController {
 
     @Override
     protected void onCreateUserProfile() {
-        checkArgument(model.getKeyPair().isPresent());
-        checkArgument(model.getPubKeyHash().isPresent());
-        checkArgument(model.getProofOfWork().isPresent());
-
-        CreateNewProfileStep2Controller.InitData initData = new CreateNewProfileStep2Controller.InitData(
-                model.getKeyPair().get(),
-                model.getPubKeyHash().get(),
-                model.getProofOfWork().get(),
-                model.getNickName().get(),
-                model.getNym().get());
-        Navigation.navigateTo(NavigationTarget.CREATE_PROFILE_STEP2, initData);
+        if (model.getProofOfWork().isPresent()) {
+            checkArgument(model.getKeyPair().isPresent());
+            checkArgument(model.getPubKeyHash().isPresent());
+            CreateNewProfileStep2Controller.InitData initData = new CreateNewProfileStep2Controller.InitData(
+                    model.getKeyPair().get(),
+                    model.getPubKeyHash().get(),
+                    model.getProofOfWork().get(),
+                    model.getNickName().get(),
+                    model.getNym().get());
+            Navigation.navigateTo(NavigationTarget.CREATE_PROFILE_STEP2, initData);
+        } else {
+            log.error("model.getProofOfWork() not present");
+        }
     }
 }

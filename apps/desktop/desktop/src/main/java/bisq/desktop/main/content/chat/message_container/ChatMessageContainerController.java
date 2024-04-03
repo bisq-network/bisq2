@@ -205,17 +205,8 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
         doSendMessage(text);
     }
 
-    void onListUserNames(UserProfile user) {
+    void onUserProfileSelected(UserProfile user) {
         String content = model.getTextInput().get().replaceAll("@[a-zA-Z\\d]*$", "@" + user.getUserName() + " ");
-        model.getTextInput().set(content);
-        model.getCaretPosition().set(content.length());
-    }
-
-    void onListChannels(ChatChannel<?> chatChannel) {
-        String channelTitle = chatService.findChatChannelService(chatChannel)
-                .map(service -> service.getChannelTitle(chatChannel))
-                .orElse("");
-        String content = model.getTextInput().get().replaceAll("#[a-zA-Z\\d]*$", "#" + channelTitle + " ");
         model.getTextInput().set(content);
         model.getCaretPosition().set(content.length());
     }

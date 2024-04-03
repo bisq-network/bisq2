@@ -27,6 +27,10 @@ import lombok.Getter;
 import lombok.Setter;
 
 public class BisqPopup extends PopupControl {
+    public enum Alignment {
+        LEFT, RIGHT
+    }
+
     @Getter
     private final StackPane root = new StackPane();
 
@@ -43,7 +47,7 @@ public class BisqPopup extends PopupControl {
         setAutoHide(true);
     }
 
-    public final void show(Node owner) {
+    public void show(Node owner) {
         Bounds bounds = owner.localToScreen(owner.getBoundsInLocal());
         double anchorX = 0;
         if (alignment == Alignment.RIGHT) {
@@ -54,10 +58,6 @@ public class BisqPopup extends PopupControl {
             anchorX = bounds.getMinX();
         }
         super.show(owner, anchorX, bounds.getMinY());
-    }
-
-    public enum Alignment {
-        LEFT, RIGHT
     }
 
     @Override
