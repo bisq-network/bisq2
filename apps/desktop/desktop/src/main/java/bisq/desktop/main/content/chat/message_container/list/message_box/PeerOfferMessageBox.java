@@ -34,7 +34,7 @@ import javafx.scene.control.ListView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
-public final class PeerOfferMessageBox extends PeerMessageBox {
+public final class PeerOfferMessageBox extends PeerTextMessageBox {
     private Button takeOfferButton;
 
     public PeerOfferMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,

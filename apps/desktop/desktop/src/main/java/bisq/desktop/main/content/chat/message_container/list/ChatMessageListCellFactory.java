@@ -134,7 +134,7 @@ final class ChatMessageListCellFactory
             } else {
                 return item.isBisqEasyPublicChatMessageWithOffer()
                         ? new MyOfferMessageBox(item, list, controller, model)
-                        : new MyMessageBox(item, list, controller, model);
+                        : new MyTextMessageBox(item, list, controller, model);
             }
         } else {
             if (item.isProtocolLogMessage()) {
@@ -142,7 +142,7 @@ final class ChatMessageListCellFactory
             } else {
                 return item.isBisqEasyPublicChatMessageWithOffer()
                         ? new PeerOfferMessageBox(item, list, controller, model)
-                        : new PeerMessageBox(item, list, controller, model);
+                        : new PeerTextMessageBox(item, list, controller, model);
             }
         }
     }

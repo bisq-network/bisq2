@@ -40,12 +40,12 @@ import javafx.scene.layout.VBox;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PeerMessageBox extends BubbleMessageBox {
+public class PeerTextMessageBox extends BubbleMessageBox {
     protected Label replyIcon, pmIcon, moreOptionsIcon;
 
-    public PeerMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
-                          ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
-                          ChatMessagesListController controller, ChatMessagesListModel model) {
+    public PeerTextMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
+                              ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
+                              ChatMessagesListController controller, ChatMessagesListModel model) {
         super(item, list, controller, model);
 
         setUpPeerMessage();
