@@ -1,4 +1,4 @@
-package bisq.desktop.main.content.components;
+package bisq.desktop.main.content.chat.message_container.components;
 
 import bisq.common.util.StringUtils;
 import bisq.desktop.components.controls.BisqPopup;

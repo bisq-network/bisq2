@@ -12,9 +12,9 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
+import bisq.desktop.main.content.chat.message_container.components.CitationBlock;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
-import bisq.desktop.main.content.components.CitationBlock;
 import bisq.desktop.main.content.components.UserProfileSelection;
 import bisq.i18n.Res;
 import bisq.settings.SettingsService;
@@ -66,7 +66,7 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
                 this::replyHandler,
                 chatChannelDomain);
 
-        model = new ChatMessageContainerModel(chatChannelDomain, chatService);
+        model = new ChatMessageContainerModel(chatChannelDomain);
         view = new ChatMessageContainerView(model, this,
                 chatMessagesListController.getView().getRoot(),
                 citationBlock.getRoot(),
@@ -208,7 +208,7 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
     void onListUserNames(UserProfile user) {
         String content = model.getTextInput().get().replaceAll("@[a-zA-Z\\d]*$", "@" + user.getUserName() + " ");
         model.getTextInput().set(content);
-        view.getInputField().positionCaret(content.length()); //todo dont call on view
+        model.getCaretPosition().set(content.length());
     }
 
     void onListChannels(ChatChannel<?> chatChannel) {
@@ -217,7 +217,7 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
                 .orElse("");
         String content = model.getTextInput().get().replaceAll("#[a-zA-Z\\d]*$", "#" + channelTitle + " ");
         model.getTextInput().set(content);
-        view.getInputField().positionCaret(content.length()); //todo dont call on view
+        model.getCaretPosition().set(content.length());
     }
 
 

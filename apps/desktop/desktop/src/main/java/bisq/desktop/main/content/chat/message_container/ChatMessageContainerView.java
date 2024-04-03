@@ -1,12 +1,11 @@
 package bisq.desktop.main.content.chat.message_container;
 
-import bisq.chat.ChatChannel;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.main.content.chat.ChatUtil;
-import bisq.desktop.main.content.components.ChatMentionPopupMenu;
+import bisq.desktop.main.content.chat.message_container.components.ChatMentionPopupMenu;
 import bisq.desktop.main.content.components.UserProfileSelection;
 import bisq.i18n.Res;
 import bisq.user.profile.UserProfile;
@@ -21,7 +20,6 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -30,15 +28,13 @@ import org.fxmisc.easybind.Subscription;
 public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox, ChatMessageContainerModel, ChatMessageContainerController> {
     private final static double CHAT_BOX_MAX_WIDTH = 1200;
     public final static String EDITED_POST_FIX = " " + Res.get("chat.message.wasEdited");
-    @Getter
-    private final BisqTextArea inputField = new BisqTextArea(); //todo remove accessor
+    private final BisqTextArea inputField = new BisqTextArea();
     private final Button sendButton = new Button();
     private final Pane messagesListView;
     private final VBox emptyMessageList;
     private ChatMentionPopupMenu<UserProfile> userMentionPopup;
-    private ChatMentionPopupMenu<ChatChannel<?>> channelMentionPopup;
     private Pane userProfileSelectionRoot;
-    private Subscription focusInputTextFieldPin;
+    private Subscription focusInputTextFieldPin, caretPositionPin;
 
     public ChatMessageContainerView(ChatMessageContainerModel model,
                                     ChatMessageContainerController controller,
@@ -71,10 +67,12 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
                 () -> StringUtils.deriveWordStartingWith(inputField.getText(), '@'),
                 inputField.textProperty()
         ));
-        channelMentionPopup.filterProperty().bind(Bindings.createStringBinding(
-                () -> StringUtils.deriveWordStartingWith(inputField.getText(), '#'),
-                inputField.textProperty()
-        ));
+
+        caretPositionPin = EasyBind.subscribe(model.getCaretPosition(), position -> {
+            if (position != null) {
+                inputField.positionCaret(position.intValue());
+            }
+        });
 
         inputField.setOnKeyPressed(event -> {
             if (event.getCode() == KeyCode.ENTER) {
@@ -93,7 +91,6 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
         });
 
         userMentionPopup.setItems(model.getMentionableUsers());
-        channelMentionPopup.setItems(model.getMentionableChatChannels());
 
         createChatDialogEnabledSubscription();
 
@@ -110,8 +107,8 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
         userProfileSelectionRoot.managedProperty().unbind();
         inputField.textProperty().unbindBidirectional(model.getTextInput());
         userMentionPopup.filterProperty().unbind();
-        channelMentionPopup.filterProperty().unbind();
         focusInputTextFieldPin.unsubscribe();
+        caretPositionPin.unsubscribe();
         removeChatDialogEnabledSubscription();
 
         inputField.setOnKeyPressed(null);
@@ -159,10 +156,6 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
         userMentionPopup = new ChatMentionPopupMenu<>(inputField);
         userMentionPopup.setItemDisplayConverter(UserProfile::getUserName);
         userMentionPopup.setSelectionHandler(controller::onListUserNames);
-
-        channelMentionPopup = new ChatMentionPopupMenu<>(inputField);
-        channelMentionPopup.setItemDisplayConverter(model::getChannelTitle);
-        channelMentionPopup.setSelectionHandler(controller::onListChannels);
     }
 
     private void setUpUserProfileSelection(UserProfileSelection userProfileSelection) {
