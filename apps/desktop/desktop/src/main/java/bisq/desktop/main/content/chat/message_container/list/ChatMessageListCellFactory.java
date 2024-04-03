@@ -19,14 +19,9 @@ package bisq.desktop.main.content.chat.message_container.list;
 
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
-import bisq.desktop.main.content.bisq_easy.offerbook.MyOfferMessageBox;
-import bisq.desktop.main.content.bisq_easy.offerbook.PeerOfferMessageBox;
 import bisq.desktop.main.content.bisq_easy.open_trades.MyProtocolLogMessageBox;
 import bisq.desktop.main.content.bisq_easy.open_trades.PeerProtocolLogMessageBox;
-import bisq.desktop.main.content.chat.message_container.list.message_box.LeaveChatMessageBox;
-import bisq.desktop.main.content.chat.message_container.list.message_box.MessageBox;
-import bisq.desktop.main.content.chat.message_container.list.message_box.MyMessageBox;
-import bisq.desktop.main.content.chat.message_container.list.message_box.PeerMessageBox;
+import bisq.desktop.main.content.chat.message_container.list.message_box.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -139,7 +134,7 @@ final class ChatMessageListCellFactory
             } else {
                 return item.isBisqEasyPublicChatMessageWithOffer()
                         ? new MyOfferMessageBox(item, list, controller, model)
-                        : new MyMessageBox(item, list, controller, model);
+                        : new MyTextMessageBox(item, list, controller, model);
             }
         } else {
             if (item.isProtocolLogMessage()) {
@@ -147,7 +142,7 @@ final class ChatMessageListCellFactory
             } else {
                 return item.isBisqEasyPublicChatMessageWithOffer()
                         ? new PeerOfferMessageBox(item, list, controller, model)
-                        : new PeerMessageBox(item, list, controller, model);
+                        : new PeerTextMessageBox(item, list, controller, model);
             }
         }
     }
