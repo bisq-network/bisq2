@@ -8,8 +8,6 @@ import bisq.desktop.main.content.chat.ChatUtil;
 import bisq.desktop.main.content.chat.message_container.components.ChatMentionPopupMenu;
 import bisq.desktop.main.content.components.UserProfileSelection;
 import bisq.i18n.Res;
-import bisq.user.profile.UserProfile;
-import javafx.beans.binding.Bindings;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -24,6 +22,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.util.stream.Collectors;
+
 @Slf4j
 public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox, ChatMessageContainerModel, ChatMessageContainerController> {
     private final static double CHAT_BOX_MAX_WIDTH = 1200;
@@ -32,7 +32,7 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
     private final Button sendButton = new Button();
     private final Pane messagesListView;
     private final VBox emptyMessageList;
-    private ChatMentionPopupMenu<UserProfile> userMentionPopup;
+    private ChatMentionPopupMenu userMentionPopup;
     private Pane userProfileSelectionRoot;
     private Subscription focusInputTextFieldPin, caretPositionPin;
 
@@ -63,10 +63,6 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
         userProfileSelectionRoot.visibleProperty().bind(model.getUserProfileSelectionVisible());
         userProfileSelectionRoot.managedProperty().bind(model.getUserProfileSelectionVisible());
         inputField.textProperty().bindBidirectional(model.getTextInput());
-        userMentionPopup.filterProperty().bind(Bindings.createStringBinding(
-                () -> StringUtils.deriveWordStartingWith(inputField.getText(), '@'),
-                inputField.textProperty()
-        ));
 
         caretPositionPin = EasyBind.subscribe(model.getCaretPosition(), position -> {
             if (position != null) {
@@ -90,7 +86,9 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
             inputField.clear();
         });
 
-        userMentionPopup.setItems(model.getMentionableUsers());
+        userMentionPopup.getObservableList().setAll(model.getMentionableUsers().stream()
+                .map(ChatMentionPopupMenu.ListItem::new)
+                .collect(Collectors.toList()));
 
         createChatDialogEnabledSubscription();
 
@@ -99,6 +97,7 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
                 inputField.requestFocus();
             }
         });
+        userMentionPopup.init();
     }
 
     @Override
@@ -106,13 +105,13 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
         userProfileSelectionRoot.visibleProperty().unbind();
         userProfileSelectionRoot.managedProperty().unbind();
         inputField.textProperty().unbindBidirectional(model.getTextInput());
-        userMentionPopup.filterProperty().unbind();
         focusInputTextFieldPin.unsubscribe();
         caretPositionPin.unsubscribe();
         removeChatDialogEnabledSubscription();
 
         inputField.setOnKeyPressed(null);
         sendButton.setOnAction(null);
+        userMentionPopup.cleanup();
     }
 
     private VBox createAndGetBottomBar(UserProfileSelection userProfileSelection) {
@@ -153,9 +152,7 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
     }
 
     private void setUpInputFieldAtMentions() {
-        userMentionPopup = new ChatMentionPopupMenu<>(inputField);
-        userMentionPopup.setItemDisplayConverter(UserProfile::getUserName);
-        userMentionPopup.setSelectionHandler(controller::onListUserNames);
+        userMentionPopup = new ChatMentionPopupMenu(inputField, controller::onUserProfileSelected);
     }
 
     private void setUpUserProfileSelection(UserProfileSelection userProfileSelection) {
