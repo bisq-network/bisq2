@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.user.reputation;
+package bisq.desktop.main.content.user.reputation.list;
 
 import bisq.common.monetary.Coin;
 import bisq.desktop.common.threading.UIThread;
@@ -49,13 +49,13 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class ReputationDetailsPopup extends VBox {
-    private final BisqTableView<ReputationDetailsPopup.ListItem> tableView;
+    private final BisqTableView<ListItem> tableView;
 
     public ReputationDetailsPopup(UserProfile userProfile,
                                   ReputationScore reputationScore,
                                   ReputationService reputationService) {
 
-        ObservableList<ReputationDetailsPopup.ListItem> listItems = FXCollections.observableArrayList();
+        ObservableList<ListItem> listItems = FXCollections.observableArrayList();
 
         ProofOfBurnService proofOfBurnService = reputationService.getProofOfBurnService();
         Optional.ofNullable(proofOfBurnService.getDataSetByHash().get(userProfile.getProofOfBurnKey()))
@@ -99,7 +99,7 @@ public class ReputationDetailsPopup extends VBox {
                                 profileAgeService.calculateScore(data)))
                         .collect(Collectors.toList())));
 
-        SortedList<ReputationDetailsPopup.ListItem> sortedList = new SortedList<>(listItems);
+        SortedList<ListItem> sortedList = new SortedList<>(listItems);
         tableView = new BisqTableView<>(sortedList);
         setPrefHeight(500);
         setPrefWidth(1000);
@@ -139,31 +139,31 @@ public class ReputationDetailsPopup extends VBox {
     private void configTableView() {
         tableView.getColumns().add(BisqTableColumns.getDateColumn(tableView.getSortOrder()));
 
-        tableView.getColumns().add(new BisqTableColumn.Builder<ReputationDetailsPopup.ListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("user.reputation.details.table.columns.source"))
                 .left()
-                .comparator(Comparator.comparing(ReputationDetailsPopup.ListItem::getReputationSource))
-                .valueSupplier(ReputationDetailsPopup.ListItem::getSourceString)
+                .comparator(Comparator.comparing(ListItem::getReputationSource))
+                .valueSupplier(ListItem::getSourceString)
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<ReputationDetailsPopup.ListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("user.reputation.details.table.columns.score"))
-                .comparator(Comparator.comparing(ReputationDetailsPopup.ListItem::getScore))
-                .valueSupplier(ReputationDetailsPopup.ListItem::getScoreString)
+                .comparator(Comparator.comparing(ListItem::getScore))
+                .valueSupplier(ListItem::getScoreString)
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<ReputationDetailsPopup.ListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("temporal.age"))
-                .comparator(Comparator.comparing(ReputationDetailsPopup.ListItem::getAge))
-                .valueSupplier(ReputationDetailsPopup.ListItem::getAgeString)
+                .comparator(Comparator.comparing(ListItem::getAge))
+                .valueSupplier(ListItem::getAgeString)
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<ReputationDetailsPopup.ListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("offer.amount"))
-                .comparator(Comparator.comparing(ReputationDetailsPopup.ListItem::getAmount))
-                .valueSupplier(ReputationDetailsPopup.ListItem::getAmountString)
+                .comparator(Comparator.comparing(ListItem::getAmount))
+                .valueSupplier(ListItem::getAmountString)
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<ReputationDetailsPopup.ListItem>()
+        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("user.reputation.details.table.columns.lockTime"))
-                .comparator(Comparator.comparing(ReputationDetailsPopup.ListItem::getLockTime))
-                .valueSupplier(ReputationDetailsPopup.ListItem::getLockTimeString)
+                .comparator(Comparator.comparing(ListItem::getLockTime))
+                .valueSupplier(ListItem::getLockTimeString)
                 .build());
     }
 

@@ -18,41 +18,26 @@
 package bisq.desktop.main.content.user.reputation;
 
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.table.BisqTableColumn;
-import bisq.desktop.components.table.BisqTableView;
-import bisq.desktop.main.content.components.ReputationScoreDisplay;
-import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.i18n.Res;
-import bisq.presentation.formatters.TimeFormatter;
-import bisq.user.profile.UserProfile;
-import bisq.user.reputation.ReputationScore;
-import bisq.user.reputation.ReputationService;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Hyperlink;
+import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.util.Callback;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
-
-import java.util.Comparator;
 
 @Slf4j
 public class ReputationView extends View<VBox, ReputationModel, ReputationController> {
     private final Button burnBsqButton, bsqBondButton, accountAgeButton, signedAccountButton;
     private final Hyperlink learnMore;
-    private final BisqTableView<ListItem> tableView;
-    private Subscription userProfileIdOfScoreUpdatePin;
+    private final VBox listVBox;
 
-    public ReputationView(ReputationModel model,
-                          ReputationController controller) {
+    public ReputationView(ReputationModel model, ReputationController controller, VBox listVBox) {
         super(new VBox(20), model, controller);
+        this.listVBox = listVBox;
 
         Label headlineLabel = new Label(Res.get("user.reputation.headline"));
         headlineLabel.getStyleClass().add("bisq-text-headline-5");
@@ -89,20 +74,11 @@ public class ReputationView extends View<VBox, ReputationModel, ReputationContro
         vBox.setPadding(new Insets(30, 30, 20, 30));
         vBox.setAlignment(Pos.TOP_LEFT);
 
-        Label tableHeadline = new Label(Res.get("user.reputation.table.headline"));
-        tableHeadline.getStyleClass().add("bisq-content-headline-label");
-
-        tableView = new BisqTableView<>(model.getSortedList());
-        tableView.getStyleClass().add("user-reputation-table-view");
-        tableView.setMinHeight(200);
-        configTableView();
 
         VBox.setMargin(vBox, new Insets(0, 0, 20, 0));
         VBox.setVgrow(vBox, Priority.SOMETIMES);
-        VBox.setMargin(tableHeadline, new Insets(0, 0, -10, 10));
-        VBox.setVgrow(tableView, Priority.ALWAYS);
         root.setPadding(new Insets(0, 40, 40, 40));
-        root.getChildren().addAll(vBox, tableHeadline, tableView);
+        root.getChildren().addAll(vBox, listVBox);
     }
 
     @Override
@@ -112,12 +88,6 @@ public class ReputationView extends View<VBox, ReputationModel, ReputationContro
         signedAccountButton.setOnAction(e -> controller.onSignedAccount());
         accountAgeButton.setOnAction(e -> controller.onAccountAge());
         learnMore.setOnAction(e -> controller.onLearnMore());
-
-        userProfileIdOfScoreUpdatePin = EasyBind.subscribe(model.getUserProfileIdOfScoreUpdate(), profileId -> {
-            if (profileId != null) {
-                tableView.refresh();
-            }
-        });
     }
 
     @Override
@@ -127,138 +97,5 @@ public class ReputationView extends View<VBox, ReputationModel, ReputationContro
         signedAccountButton.setOnAction(null);
         accountAgeButton.setOnAction(null);
         learnMore.setOnAction(null);
-
-        userProfileIdOfScoreUpdatePin.unsubscribe();
-    }
-
-    private void configTableView() {
-        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
-                .title(Res.get("user.reputation.table.columns.userProfile"))
-                .left()
-                .comparator(Comparator.comparing(ListItem::getUserName))
-                .setCellFactory(getUserProfileCellFactory())
-                .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
-                .title(Res.get("user.reputation.table.columns.profileAge"))
-                .left()
-                .comparator(Comparator.comparing(ListItem::getProfileAge))
-                .valueSupplier(ListItem::getProfileAgeString)
-                .build());
-        BisqTableColumn<ListItem> scoreColumn = new BisqTableColumn.Builder<ListItem>()
-                .title(Res.get("user.reputation.table.columns.reputationScore"))
-                .comparator(Comparator.comparing(ListItem::getTotalScore))
-                .sortType(TableColumn.SortType.DESCENDING)
-                .valueSupplier(ListItem::getTotalScoreString)
-                .build();
-        tableView.getColumns().add(scoreColumn);
-        tableView.getSortOrder().add(scoreColumn);
-
-        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
-                .title(Res.get("user.reputation.table.columns.reputation"))
-                .comparator(Comparator.comparing(ListItem::getTotalScore))
-                .sortType(TableColumn.SortType.DESCENDING)
-                .setCellFactory(getStarsCellFactory())
-                .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
-                .isSortable(false)
-                .title(Res.get("user.reputation.table.columns.details"))
-                .setCellFactory(getDetailsCellFactory())
-                .build());
-    }
-
-    private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getUserProfileCellFactory() {
-        return column -> new TableCell<>() {
-            private final Label userName = new Label();
-            private final UserProfileIcon userProfileIcon = new UserProfileIcon(40);
-            private final HBox hBox = new HBox(10, userProfileIcon, userName);
-
-            {
-                userName.setId("chat-user-name");
-                hBox.setAlignment(Pos.CENTER_LEFT);
-            }
-
-            @Override
-            public void updateItem(final ListItem item, boolean empty) {
-                super.updateItem(item, empty);
-
-                if (item != null && !empty) {
-                    userName.setText(item.getUserName());
-                    userProfileIcon.setUserProfile(item.getUserProfile());
-                    setGraphic(hBox);
-                } else {
-                    setGraphic(null);
-                }
-            }
-        };
-    }
-
-    private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getStarsCellFactory() {
-        return column -> new TableCell<>() {
-            private final ReputationScoreDisplay reputationScoreDisplay = new ReputationScoreDisplay();
-
-            @Override
-            public void updateItem(final ListItem item, boolean empty) {
-                super.updateItem(item, empty);
-
-                if (item != null && !empty) {
-                    reputationScoreDisplay.setReputationScore(item.getReputationScore());
-                    setGraphic(reputationScoreDisplay);
-                } else {
-                    setGraphic(null);
-                }
-            }
-        };
-    }
-
-    private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getDetailsCellFactory() {
-        return column -> new TableCell<>() {
-            private final Hyperlink info = new Hyperlink(Res.get("user.reputation.table.columns.details.button"));
-
-            @Override
-            public void updateItem(final ListItem item, boolean empty) {
-                super.updateItem(item, empty);
-
-                if (item != null && !empty) {
-                    info.setOnAction(e -> controller.onShowDetails(item));
-                    setGraphic(info);
-                } else {
-                    info.setOnAction(null);
-                    setGraphic(null);
-                }
-            }
-        };
-    }
-
-    @EqualsAndHashCode
-    @Getter
-    @ToString
-    static class ListItem {
-        private final ReputationService reputationService;
-        private final UserProfile userProfile;
-        private ReputationScore reputationScore;
-        private final String userName;
-        private final String profileAgeString;
-        private final long profileAge;
-        private long totalScore;
-        private String totalScoreString;
-
-        ListItem(UserProfile userProfile, ReputationService reputationService) {
-            this.reputationService = reputationService;
-            this.userProfile = userProfile;
-            userName = userProfile.getUserName();
-            requestReputationScore(userProfile.getId());
-            profileAge = reputationService.getProfileAgeService().getProfileAge(userProfile)
-                    .orElse(0L);
-            profileAgeString = reputationService.getProfileAgeService().getProfileAge(userProfile)
-                    .map(TimeFormatter::formatAgeInDays)
-                    .orElse(Res.get("data.na"));
-        }
-
-
-        void requestReputationScore(String userProfileId) {
-            reputationScore = reputationService.findReputationScore(userProfileId).orElse(ReputationScore.NONE);
-            totalScore = reputationScore.getTotalScore();
-            totalScoreString = String.valueOf(totalScore);
-        }
     }
 }
