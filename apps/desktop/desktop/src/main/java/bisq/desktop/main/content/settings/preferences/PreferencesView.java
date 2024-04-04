@@ -63,7 +63,8 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
     private final ChangeListener<Toggle> notificationsToggleListener;
     private final AutoCompleteComboBox<String> languageSelection, supportedLanguagesComboBox;
     private final MaterialTextField minRequiredReputationScore, difficultyAdjustmentFactor;
-    private Subscription selectedNotificationTypePin, getSelectedSupportedLanguageCodePin;
+    private Subscription selectedNotificationTypePin, getSelectedSupportedLanguageCodePin,
+            ignoreDiffAdjustFromSecManagerSwitchPin, ignoreMinRequiredReputationScoreFromSecManagerSwitchPin;
 
     public PreferencesView(PreferencesModel model, PreferencesController controller) {
         super(new VBox(50), model, controller);
@@ -278,6 +279,12 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         getSelectedSupportedLanguageCodePin = EasyBind.subscribe(model.getSelectedLSupportedLanguageCode(),
                 e -> supportedLanguagesComboBox.getSelectionModel().select(e));
 
+        ignoreDiffAdjustFromSecManagerSwitchPin = EasyBind.subscribe(
+                ignoreDiffAdjustFromSecManagerSwitch.selectedProperty(), s -> difficultyAdjustmentFactor.validate());
+
+        ignoreMinRequiredReputationScoreFromSecManagerSwitchPin = EasyBind.subscribe(
+                ignoreMinRequiredReputationScoreFromSecManagerSwitch.selectedProperty(), s -> minRequiredReputationScore.validate());
+
         resetDontShowAgain.setOnAction(e -> controller.onResetDontShowAgain());
         clearNotifications.setOnAction(e -> controller.onClearNotifications());
         addLanguageButton.setOnAction(e -> {
@@ -309,6 +316,8 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         notificationsToggleGroup.selectedToggleProperty().removeListener(notificationsToggleListener);
         selectedNotificationTypePin.unsubscribe();
         getSelectedSupportedLanguageCodePin.unsubscribe();
+        ignoreDiffAdjustFromSecManagerSwitchPin.unsubscribe();
+        ignoreMinRequiredReputationScoreFromSecManagerSwitchPin.unsubscribe();
 
         resetDontShowAgain.setOnAction(null);
         clearNotifications.setOnAction(null);
