@@ -59,9 +59,18 @@ public class TimeFormatter {
     }
 
     public static String formatAgeInDays(long date) {
-        long ageInDays = getAgeInDays(date);
-        String postFix = ageInDays == 1 ? Res.get("temporal.day") : Res.get("temporal.days");
-        return ageInDays + " " + postFix;
+        long days = getAgeInDays(date);
+        long years = days / 365;
+        long ageInDays = days - years * 365;
+        String daysPostFix = ageInDays == 1 ? Res.get("temporal.day") : Res.get("temporal.days");
+        String dayString = ageInDays + " " + daysPostFix;
+        if (years > 0) {
+            String yearsPostFix = years == 1 ? Res.get("temporal.year") : Res.get("temporal.years");
+            String yearString = years + " " + yearsPostFix;
+            return yearString + ", " + dayString;
+        } else {
+            return dayString;
+        }
     }
 
     public static String formatTime(Date date) {
