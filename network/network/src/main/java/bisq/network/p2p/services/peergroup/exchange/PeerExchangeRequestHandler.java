@@ -48,7 +48,7 @@ class PeerExchangeRequestHandler implements Connection.Listener {
     }
 
     CompletableFuture<Set<Peer>> request(Set<Peer> peersForPeerExchange) {
-        log.debug("Node {} send PeerExchangeRequest to {} with {} peers",
+        log.debug("{} send PeerExchangeRequest to {} with {} peers",
                 node, connection.getPeerAddress(), peersForPeerExchange.size());
         ts = System.currentTimeMillis();
         try {
@@ -69,15 +69,15 @@ class PeerExchangeRequestHandler implements Connection.Listener {
                /* String addresses = StringUtils.truncate(response.peers().stream()
                         .map(peer -> peer.getAddress().toString())
                         .collect(Collectors.toList()).toString());
-                log.debug("Node {} received PeerExchangeResponse from {} with {}",
+                log.debug("{} received PeerExchangeResponse from {} with {}",
                         node, connection.getPeerAddress(), addresses);*/
-                log.info("Node {} received PeerExchangeResponse from {} with {} peers",
+                log.info("{} received PeerExchangeResponse from {} with {} peers",
                         node, connection.getPeerAddress(), response.getPeers().size());
                 connection.getConnectionMetrics().addRtt(System.currentTimeMillis() - ts);
                 removeListeners();
                 future.complete(new HashSet<>(response.getPeers()));
             } else {
-                log.warn("Node {} received a PeerExchangeResponse from {} with an invalid nonce. response.nonce()={}, nonce={}",
+                log.warn("{} received a PeerExchangeResponse from {} with an invalid nonce. response.nonce()={}, nonce={}",
                         node, connection.getPeerAddress(), response.getNonce(), nonce);
             }
         }

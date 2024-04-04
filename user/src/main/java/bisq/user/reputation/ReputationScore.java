@@ -29,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 @EqualsAndHashCode
 @Getter
 public class ReputationScore implements Comparable<ReputationScore> {
+    public final static double MAX_VALUE = 10_000_000;
     public static final ReputationScore NONE = new ReputationScore(0, 0, 0, 0);
     
     private final long totalScore;

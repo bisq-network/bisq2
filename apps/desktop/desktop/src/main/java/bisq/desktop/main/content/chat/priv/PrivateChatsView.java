@@ -170,6 +170,7 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
         tableView = new BisqTableView<>(getModel().getSortedList());
         tableView.getStyleClass().add("private-chats-selection-list");
         tableView.allowVerticalScrollbar();
+        tableView.hideHorizontalScrollbar();
         configTableView();
         VBox.setVgrow(tableView, Priority.ALWAYS);
 

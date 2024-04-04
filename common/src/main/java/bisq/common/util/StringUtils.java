@@ -119,7 +119,7 @@ public class StringUtils {
         while (matcher.find()) {
             String link = matcher.group(1);
             hyperlinks.add(link);
-            message = message.replaceFirst(pattern.toString(), String.format("%s [%d]", link, hyperlinks.size()));
+            message = message.replaceFirst(pattern.toString(), String.format("'%s' [%d]", link, hyperlinks.size()));
         }
         return message;
     }

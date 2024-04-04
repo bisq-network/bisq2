@@ -15,16 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.offerbook;
+package bisq.desktop.main.content.chat.message_container.list.message_box;
 
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.DropdownMenu;
 import bisq.desktop.components.controls.DropdownMenuItem;
-import bisq.desktop.main.content.components.chatMessages.ChatMessageListItem;
-import bisq.desktop.main.content.components.chatMessages.ChatMessagesListView;
-import bisq.desktop.main.content.components.chatMessages.messages.BubbleMessageBox;
+import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
+import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
+import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListModel;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
@@ -41,7 +41,7 @@ public final class MyOfferMessageBox extends BubbleMessageBox {
 
     public MyOfferMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
                              ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
-                             ChatMessagesListView.Controller controller, ChatMessagesListView.Model model) {
+                             ChatMessagesListController controller, ChatMessagesListModel model) {
         super(item, list, controller, model);
 
         // Message

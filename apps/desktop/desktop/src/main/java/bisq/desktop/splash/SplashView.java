@@ -24,6 +24,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +34,7 @@ public class SplashView extends View<VBox, SplashModel, SplashController> {
     public static final int WIDTH = 535;
     private final ProgressBar progressBar;
     private final Label applicationServiceState;
+    private final Label version;
 
     public SplashView(SplashModel model, SplashController controller) {
         super(new VBox(), model, controller);
@@ -43,6 +45,14 @@ public class SplashView extends View<VBox, SplashModel, SplashController> {
         ImageView logo = new ImageView();
         logo.setId("logo-splash");
 
+        version = new Label(model.getVersion());
+        version.setOpacity(0.5);
+        version.getStyleClass().addAll("text-fill-grey-dimmed", "medium-text");
+
+        StackPane logoAndVersion = new StackPane(logo, version);
+        logoAndVersion.setAlignment(Pos.CENTER);
+        StackPane.setMargin(version, new Insets(-25, 0, 0, 200));
+
         applicationServiceState = new Label("");
         applicationServiceState.getStyleClass().add("splash-application-state");
         applicationServiceState.setTextAlignment(TextAlignment.CENTER);
@@ -52,9 +62,9 @@ public class SplashView extends View<VBox, SplashModel, SplashController> {
         progressBar.setMaxHeight(3);
         progressBar.setMinWidth(WIDTH);
 
-        VBox.setMargin(logo, new Insets(-52, 0, 83, 0));
+        VBox.setMargin(logoAndVersion, new Insets(-52, 0, 83, 0));
         VBox.setMargin(progressBar, new Insets(16, 0, 16, 0));
-        root.getChildren().addAll(logo, applicationServiceState, progressBar);
+        root.getChildren().addAll(logoAndVersion, applicationServiceState, progressBar);
     }
 
     @Override

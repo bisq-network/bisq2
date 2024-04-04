@@ -9,4 +9,6 @@ dependencies {
     implementation(libs.bouncycastle)
     implementation(libs.bouncycastle.pg)
     implementation(libs.typesafe.config)
+
+    testImplementation(libs.apache.commons.lang)
 }

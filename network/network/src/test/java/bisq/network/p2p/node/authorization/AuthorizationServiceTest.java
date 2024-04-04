@@ -37,15 +37,9 @@ public class AuthorizationServiceTest {
         result = AuthorizationService.selectAuthorizationTokenType(myPreferredAuthorizationTokenTypes, peersFeatures);
         assertEquals(AuthorizationTokenType.HASH_CASH, result);
 
-        // If not match we use first myPreferredAuthorizationTokenTypes item as default
+        // If not match we use first peersFeatures item as default
         peersFeatures = List.of(Feature.AUTHORIZATION_HASH_CASH);
         myPreferredAuthorizationTokenTypes = List.of(AuthorizationTokenType.EQUI_HASH);
-        result = AuthorizationService.selectAuthorizationTokenType(myPreferredAuthorizationTokenTypes, peersFeatures);
-        assertEquals(AuthorizationTokenType.EQUI_HASH, result);
-
-        // If not match we use first myPreferredAuthorizationTokenTypes item as default
-        peersFeatures = List.of(Feature.AUTHORIZATION_EQUI_HASH);
-        myPreferredAuthorizationTokenTypes = List.of(AuthorizationTokenType.HASH_CASH);
         result = AuthorizationService.selectAuthorizationTokenType(myPreferredAuthorizationTokenTypes, peersFeatures);
         assertEquals(AuthorizationTokenType.HASH_CASH, result);
 
@@ -89,6 +83,11 @@ public class AuthorizationServiceTest {
 
         peersFeatures = List.of(Feature.AUTHORIZATION_EQUI_HASH, Feature.AUTHORIZATION_HASH_CASH);
         myPreferredAuthorizationTokenTypes = List.of(AuthorizationTokenType.EQUI_HASH);
+        result = AuthorizationService.selectAuthorizationTokenType(myPreferredAuthorizationTokenTypes, peersFeatures);
+        assertEquals(AuthorizationTokenType.EQUI_HASH, result);
+
+        peersFeatures = List.of(Feature.AUTHORIZATION_EQUI_HASH);
+        myPreferredAuthorizationTokenTypes = List.of(AuthorizationTokenType.HASH_CASH);
         result = AuthorizationService.selectAuthorizationTokenType(myPreferredAuthorizationTokenTypes, peersFeatures);
         assertEquals(AuthorizationTokenType.EQUI_HASH, result);
 

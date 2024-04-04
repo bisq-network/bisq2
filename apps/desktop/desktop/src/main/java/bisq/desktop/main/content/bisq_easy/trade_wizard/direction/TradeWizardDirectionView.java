@@ -73,7 +73,7 @@ public class TradeWizardDirectionView extends View<StackPane, TradeWizardDirecti
         sellButton = sellPair.getSecond();
 
         HBox directionBox = new HBox(25, buyBox, sellBox);
-        directionBox.setAlignment(Pos.CENTER);
+        directionBox.setAlignment(Pos.BASELINE_CENTER);
 
         VBox.setMargin(headlineLabel, new Insets(-20, 0, 0, 0));
         VBox.setMargin(directionBox, new Insets(10, 0, 0, 0));

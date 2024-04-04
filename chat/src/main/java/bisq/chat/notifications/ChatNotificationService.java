@@ -43,6 +43,7 @@ import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
@@ -75,6 +76,9 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
     @Getter
     private final Observable<ChatNotification> changedNotification = new Observable<>();
     private final Map<String, Pin> chatMessagesByChannelIdPins = new ConcurrentHashMap<>();
+    private final long startUpDateTime = System.currentTimeMillis();
+    @Setter
+    private boolean isApplicationFocussed;
 
     public ChatNotificationService(PersistenceService persistenceService,
                                    ChatService chatService,
@@ -347,7 +351,7 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
 
         if (shouldSendNotification) {
             addNotification(chatNotification);
-            sendNotificationService.send(chatNotification);
+            maybeSendSystemNotification(chatNotification);
         } else {
             consumeNotification(chatNotification);
         }
@@ -379,5 +383,15 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
                 chatChannel,
                 chatMessage,
                 senderUserProfile);
+    }
+
+    private void maybeSendSystemNotification(ChatNotification chatNotification) {
+        if (!isApplicationFocussed && isReceivedAfterStartUp(chatNotification)) {
+            sendNotificationService.send(chatNotification);
+        }
+    }
+
+    private boolean isReceivedAfterStartUp(ChatNotification chatNotification) {
+        return chatNotification.getDate() > startUpDateTime;
     }
 }

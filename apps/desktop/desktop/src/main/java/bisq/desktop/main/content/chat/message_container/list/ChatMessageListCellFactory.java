@@ -15,18 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.components.chatMessages;
+package bisq.desktop.main.content.chat.message_container.list;
 
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
-import bisq.desktop.main.content.bisq_easy.offerbook.MyOfferMessageBox;
-import bisq.desktop.main.content.bisq_easy.offerbook.PeerOfferMessageBox;
 import bisq.desktop.main.content.bisq_easy.open_trades.MyProtocolLogMessageBox;
 import bisq.desktop.main.content.bisq_easy.open_trades.PeerProtocolLogMessageBox;
-import bisq.desktop.main.content.components.chatMessages.messages.LeaveChatMessageBox;
-import bisq.desktop.main.content.components.chatMessages.messages.MessageBox;
-import bisq.desktop.main.content.components.chatMessages.messages.MyMessageBox;
-import bisq.desktop.main.content.components.chatMessages.messages.PeerMessageBox;
+import bisq.desktop.main.content.chat.message_container.list.message_box.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -34,16 +29,18 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.HBox;
 import javafx.util.Callback;
+import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+@Slf4j
 final class ChatMessageListCellFactory
         implements Callback<ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>>,
         ListCell<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>>> {
-    private final ChatMessagesListView.Controller controller;
-    private final ChatMessagesListView.Model model;
+    private final ChatMessagesListController controller;
+    private final ChatMessagesListModel model;
 
-    public ChatMessageListCellFactory(ChatMessagesListView.Controller controller, ChatMessagesListView.Model model) {
+    public ChatMessageListCellFactory(ChatMessagesListController controller, ChatMessagesListModel model) {
         this.controller = controller;
         this.model = model;
     }
@@ -57,13 +54,13 @@ final class ChatMessageListCellFactory
             private final static String STYLE_CLASS_WITH_SCROLLBAR_FULL_WIDTH = "chat-message-list-cell-w-scrollbar-full-width";
             private final static String STYLE_CLASS_WITH_SCROLLBAR_MAX_WIDTH = "chat-message-list-cell-w-scrollbar-max-width";
 
-            private final HBox cellHBox;
+            private final HBox cellHBox = new HBox();
             private Subscription listWidthPropertyPin;
             private MessageBox messageBox;
 
             {
-                cellHBox = new HBox();
                 cellHBox.setPadding(new Insets(15, 0, 15, 0));
+                setAlignment(Pos.CENTER);
             }
 
             @Override
@@ -78,6 +75,7 @@ final class ChatMessageListCellFactory
 
                 Node flow = this.getListView().lookup(".virtual-flow");
                 if (flow != null && !flow.isVisible()) {
+                    cleanup();
                     return;
                 }
 
@@ -85,16 +83,12 @@ final class ChatMessageListCellFactory
                 cellHBox.getChildren().setAll(messageBox);
                 listWidthPropertyPin = EasyBind.subscribe(messageBox.widthProperty(), w -> updateMessageStyle());
                 setGraphic(cellHBox);
-                setAlignment(Pos.CENTER);
             }
 
             private void cleanup() {
                 if (messageBox != null) {
                     messageBox.cleanup();
                 }
-
-                cellHBox.setOnMouseEntered(null);
-                cellHBox.setOnMouseExited(null);
 
                 if (listWidthPropertyPin != null) {
                     listWidthPropertyPin.unsubscribe();
@@ -140,7 +134,7 @@ final class ChatMessageListCellFactory
             } else {
                 return item.isBisqEasyPublicChatMessageWithOffer()
                         ? new MyOfferMessageBox(item, list, controller, model)
-                        : new MyMessageBox(item, list, controller, model);
+                        : new MyTextMessageBox(item, list, controller, model);
             }
         } else {
             if (item.isProtocolLogMessage()) {
@@ -148,7 +142,7 @@ final class ChatMessageListCellFactory
             } else {
                 return item.isBisqEasyPublicChatMessageWithOffer()
                         ? new PeerOfferMessageBox(item, list, controller, model)
-                        : new PeerMessageBox(item, list, controller, model);
+                        : new PeerTextMessageBox(item, list, controller, model);
             }
         }
     }

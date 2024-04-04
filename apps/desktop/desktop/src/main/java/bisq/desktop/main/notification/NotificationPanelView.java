@@ -36,6 +36,7 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public class NotificationPanelView extends View<BorderPane, NotificationPanelModel, NotificationPanelController> {
     public static final int DURATION = Transitions.DEFAULT_DURATION / 2;
+
     private final Label notificationHeadline;
     private final Button closeButton;
     private final Hyperlink hyperlink;

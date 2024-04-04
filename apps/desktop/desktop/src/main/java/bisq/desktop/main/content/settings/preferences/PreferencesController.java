@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.settings.preferences;
 
 import bisq.bonded_roles.security_manager.difficulty_adjustment.DifficultyAdjustmentService;
+import bisq.bonded_roles.security_manager.min_reputation_score.MinRequiredReputationScoreService;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.locale.LanguageRepository;
 import bisq.common.observable.Pin;
@@ -45,17 +46,20 @@ public class PreferencesController implements Controller {
     private final SettingsService settingsService;
     private final ChatNotificationService chatNotificationService;
     private final DifficultyAdjustmentService difficultyAdjustmentService;
+    private final MinRequiredReputationScoreService minRequiredReputationScoreService;
 
     private Pin chatNotificationTypePin, useAnimationsPin, preventStandbyModePin, offerOnlyPin, closeMyOfferWhenTakenPin,
             supportedLanguageCodesPin, minRequiredReputationScorePin, ignoreDiffAdjustmentFromSecManagerPin,
-            mostRecentValueOrDefaultPin, difficultyAdjustmentFactorPin;
+            mostRecentDifficultyAdjustmentFactorOrDefaultPin, difficultyAdjustmentFactorPin, ignoreMinRequiredReputationScoreFromSecManagerPin,
+            mostRecentMinRequiredReputationScoreOrDefaultPin;
     private Subscription notifyForPreReleasePin, useTransientNotificationsPin,
-            difficultyAdjustmentFactorDescriptionTextPin;
+            difficultyAdjustmentFactorDescriptionTextPin, minRequiredReputationScoreDescriptionTextPin;
 
     public PreferencesController(ServiceProvider serviceProvider) {
         settingsService = serviceProvider.getSettingsService();
         chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
         difficultyAdjustmentService = serviceProvider.getBondedRolesService().getDifficultyAdjustmentService();
+        minRequiredReputationScoreService = serviceProvider.getBondedRolesService().getMinRequiredReputationScoreService();
         model = new PreferencesModel();
         view = new PreferencesView(model, this);
     }
@@ -72,24 +76,49 @@ public class PreferencesController implements Controller {
                 .to(settingsService.getUseAnimations());
         preventStandbyModePin = FxBindings.bindBiDir(model.getPreventStandbyMode())
                 .to(settingsService.getPreventStandbyMode());
+
         minRequiredReputationScorePin = FxBindings.bindBiDir(model.getMinRequiredReputationScore())
                 .to(settingsService.getMinRequiredReputationScore());
+        ignoreMinRequiredReputationScoreFromSecManagerPin = FxBindings.bindBiDir(model.getIgnoreMinRequiredReputationScoreFromSecManager())
+                .to(settingsService.getIgnoreMinRequiredReputationScoreFromSecManager());
+        model.getMinRequiredReputationScoreEditable().bind(model.getIgnoreMinRequiredReputationScoreFromSecManager());
+        minRequiredReputationScoreDescriptionTextPin = EasyBind.subscribe(model.getIgnoreMinRequiredReputationScoreFromSecManager(),
+                value -> {
+                    if (value) {
+                        model.getMinRequiredReputationScoreDescriptionText().set(Res.get("settings.preferences.network.minReputationScore.description.self"));
+                        if (mostRecentMinRequiredReputationScoreOrDefaultPin != null) {
+                            mostRecentMinRequiredReputationScoreOrDefaultPin.unbind();
+                        }
+                        minRequiredReputationScorePin = FxBindings.bindBiDir(model.getMinRequiredReputationScore())
+                                .to(settingsService.getMinRequiredReputationScore());
+                    } else {
+                        model.getMinRequiredReputationScoreDescriptionText().set(Res.get("settings.preferences.network.minReputationScore.description.fromSecManager"));
+
+                        if (minRequiredReputationScorePin != null) {
+                            minRequiredReputationScorePin.unbind();
+                        }
+                        mostRecentMinRequiredReputationScoreOrDefaultPin = minRequiredReputationScoreService.getMostRecentValueOrDefault()
+                                .addObserver(mostRecentValueOrDefault ->
+                                        UIThread.run(() -> model.getMinRequiredReputationScore().set(mostRecentValueOrDefault)));
+                    }
+                });
+
         offerOnlyPin = FxBindings.bindBiDir(model.getOfferOnly())
                 .to(settingsService.getOffersOnly());
         closeMyOfferWhenTakenPin = FxBindings.bindBiDir(model.getCloseMyOfferWhenTaken())
                 .to(settingsService.getCloseMyOfferWhenTaken());
         supportedLanguageCodesPin = FxBindings.<String, String>bind(model.getSelectedSupportedLanguageCodes())
                 .to(settingsService.getSupportedLanguageCodes());
+
         ignoreDiffAdjustmentFromSecManagerPin = FxBindings.bindBiDir(model.getIgnoreDiffAdjustmentFromSecManager())
                 .to(settingsService.getIgnoreDiffAdjustmentFromSecManager());
         model.getDifficultyAdjustmentFactorEditable().bind(model.getIgnoreDiffAdjustmentFromSecManager());
-
         difficultyAdjustmentFactorDescriptionTextPin = EasyBind.subscribe(model.getIgnoreDiffAdjustmentFromSecManager(),
                 value -> {
                     if (value) {
                         model.getDifficultyAdjustmentFactorDescriptionText().set(Res.get("settings.preferences.network.difficultyAdjustmentFactor.description.self"));
-                        if (mostRecentValueOrDefaultPin != null) {
-                            mostRecentValueOrDefaultPin.unbind();
+                        if (mostRecentDifficultyAdjustmentFactorOrDefaultPin != null) {
+                            mostRecentDifficultyAdjustmentFactorOrDefaultPin.unbind();
                         }
                         difficultyAdjustmentFactorPin = FxBindings.bindBiDir(model.getDifficultyAdjustmentFactor())
                                 .to(settingsService.getDifficultyAdjustmentFactor());
@@ -99,7 +128,7 @@ public class PreferencesController implements Controller {
                         if (difficultyAdjustmentFactorPin != null) {
                             difficultyAdjustmentFactorPin.unbind();
                         }
-                        mostRecentValueOrDefaultPin = difficultyAdjustmentService.getMostRecentValueOrDefault()
+                        mostRecentDifficultyAdjustmentFactorOrDefaultPin = difficultyAdjustmentService.getMostRecentValueOrDefault()
                                 .addObserver(mostRecentValueOrDefault ->
                                         UIThread.run(() -> model.getDifficultyAdjustmentFactor().set(mostRecentValueOrDefault)));
                     }
@@ -130,17 +159,25 @@ public class PreferencesController implements Controller {
         preventStandbyModePin.unbind();
         supportedLanguageCodesPin.unbind();
         ignoreDiffAdjustmentFromSecManagerPin.unbind();
+        ignoreMinRequiredReputationScoreFromSecManagerPin.unbind();
         model.getDifficultyAdjustmentFactorEditable().unbind();
         notifyForPreReleasePin.unsubscribe();
         difficultyAdjustmentFactorDescriptionTextPin.unsubscribe();
+        minRequiredReputationScoreDescriptionTextPin.unsubscribe();
         if (useTransientNotificationsPin != null) {
             useTransientNotificationsPin.unsubscribe();
         }
         if (difficultyAdjustmentFactorPin != null) {
             difficultyAdjustmentFactorPin.unbind();
         }
-        if (mostRecentValueOrDefaultPin != null) {
-            mostRecentValueOrDefaultPin.unbind();
+        if (minRequiredReputationScorePin != null) {
+            minRequiredReputationScorePin.unbind();
+        }
+        if (mostRecentDifficultyAdjustmentFactorOrDefaultPin != null) {
+            mostRecentDifficultyAdjustmentFactorOrDefaultPin.unbind();
+        }
+        if (mostRecentMinRequiredReputationScoreOrDefaultPin != null) {
+            mostRecentMinRequiredReputationScoreOrDefaultPin.unbind();
         }
     }
 

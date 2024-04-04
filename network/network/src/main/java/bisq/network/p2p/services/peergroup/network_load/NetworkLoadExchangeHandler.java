@@ -50,7 +50,7 @@ class NetworkLoadExchangeHandler implements Connection.Listener {
 
     CompletableFuture<Void> request() {
         NetworkLoad myNetworkLoad = node.getNetworkLoadSnapshot().getCurrentNetworkLoad();
-        log.info("Node {} send NetworkLoadRequest to {} with nonce {} and my networkLoad {}. Connection={}",
+        log.info("{} send NetworkLoadRequest to {} with nonce {} and my networkLoad {}. Connection={}",
                 node, connection.getPeerAddress(), nonce, myNetworkLoad, connection.getId());
         ts = System.currentTimeMillis();
         supplyAsync(() -> node.send(new NetworkLoadExchangeRequest(nonce, myNetworkLoad), connection), NetworkService.NETWORK_IO_POOL)
@@ -69,14 +69,14 @@ class NetworkLoadExchangeHandler implements Connection.Listener {
             NetworkLoadExchangeResponse response = (NetworkLoadExchangeResponse) envelopePayloadMessage;
             if (response.getRequestNonce() == nonce) {
                 NetworkLoad peersNetworkLoad = response.getNetworkLoad();
-                log.info("Node {} received NetworkLoadResponse from {} with nonce {} and peers networkLoad {}. Connection={}",
+                log.info("{} received NetworkLoadResponse from {} with nonce {} and peers networkLoad {}. Connection={}",
                         node, connection.getPeerAddress(), response.getRequestNonce(), peersNetworkLoad, connection.getId());
                 removeListeners();
                 connection.getPeersNetworkLoadSnapshot().updateNetworkLoad(peersNetworkLoad);
                 connection.getConnectionMetrics().addRtt(System.currentTimeMillis() - ts);
                 future.complete(null);
             } else {
-                log.warn("Node {} received NetworkLoadResponse from {} with invalid nonce {}. Request nonce was {}. Connection={}",
+                log.warn("{} received NetworkLoadResponse from {} with invalid nonce {}. Request nonce was {}. Connection={}",
                         node, connection.getPeerAddress(), response.getRequestNonce(), nonce, connection.getId());
             }
         }

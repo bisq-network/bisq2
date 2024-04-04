@@ -47,7 +47,7 @@ public class BisqEasyConfirmBtcSentMessageHandler extends TradeMessageHandler<Bi
 
         checkArgument(StringUtils.isNotEmpty(message.getTxId()));
         // We leave it flexible so that users can use other than BTC mainnet data as txId
-        checkArgument(message.getTxId().length() <= 100);
+        checkArgument(message.getTxId().length() <= 1000);
     }
 
     private void commitToModel(String txId) {

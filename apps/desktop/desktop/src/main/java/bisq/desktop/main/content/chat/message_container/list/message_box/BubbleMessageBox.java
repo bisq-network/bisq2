@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.components.chatMessages.messages;
+package bisq.desktop.main.content.chat.message_container.list.message_box;
 
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
@@ -24,9 +24,10 @@ import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.desktop.common.Icons;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.components.controls.BisqTooltip;
+import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
+import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
+import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListModel;
 import bisq.desktop.main.content.components.UserProfileIcon;
-import bisq.desktop.main.content.components.chatMessages.ChatMessageListItem;
-import bisq.desktop.main.content.components.chatMessages.ChatMessagesListView;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -37,17 +38,19 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
+@Slf4j
 public abstract class BubbleMessageBox extends MessageBox {
     protected static final double CHAT_MESSAGE_BOX_MAX_WIDTH = 630;
     protected static final double OFFER_MESSAGE_USER_ICON_SIZE = 70;
 
     protected final ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item;
     protected final ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list;
-    protected final ChatMessagesListView.Controller controller;
-    protected final ChatMessagesListView.Model model;
+    protected final ChatMessagesListController controller;
+    protected final ChatMessagesListModel model;
     protected final UserProfileIcon userProfileIcon = new UserProfileIcon(60);
     protected final HBox reactionsHBox = new HBox(20);
     protected final VBox quotedMessageVBox, contentVBox;
@@ -57,8 +60,8 @@ public abstract class BubbleMessageBox extends MessageBox {
 
     public BubbleMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
                             ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
-                            ChatMessagesListView.Controller controller,
-                            ChatMessagesListView.Model model) {
+                            ChatMessagesListController controller,
+                            ChatMessagesListModel model) {
         this.item = item;
         this.list = list;
         this.controller = controller;
@@ -116,10 +119,6 @@ public abstract class BubbleMessageBox extends MessageBox {
     protected void addReactionsHandlers() {
     }
 
-    protected void hideReactionsBox() {
-        reactionsHBox.setVisible(false);
-    }
-
     private void addOnMouseEventHandlers() {
         setOnMouseEntered(e -> {
             if (model.getSelectedChatMessageForMoreOptionsPopup().get() != null) {
@@ -131,11 +130,16 @@ public abstract class BubbleMessageBox extends MessageBox {
 
         setOnMouseExited(e -> {
             if (model.getSelectedChatMessageForMoreOptionsPopup().get() == null) {
-                hideReactionsBox();
                 dateTime.setVisible(false);
                 reactionsHBox.setVisible(false);
             }
         });
+    }
+
+    @Override
+    public void cleanup() {
+        setOnMouseEntered(null);
+        setOnMouseExited(null);
     }
 
     private Label createAndGetSupportedLanguagesLabel() {

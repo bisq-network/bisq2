@@ -262,16 +262,24 @@
     -fx-text-fill: -bisq-dark-grey-50;
 }
 
-
-.chat-mention-popup-menu {
-    -fx-min-width: 300;
+.chat-mention-list-view {
+    -fx-background-color: -bisq-black-lit;
+    -fx-padding: 15 0 0 0;
+    -fx-background-radius: 8 8 0 0;
 }
 
-.chat-mention-popup-menu-item {
-    -fx-background-color: -bisq-dark-grey-20;
+.chat-mention-list-view .list-cell {
+    -fx-background-color: transparent;
+    -fx-padding: 0 15 0 15;
+    -fx-background-radius: 0;
+}
+
+.chat-mention-list-button {
+    -fx-background-color: -bisq-black-lit;
     -fx-text-fill: -fx-light-text-color;
     -fx-alignment: center-left;
-    -fx-padding: 8 14 8 14;
+    -fx-padding: 5 15 5 15;
+    -fx-background-radius: 8;
 }
 
 #user-name-label {
@@ -471,6 +479,13 @@
 .system-message-background .leave-chat-message:hover:visited {
     -fx-text-fill: -bisq2-green;
     -fx-underline: true;
+}
+
+.scroll-down-bg {
+    -fx-min-height: 38;
+    -fx-max-height: 38;
+    -fx-pref-height: 38;
+    -fx-background-color: linear-gradient(to top, rgba(28, 28, 28, 1) 0%, rgba(28, 28, 28, 0.9) 40%, rgba(28, 28, 28, 0) 100%); /* -bisq-dark-grey-20 */
 }
 
 .chat-messages-badge.bisq-badge .badge-pane {

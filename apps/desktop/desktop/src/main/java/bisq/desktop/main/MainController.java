@@ -19,20 +19,18 @@ package bisq.desktop.main;
 
 import bisq.application.ApplicationService;
 import bisq.bisq_easy.NavigationTarget;
-import bisq.bonded_roles.security_manager.alert.AlertService;
-import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
-import bisq.common.observable.collection.CollectionObserver;
+import bisq.bonded_roles.security_manager.alert.AlertNotificationsService;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.components.overlay.Popup;
+import bisq.desktop.main.alert.AlertBannerController;
 import bisq.desktop.main.content.ContentController;
 import bisq.desktop.main.left.LeftNavController;
 import bisq.desktop.main.notification.NotificationPanelController;
 import bisq.desktop.main.top.TopPanelController;
-import bisq.settings.SettingsService;
 import bisq.updater.UpdaterService;
 import bisq.updater.UpdaterUtils;
 import lombok.Getter;
@@ -49,8 +47,6 @@ public class MainController extends NavigationController {
     private final MainView view;
     private final ServiceProvider serviceProvider;
     private final LeftNavController leftNavController;
-    private final AlertService alertService;
-    private final SettingsService settingsService;
     private final UpdaterService updaterService;
     private final ApplicationService.Config config;
 
@@ -58,19 +54,19 @@ public class MainController extends NavigationController {
         super(NavigationTarget.MAIN);
 
         this.serviceProvider = serviceProvider;
-        settingsService = serviceProvider.getSettingsService();
-        alertService = serviceProvider.getBondedRolesService().getAlertService();
         updaterService = serviceProvider.getUpdaterService();
         config = serviceProvider.getConfig();
 
         leftNavController = new LeftNavController(serviceProvider);
         TopPanelController topPanelController = new TopPanelController(serviceProvider);
         NotificationPanelController notificationPanelController = new NotificationPanelController(serviceProvider);
+        AlertBannerController alertBannerController = new AlertBannerController(serviceProvider);
         view = new MainView(model,
                 this,
                 leftNavController.getView().getRoot(),
                 topPanelController.getView().getRoot(),
-                notificationPanelController.getView().getRoot());
+                notificationPanelController.getView().getRoot(),
+                alertBannerController.getView().getRoot());
     }
 
     @Override
@@ -92,43 +88,6 @@ public class MainController extends NavigationController {
                 }
             }
         }
-
-        alertService.getAuthorizedAlertDataSet().addObserver(new CollectionObserver<>() {
-            @Override
-            public void add(AuthorizedAlertData authorizedAlertData) {
-                if (authorizedAlertData == null) {
-                    return;
-                }
-                UIThread.run(() -> {
-                    if (settingsService.getConsumedAlertIds().contains(authorizedAlertData.getId())) {
-                        return;
-                    }
-                    settingsService.getConsumedAlertIds().add(authorizedAlertData.getId());
-                    Optional<String> optionalMessage = authorizedAlertData.getMessage();
-                    switch (authorizedAlertData.getAlertType()) {
-                        case INFO:
-                            optionalMessage.ifPresentOrElse(message -> new Popup().attention(message).show(),
-                                    () -> log.warn("optionalMessage not present"));
-                            break;
-                        case WARN:
-                        case EMERGENCY:
-                            optionalMessage.ifPresentOrElse(message -> new Popup().warning(message).show(),
-                                    () -> log.warn("optionalMessage not present"));
-                            break;
-                        case BAN:
-                            break;
-                    }
-                });
-            }
-
-            @Override
-            public void remove(Object element) {
-            }
-
-            @Override
-            public void clear() {
-            }
-        });
 
         updaterService.getReleaseNotification().addObserver(releaseNotification -> {
             if (releaseNotification == null) {

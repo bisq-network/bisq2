@@ -121,7 +121,7 @@ public class InboundConnectionsManager {
                         peerAddress, myCapability.getAddress());
 
                 if (isAlreadyConnectedToPeer(peerAddress)) {
-                    log.warn("Node {} have already an InboundConnection from {}. This can happen when a " + "handshake was in progress while we received a new connection from that address. " + "We will close the socket of that new connection and use the existing instead.", this, peerAddress);
+                    log.warn("{} have already an InboundConnection from {}. This can happen when a " + "handshake was in progress while we received a new connection from that address. " + "We will close the socket of that new connection and use the existing instead.", this, peerAddress);
                     closeChannel(networkEnvelopeSocketChannel);
                 } else {
                     connectionByChannel.put(socketChannel, inboundConnection);

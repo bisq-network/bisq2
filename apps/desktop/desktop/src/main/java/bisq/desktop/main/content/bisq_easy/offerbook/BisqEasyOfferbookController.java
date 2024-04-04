@@ -106,7 +106,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     public BisqEasyOfferbookView createAndGetView() {
         return new BisqEasyOfferbookView(model,
                 this,
-                chatMessagesComponent.getRoot(),
+                chatMessageContainerController.getView().getRoot(),
                 channelSidebar.getRoot());
     }
 
@@ -149,6 +149,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                 settingsService.setCookie(CookieKey.MARKETS_FILTER, model.getSelectedMarketsFilter().get().name());
                 updateFilteredMarketChannelItems();
             }
+            model.getShouldShowAppliedFilters().set(filter == Filters.Markets.WITH_OFFERS || filter == Filters.Markets.FAVOURITES);
         });
 
         marketPriceByCurrencyMapPin = marketPriceService.getMarketPriceByCurrencyMap().addObserver(() -> {
@@ -167,9 +168,9 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
             if (filter == null) {
                 // By default, show all offers (any direction or owner)
                 model.getSelectedOfferDirectionOrOwnerFilter().set(Filters.OfferDirectionOrOwner.ALL);
-                chatMessagesComponent.setBisqEasyOfferDirectionOrOwnerFilterPredicate(model.getSelectedOfferDirectionOrOwnerFilter().get().getPredicate());
+                chatMessageContainerController.setBisqEasyOfferDirectionOrOwnerFilterPredicate(model.getSelectedOfferDirectionOrOwnerFilter().get().getPredicate());
             } else {
-                chatMessagesComponent.setBisqEasyOfferDirectionOrOwnerFilterPredicate(filter.getPredicate());
+                chatMessageContainerController.setBisqEasyOfferDirectionOrOwnerFilterPredicate(filter.getPredicate());
             }
         });
 
@@ -177,9 +178,9 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
             if (filter == null) {
                 // By default, show all offers (with any reputation)
                 model.getSelectedPeerReputationFilter().set(Filters.PeerReputation.ALL);
-                chatMessagesComponent.setBisqEasyPeerReputationFilterPredicate(model.getSelectedPeerReputationFilter().get().getPredicate());
+                chatMessageContainerController.setBisqEasyPeerReputationFilterPredicate(model.getSelectedPeerReputationFilter().get().getPredicate());
             } else {
-                chatMessagesComponent.setBisqEasyPeerReputationFilterPredicate(filter.getPredicate());
+                chatMessageContainerController.setBisqEasyPeerReputationFilterPredicate(filter.getPredicate());
             }
         });
 
@@ -320,7 +321,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
 
     private void updateFavouriteMarketChannelItems() {
         model.getFavouriteMarketChannelItems().setPredicate(item -> model.getFavouriteMarkets().contains(item.getMarket()));
-        double padding = 15;
+        double padding = 21;
         double tableViewHeight = (model.getFavouriteMarketChannelItems().size() * MARKET_SELECTION_LIST_CELL_HEIGHT) + padding;
         model.getFavouritesTableViewHeight().set(tableViewHeight);
     }

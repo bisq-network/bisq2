@@ -19,9 +19,9 @@ package bisq.desktop.main.content;
 
 import bisq.bisq_easy.BisqEasyNotificationsService;
 import bisq.bisq_easy.NavigationTarget;
+import bisq.bonded_roles.security_manager.alert.AlertNotificationsService;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.TabController;
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,25 +29,36 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class ContentTabController<M extends ContentTabModel> extends TabController<M> {
     protected final ServiceProvider serviceProvider;
     private final BisqEasyNotificationsService bisqEasyNotificationsService;
-    private Pin isNotificationVisiblePin;
+    private final AlertNotificationsService alertNotificationsService;
+    private Pin isNotificationPanelVisiblePin, isAlertBannerVisiblePin;
 
     public ContentTabController(M model, NavigationTarget host, ServiceProvider serviceProvider) {
         super(model, host);
 
         this.serviceProvider = serviceProvider;
         bisqEasyNotificationsService = serviceProvider.getBisqEasyService().getBisqEasyNotificationsService();
+        alertNotificationsService = serviceProvider.getAlertNotificationsService();
     }
 
     @Override
     public void onActivate() {
-        isNotificationVisiblePin = FxBindings.bind(model.getIsNotificationVisible())
-                .to(bisqEasyNotificationsService.getIsNotificationPanelVisible());
+        isNotificationPanelVisiblePin = bisqEasyNotificationsService.getIsNotificationPanelVisible().addObserver(
+                isVisible -> updateIsNotificationVisible());
+        isAlertBannerVisiblePin = alertNotificationsService.getIsAlertBannerVisible().addObserver(
+                isVisible -> updateIsNotificationVisible());
     }
 
     @Override
     public void onDeactivate() {
-        isNotificationVisiblePin.unbind();
+        isNotificationPanelVisiblePin.unbind();
+        isAlertBannerVisiblePin.unbind();
 
         resetResolvedTarget();
+    }
+
+    private void updateIsNotificationVisible() {
+        model.getIsNotificationVisible().set(
+                bisqEasyNotificationsService.getIsNotificationPanelVisible().get()
+                        || alertNotificationsService.getIsAlertBannerVisible().get());
     }
 }

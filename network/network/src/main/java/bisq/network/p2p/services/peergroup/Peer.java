@@ -29,25 +29,34 @@ import lombok.ToString;
 import javax.annotation.Nonnull;
 import java.util.Date;
 
+/**
+ * We use only the address for EqualsAndHashCode as unique identifier as the other data can be
+ * updated and we do not consider those updates as a new peer instance.
+ */
 @Getter
 @ToString
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public final class Peer implements NetworkProto, Comparable<Peer> {
     @EqualsAndHashCode.Include
+    private final Address address;
+
     private final Capability capability;
     private final NetworkLoad networkLoad;
     private final boolean isOutboundConnection;
     private final long created;
 
+
     public Peer(Capability capability, NetworkLoad networkLoad, boolean isOutboundConnection) {
         this(capability, networkLoad, isOutboundConnection, System.currentTimeMillis());
     }
 
-    public Peer(Capability capability, NetworkLoad networkLoad, boolean isOutboundConnection, long created) {
+    private Peer(Capability capability, NetworkLoad networkLoad, boolean isOutboundConnection, long created) {
         this.capability = capability;
         this.networkLoad = networkLoad;
         this.isOutboundConnection = isOutboundConnection;
         this.created = created;
+
+        address = capability.getAddress();
 
         verify();
     }

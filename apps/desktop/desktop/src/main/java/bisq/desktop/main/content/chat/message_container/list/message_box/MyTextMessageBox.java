@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.components.chatMessages.messages;
+package bisq.desktop.main.content.chat.message_container.list.message_box;
 
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
@@ -24,8 +24,9 @@ import bisq.desktop.common.Icons;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.components.controls.BisqTooltip;
-import bisq.desktop.main.content.components.chatMessages.ChatMessageListItem;
-import bisq.desktop.main.content.components.chatMessages.ChatMessagesListView;
+import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
+import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
+import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListModel;
 import bisq.i18n.Res;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
 import de.jensd.fx.fontawesome.AwesomeDude;
@@ -42,7 +43,7 @@ import javafx.scene.layout.VBox;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-public final class MyMessageBox extends BubbleMessageBox {
+public final class MyTextMessageBox extends BubbleMessageBox {
     private final static String EDITED_POST_FIX = " " + Res.get("chat.message.wasEdited");
 
     private final Label deliveryState;
@@ -52,9 +53,9 @@ public final class MyMessageBox extends BubbleMessageBox {
     private Button saveEditButton, cancelEditButton;
     private HBox editButtonsHBox;
 
-    public MyMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
-                        ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
-                        ChatMessagesListView.Controller controller, ChatMessagesListView.Model model) {
+    public MyTextMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
+                            ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
+                            ChatMessagesListController controller, ChatMessagesListModel model) {
         super(item, list, controller, model);
 
         quotedMessageVBox.setId("chat-message-quote-box-my-msg");
@@ -121,7 +122,7 @@ public final class MyMessageBox extends BubbleMessageBox {
         deliveryState.getTooltip().textProperty().bind(item.getMessageDeliveryStatusTooltip());
         editInputField.maxWidthProperty().bind(message.widthProperty());
 
-        VBox.setMargin(deliveryStateHBox, new Insets(4, 0, -3, 0));
+        setMargin(deliveryStateHBox, new Insets(4, 0, -3, 0));
         messageHBox.getChildren().setAll(Spacer.fillHBox(), messageBgHBox);
 
         contentVBox.getChildren().setAll(userNameAndDateHBox, messageHBox, editButtonsHBox, deliveryStateHBox);
@@ -133,7 +134,7 @@ public final class MyMessageBox extends BubbleMessageBox {
 
         userNameAndDateHBox = new HBox(10, dateTime, userName);
         userNameAndDateHBox.setAlignment(Pos.CENTER_RIGHT);
-        VBox.setMargin(userNameAndDateHBox, new Insets(-5, 10, -5, 0));
+        setMargin(userNameAndDateHBox, new Insets(-5, 10, -5, 0));
     }
 
     @Override
@@ -160,7 +161,7 @@ public final class MyMessageBox extends BubbleMessageBox {
         editButtonsHBox = new HBox(15, Spacer.fillHBox(), cancelEditButton, saveEditButton);
         editButtonsHBox.setVisible(false);
         editButtonsHBox.setManaged(false);
-        VBox.setMargin(editButtonsHBox, new Insets(10, 25, -15, 0));
+        setMargin(editButtonsHBox, new Insets(10, 25, -15, 0));
         handleEditBox();
     }
 
@@ -234,6 +235,8 @@ public final class MyMessageBox extends BubbleMessageBox {
 
     @Override
     public void cleanup() {
+        super.cleanup();
+
         message.maxWidthProperty().unbind();
         editInputField.maxWidthProperty().unbind();
         deliveryState.getTooltip().textProperty().unbind();

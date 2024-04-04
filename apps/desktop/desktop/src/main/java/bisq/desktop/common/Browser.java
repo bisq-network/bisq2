@@ -18,6 +18,7 @@
 package bisq.desktop.common;
 
 import bisq.common.util.OsUtils;
+import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
@@ -33,6 +34,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class Browser {
+    public static final String HYPERLINKS_OPEN_IN_BROWSER = "hyperlinks.openInBrowser";
+
     @Nullable
     private static HostServices hostServices;
     private static SettingsService settingsService;
@@ -43,9 +46,10 @@ public class Browser {
     }
 
     public static void open(String url) {
-        String id = "hyperlinks.openInBrowser";
+        String id = HYPERLINKS_OPEN_IN_BROWSER;
         if (DontShowAgainService.showAgain(id)) {
-            new Popup().feedback(Res.get("hyperlinks.openInBrowser.attention", url))
+            new Popup().headline(Res.get("hyperlinks.openInBrowser.attention.headline"))
+                    .feedback(Res.get("hyperlinks.openInBrowser.attention", url))
                     .closeButtonText(Res.get("hyperlinks.openInBrowser.no"))
                     .onClose(() -> {
                         settingsService.setCookie(CookieKey.PERMIT_OPENING_BROWSER, false);
@@ -62,7 +66,18 @@ public class Browser {
             doOpen(url);
         } else {
             ClipboardUtil.copyToClipboard(url);
+
+            // TODO create custom popup style and animation similar like Bisq1 notifications
+            //   See https://github.com/bisq-network/bisq2/issues/1883
+            Popup popup = new Popup().notify(Res.get("hyperlinks.copiedToClipboard"));
+            popup.show();
+            UIScheduler.run(popup::hide).after(3000);
         }
+    }
+
+    public static boolean hyperLinksGetCopiesWithoutPopup() {
+        return !DontShowAgainService.showAgain(Browser.HYPERLINKS_OPEN_IN_BROWSER) &&
+                !settingsService.getCookie().asBoolean(CookieKey.PERMIT_OPENING_BROWSER).orElse(false);
     }
 
     private static void doOpen(String url) {

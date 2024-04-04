@@ -217,12 +217,18 @@
     -fx-text-fill: -fx-light-text-color;
 }
 
-.market-selection-applied-filters {
+.market-selection-no-filters {
+    -fx-padding: 10 0 0 0;
+}
+
+.market-selection-show-applied-filters {
+    -fx-min-height: 35;
     -fx-pref-height: 35;
+    -fx-max-height: 35;
     -fx-padding: 5;
 }
 
-.market-selection-applied-filters .filter-display-hint {
+.market-selection-show-applied-filters .filter-display-hint {
     -fx-background-color: transparent;
     -fx-border-color: -bisq-mid-grey-20;
     -fx-border-width: 1;
@@ -230,18 +236,18 @@
     -fx-min-height: 20;
     -fx-pref-height: 20;
     -fx-max-height: 20;
-    -fx-padding: 0 0 0 5;
+    -fx-padding: 0 5 0 5;
 }
 
-.market-selection-applied-filters .filter-display-hint:hover {
+.market-selection-show-applied-filters .filter-display-hint:hover {
     -fx-border-color: -bisq-white;
 }
 
-.market-selection-applied-filters .filter-display-hint:hover .label {
+.market-selection-show-applied-filters .filter-display-hint:hover .label {
     -fx-text-fill: -bisq-white;
 }
 
-.market-selection-applied-filters .filter-display-hint .label {
+.market-selection-show-applied-filters .filter-display-hint .label {
     -fx-text-fill: -fx-mid-text-color;
 }
 
@@ -285,6 +291,7 @@
 .favourites-list {
     -fx-padding: 0 0 10 0;
     -fx-border-width: 0 0 1 0;
+    -fx-border-insets: 0 0 10 0;
     -fx-border-color: -bisq-dark-grey-50;
 }
 
@@ -725,53 +732,39 @@
 
 
 /*******************************************************************************
- * TradeWizardTakeOfferView.tableView                                                       *
+ * TradeWizardTakeOfferView.tableView                                          *
  ******************************************************************************/
 
-.bisq-easy-trade-wizard-select-trade.table-view {
-    -fx-font-size: 1.15em;
+.matching-offers-table-container {
+    -fx-background-color: -bisq-dark-grey-20;
+    -fx-border-width: 0 0 5px 0;
+    -fx-border-color: -bisq-dark-grey-20;
+}
+
+.bisq-easy-trade-wizard-select-offer.table-view {
+    -fx-background-insets: 0;
+    -fx-padding: 0;
 }
 
 .bisq-easy-trade-wizard-select-offer.table-view .column-header {
     -fx-pref-height: 40px;
 }
 
+.bisq-easy-trade-wizard-select-offer.table-view .column-header .label {
+    -fx-alignment: center;
+}
+
+.bisq-easy-trade-wizard-select-offer.table-view .table-row-cell:hover {
+    -fx-cursor: hand;
+}
+
 .bisq-easy-trade-wizard-select-offer.table-view .table-row-cell {
     -fx-pref-height: 55px;
+    -fx-border-width: 0;
 }
 
-.bisq-easy-trade-wizard-select-offer.table-view .table-row-cell .table-cell {
-    -fx-background-color: -bisq-dark-grey-40;
-}
-
-.bisq-easy-trade-wizard-select-offer.table-view .table-row-cell:hover .table-cell {
-    -fx-background-color: -bisq-darker-grey;
-}
-
-.bisq-easy-trade-wizard-select-offer.table-view .table-row-cell:selected .table-cell {
-    -fx-background-color: -bisq2-green;
-}
-
-.bisq-easy-trade-wizard-select-offer.table-view .table-row-cell:empty {
-    -fx-border-color: derive(-bisq-dark-grey-40, -30%);
-}
-
-.bisq-easy-trade-wizard-select-offer.table-view .table-row-cell:empty .table-cell {
-    -fx-background-color: derive(-bisq-dark-grey-40, -15%);
-}
-
-.bisq-easy-trade-wizard-select-offer.table-view .table-row-cell:empty:hover .table-cell {
-    -fx-background-color: derive(-bisq-dark-grey-40, -15%);
-}
-
-.bisq-easy-trade-wizard-select-offer.table-view .table-row-cell:selected .button.white-button .text {
-    -fx-fill: -bisq-black !important;
-    -fx-font-family: "IBM Plex Sans Medium" !important;
-}
-
-.bisq-easy-trade-wizard-select-offer.table-view .table-row-cell:hover .button.outlined-button .text {
-    -fx-fill: -bisq2-green;
-    -fx-font-family: "IBM Plex Sans Medium";
+.bisq-easy-trade-wizard-select-offer.table-view .table-cell {
+    -fx-padding: 0;
 }
 
 /* the text property from list view need to set to apply the color to the button label */

@@ -69,6 +69,7 @@ message AuthorizedAlertData {
   optional AuthorizedBondedRole bannedRole = 8;
   string securityManagerProfileId = 9;
   bool staticPublicKeysProvided = 10;
+  optional string headline = 11;
 }
 
 message ReleaseNotification {
@@ -85,6 +86,13 @@ message ReleaseNotification {
 message AuthorizedDifficultyAdjustmentData {
   sint64 date = 1;
   double difficultyAdjustmentFactor = 2;
+  string securityManagerProfileId = 3;
+  bool staticPublicKeysProvided = 4;
+}
+
+message AuthorizedMinRequiredReputationScoreData {
+  sint64 date = 1;
+  sint64 minRequiredReputationScore = 2;
   string securityManagerProfileId = 3;
   bool staticPublicKeysProvided = 4;
 }

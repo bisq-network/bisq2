@@ -73,7 +73,7 @@ public abstract class PrivateChatsController extends ChatController<PrivateChats
         channelsPin = channelService.getChannels().addObserver(this::channelsChanged);
 
         openPrivateChatsPin = EasyBind.subscribe(model.getNoOpenChats(),
-                noOpenChats -> chatMessagesComponent.enableChatDialog(!noOpenChats));
+                noOpenChats -> chatMessageContainerController.enableChatDialog(!noOpenChats));
 
         chatNotificationService.getNotConsumedNotifications().forEach(this::handleNotification);
         changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(this::handleNotification);

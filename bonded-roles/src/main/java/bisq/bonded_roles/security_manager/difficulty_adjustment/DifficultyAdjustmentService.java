@@ -37,9 +37,6 @@ import java.util.concurrent.CompletableFuture;
  */
 @Slf4j
 public class DifficultyAdjustmentService implements Service, AuthorizedBondedRolesService.Listener {
-
-    @Getter
-    private final Observable<Boolean> hasNotificationSenderIdentity = new Observable<>();
     @Getter
     private final Observable<Double> mostRecentValueOrDefault = new Observable<>();
     private final AuthorizedBondedRolesService authorizedBondedRolesService;

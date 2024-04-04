@@ -7,6 +7,7 @@
 [versions]
 annotations-lib = { strictly = '23.0.0' }
 
+apache-commons-lang-lib = { strictly = '3.14.0' }
 apache-httpcomponents-core-lib = { strictly = '4.4.13' }
 apache-httpcomponents-httpclient-lib = { strictly = '4.5.13' }
 apache-tomcat-annotations-api = { strictly = '6.0.53' }
@@ -71,6 +72,7 @@ typesafe-config-lib = { strictly = '1.4.2' }
 # Note: keys can contain dash (protobuf-java) but the dash is replaced by dot when referenced
 # in a build.gradle ('implementation libs.protobuf.java')
 [libraries]
+apache-commons-lang = { module = 'org.apache.commons:commons-lang3', version.ref = 'apache-commons-lang-lib' }
 apache-httpcomponents-core = { module = 'org.apache.httpcomponents:httpcore', version.ref = 'apache-httpcomponents-core-lib' }
 apache-httpcomponents-httpclient = { module = 'org.apache.httpcomponents:httpclient', version.ref = 'apache-httpcomponents-httpclient-lib' }
 apache-tomcat-annotations-api = { module = 'org.apache.tomcat:annotations-api', version.ref = 'apache-tomcat-annotations-api' }

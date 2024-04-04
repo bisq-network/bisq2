@@ -41,7 +41,7 @@ public final class CommonPrivateChatsController extends PrivateChatsController {
     public CommonPrivateChatsView createAndGetView() {
         return new CommonPrivateChatsView((CommonPrivateChatsModel) model,
                 this,
-                chatMessagesComponent.getRoot(),
+                chatMessageContainerController.getView().getRoot(),
                 channelSidebar.getRoot());
     }
 }

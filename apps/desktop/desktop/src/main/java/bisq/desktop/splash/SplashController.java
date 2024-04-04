@@ -44,7 +44,7 @@ public class SplashController implements Controller {
         this.applicationServiceState = applicationServiceState;
         this.serviceProvider = serviceProvider;
         networkService = serviceProvider.getNetworkService();
-        model = new SplashModel();
+        model = new SplashModel(serviceProvider.getConfig().getVersion());
         view = new SplashView(model, this);
     }
 

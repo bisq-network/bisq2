@@ -15,12 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.components.chatMessages.messages;
+package bisq.common.io_watcher;
 
-import javafx.scene.layout.VBox;
-
-public abstract class MessageBox extends VBox {
-    protected final static double CHAT_BOX_MAX_WIDTH = 1160;
-
-    public abstract void cleanup();
+public class NoDirectoryChangesTimeoutException extends RuntimeException {
+    public NoDirectoryChangesTimeoutException(String message) {
+        super(message);
+    }
 }

@@ -38,6 +38,6 @@ public final class CommonPublicChatController extends ChatController<CommonPubli
 
     @Override
     public CommonPublicChatView createAndGetView() {
-        return new CommonPublicChatView(model, this, chatMessagesComponent.getRoot(), channelSidebar.getRoot());
+        return new CommonPublicChatView(model, this, chatMessageContainerController.getView().getRoot(), channelSidebar.getRoot());
     }
 }

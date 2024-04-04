@@ -123,7 +123,6 @@ public class MaterialTextField extends Pane {
         }
 
         errorLabel.setLayoutX(16);
-        errorLabel.getStyleClass().add("material-text-field-help");
         errorLabel.setMouseTransparent(true);
 
         getChildren().addAll(bg, line, selectionLine, descriptionLabel, textInputControl, iconButton, helpLabel, errorLabel);
@@ -508,6 +507,16 @@ public class MaterialTextField extends Pane {
         descriptionLabel.getStyleClass().remove("material-text-field-description-deselected");
         descriptionLabel.getStyleClass().remove("material-text-field-description-read-only");
 
+        if (showErrorLabel()) {
+            if (!errorLabel.getStyleClass().contains("material-text-field-help"))
+                errorLabel.getStyleClass().add("material-text-field-help");
+            errorLabel.setVisible(true);
+            errorLabel.setManaged(true);
+        } else {
+            errorLabel.setVisible(false);
+            errorLabel.setManaged(false);
+        }
+
         if (showInputTextField()) {
             descriptionLabel.getStyleClass().add("material-text-field-description-small");
         } else {
@@ -546,6 +555,10 @@ public class MaterialTextField extends Pane {
         return StringUtils.isNotEmpty(promptTextProperty().get()) ||
                 StringUtils.isNotEmpty(textInputControl.getText()) ||
                 textInputControl.isFocused();
+    }
+
+    protected boolean showErrorLabel() {
+        return StringUtils.isNotEmpty(errorProperty().get());
     }
 
     protected double getBgHeight() {

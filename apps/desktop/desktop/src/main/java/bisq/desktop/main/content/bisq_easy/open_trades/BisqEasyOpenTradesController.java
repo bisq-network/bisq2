@@ -92,7 +92,7 @@ public final class BisqEasyOpenTradesController extends BaseChatController<BisqE
         return new BisqEasyOpenTradesView(model,
                 this,
                 tradeDataHeader.getRoot(),
-                chatMessagesComponent.getRoot(),
+                chatMessageContainerController.getView().getRoot(),
                 channelSidebar.getRoot(),
                 tradeStateController.getView().getRoot(),
                 openTradesWelcome.getView().getRoot());

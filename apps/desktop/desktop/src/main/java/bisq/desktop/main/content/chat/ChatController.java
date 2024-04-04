@@ -51,9 +51,9 @@ public abstract class ChatController<V extends ChatView<V, M>, M extends ChatMod
         model.getSearchText().set("");
         searchTextPin = EasyBind.subscribe(model.getSearchText(), searchText -> {
             if (searchText == null || searchText.isEmpty()) {
-                chatMessagesComponent.setSearchPredicate(item -> true);
+                chatMessageContainerController.setSearchPredicate(item -> true);
             } else {
-                chatMessagesComponent.setSearchPredicate(item -> item.match(searchText));
+                chatMessageContainerController.setSearchPredicate(item -> item.match(searchText));
             }
         });
     }
