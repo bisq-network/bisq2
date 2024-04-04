@@ -164,6 +164,7 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
 
                 if (item != null && !empty) {
                     reputationScoreDisplay.setReputationScore(item.getReputationScore());
+                    reputationScoreDisplay.setAlignment(Pos.CENTER);
                     setGraphic(reputationScoreDisplay);
                 } else {
                     setGraphic(null);
