@@ -24,19 +24,27 @@ import javafx.collections.ObservableList;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.*;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.stage.PopupWindow;
 import javafx.stage.WindowEvent;
+import lombok.Getter;
+
+import javax.annotation.Nullable;
+import java.util.Collection;
 
 public class DropdownMenu extends HBox {
     public static final Double INITIAL_WIDTH = 24.0;
-
+    @Getter
     private final Label label = new Label();
     private final ImageView defaultIcon, activeIcon;
     private final ContextMenu contextMenu = new ContextMenu();
     private ImageView buttonIcon;
+    @Nullable
     private ChangeListener<Number> widthPropertyChangeListener;
     private boolean isFirstRun = false;
 
@@ -82,7 +90,11 @@ public class DropdownMenu extends HBox {
         }
     }
 
-    public void addMenuItems(CustomMenuItem... items) {
+    public void addMenuItems(Collection<? extends MenuItem> items) {
+        contextMenu.getItems().addAll(items);
+    }
+
+    public void addMenuItems(MenuItem... items) {
         contextMenu.getItems().addAll(items);
     }
 

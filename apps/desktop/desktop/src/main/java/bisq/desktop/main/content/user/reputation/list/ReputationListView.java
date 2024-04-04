@@ -20,6 +20,7 @@ package bisq.desktop.main.content.user.reputation.list;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
+import bisq.desktop.components.table.StandardTable;
 import bisq.desktop.main.content.components.ReputationScoreDisplay;
 import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.i18n.Res;
@@ -27,14 +28,14 @@ import bisq.presentation.formatters.TimeFormatter;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
-import javafx.geometry.Insets;
+import bisq.user.reputation.ReputationSource;
+import bisq.user.reputation.data.*;
 import javafx.geometry.Pos;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import lombok.EqualsAndHashCode;
@@ -44,32 +45,33 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.Comparator;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class ReputationListView extends View<VBox, ReputationListModel, ReputationListController> {
     private final BisqTableView<ListItem> tableView;
+    private final StandardTable<ListItem> standardTable;
     private Subscription userProfileIdOfScoreUpdatePin;
 
     public ReputationListView(ReputationListModel model,
                               ReputationListController controller) {
         super(new VBox(20), model, controller);
 
-        Label tableHeadline = new Label(Res.get("user.reputation.table.headline"));
-        tableHeadline.getStyleClass().add("bisq-content-headline-label");
-
-        tableView = new BisqTableView<>(model.getSortedList());
-        tableView.getStyleClass().add("user-reputation-table-view");
+        standardTable = new StandardTable<>(model.getSortedList(),
+                Res.get("user.reputation.table.headline"),
+                model.getFilterItems(),
+                model.getFilterMenuItemToggleGroup());
+        tableView = standardTable.getTableView();
         tableView.setMinHeight(200);
         configTableView();
 
-        VBox.setMargin(tableHeadline, new Insets(0, 0, -10, 10));
-        VBox.setVgrow(tableView, Priority.ALWAYS);
-        root.getChildren().addAll(tableHeadline, tableView);
+        root.getChildren().addAll(standardTable);
     }
 
     @Override
     protected void onViewAttached() {
+        standardTable.initialize();
         userProfileIdOfScoreUpdatePin = EasyBind.subscribe(model.getUserProfileIdOfScoreUpdate(), profileId -> {
             if (profileId != null) {
                 tableView.refresh();
@@ -79,6 +81,7 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
 
     @Override
     protected void onViewDetached() {
+        standardTable.dispose();
         userProfileIdOfScoreUpdatePin.unsubscribe();
     }
 
@@ -183,7 +186,7 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
     @EqualsAndHashCode
     @Getter
     @ToString
-    static class ListItem {
+    public static class ListItem {
         private final ReputationService reputationService;
         private final UserProfile userProfile;
         private ReputationScore reputationScore;
@@ -192,19 +195,44 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
         private final long profileAge;
         private long totalScore;
         private String totalScoreString;
+        private final Set<ReputationSource> reputationSources = new HashSet<>();
 
         ListItem(UserProfile userProfile, ReputationService reputationService) {
             this.reputationService = reputationService;
             this.userProfile = userProfile;
             userName = userProfile.getUserName();
             requestReputationScore(userProfile.getId());
-            profileAge = reputationService.getProfileAgeService().getProfileAge(userProfile)
-                    .orElse(0L);
+            profileAge = reputationService.getProfileAgeService().getProfileAge(userProfile).orElse(0L);
             profileAgeString = reputationService.getProfileAgeService().getProfileAge(userProfile)
                     .map(TimeFormatter::formatAgeInDays)
                     .orElse(Res.get("data.na"));
-        }
 
+            Map<ReputationSource, Long> amountBySource = new HashMap<>();
+            Optional.ofNullable(reputationService.getProofOfBurnService().getDataSetByHash().get(userProfile.getProofOfBurnKey()))
+                    .ifPresent(dataSet -> amountBySource.putIfAbsent(ReputationSource.BURNED_BSQ,
+                            dataSet.stream().mapToLong(AuthorizedProofOfBurnData::getAmount).sum()));
+
+            Optional.ofNullable(reputationService.getBondedReputationService().getDataSetByHash().get(userProfile.getBondedReputationKey()))
+                    .ifPresent(dataSet -> amountBySource.putIfAbsent(ReputationSource.BSQ_BOND,
+                            dataSet.stream().mapToLong(AuthorizedBondedReputationData::getAmount).sum()));
+
+            Optional.ofNullable(reputationService.getAccountAgeService().getDataSetByHash().get(userProfile.getAccountAgeKey()))
+                    .ifPresent(dataSet -> amountBySource.putIfAbsent(ReputationSource.BISQ1_ACCOUNT_AGE,
+                            dataSet.stream().mapToLong(AuthorizedAccountAgeData::getDate).sum()));
+
+            Optional.ofNullable(reputationService.getSignedWitnessService().getDataSetByHash().get(userProfile.getSignedWitnessKey()))
+                    .ifPresent(dataSet -> amountBySource.putIfAbsent(ReputationSource.BISQ1_SIGNED_ACCOUNT_AGE_WITNESS,
+                            dataSet.stream().mapToLong(AuthorizedSignedWitnessData::getWitnessSignDate).sum()));
+
+            Optional.ofNullable(reputationService.getProfileAgeService().getDataSetByHash().get(userProfile.getProfileAgeKey()))
+                    .ifPresent(dataSet -> amountBySource.putIfAbsent(ReputationSource.PROFILE_AGE,
+                            dataSet.stream().mapToLong(AuthorizedTimestampData::getDate).sum()));
+
+            reputationSources.addAll(amountBySource.entrySet().stream()
+                    .filter(e -> e.getValue() > 0)
+                    .map(Map.Entry::getKey)
+                    .collect(Collectors.toSet()));
+        }
 
         void requestReputationScore(String userProfileId) {
             reputationScore = reputationService.findReputationScore(userProfileId).orElse(ReputationScore.NONE);

@@ -22,11 +22,16 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
+import bisq.desktop.components.table.StandardTable;
 import bisq.i18n.Res;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationService;
+import bisq.user.reputation.ReputationSource;
+import javafx.scene.control.Toggle;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import java.util.stream.Collectors;
 
@@ -40,17 +45,30 @@ public class ReputationListController implements Controller {
     private Pin getNumUserProfilesPin, proofOfBurnScoreChangedFlagPin,
             bondedReputationScoreChangedFlagPin, signedWitnessScoreChangedFlagPin,
             accountAgeScoreChangedFlagPin;
+    private Subscription filterMenuItemTogglePin;
 
     public ReputationListController(ServiceProvider serviceProvider) {
         userProfileService = serviceProvider.getUserService().getUserProfileService();
         reputationService = serviceProvider.getUserService().getReputationService();
 
         model = new ReputationListModel();
+
+        StandardTable.FilterMenuItem<ReputationListView.ListItem> showAllFilterMenuItem = StandardTable.FilterMenuItem.getShowAllFilterMenuItem(model.getFilterMenuItemToggleGroup());
+        model.getFilterItems().add(showAllFilterMenuItem);
+        addFilterMenuItem(ReputationSource.BURNED_BSQ);
+        addFilterMenuItem(ReputationSource.BSQ_BOND);
+        addFilterMenuItem(ReputationSource.BISQ1_ACCOUNT_AGE);
+        addFilterMenuItem(ReputationSource.BISQ1_SIGNED_ACCOUNT_AGE_WITNESS);
+        addFilterMenuItem(ReputationSource.PROFILE_AGE);
+        model.getFilterMenuItemToggleGroup().selectToggle(showAllFilterMenuItem);
+
         view = new ReputationListView(model, this);
     }
 
     @Override
     public void onActivate() {
+        filterMenuItemTogglePin = EasyBind.subscribe(model.getFilterMenuItemToggleGroup().selectedToggleProperty(), this::updateFilter);
+
         getNumUserProfilesPin = userProfileService.getNumUserProfiles()
                 .addObserver(numUserProfiles -> UIThread.run(() -> model.getListItems().setAll(userProfileService.getUserProfiles().stream()
                         .map(userProfile -> new ReputationListView.ListItem(userProfile, reputationService))
@@ -63,8 +81,6 @@ public class ReputationListController implements Controller {
                 .addObserver(this::updateScore);
         signedWitnessScoreChangedFlagPin = reputationService.getSignedWitnessService().getUserProfileIdOfUpdatedScore()
                 .addObserver(this::updateScore);
-
-        model.getFilteredList().setPredicate(item -> item.getTotalScore() > 0);
     }
 
     @Override
@@ -74,6 +90,8 @@ public class ReputationListController implements Controller {
         bondedReputationScoreChangedFlagPin.unbind();
         accountAgeScoreChangedFlagPin.unbind();
         signedWitnessScoreChangedFlagPin.unbind();
+
+        filterMenuItemTogglePin.unsubscribe();
     }
 
     public void onShowDetails(ReputationListView.ListItem item) {
@@ -90,6 +108,22 @@ public class ReputationListController implements Controller {
             // Enforce update in view by setting to null first
             model.getUserProfileIdOfScoreUpdate().set(null);
             model.getUserProfileIdOfScoreUpdate().set(userProfileId);
+        });
+    }
+
+    private void addFilterMenuItem(ReputationSource reputationSource) {
+        String title = Res.get("user.reputation.source." + reputationSource.name());
+        StandardTable.FilterMenuItem<ReputationListView.ListItem> filterMenuItem = new StandardTable.FilterMenuItem<>(
+                model.getFilterMenuItemToggleGroup(),
+                title,
+                item -> item.getReputationSources().contains(reputationSource));
+        model.getFilterItems().add(filterMenuItem);
+    }
+
+    private void updateFilter(Toggle selectedToggle) {
+        StandardTable.FilterMenuItem.fromToggle(selectedToggle).ifPresent(selectedItem -> {
+            model.getFilteredList().setPredicate(item ->
+                    item.getTotalScore() > 0 && selectedItem.getFilter().test(item));
         });
     }
 }

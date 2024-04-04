@@ -414,15 +414,15 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
 
         Label label = new Label(Res.get("bisqEasy.topPane.filter.hideUserMessages"));
         hideUserMessagesCheckbox = new CheckBox();
-        HBox checkbox = new HBox(5, label, hideUserMessagesCheckbox);
-        checkbox.getStyleClass().add("offerbook-subheader-checkbox");
-        checkbox.setAlignment(Pos.CENTER);
+        HBox hideUserMessagesHBox = new HBox(5, label, hideUserMessagesCheckbox);
+        hideUserMessagesHBox.getStyleClass().add("offerbook-subheader-checkbox");
+        hideUserMessagesHBox.setAlignment(Pos.CENTER);
 
         filterOffersByPeerReputationMenu = createAndGetPeerReputationFilterMenu();
         filterOffersByDirectionOrOwnerMenu = createAndGetOfferDirectionOrOwnerFilterMenu();
 
         searchBox.getStyleClass().add("offerbook-search-box");
-        HBox subheaderContent = new HBox(30, searchBox, Spacer.fillHBox(), checkbox,
+        HBox subheaderContent = new HBox(30, searchBox, Spacer.fillHBox(), hideUserMessagesHBox,
                 filterOffersByPeerReputationMenu, filterOffersByDirectionOrOwnerMenu);
         subheaderContent.getStyleClass().add("offerbook-subheader-content");
         HBox.setHgrow(subheaderContent, Priority.ALWAYS);

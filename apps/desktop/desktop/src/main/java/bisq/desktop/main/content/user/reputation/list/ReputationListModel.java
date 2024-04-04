@@ -18,14 +18,19 @@
 package bisq.desktop.main.content.user.reputation.list;
 
 import bisq.desktop.common.view.Model;
+import bisq.desktop.components.table.StandardTable;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
+import javafx.scene.control.ToggleGroup;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j
 @Getter
@@ -34,4 +39,6 @@ public class ReputationListModel implements Model {
     private final FilteredList<ReputationListView.ListItem> filteredList = new FilteredList<>(listItems);
     private final SortedList<ReputationListView.ListItem> sortedList = new SortedList<>(filteredList);
     private final StringProperty userProfileIdOfScoreUpdate = new SimpleStringProperty();
+    private final List<StandardTable.FilterMenuItem<ReputationListView.ListItem>> filterItems = new ArrayList<>();
+    private final ToggleGroup filterMenuItemToggleGroup = new ToggleGroup();
 }
