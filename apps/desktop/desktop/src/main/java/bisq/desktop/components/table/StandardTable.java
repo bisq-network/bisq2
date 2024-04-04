@@ -82,6 +82,7 @@ public class StandardTable<T> extends VBox {
     }
 
     public void initialize() {
+        tableView.initialize();
         tableView.getItems().addListener(listChangeListener);
         listItemsChanged();
         toggleGroup.selectedToggleProperty().addListener(toggleChangeListener);
@@ -90,6 +91,7 @@ public class StandardTable<T> extends VBox {
     }
 
     public void dispose() {
+        tableView.dispose();
         tableView.getItems().removeListener(listChangeListener);
         toggleGroup.selectedToggleProperty().removeListener(toggleChangeListener);
         filterItems.forEach(StandardTable.FilterMenuItem::dispose);
@@ -97,8 +99,8 @@ public class StandardTable<T> extends VBox {
 
     private void selectedFilterMenuItemChanged() {
         FilterMenuItem.fromToggle(toggleGroup.getSelectedToggle()).ifPresent(filterMenuItem -> {
-            tooltip.setText(Res.get("component.standardTable.filter.tooltip", filterMenuItem.getFilterItemName()));
-            filterMenu.setLabel(filterMenuItem.getFilterItemName());
+            tooltip.setText(Res.get("component.standardTable.filter.tooltip", filterMenuItem.getTitle()));
+            filterMenu.setLabel(filterMenuItem.getTitle());
         });
     }
 
@@ -112,7 +114,7 @@ public class StandardTable<T> extends VBox {
         private static final PseudoClass SELECTED_PSEUDO_CLASS = PseudoClass.getPseudoClass("selected");
 
         public static FilterMenuItem<ReputationListView.ListItem> getShowAllFilterMenuItem(ToggleGroup toggleGroup) {
-            return new StandardTable.FilterMenuItem<>(toggleGroup, Res.get("component.standardTable.filter.showAll"), e -> true);
+            return new StandardTable.FilterMenuItem<>(toggleGroup, Res.get("component.standardTable.filter.showAll"), Optional.empty(), e -> true);
         }
 
         public static Optional<FilterMenuItem<ReputationListView.ListItem>> fromToggle(Toggle selectedToggle) {
@@ -132,27 +134,31 @@ public class StandardTable<T> extends VBox {
             return Optional.empty();
         }
 
+        @Getter
+        private final String title;
         @EqualsAndHashCode.Include
         @Getter
-        private final String filterItemName;
+        private final Optional<Object> data;
         @Getter
         private final Predicate<T> filter;
         private final ObjectProperty<ToggleGroup> toggleGroupProperty = new SimpleObjectProperty<>();
         private final BooleanProperty selectedProperty = new SimpleBooleanProperty();
         private final ChangeListener<Toggle> toggleChangeListener;
 
-        public FilterMenuItem(ToggleGroup toggleGroup, String filterItemName, Predicate<T> filter) {
-            this(toggleGroup, "check-white", "check-white", filterItemName, filter);
+        public FilterMenuItem(ToggleGroup toggleGroup, String title, Optional<Object> data, Predicate<T> filter) {
+            this(toggleGroup, "check-white", "check-white", title, data, filter);
         }
 
         public FilterMenuItem(ToggleGroup toggleGroup,
                               String defaultIconId,
                               String activeIconId,
-                              String filterItemName,
+                              String title,
+                              Optional<Object> data,
                               Predicate<T> filter) {
-            super(defaultIconId, activeIconId, filterItemName);
+            super(defaultIconId, activeIconId, title);
 
-            this.filterItemName = filterItemName;
+            this.title = title;
+            this.data = data;
             this.filter = filter;
 
             setToggleGroup(toggleGroup);
