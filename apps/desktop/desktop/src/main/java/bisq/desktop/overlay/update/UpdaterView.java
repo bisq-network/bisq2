@@ -114,6 +114,7 @@ public class UpdaterView extends View<VBox, UpdaterModel, UpdaterController> {
 
     @Override
     protected void onViewAttached() {
+        tableView.initialize();
         releaseNotesHeadline.setText(Res.get("updater.releaseNotesHeadline", model.getVersion().get()));
         releaseNotes.setText(model.getReleaseNotes().get());
         downloadUrl.setText(model.getDownloadUrl().get());
@@ -165,6 +166,7 @@ public class UpdaterView extends View<VBox, UpdaterModel, UpdaterController> {
 
     @Override
     protected void onViewDetached() {
+        tableView.dispose();
         headline.textProperty().unbind();
         furtherInfo.textProperty().unbind();
         verificationInfo.textProperty().unbind();

@@ -99,6 +99,7 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
 
     @Override
     protected void onViewAttached() {
+        tableView.initialize();
         boolean showOffers = model.getShowOffers().get();
 
         tableView.setVisible(showOffers);
@@ -137,6 +138,7 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
 
     @Override
     protected void onViewDetached() {
+        tableView.dispose();
         if (goBackButton != null) {
             goBackButton.setOnAction(null);
         }

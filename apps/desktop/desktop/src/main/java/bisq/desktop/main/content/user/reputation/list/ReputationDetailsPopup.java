@@ -34,7 +34,6 @@ import bisq.user.profile.UserProfile;
 import bisq.user.reputation.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.collections.transformation.SortedList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -99,8 +98,7 @@ public class ReputationDetailsPopup extends VBox {
                                 profileAgeService.calculateScore(data)))
                         .collect(Collectors.toList())));
 
-        SortedList<ListItem> sortedList = new SortedList<>(listItems);
-        tableView = new BisqTableView<>(sortedList);
+        tableView = new BisqTableView<>(listItems);
         setPrefHeight(500);
         setPrefWidth(1000);
         configTableView();
@@ -134,6 +132,14 @@ public class ReputationDetailsPopup extends VBox {
         VBox.setMargin(tableView, new Insets(-10, 0, 0, 0));
         getChildren().addAll(row1, row2, tableView);
         UIThread.runOnNextRenderFrame(this::requestFocus);
+    }
+
+    public void initialize() {
+        tableView.initialize();
+    }
+
+    public void dispose() {
+        tableView.dispose();
     }
 
     private void configTableView() {

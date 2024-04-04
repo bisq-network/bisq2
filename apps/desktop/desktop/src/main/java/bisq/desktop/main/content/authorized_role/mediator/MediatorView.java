@@ -121,6 +121,7 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
 
     @Override
     protected void onViewAttached() {
+        tableView.initialize();
         selectedModelItemPin = EasyBind.subscribe(model.getSelectedItem(),
                 selected -> tableView.getSelectionModel().select(selected));
 
@@ -162,7 +163,7 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
 
     @Override
     protected void onViewDetached() {
-        tableView.removeListeners();
+        tableView.dispose();
 
         selectedModelItemPin.unsubscribe();
         tableViewSelectionPin.unsubscribe();

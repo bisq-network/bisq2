@@ -216,6 +216,8 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
 
     @Override
     protected void onViewAttached() {
+        alertTableView.initialize();
+        difficultyAdjustmentTableView.initialize();
         Bindings.bindBidirectional(difficultyAdjustmentFactor.textProperty(), model.getDifficultyAdjustmentFactor(), new NumberStringConverter());
         Bindings.bindBidirectional(minRequiredReputationScore.textProperty(), model.getMinRequiredReputationScore(), new NumberStringConverter());
 
@@ -270,6 +272,8 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
 
     @Override
     protected void onViewDetached() {
+        alertTableView.dispose();
+        difficultyAdjustmentTableView.dispose();
         Bindings.unbindBidirectional(difficultyAdjustmentFactor.textProperty(), model.getDifficultyAdjustmentFactor());
         Bindings.unbindBidirectional(minRequiredReputationScore.textProperty(), model.getMinRequiredReputationScore());
 

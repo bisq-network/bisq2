@@ -72,10 +72,12 @@ public abstract class BondedRolesView<M extends BondedRolesModel, C extends Bond
 
     @Override
     protected void onViewAttached() {
+        tableView.initialize();
     }
 
     @Override
     protected void onViewDetached() {
+        tableView.dispose();
     }
 
     protected abstract void configTableView();

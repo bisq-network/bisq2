@@ -123,6 +123,9 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     protected void onViewAttached() {
         super.onViewAttached();
 
+        favouritesTableView.initialize();
+        marketsTableView.initialize();
+
         hideUserMessagesCheckbox.selectedProperty().bindBidirectional(getModel().getOfferOnly());
         marketSelectorSearchBox.textProperty().bindBidirectional(getModel().getMarketSelectorSearchText());
         marketPrice.textProperty().bind(getModel().getMarketPrice());
@@ -192,30 +195,12 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         onlyFavouritesDisplayHint.setOnMouseExited(e -> removeFavouritesFilter.setGraphic(favouritesRemoveFilterDefaultIcon));
     }
 
-    private void updateTableViewSelection(MarketChannelItem selectedItem) {
-        marketsTableView.getSelectionModel().clearSelection();
-        marketsTableView.getSelectionModel().select(selectedItem);
-        favouritesTableView.getSelectionModel().clearSelection();
-        favouritesTableView.getSelectionModel().select(selectedItem);
-    }
-
-    private void updateFavouritesTableViewHeight(double height) {
-        favouritesTableView.setMinHeight(height);
-        favouritesTableView.setPrefHeight(height);
-        favouritesTableView.setMaxHeight(height);
-    }
-
-    private void setOfferDirectionOrOwnerFilter(DropdownFilterMenuItem<?> filterMenuItem) {
-        getModel().getSelectedOfferDirectionOrOwnerFilter().set((Filters.OfferDirectionOrOwner) filterMenuItem.getFilter());
-    }
-
-    private void setPeerReputationFilter(DropdownFilterMenuItem<?> filterMenuItem) {
-        getModel().getSelectedPeerReputationFilter().set((Filters.PeerReputation) filterMenuItem.getFilter());
-    }
-
     @Override
     protected void onViewDetached() {
         super.onViewDetached();
+
+        marketsTableView.dispose();
+        favouritesTableView.dispose();
 
         hideUserMessagesCheckbox.selectedProperty().unbindBidirectional(getModel().getOfferOnly());
         marketSelectorSearchBox.textProperty().unbindBidirectional(getModel().getMarketSelectorSearchText());
@@ -268,6 +253,27 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         getModel().getFavouriteMarketChannelItems().removeListener(listChangeListener);
     }
 
+    private void updateTableViewSelection(MarketChannelItem selectedItem) {
+        marketsTableView.getSelectionModel().clearSelection();
+        marketsTableView.getSelectionModel().select(selectedItem);
+        favouritesTableView.getSelectionModel().clearSelection();
+        favouritesTableView.getSelectionModel().select(selectedItem);
+    }
+
+    private void updateFavouritesTableViewHeight(double height) {
+        favouritesTableView.setMinHeight(height);
+        favouritesTableView.setPrefHeight(height);
+        favouritesTableView.setMaxHeight(height);
+    }
+
+    private void setOfferDirectionOrOwnerFilter(DropdownFilterMenuItem<?> filterMenuItem) {
+        getModel().getSelectedOfferDirectionOrOwnerFilter().set((Filters.OfferDirectionOrOwner) filterMenuItem.getFilter());
+    }
+
+    private void setPeerReputationFilter(DropdownFilterMenuItem<?> filterMenuItem) {
+        getModel().getSelectedPeerReputationFilter().set((Filters.PeerReputation) filterMenuItem.getFilter());
+    }
+
     private BisqEasyOfferbookModel getModel() {
         return (BisqEasyOfferbookModel) model;
     }
@@ -315,7 +321,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         favouritesTableView.setFixedCellSize(getController().getMarketSelectionListCellHeight());
         configTableView(favouritesTableView);
 
-        marketsTableView = new BisqTableView<>(getModel().getSortedMarketChannelItems());
+        marketsTableView = new BisqTableView<>(getModel().getSortedMarketChannelItems(), false);
         marketsTableView.getStyleClass().addAll("market-selection-list", "markets-list");
         marketsTableView.allowVerticalScrollbar();
         marketsTableView.hideHorizontalScrollbar();

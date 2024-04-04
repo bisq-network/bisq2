@@ -155,6 +155,8 @@ public final class BisqEasyOpenTradesView extends BaseChatView {
     protected void onViewAttached() {
         super.onViewAttached();
 
+        tableView.initialize();
+
         BisqEasyOpenTradesModel model = getModel();
 
         tradeWelcomeViewRoot.visibleProperty().bind(model.getTradeWelcomeVisible());
@@ -210,7 +212,7 @@ public final class BisqEasyOpenTradesView extends BaseChatView {
         // TODO would be nice to keep it open or allow multiple windows... but for now keep it simple...
         getController().onCloseChatWindow();
 
-        tableView.removeListeners();
+        tableView.dispose();
 
         tradeWelcomeViewRoot.visibleProperty().unbind();
         tradeWelcomeViewRoot.managedProperty().unbind();
