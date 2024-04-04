@@ -17,6 +17,7 @@
 
 package bisq.desktop.components.controls.validator;
 
+import bisq.common.util.StringUtils;
 import javafx.scene.control.TextInputControl;
 import javafx.util.StringConverter;
 import javafx.util.converter.NumberStringConverter;
@@ -33,15 +34,22 @@ public class NumberValidator extends ValidatorBase {
     private Optional<Number> maxValue = Optional.empty();
     @Getter
     private Optional<Number> numberValue = Optional.empty();
+    private final boolean allowEmptyString;
 
     public NumberValidator(String message) {
         super(message);
+        this.allowEmptyString = false;
     }
 
     public NumberValidator(String message, Number minValue, Number maxValue) {
+        this(message, minValue, maxValue, true);
+    }
+
+    public NumberValidator(String message, Number minValue, Number maxValue, boolean allowEmptyString) {
         super(message);
         this.minValue = Optional.of(minValue);
         this.maxValue = Optional.of(maxValue);
+        this.allowEmptyString = allowEmptyString;
     }
 
     public void setMinValue(Number minValue) {
@@ -54,9 +62,15 @@ public class NumberValidator extends ValidatorBase {
 
     @Override
     protected void eval() {
+        hasErrors.set(false);
         var textField = (TextInputControl) srcControl.get();
         try {
-            Number value = NUMBER_STRING_CONVERTER.fromString(textField.getText());
+            String text = textField.getText();
+            if (allowEmptyString && StringUtils.isEmpty(text)) {
+                return;
+            }
+
+            Number value = NUMBER_STRING_CONVERTER.fromString(text);
             numberValue = Optional.of(value);
 
             if (minValue.isPresent()) {
