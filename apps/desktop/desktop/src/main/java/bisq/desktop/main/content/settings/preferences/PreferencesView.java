@@ -63,7 +63,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
     private final ChangeListener<Toggle> notificationsToggleListener;
     private final AutoCompleteComboBox<String> languageSelection, supportedLanguagesComboBox;
     private final MaterialTextField minRequiredReputationScore, difficultyAdjustmentFactor;
-    private Subscription selectedNotificationTypePin, getSelectedLSupportedLanguageCodePin;
+    private Subscription selectedNotificationTypePin, getSelectedSupportedLanguageCodePin;
 
     public PreferencesView(PreferencesModel model, PreferencesController controller) {
         super(new VBox(50), model, controller);
@@ -275,7 +275,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
             controller.onSelectSupportedLanguage(supportedLanguagesComboBox.getSelectionModel().getSelectedItem());
         });
 
-        getSelectedLSupportedLanguageCodePin = EasyBind.subscribe(model.getSelectedLSupportedLanguageCode(),
+        getSelectedSupportedLanguageCodePin = EasyBind.subscribe(model.getSelectedLSupportedLanguageCode(),
                 e -> supportedLanguagesComboBox.getSelectionModel().select(e));
 
         resetDontShowAgain.setOnAction(e -> controller.onResetDontShowAgain());
@@ -308,7 +308,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
 
         notificationsToggleGroup.selectedToggleProperty().removeListener(notificationsToggleListener);
         selectedNotificationTypePin.unsubscribe();
-        getSelectedLSupportedLanguageCodePin.unsubscribe();
+        getSelectedSupportedLanguageCodePin.unsubscribe();
 
         resetDontShowAgain.setOnAction(null);
         clearNotifications.setOnAction(null);
