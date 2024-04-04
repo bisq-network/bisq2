@@ -28,7 +28,6 @@ import java.text.ParseException;
 import java.util.Optional;
 
 public class NumberValidator extends ValidatorBase {
-
     private static final StringConverter<Number> NUMBER_STRING_CONVERTER = new NumberStringConverter();
     @Getter
     private Optional<Number> minValue = Optional.empty();
@@ -40,6 +39,7 @@ public class NumberValidator extends ValidatorBase {
 
     public NumberValidator(String message) {
         super(message);
+
         this.allowEmptyString = false;
     }
 
@@ -49,6 +49,7 @@ public class NumberValidator extends ValidatorBase {
 
     public NumberValidator(String message, Number minValue, Number maxValue, boolean allowEmptyString) {
         super(message);
+
         this.minValue = Optional.of(minValue);
         this.maxValue = Optional.of(maxValue);
         this.allowEmptyString = allowEmptyString;
