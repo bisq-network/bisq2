@@ -52,6 +52,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
     private static final ValidatorBase DIFFICULTY_ADJUSTMENT_FACTOR_VALIDATOR =
             new NumberValidator(Res.get("settings.preferences.network.difficultyAdjustmentFactor.invalid", NetworkLoad.MAX_DIFFICULTY_ADJUSTMENT),
                     0, NetworkLoad.MAX_DIFFICULTY_ADJUSTMENT);
+    private static final StringConverter<Number> NUMBER_STRING_CONVERTER = new NumberStringConverter();
 
     private final Button resetDontShowAgain, clearNotifications, addLanguageButton;
     private final Switch useAnimations, preventStandbyMode, offersOnlySwitch, closeMyOfferWhenTaken, notifyForPreRelease,
@@ -249,11 +250,11 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         ignoreMinRequiredReputationScoreFromSecManagerSwitch.selectedProperty().bindBidirectional(model.getIgnoreMinRequiredReputationScoreFromSecManager());
         closeMyOfferWhenTaken.selectedProperty().bindBidirectional(model.getCloseMyOfferWhenTaken());
 
-        Bindings.bindBidirectional(minRequiredReputationScore.textProperty(), model.getMinRequiredReputationScore(), new NumberStringConverter());
+        Bindings.bindBidirectional(minRequiredReputationScore.textProperty(), model.getMinRequiredReputationScore(), NUMBER_STRING_CONVERTER);
         minRequiredReputationScore.descriptionProperty().bind(model.getMinRequiredReputationScoreDescriptionText());
         minRequiredReputationScore.getTextInputControl().editableProperty().bind(model.getMinRequiredReputationScoreEditable());
 
-        Bindings.bindBidirectional(difficultyAdjustmentFactor.textProperty(), model.getDifficultyAdjustmentFactor(), new NumberStringConverter());
+        Bindings.bindBidirectional(difficultyAdjustmentFactor.textProperty(), model.getDifficultyAdjustmentFactor(), NUMBER_STRING_CONVERTER);
         difficultyAdjustmentFactor.descriptionProperty().bind(model.getDifficultyAdjustmentFactorDescriptionText());
         difficultyAdjustmentFactor.getTextInputControl().editableProperty().bind(model.getDifficultyAdjustmentFactorEditable());
 

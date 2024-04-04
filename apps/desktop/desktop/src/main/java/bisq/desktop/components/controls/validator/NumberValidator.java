@@ -23,6 +23,8 @@ import javafx.util.StringConverter;
 import javafx.util.converter.NumberStringConverter;
 import lombok.Getter;
 
+import java.text.NumberFormat;
+import java.text.ParseException;
 import java.util.Optional;
 
 public class NumberValidator extends ValidatorBase {
@@ -70,37 +72,23 @@ public class NumberValidator extends ValidatorBase {
                 return;
             }
 
+            if (!isValidNumber(text)) {
+                hasErrors.set(true);
+                return;
+            }
+
             Number value = NUMBER_STRING_CONVERTER.fromString(text);
             numberValue = Optional.of(value);
 
             if (minValue.isPresent()) {
-                if (value instanceof Double) {
-                    if (value.doubleValue() < minValue.get().doubleValue()) {
-                        hasErrors.set(true);
-                        return;
-                    }
-                } else if (value instanceof Float) {
-                    if (value.floatValue() < minValue.get().floatValue()) {
-                        hasErrors.set(true);
-                        return;
-                    }
-                } else if (value instanceof Long) {
+                if (value instanceof Long) {
                     if (value.longValue() < minValue.get().longValue()) {
                         hasErrors.set(true);
                         return;
                     }
-                } else if (value instanceof Integer) {
-                    if (value.intValue() < minValue.get().intValue()) {
-                        hasErrors.set(true);
-                        return;
-                    }
-                } else if (value instanceof Short) {
-                    if (value.shortValue() < minValue.get().shortValue()) {
-                        hasErrors.set(true);
-                        return;
-                    }
-                } else if (value instanceof Byte) {
-                    if (value.byteValue() < minValue.get().byteValue()) {
+                } else {
+                    // Fallback to double since the rest of the types can be evaluated within a double
+                    if (value.doubleValue() < minValue.get().doubleValue()) {
                         hasErrors.set(true);
                         return;
                     }
@@ -108,33 +96,13 @@ public class NumberValidator extends ValidatorBase {
             }
 
             if (maxValue.isPresent()) {
-                if (value instanceof Double) {
-                    if (value.doubleValue() > maxValue.get().doubleValue()) {
-                        hasErrors.set(true);
-                        return;
-                    }
-                } else if (value instanceof Float) {
-                    if (value.floatValue() > maxValue.get().floatValue()) {
-                        hasErrors.set(true);
-                        return;
-                    }
-                } else if (value instanceof Long) {
+                if (value instanceof Long) {
                     if (value.longValue() > maxValue.get().longValue()) {
                         hasErrors.set(true);
                         return;
                     }
-                } else if (value instanceof Integer) {
-                    if (value.intValue() > maxValue.get().intValue()) {
-                        hasErrors.set(true);
-                        return;
-                    }
-                } else if (value instanceof Short) {
-                    if (value.shortValue() > maxValue.get().shortValue()) {
-                        hasErrors.set(true);
-                        return;
-                    }
-                } else if (value instanceof Byte) {
-                    if (value.byteValue() > maxValue.get().byteValue()) {
+                } else {
+                    if (value.doubleValue() > maxValue.get().doubleValue()) {
                         hasErrors.set(true);
                         return;
                     }
@@ -144,6 +112,16 @@ public class NumberValidator extends ValidatorBase {
             hasErrors.set(false);
         } catch (Exception e) {
             hasErrors.set(true);
+        }
+    }
+
+    private static boolean isValidNumber(String inputText) {
+        NumberFormat format = NumberFormat.getNumberInstance();
+        try {
+            format.parse(inputText);
+            return true;
+        } catch (ParseException e) {
+            return false;
         }
     }
 }
