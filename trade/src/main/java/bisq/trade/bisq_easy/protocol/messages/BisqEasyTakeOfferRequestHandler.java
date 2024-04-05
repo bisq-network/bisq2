@@ -35,7 +35,9 @@ import bisq.user.profile.UserProfile;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -91,14 +93,23 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
 
         BisqEasyContract takersContract = checkNotNull(message.getBisqEasyContract());
         BisqEasyOffer takersOffer = checkNotNull(takersContract.getOffer());
-        serviceProvider.getChatService().getBisqEasyOfferbookChannelService().getChannels().stream()
+
+        List<BisqEasyOffer> myOffers = serviceProvider.getChatService().getBisqEasyOfferbookChannelService().getChannels().stream()
                 .flatMap(channel -> channel.getChatMessages().stream())
                 .filter(chatMessage -> chatMessage.getBisqEasyOffer().isPresent())
                 .map(chatMessage -> chatMessage.getBisqEasyOffer().get())
                 .filter(offer -> offer.getMakerNetworkId().equals(trade.getMyIdentity().getNetworkId()))
+                .collect(Collectors.toList());
+        Optional<BisqEasyOffer> matchingOfferInChannel = myOffers.stream()
                 .filter(offer -> offer.equals(takersOffer))
-                .findAny()
-                .orElseThrow();
+                .findAny();
+        if (matchingOfferInChannel.isEmpty()) {
+            log.error("Could not find matching offer in BisqEasyOfferbookChannel.\n" +
+                            "takersOffer={}\n" +
+                            "myOffers={}",
+                    takersOffer, myOffers);
+            throw new RuntimeException("Could not find matching offer in BisqEasyOfferbookChannel");
+        }
 
         checkArgument(message.getSender().equals(takersContract.getTaker().getNetworkId()));
 
