@@ -262,6 +262,9 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
         applyPredicate();
     }
 
+    public void setListable(boolean isListable) {
+        model.getListable().set(isListable);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // UI - delegate to client

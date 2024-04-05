@@ -98,7 +98,7 @@ public class ChatMessagesListView extends bisq.desktop.common.view.View<ChatMess
         StackPane.setAlignment(scrollDownBackground, Pos.BOTTOM_CENTER);
         StackPane.setMargin(scrollDownBackground, new Insets(0, 15, 0, 0));
         root.setAlignment(Pos.CENTER);
-        setMessageView(model.getListOffers().get());
+        setMessageView(model.getListOffers().get() && model.getListable().get());
     }
 
     private void setMessageView(boolean listOffers) {
@@ -168,7 +168,7 @@ public class ChatMessagesListView extends bisq.desktop.common.view.View<ChatMess
             placeholderTitle.setText("");
             placeholderDescription.setText("");
         }
-        listOffersPin = EasyBind.subscribe(model.getListOffers(), this::setMessageView);
+        listOffersPin = EasyBind.subscribe(model.getListOffers(), listOffers -> setMessageView(listOffers && model.getListable().get()));
     }
 
     @Override

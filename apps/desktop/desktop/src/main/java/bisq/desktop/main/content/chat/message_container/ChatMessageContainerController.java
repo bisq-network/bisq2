@@ -115,6 +115,9 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
         chatMessagesListController.setBisqEasyPeerReputationFilterPredicate(predicate);
     }
 
+    public void setListable(boolean isListable) {
+        chatMessagesListController.setListable(isListable);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Controller

@@ -71,6 +71,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     public BisqEasyOfferbookController(ServiceProvider serviceProvider) {
         super(serviceProvider, ChatChannelDomain.BISQ_EASY_OFFERBOOK, NavigationTarget.BISQ_EASY_OFFERBOOK);
 
+        chatMessageContainerController.setListable(true);
         bisqEasyOfferbookChannelService = chatService.getBisqEasyOfferbookChannelService();
         settingsService = serviceProvider.getSettingsService();
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
