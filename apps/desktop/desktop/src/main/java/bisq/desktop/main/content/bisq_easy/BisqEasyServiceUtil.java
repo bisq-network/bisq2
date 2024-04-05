@@ -17,8 +17,8 @@
 
 package bisq.desktop.main.content.bisq_easy;
 
-import bisq.bisq_easy.BisqEasyService;
 import bisq.account.payment_method.FiatPaymentMethod;
+import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.currency.Market;
@@ -80,9 +80,6 @@ public class BisqEasyServiceUtil {
             // Maker as seller's score must be > than my required score (as buyer)
             return makerAsSellersScore >= myMinRequiredScore;
         } else {
-            if (userIdentityService.getSelectedUserIdentity() == null) {
-                return false;
-            }
             // My score (as offer is a buy offer, I am the seller) must be > as offers required score
             long myScoreAsSeller = reputationService.getReputationScore(userIdentityService.getSelectedUserIdentity().getUserProfile()).getTotalScore();
             long offersRequiredScore = OfferOptionUtil.findRequiredTotalReputationScore(peersOffer).orElse(0L);

@@ -64,8 +64,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 // TODO (refactor, low prio) Consider to use a base class to avoid code duplication with TradeWizardReviewController
 @Slf4j
 public class TakeOfferReviewController implements Controller {
@@ -187,7 +185,7 @@ public class TakeOfferReviewController implements Controller {
             onCancelHandler.run();
             return;
         }
-        UserIdentity takerIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
+        UserIdentity takerIdentity = userIdentityService.getSelectedUserIdentity();
         if (bannedUserService.isUserProfileBanned(takerIdentity.getUserProfile())) {
             // If taker is banned we don't need to show them a popup
             onCancelHandler.run();

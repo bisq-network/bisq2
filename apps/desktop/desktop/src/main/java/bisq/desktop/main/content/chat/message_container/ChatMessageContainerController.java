@@ -31,8 +31,6 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 public class ChatMessageContainerController implements bisq.desktop.common.view.Controller {
     private final ChatMessageContainerModel model;
     @Getter
@@ -245,7 +243,7 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
         }
 
         ChatChannel<? extends ChatMessage> chatChannel = model.getSelectedChannel().get();
-        UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity(), "user identity must not be null");
+        UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
         Optional<Citation> citation = citationBlock.getCitation();
 
         if (citation.isPresent() && citation.get().getText().length() > Citation.MAX_TEXT_LENGTH) {

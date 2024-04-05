@@ -65,7 +65,6 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class ChatMessagesListController implements bisq.desktop.common.view.Controller {
@@ -282,8 +281,6 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
 
     public void onTakeOffer(BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
         checkArgument(bisqEasyOfferbookMessage.getBisqEasyOffer().isPresent(), "message must contain offer");
-        checkArgument(userIdentityService.getSelectedUserIdentity() != null,
-                "userIdentityService.getSelectedUserIdentity() must not be null");
         checkArgument(!model.isMyMessage(bisqEasyOfferbookMessage), "tradeChatMessage must not be mine");
 
         UserProfile userProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
@@ -390,7 +387,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
             return;
         }
 
-        UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
+        UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
         if (chatMessage instanceof BisqEasyOfferbookMessage) {
             BisqEasyOfferbookMessage bisqEasyOfferbookMessage = (BisqEasyOfferbookMessage) chatMessage;
             chatService.getBisqEasyOfferbookChannelService().publishEditedChatMessage(bisqEasyOfferbookMessage, editedText, userIdentity);

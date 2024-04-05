@@ -35,8 +35,6 @@ import bisq.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 @Slf4j
 public class ReleaseManagerController implements Controller {
     @Getter
@@ -99,14 +97,11 @@ public class ReleaseManagerController implements Controller {
     }
 
     void onRemoveReleaseNotification(ReleaseNotification releaseNotification) {
-        UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
+        UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
         releaseManagerService.removeReleaseNotification(releaseNotification, userIdentity.getNetworkIdWithKeyPair().getKeyPair());
     }
 
     boolean isRemoveButtonVisible(ReleaseNotification releaseNotification) {
-        if (userIdentityService.getSelectedUserIdentity() == null) {
-            return false;
-        }
         return userIdentityService.getSelectedUserIdentity().getId().equals(releaseNotification.getReleaseManagerProfileId());
     }
 }

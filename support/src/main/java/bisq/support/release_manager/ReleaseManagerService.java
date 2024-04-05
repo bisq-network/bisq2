@@ -36,8 +36,6 @@ import java.security.PublicKey;
 import java.util.Date;
 import java.util.concurrent.CompletableFuture;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 @Slf4j
 public class ReleaseManagerService implements Service {
     @Getter
@@ -94,7 +92,7 @@ public class ReleaseManagerService implements Service {
                                                                  boolean isLauncherUpdate,
                                                                  String releaseNotes,
                                                                  String version) {
-        UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
+        UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
         String profileId = userIdentity.getId();
         KeyPair keyPair = userIdentity.getIdentity().getKeyBundle().getKeyPair();
         PublicKey authorizedPublicKey = keyPair.getPublic();

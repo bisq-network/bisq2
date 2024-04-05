@@ -141,9 +141,6 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
 
     public void reportUserProfile(UserProfile accusedUserProfile, String message, ChatChannelDomain chatChannelDomain) {
         UserIdentity myUserIdentity = userIdentityService.getSelectedUserIdentity();
-        if (myUserIdentity == null) {
-            return;
-        }
         checkArgument(!bannedUserService.isUserProfileBanned(myUserIdentity.getUserProfile()));
 
         NetworkIdWithKeyPair senderNetworkIdWithKeyPair = myUserIdentity.getNetworkIdWithKeyPair();
@@ -167,9 +164,6 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
 
     public CompletableFuture<BroadcastResult> banReportedUser(ReportToModeratorMessage message) {
         UserIdentity selectedUserIdentity = userIdentityService.getSelectedUserIdentity();
-        if (selectedUserIdentity == null) {
-            return CompletableFuture.failedFuture(new RuntimeException("selectedUserIdentity must not be null"));
-        }
         KeyPair keyPair = selectedUserIdentity.getNetworkIdWithKeyPair().getKeyPair();
         BannedUserProfileData data = new BannedUserProfileData(message.getAccusedUserProfile(), staticPublicKeysProvided);
         return networkService.publishAuthorizedData(data, keyPair);
@@ -177,9 +171,6 @@ public class ModeratorService implements PersistenceClient<ModeratorStore>, Serv
 
     public CompletableFuture<BroadcastResult> unBanReportedUser(BannedUserProfileData data) {
         UserIdentity selectedUserIdentity = userIdentityService.getSelectedUserIdentity();
-        if (selectedUserIdentity == null) {
-            return CompletableFuture.failedFuture(new RuntimeException("selectedUserIdentity must not be null"));
-        }
         KeyPair keyPair = selectedUserIdentity.getNetworkIdWithKeyPair().getKeyPair();
         return networkService.removeAuthorizedData(data, keyPair);
     }
