@@ -107,7 +107,7 @@ public class NodeRegistrationController extends BondedRolesRegistrationControlle
         getNodesRegistrationModel().getPubKey().set(null);
         getNodesRegistrationModel().getPrivKey().set(null);
 
-        UserIdentity userIdentity = userIdentityService.getSelectedUserIdentityObservable().get();
+        UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
         KeyPair keyPair = userIdentity.getNetworkIdWithKeyPair().getKeyPair();
         getNodesRegistrationModel().getPubKey().set(Hex.encode(keyPair.getPublic().getEncoded()));
         getNodesRegistrationModel().getPrivKey().set(Hex.encode(keyPair.getPrivate().getEncoded()));
