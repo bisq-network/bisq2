@@ -61,10 +61,10 @@ import java.util.Comparator;
 public class SecurityManagerView extends View<VBox, SecurityManagerModel, SecurityManagerController> {
     private static final ValidatorBase DIFFICULTY_ADJUSTMENT_FACTOR_VALIDATOR =
             new NumberValidator(Res.get("authorizedRole.securityManager.difficultyAdjustment.invalid", NetworkLoad.MAX_DIFFICULTY_ADJUSTMENT),
-                    0, NetworkLoad.MAX_DIFFICULTY_ADJUSTMENT);
+                    0, NetworkLoad.MAX_DIFFICULTY_ADJUSTMENT, false);
     private static final ValidatorBase MIN_REPUTATION_SCORE_VALIDATOR =
             new NumberValidator(Res.get("authorizedRole.securityManager.minRequiredReputationScore.invalid", ReputationScore.MAX_VALUE),
-                    0, ReputationScore.MAX_VALUE);
+                    0, ReputationScore.MAX_VALUE, false);
 
     private final Button difficultyAdjustmentButton, minRequiredReputationScoreButton, sendAlertButton;
     private final MaterialTextArea message;
