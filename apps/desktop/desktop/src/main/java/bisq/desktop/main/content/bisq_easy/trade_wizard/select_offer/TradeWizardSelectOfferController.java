@@ -258,8 +258,7 @@ public class TradeWizardSelectOfferController implements Controller {
                     return false;
                 }
 
-                if (userIdentityService.getSelectedUserIdentity() == null ||
-                        bannedUserService.isUserProfileBanned(userIdentityService.getSelectedUserIdentity().getUserProfile()) ||
+                if (bannedUserService.isUserProfileBanned(userIdentityService.getSelectedUserIdentity().getUserProfile()) ||
                         bannedUserService.isNetworkIdBanned(makerUserProfile.getNetworkId()) ||
                         bannedUserService.isUserProfileBanned(makerUserProfile)) {
                     return false;

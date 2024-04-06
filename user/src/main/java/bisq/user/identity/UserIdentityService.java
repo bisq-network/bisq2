@@ -188,6 +188,11 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     }
 
     public void selectChatUserIdentity(UserIdentity userIdentity) {
+        if (userIdentity == null) {
+            log.warn("userIdentity is null at selectChatUserIdentity");
+            return;
+        }
+
         persistableStore.setSelectedUserIdentity(userIdentity);
         persist();
     }
@@ -216,10 +221,8 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         }
         synchronized (lock) {
             getUserIdentities().remove(userIdentity);
-
-            getUserIdentities().stream().findAny()
-                    .ifPresentOrElse(persistableStore::setSelectedUserIdentity,
-                            () -> persistableStore.setSelectedUserIdentity(null));
+            // We have at least 1 userIdentity left
+            persistableStore.setSelectedUserIdentity(getUserIdentities().stream().findFirst().orElseThrow());
         }
         persist();
         identityService.retireActiveIdentity(userIdentity.getIdentity().getTag());
@@ -256,7 +259,6 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         return persistableStore.getSelectedUserIdentityObservable();
     }
 
-    @Nullable
     public UserIdentity getSelectedUserIdentity() {
         return persistableStore.getSelectedUserIdentity();
     }

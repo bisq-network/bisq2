@@ -111,7 +111,7 @@ public class AuthorizedRoleController extends ContentTabController<AuthorizedRol
         UIThread.run(() -> {
             UserIdentity selectedUserIdentity = userIdentityService.getSelectedUserIdentity();
             model.getAuthorizedBondedRoles().setAll(authorizedBondedRolesService.getAuthorizedBondedRoleStream()
-                    .filter(bondedRole -> selectedUserIdentity != null && selectedUserIdentity.getUserProfile().getId().equals(bondedRole.getProfileId()))
+                    .filter(bondedRole -> selectedUserIdentity.getUserProfile().getId().equals(bondedRole.getProfileId()))
                     .map(AuthorizedBondedRole::getBondedRoleType)
                     .collect(Collectors.toSet()));
         });

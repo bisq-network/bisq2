@@ -82,7 +82,7 @@ public class RoleInfo {
         private void onUserIdentity() {
             UserIdentity selectedUserIdentity = userIdentityService.getSelectedUserIdentity();
             authorizedBondedRolesService.getBondedRoles().stream()
-                    .filter(bondedRole -> selectedUserIdentity != null && selectedUserIdentity.getUserProfile().getId().equals(bondedRole.getAuthorizedBondedRole().getProfileId()))
+                    .filter(bondedRole -> selectedUserIdentity.getUserProfile().getId().equals(bondedRole.getAuthorizedBondedRole().getProfileId()))
                     .findAny()
                     .ifPresent(bondedRole -> {
                         model.setIsBanned(BooleanFormatter.toYesNo(bondedRole.isBanned()));

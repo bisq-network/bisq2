@@ -41,8 +41,6 @@ import java.util.Date;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 @Slf4j
 public class SecurityManagerService implements Service {
     @Getter
@@ -102,7 +100,7 @@ public class SecurityManagerService implements Service {
                                                    boolean requireVersionForTrading,
                                                    Optional<String> minVersion,
                                                    Optional<AuthorizedBondedRole> bannedRole) {
-        UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
+        UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
         String profileId = userIdentity.getId();
         KeyPair keyPair = userIdentity.getIdentity().getKeyBundle().getKeyPair();
         PublicKey authorizedPublicKey = keyPair.getPublic();
@@ -131,7 +129,7 @@ public class SecurityManagerService implements Service {
     }
 
     public CompletableFuture<Boolean> publishDifficultyAdjustment(double difficultyAdjustmentFactor) {
-        UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
+        UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
         String profileId = userIdentity.getId();
         KeyPair keyPair = userIdentity.getIdentity().getKeyBundle().getKeyPair();
         PublicKey authorizedPublicKey = keyPair.getPublic();
@@ -148,7 +146,7 @@ public class SecurityManagerService implements Service {
     }
 
     public CompletableFuture<Boolean> publishMinRequiredReputationScore(long minRequiredReputationScore) {
-        UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
+        UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
         String profileId = userIdentity.getId();
         KeyPair keyPair = userIdentity.getIdentity().getKeyBundle().getKeyPair();
         PublicKey authorizedPublicKey = keyPair.getPublic();

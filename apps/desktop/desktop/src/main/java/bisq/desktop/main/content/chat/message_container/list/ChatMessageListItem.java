@@ -139,7 +139,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                 ((BisqEasyOfferbookMessage) chatMessage).hasBisqEasyOffer()) {
             BisqEasyOfferbookMessage bisqEasyOfferbookMessage = (BisqEasyOfferbookMessage) chatMessage;
             message = getLocalizedOfferbookMessage(bisqEasyOfferbookMessage);
-            if (userIdentityService.getSelectedUserIdentity() != null && bisqEasyOfferbookMessage.getBisqEasyOffer().isPresent()) {
+            if (bisqEasyOfferbookMessage.getBisqEasyOffer().isPresent()) {
                 UserProfile userProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
                 NetworkId takerNetworkId = userProfile.getNetworkId();
                 BisqEasyOffer bisqEasyOffer = bisqEasyOfferbookMessage.getBisqEasyOffer().get();

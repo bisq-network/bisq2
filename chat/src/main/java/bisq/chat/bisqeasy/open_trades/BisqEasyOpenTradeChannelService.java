@@ -46,7 +46,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelService<BisqEasyOpenTradeMessage, BisqEasyOpenTradeChannel, BisqEasyOpenTradeChannelStore> {
@@ -127,7 +126,7 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
                     if (bannedUserService.isUserProfileBanned(makerUserProfile)) {
                         return CompletableFuture.<SendMessageResult>failedFuture(new RuntimeException("Maker is banned"));
                     }
-                    UserIdentity myUserIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
+                    UserIdentity myUserIdentity = userIdentityService.getSelectedUserIdentity();
                     if (bannedUserService.isUserProfileBanned(myUserIdentity.getUserProfile())) {
                         return CompletableFuture.<SendMessageResult>failedFuture(new RuntimeException());
                     }

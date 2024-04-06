@@ -42,7 +42,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.concurrent.CompletableFuture;
 
 import static bisq.bisq_easy.NavigationTarget.CREATE_PROFILE_STEP1;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class UserProfileController implements Controller {
@@ -159,7 +158,7 @@ public class UserProfileController implements Controller {
     }
 
     public void onDeleteProfile() {
-        String profileName = checkNotNull(userIdentityService.getSelectedUserIdentity()).getUserName();
+        String profileName = userIdentityService.getSelectedUserIdentity().getUserName();
         new Popup().warning(Res.get("user.userProfile.deleteProfile.popup.warning", profileName))
                 .onAction(this::doDeleteProfile)
                 .actionButtonText(Res.get("user.userProfile.deleteProfile.popup.warning.yes"))

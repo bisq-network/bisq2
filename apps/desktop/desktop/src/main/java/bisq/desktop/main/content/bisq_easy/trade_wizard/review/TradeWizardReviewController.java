@@ -76,8 +76,6 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 @Slf4j
 public class TradeWizardReviewController implements Controller {
     private final TradeWizardReviewModel model;
@@ -146,7 +144,7 @@ public class TradeWizardReviewController implements Controller {
                 fiatPaymentMethods,
                 amountSpec,
                 priceSpec);
-        UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
+        UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
         BisqEasyOffer bisqEasyOffer = new BisqEasyOffer(
                 userIdentity.getUserProfile().getNetworkId(),
                 direction,
@@ -367,7 +365,7 @@ public class TradeWizardReviewController implements Controller {
     }
 
     public void publishOffer() {
-        UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
+        UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
         bisqEasyOfferbookChannelService.publishChatMessage(model.getMyOfferMessage(), userIdentity)
                 .thenAccept(result -> UIThread.run(() -> {
                     model.getShowCreateOfferSuccess().set(true);
@@ -381,7 +379,7 @@ public class TradeWizardReviewController implements Controller {
             new Popup().warning(Res.get("bisqEasy.takeOffer.makerBanned.warning")).show();
             return;
         }
-        UserIdentity takerIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
+        UserIdentity takerIdentity = userIdentityService.getSelectedUserIdentity();
         if (bannedUserService.isUserProfileBanned(takerIdentity.getUserProfile())) {
             // If taker is banned we don't need to show them a popup
             return;

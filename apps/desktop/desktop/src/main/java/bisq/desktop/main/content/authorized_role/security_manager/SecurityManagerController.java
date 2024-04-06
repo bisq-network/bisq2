@@ -50,8 +50,6 @@ import org.fxmisc.easybind.Subscription;
 
 import java.util.Optional;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 @Slf4j
 public class SecurityManagerController implements Controller {
     @Getter
@@ -182,14 +180,11 @@ public class SecurityManagerController implements Controller {
     }
 
     boolean isRemoveDifficultyAdjustmentButtonVisible(AuthorizedAlertData authorizedAlertData) {
-        if (userIdentityService.getSelectedUserIdentity() == null) {
-            return false;
-        }
         return userIdentityService.getSelectedUserIdentity().getId().equals(authorizedAlertData.getSecurityManagerProfileId());
     }
 
     void onRemoveAlert(AuthorizedAlertData authorizedAlertData) {
-        UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
+        UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
         securityManagerService.removeAlert(authorizedAlertData, userIdentity.getNetworkIdWithKeyPair().getKeyPair());
     }
 
@@ -253,27 +248,21 @@ public class SecurityManagerController implements Controller {
     }
 
     boolean isRemoveDifficultyAdjustmentButtonVisible(AuthorizedDifficultyAdjustmentData data) {
-        if (userIdentityService.getSelectedUserIdentity() == null) {
-            return false;
-        }
         return userIdentityService.getSelectedUserIdentity().getId().equals(data.getSecurityManagerProfileId());
     }
 
     boolean isRemoveMinRequiredReputationScoreButtonVisible(AuthorizedMinRequiredReputationScoreData data) {
-        if (userIdentityService.getSelectedUserIdentity() == null) {
-            return false;
-        }
         return userIdentityService.getSelectedUserIdentity().getId().equals(data.getSecurityManagerProfileId());
     }
 
     void onRemoveDifficultyAdjustmentListItem(SecurityManagerView.DifficultyAdjustmentListItem item) {
-        UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
+        UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
         securityManagerService.removeDifficultyAdjustment(item.getData(), userIdentity.getNetworkIdWithKeyPair().getKeyPair());
         model.getDifficultyAdjustmentFactor().set(difficultyAdjustmentService.getMostRecentValueOrDefault().get());
     }
 
     void onRemoveMinRequiredReputationScoreListItem(SecurityManagerView.MinRequiredReputationScoreListItem item) {
-        UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
+        UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
         securityManagerService.removeMinRequiredReputationScore(item.getData(), userIdentity.getNetworkIdWithKeyPair().getKeyPair());
         model.getMinRequiredReputationScore().set(minRequiredReputationScoreService.getMostRecentValueOrDefault().get());
     }
@@ -304,9 +293,9 @@ public class SecurityManagerController implements Controller {
 
     private void updateSendButtonDisabled() {
         AlertType alertType = model.getSelectedAlertType().get();
-        boolean value = userIdentityService.getSelectedUserIdentity() == null || alertType == null;
-        if (value) {
-            model.getActionButtonDisabled().set(value);
+        boolean isInvalid = alertType == null;
+        if (isInvalid) {
+            model.getActionButtonDisabled().set(isInvalid);
             return;
         }
         boolean isMessageEmpty = StringUtils.isEmpty(model.getMessage().get());

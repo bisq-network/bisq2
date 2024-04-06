@@ -108,9 +108,7 @@ public class TradeWizardDirectionController implements Controller {
             return;
         }
 
-        ReputationScore reputationScore = userIdentityService.getSelectedUserIdentity() != null ?
-                reputationService.getReputationScore(userIdentityService.getSelectedUserIdentity().getUserProfile()) :
-                ReputationScore.NONE;
+        ReputationScore reputationScore = reputationService.getReputationScore(userIdentityService.getSelectedUserIdentity().getUserProfile());
         if (!reputationScore.hasReputation()) {
             navigationButtonsVisibleHandler.accept(false);
             model.getShowReputationInfo().set(true);

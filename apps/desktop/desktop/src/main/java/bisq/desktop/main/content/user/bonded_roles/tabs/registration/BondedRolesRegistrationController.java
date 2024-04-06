@@ -137,14 +137,12 @@ public abstract class BondedRolesRegistrationController implements Controller {
 
     protected void applyRequestCancellationButtonVisible() {
         UserIdentity selectedUserIdentity = userIdentityService.getSelectedUserIdentity();
-        model.getRequestCancellationButtonVisible().set(
-                selectedUserIdentity != null && authorizedBondedRolesService.getAuthorizedBondedRoleStream()
+        model.getRequestCancellationButtonVisible().set(authorizedBondedRolesService.getAuthorizedBondedRoleStream()
                         .filter(bondedRole -> bondedRole.getBondedRoleType() == model.getBondedRoleType())
                         .anyMatch(bondedRole -> selectedUserIdentity.getUserProfile().getId().equals(bondedRole.getProfileId())));
     }
 
     protected void requestBondedRoleRegistration(boolean isCancellationRequest) {
-        checkNotNull(userIdentityService.getSelectedUserIdentity());
         checkNotNull(model.getProfileId().get());
         checkNotNull(model.getAuthorizedPublicKey());
         boolean success = bondedRoleRegistrationService.requestBondedRoleRegistration(
@@ -154,7 +152,7 @@ public abstract class BondedRolesRegistrationController implements Controller {
                 model.getBondUserName().get(),
                 model.getSignature().get(),
                 model.getAddressByNetworkType(),
-                checkNotNull(userIdentityService.getSelectedUserIdentity()).getNetworkIdWithKeyPair(),
+                userIdentityService.getSelectedUserIdentity().getNetworkIdWithKeyPair(),
                 isCancellationRequest);
         if (success) {
             model.getBondUserName().set("");

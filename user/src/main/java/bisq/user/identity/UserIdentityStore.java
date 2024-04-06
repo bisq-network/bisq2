@@ -28,7 +28,6 @@ import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.HashSet;
@@ -60,7 +59,7 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
     public UserIdentityStore() {
     }
 
-    private UserIdentityStore(@Nullable String selectedUserIdentityId,
+    private UserIdentityStore(String selectedUserIdentityId,
                               Set<UserIdentity> userIdentities,
                               long lastUserProfilePublishingDate) {
         this.userIdentities.setAll(userIdentities);
@@ -76,7 +75,7 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
         this.lastUserProfilePublishingDate = lastUserProfilePublishingDate;
     }
 
-    private UserIdentityStore(@Nullable String selectedUserIdentityId,
+    private UserIdentityStore(String selectedUserIdentityId,
                               Set<UserIdentity> userIdentities,
                               Optional<EncryptedData> encryptedData,
                               Optional<ScryptParameters> scryptParameters,
@@ -288,7 +287,6 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
         return selectedUserIdentityObservable;
     }
 
-    @Nullable
     UserIdentity getSelectedUserIdentity() {
         return selectedUserIdentityObservable.get();
     }
@@ -298,11 +296,29 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
     }
 
     // We want to ensure that the selected object is the same as the one in the userIdentities set.
-    void setSelectedUserIdentity(@Nullable UserIdentity userIdentity) {
-        selectedUserIdentityObservable.set(userIdentities.stream()
+    void setSelectedUserIdentity(UserIdentity userIdentity) {
+        if (userIdentities.isEmpty()) {
+            log.error("userIdentities must not be empty. userIdentity={}", userIdentity);
+            return;
+        }
+
+        Optional<UserIdentity> optionalUserIdentity = userIdentities.stream()
                 .filter(e -> e.equals(userIdentity))
-                .findAny()
-                .orElse(null));
+                .findAny();
+        if (optionalUserIdentity.isPresent()) {
+            selectedUserIdentityObservable.set(optionalUserIdentity.get());
+        } else {
+            log.warn("Could not find user identity in userIdentities.\n" +
+                            "userIdentity={}\n" +
+                            "userIdentities={}",
+                    userIdentity, userIdentities);
+            if (selectedUserIdentityObservable.get() == null) {
+                log.warn("As selectedUserIdentity is null we select the fist found userIdentity from userIdentities.");
+                selectedUserIdentityObservable.set(userIdentities.stream().findFirst().orElseThrow());
+            } else {
+                log.warn("As selectedUserIdentity is not null we ignore the call.");
+            }
+        }
     }
 
     Optional<EncryptedData> getEncryptedData() {
@@ -325,16 +341,32 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    @Nullable
     private String getSelectedUserIdentityId() {
         return getSelectedUserIdentity() != null ? getSelectedUserIdentity().getId() : null;
     }
 
-    private void setSelectedUserIdentityId(@Nullable String selectedUserIdentityId) {
-        selectedUserIdentityObservable.set(userIdentities.stream()
-                .filter(userIdentity -> userIdentity.getId().equals(selectedUserIdentityId))
-                .findAny()
-                .orElse(null));
+    private void setSelectedUserIdentityId(String selectedUserIdentityId) {
+        if (userIdentities.isEmpty()) {
+            log.error("userIdentities must not be empty. userIdentity={}", selectedUserIdentityId);
+            return;
+        }
+        Optional<UserIdentity> optionalUserIdentity = userIdentities.stream()
+                .filter(e -> e.getId().equals(selectedUserIdentityId))
+                .findAny();
+        if (optionalUserIdentity.isPresent()) {
+            selectedUserIdentityObservable.set(optionalUserIdentity.get());
+        } else {
+            log.warn("Could not find user identity in userIdentities.\n" +
+                            "selectedUserIdentityId={}\n" +
+                            "userIdentities={}",
+                    selectedUserIdentityId, userIdentities);
+            if (selectedUserIdentityObservable.get() == null) {
+                log.warn("As selectedUserIdentity is null we select the fist found userIdentity from userIdentities.");
+                selectedUserIdentityObservable.set(userIdentities.stream().findFirst().orElseThrow());
+            } else {
+                log.warn("As selectedUserIdentity is not null we ignore the call.");
+            }
+        }
     }
 
     private void deleteAesSecretKey() {
