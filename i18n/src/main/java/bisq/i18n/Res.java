@@ -82,7 +82,7 @@ public class Res {
      * @return The value separated with a space to the postfix which is either singular or plural form
      */
     public static String getAsSingularOrPlural(String key, long value) {
-        if (value != 1) {
+        if (Math.abs(value) != 1) {
             key = key + "s";
         }
         return value + " " + get(key);
