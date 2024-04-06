@@ -34,7 +34,6 @@ import javafx.stage.PopupWindow;
 import javafx.stage.WindowEvent;
 import lombok.Getter;
 
-import javax.annotation.Nullable;
 import java.util.Collection;
 
 public class DropdownMenu extends HBox {
@@ -44,7 +43,7 @@ public class DropdownMenu extends HBox {
     private final ImageView defaultIcon, activeIcon;
     private final ContextMenu contextMenu = new ContextMenu();
     private ImageView buttonIcon;
-    @Nullable
+    // We need to pin it as used in a WeakChangeListener
     private ChangeListener<Number> widthPropertyChangeListener;
     private boolean isFirstRun = false;
 
