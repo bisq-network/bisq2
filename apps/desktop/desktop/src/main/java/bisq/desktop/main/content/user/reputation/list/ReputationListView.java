@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.user.reputation.list;
 
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
@@ -30,6 +31,8 @@ import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import bisq.user.reputation.ReputationSource;
 import bisq.user.reputation.data.*;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
@@ -49,8 +52,8 @@ import java.util.stream.Collectors;
 public class ReputationListView extends View<VBox, ReputationListModel, ReputationListController> {
     private final BisqTableView<ListItem> tableView;
     private final StandardTable<ListItem> standardTable;
-    private BisqTableColumn<ListItem> valueColumn;
-    private Subscription userProfileIdOfScoreUpdatePin;
+    private BisqTableColumn<ListItem> scoreColumn, valueColumn;
+    private Subscription userProfileIdOfScoreUpdatePin, selectedReputationSourcePin;
 
     public ReputationListView(ReputationListModel model,
                               ReputationListController controller) {
@@ -75,6 +78,29 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
                 tableView.refresh();
             }
         });
+
+        selectedReputationSourcePin = EasyBind.subscribe(model.getSelectedReputationSource(), selectedReputationSource -> {
+            UIThread.runOnNextRenderFrame(() -> {
+                tableView.getSortOrder().clear();
+                if (selectedReputationSource == null) {
+                    tableView.getSortOrder().add(scoreColumn);
+                } else {
+
+                    switch (selectedReputationSource) {
+                        case BURNED_BSQ:
+                        case BSQ_BOND:
+                            valueColumn.setSortType(TableColumn.SortType.DESCENDING);
+                            break;
+                        case PROFILE_AGE:
+                        case BISQ1_ACCOUNT_AGE:
+                        case BISQ1_SIGNED_ACCOUNT_AGE_WITNESS:
+                            valueColumn.setSortType(TableColumn.SortType.ASCENDING);
+                            break;
+                    }
+                    tableView.getSortOrder().add(valueColumn);
+                }
+            });
+        });
     }
 
     @Override
@@ -82,6 +108,7 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
         standardTable.dispose();
         valueColumn.visibleProperty().unbind();
         userProfileIdOfScoreUpdatePin.unsubscribe();
+        selectedReputationSourcePin.unsubscribe();
     }
 
     private void configTableView() {
@@ -98,20 +125,18 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
                 .valueSupplier(ListItem::getProfileAgeString)
                 .build());
 
-        BisqTableColumn<ListItem> scoreColumn = new BisqTableColumn.Builder<ListItem>()
+        scoreColumn = new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("user.reputation.table.columns.reputationScore"))
                 .comparator(Comparator.comparing(ListItem::getTotalScore))
                 .sortType(TableColumn.SortType.DESCENDING)
                 .valueSupplier(ListItem::getTotalScoreString)
                 .build();
         tableView.getColumns().add(scoreColumn);
-        tableView.getSortOrder().add(scoreColumn);
 
         valueColumn = new BisqTableColumn.Builder<ListItem>()
                 .titleProperty(model.getFilteredValueTitle())
                 .comparator(Comparator.comparing(ListItem::getValue))
-                .sortType(TableColumn.SortType.DESCENDING)
-                .valueSupplier(ListItem::getValueString)
+                .valuePropertySupplier(ListItem::getValueProperty)
                 .build();
         tableView.getColumns().add(valueColumn);
 
@@ -208,7 +233,7 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
         private long totalScore;
         private String totalScoreString;
         private long value;
-        private String valueString;
+        private final StringProperty valueProperty = new SimpleStringProperty();
         private final Set<ReputationSource> reputationSources = new HashSet<>();
         private final Subscription selectedTogglePin;
 
@@ -237,18 +262,18 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
             if (selectedReputationSource.isEmpty() || !amountBySource.containsKey(selectedReputationSource.get())) {
                 totalScore = reputationScore.getTotalScore();
                 totalScoreString = String.valueOf(totalScore);
-                valueString = String.valueOf(totalScore);
+                valueProperty.set(String.valueOf(totalScore));
             } else {
                 value = amountBySource.get(selectedReputationSource.get());
                 switch (selectedReputationSource.get()) {
                     case BURNED_BSQ:
                     case BSQ_BOND:
-                        valueString = String.valueOf(value);
+                        valueProperty.set(String.valueOf(value));
                         break;
                     case PROFILE_AGE:
                     case BISQ1_ACCOUNT_AGE:
                     case BISQ1_SIGNED_ACCOUNT_AGE_WITNESS:
-                        valueString = TimeFormatter.formatAgeInDays(value);
+                        valueProperty.set(TimeFormatter.formatAgeInDays(value));
                         break;
                 }
             }

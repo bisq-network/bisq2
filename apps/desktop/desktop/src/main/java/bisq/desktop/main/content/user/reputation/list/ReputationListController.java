@@ -153,6 +153,7 @@ public class ReputationListController implements Controller {
             model.getFilteredList().setPredicate(item ->
                     item.getTotalScore() > 0 && selectedFilterMenuItem.getFilter().test(item));
         });
+        model.getSelectedReputationSource().set(resolveReputationSource(selectedToggle).orElse(null));
     }
 
     private StandardTable.FilterMenuItem<ReputationListView.ListItem> getShowAllFilterMenuItem() {
