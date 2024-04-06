@@ -52,6 +52,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
     private static final ValidatorBase DIFFICULTY_ADJUSTMENT_FACTOR_VALIDATOR =
             new NumberValidator(Res.get("settings.preferences.network.difficultyAdjustmentFactor.invalid", NetworkLoad.MAX_DIFFICULTY_ADJUSTMENT),
                     0, NetworkLoad.MAX_DIFFICULTY_ADJUSTMENT);
+    private static final StringConverter<Number> NUMBER_STRING_CONVERTER = new NumberStringConverter();
 
     private final Button resetDontShowAgain, clearNotifications, addLanguageButton;
     private final Switch useAnimations, preventStandbyMode, offersOnlySwitch, closeMyOfferWhenTaken, notifyForPreRelease,
@@ -62,7 +63,8 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
     private final ChangeListener<Toggle> notificationsToggleListener;
     private final AutoCompleteComboBox<String> languageSelection, supportedLanguagesComboBox;
     private final MaterialTextField minRequiredReputationScore, difficultyAdjustmentFactor;
-    private Subscription selectedNotificationTypePin, getSelectedLSupportedLanguageCodePin;
+    private Subscription selectedNotificationTypePin, getSelectedSupportedLanguageCodePin,
+            ignoreDiffAdjustFromSecManagerSwitchPin, ignoreMinRequiredReputationScoreFromSecManagerSwitchPin;
 
     public PreferencesView(PreferencesModel model, PreferencesController controller) {
         super(new VBox(50), model, controller);
@@ -249,11 +251,11 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         ignoreMinRequiredReputationScoreFromSecManagerSwitch.selectedProperty().bindBidirectional(model.getIgnoreMinRequiredReputationScoreFromSecManager());
         closeMyOfferWhenTaken.selectedProperty().bindBidirectional(model.getCloseMyOfferWhenTaken());
 
-        Bindings.bindBidirectional(minRequiredReputationScore.textProperty(), model.getMinRequiredReputationScore(), new NumberStringConverter());
+        Bindings.bindBidirectional(minRequiredReputationScore.textProperty(), model.getMinRequiredReputationScore(), NUMBER_STRING_CONVERTER);
         minRequiredReputationScore.descriptionProperty().bind(model.getMinRequiredReputationScoreDescriptionText());
         minRequiredReputationScore.getTextInputControl().editableProperty().bind(model.getMinRequiredReputationScoreEditable());
 
-        Bindings.bindBidirectional(difficultyAdjustmentFactor.textProperty(), model.getDifficultyAdjustmentFactor(), new NumberStringConverter());
+        Bindings.bindBidirectional(difficultyAdjustmentFactor.textProperty(), model.getDifficultyAdjustmentFactor(), NUMBER_STRING_CONVERTER);
         difficultyAdjustmentFactor.descriptionProperty().bind(model.getDifficultyAdjustmentFactorDescriptionText());
         difficultyAdjustmentFactor.getTextInputControl().editableProperty().bind(model.getDifficultyAdjustmentFactorEditable());
 
@@ -274,8 +276,14 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
             controller.onSelectSupportedLanguage(supportedLanguagesComboBox.getSelectionModel().getSelectedItem());
         });
 
-        getSelectedLSupportedLanguageCodePin = EasyBind.subscribe(model.getSelectedLSupportedLanguageCode(),
+        getSelectedSupportedLanguageCodePin = EasyBind.subscribe(model.getSelectedLSupportedLanguageCode(),
                 e -> supportedLanguagesComboBox.getSelectionModel().select(e));
+
+        ignoreDiffAdjustFromSecManagerSwitchPin = EasyBind.subscribe(
+                ignoreDiffAdjustFromSecManagerSwitch.selectedProperty(), s -> difficultyAdjustmentFactor.validate());
+
+        ignoreMinRequiredReputationScoreFromSecManagerSwitchPin = EasyBind.subscribe(
+                ignoreMinRequiredReputationScoreFromSecManagerSwitch.selectedProperty(), s -> minRequiredReputationScore.validate());
 
         resetDontShowAgain.setOnAction(e -> controller.onResetDontShowAgain());
         clearNotifications.setOnAction(e -> controller.onClearNotifications());
@@ -307,7 +315,9 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
 
         notificationsToggleGroup.selectedToggleProperty().removeListener(notificationsToggleListener);
         selectedNotificationTypePin.unsubscribe();
-        getSelectedLSupportedLanguageCodePin.unsubscribe();
+        getSelectedSupportedLanguageCodePin.unsubscribe();
+        ignoreDiffAdjustFromSecManagerSwitchPin.unsubscribe();
+        ignoreMinRequiredReputationScoreFromSecManagerSwitchPin.unsubscribe();
 
         resetDontShowAgain.setOnAction(null);
         clearNotifications.setOnAction(null);
