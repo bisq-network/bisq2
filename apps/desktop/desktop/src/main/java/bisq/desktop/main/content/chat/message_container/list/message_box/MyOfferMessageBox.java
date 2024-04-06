@@ -20,10 +20,12 @@ package bisq.desktop.main.content.chat.message_container.list.message_box;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
+import bisq.common.data.Pair;
 import bisq.common.util.StringUtils;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.DropdownMenu;
 import bisq.desktop.components.controls.DropdownMenuItem;
+import bisq.desktop.main.content.bisq_easy.offerbook.BisqEasyOfferbookUtil;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListModel;
@@ -55,10 +57,15 @@ public final class MyOfferMessageBox extends BubbleMessageBox {
         // Dropdown menu
         DropdownMenu dropdownMenu = createAndGetDropdownMenu();
 
+        Pair<String, String> splitMessage = BisqEasyOfferbookUtil.splitOfferBookMessageText(message.getText());
+        String messageTitle = splitMessage.getFirst();
+        String messageText = splitMessage.getSecond();
+
         // My offer title
-        Label myOfferTitle = createAndGetMyOfferTitle();
+        Label myOfferTitle = createAndGetMyOfferTitle(messageTitle);
 
         // Message
+        message.setText(messageText);
         message.getStyleClass().add("chat-my-offer-message");
 
         // Offer content
@@ -114,17 +121,14 @@ public final class MyOfferMessageBox extends BubbleMessageBox {
         return dropdownMenu;
     }
 
-    private Label createAndGetMyOfferTitle() {
+    private Label createAndGetMyOfferTitle(String title) {
         BisqEasyOfferbookMessage bisqEasyOfferbookMessage = (BisqEasyOfferbookMessage) item.getChatMessage();
         checkArgument(bisqEasyOfferbookMessage.getBisqEasyOffer().isPresent(),
                 "Bisq Easy Offerbook message must contain an offer");
 
-        Direction direction = bisqEasyOfferbookMessage.getBisqEasyOffer().get().getDirection();
-        String directionString = StringUtils.capitalize(Res.get("offer." + direction.name().toLowerCase()));
-        Label label = new Label(Res.get("offer.myOffer.title", directionString));
+        boolean isBuy = bisqEasyOfferbookMessage.getBisqEasyOffer().get().getDirection() == Direction.BUY;
+        Label label = new Label(title);
         label.getStyleClass().addAll("bisq-easy-offer-title", "normal-text", "font-default");
-
-        boolean isBuy = direction == Direction.BUY;
         label.getStyleClass().add(isBuy ? "bisq-easy-offer-buy-btc-title" : "bisq-easy-offer-sell-btc-title");
         return label;
     }
