@@ -30,6 +30,7 @@ import bisq.i18n.Res;
 import bisq.offer.amount.spec.FixedAmountSpec;
 import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.offer.payment_method.PaymentMethodSpec;
 import bisq.offer.price.spec.FixPriceSpec;
 import bisq.offer.price.spec.FloatPriceSpec;
 import bisq.offer.price.spec.MarketPriceSpec;
@@ -40,18 +41,17 @@ import bisq.presentation.formatters.PriceFormatter;
 import javafx.collections.transformation.FilteredList;
 import javafx.css.PseudoClass;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
+import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import lombok.Getter;
 
 import java.util.Comparator;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public final class ChatOfferTable {
     private static final PseudoClass OWN_OFFER_PSEUDO_CLASS = PseudoClass.getPseudoClass("own-offer");
@@ -91,14 +91,14 @@ public final class ChatOfferTable {
                 .setCellFactory(getReputationCellFactory())
                 .build());
 
-        tableView.getColumns().add(new BisqTableColumn.Builder<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>>()
-                .title(Res.get("chat.offerTable.intention"))
-                .isSortable(true)
-                .left()
-                .minWidth(50)
-                .comparator(Comparator.comparing(m -> getOffer(m).map(o -> o.getDirection().getDisplayString()).orElse("")))
-                .valueSupplier(m -> getOffer(m).map(o -> o.getDirection().getDisplayString().toUpperCase()).orElse(""))
-                .build());
+//        tableView.getColumns().add(new BisqTableColumn.Builder<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>>()
+//                .title(Res.get("chat.offerTable.intention"))
+//                .isSortable(true)
+//                .left()
+//                .minWidth(50)
+//                .comparator(Comparator.comparing(m -> getOffer(m).map(o -> o.getDirection().getDisplayString()).orElse("")))
+//                .valueSupplier(m -> getOffer(m).map(o -> o.getDirection().getDisplayString().toUpperCase()).orElse(""))
+//                .build());
 
 //        tableView.getColumns().add(new BisqTableColumn.Builder<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>>()
 //                .title(Res.get("chat.offer.table.method"))
@@ -118,6 +118,16 @@ public final class ChatOfferTable {
                 .minWidth(200)
                 .comparator(Comparator.comparing(m -> getOffer(m).map(this::getAmount).orElse("")))
                 .valueSupplier(m -> getOffer(m).map(this::getAmount).orElse(""))
+                .build());
+
+        tableView.getColumns().add(new BisqTableColumn.Builder<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>>()
+                .title(Res.get("chat.offerTable.fiatMethod"))
+                .isSortable(true)
+                .left()
+                .minWidth(200)
+                .valueSupplier(m -> getOffer(m).map(o -> o.getQuoteSidePaymentMethodSpecs().stream()
+                        .map(PaymentMethodSpec::getShortDisplayString)
+                        .collect(Collectors.joining(", "))).orElse(""))
                 .build());
 
         tableView.getColumns().add(new BisqTableColumn.Builder<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>>()
@@ -283,8 +293,9 @@ public final class ChatOfferTable {
             private final Button takeOfferButton = new Button(Res.get("offer.takeOffer"));
 
             {
-                takeOfferButton.setAlignment(Pos.CENTER_RIGHT);
-                takeOfferButton.getStyleClass().add("take-offer-button");
+                takeOfferButton.setMaxWidth(300);
+                takeOfferButton.setMinWidth(200);
+                takeOfferButton.getStyleClass().add("buy-offer-button");
             }
 
             @Override
@@ -302,6 +313,15 @@ public final class ChatOfferTable {
                     BisqEasyOfferbookMessage bisqEasyOfferbookMessage = (BisqEasyOfferbookMessage) item.getChatMessage();
                     takeOfferButton.setOnAction(e -> controller.onTakeOffer(bisqEasyOfferbookMessage));
                     takeOfferButton.setDefaultButton(!item.isOfferAlreadyTaken());
+                    item.getSenderUserProfile().ifPresent(author -> getOffer(item).ifPresent(o -> {
+                        if (o.getDirection().isBuy()) {
+                            takeOfferButton.setText(Res.get("offer.sellTo", author.getNickName()));
+                            takeOfferButton.getStyleClass().setAll("button", "sell-offer-button");
+                        } else {
+                            takeOfferButton.setText(Res.get("offer.buyFrom", author.getNickName()));
+                            takeOfferButton.getStyleClass().setAll("button", "buy-offer-button");
+                        }
+                    }));
                     setGraphic(takeOfferButton);
                 } else {
                     takeOfferButton.setOnAction(null);

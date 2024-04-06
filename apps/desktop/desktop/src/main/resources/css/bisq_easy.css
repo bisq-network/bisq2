@@ -811,6 +811,14 @@
     -fx-opacity: 0.5;
 }
 
+.bisq-easy-offer-book-table-view .sell-offer-button {
+    -fx-background-color:  -bisq2-red-dim-30;
+}
+
+.bisq-easy-offer-book-table-view .buy-offer-button {
+    -fx-background-color:  -bisq2-green-dim-60;
+}
+
 /*******************************************************************************
  * Chat                                                              *
  ******************************************************************************/
