@@ -120,42 +120,22 @@ public class TakeOfferReviewController implements Controller {
         }
 
         Direction direction = bisqEasyOffer.getTakersDirection();
-        if (direction.isBuy()) {
-            // If taker is buyer we set the sellers price from the offer
-            PriceSpec priceSpec = bisqEasyOffer.getPriceSpec();
-            model.setSellersPriceSpec(priceSpec);
+        PriceSpec priceSpec = bisqEasyOffer.getPriceSpec();
+        model.setSellersPriceSpec(priceSpec);
 
-            Optional<PriceQuote> priceQuote = PriceUtil.findQuote(marketPriceService, bisqEasyOffer);
-            priceQuote.ifPresent(priceInput::setQuote);
+        Optional<PriceQuote> priceQuote = PriceUtil.findQuote(marketPriceService, bisqEasyOffer);
+        priceQuote.ifPresent(priceInput::setQuote);
 
-            applyPriceQuote(priceQuote);
-            applyPriceDetails(priceSpec, market);
-        }
+        applyPriceQuote(priceQuote);
+        applyPriceDetails(priceSpec, market);
 
-        model.setFee(direction.isBuy() ?
-                Res.get("bisqEasy.takeOffer.review.fee.buyer") :
-                Res.get("bisqEasy.takeOffer.review.fee.seller"));
+        model.setFee(direction.isBuy()
+                ? Res.get("bisqEasy.takeOffer.review.fee.buyer")
+                : Res.get("bisqEasy.takeOffer.review.fee.seller"));
 
-        model.setFeeDetails(direction.isBuy() ?
-                Res.get("bisqEasy.takeOffer.review.feeDetails.buyer") :
-                Res.get("bisqEasy.takeOffer.review.feeDetails.seller"));
-    }
-
-
-    public void setTradePriceSpec(PriceSpec priceSpec) {
-        // Only handle if taker is seller
-        if (priceSpec != null && model.getBisqEasyOffer() != null && model.getBisqEasyOffer().getTakersDirection().isSell()) {
-            model.setSellersPriceSpec(priceSpec);
-
-            Optional<PriceQuote> priceQuote = PriceUtil.findQuote(marketPriceService, priceSpec, model.getBisqEasyOffer().getMarket());
-            priceQuote.ifPresent(priceInput::setQuote);
-
-            applyPriceQuote(priceQuote);
-            applyPriceDetails(priceSpec, model.getBisqEasyOffer().getMarket());
-
-            OfferAmountUtil.findBaseSideMinOrFixedAmount(marketPriceService, model.getBisqEasyOffer().getAmountSpec(), priceSpec, model.getBisqEasyOffer().getMarket())
-                    .ifPresent(model::setTakersBaseSideAmount);
-        }
+        model.setFeeDetails(direction.isBuy()
+                ? Res.get("bisqEasy.takeOffer.review.feeDetails.buyer")
+                : Res.get("bisqEasy.takeOffer.review.feeDetails.seller"));
     }
 
     public void setTakersBaseSideAmount(Monetary amount) {

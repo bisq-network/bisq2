@@ -203,7 +203,6 @@ public class TradeWizardController extends NavigationController implements InitW
             } else {
                 tradeWizardReviewController.setDataForTakeOffer(tradeWizardSelectOfferController.getSelectedBisqEasyOffer().get(),
                         tradeWizardAmountController.getAmountSpec().get(),
-                        tradeWizardPriceController.getPriceSpec().get(),
                         tradeWizardPaymentMethodController.getFiatPaymentMethods()
                 );
                 model.getNextButtonText().set(Res.get("bisqEasy.tradeWizard.review.nextButton.takeOffer"));

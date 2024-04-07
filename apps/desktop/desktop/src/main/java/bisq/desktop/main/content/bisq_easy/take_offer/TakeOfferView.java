@@ -148,12 +148,6 @@ public class TakeOfferView extends NavigationView<VBox, TakeOfferModel, TakeOffe
             progressBox.getChildren().add(0, getHLine());
             progressBox.getChildren().add(0, amount);
         }
-        if (model.isPriceVisible()) {
-            Label price = createAndGetProgressLabel(Res.get("bisqEasy.takeOffer.progress.price"));
-            progressLabelList.add(0, price);
-            progressBox.getChildren().add(0, getHLine());
-            progressBox.getChildren().add(0, price);
-        }
 
         nextButton.textProperty().bind(model.getNextButtonText());
         nextButton.visibleProperty().bind(model.getNextButtonVisible());

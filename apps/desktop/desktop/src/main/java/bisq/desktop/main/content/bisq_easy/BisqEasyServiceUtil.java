@@ -59,9 +59,7 @@ public class BisqEasyServiceUtil {
         BisqEasyOffer bisqEasyOffer = channel.getBisqEasyOffer();
         boolean maker = isMaker(serviceProvider, bisqEasyOffer);
         UserProfile peerUserProfile = channel.getPeer();
-        NetworkId takerNetworkId = maker ?
-                peerUserProfile.getNetworkId() :
-                myUserIdentity.getUserProfile().getNetworkId();
+        NetworkId takerNetworkId = maker ? peerUserProfile.getNetworkId() : myUserIdentity.getUserProfile().getNetworkId();
         String tradeId = Trade.createId(bisqEasyOffer.getId(), takerNetworkId.getId());
         return serviceProvider.getTradeService().getBisqEasyTradeService().findTrade(tradeId);
     }

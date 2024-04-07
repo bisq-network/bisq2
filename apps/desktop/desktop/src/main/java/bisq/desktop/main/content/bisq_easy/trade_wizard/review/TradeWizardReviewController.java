@@ -71,7 +71,6 @@ import bisq.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -187,7 +186,6 @@ public class TradeWizardReviewController implements Controller {
 
     public void setDataForTakeOffer(BisqEasyOffer bisqEasyOffer,
                                     AmountSpec amountSpec,
-                                    @Nullable PriceSpec priceSpec,
                                     List<FiatPaymentMethod> fiatPaymentMethods) {
         if (bisqEasyOffer == null) {
             return;
@@ -197,6 +195,7 @@ public class TradeWizardReviewController implements Controller {
         model.setBisqEasyOffer(bisqEasyOffer);
         Direction direction = bisqEasyOffer.getTakersDirection();
         Market market = bisqEasyOffer.getMarket();
+        PriceSpec price = bisqEasyOffer.getPriceSpec();
 
         List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs = bisqEasyOffer.getQuoteSidePaymentMethodSpecs();
         Set<FiatPaymentMethod> takersPaymentMethodSet = new HashSet<>(fiatPaymentMethods);
@@ -205,21 +204,15 @@ public class TradeWizardReviewController implements Controller {
                 .map(PaymentMethodSpec::getPaymentMethod)
                 .collect(Collectors.toList());
 
-        // If taker is seller (buy offer) we use the offers price spec, otherwise the param
-        PriceSpec priceSpecToUse = direction.isBuy() ? bisqEasyOffer.getPriceSpec() : priceSpec;
-        if (direction.isBuy()) {
-            log.info("At buy offers we do not have a priceSpec as parameter {}", priceSpec);
-        }
-
-        AmountSpec amountSpecToUse = bisqEasyOffer.getAmountSpec() instanceof FixedAmountSpec ?
-                bisqEasyOffer.getAmountSpec() :
-                amountSpec;
+        AmountSpec amountSpecToUse = bisqEasyOffer.getAmountSpec() instanceof FixedAmountSpec
+                ? bisqEasyOffer.getAmountSpec()
+                : amountSpec;
 
         applyData(direction,
                 market,
                 fiatPaymentMethodsToUse,
                 amountSpecToUse,
-                priceSpecToUse);
+                price);
     }
 
     // direction is from user perspective not offer direction
@@ -438,7 +431,6 @@ public class TradeWizardReviewController implements Controller {
         mainButtonsVisibleHandler.accept(false);
         bisqEasyOpenTradeChannelService.sendTakeOfferMessage(bisqEasyTrade.getId(), bisqEasyOffer, contract.getMediator())
                 .thenAccept(result -> UIThread.run(() -> {
-
                     // In case the user has switched to another market we want to select that market in the offer book
                     ChatChannelSelectionService chatChannelSelectionService =
                             chatService.getChatChannelSelectionService(ChatChannelDomain.BISQ_EASY_OFFERBOOK);
