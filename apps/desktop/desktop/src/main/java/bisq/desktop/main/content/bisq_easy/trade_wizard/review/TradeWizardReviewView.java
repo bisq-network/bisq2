@@ -19,6 +19,7 @@ package bisq.desktop.main.content.bisq_easy.trade_wizard.review;
 
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.desktop.common.Transitions;
+import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.MultiStyleLabelPane;
@@ -28,16 +29,19 @@ import bisq.desktop.main.content.bisq_easy.components.WaitingState;
 import bisq.desktop.main.content.bisq_easy.take_offer.TakeOfferView;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardView;
 import bisq.i18n.Res;
-import javafx.animation.PauseTransition;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
-import javafx.scene.layout.*;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
-import javafx.util.Duration;
 import javafx.util.StringConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -274,15 +278,13 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
             Transitions.slideInTop(takeOfferStatus, 450);
             takeOfferSendMessageWaitingAnimation.playIndefinitely();
 
-            PauseTransition delay = new PauseTransition(Duration.seconds(8));
-            delay.setOnFinished(e -> {
+            UIScheduler.run(() -> {
                 minWaitingTimePassed = true;
                 if (model.getTakeOfferStatus().get() == TradeWizardReviewModel.TakeOfferStatus.SUCCESS) {
                     takeOfferStatus.getChildren().setAll(takeOfferSuccess, Spacer.fillVBox());
                     takeOfferSendMessageWaitingAnimation.stop();
                 }
-            });
-            delay.play();
+            }).after(8000);
         } else if (status == TradeWizardReviewModel.TakeOfferStatus.SUCCESS && minWaitingTimePassed) {
             takeOfferStatus.getChildren().setAll(takeOfferSuccess, Spacer.fillVBox());
             takeOfferSendMessageWaitingAnimation.stop();
