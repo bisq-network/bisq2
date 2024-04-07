@@ -34,9 +34,14 @@ import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.*;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -80,6 +85,8 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
     @Override
     protected void onViewAttached() {
         super.onViewAttached();
+
+        tableView.initialize();
 
         PrivateChatsModel model = getModel();
 
@@ -126,7 +133,7 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
     protected void onViewDetached() {
         super.onViewDetached();
 
-        tableView.removeListeners();
+        tableView.dispose();
 
         selectedModelItemPin.unsubscribe();
         tableViewSelectionPin.unsubscribe();

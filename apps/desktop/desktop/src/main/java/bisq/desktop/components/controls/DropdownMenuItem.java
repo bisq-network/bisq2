@@ -22,7 +22,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.CustomMenuItem;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.*;
+import javafx.scene.layout.HBox;
 
 public class DropdownMenuItem extends CustomMenuItem {
     private static final String ICON_CSS_STYLE = "menu-item-icon";

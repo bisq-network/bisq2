@@ -71,6 +71,7 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
     private final Set<AuthorizedData> failedAuthorizedData = new CopyOnWriteArraySet<>();
     private Scheduler initialDataScheduler, reprocessScheduler;
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
+    private boolean initializeCalled;
 
     public AuthorizedBondedRolesService(NetworkService networkService,
                                         boolean ignoreSecurityManager) {
@@ -99,6 +100,7 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
     @Override
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
+        initializeCalled = true;
         networkService.addDataServiceListener(initialDataServiceListener);
         // It can be that there are no new data received from the inventory request, so we apply the existing data
         applyInitialData();
@@ -107,6 +109,7 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
+        initializeCalled = false;
         networkService.removeDataServiceListener(initialDataServiceListener);
         networkService.removeDataServiceListener(this);
         if (initialDataScheduler != null) {
@@ -274,6 +277,14 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
 
     public void addListener(Listener listener) {
         listeners.add(listener);
+
+        if (initializeCalled) {
+            log.info("We get added a listener after we have been already initialized. This is expected for higher level domain listeners." +
+                    "We apply all data from the network store to the listener. " +
+                    "listener={}", listener);
+            networkService.getDataService()
+                    .ifPresent(dataService -> dataService.getAuthorizedData().forEach(listener::onAuthorizedDataAdded));
+        }
     }
 
     public void removeListener(Listener listener) {

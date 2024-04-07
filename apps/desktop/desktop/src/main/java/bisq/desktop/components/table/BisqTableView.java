@@ -19,7 +19,6 @@ package bisq.desktop.components.table;
 
 import bisq.desktop.common.threading.UIThread;
 import javafx.beans.value.ChangeListener;
-import javafx.beans.value.WeakChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
@@ -27,6 +26,7 @@ import javafx.geometry.Orientation;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.util.Callback;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -38,32 +38,48 @@ public class BisqTableView<T> extends TableView<T> {
     private final static double TABLE_HEADER_HEIGHT = 36;
     private final static double TABLE_ROW_HEIGHT = 54;
     private final static double TABLE_SCROLLBAR_HEIGHT = 16;
+    @Getter
+    private final SortedList<T> sortedList;
     private ListChangeListener<T> listChangeListener;
     private ChangeListener<Number> widthChangeListener;
-
-    public BisqTableView() {
-        super();
-
-        setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-    }
+    private final boolean useComparatorBinding;
 
     public BisqTableView(ObservableList<T> list) {
         this(new SortedList<>(list));
     }
 
+    public BisqTableView(ObservableList<T> list, boolean useComparatorBinding) {
+        this(new SortedList<>(list), useComparatorBinding);
+    }
+
     public BisqTableView(SortedList<T> sortedList) {
+        this(sortedList, true);
+    }
+
+    public BisqTableView(SortedList<T> sortedList, boolean useComparatorBinding) {
         super(sortedList);
+        this.sortedList = sortedList;
+        this.useComparatorBinding = useComparatorBinding;
 
-        comparatorProperty().addListener(new WeakChangeListener<>((observable, oldValue, newValue) -> {
-            try {
-                sortedList.setComparator(newValue);
-            } catch (Exception ignore) {
-                // When a column is added to the sortOrder we get called but there is no item data yet set, thus causing
-                // a NullPointerException.
-            }
-        }));
-
+        if (useComparatorBinding) {
+            // Need to bind early as otherwise table not applying it
+            sortedList.comparatorProperty().bind(this.comparatorProperty());
+        }
         setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+    }
+
+    public void initialize() {
+        if (useComparatorBinding) {
+            sortedList.comparatorProperty().unbind();
+            sortedList.comparatorProperty().bind(this.comparatorProperty());
+        }
+    }
+
+    public void dispose() {
+        if (useComparatorBinding) {
+            sortedList.comparatorProperty().unbind();
+        }
+        removeListeners();
     }
 
     public void setPlaceholderText(String placeHolderText) {

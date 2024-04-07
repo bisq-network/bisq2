@@ -1,5 +1,6 @@
 package bisq.desktop.components.table;
 
+import bisq.desktop.common.threading.UIThread;
 import bisq.i18n.Res;
 import javafx.collections.ObservableList;
 import javafx.geometry.Pos;
@@ -36,7 +37,7 @@ public class BisqTableColumns {
         }
         BisqTableColumn<T> column = builder.build();
         if (sortOrder != null) {
-            sortOrder.add(column);
+            UIThread.runOnNextRenderFrame(() -> sortOrder.add(column));
         }
         return column;
     }

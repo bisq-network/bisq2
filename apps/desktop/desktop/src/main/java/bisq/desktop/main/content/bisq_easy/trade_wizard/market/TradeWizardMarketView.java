@@ -91,6 +91,7 @@ public class TradeWizardMarketView extends View<VBox, TradeWizardMarketModel, Tr
 
     @Override
     protected void onViewAttached() {
+        tableView.initialize();
         headlineLabel.setText(model.getHeadline());
         tableView.getSelectionModel().select(model.getSelectedMarketListItem().get());
 
@@ -106,6 +107,7 @@ public class TradeWizardMarketView extends View<VBox, TradeWizardMarketModel, Tr
 
     @Override
     protected void onViewDetached() {
+        tableView.dispose();
         searchBox.textProperty().unbindBidirectional(model.getSearchText());
         tableView.setOnMouseClicked(null);
     }

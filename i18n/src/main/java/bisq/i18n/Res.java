@@ -72,6 +72,32 @@ public class Res {
         }
     }
 
+    // Convenience method for supporting format `{0} get(key)` where key is expected to support singular and plural
+    // cases where the plural key adds a `s` to the singular key. Argument is expected to be integer or long
+
+    /**
+     * @param key   Key which supports singular and plural. By convention, we expect the plural key to have
+     *              a `s` as postfix to the singular key.
+     * @param value The long value
+     * @return The value separated with a space to the postfix which is either singular or plural form
+     */
+    public static String getAsSingularOrPlural(String key, long value) {
+        if (Math.abs(value) != 1) {
+            key = key + "s";
+        }
+        return value + " " + get(key);
+    }
+
+    /**
+     * @param key   Key which supports singular and plural. By convention, we expect the plural key to have
+     *              a `s` as postfix to the singular key.
+     * @param value The integer value
+     * @return The value separated with a space to the postfix which is either singular or plural form
+     */
+    public static String getAsSingularOrPlural(String key, int value) {
+        return getAsSingularOrPlural(key, (long) value);
+    }
+
     public static boolean has(String key) {
         return bundles.stream().anyMatch(bundle -> bundle.containsKey(key));
     }

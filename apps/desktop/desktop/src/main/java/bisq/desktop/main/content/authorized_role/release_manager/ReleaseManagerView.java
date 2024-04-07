@@ -94,6 +94,7 @@ public class ReleaseManagerView extends View<VBox, ReleaseManagerModel, ReleaseM
 
     @Override
     protected void onViewAttached() {
+        tableView.initialize();
         version.textProperty().bindBidirectional(model.getVersion());
         releaseNotes.textProperty().bindBidirectional(model.getReleaseNotes());
         sendButton.disableProperty().bind(model.getActionButtonDisabled());
@@ -105,6 +106,7 @@ public class ReleaseManagerView extends View<VBox, ReleaseManagerModel, ReleaseM
 
     @Override
     protected void onViewDetached() {
+        tableView.dispose();
         version.textProperty().unbindBidirectional(model.getVersion());
         releaseNotes.textProperty().unbindBidirectional(model.getReleaseNotes());
         sendButton.disableProperty().unbind();

@@ -176,10 +176,12 @@ public class BannedUserProfileTable {
 
         @Override
         protected void onViewAttached() {
+            tableView.initialize();
         }
 
         @Override
         protected void onViewDetached() {
+            tableView.dispose();
         }
 
         private void configTableView() {

@@ -88,11 +88,15 @@ public class TransportTypeView extends View<GridPane, TransportTypeModel, Transp
 
     @Override
     protected void onViewAttached() {
+        connectionsTableView.initialize();
+        nodesTableView.initialize();
         myAddress.textProperty().bind(model.getMyDefaultNodeAddress());
     }
 
     @Override
     protected void onViewDetached() {
+        connectionsTableView.dispose();
+        nodesTableView.dispose();
         myAddress.textProperty().unbind();
     }
 

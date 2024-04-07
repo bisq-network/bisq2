@@ -49,10 +49,12 @@ public class WalletTxsView extends View<VBox, WalletTxsModel, WalletTxsControlle
 
     @Override
     protected void onViewAttached() {
+        tableView.initialize();
     }
 
     @Override
     protected void onViewDetached() {
+        tableView.dispose();
     }
 
     private void configTableView() {
