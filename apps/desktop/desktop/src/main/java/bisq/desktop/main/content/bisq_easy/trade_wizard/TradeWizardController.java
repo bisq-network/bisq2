@@ -128,8 +128,8 @@ public class TradeWizardController extends NavigationController implements InitW
         model.getChildTargets().addAll(List.of(
                 NavigationTarget.TRADE_WIZARD_DIRECTION,
                 NavigationTarget.TRADE_WIZARD_MARKET,
-                NavigationTarget.TRADE_WIZARD_PAYMENT_METHOD,
                 NavigationTarget.TRADE_WIZARD_AMOUNT,
+                NavigationTarget.TRADE_WIZARD_PAYMENT_METHOD,
                 NavigationTarget.TRADE_WIZARD_TAKE_OFFER_OFFER,
                 NavigationTarget.TRADE_WIZARD_REVIEW_OFFER
         ));
@@ -313,7 +313,9 @@ public class TradeWizardController extends NavigationController implements InitW
     }
 
     private boolean isTakeOfferItem(int index) {
-        return model.isCreateOfferMode() && !model.getChildTargets().isEmpty() && model.getChildTargets().get(index) == NavigationTarget.TRADE_WIZARD_TAKE_OFFER_OFFER;
+        return model.isCreateOfferMode()
+                && !model.getChildTargets().isEmpty()
+                && model.getChildTargets().get(index) == NavigationTarget.TRADE_WIZARD_TAKE_OFFER_OFFER;
     }
 
     void onClose() {

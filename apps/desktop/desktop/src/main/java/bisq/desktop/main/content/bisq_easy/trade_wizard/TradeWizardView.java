@@ -223,9 +223,9 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
                 getHLine(),
                 market,
                 getHLine(),
-                method,
-                getHLine(),
                 amount,
+                getHLine(),
+                method,
                 takeOfferProgressLine,
                 takeOfferProgressItem,
                 getHLine(),
@@ -233,7 +233,7 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
                 Spacer.fillHBox(),
                 closeButton);
 
-        return new Triple<>(hBox, closeButton, new ArrayList<>(List.of(direction, market, method, amount, takeOfferProgressItem, review)));
+        return new Triple<>(hBox, closeButton, new ArrayList<>(List.of(direction, market, amount, method, takeOfferProgressItem, review)));
     }
 
     private Region getHLine() {
