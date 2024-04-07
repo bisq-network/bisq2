@@ -19,13 +19,18 @@ package bisq.desktop.main.content.chat.message_container.list.message_box;
 
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
+import bisq.common.data.Pair;
+import bisq.common.util.StringUtils;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.DropdownMenu;
 import bisq.desktop.components.controls.DropdownMenuItem;
+import bisq.desktop.main.content.bisq_easy.offerbook.BisqEasyOfferbookUtil;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListModel;
 import bisq.i18n.Res;
+import bisq.offer.Direction;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -34,6 +39,8 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 public final class MyOfferMessageBox extends BubbleMessageBox {
     private DropdownMenuItem removeOffer;
@@ -44,24 +51,33 @@ public final class MyOfferMessageBox extends BubbleMessageBox {
                              ChatMessagesListController controller, ChatMessagesListModel model) {
         super(item, list, controller, model);
 
-        // Message
-        message.getStyleClass().add("chat-my-offer-message");
-
         // User profile icon
         userProfileIcon.setSize(OFFER_MESSAGE_USER_ICON_SIZE);
 
         // Dropdown menu
         DropdownMenu dropdownMenu = createAndGetDropdownMenu();
 
-        // Wrappers
-        HBox hBox = new HBox(15, message, userProfileIconVbox);
-        hBox.setAlignment(Pos.CENTER);
-        VBox vBox = new VBox(5, hBox, dropdownMenu);
-        vBox.setAlignment(Pos.CENTER_RIGHT);
+        Pair<String, String> splitMessage = BisqEasyOfferbookUtil.splitOfferBookMessageText(message.getText());
+        String messageTitle = splitMessage.getFirst();
+        String messageText = splitMessage.getSecond();
+
+        // My offer title
+        Label myOfferTitle = createAndGetMyOfferTitle(messageTitle);
+
+        // Message
+        message.setText(messageText);
+        message.getStyleClass().add("chat-my-offer-message");
+
+        // Offer content
+        VBox offerMessage = new VBox(10, myOfferTitle, message);
+        HBox offerContent = new HBox(15, offerMessage, userProfileIconVbox);
+        offerContent.setAlignment(Pos.CENTER);
+        VBox messageContent = new VBox(5, offerContent, dropdownMenu);
+        messageContent.setAlignment(Pos.CENTER_RIGHT);
 
         // Message background
         messageBgHBox.getStyleClass().add("chat-my-offer-message-bg");
-        messageBgHBox.getChildren().setAll(vBox);
+        messageBgHBox.getChildren().setAll(messageContent);
         messageBgHBox.setMaxWidth(Control.USE_PREF_SIZE);
 
         // Reactions
@@ -103,6 +119,18 @@ public final class MyOfferMessageBox extends BubbleMessageBox {
         dropdownMenu.setTooltip(Res.get("chat.dropdownMenu.tooltip"));
         dropdownMenu.addMenuItems(removeOffer);
         return dropdownMenu;
+    }
+
+    private Label createAndGetMyOfferTitle(String title) {
+        BisqEasyOfferbookMessage bisqEasyOfferbookMessage = (BisqEasyOfferbookMessage) item.getChatMessage();
+        checkArgument(bisqEasyOfferbookMessage.getBisqEasyOffer().isPresent(),
+                "Bisq Easy Offerbook message must contain an offer");
+
+        boolean isBuy = bisqEasyOfferbookMessage.getBisqEasyOffer().get().getDirection() == Direction.BUY;
+        Label label = new Label(title);
+        label.getStyleClass().addAll("bisq-easy-offer-title", "normal-text", "font-default");
+        label.getStyleClass().add(isBuy ? "bisq-easy-offer-buy-btc-title" : "bisq-easy-offer-sell-btc-title");
+        return label;
     }
 
     @Override

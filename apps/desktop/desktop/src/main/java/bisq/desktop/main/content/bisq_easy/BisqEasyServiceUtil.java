@@ -22,6 +22,7 @@ import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.currency.Market;
+import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.i18n.Res;
 import bisq.network.identity.NetworkId;
@@ -87,14 +88,18 @@ public class BisqEasyServiceUtil {
         }
     }
 
-    public static String createOfferBookMessageText(MarketPriceService marketPriceService,
+    public static String createOfferBookMessageText(boolean isMyMessage,
+                                                    String messageOwnerNickName,
+                                                    MarketPriceService marketPriceService,
                                                     Direction direction,
                                                     Market market,
                                                     List<FiatPaymentMethod> fiatPaymentMethods,
                                                     AmountSpec amountSpec,
                                                     PriceSpec priceSpec) {
         String paymentMethodNames = PaymentMethodSpecFormatter.fromPaymentMethods(fiatPaymentMethods);
-        return createOfferBookMessageText(marketPriceService,
+        return createOfferBookMessageText(isMyMessage,
+                messageOwnerNickName,
+                marketPriceService,
                 direction,
                 market,
                 paymentMethodNames,
@@ -102,7 +107,9 @@ public class BisqEasyServiceUtil {
                 priceSpec);
     }
 
-    public static String createOfferBookMessageText(MarketPriceService marketPriceService,
+    public static String createOfferBookMessageText(boolean isMyMessage,
+                                                    String messageOwnerNickName,
+                                                    MarketPriceService marketPriceService,
                                                     Direction direction,
                                                     Market market,
                                                     String paymentMethodNames,
@@ -125,13 +132,24 @@ public class BisqEasyServiceUtil {
             priceInfo = "";
         }
 
-        String directionString = Res.get("offer." + direction.name().toLowerCase()).toUpperCase();
         boolean hasAmountRange = amountSpec instanceof RangeAmountSpec;
         String quoteAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, amountSpec, priceSpec, market, hasAmountRange, true);
-        return Res.get("bisqEasy.tradeWizard.review.chatMessage",
-                directionString,
-                quoteAmountAsString,
-                paymentMethodNames,
-                priceInfo);
+        return buildOfferBookMessage(isMyMessage, messageOwnerNickName, direction, quoteAmountAsString, paymentMethodNames, priceInfo);
+    }
+
+    private static String buildOfferBookMessage(boolean isMyMessage,
+                                                String messageOwnerNickName,
+                                                Direction direction,
+                                                String quoteAmount,
+                                                String paymentMethods,
+                                                String price) {
+        if (isMyMessage) {
+            String directionString = StringUtils.capitalize(Res.get("offer." + direction.name().toLowerCase()));
+            return Res.get("bisqEasy.tradeWizard.review.chatMessage.myMessage", directionString, quoteAmount, paymentMethods, price);
+        }
+
+        return direction == Direction.BUY
+                ? Res.get("bisqEasy.tradeWizard.review.chatMessage.peerMessage.sell", messageOwnerNickName, quoteAmount, paymentMethods, price)
+                : Res.get("bisqEasy.tradeWizard.review.chatMessage.peerMessage.buy", messageOwnerNickName, quoteAmount, paymentMethods, price);
     }
 }

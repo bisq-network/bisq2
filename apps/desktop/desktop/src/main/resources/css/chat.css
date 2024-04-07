@@ -171,17 +171,46 @@
     -fx-font-size: 0.9em;
 }
 
-.chat-peer-offer-message {
+.chat-peer-offer-message-bg .take-offer-vLine {
+    -fx-border-color: -bisq2-green;
+    -fx-border-width: 0 3 0 0;
+}
+
+.chat-peer-offer-message-bg .chat-peer-offer-message {
     -fx-padding: 0 0 0 7;
     -fx-line-spacing: 7px;
 }
 
-.chat-peer-offer-message-bg .take-offer-button {
-    -fx-padding: 5 30 5 30;
+.bisq-easy-offer-title .text {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
 }
 
-.chat-peer-offer-message-bg .take-offer-button .text {
-    -fx-font-size: 0.8em;
+.bisq-easy-offer-sell-btc-title .text {
+    -fx-fill: -bisq2-red-lit-20;
+    -fx-text-fill: -bisq2-red-lit-20;
+}
+
+.bisq-easy-offer-buy-btc-title .text {
+    -fx-fill: -bisq2-green;
+    -fx-text-fill: -bisq2-green;
+}
+
+.chat-peer-offer-message-bg .take-offer-button {
+    -fx-padding: 2.5 30 2.5 30;
+}
+
+.chat-peer-offer-message-bg .sell-btc-button {
+    -fx-background-color: -bisq2-red-dim-30;
+}
+
+.chat-peer-offer-message-bg .buy-btc-button {
+    -fx-background-color: -bisq2-green-dim-40;
+}
+
+.chat-peer-offer-message-bg .take-offer-label .text {
+    -fx-fill: -bisq2-green;
+    -fx-text-fill: -bisq2-green;
 }
 /* ... */
 

@@ -138,13 +138,16 @@ public class TradeWizardReviewController implements Controller {
                                       AmountSpec amountSpec,
                                       PriceSpec priceSpec) {
         model.setCreateOfferMode(true);
-        String chatMessageText = BisqEasyServiceUtil.createOfferBookMessageText(marketPriceService,
+        UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
+        // By default, create the message from the perspective of the peer to be sent as offer message
+        String chatMessageText = BisqEasyServiceUtil.createOfferBookMessageText(false,
+                userIdentity.getNickName(),
+                marketPriceService,
                 direction,
                 market,
                 fiatPaymentMethods,
                 amountSpec,
                 priceSpec);
-        UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
         BisqEasyOffer bisqEasyOffer = new BisqEasyOffer(
                 userIdentity.getUserProfile().getNetworkId(),
                 direction,
