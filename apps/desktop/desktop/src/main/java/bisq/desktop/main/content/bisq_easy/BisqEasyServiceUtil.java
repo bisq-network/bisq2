@@ -116,20 +116,16 @@ public class BisqEasyServiceUtil {
                                                     AmountSpec amountSpec,
                                                     PriceSpec priceSpec) {
         String priceInfo;
-        if (direction.isSell()) {
-            if (priceSpec instanceof FixPriceSpec) {
-                FixPriceSpec fixPriceSpec = (FixPriceSpec) priceSpec;
-                String price = PriceFormatter.formatWithCode(fixPriceSpec.getPriceQuote());
-                priceInfo = Res.get("bisqEasy.tradeWizard.review.chatMessage.fixPrice", price);
-            } else if (priceSpec instanceof FloatPriceSpec) {
-                FloatPriceSpec floatPriceSpec = (FloatPriceSpec) priceSpec;
-                String percent = PercentageFormatter.formatToPercentWithSymbol(floatPriceSpec.getPercentage());
-                priceInfo = Res.get("bisqEasy.tradeWizard.review.chatMessage.floatPrice", percent);
-            } else {
-                priceInfo = Res.get("bisqEasy.tradeWizard.review.chatMessage.marketPrice");
-            }
+        if (priceSpec instanceof FixPriceSpec) {
+            FixPriceSpec fixPriceSpec = (FixPriceSpec) priceSpec;
+            String price = PriceFormatter.formatWithCode(fixPriceSpec.getPriceQuote());
+            priceInfo = Res.get("bisqEasy.tradeWizard.review.chatMessage.fixPrice", price);
+        } else if (priceSpec instanceof FloatPriceSpec) {
+            FloatPriceSpec floatPriceSpec = (FloatPriceSpec) priceSpec;
+            String percent = PercentageFormatter.formatToPercentWithSymbol(floatPriceSpec.getPercentage());
+            priceInfo = Res.get("bisqEasy.tradeWizard.review.chatMessage.floatPrice", percent);
         } else {
-            priceInfo = "";
+            priceInfo = Res.get("bisqEasy.tradeWizard.review.chatMessage.marketPrice");
         }
 
         boolean hasAmountRange = amountSpec instanceof RangeAmountSpec;

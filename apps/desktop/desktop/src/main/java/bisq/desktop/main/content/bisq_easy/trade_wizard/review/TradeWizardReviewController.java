@@ -245,7 +245,7 @@ public class TradeWizardReviewController implements Controller {
         String codes = priceQuote.map(e -> e.getMarket().getMarketCodes()).orElse("");
         model.setPrice(Res.get("bisqEasy.tradeWizard.review.price", formattedPrice, codes));
 
-        applyPriceDetails(direction, model.getPriceSpec(), market);
+        applyPriceDetails(model.getPriceSpec(), market);
 
         String toSendAmountDescription, toSendAmount, toSendCode, toReceiveAmountDescription, toReceiveAmount, toReceiveCode;
         boolean isRangeAmount = amountSpec instanceof RangeAmountSpec;
@@ -297,31 +297,28 @@ public class TradeWizardReviewController implements Controller {
             }
         }
 
+        model.setFee(direction.isBuy()
+                ? Res.get("bisqEasy.tradeWizard.review.fee.buyer")
+                : Res.get("bisqEasy.tradeWizard.review.fee.seller"));
 
-        model.setFee(direction.isBuy() ?
-                Res.get("bisqEasy.tradeWizard.review.fee.buyer") :
-                Res.get("bisqEasy.tradeWizard.review.fee.seller"));
-
-        model.setFeeDetails(direction.isBuy() ?
-                Res.get("bisqEasy.tradeWizard.review.feeDetails.buyer") :
-                Res.get("bisqEasy.tradeWizard.review.feeDetails.seller"));
+        model.setFeeDetails(direction.isBuy()
+                ? Res.get("bisqEasy.tradeWizard.review.feeDetails.buyer")
+                : Res.get("bisqEasy.tradeWizard.review.feeDetails.seller"));
 
         if (isCreateOfferMode) {
             model.setHeadline(Res.get("bisqEasy.tradeWizard.review.headline.maker"));
             model.setDetailsHeadline(Res.get("bisqEasy.tradeWizard.review.detailsHeadline.maker").toUpperCase());
             model.setPaymentMethodDescription(
-                    fiatPaymentMethods.size() == 1 ?
-                            Res.get("bisqEasy.tradeWizard.review.paymentMethodDescription") :
-                            Res.get("bisqEasy.tradeWizard.review.paymentMethodDescriptions.maker")
+                    fiatPaymentMethods.size() == 1
+                            ? Res.get("bisqEasy.tradeWizard.review.paymentMethodDescription")
+                            : Res.get("bisqEasy.tradeWizard.review.paymentMethodDescriptions.maker")
             );
             model.setPaymentMethod(PaymentMethodSpecFormatter.fromPaymentMethods(fiatPaymentMethods));
-
+            model.setPriceDescription(Res.get("bisqEasy.tradeWizard.review.priceDescription.maker"));
             if (direction.isSell()) {
-                model.setPriceDescription(Res.get("bisqEasy.tradeWizard.review.priceDescription.maker.seller"));
                 toSendAmountDescription = Res.get("bisqEasy.tradeWizard.review.toSend");
                 toReceiveAmountDescription = Res.get("bisqEasy.tradeWizard.review.toReceive");
             } else {
-                model.setPriceDescription(Res.get("bisqEasy.tradeWizard.review.priceDescription.maker.buyer"));
                 toSendAmountDescription = Res.get("bisqEasy.tradeWizard.review.toPay");
                 toReceiveAmountDescription = Res.get("bisqEasy.tradeWizard.review.btcAtMarketPrice");
             }
@@ -334,9 +331,9 @@ public class TradeWizardReviewController implements Controller {
                 model.setTakersSelectedPaymentMethod(fiatPaymentMethods.get(0));
             }
             model.setPaymentMethodDescription(
-                    fiatPaymentMethods.size() == 1 ?
-                            Res.get("bisqEasy.tradeWizard.review.paymentMethodDescription") :
-                            Res.get("bisqEasy.tradeWizard.review.paymentMethodDescriptions.taker")
+                    fiatPaymentMethods.size() == 1
+                            ? Res.get("bisqEasy.tradeWizard.review.paymentMethodDescription")
+                            : Res.get("bisqEasy.tradeWizard.review.paymentMethodDescriptions.taker")
             );
             model.setPaymentMethod(model.getTakersSelectedPaymentMethod().getDisplayString());
 
@@ -502,34 +499,30 @@ public class TradeWizardReviewController implements Controller {
         reviewDataDisplay.setPaymentMethod(fiatPaymentMethodsString);
     }
 
-    private void applyPriceDetails(Direction direction, PriceSpec priceSpec, Market market) {
+    private void applyPriceDetails(PriceSpec priceSpec, Market market) {
         Optional<MarketPrice> marketPrice = marketPriceService.findMarketPrice(market);
         marketPrice.ifPresent(price -> model.setMarketPrice(price.getPriceQuote().getValue()));
-        if (model.isCreateOfferMode() && direction.isBuy()) {
-            model.setPriceDetails(Res.get("bisqEasy.tradeWizard.review.priceDetails.buyer"));
+        Optional<PriceQuote> marketPriceQuote = marketPriceService.findMarketPrice(market).map(MarketPrice::getPriceQuote);
+        String marketPriceAsString = marketPriceQuote.map(PriceFormatter::formatWithCode).orElse(Res.get("data.na"));
+        Optional<Double> percentFromMarketPrice;
+        percentFromMarketPrice = PriceUtil.findPercentFromMarketPrice(marketPriceService, priceSpec, market);
+        double percent = percentFromMarketPrice.orElse(0d);
+        if ((priceSpec instanceof FloatPriceSpec || priceSpec instanceof MarketPriceSpec) && percent == 0) {
+            model.setPriceDetails(Res.get("bisqEasy.tradeWizard.review.priceDetails", marketPriceAsString));
         } else {
-            Optional<PriceQuote> marketPriceQuote = marketPriceService.findMarketPrice(market).map(MarketPrice::getPriceQuote);
-            String marketPriceAsString = marketPriceQuote.map(PriceFormatter::formatWithCode).orElse(Res.get("data.na"));
-            Optional<Double> percentFromMarketPrice;
-            percentFromMarketPrice = PriceUtil.findPercentFromMarketPrice(marketPriceService, priceSpec, market);
-            double percent = percentFromMarketPrice.orElse(0d);
-            if ((priceSpec instanceof FloatPriceSpec || priceSpec instanceof MarketPriceSpec) && percent == 0) {
-                model.setPriceDetails(Res.get("bisqEasy.tradeWizard.review.priceDetails.seller", marketPriceAsString));
+            String aboveOrBelow = percent > 0 ? Res.get("offer.price.above") : Res.get("offer.price.below");
+            String percentAsString = percentFromMarketPrice.map(Math::abs).map(PercentageFormatter::formatToPercentWithSymbol)
+                    .orElse(Res.get("data.na"));
+            if (priceSpec instanceof FloatPriceSpec) {
+                model.setPriceDetails(Res.get("bisqEasy.tradeWizard.review.priceDetails.float",
+                        percentAsString, aboveOrBelow, marketPriceAsString));
             } else {
-                String aboveOrBelow = percent > 0 ? Res.get("offer.price.above") : Res.get("offer.price.below");
-                String percentAsString = percentFromMarketPrice.map(Math::abs).map(PercentageFormatter::formatToPercentWithSymbol)
-                        .orElse(Res.get("data.na"));
-                if (priceSpec instanceof FloatPriceSpec) {
-                    model.setPriceDetails(Res.get("bisqEasy.tradeWizard.review.priceDetails.seller.float",
-                            percentAsString, aboveOrBelow, marketPriceAsString));
+                if (percent == 0) {
+                    model.setPriceDetails(Res.get("bisqEasy.tradeWizard.review.priceDetails.fix.atMarket",
+                            marketPriceAsString));
                 } else {
-                    if (percent == 0) {
-                        model.setPriceDetails(Res.get("bisqEasy.tradeWizard.review.priceDetails.seller.fix.atMarket",
-                                marketPriceAsString));
-                    } else {
-                        model.setPriceDetails(Res.get("bisqEasy.tradeWizard.review.priceDetails.seller.fix",
-                                percentAsString, aboveOrBelow, marketPriceAsString));
-                    }
+                    model.setPriceDetails(Res.get("bisqEasy.tradeWizard.review.priceDetails.fix",
+                            percentAsString, aboveOrBelow, marketPriceAsString));
                 }
             }
         }
