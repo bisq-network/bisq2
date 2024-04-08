@@ -65,6 +65,7 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
     private final HBox noMatchingOffersBox;
     private final BisqTableView<ListItem> tableView;
     private final Label headlineLabel, subtitleLabel;
+    private final VBox tableContainer;
     private Button goBackButton, browseOfferbookButton;
     private boolean isTableViewConfigured;
 
@@ -88,7 +89,7 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
         // fits 4 rows
         tableView.setMaxHeight(260); // 4 * 55 (row height) + 40 (header height)
 
-        VBox tableContainer = new VBox(tableView);
+        tableContainer = new VBox(tableView);
         tableContainer.getStyleClass().add("matching-offers-table-container");
 
         noMatchingOffersBox = new HBox(25);
@@ -102,8 +103,8 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
         tableView.initialize();
         boolean showOffers = model.getShowOffers().get();
 
-        tableView.setVisible(showOffers);
-        tableView.setManaged(showOffers);
+        tableContainer.setVisible(showOffers);
+        tableContainer.setManaged(showOffers);
         noMatchingOffersBox.setVisible(!showOffers);
         noMatchingOffersBox.setManaged(!showOffers);
         if (showOffers) {
