@@ -115,6 +115,7 @@ public class TradeWizardController extends NavigationController implements InitW
         boolean isCreateOfferMode = initData.isCreateOfferMode();
         model.setCreateOfferMode(isCreateOfferMode);
         tradeWizardAmountController.setIsCreateOfferMode(isCreateOfferMode);
+        model.getPriceProgressItemVisible().set(isCreateOfferMode);
     }
 
     @Override
@@ -134,17 +135,17 @@ public class TradeWizardController extends NavigationController implements InitW
                 NavigationTarget.TRADE_WIZARD_REVIEW_OFFER
         ));
 
+        if (model.getPriceProgressItemVisible().get()) {
+            model.getChildTargets().add(2, NavigationTarget.TRADE_WIZARD_PRICE);
+        } else {
+            model.getChildTargets().remove(NavigationTarget.TRADE_WIZARD_PRICE);
+        }
+
         directionPin = EasyBind.subscribe(tradeWizardDirectionController.getDirection(), direction -> {
             tradeWizardMarketController.setDirection(direction);
             tradeWizardSelectOfferController.setDirection(direction);
             tradeWizardAmountController.setDirection(direction);
             tradeWizardPaymentMethodController.setDirection(direction);
-            model.getPriceProgressItemVisible().set(direction == Direction.SELL);
-            if (direction == Direction.SELL) {
-                model.getChildTargets().add(2, NavigationTarget.TRADE_WIZARD_PRICE);
-            } else {
-                model.getChildTargets().remove(NavigationTarget.TRADE_WIZARD_PRICE);
-            }
         });
         marketPin = EasyBind.subscribe(tradeWizardMarketController.getMarket(), market -> {
             tradeWizardSelectOfferController.setMarket(market);
