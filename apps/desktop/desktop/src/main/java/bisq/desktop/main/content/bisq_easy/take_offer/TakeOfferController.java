@@ -27,7 +27,6 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.main.content.bisq_easy.take_offer.amount.TakeOfferAmountController;
 import bisq.desktop.main.content.bisq_easy.take_offer.payment_method.TakeOfferPaymentController;
-import bisq.desktop.main.content.bisq_easy.take_offer.price.TakeOfferPriceController;
 import bisq.desktop.main.content.bisq_easy.take_offer.review.TakeOfferReviewController;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
