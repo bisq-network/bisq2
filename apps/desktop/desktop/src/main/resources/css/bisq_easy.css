@@ -706,28 +706,36 @@
  * TradeWizardMarketView.tableView                                                       *
  ******************************************************************************/
 
-.bisq-easy-trade-wizard-market.table-view {
-    -fx-font-size: 1.15em;
+.markets-table-container {
+    -fx-background-color: -bisq-dark-grey-20;
+    -fx-border-width: 0 0 5px 0;
+    -fx-border-color: -bisq-dark-grey-20;
 }
 
-.bisq-easy-trade-wizard-market.table-view .column-header {
-    -fx-pref-height: 40;
+.bisq-easy-trade-wizard-market.table-view.table-view {
+    -fx-background-insets: 0;
+    -fx-padding: 0;
 }
 
-.bisq-easy-trade-wizard-market.table-view .table-row-cell {
-    -fx-pref-height: 50;
+.bisq-easy-trade-wizard-market.table-view.table-view .column-header {
+    -fx-pref-height: 40px;
 }
 
-.bisq-easy-trade-wizard-market.table-view .table-row-cell .table-cell {
-    -fx-background-color: -bisq-dark-grey-40;
+.bisq-easy-trade-wizard-market.table-view.table-view .column-header .label {
+    -fx-alignment: center;
 }
 
-.bisq-easy-trade-wizard-market.table-view .table-row-cell:hover .table-cell {
-    -fx-background-color: -bisq-darker-grey;
+.bisq-easy-trade-wizard-market.table-view.table-view .table-row-cell:hover {
+    -fx-cursor: hand;
 }
 
-.bisq-easy-trade-wizard-market.table-view .table-row-cell:selected .table-cell {
-    -fx-background-color: -bisq2-green;
+.bisq-easy-trade-wizard-market.table-view.table-view .table-row-cell {
+    -fx-pref-height: 55px;
+    -fx-border-width: 0;
+}
+
+.bisq-easy-trade-wizard-market.table-view.table-view .table-cell {
+    -fx-padding: 0;
 }
 
 

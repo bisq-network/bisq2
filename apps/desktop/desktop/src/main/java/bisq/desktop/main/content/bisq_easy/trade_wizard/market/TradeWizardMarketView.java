@@ -85,6 +85,7 @@ public class TradeWizardMarketView extends View<VBox, TradeWizardMarketModel, Tr
         tableViewWithSearchBox.setAlignment(Pos.TOP_RIGHT);
         tableViewWithSearchBox.setPrefSize(tableWidth, tableHeight);
         tableViewWithSearchBox.setMaxWidth(tableWidth);
+        tableViewWithSearchBox.getStyleClass().add("markets-table-container");
 
         root.getChildren().addAll(Spacer.fillVBox(), headlineLabel, subtitleLabel, tableViewWithSearchBox, Spacer.fillVBox());
     }
@@ -113,6 +114,7 @@ public class TradeWizardMarketView extends View<VBox, TradeWizardMarketModel, Tr
     }
 
     private void configTableView() {
+        tableView.getColumns().add(tableView.getSelectionMarkerColumn());
         tableView.getColumns().add(new BisqTableColumn.Builder<MarketListItem>()
                 .title(Res.get("bisqEasy.tradeWizard.market.columns.name"))
                 .left()
@@ -144,7 +146,7 @@ public class TradeWizardMarketView extends View<VBox, TradeWizardMarketModel, Tr
             private final Label label = new Label();
 
             {
-                label.setPadding(new Insets(0, 0, 0, -10));
+                label.setPadding(new Insets(0, 0, 0, 10));
                 label.setGraphicTextGap(8);
                 label.getStyleClass().add("bisq-text-8");
             }
