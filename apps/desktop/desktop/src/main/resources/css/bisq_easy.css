@@ -738,6 +738,15 @@
     -fx-padding: 0;
 }
 
+.bisq-easy-trade-wizard-market-search {
+    -fx-background-color: -bisq-dark-grey-20;
+}
+
+.bisq-easy-trade-wizard-market-search .search-text-field {
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 0.9em;
+}
+
 
 /*******************************************************************************
  * TradeWizardTakeOfferView.tableView                                          *
