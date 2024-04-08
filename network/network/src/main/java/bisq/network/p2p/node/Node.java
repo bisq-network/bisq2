@@ -399,7 +399,7 @@ public class Node implements Connection.Handler {
         connectionHandshakes.put(connectionHandshake.getId(), connectionHandshake);
         log.debug("Outbound handshake started: Initiated by {} to {}", myCapability.getAddress(), address);
         try {
-            ConnectionHandshake.Result result = connectionHandshake.start(networkLoadSnapshot.getCurrentNetworkLoad(), address); // Blocking call
+            ConnectionHandshake.Result result = connectionHandshake.start(networkLoadSnapshot.getCurrentNetworkLoad(), features, address); // Blocking call
             connectionHandshakes.remove(connectionHandshake.getId());
             log.debug("Outbound handshake completed: Initiated by {} to {}", myCapability.getAddress(), address);
             log.debug("Create new outbound connection to {}", address);

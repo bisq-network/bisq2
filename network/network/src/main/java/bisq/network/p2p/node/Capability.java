@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.node;
 
+import bisq.common.annotation.ExcludeForHash;
 import bisq.common.proto.NetworkProto;
 import bisq.common.util.ProtobufUtils;
 import bisq.network.common.Address;
@@ -37,6 +38,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 public final class Capability implements NetworkProto {
     private final Address address;
     private final List<TransportType> supportedTransportTypes;
+    @ExcludeForHash
     private final List<Feature> features;
 
     public Capability(Address address, List<TransportType> supportedTransportTypes, List<Feature> features) {
@@ -58,16 +60,25 @@ public final class Capability implements NetworkProto {
     }
 
     @Override
-    public bisq.network.protobuf.Capability toProto() {
-        return bisq.network.protobuf.Capability.newBuilder()
-                .setAddress(address.toProto())
+    public bisq.network.protobuf.Capability.Builder getBuilder(boolean doExclude) {
+        return filter(bisq.network.protobuf.Capability.newBuilder()
+                .setAddress(address.getBuilder(doExclude))
                 .addAllSupportedTransportTypes(supportedTransportTypes.stream()
                         .map(Enum::name)
                         .collect(Collectors.toList()))
                 .addAllFeatures(features.stream()
                         .map(Feature::toProto)
-                        .collect(Collectors.toList()))
-                .build();
+                        .collect(Collectors.toList())), doExclude);
+    }
+
+    @Override
+    public bisq.network.protobuf.Capability toProto() {
+        return getBuilder(false).build();
+    }
+
+    @Override
+    public bisq.network.protobuf.Capability.Builder getBuilder() {
+        return getBuilder(false);
     }
 
     public static Capability fromProto(bisq.network.protobuf.Capability proto) {

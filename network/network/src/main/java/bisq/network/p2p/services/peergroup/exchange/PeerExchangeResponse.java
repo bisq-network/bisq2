@@ -56,13 +56,17 @@ public final class PeerExchangeResponse implements EnvelopePayloadMessage {
 
     @Override
     public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
+        return getBuilder().build();
+    }
+
+    @Override
+    public bisq.network.protobuf.EnvelopePayloadMessage.Builder getBuilder() {
         return getNetworkMessageBuilder().setPeerExchangeResponse(
-                        bisq.network.protobuf.PeerExchangeResponse.newBuilder()
-                                .setNonce(nonce)
-                                .addAllPeers(peers.stream()
-                                        .map(Peer::toProto)
-                                        .collect(Collectors.toList())))
-                .build();
+                bisq.network.protobuf.PeerExchangeResponse.newBuilder()
+                        .setNonce(nonce)
+                        .addAllPeers(peers.stream()
+                                .map(Peer::toProto)
+                                .collect(Collectors.toList())));
     }
 
     public static PeerExchangeResponse fromProto(bisq.network.protobuf.PeerExchangeResponse proto) {

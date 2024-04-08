@@ -25,6 +25,7 @@ import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.Capability;
 import bisq.network.p2p.node.ConnectionException;
+import bisq.network.p2p.node.Feature;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
 import bisq.network.p2p.node.envelope.NetworkEnvelopeSocket;
@@ -41,8 +42,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.Optional;
+import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -93,14 +94,17 @@ public final class ConnectionHandshake {
 
         @Override
         public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
-            var builder = bisq.network.protobuf.ConnectionHandshake.Request.newBuilder()
-                    .setCapability(capability.toProto())
-                    .setNetworkLoad(networkLoad.toProto())
+            return getBuilder(false).build();
+        }
+
+        @Override
+        public bisq.network.protobuf.EnvelopePayloadMessage.Builder getBuilder(boolean doExclude) {
+            bisq.network.protobuf.ConnectionHandshake.Request.Builder builder = bisq.network.protobuf.ConnectionHandshake.Request.newBuilder()
+                    .setCapability(capability.getBuilder(doExclude))
+                    .setNetworkLoad(networkLoad.getBuilder())
                     .setSignatureDate(signatureDate);
             addressOwnershipProof.ifPresent(e -> builder.setAddressOwnershipProof(ByteString.copyFrom(e)));
-            return getNetworkMessageBuilder()
-                    .setConnectionHandshakeRequest(builder.build())
-                    .build();
+            return filter(getNetworkMessageBuilder().setConnectionHandshakeRequest(builder), doExclude);
         }
 
         public static Request fromProto(bisq.network.protobuf.ConnectionHandshake.Request proto) {
@@ -136,11 +140,15 @@ public final class ConnectionHandshake {
 
         @Override
         public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
-            return getNetworkMessageBuilder().setConnectionHandshakeResponse(
-                            bisq.network.protobuf.ConnectionHandshake.Response.newBuilder()
-                                    .setCapability(capability.toProto())
-                                    .setNetworkLoad(networkLoad.toProto()))
-                    .build();
+            return getBuilder(false).build();
+        }
+
+        @Override
+        public bisq.network.protobuf.EnvelopePayloadMessage.Builder getBuilder(boolean doExclude) {
+            return filter(getNetworkMessageBuilder().setConnectionHandshakeResponse(
+                    bisq.network.protobuf.ConnectionHandshake.Response.newBuilder()
+                            .setCapability(capability.getBuilder(doExclude))
+                            .setNetworkLoad(networkLoad.getBuilder())), doExclude);
         }
 
         public static Response fromProto(bisq.network.protobuf.ConnectionHandshake.Response proto) {
@@ -193,7 +201,7 @@ public final class ConnectionHandshake {
     }
 
     // Client side protocol
-    public Result start(NetworkLoad myNetworkLoad, Address peerAddress) {
+    public Result start(NetworkLoad myNetworkLoad, Set<Feature> features, Address peerAddress) {
         try {
             ConnectionMetrics connectionMetrics = new ConnectionMetrics();
 
@@ -207,7 +215,7 @@ public final class ConnectionHandshake {
                     NetworkLoad.INITIAL_NETWORK_LOAD,
                     peerAddress.getFullAddress(),
                     0,
-                    new ArrayList<>());
+                    features);
             NetworkEnvelope requestNetworkEnvelope = new NetworkEnvelope(token, request);
             long ts = System.currentTimeMillis();
             networkEnvelopeSocket.send(requestNetworkEnvelope);
