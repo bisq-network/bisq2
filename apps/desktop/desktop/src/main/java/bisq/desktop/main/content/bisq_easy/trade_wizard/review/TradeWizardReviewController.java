@@ -78,7 +78,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public class TradeWizardReviewController implements Controller {
-    private static final String DASH = "\u2013"; // Unicode code for "–"
+    private static final String DASH_SYMBOL = "\u2013"; // Unicode for "–"
 
     private final TradeWizardReviewModel model;
     @Getter
@@ -267,14 +267,14 @@ public class TradeWizardReviewController implements Controller {
             String formattedMaxQuoteAmount = AmountFormatter.formatAmount(maxQuoteSideAmount, true);
             String formattedMaxBaseAmount = AmountFormatter.formatAmount(maxBaseSideAmount, false);
             if (isCreateOfferMode && direction.isSell()) {
-                toSendAmount = formattedMinBaseAmount + " " + DASH + " " + formattedMaxBaseAmount;
+                toSendAmount = formattedMinBaseAmount + " " + DASH_SYMBOL + " " + formattedMaxBaseAmount;
                 toSendCode = maxBaseSideAmount.getCode();
-                toReceiveAmount = formattedMinQuoteAmount + " " + DASH + " " + formattedMaxQuoteAmount;
+                toReceiveAmount = formattedMinQuoteAmount + " " + DASH_SYMBOL + " " + formattedMaxQuoteAmount;
                 toReceiveCode = maxQuoteSideAmount.getCode();
             } else {
-                toSendAmount = formattedMinQuoteAmount + " " + DASH + " " + formattedMaxQuoteAmount;
+                toSendAmount = formattedMinQuoteAmount + " " + DASH_SYMBOL + " " + formattedMaxQuoteAmount;
                 toSendCode = maxQuoteSideAmount.getCode();
-                toReceiveAmount = formattedMinBaseAmount + " " + DASH + " " + formattedMaxBaseAmount;
+                toReceiveAmount = formattedMinBaseAmount + " " + DASH_SYMBOL + " " + formattedMaxBaseAmount;
                 toReceiveCode = maxBaseSideAmount.getCode();
             }
         } else {
