@@ -49,7 +49,7 @@ public class ChatRulesView extends View<VBox, ChatRulesModel, ChatRulesControlle
         headline.getStyleClass().add("chat-guide-headline");
 
         UnorderedList content = new UnorderedList(Res.get("chat.chatRules.content"), "bisq-text-13",
-                7, 5, UnorderedList.REGEX, UnorderedList.MARK);
+                7, 5, UnorderedList.REGEX, UnorderedList.BULLET_SYMBOL);
 
         closeIconButton = BisqIconButton.createIconButton("close");
 
