@@ -96,9 +96,9 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
 
     @Override
     public ChatNotificationsStore prunePersisted(ChatNotificationsStore persisted) {
-        long pruneDate = System.currentTimeMillis() - MAX_AGE;
+        //long pruneDate = System.currentTimeMillis() - MAX_AGE;
         return new ChatNotificationsStore(persisted.getNotifications().stream()
-                .filter(e -> e.getDate() > pruneDate)
+                .filter(e -> !isExpired(e))
                 .collect(Collectors.toSet()));
     }
 
@@ -386,9 +386,15 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
     }
 
     private void maybeSendSystemNotification(ChatNotification chatNotification) {
-        if (!isApplicationFocussed && isReceivedAfterStartUp(chatNotification)) {
+        if (!isApplicationFocussed &&
+                isReceivedAfterStartUp(chatNotification) &&
+                !isExpired(chatNotification)) {
             sendNotificationService.send(chatNotification);
         }
+    }
+
+    private boolean isExpired(ChatNotification chatNotification) {
+        return System.currentTimeMillis() - chatNotification.getDate() > MAX_AGE;
     }
 
     private boolean isReceivedAfterStartUp(ChatNotification chatNotification) {
