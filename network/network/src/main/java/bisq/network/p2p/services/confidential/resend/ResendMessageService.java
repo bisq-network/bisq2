@@ -42,7 +42,8 @@ import java.util.stream.Collectors;
 @Getter
 public class ResendMessageService implements PersistenceClient<ResendMessageStore> {
     private static final long RESEND_INTERVAL = TimeUnit.MINUTES.toMillis(2);
-    private static final int MAX_RESENDS = 5;
+    private static final int MAX_AUTO_RESENDS = 2;
+    private static final int MAX_MANUAL_RESENDS = 3;
 
     private final ResendMessageStore persistableStore = new ResendMessageStore();
     private final Persistence<ResendMessageStore> persistence;
@@ -131,7 +132,7 @@ public class ResendMessageService implements PersistenceClient<ResendMessageStor
             case TRY_ADD_TO_MAILBOX:
                 persistableStore.getResendMessageDataByMessageId().put(messageId, resendMessageData);
                 persist();
-                restartResendTimer(resendMessageData);
+                restartResendTimer(resendMessageData, RESEND_INTERVAL);
                 break;
             case FAILED:
                 persistableStore.getResendMessageDataByMessageId().put(messageId, resendMessageData);
@@ -156,14 +157,14 @@ public class ResendMessageService implements PersistenceClient<ResendMessageStor
         persist();
     }
 
-    public void resendMessage(String messageId) {
-        findResendMessageData(messageId).ifPresent(this::resendMessage);
+    public void manuallyResendMessage(String messageId) {
+        findResendMessageData(messageId).ifPresent(data -> resendMessage(data, MAX_MANUAL_RESENDS));
     }
 
-    public boolean canResendMessage(String messageId) {
+    public boolean canManuallyResendMessage(String messageId) {
         return Optional.ofNullable(persistableStore.getNumResendsByMessageId().get(messageId))
                 .map(AtomicInteger::get)
-                .orElse(0) <= MAX_RESENDS &&
+                .orElse(0) <= MAX_MANUAL_RESENDS &&
                 findResendMessageData(messageId).isPresent();
     }
 
@@ -172,12 +173,12 @@ public class ResendMessageService implements PersistenceClient<ResendMessageStor
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private void resendMessage(ResendMessageData data) {
+    private void resendMessage(ResendMessageData data, int maxResends) {
         String messageId = data.getId();
         persistableStore.getNumResendsByMessageId().putIfAbsent(messageId, new AtomicInteger(1));
         AtomicInteger numResends = persistableStore.getNumResendsByMessageId().get(messageId);
-        if (numResends.get() > MAX_RESENDS) {
-            log.warn("Do not resend message with ID {} because we have already sent {} times", messageId, MAX_RESENDS);
+        if (numResends.get() > maxResends) {
+            log.warn("Do not resend message with ID {} because we have already sent {} times", messageId, maxResends);
             return;
         } else {
             numResends.getAndIncrement();
@@ -248,11 +249,7 @@ public class ResendMessageService implements PersistenceClient<ResendMessageStor
                 .filter(e -> !schedulerByMessageId.containsKey(e.getId())) // If we have a resend scheduled we skip it
                 .filter(e -> !e.getMessageDeliveryStatus().isReceived() &&
                         e.getMessageDeliveryStatus() != MessageDeliveryStatus.ADDED_TO_MAILBOX)
-                .forEach(this::resendMessage);
-    }
-
-    private void restartResendTimer(ResendMessageData resendMessageData) {
-        restartResendTimer(resendMessageData, RESEND_INTERVAL);
+                .forEach(data -> resendMessage(data, MAX_AUTO_RESENDS));
     }
 
     private void restartResendTimer(ResendMessageData resendMessageData, long interval) {
@@ -267,7 +264,7 @@ public class ResendMessageService implements PersistenceClient<ResendMessageStor
                     resendMessageData.getMessageDeliveryStatus());
             return;
         }
-        Scheduler scheduler = Scheduler.run(() -> resendMessage(resendMessageData)).after(interval);
+        Scheduler scheduler = Scheduler.run(() -> resendMessage(resendMessageData, MAX_AUTO_RESENDS)).after(interval);
         schedulerByMessageId.put(messageId, scheduler);
     }
 

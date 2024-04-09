@@ -200,7 +200,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                                             messageDeliveryStatusIcon.set(AwesomeIcon.CLOUD_DOWNLOAD);
                                             break;
                                         case FAILED:
-                                            if (resendMessageService.map(service -> service.canResendMessage(messageId)).orElse(false)) {
+                                            if (resendMessageService.map(service -> service.canManuallyResendMessage(messageId)).orElse(false)) {
                                                 // -bisq2-yellow: #d0831f;
                                                 messageDeliveryStatusIconColor = Optional.of("#d0831f");
                                                 messageDeliveryStatusIcon.set(AwesomeIcon.REFRESH);
