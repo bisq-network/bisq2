@@ -15,11 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.services.peergroup.exchange;
+package bisq.network.p2p.services.peer_group.exchange;
 
 import bisq.network.p2p.message.EnvelopePayloadMessage;
-import bisq.network.p2p.message.Request;
-import bisq.network.p2p.services.peergroup.Peer;
+import bisq.network.p2p.message.Response;
+import bisq.network.p2p.services.peer_group.Peer;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -34,13 +34,13 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class PeerExchangeRequest implements EnvelopePayloadMessage, Request {
+public final class PeerExchangeResponse implements EnvelopePayloadMessage, Response {
     @Setter
     public static long maxNumPeers;
     private final int nonce;
     private final List<Peer> peers;
 
-    public PeerExchangeRequest(int nonce, List<Peer> peers) {
+    public PeerExchangeResponse(int nonce, List<Peer> peers) {
         this.nonce = nonce;
         this.peers = peers;
         // We need to sort deterministically as the data is used in the proof of work check
@@ -54,10 +54,11 @@ public final class PeerExchangeRequest implements EnvelopePayloadMessage, Reques
         checkArgument(peers.size() <= maxNumPeers);
     }
 
+
     @Override
     public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
-        return getNetworkMessageBuilder().setPeerExchangeRequest(
-                        bisq.network.protobuf.PeerExchangeRequest.newBuilder()
+        return getNetworkMessageBuilder().setPeerExchangeResponse(
+                        bisq.network.protobuf.PeerExchangeResponse.newBuilder()
                                 .setNonce(nonce)
                                 .addAllPeers(peers.stream()
                                         .map(Peer::toProto)
@@ -65,8 +66,8 @@ public final class PeerExchangeRequest implements EnvelopePayloadMessage, Reques
                 .build();
     }
 
-    public static PeerExchangeRequest fromProto(bisq.network.protobuf.PeerExchangeRequest proto) {
-        return new PeerExchangeRequest(proto.getNonce(),
+    public static PeerExchangeResponse fromProto(bisq.network.protobuf.PeerExchangeResponse proto) {
+        return new PeerExchangeResponse(proto.getNonce(),
                 proto.getPeersList().stream().map(Peer::fromProto).collect(Collectors.toList()));
     }
 

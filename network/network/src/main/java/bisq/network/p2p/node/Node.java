@@ -33,7 +33,7 @@ import bisq.network.p2p.node.handshake.ConnectionHandshake;
 import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
 import bisq.network.p2p.node.transport.ServerSocketResult;
 import bisq.network.p2p.node.transport.TransportService;
-import bisq.network.p2p.services.peergroup.BanList;
+import bisq.network.p2p.services.peer_group.BanList;
 import bisq.security.keys.KeyBundle;
 import bisq.security.keys.KeyBundleService;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;

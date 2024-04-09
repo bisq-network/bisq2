@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.services.peergroup.exchange;
+package bisq.network.p2p.services.peer_group.exchange;
 
 import bisq.network.common.TransportType;
 import lombok.extern.slf4j.Slf4j;

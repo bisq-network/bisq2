@@ -35,4 +35,4 @@
  * - Reported peers (connected and reported peers delivered from other peers, using PeerExchangeSelection)
  * - Connected peers (actual current connections)
  */
-package bisq.network.p2p.services.peergroup;
+package bisq.network.p2p.services.peer_group;

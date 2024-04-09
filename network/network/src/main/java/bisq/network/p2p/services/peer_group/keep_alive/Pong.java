@@ -15,10 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.services.peergroup.keep_alive;
+package bisq.network.p2p.services.peer_group.keep_alive;
 
 import bisq.network.p2p.message.EnvelopePayloadMessage;
-import bisq.network.p2p.message.Request;
+import bisq.network.p2p.message.Response;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -26,13 +26,11 @@ import lombok.ToString;
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class Ping implements EnvelopePayloadMessage, Request {
-    private final int nonce;
+public final class Pong implements EnvelopePayloadMessage, Response {
+    private final int requestNonce;
 
-    public Ping(int nonce) {
-        this.nonce = nonce;
-
-        verify();
+    public Pong(int requestNonce) {
+        this.requestNonce = requestNonce;
     }
 
     @Override
@@ -41,11 +39,14 @@ public final class Ping implements EnvelopePayloadMessage, Request {
 
     @Override
     public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
-        return getNetworkMessageBuilder().setPing(bisq.network.protobuf.Ping.newBuilder().setNonce(nonce)).build();
+        return getNetworkMessageBuilder().setPong(
+                        bisq.network.protobuf.Pong.newBuilder()
+                                .setRequestNonce(requestNonce))
+                .build();
     }
 
-    public static Ping fromProto(bisq.network.protobuf.Ping proto) {
-        return new Ping(proto.getNonce());
+    public static Pong fromProto(bisq.network.protobuf.Pong proto) {
+        return new Pong(proto.getRequestNonce());
     }
 
     @Override
@@ -55,6 +56,6 @@ public final class Ping implements EnvelopePayloadMessage, Request {
 
     @Override
     public String getRequestId() {
-        return String.valueOf(nonce);
+        return String.valueOf(requestNonce);
     }
 }

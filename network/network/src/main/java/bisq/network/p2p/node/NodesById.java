@@ -25,7 +25,7 @@ import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
 import bisq.network.p2p.node.transport.TransportService;
-import bisq.network.p2p.services.peergroup.BanList;
+import bisq.network.p2p.services.peer_group.BanList;
 import bisq.security.keys.KeyBundleService;
 import lombok.extern.slf4j.Slf4j;
 

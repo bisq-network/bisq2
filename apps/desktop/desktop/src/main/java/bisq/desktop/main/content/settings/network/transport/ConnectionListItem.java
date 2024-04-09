@@ -30,7 +30,7 @@ import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.network_load.ConnectionMetrics;
-import bisq.network.p2p.services.peergroup.PeerGroupService;
+import bisq.network.p2p.services.peer_group.PeerGroupService;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.TimeFormatter;
 import bisq.user.profile.UserProfile;

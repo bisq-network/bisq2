@@ -26,7 +26,7 @@ import bisq.network.p2p.services.data.inventory.filter.InventoryFilter;
 import bisq.network.p2p.services.data.inventory.filter.InventoryFilterType;
 import bisq.network.p2p.services.data.inventory.filter.hash_set.HashSetFilterService;
 import bisq.network.p2p.services.data.storage.StorageService;
-import bisq.network.p2p.services.peergroup.PeerGroupManager;
+import bisq.network.p2p.services.peer_group.PeerGroupManager;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

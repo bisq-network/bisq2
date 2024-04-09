@@ -15,10 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.services.peergroup.network_load;
+package bisq.network.p2p.services.peer_group.network_load;
 
 import bisq.network.p2p.message.EnvelopePayloadMessage;
-import bisq.network.p2p.message.Request;
+import bisq.network.p2p.message.Response;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -27,12 +27,12 @@ import lombok.ToString;
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class NetworkLoadExchangeRequest implements EnvelopePayloadMessage, Request {
-    private final int nonce;
+public final class NetworkLoadExchangeResponse implements EnvelopePayloadMessage, Response {
+    private final int requestNonce;
     private final NetworkLoad networkLoad;
 
-    public NetworkLoadExchangeRequest(int nonce, NetworkLoad networkLoad) {
-        this.nonce = nonce;
+    public NetworkLoadExchangeResponse(int requestNonce, NetworkLoad networkLoad) {
+        this.requestNonce = requestNonce;
         this.networkLoad = networkLoad;
 
         verify();
@@ -44,15 +44,15 @@ public final class NetworkLoadExchangeRequest implements EnvelopePayloadMessage,
 
     @Override
     public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
-        return getNetworkMessageBuilder().setNetworkLoadExchangeRequest(
-                        bisq.network.protobuf.NetworkLoadExchangeRequest.newBuilder()
-                                .setNonce(nonce)
+        return getNetworkMessageBuilder().setNetworkLoadExchangeResponse(
+                        bisq.network.protobuf.NetworkLoadExchangeResponse.newBuilder()
+                                .setRequestNonce(requestNonce)
                                 .setNetworkLoad(networkLoad.toProto()))
                 .build();
     }
 
-    public static NetworkLoadExchangeRequest fromProto(bisq.network.protobuf.NetworkLoadExchangeRequest proto) {
-        return new NetworkLoadExchangeRequest(proto.getNonce(), NetworkLoad.fromProto(proto.getNetworkLoad()));
+    public static NetworkLoadExchangeResponse fromProto(bisq.network.protobuf.NetworkLoadExchangeResponse proto) {
+        return new NetworkLoadExchangeResponse(proto.getRequestNonce(), NetworkLoad.fromProto(proto.getNetworkLoad()));
     }
 
     @Override
@@ -62,6 +62,6 @@ public final class NetworkLoadExchangeRequest implements EnvelopePayloadMessage,
 
     @Override
     public String getRequestId() {
-        return String.valueOf(nonce);
+        return String.valueOf(requestNonce);
     }
 }
