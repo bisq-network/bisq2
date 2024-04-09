@@ -1,6 +1,7 @@
 package bisq.network.p2p.services.confidential.ack;
 
 import bisq.common.validation.NetworkDataValidation;
+import bisq.network.p2p.message.Response;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import lombok.EqualsAndHashCode;
@@ -16,7 +17,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.*;
 @Getter
 @EqualsAndHashCode
 @ToString
-public final class AckMessage implements MailboxMessage {
+public final class AckMessage implements MailboxMessage, Response {
     private final MetaData metaData = new MetaData(TTL_2_DAYS, LOW_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_1000);
 
     private final String id;
@@ -48,5 +49,10 @@ public final class AckMessage implements MailboxMessage {
     @Override
     public double getCostFactor() {
         return getCostFactor(0.05, 0.1);
+    }
+
+    @Override
+    public String getRequestId() {
+        return id;
     }
 }
