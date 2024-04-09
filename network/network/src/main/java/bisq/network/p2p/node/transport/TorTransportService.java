@@ -99,15 +99,14 @@ public class TorTransportService implements TransportService {
     @Override
     public Socket getSocket(Address address) throws IOException {
         long ts = System.currentTimeMillis();
-
+        log.info("Start creating tor socket to {}", address);
         Socket socket = torService.getSocket(null); // Blocking call. Takes 5-15 sec usually.
         socket.connect(new InetSocketAddress(address.getHost(), address.getPort()));
         numSocketsCreated++;
         bootstrapInfo.getBootstrapState().set(BootstrapState.CONNECTED_TO_PEERS);
         bootstrapInfo.getBootstrapProgress().set(Math.min(1, 0.5 + numSocketsCreated / 10d));
         bootstrapInfo.getBootstrapDetails().set("Connected to " + numSocketsCreated + " peer(s)");
-
-        log.info("Tor socket to {} created. Took {} ms", address, System.currentTimeMillis() - ts);
+        log.info("Tor socket creation to {} took {} ms", address, System.currentTimeMillis() - ts);
         return socket;
     }
 

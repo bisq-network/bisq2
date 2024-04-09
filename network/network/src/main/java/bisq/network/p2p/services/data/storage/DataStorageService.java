@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.data.storage;
 
 import bisq.common.data.ByteArray;
+import bisq.common.util.DateUtils;
 import bisq.common.util.StringUtils;
 import bisq.network.p2p.services.data.DataRequest;
 import bisq.persistence.DbSubDirectory;
@@ -28,12 +29,17 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
 public abstract class DataStorageService<T extends DataRequest> extends RateLimitedPersistenceClient<DataStore<T>> {
+    // We had too narrow limits of the max map size and need to skip the check until data with the old values have expired
+    private final static Date IGNORE_MAX_MAP_SIZE_UNTIL = DateUtils.getUTCDate(2024, GregorianCalendar.MAY, 30);
+
     public static final String STORE_POST_FIX = "Store";
 
     @Getter
@@ -68,10 +74,11 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
             return persisted;
         }
 
+        int maxSize = new Date().before(IGNORE_MAX_MAP_SIZE_UNTIL) ? MetaData.MAX_MAP_SIZE_50_000 : getMaxMapSize();
         Map<ByteArray, T> pruned = map.entrySet().stream()
                 .filter(entry -> !entry.getValue().isExpired())
                 .sorted((o1, o2) -> Long.compare(o2.getValue().getCreated(), o1.getValue().getCreated()))
-                .limit(getMaxMapSize())
+                .limit(maxSize)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         map.clear();
         map.putAll(pruned);
@@ -83,6 +90,17 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
             return maxMapSize.get();
         }
         maxMapSize = persistableStore.getMap().values().stream().map(DataRequest::getMaxMapSize).findFirst();
-        return maxMapSize.orElse(MetaData.MAX_MAP_SIZE_10_000);
+        return maxMapSize.orElse(MetaData.MAX_MAP_SIZE_50_000);
+    }
+
+    protected boolean isExceedingMapSize() {
+        if (new Date().before(IGNORE_MAX_MAP_SIZE_UNTIL)) {
+            return false;
+        }
+        boolean isExceeding = persistableStore.getMap().size() > getMaxMapSize();
+        if (isExceeding) {
+            log.warn("Max. map size reached. map.size()={}, getMaxMapSize={}", persistableStore.getMap().size(), getMaxMapSize());
+        }
+        return isExceeding;
     }
 }

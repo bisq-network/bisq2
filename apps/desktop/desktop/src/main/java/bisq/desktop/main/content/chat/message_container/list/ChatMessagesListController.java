@@ -648,10 +648,10 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
     }
 
     public void onResendMessage(String messageId) {
-        resendMessageService.ifPresent(service -> service.resendMessage(messageId));
+        resendMessageService.ifPresent(service -> service.manuallyResendMessage(messageId));
     }
 
     public boolean canResendMessage(String messageId) {
-        return resendMessageService.map(service -> service.canResendMessage(messageId)).orElse(false);
+        return resendMessageService.map(service -> service.canManuallyResendMessage(messageId)).orElse(false);
     }
 }

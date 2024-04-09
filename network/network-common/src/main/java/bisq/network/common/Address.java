@@ -106,7 +106,7 @@ public final class Address implements NetworkProto, Comparable<Address> {
         if (host.equals("127.0.0.1")) {
             return "[" + port + "]";
         } else {
-            return "[" + StringUtils.truncate(host, 1000) + ":" + port + "]";
+            return StringUtils.truncate(host, 1000) + ":" + port;
         }
     }
 
