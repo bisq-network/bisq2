@@ -49,6 +49,9 @@ public class TradeStateModel implements Model {
     private final BooleanProperty showReportToMediatorButton = new SimpleBooleanProperty();
     private final StringProperty tradeInterruptedInfo = new SimpleStringProperty();
     private final StringProperty errorMessage = new SimpleStringProperty();
+    private final BooleanProperty shouldShowSellerPriceApprovalOverlay = new SimpleBooleanProperty();
+    private final BooleanProperty hasBuyerAcceptedSellersPriceSpec = new SimpleBooleanProperty();
+    private final StringProperty sellerPriceApprovalLabel = new SimpleStringProperty();
 
     void resetAll() {
         reset();
@@ -65,5 +68,8 @@ public class TradeStateModel implements Model {
         error.set(false);
         showReportToMediatorButton.set(false);
         tradeInterruptedInfo.set(null);
+        shouldShowSellerPriceApprovalOverlay.set(false);
+        hasBuyerAcceptedSellersPriceSpec.set(false);
+        sellerPriceApprovalLabel.set(null);
     }
 }

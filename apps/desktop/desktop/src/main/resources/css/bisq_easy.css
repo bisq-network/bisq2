@@ -438,7 +438,7 @@
 }
 
 /*******************************************************************************
- * Trade state phase (left side box)                                                                  *
+ * Trade state phase (left side box)                                           *
  ******************************************************************************/
 
 .bisq-easy-trade-state-phase {
@@ -493,7 +493,7 @@
 
 
 /*******************************************************************************
- * Trade state phase info (right side box)                                                                *
+ * Trade state phase info (right side box)                                     *
  ******************************************************************************/
 
 .bisq-easy-trade-state-headline {
@@ -517,10 +517,18 @@
     -fx-font-family: "IBM Plex Sans Light";
 }
 
+/* Temporary popup in Buyer Phase 1a */
+.seller-price-approval-popup {
+    -fx-min-height: 200;
+    -fx-max-height: 200;
+    -fx-min-width: 500;
+    -fx-max-width: 500;
+}
+
 
 /*******************************************************************************
  *                                                                             *
- * Trade wizard                                                        *
+ * Trade wizard                                                                *
  *                                                                             *
  ******************************************************************************/
 
