@@ -30,7 +30,7 @@ import bisq.network.p2p.services.data.inventory.InventoryService;
 import bisq.network.p2p.services.peergroup.PeerGroupManager;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
 import bisq.network.p2p.services.peergroup.exchange.PeerExchangeStrategy;
-import bisq.network.p2p.services.peergroup.keepalive.KeepAliveService;
+import bisq.network.p2p.services.peergroup.keep_alive.KeepAliveService;
 import bisq.tor.TorTransportConfig;
 import com.typesafe.config.Config;
 import lombok.Getter;

@@ -28,8 +28,8 @@ import bisq.network.p2p.services.data.inventory.InventoryRequest;
 import bisq.network.p2p.services.data.inventory.InventoryResponse;
 import bisq.network.p2p.services.peergroup.exchange.PeerExchangeRequest;
 import bisq.network.p2p.services.peergroup.exchange.PeerExchangeResponse;
-import bisq.network.p2p.services.peergroup.keepalive.Ping;
-import bisq.network.p2p.services.peergroup.keepalive.Pong;
+import bisq.network.p2p.services.peergroup.keep_alive.Ping;
+import bisq.network.p2p.services.peergroup.keep_alive.Pong;
 import bisq.network.p2p.services.peergroup.network_load.NetworkLoadExchangeRequest;
 import bisq.network.p2p.services.peergroup.network_load.NetworkLoadExchangeResponse;
 
