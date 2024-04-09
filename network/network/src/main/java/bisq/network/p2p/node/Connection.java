@@ -54,12 +54,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 @Slf4j
 public abstract class Connection {
-    public static Comparator<Connection> comparingDateDescending() {
-        return comparingDate().reversed();
-    }
-
     public static Comparator<Connection> comparingDate() {
         return Comparator.comparingLong(Connection::getCreated);
+    }
+
+    public static Comparator<Connection> comparingPendingRequests() {
+        return (o1, o2) -> Boolean.compare(o1.getPendingRequests().hasPendingRequests(), o2.getPendingRequests().hasPendingRequests());
     }
 
     protected interface Handler {
@@ -84,6 +84,8 @@ public abstract class Connection {
     private final NetworkLoadSnapshot peersNetworkLoadSnapshot;
     @Getter
     private final ConnectionMetrics connectionMetrics;
+    @Getter
+    private final PendingRequests pendingRequests = new PendingRequests();
 
     private NetworkEnvelopeSocket networkEnvelopeSocket;
     private final Handler handler;
@@ -127,12 +129,13 @@ public abstract class Connection {
                         long ts = System.currentTimeMillis();
                         NetworkEnvelope networkEnvelope = NetworkEnvelope.fromProto(proto);
                         long deserializeTime = System.currentTimeMillis() - ts;
-
                         networkEnvelope.verifyVersion();
+                        connectionMetrics.onReceived(networkEnvelope, deserializeTime);
+
                         EnvelopePayloadMessage envelopePayloadMessage = networkEnvelope.getEnvelopePayloadMessage();
                         log.debug("Received message: {} at: {}",
                                 StringUtils.truncate(envelopePayloadMessage.toString(), 200), this);
-                        connectionMetrics.onReceived(networkEnvelope, deserializeTime);
+                        pendingRequests.onReceived(envelopePayloadMessage);
                         NetworkService.DISPATCHER.submit(() -> handler.handleNetworkMessage(envelopePayloadMessage,
                                 networkEnvelope.getAuthorizationToken(),
                                 this));
@@ -189,6 +192,7 @@ public abstract class Connection {
     public boolean createdBefore(long date) {
         return getCreated() < date;
     }
+
     @Override
     public String toString() {
         return "'" + getClass().getSimpleName() + " [peerAddress=" + getPeerAddress() +
@@ -206,6 +210,9 @@ public abstract class Connection {
                     StringUtils.truncate(envelopePayloadMessage.toString(), 200), this);
             throw new ConnectionClosedException(this);
         }
+
+        pendingRequests.onSent(envelopePayloadMessage);
+
         try {
             NetworkEnvelope networkEnvelope = new NetworkEnvelope(authorizationToken, envelopePayloadMessage);
             boolean sent = false;
@@ -254,6 +261,7 @@ public abstract class Connection {
         }
         log.info("Close {}; \ncloseReason: {}", this, closeReason);
         isStopped = true;
+        pendingRequests.onClosed();
         if (inputHandlerFuture != null) {
             inputHandlerFuture.cancel(true);
         }
