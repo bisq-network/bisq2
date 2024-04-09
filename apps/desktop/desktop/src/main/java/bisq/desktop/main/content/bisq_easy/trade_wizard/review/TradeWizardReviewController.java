@@ -427,8 +427,10 @@ public class TradeWizardReviewController implements Controller {
                 }
         );
 
-        BisqEasyContract contract = bisqEasyTrade.getContract();
+        bisqEasyTradeService.takeOffer(bisqEasyTrade);
         model.getTakeOfferStatus().set(TradeWizardReviewModel.TakeOfferStatus.SENT);
+
+        BisqEasyContract contract = bisqEasyTrade.getContract();
 
         mainButtonsVisibleHandler.accept(false);
         bisqEasyOpenTradeChannelService.sendTakeOfferMessage(bisqEasyTrade.getId(), bisqEasyOffer, contract.getMediator())
