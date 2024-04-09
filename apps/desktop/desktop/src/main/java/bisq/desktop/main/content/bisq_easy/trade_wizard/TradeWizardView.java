@@ -62,10 +62,9 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
     private final VBox content;
     private final ChangeListener<Number> currentIndexListener;
     private final ChangeListener<View<? extends Parent, ? extends Model, ? extends Controller>> viewChangeListener;
-    private Label priceProgressItemLabel;
+    private Label priceProgressItemLabel, takeOfferProgressItem;
     private Region priceProgressItemLine;
     private Subscription priceProgressItemVisiblePin;
-    private Label takeOfferProgressItem;
     private Region takeOfferProgressLine;
     private UIScheduler progressLabelAnimationScheduler;
     private FadeTransition progressLabelAnimation;
@@ -146,9 +145,15 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
 
         priceProgressItemVisiblePin = EasyBind.subscribe(model.getPriceProgressItemVisible(), isVisible -> {
             if (isVisible) {
-                progressItemsBox.getChildren().add(5, priceProgressItemLine);
-                progressItemsBox.getChildren().add(5, priceProgressItemLabel);
-                progressLabelList.add(2, priceProgressItemLabel);
+                if (!progressItemsBox.getChildren().contains(priceProgressItemLine)) {
+                    progressItemsBox.getChildren().add(5, priceProgressItemLine);
+                }
+                if (!progressItemsBox.getChildren().contains(priceProgressItemLabel)) {
+                    progressItemsBox.getChildren().add(5, priceProgressItemLabel);
+                }
+                if (!progressLabelList.contains(priceProgressItemLabel)) {
+                    progressLabelList.add(2, priceProgressItemLabel);
+                }
             } else {
                 progressItemsBox.getChildren().remove(priceProgressItemLine);
                 progressItemsBox.getChildren().remove(priceProgressItemLabel);
@@ -223,9 +228,9 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
                 getHLine(),
                 market,
                 getHLine(),
-                method,
-                getHLine(),
                 amount,
+                getHLine(),
+                method,
                 takeOfferProgressLine,
                 takeOfferProgressItem,
                 getHLine(),
@@ -233,7 +238,7 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
                 Spacer.fillHBox(),
                 closeButton);
 
-        return new Triple<>(hBox, closeButton, new ArrayList<>(List.of(direction, market, method, amount, takeOfferProgressItem, review)));
+        return new Triple<>(hBox, closeButton, new ArrayList<>(List.of(direction, market, amount, method, takeOfferProgressItem, review)));
     }
 
     private Region getHLine() {

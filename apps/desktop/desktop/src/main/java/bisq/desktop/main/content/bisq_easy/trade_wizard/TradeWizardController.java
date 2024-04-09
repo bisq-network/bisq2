@@ -115,6 +115,7 @@ public class TradeWizardController extends NavigationController implements InitW
         boolean isCreateOfferMode = initData.isCreateOfferMode();
         model.setCreateOfferMode(isCreateOfferMode);
         tradeWizardAmountController.setIsCreateOfferMode(isCreateOfferMode);
+        model.getPriceProgressItemVisible().set(isCreateOfferMode);
     }
 
     @Override
@@ -128,23 +129,23 @@ public class TradeWizardController extends NavigationController implements InitW
         model.getChildTargets().addAll(List.of(
                 NavigationTarget.TRADE_WIZARD_DIRECTION,
                 NavigationTarget.TRADE_WIZARD_MARKET,
-                NavigationTarget.TRADE_WIZARD_PAYMENT_METHOD,
                 NavigationTarget.TRADE_WIZARD_AMOUNT,
+                NavigationTarget.TRADE_WIZARD_PAYMENT_METHOD,
                 NavigationTarget.TRADE_WIZARD_TAKE_OFFER_OFFER,
                 NavigationTarget.TRADE_WIZARD_REVIEW_OFFER
         ));
+
+        if (model.getPriceProgressItemVisible().get()) {
+            model.getChildTargets().add(2, NavigationTarget.TRADE_WIZARD_PRICE);
+        } else {
+            model.getChildTargets().remove(NavigationTarget.TRADE_WIZARD_PRICE);
+        }
 
         directionPin = EasyBind.subscribe(tradeWizardDirectionController.getDirection(), direction -> {
             tradeWizardMarketController.setDirection(direction);
             tradeWizardSelectOfferController.setDirection(direction);
             tradeWizardAmountController.setDirection(direction);
             tradeWizardPaymentMethodController.setDirection(direction);
-            model.getPriceProgressItemVisible().set(direction == Direction.SELL);
-            if (direction == Direction.SELL) {
-                model.getChildTargets().add(2, NavigationTarget.TRADE_WIZARD_PRICE);
-            } else {
-                model.getChildTargets().remove(NavigationTarget.TRADE_WIZARD_PRICE);
-            }
         });
         marketPin = EasyBind.subscribe(tradeWizardMarketController.getMarket(), market -> {
             tradeWizardSelectOfferController.setMarket(market);
@@ -203,7 +204,6 @@ public class TradeWizardController extends NavigationController implements InitW
             } else {
                 tradeWizardReviewController.setDataForTakeOffer(tradeWizardSelectOfferController.getSelectedBisqEasyOffer().get(),
                         tradeWizardAmountController.getAmountSpec().get(),
-                        tradeWizardPriceController.getPriceSpec().get(),
                         tradeWizardPaymentMethodController.getFiatPaymentMethods()
                 );
                 model.getNextButtonText().set(Res.get("bisqEasy.tradeWizard.review.nextButton.takeOffer"));
@@ -313,7 +313,9 @@ public class TradeWizardController extends NavigationController implements InitW
     }
 
     private boolean isTakeOfferItem(int index) {
-        return model.isCreateOfferMode() && !model.getChildTargets().isEmpty() && model.getChildTargets().get(index) == NavigationTarget.TRADE_WIZARD_TAKE_OFFER_OFFER;
+        return model.isCreateOfferMode()
+                && !model.getChildTargets().isEmpty()
+                && model.getChildTargets().get(index) == NavigationTarget.TRADE_WIZARD_TAKE_OFFER_OFFER;
     }
 
     void onClose() {
