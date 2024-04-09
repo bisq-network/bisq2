@@ -27,7 +27,7 @@ import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.peergroup.exchange.PeerExchangeService;
 import bisq.network.p2p.services.peergroup.exchange.PeerExchangeStrategy;
-import bisq.network.p2p.services.peergroup.keepalive.KeepAliveService;
+import bisq.network.p2p.services.peergroup.keep_alive.KeepAliveService;
 import bisq.network.p2p.services.peergroup.network_load.NetworkLoadExchangeService;
 import dev.failsafe.Failsafe;
 import dev.failsafe.RetryPolicy;
