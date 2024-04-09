@@ -79,6 +79,10 @@ public class SearchBox extends HBox {
         applyStyle(searchField.isFocused());
     }
 
+    public void setPromptText(String promptText) {
+        searchField.setPromptText(promptText);
+    }
+
     public final StringProperty textProperty() {
         return searchField.textProperty();
     }

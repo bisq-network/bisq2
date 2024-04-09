@@ -67,8 +67,10 @@ public class TradeWizardMarketView extends View<VBox, TradeWizardMarketModel, Tr
         subtitleLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
 
         searchBox = new SearchBox();
+        searchBox.setPromptText(Res.get("bisqEasy.tradeWizard.market.columns.name").toUpperCase());
         searchBox.setMinWidth(140);
         searchBox.setMaxWidth(140);
+        searchBox.getStyleClass().add("bisq-easy-trade-wizard-market-search");
 
         tableView = new BisqTableView<>(model.getSortedList());
         tableView.getStyleClass().add("bisq-easy-trade-wizard-market");
@@ -80,11 +82,12 @@ public class TradeWizardMarketView extends View<VBox, TradeWizardMarketModel, Tr
         tableView.setMaxWidth(tableWidth);
         configTableView();
 
-        StackPane.setMargin(searchBox, new Insets(5, 15, 0, 0));
+        StackPane.setMargin(searchBox, new Insets(5, 0, 0, 15));
         StackPane tableViewWithSearchBox = new StackPane(tableView, searchBox);
-        tableViewWithSearchBox.setAlignment(Pos.TOP_RIGHT);
+        tableViewWithSearchBox.setAlignment(Pos.TOP_LEFT);
         tableViewWithSearchBox.setPrefSize(tableWidth, tableHeight);
         tableViewWithSearchBox.setMaxWidth(tableWidth);
+        tableViewWithSearchBox.getStyleClass().add("markets-table-container");
 
         root.getChildren().addAll(Spacer.fillVBox(), headlineLabel, subtitleLabel, tableViewWithSearchBox, Spacer.fillVBox());
     }
@@ -113,10 +116,10 @@ public class TradeWizardMarketView extends View<VBox, TradeWizardMarketModel, Tr
     }
 
     private void configTableView() {
+        tableView.getColumns().add(tableView.getSelectionMarkerColumn());
         tableView.getColumns().add(new BisqTableColumn.Builder<MarketListItem>()
-                .title(Res.get("bisqEasy.tradeWizard.market.columns.name"))
                 .left()
-                .minWidth(150)
+                .minWidth(120)
                 .comparator(Comparator.comparing(MarketListItem::getQuoteCurrencyName))
                 .setCellFactory(getNameCellFactory())
                 .build());
@@ -132,10 +135,6 @@ public class TradeWizardMarketView extends View<VBox, TradeWizardMarketModel, Tr
                 .valueSupplier(MarketListItem::getNumUsers)
                 .comparator(Comparator.comparing(MarketListItem::getNumUsersAsInteger))
                 .build());
-        // We add a placeholder column as we show the search field at the header which would hide the column header
-        tableView.getColumns().add(new BisqTableColumn.Builder<MarketListItem>()
-                .fixWidth(140)
-                .build());
     }
 
     private Callback<TableColumn<MarketListItem, MarketListItem>, TableCell<MarketListItem, MarketListItem>> getNameCellFactory
@@ -144,7 +143,7 @@ public class TradeWizardMarketView extends View<VBox, TradeWizardMarketModel, Tr
             private final Label label = new Label();
 
             {
-                label.setPadding(new Insets(0, 0, 0, -10));
+                label.setPadding(new Insets(0, 0, 0, 10));
                 label.setGraphicTextGap(8);
                 label.getStyleClass().add("bisq-text-8");
             }
