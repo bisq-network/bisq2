@@ -519,10 +519,17 @@
 
 /* Temporary popup in Buyer Phase 1a */
 .seller-price-approval-popup {
-    -fx-min-height: 200;
-    -fx-max-height: 200;
+    -fx-min-height: 250;
+    -fx-max-height: 250;
     -fx-min-width: 500;
     -fx-max-width: 500;
+}
+
+.seller-price-approval-popup .label {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 1.2em;
+    -fx-font-family: "IBM Plex Sans Light";
 }
 
 

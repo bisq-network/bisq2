@@ -214,7 +214,7 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
     }
 
     private void setUpSellerPriceApprovalOverlay() {
-        sellerPriceApprovalOverlay = new VBox(20);
+        sellerPriceApprovalOverlay = new VBox();
         sellerPriceApprovalOverlay.setAlignment(Pos.CENTER);
         sellerPriceApprovalOverlay.getStyleClass().addAll("trade-wizard-feedback-bg", "seller-price-approval-popup");
         sellerPriceApprovalOverlay.setPadding(new Insets(30));
@@ -226,7 +226,7 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         HBox sellerPriceApprovalButtons = new HBox(10, acceptSellersPriceButton, cancelButton);
         sellerPriceApprovalButtons.setAlignment(Pos.BOTTOM_RIGHT);
 
-        sellerPriceApprovalOverlay.getChildren().addAll(sellerPriceApprovalLabel, sellerPriceApprovalButtons);
+        sellerPriceApprovalOverlay.getChildren().addAll(sellerPriceApprovalLabel, Spacer.fillVBox(), sellerPriceApprovalButtons);
         StackPane.setAlignment(sellerPriceApprovalOverlay, Pos.TOP_CENTER);
         StackPane.setMargin(sellerPriceApprovalOverlay, new Insets(63, 0, 0, 0));
     }
