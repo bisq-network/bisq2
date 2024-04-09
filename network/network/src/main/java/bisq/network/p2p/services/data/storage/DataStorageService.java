@@ -74,10 +74,11 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
             return persisted;
         }
 
+        int maxSize = new Date().before(IGNORE_MAX_MAP_SIZE_UNTIL) ? MetaData.MAX_MAP_SIZE_50_000 : getMaxMapSize();
         Map<ByteArray, T> pruned = map.entrySet().stream()
                 .filter(entry -> !entry.getValue().isExpired())
                 .sorted((o1, o2) -> Long.compare(o2.getValue().getCreated(), o1.getValue().getCreated()))
-                .limit(getMaxMapSize())
+                .limit(maxSize)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         map.clear();
         map.putAll(pruned);
