@@ -470,7 +470,8 @@ public class TradeStateController implements Controller {
 
     private void updateShouldShowSellerPriceApprovalOverlay() {
         model.getShouldShowSellerPriceApprovalOverlay().set(
-                model.getBisqEasyTrade().get().isBuyer()
+                model.getBisqEasyTrade().get() != null
+                        && model.getBisqEasyTrade().get().isBuyer()
                         && model.getBisqEasyTrade().get().isMaker()
                         && tradePhaseBox.getPhaseIndex() == 0
                         && requiresSellerPriceAcceptance()
