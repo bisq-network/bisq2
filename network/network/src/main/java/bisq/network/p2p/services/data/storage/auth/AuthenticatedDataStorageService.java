@@ -77,6 +77,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
         Map<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
             if (map.size() > getMaxMapSize()) {
+                log.warn("Max. map size reached. map.size()={}, getMaxMapSize={}", map.size(), getMaxMapSize());
                 return new DataStorageResult(false).maxMapSizeReached();
             }
             requestFromMap = map.get(byteArray);
