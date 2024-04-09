@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.services.peergroup;
+package bisq.network.p2p.services.peer_group;
 
 import bisq.network.common.Address;
 import lombok.EqualsAndHashCode;

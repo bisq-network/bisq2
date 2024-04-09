@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.services.peergroup;
+package bisq.network.p2p.services.peer_group;
 
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;

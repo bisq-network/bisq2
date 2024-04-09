@@ -15,13 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.services.peergroup.keep_alive;
+package bisq.network.p2p.services.peer_group.network_load;
 
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
+import bisq.network.p2p.node.network_load.NetworkLoad;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,14 +33,14 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 @Getter
 @Slf4j
-class KeepAliveHandler implements Connection.Listener {
+class NetworkLoadExchangeHandler implements Connection.Listener {
     private final Node node;
     private final Connection connection;
     private final CompletableFuture<Void> future = new CompletableFuture<>();
     private final int nonce;
     private long ts;
 
-    KeepAliveHandler(Node node, Connection connection) {
+    NetworkLoadExchangeHandler(Node node, Connection connection) {
         this.node = node;
         this.connection = connection;
 
@@ -48,10 +49,11 @@ class KeepAliveHandler implements Connection.Listener {
     }
 
     CompletableFuture<Void> request() {
-        log.info("{} send Ping to {} with nonce {}. Connection={}",
-                node, connection.getPeerAddress(), nonce, connection.getId());
+        NetworkLoad myNetworkLoad = node.getNetworkLoadSnapshot().getCurrentNetworkLoad();
+        log.info("{} send NetworkLoadRequest to {} with nonce {} and my networkLoad {}. Connection={}",
+                node, connection.getPeerAddress(), nonce, myNetworkLoad, connection.getId());
         ts = System.currentTimeMillis();
-        supplyAsync(() -> node.send(new Ping(nonce), connection), NetworkService.NETWORK_IO_POOL)
+        supplyAsync(() -> node.send(new NetworkLoadExchangeRequest(nonce, myNetworkLoad), connection), NetworkService.NETWORK_IO_POOL)
                 .whenComplete((c, throwable) -> {
                     if (throwable != null) {
                         future.completeExceptionally(throwable);
@@ -63,17 +65,19 @@ class KeepAliveHandler implements Connection.Listener {
 
     @Override
     public void onNetworkMessage(EnvelopePayloadMessage envelopePayloadMessage) {
-        if (envelopePayloadMessage instanceof Pong) {
-            Pong pong = (Pong) envelopePayloadMessage;
-            if (pong.getRequestNonce() == nonce) {
-                log.info("{} received Pong from {} with nonce {}. Connection={}",
-                        node, connection.getPeerAddress(), pong.getRequestNonce(), connection.getId());
+        if (envelopePayloadMessage instanceof NetworkLoadExchangeResponse) {
+            NetworkLoadExchangeResponse response = (NetworkLoadExchangeResponse) envelopePayloadMessage;
+            if (response.getRequestNonce() == nonce) {
+                NetworkLoad peersNetworkLoad = response.getNetworkLoad();
+                log.info("{} received NetworkLoadResponse from {} with nonce {} and peers networkLoad {}. Connection={}",
+                        node, connection.getPeerAddress(), response.getRequestNonce(), peersNetworkLoad, connection.getId());
                 removeListeners();
+                connection.getPeersNetworkLoadSnapshot().updateNetworkLoad(peersNetworkLoad);
                 connection.getConnectionMetrics().addRtt(System.currentTimeMillis() - ts);
                 future.complete(null);
             } else {
-                log.warn("{} received Pong from {} with invalid nonce {}. Request nonce was {}. Connection={}",
-                        node, connection.getPeerAddress(), pong.getRequestNonce(), nonce, connection.getId());
+                log.warn("{} received NetworkLoadResponse from {} with invalid nonce {}. Request nonce was {}. Connection={}",
+                        node, connection.getPeerAddress(), response.getRequestNonce(), nonce, connection.getId());
             }
         }
     }

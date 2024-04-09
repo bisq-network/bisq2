@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.services.peergroup.keep_alive;
+package bisq.network.p2p.services.peer_group.keep_alive;
 
 import bisq.common.timer.Scheduler;
 import bisq.network.NetworkService;

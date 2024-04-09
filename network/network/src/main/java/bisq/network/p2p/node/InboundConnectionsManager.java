@@ -27,7 +27,7 @@ import bisq.network.p2p.node.handshake.ConnectionHandshakeResponder;
 import bisq.network.p2p.node.network_load.ConnectionMetrics;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
-import bisq.network.p2p.services.peergroup.BanList;
+import bisq.network.p2p.services.peer_group.BanList;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.services.peergroup;
+package bisq.network.p2p.services.peer_group;
 
 import bisq.common.timer.Scheduler;
 import bisq.network.NetworkService;
@@ -25,10 +25,10 @@ import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
-import bisq.network.p2p.services.peergroup.exchange.PeerExchangeService;
-import bisq.network.p2p.services.peergroup.exchange.PeerExchangeStrategy;
-import bisq.network.p2p.services.peergroup.keep_alive.KeepAliveService;
-import bisq.network.p2p.services.peergroup.network_load.NetworkLoadExchangeService;
+import bisq.network.p2p.services.peer_group.exchange.PeerExchangeService;
+import bisq.network.p2p.services.peer_group.exchange.PeerExchangeStrategy;
+import bisq.network.p2p.services.peer_group.keep_alive.KeepAliveService;
+import bisq.network.p2p.services.peer_group.network_load.NetworkLoadExchangeService;
 import dev.failsafe.Failsafe;
 import dev.failsafe.RetryPolicy;
 import lombok.Getter;

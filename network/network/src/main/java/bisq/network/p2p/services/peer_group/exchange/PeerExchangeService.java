@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.services.peergroup.exchange;
+package bisq.network.p2p.services.peer_group.exchange;
 
 import bisq.common.timer.Scheduler;
 import bisq.common.util.StringUtils;
@@ -25,7 +25,7 @@ import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
-import bisq.network.p2p.services.peergroup.Peer;
+import bisq.network.p2p.services.peer_group.Peer;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

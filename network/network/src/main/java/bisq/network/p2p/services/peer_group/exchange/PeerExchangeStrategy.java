@@ -15,12 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.services.peergroup.exchange;
+package bisq.network.p2p.services.peer_group.exchange;
 
 import bisq.network.common.Address;
 import bisq.network.p2p.node.Node;
-import bisq.network.p2p.services.peergroup.Peer;
-import bisq.network.p2p.services.peergroup.PeerGroupService;
+import bisq.network.p2p.services.peer_group.Peer;
+import bisq.network.p2p.services.peer_group.PeerGroupService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

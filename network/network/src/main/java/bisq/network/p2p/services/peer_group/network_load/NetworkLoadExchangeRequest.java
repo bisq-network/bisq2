@@ -15,10 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.services.peergroup.keep_alive;
+package bisq.network.p2p.services.peer_group.network_load;
 
 import bisq.network.p2p.message.EnvelopePayloadMessage;
-import bisq.network.p2p.message.Response;
+import bisq.network.p2p.message.Request;
+import bisq.network.p2p.node.network_load.NetworkLoad;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -26,11 +27,15 @@ import lombok.ToString;
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class Pong implements EnvelopePayloadMessage, Response {
-    private final int requestNonce;
+public final class NetworkLoadExchangeRequest implements EnvelopePayloadMessage, Request {
+    private final int nonce;
+    private final NetworkLoad networkLoad;
 
-    public Pong(int requestNonce) {
-        this.requestNonce = requestNonce;
+    public NetworkLoadExchangeRequest(int nonce, NetworkLoad networkLoad) {
+        this.nonce = nonce;
+        this.networkLoad = networkLoad;
+
+        verify();
     }
 
     @Override
@@ -39,14 +44,15 @@ public final class Pong implements EnvelopePayloadMessage, Response {
 
     @Override
     public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
-        return getNetworkMessageBuilder().setPong(
-                        bisq.network.protobuf.Pong.newBuilder()
-                                .setRequestNonce(requestNonce))
+        return getNetworkMessageBuilder().setNetworkLoadExchangeRequest(
+                        bisq.network.protobuf.NetworkLoadExchangeRequest.newBuilder()
+                                .setNonce(nonce)
+                                .setNetworkLoad(networkLoad.toProto()))
                 .build();
     }
 
-    public static Pong fromProto(bisq.network.protobuf.Pong proto) {
-        return new Pong(proto.getRequestNonce());
+    public static NetworkLoadExchangeRequest fromProto(bisq.network.protobuf.NetworkLoadExchangeRequest proto) {
+        return new NetworkLoadExchangeRequest(proto.getNonce(), NetworkLoad.fromProto(proto.getNetworkLoad()));
     }
 
     @Override
@@ -56,6 +62,6 @@ public final class Pong implements EnvelopePayloadMessage, Response {
 
     @Override
     public String getRequestId() {
-        return String.valueOf(requestNonce);
+        return String.valueOf(nonce);
     }
 }
