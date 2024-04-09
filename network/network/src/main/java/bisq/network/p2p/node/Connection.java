@@ -58,8 +58,8 @@ public abstract class Connection {
         return Comparator.comparingLong(Connection::getCreated);
     }
 
-    public static Comparator<Connection> comparingPendingRequests() {
-        return (o1, o2) -> Boolean.compare(o1.getPendingRequests().hasPendingRequests(), o2.getPendingRequests().hasPendingRequests());
+    public static Comparator<Connection> comparingNumPendingRequests() {
+        return Comparator.comparingLong(o -> o.getRequestResponseManager().numPendingRequests());
     }
 
     protected interface Handler {
@@ -85,7 +85,7 @@ public abstract class Connection {
     @Getter
     private final ConnectionMetrics connectionMetrics;
     @Getter
-    private final PendingRequests pendingRequests;
+    private final RequestResponseManager requestResponseManager;
 
     private NetworkEnvelopeSocket networkEnvelopeSocket;
     private final Handler handler;
@@ -107,7 +107,7 @@ public abstract class Connection {
         this.peersNetworkLoadSnapshot = peersNetworkLoadSnapshot;
         this.handler = handler;
         this.connectionMetrics = connectionMetrics;
-        pendingRequests = new PendingRequests(connectionMetrics);
+        requestResponseManager = new RequestResponseManager(connectionMetrics);
 
         try {
             PeerSocket peerSocket = new TorSocket(socket);
@@ -136,7 +136,7 @@ public abstract class Connection {
                         EnvelopePayloadMessage envelopePayloadMessage = networkEnvelope.getEnvelopePayloadMessage();
                         log.debug("Received message: {} at: {}",
                                 StringUtils.truncate(envelopePayloadMessage.toString(), 200), this);
-                        pendingRequests.onReceived(envelopePayloadMessage);
+                        requestResponseManager.onReceived(envelopePayloadMessage);
                         NetworkService.DISPATCHER.submit(() -> handler.handleNetworkMessage(envelopePayloadMessage,
                                 networkEnvelope.getAuthorizationToken(),
                                 this));
@@ -212,7 +212,7 @@ public abstract class Connection {
             throw new ConnectionClosedException(this);
         }
 
-        pendingRequests.onSent(envelopePayloadMessage);
+        requestResponseManager.onSent(envelopePayloadMessage);
 
         try {
             NetworkEnvelope networkEnvelope = new NetworkEnvelope(authorizationToken, envelopePayloadMessage);
@@ -262,7 +262,7 @@ public abstract class Connection {
         }
         log.info("Close {}; \ncloseReason: {}", this, closeReason);
         isStopped = true;
-        pendingRequests.onClosed();
+        requestResponseManager.onClosed();
         if (inputHandlerFuture != null) {
             inputHandlerFuture.cancel(true);
         }
