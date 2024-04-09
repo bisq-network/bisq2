@@ -653,7 +653,7 @@ public class Node implements Connection.Handler {
 
     @Override
     public String toString() {
-        return findMyAddress().map(address -> "Node with address " + address)
+        return findMyAddress().map(address -> "Node with address " + StringUtils.truncate(address.toString(), 8))
                 .orElse("Node with networkId " + networkId.getInfo());
     }
 

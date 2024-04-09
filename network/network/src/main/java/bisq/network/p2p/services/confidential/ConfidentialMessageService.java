@@ -199,7 +199,11 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
 
     }
 
-    private SendConfidentialMessageResult handleSendMessageException(EnvelopePayloadMessage envelopePayloadMessage, PubKey receiverPubKey, KeyPair senderKeyPair, Exception exception, ConfidentialMessage confidentialMessage) {
+    private SendConfidentialMessageResult handleSendMessageException(EnvelopePayloadMessage envelopePayloadMessage,
+                                                                     PubKey receiverPubKey,
+                                                                     KeyPair senderKeyPair,
+                                                                     Exception exception,
+                                                                     ConfidentialMessage confidentialMessage) {
         SendConfidentialMessageResult result;
         if (envelopePayloadMessage instanceof MailboxMessage) {
             log.info("Message could not be sent because of {}.\n" +
