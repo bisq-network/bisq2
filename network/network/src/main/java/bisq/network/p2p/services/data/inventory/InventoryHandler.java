@@ -45,7 +45,6 @@ class InventoryHandler implements Connection.Listener {
     private final Connection connection;
     private final CompletableFuture<Inventory> future = new CompletableFuture<>();
     private final int nonce;
-    private long ts;
 
     InventoryHandler(Node node, Connection connection) {
         this.node = node;
@@ -56,7 +55,6 @@ class InventoryHandler implements Connection.Listener {
     }
 
     CompletableFuture<Inventory> request(InventoryFilter inventoryFilter) {
-        ts = System.currentTimeMillis();
         InventoryRequest inventoryRequest = new InventoryRequest(inventoryFilter, nonce);
         runAsync(() -> node.send(inventoryRequest, connection), NetworkService.NETWORK_IO_POOL)
                 .whenComplete((connection, throwable) -> {
@@ -75,7 +73,6 @@ class InventoryHandler implements Connection.Listener {
             if (response.getRequestNonce() == nonce) {
                 printReceivedInventory(response);
                 removeListeners();
-                connection.getConnectionMetrics().addRtt(System.currentTimeMillis() - ts);
                 future.complete(response.getInventory());
             } else {
                 log.warn("{} received InventoryResponse from {} with invalid nonce {}. Request nonce was {}. Connection={}",
