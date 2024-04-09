@@ -151,7 +151,7 @@ public class TradeStateController implements Controller {
                     hasAccepted -> updateShouldShowSellerPriceApprovalOverlay());
             updateShouldShowSellerPriceApprovalOverlay();
             model.getSellerPriceApprovalLabel().set(
-                    Res.get("bisqEasy.tradeState.info.buyer.phase1a.acceptOrRejectPrice",
+                    Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.description",
                             BisqEasyServiceUtil.getFormattedPriceSpec(bisqEasyTrade.getOffer().getPriceSpec()),
                             BisqEasyServiceUtil.getFormattedPriceSpec(bisqEasyTrade.getContract().getAgreedPriceSpec()))
             );

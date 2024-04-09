@@ -215,18 +215,21 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
 
     private void setUpSellerPriceApprovalOverlay() {
         sellerPriceApprovalOverlay = new VBox();
-        sellerPriceApprovalOverlay.setAlignment(Pos.CENTER);
+        sellerPriceApprovalOverlay.setAlignment(Pos.TOP_LEFT);
         sellerPriceApprovalOverlay.getStyleClass().addAll("trade-wizard-feedback-bg", "seller-price-approval-popup");
-        sellerPriceApprovalOverlay.setPadding(new Insets(30));
         sellerPriceApprovalOverlay.visibleProperty().set(false);
         sellerPriceApprovalOverlay.managedProperty().set(false);
 
+        Label sellerPriceApprovalTitleLabel = new Label(Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.title"));
+        sellerPriceApprovalTitleLabel.getStyleClass().addAll("seller-price-approval-title", "large-text", "font-default");
         sellerPriceApprovalLabel = new Label();
+        sellerPriceApprovalLabel.getStyleClass().addAll("seller-price-approval-description", "normal-text", "font-default");
         sellerPriceApprovalLabel.setWrapText(true);
         HBox sellerPriceApprovalButtons = new HBox(10, acceptSellersPriceButton, cancelButton);
         sellerPriceApprovalButtons.setAlignment(Pos.BOTTOM_RIGHT);
 
-        sellerPriceApprovalOverlay.getChildren().addAll(sellerPriceApprovalLabel, Spacer.fillVBox(), sellerPriceApprovalButtons);
+        sellerPriceApprovalOverlay.getChildren().addAll(sellerPriceApprovalTitleLabel, sellerPriceApprovalLabel,
+                Spacer.fillVBox(), sellerPriceApprovalButtons);
         StackPane.setAlignment(sellerPriceApprovalOverlay, Pos.TOP_CENTER);
         StackPane.setMargin(sellerPriceApprovalOverlay, new Insets(63, 0, 0, 0));
     }
