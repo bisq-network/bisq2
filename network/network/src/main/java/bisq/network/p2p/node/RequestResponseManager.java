@@ -17,14 +17,14 @@ import java.util.stream.Collectors;
  * on a connection and avoid that such connections gets closed.
  */
 @Slf4j
-public class PendingRequests {
+public class RequestResponseManager {
     private static final long MAX_AGE = TimeUnit.SECONDS.toMillis(300);
 
     private final Map<String, Long> pendingRequests = new ConcurrentHashMap<>();
     private final ConnectionMetrics connectionMetrics;
     private volatile long pruneDate;
 
-    public PendingRequests(ConnectionMetrics connectionMetrics) {
+    public RequestResponseManager(ConnectionMetrics connectionMetrics) {
         this.connectionMetrics = connectionMetrics;
         pruneDate = System.currentTimeMillis();
     }
@@ -64,8 +64,8 @@ public class PendingRequests {
         pendingRequests.clear();
     }
 
-    public boolean hasPendingRequests() {
-        return !pendingRequests.isEmpty();
+    public int numPendingRequests() {
+        return pendingRequests.size();
     }
 
     private void maybeRemoveExpired() {

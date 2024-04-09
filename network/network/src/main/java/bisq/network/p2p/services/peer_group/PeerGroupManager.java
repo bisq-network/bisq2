@@ -410,10 +410,10 @@ public class PeerGroupManager implements Node.Listener {
     // Utils
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    // Used for skip, therefor we sort by descending pendingRequests state and descending creationDate so that we close
-    // the oldest connections which have no pending requests first.
+    // Used for Stream.skip, therefor we sort by descending numPendingRequests and descending creationDate so that we close
+    // the oldest connections which have the least pending requests first.
     private Comparator<Connection> comparingForSkip() {
-        return Connection.comparingPendingRequests().reversed()
+        return Connection.comparingNumPendingRequests().reversed()
                 .thenComparing(Connection.comparingDate().reversed());
     }
 
