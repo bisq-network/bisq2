@@ -33,6 +33,7 @@ import bisq.desktop.main.content.bisq_easy.BisqEasyServiceUtil;
 import bisq.desktop.main.content.bisq_easy.components.TradeDataHeader;
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.*;
 import bisq.i18n.Res;
+import bisq.offer.price.spec.PriceSpec;
 import bisq.settings.DontShowAgainService;
 import bisq.support.mediation.MediationRequestService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
@@ -61,7 +62,7 @@ public class TradeStateController implements Controller {
     private final BisqEasyOpenTradeSelectionService selectionService;
     private final MediationRequestService mediationRequestService;
     private Pin bisqEasyTradeStatePin, errorMessagePin, peersErrorMessagePin, isInMediationPin;
-    private Subscription channelPin;
+    private Subscription channelPin, hasBuyerAcceptedPriceSpecPin;
 
     public TradeStateController(ServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
@@ -145,6 +146,15 @@ public class TradeStateController implements Controller {
                         }
                     }
             );
+
+            hasBuyerAcceptedPriceSpecPin = EasyBind.subscribe(model.getHasBuyerAcceptedSellersPriceSpec(),
+                    hasAccepted -> updateShouldShowSellerPriceApprovalOverlay());
+            updateShouldShowSellerPriceApprovalOverlay();
+            model.getSellerPriceApprovalLabel().set(
+                    Res.get("bisqEasy.tradeState.info.buyer.phase1a.acceptOrRejectPrice",
+                            bisqEasyTrade.getOffer().getPriceSpec().toString(),
+                            bisqEasyTrade.getContract().getAgreedPriceSpec().toString())
+            );
         });
     }
 
@@ -164,6 +174,9 @@ public class TradeStateController implements Controller {
         if (isInMediationPin != null) {
             isInMediationPin.unbind();
             isInMediationPin = null;
+        }
+        if (hasBuyerAcceptedPriceSpecPin != null) {
+            hasBuyerAcceptedPriceSpecPin.unsubscribe();
         }
         model.resetAll();
     }
@@ -231,6 +244,10 @@ public class TradeStateController implements Controller {
         OpenTradesUtils.reportToMediator(model.getChannel().get(),
                 model.getBisqEasyTrade().get().getContract(),
                 mediationRequestService, channelService);
+    }
+
+    void onAcceptSellersPriceButton() {
+        model.getHasBuyerAcceptedSellersPriceSpec().set(true);
     }
 
     private void applyStateInfoVBox(@Nullable BisqEasyTradeState state) {
@@ -444,5 +461,21 @@ public class TradeStateController implements Controller {
             default:
                 log.error("State {} not handled", state.name());
         }
+    }
+
+    private void updateShouldShowSellerPriceApprovalOverlay() {
+        model.getShouldShowSellerPriceApprovalOverlay().set(
+                model.getBisqEasyTrade().get().isBuyer()
+                        && model.getBisqEasyTrade().get().isMaker()
+                        && tradePhaseBox.getPhaseIndex() == 0
+                        && requiresSellerPriceAcceptance()
+                        && !model.getHasBuyerAcceptedSellersPriceSpec().get()
+        );
+    }
+
+    private boolean requiresSellerPriceAcceptance() {
+        PriceSpec buyerPriceSpec = model.getBisqEasyTrade().get().getOffer().getPriceSpec();
+        PriceSpec sellerPriceSpec = model.getBisqEasyTrade().get().getContract().getAgreedPriceSpec();
+        return !buyerPriceSpec.equals(sellerPriceSpec);
     }
 }

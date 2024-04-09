@@ -55,8 +55,8 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
         verifyMessage(message);
 
         BisqEasyContract contract = message.getBisqEasyContract();
-        checkArgument(trade.getOffer().getPriceSpec().equals(contract.getAgreedPriceSpec()),
-                "Price spec cannot be changed from the one set in offer since v2.0.3. Update software to take this offer.");
+//        checkArgument(trade.getOffer().getPriceSpec().equals(contract.getAgreedPriceSpec()),
+//                "Price spec cannot be changed from the one set in offer since v2.0.3.");
         ContractSignatureData takersContractSignatureData = message.getContractSignatureData();
         ContractService contractService = serviceProvider.getContractService();
         try {
