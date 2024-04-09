@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.peer_group.keep_alive;
 
 import bisq.common.timer.Scheduler;
+import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
@@ -73,7 +74,7 @@ public class KeepAliveService implements Node.Listener {
     public void initialize() {
         scheduler = Optional.of(Scheduler.run(this::sendPingIfRequired)
                 .periodically(config.getInterval())
-                .name("KeepAliveService.scheduler-" + node.getNodeInfo()));
+                .name("KeepAliveService.scheduler-" + StringUtils.truncate(node.getNodeInfo(), 8)));
     }
 
     public void shutdown() {

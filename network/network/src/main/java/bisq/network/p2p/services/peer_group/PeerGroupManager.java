@@ -288,6 +288,7 @@ public class PeerGroupManager implements Node.Listener {
                 .collect(Collectors.toSet());
         node.getActiveInboundConnections()
                 .filter(this::allowDisconnect)
+                .filter(this::hasNoPendingRequests)
                 .filter(inbound -> outboundAddresses.contains(inbound.getPeerAddress()))
                 .peek(inbound -> log.info("{} -> {}: Send CloseConnectionMessage as we have an " +
                                 "outbound connection with the same address.",
@@ -295,10 +296,12 @@ public class PeerGroupManager implements Node.Listener {
                 .forEach(inbound -> node.closeConnectionGracefully(inbound, CloseReason.DUPLICATE_CONNECTION));
     }
 
+
     private void maybeCloseConnectionsToSeeds() {
         log.debug("{} called maybeCloseConnectionsToSeeds", node);
         node.getAllActiveConnections()
                 .filter(this::allowDisconnect)
+                .filter(this::hasNoPendingRequests)
                 .filter(peerGroupService::isSeed)
                 .sorted(comparingForSkip())
                 .skip(config.getMaxSeeds())
@@ -311,9 +314,12 @@ public class PeerGroupManager implements Node.Listener {
     private void maybeCloseAgedConnections() {
         log.debug("{} called maybeCloseAgedConnections", node);
         long maxAgeDate = System.currentTimeMillis() - config.getMaxAge();
+        int minNumConnectedPeers = peerGroupService.getMinNumConnectedPeers();
         node.getAllActiveConnections()
                 .filter(this::allowDisconnect)
+                .sorted(comparingForSkip())
                 .filter(connection -> connection.createdBefore(maxAgeDate))
+                .skip(minNumConnectedPeers)
                 .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as the connection age " +
                                 "is too old.",
                         node, connection.getPeerAddress()))
@@ -419,6 +425,10 @@ public class PeerGroupManager implements Node.Listener {
 
     private boolean allowDisconnect(Connection connection) {
         return isNotBootstrapping(connection) && connection.isRunning();
+    }
+
+    private boolean hasNoPendingRequests(Connection connection) {
+        return !connection.getRequestResponseManager().hasPendingRequests();
     }
 
     private boolean isNotBootstrapping(Connection connection) {

@@ -28,7 +28,7 @@ public class MemoryReport {
     private static Scheduler scheduler;
 
     public static void printPeriodically() {
-        printPeriodically(1, TimeUnit.MINUTES);
+        printPeriodically(3, TimeUnit.MINUTES);
     }
 
     public static void printPeriodically(long delay, TimeUnit timeUnit) {
