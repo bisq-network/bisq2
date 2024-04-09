@@ -29,6 +29,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -42,8 +43,8 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
     private final Button cancelButton, closeTradeButton, exportButton, reportToMediatorButton, acceptSellersPriceButton;
     private final Label cancelledInfo, errorMessage;
     private VBox sellerPriceApprovalOverlay;
-    private Label sellerPriceApprovalLabel;
-    private Subscription stateInfoVBoxPin, showSellersPriceApprovalOverlayPin;
+    private Pane sellerPriceApprovalContent;
+    private Subscription stateInfoVBoxPin, showSellersPriceApprovalOverlayPin, sellerPriceApprovalContentPin;
 
     public TradeStateView(TradeStateModel model,
                           TradeStateController controller,
@@ -139,8 +140,6 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         cancelButton.visibleProperty().bind(model.getCancelButtonVisible());
         cancelButton.managedProperty().bind(model.getCancelButtonVisible());
 
-        sellerPriceApprovalLabel.textProperty().bind(model.getSellerPriceApprovalLabel());
-
         stateInfoVBoxPin = EasyBind.subscribe(model.getStateInfoVBox(), stateInfoVBox -> {
             if (phaseAndInfoHBox.getChildren().size() == 2) {
                 phaseAndInfoHBox.getChildren().remove(1);
@@ -165,6 +164,13 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
                 sellerPriceApprovalOverlay.setVisible(false);
                 sellerPriceApprovalOverlay.setManaged(false);
                 Transitions.removeEffect(phaseAndInfoHBox);
+            }
+        });
+
+        sellerPriceApprovalContentPin = EasyBind.subscribe(model.getSellerPriceApprovalContent(), content -> {
+            if (content != null) {
+                content.getStyleClass().setAll("seller-price-approval-content");
+                sellerPriceApprovalContent.getChildren().setAll(content);
             }
         });
 
@@ -197,10 +203,9 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         cancelButton.visibleProperty().unbind();
         cancelButton.managedProperty().unbind();
 
-        sellerPriceApprovalLabel.textProperty().unbind();
-
         stateInfoVBoxPin.unsubscribe();
         showSellersPriceApprovalOverlayPin.unsubscribe();
+        sellerPriceApprovalContentPin.unsubscribe();
 
         cancelButton.setOnAction(null);
         closeTradeButton.setOnAction(null);
@@ -222,13 +227,12 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
 
         Label sellerPriceApprovalTitleLabel = new Label(Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.title"));
         sellerPriceApprovalTitleLabel.getStyleClass().addAll("seller-price-approval-title", "large-text", "font-default");
-        sellerPriceApprovalLabel = new Label();
-        sellerPriceApprovalLabel.getStyleClass().addAll("seller-price-approval-description", "normal-text", "font-default");
-        sellerPriceApprovalLabel.setWrapText(true);
+        sellerPriceApprovalContent = new Pane();
+        sellerPriceApprovalContent.getStyleClass().addAll("seller-price-approval-description", "normal-text", "font-default");
         HBox sellerPriceApprovalButtons = new HBox(10, acceptSellersPriceButton, cancelButton);
         sellerPriceApprovalButtons.setAlignment(Pos.BOTTOM_RIGHT);
 
-        sellerPriceApprovalOverlay.getChildren().addAll(sellerPriceApprovalTitleLabel, sellerPriceApprovalLabel,
+        sellerPriceApprovalOverlay.getChildren().addAll(sellerPriceApprovalTitleLabel, sellerPriceApprovalContent,
                 Spacer.fillVBox(), sellerPriceApprovalButtons);
         StackPane.setAlignment(sellerPriceApprovalOverlay, Pos.TOP_CENTER);
         StackPane.setMargin(sellerPriceApprovalOverlay, new Insets(63, 0, 0, 0));

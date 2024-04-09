@@ -28,6 +28,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.components.controls.UnorderedList;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.BisqEasyServiceUtil;
 import bisq.desktop.main.content.bisq_easy.components.TradeDataHeader;
@@ -39,6 +40,8 @@ import bisq.support.mediation.MediationRequestService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
+import javafx.scene.control.Label;
+import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -150,11 +153,19 @@ public class TradeStateController implements Controller {
             hasBuyerAcceptedPriceSpecPin = EasyBind.subscribe(model.getHasBuyerAcceptedSellersPriceSpec(),
                     hasAccepted -> updateShouldShowSellerPriceApprovalOverlay());
             updateShouldShowSellerPriceApprovalOverlay();
-            model.getSellerPriceApprovalLabel().set(
-                    Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.description",
-                            BisqEasyServiceUtil.getFormattedPriceSpec(bisqEasyTrade.getOffer().getPriceSpec()),
-                            BisqEasyServiceUtil.getFormattedPriceSpec(bisqEasyTrade.getContract().getAgreedPriceSpec()))
+
+            VBox vBox = new VBox(
+                    new Label(Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.description.buyersPrice")),
+                    new UnorderedList(Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.description.price",
+                            BisqEasyServiceUtil.getFormattedPriceSpec(bisqEasyTrade.getOffer().getPriceSpec())),
+                            "bisq-text-13"),
+                    new Label(Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.description.sellersPrice")),
+                    new UnorderedList(Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.description.price",
+                            BisqEasyServiceUtil.getFormattedPriceSpec(bisqEasyTrade.getContract().getAgreedPriceSpec())),
+                            "bisq-text-13"),
+                    new Label(Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.description.question"))
             );
+            model.getSellerPriceApprovalContent().set(vBox);
         });
     }
 
