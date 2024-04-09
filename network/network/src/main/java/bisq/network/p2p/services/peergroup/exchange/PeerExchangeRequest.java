@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.peergroup.exchange;
 
 import bisq.network.p2p.message.EnvelopePayloadMessage;
+import bisq.network.p2p.message.Request;
 import bisq.network.p2p.services.peergroup.Peer;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -33,7 +34,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class PeerExchangeRequest implements EnvelopePayloadMessage {
+public final class PeerExchangeRequest implements EnvelopePayloadMessage, Request {
     @Setter
     public static long maxNumPeers;
     private final int nonce;
@@ -72,5 +73,10 @@ public final class PeerExchangeRequest implements EnvelopePayloadMessage {
     @Override
     public double getCostFactor() {
         return 0.1;
+    }
+
+    @Override
+    public String getRequestId() {
+        return String.valueOf(nonce);
     }
 }

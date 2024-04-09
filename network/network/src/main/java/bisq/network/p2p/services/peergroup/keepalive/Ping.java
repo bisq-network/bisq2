@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.peergroup.keepalive;
 
 import bisq.network.p2p.message.EnvelopePayloadMessage;
+import bisq.network.p2p.message.Request;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -25,7 +26,7 @@ import lombok.ToString;
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class Ping implements EnvelopePayloadMessage {
+public final class Ping implements EnvelopePayloadMessage, Request {
     private final int nonce;
 
     public Ping(int nonce) {
@@ -50,5 +51,10 @@ public final class Ping implements EnvelopePayloadMessage {
     @Override
     public double getCostFactor() {
         return 0.05;
+    }
+
+    @Override
+    public String getRequestId() {
+        return String.valueOf(nonce);
     }
 }
