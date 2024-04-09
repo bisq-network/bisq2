@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 /**
- * The peers package holds classes responsible for bootstrapping the network and maintaining a
+ * The peergroup package holds classes responsible for bootstrapping the network and maintaining a
  * healthy network of neighbor peers.
  * <p>
  * PeerGroupService: Manages the peer group.

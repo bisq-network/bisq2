@@ -300,7 +300,7 @@ public class PeerGroupManager implements Node.Listener {
         node.getAllActiveConnections()
                 .filter(this::allowDisconnect)
                 .filter(peerGroupService::isSeed)
-                .sorted(Connection.comparingDateDescending()) // As we use skip we sort by descending creationDate so that we close the oldest connections
+                .sorted(comparingForSkip())
                 .skip(config.getMaxSeeds())
                 .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as we have too " +
                                 "many connections to seeds.",
@@ -324,7 +324,7 @@ public class PeerGroupManager implements Node.Listener {
         log.debug("{} called maybeCloseExceedingInboundConnections", node);
         node.getActiveInboundConnections()
                 .filter(this::allowDisconnect)
-                .sorted(Connection.comparingDateDescending()) // As we use skip we sort by descending creationDate so that we close the oldest connections
+                .sorted(comparingForSkip())
                 .skip(peerGroupService.getMaxInboundConnections())
                 .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as we have too many inbound connections.",
                         node, connection.getPeerAddress()))
@@ -335,7 +335,7 @@ public class PeerGroupManager implements Node.Listener {
         log.debug("{} called maybeCloseExceedingConnections", node);
         node.getAllActiveConnections()
                 .filter(this::allowDisconnect)
-                .sorted(Connection.comparingDateDescending()) // As we use skip we sort by descending creationDate so that we close the oldest connections
+                .sorted(comparingForSkip())
                 .skip(peerGroupService.getMaxNumConnectedPeers())
                 .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as we have too many connections.",
                         node, connection.getPeerAddress()))
@@ -409,6 +409,13 @@ public class PeerGroupManager implements Node.Listener {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Utils
     ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    // Used for skip, therefor we sort by descending pendingRequests state and descending creationDate so that we close
+    // the oldest connections which have no pending requests first.
+    private Comparator<Connection> comparingForSkip() {
+        return Connection.comparingPendingRequests().reversed()
+                .thenComparing(Connection.comparingDate().reversed());
+    }
 
     private boolean allowDisconnect(Connection connection) {
         return isNotBootstrapping(connection) && connection.isRunning();
