@@ -71,12 +71,9 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
-@EqualsAndHashCode
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Slf4j
 public abstract class Overlay<T extends Overlay<T>> {
     protected final static double DEFAULT_WIDTH = 668;
@@ -139,6 +136,9 @@ public abstract class Overlay<T extends Overlay<T>> {
         }
     }
 
+    @EqualsAndHashCode.Include
+    private final String id;
+
     private Region owner;
     protected Stage stage;
     @Getter
@@ -159,7 +159,8 @@ public abstract class Overlay<T extends Overlay<T>> {
     protected boolean useAnimation = true;
 
     protected Label headlineIcon, headlineLabel, messageLabel;
-    protected String headline, message, closeButtonText, actionButtonText,
+    protected String headline, message;
+    protected String closeButtonText, actionButtonText,
             secondaryActionButtonText, dontShowAgainId, dontShowAgainText,
             truncatedMessage;
     private List<String> messageHyperlinks;
@@ -185,6 +186,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     protected int maxChar = 2200;
 
     public Overlay() {
+        id = UUID.randomUUID().toString();
         TypeToken<T> typeToken = new TypeToken<>(getClass()) {
         };
         if (!typeToken.isSupertypeOf(getClass())) {
