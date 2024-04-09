@@ -83,6 +83,6 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
             return maxMapSize.get();
         }
         maxMapSize = persistableStore.getMap().values().stream().map(DataRequest::getMaxMapSize).findFirst();
-        return maxMapSize.orElse(MetaData.MAX_MAP_SIZE_10_000);
+        return maxMapSize.orElse(MetaData.MAX_MAP_SIZE_50_000);
     }
 }
