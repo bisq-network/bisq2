@@ -85,7 +85,7 @@ public abstract class Connection {
     @Getter
     private final ConnectionMetrics connectionMetrics;
     @Getter
-    private final PendingRequests pendingRequests = new PendingRequests();
+    private final PendingRequests pendingRequests;
 
     private NetworkEnvelopeSocket networkEnvelopeSocket;
     private final Handler handler;
@@ -107,6 +107,7 @@ public abstract class Connection {
         this.peersNetworkLoadSnapshot = peersNetworkLoadSnapshot;
         this.handler = handler;
         this.connectionMetrics = connectionMetrics;
+        pendingRequests = new PendingRequests(connectionMetrics);
 
         try {
             PeerSocket peerSocket = new TorSocket(socket);

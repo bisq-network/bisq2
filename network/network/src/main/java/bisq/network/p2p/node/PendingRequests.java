@@ -3,6 +3,7 @@ package bisq.network.p2p.node;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.Request;
 import bisq.network.p2p.message.Response;
+import bisq.network.p2p.node.network_load.ConnectionMetrics;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
@@ -20,9 +21,11 @@ public class PendingRequests {
     private static final long MAX_AGE = TimeUnit.SECONDS.toMillis(300);
 
     private final Map<String, Long> pendingRequests = new ConcurrentHashMap<>();
+    private final ConnectionMetrics connectionMetrics;
     private volatile long pruneDate;
 
-    public PendingRequests() {
+    public PendingRequests(ConnectionMetrics connectionMetrics) {
+        this.connectionMetrics = connectionMetrics;
         pruneDate = System.currentTimeMillis();
     }
 
@@ -31,7 +34,9 @@ public class PendingRequests {
             String requestId = ((Response) envelopePayloadMessage).getRequestId();
             synchronized (pendingRequests) {
                 if (pendingRequests.containsKey(requestId)) {
+                    long ts = pendingRequests.get(requestId);
                     pendingRequests.remove(requestId);
+                    connectionMetrics.addRtt(System.currentTimeMillis() - ts);
                 } else {
                     log.warn("We received a Response message but did not had a matching request. envelopePayloadMessage={}", envelopePayloadMessage);
                 }

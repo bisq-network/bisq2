@@ -38,7 +38,6 @@ class NetworkLoadExchangeHandler implements Connection.Listener {
     private final Connection connection;
     private final CompletableFuture<Void> future = new CompletableFuture<>();
     private final int nonce;
-    private long ts;
 
     NetworkLoadExchangeHandler(Node node, Connection connection) {
         this.node = node;
@@ -52,7 +51,6 @@ class NetworkLoadExchangeHandler implements Connection.Listener {
         NetworkLoad myNetworkLoad = node.getNetworkLoadSnapshot().getCurrentNetworkLoad();
         log.info("{} send NetworkLoadRequest to {} with nonce {} and my networkLoad {}. Connection={}",
                 node, connection.getPeerAddress(), nonce, myNetworkLoad, connection.getId());
-        ts = System.currentTimeMillis();
         supplyAsync(() -> node.send(new NetworkLoadExchangeRequest(nonce, myNetworkLoad), connection), NetworkService.NETWORK_IO_POOL)
                 .whenComplete((c, throwable) -> {
                     if (throwable != null) {
@@ -73,7 +71,6 @@ class NetworkLoadExchangeHandler implements Connection.Listener {
                         node, connection.getPeerAddress(), response.getRequestNonce(), peersNetworkLoad, connection.getId());
                 removeListeners();
                 connection.getPeersNetworkLoadSnapshot().updateNetworkLoad(peersNetworkLoad);
-                connection.getConnectionMetrics().addRtt(System.currentTimeMillis() - ts);
                 future.complete(null);
             } else {
                 log.warn("{} received NetworkLoadResponse from {} with invalid nonce {}. Request nonce was {}. Connection={}",
