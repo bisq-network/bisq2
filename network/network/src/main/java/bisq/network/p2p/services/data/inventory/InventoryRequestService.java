@@ -32,9 +32,9 @@ import bisq.network.p2p.services.data.RemoveDataRequest;
 import bisq.network.p2p.services.data.inventory.filter.FilterService;
 import bisq.network.p2p.services.data.inventory.filter.InventoryFilter;
 import bisq.network.p2p.services.data.inventory.filter.InventoryFilterType;
-import bisq.network.p2p.services.peergroup.Peer;
-import bisq.network.p2p.services.peergroup.PeerGroupManager;
-import bisq.network.p2p.services.peergroup.PeerGroupService;
+import bisq.network.p2p.services.peer_group.Peer;
+import bisq.network.p2p.services.peer_group.PeerGroupManager;
+import bisq.network.p2p.services.peer_group.PeerGroupService;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;

@@ -15,7 +15,7 @@ import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
-import bisq.network.p2p.services.peergroup.PeerGroupService;
+import bisq.network.p2p.services.peer_group.PeerGroupService;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;

@@ -26,12 +26,12 @@ import bisq.network.p2p.services.confidential.ack.AckMessage;
 import bisq.network.p2p.services.data.DataRequest;
 import bisq.network.p2p.services.data.inventory.InventoryRequest;
 import bisq.network.p2p.services.data.inventory.InventoryResponse;
-import bisq.network.p2p.services.peergroup.exchange.PeerExchangeRequest;
-import bisq.network.p2p.services.peergroup.exchange.PeerExchangeResponse;
-import bisq.network.p2p.services.peergroup.keepalive.Ping;
-import bisq.network.p2p.services.peergroup.keepalive.Pong;
-import bisq.network.p2p.services.peergroup.network_load.NetworkLoadExchangeRequest;
-import bisq.network.p2p.services.peergroup.network_load.NetworkLoadExchangeResponse;
+import bisq.network.p2p.services.peer_group.exchange.PeerExchangeRequest;
+import bisq.network.p2p.services.peer_group.exchange.PeerExchangeResponse;
+import bisq.network.p2p.services.peer_group.keep_alive.Ping;
+import bisq.network.p2p.services.peer_group.keep_alive.Pong;
+import bisq.network.p2p.services.peer_group.network_load.NetworkLoadExchangeRequest;
+import bisq.network.p2p.services.peer_group.network_load.NetworkLoadExchangeResponse;
 
 /**
  * Interface for any message sent as payload in NetworkEnvelope

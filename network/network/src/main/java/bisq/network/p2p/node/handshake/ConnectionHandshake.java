@@ -30,7 +30,7 @@ import bisq.network.p2p.node.authorization.AuthorizationToken;
 import bisq.network.p2p.node.envelope.NetworkEnvelopeSocket;
 import bisq.network.p2p.node.network_load.ConnectionMetrics;
 import bisq.network.p2p.node.network_load.NetworkLoad;
-import bisq.network.p2p.services.peergroup.BanList;
+import bisq.network.p2p.services.peer_group.BanList;
 import bisq.security.keys.KeyBundle;
 import bisq.tor.TorSocket;
 import com.google.protobuf.ByteString;

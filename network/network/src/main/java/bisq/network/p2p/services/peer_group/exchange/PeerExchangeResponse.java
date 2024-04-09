@@ -1,0 +1,83 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bisq.network.p2p.services.peer_group.exchange;
+
+import bisq.network.p2p.message.EnvelopePayloadMessage;
+import bisq.network.p2p.message.Response;
+import bisq.network.p2p.services.peer_group.Peer;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static com.google.common.base.Preconditions.checkArgument;
+
+@Getter
+@ToString
+@EqualsAndHashCode
+public final class PeerExchangeResponse implements EnvelopePayloadMessage, Response {
+    @Setter
+    public static long maxNumPeers;
+    private final int nonce;
+    private final List<Peer> peers;
+
+    public PeerExchangeResponse(int nonce, List<Peer> peers) {
+        this.nonce = nonce;
+        this.peers = peers;
+        // We need to sort deterministically as the data is used in the proof of work check
+        Collections.sort(this.peers);
+
+        verify();
+    }
+
+    @Override
+    public void verify() {
+        checkArgument(peers.size() <= maxNumPeers);
+    }
+
+
+    @Override
+    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
+        return getNetworkMessageBuilder().setPeerExchangeResponse(
+                        bisq.network.protobuf.PeerExchangeResponse.newBuilder()
+                                .setNonce(nonce)
+                                .addAllPeers(peers.stream()
+                                        .map(Peer::toProto)
+                                        .collect(Collectors.toList())))
+                .build();
+    }
+
+    public static PeerExchangeResponse fromProto(bisq.network.protobuf.PeerExchangeResponse proto) {
+        return new PeerExchangeResponse(proto.getNonce(),
+                proto.getPeersList().stream().map(Peer::fromProto).collect(Collectors.toList()));
+    }
+
+    @Override
+    public double getCostFactor() {
+        return 0.1;
+    }
+
+    @Override
+    public String getRequestId() {
+        return String.valueOf(nonce);
+    }
+}

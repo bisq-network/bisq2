@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data.inventory;
 
+import bisq.network.p2p.message.Response;
 import bisq.network.p2p.services.data.broadcast.BroadcastMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -25,7 +26,7 @@ import lombok.ToString;
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class InventoryResponse implements BroadcastMessage {
+public final class InventoryResponse implements BroadcastMessage, Response {
     private final Inventory inventory;
     private final int requestNonce;
 
@@ -56,5 +57,10 @@ public final class InventoryResponse implements BroadcastMessage {
     @Override
     public double getCostFactor() {
         return 0.1;
+    }
+
+    @Override
+    public String getRequestId() {
+        return String.valueOf(requestNonce);
     }
 }
