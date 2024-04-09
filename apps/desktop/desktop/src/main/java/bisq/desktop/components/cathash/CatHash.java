@@ -70,11 +70,12 @@ public class CatHash {
         switch (avatarVersion) {
             case 0: {
                 bucketConfig = new BucketConfigV0();
-                log.info("Creating v0 BucketConfig: {}", bucketConfig.getClass().getName());
+                log.debug("Creating v0 BucketConfig: {}", bucketConfig.getClass().getName());
+                break;
             }
             default: {
                 bucketConfig = new BucketConfigV0();
-                log.info("Falling to create default BucketConfig: {}", bucketConfig.getClass().getName());
+                log.debug("Falling to create default BucketConfig: {}", bucketConfig.getClass().getName());
             }
         }
         return bucketConfig;
