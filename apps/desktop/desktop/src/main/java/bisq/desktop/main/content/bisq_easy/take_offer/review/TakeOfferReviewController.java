@@ -190,7 +190,6 @@ public class TakeOfferReviewController implements Controller {
         FiatPaymentMethodSpec fiatPaymentMethodSpec = model.getFiatPaymentMethodSpec();
         PriceSpec sellersPriceSpec = model.getSellersPriceSpec();
         long marketPrice = model.getMarketPrice();
-
         BisqEasyProtocol bisqEasyProtocol = bisqEasyTradeService.createBisqEasyProtocol(takerIdentity.getIdentity(),
                 bisqEasyOffer,
                 takersBaseSideAmount,
