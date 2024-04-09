@@ -15,13 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.node.transport.socketchannel;
+package bisq.network.p2p.node.transport.socket_channel;
 
 import bisq.network.common.Address;
 
 import java.io.IOException;
 import java.nio.channels.SocketChannel;
 
-public interface SocketChannelFactory {
-    SocketChannel getSocketChannelForAddress(Address address) throws IOException;
+public class ClearNetSocketChannelFactory implements SocketChannelFactory {
+    @Override
+    public SocketChannel getSocketChannelForAddress(Address address) throws IOException {
+        return SocketChannel.open();
+    }
 }

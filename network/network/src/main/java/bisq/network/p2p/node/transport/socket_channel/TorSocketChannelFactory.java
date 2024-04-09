@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.node.transport.socketchannel;
+package bisq.network.p2p.node.transport.socket_channel;
 
 import bisq.network.common.Address;
 import bisq.tor.nio.TorSocketChannel;
