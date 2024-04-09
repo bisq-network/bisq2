@@ -37,23 +37,24 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 @Slf4j
 public class KeepAliveService implements Node.Listener {
-    private static final long TIMEOUT_SEC = 120;
-
     @Getter
     @ToString
     public static final class Config {
         private final long maxIdleTime;
         private final long interval;
+        private final long timeout;
 
-        public Config(long maxIdleTime, long interval) {
+        public Config(long maxIdleTime, long interval, long timeout) {
             this.maxIdleTime = maxIdleTime;
             this.interval = interval;
+            this.timeout = timeout;
         }
 
         public static Config from(com.typesafe.config.Config typesafeConfig) {
             return new Config(
                     SECONDS.toMillis(typesafeConfig.getLong("maxIdleTimeInSeconds")),
-                    SECONDS.toMillis(typesafeConfig.getLong("intervalInSeconds"))
+                    SECONDS.toMillis(typesafeConfig.getLong("intervalInSeconds")),
+                    SECONDS.toMillis(typesafeConfig.getLong("timeoutInSeconds"))
             );
         }
     }
@@ -93,7 +94,7 @@ public class KeepAliveService implements Node.Listener {
         KeepAliveHandler handler = new KeepAliveHandler(node, connection);
         requestHandlerMap.put(key, handler);
         handler.request()
-                .orTimeout(TIMEOUT_SEC, TimeUnit.SECONDS)
+                .orTimeout(config.getTimeout(), TimeUnit.MILLISECONDS)
                 .whenComplete((nil, throwable) -> requestHandlerMap.remove(key));
     }
 
