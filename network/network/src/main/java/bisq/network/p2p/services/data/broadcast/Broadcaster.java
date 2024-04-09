@@ -88,7 +88,7 @@ public class Broadcaster {
             allConnections.stream()
                     .limit(numBroadcasts)
                     .forEach(connection -> {
-                        log.debug("{} broadcast to {}", node, connection.getPeerAddress());
+                        log.debug("{} broadcast {} to {}", node, broadcastMessage.getClass().getSimpleName(), connection.getPeerAddress());
                         try {
                             node.send(broadcastMessage, connection);
                             numSuccess.incrementAndGet();
