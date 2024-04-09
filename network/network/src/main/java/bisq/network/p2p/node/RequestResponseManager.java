@@ -68,6 +68,10 @@ public class RequestResponseManager {
         return pendingRequests.size();
     }
 
+    public boolean hasPendingRequests() {
+        return !pendingRequests.isEmpty();
+    }
+
     private void maybeRemoveExpired() {
         long cutoffDate = System.currentTimeMillis() - MAX_AGE;
         if (pruneDate > cutoffDate) {
