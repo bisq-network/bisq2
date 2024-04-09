@@ -20,7 +20,12 @@ package bisq.desktop.main.content.bisq_easy.open_trades.trade_state;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.desktop.common.view.Model;
 import bisq.trade.bisq_easy.BisqEasyTrade;
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.Setter;
@@ -51,7 +56,7 @@ public class TradeStateModel implements Model {
     private final StringProperty errorMessage = new SimpleStringProperty();
     private final BooleanProperty shouldShowSellerPriceApprovalOverlay = new SimpleBooleanProperty();
     private final BooleanProperty hasBuyerAcceptedSellersPriceSpec = new SimpleBooleanProperty();
-    private final StringProperty sellerPriceApprovalLabel = new SimpleStringProperty();
+    private final ObjectProperty<VBox> sellerPriceApprovalContent = new SimpleObjectProperty<>();
 
     void resetAll() {
         reset();
@@ -70,6 +75,6 @@ public class TradeStateModel implements Model {
         tradeInterruptedInfo.set(null);
         shouldShowSellerPriceApprovalOverlay.set(false);
         hasBuyerAcceptedSellersPriceSpec.set(false);
-        sellerPriceApprovalLabel.set(null);
+        sellerPriceApprovalContent.set(null);
     }
 }

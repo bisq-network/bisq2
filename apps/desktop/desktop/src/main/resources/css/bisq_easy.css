@@ -439,9 +439,9 @@
 
 /* Temporary overlay */
 .seller-price-approval-popup {
-    -fx-min-height: 250;
-    -fx-pref-height: 250;
-    -fx-max-height: 250;
+    -fx-min-height: 300;
+    -fx-pref-height: 300;
+    -fx-max-height: 300;
     -fx-min-width: 800;
     -fx-pref-width: 800;
     -fx-max-width: 800;
@@ -451,13 +451,21 @@
 .seller-price-approval-popup .seller-price-approval-title {
     -fx-fill: -bisq2-green;
     -fx-text-fill: -bisq2-green;
-
 }
 
-.seller-price-approval-popup .seller-price-approval-description {
+.seller-price-approval-popup .seller-price-approval-content {
     -fx-fill: -fx-light-text-color;
     -fx-text-fill: -fx-light-text-color;
-    -fx-padding: 20 0 0 0;
+    -fx-padding: 10 0 0 0;
+    -fx-spacing: 10;
+}
+
+.seller-price-approval-popup .seller-price-approval-content .unordered-list {
+    -fx-padding: 0 0 0 20;
+}
+
+.seller-price-approval-popup .seller-price-approval-description .label {
+    -fx-wrap-text: true;
 }
 
 

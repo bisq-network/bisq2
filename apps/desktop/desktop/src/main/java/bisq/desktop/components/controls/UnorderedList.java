@@ -25,6 +25,7 @@ import javax.annotation.Nullable;
 public class UnorderedList extends TextList {
     public static final String REGEX = "- ";
     public static final String BULLET_SYMBOL = "\u2022"; // Unicode for "•"
+    private static final String STYLE_CLASS = "unordered-list";
 
     public UnorderedList(String text, String style, String regex, String mark) {
         this(text, style, 7, 0, regex, mark);
@@ -36,5 +37,7 @@ public class UnorderedList extends TextList {
 
     public UnorderedList(String text, @Nullable String style, double gap, double vSpacing, String regex, String mark) {
         super(text, style, gap, vSpacing, regex, mark);
+
+        getStyleClass().add(STYLE_CLASS);
     }
 }
