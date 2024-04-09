@@ -109,7 +109,7 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         VBox content = new VBox(tradeDataHeader, Layout.hLine(), isInMediationHBox, interruptedHBox, phaseAndInfoHBox);
         content.getStyleClass().add("bisq-easy-container");
 
-        acceptSellersPriceButton = new Button(Res.get("action.close"));
+        acceptSellersPriceButton = new Button(Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.button.accept"));
         acceptSellersPriceButton.getStyleClass().add("outlined-button");
         setUpSellerPriceApprovalOverlay();
 
