@@ -42,10 +42,6 @@ import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 import static com.google.common.base.Preconditions.checkArgument;
 
-/**
- * We do not use the Request/Response interfaces here because the mediator sends 2 response messages to the 2 traders,
- * but only one trader sent the response. Thus, it is not a standard Request-Response pattern.
- */
 @Slf4j
 @Getter
 @ToString
