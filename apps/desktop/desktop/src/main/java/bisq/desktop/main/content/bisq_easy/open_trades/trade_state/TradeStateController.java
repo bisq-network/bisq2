@@ -28,7 +28,6 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.components.controls.UnorderedList;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.BisqEasyServiceUtil;
 import bisq.desktop.main.content.bisq_easy.components.TradeDataHeader;
@@ -155,15 +154,10 @@ public class TradeStateController implements Controller {
             updateShouldShowSellerPriceApprovalOverlay();
 
             VBox vBox = new VBox(
-                    new Label(Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.description.buyersPrice")),
-                    new UnorderedList(Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.description.price",
-                            BisqEasyServiceUtil.getFormattedPriceSpec(bisqEasyTrade.getOffer().getPriceSpec())),
-                            "bisq-text-13"),
-                    new Label(Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.description.sellersPrice")),
-                    new UnorderedList(Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.description.price",
-                            BisqEasyServiceUtil.getFormattedPriceSpec(bisqEasyTrade.getContract().getAgreedPriceSpec())),
-                            "bisq-text-13"),
-                    new Label(Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.description.question"))
+                    new Label(Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.description.buyersPrice",
+                            BisqEasyServiceUtil.getFormattedPriceSpec(bisqEasyTrade.getOffer().getPriceSpec()))),
+                    new Label(Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.description.sellersPrice",
+                            BisqEasyServiceUtil.getFormattedPriceSpec(bisqEasyTrade.getContract().getAgreedPriceSpec())))
             );
             model.getSellerPriceApprovalContent().set(vBox);
         });

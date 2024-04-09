@@ -40,7 +40,8 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public class TradeStateView extends View<VBox, TradeStateModel, TradeStateController> {
     private final HBox phaseAndInfoHBox, cancelledHBox, interruptedHBox, errorHBox, isInMediationHBox;
-    private final Button cancelButton, closeTradeButton, exportButton, reportToMediatorButton, acceptSellersPriceButton;
+    private final Button cancelButton, closeTradeButton, exportButton, reportToMediatorButton, acceptSellersPriceButton,
+            rejectPriceButton;
     private final Label cancelledInfo, errorMessage;
     private VBox sellerPriceApprovalOverlay;
     private Pane sellerPriceApprovalContent;
@@ -54,6 +55,11 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
 
         cancelButton = new Button();
         cancelButton.setMinWidth(160);
+        cancelButton.getStyleClass().add("outlined-button");
+
+        rejectPriceButton = new Button();
+        rejectPriceButton.setMinWidth(160);
+        rejectPriceButton.setDefaultButton(true);
 
         tradeDataHeader.getChildren().addAll(Spacer.fillHBox(), cancelButton);
 
@@ -140,6 +146,10 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         cancelButton.visibleProperty().bind(model.getCancelButtonVisible());
         cancelButton.managedProperty().bind(model.getCancelButtonVisible());
 
+        rejectPriceButton.textProperty().bind(model.getInterruptTradeButtonText());
+        rejectPriceButton.visibleProperty().bind(model.getCancelButtonVisible());
+        rejectPriceButton.managedProperty().bind(model.getCancelButtonVisible());
+
         stateInfoVBoxPin = EasyBind.subscribe(model.getStateInfoVBox(), stateInfoVBox -> {
             if (phaseAndInfoHBox.getChildren().size() == 2) {
                 phaseAndInfoHBox.getChildren().remove(1);
@@ -152,15 +162,12 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         });
 
         showSellersPriceApprovalOverlayPin = EasyBind.subscribe(model.getShouldShowSellerPriceApprovalOverlay(), shouldShow -> {
-            cancelButton.setDefaultButton(shouldShow);
             if (shouldShow) {
-                cancelButton.getStyleClass().remove("outlined-button");
                 sellerPriceApprovalOverlay.setVisible(true);
                 sellerPriceApprovalOverlay.setManaged(true);
                 Transitions.blurStrong(phaseAndInfoHBox, 0);
                 Transitions.slideInTop(sellerPriceApprovalOverlay, 450);
             } else {
-                cancelButton.getStyleClass().add("outlined-button");
                 sellerPriceApprovalOverlay.setVisible(false);
                 sellerPriceApprovalOverlay.setManaged(false);
                 Transitions.removeEffect(phaseAndInfoHBox);
@@ -177,6 +184,7 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         cancelButton.setOnAction(e -> controller.onInterruptTrade());
         closeTradeButton.setOnAction(e -> controller.onCloseTrade());
         exportButton.setOnAction(e -> controller.onExportTrade());
+        rejectPriceButton.setOnAction(e -> controller.onInterruptTrade());
         reportToMediatorButton.setOnAction(e -> controller.onReportToMediator());
         acceptSellersPriceButton.setOnAction(e -> controller.onAcceptSellersPriceButton());
     }
@@ -203,6 +211,10 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         cancelButton.visibleProperty().unbind();
         cancelButton.managedProperty().unbind();
 
+        rejectPriceButton.textProperty().unbind();
+        rejectPriceButton.visibleProperty().unbind();
+        rejectPriceButton.managedProperty().unbind();
+
         stateInfoVBoxPin.unsubscribe();
         showSellersPriceApprovalOverlayPin.unsubscribe();
         sellerPriceApprovalContentPin.unsubscribe();
@@ -210,6 +222,7 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         cancelButton.setOnAction(null);
         closeTradeButton.setOnAction(null);
         exportButton.setOnAction(null);
+        rejectPriceButton.setOnAction(null);
         reportToMediatorButton.setOnAction(null);
         acceptSellersPriceButton.setOnAction(null);
 
@@ -229,11 +242,14 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         sellerPriceApprovalTitleLabel.getStyleClass().addAll("seller-price-approval-title", "large-text", "font-default");
         sellerPriceApprovalContent = new Pane();
         sellerPriceApprovalContent.getStyleClass().addAll("seller-price-approval-description", "normal-text", "font-default");
-        HBox sellerPriceApprovalButtons = new HBox(10, acceptSellersPriceButton, cancelButton);
+        Label sellerPriceApprovalQuestionLabel = new Label(Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.description.question"));
+        sellerPriceApprovalQuestionLabel.getStyleClass().addAll("seller-price-approval-description", "normal-text",
+                "font-default", "seller-price-approval-question");
+        HBox sellerPriceApprovalButtons = new HBox(10, acceptSellersPriceButton, rejectPriceButton);
         sellerPriceApprovalButtons.setAlignment(Pos.BOTTOM_RIGHT);
 
         sellerPriceApprovalOverlay.getChildren().addAll(sellerPriceApprovalTitleLabel, sellerPriceApprovalContent,
-                Spacer.fillVBox(), sellerPriceApprovalButtons);
+                sellerPriceApprovalQuestionLabel, Spacer.fillVBox(), sellerPriceApprovalButtons);
         StackPane.setAlignment(sellerPriceApprovalOverlay, Pos.TOP_CENTER);
         StackPane.setMargin(sellerPriceApprovalOverlay, new Insets(63, 0, 0, 0));
     }
