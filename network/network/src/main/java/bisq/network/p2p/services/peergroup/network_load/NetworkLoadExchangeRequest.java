@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.peergroup.network_load;
 
 import bisq.network.p2p.message.EnvelopePayloadMessage;
+import bisq.network.p2p.message.Request;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -26,7 +27,7 @@ import lombok.ToString;
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class NetworkLoadExchangeRequest implements EnvelopePayloadMessage {
+public final class NetworkLoadExchangeRequest implements EnvelopePayloadMessage, Request {
     private final int nonce;
     private final NetworkLoad networkLoad;
 
@@ -57,5 +58,10 @@ public final class NetworkLoadExchangeRequest implements EnvelopePayloadMessage 
     @Override
     public double getCostFactor() {
         return 0.05;
+    }
+
+    @Override
+    public String getRequestId() {
+        return String.valueOf(nonce);
     }
 }
