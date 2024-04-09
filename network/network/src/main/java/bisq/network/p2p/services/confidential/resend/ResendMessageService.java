@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
 @Getter
 public class ResendMessageService implements PersistenceClient<ResendMessageStore> {
     private static final long RESEND_INTERVAL = TimeUnit.MINUTES.toMillis(2);
-    private static final int MAX_RESENDS = 2;
+    private static final int MAX_RESENDS = 5;
 
     private final ResendMessageStore persistableStore = new ResendMessageStore();
     private final Persistence<ResendMessageStore> persistence;
