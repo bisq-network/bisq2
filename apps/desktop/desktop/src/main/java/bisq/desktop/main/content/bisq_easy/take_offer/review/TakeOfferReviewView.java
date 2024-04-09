@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.take_offer.review;
 
+import bisq.common.application.DevMode;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.view.View;
@@ -32,12 +33,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.layout.ColumnConstraints;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -202,7 +198,7 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
                     takeOfferStatus.getChildren().setAll(takeOfferSuccess, Spacer.fillVBox());
                     takeOfferSendMessageWaitingAnimation.stop();
                 }
-            }).after(8000);
+            }).after(DevMode.isDevMode() ? 500 : 4000);
         } else if (status == TakeOfferReviewModel.TakeOfferStatus.SUCCESS && minWaitingTimePassed) {
             takeOfferStatus.getChildren().setAll(takeOfferSuccess, Spacer.fillVBox());
             takeOfferSendMessageWaitingAnimation.stop();
