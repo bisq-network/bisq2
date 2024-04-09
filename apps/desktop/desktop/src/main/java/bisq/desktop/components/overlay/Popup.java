@@ -68,7 +68,7 @@ public class Popup extends Overlay<Popup> {
         private static void onHidden(Popup popup) {
             boolean wasRemoved = displayedPopups.remove(popup);
             if (!wasRemoved) {
-                log.warn("We got a isHidden called with a popup to existing in our displayedPopups.");
+                log.warn("We got isHidden called with a popup not existing in our displayedPopups.");
             }
             UIScheduler.run(Manager::displayNext).after(100);
         }
