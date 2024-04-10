@@ -322,7 +322,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         return isBisqEasyPublicChatMessageWithPeerOffer() && hasBisqEasyOfferWithDirection(Direction.SELL);
     }
 
-    public int getReputationStarCount() {
+    public double getReputationStarCount() {
         return reputationScoreDisplay.getNumberOfStars();
     }
 
