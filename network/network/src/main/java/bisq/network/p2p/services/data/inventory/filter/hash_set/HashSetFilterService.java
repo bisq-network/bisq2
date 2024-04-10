@@ -30,6 +30,7 @@ import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataReques
 import bisq.network.p2p.services.data.storage.mailbox.MailboxRequest;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -45,6 +46,7 @@ public class HashSetFilterService extends FilterService<HashSetFilter> {
                 .map(this::toFilterEntry)
                 .collect(Collectors.toList());
         if (filterEntries.size() > HashSetFilter.MAX_ENTRIES) {
+            Collections.shuffle(filterEntries);
             filterEntries = filterEntries.stream().limit(HashSetFilter.MAX_ENTRIES).collect(Collectors.toList());
             log.warn("We limited the number of filter entries we send in our inventory request to {}",
                     HashSetFilter.MAX_ENTRIES);
