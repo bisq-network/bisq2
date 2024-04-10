@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.data.inventory.filter.hash_set;
 
 
+import bisq.common.util.ByteUnit;
 import bisq.network.p2p.services.data.inventory.filter.InventoryFilter;
 import bisq.network.p2p.services.data.inventory.filter.InventoryFilterType;
 import lombok.EqualsAndHashCode;
@@ -36,7 +37,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public final class HashSetFilter extends InventoryFilter {
-    // FilterEntry has about 24 bytes (hash of 20 bytes + integer). 200_000 items are about 4.8 MB)
+    // FilterEntry has about 26 bytes (hash of 20 bytes + integer + some overhead). 200_000 items are about 4.8 MB)
     // We should aim to be much below that limit.
     public final static int MAX_ENTRIES = 200_000;
 
@@ -81,7 +82,8 @@ public final class HashSetFilter extends InventoryFilter {
 
     @Override
     public String getDetails() {
-        return "HashSetFilter with " + filterEntries.size() + " filterEntries";
+        return "HashSetFilter with " + filterEntries.size() + " filterEntries and size of " +
+                ByteUnit.BYTE.toKB(toProto().getSerializedSize());
     }
 
     public Set<HashSetFilterEntry> getFilterEntriesAsSet() {

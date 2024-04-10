@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.peer_group.exchange;
 
+import bisq.common.util.CollectionUtil;
 import bisq.network.common.Address;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.peer_group.Peer;
@@ -24,7 +25,10 @@ import bisq.network.p2p.services.peer_group.PeerGroupService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -156,7 +160,7 @@ public class PeerExchangeStrategy {
     }
 
     private List<Address> getSeedAddresses() {
-        return getShuffled(peerGroupService.getSeedNodeAddresses()).stream()
+        return CollectionUtil.toShuffledList(peerGroupService.getSeedNodeAddresses()).stream()
                 .filter(node::notMyself)
                 .filter(peerGroupService::isNotBanned)
                 .limit(config.getNumSeedNodesAtBoostrap())
@@ -164,7 +168,7 @@ public class PeerExchangeStrategy {
     }
 
     private List<Address> getReportedPeerAddresses() {
-        return getReportedPeers()
+        return getSortedReportedPeers()
                 .limit(config.getNumReportedPeersAtBoostrap())
                 .map(Peer::getAddress)
                 .collect(Collectors.toList());
@@ -181,7 +185,7 @@ public class PeerExchangeStrategy {
     }
 
     private List<Address> getAllConnectedPeerAddresses() {
-        return getAllConnectedPeers()
+        return getSortedAllConnectedPeers()
                 .map(Peer::getAddress)
                 .collect(Collectors.toList());
     }
@@ -193,13 +197,13 @@ public class PeerExchangeStrategy {
 
     Set<Peer> getPeersForReporting(Address requesterAddress) {
         long hiPriorityLimit = Math.round(REPORTED_PEERS_LIMIT * 0.75);
-        Set<Peer> connectedPeers = getAllConnectedPeers()
+        Set<Peer> connectedPeers = getSortedAllConnectedPeers()
                 .filter(peer -> notSameAddress(requesterAddress, peer))
                 .limit(hiPriorityLimit)
                 .collect(Collectors.toSet());
 
         long lowPriorityLimit = Math.round(REPORTED_PEERS_LIMIT * 0.25);
-        Set<Peer> reportedPeers = getReportedPeers()
+        Set<Peer> reportedPeers = getSortedReportedPeers()
                 .filter(peer -> notSameAddress(requesterAddress, peer))
                 .limit(lowPriorityLimit)
                 .collect(Collectors.toSet());
@@ -260,22 +264,16 @@ public class PeerExchangeStrategy {
         return !peer.getAddress().equals(address);
     }
 
-    private Stream<Peer> getAllConnectedPeers() {
+    private Stream<Peer> getSortedAllConnectedPeers() {
         return peerGroupService.getAllConnectedPeers(node)
                 .filter(this::isValidNonSeedPeer)
                 .sorted();
     }
 
-    private Stream<Peer> getReportedPeers() {
+    private Stream<Peer> getSortedReportedPeers() {
         return peerGroupService.getReportedPeers().stream()
                 .filter(this::isValidNonSeedPeer)
                 .filter(this::isNotOutDated)
                 .sorted();
-    }
-
-    private List<Address> getShuffled(Collection<Address> addresses) {
-        List<Address> list = new ArrayList<>(addresses);
-        Collections.shuffle(list);
-        return list;
     }
 }

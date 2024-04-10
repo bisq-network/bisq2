@@ -32,6 +32,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 /**
  * Manages Inventory data requests and response and apply it to the data service.
  * We have InventoryServices for each supported transport. The data service though is a single instance getting services
@@ -43,17 +45,29 @@ public class InventoryService {
 
     @Getter
     public static final class Config {
-        // Default config value is 2000 (about 2MB)
-        private final int maxSizeInKb;
+        private final int maxSizeInKb;  // Default config value is 2000 (about 2MB)
+        private final long repeatRequestInterval;
+        private final int maxSeedsForRequest;
+        private final int maxPeersForRequest;
         private final List<InventoryFilterType> myPreferredFilterTypes; // Lower list index means higher preference
 
         public static Config from(com.typesafe.config.Config config) {
             return new Config(config.getInt("maxSizeInKb"),
+                    SECONDS.toMillis(config.getLong("repeatRequestIntervalInSeconds")),
+                    config.getInt("maxSeedsForRequest"),
+                    config.getInt("maxPeersForRequest"),
                     new ArrayList<>(config.getEnumList(InventoryFilterType.class, "myPreferredFilterTypes")));
         }
 
-        public Config(int maxSizeInKb, List<InventoryFilterType> myPreferredFilterTypes) {
+        public Config(int maxSizeInKb,
+                      long repeatRequestInterval,
+                      int maxSeedsForRequest,
+                      int maxPeersForRequest,
+                      List<InventoryFilterType> myPreferredFilterTypes) {
             this.maxSizeInKb = maxSizeInKb;
+            this.repeatRequestInterval = repeatRequestInterval;
+            this.maxSeedsForRequest = maxSeedsForRequest;
+            this.maxPeersForRequest = maxPeersForRequest;
             this.myPreferredFilterTypes = myPreferredFilterTypes;
         }
     }
@@ -92,8 +106,7 @@ public class InventoryService {
                 peerGroupManager,
                 dataService,
                 supportedFilterServices,
-                config.getMyPreferredFilterTypes(),
-                maxSize);
+                config);
     }
 
 

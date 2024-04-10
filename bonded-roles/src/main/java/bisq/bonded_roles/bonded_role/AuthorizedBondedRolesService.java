@@ -279,7 +279,7 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
         listeners.add(listener);
 
         if (initializeCalled) {
-            log.info("We get added a listener after we have been already initialized. This is expected for higher level domain listeners." +
+            log.info("We get added a listener after we have been already initialized. This is expected for higher level domain listeners. " +
                     "We apply all data from the network store to the listener. " +
                     "listener={}", listener);
             networkService.getDataService()

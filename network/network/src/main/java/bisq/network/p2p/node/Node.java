@@ -454,7 +454,7 @@ public class Node implements Connection.Handler {
     }
 
     public Stream<Connection> getAllConnections() {
-        return Stream.concat(inboundConnectionsByAddress.values().stream(), outboundConnectionsByAddress.values().stream());
+        return Stream.concat(outboundConnectionsByAddress.values().stream(), inboundConnectionsByAddress.values().stream());
     }
 
     public Stream<Connection> getAllActiveConnections() {

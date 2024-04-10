@@ -19,7 +19,6 @@ package bisq.network.p2p.services.data.inventory;
 
 import bisq.common.timer.Scheduler;
 import bisq.common.util.CompletableFutureUtils;
-import bisq.network.common.Address;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
@@ -32,7 +31,6 @@ import bisq.network.p2p.services.data.RemoveDataRequest;
 import bisq.network.p2p.services.data.inventory.filter.FilterService;
 import bisq.network.p2p.services.data.inventory.filter.InventoryFilter;
 import bisq.network.p2p.services.data.inventory.filter.InventoryFilterType;
-import bisq.network.p2p.services.peer_group.Peer;
 import bisq.network.p2p.services.peer_group.PeerGroupManager;
 import bisq.network.p2p.services.peer_group.PeerGroupService;
 import lombok.extern.slf4j.Slf4j;
@@ -43,11 +41,11 @@ import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 public class InventoryRequestService implements Node.Listener, PeerGroupManager.Listener {
     private static final long TIMEOUT = TimeUnit.SECONDS.toMillis(120);
-    private static final long REPEAT_REQUEST_PERIOD = TimeUnit.MINUTES.toMillis(10);
 
     private final Node node;
     private final PeerGroupManager peerGroupManager;
@@ -55,23 +53,29 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
     private final DataService dataService;
     private final Map<InventoryFilterType, FilterService<? extends InventoryFilter>> supportedFilterServices;
     private final List<InventoryFilterType> myPreferredInventoryFilterTypes;
+    private final long repeatRequestInterval;
+    private final int maxSeedsForRequest;
+    private final int maxPeersForRequest;
     private final Map<String, InventoryHandler> requestHandlerMap = new ConcurrentHashMap<>();
     private final AtomicBoolean requestsPending = new AtomicBoolean();
     private final AtomicBoolean allDataReceived = new AtomicBoolean();
+    private Optional<Scheduler> scheduler = Optional.empty();
+    private Optional<Scheduler> periodicScheduler = Optional.empty();
 
     public InventoryRequestService(Node node,
                                    PeerGroupManager peerGroupManager,
                                    DataService dataService,
                                    Map<InventoryFilterType, FilterService<? extends InventoryFilter>> supportedFilterServices,
-                                   List<InventoryFilterType> myPreferredInventoryFilterTypes,
-                                   int maxSize) {
+                                   InventoryService.Config config) {
         this.node = node;
         this.peerGroupManager = peerGroupManager;
         peerGroupService = peerGroupManager.getPeerGroupService();
         this.dataService = dataService;
         this.supportedFilterServices = supportedFilterServices;
-        this.myPreferredInventoryFilterTypes = myPreferredInventoryFilterTypes;
-
+        myPreferredInventoryFilterTypes = config.getMyPreferredFilterTypes();
+        repeatRequestInterval = config.getRepeatRequestInterval();
+        maxSeedsForRequest = config.getMaxSeedsForRequest();
+        maxPeersForRequest = config.getMaxPeersForRequest();
         node.addListener(this);
         peerGroupManager.addListener(this);
     }
@@ -81,6 +85,10 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
         peerGroupManager.removeListener(this);
         requestHandlerMap.values().forEach(InventoryHandler::dispose);
         requestHandlerMap.clear();
+        scheduler.ifPresent(Scheduler::stop);
+        scheduler = Optional.empty();
+        periodicScheduler.ifPresent(Scheduler::stop);
+        periodicScheduler = Optional.empty();
     }
 
 
@@ -92,13 +100,10 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
     }
 
-
     @Override
     public void onConnection(Connection connection) {
         if (sufficientConnections()) {
-            log.info("We are sufficiently connected to start the inventory request. numConnections={}",
-                    node.getNumConnections());
-            requestInventory();
+            maybeRequestInventory();
         }
     }
 
@@ -119,8 +124,7 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
     @Override
     public void onStateChanged(PeerGroupManager.State state) {
         if (state == PeerGroupManager.State.RUNNING) {
-            log.info("PeerGroupManager is ready. We start the inventory request.");
-            requestInventory();
+            maybeRequestInventory();
         }
     }
 
@@ -129,20 +133,19 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
     // Request inventory
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private void requestInventory() {
-        if (allDataReceived.get()) {
+    private void maybeRequestInventory() {
+        if (allDataReceived.get() || requestsPending.get()) {
             return;
         }
+
         if (peerGroupManager.getState().get() != PeerGroupManager.State.RUNNING) {
             // Not ready yet, lets try again later
-            Scheduler.run(this::requestInventory).after(5000);
+            scheduler.ifPresent(Scheduler::stop);
+            scheduler = Optional.of(Scheduler.run(this::maybeRequestInventory).after(5000));
             return;
         }
 
-        if (requestsPending.get()) {
-            return;
-        }
-
+        log.info("Start inventory requests");
         requestsPending.set(true);
         CompletableFutureUtils.allOf(requestFromPeers())
                 .whenComplete((list, throwable) -> {
@@ -158,41 +161,32 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
                         log.error("requestFromPeers completed with result list = null");
                     } else {
                         // Repeat requests until we have received all data
-                        if (list.stream().noneMatch(Inventory::noDataMissing)) {
+                        if (list.isEmpty()) {
+                            log.info("No matching peers for request have been found. We try again in 10 sec.");
+                            scheduler.ifPresent(Scheduler::stop);
+                            scheduler = Optional.of(Scheduler.run(this::maybeRequestInventory).after(10000));
+                        } else if (list.stream().noneMatch(Inventory::noDataMissing)) {
                             // We still miss data, so repeat requests
-                            Scheduler.run(this::requestInventory).after(1000);
+                            scheduler.ifPresent(Scheduler::stop);
+                            scheduler = Optional.of(Scheduler.run(this::maybeRequestInventory).after(1000));
                         } else {
                             // We got all data
                             allDataReceived.set(true);
 
                             // We request again in 10 minutes to be sure that potentially missed data gets received.
-                            Scheduler.run(() -> {
-                                allDataReceived.set(false);
-                                requestInventory();
-                            }).after(REPEAT_REQUEST_PERIOD);
+                            if (periodicScheduler.isEmpty()) {
+                                periodicScheduler = Optional.of(Scheduler.run(() -> {
+                                    allDataReceived.set(false);
+                                    maybeRequestInventory();
+                                }).periodically(repeatRequestInterval));
+                            }
                         }
                     }
                 });
     }
 
     private List<CompletableFuture<Inventory>> requestFromPeers() {
-        int maxSeeds = 2;
-        int maxCandidates = 5;
-        List<Address> candidates = getCandidates(maxSeeds);
-        List<Connection> candidateConnections = node.getAllActiveConnections()
-                .filter(connection -> !requestHandlerMap.containsKey(connection.getId()))
-                .filter(connection -> candidates.contains(connection.getPeerAddress()))
-                .collect(Collectors.toList());
-
-        List<Connection> matchingConnections = candidateConnections.stream()
-                .filter(connection -> getPreferredFilterType(connection.getPeersCapability().getFeatures()).isPresent())
-                .limit(maxCandidates)
-                .collect(Collectors.toList());
-        if (matchingConnections.isEmpty() && !candidateConnections.isEmpty()) {
-            log.warn("We did not find any peer which matches our inventory filter type settings");
-        }
-
-        return matchingConnections.stream()
+        return getCandidates().stream()
                 .map(connection -> {
                     // We need to handle requests from ourselves and those from our peer separate in case they happen on the same connection
                     // therefor we add the peer address
@@ -227,17 +221,21 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
                 .collect(Collectors.toList());
     }
 
-    private List<Address> getCandidates(int maxSeeds) {
-        List<Address> candidates = peerGroupService.getAllConnectedPeers(node)
-                .filter(peerGroupService::isSeed)
-                .limit(maxSeeds)
-                .map(Peer::getAddress)
+    private List<Connection> getCandidates() {
+        Stream<Connection> seeds = peerGroupService.getShuffledSeedConnections(node)
+                .filter(connection -> !requestHandlerMap.containsKey(connection.getId()))
+                .limit(maxSeedsForRequest);
+        Stream<Connection> peers = peerGroupService.getShuffledNonSeedConnections(node)
+                .filter(connection -> !requestHandlerMap.containsKey(connection.getId()))
+                .limit(maxPeersForRequest);
+        List<Connection> allConnections = Stream.concat(seeds, peers).collect(Collectors.toList());
+        List<Connection> matchingConnections = allConnections.stream()
+                .filter(connection -> getPreferredFilterType(connection.getPeersCapability().getFeatures()).isPresent())
                 .collect(Collectors.toList());
-        candidates.addAll(peerGroupService.getAllConnectedPeers(node)
-                .filter(peerGroupService::notASeed)
-                .map(Peer::getAddress)
-                .collect(Collectors.toList()));
-        return candidates;
+        if (matchingConnections.isEmpty() && !allConnections.isEmpty()) {
+            log.warn("We did not find any peer which matches our inventory filter type settings");
+        }
+        return matchingConnections;
     }
 
     private boolean sufficientConnections() {

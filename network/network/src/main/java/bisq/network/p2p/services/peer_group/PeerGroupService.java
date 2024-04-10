@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.peer_group;
 
+import bisq.common.util.CollectionUtil;
 import bisq.network.common.Address;
 import bisq.network.common.TransportType;
 import bisq.network.p2p.node.Connection;
@@ -203,6 +204,16 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
                         connection.isOutboundConnection()));
     }
 
+    public Stream<Connection> getShuffledSeedConnections(Node node) {
+        return CollectionUtil.toShuffledList(node.getAllActiveConnections()).stream()
+                .filter(this::isSeed);
+    }
+
+    public Stream<Connection> getShuffledNonSeedConnections(Node node) {
+        return CollectionUtil.toShuffledList(node.getAllActiveConnections()).stream()
+                .filter(connection -> !isSeed(connection));
+    }
+
     public boolean isNotBanned(Peer peer) {
         return isNotBanned(peer.getAddress());
     }
@@ -247,6 +258,7 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
     public boolean isSeed(Peer peer) {
         return isSeed(peer.getAddress());
     }
+
 
     public boolean notASeed(Peer peer) {
         return !isSeed(peer);
