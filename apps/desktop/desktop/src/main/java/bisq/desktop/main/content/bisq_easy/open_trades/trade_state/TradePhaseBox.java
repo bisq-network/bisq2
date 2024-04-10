@@ -18,7 +18,6 @@
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_state;
 
 import bisq.bisq_easy.NavigationTarget;
-import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.common.data.Triple;
@@ -74,6 +73,10 @@ class TradePhaseBox {
 
     void reset() {
         controller.model.reset();
+    }
+
+    int getPhaseIndex() {
+        return controller.model.getPhaseIndex().get();
     }
 
     private static class Controller implements bisq.desktop.common.view.Controller {
@@ -230,7 +233,6 @@ class TradePhaseBox {
                     model.getBisqEasyTrade().getContract(),
                     mediationRequestService, channelService);
         }
-
     }
 
     @Getter

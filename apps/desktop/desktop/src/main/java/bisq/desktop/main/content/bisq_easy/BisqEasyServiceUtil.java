@@ -113,6 +113,13 @@ public class BisqEasyServiceUtil {
                                                     String paymentMethodNames,
                                                     AmountSpec amountSpec,
                                                     PriceSpec priceSpec) {
+        String priceInfo = String.format("%s %s", Res.get("bisqEasy.tradeWizard.review.chatMessage.price"), getFormattedPriceSpec(priceSpec));
+        boolean hasAmountRange = amountSpec instanceof RangeAmountSpec;
+        String quoteAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, amountSpec, priceSpec, market, hasAmountRange, true);
+        return buildOfferBookMessage(isMyMessage, messageOwnerNickName, direction, quoteAmountAsString, paymentMethodNames, priceInfo);
+    }
+
+    public static String getFormattedPriceSpec(PriceSpec priceSpec) {
         String priceInfo;
         if (priceSpec instanceof FixPriceSpec) {
             FixPriceSpec fixPriceSpec = (FixPriceSpec) priceSpec;
@@ -125,10 +132,7 @@ public class BisqEasyServiceUtil {
         } else {
             priceInfo = Res.get("bisqEasy.tradeWizard.review.chatMessage.marketPrice");
         }
-
-        boolean hasAmountRange = amountSpec instanceof RangeAmountSpec;
-        String quoteAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, amountSpec, priceSpec, market, hasAmountRange, true);
-        return buildOfferBookMessage(isMyMessage, messageOwnerNickName, direction, quoteAmountAsString, paymentMethodNames, priceInfo);
+        return priceInfo;
     }
 
     private static String buildOfferBookMessage(boolean isMyMessage,
