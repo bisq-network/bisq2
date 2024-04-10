@@ -19,7 +19,6 @@ package bisq.network.p2p.services.data.inventory;
 
 import bisq.common.timer.Scheduler;
 import bisq.common.util.CompletableFutureUtils;
-import bisq.network.common.Address;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
@@ -32,7 +31,6 @@ import bisq.network.p2p.services.data.RemoveDataRequest;
 import bisq.network.p2p.services.data.inventory.filter.FilterService;
 import bisq.network.p2p.services.data.inventory.filter.InventoryFilter;
 import bisq.network.p2p.services.data.inventory.filter.InventoryFilterType;
-import bisq.network.p2p.services.peer_group.Peer;
 import bisq.network.p2p.services.peer_group.PeerGroupManager;
 import bisq.network.p2p.services.peer_group.PeerGroupService;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +41,7 @@ import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 public class InventoryRequestService implements Node.Listener, PeerGroupManager.Listener {
@@ -223,23 +222,17 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
     }
 
     private List<Connection> getCandidates() {
-        List<Address> candidates = peerGroupService.getShuffledSeeds(node).stream()
-                .limit(maxSeedsForRequest)
-                .map(Peer::getAddress)
-                .collect(Collectors.toList());
-        candidates.addAll(peerGroupService.getShuffledPeers(node).stream()
-                .filter(peerGroupService::notASeed)
-                .map(Peer::getAddress)
-                .collect(Collectors.toList()));
-        List<Connection> candidateConnections = node.getAllActiveConnections()
+        Stream<Connection> seeds = peerGroupService.getShuffledSeedConnections(node)
                 .filter(connection -> !requestHandlerMap.containsKey(connection.getId()))
-                .filter(connection -> candidates.contains(connection.getPeerAddress()))
-                .collect(Collectors.toList());
-        List<Connection> matchingConnections = candidateConnections.stream()
+                .limit(maxSeedsForRequest);
+        Stream<Connection> peers = peerGroupService.getShuffledNonSeedConnections(node)
+                .filter(connection -> !requestHandlerMap.containsKey(connection.getId()))
+                .limit(maxPeersForRequest);
+        List<Connection> allConnections = Stream.concat(seeds, peers).collect(Collectors.toList());
+        List<Connection> matchingConnections = allConnections.stream()
                 .filter(connection -> getPreferredFilterType(connection.getPeersCapability().getFeatures()).isPresent())
-                .limit(maxPeersForRequest)
                 .collect(Collectors.toList());
-        if (matchingConnections.isEmpty() && !candidateConnections.isEmpty()) {
+        if (matchingConnections.isEmpty() && !allConnections.isEmpty()) {
             log.warn("We did not find any peer which matches our inventory filter type settings");
         }
         return matchingConnections;
