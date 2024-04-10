@@ -146,7 +146,7 @@ public class PeerGroupManager implements Node.Listener {
                 config.getPeerExchangeConfig());
         peerExchangeService = new PeerExchangeService(node, peerExchangeStrategy);
         keepAliveService = new KeepAliveService(node, config.getKeepAliveServiceConfig());
-        networkLoadExchangeService = new NetworkLoadExchangeService(node, peerGroupService);
+        networkLoadExchangeService = new NetworkLoadExchangeService(node);
 
         retryPolicy = RetryPolicy.<Boolean>builder()
                 .handle(IllegalStateException.class)

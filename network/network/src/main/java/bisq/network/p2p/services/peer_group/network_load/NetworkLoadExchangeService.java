@@ -25,7 +25,6 @@ import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.network_load.NetworkLoad;
-import bisq.network.p2p.services.peer_group.PeerGroupService;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
@@ -45,13 +44,11 @@ public class NetworkLoadExchangeService implements Node.Listener {
     private static final long MAX_IDLE = TimeUnit.MINUTES.toMillis(5);
 
     private final Node node;
-    private final PeerGroupService peerGroupService;
     private final Map<String, NetworkLoadExchangeHandler> requestHandlerMap = new ConcurrentHashMap<>();
     private Optional<Scheduler> scheduler = Optional.empty();
 
-    public NetworkLoadExchangeService(Node node, PeerGroupService peerGroupService) {
+    public NetworkLoadExchangeService(Node node) {
         this.node = node;
-        this.peerGroupService = peerGroupService;
         this.node.addListener(this);
     }
 
