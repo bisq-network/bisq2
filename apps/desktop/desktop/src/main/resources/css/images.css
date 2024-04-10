@@ -693,47 +693,51 @@
 }
 
 #star-green {
-    -fx-image: url("/images/icons/star-green.png");
+    -fx-image: url("/images/icons/stars/star-green.png");
+}
+
+#star-green-hollow {
+    -fx-image: url("/images/icons/stars/star-green-hollow.png");
+}
+
+#star-half-green {
+    -fx-image: url("/images/icons/stars/star-half-green.png");
+}
+
+#star-half-hollow-green {
+    -fx-image: url("/images/icons/stars/star-half-hollow-green.png");
 }
 
 #star-white {
-    -fx-image: url("/images/icons/star-white.png");
+    -fx-image: url("/images/icons/stars/star-white.png");
+}
+
+#star-white-hollow {
+    -fx-image: url("/images/icons/stars/star-white-hollow.png");
+}
+
+#star-half-white {
+    -fx-image: url("/images/icons/stars/star-half-white.png");
+}
+
+#star-half-hollow-white {
+    -fx-image: url("/images/icons/stars/star-half-hollow-white.png");
 }
 
 #star-grey {
-    -fx-image: url("/images/icons/star-grey.png");
+    -fx-image: url("/images/icons/stars/star-grey.png");
 }
 
-#favourites-star-green {
-    -fx-image: url("/images/icons/favourites/star-green.png");
+#star-grey-hollow {
+    -fx-image: url("/images/icons/stars/star-grey-hollow.png");
 }
 
-#favourites-star-green-hollow {
-    -fx-image: url("/images/icons/favourites/star-green-hollow.png");
+#star-yellow {
+    -fx-image: url("/images/icons/stars/star-yellow.png");
 }
 
-#favourites-star-white {
-    -fx-image: url("/images/icons/favourites/star-white.png");
-}
-
-#favourites-star-white-hollow {
-    -fx-image: url("/images/icons/favourites/star-white-hollow.png");
-}
-
-#favourites-star-grey {
-    -fx-image: url("/images/icons/favourites/star-grey.png");
-}
-
-#favourites-star-grey-hollow {
-    -fx-image: url("/images/icons/favourites/star-grey-hollow.png");
-}
-
-#favourites-star-yellow {
-    -fx-image: url("/images/icons/favourites/star-yellow.png");
-}
-
-#favourites-star-yellow-hollow {
-    -fx-image: url("/images/icons/favourites/star-yellow-hollow.png");
+#star-yellow-hollow {
+    -fx-image: url("/images/icons/stars/star-yellow-hollow.png");
 }
 
 #scroll-down-white {

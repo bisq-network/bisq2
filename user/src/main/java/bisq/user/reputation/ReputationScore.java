@@ -33,14 +33,13 @@ public class ReputationScore implements Comparable<ReputationScore> {
     public static final ReputationScore NONE = new ReputationScore(0, 0, 0, 0);
     
     private final long totalScore;
-    // relativeScore has range of 0-1
-    private final double relativeScore;
+    private final double fiveSystemScore;
     private final int ranking;
     private final double relativeRanking;
 
-    public ReputationScore(long totalScore, double relativeScore, int ranking, double relativeRanking) {
+    public ReputationScore(long totalScore, double fiveSystemScore, int ranking, double relativeRanking) {
         this.totalScore = totalScore;
-        this.relativeScore = relativeScore;
+        this.fiveSystemScore = fiveSystemScore;
         this.ranking = ranking;
         this.relativeRanking = relativeRanking;
     }
