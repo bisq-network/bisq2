@@ -28,12 +28,10 @@ import bisq.persistence.PersistenceService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -201,6 +199,20 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore> {
                 new Peer(connection.getPeersCapability(),
                         connection.getPeersNetworkLoadSnapshot().getCurrentNetworkLoad(),
                         connection.isOutboundConnection()));
+    }
+
+    public List<Peer> getShuffledPeers(Node node) {
+        List<Peer> peers = getAllConnectedPeers(node).collect(Collectors.toList());
+        Collections.shuffle(peers);
+        return peers;
+    }
+
+    public List<Peer> getShuffledSeeds(Node node) {
+        List<Peer> seeds = getAllConnectedPeers(node)
+                .filter(this::isSeed)
+                .collect(Collectors.toList());
+        Collections.shuffle(seeds);
+        return seeds;
     }
 
     public boolean isNotBanned(Peer peer) {
