@@ -52,8 +52,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
 import java.util.Optional;
@@ -265,7 +263,6 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
             public TableCell<ListItem, ListItem> call(TableColumn<ListItem, ListItem> column) {
                 return new TableCell<>() {
                     private final ReputationScoreDisplay reputationScoreDisplay = new ReputationScoreDisplay();
-                    private Subscription selectedItemPin;
                     private TableRow<ListItem> tableRow;
 
                     {
@@ -278,29 +275,13 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
 
                         if (item != null && !empty) {
                             tableRow = getTableRow();
-                            tableRow.setOnMouseClicked(e -> {
-                                reputationScoreDisplay.useWhiteAcceptStar();
-                                controller.onSelectRow(item);
-                            });
-
-                            selectedItemPin = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(),
-                                    selectedItem -> {
-                                        if (item.equals(selectedItem)) {
-                                            reputationScoreDisplay.useWhiteAcceptStar();
-                                        } else {
-                                            reputationScoreDisplay.useGreenAcceptStar();
-                                        }
-                                    });
-
+                            tableRow.setOnMouseClicked(e -> controller.onSelectRow(item));
                             reputationScoreDisplay.setReputationScore(item.getReputationScore());
                             setGraphic(reputationScoreDisplay);
                         } else {
                             if (tableRow != null) {
                                 tableRow.setOnMouseClicked(null);
                                 tableRow = null;
-                            }
-                            if (selectedItemPin != null) {
-                                selectedItemPin.unsubscribe();
                             }
                             setGraphic(null);
                         }
