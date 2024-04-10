@@ -47,7 +47,7 @@ public final class Inventory implements NetworkProto {
         this(entries, maxSizeReached, Optional.empty());
     }
 
-    public Inventory(Collection<? extends DataRequest> entries, boolean maxSizeReached, Optional<Integer> serializedSize) {
+    private Inventory(Collection<? extends DataRequest> entries, boolean maxSizeReached, Optional<Integer> serializedSize) {
         this.entries = new ArrayList<>(entries);
         this.maxSizeReached = maxSizeReached;
         this.serializedSize = serializedSize;
@@ -62,11 +62,8 @@ public final class Inventory implements NetworkProto {
 
     @Override
     public void verify() {
-        // In case maxSize is very small we ignore the check
-        if (maxSize > 10000) {
-            // We limit the max serialized size but not the number of entries.
-            serializedSize.ifPresent(size -> checkArgument(size <= maxSize));
-        }
+        // We tolerate up to double of our max size
+        serializedSize.ifPresent(size -> checkArgument(size <= maxSize * 2));
     }
 
     @Override
