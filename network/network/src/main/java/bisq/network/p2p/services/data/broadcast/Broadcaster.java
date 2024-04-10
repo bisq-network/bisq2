@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data.broadcast;
 
+import bisq.common.util.CollectionUtil;
 import bisq.network.NetworkService;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
@@ -25,12 +26,10 @@ import dev.failsafe.RetryPolicy;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Duration;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class Broadcaster {
@@ -82,8 +81,7 @@ public class Broadcaster {
         long numBroadcasts = Math.min(numConnections, Math.round(numConnections * distributionFactor));
         log.debug("Broadcast {} to {} out of {} peers. distributionFactor={}",
                 broadcastMessage.getClass().getSimpleName(), numBroadcasts, numConnections, distributionFactor);
-        List<Connection> allConnections = node.getAllActiveConnections().collect(Collectors.toList());
-        Collections.shuffle(allConnections);
+        List<Connection> allConnections = CollectionUtil.toShuffledList(node.getAllActiveConnections());
         NetworkService.NETWORK_IO_POOL.submit(() -> {
             allConnections.stream()
                     .limit(numBroadcasts)
