@@ -58,6 +58,8 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
     private final Map<String, InventoryHandler> requestHandlerMap = new ConcurrentHashMap<>();
     private final AtomicBoolean requestsPending = new AtomicBoolean();
     private final AtomicBoolean allDataReceived = new AtomicBoolean();
+    private Optional<Scheduler> scheduler = Optional.empty();
+    private Optional<Scheduler> periodicScheduler = Optional.empty();
 
     public InventoryRequestService(Node node,
                                    PeerGroupManager peerGroupManager,
@@ -80,6 +82,10 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
         peerGroupManager.removeListener(this);
         requestHandlerMap.values().forEach(InventoryHandler::dispose);
         requestHandlerMap.clear();
+        scheduler.ifPresent(Scheduler::stop);
+        scheduler = Optional.empty();
+        periodicScheduler.ifPresent(Scheduler::stop);
+        periodicScheduler = Optional.empty();
     }
 
 
@@ -90,7 +96,6 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
     }
-
 
     @Override
     public void onConnection(Connection connection) {
@@ -132,7 +137,8 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
 
         if (peerGroupManager.getState().get() != PeerGroupManager.State.RUNNING) {
             // Not ready yet, lets try again later
-            Scheduler.run(this::maybeRequestInventory).after(5000);
+            scheduler.ifPresent(Scheduler::stop);
+            scheduler = Optional.of(Scheduler.run(this::maybeRequestInventory).after(5000));
             return;
         }
 
@@ -154,16 +160,19 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
                         // Repeat requests until we have received all data
                         if (list.stream().noneMatch(Inventory::noDataMissing)) {
                             // We still miss data, so repeat requests
-                            Scheduler.run(this::maybeRequestInventory).after(1000);
+                            scheduler.ifPresent(Scheduler::stop);
+                            scheduler = Optional.of(Scheduler.run(this::maybeRequestInventory).after(1000));
                         } else {
                             // We got all data
                             allDataReceived.set(true);
 
                             // We request again in 10 minutes to be sure that potentially missed data gets received.
-                            Scheduler.run(() -> {
-                                allDataReceived.set(false);
-                                maybeRequestInventory();
-                            }).after(REPEAT_REQUEST_PERIOD);
+                            if (periodicScheduler.isEmpty()) {
+                                periodicScheduler = Optional.of(Scheduler.run(() -> {
+                                    allDataReceived.set(false);
+                                    maybeRequestInventory();
+                                }).periodically(REPEAT_REQUEST_PERIOD));
+                            }
                         }
                     }
                 });
