@@ -230,7 +230,8 @@ public class MarketPriceRequestService {
                     if (marketPrice.isValidDate()) {
                         marketPrice.setSource(MarketPrice.Source.REQUESTED_FROM_PRICE_NODE);
                         map.put(priceQuote.getMarket(), marketPrice);
-                    } else {
+                    } else if (!marketPrice.getMarket().getBaseCurrencyCode().equals("DCR")) {
+                        // We get an old DCR price from the price servers. Need to be fixed in price server
                         log.warn("We got an outdated market price. {}", marketPrice);
                     }
                 }

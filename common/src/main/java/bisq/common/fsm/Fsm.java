@@ -62,7 +62,7 @@ public abstract class Fsm<M extends FsmModel> {
                 State currentState = model.getState();
                 checkNotNull(currentState, "currentState must not be null");
                 if (currentState.isFinalState()) {
-                    log.warn("We have reached the final state and do not allow further state transition");
+                    log.warn("We have reached the final state and do not allow further state transition. New event was: {}", event);
                     return;
                 }
                 log.info("Start transition from currentState {}", currentState);
