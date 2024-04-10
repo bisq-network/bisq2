@@ -92,8 +92,7 @@ public class InventoryService {
                 peerGroupManager,
                 dataService,
                 supportedFilterServices,
-                config.getMyPreferredFilterTypes(),
-                maxSize);
+                config.getMyPreferredFilterTypes());
     }
 
 

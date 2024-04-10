@@ -63,8 +63,7 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
                                    PeerGroupManager peerGroupManager,
                                    DataService dataService,
                                    Map<InventoryFilterType, FilterService<? extends InventoryFilter>> supportedFilterServices,
-                                   List<InventoryFilterType> myPreferredInventoryFilterTypes,
-                                   int maxSize) {
+                                   List<InventoryFilterType> myPreferredInventoryFilterTypes) {
         this.node = node;
         this.peerGroupManager = peerGroupManager;
         peerGroupService = peerGroupManager.getPeerGroupService();
@@ -96,9 +95,7 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
     @Override
     public void onConnection(Connection connection) {
         if (sufficientConnections()) {
-            log.info("We are sufficiently connected to start the inventory request. numConnections={}",
-                    node.getNumConnections());
-            requestInventory();
+            maybeRequestInventory();
         }
     }
 
@@ -119,8 +116,7 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
     @Override
     public void onStateChanged(PeerGroupManager.State state) {
         if (state == PeerGroupManager.State.RUNNING) {
-            log.info("PeerGroupManager is ready. We start the inventory request.");
-            requestInventory();
+            maybeRequestInventory();
         }
     }
 
@@ -129,20 +125,18 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
     // Request inventory
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private void requestInventory() {
-        if (allDataReceived.get()) {
+    private void maybeRequestInventory() {
+        if (allDataReceived.get() || requestsPending.get()) {
             return;
         }
+
         if (peerGroupManager.getState().get() != PeerGroupManager.State.RUNNING) {
             // Not ready yet, lets try again later
-            Scheduler.run(this::requestInventory).after(5000);
+            Scheduler.run(this::maybeRequestInventory).after(5000);
             return;
         }
 
-        if (requestsPending.get()) {
-            return;
-        }
-
+        log.info("Start inventory requests");
         requestsPending.set(true);
         CompletableFutureUtils.allOf(requestFromPeers())
                 .whenComplete((list, throwable) -> {
@@ -160,7 +154,7 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
                         // Repeat requests until we have received all data
                         if (list.stream().noneMatch(Inventory::noDataMissing)) {
                             // We still miss data, so repeat requests
-                            Scheduler.run(this::requestInventory).after(1000);
+                            Scheduler.run(this::maybeRequestInventory).after(1000);
                         } else {
                             // We got all data
                             allDataReceived.set(true);
@@ -168,7 +162,7 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
                             // We request again in 10 minutes to be sure that potentially missed data gets received.
                             Scheduler.run(() -> {
                                 allDataReceived.set(false);
-                                requestInventory();
+                                maybeRequestInventory();
                             }).after(REPEAT_REQUEST_PERIOD);
                         }
                     }

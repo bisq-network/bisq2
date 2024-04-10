@@ -50,7 +50,7 @@ public class CatHash {
         }
 
         BucketConfig bucketConfig = getBucketConfig(avatarVersion);
-        log.info("Getting user avatar image using class {}", bucketConfig.getClass().getName());
+        log.debug("Getting user avatar image using class {}", bucketConfig.getClass().getName());
 
         int[] buckets = BucketEncoder.encode(input, bucketConfig.getBucketSizes());
         String[] paths = BucketEncoder.toPaths(buckets, bucketConfig.getPathTemplates());
