@@ -28,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -36,14 +37,15 @@ public class ReputationScoreDisplay extends HBox {
     private static final double SPACING = 5;
     private static final double STAR_WIDTH = 12;
     private static final double STAR_HEIGHT = 11;
-    private static final double OPACITY = 0.2;
     private static final String DEFAULT_ACCEPT_STAR_ID = "star-green";
+    private static final String DEFAULT_ACCEPT_HALF_STAR_ID = "star-half-hollow-green";
     private static final int STAR_SYSTEM = 5; // 5-star system
 
     private final List<ImageView> stars = IntStream.range(0, STAR_SYSTEM).mapToObj(i -> getDefaultStar()).collect(Collectors.toList());
     private final Tooltip tooltip = new BisqTooltip();
     private ReputationScore reputationScore;
     private String acceptStarId = DEFAULT_ACCEPT_STAR_ID;
+    private String acceptHalfStarId = DEFAULT_ACCEPT_HALF_STAR_ID;
 
     public ReputationScoreDisplay(ReputationScore reputationScore) {
         this();
@@ -78,26 +80,34 @@ public class ReputationScoreDisplay extends HBox {
 
     public void useGreenAcceptStar() {
         acceptStarId = "star-green";
+        acceptHalfStarId = "star-half-hollow-green";
         applyReputationScore();
     }
 
     public void useWhiteAcceptStar() {
         acceptStarId = "star-white";
+        acceptHalfStarId = "star-half-hollow-white";
         applyReputationScore();
     }
 
     private void applyReputationScore() {
-        int starsToFill = calculateStars();
-        for (int i = 0; i < STAR_SYSTEM; i++) {
-            ImageView imageView = stars.get(i);
-            if (i < starsToFill) {
+        double starsToFill = reputationScore != null ? reputationScore.getFiveSystemScore() : 0d;
+        AtomicInteger index = new AtomicInteger();
+        stars.forEach(imageView -> {
+            int i = index.getAndIncrement();
+            if (i < Math.floor(starsToFill)) {
+                // Full star
                 imageView.setOpacity(1);
                 imageView.setId(acceptStarId);
+            } else if (i < starsToFill) {
+                // Half star
+                imageView.setOpacity(1);
+                imageView.setId(acceptHalfStarId);
             } else {
-                imageView.setOpacity(OPACITY);
-                imageView.setId("star-white");
+                // Empty star
+                imageView.setId("star-grey-hollow");
             }
-        }
+        });
         tooltip.setText(reputationScore != null ? reputationScore.getTooltipString() : null);
     }
 
@@ -105,18 +115,11 @@ public class ReputationScoreDisplay extends HBox {
         return reputationScore != null ? reputationScore.getTooltipString() : "";
     }
 
-    public int getNumberOfStars() {
-        return calculateStars();
+    public double getNumberOfStars() {
+        return reputationScore != null ? reputationScore.getFiveSystemScore() : 0d;
     }
 
     private ImageView getDefaultStar() {
-        ImageView imageView = ImageUtil.getImageViewById("star-white");
-        imageView.setOpacity(OPACITY);
-        return imageView;
-    }
-
-    private int calculateStars() {
-        double relativeScore = reputationScore != null ? reputationScore.getRelativeScore() : 0;
-        return (int) Math.floor(STAR_SYSTEM * relativeScore);
+        return ImageUtil.getImageViewById("star-grey-hollow");
     }
 }

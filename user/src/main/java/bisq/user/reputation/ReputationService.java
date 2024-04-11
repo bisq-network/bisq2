@@ -127,11 +127,11 @@ public class ReputationService implements Service {
             return Optional.empty();
         }
         long score = scoreByUserProfileId.get(userProfileId);
-        double relativeScore = getRelativeScore(score, scoreByUserProfileId.values());
+        double fiveSystemScore = getFiveSystemScore(score);
         int index = getIndex(score, scoreByUserProfileId.values());
         int rank = scoreByUserProfileId.size() - index;
         double relativeRanking = (index + 1) / (double) scoreByUserProfileId.size();
-        return Optional.of(new ReputationScore(score, relativeScore, rank, relativeRanking));
+        return Optional.of(new ReputationScore(score, fiveSystemScore, rank, relativeRanking));
     }
 
     private void onUserProfileScoreChanged(String userProfileId) {
@@ -148,9 +148,30 @@ public class ReputationService implements Service {
     }
 
     @VisibleForTesting
-    static double getRelativeScore(long candidateScore, Collection<Long> scores) {
-        long bestScore = scores.stream().max(Comparator.comparing(Long::longValue)).orElse(0L);
-        return bestScore > 0 ? candidateScore / (double) bestScore : 0;
+    static double getFiveSystemScore(long candidateScore) {
+        if (candidateScore <= 1_199) {
+            return 0;
+        } else if (candidateScore <= 4_999) {
+            return 0.5;
+        } else if (candidateScore <= 14_999) {
+            return 1;
+        } else if (candidateScore <= 19_999) {
+            return 1.5;
+        } else if (candidateScore <= 24_999) {
+            return 2;
+        } else if (candidateScore <= 29_999) {
+            return 2.5;
+        } else if (candidateScore <= 34_999) {
+            return 3;
+        } else if (candidateScore <= 39_999) {
+            return 3.5;
+        } else if (candidateScore <= 59_999) {
+            return 4;
+        } else if (candidateScore <= 99_999) {
+            return 4.5;
+        } else {
+            return 5;
+        }
     }
 
     @VisibleForTesting

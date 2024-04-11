@@ -35,14 +35,18 @@ public class ReputationServiceTest {
         assertEquals(-1, ReputationService.getIndex(1, List.of()));
     }
 
-
     @Test
-    void testGetRelativeScore() {
-        List<Long> scores = List.of(1L, 2L, 3L, 4L, 5L);
-        assertEquals(1 / 5d, ReputationService.getRelativeScore(1, scores));
-        assertEquals(1, ReputationService.getRelativeScore(5, scores));
-        assertEquals(5000 / 5001d, ReputationService.getRelativeScore(5000, List.of(1L, 2L, 3L, 4L, 5000L, 5001L)));
-        assertEquals(0, ReputationService.getRelativeScore(0, scores));
-        assertEquals(0, ReputationService.getRelativeScore(1, List.of()));
+    void testGetFiveSystemScore() {
+        assertEquals(0, ReputationService.getFiveSystemScore(0));
+        assertEquals(0.5, ReputationService.getFiveSystemScore(1_200));
+        assertEquals(1, ReputationService.getFiveSystemScore(5_000));
+        assertEquals(1.5, ReputationService.getFiveSystemScore(15_000));
+        assertEquals(2, ReputationService.getFiveSystemScore(20_000));
+        assertEquals(2.5, ReputationService.getFiveSystemScore(25_000));
+        assertEquals(3, ReputationService.getFiveSystemScore(30_000));
+        assertEquals(3.5, ReputationService.getFiveSystemScore(35_000));
+        assertEquals(4, ReputationService.getFiveSystemScore(40_000));
+        assertEquals(4.5, ReputationService.getFiveSystemScore(60_000));
+        assertEquals(5, ReputationService.getFiveSystemScore(100_000));
     }
 }
