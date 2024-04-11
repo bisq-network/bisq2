@@ -99,6 +99,10 @@ public class PeerExchangeService implements Node.Listener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+    public void startInitialPeerExchange(int minSuccess) {
+        startInitialPeerExchangeAsync().join();
+    }
+
     public CompletableFuture<Void> startInitialPeerExchangeAsync() {
         List<Address> candidates = peerExchangeStrategy.getAddressesForInitialPeerExchange();
         log.info("startInitialPeerExchange {}", candidates);
