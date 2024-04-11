@@ -107,7 +107,7 @@ public abstract class BasePeerExchangeServiceTest extends BaseNetworkTest {
                     banList);
             PeerExchangeStrategy peerExchangeStrategy = new PeerExchangeStrategy(peerGroupService, node, new PeerExchangeStrategy.Config());
             PeerExchangeService peerExchangeService = new PeerExchangeService(node, peerExchangeStrategy);
-            peerExchangeService.startInitialPeerExchange().whenComplete((result, throwable) -> {
+            peerExchangeService.startInitialPeerExchangeAsync().whenComplete((result, throwable) -> {
                 assertNull(throwable);
             }).join();
         }
@@ -128,7 +128,7 @@ public abstract class BasePeerExchangeServiceTest extends BaseNetworkTest {
                         banList);
                 PeerExchangeStrategy peerExchangeStrategy = new PeerExchangeStrategy(peerGroupService, node, new PeerExchangeStrategy.Config());
                 PeerExchangeService peerExchangeService = new PeerExchangeService(node, peerExchangeStrategy);
-                peerExchangeService.startInitialPeerExchange().whenComplete((result, throwable) -> {
+                peerExchangeService.startInitialPeerExchangeAsync().whenComplete((result, throwable) -> {
                     assertNull(throwable);
                 }).join();
             }

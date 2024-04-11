@@ -99,7 +99,7 @@ public class PeerExchangeService implements Node.Listener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<Void> startInitialPeerExchange() {
+    public CompletableFuture<Void> startInitialPeerExchangeAsync() {
         List<Address> candidates = peerExchangeStrategy.getAddressesForInitialPeerExchange();
         log.info("startInitialPeerExchange {}", candidates);
         return doPeerExchange(candidates)
@@ -110,7 +110,7 @@ public class PeerExchangeService implements Node.Listener {
                             resultFuture.completeExceptionally(throwable);
 
                             scheduler.ifPresent(Scheduler::stop);
-                            scheduler = Optional.of(Scheduler.run(this::startInitialPeerExchange)
+                            scheduler = Optional.of(Scheduler.run(this::startInitialPeerExchangeAsync)
                                     .after(doInitialPeerExchangeDelaySec, TimeUnit.SECONDS)
                                     .name("PeerExchangeService.scheduler-" + StringUtils.truncate(node.toString(), 10)));
                             doInitialPeerExchangeDelaySec = Math.min(20, doInitialPeerExchangeDelaySec * 2);
@@ -189,7 +189,7 @@ public class PeerExchangeService implements Node.Listener {
                                 log.info("{} repeats the initial peer exchange after {} sec as it has not reached sufficient connections " +
                                         "or received sufficient peers", node, doInitialPeerExchangeDelaySec);
                                 scheduler.ifPresent(Scheduler::stop);
-                                scheduler = Optional.of(Scheduler.run(this::startInitialPeerExchange)
+                                scheduler = Optional.of(Scheduler.run(this::startInitialPeerExchangeAsync)
                                         .after(doInitialPeerExchangeDelaySec, TimeUnit.SECONDS)
                                         .name("PeerExchangeService.scheduler-" + StringUtils.truncate(node.toString(), 10)));
                                 doInitialPeerExchangeDelaySec = Math.min(20, doInitialPeerExchangeDelaySec * 2);
