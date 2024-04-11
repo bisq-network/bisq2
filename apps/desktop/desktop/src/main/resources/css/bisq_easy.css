@@ -182,6 +182,11 @@
     -fx-cursor: hand;
 }
 
+.offerbook-expired-messages-indicator {
+    -fx-background-color: -bisq2-yellow;
+    -fx-min-height: 35;
+}
+
 .offerbook-subheader-checkbox .label {
     -fx-text-fill: -fx-mid-text-color;
 }

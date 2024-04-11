@@ -62,6 +62,7 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
     // BisqEasyOfferbookMessage use TTL_10_DAYS, BisqEasyOpenTradeMessage and TwoPartyPrivateChatMessage
     // use TTL_30_DAYS
     private static final long MAX_AGE = MetaData.TTL_30_DAYS;
+    private static final long BISQ_EASY_OFFERBOOK_MESSAGE_MAX_AGE = MetaData.TTL_10_DAYS;
 
     @Getter
     private final ChatNotificationsStore persistableStore = new ChatNotificationsStore();
@@ -96,9 +97,8 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
 
     @Override
     public ChatNotificationsStore prunePersisted(ChatNotificationsStore persisted) {
-        long pruneDate = System.currentTimeMillis() - MAX_AGE;
         return new ChatNotificationsStore(persisted.getNotifications().stream()
-                .filter(e -> e.getDate() > pruneDate)
+                .filter(e -> !isExpired(e))
                 .collect(Collectors.toSet()));
     }
 
@@ -255,6 +255,15 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
         }
     }
 
+    private boolean isExpired(ChatNotification chatNotification) {
+        if (chatNotification.getChatChannelDomain() == ChatChannelDomain.BISQ_EASY_OFFERBOOK) {
+            return System.currentTimeMillis() - chatNotification.getDate() > BISQ_EASY_OFFERBOOK_MESSAGE_MAX_AGE;
+        }
+        else {
+            return System.currentTimeMillis() - chatNotification.getDate() > MAX_AGE;
+        }
+    }
+
     private <M extends ChatMessage> void onChannelsChanged(ObservableArray<? extends ChatChannel<M>> channels) {
         channels.forEach(chatChannel -> {
             String channelId = chatChannel.getId();
@@ -386,7 +395,9 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
     }
 
     private void maybeSendSystemNotification(ChatNotification chatNotification) {
-        if (!isApplicationFocussed && isReceivedAfterStartUp(chatNotification)) {
+        if (!isApplicationFocussed &&
+            isReceivedAfterStartUp(chatNotification) &&
+            !isExpired(chatNotification)) {
             sendNotificationService.send(chatNotification);
         }
     }
