@@ -50,6 +50,7 @@ import org.fxmisc.easybind.Subscription;
 
 import java.lang.ref.WeakReference;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -256,10 +257,19 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                 BisqEasyOfferbookChannel channel = (BisqEasyOfferbookChannel) chatChannel;
 
                 // FIXME (low prio): marketChannelItems needs to be a hashmap
-                model.getMarketChannelItems().stream()
+                Optional<MarketChannelItem> marketChannelItem = model.getMarketChannelItems()
+                        .stream()
                         .filter(item -> item.getChannel().equals(channel))
-                        .findAny()
-                        .ifPresent(item -> model.getSelectedMarketChannelItem().set(item));
+                        .findAny();
+                
+                marketChannelItem.ifPresent(item -> {
+                        model.getSelectedMarketChannelItem().set(item);
+                        model.getShowsExpiredMessagesIndicator().set(!item.getChannel()
+                                .getChatMessages()
+                                .stream()
+                                .findFirst()
+                                .isPresent());
+                });
 
                 model.getSearchText().set("");
                 resetSelectedChildTarget();

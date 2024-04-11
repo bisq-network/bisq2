@@ -51,6 +51,7 @@ public final class BisqEasyOfferbookModel extends ChatModel {
     private final StringProperty marketPrice = new SimpleStringProperty();
     private final ObservableSet<Market> favouriteMarkets = FXCollections.observableSet();
     private final FilteredList<MarketChannelItem> favouriteMarketChannelItems = new FilteredList<>(marketChannelItems);
+    private final BooleanProperty showsExpiredMessagesIndicator = new SimpleBooleanProperty();
 
     @Setter
     private Predicate<MarketChannelItem> marketPricePredicate = marketChannelItem -> true;

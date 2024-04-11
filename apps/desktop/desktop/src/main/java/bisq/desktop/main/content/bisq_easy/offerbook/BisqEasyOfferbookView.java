@@ -72,7 +72,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     private DropdownTitleMenuItem atLeastTitle;
     private CheckBox hideUserMessagesCheckbox;
     private Label channelHeaderIcon, marketPrice, removeWithOffersFilter, removeFavouritesFilter;
-    private HBox appliedFiltersSection, withOffersDisplayHint, onlyFavouritesDisplayHint;
+    private HBox appliedFiltersSection, withOffersDisplayHint, onlyFavouritesDisplayHint, expiredMessagesIndicator;
     private ImageView withOffersRemoveFilterDefaultIcon, withOffersRemoveFilterActiveIcon,
             favouritesRemoveFilterDefaultIcon, favouritesRemoveFilterActiveIcon;
 
@@ -135,6 +135,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         onlyFavouritesDisplayHint.managedProperty().bind(getModel().getSelectedMarketsFilter().isEqualTo(Filters.Markets.FAVOURITES));
         favouritesTableView.visibleProperty().bind(Bindings.isNotEmpty(getModel().getFavouriteMarketChannelItems()));
         favouritesTableView.managedProperty().bind(Bindings.isNotEmpty(getModel().getFavouriteMarketChannelItems()));
+        expiredMessagesIndicator.visibleProperty().bind(getModel().getShowsExpiredMessagesIndicator());
 
         selectedModelItemPin = EasyBind.subscribe(getModel().getSelectedMarketChannelItem(), this::updateTableViewSelection);
         marketsTableViewSelectionPin = EasyBind.subscribe(marketsTableView.getSelectionModel().selectedItemProperty(), item -> {
@@ -211,6 +212,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         onlyFavouritesDisplayHint.managedProperty().unbind();
         favouritesTableView.visibleProperty().unbind();
         favouritesTableView.managedProperty().unbind();
+        expiredMessagesIndicator.visibleProperty().unbind();
 
         selectedModelItemPin.unsubscribe();
         marketsTableViewSelectionPin.unsubscribe();
@@ -437,10 +439,15 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         subheader.getStyleClass().add("offerbook-subheader");
         subheader.setAlignment(Pos.CENTER);
 
+        Label expiredMessagesIndicatorLabel = new Label(Res.get("bisqEasy.topPane.expiredMessagesIndicator"));
+        expiredMessagesIndicator = new HBox(30, expiredMessagesIndicatorLabel);
+        expiredMessagesIndicator.getStyleClass().add("offerbook-expired-messages-indicator");
+        expiredMessagesIndicator.setAlignment(Pos.CENTER);
+
         chatMessagesComponent.setMinWidth(700);
 
         VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
-        centerVBox.getChildren().addAll(titleHBox, Layout.hLine(), subheader, chatMessagesComponent);
+        centerVBox.getChildren().addAll(titleHBox, Layout.hLine(), subheader, expiredMessagesIndicator, chatMessagesComponent);
         centerVBox.getStyleClass().add("bisq-easy-container");
         centerVBox.setAlignment(Pos.CENTER);
     }
