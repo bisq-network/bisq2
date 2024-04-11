@@ -37,7 +37,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static bisq.network.NetworkService.NETWORK_IO_POOL;
-import static java.util.concurrent.CompletableFuture.supplyAsync;
+import static com.google.common.base.Preconditions.checkArgument;
+import static java.util.concurrent.CompletableFuture.runAsync;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
 /**
@@ -103,7 +104,7 @@ public class PeerExchangeService implements Node.Listener {
         startInitialPeerExchangeAsync().join();
     }
 
-    public CompletableFuture<Void> startInitialPeerExchangeAsync() {
+    private CompletableFuture<Void> startInitialPeerExchangeAsync() {
         List<Address> candidates = peerExchangeStrategy.getAddressesForInitialPeerExchange();
         log.info("startInitialPeerExchange {}", candidates);
         return doPeerExchange(candidates)
@@ -169,8 +170,8 @@ public class PeerExchangeService implements Node.Listener {
         candidates.stream()
                 .map(this::doPeerExchangeAsync)
                 .forEach(future -> {
-                    future.whenComplete((result, throwable) -> {
-                        if (throwable == null && result) {
+                    future.whenComplete((nil, throwable) -> {
+                        if (throwable == null) {
                             numSuccess.incrementAndGet();
                             if (!resultFuture.isDone()) {
                                 log.info("We got at least one peerExchange future completed.");
@@ -208,28 +209,19 @@ public class PeerExchangeService implements Node.Listener {
         return resultFuture;
     }
 
-    private CompletableFuture<Boolean> doPeerExchangeAsync(Address peerAddress) {
-        return supplyAsync(() -> doPeerExchange(peerAddress), NETWORK_IO_POOL);
+    private CompletableFuture<Void> doPeerExchangeAsync(Address peerAddress) {
+        return runAsync(() -> doPeerExchange(peerAddress), NETWORK_IO_POOL);
     }
 
-    private boolean doPeerExchange(Address peerAddress) {
-        String key = null;
+    private void doPeerExchange(Address peerAddress) {
+        String connectionId = null;
         try {
             Connection connection = node.getConnection(peerAddress);
-            key = connection.getId();
-            if (requestHandlerMap.containsKey(key)) {
-                log.info("requestHandlerMap contains {}. " +
-                                "This can happen if the connection is still pending the response or the peer is not available " +
-                                "but the timeout has not triggered an exception yet. We consider the past request as failed. Connection={}",
-                        key, connection);
-
-                requestHandlerMap.get(key).dispose();
-                requestHandlerMap.remove(key);
-                return false;
-            }
+            connectionId = connection.getId();
+            checkArgument(!requestHandlerMap.containsKey(connectionId), "We have a pending request for that connection");
 
             PeerExchangeRequestHandler handler = new PeerExchangeRequestHandler(node, connection);
-            requestHandlerMap.put(key, handler);
+            requestHandlerMap.put(connectionId, handler);
             Set<Peer> myPeers = peerExchangeStrategy.getPeersForReporting(peerAddress);
 
             // We request and wait for response
@@ -237,18 +229,17 @@ public class PeerExchangeService implements Node.Listener {
             log.info("{} completed peer exchange with {} and received {} reportedPeers.",
                     node, peerAddress, reportedPeers.size());
             peerExchangeStrategy.addReportedPeers(reportedPeers, peerAddress);
-            requestHandlerMap.remove(key);
-            return true;
-        } catch (Throwable throwable) {
-            if (key != null) {
-                if (requestHandlerMap.containsKey(key)) {
-                    requestHandlerMap.get(key).dispose();
-                    requestHandlerMap.remove(key);
+            requestHandlerMap.remove(connectionId);
+        } catch (Exception exception) {
+            if (connectionId != null) {
+                if (requestHandlerMap.containsKey(connectionId)) {
+                    requestHandlerMap.get(connectionId).dispose();
+                    requestHandlerMap.remove(connectionId);
                 }
             }
             log.debug("{} failed to do a peer exchange with {}.",
-                    node, peerAddress, throwable);
-            return false;
+                    node, peerAddress, exception);
+            throw exception;
         }
     }
 }
