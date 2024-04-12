@@ -47,14 +47,21 @@ public final class IdentityStore implements PersistableStore<IdentityStore> {
     }
 
     @Override
-    public bisq.identity.protobuf.IdentityStore toProto() {
+    public bisq.identity.protobuf.IdentityStore.Builder getBuilder(boolean ignoreAnnotation) {
         var builder = bisq.identity.protobuf.IdentityStore.newBuilder()
                 .putAllActiveIdentityByDomainId(activeIdentityByTag.entrySet().stream()
-                        .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().toProto())))
-                .addAllRetired(retired.stream().map(Identity::toProto).collect(Collectors.toSet()));
+                        .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().toProto(ignoreAnnotation))))
+                .addAllRetired(retired.stream()
+                        .map(identity -> identity.toProto(ignoreAnnotation))
+                        .collect(Collectors.toSet()));
 
-        defaultIdentity.ifPresent(identity -> builder.setDefaultIdentity(identity.toProto()));
-        return builder.build();
+        defaultIdentity.ifPresent(identity -> builder.setDefaultIdentity(identity.toProto(ignoreAnnotation)));
+        return builder;
+    }
+
+    @Override
+    public bisq.identity.protobuf.Identity toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static IdentityStore fromProto(bisq.identity.protobuf.IdentityStore proto) {

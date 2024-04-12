@@ -71,7 +71,6 @@ public interface Proto {
         return buildProto(false).toByteArray();
     }
 
-
     default int getSerializedSize() {
         return buildProto(true).getSerializedSize();
     }

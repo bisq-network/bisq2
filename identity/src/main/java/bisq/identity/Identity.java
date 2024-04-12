@@ -44,12 +44,16 @@ public final class Identity implements PersistableProto {
     }
 
     @Override
-    public bisq.identity.protobuf.Identity toProto() {
+    public bisq.identity.protobuf.Identity.Builder getBuilder(boolean ignoreAnnotation) {
         return bisq.identity.protobuf.Identity.newBuilder()
                 .setDomainId(tag)
-                .setNetworkId(networkId.toProto())
-                .setKeyBundle(keyBundle.toProto())
-                .build();
+                .setNetworkId(networkId.toProto(ignoreAnnotation))
+                .setKeyBundle(keyBundle.toProto(ignoreAnnotation));
+    }
+
+    @Override
+    public bisq.identity.protobuf.Identity toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static Identity fromProto(bisq.identity.protobuf.Identity proto) {
