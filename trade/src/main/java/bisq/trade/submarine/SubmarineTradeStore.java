@@ -55,12 +55,16 @@ public final class SubmarineTradeStore implements PersistableStore<SubmarineTrad
     }
 
     @Override
-    public bisq.trade.protobuf.SubmarineTradeStore toProto() {
+    public bisq.trade.protobuf.SubmarineTradeStore.Builder getBuilder(boolean ignoreAnnotation) {
         return bisq.trade.protobuf.SubmarineTradeStore.newBuilder()
                 .putAllTradeById(tradeById.entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey,
-                                e -> e.getValue().toProto())))
-                .build();
+                                e -> e.getValue().toProto(ignoreAnnotation))));
+    }
+
+    @Override
+    public bisq.trade.protobuf.SubmarineTradeStore toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static SubmarineTradeStore fromProto(bisq.trade.protobuf.SubmarineTradeStore proto) {

@@ -33,9 +33,9 @@ public class MultisigTradeParty extends TradeParty {
     }
 
     @Override
-    public bisq.trade.protobuf.TradeParty toProto() {
+    public bisq.trade.protobuf.TradeParty.Builder getBuilder(boolean ignoreAnnotation) {
         bisq.trade.protobuf.MultisigTradeParty.Builder builder = bisq.trade.protobuf.MultisigTradeParty.newBuilder();
-        return getTradePartyBuilder().setMultisigTradeParty(builder).build();
+        return getTradePartyBuilder(ignoreAnnotation).setMultisigTradeParty(builder);
     }
 
     public static MultisigTradeParty fromProto(bisq.trade.protobuf.TradeParty proto) {

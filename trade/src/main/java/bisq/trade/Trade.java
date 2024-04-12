@@ -99,15 +99,15 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
         this.maker = maker;
     }
 
-    protected bisq.trade.protobuf.Trade.Builder getTradeBuilder() {
+    protected bisq.trade.protobuf.Trade.Builder getTradeBuilder(boolean ignoreAnnotation) {
         bisq.trade.protobuf.Trade.Builder builder = bisq.trade.protobuf.Trade.newBuilder()
                 .setId(id)
                 .setTradeRole(tradeRole.toProtoEnum())
-                .setMyIdentity(myIdentity.toProto())
-                .setTaker(taker.toProto())
-                .setMaker(maker.toProto())
+                .setMyIdentity(myIdentity.toProto(ignoreAnnotation))
+                .setTaker(taker.toProto(ignoreAnnotation))
+                .setMaker(maker.toProto(ignoreAnnotation))
                 .setState(getState().name());
-        Optional.ofNullable(contract.get()).ifPresent(contract -> builder.setContract(contract.toProto()));
+        Optional.ofNullable(contract.get()).ifPresent(contract -> builder.setContract(contract.toProto(ignoreAnnotation)));
         Optional.ofNullable(getErrorMessage()).ifPresent(builder::setErrorMessage);
         Optional.ofNullable(getErrorStackTrace()).ifPresent(builder::setErrorStackTrace);
         Optional.ofNullable(getPeersErrorMessage()).ifPresent(builder::setPeersErrorMessage);

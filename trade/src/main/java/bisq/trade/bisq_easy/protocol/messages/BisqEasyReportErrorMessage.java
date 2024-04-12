@@ -19,6 +19,7 @@ package bisq.trade.bisq_easy.protocol.messages;
 
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
+import bisq.trade.protobuf.TradeMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -58,14 +59,14 @@ public final class BisqEasyReportErrorMessage extends BisqEasyTradeMessage {
     }
 
     @Override
-    protected bisq.trade.protobuf.TradeMessage toTradeMessageProto() {
-        return getTradeMessageBuilder()
+    protected bisq.trade.protobuf.TradeMessage toTradeMessageProto(boolean ignoreAnnotation) {
+        TradeMessage.Builder builder = getTradeMessageBuilder(ignoreAnnotation)
                 .setBisqEasyTradeMessage(bisq.trade.protobuf.BisqEasyTradeMessage.newBuilder()
                         .setBisqEasyReportErrorMessage(
                                 bisq.trade.protobuf.BisqEasyReportErrorMessage.newBuilder()
                                         .setErrorMessage(errorMessage)
-                                        .setStackTrace(stackTrace)))
-                .build();
+                                        .setStackTrace(stackTrace)));
+        return ignoreAnnotation ? builder.build() : clearAnnotatedFields(builder).build();
     }
 
     public static BisqEasyReportErrorMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {

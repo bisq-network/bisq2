@@ -44,13 +44,16 @@ public abstract class TradeParty implements PersistableProto {
         this.networkId = networkId;
     }
 
-    public abstract bisq.trade.protobuf.TradeParty toProto();
+    @Override
+    public bisq.trade.protobuf.TradeParty toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
+    }
 
-    public bisq.trade.protobuf.TradeParty.Builder getTradePartyBuilder() {
+    public bisq.trade.protobuf.TradeParty.Builder getTradePartyBuilder(boolean ignoreAnnotation) {
         bisq.trade.protobuf.TradeParty.Builder builder = bisq.trade.protobuf.TradeParty.newBuilder()
-                .setNetworkId(networkId.toProto());
+                .setNetworkId(networkId.toProto(ignoreAnnotation));
         Optional.ofNullable(contractSignatureData.get())
-                .ifPresent(contractSignatureData -> builder.setContractSignatureData(contractSignatureData.toProto()));
+                .ifPresent(contractSignatureData -> builder.setContractSignatureData(contractSignatureData.toProto(ignoreAnnotation)));
         return builder;
     }
 

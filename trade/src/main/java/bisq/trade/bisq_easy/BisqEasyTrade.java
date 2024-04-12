@@ -82,13 +82,19 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
     }
 
     @Override
-    public bisq.trade.protobuf.Trade toProto() {
-        bisq.trade.protobuf.BisqEasyTrade.Builder builder = bisq.trade.protobuf.BisqEasyTrade.newBuilder();
-        Optional.ofNullable(paymentAccountData.get()).ifPresent(builder::setPaymentAccountData);
-        Optional.ofNullable(btcAddress.get()).ifPresent(builder::setBtcAddress);
-        Optional.ofNullable(txId.get()).ifPresent(builder::setTxId);
-        Optional.ofNullable(interruptTradeInitiator.get()).ifPresent(e -> builder.setInterruptTradeInitiator(e.toProtoEnum()));
-        return getTradeBuilder().setBisqEasyTrade(builder).build();
+    public bisq.trade.protobuf.Trade.Builder getBuilder(boolean ignoreAnnotation) {
+        var bisqEasyTradeBuilder = bisq.trade.protobuf.BisqEasyTrade.newBuilder();
+        Optional.ofNullable(paymentAccountData.get()).ifPresent(bisqEasyTradeBuilder::setPaymentAccountData);
+        Optional.ofNullable(btcAddress.get()).ifPresent(bisqEasyTradeBuilder::setBtcAddress);
+        Optional.ofNullable(txId.get()).ifPresent(bisqEasyTradeBuilder::setTxId);
+        Optional.ofNullable(interruptTradeInitiator.get()).ifPresent(e -> bisqEasyTradeBuilder.setInterruptTradeInitiator(e.toProtoEnum()));
+        var bisqEasyTradeProto = ignoreAnnotation ? bisqEasyTradeBuilder.build() : clearAnnotatedFields(bisqEasyTradeBuilder).build();
+        return getTradeBuilder(ignoreAnnotation).setBisqEasyTrade(bisqEasyTradeProto);
+    }
+
+    @Override
+    public bisq.trade.protobuf.Trade toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static BisqEasyTrade fromProto(bisq.trade.protobuf.Trade proto) {

@@ -18,6 +18,7 @@
 package bisq.trade.bisq_easy.protocol.messages;
 
 import bisq.network.identity.NetworkId;
+import bisq.trade.protobuf.TradeMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -45,12 +46,12 @@ public final class BisqEasyCancelTradeMessage extends BisqEasyTradeMessage {
     }
 
     @Override
-    protected bisq.trade.protobuf.TradeMessage toTradeMessageProto() {
-        return getTradeMessageBuilder()
+    protected bisq.trade.protobuf.TradeMessage toTradeMessageProto(boolean ignoreAnnotation) {
+        TradeMessage.Builder builder = getTradeMessageBuilder(ignoreAnnotation)
                 .setBisqEasyTradeMessage(bisq.trade.protobuf.BisqEasyTradeMessage.newBuilder()
                         .setBisqEasyCancelTradeMessage(
-                                bisq.trade.protobuf.BisqEasyCancelTradeMessage.newBuilder()))
-                .build();
+                                bisq.trade.protobuf.BisqEasyCancelTradeMessage.newBuilder()));
+        return ignoreAnnotation ? builder.build() : clearAnnotatedFields(builder).build();
     }
 
     public static BisqEasyCancelTradeMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {

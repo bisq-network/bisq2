@@ -19,6 +19,7 @@ package bisq.trade.bisq_easy.protocol.messages;
 
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
+import bisq.trade.protobuf.TradeMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -53,13 +54,13 @@ public final class BisqEasyConfirmBtcSentMessage extends BisqEasyTradeMessage {
     }
 
     @Override
-    protected bisq.trade.protobuf.TradeMessage toTradeMessageProto() {
-        return getTradeMessageBuilder()
+    protected bisq.trade.protobuf.TradeMessage toTradeMessageProto(boolean ignoreAnnotation) {
+        TradeMessage.Builder builder = getTradeMessageBuilder(ignoreAnnotation)
                 .setBisqEasyTradeMessage(bisq.trade.protobuf.BisqEasyTradeMessage.newBuilder()
                         .setBisqEasyConfirmBtcSentMessage(
                                 bisq.trade.protobuf.BisqEasyConfirmBtcSentMessage.newBuilder()
-                                        .setTxId(txId)))
-                .build();
+                                        .setTxId(txId)));
+        return ignoreAnnotation ? builder.build() : clearAnnotatedFields(builder).build();
     }
 
     public static BisqEasyConfirmBtcSentMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {

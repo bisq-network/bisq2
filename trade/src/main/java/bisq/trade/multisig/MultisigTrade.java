@@ -67,9 +67,13 @@ public final class MultisigTrade extends Trade<MultisigOffer, MultisigContract, 
     }
 
     @Override
-    public bisq.trade.protobuf.Trade toProto() {
-        return getTradeBuilder().setMultisigTrade(bisq.trade.protobuf.MultisigTrade.newBuilder())
-                .build();
+    public bisq.trade.protobuf.Trade.Builder getBuilder(boolean ignoreAnnotation) {
+        return getTradeBuilder(ignoreAnnotation).setMultisigTrade(bisq.trade.protobuf.MultisigTrade.newBuilder());
+    }
+
+    @Override
+    public bisq.trade.protobuf.Trade toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static MultisigTrade fromProto(bisq.trade.protobuf.Trade proto) {

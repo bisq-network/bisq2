@@ -19,6 +19,7 @@ package bisq.trade.bisq_easy.protocol.messages;
 
 import bisq.contract.ContractSignatureData;
 import bisq.network.identity.NetworkId;
+import bisq.trade.protobuf.TradeMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -50,13 +51,13 @@ public final class BisqEasyTakeOfferResponse extends BisqEasyTradeMessage {
     }
 
     @Override
-    protected bisq.trade.protobuf.TradeMessage toTradeMessageProto() {
-        return getTradeMessageBuilder()
+    protected bisq.trade.protobuf.TradeMessage toTradeMessageProto(boolean ignoreAnnotation) {
+        TradeMessage.Builder builder = getTradeMessageBuilder(ignoreAnnotation)
                 .setBisqEasyTradeMessage(bisq.trade.protobuf.BisqEasyTradeMessage.newBuilder()
                         .setBisqEasyTakeOfferResponse(
                                 bisq.trade.protobuf.BisqEasyTakeOfferResponse.newBuilder()
-                                        .setContractSignatureData(contractSignatureData.toProto())))
-                .build();
+                                        .setContractSignatureData(contractSignatureData.toProto(ignoreAnnotation))));
+        return ignoreAnnotation ? builder.build() : clearAnnotatedFields(builder).build();
     }
 
     public static BisqEasyTakeOfferResponse fromProto(bisq.trade.protobuf.TradeMessage proto) {

@@ -60,23 +60,27 @@ public abstract class TradeMessage implements MailboxMessage, AckRequestingMessa
         NetworkDataValidation.validateTradeId(tradeId);
     }
 
-    public bisq.trade.protobuf.TradeMessage.Builder getTradeMessageBuilder() {
+    public bisq.trade.protobuf.TradeMessage.Builder getTradeMessageBuilder(boolean ignoreAnnotation) {
         return bisq.trade.protobuf.TradeMessage.newBuilder()
                 .setId(id)
                 .setTradeId(tradeId)
                 .setProtocolVersion(protocolVersion)
-                .setSender(sender.toProto())
-                .setReceiver(receiver.toProto());
+                .setSender(sender.toProto(ignoreAnnotation))
+                .setReceiver(receiver.toProto(ignoreAnnotation));
     }
 
     @Override
-    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
+    public bisq.network.protobuf.EnvelopePayloadMessage.Builder getBuilder(boolean ignoreAnnotation) {
         return getNetworkMessageBuilder()
-                .setExternalNetworkMessage(ExternalNetworkMessage.newBuilder().setAny(Any.pack(toTradeMessageProto())))
-                .build();
+                .setExternalNetworkMessage(ExternalNetworkMessage.newBuilder().setAny(Any.pack(toTradeMessageProto(ignoreAnnotation))));
     }
 
-    protected abstract bisq.trade.protobuf.TradeMessage toTradeMessageProto();
+    @Override
+    public bisq.network.protobuf.EnvelopePayloadMessage toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
+    }
+
+    protected abstract bisq.trade.protobuf.TradeMessage toTradeMessageProto(boolean ignoreAnnotation);
 
     public static TradeMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {
         switch (proto.getMessageCase()) {

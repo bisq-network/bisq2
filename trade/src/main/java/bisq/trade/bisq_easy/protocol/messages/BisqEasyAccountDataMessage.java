@@ -20,6 +20,7 @@ package bisq.trade.bisq_easy.protocol.messages;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.trade.protobuf.TradeMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -57,14 +58,14 @@ public final class BisqEasyAccountDataMessage extends BisqEasyTradeMessage {
     }
 
     @Override
-    protected bisq.trade.protobuf.TradeMessage toTradeMessageProto() {
-        return getTradeMessageBuilder()
+    protected bisq.trade.protobuf.TradeMessage toTradeMessageProto(boolean ignoreAnnotation) {
+        TradeMessage.Builder builder = getTradeMessageBuilder(ignoreAnnotation)
                 .setBisqEasyTradeMessage(bisq.trade.protobuf.BisqEasyTradeMessage.newBuilder()
                         .setBisqEasyAccountDataMessage(
                                 bisq.trade.protobuf.BisqEasyAccountDataMessage.newBuilder()
                                         .setPaymentAccountData(paymentAccountData)
-                                        .setBisqEasyOffer(bisqEasyOffer.toProto())))
-                .build();
+                                        .setBisqEasyOffer(bisqEasyOffer.toProto(ignoreAnnotation))));
+        return ignoreAnnotation ? builder.build() : clearAnnotatedFields(builder).build();
     }
 
     public static BisqEasyAccountDataMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {

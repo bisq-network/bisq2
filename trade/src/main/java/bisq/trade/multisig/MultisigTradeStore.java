@@ -55,12 +55,16 @@ public final class MultisigTradeStore implements PersistableStore<MultisigTradeS
     }
 
     @Override
-    public bisq.trade.protobuf.MultisigTradeStore toProto() {
+    public bisq.trade.protobuf.MultisigTradeStore.Builder getBuilder(boolean ignoreAnnotation) {
         return bisq.trade.protobuf.MultisigTradeStore.newBuilder()
                 .putAllTradeById(tradeById.entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey,
-                                e -> e.getValue().toProto())))
-                .build();
+                                e -> e.getValue().toProto(ignoreAnnotation))));
+    }
+
+    @Override
+    public bisq.trade.protobuf.MultisigTradeStore toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static MultisigTradeStore fromProto(bisq.trade.protobuf.MultisigTradeStore proto) {
