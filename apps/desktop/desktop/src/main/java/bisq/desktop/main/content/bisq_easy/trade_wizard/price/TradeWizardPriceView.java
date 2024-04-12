@@ -41,7 +41,8 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
     private final MaterialTextField percentage;
     private final VBox fieldsBox;
     private final PriceInput priceInput;
-    private final Button percentagePrice, fixedPrice;
+    private final Button percentagePrice, fixedPrice, learnWhy;
+    private final Label feedbackSentence;
     private Subscription percentageFocussedPin, useFixPricePin;
 
     public TradeWizardPriceView(TradeWizardPriceModel model, TradeWizardPriceController controller, PriceInput priceInput) {
@@ -86,13 +87,21 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         fieldsBox.setPrefWidth(350);
         fieldsBox.setMaxWidth(350);
 
+        feedbackSentence = new Label();
+        feedbackSentence.getStyleClass().add("bisq-text-3");
+        learnWhy = new Button(Res.get("bisqEasy.price.feedback.learnWhy"));
+        learnWhy.getStyleClass().add("learn-why");
+        HBox feedbackBox = new HBox(5, feedbackSentence, learnWhy);
+        feedbackBox.getStyleClass().add("feedback-box");
+
         root.getStyleClass().add("bisq-easy-trade-wizard-price-step");
-        root.getChildren().addAll(headline, subtitleLabel, pricingModels, fieldsBox);
+        root.getChildren().addAll(headline, subtitleLabel, pricingModels, fieldsBox, feedbackBox);
     }
 
     @Override
     protected void onViewAttached() {
         percentage.textProperty().bindBidirectional(model.getPercentageAsString());
+        feedbackSentence.textProperty().bind(model.getFeedbackSentence());
 
         percentageFocussedPin = EasyBind.subscribe(percentage.textInputFocusedProperty(), controller::onPercentageFocussed);
         // FIXME: The very first time this component is used when starting the app requestFocus() is not being applied.
@@ -101,7 +110,6 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
 
         percentagePrice.setOnAction(e -> controller.usePercentagePrice());
         fixedPrice.setOnAction(e -> controller.useFixedPrice());
-
 
         // Needed to trigger focusOut event on amount components
         // We handle all parents mouse events.
@@ -115,6 +123,7 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
     @Override
     protected void onViewDetached() {
         percentage.textProperty().unbindBidirectional(model.getPercentageAsString());
+        feedbackSentence.textProperty().unbind();
 
         percentageFocussedPin.unsubscribe();
         useFixPricePin.unsubscribe();

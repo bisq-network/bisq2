@@ -561,7 +561,7 @@
 
 .bisq-easy-trade-wizard-price-step .pricing-models {
     -fx-alignment: center;
-    -fx-padding: 10 0 20 0;
+    -fx-padding: 10 0 10 0;
 }
 
 .bisq-easy-trade-wizard-price-step .pricing-models .price-item-box {
@@ -578,6 +578,21 @@
 .bisq-easy-trade-wizard-price-step .selected-price-model {
     -fx-fill: -bisq2-green;
     -fx-text-fill: -bisq2-green;
+}
+
+.bisq-easy-trade-wizard-price-step .feedback-box {
+    -fx-padding: 10 0 10 0;
+    -fx-alignment: center;
+}
+
+.bisq-easy-trade-wizard-price-step .feedback-box .learn-why {
+    -fx-fill: -bisq2-green;
+    -fx-text-fill: -bisq2-green;
+    -fx-font-size: 1.15em;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-padding: 5;
+    -fx-background-color: transparent;
+    -fx-underline: true;
 }
 
 .bisq-easy-trade-wizard-review-header-description {

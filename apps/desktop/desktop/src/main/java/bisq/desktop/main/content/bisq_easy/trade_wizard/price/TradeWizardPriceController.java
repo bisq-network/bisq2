@@ -26,7 +26,11 @@ import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.components.PriceInput;
 import bisq.i18n.Res;
 import bisq.offer.price.PriceUtil;
-import bisq.offer.price.spec.*;
+import bisq.offer.price.spec.FixPriceSpec;
+import bisq.offer.price.spec.FloatPriceSpec;
+import bisq.offer.price.spec.MarketPriceSpec;
+import bisq.offer.price.spec.PriceSpec;
+import bisq.offer.price.spec.PriceSpecUtil;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
@@ -50,7 +54,7 @@ public class TradeWizardPriceController implements Controller {
     private final PriceInput priceInput;
     private final MarketPriceService marketPriceService;
     private final SettingsService settingsService;
-    private Subscription priceInputPin, isPriceInvalidPin;
+    private Subscription priceInputPin, isPriceInvalidPin, priceSpecPin;
     @Nullable
     private Popup invalidPricePopup;
 
@@ -100,6 +104,7 @@ public class TradeWizardPriceController implements Controller {
                 maybeShowPopup();
             }
         });
+        priceSpecPin = EasyBind.subscribe(model.getPriceSpec(), this::updateFeedback);
 
         String marketCodes = model.getMarket().getMarketCodes();
         priceInput.setDescription(Res.get("bisqEasy.price.tradePrice.inputBoxText", marketCodes));
@@ -111,6 +116,7 @@ public class TradeWizardPriceController implements Controller {
     public void onDeactivate() {
         priceInputPin.unsubscribe();
         isPriceInvalidPin.unsubscribe();
+        priceSpecPin.unsubscribe();
     }
 
     void onPercentageFocussed(boolean focussed) {
@@ -265,5 +271,24 @@ public class TradeWizardPriceController implements Controller {
                     .show();
         }
     }
-}
 
+    private void updateFeedback(PriceSpec priceSpec) {
+        // TODO: We should show the recommended % price based on the selected amount: e.g.
+        // amount range                     recommended price
+        // 0.0001 BTC - 0.001 BTC           10-15%
+        // 0.001 BTC - 0.01 BTC             2-10%
+        Optional<Double> percentage = PriceUtil.findPercentFromMarketPrice(marketPriceService, priceSpec, model.getMarket());
+        if (percentage.isPresent()) {
+            double percentageValue = percentage.get();
+            if (percentageValue < 0d) {
+                model.getFeedbackSentence().set(Res.get("bisqEasy.price.feedback.sentence.red"));
+            } else if (percentageValue < 0.02) { // TODO: Consider using here the recommended price
+                model.getFeedbackSentence().set(Res.get("bisqEasy.price.feedback.sentence.yellow"));
+            } else {
+                model.getFeedbackSentence().set(Res.get("bisqEasy.price.feedback.sentence.green"));
+            }
+        } else {
+            model.getFeedbackSentence().set(null);
+        }
+    }
+}
