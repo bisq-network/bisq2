@@ -108,7 +108,7 @@ public class ChatNotification implements Notification, PersistableProto {
                 .setMessage(message)
                 .setDate(date)
                 .setChatChannelId(chatChannelId)
-                .setChatChannelDomain(chatChannelDomain.toProto())
+                .setChatChannelDomain(chatChannelDomain.toProtoEnum())
                 .setChatMessageId(chatMessageId)
                 .setIsConsumed(isConsumed.get());
         tradeId.ifPresent(builder::setTradeId);

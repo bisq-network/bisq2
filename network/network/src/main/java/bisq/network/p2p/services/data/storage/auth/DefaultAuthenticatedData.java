@@ -42,7 +42,7 @@ public final class DefaultAuthenticatedData extends AuthenticatedData {
 
     @Override
     public bisq.network.protobuf.AuthenticatedData.Builder getBuilder(boolean ignoreAnnotation) {
-        return getAuthenticatedDataBuilder().setDefaultAuthenticatedData(
+        return getAuthenticatedDataBuilder(ignoreAnnotation).setDefaultAuthenticatedData(
                 bisq.network.protobuf.DefaultAuthenticatedData.newBuilder());
     }
 

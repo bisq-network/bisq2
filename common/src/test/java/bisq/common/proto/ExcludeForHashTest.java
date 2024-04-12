@@ -9,10 +9,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 @Slf4j
-public class ExcludeFromProtoTest {
+public class ExcludeForHashTest {
 
     @Test
-    public void testExcludeFromProto() {
+    public void testExcludeForHash() {
         String serialized, serializeNonExcluded;
         Child child;
         Parent parent;
@@ -21,45 +21,45 @@ public class ExcludeFromProtoTest {
         child = new ChildMock("childValue");
         parent = new ParentMock("parentValue", child);
         serialized = Hex.encode(parent.serialize());
-        serializeNonExcluded = Hex.encode(parent.serializeNonExcluded());
+        serializeNonExcluded = Hex.encode(parent.serializeForHash());
         assertEquals(serialized, serializeNonExcluded);
 
         // ParentMockWithExcludedValue
         child = new ChildMock("childValue");
         parent = new ParentMockWithExcludedValue("parentValue", child);
         serialized = Hex.encode(parent.serialize());
-        serializeNonExcluded = Hex.encode(parent.serializeNonExcluded());
+        serializeNonExcluded = Hex.encode(parent.serializeForHash());
         assertNotEquals(serialized, serializeNonExcluded);
 
         // If annotated field is set to default value (empty string) we get same results
         parent = new ParentMockWithExcludedValue("", child);
         serialized = Hex.encode(parent.serialize());
-        serializeNonExcluded = Hex.encode(parent.serializeNonExcluded());
+        serializeNonExcluded = Hex.encode(parent.serializeForHash());
         assertEquals(serialized, serializeNonExcluded);
 
         // ParentMockWithExcludedChild
         child = new ChildMock("childValue");
         parent = new ParentMockWithExcludedChild("parentValue", child);
         serialized = Hex.encode(parent.serialize());
-        serializeNonExcluded = Hex.encode(parent.serializeNonExcluded());
+        serializeNonExcluded = Hex.encode(parent.serializeForHash());
         assertNotEquals(serialized, serializeNonExcluded);
 
         // ParentMockWithExcludedChild and ChildMockWithExcludedValue
         child = new ChildMockWithExcludedValue("childValue");
         parent = new ParentMockWithExcludedChild("parentValue", child);
         serialized = Hex.encode(parent.serialize());
-        serializeNonExcluded = Hex.encode(parent.serializeNonExcluded());
+        serializeNonExcluded = Hex.encode(parent.serializeForHash());
         assertNotEquals(serialized, serializeNonExcluded);
 
 
         // If child is excluded it does not matter what actual child impl is
         child = new ChildMockWithExcludedValue("childValue");
         parent = new ParentMockWithExcludedChild("parentValue", child);
-        var serialized1 = Hex.encode(parent.serializeNonExcluded());
+        var serialized1 = Hex.encode(parent.serializeForHash());
 
         child = new ChildMock("childValue");
         parent = new ParentMockWithExcludedChild("parentValue", child);
-        var serialized2 = Hex.encode(parent.serializeNonExcluded());
+        var serialized2 = Hex.encode(parent.serializeForHash());
         assertEquals(serialized1, serialized2);
 
 
@@ -67,7 +67,7 @@ public class ExcludeFromProtoTest {
         child = new ChildMockWithExcludedValue("childValue");
         parent = new ParentMock("parentValue", child);
         serialized = Hex.encode(parent.serialize());
-        serializeNonExcluded = Hex.encode(parent.serializeNonExcluded());
+        serializeNonExcluded = Hex.encode(parent.serializeForHash());
         assertNotEquals(serialized, serializeNonExcluded);
 
 
@@ -75,7 +75,7 @@ public class ExcludeFromProtoTest {
         child = new ChildMockWithExcludedValue("childValue");
         parent = new ParentMockWithExcludedValue("parentValue", child);
         serialized = Hex.encode(parent.serialize());
-        serializeNonExcluded = Hex.encode(parent.serializeNonExcluded());
+        serializeNonExcluded = Hex.encode(parent.serializeForHash());
         assertNotEquals(serialized, serializeNonExcluded);
     }
 }

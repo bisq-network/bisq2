@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data.storage.auth.authorized;
 
+import bisq.common.annotation.ExcludeForHash;
 import bisq.common.encoding.Hex;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
@@ -41,6 +42,8 @@ import java.util.Optional;
 @EqualsAndHashCode(callSuper = true)
 @Getter
 public final class AuthorizedData extends AuthenticatedData {
+    // We omit the signature for the hash, otherwise we would get a new map entry for the same data at each republishing
+    @ExcludeForHash
     private final Optional<byte[]> signature;
     private final byte[] authorizedPublicKeyBytes;
     transient private final PublicKey authorizedPublicKey;
@@ -84,7 +87,7 @@ public final class AuthorizedData extends AuthenticatedData {
         bisq.network.protobuf.AuthorizedData.Builder builder = bisq.network.protobuf.AuthorizedData.newBuilder()
                 .setAuthorizedPublicKeyBytes(ByteString.copyFrom(authorizedPublicKeyBytes));
         signature.ifPresent(signature -> builder.setSignature(ByteString.copyFrom(signature)));
-        return getAuthenticatedDataBuilder().setAuthorizedData(builder);
+        return getAuthenticatedDataBuilder(ignoreAnnotation).setAuthorizedData(builder);
     }
 
     public static AuthorizedData fromProto(bisq.network.protobuf.AuthenticatedData proto) {
@@ -111,19 +114,6 @@ public final class AuthorizedData extends AuthenticatedData {
         }
     }
 
-    // We omit the signature for the hash, otherwise we would get a new map entry for the same data at each republishing
-    @Override
-    public byte[] serialize(boolean ignoreAnnotation) {
-        //todo User annotation
-        bisq.network.protobuf.AuthenticatedData.Builder builder = getAuthenticatedDataBuilder().setAuthorizedData(
-                bisq.network.protobuf.AuthorizedData.newBuilder()
-                        .setAuthorizedPublicKeyBytes(ByteString.copyFrom(authorizedPublicKeyBytes)));
-        if (ignoreAnnotation) {
-            builder = (bisq.network.protobuf.AuthenticatedData.Builder) clearAnnotatedFields(builder);
-        }
-        return builder.build().toByteArray();
-    }
-
     public AuthorizedDistributedData getAuthorizedDistributedData() {
         return (AuthorizedDistributedData) distributedData;
     }
@@ -131,7 +121,7 @@ public final class AuthorizedData extends AuthenticatedData {
     public boolean isNotAuthorized() {
         try {
             AuthorizedDistributedData authorizedDistributedData = getAuthorizedDistributedData();
-            if (!SignatureUtil.verify(distributedData.serializeNonExcluded(), signature.orElseThrow(), authorizedPublicKey)) {
+            if (!SignatureUtil.verify(distributedData.serializeForHash(), signature.orElseThrow(), authorizedPublicKey)) {
                 return true;
             }
 

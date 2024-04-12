@@ -37,7 +37,7 @@ public enum TradeRole implements ProtoEnum {
     }
 
     @Override
-    public bisq.trade.protobuf.TradeRole toProto() {
+    public bisq.trade.protobuf.TradeRole toProtoEnum() {
         return bisq.trade.protobuf.TradeRole.valueOf(getProtobufEnumPrefix() + name());
     }
 

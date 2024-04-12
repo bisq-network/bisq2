@@ -87,7 +87,7 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
         Optional.ofNullable(paymentAccountData.get()).ifPresent(builder::setPaymentAccountData);
         Optional.ofNullable(btcAddress.get()).ifPresent(builder::setBtcAddress);
         Optional.ofNullable(txId.get()).ifPresent(builder::setTxId);
-        Optional.ofNullable(interruptTradeInitiator.get()).ifPresent(e -> builder.setInterruptTradeInitiator(e.toProto()));
+        Optional.ofNullable(interruptTradeInitiator.get()).ifPresent(e -> builder.setInterruptTradeInitiator(e.toProtoEnum()));
         return getTradeBuilder().setBisqEasyTrade(builder).build();
     }
 

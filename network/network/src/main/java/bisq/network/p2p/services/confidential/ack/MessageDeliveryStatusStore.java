@@ -55,7 +55,7 @@ public final class MessageDeliveryStatusStore implements PersistableStore<Messag
     public bisq.network.protobuf.MessageDeliveryStatusStore.Builder getBuilder(boolean ignoreAnnotation) {
         return bisq.network.protobuf.MessageDeliveryStatusStore.newBuilder()
                 .putAllMessageDeliveryStatusByMessageId(messageDeliveryStatusByMessageId.entrySet().stream()
-                        .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().get().toProto())))
+                        .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().get().toProtoEnum())))
                 .putAllCreationDateByMessageId(creationDateByMessageId.entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
     }

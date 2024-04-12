@@ -24,7 +24,7 @@ import com.google.protobuf.ProtocolMessageEnum;
  * Interface for any enum which gets serialized using protobuf
  */
 public interface ProtoEnum {
-    ProtocolMessageEnum toProto();
+    ProtocolMessageEnum toProtoEnum();
 
     default String getProtobufEnumPrefix() {
         return getProtobufEnumPrefix(this.getClass());

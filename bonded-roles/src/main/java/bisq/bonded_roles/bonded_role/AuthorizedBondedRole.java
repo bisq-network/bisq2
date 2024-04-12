@@ -90,7 +90,7 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
         bisq.bonded_roles.protobuf.AuthorizedBondedRole.Builder builder = bisq.bonded_roles.protobuf.AuthorizedBondedRole.newBuilder()
                 .setProfileId(profileId)
                 .setAuthorizedPublicKey(authorizedPublicKey)
-                .setBondedRoleType(bondedRoleType.toProto())
+                .setBondedRoleType(bondedRoleType.toProtoEnum())
                 .setBondUserName(bondUserName)
                 .setSignatureBase64(signatureBase64)
                 .setNetworkId(networkId.toProto())

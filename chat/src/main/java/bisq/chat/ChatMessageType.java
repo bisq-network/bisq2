@@ -27,7 +27,7 @@ public enum ChatMessageType implements ProtoEnum {
     PROTOCOL_LOG_MESSAGE;
 
     @Override
-    public bisq.chat.protobuf.ChatMessageType toProto() {
+    public bisq.chat.protobuf.ChatMessageType toProtoEnum() {
         return bisq.chat.protobuf.ChatMessageType.valueOf(getProtobufEnumPrefix() + name());
     }
 

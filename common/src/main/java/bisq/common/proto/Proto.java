@@ -17,7 +17,7 @@
 
 package bisq.common.proto;
 
-import bisq.common.annotation.ExcludeFromProto;
+import bisq.common.annotation.ExcludeForHash;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.Message;
 import org.slf4j.Logger;
@@ -64,22 +64,22 @@ public interface Proto {
     }
 
     default byte[] serialize() {
-        return getBuilder(true).build().toByteArray();
+        return buildProto(true).toByteArray();
     }
 
-    default byte[] serializeNonExcluded() {
-        return getBuilder(false).build().toByteArray();
+    default byte[] serializeForHash() {
+        return buildProto(false).toByteArray();
     }
 
 
-    default long getSerializedSize() {
+    default int getSerializedSize() {
         return buildProto(true).getSerializedSize();
     }
 
     default Set<String> getExcludedFields() {
         return Arrays.stream(getClass().getDeclaredFields())
                 .peek(field -> field.setAccessible(true))
-                .filter(field -> field.isAnnotationPresent(ExcludeFromProto.class))
+                .filter(field -> field.isAnnotationPresent(ExcludeForHash.class))
                 .map(Field::getName)
                 .collect(Collectors.toSet());
     }
@@ -87,12 +87,12 @@ public interface Proto {
     /**
      * Requires that the name of the java fields is the same as the name of the proto definition.
      *
-     * @param builder The builder we transform by clearing the ExcludeFromProto annotated fields.
-     * @return Builder with the fields annotated with ExcludeFromProto cleared.
+     * @param builder The builder we transform by clearing the ExcludeForHash annotated fields.
+     * @return Builder with the fields annotated with ExcludeForHash cleared.
      */
     default Message.Builder clearAnnotatedFields(Message.Builder builder) {
         Set<String> excludedFields = getExcludedFields();
-        getLogger().info("Clear fields in builder annotated with @ExcludeFromProto: {}", excludedFields);
+        getLogger().info("Clear fields in builder annotated with @ExcludeForHash: {}", excludedFields);
         for (Descriptors.FieldDescriptor fieldDesc : builder.getAllFields().keySet()) {
             if (excludedFields.contains(fieldDesc.getName())) {
                 builder.clearField(fieldDesc);

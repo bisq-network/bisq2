@@ -24,7 +24,7 @@ public enum LoanProtocolType implements ProtocolType {
     REPUTATION;
 
     @Override
-    public bisq.account.protobuf.LoanProtocolType toProto() {
+    public bisq.account.protobuf.LoanProtocolType toProtoEnum() {
         return bisq.account.protobuf.LoanProtocolType.valueOf(getProtobufEnumPrefix() + name());
     }
 

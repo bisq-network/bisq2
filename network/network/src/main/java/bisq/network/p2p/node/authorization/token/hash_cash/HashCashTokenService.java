@@ -215,7 +215,7 @@ public class HashCashTokenService extends AuthorizationTokenService<HashCashToke
     }
 
     private byte[] getPayload(EnvelopePayloadMessage message) {
-        return message.serializeNonExcluded();
+        return message.serializeForHash();
     }
 
     private byte[] getChallenge(String peerAddress, int messageCounter) {

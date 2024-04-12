@@ -108,11 +108,11 @@ public abstract class Offer<B extends PaymentMethodSpec<?>, Q extends PaymentMet
                 .setId(id)
                 .setDate(date)
                 .setMakerNetworkId(makerNetworkId.toProto())
-                .setDirection(direction.toProto())
+                .setDirection(direction.toProtoEnum())
                 .setMarket(market.toProto())
                 .setAmountSpec(amountSpec.toProto())
                 .setPriceSpec(priceSpec.toProto())
-                .addAllProtocolTypes(protocolTypes.stream().map(TradeProtocolType::toProto).collect(Collectors.toList()))
+                .addAllProtocolTypes(protocolTypes.stream().map(TradeProtocolType::toProtoEnum).collect(Collectors.toList()))
                 .addAllBaseSidePaymentSpecs(baseSidePaymentMethodSpecs.stream().map(PaymentMethodSpec::toProto).collect(Collectors.toList()))
                 .addAllQuoteSidePaymentSpecs(quoteSidePaymentMethodSpecs.stream().map(PaymentMethodSpec::toProto).collect(Collectors.toList()))
                 .addAllOfferOptions(offerOptions.stream().map(OfferOption::toProto).collect(Collectors.toList()));

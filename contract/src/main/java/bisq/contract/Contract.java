@@ -58,7 +58,7 @@ public abstract class Contract<T extends Offer<?, ?>> implements NetworkProto {
         return bisq.contract.protobuf.Contract.newBuilder()
                 .setTakeOfferDate(takeOfferDate)
                 .setOffer(offer.toProto())
-                .setTradeProtocolType(protocolType.toProto());
+                .setTradeProtocolType(protocolType.toProtoEnum());
     }
 
     public static Contract<?> fromProto(bisq.contract.protobuf.Contract proto) {

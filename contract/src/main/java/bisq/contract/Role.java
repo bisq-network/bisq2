@@ -26,7 +26,7 @@ public enum Role implements ProtoEnum {
     ESCROW_AGENT;
 
     @Override
-    public bisq.contract.protobuf.Role toProto() {
+    public bisq.contract.protobuf.Role toProtoEnum() {
         return bisq.contract.protobuf.Role.valueOf(getProtobufEnumPrefix() + name());
     }
 

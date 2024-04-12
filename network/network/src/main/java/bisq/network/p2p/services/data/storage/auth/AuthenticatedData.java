@@ -43,9 +43,9 @@ public abstract class AuthenticatedData implements StorageData {
     @Override
     public abstract bisq.network.protobuf.AuthenticatedData toProto(boolean ignoreAnnotation);
 
-    public bisq.network.protobuf.AuthenticatedData.Builder getAuthenticatedDataBuilder() {
+    public bisq.network.protobuf.AuthenticatedData.Builder getAuthenticatedDataBuilder(boolean ignoreAnnotation) {
         return bisq.network.protobuf.AuthenticatedData.newBuilder()
-                .setDistributedData(distributedData.toAny());
+                .setDistributedData(distributedData.toAny(ignoreAnnotation));
     }
 
     public static AuthenticatedData fromProto(bisq.network.protobuf.AuthenticatedData proto) {

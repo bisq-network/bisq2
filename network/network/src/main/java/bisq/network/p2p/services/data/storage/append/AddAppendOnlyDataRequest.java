@@ -54,7 +54,7 @@ public final class AddAppendOnlyDataRequest implements AddDataRequest {
                 .setDataRequest(getDataRequestBuilder()
                         .setAddAppendOnlyDataRequest(
                                 bisq.network.protobuf.AddAppendOnlyDataRequest.newBuilder()
-                                        .setAppendOnlyData(appendOnlyData.toAny())
+                                        .setAppendOnlyData(appendOnlyData.toAny(ignoreAnnotation))
                         )
                 );
     }

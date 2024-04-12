@@ -31,7 +31,7 @@ public enum TradeProtocolType implements ProtocolType {
     MONERO_SWAP;
 
     @Override
-    public bisq.account.protobuf.TradeProtocolType toProto() {
+    public bisq.account.protobuf.TradeProtocolType toProtoEnum() {
         return bisq.account.protobuf.TradeProtocolType.valueOf(getProtobufEnumPrefix() + name());
     }
 

@@ -36,7 +36,7 @@ public abstract class AuthorizationToken implements NetworkProto {
 
     public bisq.network.protobuf.AuthorizationToken.Builder getAuthorizationTokenBuilder() {
         return bisq.network.protobuf.AuthorizationToken.newBuilder()
-                .setAuthorizationTokenType(authorizationTokenType.toProto());
+                .setAuthorizationTokenType(authorizationTokenType.toProtoEnum());
     }
 
     public static AuthorizationToken fromProto(bisq.network.protobuf.AuthorizationToken proto) {
