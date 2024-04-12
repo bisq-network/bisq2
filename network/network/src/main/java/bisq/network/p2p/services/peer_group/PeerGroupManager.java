@@ -205,7 +205,7 @@ public class PeerGroupManager implements Node.Listener {
             case NEW:
                 setState(PeerGroupManager.State.STARTING);
                 // blocking
-                peerExchangeService.startInitialPeerExchange().join();
+                peerExchangeService.startInitialPeerExchange(1);
                 log.info("{} completed doInitialPeerExchange. Start periodic tasks with interval: {} ms",
                         nodeInfo, config.getHouseKeepingInterval());
                 scheduler = Optional.of(Scheduler.run(this::doHouseKeeping)
