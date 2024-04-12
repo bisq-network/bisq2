@@ -80,23 +80,27 @@ public final class MediationRequest implements MailboxMessage {
     }
 
     @Override
-    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
+    public bisq.network.protobuf.EnvelopePayloadMessage.Builder getBuilder(boolean ignoreAnnotation) {
         return getNetworkMessageBuilder()
                 .setExternalNetworkMessage(ExternalNetworkMessage.newBuilder()
-                        .setAny(Any.pack(toMediationRequestProto())))
-                .build();
+                        .setAny(Any.pack(toMediationRequestProto(ignoreAnnotation))));
     }
 
-    public bisq.support.protobuf.MediationRequest toMediationRequestProto() {
-        return bisq.support.protobuf.MediationRequest.newBuilder()
+    @Override
+    public bisq.network.protobuf.EnvelopePayloadMessage toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
+    }
+
+    public bisq.support.protobuf.MediationRequest toMediationRequestProto(boolean ignoreAnnotation) {
+        bisq.support.protobuf.MediationRequest.Builder builder = bisq.support.protobuf.MediationRequest.newBuilder()
                 .setTradeId(tradeId)
-                .setContract(contract.toProto())
-                .setRequester(requester.toProto())
-                .setPeer(peer.toProto())
+                .setContract(contract.toProto(ignoreAnnotation))
+                .setRequester(requester.toProto(ignoreAnnotation))
+                .setPeer(peer.toProto(ignoreAnnotation))
                 .addAllChatMessages(chatMessages.stream()
-                        .map(BisqEasyOpenTradeMessage::toChatMessageProto)
-                        .collect(Collectors.toList()))
-                .build();
+                        .map(e -> e.toChatMessageProto(ignoreAnnotation))
+                        .collect(Collectors.toList()));
+        return ignoreAnnotation ? builder.build() : clearAnnotatedFields(builder).build();
     }
 
     public static MediationRequest fromProto(bisq.support.protobuf.MediationRequest proto) {

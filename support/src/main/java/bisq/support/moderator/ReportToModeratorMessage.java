@@ -72,21 +72,25 @@ public final class ReportToModeratorMessage implements MailboxMessage {
     }
 
     @Override
-    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
+    public bisq.network.protobuf.EnvelopePayloadMessage.Builder getBuilder(boolean ignoreAnnotation) {
         return getNetworkMessageBuilder()
                 .setExternalNetworkMessage(ExternalNetworkMessage.newBuilder()
-                        .setAny(Any.pack(toReportToModeratorMessageProto())))
-                .build();
+                        .setAny(Any.pack(toReportToModeratorMessageProto(ignoreAnnotation))));
     }
 
-    public bisq.support.protobuf.ReportToModeratorMessage toReportToModeratorMessageProto() {
+    @Override
+    public bisq.network.protobuf.EnvelopePayloadMessage toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
+    }
+
+    public bisq.support.protobuf.ReportToModeratorMessage toReportToModeratorMessageProto(boolean ignoreAnnotation) {
         bisq.support.protobuf.ReportToModeratorMessage.Builder builder = bisq.support.protobuf.ReportToModeratorMessage.newBuilder()
                 .setDate(date)
                 .setReporterUserProfileId(reporterUserProfileId)
-                .setAccusedUserProfile(accusedUserProfile.toProto())
+                .setAccusedUserProfile(accusedUserProfile.toProto(ignoreAnnotation))
                 .setMessage(message)
                 .setChatChannelDomain(chatChannelDomain.toProtoEnum());
-        return builder.build();
+        return ignoreAnnotation ? builder.build() : clearAnnotatedFields(builder).build();
     }
 
     public static ReportToModeratorMessage fromProto(bisq.support.protobuf.ReportToModeratorMessage proto) {

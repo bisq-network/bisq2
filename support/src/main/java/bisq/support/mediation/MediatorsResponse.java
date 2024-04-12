@@ -54,17 +54,21 @@ public final class MediatorsResponse implements MailboxMessage {
     }
 
     @Override
-    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
+    public bisq.network.protobuf.EnvelopePayloadMessage.Builder getBuilder(boolean ignoreAnnotation) {
         return getNetworkMessageBuilder()
                 .setExternalNetworkMessage(ExternalNetworkMessage.newBuilder()
-                        .setAny(Any.pack(toMediationResponseProto())))
-                .build();
+                        .setAny(Any.pack(toMediationResponseProto(ignoreAnnotation))));
     }
 
-    private bisq.support.protobuf.MediatorsResponse toMediationResponseProto() {
-        return bisq.support.protobuf.MediatorsResponse.newBuilder()
-                .setTradeId(tradeId)
-                .build();
+    @Override
+    public bisq.network.protobuf.EnvelopePayloadMessage toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
+    }
+
+    private bisq.support.protobuf.MediatorsResponse toMediationResponseProto(boolean ignoreAnnotation) {
+        bisq.support.protobuf.MediatorsResponse.Builder builder = bisq.support.protobuf.MediatorsResponse.newBuilder()
+                .setTradeId(tradeId);
+        return ignoreAnnotation ? builder.build() : clearAnnotatedFields(builder).build();
     }
 
     public static MediatorsResponse fromProto(bisq.support.protobuf.MediatorsResponse proto) {
