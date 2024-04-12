@@ -67,6 +67,7 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         subtitleLabel.setWrapText(true);
         subtitleLabel.setMaxWidth(500);
 
+        // Pricing model selection
         percentagePrice = new Button(Res.get("bisqEasy.price.percentage.title"));
         percentagePrice.getStyleClass().add("price-item");
         fixedPrice = new Button(Res.get("bisqEasy.price.tradePrice.title"));
@@ -83,14 +84,15 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         HBox pricingModels = new HBox(30, percentagePriceBox, separator, fixedPriceBox);
         pricingModels.getStyleClass().addAll("pricing-models", "bisq-text-3");
 
+        // Input box
         percentage = new MaterialTextField(Res.get("bisqEasy.price.percentage.inputBoxText"));
-
         fieldsBox = new VBox(20);
         fieldsBox.setAlignment(Pos.TOP_CENTER);
         fieldsBox.setMinWidth(350);
         fieldsBox.setPrefWidth(350);
         fieldsBox.setMaxWidth(350);
 
+        // Feedback sentence
         feedbackSentence = new Label();
         feedbackSentence.getStyleClass().add("bisq-text-3");
         showLearnWhyButton = new Button(Res.get("bisqEasy.price.feedback.learnWhySection.openButton"));
@@ -98,17 +100,9 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         HBox feedbackBox = new HBox(5, feedbackSentence, showLearnWhyButton);
         feedbackBox.getStyleClass().add("feedback-box");
 
-        Label learnWhyTitle = new Label(Res.get("bisqEasy.price.feedback.learnWhySection.title"));
-        learnWhyTitle.getStyleClass().addAll("learn-why-title-label", "large-text");
-        Label learnWhyIntroLabel = new Label(Res.get("bisqEasy.price.feedback.learnWhySection.description.intro"));
-        learnWhyIntroLabel.getStyleClass().addAll("learn-why-text", "learn-why-intro-label");
-        UnorderedList learnWhyExpositionList = new UnorderedList(Res.get("bisqEasy.price.feedback.learnWhySection.description.exposition"),
-                "learn-why-text", 7, 10, "- ", "- ");
+        // Overlay
         closeLearnWhyButton = new Button(Res.get("bisqEasy.price.feedback.learnWhySection.closeButton"));
-        learnWhyOverlay = new VBox(10, learnWhyTitle, learnWhyIntroLabel, learnWhyExpositionList, closeLearnWhyButton);
-        learnWhyOverlay.getStyleClass().addAll("trade-wizard-feedback-bg", "learn-why-overlay");
-        StackPane.setAlignment(learnWhyOverlay, Pos.TOP_CENTER);
-        StackPane.setMargin(learnWhyOverlay, new Insets(-63, 0, 0, 0));
+        learnWhyOverlay = createAndGetLearnWhyOverlay();
 
         content = new VBox(10, headline, subtitleLabel, pricingModels, fieldsBox, feedbackBox);
         content.getStyleClass().add("price-content");
@@ -123,7 +117,7 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         feedbackSentence.textProperty().bind(model.getFeedbackSentence());
 
         percentageFocussedPin = EasyBind.subscribe(percentage.textInputFocusedProperty(), controller::onPercentageFocussed);
-        // FIXME: The very first time this component is used when starting the app requestFocus() is not being applied.
+        // FIXME: The very first time this component is used when starting the app requestFocus() and slideInTop is not applied.
         useFixPricePin = EasyBind.subscribe(model.getUseFixPrice(), useFixPrice ->
                 UIScheduler.run(this::updateFieldsBox).after(100));
         shouldShowLearnWhyOverlayPin = EasyBind.subscribe(model.getShouldShowLearnWhyOverlay(), showOverlay -> {
@@ -192,5 +186,20 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
             percentage.setEditable(true);
             percentage.requestFocus();
         }
+    }
+
+    private VBox createAndGetLearnWhyOverlay() {
+        Label learnWhyTitle = new Label(Res.get("bisqEasy.price.feedback.learnWhySection.title"));
+        learnWhyTitle.getStyleClass().addAll("learn-why-title-label", "large-text");
+        Label learnWhyIntroLabel = new Label(Res.get("bisqEasy.price.feedback.learnWhySection.description.intro"));
+        learnWhyIntroLabel.getStyleClass().addAll("learn-why-text", "learn-why-intro-label");
+        UnorderedList learnWhyExpositionList = new UnorderedList(Res.get("bisqEasy.price.feedback.learnWhySection.description.exposition"),
+                "learn-why-text", 7, 10, "- ", "- ");
+
+        VBox overlay = new VBox(10, learnWhyTitle, learnWhyIntroLabel, learnWhyExpositionList, closeLearnWhyButton);
+        overlay.getStyleClass().addAll("trade-wizard-feedback-bg", "learn-why-overlay");
+        StackPane.setAlignment(overlay, Pos.TOP_CENTER);
+        StackPane.setMargin(overlay, new Insets(-63, 0, 0, 0));
+        return overlay;
     }
 }
