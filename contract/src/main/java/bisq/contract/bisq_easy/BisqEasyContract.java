@@ -100,17 +100,22 @@ public final class BisqEasyContract extends TwoPartyContract<BisqEasyOffer> {
     }
 
     @Override
-    public bisq.contract.protobuf.Contract toProto() {
+    public bisq.contract.protobuf.Contract.Builder getBuilder(boolean ignoreAnnotation) {
         var bisqEasyContract = bisq.contract.protobuf.BisqEasyContract.newBuilder()
                 .setBaseSideAmount(baseSideAmount)
                 .setQuoteSideAmount(quoteSideAmount)
-                .setBaseSidePaymentMethodSpec(baseSidePaymentMethodSpec.toProto())
-                .setQuoteSidePaymentMethodSpec(quoteSidePaymentMethodSpec.toProto())
-                .setAgreedPriceSpec(agreedPriceSpec.toProto())
+                .setBaseSidePaymentMethodSpec(baseSidePaymentMethodSpec.toProto(ignoreAnnotation))
+                .setQuoteSidePaymentMethodSpec(quoteSidePaymentMethodSpec.toProto(ignoreAnnotation))
+                .setAgreedPriceSpec(agreedPriceSpec.toProto(ignoreAnnotation))
                 .setMarketPrice(marketPrice);
-        mediator.ifPresent(mediator -> bisqEasyContract.setMediator(mediator.toProto()));
-        var twoPartyContract = getTwoPartyContractBuilder().setBisqEasyContract(bisqEasyContract);
-        return getContractBuilder().setTwoPartyContract(twoPartyContract).build();
+        mediator.ifPresent(mediator -> bisqEasyContract.setMediator(mediator.toProto(ignoreAnnotation)));
+        var twoPartyContract = getTwoPartyContractBuilder(ignoreAnnotation).setBisqEasyContract(bisqEasyContract);
+        return getContractBuilder(ignoreAnnotation).setTwoPartyContract(twoPartyContract);
+    }
+
+    @Override
+    public bisq.contract.protobuf.Contract toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static BisqEasyContract fromProto(bisq.contract.protobuf.Contract proto) {

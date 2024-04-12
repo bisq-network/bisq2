@@ -22,7 +22,6 @@ import bisq.common.monetary.Monetary;
 import bisq.common.proto.NetworkProto;
 import bisq.network.identity.NetworkId;
 import bisq.offer.poc.PocOffer;
-import com.google.protobuf.Message;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -60,11 +59,5 @@ public final class PocContract implements NetworkProto {
 
     @Override
     public void verify() {
-    }
-
-    @Override
-    public Message toProto() {
-        log.error("Not impl yet");
-        return null;
     }
 }

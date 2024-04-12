@@ -44,12 +44,16 @@ public class SignedTwoPartyContract<T extends Offer<?, ?>> implements NetworkPro
     }
 
     @Override
-    public bisq.contract.protobuf.SignedTwoPartyContract toProto() {
+    public bisq.contract.protobuf.SignedTwoPartyContract.Builder getBuilder(boolean ignoreAnnotation) {
         return bisq.contract.protobuf.SignedTwoPartyContract.newBuilder()
-                .setContract(contract.toProto())
-                .setMakerSignatureData(makerSignatureData.toProto())
-                .setTakerSignatureData(takerSignatureData.toProto())
-                .build();
+                .setContract(contract.toProto(ignoreAnnotation))
+                .setMakerSignatureData(makerSignatureData.toProto(ignoreAnnotation))
+                .setTakerSignatureData(takerSignatureData.toProto(ignoreAnnotation));
+    }
+
+    @Override
+    public bisq.contract.protobuf.SignedTwoPartyContract toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static SignedTwoPartyContract<?> fromProto(bisq.contract.protobuf.SignedTwoPartyContract proto) {

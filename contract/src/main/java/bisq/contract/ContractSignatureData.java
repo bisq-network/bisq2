@@ -53,12 +53,16 @@ public class ContractSignatureData implements NetworkProto {
     }
 
     @Override
-    public bisq.contract.protobuf.ContractSignatureData toProto() {
+    public bisq.contract.protobuf.ContractSignatureData.Builder getBuilder(boolean ignoreAnnotation) {
         return bisq.contract.protobuf.ContractSignatureData.newBuilder()
                 .setContractHash(ByteString.copyFrom(contractHash))
                 .setSignature(ByteString.copyFrom(signature))
-                .setPublicKeyBytes(ByteString.copyFrom(publicKey.getEncoded()))
-                .build();
+                .setPublicKeyBytes(ByteString.copyFrom(publicKey.getEncoded()));
+    }
+
+    @Override
+    public bisq.contract.protobuf.ContractSignatureData toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static ContractSignatureData fromProto(bisq.contract.protobuf.ContractSignatureData proto) {

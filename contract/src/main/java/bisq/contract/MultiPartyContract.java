@@ -29,11 +29,17 @@ public abstract class MultiPartyContract<T extends Offer<?, ?>> extends TwoParty
     }
 
     @Override
-    public bisq.contract.protobuf.Contract toProto() {
-        return getContractBuilder().setMultiPartyContract(
-                        bisq.contract.protobuf.MultiPartyContract.newBuilder()
-                                .addAllParties(parties.stream().map(Party::toProto).collect(Collectors.toList())))
-                .build();
+    public bisq.contract.protobuf.Contract.Builder getBuilder(boolean ignoreAnnotation) {
+        return getContractBuilder(ignoreAnnotation).setMultiPartyContract(
+                bisq.contract.protobuf.MultiPartyContract.newBuilder()
+                        .addAllParties(parties.stream()
+                                .map(e -> e.toProto(ignoreAnnotation))
+                                .collect(Collectors.toList())));
+    }
+
+    @Override
+    public bisq.contract.protobuf.Contract toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static TwoPartyContract<?> fromProto(bisq.contract.protobuf.Contract proto) {

@@ -56,10 +56,15 @@ public class MultisigContract extends TwoPartyContract<MultisigOffer> {
     }
 
     @Override
-    public bisq.contract.protobuf.Contract toProto() {
+    public bisq.contract.protobuf.Contract.Builder getBuilder(boolean ignoreAnnotation) {
         var bisqEasyContract = bisq.contract.protobuf.MultisigContract.newBuilder();
-        var twoPartyContract = getTwoPartyContractBuilder().setMultisigContract(bisqEasyContract);
-        return getContractBuilder().setTwoPartyContract(twoPartyContract).build();
+        var twoPartyContract = getTwoPartyContractBuilder(ignoreAnnotation).setMultisigContract(bisqEasyContract);
+        return getContractBuilder(ignoreAnnotation).setTwoPartyContract(twoPartyContract);
+    }
+
+    @Override
+    public bisq.contract.protobuf.Contract toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static MultisigContract fromProto(bisq.contract.protobuf.Contract proto) {
