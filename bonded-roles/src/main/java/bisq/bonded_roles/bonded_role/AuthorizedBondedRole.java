@@ -43,7 +43,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.*;
 @EqualsAndHashCode
 @Getter
 public final class AuthorizedBondedRole implements AuthorizedDistributedData {
-    private final MetaData metaData = new MetaData(TTL_100_DAYS, HIGHEST_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_1000);
+    private final MetaData metaData = new MetaData(TTL_100_DAYS, HIGHEST_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_100);
     private final String profileId;
     private final String authorizedPublicKey;
     private final BondedRoleType bondedRoleType;
