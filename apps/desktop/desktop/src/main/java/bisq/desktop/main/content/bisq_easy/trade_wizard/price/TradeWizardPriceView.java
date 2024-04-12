@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.trade_wizard.price;
 
+import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.MaterialTextField;
@@ -45,8 +46,8 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
     private final PriceInput priceInput;
     private final Button percentagePrice, fixedPrice, showLearnWhyButton, closeLearnWhyButton;
     private final Label feedbackSentence;
-    private final VBox learnWhyOverlay;
-    private Subscription percentageFocussedPin, useFixPricePin;
+    private final VBox learnWhyOverlay, content;
+    private Subscription percentageFocussedPin, useFixPricePin, shouldShowLearnWhyOverlayPin;
 
     public TradeWizardPriceView(TradeWizardPriceModel model, TradeWizardPriceController controller, PriceInput priceInput) {
         super(new VBox(), model, controller);
@@ -109,7 +110,7 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         StackPane.setAlignment(learnWhyOverlay, Pos.TOP_CENTER);
         StackPane.setMargin(learnWhyOverlay, new Insets(-63, 0, 0, 0));
 
-        VBox content = new VBox(10, headline, subtitleLabel, pricingModels, fieldsBox, feedbackBox);
+        content = new VBox(10, headline, subtitleLabel, pricingModels, fieldsBox, feedbackBox);
         content.getStyleClass().add("price-content");
         StackPane layeredContent = new StackPane(content, learnWhyOverlay);
         layeredContent.getStyleClass().add("bisq-easy-trade-wizard-price-step");
@@ -120,13 +121,23 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
     protected void onViewAttached() {
         percentage.textProperty().bindBidirectional(model.getPercentageAsString());
         feedbackSentence.textProperty().bind(model.getFeedbackSentence());
-        learnWhyOverlay.visibleProperty().bind(model.getShouldShowLearnWhyOverlay());
-        learnWhyOverlay.managedProperty().bind(model.getShouldShowLearnWhyOverlay());
 
         percentageFocussedPin = EasyBind.subscribe(percentage.textInputFocusedProperty(), controller::onPercentageFocussed);
         // FIXME: The very first time this component is used when starting the app requestFocus() is not being applied.
         useFixPricePin = EasyBind.subscribe(model.getUseFixPrice(), useFixPrice ->
                 UIScheduler.run(this::updateFieldsBox).after(100));
+        shouldShowLearnWhyOverlayPin = EasyBind.subscribe(model.getShouldShowLearnWhyOverlay(), showOverlay -> {
+            if (showOverlay) {
+                learnWhyOverlay.setVisible(true);
+                learnWhyOverlay.setManaged(true);
+                Transitions.blurStrong(content, 0);
+                Transitions.slideInTop(learnWhyOverlay, 450);
+            } else {
+                learnWhyOverlay.setVisible(false);
+                learnWhyOverlay.setManaged(false);
+                Transitions.removeEffect(content);
+            }
+        });
 
         percentagePrice.setOnAction(e -> controller.usePercentagePrice());
         fixedPrice.setOnAction(e -> controller.useFixedPrice());
@@ -146,16 +157,15 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
     protected void onViewDetached() {
         percentage.textProperty().unbindBidirectional(model.getPercentageAsString());
         feedbackSentence.textProperty().unbind();
-        learnWhyOverlay.visibleProperty().unbind();
-        learnWhyOverlay.managedProperty().unbind();
 
         percentageFocussedPin.unsubscribe();
         useFixPricePin.unsubscribe();
-        showLearnWhyButton.setOnAction(null);
-        closeLearnWhyButton.setOnAction(null);
+        shouldShowLearnWhyOverlayPin.unsubscribe();
 
         percentagePrice.setOnAction(null);
         fixedPrice.setOnAction(null);
+        showLearnWhyButton.setOnAction(null);
+        closeLearnWhyButton.setOnAction(null);
 
         Parent node = root;
         while (node.getParent() != null) {
