@@ -170,6 +170,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                     "requestFromMap expected be type of AddProtectedDataRequest");
             AddAuthenticatedDataRequest addRequestFromMap = (AddAuthenticatedDataRequest) requestFromMap;
 
+            // We skip that check for a while because we plan updates of the map size values
             if (new Date().after(IGNORE_MAX_MAP_SIZE_UNTIL)) {
                 // The metaData provided in the RemoveAuthenticatedDataRequest must be the same as we had in the AddAuthenticatedDataRequest
                 // The AddAuthenticatedDataRequest does use the metaData from the code base, not one provided by the message, thus it is trusted.
