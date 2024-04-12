@@ -18,7 +18,6 @@
 package bisq.offer.poc;
 
 import bisq.common.proto.NetworkProto;
-import com.google.protobuf.Message;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -34,10 +33,5 @@ public final class PocOpenOffer implements NetworkProto {
 
     @Override
     public void verify() {
-    }
-
-    @Override
-    public Message toProto() {
-        return null;
     }
 }

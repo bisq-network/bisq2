@@ -42,10 +42,15 @@ public final class TradeTermsOption implements OfferOption {
     }
 
     @Override
-    public bisq.offer.protobuf.OfferOption toProto() {
-        return getOfferOptionBuilder().setTradeTermsOption(bisq.offer.protobuf.TradeTermsOption.newBuilder()
-                        .setMakersTradeTerms(makersTradeTerms))
-                .build();
+    public bisq.offer.protobuf.OfferOption.Builder getBuilder(boolean ignoreAnnotation) {
+        return getOfferOptionBuilder(ignoreAnnotation)
+                .setTradeTermsOption(bisq.offer.protobuf.TradeTermsOption.newBuilder()
+                        .setMakersTradeTerms(makersTradeTerms));
+    }
+
+    @Override
+    public bisq.offer.protobuf.OfferOption toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static TradeTermsOption fromProto(bisq.offer.protobuf.TradeTermsOption proto) {

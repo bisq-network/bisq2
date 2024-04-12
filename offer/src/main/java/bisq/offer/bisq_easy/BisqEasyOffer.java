@@ -95,10 +95,14 @@ public final class BisqEasyOffer extends Offer<BitcoinPaymentMethodSpec, FiatPay
     }
 
     @Override
-    public bisq.offer.protobuf.Offer toProto() {
-        return getOfferBuilder().setBisqEasyOffer(
-                        bisq.offer.protobuf.BisqEasyOffer.newBuilder().addAllSupportedLanguageCodes(supportedLanguageCodes))
-                .build();
+    public bisq.offer.protobuf.Offer.Builder getBuilder(boolean ignoreAnnotation) {
+        return getOfferBuilder(ignoreAnnotation).setBisqEasyOffer(
+                bisq.offer.protobuf.BisqEasyOffer.newBuilder().addAllSupportedLanguageCodes(supportedLanguageCodes));
+    }
+
+    @Override
+    public bisq.offer.protobuf.Offer toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static BisqEasyOffer fromProto(bisq.offer.protobuf.Offer proto) {

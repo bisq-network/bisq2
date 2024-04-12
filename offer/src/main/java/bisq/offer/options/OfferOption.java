@@ -21,10 +21,10 @@ import bisq.common.proto.NetworkProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 
 public interface OfferOption extends NetworkProto {
+    @Override
+    bisq.offer.protobuf.OfferOption toProto(boolean ignoreAnnotation);
 
-    bisq.offer.protobuf.OfferOption toProto();
-
-    default bisq.offer.protobuf.OfferOption.Builder getOfferOptionBuilder() {
+    default bisq.offer.protobuf.OfferOption.Builder getOfferOptionBuilder(boolean ignoreAnnotation) {
         return bisq.offer.protobuf.OfferOption.newBuilder();
     }
 

@@ -58,12 +58,11 @@ public abstract class PaymentMethodSpec<T extends PaymentMethod<? extends Paymen
     }
 
     @Override
+    public abstract bisq.offer.protobuf.PaymentMethodSpec toProto(boolean ignoreAnnotation);
 
-    public abstract bisq.offer.protobuf.PaymentMethodSpec toProto();
-
-    public bisq.offer.protobuf.PaymentMethodSpec.Builder getPaymentMethodSpecBuilder() {
+    public bisq.offer.protobuf.PaymentMethodSpec.Builder getPaymentMethodSpecBuilder(boolean ignoreAnnotation) {
         bisq.offer.protobuf.PaymentMethodSpec.Builder builder = bisq.offer.protobuf.PaymentMethodSpec.newBuilder()
-                .setPaymentMethod(paymentMethod.toProto());
+                .setPaymentMethod(paymentMethod.toProto(ignoreAnnotation));
         saltedMakerAccountId.ifPresent(builder::setSaltedMakerAccountId);
         return builder;
     }

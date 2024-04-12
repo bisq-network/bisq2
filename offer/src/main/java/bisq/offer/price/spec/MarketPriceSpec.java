@@ -38,8 +38,13 @@ public final class MarketPriceSpec implements PriceSpec {
     }
 
     @Override
-    public bisq.offer.protobuf.PriceSpec toProto() {
-        return getPriceSpecBuilder().setMarketPrice(bisq.offer.protobuf.MarketPrice.newBuilder()).build();
+    public bisq.offer.protobuf.PriceSpec.Builder getBuilder(boolean ignoreAnnotation) {
+        return getPriceSpecBuilder(ignoreAnnotation).setMarketPrice(bisq.offer.protobuf.MarketPrice.newBuilder());
+    }
+
+    @Override
+    public bisq.offer.protobuf.PriceSpec toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static MarketPriceSpec fromProto(bisq.offer.protobuf.MarketPrice proto) {

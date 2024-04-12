@@ -33,7 +33,6 @@ import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import bisq.offer.price.spec.FixPriceSpec;
 import bisq.offer.price.spec.FloatPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
-import com.google.protobuf.Message;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -155,10 +154,5 @@ public final class PocOffer implements DistributedData {
         } else {
             throw new IllegalStateException("Not supported priceSpec. priceSpec=" + priceSpec);
         }
-    }
-
-    @Override
-    public Message toProto() {
-        return null;
     }
 }

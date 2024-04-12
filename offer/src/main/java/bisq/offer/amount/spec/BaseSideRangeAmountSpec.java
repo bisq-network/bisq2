@@ -37,11 +37,15 @@ public final class BaseSideRangeAmountSpec extends RangeAmountSpec implements Ba
     }
 
     @Override
-    public bisq.offer.protobuf.AmountSpec toProto() {
-        return getAmountSpecBuilder().setRangeAmountSpec(
-                        getRangeAmountSpecBuilder().setBaseSideRangeAmountSpec(
-                                bisq.offer.protobuf.BaseSideRangeAmountSpec.newBuilder()))
-                .build();
+    public bisq.offer.protobuf.AmountSpec.Builder getBuilder(boolean ignoreAnnotation) {
+        return getAmountSpecBuilder(ignoreAnnotation).setRangeAmountSpec(
+                getRangeAmountSpecBuilder(ignoreAnnotation).setBaseSideRangeAmountSpec(
+                        bisq.offer.protobuf.BaseSideRangeAmountSpec.newBuilder()));
+    }
+
+    @Override
+    public bisq.offer.protobuf.AmountSpec toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static BaseSideRangeAmountSpec fromProto(bisq.offer.protobuf.RangeAmountSpec proto) {

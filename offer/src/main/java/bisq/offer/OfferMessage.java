@@ -48,10 +48,14 @@ public final class OfferMessage implements DistributedData {
     }
 
     @Override
-    public bisq.offer.protobuf.OfferMessage toProto() {
+    public bisq.offer.protobuf.OfferMessage.Builder getBuilder(boolean ignoreAnnotation) {
         return bisq.offer.protobuf.OfferMessage.newBuilder()
-                .setOffer(offer.toProto())
-                .build();
+                .setOffer(offer.toProto(ignoreAnnotation));
+    }
+
+    @Override
+    public bisq.offer.protobuf.OfferMessage toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static OfferMessage fromProto(bisq.offer.protobuf.OfferMessage proto) {

@@ -20,7 +20,6 @@ package bisq.offer.poc;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.ProtoResolver;
 import bisq.persistence.PersistableStore;
-import com.google.protobuf.Message;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -64,10 +63,5 @@ public final class PocOpenOfferStore implements PersistableStore<PocOpenOfferSto
 
     public void remove(PocOpenOffer openOffer) {
         openOffers.remove(openOffer);
-    }
-
-    @Override
-    public Message toProto() {
-        return null;
     }
 }

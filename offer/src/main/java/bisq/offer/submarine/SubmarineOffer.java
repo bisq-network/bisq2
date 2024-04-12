@@ -82,10 +82,13 @@ public final class SubmarineOffer extends Offer<BitcoinPaymentMethodSpec, FiatPa
     }
 
     @Override
-    public bisq.offer.protobuf.Offer toProto() {
-        return getOfferBuilder().setSubmarineOffer(
-                        bisq.offer.protobuf.SubmarineOffer.newBuilder())
-                .build();
+    public bisq.offer.protobuf.Offer.Builder getBuilder(boolean ignoreAnnotation) {
+        return getOfferBuilder(ignoreAnnotation).setSubmarineOffer(bisq.offer.protobuf.SubmarineOffer.newBuilder());
+    }
+
+    @Override
+    public bisq.offer.protobuf.Offer toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static SubmarineOffer fromProto(bisq.offer.protobuf.Offer proto) {

@@ -39,11 +39,16 @@ public final class CollateralOption implements OfferOption {
     public void verify() {
     }
 
-    public bisq.offer.protobuf.OfferOption toProto() {
-        return getOfferOptionBuilder().setCollateralOption(bisq.offer.protobuf.CollateralOption.newBuilder()
+    public bisq.offer.protobuf.OfferOption.Builder getBuilder(boolean ignoreAnnotation) {
+        return getOfferOptionBuilder(ignoreAnnotation)
+                .setCollateralOption(bisq.offer.protobuf.CollateralOption.newBuilder()
                         .setBuyerSecurityDeposit(buyerSecurityDeposit)
-                        .setSellerSecurityDeposit(sellerSecurityDeposit))
-                .build();
+                        .setSellerSecurityDeposit(sellerSecurityDeposit));
+    }
+
+    @Override
+    public bisq.offer.protobuf.OfferOption toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static CollateralOption fromProto(bisq.offer.protobuf.CollateralOption proto) {
