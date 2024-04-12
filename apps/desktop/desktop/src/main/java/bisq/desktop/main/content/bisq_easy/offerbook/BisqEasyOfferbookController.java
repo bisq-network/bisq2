@@ -257,19 +257,16 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                 BisqEasyOfferbookChannel channel = (BisqEasyOfferbookChannel) chatChannel;
 
                 // FIXME (low prio): marketChannelItems needs to be a hashmap
-                Optional<MarketChannelItem> marketChannelItem = model.getMarketChannelItems()
+                model.getMarketChannelItems()
                         .stream()
                         .filter(item -> item.getChannel().equals(channel))
-                        .findAny();
-
-                marketChannelItem.ifPresent(item -> {
-                        model.getSelectedMarketChannelItem().set(item);
-                        model.getShowsExpiredMessagesIndicator().set(!item.getChannel()
-                                .getChatMessages()
-                                .stream()
-                                .findFirst()
-                                .isPresent());
-                });
+                        .findAny()
+                        .ifPresent(item -> {
+                            model.getSelectedMarketChannelItem().set(item);
+                            model.getShowsExpiredMessagesIndicator().set(item.getChannel()
+                                    .getChatMessages()
+                                    .isEmpty());
+                    });
 
                 model.getSearchText().set("");
                 resetSelectedChildTarget();
