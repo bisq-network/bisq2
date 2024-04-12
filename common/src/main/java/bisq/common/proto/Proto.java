@@ -46,12 +46,16 @@ public interface Proto {
         return getBuilder(true);
     }
 
+    default Message.Builder getBuilder(boolean ignoreAnnotation) {
+        return null;
+    }
+
     default Message toProto() {
         return buildProto(true);
     }
 
-    default Message.Builder getBuilder(boolean ignoreAnnotation) {
-        return null;
+    default Message toProto(boolean ignoreAnnotation) {
+        return buildProto(true);
     }
 
     default <T extends Message> T buildProto(boolean ignoreAnnotation) {
