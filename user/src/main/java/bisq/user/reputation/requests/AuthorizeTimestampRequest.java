@@ -53,17 +53,21 @@ public final class AuthorizeTimestampRequest implements MailboxMessage {
     }
 
     @Override
-    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
+    public bisq.network.protobuf.EnvelopePayloadMessage.Builder getBuilder(boolean ignoreAnnotation) {
         return getNetworkMessageBuilder()
                 .setExternalNetworkMessage(ExternalNetworkMessage.newBuilder()
-                        .setAny(Any.pack(toAuthorizeTimestampRequestProto())))
-                .build();
+                        .setAny(Any.pack(toAuthorizeTimestampRequestProto(ignoreAnnotation))));
     }
 
-    private bisq.user.protobuf.AuthorizeTimestampRequest toAuthorizeTimestampRequestProto() {
-        return bisq.user.protobuf.AuthorizeTimestampRequest.newBuilder()
-                .setProfileId(profileId)
-                .build();
+    @Override
+    public bisq.network.protobuf.EnvelopePayloadMessage toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
+    }
+
+    private bisq.user.protobuf.AuthorizeTimestampRequest toAuthorizeTimestampRequestProto(boolean ignoreAnnotation) {
+        var builder = bisq.user.protobuf.AuthorizeTimestampRequest.newBuilder()
+                .setProfileId(profileId);
+        return ignoreAnnotation ? builder.build() : clearAnnotatedFields(builder).build();
     }
 
     public static AuthorizeTimestampRequest fromProto(bisq.user.protobuf.AuthorizeTimestampRequest proto) {

@@ -70,21 +70,25 @@ public final class AuthorizeAccountAgeRequest implements MailboxMessage {
     }
 
     @Override
-    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
+    public bisq.network.protobuf.EnvelopePayloadMessage.Builder getBuilder(boolean ignoreAnnotation) {
         return getNetworkMessageBuilder()
                 .setExternalNetworkMessage(ExternalNetworkMessage.newBuilder()
-                        .setAny(Any.pack(toAuthorizeAccountAgeRequestProto())))
-                .build();
+                        .setAny(Any.pack(toAuthorizeAccountAgeRequestProto(ignoreAnnotation))));
     }
 
-    public bisq.user.protobuf.AuthorizeAccountAgeRequest toAuthorizeAccountAgeRequestProto() {
-        return bisq.user.protobuf.AuthorizeAccountAgeRequest.newBuilder()
+    @Override
+    public bisq.network.protobuf.EnvelopePayloadMessage toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
+    }
+
+    public bisq.user.protobuf.AuthorizeAccountAgeRequest toAuthorizeAccountAgeRequestProto(boolean ignoreAnnotation) {
+        var builder = bisq.user.protobuf.AuthorizeAccountAgeRequest.newBuilder()
                 .setProfileId(profileId)
                 .setHashAsHex(hashAsHex)
                 .setDate(date)
                 .setPubKeyBase64(pubKeyBase64)
-                .setSignatureBase64(signatureBase64)
-                .build();
+                .setSignatureBase64(signatureBase64);
+        return ignoreAnnotation ? builder.build() : clearAnnotatedFields(builder).build();
     }
 
     public static AuthorizeAccountAgeRequest fromProto(bisq.user.protobuf.AuthorizeAccountAgeRequest proto) {

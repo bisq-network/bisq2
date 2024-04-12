@@ -97,15 +97,19 @@ public final class UserProfile implements DistributedData {
     }
 
     @Override
-    public bisq.user.protobuf.UserProfile toProto() {
+    public bisq.user.protobuf.UserProfile.Builder getBuilder(boolean ignoreAnnotation) {
         return bisq.user.protobuf.UserProfile.newBuilder()
                 .setNickName(nickName)
                 .setTerms(terms)
                 .setStatement(statement)
                 .setAvatarVersion(avatarVersion)
-                .setProofOfWork(proofOfWork.toProto())
-                .setNetworkId(networkId.toProto())
-                .build();
+                .setProofOfWork(proofOfWork.toProto(ignoreAnnotation))
+                .setNetworkId(networkId.toProto(ignoreAnnotation));
+    }
+
+    @Override
+    public bisq.user.protobuf.UserProfile toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static UserProfile fromProto(bisq.user.protobuf.UserProfile proto) {

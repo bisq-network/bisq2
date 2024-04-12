@@ -62,12 +62,16 @@ public final class AuthorizedAccountAgeData implements AuthorizedDistributedData
     }
 
     @Override
-    public bisq.user.protobuf.AuthorizedAccountAgeData toProto() {
+    public bisq.user.protobuf.AuthorizedAccountAgeData.Builder getBuilder(boolean ignoreAnnotation) {
         return bisq.user.protobuf.AuthorizedAccountAgeData.newBuilder()
                 .setProfileId(profileId)
                 .setDate(date)
-                .setStaticPublicKeysProvided(staticPublicKeysProvided)
-                .build();
+                .setStaticPublicKeysProvided(staticPublicKeysProvided);
+    }
+
+    @Override
+    public bisq.user.protobuf.AuthorizedAccountAgeData toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static AuthorizedAccountAgeData fromProto(bisq.user.protobuf.AuthorizedAccountAgeData proto) {

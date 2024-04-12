@@ -66,13 +66,17 @@ public final class AuthorizedProofOfBurnData implements AuthorizedDistributedDat
     }
 
     @Override
-    public bisq.user.protobuf.AuthorizedProofOfBurnData toProto() {
+    public bisq.user.protobuf.AuthorizedProofOfBurnData.Builder getBuilder(boolean ignoreAnnotation) {
         return bisq.user.protobuf.AuthorizedProofOfBurnData.newBuilder()
                 .setAmount(amount)
                 .setTime(time)
                 .setHash(ByteString.copyFrom(hash))
-                .setStaticPublicKeysProvided(staticPublicKeysProvided)
-                .build();
+                .setStaticPublicKeysProvided(staticPublicKeysProvided);
+    }
+
+    @Override
+    public bisq.user.protobuf.AuthorizedProofOfBurnData toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static AuthorizedProofOfBurnData fromProto(bisq.user.protobuf.AuthorizedProofOfBurnData proto) {

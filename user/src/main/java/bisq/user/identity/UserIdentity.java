@@ -44,11 +44,16 @@ public final class UserIdentity implements PersistableProto {
         checkArgument(identity.getId().equals(getId()));
     }
 
-    public bisq.user.protobuf.UserIdentity toProto() {
+    @Override
+    public bisq.user.protobuf.UserIdentity.Builder getBuilder(boolean ignoreAnnotation) {
         return bisq.user.protobuf.UserIdentity.newBuilder()
-                .setIdentity(identity.toProto())
-                .setUserProfile(userProfile.toProto())
-                .build();
+                .setIdentity(identity.toProto(ignoreAnnotation))
+                .setUserProfile(userProfile.toProto(ignoreAnnotation));
+    }
+
+    @Override
+    public bisq.user.protobuf.UserIdentity toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static UserIdentity fromProto(bisq.user.protobuf.UserIdentity proto) {

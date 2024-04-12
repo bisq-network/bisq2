@@ -45,11 +45,15 @@ public final class AccountAgeStore implements PersistableStore<AccountAgeStore> 
     }
 
     @Override
-    public bisq.user.protobuf.AccountAgeStore toProto() {
+    public bisq.user.protobuf.AccountAgeStore.Builder getBuilder(boolean ignoreAnnotation) {
         return bisq.user.protobuf.AccountAgeStore.newBuilder()
                 .addAllJsonRequests(jsonRequests)
-                .setLastRequested(lastRequested)
-                .build();
+                .setLastRequested(lastRequested);
+    }
+
+    @Override
+    public bisq.user.protobuf.AccountAgeStore toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static AccountAgeStore fromProto(bisq.user.protobuf.AccountAgeStore proto) {

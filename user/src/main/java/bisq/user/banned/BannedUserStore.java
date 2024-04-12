@@ -41,12 +41,16 @@ public final class BannedUserStore implements PersistableStore<BannedUserStore> 
     }
 
     @Override
-    public bisq.user.protobuf.BannedUserStore toProto() {
+    public bisq.user.protobuf.BannedUserStore.Builder getBuilder(boolean ignoreAnnotation) {
         return bisq.user.protobuf.BannedUserStore.newBuilder()
                 .addAllBannedUserProfileDataSet(bannedUserProfileDataSet.stream()
-                        .map(BannedUserProfileData::toProto)
-                        .collect(Collectors.toList()))
-                .build();
+                        .map(e -> e.toProto(ignoreAnnotation))
+                        .collect(Collectors.toList()));
+    }
+
+    @Override
+    public bisq.user.protobuf.BannedUserStore toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static BannedUserStore fromProto(bisq.user.protobuf.BannedUserStore proto) {
