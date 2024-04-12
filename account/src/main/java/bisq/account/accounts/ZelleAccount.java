@@ -20,10 +20,14 @@ public class ZelleAccount extends Account<ZelleAccountPayload, FiatPaymentMethod
     }
 
     @Override
-    public bisq.account.protobuf.Account toProto() {
-        return getAccountBuilder()
-                .setZelleAccount(bisq.account.protobuf.ZelleAccount.newBuilder())
-                .build();
+    public bisq.account.protobuf.Account.Builder getBuilder(boolean ignoreAnnotation) {
+        return getAccountBuilder(ignoreAnnotation)
+                .setZelleAccount(bisq.account.protobuf.ZelleAccount.newBuilder());
+    }
+
+    @Override
+    public bisq.account.protobuf.Account toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static ZelleAccount fromProto(bisq.account.protobuf.Account proto) {

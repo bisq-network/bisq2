@@ -20,13 +20,16 @@ public final class CashDepositAccount extends BankAccount<CashDepositAccountPayl
     }
 
     @Override
-    public bisq.account.protobuf.Account toProto() {
-        return getAccountBuilder()
-                .setCountryBasedAccount(getCountryBasedAccountBuilder()
-                        .setBankAccount(getBankAccountBuilder()
-                                .setCashDepositAccount(bisq.account.protobuf.CashDepositAccount.newBuilder()
-                                        .build())))
-                .build();
+    public bisq.account.protobuf.Account.Builder getBuilder(boolean ignoreAnnotation) {
+        return getAccountBuilder(ignoreAnnotation)
+                .setCountryBasedAccount(getCountryBasedAccountBuilder(ignoreAnnotation)
+                        .setBankAccount(getBankAccountBuilder(ignoreAnnotation)
+                                .setCashDepositAccount(bisq.account.protobuf.CashDepositAccount.newBuilder())));
+    }
+
+    @Override
+    public bisq.account.protobuf.Account toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static CashDepositAccount fromProto(bisq.account.protobuf.Account proto) {

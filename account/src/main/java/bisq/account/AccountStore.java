@@ -48,12 +48,17 @@ public final class AccountStore implements PersistableStore<AccountStore> {
     }
 
     @Override
-    public bisq.account.protobuf.AccountStore toProto() {
+    public bisq.account.protobuf.AccountStore.Builder getBuilder(boolean ignoreAnnotation) {
         bisq.account.protobuf.AccountStore.Builder builder = bisq.account.protobuf.AccountStore.newBuilder()
                 .putAllAccountByName(accountByName.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
-                        e -> e.getValue().toProto())));
-        Optional.ofNullable(selectedAccount.get()).ifPresent(e -> builder.setSelectedAccount(e.toProto()));
-        return builder.build();
+                        e -> e.getValue().toProto(ignoreAnnotation))));
+        Optional.ofNullable(selectedAccount.get()).ifPresent(e -> builder.setSelectedAccount(e.toProto(ignoreAnnotation)));
+        return builder;
+    }
+
+    @Override
+    public bisq.account.protobuf.Account toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static AccountStore fromProto(bisq.account.protobuf.AccountStore proto) {

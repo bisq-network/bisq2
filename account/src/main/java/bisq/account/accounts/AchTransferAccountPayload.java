@@ -41,15 +41,20 @@ public final class AchTransferAccountPayload extends BankAccountPayload {
     }
 
     @Override
-    public AccountPayload toProto() {
-        return getAccountPayloadBuilder().setCountryBasedAccountPayload(
-                getCountryBasedAccountPayloadBuilder().setBankAccountPayload(
-                        getBankAccountPayloadBuilder().setAchTransferAccountPayload(
+    public AccountPayload.Builder getBuilder(boolean ignoreAnnotation) {
+        return getAccountPayloadBuilder(ignoreAnnotation).setCountryBasedAccountPayload(
+                getCountryBasedAccountPayloadBuilder(ignoreAnnotation).setBankAccountPayload(
+                        getBankAccountPayloadBuilder(ignoreAnnotation).setAchTransferAccountPayload(
                                 bisq.account.protobuf.AchTransferAccountPayload.newBuilder()
                                         .setHolderAddress(holderAddress)
                         )
                 )
-        ).build();
+        );
+    }
+
+    @Override
+    public bisq.account.protobuf.AccountPayload toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static AchTransferAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {

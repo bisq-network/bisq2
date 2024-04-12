@@ -17,14 +17,17 @@ public final class StrikeAccountPayload extends CountryBasedAccountPayload {
     }
 
     @Override
-    public AccountPayload toProto() {
-        return getAccountPayloadBuilder()
+    public AccountPayload.Builder getBuilder(boolean ignoreAnnotation) {
+        return getAccountPayloadBuilder(ignoreAnnotation)
                 .setCountryBasedAccountPayload(
-                        getCountryBasedAccountPayloadBuilder()
+                        getCountryBasedAccountPayloadBuilder(ignoreAnnotation)
                                 .setStrikeAccountPayload(bisq.account.protobuf.StrikeAccountPayload.newBuilder()
-                                        .setHolderName("holderName")
-                                        .build()))
-                .build();
+                                        .setHolderName("holderName")));
+    }
+
+    @Override
+    public bisq.account.protobuf.AccountPayload toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static StrikeAccountPayload fromProto(AccountPayload proto) {

@@ -21,7 +21,7 @@ class ZelleAccountPayloadTest {
 
     @Test
     void toProto() {
-        var result = ACCOUNT.toProto();
+        var result = ACCOUNT.toProto(true);
         assertThat(result)
                 .usingRecursiveComparison()
                 .isEqualTo(PROTO);

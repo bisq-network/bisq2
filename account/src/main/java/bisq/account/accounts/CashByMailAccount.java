@@ -20,10 +20,14 @@ public final class CashByMailAccount extends Account<CashByMailAccountPayload, F
     }
 
     @Override
-    public bisq.account.protobuf.Account toProto() {
-        return getAccountBuilder()
-                .setCashByMailAccount(bisq.account.protobuf.CashByMailAccount.newBuilder())
-                .build();
+    public bisq.account.protobuf.Account.Builder getBuilder(boolean ignoreAnnotation) {
+        return getAccountBuilder(ignoreAnnotation)
+                .setCashByMailAccount(bisq.account.protobuf.CashByMailAccount.newBuilder());
+    }
+
+    @Override
+    public bisq.account.protobuf.Account toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static CashByMailAccount fromProto(bisq.account.protobuf.Account proto) {

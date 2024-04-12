@@ -2,10 +2,9 @@ package bisq.account.accounts;
 
 import bisq.account.protobuf.Account;
 import bisq.account.protobuf.AccountPayload;
-import bisq.account.protobuf.FiatPaymentMethod;
-import bisq.account.protobuf.PaymentMethod;
 import bisq.account.protobuf.RevolutAccount;
 import bisq.account.protobuf.RevolutAccountPayload;
+import bisq.account.protobuf.*;
 import org.junit.jupiter.api.Test;
 
 import static java.lang.System.currentTimeMillis;
@@ -38,7 +37,7 @@ class RevolutAccountTest {
 
     @Test
     void toProto() {
-        var result = ACCOUNT.toProto();
+        var result = ACCOUNT.toProto(true);
         assertThat(result)
                 .usingRecursiveComparison()
                 .ignoringFields("accountPayload_.id_", "accountPayload_.memoizedHashCode", "creationDate_", "memoizedHashCode")

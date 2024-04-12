@@ -3,10 +3,9 @@ package bisq.account.accounts;
 import bisq.account.protobuf.AccountPayload;
 import bisq.account.protobuf.CountryBasedAccount;
 import bisq.account.protobuf.CountryBasedAccountPayload;
-import bisq.account.protobuf.FiatPaymentMethod;
-import bisq.account.protobuf.PaymentMethod;
 import bisq.account.protobuf.SepaAccount;
 import bisq.account.protobuf.SepaAccountPayload;
+import bisq.account.protobuf.*;
 import bisq.common.protobuf.Country;
 import bisq.common.protobuf.Region;
 import org.junit.jupiter.api.Test;
@@ -55,7 +54,7 @@ class SepaAccountTest {
 
     @Test
     void toProto() {
-        var result = ACCOUNT.toProto();
+        var result = ACCOUNT.toProto(true);
         assertThat(result)
                 .usingRecursiveComparison()
                 .ignoringFields("creationDate_", "accountPayload_.id_", "memoizedHashCode", "accountPayload_.memoizedHashCode")

@@ -20,12 +20,14 @@ public final class InteracETransferAccount extends Account<InteracETransferAccou
     }
 
     @Override
-    public bisq.account.protobuf.Account toProto() {
-        return getAccountBuilder()
-                .setInteracETransferAccount(
-                        bisq.account.protobuf.InteracETransferAccount.newBuilder()
-                )
-                .build();
+    public bisq.account.protobuf.Account.Builder getBuilder(boolean ignoreAnnotation) {
+        return getAccountBuilder(ignoreAnnotation)
+                .setInteracETransferAccount(bisq.account.protobuf.InteracETransferAccount.newBuilder());
+    }
+
+    @Override
+    public bisq.account.protobuf.Account toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static InteracETransferAccount fromProto(bisq.account.protobuf.Account proto) {

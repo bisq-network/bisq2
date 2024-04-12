@@ -20,12 +20,16 @@ public class ZelleAccountPayload extends AccountPayload {
     }
 
     @Override
-    public bisq.account.protobuf.AccountPayload toProto() {
-        return getAccountPayloadBuilder().setZelleAccountPayload(
+    public bisq.account.protobuf.AccountPayload.Builder getBuilder(boolean ignoreAnnotation) {
+        return getAccountPayloadBuilder(ignoreAnnotation).setZelleAccountPayload(
                         bisq.account.protobuf.ZelleAccountPayload.newBuilder()
                                 .setEmailOrMobileNr(emailOrMobileNr)
-                                .setHolderName(holderName))
-                .build();
+                                .setHolderName(holderName));
+    }
+
+    @Override
+    public bisq.account.protobuf.AccountPayload toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static ZelleAccountPayload fromProto(bisq.account.protobuf.AccountPayload accountPayload) {

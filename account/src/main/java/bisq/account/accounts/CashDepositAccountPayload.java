@@ -30,6 +30,11 @@ public final class CashDepositAccountPayload extends BankAccountPayload {
     }
 
     @Override
+    public bisq.account.protobuf.AccountPayload toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
+    }
+
+    @Override
     public void verify() {
         super.verify();
 
@@ -37,17 +42,16 @@ public final class CashDepositAccountPayload extends BankAccountPayload {
     }
 
     @Override
-    public AccountPayload toProto() {
-        return getAccountPayloadBuilder().setCountryBasedAccountPayload(
-                getCountryBasedAccountPayloadBuilder().setBankAccountPayload(
-                        getBankAccountPayloadBuilder()
+    public AccountPayload.Builder getBuilder(boolean ignoreAnnotation) {
+        return getAccountPayloadBuilder(ignoreAnnotation).setCountryBasedAccountPayload(
+                getCountryBasedAccountPayloadBuilder(ignoreAnnotation).setBankAccountPayload(
+                        getBankAccountPayloadBuilder(ignoreAnnotation)
                                 .setCashDepositAccountPayload(
                                         bisq.account.protobuf.CashDepositAccountPayload.newBuilder()
                                                 .setRequirements(requirements)
-                                                .build()
                                 )
                 )
-        ).build();
+        );
     }
 
     public static CashDepositAccountPayload fromProto(AccountPayload proto) {

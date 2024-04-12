@@ -4,10 +4,9 @@ import bisq.account.protobuf.Account;
 import bisq.account.protobuf.AccountPayload;
 import bisq.account.protobuf.CountryBasedAccount;
 import bisq.account.protobuf.CountryBasedAccountPayload;
-import bisq.account.protobuf.FiatPaymentMethod;
-import bisq.account.protobuf.PaymentMethod;
 import bisq.account.protobuf.UpiAccount;
 import bisq.account.protobuf.UpiAccountPayload;
+import bisq.account.protobuf.*;
 import bisq.common.protobuf.Country;
 import bisq.common.protobuf.Region;
 import org.junit.jupiter.api.Test;
@@ -53,7 +52,7 @@ class UpiAccountTest {
 
     @Test
     void toProto() {
-        var result = ACCOUNT.toProto();
+        var result = ACCOUNT.toProto(true);
         assertThat(result).usingRecursiveComparison()
                 .ignoringFields("accountPayload_.memoizedHashCode", "memoizedHashCode", "creationDate_")
                 .isEqualTo(PROTO);

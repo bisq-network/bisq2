@@ -26,14 +26,19 @@ public class NationalBankAccountPayload extends BankAccountPayload {
     }
 
     @Override
-    public AccountPayload toProto() {
-        return getAccountPayloadBuilder().setCountryBasedAccountPayload(
-                getCountryBasedAccountPayloadBuilder().setBankAccountPayload(
-                        getBankAccountPayloadBuilder().setNationalBankAccountPayload(
+    public AccountPayload.Builder getBuilder(boolean ignoreAnnotation) {
+        return getAccountPayloadBuilder(ignoreAnnotation).setCountryBasedAccountPayload(
+                getCountryBasedAccountPayloadBuilder(ignoreAnnotation).setBankAccountPayload(
+                        getBankAccountPayloadBuilder(ignoreAnnotation).setNationalBankAccountPayload(
                                 bisq.account.protobuf.NationalBankAccountPayload.newBuilder()
                         )
                 )
-        ).build();
+        );
+    }
+
+    @Override
+    public bisq.account.protobuf.AccountPayload toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static NationalBankAccountPayload fromProto(AccountPayload proto) {

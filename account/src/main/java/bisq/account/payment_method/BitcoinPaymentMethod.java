@@ -47,8 +47,13 @@ public class BitcoinPaymentMethod extends PaymentMethod<BitcoinPaymentRail> {
     }
 
     @Override
-    public bisq.account.protobuf.PaymentMethod toProto() {
-        return getPaymentMethodBuilder().setBitcoinPaymentMethod(bisq.account.protobuf.BitcoinPaymentMethod.newBuilder()).build();
+    public bisq.account.protobuf.PaymentMethod.Builder getBuilder(boolean ignoreAnnotation) {
+        return getPaymentMethodBuilder(ignoreAnnotation).setBitcoinPaymentMethod(bisq.account.protobuf.BitcoinPaymentMethod.newBuilder());
+    }
+
+    @Override
+    public bisq.account.protobuf.PaymentMethod toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static BitcoinPaymentMethod fromProto(bisq.account.protobuf.PaymentMethod proto) {

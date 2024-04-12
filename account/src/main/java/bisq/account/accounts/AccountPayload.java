@@ -47,9 +47,9 @@ public abstract class AccountPayload implements NetworkProto {
         NetworkDataValidation.validateText(paymentMethodName, 100);
     }
 
-    public abstract bisq.account.protobuf.AccountPayload toProto();
+    public abstract bisq.account.protobuf.AccountPayload toProto(boolean ignoreAnnotation);
 
-    protected bisq.account.protobuf.AccountPayload.Builder getAccountPayloadBuilder() {
+    protected bisq.account.protobuf.AccountPayload.Builder getAccountPayloadBuilder(boolean ignoreAnnotation) {
         return bisq.account.protobuf.AccountPayload.newBuilder()
                 .setId(id)
                 .setPaymentMethodName(paymentMethodName);

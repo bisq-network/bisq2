@@ -69,7 +69,7 @@ public abstract class BankAccountPayload extends CountryBasedAccountPayload {
         }
     }
 
-    protected bisq.account.protobuf.BankAccountPayload.Builder getBankAccountPayloadBuilder() {
+    protected bisq.account.protobuf.BankAccountPayload.Builder getBankAccountPayloadBuilder(boolean ignoreAnnotation) {
         var builder = bisq.account.protobuf.BankAccountPayload.newBuilder()
                 .setHolderName(holderName)
                 .setBankName(bankName)

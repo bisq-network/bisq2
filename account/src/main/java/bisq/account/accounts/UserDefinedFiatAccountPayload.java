@@ -39,11 +39,15 @@ public final class UserDefinedFiatAccountPayload extends AccountPayload {
     }
 
     @Override
-    public bisq.account.protobuf.AccountPayload toProto() {
-        return getAccountPayloadBuilder().setUserDefinedFiatAccountPayload(
+    public bisq.account.protobuf.AccountPayload.Builder getBuilder(boolean ignoreAnnotation) {
+        return getAccountPayloadBuilder(ignoreAnnotation).setUserDefinedFiatAccountPayload(
                         bisq.account.protobuf.UserDefinedFiatAccountPayload.newBuilder()
-                                .setAccountData(accountData))
-                .build();
+                                .setAccountData(accountData));
+    }
+
+    @Override
+    public bisq.account.protobuf.AccountPayload toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static UserDefinedFiatAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {

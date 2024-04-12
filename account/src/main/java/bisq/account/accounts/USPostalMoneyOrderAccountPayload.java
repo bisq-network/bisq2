@@ -21,12 +21,16 @@ public final class USPostalMoneyOrderAccountPayload extends AccountPayload {
     }
 
     @Override
-    public bisq.account.protobuf.AccountPayload toProto() {
-        return getAccountPayloadBuilder()
+    public bisq.account.protobuf.AccountPayload.Builder getBuilder(boolean ignoreAnnotation) {
+        return getAccountPayloadBuilder(ignoreAnnotation)
                 .setUsPostalMoneyOrderAccountPayload(bisq.account.protobuf.USPostalMoneyOrderAccountPayload.newBuilder()
                         .setPostalAddress(postalAddress)
-                        .setHolderName(holderName))
-                .build();
+                        .setHolderName(holderName));
+    }
+
+    @Override
+    public bisq.account.protobuf.AccountPayload toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static USPostalMoneyOrderAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {

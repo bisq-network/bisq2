@@ -16,15 +16,19 @@ public class F2FAccountPayload extends CountryBasedAccountPayload {
     }
 
     @Override
-    public AccountPayload toProto() {
-        return getAccountPayloadBuilder().setCountryBasedAccountPayload(
-                        getCountryBasedAccountPayloadBuilder().setF2FAccountPayload(
+    public AccountPayload.Builder getBuilder(boolean ignoreAnnotation) {
+        return getAccountPayloadBuilder(ignoreAnnotation).setCountryBasedAccountPayload(
+                getCountryBasedAccountPayloadBuilder(ignoreAnnotation).setF2FAccountPayload(
                                 bisq.account.protobuf.F2FAccountPayload.newBuilder()
                                         .setCity(city)
                                         .setContact(contact)
                                         .setExtraInfo(extraInfo))
-                )
-                .build();
+        );
+    }
+
+    @Override
+    public bisq.account.protobuf.AccountPayload toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static F2FAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {

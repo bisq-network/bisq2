@@ -20,12 +20,16 @@ public final class PixAccountPayload extends CountryBasedAccountPayload {
     }
 
     @Override
-    public AccountPayload toProto() {
-        return getAccountPayloadBuilder().setCountryBasedAccountPayload(
-                        getCountryBasedAccountPayloadBuilder().setPixAccountPayload(
+    public AccountPayload.Builder getBuilder(boolean ignoreAnnotation) {
+        return getAccountPayloadBuilder(ignoreAnnotation).setCountryBasedAccountPayload(
+                getCountryBasedAccountPayloadBuilder(ignoreAnnotation).setPixAccountPayload(
                                 bisq.account.protobuf.PixAccountPayload.newBuilder()
-                                        .setPixKey(pixKey)))
-                .build();
+                                        .setPixKey(pixKey)));
+    }
+
+    @Override
+    public bisq.account.protobuf.AccountPayload toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static PixAccountPayload fromProto(AccountPayload proto) {

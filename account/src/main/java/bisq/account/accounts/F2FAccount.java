@@ -21,11 +21,15 @@ public final class F2FAccount extends CountryBasedAccount<F2FAccountPayload, Fia
     }
 
     @Override
-    public bisq.account.protobuf.Account toProto() {
-        return getAccountBuilder()
-                .setCountryBasedAccount(getCountryBasedAccountBuilder()
-                        .setF2FAccount(bisq.account.protobuf.F2FAccount.newBuilder()))
-                .build();
+    public bisq.account.protobuf.Account.Builder getBuilder(boolean ignoreAnnotation) {
+        return getAccountBuilder(ignoreAnnotation)
+                .setCountryBasedAccount(getCountryBasedAccountBuilder(ignoreAnnotation)
+                        .setF2FAccount(bisq.account.protobuf.F2FAccount.newBuilder()));
+    }
+
+    @Override
+    public bisq.account.protobuf.Account toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static F2FAccount fromProto(bisq.account.protobuf.Account proto) {

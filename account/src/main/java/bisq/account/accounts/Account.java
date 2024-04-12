@@ -59,14 +59,14 @@ public abstract class Account<P extends AccountPayload, M extends PaymentMethod<
         this.paymentMethod = paymentMethod;
     }
 
-    public abstract bisq.account.protobuf.Account toProto();
+    public abstract bisq.account.protobuf.Account toProto(boolean ignoreAnnotation);
 
-    protected bisq.account.protobuf.Account.Builder getAccountBuilder() {
+    protected bisq.account.protobuf.Account.Builder getAccountBuilder(boolean ignoreAnnotation) {
         return bisq.account.protobuf.Account.newBuilder()
                 .setCreationDate(creationDate)
                 .setAccountName(accountName)
-                .setPaymentMethod(paymentMethod.toProto())
-                .setAccountPayload(accountPayload.toProto());
+                .setPaymentMethod(paymentMethod.toProto(ignoreAnnotation))
+                .setAccountPayload(accountPayload.toProto(ignoreAnnotation));
     }
 
     public static Account<?, ?> fromProto(bisq.account.protobuf.Account proto) {

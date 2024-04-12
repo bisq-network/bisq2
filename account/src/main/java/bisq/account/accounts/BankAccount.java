@@ -9,7 +9,7 @@ public abstract class BankAccount<P extends BankAccountPayload> extends CountryB
         super(accountName, paymentMethod, payload, country);
     }
 
-    protected bisq.account.protobuf.BankAccount.Builder getBankAccountBuilder() {
+    protected bisq.account.protobuf.BankAccount.Builder getBankAccountBuilder(boolean ignoreAnnotation) {
         return bisq.account.protobuf.BankAccount.newBuilder();
     }
 

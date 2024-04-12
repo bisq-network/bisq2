@@ -40,9 +40,8 @@ public abstract class CountryBasedAccount<P extends CountryBasedAccountPayload, 
         this.country = country;
     }
 
-    protected bisq.account.protobuf.CountryBasedAccount.Builder getCountryBasedAccountBuilder() {
-        return bisq.account.protobuf.CountryBasedAccount.newBuilder()
-                .setCountry(country.toProto());
+    protected bisq.account.protobuf.CountryBasedAccount.Builder getCountryBasedAccountBuilder(boolean ignoreAnnotation) {
+        return bisq.account.protobuf.CountryBasedAccount.newBuilder().setCountry(country.toProto(ignoreAnnotation));
     }
 
     public static CountryBasedAccount<?, ?> fromProto(bisq.account.protobuf.Account proto) {

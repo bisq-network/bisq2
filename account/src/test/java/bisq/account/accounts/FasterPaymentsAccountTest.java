@@ -4,8 +4,7 @@ import bisq.account.protobuf.Account;
 import bisq.account.protobuf.AccountPayload;
 import bisq.account.protobuf.FasterPaymentsAccount;
 import bisq.account.protobuf.FasterPaymentsAccountPayload;
-import bisq.account.protobuf.FiatPaymentMethod;
-import bisq.account.protobuf.PaymentMethod;
+import bisq.account.protobuf.*;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -37,7 +36,7 @@ class FasterPaymentsAccountTest {
 
     @Test
     void toProto() {
-        var result = ACCOUNT.toProto();
+        var result = ACCOUNT.toProto(true);
         assertThat(result)
                 .usingRecursiveComparison()
                 .isEqualTo(PROTO);

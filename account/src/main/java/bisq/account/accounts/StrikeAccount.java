@@ -22,11 +22,15 @@ public final class StrikeAccount extends CountryBasedAccount<StrikeAccountPayloa
     }
 
     @Override
-    public bisq.account.protobuf.Account toProto() {
-        return getAccountBuilder()
-                .setCountryBasedAccount(getCountryBasedAccountBuilder()
-                        .setStrikeAccount(bisq.account.protobuf.StrikeAccount.newBuilder()))
-                .build();
+    public bisq.account.protobuf.Account.Builder getBuilder(boolean ignoreAnnotation) {
+        return getAccountBuilder(ignoreAnnotation)
+                .setCountryBasedAccount(getCountryBasedAccountBuilder(ignoreAnnotation)
+                        .setStrikeAccount(bisq.account.protobuf.StrikeAccount.newBuilder()));
+    }
+
+    @Override
+    public bisq.account.protobuf.Account toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static StrikeAccount fromProto(Account proto) {
