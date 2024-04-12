@@ -45,13 +45,17 @@ public final class MarketPriceStore implements PersistableStore<MarketPriceStore
     }
 
     @Override
-    public bisq.bonded_roles.protobuf.MarketPriceStore toProto() {
+    public bisq.bonded_roles.protobuf.MarketPriceStore.Builder getBuilder(boolean ignoreAnnotation) {
         return bisq.bonded_roles.protobuf.MarketPriceStore.newBuilder()
                 .putAllMarketPriceByCurrencyMap(marketPriceByCurrencyMap.entrySet().stream()
                         .collect(Collectors.toMap(e -> e.getKey().getMarketCodes(),
-                                e -> e.getValue().toProto())))
-                .setSelectedMarket(selectedMarket.get().toProto())
-                .build();
+                                e -> e.getValue().toProto(ignoreAnnotation))))
+                .setSelectedMarket(selectedMarket.get().toProto(ignoreAnnotation));
+    }
+
+    @Override
+    public bisq.bonded_roles.protobuf.MarketPriceStore toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static MarketPriceStore fromProto(bisq.bonded_roles.protobuf.MarketPriceStore proto) {

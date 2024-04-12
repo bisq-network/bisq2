@@ -64,12 +64,16 @@ public final class MarketPrice implements NetworkProto {
     }
 
     @Override
-    public bisq.bonded_roles.protobuf.MarketPrice toProto() {
+    public bisq.bonded_roles.protobuf.MarketPrice.Builder getBuilder(boolean ignoreAnnotation) {
         return bisq.bonded_roles.protobuf.MarketPrice.newBuilder()
-                .setPriceQuote(priceQuote.toProto())
+                .setPriceQuote(priceQuote.toProto(ignoreAnnotation))
                 .setTimestamp(timestamp)
-                .setMarketPriceProvider(marketPriceProvider.toProtoEnum())
-                .build();
+                .setMarketPriceProvider(marketPriceProvider.toProtoEnum());
+    }
+
+    @Override
+    public bisq.bonded_roles.protobuf.MarketPrice toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static MarketPrice fromProto(bisq.bonded_roles.protobuf.MarketPrice proto) {

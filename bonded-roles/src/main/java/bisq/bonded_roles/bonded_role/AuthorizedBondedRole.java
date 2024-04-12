@@ -86,18 +86,23 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
     }
 
     @Override
-    public bisq.bonded_roles.protobuf.AuthorizedBondedRole toProto() {
+    public bisq.bonded_roles.protobuf.AuthorizedBondedRole.Builder getBuilder(boolean ignoreAnnotation) {
         bisq.bonded_roles.protobuf.AuthorizedBondedRole.Builder builder = bisq.bonded_roles.protobuf.AuthorizedBondedRole.newBuilder()
                 .setProfileId(profileId)
                 .setAuthorizedPublicKey(authorizedPublicKey)
                 .setBondedRoleType(bondedRoleType.toProtoEnum())
                 .setBondUserName(bondUserName)
                 .setSignatureBase64(signatureBase64)
-                .setNetworkId(networkId.toProto())
+                .setNetworkId(networkId.toProto(ignoreAnnotation))
                 .setStaticPublicKeysProvided(staticPublicKeysProvided);
-        addressByTransportTypeMap.ifPresent(e -> builder.setAddressByTransportTypeMap(e.toProto()));
-        authorizingOracleNode.ifPresent(oracleNode -> builder.setAuthorizingOracleNode(oracleNode.toProto()));
-        return builder.build();
+        addressByTransportTypeMap.ifPresent(e -> builder.setAddressByTransportTypeMap(e.toProto(ignoreAnnotation)));
+        authorizingOracleNode.ifPresent(oracleNode -> builder.setAuthorizingOracleNode(oracleNode.toProto(ignoreAnnotation)));
+        return builder;
+    }
+
+    @Override
+    public bisq.bonded_roles.protobuf.AuthorizedBondedRole toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static AuthorizedBondedRole fromProto(bisq.bonded_roles.protobuf.AuthorizedBondedRole proto) {

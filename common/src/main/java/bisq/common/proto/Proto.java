@@ -89,7 +89,7 @@ public interface Proto {
      * @param builder The builder we transform by clearing the ExcludeForHash annotated fields.
      * @return Builder with the fields annotated with ExcludeForHash cleared.
      */
-    default Message.Builder clearAnnotatedFields(Message.Builder builder) {
+    default <B extends Message.Builder> B clearAnnotatedFields(B builder) {
         Set<String> excludedFields = getExcludedFields();
         getLogger().info("Clear fields in builder annotated with @ExcludeForHash: {}", excludedFields);
         for (Descriptors.FieldDescriptor fieldDesc : builder.getAllFields().keySet()) {
@@ -97,7 +97,7 @@ public interface Proto {
                 builder.clearField(fieldDesc);
             }
         }
-        return builder;
+        return (B) builder;
     }
 
     private Logger getLogger() {

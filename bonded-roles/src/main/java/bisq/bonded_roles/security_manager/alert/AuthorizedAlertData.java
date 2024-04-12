@@ -96,7 +96,7 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
     }
 
     @Override
-    public bisq.bonded_roles.protobuf.AuthorizedAlertData toProto() {
+    public bisq.bonded_roles.protobuf.AuthorizedAlertData.Builder getBuilder(boolean ignoreAnnotation) {
         bisq.bonded_roles.protobuf.AuthorizedAlertData.Builder builder = bisq.bonded_roles.protobuf.AuthorizedAlertData.newBuilder()
                 .setId(id)
                 .setDate(date)
@@ -117,8 +117,13 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
             });
         });
         minVersion.ifPresent(builder::setMinVersion);
-        bannedRole.ifPresent(authorizedBondedRole -> builder.setBannedRole(authorizedBondedRole.toProto()));
-        return builder.build();
+        bannedRole.ifPresent(authorizedBondedRole -> builder.setBannedRole(authorizedBondedRole.toProto(ignoreAnnotation)));
+        return builder;
+    }
+
+    @Override
+    public bisq.bonded_roles.protobuf.AuthorizedAlertData toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static AuthorizedAlertData fromProto(bisq.bonded_roles.protobuf.AuthorizedAlertData proto) {
