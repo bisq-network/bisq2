@@ -51,7 +51,7 @@ public final class LiquidWalletStore implements PersistableStore<LiquidWalletSto
                 bisq.wallets.protobuf.LiquidWalletStore.newBuilder()
                         .addAllWalletAddresses(walletAddresses);
 
-        rpcConfig.ifPresent(config -> builder.setRpcConfig(config.toProto()));
+        rpcConfig.ifPresent(config -> builder.setRpcConfig(config.toProto(true)));
         return builder.build();
     }
 
