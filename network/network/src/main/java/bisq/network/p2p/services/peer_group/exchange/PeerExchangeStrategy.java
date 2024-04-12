@@ -114,12 +114,18 @@ public class PeerExchangeStrategy {
         return candidates;
     }
 
-    boolean shouldRedoInitialPeerExchange(int numSuccess, int numRequests) {
-        int numFailed = numRequests - numSuccess;
+    boolean tooManyFailures(int numSuccess, int numFailures) {
+        int numRequests = numSuccess + numFailures;
         int maxFailures = numRequests / 2;
-        return numFailed > maxFailures ||
-                peerGroupService.getAllConnectedPeers(node).count() < peerGroupService.getTargetNumConnectedPeers() ||
-                peerGroupService.getReportedPeers().size() < peerGroupService.getMinNumReportedPeers();
+        return numFailures > maxFailures;
+    }
+
+    boolean needsMoreReportedPeers() {
+        return peerGroupService.getReportedPeers().size() < peerGroupService.getMinNumReportedPeers();
+    }
+
+    boolean needsMoreConnections() {
+        return peerGroupService.getAllConnectedPeers(node).count() < peerGroupService.getTargetNumConnectedPeers();
     }
 
     private List<Address> getCandidates(List<Address> priorityList) {

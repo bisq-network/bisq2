@@ -32,13 +32,14 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static bisq.network.NetworkService.NETWORK_IO_POOL;
 import static com.google.common.base.Preconditions.checkArgument;
-import static java.util.concurrent.CompletableFuture.runAsync;
+import static java.util.concurrent.CompletableFuture.supplyAsync;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
 /**
@@ -51,10 +52,10 @@ public class PeerExchangeService implements Node.Listener {
     private final Node node;
     private final PeerExchangeStrategy peerExchangeStrategy;
     private final Map<String, PeerExchangeRequestHandler> requestHandlerMap = new ConcurrentHashMap<>();
-    private int doInitialPeerExchangeDelaySec = 1; //todo (refactor, low prio) move to config
+    private int peerExchangeDelaySec = 1;
     private volatile boolean isStopped;
-    private CompletableFuture<Void> resultFuture;
-    private Optional<Scheduler> scheduler = Optional.empty();
+    private volatile boolean initialPeerExchangeCompleted;
+    private Optional<Scheduler> peerExchangeScheduler = Optional.empty();
 
     public PeerExchangeService(Node node, PeerExchangeStrategy peerExchangeStrategy) {
         this.node = node;
@@ -64,7 +65,7 @@ public class PeerExchangeService implements Node.Listener {
 
     public void shutdown() {
         isStopped = true;
-        scheduler.ifPresent(Scheduler::stop);
+        peerExchangeScheduler.ifPresent(Scheduler::stop);
         requestHandlerMap.values().forEach(PeerExchangeRequestHandler::dispose);
         requestHandlerMap.clear();
     }
@@ -101,145 +102,131 @@ public class PeerExchangeService implements Node.Listener {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public void startInitialPeerExchange(int minSuccess) {
-        startInitialPeerExchangeAsync().join();
-    }
-
-    private CompletableFuture<Void> startInitialPeerExchangeAsync() {
+        if (initialPeerExchangeCompleted) {
+            return;
+        }
+        log.info("startInitialPeerExchange");
         List<Address> candidates = peerExchangeStrategy.getAddressesForInitialPeerExchange();
-        log.info("startInitialPeerExchange {}", candidates);
-        return doPeerExchange(candidates)
-                .orTimeout(2, MINUTES)
-                .whenComplete((nil, throwable) -> {
-                    if (throwable != null) {
-                        if (resultFuture != null) {
-                            resultFuture.completeExceptionally(throwable);
-
-                            scheduler.ifPresent(Scheduler::stop);
-                            scheduler = Optional.of(Scheduler.run(this::startInitialPeerExchangeAsync)
-                                    .after(doInitialPeerExchangeDelaySec, TimeUnit.SECONDS)
-                                    .name("PeerExchangeService.scheduler-" + StringUtils.truncate(node.toString(), 10)));
-                            doInitialPeerExchangeDelaySec = Math.min(20, doInitialPeerExchangeDelaySec * 2);
-                        }
-                    }
-                });
+        doPeerExchange(candidates, minSuccess);
     }
 
-    public CompletableFuture<Void> extendPeerGroup() {
+    public void extendPeerGroup() {
+        if (!initialPeerExchangeCompleted) {
+            return;
+        }
+        log.info("extendPeerGroup");
         List<Address> candidates = peerExchangeStrategy.getAddressesForExtendingPeerGroup();
-        log.info("extendPeerGroup {}", candidates);
-        return doPeerExchange(candidates)
-                .orTimeout(2, MINUTES)
-                .whenComplete((nil, throwable) -> {
-                    if (throwable != null) {
-                        if (resultFuture != null) {
-                            resultFuture.completeExceptionally(throwable);
-                        }
-                    }
-                });
+        doPeerExchange(candidates, 1);
     }
 
-    /**
-     * If the futures of all candidates are completed, we check if we need to redo the peer exchange, and if so, we
-     * repeat with increasing delay (up to 20 sec).
-     *
-     * @param candidates The addresses to use for peer exchange.
-     * @return A CompletableFuture which completes if at least one peer exchange was successful or
-     * if all failed (expected if no peers are in the network).
-     */
-    private CompletableFuture<Void> doPeerExchange(List<Address> candidates) {
-        if (candidates.isEmpty() || isStopped) {
-            return CompletableFuture.completedFuture(null);
+    private void doPeerExchange(List<Address> candidates, int minSuccess) {
+        checkArgument(minSuccess > 0, "minSuccess must be > 0");
+        if (isStopped) {
+            return;
         }
 
-        if (resultFuture != null && !resultFuture.isDone()) {
-            log.warn("We have a not completed future. We drop that call and return.");
-            return CompletableFuture.failedFuture(new RuntimeException("We got called doPeerExchange while the previous future " +
-                    "was not completed"));
+        if (candidates.isEmpty()) {
+            return;
         }
 
-        log.info("{} starts peer exchange with: {}", node,
+        log.info("candidates for doPeerExchange {}",
                 StringUtils.truncate(candidates.stream()
                         .map(Address::toString)
                         .collect(Collectors.toList())
                         .toString(), 2000));
 
-        scheduler.ifPresent(Scheduler::stop);
-        resultFuture = new CompletableFuture<>();
+        AtomicInteger numMinSuccess = new AtomicInteger(Math.min(minSuccess, candidates.size()));
         AtomicInteger numSuccess = new AtomicInteger();
         AtomicInteger numFailures = new AtomicInteger();
+        CountDownLatch latch = new CountDownLatch(1);
         candidates.stream()
                 .map(this::doPeerExchangeAsync)
                 .forEach(future -> {
                     future.whenComplete((nil, throwable) -> {
                         if (throwable == null) {
                             numSuccess.incrementAndGet();
-                            if (!resultFuture.isDone()) {
-                                log.info("We got at least one peerExchange future completed.");
-                                resultFuture.complete(null);
-                            }
                         } else {
                             numFailures.incrementAndGet();
                         }
 
-                        if (numFailures.get() == candidates.size() && !resultFuture.isDone()) {
-                            log.info("We got all peerExchange futures completed but none was successful. " +
-                                    "This is expected when no other peers are in the network");
-                            resultFuture.complete(null);
+                        boolean allCompleted = numFailures.get() + numSuccess.get() == candidates.size();
+                        if (allCompleted || numSuccess.get() == numMinSuccess.get()) {
+                            log.info("Peer exchange completed. numSuccess={}; numFailures={}",
+                                    numSuccess.get(), numFailures.get());
+                            latch.countDown();
                         }
 
-                        if (numFailures.get() + numSuccess.get() == candidates.size()) {
-                            log.info("{} completed peer exchange to {} candidates. {} requests successfully completed.",
-                                    node, candidates.size(), numSuccess);
-                            if (peerExchangeStrategy.shouldRedoInitialPeerExchange(numSuccess.get(), candidates.size())) {
-                                log.info("{} repeats the initial peer exchange after {} sec as it has not reached sufficient connections " +
-                                        "or received sufficient peers", node, doInitialPeerExchangeDelaySec);
-                                scheduler.ifPresent(Scheduler::stop);
-                                scheduler = Optional.of(Scheduler.run(this::startInitialPeerExchangeAsync)
-                                        .after(doInitialPeerExchangeDelaySec, TimeUnit.SECONDS)
-                                        .name("PeerExchangeService.scheduler-" + StringUtils.truncate(node.toString(), 10)));
-                                doInitialPeerExchangeDelaySec = Math.min(20, doInitialPeerExchangeDelaySec * 2);
+                        if (allCompleted) {
+                            boolean tooManyFailures = peerExchangeStrategy.tooManyFailures(numSuccess.get(), numFailures.get());
+                            boolean needsMoreConnections = peerExchangeStrategy.needsMoreConnections();
+                            boolean needsMoreReportedPeers = peerExchangeStrategy.needsMoreReportedPeers();
+                            if (tooManyFailures || needsMoreConnections || needsMoreReportedPeers) {
+                                if (tooManyFailures) {
+                                    log.info("Repeat peer exchange. Reason: tooManyFailures");
+                                }
+                                if (needsMoreConnections) {
+                                    log.info("Repeat peer exchange. Reason: needsMoreConnections");
+                                }
+                                if (needsMoreReportedPeers) {
+                                    log.info("Repeat peer exchange. Reason: needsMoreReportedPeers");
+                                }
+                                peerExchangeScheduler.ifPresent(Scheduler::stop);
+                                peerExchangeScheduler = Optional.of(Scheduler.run(() -> startInitialPeerExchange(minSuccess))
+                                        .after(peerExchangeDelaySec, TimeUnit.SECONDS)
+                                        .name("PeerExchangeService.scheduler"));
+                                peerExchangeDelaySec = Math.min(20, peerExchangeDelaySec * 2);
                             } else {
-                                log.info("We have completed our peer exchange as we have sufficient connections established.");
-                                scheduler.ifPresent(Scheduler::stop);
-                                scheduler = Optional.empty();
+                                log.info("We stop our peer exchange as we have sufficient connections established.");
+                                initialPeerExchangeCompleted = true;
+                                peerExchangeScheduler.ifPresent(Scheduler::stop);
+                                peerExchangeScheduler = Optional.empty();
                             }
                         }
                     });
                 });
-        return resultFuture;
+        try {
+            boolean await = latch.await(2, MINUTES);
+            checkArgument(await, "CountDownLatch not completed in 2 minutes");
+        } catch (Exception e) {
+            log.error("Error at CountDownLatch.await", e);
+            peerExchangeScheduler.ifPresent(Scheduler::stop);
+            peerExchangeScheduler = Optional.of(Scheduler.run(() -> startInitialPeerExchange(minSuccess))
+                    .after(peerExchangeDelaySec, TimeUnit.SECONDS)
+                    .name("PeerExchangeService.scheduler-" + StringUtils.truncate(node.toString(), 10)));
+            peerExchangeDelaySec = Math.min(20, peerExchangeDelaySec * 2);
+        }
     }
 
     private CompletableFuture<Void> doPeerExchangeAsync(Address peerAddress) {
-        return runAsync(() -> doPeerExchange(peerAddress), NETWORK_IO_POOL);
-    }
+        return supplyAsync(() -> {
+            String connectionId = null;
+            try {
+                Connection connection = node.getConnection(peerAddress);
+                connectionId = connection.getId();
+                checkArgument(!requestHandlerMap.containsKey(connectionId), "We have a pending request for that connection");
 
-    private void doPeerExchange(Address peerAddress) {
-        String connectionId = null;
-        try {
-            Connection connection = node.getConnection(peerAddress);
-            connectionId = connection.getId();
-            checkArgument(!requestHandlerMap.containsKey(connectionId), "We have a pending request for that connection");
+                PeerExchangeRequestHandler handler = new PeerExchangeRequestHandler(node, connection);
+                requestHandlerMap.put(connectionId, handler);
+                Set<Peer> myPeers = peerExchangeStrategy.getPeersForReporting(peerAddress);
 
-            PeerExchangeRequestHandler handler = new PeerExchangeRequestHandler(node, connection);
-            requestHandlerMap.put(connectionId, handler);
-            Set<Peer> myPeers = peerExchangeStrategy.getPeersForReporting(peerAddress);
-
-            // We request and wait for response
-            Set<Peer> reportedPeers = handler.request(myPeers).join();
-            log.info("{} completed peer exchange with {} and received {} reportedPeers.",
-                    node, peerAddress, reportedPeers.size());
-            peerExchangeStrategy.addReportedPeers(reportedPeers, peerAddress);
-            requestHandlerMap.remove(connectionId);
-        } catch (Exception exception) {
-            if (connectionId != null) {
-                if (requestHandlerMap.containsKey(connectionId)) {
-                    requestHandlerMap.get(connectionId).dispose();
-                    requestHandlerMap.remove(connectionId);
+                // We request and wait for response
+                Set<Peer> reportedPeers = handler.request(myPeers).join();
+                log.info("{} completed peer exchange with {} and received {} reportedPeers.",
+                        node, peerAddress, reportedPeers.size());
+                peerExchangeStrategy.addReportedPeers(reportedPeers, peerAddress);
+                requestHandlerMap.remove(connectionId);
+                log.info("Peer exchange with {} completed", peerAddress);
+                return null;
+            } catch (Exception exception) {
+                log.info("Peer exchange with {} failed", peerAddress);
+                if (connectionId != null) {
+                    if (requestHandlerMap.containsKey(connectionId)) {
+                        requestHandlerMap.get(connectionId).dispose();
+                        requestHandlerMap.remove(connectionId);
+                    }
                 }
+                throw exception;
             }
-            log.debug("{} failed to do a peer exchange with {}.",
-                    node, peerAddress, exception);
-            throw exception;
-        }
+        }, NETWORK_IO_POOL);
     }
 }
