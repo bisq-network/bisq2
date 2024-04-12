@@ -48,13 +48,16 @@ public final class BitcoinWalletStore implements PersistableStore<BitcoinWalletS
     }
 
     @Override
-    public bisq.wallets.protobuf.BitcoinWalletStore toProto() {
-        bisq.wallets.protobuf.BitcoinWalletStore.Builder builder =
-                bisq.wallets.protobuf.BitcoinWalletStore.newBuilder()
-                        .addAllReceiveAddresses(receiveAddresses);
+    public bisq.wallets.protobuf.BitcoinWalletStore toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
+    }
 
-        rpcConfig.ifPresent(config -> builder.setRpcConfig(config.toProto()));
-        return builder.build();
+    @Override
+    public bisq.wallets.protobuf.BitcoinWalletStore.Builder getBuilder(boolean ignoreAnnotation) {
+        bisq.wallets.protobuf.BitcoinWalletStore.Builder builder = bisq.wallets.protobuf.BitcoinWalletStore.newBuilder()
+                .addAllReceiveAddresses(receiveAddresses);
+        rpcConfig.ifPresent(config -> builder.setRpcConfig(config.toProto(ignoreAnnotation)));
+        return builder;
     }
 
     public static BitcoinWalletStore fromProto(bisq.wallets.protobuf.BitcoinWalletStore proto) {
