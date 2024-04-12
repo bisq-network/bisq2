@@ -57,7 +57,7 @@ public final class Inventory implements NetworkProto {
         //  This could be used and combined with the other remaining data, like signature and pubkey
         // We set ignoreAnnotation to false to ensure that we get the same order in case the peer has different data in the
         // annotated fields
-        this.entries.sort(Comparator.comparing((DataRequest dataRequest) -> new ByteArray(dataRequest.serialize(false))));
+        this.entries.sort(Comparator.comparing((DataRequest dataRequest) -> new ByteArray(dataRequest.serializeNonExcluded())));
 
         verify();
     }

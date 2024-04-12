@@ -57,7 +57,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
     public DataStorageResult add(AddMailboxRequest request) {
         MailboxSequentialData mailboxSequentialData = request.getMailboxSequentialData();
         MailboxData mailboxData = mailboxSequentialData.getMailboxData();
-        byte[] hash = DigestUtil.hash(mailboxData.serialize(false));
+        byte[] hash = DigestUtil.hash(mailboxData.serializeNonExcluded());
         ByteArray byteArray = new ByteArray(hash);
         MailboxRequest requestFromMap;
         Map<ByteArray, MailboxRequest> map = persistableStore.getMap();
@@ -201,7 +201,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
     }
 
     boolean canAddMailboxMessage(MailboxData mailboxData) {
-        byte[] hash = DigestUtil.hash(mailboxData.serialize(false));
+        byte[] hash = DigestUtil.hash(mailboxData.serializeNonExcluded());
         return getSequenceNumber(hash) < Integer.MAX_VALUE;
     }
 

@@ -17,7 +17,7 @@
 
 package bisq.common.proto.mocks;
 
-import bisq.common.annotation.ExcludeForHash;
+import bisq.common.annotation.ExcludeFromProto;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -25,7 +25,7 @@ import lombok.Getter;
 @Getter
 public final class ParentMockWithExcludedChild implements Parent {
     private final String parentValue;
-    @ExcludeForHash
+    @ExcludeFromProto
     private final Child child;
 
     public ParentMockWithExcludedChild(String parentValue, Child child) {

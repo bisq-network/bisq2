@@ -48,11 +48,11 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
     public static AddAuthenticatedDataRequest from(AuthenticatedDataStorageService store, AuthenticatedData authenticatedData, KeyPair keyPair)
             throws GeneralSecurityException {
 
-        byte[] hash = DigestUtil.hash(authenticatedData.serialize(false));
+        byte[] hash = DigestUtil.hash(authenticatedData.serializeNonExcluded());
         byte[] pubKeyHash = DigestUtil.hash(keyPair.getPublic().getEncoded());
         int sequenceNumber = store.getSequenceNumber(hash) + 1;
         AuthenticatedSequentialData data = new AuthenticatedSequentialData(authenticatedData, sequenceNumber, pubKeyHash, System.currentTimeMillis());
-        byte[] serialized = data.serialize(false);
+        byte[] serialized = data.serializeNonExcluded();
         byte[] signature = SignatureUtil.sign(serialized, keyPair.getPrivate());
          /*  log.error("hash={}", Hex.encode(hash));
         log.error("keyPair.getPublic().getEncoded()={}", Hex.encode(keyPair.getPublic().getEncoded()));
@@ -139,7 +139,7 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
 
     public boolean isSignatureInvalid() {
         try {
-            return !SignatureUtil.verify(authenticatedSequentialData.serialize(false), signature, getOwnerPublicKey());
+            return !SignatureUtil.verify(authenticatedSequentialData.serializeNonExcluded(), signature, getOwnerPublicKey());
         } catch (Exception e) {
             log.warn(e.toString(), e);
             return true;

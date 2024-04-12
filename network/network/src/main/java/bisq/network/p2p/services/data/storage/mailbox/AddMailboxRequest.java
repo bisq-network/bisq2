@@ -52,7 +52,7 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
                 receiverPublicKeyHash,
                 receiverPublicKey,
                 1);
-        byte[] serialized = mailboxSequentialData.serialize(false);
+        byte[] serialized = mailboxSequentialData.serializeNonExcluded();
         byte[] signature = SignatureUtil.sign(serialized, senderKeyPair.getPrivate());
         return new AddMailboxRequest(mailboxSequentialData, signature, senderPublicKey);
     }
@@ -127,7 +127,7 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
 
     public boolean isSignatureInvalid() {
         try {
-            return !SignatureUtil.verify(mailboxSequentialData.serialize(false), signature, getOwnerPublicKey());
+            return !SignatureUtil.verify(mailboxSequentialData.serializeNonExcluded(), signature, getOwnerPublicKey());
         } catch (Exception e) {
             log.warn(e.toString(), e);
             return true;

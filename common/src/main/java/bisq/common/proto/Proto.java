@@ -17,7 +17,7 @@
 
 package bisq.common.proto;
 
-import bisq.common.annotation.ExcludeForHash;
+import bisq.common.annotation.ExcludeFromProto;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.Message;
 import org.slf4j.Logger;
@@ -51,11 +51,11 @@ public interface Proto {
     }
 
     default Message toProto() {
-        return buildProto(true);
+        return toProto(true);
     }
 
     default Message toProto(boolean ignoreAnnotation) {
-        return buildProto(true);
+        return buildProto(ignoreAnnotation);
     }
 
     default <T extends Message> T buildProto(boolean ignoreAnnotation) {
@@ -63,14 +63,23 @@ public interface Proto {
         return (T) builder.build();
     }
 
-    default byte[] serialize(boolean ignoreAnnotation) {
-        return buildProto(ignoreAnnotation).toByteArray();
+    default byte[] serialize() {
+        return getBuilder(true).build().toByteArray();
+    }
+
+    default byte[] serializeNonExcluded() {
+        return getBuilder(false).build().toByteArray();
+    }
+
+
+    default long getSerializedSize() {
+        return buildProto(true).getSerializedSize();
     }
 
     default Set<String> getExcludedFields() {
         return Arrays.stream(getClass().getDeclaredFields())
                 .peek(field -> field.setAccessible(true))
-                .filter(field -> field.isAnnotationPresent(ExcludeForHash.class))
+                .filter(field -> field.isAnnotationPresent(ExcludeFromProto.class))
                 .map(Field::getName)
                 .collect(Collectors.toSet());
     }
@@ -78,12 +87,12 @@ public interface Proto {
     /**
      * Requires that the name of the java fields is the same as the name of the proto definition.
      *
-     * @param builder The builder we transform by clearing the ExcludeForHash annotated fields.
-     * @return Builder with the fields annotated with ExcludeForHash cleared.
+     * @param builder The builder we transform by clearing the ExcludeFromProto annotated fields.
+     * @return Builder with the fields annotated with ExcludeFromProto cleared.
      */
     default Message.Builder clearAnnotatedFields(Message.Builder builder) {
         Set<String> excludedFields = getExcludedFields();
-        getLogger().info("Clear fields in builder annotated with @ExcludeForHash: {}", excludedFields);
+        getLogger().info("Clear fields in builder annotated with @ExcludeFromProto: {}", excludedFields);
         for (Descriptors.FieldDescriptor fieldDesc : builder.getAllFields().keySet()) {
             if (excludedFields.contains(fieldDesc.getName())) {
                 builder.clearField(fieldDesc);
