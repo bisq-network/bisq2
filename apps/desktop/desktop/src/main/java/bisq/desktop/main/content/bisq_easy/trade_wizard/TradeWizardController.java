@@ -146,6 +146,7 @@ public class TradeWizardController extends NavigationController implements InitW
             tradeWizardSelectOfferController.setDirection(direction);
             tradeWizardAmountController.setDirection(direction);
             tradeWizardPaymentMethodController.setDirection(direction);
+            tradeWizardPriceController.setDirection(direction);
         });
         marketPin = EasyBind.subscribe(tradeWizardMarketController.getMarket(), market -> {
             tradeWizardSelectOfferController.setMarket(market);

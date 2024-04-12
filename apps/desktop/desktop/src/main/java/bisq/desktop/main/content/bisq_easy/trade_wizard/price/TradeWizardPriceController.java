@@ -25,6 +25,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.components.PriceInput;
 import bisq.i18n.Res;
+import bisq.offer.Direction;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.FixPriceSpec;
 import bisq.offer.price.spec.FloatPriceSpec;
@@ -74,6 +75,12 @@ public class TradeWizardPriceController implements Controller {
         model.setMarket(market);
     }
 
+    public void setDirection(Direction direction) {
+        if (direction != null) {
+            model.setDirection(direction);
+        }
+    }
+
     public ReadOnlyObjectProperty<PriceSpec> getPriceSpec() {
         return model.getPriceSpec();
     }
@@ -108,6 +115,8 @@ public class TradeWizardPriceController implements Controller {
 
         String marketCodes = model.getMarket().getMarketCodes();
         priceInput.setDescription(Res.get("bisqEasy.price.tradePrice.inputBoxText", marketCodes));
+
+        model.getShouldShowFeedback().set(model.getDirection().isBuy());
 
         applyPriceSpec();
     }

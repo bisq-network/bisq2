@@ -20,6 +20,7 @@ package bisq.desktop.main.content.bisq_easy.trade_wizard.price;
 import bisq.common.currency.Market;
 import bisq.common.monetary.PriceQuote;
 import bisq.desktop.common.view.Model;
+import bisq.offer.Direction;
 import bisq.offer.price.spec.MarketPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
 import javafx.beans.property.BooleanProperty;
@@ -39,6 +40,8 @@ import javax.annotation.Nullable;
 public class TradeWizardPriceModel implements Model {
     @Setter
     private Market market = null;
+    @Setter
+    private Direction direction;
     private final DoubleProperty percentage = new SimpleDoubleProperty();
     private final StringProperty percentageAsString = new SimpleStringProperty();
     private final StringProperty priceAsString = new SimpleStringProperty();
@@ -50,9 +53,11 @@ public class TradeWizardPriceModel implements Model {
     private PriceQuote lastValidPriceQuote;
     private final StringProperty feedbackSentence = new SimpleStringProperty();
     private final BooleanProperty shouldShowLearnWhyOverlay = new SimpleBooleanProperty();
+    private final BooleanProperty shouldShowFeedback = new SimpleBooleanProperty();
 
     public void reset() {
         market = null;
+        direction = null;
         percentage.set(0d);
         percentageAsString.set(null);
         priceAsString.set(null);
@@ -62,5 +67,6 @@ public class TradeWizardPriceModel implements Model {
         lastValidPriceQuote = null;
         feedbackSentence.set(null);
         shouldShowLearnWhyOverlay.set(false);
+        shouldShowFeedback.set(false);
     }
 }

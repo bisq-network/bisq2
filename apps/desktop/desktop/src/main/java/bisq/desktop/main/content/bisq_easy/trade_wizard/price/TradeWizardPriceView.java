@@ -42,11 +42,11 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
     private static final String SELECTED_PRICE_MODEL_STYLE_CLASS = "selected-price-model";
 
     private final MaterialTextField percentage;
-    private final VBox fieldsBox;
+    private final VBox fieldsBox, learnWhyOverlay, content;
     private final PriceInput priceInput;
     private final Button percentagePrice, fixedPrice, showLearnWhyButton, closeLearnWhyButton;
     private final Label feedbackSentence;
-    private final VBox learnWhyOverlay, content;
+    private final HBox feedbackBox;
     private Subscription percentageFocussedPin, useFixPricePin, shouldShowLearnWhyOverlayPin;
 
     public TradeWizardPriceView(TradeWizardPriceModel model, TradeWizardPriceController controller, PriceInput priceInput) {
@@ -97,7 +97,7 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         feedbackSentence.getStyleClass().add("bisq-text-3");
         showLearnWhyButton = new Button(Res.get("bisqEasy.price.feedback.learnWhySection.openButton"));
         showLearnWhyButton.getStyleClass().add("learn-why-button");
-        HBox feedbackBox = new HBox(5, feedbackSentence, showLearnWhyButton);
+        feedbackBox = new HBox(5, feedbackSentence, showLearnWhyButton);
         feedbackBox.getStyleClass().add("feedback-box");
 
         // Overlay
@@ -115,6 +115,8 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
     protected void onViewAttached() {
         percentage.textProperty().bindBidirectional(model.getPercentageAsString());
         feedbackSentence.textProperty().bind(model.getFeedbackSentence());
+        feedbackBox.visibleProperty().bind(model.getShouldShowFeedback());
+        feedbackBox.managedProperty().bind(model.getShouldShowFeedback());
 
         percentageFocussedPin = EasyBind.subscribe(percentage.textInputFocusedProperty(), controller::onPercentageFocussed);
         // FIXME: The very first time this component is used when starting the app requestFocus() and slideInTop is not applied.
@@ -151,6 +153,8 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
     protected void onViewDetached() {
         percentage.textProperty().unbindBidirectional(model.getPercentageAsString());
         feedbackSentence.textProperty().unbind();
+        feedbackBox.visibleProperty().unbind();
+        feedbackBox.managedProperty().unbind();
 
         percentageFocussedPin.unsubscribe();
         useFixPricePin.unsubscribe();
