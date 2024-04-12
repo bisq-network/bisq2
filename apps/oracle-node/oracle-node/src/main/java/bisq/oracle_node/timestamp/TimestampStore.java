@@ -43,13 +43,17 @@ public final class TimestampStore implements PersistableStore<TimestampStore> {
     }
 
     @Override
-    public bisq.oracle_node.protobuf.TimestampStore toProto() {
+    public bisq.oracle_node.protobuf.TimestampStore.Builder getBuilder(boolean ignoreAnnotation) {
         return bisq.oracle_node.protobuf.TimestampStore.newBuilder()
                 .addAllStringLongPairs(timestampsByProfileId.entrySet().stream()
                         .map(entry -> new StringLongPair(entry.getKey(), entry.getValue()))
-                        .map(StringLongPair::toProto)
-                        .collect(Collectors.toSet()))
-                .build();
+                        .map(e -> e.toProto(ignoreAnnotation))
+                        .collect(Collectors.toSet()));
+    }
+
+    @Override
+    public bisq.oracle_node.protobuf.TimestampStore toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static TimestampStore fromProto(bisq.oracle_node.protobuf.TimestampStore proto) {

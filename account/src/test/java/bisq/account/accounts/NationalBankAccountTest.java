@@ -57,7 +57,7 @@ class NationalBankAccountTest {
                     new bisq.common.locale.Region("regionCode", "regionName")));
 
     @Test
-    void toProto() {
+    void testToProto() {
         var result = ACCOUNT.toProto(true);
         assertThat(result)
                 .usingRecursiveComparison()
@@ -66,7 +66,7 @@ class NationalBankAccountTest {
     }
 
     @Test
-    void fromProto() {
+    void testFromProto() {
         var result = NationalBankAccount.fromProto(PROTO);
         assertThat(result)
                 .usingRecursiveComparison()

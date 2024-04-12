@@ -39,19 +39,9 @@ import java.util.stream.Collectors;
  * If a map is needed we can use the TreeMap as it provides a deterministic order.
  */
 public interface Proto {
-    // TODO use default impl to avoid compile errors until the new interface is implemented in all Proto instances
-    //Message.Builder getBuilder();
-
-    default Message.Builder getBuilder() {
-        return getBuilder(true);
-    }
 
     default Message.Builder getBuilder(boolean ignoreAnnotation) {
         return null;
-    }
-
-    default Message toProto() {
-        return toProto(true);
     }
 
     default Message toProto(boolean ignoreAnnotation) {

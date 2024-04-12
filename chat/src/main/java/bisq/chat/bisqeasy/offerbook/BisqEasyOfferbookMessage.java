@@ -81,8 +81,6 @@ public final class BisqEasyOfferbookMessage extends PublicChatMessage implements
                 wasEdited,
                 chatMessageType);
         this.bisqEasyOffer = bisqEasyOffer;
-
-        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize()); //768
     }
 
     public bisq.chat.protobuf.ChatMessage.Builder getBuilder(boolean ignoreAnnotation) {

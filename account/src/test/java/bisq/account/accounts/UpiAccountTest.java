@@ -51,7 +51,7 @@ class UpiAccountTest {
                     new bisq.common.locale.Region("regionCode", "regionName")));
 
     @Test
-    void toProto() {
+    void testToProto() {
         var result = ACCOUNT.toProto(true);
         assertThat(result).usingRecursiveComparison()
                 .ignoringFields("accountPayload_.memoizedHashCode", "memoizedHashCode", "creationDate_")
@@ -60,7 +60,7 @@ class UpiAccountTest {
     }
 
     @Test
-    void fromProto() {
+    void testFromProto() {
         var result = bisq.account.accounts.UpiAccount.fromProto(PROTO);
         assertThat(result)
                 .usingRecursiveComparison()

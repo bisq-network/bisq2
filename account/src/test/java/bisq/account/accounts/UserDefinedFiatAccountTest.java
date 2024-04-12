@@ -36,7 +36,7 @@ class UserDefinedFiatAccountTest {
             "accountName", "customData");
 
     @Test
-    void toProto() {
+    void testToProto() {
         var result = ACCOUNT.toProto(true);
         assertThat(result)
                 .usingRecursiveComparison()
@@ -47,7 +47,7 @@ class UserDefinedFiatAccountTest {
     }
 
     @Test
-    void fromProto() {
+    void testFromProto() {
         var result = bisq.account.accounts.UserDefinedFiatAccount.fromProto(PROTO);
         assertThat(result)
                 .usingRecursiveComparison()

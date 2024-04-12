@@ -116,8 +116,6 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage implement
         this.tradeId = tradeId;
         this.mediator = mediator;
         this.bisqEasyOffer = bisqEasyOffer;
-
-        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize()); //908
     }
 
     private BisqEasyOpenTradeMessage(String tradeId,
@@ -142,7 +140,6 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage implement
         this.tradeId = tradeId;
         this.mediator = mediator;
         this.bisqEasyOffer = Optional.of(bisqEasyOffer);
-        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize()); //884
     }
 
     @Override

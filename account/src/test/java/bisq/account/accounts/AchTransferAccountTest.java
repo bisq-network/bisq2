@@ -53,7 +53,7 @@ class AchTransferAccountTest {
                     new bisq.common.locale.Region("regionCode", "regionName")));
 
     @Test
-    void toProto() {
+    void testToProto() {
         var result = ACCOUNT.toProto(true);
         assertThat(result)
                 .usingRecursiveComparison()
@@ -62,7 +62,7 @@ class AchTransferAccountTest {
     }
 
     @Test
-    void fromProto() {
+    void testFromProto() {
         var result = AchTransferAccount.fromProto(PROTO);
         assertThat(result)
                 .usingRecursiveComparison()

@@ -87,7 +87,7 @@ public final class HashSetFilter extends InventoryFilter {
     @Override
     public String getDetails() {
         return "HashSetFilter with " + filterEntries.size() + " filterEntries and size of " +
-                ByteUnit.BYTE.toKB(toProto().getSerializedSize());
+                ByteUnit.BYTE.toKB(getSerializedSize());
     }
 
     public Set<HashSetFilterEntry> getFilterEntriesAsSet() {

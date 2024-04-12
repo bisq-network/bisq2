@@ -66,8 +66,6 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
                 date,
                 wasEdited,
                 chatMessageType);
-
-        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize()); //1245
     }
 
     @Override

@@ -46,13 +46,18 @@ public final class LiquidWalletStore implements PersistableStore<LiquidWalletSto
     }
 
     @Override
-    public bisq.wallets.protobuf.LiquidWalletStore toProto() {
+    public bisq.wallets.protobuf.LiquidWalletStore.Builder getBuilder(boolean ignoreAnnotation) {
         bisq.wallets.protobuf.LiquidWalletStore.Builder builder =
                 bisq.wallets.protobuf.LiquidWalletStore.newBuilder()
                         .addAllWalletAddresses(walletAddresses);
 
-        rpcConfig.ifPresent(config -> builder.setRpcConfig(config.toProto(true)));
-        return builder.build();
+        rpcConfig.ifPresent(config -> builder.setRpcConfig(config.toProto(ignoreAnnotation)));
+        return builder;
+    }
+
+    @Override
+    public bisq.wallets.protobuf.LiquidWalletStore toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static LiquidWalletStore fromProto(bisq.wallets.protobuf.LiquidWalletStore proto) {

@@ -54,7 +54,7 @@ class AmazonGiftCardAccountTest {
                             new bisq.common.locale.Region("regionCode", "regionName")));
 
     @Test
-    void toProto() {
+    void testToProto() {
         var result = ACCOUNT.toProto(true);
         assertThat(result)
                 .usingRecursiveComparison()
@@ -64,7 +64,7 @@ class AmazonGiftCardAccountTest {
     }
 
     @Test
-    void fromProto() {
+    void testFromProto() {
         var result = bisq.account.accounts.AmazonGiftCardAccount.fromProto(PROTO);
         assertThat(result)
                 .usingRecursiveComparison()

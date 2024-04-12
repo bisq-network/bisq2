@@ -20,7 +20,7 @@ class ZelleAccountPayloadTest {
             "id", "ZELLE", "email", "holderName");
 
     @Test
-    void toProto() {
+    void testToProto() {
         var result = ACCOUNT.toProto(true);
         assertThat(result)
                 .usingRecursiveComparison()
@@ -28,7 +28,7 @@ class ZelleAccountPayloadTest {
     }
 
     @Test
-    void fromProto() {
+    void testFromProto() {
         var result = bisq.account.accounts.ZelleAccountPayload.fromProto(PROTO);
         assertThat(result)
                 .usingRecursiveComparison()

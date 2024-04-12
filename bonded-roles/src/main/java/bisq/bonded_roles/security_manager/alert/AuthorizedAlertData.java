@@ -83,7 +83,6 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
         this.staticPublicKeysProvided = staticPublicKeysProvided;
 
         verify();
-        toProto();
     }
 
     @Override

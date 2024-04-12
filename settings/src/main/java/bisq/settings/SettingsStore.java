@@ -116,7 +116,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     @Override
     public bisq.settings.protobuf.SettingsStore.Builder getBuilder(boolean ignoreAnnotation) {
         return bisq.settings.protobuf.SettingsStore.newBuilder()
-                .setCookie(cookie.toProto())
+                .setCookie(cookie.toProto(ignoreAnnotation))
                 .putAllDontShowAgainMap(dontShowAgainMap)
                 .setUseAnimations(useAnimations.get())
                 .setSelectedMarket(selectedMarket.get().toProto(ignoreAnnotation))

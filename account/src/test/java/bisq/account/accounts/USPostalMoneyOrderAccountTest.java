@@ -35,7 +35,7 @@ class USPostalMoneyOrderAccountTest {
     );
 
     @Test
-    void toProto() {
+    void testToProto() {
         var result = ACCOUNT.toProto(true);
         assertThat(result)
                 .usingRecursiveComparison()
@@ -43,7 +43,7 @@ class USPostalMoneyOrderAccountTest {
     }
 
     @Test
-    void fromProto() {
+    void testFromProto() {
         var result = bisq.account.accounts.USPostalMoneyOrderAccount.fromProto(PROTO);
         assertThat(result)
                 .usingRecursiveComparison()

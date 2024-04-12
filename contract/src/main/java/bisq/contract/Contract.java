@@ -88,6 +88,6 @@ public abstract class Contract<T extends Offer<?, ?>> implements NetworkProto {
      * considerable effort as it need to cover all the object path downwards).
      */
     public byte[] getHashForSignature() {
-        return toProto().toByteArray();
+        return serializeForHash();
     }
 }
