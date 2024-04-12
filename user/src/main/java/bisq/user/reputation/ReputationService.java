@@ -149,25 +149,25 @@ public class ReputationService implements Service {
 
     @VisibleForTesting
     static double getFiveSystemScore(long candidateScore) {
-        if (candidateScore <= 1_199) {
+        if (candidateScore < 1_200) {
             return 0;
-        } else if (candidateScore <= 4_999) {
+        } else if (candidateScore < 5_000) {
             return 0.5;
-        } else if (candidateScore <= 14_999) {
+        } else if (candidateScore < 15_000) {
             return 1;
-        } else if (candidateScore <= 19_999) {
+        } else if (candidateScore < 20_000) {
             return 1.5;
-        } else if (candidateScore <= 24_999) {
+        } else if (candidateScore < 25_000) {
             return 2;
-        } else if (candidateScore <= 29_999) {
+        } else if (candidateScore < 30_000) {
             return 2.5;
-        } else if (candidateScore <= 34_999) {
+        } else if (candidateScore < 35_000) {
             return 3;
-        } else if (candidateScore <= 39_999) {
+        } else if (candidateScore < 40_000) {
             return 3.5;
-        } else if (candidateScore <= 59_999) {
+        } else if (candidateScore < 60_000) {
             return 4;
-        } else if (candidateScore <= 99_999) {
+        } else if (candidateScore < 100_000) {
             return 4.5;
         } else {
             return 5;
