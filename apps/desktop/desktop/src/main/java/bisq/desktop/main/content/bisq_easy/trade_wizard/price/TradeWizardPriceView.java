@@ -101,9 +101,9 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         Label learnWhyTitle = new Label(Res.get("bisqEasy.price.feedback.learnWhySection.title"));
         learnWhyTitle.getStyleClass().addAll("learn-why-title-label", "large-text");
         Label learnWhyIntroLabel = new Label(Res.get("bisqEasy.price.feedback.learnWhySection.description.intro"));
-        learnWhyIntroLabel.getStyleClass().addAll("bisq-text-3", "learn-why-intro-label");
+        learnWhyIntroLabel.getStyleClass().addAll("learn-why-text", "learn-why-intro-label");
         UnorderedList learnWhyExpositionList = new UnorderedList(Res.get("bisqEasy.price.feedback.learnWhySection.description.exposition"),
-                "bisq-text-3", 7, 10, "- ", "- ");
+                "learn-why-text", 7, 10, "- ", "- ");
         closeLearnWhyButton = new Button(Res.get("bisqEasy.price.feedback.learnWhySection.closeButton"));
         learnWhyOverlay = new VBox(10, learnWhyTitle, learnWhyIntroLabel, learnWhyExpositionList, closeLearnWhyButton);
         learnWhyOverlay.getStyleClass().addAll("trade-wizard-feedback-bg", "learn-why-overlay");

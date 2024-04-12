@@ -609,10 +609,17 @@
 }
 
 .bisq-easy-trade-wizard-price-step .learn-why-overlay .learn-why-title-label {
-    -fx-fill: -fx-mid-text-color;
-    -fx-text-fill: -fx-mid-text-color;
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-padding: 0 0 15 0;
+}
+
+.bisq-easy-trade-wizard-price-step .learn-why-overlay .learn-why-text {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 1.15em;
+    -fx-font-family: "IBM Plex Sans Light";
 }
 
 .bisq-easy-trade-wizard-price-step .learn-why-overlay .learn-why-intro-label {
