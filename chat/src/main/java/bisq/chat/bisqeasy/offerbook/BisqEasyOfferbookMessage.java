@@ -85,10 +85,10 @@ public final class BisqEasyOfferbookMessage extends PublicChatMessage implements
         // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize()); //768
     }
 
-    public bisq.chat.protobuf.ChatMessage toProto() {
+    public bisq.chat.protobuf.ChatMessage.Builder getBuilder(boolean ignoreAnnotation) {
         bisq.chat.protobuf.BisqEasyOfferbookMessage.Builder builder = bisq.chat.protobuf.BisqEasyOfferbookMessage.newBuilder();
-        bisqEasyOffer.ifPresent(e -> builder.setBisqEasyOffer(e.toProto()));
-        return getChatMessageBuilder().setBisqEasyOfferbookMessage(builder).build();
+        bisqEasyOffer.ifPresent(e -> builder.setBisqEasyOffer(e.toProto(ignoreAnnotation)));
+        return getChatMessageBuilder(ignoreAnnotation).setBisqEasyOfferbookMessage(builder);
     }
 
     public static BisqEasyOfferbookMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto) {

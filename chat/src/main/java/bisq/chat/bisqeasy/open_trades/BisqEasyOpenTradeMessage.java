@@ -22,6 +22,7 @@ import bisq.chat.ChatMessageType;
 import bisq.chat.Citation;
 import bisq.chat.bisqeasy.BisqEasyOfferMessage;
 import bisq.chat.priv.PrivateChatMessage;
+import bisq.chat.protobuf.ChatMessage;
 import bisq.common.util.StringUtils;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -145,23 +146,22 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage implement
     }
 
     @Override
-    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
+    public bisq.network.protobuf.EnvelopePayloadMessage.Builder getBuilder(boolean ignoreAnnotation) {
         return getNetworkMessageBuilder()
-                .setExternalNetworkMessage(ExternalNetworkMessage.newBuilder().setAny(Any.pack(toChatMessageProto())))
-                .build();
+                .setExternalNetworkMessage(ExternalNetworkMessage.newBuilder().setAny(Any.pack(toChatMessageProto(ignoreAnnotation))));
     }
 
-    public bisq.chat.protobuf.ChatMessage toChatMessageProto() {
-        bisq.chat.protobuf.BisqEasyOpenTradeMessage.Builder builder = bisq.chat.protobuf.BisqEasyOpenTradeMessage.newBuilder()
+    public bisq.chat.protobuf.ChatMessage toChatMessageProto(boolean ignoreAnnotation) {
+        var builder = bisq.chat.protobuf.BisqEasyOpenTradeMessage.newBuilder()
                 .setTradeId(tradeId)
                 .setReceiverUserProfileId(receiverUserProfileId)
-                .setReceiverNetworkId(receiverNetworkId.toProto())
-                .setSender(senderUserProfile.toProto());
-        mediator.ifPresent(mediator -> builder.setMediator(mediator.toProto()));
-        bisqEasyOffer.ifPresent(offer -> builder.setBisqEasyOffer(offer.toProto()));
-        return getChatMessageBuilder()
-                .setBisqEasyOpenTradeMessage(builder)
-                .build();
+                .setReceiverNetworkId(receiverNetworkId.toProto(ignoreAnnotation))
+                .setSender(senderUserProfile.toProto(ignoreAnnotation));
+        mediator.ifPresent(mediator -> builder.setMediator(mediator.toProto(ignoreAnnotation)));
+        bisqEasyOffer.ifPresent(offer -> builder.setBisqEasyOffer(offer.toProto(ignoreAnnotation)));
+        var bisqEasyOpenTradeMessageBuilder = ignoreAnnotation ? builder : clearAnnotatedFields(builder);
+        ChatMessage.Builder chatMessageBuilder = getChatMessageBuilder(ignoreAnnotation).setBisqEasyOpenTradeMessage(bisqEasyOpenTradeMessageBuilder);
+        return ignoreAnnotation ? chatMessageBuilder.build() : clearAnnotatedFields(chatMessageBuilder).build();
     }
 
     public static BisqEasyOpenTradeMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto) {

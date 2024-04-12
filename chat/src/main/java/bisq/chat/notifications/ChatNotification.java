@@ -101,7 +101,7 @@ public class ChatNotification implements Notification, PersistableProto {
     }
 
     @Override
-    public bisq.chat.protobuf.ChatNotification toProto() {
+    public bisq.chat.protobuf.ChatNotification.Builder getBuilder(boolean ignoreAnnotation) {
         bisq.chat.protobuf.ChatNotification.Builder builder = bisq.chat.protobuf.ChatNotification.newBuilder()
                 .setId(id)
                 .setTitle(title)
@@ -112,9 +112,14 @@ public class ChatNotification implements Notification, PersistableProto {
                 .setChatMessageId(chatMessageId)
                 .setIsConsumed(isConsumed.get());
         tradeId.ifPresent(builder::setTradeId);
-        senderUserProfile.ifPresent(e -> builder.setSenderUserProfile(e.toProto()));
-        mediator.ifPresent(e -> builder.setMediator(e.toProto()));
-        return builder.build();
+        senderUserProfile.ifPresent(e -> builder.setSenderUserProfile(e.toProto(ignoreAnnotation)));
+        mediator.ifPresent(e -> builder.setMediator(e.toProto(ignoreAnnotation)));
+        return builder;
+    }
+
+    @Override
+    public bisq.chat.protobuf.ChatNotification toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static ChatNotification fromProto(bisq.chat.protobuf.ChatNotification proto) {

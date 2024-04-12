@@ -100,6 +100,11 @@ public abstract class PrivateChatMessage extends ChatMessage implements MailboxM
     }
 
     @Override
+    public bisq.network.protobuf.EnvelopePayloadMessage toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
+    }
+
+    @Override
     public NetworkId getSender() {
         return senderUserProfile.getNetworkId();
     }

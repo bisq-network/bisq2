@@ -139,20 +139,20 @@ public final class BisqEasyOpenTradeChannel extends PrivateGroupChatChannel<Bisq
     }
 
     @Override
-    public bisq.chat.protobuf.ChatChannel toProto() {
+    public bisq.chat.protobuf.ChatChannel.Builder getBuilder(boolean ignoreAnnotation) {
         bisq.chat.protobuf.BisqEasyOpenTradeChannel.Builder builder = bisq.chat.protobuf.BisqEasyOpenTradeChannel.newBuilder()
                 .setTradeId(tradeId)
-                .setBisqEasyOffer(bisqEasyOffer.toProto())
-                .setMyUserIdentity(myUserIdentity.toProto())
+                .setBisqEasyOffer(bisqEasyOffer.toProto(ignoreAnnotation))
+                .setMyUserIdentity(myUserIdentity.toProto(ignoreAnnotation))
                 .addAllTraders(getTraders().stream()
-                        .map(UserProfile::toProto)
+                        .map(e -> e.toProto(ignoreAnnotation))
                         .collect(Collectors.toList()))
                 .setIsInMediation(isInMediation())
                 .addAllChatMessages(chatMessages.stream()
-                        .map(BisqEasyOpenTradeMessage::toChatMessageProto)
+                        .map(e -> e.toChatMessageProto(ignoreAnnotation))
                         .collect(Collectors.toList()));
-        mediator.ifPresent(mediator -> builder.setMediator(mediator.toProto()));
-        return getChatChannelBuilder().setBisqEasyOpenTradeChannel(builder).build();
+        mediator.ifPresent(mediator -> builder.setMediator(mediator.toProto(ignoreAnnotation)));
+        return getChatChannelBuilder().setBisqEasyOpenTradeChannel(builder);
     }
 
     public static BisqEasyOpenTradeChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,

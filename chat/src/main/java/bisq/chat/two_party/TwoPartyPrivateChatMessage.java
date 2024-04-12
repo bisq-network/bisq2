@@ -21,6 +21,7 @@ import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessageType;
 import bisq.chat.Citation;
 import bisq.chat.priv.PrivateChatMessage;
+import bisq.chat.protobuf.ChatMessage;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.protobuf.ExternalNetworkMessage;
@@ -70,19 +71,18 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
     }
 
     @Override
-    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
+    public bisq.network.protobuf.EnvelopePayloadMessage.Builder getBuilder(boolean ignoreAnnotation) {
         return getNetworkMessageBuilder()
-                .setExternalNetworkMessage(ExternalNetworkMessage.newBuilder().setAny(Any.pack(toChatMessageProto())))
-                .build();
+                .setExternalNetworkMessage(ExternalNetworkMessage.newBuilder().setAny(Any.pack(toChatMessageProto(ignoreAnnotation))));
     }
 
-    public bisq.chat.protobuf.ChatMessage toChatMessageProto() {
-        return getChatMessageBuilder()
+    public bisq.chat.protobuf.ChatMessage toChatMessageProto(boolean ignoreAnnotation) {
+        ChatMessage.Builder builder = getChatMessageBuilder(ignoreAnnotation)
                 .setTwoPartyPrivateChatMessage(bisq.chat.protobuf.TwoPartyPrivateChatMessage.newBuilder()
                         .setReceiverUserProfileId(receiverUserProfileId)
-                        .setReceiverNetworkId(receiverNetworkId.toProto())
-                        .setSender(senderUserProfile.toProto()))
-                .build();
+                        .setReceiverNetworkId(receiverNetworkId.toProto(ignoreAnnotation))
+                        .setSender(senderUserProfile.toProto(ignoreAnnotation)));
+        return ignoreAnnotation ? builder.build() : clearAnnotatedFields(builder).build();
     }
 
     public static TwoPartyPrivateChatMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto) {

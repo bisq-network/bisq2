@@ -85,8 +85,9 @@ public final class CommonPublicChatMessage extends PublicChatMessage {
     }
 
     @Override
-    public bisq.chat.protobuf.ChatMessage toProto() {
-        return getChatMessageBuilder().setCommonPublicChatMessage(bisq.chat.protobuf.CommonPublicChatMessage.newBuilder()).build();
+    public bisq.chat.protobuf.ChatMessage.Builder getBuilder(boolean ignoreAnnotation) {
+        return getChatMessageBuilder(ignoreAnnotation)
+                .setCommonPublicChatMessage(bisq.chat.protobuf.CommonPublicChatMessage.newBuilder());
     }
 
     public static CommonPublicChatMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto) {

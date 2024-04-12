@@ -86,7 +86,7 @@ public abstract class ChatMessage implements NetworkProto, Comparable<ChatMessag
         NetworkDataValidation.validateDate(date);
     }
 
-    public bisq.chat.protobuf.ChatMessage.Builder getChatMessageBuilder() {
+    public bisq.chat.protobuf.ChatMessage.Builder getChatMessageBuilder(boolean ignoreAnnotation) {
         bisq.chat.protobuf.ChatMessage.Builder builder = bisq.chat.protobuf.ChatMessage.newBuilder()
                 .setId(id)
                 .setChatChannelDomain(chatChannelDomain.toProtoEnum())
@@ -95,7 +95,7 @@ public abstract class ChatMessage implements NetworkProto, Comparable<ChatMessag
                 .setDate(date)
                 .setWasEdited(wasEdited)
                 .setChatMessageType(chatMessageType.toProtoEnum());
-        citation.ifPresent(citation -> builder.setCitation(citation.toProto()));
+        citation.ifPresent(citation -> builder.setCitation(citation.toProto(ignoreAnnotation)));
         text.ifPresent(builder::setText);
         return builder;
     }

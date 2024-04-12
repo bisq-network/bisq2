@@ -29,11 +29,15 @@ public final class Citation implements NetworkProto {
     }
 
     @Override
-    public bisq.chat.protobuf.Citation toProto() {
+    public bisq.chat.protobuf.Citation.Builder getBuilder(boolean ignoreAnnotation) {
         return bisq.chat.protobuf.Citation.newBuilder()
                 .setAuthorUserProfileId(authorUserProfileId)
-                .setText(text)
-                .build();
+                .setText(text);
+    }
+
+    @Override
+    public bisq.chat.protobuf.Citation toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static Citation fromProto(bisq.chat.protobuf.Citation proto) {

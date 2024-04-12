@@ -49,6 +49,11 @@ public abstract class PublicChatMessage extends ChatMessage implements Distribut
     }
 
     @Override
+    public bisq.chat.protobuf.ChatMessage toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
+    }
+
+    @Override
     public boolean isDataInvalid(byte[] pubKeyHash) {
         // AuthorId must be pubKeyHash. We get pubKeyHash passed from the data storage layer where the signature is 
         // verified as well, so we can be sure it's the sender of the message. This check prevents against 
