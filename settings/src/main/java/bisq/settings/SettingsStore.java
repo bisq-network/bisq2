@@ -114,12 +114,12 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     }
 
     @Override
-    public bisq.settings.protobuf.SettingsStore toProto() {
+    public bisq.settings.protobuf.SettingsStore.Builder getBuilder(boolean ignoreAnnotation) {
         return bisq.settings.protobuf.SettingsStore.newBuilder()
                 .setCookie(cookie.toProto())
                 .putAllDontShowAgainMap(dontShowAgainMap)
                 .setUseAnimations(useAnimations.get())
-                .setSelectedMarket(selectedMarket.get().toProto())
+                .setSelectedMarket(selectedMarket.get().toProto(ignoreAnnotation))
                 .setMinRequiredReputationScore(minRequiredReputationScore.get())
                 .setOffersOnly(offersOnly.get())
                 .setTradeRulesConfirmed(tradeRulesConfirmed.get())
@@ -132,9 +132,13 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 .addAllSupportedLanguageCodes(new ArrayList<>(supportedLanguageCodes))
                 .setDifficultyAdjustmentFactor(difficultyAdjustmentFactor.get())
                 .setIgnoreDiffAdjustmentFromSecManager(ignoreDiffAdjustmentFromSecManager.get())
-                .addAllFavouriteMarkets(favouriteMarkets.stream().map(Market::toProto).collect(Collectors.toList()))
-                .setIgnoreMinRequiredReputationScoreFromSecManager(ignoreMinRequiredReputationScoreFromSecManager.get())
-                .build();
+                .addAllFavouriteMarkets(favouriteMarkets.stream().map(market -> market.toProto(ignoreAnnotation)).collect(Collectors.toList()))
+                .setIgnoreMinRequiredReputationScoreFromSecManager(ignoreMinRequiredReputationScoreFromSecManager.get());
+    }
+
+    @Override
+    public bisq.settings.protobuf.SettingsStore toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static SettingsStore fromProto(bisq.settings.protobuf.SettingsStore proto) {
