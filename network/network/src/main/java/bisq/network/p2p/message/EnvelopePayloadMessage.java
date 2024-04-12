@@ -43,7 +43,7 @@ public interface EnvelopePayloadMessage extends NetworkProto {
         return bisq.network.protobuf.EnvelopePayloadMessage.newBuilder();
     }
 
-    bisq.network.protobuf.EnvelopePayloadMessage toProto();
+    bisq.network.protobuf.EnvelopePayloadMessage toProto(boolean ignoreAnnotation);
 
     static EnvelopePayloadMessage fromProto(bisq.network.protobuf.EnvelopePayloadMessage proto) {
         switch (proto.getMessageCase()) {

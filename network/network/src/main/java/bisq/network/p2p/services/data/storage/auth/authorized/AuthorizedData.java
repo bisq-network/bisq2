@@ -75,11 +75,16 @@ public final class AuthorizedData extends AuthenticatedData {
     }
 
     @Override
-    public bisq.network.protobuf.AuthenticatedData toProto() {
+    public bisq.network.protobuf.AuthenticatedData toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
+    }
+
+    @Override
+    public bisq.network.protobuf.AuthenticatedData.Builder getBuilder(boolean ignoreAnnotation) {
         bisq.network.protobuf.AuthorizedData.Builder builder = bisq.network.protobuf.AuthorizedData.newBuilder()
                 .setAuthorizedPublicKeyBytes(ByteString.copyFrom(authorizedPublicKeyBytes));
         signature.ifPresent(signature -> builder.setSignature(ByteString.copyFrom(signature)));
-        return getAuthenticatedDataBuilder().setAuthorizedData(builder).build();
+        return getAuthenticatedDataBuilder().setAuthorizedData(builder);
     }
 
     public static AuthorizedData fromProto(bisq.network.protobuf.AuthenticatedData proto) {
@@ -108,11 +113,15 @@ public final class AuthorizedData extends AuthenticatedData {
 
     // We omit the signature for the hash, otherwise we would get a new map entry for the same data at each republishing
     @Override
-    public byte[] serialize() {
-        return getAuthenticatedDataBuilder().setAuthorizedData(
-                        bisq.network.protobuf.AuthorizedData.newBuilder()
-                                .setAuthorizedPublicKeyBytes(ByteString.copyFrom(authorizedPublicKeyBytes)))
-                .build().toByteArray();
+    public byte[] serialize(boolean ignoreAnnotation) {
+        //todo User annotation
+        bisq.network.protobuf.AuthenticatedData.Builder builder = getAuthenticatedDataBuilder().setAuthorizedData(
+                bisq.network.protobuf.AuthorizedData.newBuilder()
+                        .setAuthorizedPublicKeyBytes(ByteString.copyFrom(authorizedPublicKeyBytes)));
+        if (ignoreAnnotation) {
+            builder = (bisq.network.protobuf.AuthenticatedData.Builder) clearAnnotatedFields(builder);
+        }
+        return builder.build().toByteArray();
     }
 
     public AuthorizedDistributedData getAuthorizedDistributedData() {
@@ -122,7 +131,7 @@ public final class AuthorizedData extends AuthenticatedData {
     public boolean isNotAuthorized() {
         try {
             AuthorizedDistributedData authorizedDistributedData = getAuthorizedDistributedData();
-            if (!SignatureUtil.verify(distributedData.serialize(), signature.orElseThrow(), authorizedPublicKey)) {
+            if (!SignatureUtil.verify(distributedData.serialize(false), signature.orElseThrow(), authorizedPublicKey)) {
                 return true;
             }
 

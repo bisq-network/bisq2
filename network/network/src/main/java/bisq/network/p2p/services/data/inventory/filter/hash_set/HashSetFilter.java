@@ -64,13 +64,17 @@ public final class HashSetFilter extends InventoryFilter {
     }
 
     @Override
-    public bisq.network.protobuf.InventoryFilter toProto() {
+    public bisq.network.protobuf.InventoryFilter toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
+    }
+
+    @Override
+    public bisq.network.protobuf.InventoryFilter.Builder getBuilder(boolean ignoreAnnotation) {
         return getInventoryFilterBuilder().setHashSetFilter(
-                        bisq.network.protobuf.HashSetFilter.newBuilder()
-                                .addAllFilterEntries(filterEntries.stream()
-                                        .map(HashSetFilterEntry::toProto)
-                                        .collect(Collectors.toList())))
-                .build();
+                bisq.network.protobuf.HashSetFilter.newBuilder()
+                        .addAllFilterEntries(filterEntries.stream()
+                                .map(entry -> entry.toProto(ignoreAnnotation))
+                                .collect(Collectors.toList())));
     }
 
     public static HashSetFilter fromProto(bisq.network.protobuf.InventoryFilter proto) {

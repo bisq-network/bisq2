@@ -49,7 +49,7 @@ public abstract class InventoryFilter implements NetworkProto {
     }
 
     @Override
-    abstract public bisq.network.protobuf.InventoryFilter toProto();
+    abstract public bisq.network.protobuf.InventoryFilter toProto(boolean ignoreAnnotation);
 
     abstract public String getDetails();
 }

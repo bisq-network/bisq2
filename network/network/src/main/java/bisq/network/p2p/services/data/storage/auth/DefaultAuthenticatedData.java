@@ -36,10 +36,14 @@ public final class DefaultAuthenticatedData extends AuthenticatedData {
     public void verify() {
     }
 
-    public bisq.network.protobuf.AuthenticatedData toProto() {
+    public bisq.network.protobuf.AuthenticatedData toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
+    }
+
+    @Override
+    public bisq.network.protobuf.AuthenticatedData.Builder getBuilder(boolean ignoreAnnotation) {
         return getAuthenticatedDataBuilder().setDefaultAuthenticatedData(
-                        bisq.network.protobuf.DefaultAuthenticatedData.newBuilder())
-                .build();
+                bisq.network.protobuf.DefaultAuthenticatedData.newBuilder());
     }
 
     public static DefaultAuthenticatedData fromProto(bisq.network.protobuf.AuthenticatedData proto) {

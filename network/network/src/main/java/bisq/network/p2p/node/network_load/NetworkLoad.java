@@ -66,19 +66,21 @@ public final class NetworkLoad implements NetworkProto {
     }
 
     @Override
-    public bisq.network.protobuf.NetworkLoad toProto() {
+    public bisq.network.protobuf.NetworkLoad toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
+    }
+
+    @Override
+    public bisq.network.protobuf.NetworkLoad.Builder getBuilder(boolean ignoreAnnotation) {
         if (new Date().after(DIFFICULTY_ADJUSTMENT_ACTIVATION_DATE)) {
             return bisq.network.protobuf.NetworkLoad.newBuilder()
                     .setLoad(load)
-                    .setDifficultyAdjustmentFactor(difficultyAdjustmentFactor)
-                    .build();
+                    .setDifficultyAdjustmentFactor(difficultyAdjustmentFactor);
         } else {
             // The hash of the payload used for PoW would change if we would add the difficultyAdjustmentFactor
             // and would result in a failure of the PoW check and would make it impossible to connect to not updated
             // nodes.
-            return bisq.network.protobuf.NetworkLoad.newBuilder()
-                    .setLoad(load)
-                    .build();
+            return bisq.network.protobuf.NetworkLoad.newBuilder().setLoad(load);
         }
     }
 

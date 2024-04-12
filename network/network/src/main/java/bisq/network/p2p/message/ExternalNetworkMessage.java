@@ -28,9 +28,9 @@ public final class ExternalNetworkMessage {
         this.envelopePayloadMessage = envelopePayloadMessage;
     }
 
-    public bisq.network.protobuf.ExternalNetworkMessage toProto() {
+    public bisq.network.protobuf.ExternalNetworkMessage toProto(boolean ignoreAnnotation) {
         return bisq.network.protobuf.ExternalNetworkMessage.newBuilder()
-                .setAny(Any.pack(envelopePayloadMessage.toProto()))
+                .setAny(Any.pack(envelopePayloadMessage.toProto(ignoreAnnotation)))
                 .build();
     }
 

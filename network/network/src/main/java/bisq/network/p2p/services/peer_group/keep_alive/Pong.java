@@ -38,11 +38,14 @@ public final class Pong implements EnvelopePayloadMessage, Response {
     }
 
     @Override
-    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
+    public bisq.network.protobuf.EnvelopePayloadMessage toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
+    }
+
+    @Override
+    public bisq.network.protobuf.EnvelopePayloadMessage.Builder getBuilder(boolean ignoreAnnotation) {
         return getNetworkMessageBuilder().setPong(
-                        bisq.network.protobuf.Pong.newBuilder()
-                                .setRequestNonce(requestNonce))
-                .build();
+                bisq.network.protobuf.Pong.newBuilder().setRequestNonce(requestNonce));
     }
 
     public static Pong fromProto(bisq.network.protobuf.Pong proto) {

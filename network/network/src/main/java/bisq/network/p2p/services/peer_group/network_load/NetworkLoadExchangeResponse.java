@@ -43,12 +43,16 @@ public final class NetworkLoadExchangeResponse implements EnvelopePayloadMessage
     }
 
     @Override
-    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
+    public bisq.network.protobuf.EnvelopePayloadMessage toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
+    }
+
+    @Override
+    public bisq.network.protobuf.EnvelopePayloadMessage.Builder getBuilder(boolean ignoreAnnotation) {
         return getNetworkMessageBuilder().setNetworkLoadExchangeResponse(
-                        bisq.network.protobuf.NetworkLoadExchangeResponse.newBuilder()
-                                .setRequestNonce(requestNonce)
-                                .setNetworkLoad(networkLoad.toProto()))
-                .build();
+                bisq.network.protobuf.NetworkLoadExchangeResponse.newBuilder()
+                        .setRequestNonce(requestNonce)
+                        .setNetworkLoad(networkLoad.toProto(ignoreAnnotation)));
     }
 
     public static NetworkLoadExchangeResponse fromProto(bisq.network.protobuf.NetworkLoadExchangeResponse proto) {

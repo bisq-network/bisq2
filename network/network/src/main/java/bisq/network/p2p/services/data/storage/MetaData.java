@@ -88,13 +88,17 @@ public final class MetaData implements NetworkProto {
     }
 
     @Override
-    public bisq.network.protobuf.MetaData toProto() {
+    public bisq.network.protobuf.MetaData toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
+    }
+
+    @Override
+    public bisq.network.protobuf.MetaData.Builder getBuilder(boolean ignoreAnnotation) {
         return bisq.network.protobuf.MetaData.newBuilder()
                 .setTtl(ttl)
                 .setPriority(priority)
                 .setClassName(className)
-                .setMaxMapSize(maxMapSize)
-                .build();
+                .setMaxMapSize(maxMapSize);
     }
 
     public static MetaData fromProto(bisq.network.protobuf.MetaData proto) {

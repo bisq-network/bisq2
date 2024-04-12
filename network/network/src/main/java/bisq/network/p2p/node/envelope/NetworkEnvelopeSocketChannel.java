@@ -55,8 +55,8 @@ public class NetworkEnvelopeSocketChannel implements Closeable {
     }
 
     public void send(NetworkEnvelope networkEnvelope) throws IOException {
-        bisq.network.protobuf.NetworkEnvelope proto = checkNotNull(networkEnvelope.toProto(),
-                "networkEnvelope.toProto() must not be null");
+        bisq.network.protobuf.NetworkEnvelope proto = checkNotNull(networkEnvelope.toProto(true),
+                "networkEnvelope.toProto(ignoreAnnotation) must not be null");
         byte[] protoInBytes = proto.toByteArray();
         int messageLength = protoInBytes.length;
 

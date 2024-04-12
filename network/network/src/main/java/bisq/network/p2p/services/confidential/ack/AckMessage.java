@@ -4,6 +4,7 @@ import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.message.Response;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
+import bisq.network.protobuf.EnvelopePayloadMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -37,9 +38,14 @@ public final class AckMessage implements MailboxMessage, Response {
     }
 
     @Override
-    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
+    public bisq.network.protobuf.EnvelopePayloadMessage toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
+    }
+
+    @Override
+    public EnvelopePayloadMessage.Builder getBuilder(boolean ignoreAnnotation) {
         return getNetworkMessageBuilder().setAckMessage(
-                bisq.network.protobuf.AckMessage.newBuilder().setId(id)).build();
+                bisq.network.protobuf.AckMessage.newBuilder().setId(id));
     }
 
     public static AckMessage fromProto(bisq.network.protobuf.AckMessage proto) {

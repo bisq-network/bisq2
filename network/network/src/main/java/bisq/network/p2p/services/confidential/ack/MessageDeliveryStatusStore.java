@@ -47,13 +47,17 @@ public final class MessageDeliveryStatusStore implements PersistableStore<Messag
     }
 
     @Override
-    public bisq.network.protobuf.MessageDeliveryStatusStore toProto() {
+    public bisq.network.protobuf.MessageDeliveryStatusStore toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
+    }
+
+    @Override
+    public bisq.network.protobuf.MessageDeliveryStatusStore.Builder getBuilder(boolean ignoreAnnotation) {
         return bisq.network.protobuf.MessageDeliveryStatusStore.newBuilder()
                 .putAllMessageDeliveryStatusByMessageId(messageDeliveryStatusByMessageId.entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().get().toProto())))
                 .putAllCreationDateByMessageId(creationDateByMessageId.entrySet().stream()
-                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)))
-                .build();
+                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
     }
 
     public static PersistableStore<?> fromProto(bisq.network.protobuf.MessageDeliveryStatusStore proto) {

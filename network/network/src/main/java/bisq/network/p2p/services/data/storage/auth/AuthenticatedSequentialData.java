@@ -64,13 +64,17 @@ public final class AuthenticatedSequentialData implements NetworkProto {
     }
 
     @Override
-    public bisq.network.protobuf.AuthenticatedSequentialData toProto() {
+    public bisq.network.protobuf.AuthenticatedSequentialData toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
+    }
+
+    @Override
+    public bisq.network.protobuf.AuthenticatedSequentialData.Builder getBuilder(boolean ignoreAnnotation) {
         return bisq.network.protobuf.AuthenticatedSequentialData.newBuilder()
-                .setAuthenticatedData(authenticatedData.toProto())
+                .setAuthenticatedData(authenticatedData.toProto(ignoreAnnotation))
                 .setSequenceNumber(sequenceNumber)
                 .setPubKeyHash(ByteString.copyFrom(pubKeyHash))
-                .setCreated(created)
-                .build();
+                .setCreated(created);
     }
 
     public static AuthenticatedSequentialData fromProto(bisq.network.protobuf.AuthenticatedSequentialData proto) {

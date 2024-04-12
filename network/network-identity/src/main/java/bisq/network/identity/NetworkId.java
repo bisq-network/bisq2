@@ -42,11 +42,15 @@ public final class NetworkId implements NetworkProto {
     }
 
     @Override
-    public bisq.network.identity.protobuf.NetworkId toProto() {
+    public bisq.network.identity.protobuf.NetworkId toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
+    }
+
+    @Override
+    public bisq.network.identity.protobuf.NetworkId.Builder getBuilder(boolean ignoreAnnotation) {
         return bisq.network.identity.protobuf.NetworkId.newBuilder()
-                .setAddressByNetworkTypeMap(addressByTransportTypeMap.toProto())
-                .setPubKey(pubKey.toProto())
-                .build();
+                .setAddressByNetworkTypeMap(addressByTransportTypeMap.toProto(ignoreAnnotation))
+                .setPubKey(pubKey.toProto(ignoreAnnotation));
     }
 
     public static NetworkId fromProto(bisq.network.identity.protobuf.NetworkId proto) {

@@ -55,7 +55,9 @@ public final class Inventory implements NetworkProto {
         // We need to sort deterministically as the data is used in the proof of work check
         // TODO (optimize, low prio) dataRequest.serialize() is expensive. We have the hash of the data in most DataRequest implementations.
         //  This could be used and combined with the other remaining data, like signature and pubkey
-        this.entries.sort(Comparator.comparing((DataRequest dataRequest) -> new ByteArray(dataRequest.serialize())));
+        // We set ignoreAnnotation to false to ensure that we get the same order in case the peer has different data in the
+        // annotated fields
+        this.entries.sort(Comparator.comparing((DataRequest dataRequest) -> new ByteArray(dataRequest.serialize(false))));
 
         verify();
     }
@@ -67,11 +69,17 @@ public final class Inventory implements NetworkProto {
     }
 
     @Override
-    public bisq.network.protobuf.Inventory toProto() {
+    public bisq.network.protobuf.Inventory toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
+    }
+
+    @Override
+    public bisq.network.protobuf.Inventory.Builder getBuilder(boolean ignoreAnnotation) {
         return bisq.network.protobuf.Inventory.newBuilder()
-                .addAllEntries(entries.stream().map(e -> e.toProto().getDataRequest()).collect(Collectors.toList()))
-                .setMaxSizeReached(maxSizeReached)
-                .build();
+                .addAllEntries(entries.stream()
+                        .map(e -> e.toProto(ignoreAnnotation).getDataRequest())
+                        .collect(Collectors.toList()))
+                .setMaxSizeReached(maxSizeReached);
     }
 
     public static Inventory fromProto(bisq.network.protobuf.Inventory proto) {

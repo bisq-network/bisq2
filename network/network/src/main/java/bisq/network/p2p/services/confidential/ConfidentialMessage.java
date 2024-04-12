@@ -52,12 +52,17 @@ public final class ConfidentialMessage implements EnvelopePayloadMessage, Distri
     }
 
     @Override
-    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
+    public bisq.network.protobuf.EnvelopePayloadMessage toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
+    }
+
+    @Override
+    public bisq.network.protobuf.EnvelopePayloadMessage.Builder getBuilder(boolean ignoreAnnotation) {
         return getNetworkMessageBuilder().setConfidentialMessage(
                 bisq.network.protobuf.ConfidentialMessage.newBuilder()
-                        .setConfidentialData(confidentialData.toProto())
+                        .setConfidentialData(confidentialData.toProto(ignoreAnnotation))
                         .setReceiverKeyId(receiverKeyId)
-        ).build();
+        );
     }
 
     public static ConfidentialMessage fromProto(bisq.network.protobuf.ConfidentialMessage proto) {

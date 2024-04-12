@@ -273,7 +273,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
 
     private ConfidentialMessage getConfidentialMessage(EnvelopePayloadMessage envelopePayloadMessage, PubKey receiverPubKey, KeyPair senderKeyPair) {
         try {
-            ConfidentialData confidentialData = HybridEncryption.encryptAndSign(envelopePayloadMessage.serialize(), receiverPubKey.getPublicKey(), senderKeyPair);
+            ConfidentialData confidentialData = HybridEncryption.encryptAndSign(envelopePayloadMessage.serialize(true), receiverPubKey.getPublicKey(), senderKeyPair);
             return new ConfidentialMessage(confidentialData, receiverPubKey.getKeyId());
         } catch (GeneralSecurityException e) {
             log.error("HybridEncryption.encryptAndSign failed at getConfidentialMessage.", e);

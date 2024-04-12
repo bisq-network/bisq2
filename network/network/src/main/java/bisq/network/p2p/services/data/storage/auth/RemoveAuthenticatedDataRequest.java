@@ -22,6 +22,7 @@ import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.RemoveDataRequest;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.protobuf.EnvelopePayloadMessage;
 import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
@@ -42,7 +43,7 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
 
     public static RemoveAuthenticatedDataRequest from(AuthenticatedDataStorageService store, AuthenticatedData authenticatedData, KeyPair keyPair)
             throws GeneralSecurityException {
-        byte[] hash = DigestUtil.hash(authenticatedData.serialize());
+        byte[] hash = DigestUtil.hash(authenticatedData.serialize(false));
         byte[] signature = SignatureUtil.sign(hash, keyPair.getPrivate());
         int newSequenceNumber = store.getSequenceNumber(hash) + 1;
         return new RemoveAuthenticatedDataRequest(authenticatedData.getMetaData(),
@@ -115,16 +116,20 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
     }
 
     @Override
-    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
+    public bisq.network.protobuf.EnvelopePayloadMessage toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
+    }
+
+    @Override
+    public EnvelopePayloadMessage.Builder getBuilder(boolean ignoreAnnotation) {
         return getNetworkMessageBuilder().setDataRequest(getDataRequestBuilder().setRemoveAuthenticatedDataRequest(
-                        bisq.network.protobuf.RemoveAuthenticatedDataRequest.newBuilder()
-                                .setMetaData(metaData.toProto())
-                                .setHash(ByteString.copyFrom(hash))
-                                .setOwnerPublicKeyBytes(ByteString.copyFrom(ownerPublicKeyBytes))
-                                .setSequenceNumber(sequenceNumber)
-                                .setSignature(ByteString.copyFrom(signature))
-                                .setCreated(created)))
-                .build();
+                bisq.network.protobuf.RemoveAuthenticatedDataRequest.newBuilder()
+                        .setMetaData(metaData.toProto(ignoreAnnotation))
+                        .setHash(ByteString.copyFrom(hash))
+                        .setOwnerPublicKeyBytes(ByteString.copyFrom(ownerPublicKeyBytes))
+                        .setSequenceNumber(sequenceNumber)
+                        .setSignature(ByteString.copyFrom(signature))
+                        .setCreated(created)));
     }
 
     public static RemoveAuthenticatedDataRequest fromProto(bisq.network.protobuf.RemoveAuthenticatedDataRequest proto) {

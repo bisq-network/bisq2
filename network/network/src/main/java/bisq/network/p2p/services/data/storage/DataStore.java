@@ -47,17 +47,20 @@ public final class DataStore<T extends DataRequest> implements PersistableStore<
     }
 
     @Override
-    public bisq.network.protobuf.DataStore toProto() {
+    public bisq.network.protobuf.DataStore toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
+    }
+
+    @Override
+    public bisq.network.protobuf.DataStore.Builder getBuilder(boolean ignoreAnnotation) {
         // Protobuf map do not support bytes as key
         List<bisq.network.protobuf.DataStore.MapEntry> mapEntries = map.entrySet().stream()
                 .map(e -> bisq.network.protobuf.DataStore.MapEntry.newBuilder()
-                        .setKey(e.getKey().toProto())
-                        .setValue(e.getValue().toProto().getDataRequest())
+                        .setKey(e.getKey().toProto(ignoreAnnotation))
+                        .setValue(e.getValue().toProto(ignoreAnnotation).getDataRequest())
                         .build())
                 .collect(Collectors.toList());
-        return bisq.network.protobuf.DataStore.newBuilder()
-                .addAllMapEntries(mapEntries)
-                .build();
+        return bisq.network.protobuf.DataStore.newBuilder().addAllMapEntries(mapEntries);
     }
 
     public static PersistableStore<?> fromProto(bisq.network.protobuf.DataStore proto) {

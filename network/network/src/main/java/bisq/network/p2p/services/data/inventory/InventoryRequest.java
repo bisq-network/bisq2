@@ -20,6 +20,7 @@ package bisq.network.p2p.services.data.inventory;
 import bisq.network.p2p.message.Request;
 import bisq.network.p2p.services.data.broadcast.BroadcastMessage;
 import bisq.network.p2p.services.data.inventory.filter.InventoryFilter;
+import bisq.network.protobuf.EnvelopePayloadMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -45,12 +46,16 @@ public final class InventoryRequest implements BroadcastMessage, Request {
     }
 
     @Override
-    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
+    public bisq.network.protobuf.EnvelopePayloadMessage toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
+    }
+
+    @Override
+    public EnvelopePayloadMessage.Builder getBuilder(boolean ignoreAnnotation) {
         return getNetworkMessageBuilder().setInventoryRequest(
-                        bisq.network.protobuf.InventoryRequest.newBuilder()
-                                .setInventoryFilter(inventoryFilter.toProto())
-                                .setNonce(nonce))
-                .build();
+                bisq.network.protobuf.InventoryRequest.newBuilder()
+                        .setInventoryFilter(inventoryFilter.toProto(ignoreAnnotation))
+                        .setNonce(nonce));
     }
 
     public static InventoryRequest fromProto(bisq.network.protobuf.InventoryRequest proto) {

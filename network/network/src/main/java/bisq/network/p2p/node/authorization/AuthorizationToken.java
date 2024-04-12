@@ -31,6 +31,9 @@ public abstract class AuthorizationToken implements NetworkProto {
         this.authorizationTokenType = authorizationTokenType;
     }
 
+    @Override
+    abstract public bisq.network.protobuf.AuthorizationToken toProto(boolean ignoreAnnotation);
+
     public bisq.network.protobuf.AuthorizationToken.Builder getAuthorizationTokenBuilder() {
         return bisq.network.protobuf.AuthorizationToken.newBuilder()
                 .setAuthorizationTokenType(authorizationTokenType.toProto());
@@ -47,7 +50,4 @@ public abstract class AuthorizationToken implements NetworkProto {
         }
         throw new UnresolvableProtobufMessageException(proto);
     }
-
-    @Override
-    abstract public bisq.network.protobuf.AuthorizationToken toProto();
 }

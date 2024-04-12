@@ -20,6 +20,7 @@ package bisq.network.p2p.services.data.storage.mailbox;
 import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.AddDataRequest;
+import bisq.network.protobuf.EnvelopePayloadMessage;
 import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
@@ -51,7 +52,7 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
                 receiverPublicKeyHash,
                 receiverPublicKey,
                 1);
-        byte[] serialized = mailboxSequentialData.serialize();
+        byte[] serialized = mailboxSequentialData.serialize(false);
         byte[] signature = SignatureUtil.sign(serialized, senderKeyPair.getPrivate());
         return new AddMailboxRequest(mailboxSequentialData, signature, senderPublicKey);
     }
@@ -86,13 +87,17 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
     }
 
     @Override
-    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
+    public bisq.network.protobuf.EnvelopePayloadMessage toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
+    }
+
+    @Override
+    public EnvelopePayloadMessage.Builder getBuilder(boolean ignoreAnnotation) {
         return getNetworkMessageBuilder().setDataRequest(getDataRequestBuilder().setAddMailboxRequest(
-                        bisq.network.protobuf.AddMailboxRequest.newBuilder()
-                                .setMailboxSequentialData(mailboxSequentialData.toProto())
-                                .setSignature(ByteString.copyFrom(signature))
-                                .setSenderPublicKeyBytes(ByteString.copyFrom(senderPublicKeyBytes))))
-                .build();
+                bisq.network.protobuf.AddMailboxRequest.newBuilder()
+                        .setMailboxSequentialData(mailboxSequentialData.toProto(ignoreAnnotation))
+                        .setSignature(ByteString.copyFrom(signature))
+                        .setSenderPublicKeyBytes(ByteString.copyFrom(senderPublicKeyBytes))));
     }
 
     public static AddMailboxRequest fromProto(bisq.network.protobuf.AddMailboxRequest proto) {
@@ -122,7 +127,7 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
 
     public boolean isSignatureInvalid() {
         try {
-            return !SignatureUtil.verify(mailboxSequentialData.serialize(), signature, getOwnerPublicKey());
+            return !SignatureUtil.verify(mailboxSequentialData.serialize(false), signature, getOwnerPublicKey());
         } catch (Exception e) {
             log.warn(e.toString(), e);
             return true;

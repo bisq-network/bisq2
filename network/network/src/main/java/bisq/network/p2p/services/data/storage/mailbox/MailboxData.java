@@ -55,11 +55,15 @@ public final class MailboxData implements StorageData {
     }
 
     @Override
-    public bisq.network.protobuf.MailboxData toProto() {
+    public bisq.network.protobuf.MailboxData toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
+    }
+
+    @Override
+    public bisq.network.protobuf.MailboxData.Builder getBuilder(boolean ignoreAnnotation) {
         return bisq.network.protobuf.MailboxData.newBuilder()
-                .setConfidentialMessage(confidentialMessage.toProto().getConfidentialMessage())
-                .setMetaData(metaData.toProto())
-                .build();
+                .setConfidentialMessage(confidentialMessage.toProto(ignoreAnnotation).getConfidentialMessage())
+                .setMetaData(metaData.toProto(ignoreAnnotation));
     }
 
     public static MailboxData fromProto(bisq.network.protobuf.MailboxData proto) {

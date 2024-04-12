@@ -92,15 +92,18 @@ public final class ConnectionHandshake {
         }
 
         @Override
-        public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
-            var builder = bisq.network.protobuf.ConnectionHandshake.Request.newBuilder()
-                    .setCapability(capability.toProto())
-                    .setNetworkLoad(networkLoad.toProto())
+        public bisq.network.protobuf.EnvelopePayloadMessage toProto(boolean ignoreAnnotation) {
+            return buildProto(ignoreAnnotation);
+        }
+
+        @Override
+        public bisq.network.protobuf.EnvelopePayloadMessage.Builder getBuilder(boolean ignoreAnnotation) {
+            bisq.network.protobuf.ConnectionHandshake.Request.Builder builder = bisq.network.protobuf.ConnectionHandshake.Request.newBuilder()
+                    .setCapability(capability.toProto(ignoreAnnotation))
+                    .setNetworkLoad(networkLoad.toProto(ignoreAnnotation))
                     .setSignatureDate(signatureDate);
             addressOwnershipProof.ifPresent(e -> builder.setAddressOwnershipProof(ByteString.copyFrom(e)));
-            return getNetworkMessageBuilder()
-                    .setConnectionHandshakeRequest(builder.build())
-                    .build();
+            return getNetworkMessageBuilder().setConnectionHandshakeRequest(builder);
         }
 
         public static Request fromProto(bisq.network.protobuf.ConnectionHandshake.Request proto) {
@@ -135,12 +138,16 @@ public final class ConnectionHandshake {
         }
 
         @Override
-        public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
+        public bisq.network.protobuf.EnvelopePayloadMessage toProto(boolean ignoreAnnotation) {
+            return buildProto(ignoreAnnotation);
+        }
+
+        @Override
+        public bisq.network.protobuf.EnvelopePayloadMessage.Builder getBuilder(boolean ignoreAnnotation) {
             return getNetworkMessageBuilder().setConnectionHandshakeResponse(
-                            bisq.network.protobuf.ConnectionHandshake.Response.newBuilder()
-                                    .setCapability(capability.toProto())
-                                    .setNetworkLoad(networkLoad.toProto()))
-                    .build();
+                    bisq.network.protobuf.ConnectionHandshake.Response.newBuilder()
+                            .setCapability(capability.toProto(ignoreAnnotation))
+                            .setNetworkLoad(networkLoad.toProto(ignoreAnnotation)));
         }
 
         public static Response fromProto(bisq.network.protobuf.ConnectionHandshake.Response proto) {

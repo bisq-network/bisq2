@@ -58,16 +58,20 @@ public final class Capability implements NetworkProto {
     }
 
     @Override
-    public bisq.network.protobuf.Capability toProto() {
+    public bisq.network.protobuf.Capability.Builder getBuilder(boolean ignoreAnnotation) {
         return bisq.network.protobuf.Capability.newBuilder()
-                .setAddress(address.toProto())
+                .setAddress(address.toProto(ignoreAnnotation))
                 .addAllSupportedTransportTypes(supportedTransportTypes.stream()
                         .map(Enum::name)
                         .collect(Collectors.toList()))
                 .addAllFeatures(features.stream()
                         .map(Feature::toProto)
-                        .collect(Collectors.toList()))
-                .build();
+                        .collect(Collectors.toList()));
+    }
+
+    @Override
+    public bisq.network.protobuf.Capability toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
     }
 
     public static Capability fromProto(bisq.network.protobuf.Capability proto) {

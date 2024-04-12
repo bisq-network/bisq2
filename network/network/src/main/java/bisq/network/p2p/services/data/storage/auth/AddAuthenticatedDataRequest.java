@@ -22,6 +22,7 @@ import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.network.p2p.services.data.storage.DistributedData;
+import bisq.network.protobuf.EnvelopePayloadMessage;
 import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
@@ -47,11 +48,11 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
     public static AddAuthenticatedDataRequest from(AuthenticatedDataStorageService store, AuthenticatedData authenticatedData, KeyPair keyPair)
             throws GeneralSecurityException {
 
-        byte[] hash = DigestUtil.hash(authenticatedData.serialize());
+        byte[] hash = DigestUtil.hash(authenticatedData.serialize(false));
         byte[] pubKeyHash = DigestUtil.hash(keyPair.getPublic().getEncoded());
         int sequenceNumber = store.getSequenceNumber(hash) + 1;
         AuthenticatedSequentialData data = new AuthenticatedSequentialData(authenticatedData, sequenceNumber, pubKeyHash, System.currentTimeMillis());
-        byte[] serialized = data.serialize();
+        byte[] serialized = data.serialize(false);
         byte[] signature = SignatureUtil.sign(serialized, keyPair.getPrivate());
          /*  log.error("hash={}", Hex.encode(hash));
         log.error("keyPair.getPublic().getEncoded()={}", Hex.encode(keyPair.getPublic().getEncoded()));
@@ -97,13 +98,18 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
     }
 
     @Override
-    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
+    public bisq.network.protobuf.EnvelopePayloadMessage toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
+    }
+
+    @Override
+    public EnvelopePayloadMessage.Builder getBuilder(boolean ignoreAnnotation) {
         return getNetworkMessageBuilder().setDataRequest(getDataRequestBuilder().setAddAuthenticatedDataRequest(
                 bisq.network.protobuf.AddAuthenticatedDataRequest.newBuilder()
-                        .setAuthenticatedSequentialData(authenticatedSequentialData.toProto())
+                        .setAuthenticatedSequentialData(authenticatedSequentialData.toProto(ignoreAnnotation))
                         .setSignature(ByteString.copyFrom(signature))
                         .setOwnerPublicKeyBytes(ByteString.copyFrom(ownerPublicKeyBytes)))
-        ).build();
+        );
     }
 
     public static AddAuthenticatedDataRequest fromProto(bisq.network.protobuf.AddAuthenticatedDataRequest proto) {
@@ -133,7 +139,7 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
 
     public boolean isSignatureInvalid() {
         try {
-            return !SignatureUtil.verify(authenticatedSequentialData.serialize(), signature, getOwnerPublicKey());
+            return !SignatureUtil.verify(authenticatedSequentialData.serialize(false), signature, getOwnerPublicKey());
         } catch (Exception e) {
             log.warn(e.toString(), e);
             return true;

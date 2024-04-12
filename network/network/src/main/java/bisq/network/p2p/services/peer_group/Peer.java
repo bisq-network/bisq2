@@ -67,13 +67,17 @@ public final class Peer implements NetworkProto, Comparable<Peer> {
     }
 
     @Override
-    public bisq.network.protobuf.Peer toProto() {
+    public bisq.network.protobuf.Peer toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
+    }
+
+    @Override
+    public bisq.network.protobuf.Peer.Builder getBuilder(boolean ignoreAnnotation) {
         return bisq.network.protobuf.Peer.newBuilder()
-                .setCapability(capability.toProto())
-                .setNetworkLoad(networkLoad.toProto())
+                .setCapability(capability.toProto(ignoreAnnotation))
+                .setNetworkLoad(networkLoad.toProto(ignoreAnnotation))
                 .setIsOutboundConnection(isOutboundConnection)
-                .setCreated(created)
-                .build();
+                .setCreated(created);
     }
 
     public static Peer fromProto(bisq.network.protobuf.Peer proto) {

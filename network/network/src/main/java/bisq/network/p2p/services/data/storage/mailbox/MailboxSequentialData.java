@@ -95,15 +95,19 @@ public final class MailboxSequentialData implements NetworkProto {
     }
 
     @Override
-    public bisq.network.protobuf.MailboxSequentialData toProto() {
+    public bisq.network.protobuf.MailboxSequentialData toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
+    }
+
+    @Override
+    public bisq.network.protobuf.MailboxSequentialData.Builder getBuilder(boolean ignoreAnnotation) {
         return bisq.network.protobuf.MailboxSequentialData.newBuilder()
-                .setMailboxData(mailboxData.toProto())
+                .setMailboxData(mailboxData.toProto(ignoreAnnotation))
                 .setSenderPublicKeyHash(ByteString.copyFrom(senderPublicKeyHash))
                 .setReceiversPubKeyHash(ByteString.copyFrom(receiversPublicKeyHash))
                 .setReceiversPubKeyBytes(ByteString.copyFrom(receiversPubKeyBytes))
                 .setCreated(created)
-                .setSequenceNumber(sequenceNumber)
-                .build();
+                .setSequenceNumber(sequenceNumber);
     }
 
     public static MailboxSequentialData fromProto(bisq.network.protobuf.MailboxSequentialData proto) {

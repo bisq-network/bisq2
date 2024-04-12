@@ -21,6 +21,7 @@ import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.RemoveDataRequest;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.protobuf.EnvelopePayloadMessage;
 import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
@@ -47,7 +48,7 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
 
     public static RemoveMailboxRequest from(MailboxData mailboxData, KeyPair receiverKeyPair)
             throws GeneralSecurityException {
-        byte[] hash = DigestUtil.hash(mailboxData.serialize());
+        byte[] hash = DigestUtil.hash(mailboxData.serialize(false));
         byte[] signature = SignatureUtil.sign(hash, receiverKeyPair.getPrivate());
         return new RemoveMailboxRequest(mailboxData.getMetaData(), hash, receiverKeyPair.getPublic(), signature);
     }
@@ -90,15 +91,19 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
     }
 
     @Override
-    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
+    public bisq.network.protobuf.EnvelopePayloadMessage toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
+    }
+
+    @Override
+    public EnvelopePayloadMessage.Builder getBuilder(boolean ignoreAnnotation) {
         return getNetworkMessageBuilder().setDataRequest(getDataRequestBuilder().setRemoveMailboxRequest(
-                        bisq.network.protobuf.RemoveMailboxRequest.newBuilder()
-                                .setMetaData(metaData.toProto())
-                                .setHash(ByteString.copyFrom(hash))
-                                .setReceiverPublicKeyBytes(ByteString.copyFrom(receiverPublicKeyBytes))
-                                .setSignature(ByteString.copyFrom(signature))
-                                .setCreated(created)))
-                .build();
+                bisq.network.protobuf.RemoveMailboxRequest.newBuilder()
+                        .setMetaData(metaData.toProto(ignoreAnnotation))
+                        .setHash(ByteString.copyFrom(hash))
+                        .setReceiverPublicKeyBytes(ByteString.copyFrom(receiverPublicKeyBytes))
+                        .setSignature(ByteString.copyFrom(signature))
+                        .setCreated(created)));
     }
 
     public static RemoveMailboxRequest fromProto(bisq.network.protobuf.RemoveMailboxRequest proto) {
