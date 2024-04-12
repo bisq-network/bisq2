@@ -555,8 +555,8 @@
  *                                                                             *
  ******************************************************************************/
 
-.bisq-easy-trade-wizard-price-step {
-
+.bisq-easy-trade-wizard-price-step .price-content {
+    -fx-alignment: center;
 }
 
 .bisq-easy-trade-wizard-price-step .pricing-models {
@@ -573,11 +573,13 @@
 .bisq-easy-trade-wizard-price-step .pricing-models .price-item-box .price-item {
     -fx-padding: 5;
     -fx-background-color: transparent;
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
 }
 
 .bisq-easy-trade-wizard-price-step .selected-price-model {
-    -fx-fill: -bisq2-green;
-    -fx-text-fill: -bisq2-green;
+    -fx-fill: -bisq2-green !important;
+    -fx-text-fill: -bisq2-green !important;
 }
 
 .bisq-easy-trade-wizard-price-step .feedback-box {
@@ -585,7 +587,7 @@
     -fx-alignment: center;
 }
 
-.bisq-easy-trade-wizard-price-step .feedback-box .learn-why {
+.bisq-easy-trade-wizard-price-step .feedback-box .learn-why-button {
     -fx-fill: -bisq2-green;
     -fx-text-fill: -bisq2-green;
     -fx-font-size: 1.15em;
@@ -593,6 +595,36 @@
     -fx-padding: 5;
     -fx-background-color: transparent;
     -fx-underline: true;
+}
+
+.bisq-easy-trade-wizard-price-step .learn-why-overlay {
+    -fx-max-height: 330;
+    -fx-min-height: 330;
+    -fx-pref-height: 330;
+    -fx-max-width: 680;
+    -fx-min-width: 680;
+    -fx-pref-width: 680;
+    -fx-alignment: center;
+    -fx-padding: 50;
+}
+
+.bisq-easy-trade-wizard-price-step .learn-why-overlay .learn-why-title-label {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-padding: 0 0 15 0;
+}
+
+.bisq-easy-trade-wizard-price-step .learn-why-overlay .learn-why-intro-label {
+    -fx-wrap-text: true;
+    -fx-line-spacing: 5px;
+    -fx-max-height: 48;
+    -fx-min-height: 48;
+    -fx-pref-height: 48;
+}
+
+.bisq-easy-trade-wizard-price-step .learn-why-overlay .unordered-list {
+    -fx-padding: 0 0 15 0;
 }
 
 .bisq-easy-trade-wizard-review-header-description {

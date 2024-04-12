@@ -176,6 +176,14 @@ public class TradeWizardPriceController implements Controller {
         }
     }
 
+    void showLearnWhySection() {
+        model.getShouldShowLearnWhyOverlay().set(true);
+    }
+
+    void closeLearnWhySection() {
+        model.getShouldShowLearnWhyOverlay().set(false);
+    }
+
     private void applyPriceSpec() {
         if (model.getUseFixPrice().get()) {
             model.getPriceSpec().set(new FixPriceSpec(priceInput.getQuote().get()));

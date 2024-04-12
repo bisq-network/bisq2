@@ -20,6 +20,7 @@ package bisq.desktop.main.content.bisq_easy.trade_wizard.price;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.MaterialTextField;
+import bisq.desktop.components.controls.UnorderedList;
 import bisq.desktop.main.content.bisq_easy.components.PriceInput;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
@@ -28,6 +29,7 @@ import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
@@ -41,12 +43,13 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
     private final MaterialTextField percentage;
     private final VBox fieldsBox;
     private final PriceInput priceInput;
-    private final Button percentagePrice, fixedPrice, learnWhy;
+    private final Button percentagePrice, fixedPrice, showLearnWhyButton, closeLearnWhyButton;
     private final Label feedbackSentence;
+    private final VBox learnWhyOverlay;
     private Subscription percentageFocussedPin, useFixPricePin;
 
     public TradeWizardPriceView(TradeWizardPriceModel model, TradeWizardPriceController controller, PriceInput priceInput) {
-        super(new VBox(10), model, controller);
+        super(new VBox(), model, controller);
 
         this.priceInput = priceInput;
 
@@ -89,19 +92,36 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
 
         feedbackSentence = new Label();
         feedbackSentence.getStyleClass().add("bisq-text-3");
-        learnWhy = new Button(Res.get("bisqEasy.price.feedback.learnWhy"));
-        learnWhy.getStyleClass().add("learn-why");
-        HBox feedbackBox = new HBox(5, feedbackSentence, learnWhy);
+        showLearnWhyButton = new Button(Res.get("bisqEasy.price.feedback.learnWhySection.openButton"));
+        showLearnWhyButton.getStyleClass().add("learn-why-button");
+        HBox feedbackBox = new HBox(5, feedbackSentence, showLearnWhyButton);
         feedbackBox.getStyleClass().add("feedback-box");
 
-        root.getStyleClass().add("bisq-easy-trade-wizard-price-step");
-        root.getChildren().addAll(headline, subtitleLabel, pricingModels, fieldsBox, feedbackBox);
+        Label learnWhyTitle = new Label(Res.get("bisqEasy.price.feedback.learnWhySection.title"));
+        learnWhyTitle.getStyleClass().addAll("learn-why-title-label", "large-text");
+        Label learnWhyIntroLabel = new Label(Res.get("bisqEasy.price.feedback.learnWhySection.description.intro"));
+        learnWhyIntroLabel.getStyleClass().addAll("bisq-text-3", "learn-why-intro-label");
+        UnorderedList learnWhyExpositionList = new UnorderedList(Res.get("bisqEasy.price.feedback.learnWhySection.description.exposition"),
+                "bisq-text-3", 7, 10, "- ", "- ");
+        closeLearnWhyButton = new Button(Res.get("bisqEasy.price.feedback.learnWhySection.closeButton"));
+        learnWhyOverlay = new VBox(10, learnWhyTitle, learnWhyIntroLabel, learnWhyExpositionList, closeLearnWhyButton);
+        learnWhyOverlay.getStyleClass().addAll("trade-wizard-feedback-bg", "learn-why-overlay");
+        StackPane.setAlignment(learnWhyOverlay, Pos.TOP_CENTER);
+        StackPane.setMargin(learnWhyOverlay, new Insets(-63, 0, 0, 0));
+
+        VBox content = new VBox(10, headline, subtitleLabel, pricingModels, fieldsBox, feedbackBox);
+        content.getStyleClass().add("price-content");
+        StackPane layeredContent = new StackPane(content, learnWhyOverlay);
+        layeredContent.getStyleClass().add("bisq-easy-trade-wizard-price-step");
+        root.getChildren().addAll(layeredContent);
     }
 
     @Override
     protected void onViewAttached() {
         percentage.textProperty().bindBidirectional(model.getPercentageAsString());
         feedbackSentence.textProperty().bind(model.getFeedbackSentence());
+        learnWhyOverlay.visibleProperty().bind(model.getShouldShowLearnWhyOverlay());
+        learnWhyOverlay.managedProperty().bind(model.getShouldShowLearnWhyOverlay());
 
         percentageFocussedPin = EasyBind.subscribe(percentage.textInputFocusedProperty(), controller::onPercentageFocussed);
         // FIXME: The very first time this component is used when starting the app requestFocus() is not being applied.
@@ -110,6 +130,8 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
 
         percentagePrice.setOnAction(e -> controller.usePercentagePrice());
         fixedPrice.setOnAction(e -> controller.useFixedPrice());
+        showLearnWhyButton.setOnAction(e -> controller.showLearnWhySection());
+        closeLearnWhyButton.setOnAction(e -> controller.closeLearnWhySection());
 
         // Needed to trigger focusOut event on amount components
         // We handle all parents mouse events.
@@ -124,9 +146,13 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
     protected void onViewDetached() {
         percentage.textProperty().unbindBidirectional(model.getPercentageAsString());
         feedbackSentence.textProperty().unbind();
+        learnWhyOverlay.visibleProperty().unbind();
+        learnWhyOverlay.managedProperty().unbind();
 
         percentageFocussedPin.unsubscribe();
         useFixPricePin.unsubscribe();
+        showLearnWhyButton.setOnAction(null);
+        closeLearnWhyButton.setOnAction(null);
 
         percentagePrice.setOnAction(null);
         fixedPrice.setOnAction(null);

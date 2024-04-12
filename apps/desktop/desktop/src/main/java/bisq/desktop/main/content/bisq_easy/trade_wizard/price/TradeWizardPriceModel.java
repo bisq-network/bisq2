@@ -49,6 +49,7 @@ public class TradeWizardPriceModel implements Model {
     @Setter
     private PriceQuote lastValidPriceQuote;
     private final StringProperty feedbackSentence = new SimpleStringProperty();
+    private final BooleanProperty shouldShowLearnWhyOverlay = new SimpleBooleanProperty();
 
     public void reset() {
         market = null;
@@ -60,5 +61,6 @@ public class TradeWizardPriceModel implements Model {
         invalidPriceErrorMessage.set(null);
         lastValidPriceQuote = null;
         feedbackSentence.set(null);
+        shouldShowLearnWhyOverlay.set(false);
     }
 }
