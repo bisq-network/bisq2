@@ -288,15 +288,25 @@ public class TradeWizardPriceController implements Controller {
         Optional<Double> percentage = PriceUtil.findPercentFromMarketPrice(marketPriceService, priceSpec, model.getMarket());
         if (percentage.isPresent()) {
             double percentageValue = percentage.get();
-            if (percentageValue < 0d) {
-                model.getFeedbackSentence().set(Res.get("bisqEasy.price.feedback.sentence.red"));
-            } else if (percentageValue < 0.02) { // TODO: Consider using here the recommended price
-                model.getFeedbackSentence().set(Res.get("bisqEasy.price.feedback.sentence.yellow"));
+            String feedbackSentence;
+            if (percentageValue < -0.05) {
+                feedbackSentence = getFeedbackSentence(Res.get("bisqEasy.price.feedback.sentence.veryLow"));
+            } else if (percentageValue < 0d) {
+                feedbackSentence = getFeedbackSentence(Res.get("bisqEasy.price.feedback.sentence.low"));
+            } else if (percentageValue < 0.05) {
+                feedbackSentence = getFeedbackSentence(Res.get("bisqEasy.price.feedback.sentence.some"));
+            } else if (percentageValue < 0.15) {
+                feedbackSentence = getFeedbackSentence(Res.get("bisqEasy.price.feedback.sentence.good"));
             } else {
-                model.getFeedbackSentence().set(Res.get("bisqEasy.price.feedback.sentence.green"));
+                feedbackSentence = getFeedbackSentence(Res.get("bisqEasy.price.feedback.sentence.veryGood"));
             }
+            model.getFeedbackSentence().set(feedbackSentence);
         } else {
             model.getFeedbackSentence().set(null);
         }
+    }
+
+    private String getFeedbackSentence(String adjective) {
+        return Res.get("bisqEasy.price.feedback.sentence", adjective);
     }
 }
