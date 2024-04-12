@@ -17,17 +17,16 @@
 
 package bisq.desktop.main.content.bisq_easy.trade_wizard.price;
 
-import bisq.desktop.common.utils.ImageUtil;
+import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.main.content.bisq_easy.components.PriceInput;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
@@ -37,10 +36,12 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, TradeWizardPriceController> {
+    private static final String SELECTED_PRICE_MODEL_STYLE_CLASS = "selected-price-model";
+
     private final MaterialTextField percentage;
-    private final ToggleButton useFixPriceToggle;
     private final VBox fieldsBox;
     private final PriceInput priceInput;
+    private final Button percentagePrice, fixedPrice;
     private Subscription percentageFocussedPin, useFixPricePin;
 
     public TradeWizardPriceView(TradeWizardPriceModel model, TradeWizardPriceController controller, PriceInput priceInput) {
@@ -52,6 +53,7 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
 
         Label headline = new Label(Res.get("bisqEasy.price.headline"));
         headline.getStyleClass().add("bisq-text-headline-2");
+        VBox.setMargin(headline, new Insets(40, 0, 0, 0));
 
         Label subtitleLabel = new Label(Res.get("bisqEasy.tradeWizard.price.subtitle"));
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
@@ -60,22 +62,32 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         subtitleLabel.setWrapText(true);
         subtitleLabel.setMaxWidth(500);
 
-        percentage = new MaterialTextField(Res.get("bisqEasy.price.percentage"));
+        percentagePrice = new Button(Res.get("bisqEasy.price.percentage.title"));
+        percentagePrice.getStyleClass().add("price-item");
+        fixedPrice = new Button(Res.get("bisqEasy.price.tradePrice.title"));
+        fixedPrice.getStyleClass().add("price-item");
+        Label separator = new Label("|");
 
-        useFixPriceToggle = new ToggleButton();
-        useFixPriceToggle.setGraphic(ImageUtil.getImageViewById("arrows-up-down"));
-        useFixPriceToggle.getStyleClass().add("icon-button");
-        useFixPriceToggle.setTooltip(new BisqTooltip(Res.get("bisqEasy.price.toggle.tooltip")));
+        HBox percentagePriceBox = new HBox(percentagePrice);
+        percentagePriceBox.getStyleClass().add("price-item-box");
+        percentagePriceBox.setAlignment(Pos.CENTER_RIGHT);
+        HBox fixedPriceBox = new HBox(fixedPrice);
+        fixedPriceBox.getStyleClass().add("price-item-box");
+        fixedPriceBox.setAlignment(Pos.CENTER_LEFT);
+
+        HBox pricingModels = new HBox(30, percentagePriceBox, separator, fixedPriceBox);
+        pricingModels.getStyleClass().addAll("pricing-models", "bisq-text-3");
+
+        percentage = new MaterialTextField(Res.get("bisqEasy.price.percentage.inputBoxText"));
 
         fieldsBox = new VBox(20);
         fieldsBox.setAlignment(Pos.TOP_CENTER);
-        fieldsBox.setMinWidth(400);
+        fieldsBox.setMinWidth(350);
+        fieldsBox.setPrefWidth(350);
+        fieldsBox.setMaxWidth(350);
 
-        HBox.setMargin(fieldsBox, new Insets(0, 0, 0, 44));
-        HBox hBox = new HBox(10, fieldsBox, useFixPriceToggle);
-        hBox.setAlignment(Pos.CENTER);
-        VBox.setMargin(headline, new Insets(60, 0, 0, 0));
-        root.getChildren().addAll(headline, subtitleLabel, hBox);
+        root.getStyleClass().add("bisq-easy-trade-wizard-price-step");
+        root.getChildren().addAll(headline, subtitleLabel, pricingModels, fieldsBox);
     }
 
     @Override
@@ -83,23 +95,13 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         percentage.textProperty().bindBidirectional(model.getPercentageAsString());
 
         percentageFocussedPin = EasyBind.subscribe(percentage.textInputFocusedProperty(), controller::onPercentageFocussed);
-        useFixPriceToggle.setSelected(model.getUseFixPrice().get());
-        useFixPriceToggle.setOnAction(e -> controller.onToggleUseFixPrice());
-        useFixPricePin = EasyBind.subscribe(model.getUseFixPrice(), useFixPrice -> {
-            if (useFixPrice) {
-                fieldsBox.getChildren().setAll(priceInput.getRoot(), percentage);
-                priceInput.requestFocus();
-                priceInput.setEditable(true);
-                percentage.deselect();
-                percentage.setEditable(false);
-            } else {
-                fieldsBox.getChildren().setAll(percentage, priceInput.getRoot());
-                priceInput.deselect();
-                priceInput.setEditable(false);
-                percentage.requestFocus();
-                percentage.setEditable(true);
-            }
-        });
+        // FIXME: The very first time this component is used when starting the app requestFocus() is not being applied.
+        useFixPricePin = EasyBind.subscribe(model.getUseFixPrice(), useFixPrice ->
+                UIScheduler.run(this::updateFieldsBox).after(100));
+
+        percentagePrice.setOnAction(e -> controller.usePercentagePrice());
+        fixedPrice.setOnAction(e -> controller.useFixedPrice());
+
 
         // Needed to trigger focusOut event on amount components
         // We handle all parents mouse events.
@@ -117,12 +119,33 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         percentageFocussedPin.unsubscribe();
         useFixPricePin.unsubscribe();
 
-        useFixPriceToggle.setOnAction(null);
+        percentagePrice.setOnAction(null);
+        fixedPrice.setOnAction(null);
 
         Parent node = root;
         while (node.getParent() != null) {
             node.setOnMousePressed(null);
             node = node.getParent();
+        }
+    }
+
+    private void updateFieldsBox() {
+        fixedPrice.getStyleClass().remove(SELECTED_PRICE_MODEL_STYLE_CLASS);
+        percentagePrice.getStyleClass().remove(SELECTED_PRICE_MODEL_STYLE_CLASS);
+        if (model.getUseFixPrice().get()) {
+            fixedPrice.getStyleClass().add(SELECTED_PRICE_MODEL_STYLE_CLASS);
+            fieldsBox.getChildren().setAll(priceInput.getRoot(), percentage);
+            percentage.deselect();
+            percentage.setEditable(false);
+            priceInput.setEditable(true);
+            priceInput.requestFocus();
+        } else {
+            percentagePrice.getStyleClass().add(SELECTED_PRICE_MODEL_STYLE_CLASS);
+            fieldsBox.getChildren().setAll(percentage, priceInput.getRoot());
+            priceInput.deselect();
+            priceInput.setEditable(false);
+            percentage.setEditable(true);
+            percentage.requestFocus();
         }
     }
 }

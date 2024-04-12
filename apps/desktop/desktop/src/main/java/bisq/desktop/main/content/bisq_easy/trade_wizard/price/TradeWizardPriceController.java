@@ -102,7 +102,7 @@ public class TradeWizardPriceController implements Controller {
         });
 
         String marketCodes = model.getMarket().getMarketCodes();
-        priceInput.setDescription(Res.get("bisqEasy.price.tradePrice", marketCodes));
+        priceInput.setDescription(Res.get("bisqEasy.price.tradePrice.inputBoxText", marketCodes));
 
         applyPriceSpec();
     }
@@ -156,6 +156,18 @@ public class TradeWizardPriceController implements Controller {
         model.getUseFixPrice().set(useFixPrice);
         settingsService.setCookie(CookieKey.CREATE_OFFER_USE_FIX_PRICE, getCookieSubKey(), useFixPrice);
         applyPriceSpec();
+    }
+
+    void useFixedPrice() {
+        if (!model.getUseFixPrice().get()) {
+            onToggleUseFixPrice();
+        }
+    }
+
+    void usePercentagePrice() {
+        if (model.getUseFixPrice().get()) {
+            onToggleUseFixPrice();
+        }
     }
 
     private void applyPriceSpec() {
