@@ -22,7 +22,6 @@ import bisq.chat.ChatMessage;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.data.Pair;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.main.content.bisq_easy.offerbook.BisqEasyOfferbookUtil;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListModel;
@@ -65,17 +64,13 @@ public final class PeerOfferMessageBox extends PeerTextMessageBox {
         reputationVBox.setAlignment(Pos.CENTER);
         reputationVBox.getStyleClass().add("reputation");
 
-        Pair<String, String> splitMessage = BisqEasyOfferbookUtil.splitOfferBookMessageText(message.getText());
-        String messageTitle = splitMessage.getFirst();
-        String messageText = splitMessage.getSecond();
-
         // Take offer title and button
+        String messageTitle = "TODO PEER TITLE";
         Pair<Label, Button> takeOfferLabelAndButton = createAndGetTakeOfferLabelAndButton(messageTitle);
         Label takeOfferTitle = takeOfferLabelAndButton.getFirst();
         takeOfferButton = takeOfferLabelAndButton.getSecond();
 
         // Message
-        message.setText(messageText);
         message.getStyleClass().add("chat-peer-offer-message");
 
         // Offer content

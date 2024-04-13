@@ -20,12 +20,9 @@ package bisq.desktop.main.content.chat.message_container.list.message_box;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
-import bisq.common.data.Pair;
-import bisq.common.util.StringUtils;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.DropdownMenu;
 import bisq.desktop.components.controls.DropdownMenuItem;
-import bisq.desktop.main.content.bisq_easy.offerbook.BisqEasyOfferbookUtil;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListModel;
@@ -57,15 +54,11 @@ public final class MyOfferMessageBox extends BubbleMessageBox {
         // Dropdown menu
         DropdownMenu dropdownMenu = createAndGetDropdownMenu();
 
-        Pair<String, String> splitMessage = BisqEasyOfferbookUtil.splitOfferBookMessageText(message.getText());
-        String messageTitle = splitMessage.getFirst();
-        String messageText = splitMessage.getSecond();
-
         // My offer title
+        String messageTitle = "TODO MY OFFER TITLE";
         Label myOfferTitle = createAndGetMyOfferTitle(messageTitle);
 
         // Message
-        message.setText(messageText);
         message.getStyleClass().add("chat-my-offer-message");
 
         // Offer content

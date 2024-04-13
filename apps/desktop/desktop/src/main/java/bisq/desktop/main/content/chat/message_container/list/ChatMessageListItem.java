@@ -138,7 +138,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         if (chatMessage instanceof BisqEasyOfferbookMessage &&
                 ((BisqEasyOfferbookMessage) chatMessage).hasBisqEasyOffer()) {
             BisqEasyOfferbookMessage bisqEasyOfferbookMessage = (BisqEasyOfferbookMessage) chatMessage;
-            message = getLocalizedOfferbookMessage(bisqEasyOfferbookMessage);
+            message = getLocalizedOfferBookMessage(bisqEasyOfferbookMessage);
             if (bisqEasyOfferbookMessage.getBisqEasyOffer().isPresent()) {
                 UserProfile userProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
                 NetworkId takerNetworkId = userProfile.getNetworkId();
@@ -235,13 +235,10 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         }));
     }
 
-    private String getLocalizedOfferbookMessage(BisqEasyOfferbookMessage chatMessage) {
+    private String getLocalizedOfferBookMessage(BisqEasyOfferbookMessage chatMessage) {
         BisqEasyOffer bisqEasyOffer = chatMessage.getBisqEasyOffer().orElseThrow();
         String fiatPaymentMethods = PaymentMethodSpecFormatter.fromPaymentMethodSpecs(bisqEasyOffer.getQuoteSidePaymentMethodSpecs());
-        return BisqEasyServiceUtil.createOfferBookMessageText(isMyMessage(),
-                getNickName(),
-                marketPriceService,
-                bisqEasyOffer.getDirection(),
+        return BisqEasyServiceUtil.createBasicOfferBookMessage(marketPriceService,
                 bisqEasyOffer.getMarket(),
                 fiatPaymentMethods,
                 bisqEasyOffer.getAmountSpec(),
