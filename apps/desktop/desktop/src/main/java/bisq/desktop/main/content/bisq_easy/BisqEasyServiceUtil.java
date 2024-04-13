@@ -121,7 +121,7 @@ public class BisqEasyServiceUtil {
                                                                    String paymentMethodNames,
                                                                    AmountSpec amountSpec,
                                                                    PriceSpec priceSpec) {
-        String ownerNickName = StringUtils.truncate(messageOwnerNickName, 30);
+        String ownerNickName = StringUtils.truncate(messageOwnerNickName, 28);
         String priceInfo = String.format("%s %s", Res.get("bisqEasy.tradeWizard.review.chatMessage.price"), getFormattedPriceSpec(priceSpec));
         boolean hasAmountRange = amountSpec instanceof RangeAmountSpec;
         String quoteAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, amountSpec, priceSpec, market, hasAmountRange, true);

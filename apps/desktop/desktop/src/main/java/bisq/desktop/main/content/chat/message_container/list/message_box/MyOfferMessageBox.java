@@ -41,6 +41,7 @@ import javafx.scene.layout.VBox;
 import static com.google.common.base.Preconditions.checkArgument;
 
 public final class MyOfferMessageBox extends BubbleMessageBox {
+    private final Label myOfferTitle;
     private DropdownMenuItem removeOffer;
     private Label copyIcon;
 
@@ -56,7 +57,7 @@ public final class MyOfferMessageBox extends BubbleMessageBox {
         DropdownMenu dropdownMenu = createAndGetDropdownMenu();
 
         // My offer title
-        Label myOfferTitle = createAndGetMyOfferTitle();
+        myOfferTitle = createAndGetMyOfferTitle();
 
         // Message
         message.getStyleClass().add("chat-my-offer-message");
@@ -97,7 +98,7 @@ public final class MyOfferMessageBox extends BubbleMessageBox {
 
     @Override
     protected void addReactionsHandlers() {
-        copyIcon.setOnMouseClicked(e -> onCopyMessage(item.getChatMessage()));
+        copyIcon.setOnMouseClicked(e -> onCopyMessage(String.format("%s\n%s", myOfferTitle.getText(), message.getText())));
     }
 
     private DropdownMenu createAndGetDropdownMenu() {
