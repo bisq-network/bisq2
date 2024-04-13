@@ -18,7 +18,6 @@
 package bisq.presentation.parser;
 
 import bisq.common.util.ExceptionUtil;
-import bisq.common.util.StringUtils;
 
 public class PercentageParser {
 
@@ -35,16 +34,14 @@ public class PercentageParser {
     }
 
     /**
-     * @param input The string input to parse to a normalized percentage input (1=100%)
-     * @return the percentage input if the input was valid.
-     * @throws NumberFormatException thrown if input was invalid
+     * @param value The string value to parse to a normalized percentage value (1=100%)
+     * @return the percentage value if the value was valid.
+     * @throws NumberFormatException thrown if value was invalid
      */
-    public static double parse(String input) throws NumberFormatException {
+    public static double parse(String value) throws NumberFormatException {
         try {
-            input = StringUtils.removeAllWhitespaces(input);
-            input = input.replace("%", "");
-            input = input.replace(",", ".");
-            return Double.parseDouble(input) / 100d;
+            value = value.replace("%", "");
+            return DoubleParser.parse(value) / 100d;
         } catch (NumberFormatException e) {
             throw e;
         } catch (Throwable t) {

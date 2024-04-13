@@ -21,10 +21,13 @@ import bisq.common.currency.TradeCurrency;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
+import bisq.common.util.StringUtils;
+import bisq.presentation.formatters.DefaultNumberFormatter;
 
 public class AmountParser {
     public static Monetary parse(String value, String code) {
-        value = value.replace(",", ".");
+        value = DefaultNumberFormatter.reformat(value);
+        value = StringUtils.removeAllWhitespaces(value);
         if (TradeCurrency.isFiat(code)) {
             return Fiat.parse(value, code);
         } else {

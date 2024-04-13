@@ -22,6 +22,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.controls.validator.deprecated.MonetaryValidator;
 import bisq.desktop.components.overlay.Popup;
+import bisq.presentation.parser.DoubleParser;
 import bisq.wallets.core.WalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -66,7 +67,8 @@ public class WalletSendController implements Controller {
     }
 
     void onSend() {
-        double amount = Double.parseDouble(model.getAmount().get());
+        String value = model.getAmount().get();
+        double amount = DoubleParser.parse(value);
         String address = model.getAddress().get();
         walletService.sendToAddress(Optional.ofNullable(model.getPassword().get()), address, amount)
                 .whenComplete((response, throwable) -> {

@@ -120,6 +120,4 @@ public class StringUtilsTest {
         assertEquals("camel-case", StringUtils.snakeCaseToKebapCase("camel-case"));
         assertEquals("", StringUtils.snakeCaseToKebapCase(""));
     }
-
-
 }
