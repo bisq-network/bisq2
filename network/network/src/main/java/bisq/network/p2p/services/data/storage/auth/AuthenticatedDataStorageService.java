@@ -72,7 +72,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
     public DataStorageResult add(AddAuthenticatedDataRequest request) {
         AuthenticatedSequentialData authenticatedSequentialData = request.getAuthenticatedSequentialData();
         AuthenticatedData authenticatedData = authenticatedSequentialData.getAuthenticatedData();
-        byte[] hash = DigestUtil.hash(authenticatedData.serialize());
+        byte[] hash = DigestUtil.hash(authenticatedData.serializeForHash());
         ByteArray byteArray = new ByteArray(hash);
         AuthenticatedDataRequest requestFromMap;
         Map<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();

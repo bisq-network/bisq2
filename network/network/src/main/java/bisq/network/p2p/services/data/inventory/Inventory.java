@@ -55,7 +55,7 @@ public final class Inventory implements NetworkProto {
         // We need to sort deterministically as the data is used in the proof of work check
         // TODO (optimize, low prio) dataRequest.serialize() is expensive. We have the hash of the data in most DataRequest implementations.
         //  This could be used and combined with the other remaining data, like signature and pubkey
-        this.entries.sort(Comparator.comparing((DataRequest dataRequest) -> new ByteArray(dataRequest.serialize())));
+        this.entries.sort(Comparator.comparing((DataRequest dataRequest) -> new ByteArray(dataRequest.serializeForHash())));
 
         verify();
     }

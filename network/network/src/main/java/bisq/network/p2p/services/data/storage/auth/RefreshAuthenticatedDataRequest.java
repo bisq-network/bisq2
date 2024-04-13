@@ -43,7 +43,7 @@ public final class RefreshAuthenticatedDataRequest implements DataRequest {
                                                        AuthenticatedData authenticatedData,
                                                        KeyPair keyPair)
             throws GeneralSecurityException {
-        byte[] hash = DigestUtil.hash(authenticatedData.serialize());
+        byte[] hash = DigestUtil.hash(authenticatedData.serializeForHash());
         byte[] signature = SignatureUtil.sign(hash, keyPair.getPrivate());
         int newSequenceNumber = store.getSequenceNumber(hash) + 1;
         return new RefreshAuthenticatedDataRequest(authenticatedData.getMetaData(),

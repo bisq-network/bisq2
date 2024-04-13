@@ -36,6 +36,11 @@ public interface Proto {
         return toProto().toByteArray();
     }
 
+    default byte[] serializeForHash() {
+        // TODO
+        return toProto().toByteArray();
+    }
+
     default int getSerializedSize() {
         return toProto().getSerializedSize();
     }

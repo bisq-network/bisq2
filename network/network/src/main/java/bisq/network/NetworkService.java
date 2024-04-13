@@ -308,7 +308,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                                                                     PublicKey authorizedPublicKey) {
         checkArgument(dataService.isPresent(), "DataService must be supported when addData is called.");
         try {
-            byte[] signature = SignatureUtil.sign(authorizedDistributedData.serialize(), authorizedPrivateKey);
+            byte[] signature = SignatureUtil.sign(authorizedDistributedData.serializeForHash(), authorizedPrivateKey);
             AuthorizedData authorizedData = new AuthorizedData(authorizedDistributedData, Optional.of(signature), authorizedPublicKey);
             return dataService.get().addAuthorizedData(authorizedData, keyPair);
         } catch (GeneralSecurityException e) {
