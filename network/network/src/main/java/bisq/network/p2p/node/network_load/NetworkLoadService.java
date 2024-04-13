@@ -110,7 +110,7 @@ public class NetworkLoadService {
                 .map(ConnectionMetrics::getNumMessagesReceivedOfLastHour)
                 .mapToLong(e -> e)
                 .sum();
-        long networkDatabaseSize = dataRequests.stream().mapToLong(e -> e.toProto().getSerializedSize()).sum();
+        long networkDatabaseSize = dataRequests.stream().mapToLong(e -> e.getSerializedSize()).sum();
 
         StringBuilder sb = new StringBuilder("\n\n////////////////////////////////////////////////////////////////////////////////////////////////////");
         sb.append("\nNetwork statistics").append(("\n////////////////////////////////////////////////////////////////////////////////////////////////////"))

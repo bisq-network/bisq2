@@ -35,4 +35,8 @@ public interface Proto {
     default byte[] serialize() {
         return toProto().toByteArray();
     }
+
+    default int getSerializedSize() {
+        return toProto().getSerializedSize();
+    }
 }
