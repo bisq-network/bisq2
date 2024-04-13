@@ -21,6 +21,7 @@ import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.data.Pair;
+import bisq.common.util.StringUtils;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
@@ -103,7 +104,7 @@ public final class PeerOfferMessageBox extends PeerTextMessageBox {
         Label messageTitle = new Label(title);
         messageTitle.getStyleClass().addAll("bisq-easy-offer-title", "normal-text", "font-default");
         messageTitle.setPadding(new Insets(0, 0, 0, 7));
-        peerNickName = new Label(item.getNickName());
+        peerNickName = new Label(StringUtils.truncate(item.getNickName(), 28));
         peerNickName.getStyleClass().addAll("code-block", "hand-cursor");
         peerNickName.setOnMouseClicked(e -> controller.onShowChatUserDetails(item.getChatMessage()));
         HBox messageTitleBox = new HBox(5, messageTitle, peerNickName);
