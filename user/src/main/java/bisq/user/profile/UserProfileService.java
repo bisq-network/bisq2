@@ -20,6 +20,8 @@ package bisq.user.profile;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
+import bisq.common.observable.map.ObservableHashMap;
+import bisq.common.timer.Scheduler;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.DistributedData;
@@ -132,17 +134,19 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
         if (!nymsByNickName.containsKey(nickName)) {
             nymsByNickName.put(nickName, new HashSet<>());
         }
-
         Set<String> nyms = nymsByNickName.get(nickName);
         nyms.add(nym);
-        persist();
+
+        // TODO calling persist() cause a ConcurrentModificationException
+        // we should redesign the handling of the nyms
+        Scheduler.run(this::persist).after(500);
+
         if (nyms.size() == 1) {
             return nickName;
         } else {
             return nickName + SEPARATOR_START + nym + SEPARATOR_END;
         }
     }
-
 
     private void processUserProfileAdded(UserProfile userProfile) {
         Optional<UserProfile> optionalChatUser = findUserProfile(userProfile.getId());
@@ -187,7 +191,7 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
         return persistableStore.getNymsByNickName();
     }
 
-    public Map<String, UserProfile> getUserProfileById() {
+    public ObservableHashMap<String, UserProfile> getUserProfileById() {
         return persistableStore.getUserProfileById();
     }
 }
