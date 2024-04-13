@@ -255,7 +255,7 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
                 log.debug("authorizedPublicKey provided by a bonded role. data={}", data.getClass().getSimpleName());
                 // In case we are reprocessing previous failed authorizedData we clear it from the queue.
                 if (failedAuthorizedData.remove(authorizedData)) {
-                    log.info("We successfully reprocessed authorizedData.\n" +
+                    log.debug("We successfully reprocessed authorizedData.\n" +
                                     "AuthorizedDistributedData={}, {}",
                             data.getClass().getSimpleName(), data.toString().substring(0, 100));
                 }
