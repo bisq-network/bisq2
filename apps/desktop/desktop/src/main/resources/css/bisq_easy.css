@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Container boxes                                                              *
+ * Container boxes                                                             *
  ******************************************************************************/
 
 .bisq-easy-container {
@@ -43,7 +43,7 @@
 
 
 /*******************************************************************************
- * Trade guide                                                            *
+ * Trade guide                                                                 *
  ******************************************************************************/
 
 .bisq-easy-trade-guide-headline {
@@ -62,7 +62,7 @@
 
 
 /*******************************************************************************
- * Onboarding                                                           *
+ * Onboarding                                                                  *
  ******************************************************************************/
 
 .bisq-easy-onboarding-big-box {
@@ -104,7 +104,7 @@
 
 
 /*******************************************************************************
- * Offerbook                                                           *
+ * Offerbook                                                                   *
  ******************************************************************************/
 
 .offerbook-channel-title {
@@ -327,7 +327,6 @@
  *                                                                             *
  ******************************************************************************/
 
-
 .open-trades-badge.bisq-badge .badge-pane {
     -fx-background-color: -bisq2-yellow;
 }
@@ -371,7 +370,7 @@
 
 
 /*******************************************************************************
- * BisqEasyOpenTradesView.tableView                                                       *
+ * BisqEasyOpenTradesView.tableView                                            *
  ******************************************************************************/
 
 .bisq-easy-open-trades.table-view .table-row-cell:filled:hover .table-cell {
@@ -384,7 +383,7 @@
 
 
 /*******************************************************************************
- * Header                                                                 *
+ * Header                                                                      *
  ******************************************************************************/
 
 .bisq-easy-open-trades-header-description {
@@ -556,6 +555,85 @@
  *                                                                             *
  ******************************************************************************/
 
+.bisq-easy-trade-wizard-price-step .price-content {
+    -fx-alignment: center;
+}
+
+.bisq-easy-trade-wizard-price-step .pricing-models {
+    -fx-alignment: center;
+    -fx-padding: 10 0 10 0;
+}
+
+.bisq-easy-trade-wizard-price-step .pricing-models .price-item-box {
+    -fx-max-width: 300;
+    -fx-min-width: 300;
+    -fx-pref-width: 300;
+}
+
+.bisq-easy-trade-wizard-price-step .pricing-models .price-item-box .price-item {
+    -fx-padding: 5;
+    -fx-background-color: transparent;
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+}
+
+.bisq-easy-trade-wizard-price-step .selected-price-model {
+    -fx-fill: -bisq2-green !important;
+    -fx-text-fill: -bisq2-green !important;
+}
+
+.bisq-easy-trade-wizard-price-step .feedback-box {
+    -fx-padding: 10 0 10 0;
+    -fx-alignment: center;
+}
+
+.bisq-easy-trade-wizard-price-step .feedback-box .learn-why-button {
+    -fx-fill: -bisq2-green;
+    -fx-text-fill: -bisq2-green;
+    -fx-font-size: 1.15em;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-padding: 5;
+    -fx-background-color: transparent;
+    -fx-underline: true;
+}
+
+.bisq-easy-trade-wizard-price-step .learn-why-overlay {
+    -fx-max-height: 330;
+    -fx-min-height: 330;
+    -fx-pref-height: 330;
+    -fx-max-width: 680;
+    -fx-min-width: 680;
+    -fx-pref-width: 680;
+    -fx-alignment: center;
+    -fx-padding: 50;
+}
+
+.bisq-easy-trade-wizard-price-step .learn-why-overlay .learn-why-title-label {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-padding: 0 0 15 0;
+}
+
+.bisq-easy-trade-wizard-price-step .learn-why-overlay .learn-why-text {
+    -fx-fill: -fx-light-text-color;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 1.15em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.bisq-easy-trade-wizard-price-step .learn-why-overlay .learn-why-intro-label {
+    -fx-wrap-text: true;
+    -fx-line-spacing: 5px;
+    -fx-max-height: 48;
+    -fx-min-height: 48;
+    -fx-pref-height: 48;
+}
+
+.bisq-easy-trade-wizard-price-step .learn-why-overlay .unordered-list {
+    -fx-padding: 0 0 15 0;
+}
+
 .bisq-easy-trade-wizard-review-header-description {
     -fx-alignment: left;
     -fx-fill: -fx-mid-text-color;
@@ -584,7 +662,6 @@
     -fx-font-size: 2.3em;
     -fx-font-family: "IBM Plex Sans Light";
 }
-
 
 .trade-wizard-review-direction {
     -fx-fill: -fx-mid-text-color;
@@ -703,7 +780,6 @@
     -fx-font-family: "IBM Plex Sans Light";
 }
 
-
 .trade-wizard-review-payment-combo-box {
     -fx-background-color: -bisq-dark-grey-50;
     -fx-background-insets: 6 0 6 0;
@@ -734,8 +810,9 @@
     -fx-font-family: "IBM Plex Sans Light";
 }
 
+
 /*******************************************************************************
- * TradeWizardMarketView.tableView                                                       *
+ * TradeWizardMarketView.tableView                                             *
  ******************************************************************************/
 
 .markets-table-container {
@@ -844,7 +921,7 @@
 
 
 /*******************************************************************************
- * Chat                                                              *
+ * Chat                                                                        *
  ******************************************************************************/
 
 .bisq-easy-chat-sidebar-bg {
@@ -855,7 +932,7 @@
 
 /*******************************************************************************
  *                                                                             *
- * Trade domain                                                                   *
+ * Trade domain                                                                *
  *                                                                             *
  ******************************************************************************/
 
@@ -868,7 +945,7 @@
 
 /*******************************************************************************
  *                                                                             *
- * PaymentMethod domain                                                                *
+ * PaymentMethod domain                                                        *
  *                                                                             *
  ******************************************************************************/
 
@@ -885,7 +962,7 @@
 
 /*******************************************************************************
  *                                                                             *
- * Misc                                                                 *
+ * Misc                                                                        *
  *                                                                             *
  ******************************************************************************/
 
@@ -927,7 +1004,7 @@
 
 /*******************************************************************************
  *                                                                             *
- * Mediator view                                                              *
+ * Mediator view                                                               *
  *                                                                             *
  ******************************************************************************/
 
