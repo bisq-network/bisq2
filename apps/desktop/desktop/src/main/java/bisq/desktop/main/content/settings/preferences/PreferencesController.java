@@ -77,8 +77,6 @@ public class PreferencesController implements Controller {
         preventStandbyModePin = FxBindings.bindBiDir(model.getPreventStandbyMode())
                 .to(settingsService.getPreventStandbyMode());
 
-        minRequiredReputationScorePin = FxBindings.bindBiDir(model.getMinRequiredReputationScore())
-                .to(settingsService.getMinRequiredReputationScore());
         ignoreMinRequiredReputationScoreFromSecManagerPin = FxBindings.bindBiDir(model.getIgnoreMinRequiredReputationScoreFromSecManager())
                 .to(settingsService.getIgnoreMinRequiredReputationScoreFromSecManager());
         model.getMinRequiredReputationScoreEditable().bind(model.getIgnoreMinRequiredReputationScoreFromSecManager());
