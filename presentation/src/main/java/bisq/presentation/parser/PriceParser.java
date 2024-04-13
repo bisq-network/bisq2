@@ -19,10 +19,11 @@ package bisq.presentation.parser;
 
 import bisq.common.currency.Market;
 import bisq.common.monetary.PriceQuote;
+import bisq.presentation.formatters.DefaultNumberFormatter;
 
 public class PriceParser {
     public static PriceQuote parse(String value, String baseCurrencyCode, String quoteCurrencyCode) {
-        value = value.replace(",", ".");
+        value = DefaultNumberFormatter.reformat(value);
         return PriceQuote.fromPrice(Double.parseDouble(value), baseCurrencyCode, quoteCurrencyCode);
     }
 

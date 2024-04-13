@@ -18,6 +18,7 @@
 package bisq.desktop.components.controls.validator.deprecated;
 
 import bisq.i18n.Res;
+import bisq.presentation.formatters.DefaultNumberFormatter;
 import lombok.extern.slf4j.Slf4j;
 
 // todo: (refactor) better use another validation framework as in bisq 1
@@ -32,6 +33,7 @@ public class PriceValidator extends InputValidator {
             return new ValidationResult(true);
         }
         try {
+            value = DefaultNumberFormatter.reformat(value);
             Double.parseDouble(value);
             return new ValidationResult(true);
         } catch (Exception error) {

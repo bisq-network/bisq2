@@ -20,26 +20,35 @@ package bisq.presentation.formatters;
 import bisq.common.util.MathUtils;
 import lombok.extern.slf4j.Slf4j;
 
+import java.math.RoundingMode;
 import java.text.DecimalFormat;
+import java.util.Locale;
 
 @Slf4j
 public class PercentageFormatter {
+    public static final DecimalFormat DEFAULT_FORMAT = (DecimalFormat) DecimalFormat.getInstance(Locale.US);
+
+    static {
+        DEFAULT_FORMAT.setDecimalFormatSymbols(DefaultNumberFormatter.DEFAULT_SEPARATORS);
+        DEFAULT_FORMAT.setRoundingMode(RoundingMode.HALF_UP);
+        DEFAULT_FORMAT.setMinimumFractionDigits(2);
+        DEFAULT_FORMAT.setMaximumFractionDigits(2);
+        DEFAULT_FORMAT.applyPattern("#.##");
+    }
+
     public static String formatToPercentWithSymbol(double value) {
         return formatToPercent(value) + "%";
     }
 
-    public static String formatToRoundedPercentWithSymbol(double value) {
-        return formatToPercent(value, new DecimalFormat("#")) + "%";
-    }
-
+    /**
+     * @param value to be represented as percentage. 1 = 100 %. We show 2 fraction digits and use RoundingMode.HALF_UP
+     * @return The formatted percentage value without the '%' sign
+     */
     public static String formatToPercent(double value) {
-        DecimalFormat decimalFormat = new DecimalFormat("#.##");
-        decimalFormat.setMinimumFractionDigits(2);
-        decimalFormat.setMaximumFractionDigits(2);
-        return formatToPercent(value, decimalFormat);
+        return formatToPercent(value, DEFAULT_FORMAT);
     }
 
-    public static String formatToPercent(double value, DecimalFormat decimalFormat) {
-        return decimalFormat.format(MathUtils.roundDouble(value * 100.0, 2)).replace(",", ".");
+    public static String formatToPercent(double value, DecimalFormat defaultNumberFormat) {
+        return defaultNumberFormat.format(MathUtils.roundDouble(value * 100.0, 2));
     }
 }

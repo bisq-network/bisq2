@@ -207,6 +207,7 @@ public class StringUtils {
     }
 
     public static String formatBytes(long size) {
+        //todo Use ByteUnit instead
         if (size <= 0) return "0 B";
         String[] units = new String[]{"B", "kB", "MB", "GB", "TB"};
         int digitGroups = (int) (Math.log10(size) / Math.log10(1024));

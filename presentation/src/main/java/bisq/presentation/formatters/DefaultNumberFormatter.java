@@ -21,11 +21,12 @@ public class DefaultNumberFormatter {
      * RoundingMode.DOWN is used (equal to cut off 9th digit).
      */
     public static final DecimalFormat DEFAULT_NUMBER_FORMAT = (DecimalFormat) DecimalFormat.getInstance(Locale.US);
+    public static final DecimalFormatSymbols DEFAULT_SEPARATORS = new DecimalFormatSymbols();
 
     static {
-        DecimalFormatSymbols customSymbol = new DecimalFormatSymbols();
-        customSymbol.setGroupingSeparator(' ');
-        DEFAULT_NUMBER_FORMAT.setDecimalFormatSymbols(customSymbol);
+        DEFAULT_SEPARATORS.setGroupingSeparator(' ');
+        DEFAULT_SEPARATORS.setDecimalSeparator('.');
+        DEFAULT_NUMBER_FORMAT.setDecimalFormatSymbols(DEFAULT_SEPARATORS);
         DEFAULT_NUMBER_FORMAT.setRoundingMode(RoundingMode.DOWN);
         DEFAULT_NUMBER_FORMAT.setMaximumFractionDigits(8);
     }
