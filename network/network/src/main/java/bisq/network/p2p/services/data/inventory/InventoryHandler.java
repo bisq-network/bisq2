@@ -117,7 +117,7 @@ class InventoryHandler implements Connection.Listener {
             report = "No items received";
         }
         String maxSizeReached = inventory.isMaxSizeReached() ? "; \nResponse got truncated because max size was reached" : "";
-        String size = ByteUnit.BYTE.toKB((double) inventory.getSerializedSize().orElse(0)) + " KB";
+        String size = ByteUnit.BYTE.toKB((double) inventory.getCachedSerializedSize().orElse(0)) + " KB";
         log.info("\n##########################################################################################\n" +
                 "Received " + size + " of inventory data from: " + connection.getPeerAddress().getFullAddress() +
                 maxSizeReached +
