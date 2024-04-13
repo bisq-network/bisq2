@@ -18,17 +18,13 @@
 package bisq.desktop.components.controls.validator;
 
 import bisq.common.util.StringUtils;
+import bisq.presentation.formatters.DefaultNumberFormatter;
 import javafx.scene.control.TextInputControl;
-import javafx.util.StringConverter;
-import javafx.util.converter.NumberStringConverter;
 import lombok.Getter;
 
-import java.text.NumberFormat;
-import java.text.ParseException;
 import java.util.Optional;
 
 public class NumberValidator extends ValidatorBase {
-    private static final StringConverter<Number> NUMBER_STRING_CONVERTER = new NumberStringConverter();
     @Getter
     private Optional<Number> minValue = Optional.empty();
     @Getter
@@ -73,56 +69,22 @@ public class NumberValidator extends ValidatorBase {
                 return;
             }
 
-            if (!isValidNumber(text)) {
+            double value = DefaultNumberFormatter.parse(text);
+            numberValue = Optional.of(value);
+
+            if (minValue.isPresent() && value < minValue.get().doubleValue()) {
                 hasErrors.set(true);
                 return;
             }
 
-            Number value = NUMBER_STRING_CONVERTER.fromString(text);
-            numberValue = Optional.of(value);
-
-            if (minValue.isPresent()) {
-                if (value instanceof Long) {
-                    if (value.longValue() < minValue.get().longValue()) {
-                        hasErrors.set(true);
-                        return;
-                    }
-                } else {
-                    // Fallback to double since the rest of the types can be evaluated within a double
-                    if (value.doubleValue() < minValue.get().doubleValue()) {
-                        hasErrors.set(true);
-                        return;
-                    }
-                }
-            }
-
-            if (maxValue.isPresent()) {
-                if (value instanceof Long) {
-                    if (value.longValue() > maxValue.get().longValue()) {
-                        hasErrors.set(true);
-                        return;
-                    }
-                } else {
-                    if (value.doubleValue() > maxValue.get().doubleValue()) {
-                        hasErrors.set(true);
-                        return;
-                    }
-                }
+            if (maxValue.isPresent() && value > maxValue.get().doubleValue()) {
+                hasErrors.set(true);
+                return;
             }
 
             hasErrors.set(false);
         } catch (Exception e) {
             hasErrors.set(true);
-        }
-    }
-
-    private static boolean isValidNumber(String inputText) {
-        NumberFormat format = NumberFormat.getNumberInstance();
-        try {
-            format.parse(inputText);
-            return true;
-        } catch (ParseException e) {
-            return false;
         }
     }
 }

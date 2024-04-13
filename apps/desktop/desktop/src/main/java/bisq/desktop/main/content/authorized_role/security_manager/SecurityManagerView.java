@@ -22,6 +22,7 @@ import bisq.bonded_roles.security_manager.alert.AlertType;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
 import bisq.bonded_roles.security_manager.difficulty_adjustment.AuthorizedDifficultyAdjustmentData;
 import bisq.bonded_roles.security_manager.min_reputation_score.AuthorizedMinRequiredReputationScoreData;
+import bisq.desktop.common.converters.Converters;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.controls.MaterialTextArea;
@@ -47,7 +48,6 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
-import javafx.util.converter.NumberStringConverter;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -218,8 +218,10 @@ public class SecurityManagerView extends View<VBox, SecurityManagerModel, Securi
     protected void onViewAttached() {
         alertTableView.initialize();
         difficultyAdjustmentTableView.initialize();
-        Bindings.bindBidirectional(difficultyAdjustmentFactor.textProperty(), model.getDifficultyAdjustmentFactor(), new NumberStringConverter());
-        Bindings.bindBidirectional(minRequiredReputationScore.textProperty(), model.getMinRequiredReputationScore(), new NumberStringConverter());
+        Bindings.bindBidirectional(difficultyAdjustmentFactor.textProperty(), model.getDifficultyAdjustmentFactor(),
+                Converters.DOUBLE_STRING_CONVERTER);
+        Bindings.bindBidirectional(minRequiredReputationScore.textProperty(), model.getMinRequiredReputationScore(),
+                Converters.LONG_STRING_CONVERTER);
 
         haltTradingCheckBox.visibleProperty().bind(model.getSelectedAlertType().isEqualTo(AlertType.EMERGENCY));
         haltTradingCheckBox.managedProperty().bind(haltTradingCheckBox.visibleProperty());
