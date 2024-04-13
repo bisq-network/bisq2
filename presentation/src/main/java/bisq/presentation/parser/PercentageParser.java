@@ -18,7 +18,6 @@
 package bisq.presentation.parser;
 
 import bisq.common.util.ExceptionUtil;
-import bisq.presentation.formatters.DefaultNumberFormatter;
 
 public class PercentageParser {
 
@@ -41,9 +40,8 @@ public class PercentageParser {
      */
     public static double parse(String value) throws NumberFormatException {
         try {
-            value = DefaultNumberFormatter.reformat(value);
             value = value.replace("%", "");
-            return Double.parseDouble(value) / 100d;
+            return DoubleParser.parse(value) / 100d;
         } catch (NumberFormatException e) {
             throw e;
         } catch (Throwable t) {

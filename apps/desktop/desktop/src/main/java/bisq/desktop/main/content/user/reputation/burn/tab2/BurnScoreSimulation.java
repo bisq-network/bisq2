@@ -20,7 +20,7 @@ package bisq.desktop.main.content.user.reputation.burn.tab2;
 import bisq.common.util.MathUtils;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.i18n.Res;
-import bisq.presentation.formatters.DefaultNumberFormatter;
+import bisq.presentation.parser.DoubleParser;
 import bisq.user.reputation.ProofOfBurnService;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -70,8 +70,7 @@ public class BurnScoreSimulation {
         private String calculateSimScore(String value) {
             try {
                 // amountAsLong is the smallest unit of BSQ (100 = 1 BSQ)
-                value = DefaultNumberFormatter.reformat(value);
-                long amountAsLong = Math.max(0, MathUtils.roundDoubleToLong(Double.parseDouble(value) * 100));
+                long amountAsLong = Math.max(0, MathUtils.roundDoubleToLong(DoubleParser.parse(value) * 100));
                 long totalScore = ProofOfBurnService.doCalculateScore(amountAsLong);
                 return String.valueOf(totalScore);
             } catch (Exception e) {
