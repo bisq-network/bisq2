@@ -127,7 +127,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 .setMinRequiredReputationScore(minRequiredReputationScore.get())
                 .setOffersOnly(offersOnly.get())
                 .setTradeRulesConfirmed(tradeRulesConfirmed.get())
-                .setChatNotificationType(chatNotificationType.get().toProto())
+                .setChatNotificationType(chatNotificationType.get().toProtoEnum())
                 .setIsTacAccepted(isTacAccepted.get())
                 .addAllConsumedAlertIds(new ArrayList<>(consumedAlertIds))
                 .setCloseMyOfferWhenTaken(closeMyOfferWhenTaken.get())

@@ -22,7 +22,7 @@ public enum AuthorizationTokenType implements ProtoEnum {
     }
 
     @Override
-    public bisq.network.protobuf.AuthorizationTokenType toProto() {
+    public bisq.network.protobuf.AuthorizationTokenType toProtoEnum() {
         return bisq.network.protobuf.AuthorizationTokenType.valueOf(getProtobufEnumPrefix() + name());
     }
 

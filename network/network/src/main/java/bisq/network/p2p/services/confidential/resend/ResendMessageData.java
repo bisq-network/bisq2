@@ -99,7 +99,7 @@ public class ResendMessageData implements NetworkProto {
                 .setReceiverNetworkId(receiverNetworkId.toProto())
                 .setSenderKeyPair(KeyPairProtoUtil.toProto(senderKeyPair))
                 .setSenderNetworkId(senderNetworkId.toProto())
-                .setMessageDeliveryStatus(messageDeliveryStatus.toProto())
+                .setMessageDeliveryStatus(messageDeliveryStatus.toProtoEnum())
                 .setDate(date)
                 .build();
     }

@@ -103,7 +103,7 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
     protected bisq.trade.protobuf.Trade.Builder getTradeBuilder() {
         bisq.trade.protobuf.Trade.Builder builder = bisq.trade.protobuf.Trade.newBuilder()
                 .setId(id)
-                .setTradeRole(tradeRole.toProto())
+                .setTradeRole(tradeRole.toProtoEnum())
                 .setMyIdentity(myIdentity.toProto())
                 .setTaker(taker.toProto())
                 .setMaker(maker.toProto())

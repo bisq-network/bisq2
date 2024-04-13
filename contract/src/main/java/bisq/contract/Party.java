@@ -44,7 +44,7 @@ public final class Party implements NetworkProto {
     @Override
     public bisq.contract.protobuf.Party toProto() {
         return bisq.contract.protobuf.Party.newBuilder()
-                .setRole(role.toProto())
+                .setRole(role.toProtoEnum())
                 .setNetworkId(networkId.toProto())
                 .build();
     }

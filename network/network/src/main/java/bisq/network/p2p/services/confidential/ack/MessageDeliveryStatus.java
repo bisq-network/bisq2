@@ -26,7 +26,7 @@ public enum MessageDeliveryStatus implements ProtoEnum {
 
 
     @Override
-    public bisq.network.protobuf.MessageDeliveryStatus toProto() {
+    public bisq.network.protobuf.MessageDeliveryStatus toProtoEnum() {
         return bisq.network.protobuf.MessageDeliveryStatus.valueOf(getProtobufEnumPrefix() + name());
     }
 

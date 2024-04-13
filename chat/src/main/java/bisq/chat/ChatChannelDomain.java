@@ -30,7 +30,7 @@ public enum ChatChannelDomain implements ProtoEnum {
     SUPPORT;
 
     @Override
-    public bisq.chat.protobuf.ChatChannelDomain toProto() {
+    public bisq.chat.protobuf.ChatChannelDomain toProtoEnum() {
         return bisq.chat.protobuf.ChatChannelDomain.valueOf(getProtobufEnumPrefix() + name());
     }
 

@@ -58,8 +58,8 @@ public abstract class ChatChannel<M extends ChatMessage> implements PersistableP
     public bisq.chat.protobuf.ChatChannel.Builder getChatChannelBuilder() {
         return bisq.chat.protobuf.ChatChannel.newBuilder()
                 .setId(id)
-                .setChatChannelDomain(chatChannelDomain.toProto())
-                .setChatChannelNotificationType(chatChannelNotificationType.get().toProto());
+                .setChatChannelDomain(chatChannelDomain.toProtoEnum())
+                .setChatChannelNotificationType(chatChannelNotificationType.get().toProtoEnum());
     }
 
     public abstract bisq.chat.protobuf.ChatChannel toProto();

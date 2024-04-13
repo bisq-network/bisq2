@@ -39,7 +39,7 @@ public enum InventoryFilterType implements ProtoEnum {
     }
 
     @Override
-    public bisq.network.protobuf.InventoryFilterType toProto() {
+    public bisq.network.protobuf.InventoryFilterType toProtoEnum() {
         return bisq.network.protobuf.InventoryFilterType.valueOf(getProtobufEnumPrefix() + name());
     }
 
