@@ -151,7 +151,6 @@ public class PreferencesController implements Controller {
     public void onDeactivate() {
         chatNotificationTypePin.unbind();
         useAnimationsPin.unbind();
-        minRequiredReputationScorePin.unbind();
         offerOnlyPin.unbind();
         closeMyOfferWhenTakenPin.unbind();
         preventStandbyModePin.unbind();
@@ -162,6 +161,10 @@ public class PreferencesController implements Controller {
         notifyForPreReleasePin.unsubscribe();
         difficultyAdjustmentFactorDescriptionTextPin.unsubscribe();
         minRequiredReputationScoreDescriptionTextPin.unsubscribe();
+
+        if (minRequiredReputationScorePin != null) {
+            minRequiredReputationScorePin.unbind();
+        }
         if (useTransientNotificationsPin != null) {
             useTransientNotificationsPin.unsubscribe();
         }
