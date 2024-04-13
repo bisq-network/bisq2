@@ -20,6 +20,7 @@ package bisq.desktop.main.content.chat.message_container.list.message_box;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
+import bisq.common.util.StringUtils;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.DropdownMenu;
 import bisq.desktop.components.controls.DropdownMenuItem;
@@ -55,8 +56,7 @@ public final class MyOfferMessageBox extends BubbleMessageBox {
         DropdownMenu dropdownMenu = createAndGetDropdownMenu();
 
         // My offer title
-        String messageTitle = "TODO MY OFFER TITLE";
-        Label myOfferTitle = createAndGetMyOfferTitle(messageTitle);
+        Label myOfferTitle = createAndGetMyOfferTitle();
 
         // Message
         message.getStyleClass().add("chat-my-offer-message");
@@ -114,14 +114,17 @@ public final class MyOfferMessageBox extends BubbleMessageBox {
         return dropdownMenu;
     }
 
-    private Label createAndGetMyOfferTitle(String title) {
+    private Label createAndGetMyOfferTitle() {
         BisqEasyOfferbookMessage bisqEasyOfferbookMessage = (BisqEasyOfferbookMessage) item.getChatMessage();
         checkArgument(bisqEasyOfferbookMessage.getBisqEasyOffer().isPresent(),
                 "Bisq Easy Offerbook message must contain an offer");
 
-        boolean isBuy = bisqEasyOfferbookMessage.getBisqEasyOffer().get().getDirection() == Direction.BUY;
+        Direction direction = bisqEasyOfferbookMessage.getBisqEasyOffer().get().getDirection();
+        String directionString = StringUtils.capitalize(Res.get("offer." + direction.name().toLowerCase()));
+        String title = Res.get("bisqEasy.tradeWizard.review.chatMessage.myMessageTitle", directionString);
         Label label = new Label(title);
         label.getStyleClass().addAll("bisq-easy-offer-title", "normal-text", "font-default");
+        boolean isBuy = direction == Direction.BUY;
         label.getStyleClass().add(isBuy ? "bisq-easy-offer-buy-btc-title" : "bisq-easy-offer-sell-btc-title");
         return label;
     }
