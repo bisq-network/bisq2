@@ -41,6 +41,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 public final class PeerOfferMessageBox extends PeerTextMessageBox {
     private Button takeOfferButton;
+    private Label peerNickName;
 
     public PeerOfferMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
                                ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
@@ -65,9 +66,8 @@ public final class PeerOfferMessageBox extends PeerTextMessageBox {
         reputationVBox.getStyleClass().add("reputation");
 
         // Take offer title and button
-        String messageTitle = "TODO PEER TITLE";
-        Pair<Label, Button> takeOfferLabelAndButton = createAndGetTakeOfferLabelAndButton(messageTitle);
-        Label takeOfferTitle = takeOfferLabelAndButton.getFirst();
+        Pair<HBox, Button> takeOfferLabelAndButton = createAndGetTakeOfferTitleBoxAndButton();
+        HBox takeOfferTitle = takeOfferLabelAndButton.getFirst();
         takeOfferButton = takeOfferLabelAndButton.getSecond();
 
         // Message
@@ -89,7 +89,7 @@ public final class PeerOfferMessageBox extends PeerTextMessageBox {
         messageBgHBox.setMaxWidth(Control.USE_PREF_SIZE);
     }
 
-    private Pair<Label, Button> createAndGetTakeOfferLabelAndButton(String title) {
+    private Pair<HBox, Button> createAndGetTakeOfferTitleBoxAndButton() {
         BisqEasyOfferbookMessage bisqEasyOfferbookMessage = (BisqEasyOfferbookMessage) item.getChatMessage();
         checkArgument(bisqEasyOfferbookMessage.getBisqEasyOffer().isPresent(),
                 "Bisq Easy Offerbook message must contain an offer");
@@ -97,10 +97,18 @@ public final class PeerOfferMessageBox extends PeerTextMessageBox {
         boolean isBuy = bisqEasyOfferbookMessage.getBisqEasyOffer().get().getDirection() == Direction.BUY;
 
         // Label
-        Label label = new Label(title);
-        label.getStyleClass().addAll("bisq-easy-offer-title", "normal-text", "font-default");
-        label.getStyleClass().add(isBuy ? "bisq-easy-offer-sell-btc-title" : "bisq-easy-offer-buy-btc-title");
-        label.setPadding(new Insets(0, 0, 0, 7));
+        String title = isBuy
+                ? Res.get("bisqEasy.tradeWizard.review.chatMessage.peerMessageTitle.sell")
+                : Res.get("bisqEasy.tradeWizard.review.chatMessage.peerMessageTitle.buy");
+        Label messageTitle = new Label(title);
+        messageTitle.getStyleClass().addAll("bisq-easy-offer-title", "normal-text", "font-default");
+        messageTitle.getStyleClass().add(isBuy ? "bisq-easy-offer-sell-btc-title" : "bisq-easy-offer-buy-btc-title");
+        messageTitle.setPadding(new Insets(0, 0, 0, 7));
+        peerNickName = new Label(item.getNickName());
+        peerNickName.getStyleClass().addAll("code-block", "hand-cursor");
+        peerNickName.setOnMouseClicked(e -> controller.onShowChatUserDetails(item.getChatMessage()));
+        HBox messageTitleBox = new HBox(5, messageTitle, peerNickName);
+        messageTitleBox.setAlignment(Pos.BASELINE_LEFT);
 
         // Button
         Button button = new Button(isBuy ? Res.get("offer.takeOffer.sell.button") : Res.get("offer.takeOffer.buy.button"));
@@ -110,7 +118,7 @@ public final class PeerOfferMessageBox extends PeerTextMessageBox {
         button.setDefaultButton(!item.isOfferAlreadyTaken());
         VBox.setMargin(button, new Insets(10, 0, 0, 7));
 
-        return new Pair<>(label, button);
+        return new Pair<>(messageTitleBox, button);
     }
 
     @Override
@@ -118,5 +126,6 @@ public final class PeerOfferMessageBox extends PeerTextMessageBox {
         super.cleanup();
 
         takeOfferButton.setOnAction(null);
+        peerNickName.setOnMouseClicked(null);
     }
 }
