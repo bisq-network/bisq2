@@ -384,11 +384,11 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
 
     private EncryptedData encryptPlainTextProto(bisq.user.protobuf.UserIdentityStore plainTextProto) {
         try {
-            byte[] plainText = ProtobufUtils.getByteArrayFromProto(Any.pack(plainTextProto));
+            byte[] plainText = Any.pack(plainTextProto).toByteArray();
             byte[] iv = AesGcm.generateIv().getIV();
             byte[] cipherText = AesGcm.encrypt(aesSecretKey.orElseThrow(), iv, plainText);
             return new EncryptedData(iv, cipherText);
-        } catch (IOException | GeneralSecurityException e) {
+        } catch (GeneralSecurityException e) {
             throw new RuntimeException(e);
         }
     }

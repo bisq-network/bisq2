@@ -23,6 +23,8 @@ import com.google.protobuf.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Set;
@@ -64,6 +66,10 @@ public interface Proto {
 
     default int getSerializedSize() {
         return buildProto(true).getSerializedSize();
+    }
+
+    default void writeDelimitedTo(OutputStream outputStream) throws IOException {
+        toProto(true).writeDelimitedTo(outputStream);
     }
 
     default Set<String> getExcludedFields() {

@@ -91,7 +91,7 @@ public class NetworkEnvelopeSocketChannelTests {
         NetworkEnvelope requestNetworkEnvelope = createHandshakeRequestMessage();
 
         OutputStream outputStream = Channels.newOutputStream(serverToClientSocketChannel);
-        requestNetworkEnvelope.toProto().writeDelimitedTo(outputStream);
+        requestNetworkEnvelope.writeDelimitedTo(outputStream);
 
         List<NetworkEnvelope> receivedNetworkEnvelopes = networkEnvelopeSocketChannel.receiveNetworkEnvelopes();
         assertThat(receivedNetworkEnvelopes).containsExactly(requestNetworkEnvelope);
@@ -102,8 +102,8 @@ public class NetworkEnvelopeSocketChannelTests {
         NetworkEnvelope requestNetworkEnvelope = createHandshakeRequestMessage();
 
         OutputStream outputStream = Channels.newOutputStream(serverToClientSocketChannel);
-        requestNetworkEnvelope.toProto().writeDelimitedTo(outputStream);
-        requestNetworkEnvelope.toProto().writeDelimitedTo(outputStream);
+        requestNetworkEnvelope.writeDelimitedTo(outputStream);
+        requestNetworkEnvelope.writeDelimitedTo(outputStream);
 
         List<NetworkEnvelope> receivedNetworkEnvelopes = networkEnvelopeSocketChannel.receiveNetworkEnvelopes();
         assertThat(receivedNetworkEnvelopes)
@@ -116,7 +116,7 @@ public class NetworkEnvelopeSocketChannelTests {
         NetworkEnvelope requestNetworkEnvelope = createHandshakeRequestMessage();
 
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        requestNetworkEnvelope.toProto().writeDelimitedTo(byteArrayOutputStream);
+        requestNetworkEnvelope.writeDelimitedTo(byteArrayOutputStream);
 
         byte[] messageInBytes = byteArrayOutputStream.toByteArray();
         // 176 bytes
@@ -137,7 +137,7 @@ public class NetworkEnvelopeSocketChannelTests {
         NetworkEnvelope requestNetworkEnvelope = createHandshakeRequestMessage();
 
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        requestNetworkEnvelope.toProto().writeDelimitedTo(byteArrayOutputStream);
+        requestNetworkEnvelope.writeDelimitedTo(byteArrayOutputStream);
 
         byte[] messageInBytes = byteArrayOutputStream.toByteArray();
         // 176 bytes
@@ -172,7 +172,7 @@ public class NetworkEnvelopeSocketChannelTests {
         NetworkEnvelope requestNetworkEnvelope = createHandshakeRequestMessage();
 
         OutputStream outputStream = Channels.newOutputStream(serverToClientSocketChannel);
-        requestNetworkEnvelope.toProto().writeDelimitedTo(outputStream);
+        requestNetworkEnvelope.writeDelimitedTo(outputStream);
 
         // read first 100 bytes
         List<NetworkEnvelope> receivedNetworkEnvelopes = networkEnvelopeSocketChannel.receiveNetworkEnvelopes();

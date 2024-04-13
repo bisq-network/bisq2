@@ -26,8 +26,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 @Slf4j
 public class NetworkEnvelopeSocket implements Closeable {
     private final PeerSocket socket;
@@ -41,9 +39,7 @@ public class NetworkEnvelopeSocket implements Closeable {
     }
 
     public void send(NetworkEnvelope networkEnvelope) throws IOException {
-        bisq.network.protobuf.NetworkEnvelope proto = checkNotNull(networkEnvelope.toProto(),
-                "networkEnvelope.toProto() must not be null");
-        proto.writeDelimitedTo(outputStream);
+        networkEnvelope.writeDelimitedTo(outputStream);
         outputStream.flush();
     }
 
