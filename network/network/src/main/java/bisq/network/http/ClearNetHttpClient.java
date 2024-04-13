@@ -74,7 +74,7 @@ public class ClearNetHttpClient extends BaseHttpClient {
                 .orTimeout(500, TimeUnit.MILLISECONDS)
                 .whenComplete((result, throwable) -> {
                     if (throwable != null) {
-                        log.warn("Error at shutdown", throwable);
+                        log.warn("Error at shutdown: {}", ExceptionUtil.getMessageOrToString(throwable));
                     }
                 });
         connection = null;

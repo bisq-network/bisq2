@@ -18,12 +18,14 @@
 package bisq.desktop.main.content.user.reputation.list;
 
 import bisq.common.observable.Pin;
+import bisq.common.observable.map.HashMapObserver;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.components.table.StandardTable;
 import bisq.i18n.Res;
+import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationService;
 import bisq.user.reputation.ReputationSource;
@@ -34,6 +36,8 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -44,7 +48,7 @@ public class ReputationListController implements Controller {
     private final ReputationService reputationService;
     private final UserProfileService userProfileService;
     private final ReputationListModel model;
-    private Pin getNumUserProfilesPin, proofOfBurnScoreChangedFlagPin,
+    private Pin userProfileByIdPin, proofOfBurnScoreChangedFlagPin,
             bondedReputationScoreChangedFlagPin, signedWitnessScoreChangedFlagPin,
             accountAgeScoreChangedFlagPin;
     private Subscription filterMenuItemTogglePin;
@@ -73,10 +77,49 @@ public class ReputationListController implements Controller {
 
         filterMenuItemTogglePin = EasyBind.subscribe(model.getFilterMenuItemToggleGroup().selectedToggleProperty(), this::updateFilter);
 
-        getNumUserProfilesPin = userProfileService.getNumUserProfiles()
-                .addObserver(numUserProfiles -> UIThread.run(() -> model.getListItems().setAll(userProfileService.getUserProfiles().stream()
-                        .map(userProfile -> new ReputationListView.ListItem(userProfile, reputationService, this, model.getFilterMenuItemToggleGroup()))
-                        .collect(Collectors.toList()))));
+        userProfileByIdPin = userProfileService.getUserProfileById().addObserver(new HashMapObserver<>() {
+            @Override
+            public void put(String key, UserProfile userProfile) {
+                UIThread.run(() -> {
+                    ReputationListView.ListItem listItem = new ReputationListView.ListItem(userProfile,
+                            reputationService,
+                            ReputationListController.this,
+                            model.getFilterMenuItemToggleGroup());
+                    model.getListItems().add(listItem);
+                });
+            }
+
+            @Override
+            public void putAll(Map<? extends String, ? extends UserProfile> map) {
+                UIThread.run(() -> {
+                    List<ReputationListView.ListItem> listItems = map.values().stream()
+                            .map(userProfile -> new ReputationListView.ListItem(userProfile,
+                                    reputationService,
+                                    ReputationListController.this,
+                                    model.getFilterMenuItemToggleGroup()))
+                            .collect(Collectors.toList());
+                    model.getListItems().setAll(listItems);
+                });
+            }
+
+            @Override
+            public void remove(Object key) {
+                if (key instanceof String) {
+                    UIThread.run(() -> {
+                        Optional<ReputationListView.ListItem> toRemove = model.getListItems().stream()
+                                .filter(e -> e.getUserProfile().getId().equals(key))
+                                .findAny();
+                        toRemove.ifPresent(listItem -> model.getListItems().remove(listItem));
+                    });
+                }
+            }
+
+            @Override
+            public void clear() {
+                UIThread.run(() -> model.getListItems().clear());
+            }
+        });
+
         proofOfBurnScoreChangedFlagPin = reputationService.getProofOfBurnService().getUserProfileIdOfUpdatedScore()
                 .addObserver(this::updateScore);
         bondedReputationScoreChangedFlagPin = reputationService.getBondedReputationService().getUserProfileIdOfUpdatedScore()
@@ -89,7 +132,7 @@ public class ReputationListController implements Controller {
 
     @Override
     public void onDeactivate() {
-        getNumUserProfilesPin.unbind();
+        userProfileByIdPin.unbind();
         proofOfBurnScoreChangedFlagPin.unbind();
         bondedReputationScoreChangedFlagPin.unbind();
         accountAgeScoreChangedFlagPin.unbind();
@@ -151,7 +194,7 @@ public class ReputationListController implements Controller {
             model.getValueColumnVisible().set(selectedFilterMenuItem.getData().isPresent());
             model.getFilteredValueTitle().set(selectedFilterMenuItem.getTitle().toUpperCase());
             model.getFilteredList().setPredicate(item ->
-                    item.getTotalScore() > 0 && selectedFilterMenuItem.getFilter().test(item));
+                    selectedFilterMenuItem.getFilter().test(item));
         });
         model.getSelectedReputationSource().set(resolveReputationSource(selectedToggle).orElse(null));
     }

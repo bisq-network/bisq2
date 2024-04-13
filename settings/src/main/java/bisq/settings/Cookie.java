@@ -20,9 +20,9 @@ package bisq.settings;
 import bisq.common.proto.PersistableProto;
 import bisq.settings.protobuf.CookieMapEntry;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -33,7 +33,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Does not support observable properties.
  */
 public final class Cookie implements PersistableProto {
-    private final Map<CookieKey, String> map = new HashMap<>();
+    private final Map<CookieKey, String> map = new ConcurrentHashMap<>();
 
     public Cookie() {
     }

@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.peer_group.exchange;
 
 import bisq.common.timer.Scheduler;
+import bisq.common.util.ExceptionUtil;
 import bisq.common.util.StringUtils;
 import bisq.network.common.Address;
 import bisq.network.identity.NetworkId;
@@ -188,7 +189,7 @@ public class PeerExchangeService implements Node.Listener {
             boolean await = latch.await(2, MINUTES);
             checkArgument(await, "CountDownLatch not completed in 2 minutes");
         } catch (Exception e) {
-            log.error("Error at CountDownLatch.await", e);
+            log.error("Error at CountDownLatch.await: {}", ExceptionUtil.getMessageOrToString(e));
             peerExchangeScheduler.ifPresent(Scheduler::stop);
             peerExchangeScheduler = Optional.of(Scheduler.run(() -> startInitialPeerExchange(minSuccess))
                     .after(peerExchangeDelaySec, TimeUnit.SECONDS)

@@ -20,6 +20,7 @@ package bisq.user.profile;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
+import bisq.common.observable.map.ObservableHashMap;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.DistributedData;
@@ -128,32 +129,42 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
     }
 
     public String getUserName(String nym, String nickName) {
-        Map<String, Set<String>> nymsByNickName = getNymsByNickName();
-        if (!nymsByNickName.containsKey(nickName)) {
-            nymsByNickName.put(nickName, new HashSet<>());
-        }
-
-        Set<String> nyms = nymsByNickName.get(nickName);
-        nyms.add(nym);
-        persist();
-        if (nyms.size() == 1) {
+        int numNymsForNickName = Optional.ofNullable(getNymsByNickName().get(nickName))
+                .map(Set::size)
+                .orElse(0);
+        if (numNymsForNickName <= 1) {
             return nickName;
         } else {
             return nickName + SEPARATOR_START + nym + SEPARATOR_END;
         }
     }
 
-
     private void processUserProfileAdded(UserProfile userProfile) {
-        Optional<UserProfile> optionalChatUser = findUserProfile(userProfile.getId());
-        if (optionalChatUser.isEmpty() || !optionalChatUser.get().equals(userProfile)) {
+        Optional<UserProfile> optionalUserProfile = findUserProfile(userProfile.getId());
+        if (optionalUserProfile.isEmpty() || !optionalUserProfile.get().equals(userProfile)) {
             if (verifyUserProfile(userProfile)) {
+                ObservableHashMap<String, UserProfile> userProfileById = getUserProfileById();
                 synchronized (persistableStore) {
-                    getUserProfileById().put(userProfile.getId(), userProfile);
+                    addNymToNickNameHashMap(userProfile.getNym(), userProfile.getNickName());
+                    userProfileById.put(userProfile.getId(), userProfile);
                 }
-                numUserProfiles.set(getUserProfileById().values().size());
+                numUserProfiles.set(userProfileById.values().size());
                 persist();
             }
+        }
+    }
+
+    private void processUserProfileRemoved(AuthenticatedData authenticatedData) {
+        DistributedData distributedData = authenticatedData.getDistributedData();
+        if (distributedData instanceof UserProfile) {
+            UserProfile userProfile = (UserProfile) distributedData;
+            ObservableHashMap<String, UserProfile> userProfileById = getUserProfileById();
+            synchronized (persistableStore) {
+                removeNymFromNickNameHashMap(userProfile.getNym(), userProfile.getNickName());
+                userProfileById.remove(userProfile.getId());
+            }
+            numUserProfiles.set(userProfileById.values().size());
+            persist();
         }
     }
 
@@ -171,23 +182,33 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
         return true;
     }
 
-    private void processUserProfileRemoved(AuthenticatedData authenticatedData) {
-        DistributedData distributedData = authenticatedData.getDistributedData();
-        if (distributedData instanceof UserProfile) {
-            UserProfile userProfile = (UserProfile) distributedData;
-            synchronized (persistableStore) {
-                getUserProfileById().remove(userProfile.getId());
-            }
-            numUserProfiles.set(getUserProfileById().values().size());
-            persist();
-        }
-    }
 
     private Map<String, Set<String>> getNymsByNickName() {
         return persistableStore.getNymsByNickName();
     }
 
-    public Map<String, UserProfile> getUserProfileById() {
+    public ObservableHashMap<String, UserProfile> getUserProfileById() {
         return persistableStore.getUserProfileById();
+    }
+
+
+    private void addNymToNickNameHashMap(String nym, String nickName) {
+        Map<String, Set<String>> nymsByNickName = getNymsByNickName();
+        if (!nymsByNickName.containsKey(nickName)) {
+            nymsByNickName.put(nickName, new HashSet<>());
+        }
+        Set<String> nyms = nymsByNickName.get(nickName);
+        nyms.add(nym);
+        persist();
+    }
+
+    private void removeNymFromNickNameHashMap(String nym, String nickName) {
+        Map<String, Set<String>> nymsByNickName = getNymsByNickName();
+        if (!nymsByNickName.containsKey(nickName)) {
+            return;
+        }
+        Set<String> nyms = nymsByNickName.get(nickName);
+        nyms.remove(nym);
+        persist();
     }
 }
