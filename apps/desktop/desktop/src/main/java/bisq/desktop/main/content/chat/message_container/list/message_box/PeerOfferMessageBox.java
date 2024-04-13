@@ -102,12 +102,12 @@ public final class PeerOfferMessageBox extends PeerTextMessageBox {
                 : Res.get("bisqEasy.tradeWizard.review.chatMessage.peerMessageTitle.buy");
         Label messageTitle = new Label(title);
         messageTitle.getStyleClass().addAll("bisq-easy-offer-title", "normal-text", "font-default");
-        messageTitle.getStyleClass().add(isBuy ? "bisq-easy-offer-sell-btc-title" : "bisq-easy-offer-buy-btc-title");
         messageTitle.setPadding(new Insets(0, 0, 0, 7));
         peerNickName = new Label(item.getNickName());
         peerNickName.getStyleClass().addAll("code-block", "hand-cursor");
         peerNickName.setOnMouseClicked(e -> controller.onShowChatUserDetails(item.getChatMessage()));
         HBox messageTitleBox = new HBox(5, messageTitle, peerNickName);
+        messageTitleBox.getStyleClass().add(isBuy ? "bisq-easy-offer-sell-btc-title" : "bisq-easy-offer-buy-btc-title");
         messageTitleBox.setAlignment(Pos.BASELINE_LEFT);
 
         // Button
