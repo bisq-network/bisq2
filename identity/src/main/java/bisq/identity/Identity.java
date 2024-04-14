@@ -44,12 +44,16 @@ public final class Identity implements PersistableProto {
     }
 
     @Override
-    public bisq.identity.protobuf.Identity toProto() {
+    public bisq.identity.protobuf.Identity.Builder getBuilder(boolean serializeForHash) {
         return bisq.identity.protobuf.Identity.newBuilder()
                 .setDomainId(tag)
-                .setNetworkId(networkId.toProto())
-                .setKeyBundle(keyBundle.toProto())
-                .build();
+                .setNetworkId(networkId.toProto(serializeForHash))
+                .setKeyBundle(keyBundle.toProto(serializeForHash));
+    }
+
+    @Override
+    public bisq.identity.protobuf.Identity toProto(boolean serializeForHash) {
+        return buildProto(serializeForHash);
     }
 
     public static Identity fromProto(bisq.identity.protobuf.Identity proto) {
