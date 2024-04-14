@@ -2,7 +2,6 @@ package bisq.desktop.main.content.bisq_easy.offerbook;
 
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
-import bisq.common.data.Pair;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTooltip;
@@ -21,9 +20,6 @@ import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
 import java.util.List;
-
-import static com.google.common.base.Preconditions.checkArgument;
-import static java.util.Arrays.copyOfRange;
 
 public class BisqEasyOfferbookUtil {
     static final List<Market> majorMarkets = MarketRepository.getMajorMarkets();
@@ -166,14 +162,5 @@ public class BisqEasyOfferbookUtil {
         return numOffers > 1
                 ? Res.get("bisqEasy.offerbook.marketListCell.numOffers.tooltip.many", numOffers, quoteCurrencyName)
                 : Res.get("bisqEasy.offerbook.marketListCell.numOffers.tooltip.one", numOffers, quoteCurrencyName);
-    }
-
-    public static Pair<String, String> splitOfferBookMessageText(String messageText) {
-        String[] lines = messageText.split("\n", -1);
-        checkArgument(lines.length == 4, "Offerbook Message must contain exactly four lines.");
-
-        String title = lines[0];
-        String text = String.join("\n", copyOfRange(lines, 1, lines.length));
-        return new Pair<>(title, text);
     }
 }

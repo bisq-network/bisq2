@@ -165,6 +165,7 @@
 /* Peer Offer Message */
 .chat-peer-offer-message-bg {
     -fx-padding: 20 30 20 20;
+    -fx-min-width: 500;
 }
 
 .chat-peer-offer-message-bg .reputation .label {
