@@ -33,9 +33,9 @@ public class SubmarineTradeParty extends TradeParty {
     }
 
     @Override
-    public bisq.trade.protobuf.TradeParty toProto() {
+    public bisq.trade.protobuf.TradeParty.Builder getBuilder(boolean serializeForHash) {
         bisq.trade.protobuf.SubmarineTradeParty.Builder builder = bisq.trade.protobuf.SubmarineTradeParty.newBuilder();
-        return getTradePartyBuilder().setSubmarineTradeParty(builder).build();
+        return getTradePartyBuilder(serializeForHash).setSubmarineTradeParty(builder);
     }
 
     public static SubmarineTradeParty fromProto(bisq.trade.protobuf.TradeParty proto) {

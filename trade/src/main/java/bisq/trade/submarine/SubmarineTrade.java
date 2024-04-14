@@ -67,9 +67,13 @@ public final class SubmarineTrade extends Trade<SubmarineOffer, SubmarineContrac
     }
 
     @Override
-    public bisq.trade.protobuf.Trade toProto() {
-        return getTradeBuilder().setSubmarineTrade(bisq.trade.protobuf.SubmarineTrade.newBuilder())
-                .build();
+    public bisq.trade.protobuf.Trade.Builder getBuilder(boolean serializeForHash) {
+        return getTradeBuilder(serializeForHash).setSubmarineTrade(bisq.trade.protobuf.SubmarineTrade.newBuilder());
+    }
+
+    @Override
+    public bisq.trade.protobuf.Trade toProto(boolean serializeForHash) {
+        return buildProto(serializeForHash);
     }
 
     public static SubmarineTrade fromProto(bisq.trade.protobuf.Trade proto) {

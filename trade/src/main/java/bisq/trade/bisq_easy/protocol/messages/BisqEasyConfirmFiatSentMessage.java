@@ -44,12 +44,18 @@ public final class BisqEasyConfirmFiatSentMessage extends BisqEasyTradeMessage {
     }
 
     @Override
-    protected bisq.trade.protobuf.TradeMessage toTradeMessageProto() {
-        return getTradeMessageBuilder()
-                .setBisqEasyTradeMessage(bisq.trade.protobuf.BisqEasyTradeMessage.newBuilder()
-                        .setBisqEasyConfirmFiatSentMessage(
-                                bisq.trade.protobuf.BisqEasyConfirmFiatSentMessage.newBuilder()))
-                .build();
+    protected bisq.trade.protobuf.BisqEasyTradeMessage.Builder getBisqEasyTradeMessageBuilder(boolean serializeForHash) {
+        return bisq.trade.protobuf.BisqEasyTradeMessage.newBuilder()
+                .setBisqEasyConfirmFiatSentMessage(toBisqEasyConfirmFiatSentMessageProto(serializeForHash));
+    }
+
+    private bisq.trade.protobuf.BisqEasyConfirmFiatSentMessage toBisqEasyConfirmFiatSentMessageProto(boolean serializeForHash) {
+        bisq.trade.protobuf.BisqEasyConfirmFiatSentMessage.Builder builder = getBisqEasyConfirmFiatSentMessageBuilder(serializeForHash);
+        return getTweakedBuilder(builder, serializeForHash).build();
+    }
+
+    private bisq.trade.protobuf.BisqEasyConfirmFiatSentMessage.Builder getBisqEasyConfirmFiatSentMessageBuilder(boolean serializeForHash) {
+        return bisq.trade.protobuf.BisqEasyConfirmFiatSentMessage.newBuilder();
     }
 
     public static BisqEasyConfirmFiatSentMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {

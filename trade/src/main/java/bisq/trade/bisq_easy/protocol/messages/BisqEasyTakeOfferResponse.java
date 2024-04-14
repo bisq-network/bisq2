@@ -50,13 +50,19 @@ public final class BisqEasyTakeOfferResponse extends BisqEasyTradeMessage {
     }
 
     @Override
-    protected bisq.trade.protobuf.TradeMessage toTradeMessageProto() {
-        return getTradeMessageBuilder()
-                .setBisqEasyTradeMessage(bisq.trade.protobuf.BisqEasyTradeMessage.newBuilder()
-                        .setBisqEasyTakeOfferResponse(
-                                bisq.trade.protobuf.BisqEasyTakeOfferResponse.newBuilder()
-                                        .setContractSignatureData(contractSignatureData.toProto())))
-                .build();
+    protected bisq.trade.protobuf.BisqEasyTradeMessage.Builder getBisqEasyTradeMessageBuilder(boolean serializeForHash) {
+        return bisq.trade.protobuf.BisqEasyTradeMessage.newBuilder()
+                .setBisqEasyTakeOfferResponse(toBisqEasyTakeOfferResponseProto(serializeForHash));
+    }
+
+    private bisq.trade.protobuf.BisqEasyTakeOfferResponse toBisqEasyTakeOfferResponseProto(boolean serializeForHash) {
+        bisq.trade.protobuf.BisqEasyTakeOfferResponse.Builder builder = getBisqEasyTakeOfferResponseBuilder(serializeForHash);
+        return getTweakedBuilder(builder, serializeForHash).build();
+    }
+
+    private bisq.trade.protobuf.BisqEasyTakeOfferResponse.Builder getBisqEasyTakeOfferResponseBuilder(boolean serializeForHash) {
+        return bisq.trade.protobuf.BisqEasyTakeOfferResponse.newBuilder()
+                .setContractSignatureData(contractSignatureData.toProto(serializeForHash));
     }
 
     public static BisqEasyTakeOfferResponse fromProto(bisq.trade.protobuf.TradeMessage proto) {

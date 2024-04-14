@@ -60,14 +60,20 @@ public final class BisqEasyBtcAddressMessage extends BisqEasyTradeMessage {
     }
 
     @Override
-    protected bisq.trade.protobuf.TradeMessage toTradeMessageProto() {
-        return getTradeMessageBuilder()
-                .setBisqEasyTradeMessage(bisq.trade.protobuf.BisqEasyTradeMessage.newBuilder()
-                        .setBisqEasyBtcAddressMessage(
-                                bisq.trade.protobuf.BisqEasyBtcAddressMessage.newBuilder()
-                                        .setBtcAddress(btcAddress)
-                                        .setBisqEasyOffer(bisqEasyOffer.toProto())))
-                .build();
+    protected bisq.trade.protobuf.BisqEasyTradeMessage.Builder getBisqEasyTradeMessageBuilder(boolean serializeForHash) {
+        return bisq.trade.protobuf.BisqEasyTradeMessage.newBuilder()
+                .setBisqEasyBtcAddressMessage(toBisqEasyBtcAddressMessageProto(serializeForHash));
+    }
+
+    private bisq.trade.protobuf.BisqEasyBtcAddressMessage toBisqEasyBtcAddressMessageProto(boolean serializeForHash) {
+        bisq.trade.protobuf.BisqEasyBtcAddressMessage.Builder builder = getBisqEasyBtcAddressMessageBuilder(serializeForHash);
+        return getTweakedBuilder(builder, serializeForHash).build();
+    }
+
+    private bisq.trade.protobuf.BisqEasyBtcAddressMessage.Builder getBisqEasyBtcAddressMessageBuilder(boolean serializeForHash) {
+        return bisq.trade.protobuf.BisqEasyBtcAddressMessage.newBuilder()
+                .setBtcAddress(btcAddress)
+                .setBisqEasyOffer(bisqEasyOffer.toProto(serializeForHash));
     }
 
     public static BisqEasyBtcAddressMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {

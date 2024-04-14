@@ -45,12 +45,18 @@ public final class BisqEasyRejectTradeMessage extends BisqEasyTradeMessage {
     }
 
     @Override
-    protected bisq.trade.protobuf.TradeMessage toTradeMessageProto() {
-        return getTradeMessageBuilder()
-                .setBisqEasyTradeMessage(bisq.trade.protobuf.BisqEasyTradeMessage.newBuilder()
-                        .setBisqEasyRejectTradeMessage(
-                                bisq.trade.protobuf.BisqEasyRejectTradeMessage.newBuilder()))
-                .build();
+    protected bisq.trade.protobuf.BisqEasyTradeMessage.Builder getBisqEasyTradeMessageBuilder(boolean serializeForHash) {
+        return bisq.trade.protobuf.BisqEasyTradeMessage.newBuilder()
+                .setBisqEasyRejectTradeMessage(toBisqEasyRejectTradeMessageProto(serializeForHash));
+    }
+
+    private bisq.trade.protobuf.BisqEasyRejectTradeMessage toBisqEasyRejectTradeMessageProto(boolean serializeForHash) {
+        bisq.trade.protobuf.BisqEasyRejectTradeMessage.Builder builder = getBisqEasyRejectTradeMessageBuilder(serializeForHash);
+        return getTweakedBuilder(builder, serializeForHash).build();
+    }
+
+    private bisq.trade.protobuf.BisqEasyRejectTradeMessage.Builder getBisqEasyRejectTradeMessageBuilder(boolean serializeForHash) {
+        return bisq.trade.protobuf.BisqEasyRejectTradeMessage.newBuilder();
     }
 
     public static BisqEasyRejectTradeMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {

@@ -58,14 +58,20 @@ public final class BisqEasyReportErrorMessage extends BisqEasyTradeMessage {
     }
 
     @Override
-    protected bisq.trade.protobuf.TradeMessage toTradeMessageProto() {
-        return getTradeMessageBuilder()
-                .setBisqEasyTradeMessage(bisq.trade.protobuf.BisqEasyTradeMessage.newBuilder()
-                        .setBisqEasyReportErrorMessage(
-                                bisq.trade.protobuf.BisqEasyReportErrorMessage.newBuilder()
-                                        .setErrorMessage(errorMessage)
-                                        .setStackTrace(stackTrace)))
-                .build();
+    protected bisq.trade.protobuf.BisqEasyTradeMessage.Builder getBisqEasyTradeMessageBuilder(boolean serializeForHash) {
+        return bisq.trade.protobuf.BisqEasyTradeMessage.newBuilder()
+                .setBisqEasyReportErrorMessage(toBisqEasyReportErrorMessageProto(serializeForHash));
+    }
+
+    private bisq.trade.protobuf.BisqEasyReportErrorMessage toBisqEasyReportErrorMessageProto(boolean serializeForHash) {
+        bisq.trade.protobuf.BisqEasyReportErrorMessage.Builder builder = getBisqEasyReportErrorMessageBuilder(serializeForHash);
+        return getTweakedBuilder(builder, serializeForHash).build();
+    }
+
+    private bisq.trade.protobuf.BisqEasyReportErrorMessage.Builder getBisqEasyReportErrorMessageBuilder(boolean serializeForHash) {
+        return bisq.trade.protobuf.BisqEasyReportErrorMessage.newBuilder()
+                .setErrorMessage(errorMessage)
+                .setStackTrace(stackTrace);
     }
 
     public static BisqEasyReportErrorMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {

@@ -55,12 +55,16 @@ public final class MultisigTradeStore implements PersistableStore<MultisigTradeS
     }
 
     @Override
-    public bisq.trade.protobuf.MultisigTradeStore toProto() {
+    public bisq.trade.protobuf.MultisigTradeStore.Builder getBuilder(boolean serializeForHash) {
         return bisq.trade.protobuf.MultisigTradeStore.newBuilder()
                 .putAllTradeById(tradeById.entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey,
-                                e -> e.getValue().toProto())))
-                .build();
+                                e -> e.getValue().toProto(serializeForHash))));
+    }
+
+    @Override
+    public bisq.trade.protobuf.MultisigTradeStore toProto(boolean serializeForHash) {
+        return buildProto(serializeForHash);
     }
 
     public static MultisigTradeStore fromProto(bisq.trade.protobuf.MultisigTradeStore proto) {
