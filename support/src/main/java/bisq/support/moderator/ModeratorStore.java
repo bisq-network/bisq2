@@ -41,12 +41,16 @@ public final class ModeratorStore implements PersistableStore<ModeratorStore> {
     }
 
     @Override
-    public bisq.support.protobuf.ModeratorStore toProto() {
+    public bisq.support.protobuf.ModeratorStore.Builder getBuilder(boolean serializeForHash) {
         return bisq.support.protobuf.ModeratorStore.newBuilder()
                 .addAllReportToModeratorMessages(reportToModeratorMessages.stream()
-                        .map(ReportToModeratorMessage::toReportToModeratorMessageProto)
-                        .collect(Collectors.toList()))
-                .build();
+                        .map(e -> e.toValueProto(serializeForHash))
+                        .collect(Collectors.toList()));
+    }
+
+    @Override
+    public bisq.support.protobuf.ModeratorStore toProto(boolean serializeForHash) {
+        return buildProto(serializeForHash);
     }
 
     public static ModeratorStore fromProto(bisq.support.protobuf.ModeratorStore proto) {

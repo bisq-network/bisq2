@@ -22,12 +22,10 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.contract.bisq_easy.BisqEasyContract;
-import bisq.network.p2p.message.EnvelopePayloadMessage;
+import bisq.network.p2p.message.ExternalNetworkMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
-import bisq.network.protobuf.ExternalNetworkMessage;
 import bisq.user.profile.UserProfile;
-import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -46,7 +44,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Getter
 @ToString
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public final class MediationRequest implements MailboxMessage {
+public final class MediationRequest implements MailboxMessage, ExternalNetworkMessage {
     private final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
     @EqualsAndHashCode.Include
     private final BisqEasyContract contract;
@@ -78,25 +76,21 @@ public final class MediationRequest implements MailboxMessage {
         NetworkDataValidation.validateTradeId(tradeId);
         checkArgument(chatMessages.size() < 1000);
     }
-
     @Override
-    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
-        return getNetworkMessageBuilder()
-                .setExternalNetworkMessage(ExternalNetworkMessage.newBuilder()
-                        .setAny(Any.pack(toMediationRequestProto())))
-                .build();
-    }
-
-    public bisq.support.protobuf.MediationRequest toMediationRequestProto() {
+    public bisq.support.protobuf.MediationRequest.Builder getValueBuilder(boolean serializeForHash) {
         return bisq.support.protobuf.MediationRequest.newBuilder()
                 .setTradeId(tradeId)
-                .setContract(contract.toProto())
-                .setRequester(requester.toProto())
-                .setPeer(peer.toProto())
+                .setContract(contract.toProto(serializeForHash))
+                .setRequester(requester.toProto(serializeForHash))
+                .setPeer(peer.toProto(serializeForHash))
                 .addAllChatMessages(chatMessages.stream()
-                        .map(BisqEasyOpenTradeMessage::toChatMessageProto)
-                        .collect(Collectors.toList()))
-                .build();
+                        .map(e -> e.toValueProto(serializeForHash))
+                        .collect(Collectors.toList()));
+    }
+
+    @Override
+    public bisq.support.protobuf.MediationRequest toValueProto(boolean serializeForHash) {
+        return getTweakedBuilder(this.getValueBuilder(serializeForHash), serializeForHash).build();
     }
 
     public static MediationRequest fromProto(bisq.support.protobuf.MediationRequest proto) {
@@ -109,7 +103,7 @@ public final class MediationRequest implements MailboxMessage {
                         .collect(Collectors.toList()));
     }
 
-    public static ProtoResolver<EnvelopePayloadMessage> getNetworkMessageResolver() {
+    public static ProtoResolver<ExternalNetworkMessage> getNetworkMessageResolver() {
         return any -> {
             try {
                 bisq.support.protobuf.MediationRequest proto = any.unpack(bisq.support.protobuf.MediationRequest.class);
