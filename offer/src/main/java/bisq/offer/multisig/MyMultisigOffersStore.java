@@ -54,10 +54,16 @@ public final class MyMultisigOffersStore implements PersistableStore<MyMultisigO
     }
 
     @Override
-    public bisq.offer.protobuf.MyMultisigOffersStore toProto() {
+    public bisq.offer.protobuf.MyMultisigOffersStore.Builder getBuilder(boolean serializeForHash) {
         return bisq.offer.protobuf.MyMultisigOffersStore.newBuilder()
-                .addAllOffers(offers.stream().map(MultisigOffer::toProto).collect(Collectors.toList()))
-                .build();
+                .addAllOffers(offers.stream()
+                        .map(e -> e.toProto(serializeForHash))
+                        .collect(Collectors.toList()));
+    }
+
+    @Override
+    public bisq.offer.protobuf.MyMultisigOffersStore toProto(boolean serializeForHash) {
+        return buildProto(serializeForHash);
     }
 
     public static MyMultisigOffersStore fromProto(bisq.offer.protobuf.MyMultisigOffersStore proto) {

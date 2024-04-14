@@ -48,10 +48,14 @@ public final class OfferMessage implements DistributedData {
     }
 
     @Override
-    public bisq.offer.protobuf.OfferMessage toProto() {
+    public bisq.offer.protobuf.OfferMessage.Builder getBuilder(boolean serializeForHash) {
         return bisq.offer.protobuf.OfferMessage.newBuilder()
-                .setOffer(offer.toProto())
-                .build();
+                .setOffer(offer.toProto(serializeForHash));
+    }
+
+    @Override
+    public bisq.offer.protobuf.OfferMessage toProto(boolean serializeForHash) {
+        return buildProto(serializeForHash);
     }
 
     public static OfferMessage fromProto(bisq.offer.protobuf.OfferMessage proto) {

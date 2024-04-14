@@ -101,21 +101,29 @@ public abstract class Offer<B extends PaymentMethodSpec<?>, Q extends PaymentMet
     }
 
     @Override
-    public abstract bisq.offer.protobuf.Offer toProto();
+    public abstract bisq.offer.protobuf.Offer toProto(boolean serializeForHash);
 
-    protected bisq.offer.protobuf.Offer.Builder getOfferBuilder() {
+    protected bisq.offer.protobuf.Offer.Builder getOfferBuilder(boolean serializeForHash) {
         return bisq.offer.protobuf.Offer.newBuilder()
                 .setId(id)
                 .setDate(date)
-                .setMakerNetworkId(makerNetworkId.toProto())
+                .setMakerNetworkId(makerNetworkId.toProto(serializeForHash))
                 .setDirection(direction.toProtoEnum())
-                .setMarket(market.toProto())
-                .setAmountSpec(amountSpec.toProto())
-                .setPriceSpec(priceSpec.toProto())
-                .addAllProtocolTypes(protocolTypes.stream().map(TradeProtocolType::toProtoEnum).collect(Collectors.toList()))
-                .addAllBaseSidePaymentSpecs(baseSidePaymentMethodSpecs.stream().map(PaymentMethodSpec::toProto).collect(Collectors.toList()))
-                .addAllQuoteSidePaymentSpecs(quoteSidePaymentMethodSpecs.stream().map(PaymentMethodSpec::toProto).collect(Collectors.toList()))
-                .addAllOfferOptions(offerOptions.stream().map(OfferOption::toProto).collect(Collectors.toList()));
+                .setMarket(market.toProto(serializeForHash))
+                .setAmountSpec(amountSpec.toProto(serializeForHash))
+                .setPriceSpec(priceSpec.toProto(serializeForHash))
+                .addAllProtocolTypes(protocolTypes.stream()
+                        .map(TradeProtocolType::toProtoEnum)
+                        .collect(Collectors.toList()))
+                .addAllBaseSidePaymentSpecs(baseSidePaymentMethodSpecs.stream()
+                        .map(e -> e.toProto(serializeForHash))
+                        .collect(Collectors.toList()))
+                .addAllQuoteSidePaymentSpecs(quoteSidePaymentMethodSpecs.stream()
+                        .map(e -> e.toProto(serializeForHash))
+                        .collect(Collectors.toList()))
+                .addAllOfferOptions(offerOptions.stream()
+                        .map(e -> e.toProto(serializeForHash))
+                        .collect(Collectors.toList()));
     }
 
 

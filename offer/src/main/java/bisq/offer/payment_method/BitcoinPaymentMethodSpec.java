@@ -44,8 +44,14 @@ public final class BitcoinPaymentMethodSpec extends PaymentMethodSpec<BitcoinPay
     }
 
     @Override
-    public bisq.offer.protobuf.PaymentMethodSpec toProto() {
-        return getPaymentMethodSpecBuilder().setBitcoinPaymentMethodSpec(bisq.offer.protobuf.BitcoinPaymentMethodSpec.newBuilder()).build();
+    public bisq.offer.protobuf.PaymentMethodSpec.Builder getBuilder(boolean serializeForHash) {
+        return getPaymentMethodSpecBuilder(serializeForHash)
+                .setBitcoinPaymentMethodSpec(bisq.offer.protobuf.BitcoinPaymentMethodSpec.newBuilder());
+    }
+
+    @Override
+    public bisq.offer.protobuf.PaymentMethodSpec toProto(boolean serializeForHash) {
+        return buildProto(serializeForHash);
     }
 
     public static BitcoinPaymentMethodSpec fromProto(bisq.offer.protobuf.PaymentMethodSpec proto) {

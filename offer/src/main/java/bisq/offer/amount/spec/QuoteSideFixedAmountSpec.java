@@ -40,11 +40,15 @@ public final class QuoteSideFixedAmountSpec extends FixedAmountSpec implements Q
     }
 
     @Override
-    public bisq.offer.protobuf.AmountSpec toProto() {
-        return getAmountSpecBuilder().setFixedAmountSpec(
-                        getFixedAmountSpecBuilder().setQuoteSideFixedAmountSpec(
-                                bisq.offer.protobuf.QuoteSideFixedAmountSpec.newBuilder()))
-                .build();
+    public bisq.offer.protobuf.AmountSpec.Builder getBuilder(boolean serializeForHash) {
+        return getAmountSpecBuilder(serializeForHash).setFixedAmountSpec(
+                getFixedAmountSpecBuilder(serializeForHash).setQuoteSideFixedAmountSpec(
+                        bisq.offer.protobuf.QuoteSideFixedAmountSpec.newBuilder()));
+    }
+
+    @Override
+    public bisq.offer.protobuf.AmountSpec toProto(boolean serializeForHash) {
+        return buildProto(serializeForHash);
     }
 
     public static QuoteSideFixedAmountSpec fromProto(bisq.offer.protobuf.FixedAmountSpec proto) {

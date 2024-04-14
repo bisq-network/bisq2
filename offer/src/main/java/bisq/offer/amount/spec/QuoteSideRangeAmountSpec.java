@@ -37,11 +37,15 @@ public final class QuoteSideRangeAmountSpec extends RangeAmountSpec implements Q
     }
 
     @Override
-    public bisq.offer.protobuf.AmountSpec toProto() {
-        return getAmountSpecBuilder().setRangeAmountSpec(
-                        getRangeAmountSpecBuilder().setQuoteSideRangeAmountSpec(
-                                bisq.offer.protobuf.QuoteSideRangeAmountSpec.newBuilder()))
-                .build();
+    public bisq.offer.protobuf.AmountSpec.Builder getBuilder(boolean serializeForHash) {
+        return getAmountSpecBuilder(serializeForHash).setRangeAmountSpec(
+                getRangeAmountSpecBuilder(serializeForHash).setQuoteSideRangeAmountSpec(
+                        bisq.offer.protobuf.QuoteSideRangeAmountSpec.newBuilder()));
+    }
+
+    @Override
+    public bisq.offer.protobuf.AmountSpec toProto(boolean serializeForHash) {
+        return buildProto(serializeForHash);
     }
 
     public static QuoteSideRangeAmountSpec fromProto(bisq.offer.protobuf.RangeAmountSpec proto) {

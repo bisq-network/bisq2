@@ -37,7 +37,12 @@ public final class PocOpenOffer implements NetworkProto {
     }
 
     @Override
-    public Message toProto() {
+    public Message.Builder getBuilder(boolean serializeForHash) {
+        return null;
+    }
+
+    @Override
+    public Message toProto(boolean serializeForHash) {
         return null;
     }
 }
