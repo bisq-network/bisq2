@@ -17,7 +17,6 @@
 
 package bisq.tor;
 
-import bisq.tor.installer.TorInstallationFiles;
 import bisq.tor.installer.TorInstaller;
 import bisq.tor.process.LdPreload;
 import org.junit.jupiter.api.Test;
@@ -33,8 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class InstallerAndRunRaceConditionTest {
     @Test
     void test(@TempDir Path tempDir) throws IOException, InterruptedException {
-        var torInstallationFiles = new TorInstallationFiles(tempDir);
-        var torInstaller = new TorInstaller(torInstallationFiles);
+        var torInstaller = new TorInstaller(tempDir);
         torInstaller.installIfNotUpToDate();
 
         Path torBinaryPath = tempDir.resolve("tor");

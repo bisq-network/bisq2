@@ -23,7 +23,6 @@ import bisq.common.util.NetworkUtils;
 import bisq.network.tor.common.torrc.TorrcFileGenerator;
 import bisq.tor.controller.NativeTorController;
 import bisq.tor.controller.events.events.BootstrapEvent;
-import bisq.tor.installer.TorInstallationFiles;
 import bisq.tor.installer.TorInstaller;
 import bisq.tor.onionservice.CreateOnionServiceResponse;
 import bisq.tor.onionservice.OnionServicePublishService;
@@ -154,9 +153,7 @@ public class TorService implements Service {
 
     private void installTorIfNotUpToDate() {
         Path torDataDirPath = transportConfig.getDataDir();
-        var torInstallationFiles = new TorInstallationFiles(torDataDirPath);
-
-        var torInstaller = new TorInstaller(torInstallationFiles);
+        var torInstaller = new TorInstaller(torDataDirPath);
         torInstaller.installIfNotUpToDate();
     }
 

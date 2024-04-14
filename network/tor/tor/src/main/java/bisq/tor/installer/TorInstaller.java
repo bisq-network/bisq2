@@ -22,14 +22,15 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 
 @Slf4j
 public class TorInstaller {
     private static final String VERSION = "0.1.0";
     private final TorInstallationFiles torInstallationFiles;
 
-    public TorInstaller(TorInstallationFiles torInstallationFiles) {
-        this.torInstallationFiles = torInstallationFiles;
+    public TorInstaller(Path torDataDirPath) {
+        this.torInstallationFiles = new TorInstallationFiles(torDataDirPath);
     }
 
     public void installIfNotUpToDate() {
