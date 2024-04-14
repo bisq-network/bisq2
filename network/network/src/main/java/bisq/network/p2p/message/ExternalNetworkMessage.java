@@ -33,10 +33,10 @@ public interface ExternalNetworkMessage extends EnvelopePayloadMessage {
 
     default bisq.network.protobuf.ExternalNetworkMessage.Builder getExternalPayloadMessageBuilder(boolean serializeForHash) {
         return bisq.network.protobuf.ExternalNetworkMessage.newBuilder()
-                .setExternalPayloadMessage(Any.pack(toValueProto(serializeForHash)));
+                .setPayload(Any.pack(toValueProto(serializeForHash)));
     }
 
     static EnvelopePayloadMessage fromProto(bisq.network.protobuf.ExternalNetworkMessage externalNetworkMessage) {
-        return NetworkMessageResolver.fromAny(externalNetworkMessage.getExternalPayloadMessage());
+        return NetworkMessageResolver.fromAny(externalNetworkMessage.getPayload());
     }
 }
