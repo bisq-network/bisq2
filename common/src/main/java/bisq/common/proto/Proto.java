@@ -43,29 +43,29 @@ import java.util.stream.Collectors;
 public interface Proto {
     Message toProto();
 
-    default Message.Builder getBuilder(boolean ignoreAnnotation) {
+    default Message.Builder getBuilder(boolean serializeForHash) {
         return null;
     }
 
-    default Message toProto(boolean ignoreAnnotation) {
-        return buildProto(ignoreAnnotation);
+    default Message toProto(boolean serializeForHash) {
+        return buildProto(serializeForHash);
     }
 
-    default <T extends Message> T buildProto(boolean ignoreAnnotation) {
-        var builder = ignoreAnnotation ? getBuilder(true) : clearAnnotatedFields(getBuilder(false));
+    default <T extends Message> T buildProto(boolean serializeForHash) {
+        var builder = serializeForHash ? clearAnnotatedFields(getBuilder(serializeForHash)) : getBuilder(serializeForHash);
         return (T) builder.build();
     }
 
     default byte[] serialize() {
-        return buildProto(true).toByteArray();
-    }
-
-    default byte[] serializeForHash() {
         return buildProto(false).toByteArray();
     }
 
+    default byte[] serializeForHash() {
+        return buildProto(true).toByteArray();
+    }
+
     default int getSerializedSize() {
-        return buildProto(true).getSerializedSize();
+        return buildProto(false).getSerializedSize();
     }
 
     default void writeDelimitedTo(OutputStream outputStream) throws IOException {

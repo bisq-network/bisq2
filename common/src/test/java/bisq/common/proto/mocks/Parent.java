@@ -7,12 +7,12 @@ public interface Parent extends Proto {
 
     Child getChild();
 
-    bisq.common.test.protobuf.Parent toProto(boolean ignoreAnnotation);
+    bisq.common.test.protobuf.Parent toProto(boolean serializeForHash);
 
-    bisq.common.test.protobuf.Parent.Builder getBuilder(boolean ignoreAnnotation);
+    bisq.common.test.protobuf.Parent.Builder getBuilder(boolean serializeForHash);
 
     @Override
     default bisq.common.test.protobuf.Parent toProto() {
-        return buildProto(true);
+        return buildProto(false);
     }
 }

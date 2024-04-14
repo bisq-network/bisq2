@@ -34,14 +34,14 @@ public final class ParentMockWithExcludedValue implements Parent {
     }
 
     @Override
-    public bisq.common.test.protobuf.Parent toProto(boolean ignoreAnnotation) {
-        return buildProto(ignoreAnnotation);
+    public bisq.common.test.protobuf.Parent toProto(boolean serializeForHash) {
+        return buildProto(serializeForHash);
     }
 
     @Override
-    public bisq.common.test.protobuf.Parent.Builder getBuilder(boolean ignoreAnnotation) {
+    public bisq.common.test.protobuf.Parent.Builder getBuilder(boolean serializeForHash) {
         return bisq.common.test.protobuf.Parent.newBuilder()
                 .setParentValue(parentValue)
-                .setChild(child.toProto(ignoreAnnotation));
+                .setChild(child.toProto(serializeForHash));
     }
 }
