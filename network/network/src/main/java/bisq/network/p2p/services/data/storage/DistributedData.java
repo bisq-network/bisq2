@@ -27,8 +27,8 @@ public interface DistributedData extends NetworkProto {
         return DistributedDataResolver.fromAny(any);
     }
 
-    default Any toAny() {
-        return Any.pack(toProto());
+    default Any toAny(boolean serializeForHash) {
+        return Any.pack(toProto(serializeForHash));
     }
 
     MetaData getMetaData();

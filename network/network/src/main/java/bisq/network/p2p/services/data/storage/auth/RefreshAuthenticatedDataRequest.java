@@ -97,15 +97,23 @@ public final class RefreshAuthenticatedDataRequest implements DataRequest {
     }
 
     @Override
-    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
-        return getNetworkMessageBuilder().setDataRequest(getDataRequestBuilder().setRefreshAuthenticatedDataRequest(
-                        bisq.network.protobuf.RefreshAuthenticatedDataRequest.newBuilder()
-                                .setMetaData(metaData.toProto())
-                                .setHash(ByteString.copyFrom(hash))
-                                .setOwnerPublicKeyBytes(ByteString.copyFrom(ownerPublicKeyBytes))
-                                .setSequenceNumber(sequenceNumber)
-                                .setSignature(ByteString.copyFrom(signature))))
-                .build();
+    public bisq.network.protobuf.DataRequest.Builder getDataRequestBuilder(boolean serializeForHash) {
+        return newDataRequestBuilder().setRefreshAuthenticatedDataRequest(toValueProto(serializeForHash));
+    }
+
+    @Override
+    public bisq.network.protobuf.RefreshAuthenticatedDataRequest toValueProto(boolean serializeForHash) {
+        return buildValueProto(serializeForHash);
+    }
+
+    @Override
+    public bisq.network.protobuf.RefreshAuthenticatedDataRequest.Builder getValueBuilder(boolean serializeForHash) {
+        return bisq.network.protobuf.RefreshAuthenticatedDataRequest.newBuilder()
+                .setMetaData(metaData.toProto(serializeForHash))
+                .setHash(ByteString.copyFrom(hash))
+                .setOwnerPublicKeyBytes(ByteString.copyFrom(ownerPublicKeyBytes))
+                .setSequenceNumber(sequenceNumber)
+                .setSignature(ByteString.copyFrom(signature));
     }
 
     public static RefreshAuthenticatedDataRequest fromProto(bisq.network.protobuf.RefreshAuthenticatedDataRequest proto) {

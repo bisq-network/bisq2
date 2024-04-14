@@ -242,7 +242,7 @@ public class OutboundConnectionManager {
     }
 
     private ByteBuffer wrapPayloadInByteBuffer(NetworkEnvelope networkEnvelope) {
-        bisq.network.protobuf.NetworkEnvelope poWRequest = networkEnvelope.toProto();
+        bisq.network.protobuf.NetworkEnvelope poWRequest = networkEnvelope.writeProto();
         byte[] requestInBytes = poWRequest.toByteArray();
         ByteBuffer byteBuffer = ByteBuffer.allocate(1024);
         ProtoBufMessageLengthWriter.writeToBuffer(requestInBytes.length, byteBuffer);

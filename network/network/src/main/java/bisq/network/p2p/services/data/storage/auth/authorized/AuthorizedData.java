@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data.storage.auth.authorized;
 
+import bisq.common.annotation.ExcludeForHash;
 import bisq.common.encoding.Hex;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
@@ -41,6 +42,8 @@ import java.util.Optional;
 @EqualsAndHashCode(callSuper = true)
 @Getter
 public final class AuthorizedData extends AuthenticatedData {
+    // We omit the signature for the hash, otherwise we would get a new map entry for the same data at each republishing
+    @ExcludeForHash
     private final Optional<byte[]> signature;
     private final byte[] authorizedPublicKeyBytes;
     transient private final PublicKey authorizedPublicKey;
@@ -75,11 +78,16 @@ public final class AuthorizedData extends AuthenticatedData {
     }
 
     @Override
-    public bisq.network.protobuf.AuthenticatedData toProto() {
+    public bisq.network.protobuf.AuthenticatedData toProto(boolean serializeForHash) {
+        return buildProto(serializeForHash);
+    }
+
+    @Override
+    public bisq.network.protobuf.AuthenticatedData.Builder getBuilder(boolean serializeForHash) {
         bisq.network.protobuf.AuthorizedData.Builder builder = bisq.network.protobuf.AuthorizedData.newBuilder()
                 .setAuthorizedPublicKeyBytes(ByteString.copyFrom(authorizedPublicKeyBytes));
         signature.ifPresent(signature -> builder.setSignature(ByteString.copyFrom(signature)));
-        return getAuthenticatedDataBuilder().setAuthorizedData(builder).build();
+        return getAuthenticatedDataBuilder(serializeForHash).setAuthorizedData(builder);
     }
 
     public static AuthorizedData fromProto(bisq.network.protobuf.AuthenticatedData proto) {
@@ -104,15 +112,6 @@ public final class AuthorizedData extends AuthenticatedData {
             e.printStackTrace();
             throw new RuntimeException(e);
         }
-    }
-
-    // We omit the signature for the hash, otherwise we would get a new map entry for the same data at each republishing
-    @Override
-    public byte[] serialize() {
-        return getAuthenticatedDataBuilder().setAuthorizedData(
-                        bisq.network.protobuf.AuthorizedData.newBuilder()
-                                .setAuthorizedPublicKeyBytes(ByteString.copyFrom(authorizedPublicKeyBytes)))
-                .build().toByteArray();
     }
 
     public AuthorizedDistributedData getAuthorizedDistributedData() {

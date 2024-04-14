@@ -30,8 +30,6 @@ import java.nio.channels.SocketChannel;
 import java.util.Collections;
 import java.util.List;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 @Slf4j
 public class NetworkEnvelopeSocketChannel implements Closeable {
     public static final int BYTE_BUFFER_SIZE = 1024;
@@ -55,8 +53,7 @@ public class NetworkEnvelopeSocketChannel implements Closeable {
     }
 
     public void send(NetworkEnvelope networkEnvelope) throws IOException {
-        bisq.network.protobuf.NetworkEnvelope proto = checkNotNull(networkEnvelope.toProto(),
-                "networkEnvelope.toProto() must not be null");
+        bisq.network.protobuf.NetworkEnvelope proto = networkEnvelope.writeProto();
         byte[] protoInBytes = proto.toByteArray();
         int messageLength = protoInBytes.length;
 

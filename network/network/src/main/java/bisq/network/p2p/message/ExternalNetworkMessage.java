@@ -21,20 +21,22 @@ import com.google.protobuf.Any;
 
 // Wrapper for NetworkMessages which are not part of the network module (e.g. PrivateChatMessage).
 // We wrap them into an Any binary blob.
-public final class ExternalNetworkMessage {
-    private final EnvelopePayloadMessage envelopePayloadMessage;
+public interface ExternalNetworkMessage extends EnvelopePayloadMessage {
 
-    public ExternalNetworkMessage(EnvelopePayloadMessage envelopePayloadMessage) {
-        this.envelopePayloadMessage = envelopePayloadMessage;
+    default bisq.network.protobuf.EnvelopePayloadMessage.Builder getBuilder(boolean serializeForHash) {
+        return newEnvelopePayloadMessageBuilder().setExternalNetworkMessage(toExternalNetworkMessageProto(serializeForHash));
     }
 
-    public bisq.network.protobuf.ExternalNetworkMessage toProto() {
+    default bisq.network.protobuf.ExternalNetworkMessage toExternalNetworkMessageProto(boolean serializeForHash) {
+        return getTweakedBuilder(getExternalPayloadMessageBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    default bisq.network.protobuf.ExternalNetworkMessage.Builder getExternalPayloadMessageBuilder(boolean serializeForHash) {
         return bisq.network.protobuf.ExternalNetworkMessage.newBuilder()
-                .setAny(Any.pack(envelopePayloadMessage.toProto()))
-                .build();
+                .setExternalPayloadMessage(Any.pack(toValueProto(serializeForHash)));
     }
 
-    public static EnvelopePayloadMessage fromProto(bisq.network.protobuf.ExternalNetworkMessage externalNetworkMessage) {
-        return NetworkMessageResolver.fromAny(externalNetworkMessage.getAny());
+    static EnvelopePayloadMessage fromProto(bisq.network.protobuf.ExternalNetworkMessage externalNetworkMessage) {
+        return NetworkMessageResolver.fromAny(externalNetworkMessage.getExternalPayloadMessage());
     }
 }

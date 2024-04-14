@@ -37,9 +37,18 @@ public final class AckMessage implements MailboxMessage, Response {
     }
 
     @Override
-    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
-        return getNetworkMessageBuilder().setAckMessage(
-                bisq.network.protobuf.AckMessage.newBuilder().setId(id)).build();
+    public bisq.network.protobuf.EnvelopePayloadMessage.Builder getBuilder(boolean serializeForHash) {
+        return newEnvelopePayloadMessageBuilder().setAckMessage(toValueProto(serializeForHash));
+    }
+
+    @Override
+    public bisq.network.protobuf.AckMessage toValueProto(boolean serializeForHash) {
+        return buildValueProto(serializeForHash);
+    }
+
+    @Override
+    public bisq.network.protobuf.AckMessage.Builder getValueBuilder(boolean serializeForHash) {
+        return bisq.network.protobuf.AckMessage.newBuilder().setId(id);
     }
 
     public static AckMessage fromProto(bisq.network.protobuf.AckMessage proto) {

@@ -44,15 +44,19 @@ public final class NetworkServiceStore implements PersistableStore<NetworkServic
     }
 
     @Override
-    public bisq.network.protobuf.NetworkServiceStore toProto() {
+    public bisq.network.protobuf.NetworkServiceStore toProto(boolean serializeForHash) {
+        return buildProto(serializeForHash);
+    }
+
+    @Override
+    public bisq.network.protobuf.NetworkServiceStore.Builder getBuilder(boolean serializeForHash) {
         return bisq.network.protobuf.NetworkServiceStore.newBuilder()
                 .addAllSeedNodes(seedNodes.stream()
-                        .map(AddressByTransportTypeMap::toProto)
+                        .map(e -> e.toProto(serializeForHash))
                         .collect(Collectors.toList()))
                 .putAllNetworkIdByTag(networkIdByTag.entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey,
-                                e -> e.getValue().toProto())))
-                .build();
+                                e -> e.getValue().toProto(serializeForHash))));
     }
 
     public static PersistableStore<?> fromProto(bisq.network.protobuf.NetworkServiceStore proto) {

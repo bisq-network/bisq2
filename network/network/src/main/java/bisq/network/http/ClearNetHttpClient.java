@@ -70,7 +70,8 @@ public class ClearNetHttpClient extends BaseHttpClient {
                             return false;
                         }
                     } catch (IOException e) {
-                        throw new RuntimeException(e);
+                        log.error("Error at shutdown {}", ExceptionUtil.getMessageOrToString(e));
+                        return false;
                     }
                 }, ExecutorFactory.newSingleThreadExecutor("ClearNetHttpClient-shutdown"))
                 .orTimeout(500, TimeUnit.MILLISECONDS)

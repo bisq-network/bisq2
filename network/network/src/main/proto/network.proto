@@ -160,7 +160,7 @@ message InventoryResponse {
 }
 
 message ExternalNetworkMessage {
-  google.protobuf.Any any = 1;
+  google.protobuf.Any externalPayloadMessage = 1;
 }
 
 

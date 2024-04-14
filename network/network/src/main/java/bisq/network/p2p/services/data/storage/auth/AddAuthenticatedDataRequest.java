@@ -22,6 +22,7 @@ import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.network.p2p.services.data.storage.DistributedData;
+import bisq.network.protobuf.DataRequest;
 import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
@@ -97,13 +98,22 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
     }
 
     @Override
-    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
-        return getNetworkMessageBuilder().setDataRequest(getDataRequestBuilder().setAddAuthenticatedDataRequest(
-                bisq.network.protobuf.AddAuthenticatedDataRequest.newBuilder()
-                        .setAuthenticatedSequentialData(authenticatedSequentialData.toProto())
+    public DataRequest.Builder getDataRequestBuilder(boolean serializeForHash) {
+        return newDataRequestBuilder().setAddAuthenticatedDataRequest(toValueProto(serializeForHash));
+    }
+
+    @Override
+    public bisq.network.protobuf.AddAuthenticatedDataRequest toValueProto(boolean serializeForHash) {
+        return buildValueProto(serializeForHash);
+    }
+
+    @Override
+    public bisq.network.protobuf.AddAuthenticatedDataRequest.Builder getValueBuilder(boolean serializeForHash) {
+        return bisq.network.protobuf.AddAuthenticatedDataRequest.newBuilder()
+                .setAuthenticatedSequentialData(authenticatedSequentialData.toProto(serializeForHash))
                         .setSignature(ByteString.copyFrom(signature))
-                        .setOwnerPublicKeyBytes(ByteString.copyFrom(ownerPublicKeyBytes)))
-        ).build();
+                .setOwnerPublicKeyBytes(ByteString.copyFrom(ownerPublicKeyBytes)
+                );
     }
 
     public static AddAuthenticatedDataRequest fromProto(bisq.network.protobuf.AddAuthenticatedDataRequest proto) {

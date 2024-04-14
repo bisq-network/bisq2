@@ -58,12 +58,16 @@ public final class EquiHashToken extends AuthorizationToken {
     }
 
     @Override
-    public bisq.network.protobuf.AuthorizationToken toProto() {
+    public bisq.network.protobuf.AuthorizationToken toProto(boolean serializeForHash) {
+        return buildProto(serializeForHash);
+    }
+
+    @Override
+    public bisq.network.protobuf.AuthorizationToken.Builder getBuilder(boolean serializeForHash) {
         return getAuthorizationTokenBuilder().setEquiHashToken(
-                        bisq.network.protobuf.EquiHashToken.newBuilder()
-                                .setProofOfWork(proofOfWork.toProto())
-                                .setMessageCounter(messageCounter))
-                .build();
+                bisq.network.protobuf.EquiHashToken.newBuilder()
+                        .setProofOfWork(proofOfWork.toProto(serializeForHash))
+                        .setMessageCounter(messageCounter));
     }
 
     public static EquiHashToken fromProto(bisq.network.protobuf.AuthorizationToken proto) {

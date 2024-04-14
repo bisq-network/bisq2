@@ -64,13 +64,17 @@ public final class HashSetFilter extends InventoryFilter {
     }
 
     @Override
-    public bisq.network.protobuf.InventoryFilter toProto() {
+    public bisq.network.protobuf.InventoryFilter toProto(boolean serializeForHash) {
+        return buildProto(serializeForHash);
+    }
+
+    @Override
+    public bisq.network.protobuf.InventoryFilter.Builder getBuilder(boolean serializeForHash) {
         return getInventoryFilterBuilder().setHashSetFilter(
-                        bisq.network.protobuf.HashSetFilter.newBuilder()
-                                .addAllFilterEntries(filterEntries.stream()
-                                        .map(HashSetFilterEntry::toProto)
-                                        .collect(Collectors.toList())))
-                .build();
+                bisq.network.protobuf.HashSetFilter.newBuilder()
+                        .addAllFilterEntries(filterEntries.stream()
+                                .map(entry -> entry.toProto(serializeForHash))
+                                .collect(Collectors.toList())));
     }
 
     public static HashSetFilter fromProto(bisq.network.protobuf.InventoryFilter proto) {
@@ -83,7 +87,7 @@ public final class HashSetFilter extends InventoryFilter {
     @Override
     public String getDetails() {
         return "HashSetFilter with " + filterEntries.size() + " filterEntries and size of " +
-                ByteUnit.BYTE.toKB(toProto().getSerializedSize());
+                ByteUnit.BYTE.toKB(getSerializedSize());
     }
 
     public Set<HashSetFilterEntry> getFilterEntriesAsSet() {

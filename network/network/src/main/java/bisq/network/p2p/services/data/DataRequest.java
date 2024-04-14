@@ -27,9 +27,20 @@ import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
 import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
 
 public interface DataRequest extends BroadcastMessage {
-    default bisq.network.protobuf.DataRequest.Builder getDataRequestBuilder() {
+    default bisq.network.protobuf.DataRequest.Builder newDataRequestBuilder() {
         return bisq.network.protobuf.DataRequest.newBuilder();
     }
+
+    @Override
+    default bisq.network.protobuf.EnvelopePayloadMessage.Builder getBuilder(boolean serializeForHash) {
+        return newEnvelopePayloadMessageBuilder().setDataRequest(toDataRequestProto(serializeForHash));
+    }
+
+    default bisq.network.protobuf.DataRequest toDataRequestProto(boolean serializeForHash) {
+        return getTweakedBuilder(getDataRequestBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    bisq.network.protobuf.DataRequest.Builder getDataRequestBuilder(boolean serializeForHash);
 
     static DataRequest fromProto(bisq.network.protobuf.DataRequest proto) {
         switch (proto.getMessageCase()) {

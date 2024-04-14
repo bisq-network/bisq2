@@ -32,6 +32,7 @@ import bisq.network.p2p.services.peer_group.keep_alive.Ping;
 import bisq.network.p2p.services.peer_group.keep_alive.Pong;
 import bisq.network.p2p.services.peer_group.network_load.NetworkLoadExchangeRequest;
 import bisq.network.p2p.services.peer_group.network_load.NetworkLoadExchangeResponse;
+import com.google.protobuf.Message;
 
 /**
  * Interface for any message sent as payload in NetworkEnvelope
@@ -39,11 +40,31 @@ import bisq.network.p2p.services.peer_group.network_load.NetworkLoadExchangeResp
 public interface EnvelopePayloadMessage extends NetworkProto {
     double getCostFactor();
 
-    default bisq.network.protobuf.EnvelopePayloadMessage.Builder getNetworkMessageBuilder() {
+    default bisq.network.protobuf.EnvelopePayloadMessage.Builder newEnvelopePayloadMessageBuilder() {
         return bisq.network.protobuf.EnvelopePayloadMessage.newBuilder();
     }
 
-    bisq.network.protobuf.EnvelopePayloadMessage toProto();
+    // EnvelopePayloadMessage level
+    @Override
+    default bisq.network.protobuf.EnvelopePayloadMessage toProto(boolean serializeForHash) {
+        return buildProto(serializeForHash);
+    }
+
+    @Override
+    bisq.network.protobuf.EnvelopePayloadMessage.Builder getBuilder(boolean serializeForHash);
+
+
+    // Implementation class level (this versus interface)
+    default <T extends Message> T buildValueProto(boolean serializeForHash) {
+        return (T) getTweakedBuilder(getValueBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    Message.Builder getValueBuilder(boolean serializeForHash);
+
+    default Message toValueProto(boolean serializeForHash) {
+        return buildValueProto(serializeForHash);
+    }
+
 
     static EnvelopePayloadMessage fromProto(bisq.network.protobuf.EnvelopePayloadMessage proto) {
         switch (proto.getMessageCase()) {

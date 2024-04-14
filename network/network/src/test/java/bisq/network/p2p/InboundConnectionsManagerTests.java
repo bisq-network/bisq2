@@ -254,7 +254,7 @@ public class InboundConnectionsManagerTests {
                 new NetworkLoad(),
                 myAddress.getFullAddress(),
                 0, new ArrayList<>());
-        return new NetworkEnvelope(token, request).toProto();
+        return new NetworkEnvelope(token, request).writeProto();
     }
 
     private AuthorizationService createAuthorizationService() {

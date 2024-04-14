@@ -73,11 +73,15 @@ public final class Address implements NetworkProto, Comparable<Address> {
     }
 
     @Override
-    public bisq.network.common.protobuf.Address toProto() {
+    public bisq.network.common.protobuf.Address toProto(boolean serializeForHash) {
+        return buildProto(serializeForHash);
+    }
+
+    @Override
+    public bisq.network.common.protobuf.Address.Builder getBuilder(boolean serializeForHash) {
         return bisq.network.common.protobuf.Address.newBuilder()
                 .setHost(host)
-                .setPort(port)
-                .build();
+                .setPort(port);
     }
 
     public static Address fromProto(bisq.network.common.protobuf.Address proto) {

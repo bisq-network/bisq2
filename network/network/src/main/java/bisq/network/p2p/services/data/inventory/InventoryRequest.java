@@ -45,12 +45,20 @@ public final class InventoryRequest implements BroadcastMessage, Request {
     }
 
     @Override
-    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
-        return getNetworkMessageBuilder().setInventoryRequest(
-                        bisq.network.protobuf.InventoryRequest.newBuilder()
-                                .setInventoryFilter(inventoryFilter.toProto())
-                                .setNonce(nonce))
-                .build();
+    public bisq.network.protobuf.EnvelopePayloadMessage.Builder getBuilder(boolean serializeForHash) {
+        return newEnvelopePayloadMessageBuilder().setInventoryRequest(toValueProto(serializeForHash));
+    }
+
+    @Override
+    public bisq.network.protobuf.InventoryRequest toValueProto(boolean serializeForHash) {
+        return buildValueProto(serializeForHash);
+    }
+
+    @Override
+    public bisq.network.protobuf.InventoryRequest.Builder getValueBuilder(boolean serializeForHash) {
+        return bisq.network.protobuf.InventoryRequest.newBuilder()
+                .setInventoryFilter(inventoryFilter.toProto(serializeForHash))
+                .setNonce(nonce);
     }
 
     public static InventoryRequest fromProto(bisq.network.protobuf.InventoryRequest proto) {

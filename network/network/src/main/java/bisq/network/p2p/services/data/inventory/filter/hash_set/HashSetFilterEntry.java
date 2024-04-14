@@ -46,11 +46,15 @@ public final class HashSetFilterEntry implements NetworkProto, Comparable<HashSe
     }
 
     @Override
-    public bisq.network.protobuf.HashSetFilterEntry toProto() {
+    public bisq.network.protobuf.HashSetFilterEntry toProto(boolean serializeForHash) {
+        return buildProto(serializeForHash);
+    }
+
+    @Override
+    public bisq.network.protobuf.HashSetFilterEntry.Builder getBuilder(boolean serializeForHash) {
         return bisq.network.protobuf.HashSetFilterEntry.newBuilder()
                 .setHash(ByteString.copyFrom(hash))
-                .setSequenceNumber(sequenceNumber)
-                .build();
+                .setSequenceNumber(sequenceNumber);
     }
 
     public static HashSetFilterEntry fromProto(bisq.network.protobuf.HashSetFilterEntry proto) {

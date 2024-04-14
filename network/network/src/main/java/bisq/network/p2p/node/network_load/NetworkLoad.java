@@ -60,11 +60,15 @@ public final class NetworkLoad implements NetworkProto {
     }
 
     @Override
-    public bisq.network.protobuf.NetworkLoad toProto() {
+    public bisq.network.protobuf.NetworkLoad toProto(boolean serializeForHash) {
+        return buildProto(serializeForHash);
+    }
+
+    @Override
+    public bisq.network.protobuf.NetworkLoad.Builder getBuilder(boolean serializeForHash) {
         return bisq.network.protobuf.NetworkLoad.newBuilder()
                 .setLoad(load)
-                .setDifficultyAdjustmentFactor(difficultyAdjustmentFactor)
-                .build();
+                .setDifficultyAdjustmentFactor(difficultyAdjustmentFactor);
     }
 
     public static NetworkLoad fromProto(bisq.network.protobuf.NetworkLoad proto) {
