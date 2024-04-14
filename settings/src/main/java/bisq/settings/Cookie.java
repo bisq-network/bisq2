@@ -43,14 +43,18 @@ public final class Cookie implements PersistableProto {
     }
 
     @Override
-    public bisq.settings.protobuf.Cookie toProto() {
+    public bisq.settings.protobuf.Cookie.Builder getBuilder(boolean serializeForHash) {
         return bisq.settings.protobuf.Cookie.newBuilder()
                 .addAllCookieMapEntries(map.entrySet().stream()
                         .map(entry -> CookieMapEntry.newBuilder()
                                 .setCookieKey(entry.getKey().getKeyForProto())
                                 .setValue(entry.getValue()).build())
-                        .collect(Collectors.toList()))
-                .build();
+                        .collect(Collectors.toList()));
+    }
+
+    @Override
+    public bisq.settings.protobuf.Cookie toProto(boolean serializeForHash) {
+        return buildProto(serializeForHash);
     }
 
     static Cookie fromProto(bisq.settings.protobuf.Cookie proto) {

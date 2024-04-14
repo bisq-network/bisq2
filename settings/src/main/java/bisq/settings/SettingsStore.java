@@ -118,12 +118,12 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     }
 
     @Override
-    public bisq.settings.protobuf.SettingsStore toProto() {
+    public bisq.settings.protobuf.SettingsStore.Builder getBuilder(boolean serializeForHash) {
         return bisq.settings.protobuf.SettingsStore.newBuilder()
-                .setCookie(cookie.toProto())
+                .setCookie(cookie.toProto(serializeForHash))
                 .putAllDontShowAgainMap(dontShowAgainMap)
                 .setUseAnimations(useAnimations.get())
-                .setSelectedMarket(selectedMarket.get().toProto())
+                .setSelectedMarket(selectedMarket.get().toProto(serializeForHash))
                 .setMinRequiredReputationScore(minRequiredReputationScore.get())
                 .setOffersOnly(offersOnly.get())
                 .setTradeRulesConfirmed(tradeRulesConfirmed.get())
@@ -136,10 +136,14 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 .addAllSupportedLanguageCodes(new ArrayList<>(supportedLanguageCodes))
                 .setDifficultyAdjustmentFactor(difficultyAdjustmentFactor.get())
                 .setIgnoreDiffAdjustmentFromSecManager(ignoreDiffAdjustmentFromSecManager.get())
-                .addAllFavouriteMarkets(favouriteMarkets.stream().map(Market::toProto).collect(Collectors.toList()))
+                .addAllFavouriteMarkets(favouriteMarkets.stream().map(market -> market.toProto(serializeForHash)).collect(Collectors.toList()))
                 .setIgnoreMinRequiredReputationScoreFromSecManager(ignoreMinRequiredReputationScoreFromSecManager.get())
-                .setMaxTradePriceDeviation(maxTradePriceDeviation.get())
-                .build();
+                .setMaxTradePriceDeviation(maxTradePriceDeviation.get());
+    }
+
+    @Override
+    public bisq.settings.protobuf.SettingsStore toProto(boolean serializeForHash) {
+        return buildProto(serializeForHash);
     }
 
     public static SettingsStore fromProto(bisq.settings.protobuf.SettingsStore proto) {
