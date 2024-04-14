@@ -53,7 +53,7 @@ public class NetworkEnvelopeSocketChannel implements Closeable {
     }
 
     public void send(NetworkEnvelope networkEnvelope) throws IOException {
-        bisq.network.protobuf.NetworkEnvelope proto = networkEnvelope.writeProto();
+        bisq.network.protobuf.NetworkEnvelope proto = networkEnvelope.completeProto();
         byte[] protoInBytes = proto.toByteArray();
         int messageLength = protoInBytes.length;
 

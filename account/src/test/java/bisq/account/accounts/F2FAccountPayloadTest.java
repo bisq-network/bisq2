@@ -27,7 +27,7 @@ class F2FAccountPayloadTest {
 
     @Test
     void testToProto() {
-        assertEquals(PROTO, PAYLOAD.writeProto());
+        assertEquals(PROTO, PAYLOAD.completeProto());
     }
 
     @Test

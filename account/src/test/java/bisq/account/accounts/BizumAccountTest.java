@@ -52,7 +52,7 @@ class BizumAccountTest {
 
     @Test
     void testToProto() {
-        var result = ACCOUNT.writeProto();
+        var result = ACCOUNT.completeProto();
         assertThat(result).usingRecursiveComparison()
                 .ignoringFields("accountPayload_.memoizedHashCode", "memoizedHashCode", "creationDate_")
                 .isEqualTo(PROTO);

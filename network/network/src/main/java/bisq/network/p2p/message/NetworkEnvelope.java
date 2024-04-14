@@ -65,7 +65,7 @@ public final class NetworkEnvelope implements NetworkProto {
     }
 
     @Override
-    public bisq.network.protobuf.NetworkEnvelope writeProto() {
+    public bisq.network.protobuf.NetworkEnvelope completeProto() {
         return toProto(false);
     }
 

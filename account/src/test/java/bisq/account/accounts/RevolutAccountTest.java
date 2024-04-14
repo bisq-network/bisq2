@@ -37,7 +37,7 @@ class RevolutAccountTest {
 
     @Test
     void testToProto() {
-        var result = ACCOUNT.writeProto();
+        var result = ACCOUNT.completeProto();
         assertThat(result)
                 .usingRecursiveComparison()
                 .ignoringFields("accountPayload_.id_", "accountPayload_.memoizedHashCode", "creationDate_", "memoizedHashCode")

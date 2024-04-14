@@ -20,7 +20,7 @@ class RevolutAccountPayloadTest {
 
     @Test
     void testToProto() {
-        assertEquals(PROTO, PAYLOAD.writeProto());
+        assertEquals(PROTO, PAYLOAD.completeProto());
     }
 
     @Test

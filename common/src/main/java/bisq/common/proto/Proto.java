@@ -45,7 +45,7 @@ public interface Proto {
 
     Message toProto(boolean serializeForHash);
 
-    default Message writeProto() {
+    default Message completeProto() {
         return toProto(false);
     }
 
@@ -71,7 +71,7 @@ public interface Proto {
     }
 
     default void writeDelimitedTo(OutputStream outputStream) throws IOException {
-        writeProto().writeDelimitedTo(outputStream);
+        completeProto().writeDelimitedTo(outputStream);
     }
 
     default Set<String> getExcludedFields() {

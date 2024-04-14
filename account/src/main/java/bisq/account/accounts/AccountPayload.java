@@ -53,7 +53,7 @@ public abstract class AccountPayload implements NetworkProto {
     }
 
     @Override
-    public bisq.account.protobuf.AccountPayload writeProto() {
+    public bisq.account.protobuf.AccountPayload completeProto() {
         return toProto(false);
     }
 

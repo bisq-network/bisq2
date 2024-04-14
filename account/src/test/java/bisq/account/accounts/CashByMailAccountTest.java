@@ -37,7 +37,7 @@ class CashByMailAccountTest {
 
     @Test
     void testToProto() {
-        var result = ACCOUNT.writeProto();
+        var result = ACCOUNT.completeProto();
         assertThat(result)
                 .usingRecursiveComparison()
                 .isEqualTo(PROTO);

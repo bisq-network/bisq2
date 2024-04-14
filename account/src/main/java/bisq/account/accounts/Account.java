@@ -65,7 +65,7 @@ public abstract class Account<P extends AccountPayload, M extends PaymentMethod<
     }
 
     @Override
-    public bisq.account.protobuf.Account writeProto() {
+    public bisq.account.protobuf.Account completeProto() {
         return toProto(false);
     }
 

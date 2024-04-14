@@ -54,7 +54,7 @@ class SepaAccountTest {
 
     @Test
     void testToProto() {
-        var result = ACCOUNT.writeProto();
+        var result = ACCOUNT.completeProto();
         assertThat(result)
                 .usingRecursiveComparison()
                 .ignoringFields("creationDate_", "accountPayload_.id_", "memoizedHashCode", "accountPayload_.memoizedHashCode")
