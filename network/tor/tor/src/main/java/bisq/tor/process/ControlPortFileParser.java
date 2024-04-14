@@ -30,6 +30,9 @@ public class ControlPortFileParser {
 
             if (isControlPortFileReady(fileContent)) {
                 for (String line : fileContent.split("\n")) {
+                    // Lines end on Windows with "\r\n". Previous String.split("\n") removed "\n" already.
+                    line = line.replace("\r", "");
+
                     if (isPortLine(line)) {
                         return parsePort(line);
                     }
