@@ -69,14 +69,18 @@ public final class AuthorizedBondedReputationData implements AuthorizedDistribut
     }
 
     @Override
-    public bisq.user.protobuf.AuthorizedBondedReputationData toProto() {
+    public bisq.user.protobuf.AuthorizedBondedReputationData.Builder getBuilder(boolean serializeForHash) {
         return bisq.user.protobuf.AuthorizedBondedReputationData.newBuilder()
                 .setAmount(amount)
                 .setLockTime(lockTime)
                 .setTime(time)
                 .setHash(ByteString.copyFrom(hash))
-                .setStaticPublicKeysProvided(staticPublicKeysProvided)
-                .build();
+                .setStaticPublicKeysProvided(staticPublicKeysProvided);
+    }
+
+    @Override
+    public bisq.user.protobuf.AuthorizedBondedReputationData toProto(boolean serializeForHash) {
+        return buildProto(serializeForHash);
     }
 
     public static AuthorizedBondedReputationData fromProto(bisq.user.protobuf.AuthorizedBondedReputationData proto) {

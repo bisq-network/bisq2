@@ -61,12 +61,16 @@ public final class AuthorizedSignedWitnessData implements AuthorizedDistributedD
     }
 
     @Override
-    public bisq.user.protobuf.AuthorizedSignedWitnessData toProto() {
+    public bisq.user.protobuf.AuthorizedSignedWitnessData.Builder getBuilder(boolean serializeForHash) {
         return bisq.user.protobuf.AuthorizedSignedWitnessData.newBuilder()
                 .setProfileId(profileId)
                 .setWitnessSignDate(witnessSignDate)
-                .setStaticPublicKeysProvided(staticPublicKeysProvided)
-                .build();
+                .setStaticPublicKeysProvided(staticPublicKeysProvided);
+    }
+
+    @Override
+    public bisq.user.protobuf.AuthorizedSignedWitnessData toProto(boolean serializeForHash) {
+        return buildProto(serializeForHash);
     }
 
     public static AuthorizedSignedWitnessData fromProto(bisq.user.protobuf.AuthorizedSignedWitnessData proto) {

@@ -22,7 +22,6 @@ import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
-import bisq.user.protobuf.NymList;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -58,21 +57,25 @@ public final class UserProfileStore implements PersistableStore<UserProfileStore
     }
 
     @Override
-    public bisq.user.protobuf.UserProfileStore toProto() {
-        bisq.user.protobuf.UserProfileStore proto;
+    public bisq.user.protobuf.UserProfileStore.Builder getBuilder(boolean serializeForHash) {
+        bisq.user.protobuf.UserProfileStore.Builder protoBuilder;
         synchronized (lock) {
-            proto = bisq.user.protobuf.UserProfileStore.newBuilder()
+            protoBuilder = bisq.user.protobuf.UserProfileStore.newBuilder()
                     .putAllNymListByNickName(nymsByNickName.entrySet().stream()
                             .collect(Collectors.toMap(Map.Entry::getKey,
-                                    entry -> NymList.newBuilder()
+                                    entry -> bisq.user.protobuf.NymList.newBuilder()
                                             .addAllNyms(entry.getValue()).build())))
                     .addAllIgnoredUserProfileIds(ignoredUserProfileIds)
                     .putAllUserProfileById(userProfileById.entrySet().stream()
                             .collect(Collectors.toMap(Map.Entry::getKey,
-                                    entry -> entry.getValue().toProto())))
-                    .build();
+                                    entry -> entry.getValue().toProto(serializeForHash))));
         }
-        return proto;
+        return protoBuilder;
+    }
+
+    @Override
+    public bisq.user.protobuf.UserProfileStore toProto(boolean serializeForHash) {
+        return buildProto(serializeForHash);
     }
 
     public static UserProfileStore fromProto(bisq.user.protobuf.UserProfileStore proto) {

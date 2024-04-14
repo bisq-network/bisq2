@@ -20,11 +20,9 @@ package bisq.user.reputation.requests;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
-import bisq.network.p2p.message.EnvelopePayloadMessage;
+import bisq.network.p2p.message.ExternalNetworkMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
-import bisq.network.protobuf.ExternalNetworkMessage;
-import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -38,7 +36,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class AuthorizeSignedWitnessRequest implements MailboxMessage {
+public final class AuthorizeSignedWitnessRequest implements MailboxMessage, ExternalNetworkMessage {
     private final MetaData metaData = new MetaData(TTL_10_DAYS, getClass().getSimpleName(), MAX_MAP_SIZE_100);
     private final String profileId;
     private final String hashAsHex;
@@ -74,22 +72,14 @@ public final class AuthorizeSignedWitnessRequest implements MailboxMessage {
     }
 
     @Override
-    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
-        return getNetworkMessageBuilder()
-                .setExternalNetworkMessage(ExternalNetworkMessage.newBuilder()
-                        .setAny(Any.pack(toAuthorizeSignedWitnessRequestProto())))
-                .build();
-    }
-
-    public bisq.user.protobuf.AuthorizeSignedWitnessRequest toAuthorizeSignedWitnessRequestProto() {
+    public bisq.user.protobuf.AuthorizeSignedWitnessRequest.Builder getValueBuilder(boolean serializeForHash) {
         return bisq.user.protobuf.AuthorizeSignedWitnessRequest.newBuilder()
                 .setProfileId(profileId)
                 .setHashAsHex(hashAsHex)
                 .setAccountAgeWitnessDate(accountAgeWitnessDate)
                 .setWitnessSignDate(witnessSignDate)
                 .setPubKeyBase64(pubKeyBase64)
-                .setSignatureBase64(signatureBase64)
-                .build();
+                .setSignatureBase64(signatureBase64);
     }
 
     public static AuthorizeSignedWitnessRequest fromProto(bisq.user.protobuf.AuthorizeSignedWitnessRequest proto) {
@@ -101,7 +91,7 @@ public final class AuthorizeSignedWitnessRequest implements MailboxMessage {
                 proto.getSignatureBase64());
     }
 
-    public static ProtoResolver<EnvelopePayloadMessage> getNetworkMessageResolver() {
+    public static ProtoResolver<ExternalNetworkMessage> getNetworkMessageResolver() {
         return any -> {
             try {
                 bisq.user.protobuf.AuthorizeSignedWitnessRequest proto = any.unpack(bisq.user.protobuf.AuthorizeSignedWitnessRequest.class);

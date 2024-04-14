@@ -96,31 +96,36 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public bisq.user.protobuf.UserIdentityStore toProto() {
+    public bisq.user.protobuf.UserIdentityStore.Builder getBuilder(boolean serializeForHash) {
         if (aesSecretKey.isPresent()) {
             long ts = System.currentTimeMillis();
             // We put the data we want to encrypt into a protobuf object.
-            bisq.user.protobuf.UserIdentityStore.Builder plainTextProtoBuilder = bisq.user.protobuf.UserIdentityStore.newBuilder()
-                    .addAllUserIdentities(userIdentities.stream().map(UserIdentity::toProto).collect(Collectors.toSet()));
-            Optional.ofNullable(getSelectedUserIdentityId()).ifPresent(plainTextProtoBuilder::setSelectedUserIdentityId);
-            bisq.user.protobuf.UserIdentityStore plainTextProto = plainTextProtoBuilder.build();
-            encryptedData = Optional.of(encryptPlainTextProto(plainTextProto));
+            encryptedData = Optional.of(encryptPlainTextProto(getPlainTextBuilder().build()));
 
             log.info("Encryption at toProto took {} ms", System.currentTimeMillis() - ts);
             checkArgument(scryptParameters.isPresent());
-            bisq.user.protobuf.UserIdentityStore.Builder builder = bisq.user.protobuf.UserIdentityStore.newBuilder()
-                    .setEncryptedData(encryptedData.get().toProto())
-                    .setScryptParameters(scryptParameters.get().toProto())
+            return bisq.user.protobuf.UserIdentityStore.newBuilder()
+                    .setEncryptedData(encryptedData.get().toProto(serializeForHash))
+                    .setScryptParameters(scryptParameters.get().toProto(serializeForHash))
                     .setLastUserProfilePublishingDate(lastUserProfilePublishingDate);
-            return builder.build();
         } else {
-            bisq.user.protobuf.UserIdentityStore.Builder builder = bisq.user.protobuf.UserIdentityStore.newBuilder()
-                    .addAllUserIdentities(userIdentities.stream().map(UserIdentity::toProto).collect(Collectors.toSet()));
-            Optional.ofNullable(getSelectedUserIdentityId()).ifPresent(builder::setSelectedUserIdentityId);
-            return builder
-                    .setLastUserProfilePublishingDate(lastUserProfilePublishingDate)
-                    .build();
+            return getPlainTextBuilder()
+                    .setLastUserProfilePublishingDate(lastUserProfilePublishingDate);
         }
+    }
+
+    private bisq.user.protobuf.UserIdentityStore.Builder getPlainTextBuilder() {
+        var builder = bisq.user.protobuf.UserIdentityStore.newBuilder()
+                .addAllUserIdentities(userIdentities.stream()
+                        .map(userIdentity -> userIdentity.toProto(false))
+                        .collect(Collectors.toSet()));
+        Optional.ofNullable(getSelectedUserIdentityId()).ifPresent(builder::setSelectedUserIdentityId);
+        return builder;
+    }
+
+    @Override
+    public bisq.user.protobuf.UserIdentityStore toProto(boolean serializeForHash) {
+        return buildProto(serializeForHash);
     }
 
     public static UserIdentityStore fromProto(bisq.user.protobuf.UserIdentityStore proto) {
@@ -138,9 +143,7 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
             Set<UserIdentity> userIdentitySet = proto.getUserIdentitiesList().stream()
                     .map(UserIdentity::fromProto)
                     .collect(Collectors.toSet());
-            return new UserIdentityStore(selectedUserIdentityId,
-                    userIdentitySet,
-                    lastUserProfilePublishingDate);
+            return new UserIdentityStore(selectedUserIdentityId, userIdentitySet, lastUserProfilePublishingDate);
         }
     }
 
@@ -220,11 +223,7 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
         checkArgument(scryptParameters.isPresent(), "scryptParameters must be present at encrypt.");
         long ts = System.currentTimeMillis();
         return CompletableFuture.supplyAsync(() -> {
-            bisq.user.protobuf.UserIdentityStore.Builder builder = bisq.user.protobuf.UserIdentityStore.newBuilder()
-                    .addAllUserIdentities(userIdentities.stream().map(UserIdentity::toProto).collect(Collectors.toSet()));
-            Optional.ofNullable(getSelectedUserIdentityId()).ifPresent(builder::setSelectedUserIdentityId);
-            bisq.user.protobuf.UserIdentityStore plainTextProto = builder.build();
-            EncryptedData encryptedData = encryptPlainTextProto(plainTextProto);
+            EncryptedData encryptedData = encryptPlainTextProto(getPlainTextBuilder().build());
             log.info("encrypt took {} ms", System.currentTimeMillis() - ts);
             return encryptedData;
         }).whenComplete((encrypted, throwable) -> {
