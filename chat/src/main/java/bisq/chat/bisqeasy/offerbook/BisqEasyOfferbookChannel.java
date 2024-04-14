@@ -51,10 +51,9 @@ public final class BisqEasyOfferbookChannel extends PublicChatChannel<BisqEasyOf
     }
 
     @Override
-    public bisq.chat.protobuf.ChatChannel toProto() {
+    public bisq.chat.protobuf.ChatChannel.Builder getBuilder(boolean serializeForHash) {
         return getChatChannelBuilder().setBisqEasyOfferbookChannel(bisq.chat.protobuf.BisqEasyOfferbookChannel.newBuilder()
-                        .setMarket(market.toProto()))
-                .build();
+                .setMarket(market.toProto(serializeForHash)));
     }
 
     public static BisqEasyOfferbookChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,

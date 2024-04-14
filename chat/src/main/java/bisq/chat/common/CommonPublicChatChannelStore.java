@@ -40,10 +40,16 @@ public class CommonPublicChatChannelStore implements PersistableStore<CommonPubl
     }
 
     @Override
-    public bisq.chat.protobuf.CommonPublicChatChannelStore toProto() {
-        bisq.chat.protobuf.CommonPublicChatChannelStore.Builder builder = bisq.chat.protobuf.CommonPublicChatChannelStore.newBuilder()
-                .addAllChannels(channels.stream().map(CommonPublicChatChannel::toProto).collect(Collectors.toList()));
-        return builder.build();
+    public bisq.chat.protobuf.CommonPublicChatChannelStore.Builder getBuilder(boolean serializeForHash) {
+        return bisq.chat.protobuf.CommonPublicChatChannelStore.newBuilder()
+                .addAllChannels(channels.stream()
+                        .map(e -> e.toProto(serializeForHash))
+                        .collect(Collectors.toList()));
+    }
+
+    @Override
+    public bisq.chat.protobuf.CommonPublicChatChannelStore toProto(boolean serializeForHash) {
+        return buildProto(serializeForHash);
     }
 
     public static CommonPublicChatChannelStore fromProto(bisq.chat.protobuf.CommonPublicChatChannelStore proto) {

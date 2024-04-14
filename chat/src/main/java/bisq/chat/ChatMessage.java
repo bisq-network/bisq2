@@ -26,7 +26,7 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.i18n.Res;
-import bisq.network.p2p.message.EnvelopePayloadMessage;
+import bisq.network.p2p.message.ExternalNetworkMessage;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.user.identity.UserIdentity;
@@ -86,7 +86,7 @@ public abstract class ChatMessage implements NetworkProto, Comparable<ChatMessag
         NetworkDataValidation.validateDate(date);
     }
 
-    public bisq.chat.protobuf.ChatMessage.Builder getChatMessageBuilder() {
+    protected bisq.chat.protobuf.ChatMessage.Builder getChatMessageBuilder(boolean serializeForHash) {
         bisq.chat.protobuf.ChatMessage.Builder builder = bisq.chat.protobuf.ChatMessage.newBuilder()
                 .setId(id)
                 .setChatChannelDomain(chatChannelDomain.toProtoEnum())
@@ -95,7 +95,7 @@ public abstract class ChatMessage implements NetworkProto, Comparable<ChatMessag
                 .setDate(date)
                 .setWasEdited(wasEdited)
                 .setChatMessageType(chatMessageType.toProtoEnum());
-        citation.ifPresent(citation -> builder.setCitation(citation.toProto()));
+        citation.ifPresent(citation -> builder.setCitation(citation.toProto(serializeForHash)));
         text.ifPresent(builder::setText);
         return builder;
     }
@@ -146,7 +146,7 @@ public abstract class ChatMessage implements NetworkProto, Comparable<ChatMessag
         };
     }
 
-    public static ProtoResolver<EnvelopePayloadMessage> getNetworkMessageResolver() {
+    public static ProtoResolver<ExternalNetworkMessage> getNetworkMessageResolver() {
         return any -> {
             try {
                 bisq.chat.protobuf.ChatMessage proto = any.unpack(bisq.chat.protobuf.ChatMessage.class);

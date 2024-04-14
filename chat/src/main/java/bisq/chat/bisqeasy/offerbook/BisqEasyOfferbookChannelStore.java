@@ -40,10 +40,16 @@ public class BisqEasyOfferbookChannelStore implements PersistableStore<BisqEasyO
     }
 
     @Override
-    public bisq.chat.protobuf.BisqEasyOfferbookChannelStore toProto() {
+    public bisq.chat.protobuf.BisqEasyOfferbookChannelStore.Builder getBuilder(boolean serializeForHash) {
         return bisq.chat.protobuf.BisqEasyOfferbookChannelStore.newBuilder()
-                .addAllChannels(channels.stream().map(BisqEasyOfferbookChannel::toProto).collect(Collectors.toList()))
-                .build();
+                .addAllChannels(channels.stream()
+                        .map(e -> e.toProto(serializeForHash))
+                        .collect(Collectors.toList()));
+    }
+
+    @Override
+    public bisq.chat.protobuf.BisqEasyOfferbookChannelStore toProto(boolean serializeForHash) {
+        return buildProto(serializeForHash);
     }
 
     public static BisqEasyOfferbookChannelStore fromProto(bisq.chat.protobuf.BisqEasyOfferbookChannelStore proto) {
