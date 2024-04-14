@@ -50,13 +50,13 @@ public interface Proto {
     }
 
     default <T extends Message> T resolveProto(boolean serializeForHash) {
+        //noinspection unchecked
         return (T) resolveBuilder(getBuilder(serializeForHash), serializeForHash).build();
     }
 
     default <B extends Message.Builder> B resolveBuilder(B builder, boolean serializeForHash) {
         return serializeForHash ? clearAnnotatedFields(builder) : builder;
     }
-
 
     default byte[] serialize() {
         return resolveProto(false).toByteArray();
