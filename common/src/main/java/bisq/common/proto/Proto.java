@@ -91,7 +91,7 @@ public interface Proto {
     default <B extends Message.Builder> B clearAnnotatedFields(B builder) {
         Set<String> excludedFields = getExcludedFields();
         if (!excludedFields.isEmpty()) {
-            getLogger().info("Clear fields in builder annotated with @ExcludeForHash: {}", excludedFields);
+            getLogger().debug("Clear fields in builder annotated with @ExcludeForHash: {}", excludedFields);
         }
         for (Descriptors.FieldDescriptor fieldDesc : builder.getAllFields().keySet()) {
             if (excludedFields.contains(fieldDesc.getName())) {
