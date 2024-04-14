@@ -15,12 +15,17 @@ public final class AchTransferAccount extends BankAccount<AchTransferAccountPayl
     }
 
     @Override
-    public bisq.account.protobuf.Account toProto() {
-        return getAccountBuilder()
-                .setCountryBasedAccount(getCountryBasedAccountBuilder()
-                        .setBankAccount(getBankAccountBuilder().setAchTransferAccount(
-                                bisq.account.protobuf.AchTransferAccount.newBuilder())))
-                .build();
+    protected bisq.account.protobuf.BankAccount.Builder getBankAccountBuilder(boolean serializeForHash) {
+        return super.getBankAccountBuilder(serializeForHash).setAchTransferAccount(
+                toAchTransferAccountProto(serializeForHash));
+    }
+
+    private bisq.account.protobuf.AchTransferAccount toAchTransferAccountProto(boolean serializeForHash) {
+        return getTweakedBuilder(getAchTransferAccountBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    private bisq.account.protobuf.AchTransferAccount.Builder getAchTransferAccountBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.AchTransferAccount.newBuilder();
     }
 
     public static AchTransferAccount fromProto(bisq.account.protobuf.Account proto) {

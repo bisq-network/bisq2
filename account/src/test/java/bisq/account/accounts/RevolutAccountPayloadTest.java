@@ -19,12 +19,12 @@ class RevolutAccountPayloadTest {
             "id", "paymentMethodName", "email");
 
     @Test
-    void toProto() {
-        assertEquals(PROTO, PAYLOAD.toProto());
+    void testToProto() {
+        assertEquals(PROTO, PAYLOAD.writeProto());
     }
 
     @Test
-    void fromProto() {
+    void testFromProto() {
         assertEquals(PAYLOAD, bisq.account.accounts.RevolutAccountPayload.fromProto(PROTO));
     }
 }

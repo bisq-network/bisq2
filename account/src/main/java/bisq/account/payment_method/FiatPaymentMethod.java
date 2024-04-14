@@ -48,10 +48,14 @@ public class FiatPaymentMethod extends PaymentMethod<FiatPaymentRail> {
     }
 
     @Override
-    public bisq.account.protobuf.PaymentMethod toProto() {
-        return getPaymentMethodBuilder().setFiatPaymentMethod(bisq.account.protobuf.FiatPaymentMethod.newBuilder()).build();
+    public bisq.account.protobuf.PaymentMethod.Builder getBuilder(boolean serializeForHash) {
+        return getPaymentMethodBuilder(serializeForHash).setFiatPaymentMethod(bisq.account.protobuf.FiatPaymentMethod.newBuilder());
     }
 
+    @Override
+    public bisq.account.protobuf.PaymentMethod toProto(boolean serializeForHash) {
+        return buildProto(serializeForHash);
+    }
     public static FiatPaymentMethod fromProto(bisq.account.protobuf.PaymentMethod proto) {
         return FiatPaymentMethodUtil.getPaymentMethod(proto.getName());
     }

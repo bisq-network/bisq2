@@ -2,9 +2,8 @@ package bisq.account.accounts;
 
 import bisq.account.protobuf.Account;
 import bisq.account.protobuf.AccountPayload;
-import bisq.account.protobuf.FiatPaymentMethod;
-import bisq.account.protobuf.PaymentMethod;
 import bisq.account.protobuf.ZelleAccountPayload;
+import bisq.account.protobuf.*;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -35,15 +34,15 @@ class ZelleAccountTest {
             123, "accountName", new bisq.account.accounts.ZelleAccountPayload("id", "ZELLE", "email", "holderName"));
 
     @Test
-    void toProto() {
-        var result = ACCOUNT.toProto();
+    void testToProto() {
+        var result = ACCOUNT.writeProto();
         assertThat(result)
                 .usingRecursiveComparison()
                 .isEqualTo(PROTO);
     }
 
     @Test
-    void fromProto() {
+    void testFromProto() {
         var result = ZelleAccount.fromProto(PROTO);
         assertThat(result)
                 .usingRecursiveComparison()

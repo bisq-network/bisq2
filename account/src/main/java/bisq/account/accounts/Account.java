@@ -59,14 +59,22 @@ public abstract class Account<P extends AccountPayload, M extends PaymentMethod<
         this.paymentMethod = paymentMethod;
     }
 
-    public abstract bisq.account.protobuf.Account toProto();
+    @Override
+    public bisq.account.protobuf.Account toProto(boolean serializeForHash) {
+        return buildProto(serializeForHash);
+    }
 
-    protected bisq.account.protobuf.Account.Builder getAccountBuilder() {
+    @Override
+    public bisq.account.protobuf.Account writeProto() {
+        return toProto(false);
+    }
+
+    protected bisq.account.protobuf.Account.Builder getAccountBuilder(boolean serializeForHash) {
         return bisq.account.protobuf.Account.newBuilder()
                 .setCreationDate(creationDate)
                 .setAccountName(accountName)
-                .setPaymentMethod(paymentMethod.toProto())
-                .setAccountPayload(accountPayload.toProto());
+                .setPaymentMethod(paymentMethod.toProto(serializeForHash))
+                .setAccountPayload(accountPayload.toProto(serializeForHash));
     }
 
     public static Account<?, ?> fromProto(bisq.account.protobuf.Account proto) {

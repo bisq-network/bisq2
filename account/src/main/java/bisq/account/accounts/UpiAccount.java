@@ -22,11 +22,17 @@ public final class UpiAccount extends CountryBasedAccount<UpiAccountPayload, Fia
     }
 
     @Override
-    public bisq.account.protobuf.Account toProto() {
-        return getAccountBuilder()
-                .setCountryBasedAccount(getCountryBasedAccountBuilder()
-                        .setUpiAccount(bisq.account.protobuf.UpiAccount.newBuilder()))
-                .build();
+    protected bisq.account.protobuf.CountryBasedAccount.Builder getCountryBasedAccountBuilder(boolean serializeForHash) {
+        return super.getCountryBasedAccountBuilder(serializeForHash).setUpiAccount(
+                toUpiAccountProto(serializeForHash));
+    }
+
+    private bisq.account.protobuf.UpiAccount toUpiAccountProto(boolean serializeForHash) {
+        return getTweakedBuilder(getUpiAccountBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    private bisq.account.protobuf.UpiAccount.Builder getUpiAccountBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.UpiAccount.newBuilder();
     }
 
     public static UpiAccount fromProto(Account proto) {

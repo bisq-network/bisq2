@@ -6,8 +6,7 @@ import bisq.account.protobuf.AmazonGiftCardAccount;
 import bisq.account.protobuf.AmazonGiftCardAccountPayload;
 import bisq.account.protobuf.CountryBasedAccount;
 import bisq.account.protobuf.CountryBasedAccountPayload;
-import bisq.account.protobuf.FiatPaymentMethod;
-import bisq.account.protobuf.PaymentMethod;
+import bisq.account.protobuf.*;
 import bisq.common.protobuf.Country;
 import bisq.common.protobuf.Region;
 import org.junit.jupiter.api.Test;
@@ -55,8 +54,8 @@ class AmazonGiftCardAccountTest {
                             new bisq.common.locale.Region("regionCode", "regionName")));
 
     @Test
-    void toProto() {
-        var result = ACCOUNT.toProto();
+    void testToProto() {
+        var result = ACCOUNT.writeProto();
         assertThat(result)
                 .usingRecursiveComparison()
                 .ignoringFields("accountPayload_.memoizedHashCode", "memoizedHashCode", "creationDate_")
@@ -65,7 +64,7 @@ class AmazonGiftCardAccountTest {
     }
 
     @Test
-    void fromProto() {
+    void testFromProto() {
         var result = bisq.account.accounts.AmazonGiftCardAccount.fromProto(PROTO);
         assertThat(result)
                 .usingRecursiveComparison()

@@ -35,11 +35,18 @@ public final class RevolutAccountPayload extends AccountPayload {
     }
 
     @Override
-    public bisq.account.protobuf.AccountPayload toProto() {
-        return getAccountPayloadBuilder().setRevolutAccountPayload(
-                        bisq.account.protobuf.RevolutAccountPayload.newBuilder()
-                                .setEmail(email))
-                .build();
+    public bisq.account.protobuf.AccountPayload.Builder getBuilder(boolean serializeForHash) {
+        return getAccountPayloadBuilder(serializeForHash)
+                .setRevolutAccountPayload(toRevolutAccountPayloadProto(serializeForHash));
+    }
+
+    private bisq.account.protobuf.RevolutAccountPayload toRevolutAccountPayloadProto(boolean serializeForHash) {
+        return getTweakedBuilder(getRevolutAccountPayloadBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    private bisq.account.protobuf.RevolutAccountPayload.Builder getRevolutAccountPayloadBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.RevolutAccountPayload.newBuilder()
+                .setEmail(email);
     }
 
     public static RevolutAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {

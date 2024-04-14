@@ -11,26 +11,32 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @EqualsAndHashCode(callSuper = true)
 public final class StrikeAccountPayload extends CountryBasedAccountPayload {
+    private final String holderName;
 
-    public StrikeAccountPayload(String id, String paymentMethodName, String countryCode) {
+    public StrikeAccountPayload(String id, String paymentMethodName, String countryCode, String holderName) {
         super(id, paymentMethodName, countryCode);
+        this.holderName = holderName;
     }
 
     @Override
-    public AccountPayload toProto() {
-        return getAccountPayloadBuilder()
-                .setCountryBasedAccountPayload(
-                        getCountryBasedAccountPayloadBuilder()
-                                .setStrikeAccountPayload(bisq.account.protobuf.StrikeAccountPayload.newBuilder()
-                                        .setHolderName("holderName")
-                                        .build()))
-                .build();
+    protected bisq.account.protobuf.CountryBasedAccountPayload.Builder getCountryBasedAccountPayloadBuilder(boolean serializeForHash) {
+        return super.getCountryBasedAccountPayloadBuilder(serializeForHash).setStrikeAccountPayload(
+                toStrikeAccountPayloadProto(serializeForHash));
+    }
+
+    private bisq.account.protobuf.StrikeAccountPayload toStrikeAccountPayloadProto(boolean serializeForHash) {
+        return getTweakedBuilder(getStrikeAccountPayloadBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    private bisq.account.protobuf.StrikeAccountPayload.Builder getStrikeAccountPayloadBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.StrikeAccountPayload.newBuilder().setHolderName(holderName);
     }
 
     public static StrikeAccountPayload fromProto(AccountPayload proto) {
         return new StrikeAccountPayload(
                 proto.getId(),
                 proto.getPaymentMethodName(),
-                proto.getCountryBasedAccountPayload().getCountryCode());
+                proto.getCountryBasedAccountPayload().getCountryCode(),
+                proto.getCountryBasedAccountPayload().getStrikeAccountPayload().getHolderName());
     }
 }

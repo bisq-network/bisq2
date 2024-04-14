@@ -64,13 +64,17 @@ public final class AuthorizedMarketPriceData implements AuthorizedDistributedDat
     }
 
     @Override
-    public bisq.bonded_roles.protobuf.AuthorizedMarketPriceData toProto() {
+    public bisq.bonded_roles.protobuf.AuthorizedMarketPriceData.Builder getBuilder(boolean serializeForHash) {
         return bisq.bonded_roles.protobuf.AuthorizedMarketPriceData.newBuilder()
                 .putAllMarketPriceByCurrencyMap(marketPriceByCurrencyMap.entrySet().stream()
                         .collect(Collectors.toMap(e -> e.getKey().getMarketCodes(),
-                                e -> e.getValue().toProto())))
-                .setStaticPublicKeysProvided(staticPublicKeysProvided)
-                .build();
+                                e -> e.getValue().toProto(serializeForHash))))
+                .setStaticPublicKeysProvided(staticPublicKeysProvided);
+    }
+
+    @Override
+    public bisq.bonded_roles.protobuf.AuthorizedMarketPriceData toProto(boolean serializeForHash) {
+        return buildProto(serializeForHash);
     }
 
     public static AuthorizedMarketPriceData fromProto(bisq.bonded_roles.protobuf.AuthorizedMarketPriceData proto) {

@@ -26,12 +26,12 @@ class F2FAccountPayloadTest {
             "city", "contact", "extraInfo");
 
     @Test
-    void toProto() {
-        assertEquals(PROTO, PAYLOAD.toProto());
+    void testToProto() {
+        assertEquals(PROTO, PAYLOAD.writeProto());
     }
 
     @Test
-    void fromProto() {
+    void testFromProto() {
         assertEquals(PAYLOAD, F2FAccountPayload.fromProto(PROTO));
     }
 }

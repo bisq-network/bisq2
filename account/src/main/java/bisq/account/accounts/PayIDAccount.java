@@ -20,10 +20,17 @@ public final class PayIDAccount extends Account<PayIDAccountPayload, FiatPayment
     }
 
     @Override
-    public bisq.account.protobuf.Account toProto() {
-        return getAccountBuilder()
-                .setPayIDAccount(bisq.account.protobuf.PayIDAccount.newBuilder())
-                .build();
+    public bisq.account.protobuf.Account.Builder getBuilder(boolean serializeForHash) {
+        return getAccountBuilder(serializeForHash)
+                .setPayIDAccount(toPayIDAccountProto(serializeForHash));
+    }
+
+    private bisq.account.protobuf.PayIDAccount toPayIDAccountProto(boolean serializeForHash) {
+        return getTweakedBuilder(getPayIDAccountBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    private bisq.account.protobuf.PayIDAccount.Builder getPayIDAccountBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.PayIDAccount.newBuilder();
     }
 
     public static PayIDAccount fromProto(bisq.account.protobuf.Account proto) {

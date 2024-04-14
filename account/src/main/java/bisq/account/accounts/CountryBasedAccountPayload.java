@@ -42,7 +42,17 @@ public abstract class CountryBasedAccountPayload extends AccountPayload {
         NetworkDataValidation.validateCode(countryCode);
     }
 
-    protected bisq.account.protobuf.CountryBasedAccountPayload.Builder getCountryBasedAccountPayloadBuilder() {
+    @Override
+    public bisq.account.protobuf.AccountPayload.Builder getBuilder(boolean serializeForHash) {
+        return getAccountPayloadBuilder(serializeForHash)
+                .setCountryBasedAccountPayload(toCountryBasedAccountPayloadProto(serializeForHash));
+    }
+
+    private bisq.account.protobuf.CountryBasedAccountPayload toCountryBasedAccountPayloadProto(boolean serializeForHash) {
+        return getTweakedBuilder(getCountryBasedAccountPayloadBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    protected bisq.account.protobuf.CountryBasedAccountPayload.Builder getCountryBasedAccountPayloadBuilder(boolean serializeForHash) {
         return bisq.account.protobuf.CountryBasedAccountPayload.newBuilder()
                 .setCountryCode(countryCode);
     }

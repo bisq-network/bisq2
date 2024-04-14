@@ -2,10 +2,9 @@ package bisq.account.accounts;
 
 import bisq.account.protobuf.Account;
 import bisq.account.protobuf.AccountPayload;
-import bisq.account.protobuf.FiatPaymentMethod;
-import bisq.account.protobuf.PaymentMethod;
 import bisq.account.protobuf.UserDefinedFiatAccount;
 import bisq.account.protobuf.UserDefinedFiatAccountPayload;
+import bisq.account.protobuf.*;
 import org.junit.jupiter.api.Test;
 
 import static java.lang.System.currentTimeMillis;
@@ -37,8 +36,8 @@ class UserDefinedFiatAccountTest {
             "accountName", "customData");
 
     @Test
-    void toProto() {
-        var result = ACCOUNT.toProto();
+    void testToProto() {
+        var result = ACCOUNT.writeProto();
         assertThat(result)
                 .usingRecursiveComparison()
                 .ignoringFields("accountPayload_.id_", "accountPayload_.memoizedHashCode", "creationDate_", "memoizedHashCode")
@@ -48,7 +47,7 @@ class UserDefinedFiatAccountTest {
     }
 
     @Test
-    void fromProto() {
+    void testFromProto() {
         var result = bisq.account.accounts.UserDefinedFiatAccount.fromProto(PROTO);
         assertThat(result)
                 .usingRecursiveComparison()

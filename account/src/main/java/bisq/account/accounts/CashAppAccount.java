@@ -19,7 +19,6 @@ package bisq.account.accounts;
 
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentRail;
-import bisq.common.util.StringUtils;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -38,9 +37,17 @@ public final class CashAppAccount extends Account<CashAppAccountPayload, FiatPay
     }
 
     @Override
-    public bisq.account.protobuf.Account toProto() {
-        return getAccountBuilder()
-                .setCashAppAccount(bisq.account.protobuf.CashAppAccount.newBuilder()).build();
+    public bisq.account.protobuf.Account.Builder getBuilder(boolean serializeForHash) {
+        return getAccountBuilder(serializeForHash)
+                .setCashAppAccount(toCashAppAccountProto(serializeForHash));
+    }
+
+    private bisq.account.protobuf.CashAppAccount toCashAppAccountProto(boolean serializeForHash) {
+        return getTweakedBuilder(getCashAppAccountBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    private bisq.account.protobuf.CashAppAccount.Builder getCashAppAccountBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.CashAppAccount.newBuilder();
     }
 
     public static CashAppAccount fromProto(bisq.account.protobuf.Account proto) {

@@ -88,7 +88,7 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
     }
 
     @Override
-    public bisq.bonded_roles.protobuf.ReleaseNotification toProto() {
+    public bisq.bonded_roles.protobuf.ReleaseNotification.Builder getBuilder(boolean serializeForHash) {
         return bisq.bonded_roles.protobuf.ReleaseNotification.newBuilder()
                 .setId(id)
                 .setDate(date)
@@ -97,8 +97,12 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
                 .setReleaseNotes(releaseNotes)
                 .setVersionString(versionString)
                 .setReleaseManagerProfileId(releaseManagerProfileId)
-                .setStaticPublicKeysProvided(staticPublicKeysProvided)
-                .build();
+                .setStaticPublicKeysProvided(staticPublicKeysProvided);
+    }
+
+    @Override
+    public bisq.bonded_roles.protobuf.ReleaseNotification toProto(boolean serializeForHash) {
+        return buildProto(serializeForHash);
     }
 
     public static ReleaseNotification fromProto(bisq.bonded_roles.protobuf.ReleaseNotification proto) {

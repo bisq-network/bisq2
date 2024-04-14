@@ -21,10 +21,17 @@ public final class FasterPaymentsAccount extends Account<FasterPaymentsAccountPa
     }
 
     @Override
-    public bisq.account.protobuf.Account toProto() {
-        return getAccountBuilder()
-                .setFasterPaymentsAccount(bisq.account.protobuf.FasterPaymentsAccount.newBuilder())
-                .build();
+    public bisq.account.protobuf.Account.Builder getBuilder(boolean serializeForHash) {
+        return getAccountBuilder(serializeForHash)
+                .setFasterPaymentsAccount(toFasterPaymentsAccountProto(serializeForHash));
+    }
+
+    private bisq.account.protobuf.FasterPaymentsAccount toFasterPaymentsAccountProto(boolean serializeForHash) {
+        return getTweakedBuilder(getFasterPaymentsAccountBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    private bisq.account.protobuf.FasterPaymentsAccount.Builder getFasterPaymentsAccountBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.FasterPaymentsAccount.newBuilder();
     }
 
     public static FasterPaymentsAccount fromProto(bisq.account.protobuf.Account proto) {

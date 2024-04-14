@@ -47,9 +47,17 @@ public abstract class AccountPayload implements NetworkProto {
         NetworkDataValidation.validateText(paymentMethodName, 100);
     }
 
-    public abstract bisq.account.protobuf.AccountPayload toProto();
+    @Override
+    public bisq.account.protobuf.AccountPayload toProto(boolean serializeForHash) {
+        return buildProto(serializeForHash);
+    }
 
-    protected bisq.account.protobuf.AccountPayload.Builder getAccountPayloadBuilder() {
+    @Override
+    public bisq.account.protobuf.AccountPayload writeProto() {
+        return toProto(false);
+    }
+
+    protected bisq.account.protobuf.AccountPayload.Builder getAccountPayloadBuilder(boolean serializeForHash) {
         return bisq.account.protobuf.AccountPayload.newBuilder()
                 .setId(id)
                 .setPaymentMethodName(paymentMethodName);

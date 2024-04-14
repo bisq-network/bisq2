@@ -18,16 +18,18 @@ public final class BizumAccountPayload extends CountryBasedAccountPayload {
         super(id, paymentMethodName, countryCode);
         this.mobileNr = mobileNr;
     }
-
     @Override
-    public AccountPayload toProto() {
-        return getAccountPayloadBuilder()
-                .setCountryBasedAccountPayload(
-                        getCountryBasedAccountPayloadBuilder()
-                                .setBizumAccountPayload(
-                                        bisq.account.protobuf.BizumAccountPayload.newBuilder()
-                                                .setMobileNr(mobileNr)))
-                .build();
+    protected bisq.account.protobuf.CountryBasedAccountPayload.Builder getCountryBasedAccountPayloadBuilder(boolean serializeForHash) {
+        return super.getCountryBasedAccountPayloadBuilder(serializeForHash).setBizumAccountPayload(
+                toBizumAccountPayloadProto(serializeForHash));
+    }
+
+    private bisq.account.protobuf.BizumAccountPayload toBizumAccountPayloadProto(boolean serializeForHash) {
+        return getTweakedBuilder(getBizumAccountPayloadBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    private bisq.account.protobuf.BizumAccountPayload.Builder getBizumAccountPayloadBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.BizumAccountPayload.newBuilder().setMobileNr(mobileNr);
     }
 
     public static BizumAccountPayload fromProto(AccountPayload proto) {

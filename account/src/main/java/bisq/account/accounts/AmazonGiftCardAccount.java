@@ -22,11 +22,24 @@ public final class AmazonGiftCardAccount extends CountryBasedAccount<AmazonGiftC
     }
 
     @Override
-    public Account toProto() {
-        return getAccountBuilder()
-                .setCountryBasedAccount(getCountryBasedAccountBuilder()
-                        .setAmazonGiftCardAccount(bisq.account.protobuf.AmazonGiftCardAccount.newBuilder()))
-                .build();
+    protected bisq.account.protobuf.CountryBasedAccount.Builder getCountryBasedAccountBuilder(boolean serializeForHash) {
+        return super.getCountryBasedAccountBuilder(serializeForHash).setAmazonGiftCardAccount(
+                toAmazonGiftCardAccountProto(serializeForHash));
+    }
+
+    private bisq.account.protobuf.AmazonGiftCardAccount toAmazonGiftCardAccountProto(boolean serializeForHash) {
+        return getTweakedBuilder(getAmazonGiftCardAccountBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    private bisq.account.protobuf.AmazonGiftCardAccount.Builder getAmazonGiftCardAccountBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.AmazonGiftCardAccount.newBuilder();
+    }
+
+    @Override
+    public Account.Builder getBuilder(boolean serializeForHash) {
+        return getAccountBuilder(serializeForHash)
+                .setCountryBasedAccount(getCountryBasedAccountBuilder(serializeForHash)
+                        .setAmazonGiftCardAccount(bisq.account.protobuf.AmazonGiftCardAccount.newBuilder()));
     }
 
     public static AmazonGiftCardAccount fromProto(bisq.account.protobuf.Account proto) {

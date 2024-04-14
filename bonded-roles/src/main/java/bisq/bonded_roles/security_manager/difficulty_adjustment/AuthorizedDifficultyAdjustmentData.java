@@ -66,13 +66,17 @@ public final class AuthorizedDifficultyAdjustmentData implements AuthorizedDistr
     }
 
     @Override
-    public bisq.bonded_roles.protobuf.AuthorizedDifficultyAdjustmentData toProto() {
-        bisq.bonded_roles.protobuf.AuthorizedDifficultyAdjustmentData.Builder builder = bisq.bonded_roles.protobuf.AuthorizedDifficultyAdjustmentData.newBuilder()
+    public bisq.bonded_roles.protobuf.AuthorizedDifficultyAdjustmentData.Builder getBuilder(boolean serializeForHash) {
+        return bisq.bonded_roles.protobuf.AuthorizedDifficultyAdjustmentData.newBuilder()
                 .setDate(date)
                 .setDifficultyAdjustmentFactor(difficultyAdjustmentFactor)
                 .setSecurityManagerProfileId(securityManagerProfileId)
                 .setStaticPublicKeysProvided(staticPublicKeysProvided);
-        return builder.build();
+    }
+
+    @Override
+    public bisq.bonded_roles.protobuf.AuthorizedDifficultyAdjustmentData toProto(boolean serializeForHash) {
+        return buildProto(serializeForHash);
     }
 
     public static AuthorizedDifficultyAdjustmentData fromProto(bisq.bonded_roles.protobuf.AuthorizedDifficultyAdjustmentData proto) {

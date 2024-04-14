@@ -35,19 +35,18 @@ public final class CashDepositAccountPayload extends BankAccountPayload {
 
         NetworkDataValidation.validateText(requirements, 500);
     }
-
     @Override
-    public AccountPayload toProto() {
-        return getAccountPayloadBuilder().setCountryBasedAccountPayload(
-                getCountryBasedAccountPayloadBuilder().setBankAccountPayload(
-                        getBankAccountPayloadBuilder()
-                                .setCashDepositAccountPayload(
-                                        bisq.account.protobuf.CashDepositAccountPayload.newBuilder()
-                                                .setRequirements(requirements)
-                                                .build()
-                                )
-                )
-        ).build();
+    protected bisq.account.protobuf.BankAccountPayload.Builder getBankAccountPayloadBuilder(boolean serializeForHash) {
+        return super.getBankAccountPayloadBuilder(serializeForHash).setCashDepositAccountPayload(
+                toCashDepositAccountPayloadProto(serializeForHash));
+    }
+
+    private bisq.account.protobuf.CashDepositAccountPayload toCashDepositAccountPayloadProto(boolean serializeForHash) {
+        return getTweakedBuilder(getCashDepositAccountPayloadBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    private bisq.account.protobuf.CashDepositAccountPayload.Builder getCashDepositAccountPayloadBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.CashDepositAccountPayload.newBuilder().setRequirements(requirements);
     }
 
     public static CashDepositAccountPayload fromProto(AccountPayload proto) {

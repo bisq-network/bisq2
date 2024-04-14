@@ -47,8 +47,17 @@ public final class UserDefinedFiatAccount extends Account<UserDefinedFiatAccount
     }
 
     @Override
-    public bisq.account.protobuf.Account toProto() {
-        return getAccountBuilder().setUserDefinedFiatAccount(bisq.account.protobuf.UserDefinedFiatAccount.newBuilder()).build();
+    public bisq.account.protobuf.Account.Builder getBuilder(boolean serializeForHash) {
+        return getAccountBuilder(serializeForHash)
+                .setUserDefinedFiatAccount(toUserDefinedFiatAccountProto(serializeForHash));
+    }
+
+    private bisq.account.protobuf.UserDefinedFiatAccount toUserDefinedFiatAccountProto(boolean serializeForHash) {
+        return getTweakedBuilder(getUserDefinedFiatAccountBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    private bisq.account.protobuf.UserDefinedFiatAccount.Builder getUserDefinedFiatAccountBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.UserDefinedFiatAccount.newBuilder();
     }
 
     public static UserDefinedFiatAccount fromProto(bisq.account.protobuf.Account proto) {

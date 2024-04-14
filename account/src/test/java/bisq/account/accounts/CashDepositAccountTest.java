@@ -67,8 +67,8 @@ class CashDepositAccountTest {
                     new bisq.common.locale.Region("regionCode", "regionName")));
 
     @Test
-    void toProto() {
-        var result = ACCOUNT.toProto();
+    void testToProto() {
+        var result = ACCOUNT.writeProto();
         assertThat(result)
                 .usingRecursiveComparison()
                 .ignoringFields("creationDate_", "memoizedHashCode")
@@ -76,7 +76,7 @@ class CashDepositAccountTest {
     }
 
     @Test
-    void fromProto() {
+    void testFromProto() {
         var result = bisq.account.accounts.CashDepositAccount.fromProto(PROTO);
         assertThat(result)
                 .usingRecursiveComparison()

@@ -20,15 +20,15 @@ class ZelleAccountPayloadTest {
             "id", "ZELLE", "email", "holderName");
 
     @Test
-    void toProto() {
-        var result = ACCOUNT.toProto();
+    void testToProto() {
+        var result = ACCOUNT.writeProto();
         assertThat(result)
                 .usingRecursiveComparison()
                 .isEqualTo(PROTO);
     }
 
     @Test
-    void fromProto() {
+    void testFromProto() {
         var result = bisq.account.accounts.ZelleAccountPayload.fromProto(PROTO);
         assertThat(result)
                 .usingRecursiveComparison()
