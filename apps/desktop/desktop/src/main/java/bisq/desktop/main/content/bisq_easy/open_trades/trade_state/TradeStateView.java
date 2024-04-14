@@ -144,8 +144,10 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         errorMessage.textProperty().bind(model.getErrorMessage());
 
         cancelButton.textProperty().bind(model.getInterruptTradeButtonText());
-        cancelButton.visibleProperty().bind(model.getCancelButtonVisible());
-        cancelButton.managedProperty().bind(model.getCancelButtonVisible());
+        cancelButton.visibleProperty().bind(model.getCancelButtonVisible().and(model.getShouldShowSellerPriceApprovalOverlay().not()));
+        cancelButton.managedProperty().bind(model.getCancelButtonVisible().and(model.getShouldShowSellerPriceApprovalOverlay().not()));
+
+        rejectPriceButton.textProperty().bind(model.getInterruptTradeButtonText());
 
         stateInfoVBoxPin = EasyBind.subscribe(model.getStateInfoVBox(), stateInfoVBox -> {
             if (phaseAndInfoHBox.getChildren().size() == 2) {
@@ -181,7 +183,7 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         cancelButton.setOnAction(e -> controller.onInterruptTrade());
         closeTradeButton.setOnAction(e -> controller.onCloseTrade());
         exportButton.setOnAction(e -> controller.onExportTrade());
-        rejectPriceButton.setOnAction(e -> controller.onInterruptTrade());
+        rejectPriceButton.setOnAction(e -> controller.doInterruptTrade());
         reportToMediatorButton.setOnAction(e -> controller.onReportToMediator());
         acceptSellersPriceButton.setOnAction(e -> controller.onAcceptSellersPriceButton());
     }
@@ -208,6 +210,8 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
         cancelButton.visibleProperty().unbind();
         cancelButton.managedProperty().unbind();
 
+        rejectPriceButton.textProperty().unbind();
+
         stateInfoVBoxPin.unsubscribe();
         showSellersPriceApprovalOverlayPin.unsubscribe();
         sellerPriceApprovalContentPin.unsubscribe();
@@ -225,23 +229,30 @@ public class TradeStateView extends View<VBox, TradeStateModel, TradeStateContro
     }
 
     private VBox createAndGetSellerPriceApprovalOverlay() {
-        VBox overlay = new VBox();
+        VBox overlay = new VBox(10);
         overlay.setAlignment(Pos.TOP_LEFT);
         overlay.getStyleClass().addAll("trade-wizard-feedback-bg", "seller-price-approval-popup");
         overlay.visibleProperty().set(false);
         overlay.managedProperty().set(false);
 
-        Label sellerPriceApprovalTitleLabel = new Label(Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.title"));
-        sellerPriceApprovalTitleLabel.getStyleClass().addAll("seller-price-approval-title", "large-text", "font-default");
-        sellerPriceApprovalContent.getStyleClass().addAll("seller-price-approval-description", "normal-text", "font-default");
-        Label sellerPriceApprovalQuestionLabel = new Label(Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.description.question"));
-        sellerPriceApprovalQuestionLabel.getStyleClass().addAll("seller-price-approval-description", "normal-text",
-                "font-default", "seller-price-approval-question");
-        HBox sellerPriceApprovalButtons = new HBox(10, acceptSellersPriceButton, rejectPriceButton);
-        sellerPriceApprovalButtons.setAlignment(Pos.BOTTOM_RIGHT);
+        Label titleLabel = new Label(Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.title"));
+        titleLabel.getStyleClass().addAll("seller-price-approval-title", "large-text", "font-default");
 
-        overlay.getChildren().addAll(sellerPriceApprovalTitleLabel, sellerPriceApprovalContent,
-                sellerPriceApprovalQuestionLabel, Spacer.fillVBox(), sellerPriceApprovalButtons);
+        sellerPriceApprovalContent.getStyleClass().addAll("seller-price-approval-description", "normal-text", "font-default");
+
+        Label questionLabel = new Label(Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.description.question"));
+        questionLabel.getStyleClass().addAll("seller-price-approval-description", "normal-text",
+                "font-default", "seller-price-approval-question");
+
+        Label disclaimerLabel = new Label(Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.description.disclaimer"));
+        disclaimerLabel.getStyleClass().addAll("seller-price-approval-description", "small-text", "font-default",
+                "seller-price-approval-disclaimer");
+
+        HBox acceptOrRejectButtons = new HBox(10, acceptSellersPriceButton, rejectPriceButton);
+        acceptOrRejectButtons.setAlignment(Pos.BOTTOM_RIGHT);
+
+        overlay.getChildren().addAll(titleLabel, sellerPriceApprovalContent,
+                questionLabel, disclaimerLabel, Spacer.fillVBox(), acceptOrRejectButtons);
         StackPane.setAlignment(overlay, Pos.TOP_CENTER);
         StackPane.setMargin(overlay, new Insets(63, 0, 0, 0));
         return overlay;
