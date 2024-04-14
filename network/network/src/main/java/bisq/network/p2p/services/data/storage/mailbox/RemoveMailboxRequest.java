@@ -96,7 +96,7 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
 
     @Override
     public bisq.network.protobuf.RemoveMailboxRequest toValueProto(boolean serializeForHash) {
-        return buildValueProto(serializeForHash);
+        return resolveValueProto(serializeForHash);
     }
 
     @Override

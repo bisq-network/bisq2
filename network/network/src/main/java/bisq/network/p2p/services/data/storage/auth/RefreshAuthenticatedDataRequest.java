@@ -103,7 +103,7 @@ public final class RefreshAuthenticatedDataRequest implements DataRequest {
 
     @Override
     public bisq.network.protobuf.RefreshAuthenticatedDataRequest toValueProto(boolean serializeForHash) {
-        return buildValueProto(serializeForHash);
+        return resolveValueProto(serializeForHash);
     }
 
     @Override

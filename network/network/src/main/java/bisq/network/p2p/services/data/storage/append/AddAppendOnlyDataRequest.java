@@ -50,7 +50,7 @@ public final class AddAppendOnlyDataRequest implements AddDataRequest {
 
     @Override
     public bisq.network.protobuf.AddAppendOnlyDataRequest toValueProto(boolean serializeForHash) {
-        return buildValueProto(serializeForHash);
+        return resolveValueProto(serializeForHash);
     }
 
     @Override

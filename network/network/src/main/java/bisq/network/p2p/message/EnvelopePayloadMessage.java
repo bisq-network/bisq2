@@ -55,14 +55,14 @@ public interface EnvelopePayloadMessage extends NetworkProto {
 
 
     // Implementation class level (this versus interface)
-    default <T extends Message> T buildValueProto(boolean serializeForHash) {
+    default <T extends Message> T resolveValueProto(boolean serializeForHash) {
         return (T) resolveBuilder(getValueBuilder(serializeForHash), serializeForHash).build();
     }
 
     Message.Builder getValueBuilder(boolean serializeForHash);
 
     default Message toValueProto(boolean serializeForHash) {
-        return buildValueProto(serializeForHash);
+        return resolveValueProto(serializeForHash);
     }
 
 

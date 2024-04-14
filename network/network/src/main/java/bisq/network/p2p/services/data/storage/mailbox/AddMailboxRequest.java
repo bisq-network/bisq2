@@ -92,7 +92,7 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
 
     @Override
     public bisq.network.protobuf.AddMailboxRequest toValueProto(boolean serializeForHash) {
-        return buildValueProto(serializeForHash);
+        return resolveValueProto(serializeForHash);
     }
 
     @Override

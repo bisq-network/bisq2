@@ -104,7 +104,7 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
 
     @Override
     public bisq.network.protobuf.AddAuthenticatedDataRequest toValueProto(boolean serializeForHash) {
-        return buildValueProto(serializeForHash);
+        return resolveValueProto(serializeForHash);
     }
 
     @Override

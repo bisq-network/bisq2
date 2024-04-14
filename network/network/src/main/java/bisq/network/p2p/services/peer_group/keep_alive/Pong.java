@@ -43,7 +43,7 @@ public final class Pong implements EnvelopePayloadMessage, Response {
 
     @Override
     public bisq.network.protobuf.Pong toValueProto(boolean serializeForHash) {
-        return buildValueProto(serializeForHash);
+        return resolveValueProto(serializeForHash);
     }
 
     @Override

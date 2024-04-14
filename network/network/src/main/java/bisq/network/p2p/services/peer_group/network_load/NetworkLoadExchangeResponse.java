@@ -49,7 +49,7 @@ public final class NetworkLoadExchangeResponse implements EnvelopePayloadMessage
 
     @Override
     public bisq.network.protobuf.NetworkLoadExchangeResponse toValueProto(boolean serializeForHash) {
-        return buildValueProto(serializeForHash);
+        return resolveValueProto(serializeForHash);
     }
 
     @Override

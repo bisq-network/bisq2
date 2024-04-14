@@ -58,7 +58,7 @@ public final class ConfidentialMessage implements EnvelopePayloadMessage, Distri
 
     @Override
     public bisq.network.protobuf.ConfidentialMessage toValueProto(boolean serializeForHash) {
-        return buildValueProto(serializeForHash);
+        return resolveValueProto(serializeForHash);
     }
 
     @Override

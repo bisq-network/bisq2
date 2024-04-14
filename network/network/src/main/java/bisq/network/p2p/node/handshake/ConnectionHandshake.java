@@ -98,7 +98,7 @@ public final class ConnectionHandshake {
 
         @Override
         public bisq.network.protobuf.ConnectionHandshake.Request toValueProto(boolean serializeForHash) {
-            return buildValueProto(serializeForHash);
+            return resolveValueProto(serializeForHash);
         }
 
         @Override
@@ -149,7 +149,7 @@ public final class ConnectionHandshake {
 
         @Override
         public bisq.network.protobuf.ConnectionHandshake.Response toValueProto(boolean serializeForHash) {
-            return buildValueProto(serializeForHash);
+            return resolveValueProto(serializeForHash);
         }
 
         @Override

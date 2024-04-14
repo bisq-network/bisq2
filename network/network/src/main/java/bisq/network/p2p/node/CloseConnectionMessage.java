@@ -29,7 +29,7 @@ public final class CloseConnectionMessage implements EnvelopePayloadMessage {
 
     @Override
     public bisq.network.protobuf.CloseConnectionMessage toValueProto(boolean serializeForHash) {
-        return buildValueProto(serializeForHash);
+        return resolveValueProto(serializeForHash);
     }
 
     @Override

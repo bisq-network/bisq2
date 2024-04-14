@@ -93,7 +93,7 @@ public final class AuthorizeSignedWitnessRequest implements MailboxMessage, Exte
 
     @Override
     public bisq.user.protobuf.AuthorizeSignedWitnessRequest toValueProto(boolean serializeForHash) {
-        return buildValueProto(serializeForHash);
+        return resolveValueProto(serializeForHash);
     }
 
     public static ProtoResolver<ExternalNetworkMessage> getNetworkMessageResolver() {

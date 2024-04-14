@@ -43,7 +43,7 @@ public final class AckMessage implements MailboxMessage, Response {
 
     @Override
     public bisq.network.protobuf.AckMessage toValueProto(boolean serializeForHash) {
-        return buildValueProto(serializeForHash);
+        return resolveValueProto(serializeForHash);
     }
 
     @Override

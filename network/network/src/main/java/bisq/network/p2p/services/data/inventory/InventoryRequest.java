@@ -51,7 +51,7 @@ public final class InventoryRequest implements BroadcastMessage, Request {
 
     @Override
     public bisq.network.protobuf.InventoryRequest toValueProto(boolean serializeForHash) {
-        return buildValueProto(serializeForHash);
+        return resolveValueProto(serializeForHash);
     }
 
     @Override

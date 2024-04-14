@@ -61,7 +61,7 @@ public final class PeerExchangeResponse implements EnvelopePayloadMessage, Respo
 
     @Override
     public bisq.network.protobuf.PeerExchangeResponse toValueProto(boolean serializeForHash) {
-        return buildValueProto(serializeForHash);
+        return resolveValueProto(serializeForHash);
     }
 
     @Override

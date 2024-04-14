@@ -46,7 +46,7 @@ public final class Ping implements EnvelopePayloadMessage, Request {
 
     @Override
     public bisq.network.protobuf.Ping toValueProto(boolean serializeForHash) {
-        return buildValueProto(serializeForHash);
+        return resolveValueProto(serializeForHash);
     }
 
     @Override

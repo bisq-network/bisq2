@@ -48,7 +48,7 @@ public final class InventoryResponse implements BroadcastMessage, Response {
 
     @Override
     public bisq.network.protobuf.InventoryResponse toValueProto(boolean serializeForHash) {
-        return buildValueProto(serializeForHash);
+        return resolveValueProto(serializeForHash);
     }
 
     @Override

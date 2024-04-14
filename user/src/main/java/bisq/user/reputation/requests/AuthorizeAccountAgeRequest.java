@@ -79,7 +79,7 @@ public final class AuthorizeAccountAgeRequest implements MailboxMessage, Externa
 
     @Override
     public bisq.user.protobuf.AuthorizeAccountAgeRequest toValueProto(boolean serializeForHash) {
-        return buildValueProto(serializeForHash);
+        return resolveValueProto(serializeForHash);
     }
 
     public static AuthorizeAccountAgeRequest fromProto(bisq.user.protobuf.AuthorizeAccountAgeRequest proto) {
