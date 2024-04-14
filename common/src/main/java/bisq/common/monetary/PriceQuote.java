@@ -66,11 +66,16 @@ public final class PriceQuote implements Comparable<PriceQuote>, PersistableProt
         market = new Market(baseSideMonetary.getCode(), quoteSideMonetary.getCode(), baseSideMonetary.getName(), quoteSideMonetary.getName());
     }
 
-    public bisq.common.protobuf.PriceQuote toProto() {
+    @Override
+    public bisq.common.protobuf.PriceQuote toProto(boolean serializeForHash) {
+        return buildProto(serializeForHash);
+    }
+
+    @Override
+    public bisq.common.protobuf.PriceQuote.Builder getBuilder(boolean serializeForHash) {
         return bisq.common.protobuf.PriceQuote.newBuilder().setValue(value)
-                .setBaseSideMonetary(baseSideMonetary.toProto())
-                .setQuoteSideMonetary(quoteSideMonetary.toProto())
-                .build();
+                .setBaseSideMonetary(baseSideMonetary.toProto(serializeForHash))
+                .setQuoteSideMonetary(quoteSideMonetary.toProto(serializeForHash));
     }
 
     public static PriceQuote fromProto(bisq.common.protobuf.PriceQuote proto) {
@@ -89,7 +94,7 @@ public final class PriceQuote implements Comparable<PriceQuote>, PersistableProt
     }
 
     /**
-     * @param priceValue       Price of an Altcoin-BTC quote (e.g. XMR/BTC). Altcoin is base currency
+     * @param priceValue  Price of an Altcoin-BTC quote (e.g. XMR/BTC). Altcoin is base currency
      * @param altCoinCode Currency code of the altcoin (base) side
      * @return A PriceQuote object using 1 unit of the altcoin as base coin.
      */
@@ -98,9 +103,9 @@ public final class PriceQuote implements Comparable<PriceQuote>, PersistableProt
     }
 
     /**
-     * @param priceValue                Price (e.g. EUR/USD). Anything can be base currency or quote currency.
-     * @param baseCurrencyCode          Base currency code
-     * @param quoteCurrencyCode         Quote currency code
+     * @param priceValue        Price (e.g. EUR/USD). Anything can be base currency or quote currency.
+     * @param baseCurrencyCode  Base currency code
+     * @param quoteCurrencyCode Quote currency code
      * @return A PriceQuote object using 1 unit of the base asset.
      */
     public static PriceQuote fromPrice(double priceValue, String baseCurrencyCode, String quoteCurrencyCode) {

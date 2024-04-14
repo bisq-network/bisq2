@@ -8,9 +8,4 @@ public interface Child extends Proto {
     bisq.common.test.protobuf.Child toProto(boolean serializeForHash);
 
     bisq.common.test.protobuf.Child.Builder getBuilder(boolean serializeForHash);
-
-    @Override
-    default bisq.common.test.protobuf.Parent toProto() {
-        return buildProto(false);
-    }
 }
