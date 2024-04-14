@@ -42,11 +42,15 @@ public final class Party implements NetworkProto {
     }
 
     @Override
-    public bisq.contract.protobuf.Party toProto() {
+    public bisq.contract.protobuf.Party.Builder getBuilder(boolean serializeForHash) {
         return bisq.contract.protobuf.Party.newBuilder()
                 .setRole(role.toProtoEnum())
-                .setNetworkId(networkId.toProto())
-                .build();
+                .setNetworkId(networkId.toProto(serializeForHash));
+    }
+
+    @Override
+    public bisq.contract.protobuf.Party toProto(boolean serializeForHash) {
+        return buildProto(serializeForHash);
     }
 
     public static Party fromProto(bisq.contract.protobuf.Party proto) {

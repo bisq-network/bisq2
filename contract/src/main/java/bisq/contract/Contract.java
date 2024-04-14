@@ -52,12 +52,12 @@ public abstract class Contract<T extends Offer<?, ?>> implements NetworkProto {
     }
 
     @Override
-    public abstract bisq.contract.protobuf.Contract toProto();
+    public abstract bisq.contract.protobuf.Contract toProto(boolean serializeForHash);
 
-    protected bisq.contract.protobuf.Contract.Builder getContractBuilder() {
+    protected bisq.contract.protobuf.Contract.Builder getContractBuilder(boolean serializeForHash) {
         return bisq.contract.protobuf.Contract.newBuilder()
                 .setTakeOfferDate(takeOfferDate)
-                .setOffer(offer.toProto())
+                .setOffer(offer.toProto(serializeForHash))
                 .setTradeProtocolType(protocolType.toProtoEnum());
     }
 
