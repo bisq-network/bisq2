@@ -30,7 +30,7 @@ public interface PersistableStore<T> extends PersistableProto {
     }
 
     default Any toAny() {
-        return Any.pack(toProto());
+        return Any.pack(writeProto());
     }
 
     T getClone();
