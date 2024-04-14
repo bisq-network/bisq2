@@ -26,7 +26,7 @@ public final class USPostalMoneyOrderAccount extends Account<USPostalMoneyOrderA
     }
 
     private bisq.account.protobuf.USPostalMoneyOrderAccount toUSPostalMoneyOrderAccountProto(boolean serializeForHash) {
-        return getTweakedBuilder(getUSPostalMoneyOrderAccountBuilder(serializeForHash), serializeForHash).build();
+        return resolveBuilder(getUSPostalMoneyOrderAccountBuilder(serializeForHash), serializeForHash).build();
     }
 
     private bisq.account.protobuf.USPostalMoneyOrderAccount.Builder getUSPostalMoneyOrderAccountBuilder(boolean serializeForHash) {

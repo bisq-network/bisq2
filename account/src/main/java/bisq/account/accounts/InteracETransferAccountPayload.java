@@ -31,7 +31,7 @@ public final class InteracETransferAccountPayload extends AccountPayload {
     }
 
     private bisq.account.protobuf.InteracETransferAccountPayload toInteracETransferAccountPayloadProto(boolean serializeForHash) {
-        return getTweakedBuilder(getInteracETransferAccountPayloadBuilder(serializeForHash), serializeForHash).build();
+        return resolveBuilder(getInteracETransferAccountPayloadBuilder(serializeForHash), serializeForHash).build();
     }
 
     private bisq.account.protobuf.InteracETransferAccountPayload.Builder getInteracETransferAccountPayloadBuilder(boolean serializeForHash) {

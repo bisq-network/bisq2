@@ -48,7 +48,7 @@ public abstract class BisqEasyTradeMessage extends TradeMessage {
 
     protected bisq.trade.protobuf.BisqEasyTradeMessage toBisqEasyTradeMessageProto(boolean serializeForHash) {
         bisq.trade.protobuf.BisqEasyTradeMessage.Builder builder = getBisqEasyTradeMessageBuilder(serializeForHash);
-        return getTweakedBuilder(builder, serializeForHash).build();
+        return resolveBuilder(builder, serializeForHash).build();
     }
 
     abstract protected bisq.trade.protobuf.BisqEasyTradeMessage.Builder getBisqEasyTradeMessageBuilder(boolean serializeForHash);

@@ -56,7 +56,7 @@ public interface EnvelopePayloadMessage extends NetworkProto {
 
     // Implementation class level (this versus interface)
     default <T extends Message> T buildValueProto(boolean serializeForHash) {
-        return (T) getTweakedBuilder(getValueBuilder(serializeForHash), serializeForHash).build();
+        return (T) resolveBuilder(getValueBuilder(serializeForHash), serializeForHash).build();
     }
 
     Message.Builder getValueBuilder(boolean serializeForHash);

@@ -146,7 +146,7 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage implement
     }
 
     private bisq.chat.protobuf.BisqEasyOpenTradeMessage toBisqEasyOpenTradeMessageProto(boolean serializeForHash) {
-        return getTweakedBuilder(getBisqEasyOpenTradeMessageBuilder(serializeForHash), serializeForHash).build();
+        return resolveBuilder(getBisqEasyOpenTradeMessageBuilder(serializeForHash), serializeForHash).build();
     }
 
     private bisq.chat.protobuf.BisqEasyOpenTradeMessage.Builder getBisqEasyOpenTradeMessageBuilder(boolean serializeForHash) {

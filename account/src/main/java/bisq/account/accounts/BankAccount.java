@@ -14,7 +14,7 @@ public abstract class BankAccount<P extends BankAccountPayload> extends CountryB
     }
 
     protected bisq.account.protobuf.BankAccount toBankAccountProto(boolean serializeForHash) {
-        return getTweakedBuilder(getBankAccountBuilder(serializeForHash), serializeForHash).build();
+        return resolveBuilder(getBankAccountBuilder(serializeForHash), serializeForHash).build();
     }
 
     @Override

@@ -26,7 +26,7 @@ public class ZelleAccountPayload extends AccountPayload {
     }
 
     private bisq.account.protobuf.ZelleAccountPayload toZelleAccountPayloadProto(boolean serializeForHash) {
-        return getTweakedBuilder(getZelleAccountPayloadBuilder(serializeForHash), serializeForHash).build();
+        return resolveBuilder(getZelleAccountPayloadBuilder(serializeForHash), serializeForHash).build();
     }
 
     private bisq.account.protobuf.ZelleAccountPayload.Builder getZelleAccountPayloadBuilder(boolean serializeForHash) {

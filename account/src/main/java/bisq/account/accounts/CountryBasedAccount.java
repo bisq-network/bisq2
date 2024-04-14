@@ -52,7 +52,7 @@ public abstract class CountryBasedAccount<P extends CountryBasedAccountPayload, 
     }
 
     private bisq.account.protobuf.CountryBasedAccount toCountryBasedAccountProto(boolean serializeForHash) {
-        return getTweakedBuilder(getCountryBasedAccountBuilder(serializeForHash), serializeForHash).build();
+        return resolveBuilder(getCountryBasedAccountBuilder(serializeForHash), serializeForHash).build();
     }
 
     public static CountryBasedAccount<?, ?> fromProto(bisq.account.protobuf.Account proto) {

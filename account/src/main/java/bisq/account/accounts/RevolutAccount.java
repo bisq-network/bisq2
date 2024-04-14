@@ -47,7 +47,7 @@ public final class RevolutAccount extends Account<RevolutAccountPayload, FiatPay
     }
 
     private bisq.account.protobuf.RevolutAccount toRevolutAccountProto(boolean serializeForHash) {
-        return getTweakedBuilder(getRevolutAccountBuilder(serializeForHash), serializeForHash).build();
+        return resolveBuilder(getRevolutAccountBuilder(serializeForHash), serializeForHash).build();
     }
 
     private bisq.account.protobuf.RevolutAccount.Builder getRevolutAccountBuilder(boolean serializeForHash) {

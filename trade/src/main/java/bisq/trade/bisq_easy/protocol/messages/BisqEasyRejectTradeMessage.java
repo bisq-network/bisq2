@@ -52,7 +52,7 @@ public final class BisqEasyRejectTradeMessage extends BisqEasyTradeMessage {
 
     private bisq.trade.protobuf.BisqEasyRejectTradeMessage toBisqEasyRejectTradeMessageProto(boolean serializeForHash) {
         bisq.trade.protobuf.BisqEasyRejectTradeMessage.Builder builder = getBisqEasyRejectTradeMessageBuilder(serializeForHash);
-        return getTweakedBuilder(builder, serializeForHash).build();
+        return resolveBuilder(builder, serializeForHash).build();
     }
 
     private bisq.trade.protobuf.BisqEasyRejectTradeMessage.Builder getBisqEasyRejectTradeMessageBuilder(boolean serializeForHash) {

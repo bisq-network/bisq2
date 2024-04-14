@@ -27,7 +27,7 @@ public final class PayIDAccountPayload extends AccountPayload {
     }
 
     private bisq.account.protobuf.PayIDAccountPayload toPayIDAccountPayloadProto(boolean serializeForHash) {
-        return getTweakedBuilder(getPayIDAccountPayloadBuilder(serializeForHash), serializeForHash).build();
+        return resolveBuilder(getPayIDAccountPayloadBuilder(serializeForHash), serializeForHash).build();
     }
 
     private bisq.account.protobuf.PayIDAccountPayload.Builder getPayIDAccountPayloadBuilder(boolean serializeForHash) {

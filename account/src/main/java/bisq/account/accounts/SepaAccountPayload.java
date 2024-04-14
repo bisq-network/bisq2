@@ -45,7 +45,7 @@ public final class SepaAccountPayload extends CountryBasedAccountPayload {
     }
 
     private bisq.account.protobuf.SepaAccountPayload toSepaAccountPayloadProto(boolean serializeForHash) {
-        return getTweakedBuilder(getSepaAccountPayloadBuilder(serializeForHash), serializeForHash).build();
+        return resolveBuilder(getSepaAccountPayloadBuilder(serializeForHash), serializeForHash).build();
     }
 
     private bisq.account.protobuf.SepaAccountPayload.Builder getSepaAccountPayloadBuilder(boolean serializeForHash) {

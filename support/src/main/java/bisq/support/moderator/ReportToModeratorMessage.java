@@ -81,7 +81,7 @@ public final class ReportToModeratorMessage implements MailboxMessage, ExternalN
 
     @Override
     public bisq.support.protobuf.ReportToModeratorMessage toValueProto(boolean serializeForHash) {
-        return getTweakedBuilder(this.getValueBuilder(serializeForHash), serializeForHash).build();
+        return resolveBuilder(this.getValueBuilder(serializeForHash), serializeForHash).build();
     }
 
     public static ReportToModeratorMessage fromProto(bisq.support.protobuf.ReportToModeratorMessage proto) {

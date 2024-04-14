@@ -19,7 +19,7 @@ public class F2FAccountPayload extends CountryBasedAccountPayload {
     }
 
     private bisq.account.protobuf.F2FAccountPayload toF2FAccountPayloadProto(boolean serializeForHash) {
-        return getTweakedBuilder(getF2FAccountPayloadBuilder(serializeForHash), serializeForHash).build();
+        return resolveBuilder(getF2FAccountPayloadBuilder(serializeForHash), serializeForHash).build();
     }
 
     private bisq.account.protobuf.F2FAccountPayload.Builder getF2FAccountPayloadBuilder(boolean serializeForHash) {

@@ -50,10 +50,10 @@ public interface Proto {
     }
 
     default <T extends Message> T buildProto(boolean serializeForHash) {
-        return (T) getTweakedBuilder(getBuilder(serializeForHash), serializeForHash).build();
+        return (T) resolveBuilder(getBuilder(serializeForHash), serializeForHash).build();
     }
 
-    default <B extends Message.Builder> B getTweakedBuilder(B builder, boolean serializeForHash) {
+    default <B extends Message.Builder> B resolveBuilder(B builder, boolean serializeForHash) {
         return serializeForHash ? clearAnnotatedFields(builder) : builder;
     }
 

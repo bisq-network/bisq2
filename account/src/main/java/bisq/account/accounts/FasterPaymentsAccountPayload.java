@@ -36,7 +36,7 @@ public final class FasterPaymentsAccountPayload extends AccountPayload {
     }
 
     private bisq.account.protobuf.FasterPaymentsAccountPayload toFasterPaymentsAccountPayloadProto(boolean serializeForHash) {
-        return getTweakedBuilder(getFasterPaymentsAccountPayloadBuilder(serializeForHash), serializeForHash).build();
+        return resolveBuilder(getFasterPaymentsAccountPayloadBuilder(serializeForHash), serializeForHash).build();
     }
 
     private bisq.account.protobuf.FasterPaymentsAccountPayload.Builder getFasterPaymentsAccountPayloadBuilder(boolean serializeForHash) {

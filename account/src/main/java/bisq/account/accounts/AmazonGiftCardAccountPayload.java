@@ -27,7 +27,7 @@ public final class AmazonGiftCardAccountPayload extends CountryBasedAccountPaylo
     }
 
     private bisq.account.protobuf.AmazonGiftCardAccountPayload toAmazonGiftCardAccountPayloadProto(boolean serializeForHash) {
-        return getTweakedBuilder(getAmazonGiftCardAccountPayloadBuilder(serializeForHash), serializeForHash).build();
+        return resolveBuilder(getAmazonGiftCardAccountPayloadBuilder(serializeForHash), serializeForHash).build();
     }
 
     private bisq.account.protobuf.AmazonGiftCardAccountPayload.Builder getAmazonGiftCardAccountPayloadBuilder(boolean serializeForHash) {

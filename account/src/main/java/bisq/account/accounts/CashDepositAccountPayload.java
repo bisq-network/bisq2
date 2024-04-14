@@ -42,7 +42,7 @@ public final class CashDepositAccountPayload extends BankAccountPayload {
     }
 
     private bisq.account.protobuf.CashDepositAccountPayload toCashDepositAccountPayloadProto(boolean serializeForHash) {
-        return getTweakedBuilder(getCashDepositAccountPayloadBuilder(serializeForHash), serializeForHash).build();
+        return resolveBuilder(getCashDepositAccountPayloadBuilder(serializeForHash), serializeForHash).build();
     }
 
     private bisq.account.protobuf.CashDepositAccountPayload.Builder getCashDepositAccountPayloadBuilder(boolean serializeForHash) {

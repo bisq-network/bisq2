@@ -52,7 +52,7 @@ public final class BisqEasyCancelTradeMessage extends BisqEasyTradeMessage {
 
     private bisq.trade.protobuf.BisqEasyCancelTradeMessage toBisqEasyCancelTradeMessageProto(boolean serializeForHash) {
         bisq.trade.protobuf.BisqEasyCancelTradeMessage.Builder builder = getBisqEasyCancelTradeMessageBuilder(serializeForHash);
-        return getTweakedBuilder(builder, serializeForHash).build();
+        return resolveBuilder(builder, serializeForHash).build();
     }
 
     private bisq.trade.protobuf.BisqEasyCancelTradeMessage.Builder getBisqEasyCancelTradeMessageBuilder(boolean serializeForHash) {

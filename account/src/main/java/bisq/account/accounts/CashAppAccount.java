@@ -43,7 +43,7 @@ public final class CashAppAccount extends Account<CashAppAccountPayload, FiatPay
     }
 
     private bisq.account.protobuf.CashAppAccount toCashAppAccountProto(boolean serializeForHash) {
-        return getTweakedBuilder(getCashAppAccountBuilder(serializeForHash), serializeForHash).build();
+        return resolveBuilder(getCashAppAccountBuilder(serializeForHash), serializeForHash).build();
     }
 
     private bisq.account.protobuf.CashAppAccount.Builder getCashAppAccountBuilder(boolean serializeForHash) {

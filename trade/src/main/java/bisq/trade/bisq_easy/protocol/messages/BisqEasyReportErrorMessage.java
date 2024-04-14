@@ -65,7 +65,7 @@ public final class BisqEasyReportErrorMessage extends BisqEasyTradeMessage {
 
     private bisq.trade.protobuf.BisqEasyReportErrorMessage toBisqEasyReportErrorMessageProto(boolean serializeForHash) {
         bisq.trade.protobuf.BisqEasyReportErrorMessage.Builder builder = getBisqEasyReportErrorMessageBuilder(serializeForHash);
-        return getTweakedBuilder(builder, serializeForHash).build();
+        return resolveBuilder(builder, serializeForHash).build();
     }
 
     private bisq.trade.protobuf.BisqEasyReportErrorMessage.Builder getBisqEasyReportErrorMessageBuilder(boolean serializeForHash) {

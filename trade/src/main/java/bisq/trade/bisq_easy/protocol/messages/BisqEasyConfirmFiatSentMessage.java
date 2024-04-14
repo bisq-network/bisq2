@@ -51,7 +51,7 @@ public final class BisqEasyConfirmFiatSentMessage extends BisqEasyTradeMessage {
 
     private bisq.trade.protobuf.BisqEasyConfirmFiatSentMessage toBisqEasyConfirmFiatSentMessageProto(boolean serializeForHash) {
         bisq.trade.protobuf.BisqEasyConfirmFiatSentMessage.Builder builder = getBisqEasyConfirmFiatSentMessageBuilder(serializeForHash);
-        return getTweakedBuilder(builder, serializeForHash).build();
+        return resolveBuilder(builder, serializeForHash).build();
     }
 
     private bisq.trade.protobuf.BisqEasyConfirmFiatSentMessage.Builder getBisqEasyConfirmFiatSentMessageBuilder(boolean serializeForHash) {

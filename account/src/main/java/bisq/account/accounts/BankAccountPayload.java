@@ -76,7 +76,7 @@ public abstract class BankAccountPayload extends CountryBasedAccountPayload {
     }
 
     protected bisq.account.protobuf.BankAccountPayload toBankAccountPayloadProto(boolean serializeForHash) {
-        return getTweakedBuilder(getBankAccountPayloadBuilder(serializeForHash), serializeForHash).build();
+        return resolveBuilder(getBankAccountPayloadBuilder(serializeForHash), serializeForHash).build();
     }
 
     protected bisq.account.protobuf.BankAccountPayload.Builder getBankAccountPayloadBuilder(boolean serializeForHash) {

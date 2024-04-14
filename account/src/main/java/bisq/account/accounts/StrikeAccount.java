@@ -28,7 +28,7 @@ public final class StrikeAccount extends CountryBasedAccount<StrikeAccountPayloa
     }
 
     private bisq.account.protobuf.StrikeAccount toStrikeAccountProto(boolean serializeForHash) {
-        return getTweakedBuilder(getStrikeAccountBuilder(serializeForHash), serializeForHash).build();
+        return resolveBuilder(getStrikeAccountBuilder(serializeForHash), serializeForHash).build();
     }
 
     private bisq.account.protobuf.StrikeAccount.Builder getStrikeAccountBuilder(boolean serializeForHash) {

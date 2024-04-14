@@ -25,7 +25,7 @@ public final class PixAccountPayload extends CountryBasedAccountPayload {
     }
 
     private bisq.account.protobuf.PixAccountPayload toPixAccountPayloadProto(boolean serializeForHash) {
-        return getTweakedBuilder(getPixAccountPayloadBuilder(serializeForHash), serializeForHash).build();
+        return resolveBuilder(getPixAccountPayloadBuilder(serializeForHash), serializeForHash).build();
     }
 
     private bisq.account.protobuf.PixAccountPayload.Builder getPixAccountPayloadBuilder(boolean serializeForHash) {

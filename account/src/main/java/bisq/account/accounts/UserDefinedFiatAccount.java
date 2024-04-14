@@ -53,7 +53,7 @@ public final class UserDefinedFiatAccount extends Account<UserDefinedFiatAccount
     }
 
     private bisq.account.protobuf.UserDefinedFiatAccount toUserDefinedFiatAccountProto(boolean serializeForHash) {
-        return getTweakedBuilder(getUserDefinedFiatAccountBuilder(serializeForHash), serializeForHash).build();
+        return resolveBuilder(getUserDefinedFiatAccountBuilder(serializeForHash), serializeForHash).build();
     }
 
     private bisq.account.protobuf.UserDefinedFiatAccount.Builder getUserDefinedFiatAccountBuilder(boolean serializeForHash) {

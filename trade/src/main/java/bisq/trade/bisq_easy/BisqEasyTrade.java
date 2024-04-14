@@ -92,7 +92,7 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
     }
 
     private bisq.trade.protobuf.BisqEasyTrade toBisqEasyTradeProto(boolean serializeForHash) {
-        return getTweakedBuilder(getBisqEasyTradeBuilder(serializeForHash), serializeForHash).build();
+        return resolveBuilder(getBisqEasyTradeBuilder(serializeForHash), serializeForHash).build();
     }
 
     private bisq.trade.protobuf.BisqEasyTrade.Builder getBisqEasyTradeBuilder(boolean serializeForHash) {

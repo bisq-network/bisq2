@@ -26,7 +26,7 @@ public final class CashDepositAccount extends BankAccount<CashDepositAccountPayl
     }
 
     private bisq.account.protobuf.CashDepositAccount toCashDepositAccountProto(boolean serializeForHash) {
-        return getTweakedBuilder(getCashDepositAccountBuilder(serializeForHash), serializeForHash).build();
+        return resolveBuilder(getCashDepositAccountBuilder(serializeForHash), serializeForHash).build();
     }
 
     private bisq.account.protobuf.CashDepositAccount.Builder getCashDepositAccountBuilder(boolean serializeForHash) {

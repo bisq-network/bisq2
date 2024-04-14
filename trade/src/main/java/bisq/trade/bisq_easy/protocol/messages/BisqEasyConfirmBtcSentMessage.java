@@ -60,7 +60,7 @@ public final class BisqEasyConfirmBtcSentMessage extends BisqEasyTradeMessage {
 
     private bisq.trade.protobuf.BisqEasyConfirmBtcSentMessage toBisqEasyConfirmBtcSentMessageProto(boolean serializeForHash) {
         bisq.trade.protobuf.BisqEasyConfirmBtcSentMessage.Builder builder = getBisqEasyConfirmBtcSentMessageBuilder(serializeForHash);
-        return getTweakedBuilder(builder, serializeForHash).build();
+        return resolveBuilder(builder, serializeForHash).build();
     }
 
     private bisq.trade.protobuf.BisqEasyConfirmBtcSentMessage.Builder getBisqEasyConfirmBtcSentMessageBuilder(boolean serializeForHash) {

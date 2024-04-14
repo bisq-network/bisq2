@@ -29,7 +29,7 @@ public final class CashByMailAccountPayload extends AccountPayload {
     }
 
     private bisq.account.protobuf.CashByMailAccountPayload toCashByMailAccountPayloadProto(boolean serializeForHash) {
-        return getTweakedBuilder(getCashByMailAccountPayloadBuilder(serializeForHash), serializeForHash).build();
+        return resolveBuilder(getCashByMailAccountPayloadBuilder(serializeForHash), serializeForHash).build();
     }
 
     private bisq.account.protobuf.CashByMailAccountPayload.Builder getCashByMailAccountPayloadBuilder(boolean serializeForHash) {

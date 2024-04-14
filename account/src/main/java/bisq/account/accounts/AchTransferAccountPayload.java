@@ -46,7 +46,7 @@ public final class AchTransferAccountPayload extends BankAccountPayload {
     }
 
     private bisq.account.protobuf.AchTransferAccountPayload toAchTransferAccountPayloadProto(boolean serializeForHash) {
-        return getTweakedBuilder(getAchTransferAccountPayloadBuilder(serializeForHash), serializeForHash).build();
+        return resolveBuilder(getAchTransferAccountPayloadBuilder(serializeForHash), serializeForHash).build();
     }
 
     private bisq.account.protobuf.AchTransferAccountPayload.Builder getAchTransferAccountPayloadBuilder(boolean serializeForHash) {

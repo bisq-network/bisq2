@@ -27,7 +27,7 @@ public final class FasterPaymentsAccount extends Account<FasterPaymentsAccountPa
     }
 
     private bisq.account.protobuf.FasterPaymentsAccount toFasterPaymentsAccountProto(boolean serializeForHash) {
-        return getTweakedBuilder(getFasterPaymentsAccountBuilder(serializeForHash), serializeForHash).build();
+        return resolveBuilder(getFasterPaymentsAccountBuilder(serializeForHash), serializeForHash).build();
     }
 
     private bisq.account.protobuf.FasterPaymentsAccount.Builder getFasterPaymentsAccountBuilder(boolean serializeForHash) {

@@ -57,7 +57,7 @@ public final class BisqEasyTakeOfferResponse extends BisqEasyTradeMessage {
 
     private bisq.trade.protobuf.BisqEasyTakeOfferResponse toBisqEasyTakeOfferResponseProto(boolean serializeForHash) {
         bisq.trade.protobuf.BisqEasyTakeOfferResponse.Builder builder = getBisqEasyTakeOfferResponseBuilder(serializeForHash);
-        return getTweakedBuilder(builder, serializeForHash).build();
+        return resolveBuilder(builder, serializeForHash).build();
     }
 
     private bisq.trade.protobuf.BisqEasyTakeOfferResponse.Builder getBisqEasyTakeOfferResponseBuilder(boolean serializeForHash) {

@@ -27,7 +27,7 @@ public final class F2FAccount extends CountryBasedAccount<F2FAccountPayload, Fia
     }
 
     private bisq.account.protobuf.F2FAccount toF2FAccountProto(boolean serializeForHash) {
-        return getTweakedBuilder(getF2FAccountBuilder(serializeForHash), serializeForHash).build();
+        return resolveBuilder(getF2FAccountBuilder(serializeForHash), serializeForHash).build();
     }
 
     private bisq.account.protobuf.F2FAccount.Builder getF2FAccountBuilder(boolean serializeForHash) {

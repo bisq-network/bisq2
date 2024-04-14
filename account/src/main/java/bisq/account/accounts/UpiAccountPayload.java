@@ -25,7 +25,7 @@ public final class UpiAccountPayload extends CountryBasedAccountPayload {
     }
 
     private bisq.account.protobuf.UpiAccountPayload toUpiAccountPayloadProto(boolean serializeForHash) {
-        return getTweakedBuilder(getUpiAccountPayloadBuilder(serializeForHash), serializeForHash).build();
+        return resolveBuilder(getUpiAccountPayloadBuilder(serializeForHash), serializeForHash).build();
     }
 
     private bisq.account.protobuf.UpiAccountPayload.Builder getUpiAccountPayloadBuilder(boolean serializeForHash) {

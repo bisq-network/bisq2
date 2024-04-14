@@ -90,7 +90,7 @@ public final class MediationRequest implements MailboxMessage, ExternalNetworkMe
 
     @Override
     public bisq.support.protobuf.MediationRequest toValueProto(boolean serializeForHash) {
-        return getTweakedBuilder(this.getValueBuilder(serializeForHash), serializeForHash).build();
+        return resolveBuilder(this.getValueBuilder(serializeForHash), serializeForHash).build();
     }
 
     public static MediationRequest fromProto(bisq.support.protobuf.MediationRequest proto) {

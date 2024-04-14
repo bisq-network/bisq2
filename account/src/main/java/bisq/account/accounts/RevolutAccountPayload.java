@@ -41,7 +41,7 @@ public final class RevolutAccountPayload extends AccountPayload {
     }
 
     private bisq.account.protobuf.RevolutAccountPayload toRevolutAccountPayloadProto(boolean serializeForHash) {
-        return getTweakedBuilder(getRevolutAccountPayloadBuilder(serializeForHash), serializeForHash).build();
+        return resolveBuilder(getRevolutAccountPayloadBuilder(serializeForHash), serializeForHash).build();
     }
 
     private bisq.account.protobuf.RevolutAccountPayload.Builder getRevolutAccountPayloadBuilder(boolean serializeForHash) {

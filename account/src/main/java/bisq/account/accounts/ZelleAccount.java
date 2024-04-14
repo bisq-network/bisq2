@@ -26,7 +26,7 @@ public class ZelleAccount extends Account<ZelleAccountPayload, FiatPaymentMethod
     }
 
     private bisq.account.protobuf.ZelleAccount toZelleAccountProto(boolean serializeForHash) {
-        return getTweakedBuilder(getZelleAccountBuilder(serializeForHash), serializeForHash).build();
+        return resolveBuilder(getZelleAccountBuilder(serializeForHash), serializeForHash).build();
     }
 
     private bisq.account.protobuf.ZelleAccount.Builder getZelleAccountBuilder(boolean serializeForHash) {

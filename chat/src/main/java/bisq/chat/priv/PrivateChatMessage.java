@@ -106,7 +106,7 @@ public abstract class PrivateChatMessage extends ChatMessage implements MailboxM
 
     @Override
     public bisq.chat.protobuf.ChatMessage toValueProto(boolean serializeForHash) {
-        return getTweakedBuilder(this.getValueBuilder(serializeForHash), serializeForHash).build();
+        return resolveBuilder(this.getValueBuilder(serializeForHash), serializeForHash).build();
     }
 
     @Override

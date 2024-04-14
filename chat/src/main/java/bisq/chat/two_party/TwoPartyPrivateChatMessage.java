@@ -72,7 +72,7 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
     }
 
     private bisq.chat.protobuf.TwoPartyPrivateChatMessage toTwoPartyPrivateChatMessageProto(boolean serializeForHash) {
-        return getTweakedBuilder(getTwoPartyPrivateChatMessageBuilder(serializeForHash), serializeForHash).build();
+        return resolveBuilder(getTwoPartyPrivateChatMessageBuilder(serializeForHash), serializeForHash).build();
     }
 
     private bisq.chat.protobuf.TwoPartyPrivateChatMessage.Builder getTwoPartyPrivateChatMessageBuilder(boolean serializeForHash) {

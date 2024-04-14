@@ -28,7 +28,7 @@ public interface ExternalNetworkMessage extends EnvelopePayloadMessage {
     }
 
     default bisq.network.protobuf.ExternalNetworkMessage toExternalNetworkMessageProto(boolean serializeForHash) {
-        return getTweakedBuilder(getExternalPayloadMessageBuilder(serializeForHash), serializeForHash).build();
+        return resolveBuilder(getExternalPayloadMessageBuilder(serializeForHash), serializeForHash).build();
     }
 
     default bisq.network.protobuf.ExternalNetworkMessage.Builder getExternalPayloadMessageBuilder(boolean serializeForHash) {

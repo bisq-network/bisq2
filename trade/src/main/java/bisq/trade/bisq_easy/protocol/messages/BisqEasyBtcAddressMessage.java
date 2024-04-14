@@ -67,7 +67,7 @@ public final class BisqEasyBtcAddressMessage extends BisqEasyTradeMessage {
 
     private bisq.trade.protobuf.BisqEasyBtcAddressMessage toBisqEasyBtcAddressMessageProto(boolean serializeForHash) {
         bisq.trade.protobuf.BisqEasyBtcAddressMessage.Builder builder = getBisqEasyBtcAddressMessageBuilder(serializeForHash);
-        return getTweakedBuilder(builder, serializeForHash).build();
+        return resolveBuilder(builder, serializeForHash).build();
     }
 
     private bisq.trade.protobuf.BisqEasyBtcAddressMessage.Builder getBisqEasyBtcAddressMessageBuilder(boolean serializeForHash) {

@@ -26,7 +26,7 @@ public final class CashByMailAccount extends Account<CashByMailAccountPayload, F
     }
 
     private bisq.account.protobuf.CashByMailAccount toCashByMailAccountProto(boolean serializeForHash) {
-        return getTweakedBuilder(getCashByMailAccountBuilder(serializeForHash), serializeForHash).build();
+        return resolveBuilder(getCashByMailAccountBuilder(serializeForHash), serializeForHash).build();
     }
 
     private bisq.account.protobuf.CashByMailAccount.Builder getCashByMailAccountBuilder(boolean serializeForHash) {

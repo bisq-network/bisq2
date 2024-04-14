@@ -90,7 +90,7 @@ public final class BisqEasyOfferbookMessage extends PublicChatMessage implements
     }
 
     private bisq.chat.protobuf.BisqEasyOfferbookMessage toBisqEasyOfferbookMessageProto(boolean serializeForHash) {
-        return getTweakedBuilder(getBisqEasyOfferbookMessageBuilder(serializeForHash), serializeForHash).build();
+        return resolveBuilder(getBisqEasyOfferbookMessageBuilder(serializeForHash), serializeForHash).build();
     }
 
     private bisq.chat.protobuf.BisqEasyOfferbookMessage.Builder getBisqEasyOfferbookMessageBuilder(boolean serializeForHash) {

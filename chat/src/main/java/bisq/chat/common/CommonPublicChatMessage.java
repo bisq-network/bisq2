@@ -91,7 +91,7 @@ public final class CommonPublicChatMessage extends PublicChatMessage {
     }
 
     private bisq.chat.protobuf.CommonPublicChatMessage toCommonPublicChatMessageProto(boolean serializeForHash) {
-        return getTweakedBuilder(getCommonPublicChatMessageBuilder(serializeForHash), serializeForHash).build();
+        return resolveBuilder(getCommonPublicChatMessageBuilder(serializeForHash), serializeForHash).build();
     }
 
     private bisq.chat.protobuf.CommonPublicChatMessage.Builder getCommonPublicChatMessageBuilder(boolean serializeForHash) {

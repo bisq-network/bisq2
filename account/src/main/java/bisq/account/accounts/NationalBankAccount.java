@@ -26,7 +26,7 @@ public class NationalBankAccount extends BankAccount<NationalBankAccountPayload>
     }
 
     private bisq.account.protobuf.NationalBankAccount toNationalBankAccountProto(boolean serializeForHash) {
-        return getTweakedBuilder(getNationalBankAccountBuilder(serializeForHash), serializeForHash).build();
+        return resolveBuilder(getNationalBankAccountBuilder(serializeForHash), serializeForHash).build();
     }
 
     private bisq.account.protobuf.NationalBankAccount.Builder getNationalBankAccountBuilder(boolean serializeForHash) {

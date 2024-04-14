@@ -25,7 +25,7 @@ public final class BizumAccountPayload extends CountryBasedAccountPayload {
     }
 
     private bisq.account.protobuf.BizumAccountPayload toBizumAccountPayloadProto(boolean serializeForHash) {
-        return getTweakedBuilder(getBizumAccountPayloadBuilder(serializeForHash), serializeForHash).build();
+        return resolveBuilder(getBizumAccountPayloadBuilder(serializeForHash), serializeForHash).build();
     }
 
     private bisq.account.protobuf.BizumAccountPayload.Builder getBizumAccountPayloadBuilder(boolean serializeForHash) {
