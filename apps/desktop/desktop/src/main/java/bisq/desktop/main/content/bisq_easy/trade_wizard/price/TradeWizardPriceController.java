@@ -123,6 +123,8 @@ public class TradeWizardPriceController implements Controller {
 
     @Override
     public void onDeactivate() {
+        model.getShouldShowLearnWhyOverlay().set(false);
+
         priceInputPin.unsubscribe();
         isPriceInvalidPin.unsubscribe();
         priceSpecPin.unsubscribe();
