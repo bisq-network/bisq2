@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public abstract class DataStorageService<T extends DataRequest> extends RateLimitedPersistenceClient<DataStore<T>> {
     // We had too narrow limits of the max map size and need to skip the check until data with the old values have expired
-    public final static Date IGNORE_MAX_MAP_SIZE_UNTIL = DateUtils.getUTCDate(2024, GregorianCalendar.MAY, 30);
+    public final static Date IGNORE_MAX_MAP_SIZE_UNTIL = DateUtils.getUTCDate(2024, GregorianCalendar.JULY, 30);
 
     public static final String STORE_POST_FIX = "Store";
 
