@@ -50,7 +50,7 @@ public final class Party implements NetworkProto {
 
     @Override
     public bisq.contract.protobuf.Party toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     public static Party fromProto(bisq.contract.protobuf.Party proto) {

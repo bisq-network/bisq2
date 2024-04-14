@@ -49,7 +49,7 @@ public interface Proto {
         return toProto(false);
     }
 
-    default <T extends Message> T buildProto(boolean serializeForHash) {
+    default <T extends Message> T resolveProto(boolean serializeForHash) {
         return (T) resolveBuilder(getBuilder(serializeForHash), serializeForHash).build();
     }
 
@@ -59,15 +59,15 @@ public interface Proto {
 
 
     default byte[] serialize() {
-        return buildProto(false).toByteArray();
+        return resolveProto(false).toByteArray();
     }
 
     default byte[] serializeForHash() {
-        return buildProto(true).toByteArray();
+        return resolveProto(true).toByteArray();
     }
 
     default int getSerializedSize() {
-        return buildProto(false).getSerializedSize();
+        return resolveProto(false).getSerializedSize();
     }
 
     default void writeDelimitedTo(OutputStream outputStream) throws IOException {

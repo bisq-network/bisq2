@@ -48,7 +48,7 @@ public final class MessageDeliveryStatusStore implements PersistableStore<Messag
 
     @Override
     public bisq.network.protobuf.MessageDeliveryStatusStore toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     @Override

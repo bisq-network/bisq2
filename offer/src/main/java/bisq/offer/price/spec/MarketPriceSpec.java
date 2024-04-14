@@ -44,7 +44,7 @@ public final class MarketPriceSpec implements PriceSpec {
 
     @Override
     public bisq.offer.protobuf.PriceSpec toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     public static MarketPriceSpec fromProto(bisq.offer.protobuf.MarketPrice proto) {

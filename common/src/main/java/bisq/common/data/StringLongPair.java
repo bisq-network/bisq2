@@ -36,7 +36,7 @@ public final class StringLongPair implements PersistableProto {
 
     @Override
     public bisq.common.protobuf.StringLongPair toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     @Override

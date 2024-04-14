@@ -61,7 +61,7 @@ public final class IdentityStore implements PersistableStore<IdentityStore> {
 
     @Override
     public bisq.identity.protobuf.IdentityStore toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     public static IdentityStore fromProto(bisq.identity.protobuf.IdentityStore proto) {

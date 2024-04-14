@@ -74,7 +74,7 @@ public final class Address implements NetworkProto, Comparable<Address> {
 
     @Override
     public bisq.network.common.protobuf.Address toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     @Override

@@ -102,7 +102,7 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
 
     @Override
     public bisq.bonded_roles.protobuf.ReleaseNotification toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     public static ReleaseNotification fromProto(bisq.bonded_roles.protobuf.ReleaseNotification proto) {

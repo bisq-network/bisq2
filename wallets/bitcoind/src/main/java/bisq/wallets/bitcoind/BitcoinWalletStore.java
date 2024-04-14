@@ -49,7 +49,7 @@ public final class BitcoinWalletStore implements PersistableStore<BitcoinWalletS
 
     @Override
     public bisq.wallets.protobuf.BitcoinWalletStore toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     @Override

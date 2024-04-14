@@ -92,7 +92,7 @@ public final class Fiat extends Monetary {
 
     @Override
     public bisq.common.protobuf.Monetary toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     @Override

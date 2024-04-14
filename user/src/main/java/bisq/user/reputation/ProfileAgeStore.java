@@ -53,7 +53,7 @@ public final class ProfileAgeStore implements PersistableStore<ProfileAgeStore> 
 
     @Override
     public bisq.user.protobuf.ProfileAgeStore toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     public static ProfileAgeStore fromProto(bisq.user.protobuf.ProfileAgeStore proto) {

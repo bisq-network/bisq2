@@ -14,7 +14,7 @@ public class ChildMock implements Child {
 
     @Override
     public bisq.common.test.protobuf.Child toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     @Override

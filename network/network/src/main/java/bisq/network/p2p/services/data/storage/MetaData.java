@@ -89,7 +89,7 @@ public final class MetaData implements NetworkProto {
 
     @Override
     public bisq.network.protobuf.MetaData toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     @Override

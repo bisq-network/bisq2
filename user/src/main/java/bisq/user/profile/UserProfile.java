@@ -109,7 +109,7 @@ public final class UserProfile implements DistributedData {
 
     @Override
     public bisq.user.protobuf.UserProfile toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     public static UserProfile fromProto(bisq.user.protobuf.UserProfile proto) {

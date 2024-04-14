@@ -71,7 +71,7 @@ public final class Capability implements NetworkProto {
 
     @Override
     public bisq.network.protobuf.Capability toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     public static Capability fromProto(bisq.network.protobuf.Capability proto) {

@@ -143,7 +143,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
 
     @Override
     public bisq.settings.protobuf.SettingsStore toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     public static SettingsStore fromProto(bisq.settings.protobuf.SettingsStore proto) {

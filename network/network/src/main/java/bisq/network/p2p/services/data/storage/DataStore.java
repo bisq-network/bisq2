@@ -48,7 +48,7 @@ public final class DataStore<T extends DataRequest> implements PersistableStore<
 
     @Override
     public bisq.network.protobuf.DataStore toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     @Override

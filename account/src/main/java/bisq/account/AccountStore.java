@@ -58,7 +58,7 @@ public final class AccountStore implements PersistableStore<AccountStore> {
 
     @Override
     public bisq.account.protobuf.AccountStore toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     public static AccountStore fromProto(bisq.account.protobuf.AccountStore proto) {

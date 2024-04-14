@@ -80,7 +80,7 @@ public final class AuthorizedBondedReputationData implements AuthorizedDistribut
 
     @Override
     public bisq.user.protobuf.AuthorizedBondedReputationData toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     public static AuthorizedBondedReputationData fromProto(bisq.user.protobuf.AuthorizedBondedReputationData proto) {

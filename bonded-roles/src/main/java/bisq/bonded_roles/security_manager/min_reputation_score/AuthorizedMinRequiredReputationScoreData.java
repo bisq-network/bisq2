@@ -76,7 +76,7 @@ public final class AuthorizedMinRequiredReputationScoreData implements Authorize
 
     @Override
     public bisq.bonded_roles.protobuf.AuthorizedMinRequiredReputationScoreData toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     public static AuthorizedMinRequiredReputationScoreData fromProto(bisq.bonded_roles.protobuf.AuthorizedMinRequiredReputationScoreData proto) {

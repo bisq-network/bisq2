@@ -55,7 +55,7 @@ public final class MarketPriceStore implements PersistableStore<MarketPriceStore
 
     @Override
     public bisq.bonded_roles.protobuf.MarketPriceStore toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     public static MarketPriceStore fromProto(bisq.bonded_roles.protobuf.MarketPriceStore proto) {

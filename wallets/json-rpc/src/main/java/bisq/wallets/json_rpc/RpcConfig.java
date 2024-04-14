@@ -31,7 +31,7 @@ public final class RpcConfig implements PersistableProto {
 
     @Override
     public bisq.wallets.protobuf.RpcConfig toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     @Override

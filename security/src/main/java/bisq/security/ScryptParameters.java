@@ -68,7 +68,7 @@ public class ScryptParameters implements PersistableProto {
 
     @Override
     public bisq.security.protobuf.ScryptParameters toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     @Override

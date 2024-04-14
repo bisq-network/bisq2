@@ -36,7 +36,7 @@ public final class Region implements PersistableProto {
 
     @Override
     public bisq.common.protobuf.Region toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     @Override

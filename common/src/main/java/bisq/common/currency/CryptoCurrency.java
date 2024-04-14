@@ -38,7 +38,7 @@ public final class CryptoCurrency extends TradeCurrency {
 
     @Override
     public bisq.common.protobuf.TradeCurrency toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     public static CryptoCurrency fromProto(bisq.common.protobuf.TradeCurrency baseProto, bisq.common.protobuf.CryptoCurrency proto) {

@@ -58,7 +58,7 @@ public final class FloatPriceSpec implements PriceSpec {
 
     @Override
     public bisq.offer.protobuf.PriceSpec toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     public static FloatPriceSpec fromProto(bisq.offer.protobuf.FloatPrice proto) {

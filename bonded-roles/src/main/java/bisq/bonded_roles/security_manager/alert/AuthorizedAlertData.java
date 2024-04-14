@@ -122,7 +122,7 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
 
     @Override
     public bisq.bonded_roles.protobuf.AuthorizedAlertData toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     public static AuthorizedAlertData fromProto(bisq.bonded_roles.protobuf.AuthorizedAlertData proto) {

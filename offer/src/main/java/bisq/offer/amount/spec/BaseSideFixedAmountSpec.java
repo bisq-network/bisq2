@@ -48,7 +48,7 @@ public final class BaseSideFixedAmountSpec extends FixedAmountSpec implements Ba
 
     @Override
     public bisq.offer.protobuf.AmountSpec toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     public static BaseSideFixedAmountSpec fromProto(bisq.offer.protobuf.FixedAmountSpec proto) {

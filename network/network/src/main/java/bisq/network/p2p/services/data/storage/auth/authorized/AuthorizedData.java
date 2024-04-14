@@ -79,7 +79,7 @@ public final class AuthorizedData extends AuthenticatedData {
 
     @Override
     public bisq.network.protobuf.AuthenticatedData toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     @Override

@@ -61,7 +61,7 @@ public abstract class Account<P extends AccountPayload, M extends PaymentMethod<
 
     @Override
     public bisq.account.protobuf.Account toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     @Override

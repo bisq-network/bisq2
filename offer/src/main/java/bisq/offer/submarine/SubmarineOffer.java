@@ -88,7 +88,7 @@ public final class SubmarineOffer extends Offer<BitcoinPaymentMethodSpec, FiatPa
 
     @Override
     public bisq.offer.protobuf.Offer toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     public static SubmarineOffer fromProto(bisq.offer.protobuf.Offer proto) {

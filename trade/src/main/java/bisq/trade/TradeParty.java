@@ -46,7 +46,7 @@ public abstract class TradeParty implements PersistableProto {
 
     @Override
     public bisq.trade.protobuf.TradeParty toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     public bisq.trade.protobuf.TradeParty.Builder getTradePartyBuilder(boolean serializeForHash) {

@@ -51,7 +51,7 @@ final class MediatorStore implements PersistableStore<MediatorStore> {
 
     @Override
     public bisq.support.protobuf.MediatorStore toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     public static MediatorStore fromProto(bisq.support.protobuf.MediatorStore proto) {

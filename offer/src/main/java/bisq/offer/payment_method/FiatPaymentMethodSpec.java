@@ -51,7 +51,7 @@ public final class FiatPaymentMethodSpec extends PaymentMethodSpec<FiatPaymentMe
 
     @Override
     public bisq.offer.protobuf.PaymentMethodSpec toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     public static FiatPaymentMethodSpec fromProto(bisq.offer.protobuf.PaymentMethodSpec proto) {

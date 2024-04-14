@@ -49,7 +49,7 @@ public class BisqEasyOpenTradeChannelStore implements PersistableStore<BisqEasyO
 
     @Override
     public bisq.chat.protobuf.BisqEasyOpenTradeChannelStore toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     public static BisqEasyOpenTradeChannelStore fromProto(bisq.chat.protobuf.BisqEasyOpenTradeChannelStore proto) {

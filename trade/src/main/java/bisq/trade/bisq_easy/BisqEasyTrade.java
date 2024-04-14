@@ -88,7 +88,7 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
 
     @Override
     public bisq.trade.protobuf.Trade toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     private bisq.trade.protobuf.BisqEasyTrade toBisqEasyTradeProto(boolean serializeForHash) {

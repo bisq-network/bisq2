@@ -62,7 +62,7 @@ public class ContractSignatureData implements NetworkProto {
 
     @Override
     public bisq.contract.protobuf.ContractSignatureData toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     public static ContractSignatureData fromProto(bisq.contract.protobuf.ContractSignatureData proto) {

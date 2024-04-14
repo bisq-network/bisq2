@@ -61,7 +61,7 @@ public final class NetworkEnvelope implements NetworkProto {
 
     @Override
     public bisq.network.protobuf.NetworkEnvelope toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     @Override

@@ -75,7 +75,7 @@ public final class UserProfileStore implements PersistableStore<UserProfileStore
 
     @Override
     public bisq.user.protobuf.UserProfileStore toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     public static UserProfileStore fromProto(bisq.user.protobuf.UserProfileStore proto) {

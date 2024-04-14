@@ -54,7 +54,7 @@ public final class Cookie implements PersistableProto {
 
     @Override
     public bisq.settings.protobuf.Cookie toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     static Cookie fromProto(bisq.settings.protobuf.Cookie proto) {

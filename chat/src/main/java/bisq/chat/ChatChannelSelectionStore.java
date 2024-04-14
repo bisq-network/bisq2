@@ -51,7 +51,7 @@ public final class ChatChannelSelectionStore implements PersistableStore<ChatCha
 
     @Override
     public bisq.chat.protobuf.ChatChannelSelectionStore toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     public static ChatChannelSelectionStore fromProto(bisq.chat.protobuf.ChatChannelSelectionStore proto) {

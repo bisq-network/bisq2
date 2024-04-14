@@ -64,7 +64,7 @@ public final class MultisigTradeStore implements PersistableStore<MultisigTradeS
 
     @Override
     public bisq.trade.protobuf.MultisigTradeStore toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     public static MultisigTradeStore fromProto(bisq.trade.protobuf.MultisigTradeStore proto) {

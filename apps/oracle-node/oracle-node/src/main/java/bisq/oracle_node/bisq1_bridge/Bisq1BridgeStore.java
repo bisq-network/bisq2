@@ -65,7 +65,7 @@ public final class Bisq1BridgeStore implements PersistableStore<Bisq1BridgeStore
 
     @Override
     public bisq.oracle_node.protobuf.Bisq1BridgeStore toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     public static Bisq1BridgeStore fromProto(bisq.oracle_node.protobuf.Bisq1BridgeStore proto) {

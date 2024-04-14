@@ -53,7 +53,7 @@ public class BitcoinPaymentMethod extends PaymentMethod<BitcoinPaymentRail> {
 
     @Override
     public bisq.account.protobuf.PaymentMethod toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     public static BitcoinPaymentMethod fromProto(bisq.account.protobuf.PaymentMethod proto) {

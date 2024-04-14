@@ -39,7 +39,7 @@ public abstract class MultiPartyContract<T extends Offer<?, ?>> extends TwoParty
 
     @Override
     public bisq.contract.protobuf.Contract toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     public static TwoPartyContract<?> fromProto(bisq.contract.protobuf.Contract proto) {

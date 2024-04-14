@@ -64,7 +64,7 @@ public final class AddressByTransportTypeMap implements Map<TransportType, Addre
 
     @Override
     public bisq.network.common.protobuf.AddressByTransportTypeMap toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     @Override

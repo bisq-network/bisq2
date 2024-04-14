@@ -49,7 +49,7 @@ public abstract class AccountPayload implements NetworkProto {
 
     @Override
     public bisq.account.protobuf.AccountPayload toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     @Override

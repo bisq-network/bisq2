@@ -48,7 +48,7 @@ public final class CollateralOption implements OfferOption {
 
     @Override
     public bisq.offer.protobuf.OfferOption toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     public static CollateralOption fromProto(bisq.offer.protobuf.CollateralOption proto) {

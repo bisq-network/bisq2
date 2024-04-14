@@ -56,7 +56,7 @@ public final class MailboxData implements StorageData {
 
     @Override
     public bisq.network.protobuf.MailboxData toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     @Override

@@ -49,7 +49,7 @@ public final class ChatNotificationsStore implements PersistableStore<ChatNotifi
 
     @Override
     public bisq.chat.protobuf.ChatNotificationsStore toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     public static PersistableStore<?> fromProto(bisq.chat.protobuf.ChatNotificationsStore proto) {

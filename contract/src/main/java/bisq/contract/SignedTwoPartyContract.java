@@ -53,7 +53,7 @@ public class SignedTwoPartyContract<T extends Offer<?, ?>> implements NetworkPro
 
     @Override
     public bisq.contract.protobuf.SignedTwoPartyContract toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     public static SignedTwoPartyContract<?> fromProto(bisq.contract.protobuf.SignedTwoPartyContract proto) {

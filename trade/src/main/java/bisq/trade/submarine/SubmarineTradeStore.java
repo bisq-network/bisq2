@@ -64,7 +64,7 @@ public final class SubmarineTradeStore implements PersistableStore<SubmarineTrad
 
     @Override
     public bisq.trade.protobuf.SubmarineTradeStore toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     public static SubmarineTradeStore fromProto(bisq.trade.protobuf.SubmarineTradeStore proto) {

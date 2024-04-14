@@ -47,7 +47,7 @@ public final class HashSetFilterEntry implements NetworkProto, Comparable<HashSe
 
     @Override
     public bisq.network.protobuf.HashSetFilterEntry toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     @Override

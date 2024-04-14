@@ -42,7 +42,7 @@ public final class PeerGroupStore implements PersistableStore<PeerGroupStore> {
 
     @Override
     public bisq.network.protobuf.PeerGroupStore toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     @Override

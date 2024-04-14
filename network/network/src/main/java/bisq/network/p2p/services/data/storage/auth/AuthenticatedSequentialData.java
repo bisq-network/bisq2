@@ -65,7 +65,7 @@ public final class AuthenticatedSequentialData implements NetworkProto {
 
     @Override
     public bisq.network.protobuf.AuthenticatedSequentialData toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     @Override

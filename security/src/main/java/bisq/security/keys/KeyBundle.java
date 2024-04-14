@@ -33,7 +33,7 @@ public class KeyBundle implements PersistableProto {
 
     @Override
     public bisq.security.protobuf.KeyBundle toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     @Override

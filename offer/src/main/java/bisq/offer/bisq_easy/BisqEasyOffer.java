@@ -102,7 +102,7 @@ public final class BisqEasyOffer extends Offer<BitcoinPaymentMethodSpec, FiatPay
 
     @Override
     public bisq.offer.protobuf.Offer toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     public static BisqEasyOffer fromProto(bisq.offer.protobuf.Offer proto) {

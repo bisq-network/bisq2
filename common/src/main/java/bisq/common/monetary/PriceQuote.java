@@ -68,7 +68,7 @@ public final class PriceQuote implements Comparable<PriceQuote>, PersistableProt
 
     @Override
     public bisq.common.protobuf.PriceQuote toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     @Override

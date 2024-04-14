@@ -64,7 +64,7 @@ public class MultisigContract extends TwoPartyContract<MultisigOffer> {
 
     @Override
     public bisq.contract.protobuf.Contract toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     public static MultisigContract fromProto(bisq.contract.protobuf.Contract proto) {

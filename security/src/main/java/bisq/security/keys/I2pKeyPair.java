@@ -27,7 +27,7 @@ public class I2pKeyPair implements PersistableProto {
 
     @Override
     public bisq.security.protobuf.I2PKeyPair toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     @Override

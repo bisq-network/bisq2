@@ -50,7 +50,7 @@ public final class ModeratorStore implements PersistableStore<ModeratorStore> {
 
     @Override
     public bisq.support.protobuf.ModeratorStore toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     public static ModeratorStore fromProto(bisq.support.protobuf.ModeratorStore proto) {

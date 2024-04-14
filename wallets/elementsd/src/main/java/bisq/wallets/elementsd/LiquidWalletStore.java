@@ -57,7 +57,7 @@ public final class LiquidWalletStore implements PersistableStore<LiquidWalletSto
 
     @Override
     public bisq.wallets.protobuf.LiquidWalletStore toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     public static LiquidWalletStore fromProto(bisq.wallets.protobuf.LiquidWalletStore proto) {

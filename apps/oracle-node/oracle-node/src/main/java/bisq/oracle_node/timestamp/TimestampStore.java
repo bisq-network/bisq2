@@ -53,7 +53,7 @@ public final class TimestampStore implements PersistableStore<TimestampStore> {
 
     @Override
     public bisq.oracle_node.protobuf.TimestampStore toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     public static TimestampStore fromProto(bisq.oracle_node.protobuf.TimestampStore proto) {

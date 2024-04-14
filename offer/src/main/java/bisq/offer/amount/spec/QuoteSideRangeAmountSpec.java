@@ -45,7 +45,7 @@ public final class QuoteSideRangeAmountSpec extends RangeAmountSpec implements Q
 
     @Override
     public bisq.offer.protobuf.AmountSpec toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     public static QuoteSideRangeAmountSpec fromProto(bisq.offer.protobuf.RangeAmountSpec proto) {

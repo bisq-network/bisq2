@@ -43,7 +43,7 @@ public final class NetworkId implements NetworkProto {
 
     @Override
     public bisq.network.identity.protobuf.NetworkId toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     @Override

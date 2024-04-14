@@ -64,7 +64,7 @@ public abstract class ChatChannel<M extends ChatMessage> implements PersistableP
 
     @Override
     public bisq.chat.protobuf.ChatChannel toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     public static ChatChannel<? extends ChatMessage> fromProto(bisq.chat.protobuf.ChatChannel proto) {

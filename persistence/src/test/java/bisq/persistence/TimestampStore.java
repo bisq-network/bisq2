@@ -43,7 +43,7 @@ public final class TimestampStore implements PersistableStore<TimestampStore> {
 
     @Override
     public bisq.persistence.protobuf.TimestampStore toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     @Override

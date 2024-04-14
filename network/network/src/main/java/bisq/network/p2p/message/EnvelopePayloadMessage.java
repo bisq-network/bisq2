@@ -47,7 +47,7 @@ public interface EnvelopePayloadMessage extends NetworkProto {
     // EnvelopePayloadMessage level
     @Override
     default bisq.network.protobuf.EnvelopePayloadMessage toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     @Override

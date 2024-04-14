@@ -68,7 +68,7 @@ public final class Peer implements NetworkProto, Comparable<Peer> {
 
     @Override
     public bisq.network.protobuf.Peer toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     @Override

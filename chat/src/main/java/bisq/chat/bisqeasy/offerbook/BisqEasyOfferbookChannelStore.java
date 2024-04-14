@@ -49,7 +49,7 @@ public class BisqEasyOfferbookChannelStore implements PersistableStore<BisqEasyO
 
     @Override
     public bisq.chat.protobuf.BisqEasyOfferbookChannelStore toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     public static BisqEasyOfferbookChannelStore fromProto(bisq.chat.protobuf.BisqEasyOfferbookChannelStore proto) {

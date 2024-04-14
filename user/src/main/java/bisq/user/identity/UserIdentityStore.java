@@ -125,7 +125,7 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
 
     @Override
     public bisq.user.protobuf.UserIdentityStore toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     public static UserIdentityStore fromProto(bisq.user.protobuf.UserIdentityStore proto) {

@@ -50,7 +50,7 @@ public final class FixPriceSpec implements PriceSpec {
 
     @Override
     public bisq.offer.protobuf.PriceSpec toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     public static FixPriceSpec fromProto(bisq.offer.protobuf.FixPrice proto) {

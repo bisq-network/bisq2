@@ -70,7 +70,7 @@ public final class CryptoPaymentMethod extends PaymentMethod<CryptoPaymentRail> 
 
     @Override
     public bisq.account.protobuf.PaymentMethod toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     public static CryptoPaymentMethod fromProto(bisq.account.protobuf.PaymentMethod proto) {

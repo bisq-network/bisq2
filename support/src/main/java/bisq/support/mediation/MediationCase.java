@@ -35,7 +35,7 @@ public class MediationCase implements PersistableProto {
 
     @Override
     public bisq.support.protobuf.MediationCase toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
 

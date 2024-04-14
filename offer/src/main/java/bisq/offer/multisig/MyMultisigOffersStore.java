@@ -63,7 +63,7 @@ public final class MyMultisigOffersStore implements PersistableStore<MyMultisigO
 
     @Override
     public bisq.offer.protobuf.MyMultisigOffersStore toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     public static MyMultisigOffersStore fromProto(bisq.offer.protobuf.MyMultisigOffersStore proto) {

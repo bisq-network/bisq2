@@ -61,7 +61,7 @@ public final class FiatCurrency extends TradeCurrency {
 
     @Override
     public bisq.common.protobuf.TradeCurrency toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     public static FiatCurrency fromProto(bisq.common.protobuf.TradeCurrency baseProto, bisq.common.protobuf.FiatCurrency proto) {

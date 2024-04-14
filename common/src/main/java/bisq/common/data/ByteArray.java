@@ -35,7 +35,7 @@ public final class ByteArray implements PersistableProto, Comparable<ByteArray> 
 
     @Override
     public bisq.common.protobuf.ByteArray toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     @Override

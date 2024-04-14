@@ -49,7 +49,7 @@ public class TwoPartyPrivateChatChannelStore implements PersistableStore<TwoPart
 
     @Override
     public bisq.chat.protobuf.TwoPartyPrivateChatChannelStore toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     public static TwoPartyPrivateChatChannelStore fromProto(bisq.chat.protobuf.TwoPartyPrivateChatChannelStore proto) {

@@ -44,7 +44,7 @@ public final class ResendMessageStore implements PersistableStore<ResendMessageS
 
     @Override
     public bisq.network.protobuf.ResendMessageStore toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     @Override

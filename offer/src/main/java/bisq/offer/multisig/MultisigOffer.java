@@ -90,7 +90,7 @@ public final class MultisigOffer extends Offer<BitcoinPaymentMethodSpec, FiatPay
 
     @Override
     public bisq.offer.protobuf.Offer toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     public static MultisigOffer fromProto(bisq.offer.protobuf.Offer proto) {

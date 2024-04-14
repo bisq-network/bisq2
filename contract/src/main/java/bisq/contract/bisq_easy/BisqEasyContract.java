@@ -115,7 +115,7 @@ public final class BisqEasyContract extends TwoPartyContract<BisqEasyOffer> {
 
     @Override
     public bisq.contract.protobuf.Contract toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     public static BisqEasyContract fromProto(bisq.contract.protobuf.Contract proto) {

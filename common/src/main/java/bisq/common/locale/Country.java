@@ -51,7 +51,7 @@ public final class Country implements PersistableProto {
 
     @Override
     public bisq.common.protobuf.Country toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     public static Country fromProto(bisq.common.protobuf.Country proto) {

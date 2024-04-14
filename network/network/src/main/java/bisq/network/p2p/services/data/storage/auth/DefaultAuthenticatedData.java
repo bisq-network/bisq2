@@ -37,7 +37,7 @@ public final class DefaultAuthenticatedData extends AuthenticatedData {
     }
 
     public bisq.network.protobuf.AuthenticatedData toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     @Override

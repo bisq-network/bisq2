@@ -45,7 +45,7 @@ public final class NetworkServiceStore implements PersistableStore<NetworkServic
 
     @Override
     public bisq.network.protobuf.NetworkServiceStore toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     @Override

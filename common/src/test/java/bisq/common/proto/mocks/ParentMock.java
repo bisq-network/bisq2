@@ -33,7 +33,7 @@ public final class ParentMock implements Parent {
 
     @Override
     public bisq.common.test.protobuf.Parent toProto(boolean serializeForHash) {
-        return buildProto(serializeForHash);
+        return resolveProto(serializeForHash);
     }
 
     @Override
