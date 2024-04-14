@@ -53,15 +53,19 @@ public final class Bisq1BridgeStore implements PersistableStore<Bisq1BridgeStore
     }
 
     @Override
-    public bisq.oracle_node.protobuf.Bisq1BridgeStore toProto() {
+    public bisq.oracle_node.protobuf.Bisq1BridgeStore.Builder getBuilder(boolean serializeForHash) {
         return bisq.oracle_node.protobuf.Bisq1BridgeStore.newBuilder()
                 .addAllAccountAgeRequests(accountAgeRequests.stream()
-                        .map(AuthorizeAccountAgeRequest::toAuthorizeAccountAgeRequestProto)
+                        .map(e -> e.toValueProto(serializeForHash))
                         .collect(Collectors.toList()))
                 .addAllSignedWitnessRequests(signedWitnessRequests.stream()
-                        .map(AuthorizeSignedWitnessRequest::toAuthorizeSignedWitnessRequestProto)
-                        .collect(Collectors.toList()))
-                .build();
+                        .map(e -> e.toValueProto(serializeForHash))
+                        .collect(Collectors.toList()));
+    }
+
+    @Override
+    public bisq.oracle_node.protobuf.Bisq1BridgeStore toProto(boolean serializeForHash) {
+        return buildProto(serializeForHash);
     }
 
     public static Bisq1BridgeStore fromProto(bisq.oracle_node.protobuf.Bisq1BridgeStore proto) {

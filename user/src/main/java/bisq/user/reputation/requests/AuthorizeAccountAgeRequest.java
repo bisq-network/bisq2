@@ -77,6 +77,11 @@ public final class AuthorizeAccountAgeRequest implements MailboxMessage, Externa
                 .setSignatureBase64(signatureBase64);
     }
 
+    @Override
+    public bisq.user.protobuf.AuthorizeAccountAgeRequest toValueProto(boolean serializeForHash) {
+        return buildValueProto(serializeForHash);
+    }
+
     public static AuthorizeAccountAgeRequest fromProto(bisq.user.protobuf.AuthorizeAccountAgeRequest proto) {
         return new AuthorizeAccountAgeRequest(proto.getProfileId(),
                 proto.getHashAsHex(),

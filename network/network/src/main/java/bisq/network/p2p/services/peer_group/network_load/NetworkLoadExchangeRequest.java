@@ -41,6 +41,7 @@ public final class NetworkLoadExchangeRequest implements EnvelopePayloadMessage,
     @Override
     public void verify() {
     }
+
     @Override
     public bisq.network.protobuf.EnvelopePayloadMessage.Builder getBuilder(boolean serializeForHash) {
         return newEnvelopePayloadMessageBuilder().setNetworkLoadExchangeRequest(toValueProto(serializeForHash));

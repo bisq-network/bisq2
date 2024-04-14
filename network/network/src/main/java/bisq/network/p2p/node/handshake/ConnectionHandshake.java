@@ -90,6 +90,7 @@ public final class ConnectionHandshake {
                         "Signature not of the expected size. signature.length=" + signature.length);
             });
         }
+
         @Override
         public bisq.network.protobuf.EnvelopePayloadMessage.Builder getBuilder(boolean serializeForHash) {
             return newEnvelopePayloadMessageBuilder().setConnectionHandshakeRequest(toValueProto(serializeForHash));

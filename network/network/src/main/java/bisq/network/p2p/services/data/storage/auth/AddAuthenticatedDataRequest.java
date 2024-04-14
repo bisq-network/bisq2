@@ -111,7 +111,7 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
     public bisq.network.protobuf.AddAuthenticatedDataRequest.Builder getValueBuilder(boolean serializeForHash) {
         return bisq.network.protobuf.AddAuthenticatedDataRequest.newBuilder()
                 .setAuthenticatedSequentialData(authenticatedSequentialData.toProto(serializeForHash))
-                        .setSignature(ByteString.copyFrom(signature))
+                .setSignature(ByteString.copyFrom(signature))
                 .setOwnerPublicKeyBytes(ByteString.copyFrom(ownerPublicKeyBytes)
                 );
     }
