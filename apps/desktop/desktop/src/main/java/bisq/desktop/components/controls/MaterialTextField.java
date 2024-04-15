@@ -203,7 +203,7 @@ public class MaterialTextField extends Pane {
         errorLabel.setText("");
     }
 
-    private final BooleanProperty isValid = new SimpleBooleanProperty();
+    private final BooleanProperty isValid = new SimpleBooleanProperty(true);
 
     public BooleanProperty isValidProperty() {
         return isValid;
