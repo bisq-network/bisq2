@@ -38,6 +38,7 @@ import javafx.scene.control.TextInputControl;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
+import javafx.util.StringConverter;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -61,6 +62,9 @@ public class MaterialTextField extends Pane {
     @Getter
     private final BisqIconButton iconButton = new BisqIconButton();
     private ChangeListener<Number> iconButtonHeightListener;
+    protected ValidationControl validationControl;
+    private final BooleanProperty isValid = new SimpleBooleanProperty(false);
+    private Optional<StringConverter<Number>> stringConverter = Optional.empty();
 
     public MaterialTextField() {
         this(null, null, null);
@@ -159,11 +163,10 @@ public class MaterialTextField extends Pane {
         update();
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Validation
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    protected ValidationControl validationControl;
 
     public Optional<ValidatorBase> getActiveValidator() {
         return Optional.ofNullable(validationControl.getActiveValidator());
@@ -202,8 +205,6 @@ public class MaterialTextField extends Pane {
         descriptionLabel.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, false);
         errorLabel.setText("");
     }
-
-    private final BooleanProperty isValid = new SimpleBooleanProperty(true);
 
     public BooleanProperty isValidProperty() {
         return isValid;
@@ -265,10 +266,14 @@ public class MaterialTextField extends Pane {
         //todo
     }
 
+    public void setStringConverter(StringConverter<Number> stringConverter) {
+        this.stringConverter = Optional.of(stringConverter);
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // PromptText
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-
 
     public String getPromptText() {
         return textInputControl.getPromptText();
@@ -396,6 +401,12 @@ public class MaterialTextField extends Pane {
             Transitions.animateWidth(selectionLine, getWidth());
         } else {
             Transitions.fadeOut(selectionLine, 200);
+            stringConverter.ifPresent(stringConverter -> {
+                try {
+                    setText(stringConverter.toString(stringConverter.fromString(getText())));
+                } catch (Exception ignore) {
+                }
+            });
             validate();
         }
         onMouseExited();
