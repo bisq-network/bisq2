@@ -209,7 +209,8 @@ public abstract class Connection {
         if (isStopped) {
             log.warn("Message not sent as connection has been shut down already. Message={}, Connection={}",
                     StringUtils.truncate(envelopePayloadMessage.toString(), 200), this);
-            throw new ConnectionClosedException(this);
+            // We do not throw a ConnectionClosedException here
+            return this;
         }
 
         requestResponseManager.onSent(envelopePayloadMessage);
