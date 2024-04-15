@@ -17,24 +17,24 @@
 
 package bisq.desktop.common.converters;
 
-import bisq.presentation.formatters.DefaultNumberFormatter;
+import bisq.presentation.formatters.PercentageFormatter;
+import bisq.presentation.parser.PercentageParser;
 import javafx.util.StringConverter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class DoubleStringConverter extends StringConverter<Number> {
-    public DoubleStringConverter() {
+public class PercentageStringConverter extends StringConverter<Number> {
+    public PercentageStringConverter() {
     }
 
     public Number fromString(String value) {
-        return DefaultNumberFormatter.parse(value);
+        return PercentageParser.parse(value);
     }
 
     public String toString(Number numberValue) {
         if (numberValue == null) {
             return "";
         }
-
-        return DefaultNumberFormatter.format(numberValue);
+        return PercentageFormatter.formatToPercentWithSymbol(numberValue.doubleValue());
     }
 }

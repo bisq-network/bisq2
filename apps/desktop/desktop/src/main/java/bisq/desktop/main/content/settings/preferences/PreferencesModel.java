@@ -54,6 +54,7 @@ public class PreferencesModel implements Model {
     private final ObservableList<String> supportedLanguageCodes = FXCollections.observableArrayList();
     private final FilteredList<String> supportedLanguageCodeFilteredList = new FilteredList<>(supportedLanguageCodes);
     private final ObservableList<String> selectedSupportedLanguageCodes = FXCollections.observableArrayList();
+    private final DoubleProperty maxTradePriceDeviation = new SimpleDoubleProperty();
 
     public PreferencesModel() {
     }
