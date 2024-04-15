@@ -202,6 +202,7 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
                 "marketPrice=" + marketPrice.getPriceQuote().getValue() + "\n" +
                 "priceQuote=" + priceQuote.map(PriceQuote::getValue).orElse(0L);
         if (throwException) {
+            log.error(message + details);
             throw new IllegalArgumentException(message);
         } else if (showWaring) {
             log.warn(message + details);
