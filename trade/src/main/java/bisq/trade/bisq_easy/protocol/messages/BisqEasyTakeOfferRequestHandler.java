@@ -205,7 +205,10 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
             throw new IllegalArgumentException(message);
         } else if (showWaring) {
             log.warn(message + details);
+        } else if (myAmount != takersAmount) {
+            log.info("My amount and the amount set by the taker are not the same. This is expected if the offer used a " +
+                    "market based price and the taker had a different market price.\n" +
+                    "{}", details);
         }
-        log.warn(details);
     }
 }
