@@ -17,9 +17,12 @@
 
 package bisq.trade.bisq_easy.protocol.messages;
 
+import bisq.bonded_roles.market_price.MarketPrice;
+import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.common.fsm.Event;
 import bisq.common.monetary.Monetary;
+import bisq.common.monetary.PriceQuote;
 import bisq.common.util.StringUtils;
 import bisq.contract.ContractService;
 import bisq.contract.ContractSignatureData;
@@ -140,24 +143,69 @@ public class BisqEasyTakeOfferRequestHandler extends TradeMessageHandler<BisqEas
     }
 
     private void validateAmount(BisqEasyOffer takersOffer, BisqEasyContract takersContract) {
-        Optional<Monetary> amount = getAmount(takersOffer, takersContract);
-        checkArgument(amount.isPresent(), "No market price available for validation.");
+        MarketPriceService marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
+        MarketPrice marketPrice = marketPriceService.getMarketPriceByCurrencyMap().get(takersOffer.getMarket());
+        Optional<PriceQuote> priceQuote = PriceUtil.findQuote(marketPriceService,
+                takersContract.getAgreedPriceSpec(), takersOffer.getMarket());
+        Optional<Monetary> amount = priceQuote.map(quote -> quote.toBaseSideMonetary(Monetary.from(takersContract.getQuoteSideAmount(),
+                takersOffer.getMarket().getQuoteCurrencyCode())));
 
-        double tolerancePercentage = 0.03;
-        long tolerance = (long) (amount.get().getValue() * tolerancePercentage);
-        long minAmountWithTolerance = amount.get().getValue() - tolerance;
-        long maxAmountWithTolerance = amount.get().getValue() + tolerance;
+        checkArgument(amount.isPresent(), "No priceQuote present. Might be that no market price is available. marketPrice=" + marketPrice);
 
         long takersAmount = takersContract.getBaseSideAmount();
-        String errorMsg = "Market price deviation is too big.";
-        checkArgument(takersAmount >= minAmountWithTolerance, errorMsg);
-        checkArgument(takersAmount <= maxAmountWithTolerance, errorMsg);
-    }
+        long myAmount = amount.get().getValue(); // I am maker
 
-    private Optional<Monetary> getAmount(BisqEasyOffer takersOffer, BisqEasyContract takersContract) {
-        return PriceUtil.findQuote(serviceProvider.getBondedRolesService().getMarketPriceService(),
-                        takersContract.getAgreedPriceSpec(), takersOffer.getMarket())
-                .map(quote -> quote.toBaseSideMonetary(Monetary.from(takersContract.getQuoteSideAmount(),
-                        takersOffer.getMarket().getQuoteCurrencyCode())));
+        double maxTradePriceDeviation = serviceProvider.getSettingsService().getMaxTradePriceDeviation().get();
+        double warnDeviation = maxTradePriceDeviation / 2;
+        double warnThreshold, errorThreshold;
+        boolean showWaring = false;
+        boolean throwException = false;
+        String message = "";
+
+        if (trade.isBuyer()) {
+            // If I am buyer I accept if takers amount is larger than my expected amount (good for me as I receive more BTC).
+            // If takers amount is below my maxTradePriceDeviation the trade fails.
+            warnThreshold = myAmount * (1 - warnDeviation);
+            errorThreshold = myAmount * (1 - maxTradePriceDeviation);
+            if (takersAmount < errorThreshold) {
+                throwException = true;
+                message = "Takers (sellers) Bitcoin amount is too low. " +
+                        "This can be caused by differences in the 2 traders market price or by an attempt by the taker " +
+                        "to manipulate the price.\n";
+            } else if (takersAmount < warnThreshold) {
+                showWaring = true;
+                message = "Takers (sellers) Bitcoin amount is lower as expected. " +
+                        "This can be caused by differences in the 2 traders market price or by an attempt by the taker " +
+                        "to manipulate the price. We still tolerate that deviation.\n";
+            }
+        } else {
+            // If I am seller I accept if takers amount is smaller than my expected amount (good for me as I need to send less BTC).
+            // If takers amount is above my maxTradePriceDeviation the trade fails.
+            warnThreshold = myAmount * (1 + warnDeviation);
+            errorThreshold = myAmount * (1 + maxTradePriceDeviation);
+            if (takersAmount > errorThreshold) {
+                throwException = true;
+                message = "Takers (buyers) Bitcoin amount is too high. " +
+                        "This can be caused by differences in the 2 traders market price or by an attempt by the taker " +
+                        "to manipulate the price.\n";
+            } else if (takersAmount > warnThreshold) {
+                showWaring = true;
+                message = "Takers (sellers) Bitcoin amount is lower as expected. " +
+                        "This can be caused by differences in the 2 traders market price or by an attempt by the taker " +
+                        "to manipulate the price. We still tolerate that deviation.\n";
+            }
+        }
+
+        String details = "takersAmount=" + takersAmount + "\n" +
+                "myAmount=" + myAmount + "\n" +
+                "errorThreshold=" + errorThreshold + "\n" +
+                "marketPrice=" + marketPrice.getPriceQuote().getValue() + "\n" +
+                "priceQuote=" + priceQuote.map(PriceQuote::getValue).orElse(0L);
+        if (throwException) {
+            throw new IllegalArgumentException(message);
+        } else if (showWaring) {
+            log.warn(message + details);
+        }
+        log.warn(details);
     }
 }
