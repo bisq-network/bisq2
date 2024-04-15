@@ -119,20 +119,24 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         feedbackBox.managedProperty().bind(model.getShouldShowFeedback());
 
         percentageFocussedPin = EasyBind.subscribe(percentage.textInputFocusedProperty(), controller::onPercentageFocussed);
-        // FIXME: The very first time this component is used when starting the app requestFocus() and slideInTop is not applied.
+
+        // FIXME: The very first time this component is used when starting the app requestFocus() is not applied.
         useFixPricePin = EasyBind.subscribe(model.getUseFixPrice(), useFixPrice ->
                 UIScheduler.run(this::updateFieldsBox).after(100));
+
         shouldShowLearnWhyOverlayPin = EasyBind.subscribe(model.getShouldShowLearnWhyOverlay(), showOverlay -> {
-            if (showOverlay) {
-                learnWhyOverlay.setVisible(true);
-                learnWhyOverlay.setManaged(true);
-                Transitions.blurStrong(content, 0);
-                Transitions.slideInTop(learnWhyOverlay, 450);
-            } else {
-                learnWhyOverlay.setVisible(false);
-                learnWhyOverlay.setManaged(false);
-                Transitions.removeEffect(content);
-            }
+            UIScheduler.run(() -> {
+                if (showOverlay) {
+                    learnWhyOverlay.setVisible(true);
+                    learnWhyOverlay.setManaged(true);
+                    Transitions.blurStrong(content, 0);
+                    Transitions.slideInTop(learnWhyOverlay, 450);
+                } else {
+                    learnWhyOverlay.setVisible(false);
+                    learnWhyOverlay.setManaged(false);
+                    Transitions.removeEffect(content);
+                }
+            }).after(100);
         });
 
         percentagePrice.setOnAction(e -> controller.usePercentagePrice());
