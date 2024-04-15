@@ -21,6 +21,7 @@ import bisq.network.tor.common.torrc.BaseTorrcGenerator;
 import bisq.network.tor.common.torrc.ClientTorrcGenerator;
 import bisq.network.tor.common.torrc.TestNetworkTorrcGenerator;
 import bisq.network.tor.common.torrc.TorrcConfigGenerator;
+import bisq.tor.process.NativeTorProcess;
 import lombok.Builder;
 import net.freehaven.tor.control.PasswordDigest;
 
@@ -33,18 +34,15 @@ public class TorrcClientConfigFactory {
 
     private final boolean isTestNetwork;
     private final Path dataDir;
-    private final int controlPort;
     private final int socksPort;
     private final PasswordDigest hashedControlPassword;
 
     public TorrcClientConfigFactory(boolean isTestNetwork,
                                     Path dataDir,
-                                    int controlPort,
                                     int socksPort,
                                     PasswordDigest hashedControlPassword) {
         this.isTestNetwork = isTestNetwork;
         this.dataDir = dataDir;
-        this.controlPort = controlPort;
         this.socksPort = socksPort;
         this.hashedControlPassword = hashedControlPassword;
     }
@@ -71,7 +69,7 @@ public class TorrcClientConfigFactory {
     private TorrcConfigGenerator baseTorrcGenerator() {
         return BaseTorrcGenerator.builder()
                 .dataDirPath(dataDir)
-                .controlPort(controlPort)
+                .controlPortWriteFile(dataDir.resolve(NativeTorProcess.CONTROL_DIR_NAME).resolve("control"))
                 .hashedControlPassword(hashedControlPassword.getHashedPassword())
                 .isTestNetwork(isTestNetwork)
                 .build();

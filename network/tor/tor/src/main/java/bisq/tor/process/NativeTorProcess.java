@@ -24,16 +24,18 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class NativeTorProcess {
     public static final String ARG_OWNER_PID = "__OwningControllerProcess";
+    public static final String CONTROL_DIR_NAME = "control";
 
     private final Path torDataDirPath;
     private final Path torBinaryPath;
@@ -48,6 +50,7 @@ public class NativeTorProcess {
     }
 
     public void start() {
+        createTorControlDirectory();
         String absoluteTorrcPathAsString = torrcPath.toAbsolutePath().toString();
 
         String ownerPid = Pid.getMyPid();
@@ -107,14 +110,14 @@ public class NativeTorProcess {
         });
     }
 
-    private String computeLdPreloadVariable() {
-        File[] sharedLibraries = torDataDirPath.toFile()
-                .listFiles((file, fileName) -> fileName.contains(".so."));
-        Objects.requireNonNull(sharedLibraries);
-
-        return Arrays.stream(sharedLibraries)
-                .map(File::getAbsolutePath)
-                .collect(Collectors.joining(":"));
+    private void createTorControlDirectory() {
+        File controlDirFile = torDataDirPath.resolve(CONTROL_DIR_NAME).toFile();
+        if (!controlDirFile.exists()) {
+            boolean isSuccess = controlDirFile.mkdirs();
+            if (!isSuccess) {
+                throw new TorStartupFailedException("Couldn't create Tor control directory.");
+            }
+        }
     }
 
     private Future<Path> createLogFileCreationWaiter() {

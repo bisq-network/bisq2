@@ -26,6 +26,7 @@ import bisq.tor.controller.events.events.BootstrapEvent;
 import bisq.tor.installer.TorInstaller;
 import bisq.tor.onionservice.CreateOnionServiceResponse;
 import bisq.tor.onionservice.OnionServicePublishService;
+import bisq.tor.process.ControlPortFilePoller;
 import bisq.tor.process.NativeTorProcess;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.extern.slf4j.Slf4j;
@@ -73,9 +74,8 @@ public class TorService implements Service {
 
         installTorIfNotUpToDate();
 
-        int controlPort = NetworkUtils.findFreeSystemPort();
         PasswordDigest hashedControlPassword = PasswordDigest.generateDigest();
-        createTorrcConfigFile(torDataDirPath, controlPort, hashedControlPassword);
+        createTorrcConfigFile(torDataDirPath, hashedControlPassword);
 
         var nativeTorProcess = new NativeTorProcess(torDataDirPath);
         torProcess = Optional.of(nativeTorProcess);
@@ -89,18 +89,23 @@ public class TorService implements Service {
         }
 
         nativeTorProcess.start();
-        nativeTorProcess.waitUntilControlPortReady();
 
-        nativeTorController.connect(controlPort, hashedControlPassword);
-        nativeTorController.bindTorToConnection();
+        Path controlDirPath = torDataDirPath.resolve(NativeTorProcess.CONTROL_DIR_NAME);
+        Path controlPortFilePath = controlDirPath.resolve("control");
 
-        nativeTorController.enableTorNetworking();
-        nativeTorController.waitUntilBootstrapped();
+        return new ControlPortFilePoller(controlPortFilePath)
+                .parsePort()
+                .thenAccept(controlPort -> {
+                    nativeTorController.connect(controlPort, hashedControlPassword);
+                    nativeTorController.bindTorToConnection();
 
-        int socksPort = this.socksPort.orElseThrow();
-        torSocksProxyFactory = Optional.of(new TorSocksProxyFactory(socksPort));
+                    nativeTorController.enableTorNetworking();
+                    nativeTorController.waitUntilBootstrapped();
 
-        return CompletableFuture.completedFuture(true);
+                    int port = socksPort.orElseThrow();
+                    torSocksProxyFactory = Optional.of(new TorSocksProxyFactory(port));
+                })
+                .thenApply(unused -> true);
     }
 
     @Override
@@ -125,8 +130,8 @@ public class TorService implements Service {
             int localPort = localServerSocket.getLocalPort();
             return onionServicePublishService.publish(privateOpenSshKey, onionAddressString, port, localPort)
                     .thenApply(onionAddress -> {
-                        log.info("Tor hidden service Ready. Took {} ms. Onion address={}",
-                                System.currentTimeMillis() - ts, onionAddress);
+                                log.info("Tor hidden service Ready. Took {} ms. Onion address={}",
+                                        System.currentTimeMillis() - ts, onionAddress);
                                 return new CreateOnionServiceResponse(localServerSocket, onionAddress);
                             }
                     );
@@ -157,14 +162,13 @@ public class TorService implements Service {
         torInstaller.installIfNotUpToDate();
     }
 
-    private void createTorrcConfigFile(Path dataDir, int controlPort, PasswordDigest hashedControlPassword) {
+    private void createTorrcConfigFile(Path dataDir, PasswordDigest hashedControlPassword) {
         int socksPort = NetworkUtils.findFreeSystemPort();
         this.socksPort = Optional.of(socksPort);
 
         TorrcClientConfigFactory torrcClientConfigFactory = TorrcClientConfigFactory.builder()
                 .isTestNetwork(transportConfig.isTestNetwork())
                 .dataDir(dataDir)
-                .controlPort(controlPort)
                 .socksPort(socksPort)
                 .hashedControlPassword(hashedControlPassword)
                 .build();

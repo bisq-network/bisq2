@@ -25,15 +25,16 @@ import java.util.Map;
 
 @Builder
 public class BaseTorrcGenerator implements TorrcConfigGenerator {
+    private static final String CONTROL_PORT_WRITE_TO_FILE_CONFIG_KEY = "ControlPortWriteToFile";
 
     private final Path dataDirPath;
-    private final int controlPort;
+    private final Path controlPortWriteFile;
     private final String hashedControlPassword;
     private final boolean isTestNetwork;
 
-    public BaseTorrcGenerator(Path dataDirPath, int controlPort, String hashedControlPassword, boolean isTestNetwork) {
+    public BaseTorrcGenerator(Path dataDirPath, Path controlPortWriteFile, String hashedControlPassword, boolean isTestNetwork) {
         this.dataDirPath = dataDirPath;
-        this.controlPort = controlPort;
+        this.controlPortWriteFile = controlPortWriteFile;
         this.hashedControlPassword = hashedControlPassword;
         this.isTestNetwork = isTestNetwork;
     }
@@ -43,7 +44,8 @@ public class BaseTorrcGenerator implements TorrcConfigGenerator {
         Map<String, String> torConfigMap = new HashMap<>();
         torConfigMap.put("DataDirectory", dataDirPath.toAbsolutePath().toString());
 
-        torConfigMap.put("ControlPort", "127.0.0.1:" + controlPort);
+        torConfigMap.put("ControlPort", "127.0.0.1:auto");
+        torConfigMap.put(CONTROL_PORT_WRITE_TO_FILE_CONFIG_KEY, controlPortWriteFile.toAbsolutePath().toString());
         torConfigMap.put("HashedControlPassword", hashedControlPassword);
 
         String logLevel = isTestNetwork ? "debug" : "notice";
