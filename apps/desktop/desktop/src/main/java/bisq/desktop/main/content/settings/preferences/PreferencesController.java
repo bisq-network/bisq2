@@ -51,7 +51,7 @@ public class PreferencesController implements Controller {
     private Pin chatNotificationTypePin, useAnimationsPin, preventStandbyModePin, offerOnlyPin, closeMyOfferWhenTakenPin,
             supportedLanguageCodesPin, minRequiredReputationScorePin, ignoreDiffAdjustmentFromSecManagerPin,
             mostRecentDifficultyAdjustmentFactorOrDefaultPin, difficultyAdjustmentFactorPin, ignoreMinRequiredReputationScoreFromSecManagerPin,
-            mostRecentMinRequiredReputationScoreOrDefaultPin;
+            mostRecentMinRequiredReputationScoreOrDefaultPin, maxTradePriceDeviationPin;
     private Subscription notifyForPreReleasePin, useTransientNotificationsPin,
             difficultyAdjustmentFactorDescriptionTextPin, minRequiredReputationScoreDescriptionTextPin;
 
@@ -144,6 +144,9 @@ public class PreferencesController implements Controller {
                     value -> settingsService.setCookie(CookieKey.USE_TRANSIENT_NOTIFICATIONS, value));
         }
 
+        maxTradePriceDeviationPin = FxBindings.bindBiDir(model.getMaxTradePriceDeviation())
+                .to(settingsService.getMaxTradePriceDeviation());
+
         model.getSupportedLanguageCodeFilteredList().setPredicate(e -> !model.getSelectedSupportedLanguageCodes().contains(e));
     }
 
@@ -158,6 +161,7 @@ public class PreferencesController implements Controller {
         ignoreDiffAdjustmentFromSecManagerPin.unbind();
         ignoreMinRequiredReputationScoreFromSecManagerPin.unbind();
         model.getDifficultyAdjustmentFactorEditable().unbind();
+        maxTradePriceDeviationPin.unbind();
         notifyForPreReleasePin.unsubscribe();
         difficultyAdjustmentFactorDescriptionTextPin.unsubscribe();
         minRequiredReputationScoreDescriptionTextPin.unsubscribe();
