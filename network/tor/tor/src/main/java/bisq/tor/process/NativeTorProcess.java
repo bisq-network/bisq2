@@ -17,8 +17,6 @@
 
 package bisq.tor.process;
 
-import bisq.common.FileCreationWatcher;
-import bisq.common.scanner.FileScanner;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -26,11 +24,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 @Slf4j
 public class NativeTorProcess {
@@ -41,7 +35,6 @@ public class NativeTorProcess {
     private final Path torBinaryPath;
     private final Path torrcPath;
     private Optional<Process> process = Optional.empty();
-    private Optional<Future<Path>> logFileCreationWaiter = Optional.empty();
 
     public NativeTorProcess(Path torDataDirPath) {
         this.torDataDirPath = torDataDirPath;
@@ -66,31 +59,11 @@ public class NativeTorProcess {
         processBuilder.redirectError(ProcessBuilder.Redirect.DISCARD);
         processBuilder.redirectOutput(ProcessBuilder.Redirect.DISCARD);
 
-        logFileCreationWaiter = Optional.of(createLogFileCreationWaiter());
-
         try {
             Process torProcess = processBuilder.start();
             process = Optional.of(torProcess);
         } catch (IOException e) {
             throw new TorStartupFailedException(e);
-        }
-    }
-
-    public void waitUntilControlPortReady() {
-        try {
-            if (logFileCreationWaiter.isPresent()) {
-                Future<Path> pathFuture = logFileCreationWaiter.get();
-
-                FileScanner fileScanner = new FileScanner(
-                        Set.of("[notice] Opened Control listener connection (ready) on "),
-                        pathFuture
-                );
-                fileScanner.waitUntilLogContainsLines();
-            }
-
-        } catch (ExecutionException | IOException | InterruptedException | TimeoutException e) {
-            log.error("Couldn't wait for log file creation.", e);
-            throw new IllegalStateException("Couldn't wait for log file creation.");
         }
     }
 
@@ -119,13 +92,4 @@ public class NativeTorProcess {
             }
         }
     }
-
-    private Future<Path> createLogFileCreationWaiter() {
-        Path dataDir = torrcPath.getParent();
-        Path logFilePath = torrcPath.getParent().resolve("debug.log");
-
-        FileCreationWatcher fileCreationWatcher = new FileCreationWatcher(dataDir);
-        return fileCreationWatcher.waitForFile(logFilePath);
-    }
-
 }
