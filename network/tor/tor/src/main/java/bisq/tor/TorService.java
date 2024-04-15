@@ -32,7 +32,6 @@ import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.extern.slf4j.Slf4j;
 import net.freehaven.tor.control.PasswordDigest;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -79,15 +78,6 @@ public class TorService implements Service {
 
         var nativeTorProcess = new NativeTorProcess(torDataDirPath);
         torProcess = Optional.of(nativeTorProcess);
-
-        File debugLogFile = torDataDirPath.resolve("debug.log").toFile();
-        if (debugLogFile.exists()) {
-            boolean isSuccess = debugLogFile.delete();
-            if (!isSuccess) {
-                throw new IllegalStateException("Can't delete old debug.log file");
-            }
-        }
-
         nativeTorProcess.start();
 
         Path controlDirPath = torDataDirPath.resolve(NativeTorProcess.CONTROL_DIR_NAME);
