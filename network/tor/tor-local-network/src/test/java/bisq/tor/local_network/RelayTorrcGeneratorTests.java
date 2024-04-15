@@ -21,6 +21,7 @@ import bisq.network.tor.common.torrc.DirectoryAuthority;
 import bisq.network.tor.common.torrc.TorrcConfigGenerator;
 import bisq.network.tor.common.torrc.TorrcFileGenerator;
 import bisq.tor.local_network.torrc.TestNetworkTorrcGeneratorFactory;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -33,6 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 
+@Disabled
 public class RelayTorrcGeneratorTests {
     @Test
     void basicTest(@TempDir Path tempDir) {

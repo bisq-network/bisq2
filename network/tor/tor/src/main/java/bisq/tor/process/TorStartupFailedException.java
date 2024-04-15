@@ -18,6 +18,10 @@
 package bisq.tor.process;
 
 public class TorStartupFailedException extends RuntimeException {
+    public TorStartupFailedException(String message) {
+        super(message);
+    }
+
     public TorStartupFailedException(Throwable cause) {
         super(cause);
     }
