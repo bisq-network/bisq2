@@ -119,7 +119,7 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
 
     @Override
     protected void exitJvm() {
-        if (applicationService.getShutDownErrorMessage().get() == null) {
+        if (applicationService != null && applicationService.getShutDownErrorMessage().get() == null) {
             doExit();
         }
         // If we have an error popup we leave it to the user to close it and shutdown the app by clicking the shutdown button
