@@ -66,8 +66,8 @@ public class TorService implements Service {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        boolean isAlreadyRunning = isRunning.getAndSet(true);
-        if (isAlreadyRunning) {
+        boolean isNotRunning = isRunning.compareAndSet(false, true);
+        if (!isNotRunning) {
             return CompletableFuture.completedFuture(true);
         }
 
