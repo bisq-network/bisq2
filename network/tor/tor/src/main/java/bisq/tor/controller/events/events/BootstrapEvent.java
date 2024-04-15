@@ -21,6 +21,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.time.Instant;
+
 @Builder
 @Getter
 @ToString
@@ -31,6 +33,8 @@ public class BootstrapEvent {
     private final int progress;
     private final String tag;
     private final String summary;
+
+    private final Instant timestamp = Instant.now();
 
     public BootstrapEvent(int progress, String tag, String summary) {
         if (progress < 0 || tag.isEmpty() || summary.isEmpty()) {
