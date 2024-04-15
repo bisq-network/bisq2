@@ -38,6 +38,7 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 public class SettingsService implements PersistenceClient<SettingsStore>, Service {
     public final static long DEFAULT_MIN_REQUIRED_REPUTATION_SCORE = 30_000;
+    public final static double DEFAULT_MAX_TRADE_PRICE_DEVIATION = 0.05; // 5%
 
     @Getter
     private static SettingsService instance;
@@ -79,6 +80,7 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         getIgnoreDiffAdjustmentFromSecManager().addObserver(value -> persist());
         getFavouriteMarkets().addObserver(this::persist);
         getIgnoreMinRequiredReputationScoreFromSecManager().addObserver(value -> persist());
+        getMaxTradePriceDeviation().addObserver(value -> persist());
         isInitialized = true;
 
         if (DevMode.isDevMode() && getMinRequiredReputationScore().get() == DEFAULT_MIN_REQUIRED_REPUTATION_SCORE) {
@@ -155,6 +157,10 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
 
     public Observable<Double> getDifficultyAdjustmentFactor() {
         return persistableStore.difficultyAdjustmentFactor;
+    }
+
+    public Observable<Double> getMaxTradePriceDeviation() {
+        return persistableStore.maxTradePriceDeviation;
     }
 
     public Observable<ChatNotificationType> getChatNotificationType() {

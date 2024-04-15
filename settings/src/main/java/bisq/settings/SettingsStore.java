@@ -53,6 +53,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     final Observable<Boolean> ignoreDiffAdjustmentFromSecManager = new Observable<>();
     final ObservableSet<Market> favouriteMarkets = new ObservableSet<>();
     final Observable<Boolean> ignoreMinRequiredReputationScoreFromSecManager = new Observable<>();
+    final Observable<Double> maxTradePriceDeviation = new Observable<>();
 
     public SettingsStore() {
         this(new Cookie(),
@@ -72,7 +73,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 NetworkLoad.DEFAULT_DIFFICULTY_ADJUSTMENT,
                 false,
                 new HashSet<>(),
-                false);
+                false,
+                SettingsService.DEFAULT_MAX_TRADE_PRICE_DEVIATION);
     }
 
     public SettingsStore(Cookie cookie,
@@ -92,7 +94,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                          double difficultyAdjustmentFactor,
                          boolean ignoreDiffAdjustmentFromSecManager,
                          Set<Market> favouriteMarkets,
-                         boolean ignoreMinRequiredReputationScoreFromSecManager) {
+                         boolean ignoreMinRequiredReputationScoreFromSecManager,
+                         double maxTradePriceDeviation) {
         this.cookie = cookie;
         this.dontShowAgainMap.putAll(dontShowAgainMap);
         this.useAnimations.set(useAnimations);
@@ -111,6 +114,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
         this.ignoreDiffAdjustmentFromSecManager.set(ignoreDiffAdjustmentFromSecManager);
         this.favouriteMarkets.setAll(favouriteMarkets);
         this.ignoreMinRequiredReputationScoreFromSecManager.set(ignoreMinRequiredReputationScoreFromSecManager);
+        this.maxTradePriceDeviation.set(maxTradePriceDeviation);
     }
 
     @Override
@@ -134,6 +138,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 .setIgnoreDiffAdjustmentFromSecManager(ignoreDiffAdjustmentFromSecManager.get())
                 .addAllFavouriteMarkets(favouriteMarkets.stream().map(Market::toProto).collect(Collectors.toList()))
                 .setIgnoreMinRequiredReputationScoreFromSecManager(ignoreMinRequiredReputationScoreFromSecManager.get())
+                .setMaxTradePriceDeviation(maxTradePriceDeviation.get())
                 .build();
     }
 
@@ -157,7 +162,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 proto.getIgnoreDiffAdjustmentFromSecManager(),
                 new HashSet<>(proto.getFavouriteMarketsList().stream()
                         .map(Market::fromProto).collect(Collectors.toSet())),
-                proto.getIgnoreMinRequiredReputationScoreFromSecManager());
+                proto.getIgnoreMinRequiredReputationScoreFromSecManager(),
+                proto.getMaxTradePriceDeviation());
     }
 
     @Override
@@ -190,7 +196,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 difficultyAdjustmentFactor.get(),
                 ignoreDiffAdjustmentFromSecManager.get(),
                 new HashSet<>(favouriteMarkets),
-                ignoreMinRequiredReputationScoreFromSecManager.get());
+                ignoreMinRequiredReputationScoreFromSecManager.get(),
+                maxTradePriceDeviation.get());
     }
 
     @Override
@@ -214,6 +221,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
             ignoreDiffAdjustmentFromSecManager.set(persisted.ignoreDiffAdjustmentFromSecManager.get());
             favouriteMarkets.setAll(persisted.favouriteMarkets);
             ignoreMinRequiredReputationScoreFromSecManager.set(persisted.ignoreMinRequiredReputationScoreFromSecManager.get());
+            maxTradePriceDeviation.set(persisted.toProto().getMaxTradePriceDeviation());
         } catch (Exception e) {
             log.error("Exception at applyPersisted", e);
         }
