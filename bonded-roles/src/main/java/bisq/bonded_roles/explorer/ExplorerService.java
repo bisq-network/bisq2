@@ -35,14 +35,13 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -53,32 +52,49 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 public class ExplorerService {
     public static final ExecutorService POOL = ExecutorFactory.newCachedThreadPool("BlockExplorerService.pool", 2, 6, 60);
 
-    // We only have one bonded role node. In case it fails we use those fallback providers (public services):
-    // todo add to preferences so users can set them up
-    private static final List<Provider> ALL_FALLBACK_PROVIDERS = List.of(
-            new Provider("emzy", "https://mempool.emzy.de", TransportType.CLEAR),
-            new Provider("emzy", "http://mempool4t6mypeemozyterviq3i5de4kpoua65r3qkn5i3kknu5l2cad.onion", TransportType.TOR),
-            new Provider("devinbileck", "https://mempool.bisq.services", TransportType.CLEAR),
-            new Provider("devinbileck", "http://mempoolcutehjtynu4k4rd746acmssvj2vz4jbz4setb72clbpx2dfqd.onion", TransportType.TOR),
-            new Provider("blockstream", "https://blockstream.info/", TransportType.CLEAR),
-            new Provider("blockstream", "http://explorerzydxu5ecjrkwceayqybizmpjjznk5izmitf2modhcusuqlid.onion", TransportType.TOR));
-
     @Getter
     @ToString
     public static final class Config {
         public static Config from(com.typesafe.config.Config typesafeConfig) {
-            return new Config(SECONDS.toMillis(typesafeConfig.getLong("timeoutInSeconds")),
-                    List.of(
-                            new Provider("RunBTC", "http://runbtcx3wfygbq2wdde6qzjnpyrqn3gvbks7t5jdymmunxttdvvttpyd.onion", TransportType.TOR) // Bonded role
-                    ));
+            long timeoutInSeconds = typesafeConfig.getLong("timeoutInSeconds");
+            Set<Provider> providers = typesafeConfig.getConfigList("providers").stream()
+                    .map(config -> {
+                        String url = config.getString("url");
+                        String operator = config.getString("operator");
+                        TransportType transportType = getTransportTypeFromUrl(url);
+                        return new Provider(url, operator, transportType);
+                    })
+                    .collect(Collectors.toUnmodifiableSet());
+
+            Set<Provider> fallbackProviders = typesafeConfig.getConfigList("fallbackProviders").stream()
+                    .map(config -> {
+                        String url = config.getString("url");
+                        String operator = config.getString("operator");
+                        TransportType transportType = getTransportTypeFromUrl(url);
+                        return new Provider(url, operator, transportType);
+                    })
+                    .collect(Collectors.toUnmodifiableSet());
+            return new Config(timeoutInSeconds, providers, fallbackProviders);
         }
 
-        private final List<Provider> providers;
-        private final long timeout;
+        private static TransportType getTransportTypeFromUrl(String url) {
+            if (url.endsWith(".i2p")) {
+                return TransportType.I2P;
+            } else if (url.endsWith(".onion")) {
+                return TransportType.TOR;
+            } else {
+                return TransportType.CLEAR;
+            }
+        }
 
-        public Config(long timeout, List<Provider> providers) {
-            this.timeout = timeout;
+        private final Set<Provider> providers;
+        private final Set<Provider> fallbackProviders;
+        private final long timeoutInSeconds;
+
+        public Config(long timeoutInSeconds, Set<Provider> providers, Set<Provider> fallbackProviders) {
+            this.timeoutInSeconds = timeoutInSeconds;
             this.providers = providers;
+            this.fallbackProviders = fallbackProviders;
         }
     }
 
@@ -86,20 +102,20 @@ public class ExplorerService {
     @ToString
     @EqualsAndHashCode
     public static final class Provider {
-        private final String operator;
         private final String baseUrl;
+        private final String operator;
         private final String apiPath;
         private final String txPath;
         private final String addressPath;
         private final TransportType transportType;
 
-        public Provider(String operator, String baseUrl, TransportType transportType) {
-            this(operator, baseUrl, "api/", "tx/", "address/", transportType);
+        public Provider(String baseUrl, String operator, TransportType transportType) {
+            this(baseUrl, operator, "api/", "tx/", "address/", transportType);
         }
 
-        public Provider(String operator, String baseUrl, String apiPath, String txPath, String addressPath, TransportType transportType) {
-            this.operator = operator;
+        public Provider(String baseUrl, String operator, String apiPath, String txPath, String addressPath, TransportType transportType) {
             this.baseUrl = baseUrl;
+            this.operator = operator;
             this.apiPath = apiPath;
             this.txPath = txPath;
             this.addressPath = addressPath;
@@ -129,7 +145,7 @@ public class ExplorerService {
         conf.providers.stream()
                 .filter(provider -> supportedTransportTypes.contains(provider.getTransportType()))
                 .forEach(providersFromConfig::add);
-        ALL_FALLBACK_PROVIDERS.stream()
+        conf.getFallbackProviders().stream()
                 .filter(provider -> supportedTransportTypes.contains(provider.getTransportType()))
                 .forEach(fallbackProviders::add);
 
@@ -211,7 +227,7 @@ public class ExplorerService {
                     throw new RuntimeException("We failed at all possible providers and give up");
                 }
             }
-        }, POOL).orTimeout(conf.getTimeout(), TimeUnit.MILLISECONDS);
+        }, POOL).orTimeout(conf.getTimeoutInSeconds(), SECONDS);
     }
 
     private Provider selectNextProvider() {

@@ -56,8 +56,8 @@ public class MarketPriceRequestService {
     @Getter
     @ToString
     public static final class Config {
-        public static Config from(com.typesafe.config.Config marketPriceConfig) {
-            Set<Provider> marketPriceProviders = marketPriceConfig.getConfigList("providers").stream()
+        public static Config from(com.typesafe.config.Config typesafeConfig) {
+            Set<Provider> providers = typesafeConfig.getConfigList("providers").stream()
                     .map(config -> {
                         String url = config.getString("url");
                         String operator = config.getString("operator");
@@ -66,8 +66,8 @@ public class MarketPriceRequestService {
                     })
                     .collect(Collectors.toUnmodifiableSet());
 
-            long interval = marketPriceConfig.getLong("interval");
-            return new MarketPriceRequestService.Config(marketPriceProviders, interval);
+            long interval = typesafeConfig.getLong("interval");
+            return new MarketPriceRequestService.Config(providers, interval);
         }
 
         private static TransportType getTransportTypeFromUrl(String url) {
