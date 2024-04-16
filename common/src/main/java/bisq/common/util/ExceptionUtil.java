@@ -74,7 +74,7 @@ public class ExceptionUtil {
     }
 
     public static Throwable getRootCause(Throwable throwable) {
-        while (throwable != null && throwable.getCause() != null) {
+        while (throwable != null && throwable.getCause() != null && !throwable.getCause().equals(throwable)) {
             throwable = throwable.getCause();
         }
         return throwable;
