@@ -91,7 +91,7 @@ public class ClearNetHttpClient extends BaseHttpClient {
 
         long ts = System.currentTimeMillis();
         log.debug("requestWithoutProxy: URL={}, param={}, httpMethod={}", baseUrl, param, httpMethod);
-        String spec = httpMethod == HttpMethod.GET ? baseUrl + param : baseUrl;
+        String spec = httpMethod == HttpMethod.GET ? baseUrl + "/" + param : baseUrl;
         try {
             URL url = new URL(spec);
             if (proxy == null) {
@@ -146,7 +146,7 @@ public class ClearNetHttpClient extends BaseHttpClient {
                 throw new HttpException("Request failed", responseCode);
             }
         } catch (Exception e) {
-            String message = "Request to " + baseUrl + param + " failed with error: " + ExceptionUtil.getMessageOrToString(e);
+            String message = "Request to " + baseUrl + "/" + param + " failed with error: " + ExceptionUtil.getMessageOrToString(e);
             throw new IOException(message, e);
         } finally {
             try {
