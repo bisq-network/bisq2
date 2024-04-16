@@ -91,7 +91,6 @@ public class BuyerState3b extends BaseState {
 
             model.setTxId(model.getBisqEasyTrade().getTxId().get());
             model.setBtcAddress(model.getBisqEasyTrade().getBtcAddress().get());
-            model.getConfirmationInfo().set(Res.get("bisqEasy.tradeState.info.phase3b.balance.help.explorerLookup"));
             if (model.getConfirmationState().get() == null) {
                 model.getConfirmationState().set(Model.ConfirmationState.REQUEST_STARTED);
                 requestTx();
@@ -125,6 +124,8 @@ public class BuyerState3b extends BaseState {
         }
 
         private void requestTx() {
+            model.getConfirmationInfo().set(Res.get("bisqEasy.tradeState.info.phase3b.balance.help.explorerLookup",
+                    explorerService.getSelectedProvider().get().getBaseUrl()));
             requestFuture = explorerService.requestTx(model.getTxId())
                     .whenComplete((tx, throwable) -> {
                         UIThread.run(() -> {
