@@ -34,6 +34,8 @@ import net.freehaven.tor.control.TorControlConnection;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -139,11 +141,14 @@ public class NativeTorController implements BootstrapEventListener, HsDescUpload
 
     public void waitUntilBootstrapped() {
         try {
-            boolean isSuccess = isBootstrappedCountdownLatch.await(bootstrapTimeout, TimeUnit.MILLISECONDS);
-            if (isSuccess) {
-                removeBootstrapEventListener();
-            } else {
-                throw new TorBootstrapFailedException("Tor bootstrap timeout triggered.");
+            while (true) {
+                boolean isSuccess = isBootstrappedCountdownLatch.await(bootstrapTimeout, TimeUnit.MILLISECONDS);
+                if (isSuccess) {
+                    removeBootstrapEventListener();
+                    break;
+                } else if (isBootstrapTimeoutTriggered()) {
+                    throw new TorBootstrapFailedException("Tor bootstrap timeout triggered.");
+                }
             }
         } catch (InterruptedException e) {
             throw new TorBootstrapFailedException(e);
@@ -220,5 +225,12 @@ public class NativeTorController implements BootstrapEventListener, HsDescUpload
         TorControlConnection controlConnection = torControlConnection.orElseThrow();
         controllerEventHandler.removeHsDescUploadedListener(this);
         clearAllEventSubscriptionsOnConnection(controlConnection);
+    }
+
+    private boolean isBootstrapTimeoutTriggered() {
+        BootstrapEvent bootstrapEvent = this.bootstrapEvent.get();
+        Instant timestamp = bootstrapEvent.getTimestamp();
+        Instant bootstrapTimeoutAgo = Instant.now().minus(bootstrapTimeout, ChronoUnit.MILLIS);
+        return bootstrapTimeoutAgo.isAfter(timestamp);
     }
 }
