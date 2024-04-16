@@ -84,8 +84,7 @@ public class ClearNetHttpClient extends BaseHttpClient {
     }
 
     @Override
-    protected String doRequest(String param, HttpMethod
-            httpMethod, Optional<Pair<String, String>> optionalHeader) throws IOException {
+    protected String doRequest(String param, HttpMethod httpMethod, Optional<Pair<String, String>> optionalHeader) throws IOException {
         checkArgument(!hasPendingRequest, "We got called on the same HttpClient again while a request is still open.");
         hasPendingRequest = true;
 

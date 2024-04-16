@@ -184,6 +184,7 @@ public class BuyerState3b extends BaseState {
                                 model.getConfirmationState().set(Model.ConfirmationState.FAILED);
                                 Throwable rootCause = ExceptionUtil.getRootCause(throwable);
                                 model.getConfirmationInfo().set(Res.get("bisqEasy.tradeState.info.phase3b.txId.failed",
+                                        explorerService.getSelectedProvider().get().getBaseUrl(),
                                         rootCause.getClass().getSimpleName(),
                                         ExceptionUtil.getMessageOrToString(rootCause)));
                             }
