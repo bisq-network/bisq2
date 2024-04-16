@@ -194,7 +194,7 @@ public class ExplorerService {
             long ts = System.currentTimeMillis();
             String param = provider.getApiPath() + provider.getTxPath() + txId;
             try {
-                log.info("Request tx with ID {} from {}", txId, client.getBaseUrl() + param);
+                log.info("Request tx with ID {} from {}", txId, client.getBaseUrl() + "/" + param);
                 String json = client.get(param, Optional.of(new Pair<>("User-Agent", userAgent)));
                 log.info("Received tx lookup response from {} after {} ms", client.getBaseUrl() + param, System.currentTimeMillis() - ts);
                 selectedProvider.set(selectNextProvider());
@@ -221,6 +221,7 @@ public class ExplorerService {
                 }
                 int numRecursions = recursionDepth.incrementAndGet();
                 if (numRecursions < numTotalCandidates && failedProviders.size() < numTotalCandidates) {
+                    log.warn("We retry the request with new provider {}", selectedProvider.get().getBaseUrl());
                     return requestTx(txId, recursionDepth).join();
                 } else {
                     log.warn("We exhausted all possible providers and give up");
