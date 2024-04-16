@@ -19,6 +19,7 @@ package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 
 import bisq.bonded_roles.explorer.ExplorerService;
 import bisq.bonded_roles.explorer.dto.Output;
+import bisq.bonded_roles.explorer.dto.Tx;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.monetary.Coin;
 import bisq.common.util.ExceptionUtil;
@@ -45,6 +46,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import javax.annotation.Nullable;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -61,7 +64,10 @@ public class BuyerState3b extends BaseState {
 
     private static class Controller extends BaseState.Controller<Model, View> {
         private final ExplorerService explorerService;
+        @Nullable
         private UIScheduler scheduler;
+        @Nullable
+        private CompletableFuture<Tx> requestFuture;
 
         private Controller(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
             super(serviceProvider, bisqEasyTrade, channel);
@@ -100,6 +106,10 @@ public class BuyerState3b extends BaseState {
                 scheduler.stop();
                 scheduler = null;
             }
+            if (requestFuture != null) {
+                requestFuture.cancel(true);
+                requestFuture = null;
+            }
         }
 
         public void openExplorer() {
@@ -115,7 +125,7 @@ public class BuyerState3b extends BaseState {
         }
 
         private void requestTx() {
-            explorerService.requestTx(model.getTxId())
+            requestFuture = explorerService.requestTx(model.getTxId())
                     .whenComplete((tx, throwable) -> {
                         UIThread.run(() -> {
                             if (scheduler != null) {

@@ -19,6 +19,7 @@ package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 
 import bisq.bonded_roles.explorer.ExplorerService;
 import bisq.bonded_roles.explorer.dto.Output;
+import bisq.bonded_roles.explorer.dto.Tx;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.monetary.Coin;
 import bisq.common.util.ExceptionUtil;
@@ -45,6 +46,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import javax.annotation.Nullable;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -61,7 +64,10 @@ public class SellerState3b extends BaseState {
 
     private static class Controller extends BaseState.Controller<Model, View> {
         private final ExplorerService explorerService;
+        @Nullable
         private UIScheduler scheduler;
+        @Nullable
+        private CompletableFuture<Tx> requestFuture;
 
         private Controller(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
             super(serviceProvider, bisqEasyTrade, channel);
@@ -86,7 +92,8 @@ public class SellerState3b extends BaseState {
             model.setTxId(model.getBisqEasyTrade().getTxId().get());
             model.setBtcAddress(model.getBisqEasyTrade().getBtcAddress().get());
             model.getConfirmationInfo().set(Res.get("bisqEasy.tradeState.info.phase3b.balance.help.explorerLookup"));
-            if (model.getBtcBalance().get() == null) {
+            if (model.getConfirmationState().get() == null) {
+                model.getConfirmationState().set(Model.ConfirmationState.REQUEST_STARTED);
                 requestTx();
             }
             model.getButtonText().set(Res.get("bisqEasy.tradeState.info.phase3b.button.skip"));
@@ -98,6 +105,10 @@ public class SellerState3b extends BaseState {
             if (scheduler != null) {
                 scheduler.stop();
                 scheduler = null;
+            }
+            if (requestFuture != null) {
+                requestFuture.cancel(true);
+                requestFuture = null;
             }
         }
 
@@ -114,7 +125,7 @@ public class SellerState3b extends BaseState {
         }
 
         private void requestTx() {
-            explorerService.requestTx(model.getTxId())
+            requestFuture = explorerService.requestTx(model.getTxId())
                     .whenComplete((tx, throwable) -> {
                         UIThread.run(() -> {
                             if (scheduler != null) {
@@ -134,6 +145,9 @@ public class SellerState3b extends BaseState {
                                     model.getConfirmationState().set(Model.ConfirmationState.CONFIRMED);
                                     model.getButtonText().set(Res.get("bisqEasy.tradeState.info.phase3b.button.next"));
                                     model.getConfirmationInfo().set(Res.get("bisqEasy.tradeState.info.phase3b.balance.help.confirmed"));
+                                    if (scheduler != null) {
+                                        scheduler.stop();
+                                    }
                                 } else {
                                     model.getConfirmationState().set(Model.ConfirmationState.IN_MEMPOOL);
                                     model.getConfirmationInfo().set(Res.get("bisqEasy.tradeState.info.phase3b.balance.help.notConfirmed"));
@@ -154,7 +168,7 @@ public class SellerState3b extends BaseState {
     @Getter
     private static class Model extends BaseState.Model {
         enum ConfirmationState {
-            UNKNOWN,
+            REQUEST_STARTED,
             IN_MEMPOOL,
             CONFIRMED,
             FAILED,
@@ -222,7 +236,7 @@ public class SellerState3b extends BaseState {
                     btcBalance.getHelpLabel().getStyleClass().remove("tx-lookup-confirmed");
                     btcBalance.getHelpLabel().getStyleClass().remove("tx-lookup-failed");
                     switch (confirmationState) {
-                        case UNKNOWN:
+                        case REQUEST_STARTED:
                             break;
                         case IN_MEMPOOL:
                             btcBalance.getHelpLabel().getStyleClass().add("tx-lookup-in-mempool");
