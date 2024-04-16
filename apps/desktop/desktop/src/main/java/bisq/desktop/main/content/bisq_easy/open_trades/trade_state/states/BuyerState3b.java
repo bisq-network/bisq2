@@ -47,6 +47,8 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -63,6 +65,8 @@ public class BuyerState3b extends BaseState {
     }
 
     private static class Controller extends BaseState.Controller<Model, View> {
+        private final static Map<String, Tx> CONFIRMED_TX_CACHE = new HashMap<>();
+
         private final ExplorerService explorerService;
         @Nullable
         private UIScheduler scheduler;
@@ -124,9 +128,30 @@ public class BuyerState3b extends BaseState {
         }
 
         private void requestTx() {
+            String txId = model.getTxId();
+            if (CONFIRMED_TX_CACHE.containsKey(txId)) {
+                Tx tx = CONFIRMED_TX_CACHE.get(txId);
+                model.getBtcBalance().set(
+                        tx.getOutputs().stream()
+                                .filter(output -> model.getBtcAddress().equals(output.getAddress()))
+                                .map(Output::getValue)
+                                .map(Coin::asBtcFromValue)
+                                .map(e -> AmountFormatter.formatAmountWithCode(e, false))
+                                .findAny()
+                                .orElse(""));
+                model.getIsConfirmed().set(tx.getStatus().isConfirmed());
+                model.getConfirmationState().set(Model.ConfirmationState.CONFIRMED);
+                model.getButtonText().set(Res.get("bisqEasy.tradeState.info.phase3b.button.next"));
+                model.getConfirmationInfo().set(Res.get("bisqEasy.tradeState.info.phase3b.balance.help.confirmed"));
+                if (scheduler != null) {
+                    scheduler.stop();
+                }
+                return;
+            }
+
             model.getConfirmationInfo().set(Res.get("bisqEasy.tradeState.info.phase3b.balance.help.explorerLookup",
                     explorerService.getSelectedProvider().get().getBaseUrl()));
-            requestFuture = explorerService.requestTx(model.getTxId())
+            requestFuture = explorerService.requestTx(txId)
                     .whenComplete((tx, throwable) -> {
                         UIThread.run(() -> {
                             if (scheduler != null) {
@@ -143,6 +168,7 @@ public class BuyerState3b extends BaseState {
                                                 .orElse(""));
                                 model.getIsConfirmed().set(tx.getStatus().isConfirmed());
                                 if (tx.getStatus().isConfirmed()) {
+                                    CONFIRMED_TX_CACHE.put(txId, tx);
                                     model.getConfirmationState().set(Model.ConfirmationState.CONFIRMED);
                                     model.getButtonText().set(Res.get("bisqEasy.tradeState.info.phase3b.button.next"));
                                     model.getConfirmationInfo().set(Res.get("bisqEasy.tradeState.info.phase3b.balance.help.confirmed"));
