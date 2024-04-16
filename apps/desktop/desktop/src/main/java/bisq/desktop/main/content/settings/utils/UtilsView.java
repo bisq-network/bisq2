@@ -106,6 +106,7 @@ public class UtilsView extends View<VBox, UtilsModel, UtilsController> {
     protected void onViewAttached() {
         backupLocation.resetValidation();
         backupLocation.textProperty().bindBidirectional(model.getBackupLocation());
+        backupLocation.validate();
         setBackupLocationButton.defaultButtonProperty().bind(model.getBackupButtonDefault().not());
         backupButton.defaultButtonProperty().bind(model.getBackupButtonDefault());
 

@@ -117,6 +117,7 @@ public class BuyerState2a extends BaseState {
             quoteAmount.setText(model.getFormattedQuoteAmount());
             quoteAmount.getIconButton().setOnAction(e -> ClipboardUtil.copyToClipboard(model.getQuoteAmount()));
             account.setText(model.getBisqEasyTrade().getPaymentAccountData().get());
+            account.validate();
             confirmFiatSentButton.setText(Res.get("bisqEasy.tradeState.info.buyer.phase2a.confirmFiatSent", model.getFormattedQuoteAmount()));
             confirmFiatSentButton.setOnAction(e -> controller.onConfirmFiatSent());
         }

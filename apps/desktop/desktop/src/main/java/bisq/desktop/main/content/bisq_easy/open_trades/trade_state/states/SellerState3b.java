@@ -193,10 +193,12 @@ public class SellerState3b extends BaseState {
             super.onViewAttached();
 
             txId.setText(model.getTxId());
+            txId.validate();
 
             skipButton.defaultButtonProperty().bind(model.isConfirmed);
             btcBalance.textProperty().bind(model.getBtcBalance());
             btcBalance.helpProperty().bind(model.getConfirmationState());
+            btcBalance.validate();
 
             skipButton.setOnAction(e -> controller.onSkip());
             txId.getIconButton().setOnAction(e -> controller.openExplorer());
