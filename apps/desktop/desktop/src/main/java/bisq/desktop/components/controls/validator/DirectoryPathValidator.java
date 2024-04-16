@@ -17,6 +17,7 @@
 
 package bisq.desktop.components.controls.validator;
 
+import bisq.common.util.StringUtils;
 import javafx.scene.control.TextInputControl;
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,17 +26,27 @@ import static java.nio.file.Paths.get;
 
 @Slf4j
 public class DirectoryPathValidator extends ValidatorBase {
+    private final boolean allowEmptyString;
 
     public DirectoryPathValidator(String message) {
+        this(message, true);
+    }
+
+    public DirectoryPathValidator(String message, boolean allowEmptyString) {
         super(message);
+        this.allowEmptyString = allowEmptyString;
     }
 
     @Override
     protected void eval() {
-        var textField = (TextInputControl) srcControl.get();
+        TextInputControl textField = (TextInputControl) srcControl.get();
+        String path = textField.getText();
+        if (allowEmptyString && StringUtils.isEmpty(path)) {
+            hasErrors.set(false);
+            return;
+        }
         try {
-            var path = textField.getText();
-            hasErrors.set(path.isEmpty() || !isDirectory(get(path)));
+            hasErrors.set(StringUtils.isEmpty(path) || !isDirectory(get(path)));
         } catch (Exception e) {
             log.debug("Exception found while validating directory path. " +
                     "Directory path validation will treat this as directory not valid. ", e);
