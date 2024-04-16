@@ -51,7 +51,9 @@ public class WalletSendView extends View<VBox, WalletSendModel, WalletSendContro
     @Override
     protected void onViewAttached() {
         address.textProperty().bindBidirectional(model.getAddress());
+        address.validate();
         amount.textProperty().bindBidirectional(model.getAmount());
+        amount.validate();
         password.textProperty().bindBidirectional(model.getPassword());
         password.visibleProperty().bind(model.getIsPasswordVisible());
         password.managedProperty().bind(model.getIsPasswordVisible());

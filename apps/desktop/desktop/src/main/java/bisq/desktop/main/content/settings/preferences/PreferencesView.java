@@ -274,6 +274,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
                 Converters.LONG_STRING_CONVERTER);
         minRequiredReputationScore.descriptionProperty().bind(model.getMinRequiredReputationScoreDescriptionText());
         minRequiredReputationScore.getTextInputControl().editableProperty().bind(model.getMinRequiredReputationScoreEditable());
+        minRequiredReputationScore.validate();
 
         Bindings.bindBidirectional(difficultyAdjustmentFactor.textProperty(), model.getDifficultyAdjustmentFactor(),
                 Converters.DOUBLE_STRING_CONVERTER);

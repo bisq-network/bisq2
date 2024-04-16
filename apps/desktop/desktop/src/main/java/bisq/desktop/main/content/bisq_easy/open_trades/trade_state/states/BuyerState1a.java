@@ -128,6 +128,7 @@ public class BuyerState1a extends BaseState {
             super.onViewAttached();
 
             btcAddress.textProperty().bindBidirectional(model.getBtcAddress());
+            btcAddress.validate();
             sendBtcAddressButton.disableProperty().bind(model.getSendBtcAddressButtonDisabled());
             sendBtcAddressButton.setOnAction(e -> controller.onSendBtcAddress());
             walletInfoButton.setOnAction(e -> controller.onOpenWalletHelp());

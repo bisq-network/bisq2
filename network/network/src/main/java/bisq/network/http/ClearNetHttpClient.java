@@ -62,7 +62,9 @@ public class ClearNetHttpClient extends BaseHttpClient {
                         if (connection != null) {
                             // blocking call if connection has issues
                             connection.getInputStream().close();
-                            connection.disconnect();
+                            if (connection != null) {
+                                connection.disconnect();
+                            }
                             return true;
                         } else {
                             return false;
