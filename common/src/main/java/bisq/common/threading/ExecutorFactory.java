@@ -72,12 +72,17 @@ public class ExecutorFactory {
         return executorService;
     }
 
-    public static ExecutorService newCachedThreadPool(String name, int maxPoolSize, long keepAliveInSeconds) {
+    public static ExecutorService newCachedThreadPool(String name, int poolSize, long keepAliveInSeconds) {
+        return newCachedThreadPool(name, poolSize, poolSize, keepAliveInSeconds);
+    }
+
+    public static ExecutorService newCachedThreadPool(String name, int corePoolSize, int maxPoolSize, long keepAliveInSeconds) {
         ThreadFactory threadFactory = new ThreadFactoryBuilder()
                 .setNameFormat(getNameWithThreadNum(name))
                 .build();
         ExecutorService executorService = Executors.newCachedThreadPool(threadFactory);
         ((ThreadPoolExecutor) executorService).setKeepAliveTime(keepAliveInSeconds, TimeUnit.SECONDS);
+        ((ThreadPoolExecutor) executorService).setCorePoolSize(corePoolSize);
         ((ThreadPoolExecutor) executorService).setMaximumPoolSize(maxPoolSize);
         return executorService;
     }
