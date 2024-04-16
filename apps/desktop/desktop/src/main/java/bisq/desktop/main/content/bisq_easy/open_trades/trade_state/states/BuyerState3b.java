@@ -21,6 +21,7 @@ import bisq.bonded_roles.explorer.ExplorerService;
 import bisq.bonded_roles.explorer.dto.Output;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.monetary.Coin;
+import bisq.common.util.ExceptionUtil;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.threading.UIScheduler;
@@ -33,10 +34,7 @@ import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.layout.HBox;
@@ -44,6 +42,8 @@ import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import java.util.concurrent.TimeUnit;
 
@@ -85,9 +85,12 @@ public class BuyerState3b extends BaseState {
 
             model.setTxId(model.getBisqEasyTrade().getTxId().get());
             model.setBtcAddress(model.getBisqEasyTrade().getBtcAddress().get());
-            model.getBtcBalance().set("");
-            model.getConfirmationState().set(Res.get("bisqEasy.tradeState.info.phase3b.balance.help.explorerLookup"));
-            requestTx();
+            model.getConfirmationInfo().set(Res.get("bisqEasy.tradeState.info.phase3b.balance.help.explorerLookup"));
+            if (model.getConfirmationState().get() == null) {
+                model.getConfirmationState().set(Model.ConfirmationState.REQUEST_STARTED);
+                requestTx();
+            }
+            model.getButtonText().set(Res.get("bisqEasy.tradeState.info.phase3b.button.skip"));
         }
 
         @Override
@@ -105,7 +108,9 @@ public class BuyerState3b extends BaseState {
             Browser.open(url);
         }
 
-        private void onSkip() {
+        private void onButtonClicked() {
+            // todo should we send a system message? if se we should change the text
+            //sendSystemMessage(Res.get("bisqEasy.tradeState.info.phase3b.systemMessage", model.getChannel().getMyUserIdentity().getUserName()));
             bisqEasyTradeService.btcConfirmed(model.getBisqEasyTrade());
         }
 
@@ -117,7 +122,7 @@ public class BuyerState3b extends BaseState {
                                 scheduler.stop();
                             }
                             if (throwable == null) {
-                                model.btcBalance.set(
+                                model.getBtcBalance().set(
                                         tx.getOutputs().stream()
                                                 .filter(output -> model.getBtcAddress().equals(output.getAddress()))
                                                 .map(Output::getValue)
@@ -127,34 +132,47 @@ public class BuyerState3b extends BaseState {
                                                 .orElse(""));
                                 model.getIsConfirmed().set(tx.getStatus().isConfirmed());
                                 if (tx.getStatus().isConfirmed()) {
-                                    onTxConfirmed();
+                                    model.getConfirmationState().set(Model.ConfirmationState.CONFIRMED);
+                                    model.getButtonText().set(Res.get("bisqEasy.tradeState.info.phase3b.button.next"));
+                                    model.getConfirmationInfo().set(Res.get("bisqEasy.tradeState.info.phase3b.balance.help.confirmed"));
+                                    if (scheduler != null) {
+                                        scheduler.stop();
+                                    }
                                 } else {
-                                    model.getConfirmationState().set(Res.get("bisqEasy.tradeState.info.phase3b.balance.help.notConfirmed"));
+                                    model.getConfirmationState().set(Model.ConfirmationState.IN_MEMPOOL);
+                                    model.getConfirmationInfo().set(Res.get("bisqEasy.tradeState.info.phase3b.balance.help.notConfirmed"));
                                     scheduler = UIScheduler.run(this::requestTx).after(20, TimeUnit.SECONDS);
                                 }
                             } else {
-                                model.getConfirmationState().set(Res.get("bisqEasy.tradeState.info.phase3b.txId.failed"));
+                                model.getConfirmationState().set(Model.ConfirmationState.FAILED);
+                                Throwable rootCause = ExceptionUtil.getRootCause(throwable);
+                                model.getConfirmationInfo().set(Res.get("bisqEasy.tradeState.info.phase3b.txId.failed",
+                                        rootCause.getClass().getSimpleName(),
+                                        ExceptionUtil.getMessageOrToString(rootCause)));
                             }
                         });
                     });
-        }
-
-        private void onTxConfirmed() {
-            model.getConfirmationState().set(Res.get("bisqEasy.tradeState.info.phase3b.balance.help.confirmed"));
-            sendSystemMessage(Res.get("bisqEasy.tradeState.info.phase3b.systemMessage", model.getFormattedBaseAmount(), model.btcAddress));
-            bisqEasyTradeService.btcConfirmed(model.getBisqEasyTrade());
         }
     }
 
     @Getter
     private static class Model extends BaseState.Model {
+        enum ConfirmationState {
+            REQUEST_STARTED,
+            IN_MEMPOOL,
+            CONFIRMED,
+            FAILED,
+        }
+
         @Setter
         protected String btcAddress;
         @Setter
         protected String txId;
         private final StringProperty btcBalance = new SimpleStringProperty();
-        private final StringProperty confirmationState = new SimpleStringProperty();
+        private final StringProperty confirmationInfo = new SimpleStringProperty();
+        private final StringProperty buttonText = new SimpleStringProperty();
         private final BooleanProperty isConfirmed = new SimpleBooleanProperty();
+        private final ObjectProperty<ConfirmationState> confirmationState = new SimpleObjectProperty<>();
 
         protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
             super(bisqEasyTrade, channel);
@@ -162,9 +180,10 @@ public class BuyerState3b extends BaseState {
     }
 
     public static class View extends BaseState.View<Model, Controller> {
-        private final Button skipButton;
+        private final Button button;
         private final MaterialTextField txId, btcBalance;
         private final WaitingAnimation waitingAnimation;
+        private Subscription confirmationStatePin;
 
         private View(Model model, Controller controller) {
             super(model, controller);
@@ -177,15 +196,15 @@ public class BuyerState3b extends BaseState {
             btcBalance.setPromptText(Res.get("bisqEasy.tradeState.info.buyer.phase3b.balance.prompt"));
             btcBalance.filterMouseEventOnNonEditableText();
 
-            skipButton = new Button(Res.get("bisqEasy.tradeState.info.phase3b.buttonText"));
-            VBox.setMargin(skipButton, new Insets(5, 0, 5, 0));
+            button = new Button();
+            VBox.setMargin(button, new Insets(5, 0, 5, 0));
 
             waitingAnimation = new WaitingAnimation(WaitingState.BITCOIN_CONFIRMATION);
             WrappingText headline = FormUtils.getHeadline(Res.get("bisqEasy.tradeState.info.buyer.phase3b.headline"));
             WrappingText info = FormUtils.getInfo(Res.get("bisqEasy.tradeState.info.buyer.phase3b.info"));
             HBox waitingInfo = createWaitingInfo(waitingAnimation, headline, info);
 
-            root.getChildren().addAll(waitingInfo, txId, btcBalance, skipButton);
+            root.getChildren().addAll(waitingInfo, txId, btcBalance, button);
         }
 
         @Override
@@ -195,12 +214,34 @@ public class BuyerState3b extends BaseState {
             txId.setText(model.getTxId());
             txId.validate();
 
-            skipButton.defaultButtonProperty().bind(model.isConfirmed);
+            button.defaultButtonProperty().bind(model.isConfirmed);
+            button.textProperty().bind(model.getButtonText());
             btcBalance.textProperty().bind(model.getBtcBalance());
-            btcBalance.helpProperty().bind(model.getConfirmationState());
+            btcBalance.helpProperty().bind(model.getConfirmationInfo());
             btcBalance.validate();
 
-            skipButton.setOnAction(e -> controller.onSkip());
+            confirmationStatePin = EasyBind.subscribe(model.getConfirmationState(), confirmationState -> {
+                if (confirmationState != null) {
+                    btcBalance.getHelpLabel().getStyleClass().remove("tx-lookup-in-mempool");
+                    btcBalance.getHelpLabel().getStyleClass().remove("tx-lookup-confirmed");
+                    btcBalance.getHelpLabel().getStyleClass().remove("tx-lookup-failed");
+                    switch (confirmationState) {
+                        case REQUEST_STARTED:
+                            break;
+                        case IN_MEMPOOL:
+                            btcBalance.getHelpLabel().getStyleClass().add("tx-lookup-in-mempool");
+                            break;
+                        case CONFIRMED:
+                            btcBalance.getHelpLabel().getStyleClass().add("tx-lookup-confirmed");
+                            break;
+                        case FAILED:
+                            btcBalance.getHelpLabel().getStyleClass().add("tx-lookup-failed");
+                            break;
+                    }
+                }
+            });
+
+            button.setOnAction(e -> controller.onButtonClicked());
             txId.getIconButton().setOnAction(e -> controller.openExplorer());
 
             waitingAnimation.play();
@@ -210,11 +251,13 @@ public class BuyerState3b extends BaseState {
         protected void onViewDetached() {
             super.onViewDetached();
 
-            skipButton.defaultButtonProperty().unbind();
+            button.defaultButtonProperty().unbind();
+            button.textProperty().unbind();
             btcBalance.textProperty().unbind();
             btcBalance.helpProperty().unbind();
+            confirmationStatePin.unsubscribe();
 
-            skipButton.setOnAction(null);
+            button.setOnAction(null);
             txId.getIconButton().setOnAction(null);
 
             waitingAnimation.stop();
