@@ -56,12 +56,12 @@ public class ExplorerService {
     // We only have one bonded role node. In case it fails we use those fallback providers (public services):
     // todo add to preferences so users can set them up
     private static final List<Provider> ALL_FALLBACK_PROVIDERS = List.of(
-            new Provider("emzy", "https://mempool.emzy.de/", TransportType.CLEAR),
-            new Provider("emzy", "http://mempool4t6mypeemozyterviq3i5de4kpoua65r3qkn5i3kknu5l2cad.onion/", TransportType.TOR),
-            new Provider("devinbileck", "https://mempool.bisq.services/", TransportType.CLEAR),
-            new Provider("devinbileck", "http://mempoolcutehjtynu4k4rd746acmssvj2vz4jbz4setb72clbpx2dfqd.onion/", TransportType.TOR),
-            new Provider("blockstream", "blockstream.info/", TransportType.CLEAR),
-            new Provider("blockstream", "http://explorerzydxu5ecjrkwceayqybizmpjjznk5izmitf2modhcusuqlid.onion/", TransportType.TOR));
+            new Provider("emzy", "https://mempool.emzy.de", TransportType.CLEAR),
+            new Provider("emzy", "http://mempool4t6mypeemozyterviq3i5de4kpoua65r3qkn5i3kknu5l2cad.onion", TransportType.TOR),
+            new Provider("devinbileck", "https://mempool.bisq.services", TransportType.CLEAR),
+            new Provider("devinbileck", "http://mempoolcutehjtynu4k4rd746acmssvj2vz4jbz4setb72clbpx2dfqd.onion", TransportType.TOR),
+            new Provider("blockstream", "https://blockstream.info/", TransportType.CLEAR),
+            new Provider("blockstream", "http://explorerzydxu5ecjrkwceayqybizmpjjznk5izmitf2modhcusuqlid.onion", TransportType.TOR));
 
     @Getter
     @ToString
@@ -69,8 +69,8 @@ public class ExplorerService {
         public static Config from(com.typesafe.config.Config typesafeConfig) {
             return new Config(SECONDS.toMillis(typesafeConfig.getLong("timeoutInSeconds")),
                     List.of(
-                            new Provider("RunBTC", "http://runbtcx3wfygbq2wdde6qzjnpyrqn3gvbks7t5jdymmunxttdvvttpyd.onion/", TransportType.TOR) // Bonded role
-            ));
+                            new Provider("RunBTC", "http://runbtcx3wfygbq2wdde6qzjnpyrqn3gvbks7t5jdymmunxttdvvttpyd.onion", TransportType.TOR) // Bonded role
+                    ));
         }
 
         private final List<Provider> providers;

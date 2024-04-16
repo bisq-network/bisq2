@@ -167,7 +167,7 @@ public class TorHttpClient extends BaseHttpClient {
             throws UnsupportedEncodingException {
         switch (httpMethod) {
             case GET:
-                return new HttpGet(baseUrl + param);
+                return new HttpGet(baseUrl + "/" + param);
             case POST:
                 HttpPost httpPost = new HttpPost(baseUrl);
                 HttpEntity httpEntity = new StringEntity(param);
