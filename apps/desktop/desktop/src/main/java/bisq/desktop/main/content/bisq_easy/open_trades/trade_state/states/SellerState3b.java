@@ -95,11 +95,17 @@ public class SellerState3b extends BaseState {
 
             model.setTxId(model.getBisqEasyTrade().getTxId().get());
             model.setBtcAddress(model.getBisqEasyTrade().getBtcAddress().get());
+
             if (model.getConfirmationState().get() == null) {
                 model.getConfirmationState().set(Model.ConfirmationState.REQUEST_STARTED);
                 requestTx();
             }
-            model.getButtonText().set(Res.get("bisqEasy.tradeState.info.phase3b.button.skip"));
+
+            if (model.getConfirmationState().get() == Model.ConfirmationState.CONFIRMED) {
+                model.getButtonText().set(Res.get("bisqEasy.tradeState.info.phase3b.button.next"));
+            } else {
+                model.getButtonText().set(Res.get("bisqEasy.tradeState.info.phase3b.button.skip"));
+            }
         }
 
         @Override
