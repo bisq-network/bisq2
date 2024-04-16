@@ -337,6 +337,18 @@
     -fx-font-family: "IBM Plex Sans SemiBold" !important;
 }
 
+.tx-lookup-in-mempool {
+    -fx-text-fill: -bisq2-yellow;
+}
+
+.tx-lookup-confirmed {
+    -fx-text-fill: -bisq2-green;
+}
+
+.tx-lookup-failed {
+    -fx-text-fill: -bisq2-red;
+}
+
 
 /*******************************************************************************
  * OpenTradesWelcome                                                            *
