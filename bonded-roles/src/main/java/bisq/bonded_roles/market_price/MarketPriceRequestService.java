@@ -71,9 +71,9 @@ public class MarketPriceRequestService {
         }
 
         private static TransportType getTransportTypeFromUrl(String url) {
-            if (url.endsWith(".i2p/")) {
+            if (url.endsWith(".i2p")) {
                 return TransportType.I2P;
-            } else if (url.endsWith(".onion/")) {
+            } else if (url.endsWith(".onion")) {
                 return TransportType.TOR;
             } else {
                 return TransportType.CLEAR;

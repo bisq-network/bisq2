@@ -198,7 +198,7 @@ public class ExplorerService {
                 if (rootCause instanceof HttpException) {
                     HttpException httpException = (HttpException) rootCause;
                     int responseCode = httpException.getResponseCode();
-                    // If not server error  we pass the error to the client
+                    // If not server error we pass the error to the client
                     if (responseCode < 500) {
                         throw new RuntimeException(e);
                     }
@@ -250,5 +250,4 @@ public class ExplorerService {
         } catch (Exception ignore) {
         }
     }
-
 }
