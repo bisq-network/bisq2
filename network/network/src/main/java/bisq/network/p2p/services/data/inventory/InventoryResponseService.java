@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.data.inventory;
 
 import bisq.common.util.ByteUnit;
+import bisq.common.util.ExceptionUtil;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
@@ -78,7 +79,13 @@ public class InventoryResponseService implements Node.Listener {
         if (filterServiceMap.containsKey(inventoryFilterType)) {
             FilterService<? extends InventoryFilter> filterService = filterServiceMap.get(inventoryFilterType);
             Inventory inventory = filterService.createInventory(inventoryFilter);
-            NetworkService.NETWORK_IO_POOL.submit(() -> node.send(new InventoryResponse(inventory, request.getNonce()), connection));
+            NetworkService.NETWORK_IO_POOL.submit(() -> {
+                try {
+                    node.send(new InventoryResponse(inventory, request.getNonce()), connection);
+                } catch (Exception e) {
+                    log.warn("Error at send InventoryResponse. {}", ExceptionUtil.getMessageOrToString(e));
+                }
+            });
         } else {
             log.warn("We got an inventoryRequest with filterType {} which we do not support." +
                             "This should never happen if our feature entries are correct and if the peers code is executed as expected.",
