@@ -20,14 +20,6 @@ targets a user group which we cannot reach with Bisq v1. You can read more about
 in [the Bisq wiki](https://bisq.wiki/Bisq_Easy).
 
 
- ![Actions Status](https://github.com/bisq-network/bisq2/actions/workflows/build.yml/badge.svg)
-
-## Why work on Bisq 2?
-
-- **Compensated Contributions:** Unique in open-source, contributors are rewarded for their work.
-- **Technological Edge:** Java, Blockchain, P2P networks, JavaFX - cutting-edge tech at your fingertips.
-- **Complex, Rewarding Challenges:** Dive into a sophisticated architecture that rewards ingenuity.
-
 ## Getting Started
 
 ### Quick Setup
@@ -45,27 +37,30 @@ in [the Bisq wiki](https://bisq.wiki/Bisq_Easy).
    ./gradlew desktop:desktop-app:run
    ```
 
+4. **Run desktop client with custom data directory:**
+   ```bash
+   apps/desktop/desktop-app/build/install/desktop-app/bin/desktop-app --data-dir=<data_dir>
+   ```
+
 ## Community and Contributions
 
 Bisq is an open source project and a [Decentralized Autonomous Organization (DAO)](https://bisq.network/dao/).
 
-Whether you're reporting bugs, suggesting features, or contributing code, you're part of our ecosystem. Get involved:
-- [Contribution Guideline](./docs/dev/contributing.md)
-- [Development Guidelines](./docs/dev/dev-guide.md)
-- Join the discussion on [Matrix](https://matrix.to/#/#bisq.v2.dev:bitcoin.kyoto)
+If you want to contribute to Bisq get in touch on [Matrix](https://matrix.to/#/#bisq.v2.dev:bitcoin.kyoto).
 
-## Documentation
+If you are a developer check out the [dev guide](./docs/dev/dev-guide.md).
 
-Dive into our extensive documentation for a deeper understanding of Bisq 2:
+**Why work on Bisq 2?**
 
-- [Distributed Data Storage](./docs/dev/distributed-data-storage-notes.md)
-- [Protobuf](./docs/dev/protobuf-notes.md)
+- Compensated Contributions: Unique in open-source, contributors are rewarded for their work.
+- Technological Edge: [P2P network](network.md), Bitcoin, Cryptography,...
+- Complex, Rewarding Challenges: Dive into a sophisticated architecture that rewards ingenuity.
 
-## Support and Troubleshooting
-
-Run into issues? Check our [Troubleshooting Guide](./docs/known-issues-with-installation.md) or reach out on [Matrix](https://bisq.chat).
 
 ## License
 
 Bisq 2 is licensed under the [AGPL-3.0 license](LICENSE). All contributions are subject to this license.
+
+![Actions Status](https://github.com/bisq-network/bisq2/actions/workflows/build.yml/badge.svg)
+
 
