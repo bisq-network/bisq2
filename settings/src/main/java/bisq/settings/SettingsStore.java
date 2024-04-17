@@ -143,6 +143,13 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     }
 
     public static SettingsStore fromProto(bisq.settings.protobuf.SettingsStore proto) {
+        // When users update from 2.0.2 the default value is 0. We require anyway a 1% as min. value so we use the
+        // fact that 0 is invalid to convert to the default value at updates.
+        // Can be removed once it's not expected anymore that users update from v2.0.2.
+        double maxTradePriceDeviation = proto.getMaxTradePriceDeviation();
+        if (maxTradePriceDeviation == 0) {
+            maxTradePriceDeviation = SettingsService.DEFAULT_MAX_TRADE_PRICE_DEVIATION;
+        }
         return new SettingsStore(Cookie.fromProto(proto.getCookie()),
                 proto.getDontShowAgainMapMap().entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)),
@@ -163,7 +170,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 new HashSet<>(proto.getFavouriteMarketsList().stream()
                         .map(Market::fromProto).collect(Collectors.toSet())),
                 proto.getIgnoreMinRequiredReputationScoreFromSecManager(),
-                proto.getMaxTradePriceDeviation());
+                maxTradePriceDeviation);
     }
 
     @Override
