@@ -56,7 +56,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
                     0, NetworkLoad.MAX_DIFFICULTY_ADJUSTMENT);
     private static final ValidatorBase MAX_TRADE_PRICE_DEVIATION_VALIDATOR =
             new PercentageValidator(Res.get("settings.preferences.trade.maxTradePriceDeviation.invalid", BisqEasyTradeService.MAX_TRADE_PRICE_DEVIATION * 100),
-                    0, BisqEasyTradeService.MAX_TRADE_PRICE_DEVIATION);
+                    0.01, BisqEasyTradeService.MAX_TRADE_PRICE_DEVIATION);
     private static final double TEXT_FIELD_WIDTH = 500;
 
     private final Button resetDontShowAgain, clearNotifications, addLanguageButton;
