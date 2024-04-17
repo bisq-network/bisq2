@@ -100,7 +100,8 @@ public class ServiceNodesByTransport {
                     features,
                     transportConfig,
                     transportConfig.getDefaultNodeSocketTimeout(),
-                    transportConfig.getUserNodeSocketTimeout());
+                    transportConfig.getUserNodeSocketTimeout(),
+                    transportConfig.getDevModeDelayInMs());
             Set<Address> seedAddresses = seedAddressesByTransport.get(transportType);
             checkNotNull(seedAddresses, "Seed nodes must be setup for %s", transportType);
             PeerGroupManager.Config peerGroupServiceConfig = peerGroupServiceConfigByTransport.get(transportType);
