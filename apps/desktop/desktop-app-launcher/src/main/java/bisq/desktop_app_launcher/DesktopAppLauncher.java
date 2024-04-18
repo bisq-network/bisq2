@@ -61,7 +61,7 @@ import static bisq.updater.UpdaterUtils.readVersionFromVersionFile;
  */
 @Slf4j
 public class DesktopAppLauncher {
-    private static final String VERSION = "2.0.2";
+    private static final String VERSION = "2.0.3";
     private static final String APP_NAME = "Bisq2";
     private static final String FINGER_PRINT_ALEJANDRO_GARCIA = "E222AA02"; // B493 3191 06CC 3D1F 252E  19CB F806 F422 E222 AA02
     private static final String FINGER_PRINT_HENRIK_JANNSEN = "387C8307"; // B8A5 D214 ADFA A387 A14C  8BCF 02AA 2BAE 387C 8307
