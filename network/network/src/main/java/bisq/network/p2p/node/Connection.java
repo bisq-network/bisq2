@@ -95,7 +95,7 @@ public abstract class Connection {
     private Future<?> inputHandlerFuture;
     private final AtomicInteger sentMessageCounter = new AtomicInteger(0);
     private final Object writeLock = new Object();
-    private volatile boolean isStopped;
+    private volatile boolean shutdownStarted;
     private volatile boolean listeningStopped;
 
     protected Connection(Socket socket,
@@ -116,7 +116,7 @@ public abstract class Connection {
         } catch (IOException exception) {
             log.error("Could not create objectOutputStream/objectInputStream for socket " + socket, exception);
             errorHandler.accept(this, exception);
-            close(CloseReason.EXCEPTION.exception(exception));
+            shutdown(CloseReason.EXCEPTION.exception(exception));
             return;
         }
 
@@ -147,7 +147,7 @@ public abstract class Connection {
                 //todo (deferred) StreamCorruptedException from i2p at shutdown. prob it send some text data at shut down
                 if (isInputStreamActive()) {
                     log.debug("Exception at input handler on {}", this, exception);
-                    close(CloseReason.EXCEPTION.exception(exception));
+                    shutdown(CloseReason.EXCEPTION.exception(exception));
 
                     // EOFException expected if connection got closed (Socket closed message)
                     if (!(exception instanceof EOFException)) {
@@ -180,7 +180,7 @@ public abstract class Connection {
     }
 
     public boolean isRunning() {
-        return !isStopped();
+        return !isShutdownStarted();
     }
 
     public long getCreated() {
@@ -207,7 +207,7 @@ public abstract class Connection {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     Connection send(EnvelopePayloadMessage envelopePayloadMessage, AuthorizationToken authorizationToken) {
-        if (isStopped()) {
+        if (isShutdownStarted()) {
             log.warn("Message not sent as connection has been shut down already. Message={}, Connection={}",
                     StringUtils.truncate(envelopePayloadMessage.toString(), 200), this);
             // We do not throw a ConnectionClosedException here
@@ -246,7 +246,7 @@ public abstract class Connection {
         } catch (IOException exception) {
             if (isRunning()) {
                 log.warn("Send message at {} failed with {}", this, ExceptionUtil.getMessageOrToString(exception));
-                close(CloseReason.EXCEPTION.exception(exception));
+                shutdown(CloseReason.EXCEPTION.exception(exception));
             }
             // We wrap any exception (also expected EOFException in case of connection close), to leave handling of the exception to the caller.
             throw new ConnectionException(exception);
@@ -257,13 +257,13 @@ public abstract class Connection {
         listeningStopped = true;
     }
 
-    void close(CloseReason closeReason) {
-        if (isStopped()) {
+    void shutdown(CloseReason closeReason) {
+        if (isShutdownStarted()) {
             log.debug("Shut down already in progress {}", this);
             return;
         }
         log.info("Close {}; \ncloseReason: {}", this, closeReason);
-        isStopped = true;
+        shutdownStarted = true;
         requestResponseManager.onClosed();
         if (inputHandlerFuture != null) {
             inputHandlerFuture.cancel(true);
@@ -299,8 +299,8 @@ public abstract class Connection {
         return sentMessageCounter;
     }
 
-    boolean isStopped() {
-        return isStopped || networkEnvelopeSocket.isClosed() || Thread.currentThread().isInterrupted();
+    boolean isShutdownStarted() {
+        return shutdownStarted || networkEnvelopeSocket.isClosed() || Thread.currentThread().isInterrupted();
     }
 
 

@@ -323,7 +323,7 @@ public class Node implements Connection.Handler {
     }
 
     public Connection send(EnvelopePayloadMessage envelopePayloadMessage, Connection connection) {
-        if (connection.isStopped()) {
+        if (connection.isShutdownStarted()) {
             log.debug("Send message failed as connection is already stopped {}", this);
             throw new ConnectionClosedException(connection);
         }
@@ -583,7 +583,7 @@ public class Node implements Connection.Handler {
 
     public void closeConnection(Connection connection, CloseReason closeReason) {
         log.debug("{} got called closeConnection for {}, closeReason={}", this, connection, closeReason);
-        connection.close(closeReason);
+        connection.shutdown(closeReason);
     }
 
     public CompletableFuture<Void> closeConnectionGracefullyAsync(Connection connection, CloseReason closeReason) {
@@ -599,7 +599,7 @@ public class Node implements Connection.Handler {
             Thread.sleep(100);
         } catch (Throwable ignore) {
         }
-        connection.close(CloseReason.CLOSE_MSG_SENT.details(closeReason.name()));
+        connection.shutdown(CloseReason.CLOSE_MSG_SENT.details(closeReason.name()));
     }
 
     public CompletableFuture<Boolean> shutdown() {
