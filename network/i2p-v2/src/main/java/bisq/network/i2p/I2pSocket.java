@@ -42,4 +42,9 @@ public class I2pSocket implements PeerSocket {
     public void close() throws IOException {
         socket.close();
     }
+
+    @Override
+    public boolean isClosed() {
+        return false;
+    }
 }
