@@ -232,7 +232,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
             ignoreDiffAdjustmentFromSecManager.set(persisted.ignoreDiffAdjustmentFromSecManager.get());
             favouriteMarkets.setAll(persisted.favouriteMarkets);
             ignoreMinRequiredReputationScoreFromSecManager.set(persisted.ignoreMinRequiredReputationScoreFromSecManager.get());
-            maxTradePriceDeviation.set(persisted.toProto().getMaxTradePriceDeviation());
+            maxTradePriceDeviation.set(persisted.maxTradePriceDeviation.get());
         } catch (Exception e) {
             log.error("Exception at applyPersisted", e);
         }
