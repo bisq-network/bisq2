@@ -105,7 +105,7 @@ public class Bisq1BridgeHttpService implements Service {
     public CompletableFuture<List<ProofOfBurnDto>> requestProofOfBurnTxs() {
         return CompletableFuture.supplyAsync(() -> {
                     try {
-                        String path = "/api/v1/proof-of-burn/get-proof-of-burn/" + (lastRequestedProofOfBurnBlockHeight.get() + 1);
+                        String path = "api/v1/proof-of-burn/get-proof-of-burn/" + (lastRequestedProofOfBurnBlockHeight.get() + 1);
                         log.info("Request Bisq DAO node: {}", path);
                         String response = httpClient.get(path,
                                 Optional.of(new Pair<>("User-Agent", httpClient.userAgent)));
@@ -131,7 +131,7 @@ public class Bisq1BridgeHttpService implements Service {
     public CompletableFuture<List<BondedReputationDto>> requestBondedReputations() {
         return CompletableFuture.supplyAsync(() -> {
                     try {
-                        String path = "/api/v1/bonded-reputation/get-bonded-reputation/" + (lastRequestedBondedReputationBlockHeight.get() + 1);
+                        String path = "api/v1/bonded-reputation/get-bonded-reputation/" + (lastRequestedBondedReputationBlockHeight.get() + 1);
                         log.info("Request Bisq DAO node: {}", path);
                         String response = httpClient.get(path,
                                 Optional.of(new Pair<>("User-Agent", httpClient.userAgent)));
@@ -157,7 +157,7 @@ public class Bisq1BridgeHttpService implements Service {
     public CompletableFuture<Optional<Long>> requestAccountAgeWitness(String hashAsHex) {
         return CompletableFuture.supplyAsync(() -> {
             try {
-                String path = "/api/v1/account-age/get-date/" + hashAsHex;
+                String path = "api/v1/account-age/get-date/" + hashAsHex;
                 log.info("Request account age witness: {}", path);
                 String response = httpClient.get(path,
                         Optional.of(new Pair<>("User-Agent", httpClient.userAgent)));
@@ -175,7 +175,7 @@ public class Bisq1BridgeHttpService implements Service {
     public CompletableFuture<Optional<Long>> requestSignedWitnessDate(String hashAsHex) {
         return CompletableFuture.supplyAsync(() -> {
             try {
-                String path = "/api/v1/signed-witness/get-date/" + hashAsHex;
+                String path = "api/v1/signed-witness/get-date/" + hashAsHex;
                 log.info("Request signed-witness: {}", path);
                 String response = httpClient.get(path,
                         Optional.of(new Pair<>("User-Agent", httpClient.userAgent)));
@@ -198,7 +198,7 @@ public class Bisq1BridgeHttpService implements Service {
             // We cannot use URLEncoding as it would convert a + into a space (+ and / can appear in base64 encoding)
             String signatureAsHex = Hex.encode(Base64.decode(signatureBase64));
             //todo (Critical) URLEncoding for userName
-            String path = "/api/v1/bonded-role-verification/get-bonded-role-verification/" +
+            String path = "api/v1/bonded-role-verification/get-bonded-role-verification/" +
                     bondUserName + "/" +
                     roleType + "/" +
                     profileId + "/" +
