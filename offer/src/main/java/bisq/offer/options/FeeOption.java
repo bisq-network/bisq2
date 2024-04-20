@@ -33,7 +33,7 @@ public final class FeeOption implements OfferOption {
         BSQ;
 
         @Override
-        public bisq.offer.protobuf.FeeOption.FeeType toProto() {
+        public bisq.offer.protobuf.FeeOption.FeeType toProtoEnum() {
             return bisq.offer.protobuf.FeeOption.FeeType.valueOf(getProtobufEnumPrefix() + name());
         }
 
@@ -62,7 +62,7 @@ public final class FeeOption implements OfferOption {
     @Override
     public bisq.offer.protobuf.OfferOption toProto() {
         return getOfferOptionBuilder().setFeeOption(bisq.offer.protobuf.FeeOption.newBuilder()
-                        .setFeeType(feeType.toProto())
+                        .setFeeType(feeType.toProtoEnum())
                         .setBlockHeightAtFeePayment(blockHeightAtFeePayment)
                         .setFeeTxId(feeTxId))
                 .build();

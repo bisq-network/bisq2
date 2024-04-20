@@ -17,7 +17,18 @@
 
 package bisq.common.proto;
 
+import bisq.common.annotation.ExcludeForHash;
+import com.google.protobuf.Descriptors;
 import com.google.protobuf.Message;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.io.OutputStream;
+import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Interface for any object which gets serialized using protobuf.
@@ -32,7 +43,61 @@ import com.google.protobuf.Message;
 public interface Proto {
     Message toProto();
 
+    default Message.Builder getBuilder(boolean ignoreAnnotation) {
+        return null;
+    }
+
+    default Message toProto(boolean ignoreAnnotation) {
+        return buildProto(ignoreAnnotation);
+    }
+
+    default <T extends Message> T buildProto(boolean ignoreAnnotation) {
+        var builder = ignoreAnnotation ? getBuilder(true) : clearAnnotatedFields(getBuilder(false));
+        return (T) builder.build();
+    }
+
     default byte[] serialize() {
-        return toProto().toByteArray();
+        return buildProto(true).toByteArray();
+    }
+
+    default byte[] serializeForHash() {
+        return buildProto(false).toByteArray();
+    }
+
+    default int getSerializedSize() {
+        return buildProto(true).getSerializedSize();
+    }
+
+    default void writeDelimitedTo(OutputStream outputStream) throws IOException {
+        toProto(true).writeDelimitedTo(outputStream);
+    }
+
+    default Set<String> getExcludedFields() {
+        return Arrays.stream(getClass().getDeclaredFields())
+                .peek(field -> field.setAccessible(true))
+                .filter(field -> field.isAnnotationPresent(ExcludeForHash.class))
+                .map(Field::getName)
+                .collect(Collectors.toSet());
+    }
+
+    /**
+     * Requires that the name of the java fields is the same as the name of the proto definition.
+     *
+     * @param builder The builder we transform by clearing the ExcludeForHash annotated fields.
+     * @return Builder with the fields annotated with ExcludeForHash cleared.
+     */
+    default <B extends Message.Builder> B clearAnnotatedFields(B builder) {
+        Set<String> excludedFields = getExcludedFields();
+        getLogger().info("Clear fields in builder annotated with @ExcludeForHash: {}", excludedFields);
+        for (Descriptors.FieldDescriptor fieldDesc : builder.getAllFields().keySet()) {
+            if (excludedFields.contains(fieldDesc.getName())) {
+                builder.clearField(fieldDesc);
+            }
+        }
+        return (B) builder;
+    }
+
+    private Logger getLogger() {
+        return LoggerFactory.getLogger(getClass().getSimpleName());
     }
 }

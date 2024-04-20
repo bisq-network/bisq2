@@ -15,27 +15,17 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.account.protocol_type;
+syntax = "proto3";
 
-import bisq.common.util.ProtobufUtils;
+package common;
+option java_package = "bisq.common.test.protobuf";
+option java_multiple_files = true;
 
-public enum TradeProtocolType implements ProtocolType {
-    BISQ_EASY,
-    MULTISIG,
-    SUBMARINE,
-    LIQUID_MULTISIG,
-    BISQ_LIGHTNING,
-    LIQUID_SWAP,
-    BSQ_SWAP,
-    LIGHTNING_ESCROW,
-    MONERO_SWAP;
+message Child {
+  string childValue = 1;
+}
 
-    @Override
-    public bisq.account.protobuf.TradeProtocolType toProtoEnum() {
-        return bisq.account.protobuf.TradeProtocolType.valueOf(getProtobufEnumPrefix() + name());
-    }
-
-    public static TradeProtocolType fromProto(bisq.account.protobuf.TradeProtocolType proto) {
-        return ProtobufUtils.enumFromProto(TradeProtocolType.class, proto.name(), BISQ_EASY);
-    }
+message Parent {
+  string parentValue = 1;
+  Child child = 2;
 }

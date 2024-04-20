@@ -52,7 +52,7 @@ public enum BondedRoleType implements ProtoEnum {
     }
 
     @Override
-    public bisq.bonded_roles.protobuf.BondedRoleType toProto() {
+    public bisq.bonded_roles.protobuf.BondedRoleType toProtoEnum() {
         return bisq.bonded_roles.protobuf.BondedRoleType.valueOf(getProtobufEnumPrefix() + name());
     }
 

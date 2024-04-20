@@ -41,21 +41,21 @@ public final class Inventory implements NetworkProto {
 
     private final List<? extends DataRequest> entries;
     private final boolean maxSizeReached;
-    private transient final Optional<Integer> serializedSize;
+    private transient final Optional<Integer> cachedSerializedSize;
 
     public Inventory(Collection<? extends DataRequest> entries, boolean maxSizeReached) {
         this(entries, maxSizeReached, Optional.empty());
     }
 
-    private Inventory(Collection<? extends DataRequest> entries, boolean maxSizeReached, Optional<Integer> serializedSize) {
+    private Inventory(Collection<? extends DataRequest> entries, boolean maxSizeReached, Optional<Integer> cachedSerializedSize) {
         this.entries = new ArrayList<>(entries);
         this.maxSizeReached = maxSizeReached;
-        this.serializedSize = serializedSize;
+        this.cachedSerializedSize = cachedSerializedSize;
 
         // We need to sort deterministically as the data is used in the proof of work check
         // TODO (optimize, low prio) dataRequest.serialize() is expensive. We have the hash of the data in most DataRequest implementations.
         //  This could be used and combined with the other remaining data, like signature and pubkey
-        this.entries.sort(Comparator.comparing((DataRequest dataRequest) -> new ByteArray(dataRequest.serialize())));
+        this.entries.sort(Comparator.comparing((DataRequest dataRequest) -> new ByteArray(dataRequest.serializeForHash())));
 
         verify();
     }
@@ -63,7 +63,7 @@ public final class Inventory implements NetworkProto {
     @Override
     public void verify() {
         // We tolerate up to double of our max size
-        serializedSize.ifPresent(size -> checkArgument(size <= maxSize * 2));
+        cachedSerializedSize.ifPresent(size -> checkArgument(size <= maxSize * 2));
     }
 
     @Override

@@ -65,7 +65,7 @@ public final class Capability implements NetworkProto {
                         .map(Enum::name)
                         .collect(Collectors.toList()))
                 .addAllFeatures(features.stream()
-                        .map(Feature::toProto)
+                        .map(Feature::toProtoEnum)
                         .collect(Collectors.toList()))
                 .build();
     }

@@ -24,7 +24,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
@@ -73,13 +72,6 @@ public class ProtobufUtils {
     public static String getProtoType(Any any) {
         String[] tokens = any.getTypeUrl().split("/");
         return tokens.length > 1 ? tokens[1] : "";
-    }
-
-    public static byte[] getByteArrayFromProto(com.google.protobuf.Message proto) throws IOException {
-        try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
-            proto.writeDelimitedTo(byteArrayOutputStream);
-            return byteArrayOutputStream.toByteArray();
-        }
     }
 
     public static Any toAny(byte[] bytes) throws IOException {

@@ -58,7 +58,7 @@ public abstract class Contract<T extends Offer<?, ?>> implements NetworkProto {
         return bisq.contract.protobuf.Contract.newBuilder()
                 .setTakeOfferDate(takeOfferDate)
                 .setOffer(offer.toProto())
-                .setTradeProtocolType(protocolType.toProto());
+                .setTradeProtocolType(protocolType.toProtoEnum());
     }
 
     public static Contract<?> fromProto(bisq.contract.protobuf.Contract proto) {
@@ -78,16 +78,4 @@ public abstract class Contract<T extends Offer<?, ?>> implements NetworkProto {
     }
 
     public abstract Party getTaker();
-
-    /**
-     * We need to provide a deterministic serialisation of our data (including all child objects).
-     * Any collection must be deterministically sorted.
-     * To use protobuf serialisation comes with some risks, but it can be assumed that version updates will
-     * not break byte representation even protobuf does not provide such guarantees. Worst case, we need to stick with
-     * the version before a breaking change happens or implement our own serialisation format (which comes with
-     * considerable effort as it need to cover all the object path downwards).
-     */
-    public byte[] getHashForSignature() {
-        return toProto().toByteArray();
-    }
 }

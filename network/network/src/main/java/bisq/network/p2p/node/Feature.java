@@ -14,7 +14,7 @@ public enum Feature implements ProtoEnum {
     AUTHORIZATION_EQUI_HASH;
 
     @Override
-    public bisq.network.protobuf.Feature toProto() {
+    public bisq.network.protobuf.Feature toProtoEnum() {
         return bisq.network.protobuf.Feature.valueOf(getProtobufEnumPrefix() + name());
     }
 

@@ -43,7 +43,7 @@ public enum MarketPriceProvider implements ProtoEnum {
     }
 
     @Override
-    public bisq.bonded_roles.protobuf.MarketPriceProvider toProto() {
+    public bisq.bonded_roles.protobuf.MarketPriceProvider toProtoEnum() {
         return bisq.bonded_roles.protobuf.MarketPriceProvider.valueOf(getProtobufEnumPrefix() + name());
     }
 

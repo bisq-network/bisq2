@@ -89,12 +89,12 @@ public abstract class ChatMessage implements NetworkProto, Comparable<ChatMessag
     public bisq.chat.protobuf.ChatMessage.Builder getChatMessageBuilder() {
         bisq.chat.protobuf.ChatMessage.Builder builder = bisq.chat.protobuf.ChatMessage.newBuilder()
                 .setId(id)
-                .setChatChannelDomain(chatChannelDomain.toProto())
+                .setChatChannelDomain(chatChannelDomain.toProtoEnum())
                 .setChannelId(channelId)
                 .setAuthorUserProfileId(authorUserProfileId)
                 .setDate(date)
                 .setWasEdited(wasEdited)
-                .setChatMessageType(chatMessageType.toProto());
+                .setChatMessageType(chatMessageType.toProtoEnum());
         citation.ifPresent(citation -> builder.setCitation(citation.toProto()));
         text.ifPresent(builder::setText);
         return builder;

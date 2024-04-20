@@ -101,7 +101,7 @@ public abstract class FilterService<T extends InventoryFilter> {
                         o1.getAuthenticatedSequentialData().getAuthenticatedData().getDistributedData().getMetaData().getPriority()))
                 .filter(request -> {
                     if (!maxSizeReached.get()) {
-                        maxSizeReached.set(accumulatedSize.addAndGet(request.toProto().getSerializedSize()) > maxSize);
+                        maxSizeReached.set(accumulatedSize.addAndGet(request.getSerializedSize()) > maxSize);
                     }
                     return !maxSizeReached.get();
                 })
@@ -113,7 +113,7 @@ public abstract class FilterService<T extends InventoryFilter> {
                     .sorted((o1, o2) -> Integer.compare(o2.getMetaData().getPriority(), o1.getMetaData().getPriority()))
                     .filter(request -> {
                         if (!maxSizeReached.get()) {
-                            maxSizeReached.set(accumulatedSize.addAndGet(request.toProto().getSerializedSize()) > maxSize);
+                            maxSizeReached.set(accumulatedSize.addAndGet(request.getSerializedSize()) > maxSize);
                         }
                         return !maxSizeReached.get();
                     })
@@ -152,7 +152,7 @@ public abstract class FilterService<T extends InventoryFilter> {
                         o1.getMailboxSequentialData().getMailboxData().getMetaData().getPriority()))
                 .filter(request -> {
                     if (!maxSizeReached.get()) {
-                        maxSizeReached.set(accumulatedSize.addAndGet(request.toProto().getSerializedSize()) > maxSize);
+                        maxSizeReached.set(accumulatedSize.addAndGet(request.getSerializedSize()) > maxSize);
                     }
                     return !maxSizeReached.get();
                 })
@@ -163,7 +163,7 @@ public abstract class FilterService<T extends InventoryFilter> {
                     .sorted((o1, o2) -> Integer.compare(o2.getMetaData().getPriority(), o1.getMetaData().getPriority()))
                     .filter(request -> {
                         if (!maxSizeReached.get()) {
-                            maxSizeReached.set(accumulatedSize.addAndGet(request.toProto().getSerializedSize()) > maxSize);
+                            maxSizeReached.set(accumulatedSize.addAndGet(request.getSerializedSize()) > maxSize);
                         }
                         return !maxSizeReached.get();
                     })
@@ -183,7 +183,7 @@ public abstract class FilterService<T extends InventoryFilter> {
                         o1.getAppendOnlyData().getMetaData().getPriority()))
                 .filter(request -> {
                     if (!maxSizeReached.get()) {
-                        maxSizeReached.set(accumulatedSize.addAndGet(request.toProto().getSerializedSize()) > maxSize);
+                        maxSizeReached.set(accumulatedSize.addAndGet(request.getSerializedSize()) > maxSize);
                     }
                     return !maxSizeReached.get();
                 })

@@ -94,7 +94,7 @@ public final class BondedRoleRegistrationRequest implements MailboxMessage {
         var builder = bisq.bonded_roles.protobuf.BondedRoleRegistrationRequest.newBuilder()
                 .setProfileId(profileId)
                 .setAuthorizedPublicKey(authorizedPublicKey)
-                .setBondedRoleType(bondedRoleType.toProto())
+                .setBondedRoleType(bondedRoleType.toProtoEnum())
                 .setBondUserName(bondUserName)
                 .setSignatureBase64(signatureBase64)
                 .setNetworkId(networkId.toProto())

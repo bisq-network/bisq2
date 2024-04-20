@@ -68,7 +68,7 @@ public final class MarketPrice implements NetworkProto {
         return bisq.bonded_roles.protobuf.MarketPrice.newBuilder()
                 .setPriceQuote(priceQuote.toProto())
                 .setTimestamp(timestamp)
-                .setMarketPriceProvider(marketPriceProvider.toProto())
+                .setMarketPriceProvider(marketPriceProvider.toProtoEnum())
                 .build();
     }
 

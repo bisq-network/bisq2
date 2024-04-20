@@ -85,7 +85,7 @@ public final class ReportToModeratorMessage implements MailboxMessage {
                 .setReporterUserProfileId(reporterUserProfileId)
                 .setAccusedUserProfile(accusedUserProfile.toProto())
                 .setMessage(message)
-                .setChatChannelDomain(chatChannelDomain.toProto());
+                .setChatChannelDomain(chatChannelDomain.toProtoEnum());
         return builder.build();
     }
 

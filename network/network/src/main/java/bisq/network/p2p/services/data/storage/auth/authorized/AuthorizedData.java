@@ -122,7 +122,7 @@ public final class AuthorizedData extends AuthenticatedData {
     public boolean isNotAuthorized() {
         try {
             AuthorizedDistributedData authorizedDistributedData = getAuthorizedDistributedData();
-            if (!SignatureUtil.verify(distributedData.serialize(), signature.orElseThrow(), authorizedPublicKey)) {
+            if (!SignatureUtil.verify(distributedData.serializeForHash(), signature.orElseThrow(), authorizedPublicKey)) {
                 return true;
             }
 

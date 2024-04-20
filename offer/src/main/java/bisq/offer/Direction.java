@@ -26,7 +26,7 @@ public enum Direction implements ProtoEnum {
     SELL;
 
     @Override
-    public bisq.offer.protobuf.Direction toProto() {
+    public bisq.offer.protobuf.Direction toProtoEnum() {
         return bisq.offer.protobuf.Direction.valueOf(getProtobufEnumPrefix() + name());
     }
 

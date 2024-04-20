@@ -63,7 +63,7 @@ public class ConnectionMetrics {
 
         int ageInMinutes = getAgeInMinutes(now);
         sentBytesPerMinute.putIfAbsent(ageInMinutes, new AtomicLong());
-        sentBytesPerMinute.get(ageInMinutes).getAndAdd(networkEnvelope.toProto().getSerializedSize());
+        sentBytesPerMinute.get(ageInMinutes).getAndAdd(networkEnvelope.getSerializedSize());
 
         numMessagesSentPerMinute.putIfAbsent(ageInMinutes, new AtomicLong());
         numMessagesSentPerMinute.get(ageInMinutes).incrementAndGet();
@@ -78,7 +78,7 @@ public class ConnectionMetrics {
 
         int ageInMinutes = getAgeInMinutes(now);
         receivedBytesPerMinute.putIfAbsent(ageInMinutes, new AtomicLong());
-        receivedBytesPerMinute.get(ageInMinutes).getAndAdd(networkEnvelope.toProto().getSerializedSize());
+        receivedBytesPerMinute.get(ageInMinutes).getAndAdd(networkEnvelope.getSerializedSize());
 
         numMessagesReceivedPerMinute.putIfAbsent(ageInMinutes, new AtomicLong());
         numMessagesReceivedPerMinute.get(ageInMinutes).incrementAndGet();

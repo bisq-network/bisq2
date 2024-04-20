@@ -47,7 +47,7 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
 
     public static RemoveMailboxRequest from(MailboxData mailboxData, KeyPair receiverKeyPair)
             throws GeneralSecurityException {
-        byte[] hash = DigestUtil.hash(mailboxData.serialize());
+        byte[] hash = DigestUtil.hash(mailboxData.serializeForHash());
         byte[] signature = SignatureUtil.sign(hash, receiverKeyPair.getPrivate());
         return new RemoveMailboxRequest(mailboxData.getMetaData(), hash, receiverKeyPair.getPublic(), signature);
     }

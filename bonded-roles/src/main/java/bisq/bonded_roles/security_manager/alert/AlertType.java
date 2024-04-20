@@ -27,7 +27,7 @@ public enum AlertType implements ProtoEnum {
     BAN;
 
     @Override
-    public bisq.bonded_roles.protobuf.AlertType toProto() {
+    public bisq.bonded_roles.protobuf.AlertType toProtoEnum() {
         return bisq.bonded_roles.protobuf.AlertType.valueOf(getProtobufEnumPrefix() + name());
     }
 

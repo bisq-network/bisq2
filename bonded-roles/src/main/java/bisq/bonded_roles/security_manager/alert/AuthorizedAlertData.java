@@ -100,7 +100,7 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
         bisq.bonded_roles.protobuf.AuthorizedAlertData.Builder builder = bisq.bonded_roles.protobuf.AuthorizedAlertData.newBuilder()
                 .setId(id)
                 .setDate(date)
-                .setAlertType(alertType.toProto())
+                .setAlertType(alertType.toProtoEnum())
                 .setHaltTrading(haltTrading)
                 .setRequireVersionForTrading(requireVersionForTrading)
                 .setSecurityManagerProfileId(securityManagerProfileId)

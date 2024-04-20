@@ -71,7 +71,7 @@ public class InventoryResponseService implements Node.Listener {
 
     private void handleInventoryRequest(InventoryRequest request, Connection connection) {
         InventoryFilter inventoryFilter = request.getInventoryFilter();
-        double size = ByteUnit.BYTE.toKB(inventoryFilter.toProto().getSerializedSize());
+        double size = ByteUnit.BYTE.toKB(inventoryFilter.getSerializedSize());
         log.info("Received an InventoryRequest from peer {}. Size: {} kb. Filter details: {}",
                 connection.getPeerAddress(), size, inventoryFilter.getDetails());
 

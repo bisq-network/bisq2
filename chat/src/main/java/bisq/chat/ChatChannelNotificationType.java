@@ -28,7 +28,7 @@ public enum ChatChannelNotificationType implements ProtoEnum {
     OFF;
 
     @Override
-    public bisq.chat.protobuf.ChatChannelNotificationType toProto() {
+    public bisq.chat.protobuf.ChatChannelNotificationType toProtoEnum() {
         return bisq.chat.protobuf.ChatChannelNotificationType.valueOf(getProtobufEnumPrefix() + name());
     }
 
