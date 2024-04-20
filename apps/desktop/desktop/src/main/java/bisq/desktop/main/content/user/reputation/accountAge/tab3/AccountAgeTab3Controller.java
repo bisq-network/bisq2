@@ -19,7 +19,6 @@ package bisq.desktop.main.content.user.reputation.accountAge.tab3;
 
 import bisq.bisq_easy.NavigationTarget;
 import bisq.common.observable.Pin;
-import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.Transitions;
@@ -99,7 +98,7 @@ public class AccountAgeTab3Controller implements Controller {
     }
 
     public void onRequestAuthorization() {
-        String signedMessage = String.valueOf(model.getSignedMessage());
+        String signedMessage = model.getSignedMessage().get();
         if (signedMessage.startsWith(PREFIX)) {
             signedMessage = signedMessage.replace(PREFIX, "");
         }
