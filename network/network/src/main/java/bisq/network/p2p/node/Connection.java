@@ -207,7 +207,7 @@ public abstract class Connection {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     Connection send(EnvelopePayloadMessage envelopePayloadMessage, AuthorizationToken authorizationToken) {
-        if (isStopped) {
+        if (isStopped()) {
             log.warn("Message not sent as connection has been shut down already. Message={}, Connection={}",
                     StringUtils.truncate(envelopePayloadMessage.toString(), 200), this);
             // We do not throw a ConnectionClosedException here
@@ -224,11 +224,11 @@ public abstract class Connection {
                 try {
                     networkEnvelopeSocket.send(networkEnvelope);
                     sent = true;
-                } catch (Throwable throwable) {
-                    if (!isStopped) {
-                        throw throwable;
+                } catch (Exception exception) {
+                    if (isRunning()) {
+                        throw exception;
                     } else {
-                        log.warn("Send message failed at stopped connection", throwable);
+                        log.info("Send message at stopped connection {} failed with {}", this, ExceptionUtil.getMessageOrToString(exception));
                     }
                 }
             }
@@ -244,8 +244,8 @@ public abstract class Connection {
             }
             return this;
         } catch (IOException exception) {
-            if (!isStopped) {
-                log.error("Send message failed. {}", this, ExceptionUtil.getMessageOrToString(exception));
+            if (isRunning()) {
+                log.warn("Send message at {} failed with {}", this, ExceptionUtil.getMessageOrToString(exception));
                 close(CloseReason.EXCEPTION.exception(exception));
             }
             // We wrap any exception (also expected EOFException in case of connection close), to leave handling of the exception to the caller.
@@ -258,7 +258,7 @@ public abstract class Connection {
     }
 
     void close(CloseReason closeReason) {
-        if (isStopped) {
+        if (isStopped()) {
             log.debug("Shut down already in progress {}", this);
             return;
         }
@@ -300,7 +300,7 @@ public abstract class Connection {
     }
 
     boolean isStopped() {
-        return isStopped;
+        return isStopped || networkEnvelopeSocket.isClosed() || Thread.currentThread().isInterrupted();
     }
 
 
@@ -313,6 +313,6 @@ public abstract class Connection {
     }
 
     private boolean isInputStreamActive() {
-        return !listeningStopped && !isStopped && !Thread.currentThread().isInterrupted();
+        return !listeningStopped && isRunning();
     }
 }

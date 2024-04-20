@@ -335,11 +335,11 @@ public class Node implements Connection.Handler {
                     connection.getPeersCapability().getFeatures());
             maybeSimulateDelay();
             return connection.send(envelopePayloadMessage, token);
-        } catch (Throwable throwable) {
+        } catch (Exception exception) {
             if (connection.isRunning()) {
-                handleException(connection, throwable);
-                log.debug("Send message failed on {}", this, throwable);
-                closeConnection(connection, CloseReason.EXCEPTION.exception(throwable));
+                handleException(connection, exception);
+                log.debug("Send message failed on {}", this, exception);
+                closeConnection(connection, CloseReason.EXCEPTION.exception(exception));
             }
             throw new ConnectionClosedException(connection);
         }
