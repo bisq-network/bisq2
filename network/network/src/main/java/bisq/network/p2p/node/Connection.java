@@ -21,6 +21,7 @@ import bisq.common.util.ExceptionUtil;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
 import bisq.network.common.Address;
+import bisq.network.common.DefaultPeerSocket;
 import bisq.network.common.PeerSocket;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.NetworkEnvelope;
@@ -28,7 +29,6 @@ import bisq.network.p2p.node.authorization.AuthorizationToken;
 import bisq.network.p2p.node.envelope.NetworkEnvelopeSocket;
 import bisq.network.p2p.node.network_load.ConnectionMetrics;
 import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
-import bisq.tor.TorSocket;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -111,7 +111,7 @@ public abstract class Connection {
         requestResponseManager = new RequestResponseManager(connectionMetrics);
 
         try {
-            PeerSocket peerSocket = new TorSocket(socket);
+            PeerSocket peerSocket = new DefaultPeerSocket(socket);
             this.networkEnvelopeSocket = new NetworkEnvelopeSocket(peerSocket);
         } catch (IOException exception) {
             log.error("Could not create objectOutputStream/objectInputStream for socket " + socket, exception);
