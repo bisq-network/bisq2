@@ -180,7 +180,7 @@ public abstract class Connection {
     }
 
     public boolean isRunning() {
-        return !isShutdownStarted();
+        return !isStopped();
     }
 
     public long getCreated() {
@@ -207,7 +207,7 @@ public abstract class Connection {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     Connection send(EnvelopePayloadMessage envelopePayloadMessage, AuthorizationToken authorizationToken) {
-        if (isShutdownStarted()) {
+        if (isStopped()) {
             log.warn("Message not sent as connection has been shut down already. Message={}, Connection={}",
                     StringUtils.truncate(envelopePayloadMessage.toString(), 200), this);
             // We do not throw a ConnectionClosedException here
@@ -258,7 +258,7 @@ public abstract class Connection {
     }
 
     void shutdown(CloseReason closeReason) {
-        if (isShutdownStarted()) {
+        if (isStopped()) {
             log.debug("Shut down already in progress {}", this);
             return;
         }
@@ -299,7 +299,7 @@ public abstract class Connection {
         return sentMessageCounter;
     }
 
-    boolean isShutdownStarted() {
+    boolean isStopped() {
         return shutdownStarted || networkEnvelopeSocket.isClosed() || Thread.currentThread().isInterrupted();
     }
 

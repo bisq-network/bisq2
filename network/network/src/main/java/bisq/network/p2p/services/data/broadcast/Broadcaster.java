@@ -90,7 +90,7 @@ public class Broadcaster {
                         try {
                             node.send(broadcastMessage, connection);
                             numSuccess.incrementAndGet();
-                        } catch (Throwable throwable) {
+                        } catch (Exception exception) {
                             numFaults.incrementAndGet();
                         }
                         if (numSuccess.get() + numFaults.get() == numBroadcasts) {
