@@ -29,10 +29,12 @@ import bisq.network.p2p.services.data.storage.StorageService;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -112,11 +114,47 @@ public class NetworkLoadService {
                 .sum();
         long networkDatabaseSize = dataRequests.stream().mapToLong(e -> e.toProto().getSerializedSize()).sum();
 
+        Map<String, AtomicLong> numSentMessagesByMessageClassName = new HashMap<>();
+        allConnectionMetrics.stream()
+                .map(ConnectionMetrics::getNumSentMessagesByMessageClassName)
+                .forEach(map -> {
+                    map.forEach((name, value) -> {
+                        numSentMessagesByMessageClassName.putIfAbsent(name, new AtomicLong());
+                        numSentMessagesByMessageClassName.get(name).getAndIncrement();
+                    });
+                });
+        StringBuilder numSentMsgPerClassName = new StringBuilder();
+        numSentMessagesByMessageClassName.forEach((key, value) -> {
+            numSentMsgPerClassName.append("\n - ");
+            numSentMsgPerClassName.append(key);
+            numSentMsgPerClassName.append(": ");
+            numSentMsgPerClassName.append(value.get());
+        });
+
+        Map<String, AtomicLong> numReceivedMessagesByMessageClassName = new HashMap<>();
+        allConnectionMetrics.stream()
+                .map(ConnectionMetrics::getNumReceivedMessagesByMessageClassName)
+                .forEach(map -> {
+                    map.forEach((name, value) -> {
+                        numReceivedMessagesByMessageClassName.putIfAbsent(name, new AtomicLong());
+                        numReceivedMessagesByMessageClassName.get(name).getAndIncrement();
+                    });
+                });
+        StringBuilder numRecMsgPerClassName = new StringBuilder();
+        numReceivedMessagesByMessageClassName.forEach((key, value) -> {
+            numRecMsgPerClassName.append("\n - ");
+            numRecMsgPerClassName.append(key);
+            numRecMsgPerClassName.append(": ");
+            numRecMsgPerClassName.append(value.get());
+        });
+
         StringBuilder sb = new StringBuilder("\n\n////////////////////////////////////////////////////////////////////////////////////////////////////");
         sb.append("\nNetwork statistics").append(("\n////////////////////////////////////////////////////////////////////////////////////////////////////"))
                 .append("\nNumber of Connections: ").append(numConnections)
                 .append("\nNumber of messages sent in last hour: ").append(numMessagesSentOfLastHour)
+                .append("\nNumber of messages sent by class name:").append(numSentMsgPerClassName)
                 .append("\nNumber of messages received in last hour: ").append(numMessagesReceivedOfLastHour)
+                .append("\nNumber of messages received by class name:").append(numRecMsgPerClassName)
                 .append("\nSize of network DB: ").append(ByteUnit.BYTE.toMB(networkDatabaseSize)).append(" MB")
                 .append("\nData sent in last hour: ").append(ByteUnit.BYTE.toKB(sentBytesOfLastHour)).append(" KB")
                 .append("\nData received in last hour: ").append(ByteUnit.BYTE.toKB(receivedBytesOfLastHour)).append(" KB")
