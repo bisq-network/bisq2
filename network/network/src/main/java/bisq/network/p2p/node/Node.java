@@ -329,11 +329,11 @@ public class Node implements Connection.Handler {
                     connection.getSentMessageCounter().incrementAndGet(),
                     connection.getPeersCapability().getFeatures());
             return connection.send(envelopePayloadMessage, token);
-        } catch (Throwable throwable) {
-            if (connection.isRunning()) {
-                handleException(connection, throwable);
-                log.debug("Send message failed on {}", this, throwable);
-                closeConnection(connection, CloseReason.EXCEPTION.exception(throwable));
+        } catch (Exception exception) {
+            if (connection.isRunning() && !(exception.getCause() instanceof SocketException)) {
+                handleException(connection, exception);
+                log.debug("Send message failed on {}", this, exception);
+                closeConnection(connection, CloseReason.EXCEPTION.exception(exception));
             }
             throw new ConnectionClosedException(connection);
         }
