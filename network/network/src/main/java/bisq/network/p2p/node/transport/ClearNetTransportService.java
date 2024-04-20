@@ -32,22 +32,26 @@ public class ClearNetTransportService implements TransportService {
             return new Config(dataDir,
                     config.hasPath("defaultNodePort") ? config.getInt("defaultNodePort") : -1,
                     (int) TimeUnit.SECONDS.toMillis(config.getInt("defaultNodeSocketTimeout")),
-                    (int) TimeUnit.SECONDS.toMillis(config.getInt("userNodeSocketTimeout")));
+                    (int) TimeUnit.SECONDS.toMillis(config.getInt("userNodeSocketTimeout")),
+                    (int) TimeUnit.MILLISECONDS.toMillis(config.getInt("devModeDelayInMs")));
         }
 
+        private final Path dataDir;
         private final int defaultNodePort;
         private final int defaultNodeSocketTimeout;
         private final int userNodeSocketTimeout;
-        private final Path dataDir;
+        private final int devModeDelayInMs;
 
-        public Config(Path dataDir, int defaultNodePort, int defaultNodeSocketTimeout, int userNodeSocketTimeout) {
+        public Config(Path dataDir, int defaultNodePort, int defaultNodeSocketTimeout, int userNodeSocketTimeout, int devModeDelayInMs) {
             this.dataDir = dataDir;
             this.defaultNodePort = defaultNodePort;
             this.defaultNodeSocketTimeout = defaultNodeSocketTimeout;
             this.userNodeSocketTimeout = userNodeSocketTimeout;
+            this.devModeDelayInMs = devModeDelayInMs;
         }
     }
 
+    private final int devModeDelayInMs;
     private int numSocketsCreated = 0;
     @Getter
     private final BootstrapInfo bootstrapInfo = new BootstrapInfo();
@@ -55,6 +59,7 @@ public class ClearNetTransportService implements TransportService {
     private Scheduler startBootstrapProgressUpdater;
 
     public ClearNetTransportService(TransportConfig config) {
+        devModeDelayInMs = config.getDevModeDelayInMs();
     }
 
     @Override
@@ -63,19 +68,19 @@ public class ClearNetTransportService implements TransportService {
             return;
         }
         initializeCalled = true;
+        maybeSimulateDelay();
         bootstrapInfo.getBootstrapState().set(BootstrapState.BOOTSTRAP_TO_NETWORK);
         startBootstrapProgressUpdater = Scheduler.run(() -> updateStartBootstrapProgress(bootstrapInfo)).periodically(1000);
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        // Simulate delay
         if (startBootstrapProgressUpdater != null) {
             startBootstrapProgressUpdater.stop();
             startBootstrapProgressUpdater = null;
         }
         return CompletableFuture.supplyAsync(() -> true,
-                CompletableFuture.delayedExecutor(20, TimeUnit.MILLISECONDS));
+                CompletableFuture.delayedExecutor(devModeDelayInMs, TimeUnit.MILLISECONDS));
     }
 
     @Override
@@ -91,6 +96,7 @@ public class ClearNetTransportService implements TransportService {
         bootstrapInfo.getBootstrapProgress().set(0.25);
         bootstrapInfo.getBootstrapDetails().set("Start creating server");
 
+        maybeSimulateDelay();
         try {
             ServerSocket serverSocket = new ServerSocket(port);
             Address address = Address.localHost(port);
@@ -110,6 +116,7 @@ public class ClearNetTransportService implements TransportService {
     @Override
     public Socket getSocket(Address address) throws IOException {
         log.debug("Create new Socket to {}", address);
+        maybeSimulateDelay();
         Socket socket = new Socket(address.getHost(), address.getPort());
         numSocketsCreated++;
 
@@ -126,6 +133,15 @@ public class ClearNetTransportService implements TransportService {
             return true;
         } catch (IOException e) {
             return false;
+        }
+    }
+
+    private void maybeSimulateDelay() {
+        if (devModeDelayInMs > 0) {
+            try {
+                Thread.sleep(devModeDelayInMs);
+            } catch (Throwable t) {
+            }
         }
     }
 }

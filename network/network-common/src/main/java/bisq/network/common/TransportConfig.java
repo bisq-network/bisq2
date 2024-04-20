@@ -27,4 +27,8 @@ public interface TransportConfig {
     int getDefaultNodeSocketTimeout(); // in ms
 
     int getUserNodeSocketTimeout(); // in ms
+
+    default int getDevModeDelayInMs() {
+        return 0;
+    }
 }

@@ -109,19 +109,22 @@ public class Node implements Connection.Handler {
         private final TransportConfig transportConfig;
         private final int defaultNodeSocketTimeout; // in ms
         private final int userNodeSocketTimeout; // in ms
+        private final int devModeDelayInMs;
 
         public Config(TransportType transportType,
                       Set<TransportType> supportedTransportTypes,
                       Set<Feature> features,
                       TransportConfig transportConfig,
                       int defaultNodeSocketTimeout,
-                      int userNodeSocketTimeout) {
+                      int userNodeSocketTimeout,
+                      int devModeDelayInMs) {
             this.transportType = transportType;
             this.supportedTransportTypes = supportedTransportTypes;
             this.features = features;
             this.transportConfig = transportConfig;
             this.defaultNodeSocketTimeout = defaultNodeSocketTimeout;
             this.userNodeSocketTimeout = userNodeSocketTimeout;
+            this.devModeDelayInMs = devModeDelayInMs;
         }
     }
 
@@ -129,6 +132,7 @@ public class Node implements Connection.Handler {
     private final TransportService transportService;
     private final AuthorizationService authorizationService;
     private final int socketTimeout; // in ms
+    private final int devModeDelayInMs; // Only set for clearnet, otherwise it is 0
     private final Set<TransportType> supportedTransportTypes;
     private final Set<Feature> features;
     @Getter
@@ -172,6 +176,7 @@ public class Node implements Connection.Handler {
         supportedTransportTypes = config.getSupportedTransportTypes();
         features = config.getFeatures();
         socketTimeout = isDefaultNode ? config.getDefaultNodeSocketTimeout() : config.getUserNodeSocketTimeout();
+        devModeDelayInMs = config.getDevModeDelayInMs();
         this.banList = banList;
         this.transportService = transportService;
         this.authorizationService = authorizationService;
@@ -328,6 +333,7 @@ public class Node implements Connection.Handler {
                     connection.getPeerAddress().getFullAddress(),
                     connection.getSentMessageCounter().incrementAndGet(),
                     connection.getPeersCapability().getFeatures());
+            maybeSimulateDelay();
             return connection.send(envelopePayloadMessage, token);
         } catch (Throwable throwable) {
             if (connection.isRunning()) {
@@ -484,6 +490,7 @@ public class Node implements Connection.Handler {
         if (isShutdown()) {
             return;
         }
+        maybeSimulateDelay();
         String myAddress = findMyAddress().orElseThrow().getFullAddress();
         boolean isAuthorized = authorizationService.isAuthorized(envelopePayloadMessage,
                 authorizationToken,
@@ -716,5 +723,15 @@ public class Node implements Connection.Handler {
 
     private boolean isShutdown() {
         return getState().get() == STOPPING || getState().get() == TERMINATED;
+    }
+
+    // Only used for clearnet
+    private void maybeSimulateDelay() {
+        if (devModeDelayInMs > 0) {
+            try {
+                Thread.sleep(devModeDelayInMs);
+            } catch (Throwable t) {
+            }
+        }
     }
 }
