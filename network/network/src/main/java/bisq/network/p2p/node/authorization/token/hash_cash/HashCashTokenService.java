@@ -61,11 +61,16 @@ public class HashCashTokenService extends AuthorizationTokenService<HashCashToke
         aggregatedNetworkLoadValues.add(networkLoad.getLoad());
         int size = aggregatedPoWDuration.size();
         if (size % 100 == 0) {
+            double averageTimePerMessage = MathUtils.roundDouble(aggregatedPoWDuration.stream().mapToLong(e -> e).average().orElse(0D), 2);
+            double accDuration = MathUtils.roundDouble(accumulatedPoWDuration / 1000, 2);
+            double averageLoad = MathUtils.roundDouble(aggregatedNetworkLoadValues.stream().mapToDouble(e -> e).average().orElse(0D), 4);
+            if (averageTimePerMessage > 1000) {
+                log.warn("Average time/message used for PoW is very high");
+            } else if (averageTimePerMessage > 300) {
+                log.warn("Average time/message used for PoW is higher as expected");
+            }
             log.info("Total time used for PoW: {} sec; Average time/message used for PoW: {} ms; Average network load value: {}; Number of messages: {}",
-                    MathUtils.roundDouble(accumulatedPoWDuration / 1000, 2),
-                    MathUtils.roundDouble(aggregatedPoWDuration.stream().mapToLong(e -> e).average().orElse(0D), 2),
-                    MathUtils.roundDouble(aggregatedNetworkLoadValues.stream().mapToDouble(e -> e).average().orElse(0D), 4),
-                    size
+                    accDuration, averageTimePerMessage, averageLoad, size
             );
             if (aggregatedPoWDuration.size() > 100_000) {
                 log.warn("aggregatedPoWDuration is getting too large. We clear the list.");

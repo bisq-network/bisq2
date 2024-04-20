@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.data.broadcast;
 
 import bisq.common.util.CollectionUtil;
+import bisq.common.util.ExceptionUtil;
 import bisq.network.NetworkService;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
@@ -90,7 +91,8 @@ public class Broadcaster {
                         try {
                             node.send(broadcastMessage, connection);
                             numSuccess.incrementAndGet();
-                        } catch (Throwable throwable) {
+                        } catch (Exception exception) {
+                            log.info("Exception at sending broadcastMessage: {}", ExceptionUtil.getMessageOrToString(exception));
                             numFaults.incrementAndGet();
                         }
                         if (numSuccess.get() + numFaults.get() == numBroadcasts) {
