@@ -318,7 +318,7 @@ public class Node implements Connection.Handler {
     }
 
     public Connection send(EnvelopePayloadMessage envelopePayloadMessage, Connection connection) {
-        if (connection.isStopped()) {
+        if (!connection.isRunning()) {
             log.debug("Send message failed as connection is already stopped {}", this);
             throw new ConnectionClosedException(connection);
         }

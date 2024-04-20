@@ -25,4 +25,6 @@ public interface PeerSocket extends Closeable {
     InputStream getInputStream();
 
     OutputStream getOutputStream();
+
+    boolean isClosed();
 }

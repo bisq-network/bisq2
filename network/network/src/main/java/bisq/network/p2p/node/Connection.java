@@ -179,7 +179,7 @@ public abstract class Connection {
     }
 
     public boolean isRunning() {
-        return !isStopped();
+        return !isStopped() && !isClosed();
     }
 
     public long getCreated() {
@@ -300,6 +300,10 @@ public abstract class Connection {
 
     boolean isStopped() {
         return isStopped;
+    }
+
+    boolean isClosed() {
+        return networkEnvelopeSocket.isClosed();
     }
 
 
