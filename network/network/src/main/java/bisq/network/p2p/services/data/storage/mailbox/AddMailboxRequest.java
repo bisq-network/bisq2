@@ -86,13 +86,21 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
     }
 
     @Override
-    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
-        return getNetworkMessageBuilder().setDataRequest(getDataRequestBuilder().setAddMailboxRequest(
-                        bisq.network.protobuf.AddMailboxRequest.newBuilder()
-                                .setMailboxSequentialData(mailboxSequentialData.toProto())
-                                .setSignature(ByteString.copyFrom(signature))
-                                .setSenderPublicKeyBytes(ByteString.copyFrom(senderPublicKeyBytes))))
-                .build();
+    public bisq.network.protobuf.DataRequest.Builder getDataRequestBuilder(boolean serializeForHash) {
+        return newDataRequestBuilder().setAddMailboxRequest(toValueProto(serializeForHash));
+    }
+
+    @Override
+    public bisq.network.protobuf.AddMailboxRequest toValueProto(boolean serializeForHash) {
+        return resolveValueProto(serializeForHash);
+    }
+
+    @Override
+    public bisq.network.protobuf.AddMailboxRequest.Builder getValueBuilder(boolean serializeForHash) {
+        return bisq.network.protobuf.AddMailboxRequest.newBuilder()
+                .setMailboxSequentialData(mailboxSequentialData.toProto(serializeForHash))
+                .setSignature(ByteString.copyFrom(signature))
+                .setSenderPublicKeyBytes(ByteString.copyFrom(senderPublicKeyBytes));
     }
 
     public static AddMailboxRequest fromProto(bisq.network.protobuf.AddMailboxRequest proto) {

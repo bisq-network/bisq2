@@ -48,13 +48,17 @@ final class BisqEasyTradeStore implements PersistableStore<BisqEasyTradeStore> {
     }
 
     @Override
-    public bisq.trade.protobuf.BisqEasyTradeStore toProto() {
+    public bisq.trade.protobuf.BisqEasyTradeStore.Builder getBuilder(boolean serializeForHash) {
         return bisq.trade.protobuf.BisqEasyTradeStore.newBuilder()
                 .addAllTrades(trades.stream()
-                        .map(BisqEasyTrade::toProto)
+                        .map(e -> e.toProto(serializeForHash))
                         .collect(Collectors.toList()))
-                .addAllTradeIds(tradeIds)
-                .build();
+                .addAllTradeIds(tradeIds);
+    }
+
+    @Override
+    public bisq.trade.protobuf.BisqEasyTradeStore toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
     }
 
     public static BisqEasyTradeStore fromProto(bisq.trade.protobuf.BisqEasyTradeStore proto) {

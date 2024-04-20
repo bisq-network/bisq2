@@ -116,6 +116,6 @@ public class ProtoBufMessageLengthTests {
                 new NetworkLoad(),
                 Address.localHost(1234).getFullAddress(),
                 0, new ArrayList<>());
-        return new NetworkEnvelope(token, request).toProto();
+        return new NetworkEnvelope(token, request).completeProto();
     }
 }

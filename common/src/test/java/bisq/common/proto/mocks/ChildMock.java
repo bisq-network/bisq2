@@ -13,12 +13,12 @@ public class ChildMock implements Child {
     }
 
     @Override
-    public bisq.common.test.protobuf.Child toProto(boolean ignoreAnnotation) {
-        return buildProto(ignoreAnnotation);
+    public bisq.common.test.protobuf.Child toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
     }
 
     @Override
-    public bisq.common.test.protobuf.Child.Builder getBuilder(boolean ignoreAnnotation) {
+    public bisq.common.test.protobuf.Child.Builder getBuilder(boolean serializeForHash) {
         return bisq.common.test.protobuf.Child.newBuilder()
                 .setChildValue(childValue);
     }

@@ -36,8 +36,12 @@ public abstract class TwoPartyContract<T extends Offer<?, ?>> extends Contract<T
         this.taker = taker;
     }
 
-    protected bisq.contract.protobuf.TwoPartyContract.Builder getTwoPartyContractBuilder() {
-        return bisq.contract.protobuf.TwoPartyContract.newBuilder().setTaker(taker.toProto());
+    protected bisq.contract.protobuf.TwoPartyContract.Builder getTwoPartyContractBuilder(boolean serializeForHash) {
+        return bisq.contract.protobuf.TwoPartyContract.newBuilder().setTaker(taker.toProto(serializeForHash));
+    }
+
+    protected bisq.contract.protobuf.TwoPartyContract toTwoPartyContract(boolean serializeForHash) {
+        return resolveBuilder(getTwoPartyContractBuilder(serializeForHash), serializeForHash).build();
     }
 
     public static TwoPartyContract<?> fromProto(bisq.contract.protobuf.Contract proto) {

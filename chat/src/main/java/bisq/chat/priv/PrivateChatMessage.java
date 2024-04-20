@@ -23,6 +23,7 @@ import bisq.chat.ChatMessageType;
 import bisq.chat.Citation;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
+import bisq.network.p2p.message.ExternalNetworkMessage;
 import bisq.network.p2p.services.confidential.ack.AckRequestingMessage;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.user.profile.UserProfile;
@@ -40,7 +41,7 @@ import java.util.Optional;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public abstract class PrivateChatMessage extends ChatMessage implements MailboxMessage, AckRequestingMessage {
+public abstract class PrivateChatMessage extends ChatMessage implements MailboxMessage, ExternalNetworkMessage, AckRequestingMessage {
     // In group channels we send a message to multiple peers but want to avoid that the message gets duplicated in our hashSet by a different receiverUserProfileId
     @EqualsAndHashCode.Exclude
     protected final String receiverUserProfileId;
@@ -97,6 +98,15 @@ public abstract class PrivateChatMessage extends ChatMessage implements MailboxM
         this.receiverNetworkId = receiverNetworkId;
 
         NetworkDataValidation.validateProfileId(receiverUserProfileId);
+    }
+
+    // We are an ExternalNetworkMessage, toValueProto and getValueBuilder are our entry points
+    @Override
+    abstract public bisq.chat.protobuf.ChatMessage.Builder getValueBuilder(boolean serializeForHash);
+
+    @Override
+    public bisq.chat.protobuf.ChatMessage toValueProto(boolean serializeForHash) {
+        return resolveBuilder(this.getValueBuilder(serializeForHash), serializeForHash).build();
     }
 
     @Override

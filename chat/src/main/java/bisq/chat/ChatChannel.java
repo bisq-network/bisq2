@@ -62,7 +62,10 @@ public abstract class ChatChannel<M extends ChatMessage> implements PersistableP
                 .setChatChannelNotificationType(chatChannelNotificationType.get().toProtoEnum());
     }
 
-    public abstract bisq.chat.protobuf.ChatChannel toProto();
+    @Override
+    public bisq.chat.protobuf.ChatChannel toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
+    }
 
     public static ChatChannel<? extends ChatMessage> fromProto(bisq.chat.protobuf.ChatChannel proto) {
         switch (proto.getMessageCase()) {

@@ -20,10 +20,17 @@ public final class USPostalMoneyOrderAccount extends Account<USPostalMoneyOrderA
     }
 
     @Override
-    public bisq.account.protobuf.Account toProto() {
-        return getAccountBuilder()
-                .setUsPostalMoneyOrderAccount(bisq.account.protobuf.USPostalMoneyOrderAccount.newBuilder())
-                .build();
+    public bisq.account.protobuf.Account.Builder getBuilder(boolean serializeForHash) {
+        return getAccountBuilder(serializeForHash)
+                .setUsPostalMoneyOrderAccount(toUSPostalMoneyOrderAccountProto(serializeForHash));
+    }
+
+    private bisq.account.protobuf.USPostalMoneyOrderAccount toUSPostalMoneyOrderAccountProto(boolean serializeForHash) {
+        return resolveBuilder(getUSPostalMoneyOrderAccountBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    private bisq.account.protobuf.USPostalMoneyOrderAccount.Builder getUSPostalMoneyOrderAccountBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.USPostalMoneyOrderAccount.newBuilder();
     }
 
     public static USPostalMoneyOrderAccount fromProto(bisq.account.protobuf.Account proto) {

@@ -42,7 +42,7 @@ public abstract class FixedAmountSpec implements AmountSpec {
         checkArgument(amount > 0);
     }
 
-    public bisq.offer.protobuf.FixedAmountSpec.Builder getFixedAmountSpecBuilder() {
+    public bisq.offer.protobuf.FixedAmountSpec.Builder getFixedAmountSpecBuilder(boolean serializeForHash) {
         return bisq.offer.protobuf.FixedAmountSpec.newBuilder().setAmount(amount);
     }
 

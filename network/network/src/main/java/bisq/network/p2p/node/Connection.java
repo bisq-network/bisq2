@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.node;
 
+import bisq.common.util.ExceptionUtil;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
 import bisq.network.common.Address;
@@ -244,7 +245,7 @@ public abstract class Connection {
             return this;
         } catch (IOException exception) {
             if (!isStopped) {
-                log.error("Send message failed. {}", this, exception);
+                log.error("Send message failed. {}", this, ExceptionUtil.getMessageOrToString(exception));
                 close(CloseReason.EXCEPTION.exception(exception));
             }
             // We wrap any exception (also expected EOFException in case of connection close), to leave handling of the exception to the caller.

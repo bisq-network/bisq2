@@ -20,6 +20,7 @@ package bisq.network.p2p.services.data.storage.append;
 import bisq.common.util.MathUtils;
 import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.network.p2p.services.data.storage.DistributedData;
+import bisq.network.protobuf.DataRequest;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -43,14 +44,19 @@ public final class AddAppendOnlyDataRequest implements AddDataRequest {
     }
 
     @Override
-    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
-        return getNetworkMessageBuilder()
-                .setDataRequest(getDataRequestBuilder()
-                        .setAddAppendOnlyDataRequest(
-                                bisq.network.protobuf.AddAppendOnlyDataRequest.newBuilder()
-                                        .setAppendOnlyData(appendOnlyData.toAny())
-                        )
-                ).build();
+    public DataRequest.Builder getDataRequestBuilder(boolean serializeForHash) {
+        return newDataRequestBuilder().setAddAppendOnlyDataRequest(toValueProto(serializeForHash));
+    }
+
+    @Override
+    public bisq.network.protobuf.AddAppendOnlyDataRequest toValueProto(boolean serializeForHash) {
+        return resolveValueProto(serializeForHash);
+    }
+
+    @Override
+    public bisq.network.protobuf.AddAppendOnlyDataRequest.Builder getValueBuilder(boolean serializeForHash) {
+        return bisq.network.protobuf.AddAppendOnlyDataRequest.newBuilder()
+                .setAppendOnlyData(appendOnlyData.toAny(serializeForHash));
     }
 
     public static AddAppendOnlyDataRequest fromProto(bisq.network.protobuf.AddAppendOnlyDataRequest proto) {

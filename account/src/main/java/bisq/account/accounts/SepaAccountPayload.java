@@ -39,13 +39,20 @@ public final class SepaAccountPayload extends CountryBasedAccountPayload {
     }
 
     @Override
-    public bisq.account.protobuf.AccountPayload toProto() {
-        bisq.account.protobuf.SepaAccountPayload.Builder sepa = bisq.account.protobuf.SepaAccountPayload.newBuilder()
+    protected bisq.account.protobuf.CountryBasedAccountPayload.Builder getCountryBasedAccountPayloadBuilder(boolean serializeForHash) {
+        return super.getCountryBasedAccountPayloadBuilder(serializeForHash).setSepaAccountPayload(
+                toSepaAccountPayloadProto(serializeForHash));
+    }
+
+    private bisq.account.protobuf.SepaAccountPayload toSepaAccountPayloadProto(boolean serializeForHash) {
+        return resolveBuilder(getSepaAccountPayloadBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    private bisq.account.protobuf.SepaAccountPayload.Builder getSepaAccountPayloadBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.SepaAccountPayload.newBuilder()
                 .setHolderName(holderName)
                 .setIban(iban)
                 .setBic(bic);
-        bisq.account.protobuf.CountryBasedAccountPayload.Builder countryBased = getCountryBasedAccountPayloadBuilder().setSepaAccountPayload(sepa);
-        return getAccountPayloadBuilder().setCountryBasedAccountPayload(countryBased).build();
     }
 
     public static SepaAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {

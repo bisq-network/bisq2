@@ -42,12 +42,20 @@ public final class InventoryResponse implements BroadcastMessage, Response {
     }
 
     @Override
-    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
-        return getNetworkMessageBuilder().setInventoryResponse(
-                        bisq.network.protobuf.InventoryResponse.newBuilder()
-                                .setInventory(inventory.toProto())
-                                .setRequestNonce(requestNonce))
-                .build();
+    public bisq.network.protobuf.EnvelopePayloadMessage.Builder getBuilder(boolean serializeForHash) {
+        return newEnvelopePayloadMessageBuilder().setInventoryResponse(toValueProto(serializeForHash));
+    }
+
+    @Override
+    public bisq.network.protobuf.InventoryResponse toValueProto(boolean serializeForHash) {
+        return resolveValueProto(serializeForHash);
+    }
+
+    @Override
+    public bisq.network.protobuf.InventoryResponse.Builder getValueBuilder(boolean serializeForHash) {
+        return bisq.network.protobuf.InventoryResponse.newBuilder()
+                .setInventory(inventory.toProto(serializeForHash))
+                .setRequestNonce(requestNonce);
     }
 
     public static InventoryResponse fromProto(bisq.network.protobuf.InventoryResponse proto) {

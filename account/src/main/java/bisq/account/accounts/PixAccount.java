@@ -2,7 +2,6 @@ package bisq.account.accounts;
 
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.payment_method.FiatPaymentRail;
-import bisq.account.protobuf.Account;
 import bisq.common.locale.Country;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -22,11 +21,17 @@ public final class PixAccount extends CountryBasedAccount<PixAccountPayload, Fia
     }
 
     @Override
-    public Account toProto() {
-        return getAccountBuilder()
-                .setCountryBasedAccount(getCountryBasedAccountBuilder()
-                        .setPixAccount(bisq.account.protobuf.PixAccount.newBuilder()))
-                .build();
+    protected bisq.account.protobuf.CountryBasedAccount.Builder getCountryBasedAccountBuilder(boolean serializeForHash) {
+        return super.getCountryBasedAccountBuilder(serializeForHash).setPixAccount(
+                toPixAccountProto(serializeForHash));
+    }
+
+    private bisq.account.protobuf.PixAccount toPixAccountProto(boolean serializeForHash) {
+        return resolveBuilder(getPixAccountBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    private bisq.account.protobuf.PixAccount.Builder getPixAccountBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.PixAccount.newBuilder();
     }
 
     public static PixAccount fromProto(bisq.account.protobuf.Account proto) {

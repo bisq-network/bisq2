@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.node.network_load;
 
+import bisq.common.proto.Proto;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.ByteUnit;
 import bisq.common.util.MathUtils;
@@ -110,7 +111,7 @@ public class NetworkLoadService {
                 .map(ConnectionMetrics::getNumMessagesReceivedOfLastHour)
                 .mapToLong(e -> e)
                 .sum();
-        long networkDatabaseSize = dataRequests.stream().mapToLong(e -> e.getSerializedSize()).sum();
+        long networkDatabaseSize = dataRequests.stream().mapToLong(Proto::getSerializedSize).sum();
 
         StringBuilder sb = new StringBuilder("\n\n////////////////////////////////////////////////////////////////////////////////////////////////////");
         sb.append("\nNetwork statistics").append(("\n////////////////////////////////////////////////////////////////////////////////////////////////////"))

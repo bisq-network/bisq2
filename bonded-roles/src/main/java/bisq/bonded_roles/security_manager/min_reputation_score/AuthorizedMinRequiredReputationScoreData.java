@@ -66,13 +66,17 @@ public final class AuthorizedMinRequiredReputationScoreData implements Authorize
     }
 
     @Override
-    public bisq.bonded_roles.protobuf.AuthorizedMinRequiredReputationScoreData toProto() {
-        bisq.bonded_roles.protobuf.AuthorizedMinRequiredReputationScoreData.Builder builder = bisq.bonded_roles.protobuf.AuthorizedMinRequiredReputationScoreData.newBuilder()
+    public bisq.bonded_roles.protobuf.AuthorizedMinRequiredReputationScoreData.Builder getBuilder(boolean serializeForHash) {
+        return bisq.bonded_roles.protobuf.AuthorizedMinRequiredReputationScoreData.newBuilder()
                 .setDate(date)
                 .setMinRequiredReputationScore(minRequiredReputationScore)
                 .setSecurityManagerProfileId(securityManagerProfileId)
                 .setStaticPublicKeysProvided(staticPublicKeysProvided);
-        return builder.build();
+    }
+
+    @Override
+    public bisq.bonded_roles.protobuf.AuthorizedMinRequiredReputationScoreData toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
     }
 
     public static AuthorizedMinRequiredReputationScoreData fromProto(bisq.bonded_roles.protobuf.AuthorizedMinRequiredReputationScoreData proto) {

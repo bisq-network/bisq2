@@ -40,8 +40,6 @@ public final class PocOpenOfferStore implements PersistableStore<PocOpenOfferSto
     }
 
 
- 
-
     @Override
     public PocOpenOfferStore getClone() {
         return new PocOpenOfferStore(new HashSet<>(openOffers));
@@ -67,7 +65,12 @@ public final class PocOpenOfferStore implements PersistableStore<PocOpenOfferSto
     }
 
     @Override
-    public Message toProto() {
+    public Message.Builder getBuilder(boolean serializeForHash) {
+        return null;
+    }
+
+    @Override
+    public Message toProto(boolean serializeForHash) {
         return null;
     }
 }

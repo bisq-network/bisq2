@@ -73,15 +73,19 @@ public final class AuthorizedOracleNode implements AuthorizedDistributedData {
     }
 
     @Override
-    public bisq.bonded_roles.protobuf.AuthorizedOracleNode toProto() {
+    public bisq.bonded_roles.protobuf.AuthorizedOracleNode.Builder getBuilder(boolean serializeForHash) {
         return bisq.bonded_roles.protobuf.AuthorizedOracleNode.newBuilder()
-                .setNetworkId(networkId.toProto())
+                .setNetworkId(networkId.toProto(serializeForHash))
                 .setProfileId(profileId)
                 .setAuthorizedPublicKey(authorizedPublicKey)
                 .setBondUserName(bondUserName)
                 .setSignatureBase64(signatureBase64)
-                .setStaticPublicKeysProvided(staticPublicKeysProvided)
-                .build();
+                .setStaticPublicKeysProvided(staticPublicKeysProvided);
+    }
+
+    @Override
+    public bisq.bonded_roles.protobuf.AuthorizedOracleNode toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
     }
 
     public static AuthorizedOracleNode fromProto(bisq.bonded_roles.protobuf.AuthorizedOracleNode proto) {

@@ -60,12 +60,16 @@ public final class AuthorizedTimestampData implements AuthorizedDistributedData 
     }
 
     @Override
-    public bisq.user.protobuf.AuthorizedTimestampData toProto() {
+    public bisq.user.protobuf.AuthorizedTimestampData.Builder getBuilder(boolean serializeForHash) {
         return bisq.user.protobuf.AuthorizedTimestampData.newBuilder()
                 .setProfileId(profileId)
                 .setDate(date)
-                .setStaticPublicKeysProvided(staticPublicKeysProvided)
-                .build();
+                .setStaticPublicKeysProvided(staticPublicKeysProvided);
+    }
+
+    @Override
+    public bisq.user.protobuf.AuthorizedTimestampData toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
     }
 
     public static AuthorizedTimestampData fromProto(bisq.user.protobuf.AuthorizedTimestampData proto) {

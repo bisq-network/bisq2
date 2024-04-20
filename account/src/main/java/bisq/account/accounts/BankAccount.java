@@ -9,8 +9,18 @@ public abstract class BankAccount<P extends BankAccountPayload> extends CountryB
         super(accountName, paymentMethod, payload, country);
     }
 
-    protected bisq.account.protobuf.BankAccount.Builder getBankAccountBuilder() {
+    protected bisq.account.protobuf.BankAccount.Builder getBankAccountBuilder(boolean serializeForHash) {
         return bisq.account.protobuf.BankAccount.newBuilder();
+    }
+
+    protected bisq.account.protobuf.BankAccount toBankAccountProto(boolean serializeForHash) {
+        return resolveBuilder(getBankAccountBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    @Override
+    protected bisq.account.protobuf.CountryBasedAccount.Builder getCountryBasedAccountBuilder(boolean serializeForHash) {
+        return super.getCountryBasedAccountBuilder(serializeForHash)
+                .setBankAccount(toBankAccountProto(serializeForHash));
     }
 
     public static BankAccount<?> fromProto(bisq.account.protobuf.Account proto) {

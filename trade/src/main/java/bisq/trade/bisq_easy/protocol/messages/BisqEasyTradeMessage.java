@@ -40,6 +40,19 @@ public abstract class BisqEasyTradeMessage extends TradeMessage {
         super(id, tradeId, protocolVersion, sender, receiver);
     }
 
+    @Override
+    public bisq.trade.protobuf.TradeMessage.Builder getValueBuilder(boolean serializeForHash) {
+        return getTradeMessageBuilder(serializeForHash)
+                .setBisqEasyTradeMessage(toBisqEasyTradeMessageProto(serializeForHash));
+    }
+
+    protected bisq.trade.protobuf.BisqEasyTradeMessage toBisqEasyTradeMessageProto(boolean serializeForHash) {
+        bisq.trade.protobuf.BisqEasyTradeMessage.Builder builder = getBisqEasyTradeMessageBuilder(serializeForHash);
+        return resolveBuilder(builder, serializeForHash).build();
+    }
+
+    abstract protected bisq.trade.protobuf.BisqEasyTradeMessage.Builder getBisqEasyTradeMessageBuilder(boolean serializeForHash);
+
     public static BisqEasyTradeMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {
         switch (proto.getBisqEasyTradeMessage().getMessageCase()) {
             case BISQEASYTAKEOFFERREQUEST: {

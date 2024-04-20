@@ -60,12 +60,17 @@ public final class FeeOption implements OfferOption {
     }
 
     @Override
-    public bisq.offer.protobuf.OfferOption toProto() {
-        return getOfferOptionBuilder().setFeeOption(bisq.offer.protobuf.FeeOption.newBuilder()
+    public bisq.offer.protobuf.OfferOption.Builder getBuilder(boolean serializeForHash) {
+        return getOfferOptionBuilder(serializeForHash)
+                .setFeeOption(bisq.offer.protobuf.FeeOption.newBuilder()
                         .setFeeType(feeType.toProtoEnum())
                         .setBlockHeightAtFeePayment(blockHeightAtFeePayment)
-                        .setFeeTxId(feeTxId))
-                .build();
+                        .setFeeTxId(feeTxId));
+    }
+
+    @Override
+    public bisq.offer.protobuf.OfferOption toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
     }
 
     public static FeeOption fromProto(bisq.offer.protobuf.FeeOption proto) {

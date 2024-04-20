@@ -25,17 +25,21 @@ public final class InteracETransferAccountPayload extends AccountPayload {
     }
 
     @Override
-    public bisq.account.protobuf.AccountPayload toProto() {
-        return getAccountPayloadBuilder()
-                .setInteracETransferAccountPayload(
-                        bisq.account.protobuf.InteracETransferAccountPayload.newBuilder()
-                                .setEmail(email)
-                                .setHolderName(holderName)
-                                .setQuestion(question)
-                                .setAnswer(answer)
-                                .build()
-                )
-                .build();
+    public bisq.account.protobuf.AccountPayload.Builder getBuilder(boolean serializeForHash) {
+        return getAccountPayloadBuilder(serializeForHash)
+                .setInteracETransferAccountPayload(toInteracETransferAccountPayloadProto(serializeForHash));
+    }
+
+    private bisq.account.protobuf.InteracETransferAccountPayload toInteracETransferAccountPayloadProto(boolean serializeForHash) {
+        return resolveBuilder(getInteracETransferAccountPayloadBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    private bisq.account.protobuf.InteracETransferAccountPayload.Builder getInteracETransferAccountPayloadBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.InteracETransferAccountPayload.newBuilder()
+                .setEmail(email)
+                .setHolderName(holderName)
+                .setQuestion(question)
+                .setAnswer(answer);
     }
 
     public static InteracETransferAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {

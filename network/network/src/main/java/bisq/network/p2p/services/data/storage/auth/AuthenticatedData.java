@@ -41,11 +41,11 @@ public abstract class AuthenticatedData implements StorageData {
     }
 
     @Override
-    public abstract bisq.network.protobuf.AuthenticatedData toProto();
+    public abstract bisq.network.protobuf.AuthenticatedData toProto(boolean serializeForHash);
 
-    public bisq.network.protobuf.AuthenticatedData.Builder getAuthenticatedDataBuilder() {
+    public bisq.network.protobuf.AuthenticatedData.Builder getAuthenticatedDataBuilder(boolean serializeForHash) {
         return bisq.network.protobuf.AuthenticatedData.newBuilder()
-                .setDistributedData(distributedData.toAny());
+                .setDistributedData(distributedData.toAny(serializeForHash));
     }
 
     public static AuthenticatedData fromProto(bisq.network.protobuf.AuthenticatedData proto) {

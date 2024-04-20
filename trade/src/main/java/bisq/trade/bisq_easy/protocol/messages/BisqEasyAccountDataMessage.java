@@ -57,14 +57,20 @@ public final class BisqEasyAccountDataMessage extends BisqEasyTradeMessage {
     }
 
     @Override
-    protected bisq.trade.protobuf.TradeMessage toTradeMessageProto() {
-        return getTradeMessageBuilder()
-                .setBisqEasyTradeMessage(bisq.trade.protobuf.BisqEasyTradeMessage.newBuilder()
-                        .setBisqEasyAccountDataMessage(
-                                bisq.trade.protobuf.BisqEasyAccountDataMessage.newBuilder()
-                                        .setPaymentAccountData(paymentAccountData)
-                                        .setBisqEasyOffer(bisqEasyOffer.toProto())))
-                .build();
+    protected bisq.trade.protobuf.BisqEasyTradeMessage.Builder getBisqEasyTradeMessageBuilder(boolean serializeForHash) {
+        return bisq.trade.protobuf.BisqEasyTradeMessage.newBuilder()
+                .setBisqEasyAccountDataMessage(toBisqEasyAccountDataMessageProto(serializeForHash));
+    }
+
+    private bisq.trade.protobuf.BisqEasyAccountDataMessage toBisqEasyAccountDataMessageProto(boolean serializeForHash) {
+        bisq.trade.protobuf.BisqEasyAccountDataMessage.Builder builder = getBisqEasyAccountDataMessageBuilder(serializeForHash);
+        return resolveBuilder(builder, serializeForHash).build();
+    }
+
+    private bisq.trade.protobuf.BisqEasyAccountDataMessage.Builder getBisqEasyAccountDataMessageBuilder(boolean serializeForHash) {
+        return bisq.trade.protobuf.BisqEasyAccountDataMessage.newBuilder()
+                .setPaymentAccountData(paymentAccountData)
+                .setBisqEasyOffer(bisqEasyOffer.toProto(serializeForHash));
     }
 
     public static BisqEasyAccountDataMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {

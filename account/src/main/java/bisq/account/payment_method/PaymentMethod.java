@@ -97,11 +97,10 @@ public abstract class PaymentMethod<R extends PaymentRail> implements Comparable
     }
 
     @Override
-    public abstract bisq.account.protobuf.PaymentMethod toProto();
+    public abstract bisq.account.protobuf.PaymentMethod toProto(boolean serializeForHash);
 
-    protected bisq.account.protobuf.PaymentMethod.Builder getPaymentMethodBuilder() {
-        return bisq.account.protobuf.PaymentMethod.newBuilder()
-                .setName(name);
+    protected bisq.account.protobuf.PaymentMethod.Builder getPaymentMethodBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.PaymentMethod.newBuilder().setName(name);
     }
 
     public static PaymentMethod<? extends PaymentRail> fromProto(bisq.account.protobuf.PaymentMethod proto) {

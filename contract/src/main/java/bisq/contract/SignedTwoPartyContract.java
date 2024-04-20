@@ -44,12 +44,16 @@ public class SignedTwoPartyContract<T extends Offer<?, ?>> implements NetworkPro
     }
 
     @Override
-    public bisq.contract.protobuf.SignedTwoPartyContract toProto() {
+    public bisq.contract.protobuf.SignedTwoPartyContract.Builder getBuilder(boolean serializeForHash) {
         return bisq.contract.protobuf.SignedTwoPartyContract.newBuilder()
-                .setContract(contract.toProto())
-                .setMakerSignatureData(makerSignatureData.toProto())
-                .setTakerSignatureData(takerSignatureData.toProto())
-                .build();
+                .setContract(contract.toProto(serializeForHash))
+                .setMakerSignatureData(makerSignatureData.toProto(serializeForHash))
+                .setTakerSignatureData(takerSignatureData.toProto(serializeForHash));
+    }
+
+    @Override
+    public bisq.contract.protobuf.SignedTwoPartyContract toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
     }
 
     public static SignedTwoPartyContract<?> fromProto(bisq.contract.protobuf.SignedTwoPartyContract proto) {

@@ -45,11 +45,15 @@ public final class SignedWitnessStore implements PersistableStore<SignedWitnessS
     }
 
     @Override
-    public bisq.user.protobuf.SignedWitnessStore toProto() {
+    public bisq.user.protobuf.SignedWitnessStore.Builder getBuilder(boolean serializeForHash) {
         return bisq.user.protobuf.SignedWitnessStore.newBuilder()
                 .addAllJsonRequests(jsonRequests)
-                .setLastRequested(lastRequested)
-                .build();
+                .setLastRequested(lastRequested);
+    }
+
+    @Override
+    public bisq.user.protobuf.SignedWitnessStore toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
     }
 
     public static SignedWitnessStore fromProto(bisq.user.protobuf.SignedWitnessStore proto) {

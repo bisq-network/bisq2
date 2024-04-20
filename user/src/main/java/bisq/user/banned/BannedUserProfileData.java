@@ -55,11 +55,15 @@ public final class BannedUserProfileData implements AuthorizedDistributedData {
     }
 
     @Override
-    public bisq.user.protobuf.BannedUserProfileData toProto() {
-        bisq.user.protobuf.BannedUserProfileData.Builder builder = bisq.user.protobuf.BannedUserProfileData.newBuilder()
-                .setUserProfile(userProfile.toProto())
+    public bisq.user.protobuf.BannedUserProfileData.Builder getBuilder(boolean serializeForHash) {
+        return bisq.user.protobuf.BannedUserProfileData.newBuilder()
+                .setUserProfile(userProfile.toProto(serializeForHash))
                 .setStaticPublicKeysProvided(staticPublicKeysProvided);
-        return builder.build();
+    }
+
+    @Override
+    public bisq.user.protobuf.BannedUserProfileData toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
     }
 
     public static BannedUserProfileData fromProto(bisq.user.protobuf.BannedUserProfileData proto) {

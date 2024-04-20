@@ -60,12 +60,21 @@ public final class NetworkEnvelope implements NetworkProto {
     }
 
     @Override
-    public bisq.network.protobuf.NetworkEnvelope toProto() {
+    public bisq.network.protobuf.NetworkEnvelope toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
+    }
+
+    @Override
+    public bisq.network.protobuf.NetworkEnvelope completeProto() {
+        return toProto(false);
+    }
+
+    @Override
+    public bisq.network.protobuf.NetworkEnvelope.Builder getBuilder(boolean serializeForHash) {
         return bisq.network.protobuf.NetworkEnvelope.newBuilder()
                 .setVersion(version)
-                .setAuthorizationToken(authorizationToken.toProto())
-                .setNetworkMessage(envelopePayloadMessage.toProto())
-                .build();
+                .setAuthorizationToken(authorizationToken.toProto(serializeForHash))
+                .setNetworkMessage(envelopePayloadMessage.toProto(serializeForHash));
     }
 
     public static NetworkEnvelope fromProto(bisq.network.protobuf.NetworkEnvelope proto) {

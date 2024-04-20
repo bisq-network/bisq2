@@ -55,14 +55,22 @@ public final class PeerExchangeRequest implements EnvelopePayloadMessage, Reques
     }
 
     @Override
-    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
-        return getNetworkMessageBuilder().setPeerExchangeRequest(
-                        bisq.network.protobuf.PeerExchangeRequest.newBuilder()
-                                .setNonce(nonce)
-                                .addAllPeers(peers.stream()
-                                        .map(Peer::toProto)
-                                        .collect(Collectors.toList())))
-                .build();
+    public bisq.network.protobuf.EnvelopePayloadMessage.Builder getBuilder(boolean serializeForHash) {
+        return newEnvelopePayloadMessageBuilder().setPeerExchangeRequest(toValueProto(serializeForHash));
+    }
+
+    @Override
+    public bisq.network.protobuf.PeerExchangeRequest toValueProto(boolean serializeForHash) {
+        return resolveValueProto(serializeForHash);
+    }
+
+    @Override
+    public bisq.network.protobuf.PeerExchangeRequest.Builder getValueBuilder(boolean serializeForHash) {
+        return bisq.network.protobuf.PeerExchangeRequest.newBuilder()
+                .setNonce(nonce)
+                .addAllPeers(peers.stream()
+                        .map(peer -> peer.toProto(serializeForHash))
+                        .collect(Collectors.toList()));
     }
 
     public static PeerExchangeRequest fromProto(bisq.network.protobuf.PeerExchangeRequest proto) {

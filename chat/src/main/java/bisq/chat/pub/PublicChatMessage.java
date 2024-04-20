@@ -48,6 +48,15 @@ public abstract class PublicChatMessage extends ChatMessage implements Distribut
         super(messageId, chatChannelDomain, channelId, authorUserProfileId, text, citation, date, wasEdited, chatMessageType);
     }
 
+    // We are part of other proto messages via DistributedData thus, toProto and getBuilder are our entry points
+    @Override
+    public bisq.chat.protobuf.ChatMessage toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
+    }
+
+    abstract public bisq.chat.protobuf.ChatMessage.Builder getBuilder(boolean serializeForHash);
+
+
     @Override
     public boolean isDataInvalid(byte[] pubKeyHash) {
         // AuthorId must be pubKeyHash. We get pubKeyHash passed from the data storage layer where the signature is 

@@ -47,14 +47,21 @@ public final class IdentityStore implements PersistableStore<IdentityStore> {
     }
 
     @Override
-    public bisq.identity.protobuf.IdentityStore toProto() {
+    public bisq.identity.protobuf.IdentityStore.Builder getBuilder(boolean serializeForHash) {
         var builder = bisq.identity.protobuf.IdentityStore.newBuilder()
                 .putAllActiveIdentityByDomainId(activeIdentityByTag.entrySet().stream()
-                        .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().toProto())))
-                .addAllRetired(retired.stream().map(Identity::toProto).collect(Collectors.toSet()));
+                        .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().toProto(serializeForHash))))
+                .addAllRetired(retired.stream()
+                        .map(identity -> identity.toProto(serializeForHash))
+                        .collect(Collectors.toSet()));
 
-        defaultIdentity.ifPresent(identity -> builder.setDefaultIdentity(identity.toProto()));
-        return builder.build();
+        defaultIdentity.ifPresent(identity -> builder.setDefaultIdentity(identity.toProto(serializeForHash)));
+        return builder;
+    }
+
+    @Override
+    public bisq.identity.protobuf.IdentityStore toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
     }
 
     public static IdentityStore fromProto(bisq.identity.protobuf.IdentityStore proto) {

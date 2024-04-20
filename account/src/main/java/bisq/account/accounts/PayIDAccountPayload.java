@@ -21,12 +21,19 @@ public final class PayIDAccountPayload extends AccountPayload {
     }
 
     @Override
-    public bisq.account.protobuf.AccountPayload toProto() {
-        return getAccountPayloadBuilder()
-                .setPayIDAccountPayload(bisq.account.protobuf.PayIDAccountPayload.newBuilder()
-                        .setBankAccountName(bankAccountName)
-                        .setPayId(payID))
-                .build();
+    public bisq.account.protobuf.AccountPayload.Builder getBuilder(boolean serializeForHash) {
+        return getAccountPayloadBuilder(serializeForHash)
+                .setPayIDAccountPayload(toPayIDAccountPayloadProto(serializeForHash));
+    }
+
+    private bisq.account.protobuf.PayIDAccountPayload toPayIDAccountPayloadProto(boolean serializeForHash) {
+        return resolveBuilder(getPayIDAccountPayloadBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    private bisq.account.protobuf.PayIDAccountPayload.Builder getPayIDAccountPayloadBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.PayIDAccountPayload.newBuilder()
+                .setBankAccountName(bankAccountName)
+                .setPayId(payID);
     }
 
     public static PayIDAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {

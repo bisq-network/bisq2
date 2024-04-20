@@ -41,35 +41,37 @@ import java.util.stream.Collectors;
  * If a map is needed we can use the TreeMap as it provides a deterministic order.
  */
 public interface Proto {
-    Message toProto();
+    Message.Builder getBuilder(boolean serializeForHash);
 
-    default Message.Builder getBuilder(boolean ignoreAnnotation) {
-        return null;
+    Message toProto(boolean serializeForHash);
+
+    default Message completeProto() {
+        return toProto(false);
     }
 
-    default Message toProto(boolean ignoreAnnotation) {
-        return buildProto(ignoreAnnotation);
+    default <T extends Message> T resolveProto(boolean serializeForHash) {
+        //noinspection unchecked
+        return (T) resolveBuilder(getBuilder(serializeForHash), serializeForHash).build();
     }
 
-    default <T extends Message> T buildProto(boolean ignoreAnnotation) {
-        var builder = ignoreAnnotation ? getBuilder(true) : clearAnnotatedFields(getBuilder(false));
-        return (T) builder.build();
+    default <B extends Message.Builder> B resolveBuilder(B builder, boolean serializeForHash) {
+        return serializeForHash ? clearAnnotatedFields(builder) : builder;
     }
 
     default byte[] serialize() {
-        return buildProto(true).toByteArray();
+        return resolveProto(false).toByteArray();
     }
 
     default byte[] serializeForHash() {
-        return buildProto(false).toByteArray();
+        return resolveProto(true).toByteArray();
     }
 
     default int getSerializedSize() {
-        return buildProto(true).getSerializedSize();
+        return resolveProto(false).getSerializedSize();
     }
 
     default void writeDelimitedTo(OutputStream outputStream) throws IOException {
-        toProto(true).writeDelimitedTo(outputStream);
+        completeProto().writeDelimitedTo(outputStream);
     }
 
     default Set<String> getExcludedFields() {
@@ -88,13 +90,15 @@ public interface Proto {
      */
     default <B extends Message.Builder> B clearAnnotatedFields(B builder) {
         Set<String> excludedFields = getExcludedFields();
-        getLogger().info("Clear fields in builder annotated with @ExcludeForHash: {}", excludedFields);
+        if (!excludedFields.isEmpty()) {
+            getLogger().debug("Clear fields in builder annotated with @ExcludeForHash: {}", excludedFields);
+        }
         for (Descriptors.FieldDescriptor fieldDesc : builder.getAllFields().keySet()) {
             if (excludedFields.contains(fieldDesc.getName())) {
                 builder.clearField(fieldDesc);
             }
         }
-        return (B) builder;
+        return builder;
     }
 
     private Logger getLogger() {

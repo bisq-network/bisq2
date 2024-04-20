@@ -23,9 +23,7 @@ import bisq.chat.Citation;
 import bisq.chat.priv.PrivateChatMessage;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.protobuf.ExternalNetworkMessage;
 import bisq.user.profile.UserProfile;
-import com.google.protobuf.Any;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -65,24 +63,23 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
                 date,
                 wasEdited,
                 chatMessageType);
-
-        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize()); //1245
     }
 
     @Override
-    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
-        return getNetworkMessageBuilder()
-                .setExternalNetworkMessage(ExternalNetworkMessage.newBuilder().setAny(Any.pack(toChatMessageProto())))
-                .build();
+    public bisq.chat.protobuf.ChatMessage.Builder getValueBuilder(boolean serializeForHash) {
+        return getChatMessageBuilder(serializeForHash)
+                .setTwoPartyPrivateChatMessage(toTwoPartyPrivateChatMessageProto(serializeForHash));
     }
 
-    public bisq.chat.protobuf.ChatMessage toChatMessageProto() {
-        return getChatMessageBuilder()
-                .setTwoPartyPrivateChatMessage(bisq.chat.protobuf.TwoPartyPrivateChatMessage.newBuilder()
-                        .setReceiverUserProfileId(receiverUserProfileId)
-                        .setReceiverNetworkId(receiverNetworkId.toProto())
-                        .setSender(senderUserProfile.toProto()))
-                .build();
+    private bisq.chat.protobuf.TwoPartyPrivateChatMessage toTwoPartyPrivateChatMessageProto(boolean serializeForHash) {
+        return resolveBuilder(getTwoPartyPrivateChatMessageBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    private bisq.chat.protobuf.TwoPartyPrivateChatMessage.Builder getTwoPartyPrivateChatMessageBuilder(boolean serializeForHash) {
+        return bisq.chat.protobuf.TwoPartyPrivateChatMessage.newBuilder()
+                .setReceiverUserProfileId(receiverUserProfileId)
+                .setReceiverNetworkId(receiverNetworkId.toProto(serializeForHash))
+                .setSender(senderUserProfile.toProto(serializeForHash));
     }
 
     public static TwoPartyPrivateChatMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto) {

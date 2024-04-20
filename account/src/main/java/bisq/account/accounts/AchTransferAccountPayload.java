@@ -1,6 +1,5 @@
 package bisq.account.accounts;
 
-import bisq.account.protobuf.AccountPayload;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -41,15 +40,17 @@ public final class AchTransferAccountPayload extends BankAccountPayload {
     }
 
     @Override
-    public AccountPayload toProto() {
-        return getAccountPayloadBuilder().setCountryBasedAccountPayload(
-                getCountryBasedAccountPayloadBuilder().setBankAccountPayload(
-                        getBankAccountPayloadBuilder().setAchTransferAccountPayload(
-                                bisq.account.protobuf.AchTransferAccountPayload.newBuilder()
-                                        .setHolderAddress(holderAddress)
-                        )
-                )
-        ).build();
+    protected bisq.account.protobuf.BankAccountPayload.Builder getBankAccountPayloadBuilder(boolean serializeForHash) {
+        return super.getBankAccountPayloadBuilder(serializeForHash).setAchTransferAccountPayload(
+                toAchTransferAccountPayloadProto(serializeForHash));
+    }
+
+    private bisq.account.protobuf.AchTransferAccountPayload toAchTransferAccountPayloadProto(boolean serializeForHash) {
+        return resolveBuilder(getAchTransferAccountPayloadBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    private bisq.account.protobuf.AchTransferAccountPayload.Builder getAchTransferAccountPayloadBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.AchTransferAccountPayload.newBuilder().setHolderAddress(holderAddress);
     }
 
     public static AchTransferAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {

@@ -90,15 +90,23 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
     }
 
     @Override
-    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
-        return getNetworkMessageBuilder().setDataRequest(getDataRequestBuilder().setRemoveMailboxRequest(
-                        bisq.network.protobuf.RemoveMailboxRequest.newBuilder()
-                                .setMetaData(metaData.toProto())
-                                .setHash(ByteString.copyFrom(hash))
-                                .setReceiverPublicKeyBytes(ByteString.copyFrom(receiverPublicKeyBytes))
-                                .setSignature(ByteString.copyFrom(signature))
-                                .setCreated(created)))
-                .build();
+    public bisq.network.protobuf.DataRequest.Builder getDataRequestBuilder(boolean serializeForHash) {
+        return newDataRequestBuilder().setRemoveMailboxRequest(toValueProto(serializeForHash));
+    }
+
+    @Override
+    public bisq.network.protobuf.RemoveMailboxRequest toValueProto(boolean serializeForHash) {
+        return resolveValueProto(serializeForHash);
+    }
+
+    @Override
+    public bisq.network.protobuf.RemoveMailboxRequest.Builder getValueBuilder(boolean serializeForHash) {
+        return bisq.network.protobuf.RemoveMailboxRequest.newBuilder()
+                .setMetaData(metaData.toProto(serializeForHash))
+                .setHash(ByteString.copyFrom(hash))
+                .setReceiverPublicKeyBytes(ByteString.copyFrom(receiverPublicKeyBytes))
+                .setSignature(ByteString.copyFrom(signature))
+                .setCreated(created);
     }
 
     public static RemoveMailboxRequest fromProto(bisq.network.protobuf.RemoveMailboxRequest proto) {

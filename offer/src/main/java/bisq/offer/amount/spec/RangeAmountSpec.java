@@ -43,7 +43,7 @@ public abstract class RangeAmountSpec implements AmountSpec {
         checkArgument(maxAmount >= minAmount);
     }
 
-    public bisq.offer.protobuf.RangeAmountSpec.Builder getRangeAmountSpecBuilder() {
+    public bisq.offer.protobuf.RangeAmountSpec.Builder getRangeAmountSpecBuilder(boolean serializeForHash) {
         return bisq.offer.protobuf.RangeAmountSpec.newBuilder()
                 .setMinAmount(minAmount)
                 .setMaxAmount(maxAmount);

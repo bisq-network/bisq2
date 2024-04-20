@@ -53,13 +53,18 @@ public final class BisqEasyConfirmBtcSentMessage extends BisqEasyTradeMessage {
     }
 
     @Override
-    protected bisq.trade.protobuf.TradeMessage toTradeMessageProto() {
-        return getTradeMessageBuilder()
-                .setBisqEasyTradeMessage(bisq.trade.protobuf.BisqEasyTradeMessage.newBuilder()
-                        .setBisqEasyConfirmBtcSentMessage(
-                                bisq.trade.protobuf.BisqEasyConfirmBtcSentMessage.newBuilder()
-                                        .setTxId(txId)))
-                .build();
+    protected bisq.trade.protobuf.BisqEasyTradeMessage.Builder getBisqEasyTradeMessageBuilder(boolean serializeForHash) {
+        return bisq.trade.protobuf.BisqEasyTradeMessage.newBuilder()
+                .setBisqEasyConfirmBtcSentMessage(toBisqEasyConfirmBtcSentMessageProto(serializeForHash));
+    }
+
+    private bisq.trade.protobuf.BisqEasyConfirmBtcSentMessage toBisqEasyConfirmBtcSentMessageProto(boolean serializeForHash) {
+        bisq.trade.protobuf.BisqEasyConfirmBtcSentMessage.Builder builder = getBisqEasyConfirmBtcSentMessageBuilder(serializeForHash);
+        return resolveBuilder(builder, serializeForHash).build();
+    }
+
+    private bisq.trade.protobuf.BisqEasyConfirmBtcSentMessage.Builder getBisqEasyConfirmBtcSentMessageBuilder(boolean serializeForHash) {
+        return bisq.trade.protobuf.BisqEasyConfirmBtcSentMessage.newBuilder().setTxId(txId);
     }
 
     public static BisqEasyConfirmBtcSentMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {

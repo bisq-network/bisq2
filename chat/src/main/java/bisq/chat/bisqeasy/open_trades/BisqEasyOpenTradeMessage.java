@@ -25,10 +25,8 @@ import bisq.chat.priv.PrivateChatMessage;
 import bisq.common.util.StringUtils;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.protobuf.ExternalNetworkMessage;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.user.profile.UserProfile;
-import com.google.protobuf.Any;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -115,8 +113,6 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage implement
         this.tradeId = tradeId;
         this.mediator = mediator;
         this.bisqEasyOffer = bisqEasyOffer;
-
-        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize()); //908
     }
 
     private BisqEasyOpenTradeMessage(String tradeId,
@@ -141,27 +137,27 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage implement
         this.tradeId = tradeId;
         this.mediator = mediator;
         this.bisqEasyOffer = Optional.of(bisqEasyOffer);
-        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize()); //884
     }
 
     @Override
-    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
-        return getNetworkMessageBuilder()
-                .setExternalNetworkMessage(ExternalNetworkMessage.newBuilder().setAny(Any.pack(toChatMessageProto())))
-                .build();
+    public bisq.chat.protobuf.ChatMessage.Builder getValueBuilder(boolean serializeForHash) {
+        return getChatMessageBuilder(serializeForHash)
+                .setBisqEasyOpenTradeMessage(toBisqEasyOpenTradeMessageProto(serializeForHash));
     }
 
-    public bisq.chat.protobuf.ChatMessage toChatMessageProto() {
-        bisq.chat.protobuf.BisqEasyOpenTradeMessage.Builder builder = bisq.chat.protobuf.BisqEasyOpenTradeMessage.newBuilder()
+    private bisq.chat.protobuf.BisqEasyOpenTradeMessage toBisqEasyOpenTradeMessageProto(boolean serializeForHash) {
+        return resolveBuilder(getBisqEasyOpenTradeMessageBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    private bisq.chat.protobuf.BisqEasyOpenTradeMessage.Builder getBisqEasyOpenTradeMessageBuilder(boolean serializeForHash) {
+        var builder = bisq.chat.protobuf.BisqEasyOpenTradeMessage.newBuilder()
                 .setTradeId(tradeId)
                 .setReceiverUserProfileId(receiverUserProfileId)
-                .setReceiverNetworkId(receiverNetworkId.toProto())
-                .setSender(senderUserProfile.toProto());
-        mediator.ifPresent(mediator -> builder.setMediator(mediator.toProto()));
-        bisqEasyOffer.ifPresent(offer -> builder.setBisqEasyOffer(offer.toProto()));
-        return getChatMessageBuilder()
-                .setBisqEasyOpenTradeMessage(builder)
-                .build();
+                .setReceiverNetworkId(receiverNetworkId.toProto(serializeForHash))
+                .setSender(senderUserProfile.toProto(serializeForHash));
+        mediator.ifPresent(mediator -> builder.setMediator(mediator.toProto(serializeForHash)));
+        bisqEasyOffer.ifPresent(offer -> builder.setBisqEasyOffer(offer.toProto(serializeForHash)));
+        return builder;
     }
 
     public static BisqEasyOpenTradeMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto) {

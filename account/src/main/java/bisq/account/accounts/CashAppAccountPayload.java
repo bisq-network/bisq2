@@ -35,12 +35,20 @@ public final class CashAppAccountPayload extends AccountPayload {
         this.cashTag = cashTag;
     }
 
+
     @Override
-    public bisq.account.protobuf.AccountPayload toProto() {
-        return getAccountPayloadBuilder().setCashAppAccountPayload(
-                        bisq.account.protobuf.CashAppAccountPayload.newBuilder()
-                                .setCashTag(cashTag))
-                .build();
+    public bisq.account.protobuf.AccountPayload.Builder getBuilder(boolean serializeForHash) {
+        return getAccountPayloadBuilder(serializeForHash)
+                .setCashAppAccountPayload(toCashAppAccountPayloadProto(serializeForHash));
+    }
+
+    private bisq.account.protobuf.CashAppAccountPayload toCashAppAccountPayloadProto(boolean serializeForHash) {
+        return resolveBuilder(getCashAppAccountPayloadBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    private bisq.account.protobuf.CashAppAccountPayload.Builder getCashAppAccountPayloadBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.CashAppAccountPayload.newBuilder()
+                .setCashTag(cashTag);
     }
 
     public static CashAppAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {

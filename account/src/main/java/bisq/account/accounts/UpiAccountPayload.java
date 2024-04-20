@@ -18,16 +18,18 @@ public final class UpiAccountPayload extends CountryBasedAccountPayload {
         super(id, paymentMethodName, countryCode);
         this.virtualPaymentAddress = virtualPaymentAddress;
     }
-
     @Override
-    public AccountPayload toProto() {
-        return getAccountPayloadBuilder()
-                .setCountryBasedAccountPayload(
-                        getCountryBasedAccountPayloadBuilder()
-                                .setUpiAccountPayload(bisq.account.protobuf.UpiAccountPayload.newBuilder()
-                                        .setVirtualPaymentAddress("virtualPaymentAddress")
-                                        .build()))
-                .build();
+    protected bisq.account.protobuf.CountryBasedAccountPayload.Builder getCountryBasedAccountPayloadBuilder(boolean serializeForHash) {
+        return super.getCountryBasedAccountPayloadBuilder(serializeForHash).setUpiAccountPayload(
+                toUpiAccountPayloadProto(serializeForHash));
+    }
+
+    private bisq.account.protobuf.UpiAccountPayload toUpiAccountPayloadProto(boolean serializeForHash) {
+        return resolveBuilder(getUpiAccountPayloadBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    private bisq.account.protobuf.UpiAccountPayload.Builder getUpiAccountPayloadBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.UpiAccountPayload.newBuilder().setVirtualPaymentAddress(virtualPaymentAddress);
     }
 
     public static UpiAccountPayload fromProto(AccountPayload proto) {

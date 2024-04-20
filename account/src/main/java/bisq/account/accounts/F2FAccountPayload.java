@@ -1,7 +1,5 @@
 package bisq.account.accounts;
 
-import bisq.account.protobuf.AccountPayload;
-
 public class F2FAccountPayload extends CountryBasedAccountPayload {
 
     private final String city;
@@ -14,17 +12,21 @@ public class F2FAccountPayload extends CountryBasedAccountPayload {
         this.contact = contact;
         this.extraInfo = extraInfo;
     }
-
     @Override
-    public AccountPayload toProto() {
-        return getAccountPayloadBuilder().setCountryBasedAccountPayload(
-                        getCountryBasedAccountPayloadBuilder().setF2FAccountPayload(
-                                bisq.account.protobuf.F2FAccountPayload.newBuilder()
-                                        .setCity(city)
-                                        .setContact(contact)
-                                        .setExtraInfo(extraInfo))
-                )
-                .build();
+    protected bisq.account.protobuf.CountryBasedAccountPayload.Builder getCountryBasedAccountPayloadBuilder(boolean serializeForHash) {
+        return super.getCountryBasedAccountPayloadBuilder(serializeForHash).setF2FAccountPayload(
+                toF2FAccountPayloadProto(serializeForHash));
+    }
+
+    private bisq.account.protobuf.F2FAccountPayload toF2FAccountPayloadProto(boolean serializeForHash) {
+        return resolveBuilder(getF2FAccountPayloadBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    private bisq.account.protobuf.F2FAccountPayload.Builder getF2FAccountPayloadBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.F2FAccountPayload.newBuilder()
+                .setCity(city)
+                .setContact(contact)
+                .setExtraInfo(extraInfo);
     }
 
     public static F2FAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {

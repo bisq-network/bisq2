@@ -20,11 +20,9 @@ package bisq.support.mediation;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
-import bisq.network.p2p.message.EnvelopePayloadMessage;
+import bisq.network.p2p.message.ExternalNetworkMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
-import bisq.network.protobuf.ExternalNetworkMessage;
-import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -38,7 +36,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class MediatorsResponse implements MailboxMessage {
+public final class MediatorsResponse implements MailboxMessage, ExternalNetworkMessage {
     private final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
     private final String tradeId;
 
@@ -54,24 +52,16 @@ public final class MediatorsResponse implements MailboxMessage {
     }
 
     @Override
-    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
-        return getNetworkMessageBuilder()
-                .setExternalNetworkMessage(ExternalNetworkMessage.newBuilder()
-                        .setAny(Any.pack(toMediationResponseProto())))
-                .build();
-    }
-
-    private bisq.support.protobuf.MediatorsResponse toMediationResponseProto() {
+    public bisq.support.protobuf.MediatorsResponse.Builder getValueBuilder(boolean serializeForHash) {
         return bisq.support.protobuf.MediatorsResponse.newBuilder()
-                .setTradeId(tradeId)
-                .build();
+                .setTradeId(tradeId);
     }
 
     public static MediatorsResponse fromProto(bisq.support.protobuf.MediatorsResponse proto) {
         return new MediatorsResponse(proto.getTradeId());
     }
 
-    public static ProtoResolver<EnvelopePayloadMessage> getNetworkMessageResolver() {
+    public static ProtoResolver<ExternalNetworkMessage> getNetworkMessageResolver() {
         return any -> {
             try {
                 bisq.support.protobuf.MediatorsResponse proto = any.unpack(bisq.support.protobuf.MediatorsResponse.class);

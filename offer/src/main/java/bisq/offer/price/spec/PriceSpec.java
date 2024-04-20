@@ -22,11 +22,12 @@ import bisq.common.proto.UnresolvableProtobufMessageException;
 
 public interface PriceSpec extends NetworkProto {
 
-    bisq.offer.protobuf.PriceSpec toProto();
-
-    default bisq.offer.protobuf.PriceSpec.Builder getPriceSpecBuilder() {
+    default bisq.offer.protobuf.PriceSpec.Builder getPriceSpecBuilder(boolean serializeForHash) {
         return bisq.offer.protobuf.PriceSpec.newBuilder();
     }
+
+    @Override
+    bisq.offer.protobuf.PriceSpec toProto(boolean serializeForHash);
 
     static PriceSpec fromProto(bisq.offer.protobuf.PriceSpec proto) {
         switch (proto.getMessageCase()) {

@@ -20,11 +20,9 @@ package bisq.user.reputation.requests;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
-import bisq.network.p2p.message.EnvelopePayloadMessage;
+import bisq.network.p2p.message.ExternalNetworkMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
-import bisq.network.protobuf.ExternalNetworkMessage;
-import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -38,7 +36,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class AuthorizeAccountAgeRequest implements MailboxMessage {
+public final class AuthorizeAccountAgeRequest implements MailboxMessage, ExternalNetworkMessage {
     private final MetaData metaData = new MetaData(TTL_10_DAYS, getClass().getSimpleName(), MAX_MAP_SIZE_100);
     private final String profileId;
     private final String hashAsHex;
@@ -70,21 +68,18 @@ public final class AuthorizeAccountAgeRequest implements MailboxMessage {
     }
 
     @Override
-    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
-        return getNetworkMessageBuilder()
-                .setExternalNetworkMessage(ExternalNetworkMessage.newBuilder()
-                        .setAny(Any.pack(toAuthorizeAccountAgeRequestProto())))
-                .build();
-    }
-
-    public bisq.user.protobuf.AuthorizeAccountAgeRequest toAuthorizeAccountAgeRequestProto() {
+    public bisq.user.protobuf.AuthorizeAccountAgeRequest.Builder getValueBuilder(boolean serializeForHash) {
         return bisq.user.protobuf.AuthorizeAccountAgeRequest.newBuilder()
                 .setProfileId(profileId)
                 .setHashAsHex(hashAsHex)
                 .setDate(date)
                 .setPubKeyBase64(pubKeyBase64)
-                .setSignatureBase64(signatureBase64)
-                .build();
+                .setSignatureBase64(signatureBase64);
+    }
+
+    @Override
+    public bisq.user.protobuf.AuthorizeAccountAgeRequest toValueProto(boolean serializeForHash) {
+        return resolveValueProto(serializeForHash);
     }
 
     public static AuthorizeAccountAgeRequest fromProto(bisq.user.protobuf.AuthorizeAccountAgeRequest proto) {
@@ -95,7 +90,7 @@ public final class AuthorizeAccountAgeRequest implements MailboxMessage {
                 proto.getSignatureBase64());
     }
 
-    public static ProtoResolver<EnvelopePayloadMessage> getNetworkMessageResolver() {
+    public static ProtoResolver<ExternalNetworkMessage> getNetworkMessageResolver() {
         return any -> {
             try {
                 bisq.user.protobuf.AuthorizeAccountAgeRequest proto = any.unpack(bisq.user.protobuf.AuthorizeAccountAgeRequest.class);

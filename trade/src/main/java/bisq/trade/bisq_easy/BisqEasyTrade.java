@@ -82,13 +82,26 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
     }
 
     @Override
-    public bisq.trade.protobuf.Trade toProto() {
-        bisq.trade.protobuf.BisqEasyTrade.Builder builder = bisq.trade.protobuf.BisqEasyTrade.newBuilder();
+    public bisq.trade.protobuf.Trade.Builder getBuilder(boolean serializeForHash) {
+        return getTradeBuilder(serializeForHash).setBisqEasyTrade(toBisqEasyTradeProto(serializeForHash));
+    }
+
+    @Override
+    public bisq.trade.protobuf.Trade toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
+    }
+
+    private bisq.trade.protobuf.BisqEasyTrade toBisqEasyTradeProto(boolean serializeForHash) {
+        return resolveBuilder(getBisqEasyTradeBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    private bisq.trade.protobuf.BisqEasyTrade.Builder getBisqEasyTradeBuilder(boolean serializeForHash) {
+        var builder = bisq.trade.protobuf.BisqEasyTrade.newBuilder();
         Optional.ofNullable(paymentAccountData.get()).ifPresent(builder::setPaymentAccountData);
         Optional.ofNullable(btcAddress.get()).ifPresent(builder::setBtcAddress);
         Optional.ofNullable(txId.get()).ifPresent(builder::setTxId);
         Optional.ofNullable(interruptTradeInitiator.get()).ifPresent(e -> builder.setInterruptTradeInitiator(e.toProtoEnum()));
-        return getTradeBuilder().setBisqEasyTrade(builder).build();
+        return builder;
     }
 
     public static BisqEasyTrade fromProto(bisq.trade.protobuf.Trade proto) {

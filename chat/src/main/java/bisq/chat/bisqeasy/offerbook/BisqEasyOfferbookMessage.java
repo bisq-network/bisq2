@@ -81,14 +81,22 @@ public final class BisqEasyOfferbookMessage extends PublicChatMessage implements
                 wasEdited,
                 chatMessageType);
         this.bisqEasyOffer = bisqEasyOffer;
-
-        // log.error("{} {}", metaData.getClassName(), toProto().getSerializedSize()); //768
     }
 
-    public bisq.chat.protobuf.ChatMessage toProto() {
+    @Override
+    public bisq.chat.protobuf.ChatMessage.Builder getBuilder(boolean serializeForHash) {
+        return getChatMessageBuilder(serializeForHash)
+                .setBisqEasyOfferbookMessage(toBisqEasyOfferbookMessageProto(serializeForHash));
+    }
+
+    private bisq.chat.protobuf.BisqEasyOfferbookMessage toBisqEasyOfferbookMessageProto(boolean serializeForHash) {
+        return resolveBuilder(getBisqEasyOfferbookMessageBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    private bisq.chat.protobuf.BisqEasyOfferbookMessage.Builder getBisqEasyOfferbookMessageBuilder(boolean serializeForHash) {
         bisq.chat.protobuf.BisqEasyOfferbookMessage.Builder builder = bisq.chat.protobuf.BisqEasyOfferbookMessage.newBuilder();
-        bisqEasyOffer.ifPresent(e -> builder.setBisqEasyOffer(e.toProto()));
-        return getChatMessageBuilder().setBisqEasyOfferbookMessage(builder).build();
+        bisqEasyOffer.ifPresent(e -> builder.setBisqEasyOffer(e.toProto(serializeForHash)));
+        return builder;
     }
 
     public static BisqEasyOfferbookMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto) {

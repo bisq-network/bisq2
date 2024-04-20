@@ -92,15 +92,23 @@ public final class ConnectionHandshake {
         }
 
         @Override
-        public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
-            var builder = bisq.network.protobuf.ConnectionHandshake.Request.newBuilder()
-                    .setCapability(capability.toProto())
-                    .setNetworkLoad(networkLoad.toProto())
+        public bisq.network.protobuf.EnvelopePayloadMessage.Builder getBuilder(boolean serializeForHash) {
+            return newEnvelopePayloadMessageBuilder().setConnectionHandshakeRequest(toValueProto(serializeForHash));
+        }
+
+        @Override
+        public bisq.network.protobuf.ConnectionHandshake.Request toValueProto(boolean serializeForHash) {
+            return resolveValueProto(serializeForHash);
+        }
+
+        @Override
+        public bisq.network.protobuf.ConnectionHandshake.Request.Builder getValueBuilder(boolean serializeForHash) {
+            bisq.network.protobuf.ConnectionHandshake.Request.Builder builder = bisq.network.protobuf.ConnectionHandshake.Request.newBuilder()
+                    .setCapability(capability.toProto(serializeForHash))
+                    .setNetworkLoad(networkLoad.toProto(serializeForHash))
                     .setSignatureDate(signatureDate);
             addressOwnershipProof.ifPresent(e -> builder.setAddressOwnershipProof(ByteString.copyFrom(e)));
-            return getNetworkMessageBuilder()
-                    .setConnectionHandshakeRequest(builder.build())
-                    .build();
+            return builder;
         }
 
         public static Request fromProto(bisq.network.protobuf.ConnectionHandshake.Request proto) {
@@ -135,12 +143,20 @@ public final class ConnectionHandshake {
         }
 
         @Override
-        public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
-            return getNetworkMessageBuilder().setConnectionHandshakeResponse(
-                            bisq.network.protobuf.ConnectionHandshake.Response.newBuilder()
-                                    .setCapability(capability.toProto())
-                                    .setNetworkLoad(networkLoad.toProto()))
-                    .build();
+        public bisq.network.protobuf.EnvelopePayloadMessage.Builder getBuilder(boolean serializeForHash) {
+            return newEnvelopePayloadMessageBuilder().setConnectionHandshakeResponse(toValueProto(serializeForHash));
+        }
+
+        @Override
+        public bisq.network.protobuf.ConnectionHandshake.Response toValueProto(boolean serializeForHash) {
+            return resolveValueProto(serializeForHash);
+        }
+
+        @Override
+        public bisq.network.protobuf.ConnectionHandshake.Response.Builder getValueBuilder(boolean serializeForHash) {
+            return bisq.network.protobuf.ConnectionHandshake.Response.newBuilder()
+                    .setCapability(capability.toProto(serializeForHash))
+                    .setNetworkLoad(networkLoad.toProto(serializeForHash));
         }
 
         public static Response fromProto(bisq.network.protobuf.ConnectionHandshake.Response proto) {

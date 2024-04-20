@@ -21,14 +21,17 @@ public final class AmazonGiftCardAccountPayload extends CountryBasedAccountPaylo
     }
 
     @Override
-    public AccountPayload toProto() {
-        return getAccountPayloadBuilder().setCountryBasedAccountPayload(
-                        getCountryBasedAccountPayloadBuilder()
-                                .setAmazonGiftCardAccountPayload(
-                                        bisq.account.protobuf.AmazonGiftCardAccountPayload.newBuilder()
-                                                .setEmailOrMobileNr(emailOrMobileNr)
-                                ))
-                .build();
+    protected bisq.account.protobuf.CountryBasedAccountPayload.Builder getCountryBasedAccountPayloadBuilder(boolean serializeForHash) {
+        return super.getCountryBasedAccountPayloadBuilder(serializeForHash).setAmazonGiftCardAccountPayload(
+                toAmazonGiftCardAccountPayloadProto(serializeForHash));
+    }
+
+    private bisq.account.protobuf.AmazonGiftCardAccountPayload toAmazonGiftCardAccountPayloadProto(boolean serializeForHash) {
+        return resolveBuilder(getAmazonGiftCardAccountPayloadBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    private bisq.account.protobuf.AmazonGiftCardAccountPayload.Builder getAmazonGiftCardAccountPayloadBuilder(boolean serializeForHash) {
+        return bisq.account.protobuf.AmazonGiftCardAccountPayload.newBuilder().setEmailOrMobileNr(emailOrMobileNr);
     }
 
     public static AmazonGiftCardAccountPayload fromProto(AccountPayload proto) {

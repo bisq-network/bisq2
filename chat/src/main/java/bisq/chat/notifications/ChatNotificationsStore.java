@@ -40,12 +40,16 @@ public final class ChatNotificationsStore implements PersistableStore<ChatNotifi
     }
 
     @Override
-    public bisq.chat.protobuf.ChatNotificationsStore toProto() {
+    public bisq.chat.protobuf.ChatNotificationsStore.Builder getBuilder(boolean serializeForHash) {
         return bisq.chat.protobuf.ChatNotificationsStore.newBuilder()
                 .addAllChatNotifications(chatNotifications.stream()
-                        .map(ChatNotification::toProto)
-                        .collect(Collectors.toList()))
-                .build();
+                        .map(e -> e.toProto(serializeForHash))
+                        .collect(Collectors.toList()));
+    }
+
+    @Override
+    public bisq.chat.protobuf.ChatNotificationsStore toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
     }
 
     public static PersistableStore<?> fromProto(bisq.chat.protobuf.ChatNotificationsStore proto) {

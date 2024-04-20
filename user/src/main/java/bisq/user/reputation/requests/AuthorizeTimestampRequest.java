@@ -20,11 +20,9 @@ package bisq.user.reputation.requests;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
-import bisq.network.p2p.message.EnvelopePayloadMessage;
+import bisq.network.p2p.message.ExternalNetworkMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
-import bisq.network.protobuf.ExternalNetworkMessage;
-import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -37,7 +35,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class AuthorizeTimestampRequest implements MailboxMessage {
+public final class AuthorizeTimestampRequest implements MailboxMessage, ExternalNetworkMessage {
     private final MetaData metaData = new MetaData(TTL_10_DAYS, getClass().getSimpleName());
     private final String profileId;
 
@@ -53,24 +51,16 @@ public final class AuthorizeTimestampRequest implements MailboxMessage {
     }
 
     @Override
-    public bisq.network.protobuf.EnvelopePayloadMessage toProto() {
-        return getNetworkMessageBuilder()
-                .setExternalNetworkMessage(ExternalNetworkMessage.newBuilder()
-                        .setAny(Any.pack(toAuthorizeTimestampRequestProto())))
-                .build();
-    }
-
-    private bisq.user.protobuf.AuthorizeTimestampRequest toAuthorizeTimestampRequestProto() {
+    public bisq.user.protobuf.AuthorizeTimestampRequest.Builder getValueBuilder(boolean serializeForHash) {
         return bisq.user.protobuf.AuthorizeTimestampRequest.newBuilder()
-                .setProfileId(profileId)
-                .build();
+                .setProfileId(profileId);
     }
 
     public static AuthorizeTimestampRequest fromProto(bisq.user.protobuf.AuthorizeTimestampRequest proto) {
         return new AuthorizeTimestampRequest(proto.getProfileId());
     }
 
-    public static ProtoResolver<EnvelopePayloadMessage> getNetworkMessageResolver() {
+    public static ProtoResolver<ExternalNetworkMessage> getNetworkMessageResolver() {
         return any -> {
             try {
                 bisq.user.protobuf.AuthorizeTimestampRequest proto = any.unpack(bisq.user.protobuf.AuthorizeTimestampRequest.class);

@@ -100,17 +100,35 @@ public final class BisqEasyContract extends TwoPartyContract<BisqEasyOffer> {
     }
 
     @Override
-    public bisq.contract.protobuf.Contract toProto() {
-        var bisqEasyContract = bisq.contract.protobuf.BisqEasyContract.newBuilder()
+    public bisq.contract.protobuf.Contract.Builder getBuilder(boolean serializeForHash) {
+        return getContractBuilder(serializeForHash).setTwoPartyContract(toTwoPartyContract(serializeForHash));
+    }
+
+    @Override
+    protected bisq.contract.protobuf.TwoPartyContract.Builder getTwoPartyContractBuilder(boolean serializeForHash) {
+        return super.getTwoPartyContractBuilder(serializeForHash)
+                .setBisqEasyContract(toBisqEasyContractProto(serializeForHash));
+    }
+
+    private bisq.contract.protobuf.BisqEasyContract toBisqEasyContractProto(boolean serializeForHash) {
+        return resolveBuilder(getBisqEasyContractBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    private bisq.contract.protobuf.BisqEasyContract.Builder getBisqEasyContractBuilder(boolean serializeForHash) {
+        bisq.contract.protobuf.BisqEasyContract.Builder builder = bisq.contract.protobuf.BisqEasyContract.newBuilder()
                 .setBaseSideAmount(baseSideAmount)
                 .setQuoteSideAmount(quoteSideAmount)
-                .setBaseSidePaymentMethodSpec(baseSidePaymentMethodSpec.toProto())
-                .setQuoteSidePaymentMethodSpec(quoteSidePaymentMethodSpec.toProto())
-                .setAgreedPriceSpec(agreedPriceSpec.toProto())
+                .setBaseSidePaymentMethodSpec(baseSidePaymentMethodSpec.toProto(serializeForHash))
+                .setQuoteSidePaymentMethodSpec(quoteSidePaymentMethodSpec.toProto(serializeForHash))
+                .setAgreedPriceSpec(agreedPriceSpec.toProto(serializeForHash))
                 .setMarketPrice(marketPrice);
-        mediator.ifPresent(mediator -> bisqEasyContract.setMediator(mediator.toProto()));
-        var twoPartyContract = getTwoPartyContractBuilder().setBisqEasyContract(bisqEasyContract);
-        return getContractBuilder().setTwoPartyContract(twoPartyContract).build();
+        mediator.ifPresent(mediator -> builder.setMediator(mediator.toProto(serializeForHash)));
+        return builder;
+    }
+
+    @Override
+    public bisq.contract.protobuf.Contract toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
     }
 
     public static BisqEasyContract fromProto(bisq.contract.protobuf.Contract proto) {
