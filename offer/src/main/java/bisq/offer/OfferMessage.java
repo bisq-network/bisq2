@@ -17,6 +17,7 @@
 
 package bisq.offer;
 
+import bisq.common.annotation.ExcludeForHash;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.DistributedData;
@@ -34,6 +35,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_2_DAYS;
 @Getter
 @EqualsAndHashCode
 public final class OfferMessage implements DistributedData {
+    @ExcludeForHash
     private final MetaData metaData = new MetaData(TTL_2_DAYS, getClass().getSimpleName());
     private final Offer<?, ?> offer;
 
