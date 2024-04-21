@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data.storage.auth;
 
+import bisq.common.application.DevMode;
 import bisq.common.data.ByteArray;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.StringUtils;
@@ -35,6 +36,7 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -60,16 +62,19 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
 
     @Override
     public void onPersistedApplied(DataStore<AuthenticatedDataRequest> persisted) {
+        maybeLogMapState("onPersistedApplied", persisted);
         pruneInvalidAuthorizedData();
     }
 
     @Override
     public void shutdown() {
+        maybeLogMapState("shutdown", persistableStore);
         super.shutdown();
         scheduler.stop();
     }
 
     public DataStorageResult add(AddAuthenticatedDataRequest request) {
+        maybeLogMapState("add", persistableStore);
         AuthenticatedSequentialData authenticatedSequentialData = request.getAuthenticatedSequentialData();
         AuthenticatedData authenticatedData = authenticatedSequentialData.getAuthenticatedData();
         byte[] hash = DigestUtil.hash(authenticatedData.serializeForHash());
@@ -136,10 +141,12 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                 log.error("Calling onAdded at listener {} failed", listener, e);
             }
         });
+        maybeLogMapState("add success", persistableStore);
         return new DataStorageResult(true);
     }
 
     public DataStorageResult remove(RemoveAuthenticatedDataRequest request) {
+        maybeLogMapState("remove ", persistableStore);
         ByteArray byteArray = new ByteArray(request.getHash());
         AuthenticatedData authenticatedDataFromMap;
         Map<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
@@ -208,10 +215,12 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                 log.error("Calling onRemoved at listener {} failed", listener, e);
             }
         });
+        maybeLogMapState("remove success", persistableStore);
         return new DataStorageResult(true).removedData(authenticatedDataFromMap);
     }
 
     public DataStorageResult refresh(RefreshAuthenticatedDataRequest request) {
+        maybeLogMapState("refresh ", persistableStore);
         ByteArray byteArray = new ByteArray(request.getHash());
         AddAuthenticatedDataRequest updatedRequest;
         Map<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
@@ -264,6 +273,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                 log.error("Calling onRefreshed at listener {} failed", listener, e);
             }
         });
+        maybeLogMapState("refresh success", persistableStore);
         return new DataStorageResult(true);
     }
 
@@ -332,6 +342,26 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                 persistableStore.getMap().remove(key);
             });
             persist();
+        }
+    }
+
+    // Useful for debugging state of the store
+    private static void maybeLogMapState(String methodName, DataStore<AuthenticatedDataRequest> persisted) {
+        if (DevMode.isDevMode()) {
+            var added = persisted.getMap().values().stream()
+                    .filter(authenticatedDataRequest -> authenticatedDataRequest instanceof AddAuthenticatedDataRequest)
+                    .map(authenticatedDataRequest -> (AddAuthenticatedDataRequest) authenticatedDataRequest)
+                    .map(e -> e.getAuthenticatedSequentialData().getAuthenticatedData().getDistributedData().getClass().getSimpleName())
+                    .collect(Collectors.toList());
+            var removed = persisted.getMap().values().stream()
+                    .filter(authenticatedDataRequest -> authenticatedDataRequest instanceof RemoveAuthenticatedDataRequest)
+                    .map(authenticatedDataRequest -> (RemoveAuthenticatedDataRequest) authenticatedDataRequest)
+                    .map(RemoveAuthenticatedDataRequest::getClassName)
+                    .collect(Collectors.toList());
+            var className = Stream.concat(added.stream(), removed.stream())
+                    .findAny().orElse("N/A");
+            log.info("Method: {}; map entry: {}; num AddRequests: {}; num RemoveRequests={}; map size:{}",
+                    methodName, className, added.size(), removed.size(), persisted.getMap().size());
         }
     }
 }
