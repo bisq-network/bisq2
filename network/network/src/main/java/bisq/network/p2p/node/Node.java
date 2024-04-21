@@ -20,6 +20,7 @@ package bisq.network.p2p.node;
 
 import bisq.common.observable.Observable;
 import bisq.common.util.CompletableFutureUtils;
+import bisq.common.util.ExceptionUtil;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
 import bisq.network.common.Address;
@@ -335,11 +336,11 @@ public class Node implements Connection.Handler {
                     connection.getPeersCapability().getFeatures());
             maybeSimulateDelay();
             return connection.send(envelopePayloadMessage, token);
-        } catch (Throwable throwable) {
-            if (connection.isRunning()) {
-                handleException(connection, throwable);
-                log.debug("Send message failed on {}", this, throwable);
-                closeConnection(connection, CloseReason.EXCEPTION.exception(throwable));
+        } catch (Exception exception) {
+            if (connection.isRunning() && !(exception.getCause() instanceof SocketException)) {
+                handleException(connection, exception);
+                log.debug("Send message failed on {}", this, exception);
+                closeConnection(connection, CloseReason.EXCEPTION.exception(exception));
             }
             throw new ConnectionClosedException(connection);
         }
@@ -583,23 +584,23 @@ public class Node implements Connection.Handler {
 
     public void closeConnection(Connection connection, CloseReason closeReason) {
         log.debug("{} got called closeConnection for {}, closeReason={}", this, connection, closeReason);
-        connection.close(closeReason);
+        connection.shutdown(closeReason);
     }
 
     public CompletableFuture<Void> closeConnectionGracefullyAsync(Connection connection, CloseReason closeReason) {
-        return runAsync(() -> closeConnectionGracefully(connection, closeReason), NetworkService.NETWORK_IO_POOL);
+        return runAsync(() -> closeConnectionGracefully(connection, closeReason), NetworkService.NETWORK_IO_POOL)
+                .orTimeout(4, SECONDS);
     }
 
     public void closeConnectionGracefully(Connection connection, CloseReason closeReason) {
+        connection.stopListening();
+        send(new CloseConnectionMessage(closeReason), connection);
         try {
-            connection.stopListening();
-            send(new CloseConnectionMessage(closeReason), connection);
-
             // Give a bit of delay before we close the connection.
             Thread.sleep(100);
         } catch (Throwable ignore) {
         }
-        connection.close(CloseReason.CLOSE_MSG_SENT.details(closeReason.name()));
+        connection.shutdown(CloseReason.CLOSE_MSG_SENT.details(closeReason.name()));
     }
 
     public CompletableFuture<Boolean> shutdown() {
@@ -617,7 +618,7 @@ public class Node implements Connection.Handler {
                 .orTimeout(10, SECONDS)
                 .whenComplete((list, throwable) -> {
                     if (throwable != null) {
-                        log.warn("Exception at node shutdown", throwable);
+                        log.warn("Exception at node shutdown {}", ExceptionUtil.getMessageOrToString(throwable));
                     }
                     outboundConnectionsByAddress.clear();
                     inboundConnectionsByAddress.clear();

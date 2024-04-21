@@ -21,6 +21,7 @@ import bisq.common.util.ExceptionUtil;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
 import bisq.network.common.Address;
+import bisq.network.common.DefaultPeerSocket;
 import bisq.network.common.PeerSocket;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.NetworkEnvelope;
@@ -28,7 +29,6 @@ import bisq.network.p2p.node.authorization.AuthorizationToken;
 import bisq.network.p2p.node.envelope.NetworkEnvelopeSocket;
 import bisq.network.p2p.node.network_load.ConnectionMetrics;
 import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
-import bisq.tor.TorSocket;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -95,7 +95,7 @@ public abstract class Connection {
     private Future<?> inputHandlerFuture;
     private final AtomicInteger sentMessageCounter = new AtomicInteger(0);
     private final Object writeLock = new Object();
-    private volatile boolean isStopped;
+    private volatile boolean shutdownStarted;
     private volatile boolean listeningStopped;
 
     protected Connection(Socket socket,
@@ -111,12 +111,12 @@ public abstract class Connection {
         requestResponseManager = new RequestResponseManager(connectionMetrics);
 
         try {
-            PeerSocket peerSocket = new TorSocket(socket);
+            PeerSocket peerSocket = new DefaultPeerSocket(socket);
             this.networkEnvelopeSocket = new NetworkEnvelopeSocket(peerSocket);
         } catch (IOException exception) {
             log.error("Could not create objectOutputStream/objectInputStream for socket " + socket, exception);
             errorHandler.accept(this, exception);
-            close(CloseReason.EXCEPTION.exception(exception));
+            shutdown(CloseReason.EXCEPTION.exception(exception));
             return;
         }
 
@@ -147,7 +147,7 @@ public abstract class Connection {
                 //todo (deferred) StreamCorruptedException from i2p at shutdown. prob it send some text data at shut down
                 if (isInputStreamActive()) {
                     log.debug("Exception at input handler on {}", this, exception);
-                    close(CloseReason.EXCEPTION.exception(exception));
+                    shutdown(CloseReason.EXCEPTION.exception(exception));
 
                     // EOFException expected if connection got closed (Socket closed message)
                     if (!(exception instanceof EOFException)) {
@@ -207,7 +207,7 @@ public abstract class Connection {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     Connection send(EnvelopePayloadMessage envelopePayloadMessage, AuthorizationToken authorizationToken) {
-        if (isStopped) {
+        if (isStopped()) {
             log.warn("Message not sent as connection has been shut down already. Message={}, Connection={}",
                     StringUtils.truncate(envelopePayloadMessage.toString(), 200), this);
             // We do not throw a ConnectionClosedException here
@@ -224,11 +224,11 @@ public abstract class Connection {
                 try {
                     networkEnvelopeSocket.send(networkEnvelope);
                     sent = true;
-                } catch (Throwable throwable) {
-                    if (!isStopped) {
-                        throw throwable;
+                } catch (Exception exception) {
+                    if (isRunning()) {
+                        throw exception;
                     } else {
-                        log.warn("Send message failed at stopped connection", throwable);
+                        log.info("Send message at stopped connection {} failed with {}", this, ExceptionUtil.getMessageOrToString(exception));
                     }
                 }
             }
@@ -244,9 +244,9 @@ public abstract class Connection {
             }
             return this;
         } catch (IOException exception) {
-            if (!isStopped) {
-                log.error("Send message failed. {}", this, ExceptionUtil.getMessageOrToString(exception));
-                close(CloseReason.EXCEPTION.exception(exception));
+            if (isRunning()) {
+                log.warn("Send message at {} failed with {}", this, ExceptionUtil.getMessageOrToString(exception));
+                shutdown(CloseReason.EXCEPTION.exception(exception));
             }
             // We wrap any exception (also expected EOFException in case of connection close), to leave handling of the exception to the caller.
             throw new ConnectionException(exception);
@@ -257,13 +257,13 @@ public abstract class Connection {
         listeningStopped = true;
     }
 
-    void close(CloseReason closeReason) {
-        if (isStopped) {
+    void shutdown(CloseReason closeReason) {
+        if (isStopped()) {
             log.debug("Shut down already in progress {}", this);
             return;
         }
         log.info("Close {}; \ncloseReason: {}", this, closeReason);
-        isStopped = true;
+        shutdownStarted = true;
         requestResponseManager.onClosed();
         if (inputHandlerFuture != null) {
             inputHandlerFuture.cancel(true);
@@ -300,7 +300,7 @@ public abstract class Connection {
     }
 
     boolean isStopped() {
-        return isStopped;
+        return shutdownStarted || networkEnvelopeSocket.isClosed() || Thread.currentThread().isInterrupted();
     }
 
 
@@ -313,6 +313,6 @@ public abstract class Connection {
     }
 
     private boolean isInputStreamActive() {
-        return !listeningStopped && !isStopped && !Thread.currentThread().isInterrupted();
+        return !listeningStopped && isRunning();
     }
 }

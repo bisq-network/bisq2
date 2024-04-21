@@ -42,4 +42,8 @@ public class TorSocket implements PeerSocket {
     public void close() throws IOException {
         socket.close();
     }
+
+    public boolean isClosed() {
+        return socket.isClosed();
+    }
 }

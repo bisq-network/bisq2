@@ -17,14 +17,32 @@
 
 package bisq.network.common;
 
-import java.io.Closeable;
+import lombok.Getter;
+
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.Socket;
 
-public interface PeerSocket extends Closeable {
-    InputStream getInputStream();
+public class DefaultPeerSocket implements PeerSocket {
+    private final Socket socket;
+    @Getter
+    private final InputStream inputStream;
+    @Getter
+    private final OutputStream outputStream;
 
-    OutputStream getOutputStream();
+    public DefaultPeerSocket(Socket socket) throws IOException {
+        this.socket = socket;
+        this.inputStream = socket.getInputStream();
+        this.outputStream = socket.getOutputStream();
+    }
 
-    boolean isClosed();
+    @Override
+    public void close() throws IOException {
+        socket.close();
+    }
+
+    public boolean isClosed() {
+        return socket.isClosed();
+    }
 }
