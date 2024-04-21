@@ -26,6 +26,7 @@ import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
@@ -35,6 +36,7 @@ import java.util.Arrays;
 import java.util.Optional;
 
 @Slf4j
+@ToString
 @EqualsAndHashCode
 @Getter
 public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
@@ -176,10 +178,5 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
     @Override
     public int getMaxMapSize() {
         return mailboxSequentialData.getMailboxData().getMetaData().getMaxMapSize();
-    }
-
-    @Override
-    public String toString() {
-        return "AddMailboxDataRequest{} " + super.toString();
     }
 }
