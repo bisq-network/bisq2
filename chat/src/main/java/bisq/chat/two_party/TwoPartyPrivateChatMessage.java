@@ -21,6 +21,7 @@ import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessageType;
 import bisq.chat.Citation;
 import bisq.chat.priv.PrivateChatMessage;
+import bisq.common.annotation.ExcludeForHash;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.user.profile.UserProfile;
@@ -39,6 +40,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
+    @ExcludeForHash
     private final MetaData metaData = new MetaData(TTL_30_DAYS, getClass().getSimpleName(), MAX_MAP_SIZE_100);
 
     public TwoPartyPrivateChatMessage(String messageId,
