@@ -22,10 +22,7 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -41,6 +38,8 @@ public class ConnectionMetrics {
     private final TreeMap<Integer, AtomicLong> deserializeTimePerMinute = new TreeMap<>();
     private final TreeMap<Integer, AtomicLong> numMessagesReceivedPerMinute = new TreeMap<>();
     private final TreeMap<Integer, AtomicLong> receivedBytesPerMinute = new TreeMap<>();
+    private final Map<String, AtomicLong> numSentMessagesByMessageClassName = new HashMap<>();
+    private final Map<String, AtomicLong> numReceivedMessagesByMessageClassName = new HashMap<>();
 
     private final AtomicLong numMessagesReceived = new AtomicLong();
     private final List<Long> rrtList = new CopyOnWriteArrayList<>();
@@ -70,6 +69,10 @@ public class ConnectionMetrics {
 
         spentSendMessageTimePerMinute.putIfAbsent(ageInMinutes, new AtomicLong());
         spentSendMessageTimePerMinute.get(ageInMinutes).getAndAdd(spentTime);
+
+        String name = networkEnvelope.getEnvelopePayloadMessage().getClass().getSimpleName();
+        numSentMessagesByMessageClassName.putIfAbsent(name, new AtomicLong());
+        numSentMessagesByMessageClassName.get(name).getAndIncrement();
     }
 
     public void onReceived(NetworkEnvelope networkEnvelope, long deserializeTime) {
@@ -85,6 +88,10 @@ public class ConnectionMetrics {
 
         deserializeTimePerMinute.putIfAbsent(ageInMinutes, new AtomicLong());
         deserializeTimePerMinute.get(ageInMinutes).getAndAdd(deserializeTime);
+
+        String name = networkEnvelope.getEnvelopePayloadMessage().getClass().getSimpleName();
+        numReceivedMessagesByMessageClassName.putIfAbsent(name, new AtomicLong());
+        numReceivedMessagesByMessageClassName.get(name).getAndIncrement();
     }
 
     public void addRtt(long value) {
