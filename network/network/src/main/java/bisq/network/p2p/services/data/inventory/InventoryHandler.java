@@ -26,6 +26,10 @@ import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.data.inventory.filter.InventoryFilter;
 import bisq.network.p2p.services.data.storage.append.AddAppendOnlyDataRequest;
 import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
+import bisq.network.p2p.services.data.storage.auth.RefreshAuthenticatedDataRequest;
+import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
+import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
+import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -92,9 +96,21 @@ class InventoryHandler implements Connection.Listener {
                     if (dataRequest instanceof AddAuthenticatedDataRequest) {
                         AddAuthenticatedDataRequest addRequest = (AddAuthenticatedDataRequest) dataRequest;
                         payloadName = addRequest.getAuthenticatedSequentialData().getAuthenticatedData().getDistributedData().getClass().getSimpleName();
+                    } else if (dataRequest instanceof RemoveAuthenticatedDataRequest) {
+                        RemoveAuthenticatedDataRequest removeRequest = (RemoveAuthenticatedDataRequest) dataRequest;
+                        payloadName = removeRequest.getClassName();
+                    } else if (dataRequest instanceof RefreshAuthenticatedDataRequest) {
+                        RefreshAuthenticatedDataRequest request = (RefreshAuthenticatedDataRequest) dataRequest;
+                        payloadName = request.getClassName();
                     } else if (dataRequest instanceof AddAppendOnlyDataRequest) {
                         AddAppendOnlyDataRequest addRequest = (AddAppendOnlyDataRequest) dataRequest;
                         payloadName = addRequest.getAppendOnlyData().getClass().getSimpleName();
+                    } else if (dataRequest instanceof AddMailboxRequest) {
+                        AddMailboxRequest addRequest = (AddMailboxRequest) dataRequest;
+                        payloadName = addRequest.getMailboxSequentialData().getMailboxData().getClassName();
+                    } else if (dataRequest instanceof RemoveMailboxRequest) {
+                        RemoveMailboxRequest removeRequest = (RemoveMailboxRequest) dataRequest;
+                        payloadName = removeRequest.getClassName();
                     }
                     dataRequestMap.putIfAbsent(dataRequestName, new HashMap<>());
                     Map<String, AtomicInteger> payloadMap = dataRequestMap.get(dataRequestName);
