@@ -17,10 +17,12 @@
 
 package bisq.network.p2p.services.data.storage.mailbox;
 
+import bisq.common.application.DevMode;
 import bisq.common.data.ByteArray;
 import bisq.common.timer.Scheduler;
 import bisq.network.p2p.services.data.storage.DataStorageResult;
 import bisq.network.p2p.services.data.storage.DataStorageService;
+import bisq.network.p2p.services.data.storage.DataStore;
 import bisq.persistence.PersistenceService;
 import bisq.security.DigestUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +32,7 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 public class MailboxDataStorageService extends DataStorageService<MailboxRequest> {
@@ -49,12 +52,19 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
     }
 
     @Override
+    public void onPersistedApplied(DataStore<MailboxRequest> persisted) {
+        maybeLogMapState("onPersistedApplied", persisted);
+    }
+
+    @Override
     public void shutdown() {
+        maybeLogMapState("shutdown", persistableStore);
         super.shutdown();
         scheduler.stop();
     }
 
     public DataStorageResult add(AddMailboxRequest request) {
+        maybeLogMapState("add", persistableStore);
         MailboxSequentialData mailboxSequentialData = request.getMailboxSequentialData();
         MailboxData mailboxData = mailboxSequentialData.getMailboxData();
         byte[] hash = DigestUtil.hash(mailboxData.serializeForHash());
@@ -108,11 +118,13 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
                 log.error("Calling onAdded at listener {} failed", listener, e);
             }
         });
+        maybeLogMapState("add success", persistableStore);
         return new DataStorageResult(true);
     }
 
 
     public DataStorageResult remove(RemoveMailboxRequest request) {
+        maybeLogMapState("remove ", persistableStore);
         ByteArray byteArray = new ByteArray(request.getHash());
         Map<ByteArray, MailboxRequest> map = persistableStore.getMap();
         MailboxRequest requestFromMap = map.get(byteArray);
@@ -165,6 +177,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
         }
 
         persist();
+        maybeLogMapState("remove success", persistableStore);
         return new DataStorageResult(true).removedData(sequentialDataFromMap.getMailboxData());
     }
 
@@ -212,6 +225,26 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
         if (!expiredEntries.isEmpty()) {
             log.info("We remove {} expired entries from our map", expiredEntries.size());
             expiredEntries.forEach(entry -> persistableStore.getMap().remove(entry.getKey()));
+        }
+    }
+
+    // Useful for debugging state of the store
+    private static void maybeLogMapState(String methodName, DataStore<MailboxRequest> persisted) {
+        if (DevMode.isDevMode()) {
+            var added = persisted.getMap().values().stream()
+                    .filter(authenticatedDataRequest -> authenticatedDataRequest instanceof AddMailboxRequest)
+                    .map(authenticatedDataRequest -> (AddMailboxRequest) authenticatedDataRequest)
+                    .map(e -> e.getMailboxSequentialData().getMailboxData().getClassName())
+                    .collect(Collectors.toList());
+            var removed = persisted.getMap().values().stream()
+                    .filter(authenticatedDataRequest -> authenticatedDataRequest instanceof RemoveMailboxRequest)
+                    .map(authenticatedDataRequest -> (RemoveMailboxRequest) authenticatedDataRequest)
+                    .map(RemoveMailboxRequest::getClassName)
+                    .collect(Collectors.toList());
+            var className = Stream.concat(added.stream(), removed.stream())
+                    .findAny().orElse("unknown because map is empty");
+            log.info("Method: {}; map entry: {}; num AddRequests: {}; num RemoveRequests={}; map size:{}",
+                    methodName, className, added.size(), removed.size(), persisted.getMap().size());
         }
     }
 }
