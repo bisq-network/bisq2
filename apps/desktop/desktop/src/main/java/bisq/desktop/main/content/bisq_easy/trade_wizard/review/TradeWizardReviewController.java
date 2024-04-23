@@ -312,13 +312,6 @@ public class TradeWizardReviewController implements Controller {
             );
             model.setPaymentMethod(PaymentMethodSpecFormatter.fromPaymentMethods(fiatPaymentMethods));
             model.setPriceDescription(Res.get("bisqEasy.tradeWizard.review.priceDescription.maker"));
-            if (direction.isSell()) {
-                toSendAmountDescription = Res.get("bisqEasy.tradeWizard.review.toSend");
-                toReceiveAmountDescription = Res.get("bisqEasy.tradeWizard.review.toReceive");
-            } else {
-                toSendAmountDescription = Res.get("bisqEasy.tradeWizard.review.toPay");
-                toReceiveAmountDescription = Res.get("bisqEasy.tradeWizard.review.toReceive");
-            }
         } else {
             model.setHeadline(Res.get("bisqEasy.tradeWizard.review.headline.taker"));
             model.setDetailsHeadline(Res.get("bisqEasy.tradeWizard.review.detailsHeadline.taker").toUpperCase());
@@ -334,14 +327,13 @@ public class TradeWizardReviewController implements Controller {
             );
             model.setPaymentMethod(model.getTakersSelectedPaymentMethod().getDisplayString());
 
-            if (direction.isSell()) {
-                toSendAmountDescription = Res.get("bisqEasy.tradeWizard.review.toSend");
-                toReceiveAmountDescription = Res.get("bisqEasy.tradeWizard.review.toReceive");
-            } else {
-                toSendAmountDescription = Res.get("bisqEasy.tradeWizard.review.toPay");
-                toReceiveAmountDescription = Res.get("bisqEasy.tradeWizard.review.toReceive");
-            }
         }
+        if (direction.isSell()) {
+            toSendAmountDescription = Res.get("bisqEasy.tradeWizard.review.toSend");
+        } else {
+            toSendAmountDescription = Res.get("bisqEasy.tradeWizard.review.toPay");
+        }
+        toReceiveAmountDescription = Res.get("bisqEasy.tradeWizard.review.toReceive");
 
         applyHeaderPaymentMethod();
 
