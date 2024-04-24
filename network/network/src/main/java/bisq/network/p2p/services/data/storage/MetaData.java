@@ -41,7 +41,6 @@ public final class MetaData implements NetworkProto {
     public static final long TTL_30_DAYS = TimeUnit.DAYS.toMillis(30);
     public static final long TTL_100_DAYS = TimeUnit.DAYS.toMillis(100);
 
-    public static final int MAX_MAP_SIZE_100 = 100;
     public static final int MAX_MAP_SIZE_1000 = 1000;
     public static final int MAX_MAP_SIZE_5000 = 5000;
     public static final int MAX_MAP_SIZE_10_000 = 10_000;
