@@ -43,7 +43,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 import java.util.Optional;
 
-import static bisq.network.p2p.services.data.storage.MetaData.TTL_2_DAYS;
+import static bisq.network.p2p.services.data.storage.MetaData.TTL_4_DAYS;
 
 @Slf4j
 @Getter
@@ -51,7 +51,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_2_DAYS;
 @EqualsAndHashCode
 public final class PocOffer implements DistributedData {
     @ExcludeForHash
-    private final MetaData metaData = new MetaData(TTL_2_DAYS, getClass().getSimpleName());
+    private final MetaData metaData = new MetaData(TTL_4_DAYS, getClass().getSimpleName());
 
     public static final String ACCOUNT_AGE_WITNESS_HASH = "accountAgeWitnessHash";
     public static final String REFERRAL_ID = "referralId";

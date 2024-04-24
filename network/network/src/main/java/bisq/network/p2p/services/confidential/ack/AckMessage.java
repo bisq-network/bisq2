@@ -20,7 +20,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.*;
 @ToString
 public final class AckMessage implements MailboxMessage, Response {
     @ExcludeForHash
-    private final MetaData metaData = new MetaData(TTL_2_DAYS, LOW_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_5000);
+    private final MetaData metaData = new MetaData(TTL_4_DAYS, LOW_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_5000);
 
     private final String id;
 
