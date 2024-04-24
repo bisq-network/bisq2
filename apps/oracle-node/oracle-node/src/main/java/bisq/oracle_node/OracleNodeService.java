@@ -206,9 +206,9 @@ public class OracleNodeService implements Service {
             startupScheduler = Scheduler.run(() -> publishMyAuthorizedData(authorizedOracleNode, authorizedBondedRole, keyPair))
                     .repeated(1, 10, TimeUnit.SECONDS, 3);
 
-            // We have 30 days TTL for the data, we republish after 25 days to ensure the data does not expire
+            // We have 100 days TTL for the data, we republish after 50 days to ensure the data does not expire
             scheduler = Scheduler.run(() -> publishMyAuthorizedData(authorizedOracleNode, authorizedBondedRole, keyPair))
-                    .periodically(25, TimeUnit.DAYS);
+                    .periodically(50, TimeUnit.DAYS);
         }
 
         authorizedBondedRolesService.getBondedRoles().addObserver(new CollectionObserver<>() {
