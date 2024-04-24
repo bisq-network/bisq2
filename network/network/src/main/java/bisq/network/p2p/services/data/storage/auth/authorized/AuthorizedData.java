@@ -84,10 +84,18 @@ public final class AuthorizedData extends AuthenticatedData {
 
     @Override
     public bisq.network.protobuf.AuthenticatedData.Builder getBuilder(boolean serializeForHash) {
+        return getAuthenticatedDataBuilder(serializeForHash).setAuthorizedData(toValueProto(serializeForHash));
+    }
+
+    public bisq.network.protobuf.AuthorizedData toValueProto(boolean serializeForHash) {
+        return resolveBuilder(getValueBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    public bisq.network.protobuf.AuthorizedData.Builder getValueBuilder(boolean serializeForHash) {
         bisq.network.protobuf.AuthorizedData.Builder builder = bisq.network.protobuf.AuthorizedData.newBuilder()
                 .setAuthorizedPublicKeyBytes(ByteString.copyFrom(authorizedPublicKeyBytes));
         signature.ifPresent(signature -> builder.setSignature(ByteString.copyFrom(signature)));
-        return getAuthenticatedDataBuilder(serializeForHash).setAuthorizedData(builder);
+        return builder;
     }
 
     public static AuthorizedData fromProto(bisq.network.protobuf.AuthenticatedData proto) {
