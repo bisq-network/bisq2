@@ -19,6 +19,7 @@ package bisq.user.reputation.data;
 
 import bisq.bonded_roles.AuthorizedPubKeys;
 import bisq.common.application.DevMode;
+import bisq.common.annotation.ExcludeForHash;
 import bisq.common.encoding.Hex;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -43,6 +44,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @EqualsAndHashCode
 @Getter
 public final class AuthorizedBondedReputationData implements AuthorizedDistributedData {
+    @ExcludeForHash
     @EqualsAndHashCode.Exclude
     private final MetaData metaData = new MetaData(TTL_100_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
     private final long amount;

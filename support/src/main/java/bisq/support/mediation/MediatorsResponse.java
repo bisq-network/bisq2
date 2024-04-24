@@ -17,6 +17,7 @@
 
 package bisq.support.mediation;
 
+import bisq.common.annotation.ExcludeForHash;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
@@ -37,6 +38,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 @ToString
 @EqualsAndHashCode
 public final class MediatorsResponse implements MailboxMessage, ExternalNetworkMessage {
+    @ExcludeForHash
     private final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
     private final String tradeId;
 

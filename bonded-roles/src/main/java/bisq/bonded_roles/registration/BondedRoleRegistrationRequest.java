@@ -18,6 +18,7 @@
 package bisq.bonded_roles.registration;
 
 import bisq.bonded_roles.BondedRoleType;
+import bisq.common.annotation.ExcludeForHash;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
@@ -42,6 +43,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 @ToString
 @EqualsAndHashCode
 public final class BondedRoleRegistrationRequest implements MailboxMessage, ExternalNetworkMessage {
+    @ExcludeForHash
     private final MetaData metaData = new MetaData(TTL_10_DAYS, getClass().getSimpleName(), MAX_MAP_SIZE_100);
     private final String profileId;
     private final String authorizedPublicKey;

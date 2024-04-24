@@ -18,6 +18,7 @@
 package bisq.user.reputation.data;
 
 import bisq.bonded_roles.AuthorizedPubKeys;
+import bisq.common.annotation.ExcludeForHash;
 import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -43,6 +44,7 @@ public final class AuthorizedAccountAgeData implements AuthorizedDistributedData
     public static final long TTL = TTL_100_DAYS;
 
     @EqualsAndHashCode.Exclude
+    @ExcludeForHash
     private final MetaData metaData = new MetaData(TTL, HIGHEST_PRIORITY, getClass().getSimpleName());
     private final String profileId;
     private final long date;

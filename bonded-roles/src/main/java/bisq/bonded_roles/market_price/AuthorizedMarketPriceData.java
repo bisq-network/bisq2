@@ -18,6 +18,7 @@
 package bisq.bonded_roles.market_price;
 
 import bisq.bonded_roles.AuthorizedPubKeys;
+import bisq.common.annotation.ExcludeForHash;
 import bisq.common.application.DevMode;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
@@ -45,6 +46,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Getter
 public final class AuthorizedMarketPriceData implements AuthorizedDistributedData {
     public static final long TTL = TimeUnit.MINUTES.toMillis(10);
+    @ExcludeForHash
     private final MetaData metaData = new MetaData(TTL, DEFAULT_PRIORITY, getClass().getSimpleName());
     // We need deterministic sorting or the map, so we use a treemap
     private final TreeMap<Market, MarketPrice> marketPriceByCurrencyMap;
