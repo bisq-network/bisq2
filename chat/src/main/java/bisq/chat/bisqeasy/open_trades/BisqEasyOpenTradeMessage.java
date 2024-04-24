@@ -22,6 +22,7 @@ import bisq.chat.ChatMessageType;
 import bisq.chat.Citation;
 import bisq.chat.bisqeasy.BisqEasyOfferMessage;
 import bisq.chat.priv.PrivateChatMessage;
+import bisq.common.annotation.ExcludeForHash;
 import bisq.common.util.StringUtils;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -59,8 +60,8 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage implement
                 bisqEasyOffer);
     }
 
+    @ExcludeForHash
     private final MetaData metaData = new MetaData(TTL_30_DAYS, HIGH_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_100);
-
     private final String tradeId;
     private final Optional<UserProfile> mediator;
     private final Optional<BisqEasyOffer> bisqEasyOffer;
