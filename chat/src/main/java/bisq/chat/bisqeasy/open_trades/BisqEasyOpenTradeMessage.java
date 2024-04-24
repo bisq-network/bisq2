@@ -61,7 +61,7 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage implement
     }
 
     @ExcludeForHash
-    private final MetaData metaData = new MetaData(TTL_30_DAYS, HIGH_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_5000);
+    private final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_5000);
     private final String tradeId;
     private final Optional<UserProfile> mediator;
     private final Optional<BisqEasyOffer> bisqEasyOffer;

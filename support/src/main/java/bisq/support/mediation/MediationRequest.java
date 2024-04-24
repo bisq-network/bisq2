@@ -37,8 +37,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
-import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
+import static bisq.network.p2p.services.data.storage.MetaData.*;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
@@ -47,7 +46,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public final class MediationRequest implements MailboxMessage, ExternalNetworkMessage {
     @ExcludeForHash
-    private final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    private final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_1000);
     @EqualsAndHashCode.Include
     private final BisqEasyContract contract;
     @EqualsAndHashCode.Include

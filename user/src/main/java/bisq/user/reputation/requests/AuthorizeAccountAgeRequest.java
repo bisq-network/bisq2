@@ -30,8 +30,7 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.network.p2p.services.data.storage.MetaData.MAX_MAP_SIZE_1000;
-import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
+import static bisq.network.p2p.services.data.storage.MetaData.*;
 
 @Slf4j
 @Getter
@@ -39,7 +38,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 @EqualsAndHashCode
 public final class AuthorizeAccountAgeRequest implements MailboxMessage, ExternalNetworkMessage {
     @ExcludeForHash
-    private final MetaData metaData = new MetaData(TTL_10_DAYS, getClass().getSimpleName(), MAX_MAP_SIZE_1000);
+    private final MetaData metaData = new MetaData(TTL_10_DAYS, LOW_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_500);
     private final String profileId;
     private final String hashAsHex;
     private final long date;

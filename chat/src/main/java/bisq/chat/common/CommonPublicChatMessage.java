@@ -39,7 +39,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.*;
 @EqualsAndHashCode(callSuper = true)
 public final class CommonPublicChatMessage extends PublicChatMessage {
     @ExcludeForHash
-    private final MetaData metaData = new MetaData(TTL_10_DAYS, LOW_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_10_000);
+    private final MetaData metaData = new MetaData(TTL_10_DAYS, LOW_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_50_000);
 
     public CommonPublicChatMessage(ChatChannelDomain chatChannelDomain,
                                    String channelId,

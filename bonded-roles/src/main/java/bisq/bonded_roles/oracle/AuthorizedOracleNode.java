@@ -42,7 +42,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.*;
 @Getter
 public final class AuthorizedOracleNode implements AuthorizedDistributedData {
     @ExcludeForHash
-    private final MetaData metaData = new MetaData(TTL_100_DAYS, HIGHEST_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_1000);
+    private final MetaData metaData = new MetaData(TTL_100_DAYS, HIGHEST_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_500);
     private final NetworkId networkId;
     private final String profileId;
     private final String authorizedPublicKey;
