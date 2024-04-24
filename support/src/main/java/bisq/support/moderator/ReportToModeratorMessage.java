@@ -18,6 +18,7 @@
 package bisq.support.moderator;
 
 import bisq.chat.ChatChannelDomain;
+import bisq.common.annotation.ExcludeForHash;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
@@ -41,6 +42,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 public final class ReportToModeratorMessage implements MailboxMessage, ExternalNetworkMessage {
     public final static int MAX_MESSAGE_LENGTH = 10_000;
 
+    @ExcludeForHash
     private final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
     private final long date;
     private final String reporterUserProfileId;

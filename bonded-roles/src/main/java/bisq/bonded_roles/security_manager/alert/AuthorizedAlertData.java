@@ -19,6 +19,7 @@ package bisq.bonded_roles.security_manager.alert;
 
 import bisq.bonded_roles.AuthorizedPubKeys;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
+import bisq.common.annotation.ExcludeForHash;
 import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -46,6 +47,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
 public final class AuthorizedAlertData implements AuthorizedDistributedData {
     public final static int MAX_MESSAGE_LENGTH = 1000;
 
+    @ExcludeForHash
     private final MetaData metaData = new MetaData(TTL_30_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
     private final String id;
     private final long date;

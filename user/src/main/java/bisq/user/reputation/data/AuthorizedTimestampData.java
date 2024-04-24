@@ -18,6 +18,7 @@
 package bisq.user.reputation.data;
 
 import bisq.bonded_roles.AuthorizedPubKeys;
+import bisq.common.annotation.ExcludeForHash;
 import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -40,6 +41,8 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
 @Getter
 public final class AuthorizedTimestampData implements AuthorizedDistributedData {
     public static final long TTL = TTL_30_DAYS;
+
+    @ExcludeForHash
     private final MetaData metaData = new MetaData(TTL, getClass().getSimpleName());
     private final String profileId;
     private final long date;
