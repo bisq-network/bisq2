@@ -28,7 +28,7 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.network.p2p.services.data.storage.MetaData.TTL_2_DAYS;
+import static bisq.network.p2p.services.data.storage.MetaData.TTL_4_DAYS;
 
 @Slf4j
 @ToString
@@ -36,7 +36,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_2_DAYS;
 @EqualsAndHashCode
 public final class OfferMessage implements DistributedData {
     @ExcludeForHash
-    private final MetaData metaData = new MetaData(TTL_2_DAYS, getClass().getSimpleName());
+    private final MetaData metaData = new MetaData(TTL_4_DAYS, getClass().getSimpleName());
     private final Offer<?, ?> offer;
 
     public OfferMessage(Offer<?, ?> offer) {
