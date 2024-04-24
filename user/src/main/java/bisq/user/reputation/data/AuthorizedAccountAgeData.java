@@ -34,8 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Date;
 import java.util.Set;
 
-import static bisq.network.p2p.services.data.storage.MetaData.HIGHEST_PRIORITY;
-import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
+import static bisq.network.p2p.services.data.storage.MetaData.*;
 
 @Slf4j
 @EqualsAndHashCode
@@ -45,7 +44,7 @@ public final class AuthorizedAccountAgeData implements AuthorizedDistributedData
 
     @ExcludeForHash
     @EqualsAndHashCode.Exclude
-    private final MetaData metaData = new MetaData(TTL, HIGHEST_PRIORITY, getClass().getSimpleName());
+    private final MetaData metaData = new MetaData(TTL, LOW_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_5000);
     private final String profileId;
     private final long date;
     @EqualsAndHashCode.Exclude

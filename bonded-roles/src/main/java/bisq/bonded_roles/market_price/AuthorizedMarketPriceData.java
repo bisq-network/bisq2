@@ -38,7 +38,8 @@ import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static bisq.network.p2p.services.data.storage.MetaData.DEFAULT_PRIORITY;
+import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
+import static bisq.network.p2p.services.data.storage.MetaData.MAX_MAP_SIZE_500;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
@@ -47,7 +48,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 public final class AuthorizedMarketPriceData implements AuthorizedDistributedData {
     public static final long TTL = TimeUnit.MINUTES.toMillis(10);
     @ExcludeForHash
-    private final MetaData metaData = new MetaData(TTL, DEFAULT_PRIORITY, getClass().getSimpleName());
+    private final MetaData metaData = new MetaData(TTL, HIGH_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_500);
     // We need deterministic sorting or the map, so we use a treemap
     private final TreeMap<Market, MarketPrice> marketPriceByCurrencyMap;
     private final boolean staticPublicKeysProvided;

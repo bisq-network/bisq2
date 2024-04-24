@@ -59,9 +59,9 @@ import java.util.stream.Stream;
  */
 @Slf4j
 public class ChatNotificationService implements PersistenceClient<ChatNotificationsStore>, Service {
-    // BisqEasyOfferbookMessage use TTL_10_DAYS, BisqEasyOpenTradeMessage and TwoPartyPrivateChatMessage
-    // use TTL_30_DAYS
-    private static final long MAX_AGE = MetaData.TTL_30_DAYS;
+    // BisqEasyOfferbookMessage, TwoPartyPrivateChatMessage, BisqEasyOpenTradeMessage
+    // use TTL_10_DAYS
+    private static final long MAX_AGE = MetaData.TTL_10_DAYS;
 
     @Getter
     private final ChatNotificationsStore persistableStore = new ChatNotificationsStore();

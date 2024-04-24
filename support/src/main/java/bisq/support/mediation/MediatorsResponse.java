@@ -30,8 +30,7 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
-import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
+import static bisq.network.p2p.services.data.storage.MetaData.*;
 
 @Slf4j
 @Getter
@@ -39,7 +38,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 @EqualsAndHashCode
 public final class MediatorsResponse implements MailboxMessage, ExternalNetworkMessage {
     @ExcludeForHash
-    private final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    private final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_1000);
     private final String tradeId;
 
     public MediatorsResponse(String tradeId) {
