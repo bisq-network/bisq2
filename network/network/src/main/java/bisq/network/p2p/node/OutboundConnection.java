@@ -38,8 +38,9 @@ public class OutboundConnection extends Connection {
                        NetworkLoadSnapshot peersNetworkLoadSnapshot,
                        ConnectionMetrics connectionMetrics,
                        Handler handler,
-                       BiConsumer<Connection, Exception> errorHandler) {
-        super(socket, peersCapability, peersNetworkLoadSnapshot, connectionMetrics, handler, errorHandler);
+                       BiConsumer<Connection, Exception> errorHandler,
+                       long sendMessageMinThrottleTime) {
+        super(socket, peersCapability, peersNetworkLoadSnapshot, connectionMetrics, handler, errorHandler, sendMessageMinThrottleTime);
 
         this.address = address;
         log.debug("Create outboundConnection to {}", address);
