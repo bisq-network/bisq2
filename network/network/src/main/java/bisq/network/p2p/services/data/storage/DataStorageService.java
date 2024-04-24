@@ -19,7 +19,6 @@ package bisq.network.p2p.services.data.storage;
 
 import bisq.common.data.ByteArray;
 import bisq.common.util.DateUtils;
-import bisq.common.util.StringUtils;
 import bisq.network.p2p.services.data.DataRequest;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
@@ -56,7 +55,7 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
         super();
 
         this.storeKey = storeKey;
-        String storageFileName = StringUtils.camelCaseToSnakeCase(storeKey + STORE_POST_FIX);
+        String storageFileName = storeKey + STORE_POST_FIX;
         subDirectory = DbSubDirectory.NETWORK_DB.getDbPath() + File.separator + storeName;
         persistence = persistenceService.getOrCreatePersistence(this,
                 subDirectory,
