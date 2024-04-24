@@ -32,6 +32,7 @@ import bisq.chat.common.CommonPublicChatMessage;
 import bisq.chat.two_party.TwoPartyPrivateChatMessage;
 import bisq.common.proto.NetworkStorageWhiteList;
 import bisq.network.p2p.message.NetworkMessageResolver;
+import bisq.network.p2p.services.confidential.ack.AckMessage;
 import bisq.network.p2p.services.data.storage.DistributedDataResolver;
 import bisq.offer.OfferMessage;
 import bisq.support.mediation.MediationRequest;
@@ -104,5 +105,8 @@ public class ResolverConfig {
         NetworkStorageWhiteList.add(BisqEasyReportErrorMessage.class);
         NetworkStorageWhiteList.add(BisqEasyTakeOfferRequest.class);
         NetworkStorageWhiteList.add(BisqEasyTakeOfferResponse.class);
+
+        // From network module. As it is used as mailbox message we add it here as well.
+        NetworkStorageWhiteList.add(AckMessage.class);
     }
 }
