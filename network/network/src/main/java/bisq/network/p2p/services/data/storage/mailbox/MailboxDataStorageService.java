@@ -229,8 +229,8 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
     }
 
     // Useful for debugging state of the store
-    private static void maybeLogMapState(String methodName, DataStore<MailboxRequest> persisted) {
-        if (DevMode.isDevMode()) {
+    private void maybeLogMapState(String methodName, DataStore<MailboxRequest> persisted) {
+        if (DevMode.isDevMode() || methodName.equals("onPersistedApplied")) {
             var added = persisted.getMap().values().stream()
                     .filter(authenticatedDataRequest -> authenticatedDataRequest instanceof AddMailboxRequest)
                     .map(authenticatedDataRequest -> (AddMailboxRequest) authenticatedDataRequest)
@@ -242,7 +242,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
                     .map(RemoveMailboxRequest::getClassName)
                     .collect(Collectors.toList());
             var className = Stream.concat(added.stream(), removed.stream())
-                    .findAny().orElse("unknown because map is empty");
+                    .findAny().orElse(persistence.getFileName().replace("Store", ""));
             log.info("Method: {}; map entry: {}; num AddRequests: {}; num RemoveRequests={}; map size:{}",
                     methodName, className, added.size(), removed.size(), persisted.getMap().size());
         }
