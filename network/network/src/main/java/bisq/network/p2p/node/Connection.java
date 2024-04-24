@@ -18,6 +18,7 @@
 package bisq.network.p2p.node;
 
 import bisq.common.util.ExceptionUtil;
+import bisq.common.util.MathUtils;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
 import bisq.network.common.Address;
@@ -97,18 +98,22 @@ public abstract class Connection {
     private final Object writeLock = new Object();
     private volatile boolean shutdownStarted;
     private volatile boolean listeningStopped;
+    private volatile long sendMessageTimestamp;
+    private final long sendMessageMinThrottleTime;
 
     protected Connection(Socket socket,
                          Capability peersCapability,
                          NetworkLoadSnapshot peersNetworkLoadSnapshot,
                          ConnectionMetrics connectionMetrics,
                          Handler handler,
-                         BiConsumer<Connection, Exception> errorHandler) {
+                         BiConsumer<Connection, Exception> errorHandler,
+                         long sendMessageMinThrottleTime) {
         this.peersCapability = peersCapability;
         this.peersNetworkLoadSnapshot = peersNetworkLoadSnapshot;
         this.handler = handler;
         this.connectionMetrics = connectionMetrics;
         requestResponseManager = new RequestResponseManager(connectionMetrics);
+        this.sendMessageMinThrottleTime = sendMessageMinThrottleTime;
 
         try {
             PeerSocket peerSocket = new DefaultPeerSocket(socket);
@@ -214,6 +219,8 @@ public abstract class Connection {
             return this;
         }
 
+        throttle();
+
         requestResponseManager.onSent(envelopePayloadMessage);
 
         try {
@@ -251,6 +258,18 @@ public abstract class Connection {
             // We wrap any exception (also expected EOFException in case of connection close), to leave handling of the exception to the caller.
             throw new ConnectionException(exception);
         }
+    }
+
+    private void throttle() {
+        long passedSinceLastSend = System.currentTimeMillis() - sendMessageTimestamp;
+        if (passedSinceLastSend < sendMessageMinThrottleTime) {
+            try {
+                long sleepTime = MathUtils.bounded(1, 1000, sendMessageMinThrottleTime - passedSinceLastSend);
+                Thread.sleep(sleepTime);
+            } catch (InterruptedException ignore) {
+            }
+        }
+        sendMessageTimestamp = System.currentTimeMillis();
     }
 
     void stopListening() {
