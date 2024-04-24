@@ -31,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
 import java.security.PublicKey;
+import java.util.Date;
 import java.util.Optional;
 
 /**
@@ -75,6 +76,22 @@ public final class AuthorizedData extends AuthenticatedData {
     public void verify() {
         signature.ifPresent(NetworkDataValidation::validateECSignature);
         NetworkDataValidation.validateECPubKey(authorizedPublicKeyBytes);
+    }
+
+    // This method can be removed after ACTIVATE_EXCLUDE_FOR_HASH_DATE
+    @Override
+    public byte[] serialize() {
+        if (new Date().before(ACTIVATE_EXCLUDE_FOR_HASH_DATE)) {
+            // Before activation, we use old custom code for ignoring signature
+
+            // We omit the signature for the hash, otherwise we would get a new map entry for the same data at each republishing
+            return getAuthenticatedDataBuilder(false).setAuthorizedData(
+                            bisq.network.protobuf.AuthorizedData.newBuilder()
+                                    .setAuthorizedPublicKeyBytes(ByteString.copyFrom(authorizedPublicKeyBytes)))
+                    .build().toByteArray();
+        } else {
+            return super.serialize();
+        }
     }
 
     @Override
