@@ -136,7 +136,7 @@ public class TradeWizardController extends NavigationController implements InitW
         ));
 
         if (model.getPriceProgressItemVisible().get()) {
-            model.getChildTargets().add(2, NavigationTarget.TRADE_WIZARD_PRICE);
+            model.getChildTargets().add(3, NavigationTarget.TRADE_WIZARD_PRICE);
         } else {
             model.getChildTargets().remove(NavigationTarget.TRADE_WIZARD_PRICE);
         }
