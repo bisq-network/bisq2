@@ -18,6 +18,7 @@
 package bisq.common.proto;
 
 import bisq.common.annotation.ExcludeForHash;
+import bisq.common.util.DateUtils;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.Message;
 import org.slf4j.Logger;
@@ -27,6 +28,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.util.Arrays;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -41,6 +44,8 @@ import java.util.stream.Collectors;
  * If a map is needed we can use the TreeMap as it provides a deterministic order.
  */
 public interface Proto {
+    Date ACTIVATE_EXCLUDE_FOR_HASH_DATE = DateUtils.getUTCDate(2024, GregorianCalendar.MAY, 12);
+
     Message.Builder getBuilder(boolean serializeForHash);
 
     Message toProto(boolean serializeForHash);
@@ -89,6 +94,10 @@ public interface Proto {
      * @return Builder with the fields annotated with ExcludeForHash cleared.
      */
     default <B extends Message.Builder> B clearAnnotatedFields(B builder) {
+        if (new Date().before(ACTIVATE_EXCLUDE_FOR_HASH_DATE)) {
+            return builder;
+        }
+
         Set<String> excludedFields = getExcludedFields();
         if (!excludedFields.isEmpty()) {
             getLogger().debug("Clear fields in builder annotated with @ExcludeForHash: {}", excludedFields);
