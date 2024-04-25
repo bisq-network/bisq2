@@ -27,6 +27,7 @@ import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
@@ -35,6 +36,7 @@ import java.security.PublicKey;
 import java.util.Arrays;
 
 @Slf4j
+@ToString
 @EqualsAndHashCode
 @Getter
 public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataRequest {

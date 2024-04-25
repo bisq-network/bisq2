@@ -63,6 +63,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -243,7 +244,6 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
     }
 
     private CompletableFuture<Boolean> publishAuthorizedData(AuthorizedDistributedData data) {
-        log.info("publishAuthorizedData {}", data);
         return networkService.publishAuthorizedData(data,
                         identity.getNetworkIdWithKeyPair().getKeyPair(),
                         authorizedPrivateKey,
@@ -260,18 +260,21 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
 
     private void republishAuthorizedBondedRoles() {
         networkService.getDataService()
-                .ifPresent(dataService -> dataService.getAuthorizedData()
-                        .forEach(authorizedData -> {
-                            AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
-                            if (data instanceof AuthorizedBondedRole) {
-                                AuthorizedBondedRole authorizedBondedRole = (AuthorizedBondedRole) data;
-                                authorizedBondedRole.getAuthorizingOracleNode().ifPresent(authorizingOracleNode -> {
-                                    if (authorizingOracleNode.equals(authorizedOracleNode)) {
-                                        publishAuthorizedData(authorizedBondedRole);
-                                    }
-                                });
-                            }
-                        }));
+                .ifPresent(dataService -> {
+                    List<AuthorizedData> authorizedDataList = dataService.getAuthorizedData().collect(Collectors.toList());
+                    log.info("republish AuthorizedBondedRoles for {} authorizedDataList items", authorizedDataList.size());
+                    authorizedDataList.forEach(authorizedData -> {
+                        AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
+                        if (data instanceof AuthorizedBondedRole) {
+                            AuthorizedBondedRole authorizedBondedRole = (AuthorizedBondedRole) data;
+                            authorizedBondedRole.getAuthorizingOracleNode().ifPresent(authorizingOracleNode -> {
+                                if (authorizingOracleNode.equals(authorizedOracleNode)) {
+                                    publishAuthorizedData(authorizedBondedRole);
+                                }
+                            });
+                        }
+                    });
+                });
     }
 
     private CompletableFuture<Boolean> requestDoaData() {
@@ -282,6 +285,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
     }
 
     private void processAuthorizeAccountAgeRequest(AuthorizeAccountAgeRequest request) {
+        log.info("processAuthorizeAccountAgeRequest {}", request);
         long requestDate = request.getDate();
         String profileId = request.getProfileId();
         String hashAsHex = request.getHashAsHex();
@@ -326,6 +330,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
     }
 
     private void processAuthorizeSignedWitnessRequest(AuthorizeSignedWitnessRequest request) {
+        log.info("processAuthorizeSignedWitnessRequest {}", request);
         long witnessSignDate = request.getWitnessSignDate();
         if (witnessSignDate < 61) {
             log.warn("Age is not at least 60 days");
@@ -371,6 +376,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
     }
 
     private void processBondedRoleRegistrationRequest(BondedRoleRegistrationRequest request, PublicKey senderPublicKey) {
+        log.info("processBondedRoleRegistrationRequest {}", request);
         String profileId = request.getProfileId();
 
         // Verify if message sender is owner of the profileId

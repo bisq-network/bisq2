@@ -177,6 +177,10 @@ public final class RefreshAuthenticatedDataRequest implements DataRequest {
         return metaData.getMaxMapSize();
     }
 
+    public String getClassName() {
+        return metaData.getClassName();
+    }
+
     @Override
     public String toString() {
         return "RefreshAuthenticatedDataRequest{" +
