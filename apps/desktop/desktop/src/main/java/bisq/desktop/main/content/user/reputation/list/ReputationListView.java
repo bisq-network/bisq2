@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.user.reputation.list;
 
+import bisq.common.monetary.Coin;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.table.BisqTableColumn;
@@ -25,6 +26,7 @@ import bisq.desktop.components.table.StandardTable;
 import bisq.desktop.main.content.components.ReputationScoreDisplay;
 import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.i18n.Res;
+import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.TimeFormatter;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationScore;
@@ -268,7 +270,7 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
                 switch (selectedReputationSource.get()) {
                     case BURNED_BSQ:
                     case BSQ_BOND:
-                        valueProperty.set(String.valueOf(value));
+                        valueProperty.set(AmountFormatter.formatAmount(Coin.asBsqFromValue(value)));
                         break;
                     case PROFILE_AGE:
                     case BISQ1_ACCOUNT_AGE:

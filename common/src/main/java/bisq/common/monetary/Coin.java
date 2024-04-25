@@ -89,6 +89,21 @@ public final class Coin extends Monetary {
     /**
      * @param value Value as smallest unit the Coin object can represent.
      */
+    public static Coin asBsqFromValue(long value) {
+        return new Coin(value, "BSQ", 2);
+    }
+
+    /**
+     * @param faceValue Coin value as face value. E.g. 1.123456789012 XMR
+     */
+    public static Coin asBsqFromFaceValue(double faceValue) {
+        return new Coin(faceValue, "BSQ", 2);
+    }
+
+
+    /**
+     * @param value Value as smallest unit the Coin object can represent.
+     */
     public static Coin asXmrFromValue(long value) {
         return new Coin(value, "XMR", 12);
     }
