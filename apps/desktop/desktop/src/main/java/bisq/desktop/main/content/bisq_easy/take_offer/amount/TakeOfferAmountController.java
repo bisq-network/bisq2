@@ -82,14 +82,13 @@ public class TakeOfferAmountController implements Controller {
             OfferAmountUtil.findBaseSideMaxOrFixedAmount(marketPriceService, amountSpec, bisqEasyOffer.getPriceSpec(), market)
                     .ifPresent(amountComponent::setBaseSideAmount);
         });
-        if (model.getBisqEasyOffer().getTakersDirection().isSell()) {
-            String btcAmount = Res.get("bisqEasy.component.amount.baseSide.tooltip.seller.btcAmount") + "\n";
-            amountComponent.setTooltip(btcAmount + Res.get("bisqEasy.component.amount.baseSide.tooltip.price"));
-        } else {
-            String btcAmount = Res.get("bisqEasy.component.amount.baseSide.tooltip.seller.btcAmount") + "\n";
-            PriceUtil.findQuote(marketPriceService, model.getBisqEasyOffer()).ifPresent(priceQuote ->
-                    amountComponent.setTooltip(btcAmount + Res.get("bisqEasy.component.amount.baseSide.tooltip.taker.offerPrice", PriceFormatter.formatWithCode(priceQuote))));
-        }
+
+        String btcAmount = takersDirection.isBuy()
+                ? Res.get("bisqEasy.component.amount.baseSide.tooltip.buyer.btcAmount")
+                : Res.get("bisqEasy.component.amount.baseSide.tooltip.seller.btcAmount");
+        Optional<String> priceQuoteOptional = PriceUtil.findQuote(marketPriceService, model.getBisqEasyOffer())
+                .map(priceQuote -> "\n" + Res.get("bisqEasy.component.amount.baseSide.tooltip.taker.offerPrice", PriceFormatter.formatWithCode(priceQuote)));
+        priceQuoteOptional.ifPresent(priceQuote -> amountComponent.setTooltip(String.format("%s%s", btcAmount, priceQuote)));
     }
 
     public ReadOnlyObjectProperty<Monetary> getTakersQuoteSideAmount() {

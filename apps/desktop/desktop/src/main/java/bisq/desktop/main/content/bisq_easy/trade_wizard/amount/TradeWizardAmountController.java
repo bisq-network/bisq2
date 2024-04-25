@@ -210,21 +210,20 @@ public class TradeWizardAmountController implements Controller {
 
         applyAmountSpec();
 
-        if (model.getDirection().isSell()) {
-            // Use sellers trade price
-            String btcAmount = Res.get("bisqEasy.component.amount.baseSide.tooltip.seller.btcAmount") + "\n";
-            maxOrFixAmountComponent.setTooltip(btcAmount + Res.get("bisqEasy.component.amount.baseSide.tooltip.price"));
-        } else {
+        String marketPriceAmountTooltip = Res.get("bisqEasy.component.amount.baseSide.tooltip.btcAmount.marketPrice");
+        if (!model.isCreateOfferMode()) {
+            applyBestOfferQuote();
             // Use best price of matching offer if any match found, otherwise market price.
-            String btcAmount = Res.get("bisqEasy.component.amount.baseSide.tooltip.buyer.btcAmount") + "\n";
-            if (!model.isCreateOfferMode()) {
-                applyBestOfferQuote();
-                maxOrFixAmountComponent.setTooltip(model.getBestOffersPrice()
-                        .map(bestOffersPrice -> btcAmount + Res.get("bisqEasy.component.amount.baseSide.tooltip.bestOfferPrice", PriceFormatter.formatWithCode(bestOffersPrice)))
-                        .orElse(btcAmount + Res.get("bisqEasy.component.amount.baseSide.tooltip.marketPrice")));
-            } else {
-                maxOrFixAmountComponent.setTooltip(btcAmount + Res.get("bisqEasy.component.amount.baseSide.tooltip.marketPrice"));
-            }
+            // FIXME: Tooltip not updating when input amount changes
+            Optional<String> bestOffersPriceTooltip = model.getBestOffersPrice()
+                    .map(bestOffersPrice -> Res.get("bisqEasy.component.amount.baseSide.tooltip.bestOfferPrice",
+                            PriceFormatter.formatWithCode(bestOffersPrice)));
+            String marketPriceTooltipWithMaybeBuyerInfo = String.format("%s%s",
+                    marketPriceAmountTooltip,
+                    model.getDirection().isSell() ? "" : "\n" + Res.get("bisqEasy.component.amount.baseSide.tooltip.buyerInfo"));
+            maxOrFixAmountComponent.setTooltip(bestOffersPriceTooltip.orElse(marketPriceTooltipWithMaybeBuyerInfo));
+        } else {
+            maxOrFixAmountComponent.setTooltip(marketPriceAmountTooltip);
         }
     }
 
@@ -290,6 +289,7 @@ public class TradeWizardAmountController implements Controller {
     private void applyBestOfferQuote() {
         Optional<BisqEasyOfferbookChannel> optionalChannel = bisqEasyOfferbookChannelService.findChannel(model.getMarket());
         if (optionalChannel.isPresent() && model.getMarket() != null) {
+            // TODO: for direction SELL use highest offer price (i.e. max)
             Optional<PriceQuote> bestOffersPrice = optionalChannel.get().getChatMessages().stream()
                     .filter(chatMessage -> chatMessage.getBisqEasyOffer().isPresent())
                     .filter(chatMessage -> filterOffers(chatMessage.getBisqEasyOffer().get()))
