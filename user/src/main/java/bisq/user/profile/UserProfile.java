@@ -66,6 +66,7 @@ public final class UserProfile implements DistributedData {
     private final String nickName;
     // We need the proofOfWork for verification of the nym and cathash icon
     private final ProofOfWork proofOfWork;
+    @ExcludeForHash
     private final int avatarVersion;
     private final NetworkId networkId;
     private final String terms;
@@ -168,6 +169,7 @@ public final class UserProfile implements DistributedData {
 
     public ByteArray getProofOfBurnKey() {
         if (proofOfBurnHash == null) {
+            // Must be compatible with Bisq 1 proofOfBurn input
             proofOfBurnHash = new ByteArray(DigestUtil.hash(getId().getBytes(Charsets.UTF_8)));
         }
         return proofOfBurnHash;

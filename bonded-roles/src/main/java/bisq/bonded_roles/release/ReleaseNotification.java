@@ -54,7 +54,6 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
     private final String versionString;
     private final String releaseManagerProfileId;
     private final boolean staticPublicKeysProvided;
-
     private transient final Version version;
 
     public ReleaseNotification(String id,

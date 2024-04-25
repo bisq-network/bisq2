@@ -54,6 +54,7 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
     private final Optional<AddressByTransportTypeMap> addressByTransportTypeMap;
     private final NetworkId networkId;
     // The oracle node which did the validation and publishing
+    @ExcludeForHash
     private final Optional<AuthorizedOracleNode> authorizingOracleNode;
     private final boolean staticPublicKeysProvided;
 
