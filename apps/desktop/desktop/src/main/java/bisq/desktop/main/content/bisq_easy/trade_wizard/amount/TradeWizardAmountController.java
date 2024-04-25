@@ -41,8 +41,7 @@ import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import bisq.offer.payment_method.PaymentMethodSpecUtil;
 import bisq.offer.price.PriceUtil;
-import bisq.offer.price.spec.FixPriceSpec;
-import bisq.offer.price.spec.FloatPriceSpec;
+import bisq.offer.price.spec.MarketPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.settings.CookieKey;
@@ -66,6 +65,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class TradeWizardAmountController implements Controller {
+    private static final PriceSpec MARKET_PRICE_SPEC = new MarketPriceSpec();
+
     private final TradeWizardAmountModel model;
     @Getter
     private final TradeWizardAmountView view;
@@ -128,30 +129,6 @@ public class TradeWizardAmountController implements Controller {
     public void setFiatPaymentMethods(List<FiatPaymentMethod> fiatPaymentMethods) {
         if (fiatPaymentMethods != null) {
             model.setFiatPaymentMethods(fiatPaymentMethods);
-        }
-    }
-
-    public void setPriceSpec(PriceSpec priceSpec) {
-        model.setPriceSpec(priceSpec);
-        PriceQuote priceQuote;
-        if (priceSpec instanceof FixPriceSpec) {
-            priceQuote = ((FixPriceSpec) priceSpec).getPriceQuote();
-            minAmountComponent.setQuote(priceQuote);
-            maxOrFixAmountComponent.setQuote(priceQuote);
-        } else {
-            Optional<PriceQuote> marketPriceQuote = getMarketPriceQuote();
-            if (marketPriceQuote.isPresent()) {
-                if (priceSpec instanceof FloatPriceSpec) {
-                    double percentage = ((FloatPriceSpec) priceSpec).getPercentage();
-                    priceQuote = PriceUtil.fromMarketPriceMarkup(marketPriceQuote.get(), percentage);
-                } else {
-                    priceQuote = marketPriceQuote.get();
-                }
-                minAmountComponent.setQuote(priceQuote);
-                maxOrFixAmountComponent.setQuote(priceQuote);
-            } else {
-                log.error("marketPriceQuote not present");
-            }
         }
     }
 
@@ -355,13 +332,13 @@ public class TradeWizardAmountController implements Controller {
                 return false;
             }
 
-            Optional<Monetary> myQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, model.getAmountSpec().get(), model.getPriceSpec(), model.getMarket());
+            Optional<Monetary> myQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, model.getAmountSpec().get(), MARKET_PRICE_SPEC, model.getMarket());
             Optional<Monetary> peersQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, peersOffer);
             if (myQuoteSideMinOrFixedAmount.orElseThrow().getValue() > peersQuoteSideMaxOrFixedAmount.orElseThrow().getValue()) {
                 return false;
             }
 
-            Optional<Monetary> myQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, model.getAmountSpec().get(), model.getPriceSpec(), model.getMarket());
+            Optional<Monetary> myQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, model.getAmountSpec().get(), MARKET_PRICE_SPEC, model.getMarket());
             Optional<Monetary> peersQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, peersOffer);
             if (myQuoteSideMaxOrFixedAmount.orElseThrow().getValue() < peersQuoteSideMinOrFixedAmount.orElseThrow().getValue()) {
                 return false;
@@ -374,15 +351,11 @@ public class TradeWizardAmountController implements Controller {
                 return false;
             }
 
-            if (!BisqEasyServiceUtil.offerMatchesMinRequiredReputationScore(reputationService,
+            return BisqEasyServiceUtil.offerMatchesMinRequiredReputationScore(reputationService,
                     bisqEasyService,
                     userIdentityService,
                     userProfileService,
-                    peersOffer)) {
-                return false;
-            }
-
-            return true;
+                    peersOffer);
         } catch (Throwable t) {
             log.error("Error at TakeOfferPredicate", t);
             return false;

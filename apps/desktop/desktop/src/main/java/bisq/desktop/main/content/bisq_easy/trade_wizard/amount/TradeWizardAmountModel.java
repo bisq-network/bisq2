@@ -24,8 +24,6 @@ import bisq.common.monetary.PriceQuote;
 import bisq.desktop.common.view.Model;
 import bisq.offer.Direction;
 import bisq.offer.amount.spec.AmountSpec;
-import bisq.offer.price.spec.MarketPriceSpec;
-import bisq.offer.price.spec.PriceSpec;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -48,8 +46,6 @@ public class TradeWizardAmountModel implements Model {
     @Setter
     private List<FiatPaymentMethod> fiatPaymentMethods = new ArrayList<>();
     @Setter
-    private PriceSpec priceSpec = new MarketPriceSpec();
-    @Setter
     private String headline;
     @Setter
     private boolean isCreateOfferMode;
@@ -64,7 +60,6 @@ public class TradeWizardAmountModel implements Model {
         direction = null;
         market = MarketRepository.getDefault();
         fiatPaymentMethods = new ArrayList<>();
-        priceSpec = new MarketPriceSpec();
         headline = null;
         isCreateOfferMode = false;
         bestOffersPrice = Optional.empty();
