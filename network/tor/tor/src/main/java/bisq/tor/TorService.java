@@ -19,7 +19,6 @@ package bisq.tor;
 
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
-import bisq.common.util.NetworkUtils;
 import bisq.network.tor.common.torrc.TorrcFileGenerator;
 import bisq.tor.controller.NativeTorController;
 import bisq.tor.controller.events.events.BootstrapEvent;
@@ -155,7 +154,6 @@ public class TorService implements Service {
         TorrcClientConfigFactory torrcClientConfigFactory = TorrcClientConfigFactory.builder()
                 .isTestNetwork(transportConfig.isTestNetwork())
                 .dataDir(dataDir)
-                .socksPort(NetworkUtils.findFreeSystemPort())
                 .hashedControlPassword(hashedControlPassword)
                 .build();
 
