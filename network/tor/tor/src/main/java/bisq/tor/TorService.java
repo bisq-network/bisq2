@@ -53,7 +53,6 @@ public class TorService implements Service {
     private final AtomicBoolean isRunning = new AtomicBoolean();
 
     private Optional<NativeTorProcess> torProcess = Optional.empty();
-    private Optional<Integer> socksPort = Optional.empty();
     private Optional<TorSocksProxyFactory> torSocksProxyFactory = Optional.empty();
 
     public TorService(TorTransportConfig transportConfig) {
@@ -92,7 +91,7 @@ public class TorService implements Service {
                     nativeTorController.enableTorNetworking();
                     nativeTorController.waitUntilBootstrapped();
 
-                    int port = socksPort.orElseThrow();
+                    int port = nativeTorController.getSocksPort().orElseThrow();
                     torSocksProxyFactory = Optional.of(new TorSocksProxyFactory(port));
                 })
                 .thenApply(unused -> true);
@@ -153,13 +152,10 @@ public class TorService implements Service {
     }
 
     private void createTorrcConfigFile(Path dataDir, PasswordDigest hashedControlPassword) {
-        int socksPort = NetworkUtils.findFreeSystemPort();
-        this.socksPort = Optional.of(socksPort);
-
         TorrcClientConfigFactory torrcClientConfigFactory = TorrcClientConfigFactory.builder()
                 .isTestNetwork(transportConfig.isTestNetwork())
                 .dataDir(dataDir)
-                .socksPort(socksPort)
+                .socksPort(NetworkUtils.findFreeSystemPort())
                 .hashedControlPassword(hashedControlPassword)
                 .build();
 
