@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.tor.process;
+package bisq.tor.process.control_port;
 
 public class ControlPortFileParseFailureException extends RuntimeException {
     public ControlPortFileParseFailureException(String message) {

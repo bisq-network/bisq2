@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.tor.process;
+package bisq.tor.process.control_port;
 
 import java.nio.file.Path;
 import java.util.Optional;
