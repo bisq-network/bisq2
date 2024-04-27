@@ -19,14 +19,15 @@ package bisq.tor;
 
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
+import bisq.common.util.OsUtils;
 import bisq.network.tor.common.torrc.TorrcFileGenerator;
 import bisq.tor.controller.NativeTorController;
 import bisq.tor.controller.events.events.BootstrapEvent;
 import bisq.tor.installer.TorInstaller;
 import bisq.tor.onionservice.CreateOnionServiceResponse;
 import bisq.tor.onionservice.OnionServicePublishService;
-import bisq.tor.process.control_port.ControlPortFilePoller;
 import bisq.tor.process.NativeTorProcess;
+import bisq.tor.process.control_port.ControlPortFilePoller;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.extern.slf4j.Slf4j;
 import net.freehaven.tor.control.PasswordDigest;
@@ -69,12 +70,11 @@ public class TorService implements Service {
             return CompletableFuture.completedFuture(true);
         }
 
-        installTorIfNotUpToDate();
-
         PasswordDigest hashedControlPassword = PasswordDigest.generateDigest();
         createTorrcConfigFile(torDataDirPath, hashedControlPassword);
 
-        var nativeTorProcess = new NativeTorProcess(torDataDirPath);
+        Path torBinaryPath = getTorBinaryPath();
+        var nativeTorProcess = new NativeTorProcess(torBinaryPath, torDataDirPath);
         torProcess = Optional.of(nativeTorProcess);
         nativeTorProcess.start();
 
@@ -142,6 +142,18 @@ public class TorService implements Service {
     public Socks5Proxy getSocks5Proxy(String streamId) throws IOException {
         TorSocksProxyFactory socksProxyFactory = torSocksProxyFactory.orElseThrow();
         return socksProxyFactory.getSocks5Proxy(streamId);
+    }
+
+    private Path getTorBinaryPath() {
+        if (OsUtils.isLinux()) {
+            Optional<Path> systemTorBinaryPath = NativeTorProcess.getSystemTorPath();
+            if (systemTorBinaryPath.isPresent()) {
+                return systemTorBinaryPath.get();
+            }
+        }
+
+        installTorIfNotUpToDate();
+        return torDataDirPath.resolve("tor");
     }
 
     private void installTorIfNotUpToDate() {
