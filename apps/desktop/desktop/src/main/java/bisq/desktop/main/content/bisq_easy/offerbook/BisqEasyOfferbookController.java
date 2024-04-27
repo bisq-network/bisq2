@@ -288,13 +288,6 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         });
     }
 
-    private void createMarketChannels() {
-        List<MarketChannelItem> marketChannelItems = bisqEasyOfferbookChannelService.getChannels().stream()
-                .map(MarketChannelItem::new)
-                .collect(Collectors.toList());
-        model.getMarketChannelItems().setAll(marketChannelItems);
-    }
-
     void onCreateOffer() {
         ChatChannel<? extends ChatMessage> chatChannel = model.getSelectedChannel();
         checkArgument(chatChannel instanceof BisqEasyOfferbookChannel,
@@ -305,6 +298,25 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     void onSortMarkets(MarketSortType marketSortType) {
         model.getSelectedMarketSortType().set(marketSortType);
         model.getSortedMarketChannelItems().setComparator(marketSortType.getComparator());
+    }
+
+    void onSelectMarketChannelItem(MarketChannelItem item) {
+        if (item == null) {
+            selectionService.selectChannel(null);
+        } else if (!item.getChannel().equals(selectionService.getSelectedChannel().get())) {
+            selectionService.selectChannel(item.getChannel());
+        }
+    }
+
+    double getMarketSelectionListCellHeight() {
+        return MARKET_SELECTION_LIST_CELL_HEIGHT;
+    }
+
+    private void createMarketChannels() {
+        List<MarketChannelItem> marketChannelItems = bisqEasyOfferbookChannelService.getChannels().stream()
+                .map(MarketChannelItem::new)
+                .collect(Collectors.toList());
+        model.getMarketChannelItems().setAll(marketChannelItems);
     }
 
     private void updateMarketPrice() {
@@ -336,24 +348,12 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         return bisqEasyOffer.isMyOffer(userIdentityService.getMyUserProfileIds());
     }
 
-    void onSelectMarketChannelItem(MarketChannelItem item) {
-        if (item == null) {
-            selectionService.selectChannel(null);
-        } else if (!item.getChannel().equals(selectionService.getSelectedChannel().get())) {
-            selectionService.selectChannel(item.getChannel());
-        }
-    }
-
     private void maybeSelectFirst() {
         if (selectionService.getSelectedChannel().get() == null &&
                 !bisqEasyOfferbookChannelService.getChannels().isEmpty() &&
                 !model.getSortedMarketChannelItems().isEmpty()) {
             selectionService.selectChannel(model.getSortedMarketChannelItems().get(0).getChannel());
         }
-    }
-
-    double getMarketSelectionListCellHeight() {
-        return MARKET_SELECTION_LIST_CELL_HEIGHT;
     }
 
     private void bindOfferMessages(BisqEasyOfferbookChannel channel) {
