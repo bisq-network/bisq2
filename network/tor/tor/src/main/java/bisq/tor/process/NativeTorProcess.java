@@ -53,8 +53,10 @@ public class NativeTorProcess {
                 ARG_OWNER_PID, ownerPid
         );
 
-        Map<String, String> environment = processBuilder.environment();
-        environment.put("LD_PRELOAD", LdPreload.computeLdPreloadVariable(torDataDirPath));
+        if (torBinaryPath.startsWith(torDataDirPath)) {
+            Map<String, String> environment = processBuilder.environment();
+            environment.put("LD_PRELOAD", LdPreload.computeLdPreloadVariable(torDataDirPath));
+        }
 
         processBuilder.redirectError(ProcessBuilder.Redirect.DISCARD);
         processBuilder.redirectOutput(ProcessBuilder.Redirect.DISCARD);
