@@ -41,8 +41,7 @@ import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import bisq.offer.payment_method.PaymentMethodSpecUtil;
 import bisq.offer.price.PriceUtil;
-import bisq.offer.price.spec.FixPriceSpec;
-import bisq.offer.price.spec.FloatPriceSpec;
+import bisq.offer.price.spec.MarketPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.settings.CookieKey;
@@ -66,6 +65,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class TradeWizardAmountController implements Controller {
+    private static final PriceSpec MARKET_PRICE_SPEC = new MarketPriceSpec();
+
     private final TradeWizardAmountModel model;
     @Getter
     private final TradeWizardAmountView view;
@@ -128,30 +129,6 @@ public class TradeWizardAmountController implements Controller {
     public void setFiatPaymentMethods(List<FiatPaymentMethod> fiatPaymentMethods) {
         if (fiatPaymentMethods != null) {
             model.setFiatPaymentMethods(fiatPaymentMethods);
-        }
-    }
-
-    public void setPriceSpec(PriceSpec priceSpec) {
-        model.setPriceSpec(priceSpec);
-        PriceQuote priceQuote;
-        if (priceSpec instanceof FixPriceSpec) {
-            priceQuote = ((FixPriceSpec) priceSpec).getPriceQuote();
-            minAmountComponent.setQuote(priceQuote);
-            maxOrFixAmountComponent.setQuote(priceQuote);
-        } else {
-            Optional<PriceQuote> marketPriceQuote = getMarketPriceQuote();
-            if (marketPriceQuote.isPresent()) {
-                if (priceSpec instanceof FloatPriceSpec) {
-                    double percentage = ((FloatPriceSpec) priceSpec).getPercentage();
-                    priceQuote = PriceUtil.fromMarketPriceMarkup(marketPriceQuote.get(), percentage);
-                } else {
-                    priceQuote = marketPriceQuote.get();
-                }
-                minAmountComponent.setQuote(priceQuote);
-                maxOrFixAmountComponent.setQuote(priceQuote);
-            } else {
-                log.error("marketPriceQuote not present");
-            }
         }
     }
 
@@ -233,21 +210,20 @@ public class TradeWizardAmountController implements Controller {
 
         applyAmountSpec();
 
-        if (model.getDirection().isSell()) {
-            // Use sellers trade price
-            String btcAmount = Res.get("bisqEasy.component.amount.baseSide.tooltip.seller.btcAmount") + "\n";
-            maxOrFixAmountComponent.setTooltip(btcAmount + Res.get("bisqEasy.component.amount.baseSide.tooltip.price"));
-        } else {
+        String marketPriceAmountTooltip = Res.get("bisqEasy.component.amount.baseSide.tooltip.btcAmount.marketPrice");
+        if (!model.isCreateOfferMode()) {
+            applyBestOfferQuote();
             // Use best price of matching offer if any match found, otherwise market price.
-            String btcAmount = Res.get("bisqEasy.component.amount.baseSide.tooltip.buyer.btcAmount") + "\n";
-            if (!model.isCreateOfferMode()) {
-                applyBestOfferQuote();
-                maxOrFixAmountComponent.setTooltip(model.getBestOffersPrice()
-                        .map(bestOffersPrice -> btcAmount + Res.get("bisqEasy.component.amount.baseSide.tooltip.bestOfferPrice", PriceFormatter.formatWithCode(bestOffersPrice)))
-                        .orElse(btcAmount + Res.get("bisqEasy.component.amount.baseSide.tooltip.marketPrice")));
-            } else {
-                maxOrFixAmountComponent.setTooltip(btcAmount + Res.get("bisqEasy.component.amount.baseSide.tooltip.marketPrice"));
-            }
+            // FIXME: Tooltip not updating when input amount changes
+            Optional<String> bestOffersPriceTooltip = model.getBestOffersPrice()
+                    .map(bestOffersPrice -> Res.get("bisqEasy.component.amount.baseSide.tooltip.bestOfferPrice",
+                            PriceFormatter.formatWithCode(bestOffersPrice)));
+            String marketPriceTooltipWithMaybeBuyerInfo = String.format("%s%s",
+                    marketPriceAmountTooltip,
+                    model.getDirection().isSell() ? "" : "\n" + Res.get("bisqEasy.component.amount.baseSide.tooltip.buyerInfo"));
+            maxOrFixAmountComponent.setTooltip(bestOffersPriceTooltip.orElse(marketPriceTooltipWithMaybeBuyerInfo));
+        } else {
+            maxOrFixAmountComponent.setTooltip(marketPriceAmountTooltip);
         }
     }
 
@@ -313,6 +289,7 @@ public class TradeWizardAmountController implements Controller {
     private void applyBestOfferQuote() {
         Optional<BisqEasyOfferbookChannel> optionalChannel = bisqEasyOfferbookChannelService.findChannel(model.getMarket());
         if (optionalChannel.isPresent() && model.getMarket() != null) {
+            // TODO: for direction SELL use highest offer price (i.e. max)
             Optional<PriceQuote> bestOffersPrice = optionalChannel.get().getChatMessages().stream()
                     .filter(chatMessage -> chatMessage.getBisqEasyOffer().isPresent())
                     .filter(chatMessage -> filterOffers(chatMessage.getBisqEasyOffer().get()))
@@ -355,13 +332,13 @@ public class TradeWizardAmountController implements Controller {
                 return false;
             }
 
-            Optional<Monetary> myQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, model.getAmountSpec().get(), model.getPriceSpec(), model.getMarket());
+            Optional<Monetary> myQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, model.getAmountSpec().get(), MARKET_PRICE_SPEC, model.getMarket());
             Optional<Monetary> peersQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, peersOffer);
             if (myQuoteSideMinOrFixedAmount.orElseThrow().getValue() > peersQuoteSideMaxOrFixedAmount.orElseThrow().getValue()) {
                 return false;
             }
 
-            Optional<Monetary> myQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, model.getAmountSpec().get(), model.getPriceSpec(), model.getMarket());
+            Optional<Monetary> myQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, model.getAmountSpec().get(), MARKET_PRICE_SPEC, model.getMarket());
             Optional<Monetary> peersQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, peersOffer);
             if (myQuoteSideMaxOrFixedAmount.orElseThrow().getValue() < peersQuoteSideMinOrFixedAmount.orElseThrow().getValue()) {
                 return false;
@@ -374,15 +351,11 @@ public class TradeWizardAmountController implements Controller {
                 return false;
             }
 
-            if (!BisqEasyServiceUtil.offerMatchesMinRequiredReputationScore(reputationService,
+            return BisqEasyServiceUtil.offerMatchesMinRequiredReputationScore(reputationService,
                     bisqEasyService,
                     userIdentityService,
                     userProfileService,
-                    peersOffer)) {
-                return false;
-            }
-
-            return true;
+                    peersOffer);
         } catch (Throwable t) {
             log.error("Error at TakeOfferPredicate", t);
             return false;

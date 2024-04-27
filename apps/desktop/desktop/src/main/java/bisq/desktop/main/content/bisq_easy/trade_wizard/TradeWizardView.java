@@ -146,13 +146,13 @@ public class TradeWizardView extends NavigationView<VBox, TradeWizardModel, Trad
         priceProgressItemVisiblePin = EasyBind.subscribe(model.getPriceProgressItemVisible(), isVisible -> {
             if (isVisible) {
                 if (!progressItemsBox.getChildren().contains(priceProgressItemLine)) {
-                    progressItemsBox.getChildren().add(5, priceProgressItemLine);
+                    progressItemsBox.getChildren().add(7, priceProgressItemLine);
                 }
                 if (!progressItemsBox.getChildren().contains(priceProgressItemLabel)) {
-                    progressItemsBox.getChildren().add(5, priceProgressItemLabel);
+                    progressItemsBox.getChildren().add(7, priceProgressItemLabel);
                 }
                 if (!progressLabelList.contains(priceProgressItemLabel)) {
-                    progressLabelList.add(2, priceProgressItemLabel);
+                    progressLabelList.add(3, priceProgressItemLabel);
                 }
             } else {
                 progressItemsBox.getChildren().remove(priceProgressItemLine);
