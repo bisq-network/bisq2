@@ -57,7 +57,8 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     private final ListChangeListener<MarketChannelItem> listChangeListener;
     private SearchBox marketSelectorSearchBox;
     private BisqTableView<MarketChannelItem> marketsTableView, favouritesTableView;
-    private VBox marketSelectionList;
+    private BisqTableView<OfferMessageItem> offerListTableView;
+    private VBox marketSelectionList, offerList;
     private Subscription marketsTableViewSelectionPin, selectedModelItemPin, channelHeaderIconPin, selectedMarketFilterPin,
             selectedOfferDirectionOrOwnerFilterPin, selectedPeerReputationFilterPin, selectedMarketSortTypePin,
             marketSelectorSearchPin, favouritesTableViewHeightPin, favouritesTableViewSelectionPin,
@@ -110,13 +111,14 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     protected void configCenterVBox() {
         addMarketSelectionList();
         addChatBox();
+        addOfferList();
     }
 
     @Override
     protected void configContainerHBox() {
         super.configContainerHBox();
 
-        containerHBox.getChildren().setAll(marketSelectionList, centerVBox, sideBar);
+        containerHBox.getChildren().setAll(marketSelectionList, centerVBox, offerList, sideBar);
     }
 
     @Override
@@ -561,6 +563,28 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
             default:
                 return label;
         }
+    }
+
+    private void addOfferList() {
+        Label offerListTitle = new Label(Res.get("bisqEasy.offerbook.offerList"));
+        HBox header = new HBox(offerListTitle);
+        header.setMinHeight(HEADER_HEIGHT);
+        header.setMaxHeight(HEADER_HEIGHT);
+        header.setAlignment(Pos.CENTER_LEFT);
+        header.setPadding(new Insets(4, 0, 0, 15));
+        header.getStyleClass().add("chat-header-title");
+
+        HBox subheader = new HBox();
+        subheader.setAlignment(Pos.CENTER);
+        subheader.getStyleClass().add("market-selection-subheader");
+
+        offerListTableView = new BisqTableView<>(getModel().getSortedOfferMessageItems(), false);
+
+        offerList = new VBox(header, Layout.hLine(), subheader, offerListTableView);
+        offerList.setPrefWidth(210);
+        offerList.setMinWidth(210);
+        offerList.setFillWidth(true);
+        offerList.getStyleClass().add("chat-container");
     }
 
     private static final class DropdownFilterMenuItem<T> extends DropdownMenuItem {

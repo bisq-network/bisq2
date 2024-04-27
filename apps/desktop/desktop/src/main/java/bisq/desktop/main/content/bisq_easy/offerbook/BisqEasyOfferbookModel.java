@@ -51,6 +51,9 @@ public final class BisqEasyOfferbookModel extends ChatModel {
     private final StringProperty marketPrice = new SimpleStringProperty();
     private final ObservableSet<Market> favouriteMarkets = FXCollections.observableSet();
     private final FilteredList<MarketChannelItem> favouriteMarketChannelItems = new FilteredList<>(marketChannelItems);
+    private final ObservableList<OfferMessageItem> offerMessageItems = FXCollections.observableArrayList();
+    private final FilteredList<OfferMessageItem> filteredOfferMessageItems = new FilteredList<>(offerMessageItems);
+    private final SortedList<OfferMessageItem> sortedOfferMessageItems = new SortedList<>(filteredOfferMessageItems);
 
     @Setter
     private Predicate<MarketChannelItem> marketPricePredicate = marketChannelItem -> true;
