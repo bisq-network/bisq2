@@ -25,7 +25,7 @@ import bisq.tor.controller.events.events.BootstrapEvent;
 import bisq.tor.installer.TorInstaller;
 import bisq.tor.onionservice.CreateOnionServiceResponse;
 import bisq.tor.onionservice.OnionServicePublishService;
-import bisq.tor.process.ControlPortFilePoller;
+import bisq.tor.process.control_port.ControlPortFilePoller;
 import bisq.tor.process.NativeTorProcess;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.extern.slf4j.Slf4j;
