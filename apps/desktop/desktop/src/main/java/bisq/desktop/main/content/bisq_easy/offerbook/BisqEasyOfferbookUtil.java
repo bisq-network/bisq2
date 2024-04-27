@@ -6,6 +6,8 @@ import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.i18n.Res;
+import bisq.offer.amount.OfferAmountFormatter;
+import bisq.presentation.formatters.PercentageFormatter;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.StringExpression;
 import javafx.geometry.Pos;
@@ -50,6 +52,11 @@ public class BisqEasyOfferbookUtil {
                 .thenComparing(BisqEasyOfferbookUtil.sortByMarketNameAsc())
                 .compare(lhs, rhs);
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // MARKETS' LIST
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     static Callback<TableColumn<MarketChannelItem, MarketChannelItem>,
             TableCell<MarketChannelItem, MarketChannelItem>> getMarketLabelCellFactory(boolean isFavouritesTableView) {
@@ -162,5 +169,68 @@ public class BisqEasyOfferbookUtil {
         return numOffers > 1
                 ? Res.get("bisqEasy.offerbook.marketListCell.numOffers.tooltip.many", numOffers, quoteCurrencyName)
                 : Res.get("bisqEasy.offerbook.marketListCell.numOffers.tooltip.one", numOffers, quoteCurrencyName);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // OFFERS' LIST
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    static Callback<TableColumn<OfferMessageItem, OfferMessageItem>,
+            TableCell<OfferMessageItem, OfferMessageItem>> getOfferMessageUserProfileCellFactory() {
+        return column -> new TableCell<>() {
+            private final Label userProfileLabel = new Label();
+
+            @Override
+            protected void updateItem(OfferMessageItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    userProfileLabel.setText(item.getNickName());
+                    setGraphic(userProfileLabel);
+                } else {
+                    setGraphic(null);
+                }
+            }
+        };
+    }
+
+    static Callback<TableColumn<OfferMessageItem, OfferMessageItem>,
+            TableCell<OfferMessageItem, OfferMessageItem>> getOfferMessagePriceCellFactory() {
+        return column -> new TableCell<>() {
+            private final Label priceSpecAsPercentLabel = new Label();
+
+            @Override
+            protected void updateItem(OfferMessageItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    // TODO: react to priceSpec if it changes
+                    priceSpecAsPercentLabel.setText(PercentageFormatter.formatToPercent(item.getPriceSpecAsPercent()));
+                    setGraphic(priceSpecAsPercentLabel);
+                } else {
+                    setGraphic(null);
+                }
+            }
+        };
+    }
+
+    static Callback<TableColumn<OfferMessageItem, OfferMessageItem>,
+            TableCell<OfferMessageItem, OfferMessageItem>> getOfferMessageFiatAmountCellFactory() {
+        return column -> new TableCell<>() {
+            private final Label fiatAmountLabel = new Label();
+
+            @Override
+            protected void updateItem(OfferMessageItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    fiatAmountLabel.setText(item.getMinMaxAmountAsString());
+                    setGraphic(fiatAmountLabel);
+                } else {
+                    setGraphic(null);
+                }
+            }
+        };
     }
 }

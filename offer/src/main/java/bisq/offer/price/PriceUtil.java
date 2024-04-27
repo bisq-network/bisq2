@@ -69,7 +69,7 @@ public class PriceUtil {
     public static Optional<Double> findPercentFromMarketPrice(MarketPriceService marketPriceService, PriceSpec priceSpec, Market market) {
         Optional<Double> percentage;
         if (priceSpec instanceof FixPriceSpec) {
-            PriceQuote fixPrice = getFixePriceQuote((FixPriceSpec) priceSpec);
+            PriceQuote fixPrice = getFixPriceQuote((FixPriceSpec) priceSpec);
             percentage = findMarketPriceQuote(marketPriceService, market).map(marketPrice ->
                     getPercentageToMarketPrice(marketPrice, fixPrice));
         } else if (priceSpec instanceof MarketPriceSpec) {
@@ -93,7 +93,7 @@ public class PriceUtil {
 
     public static Optional<PriceQuote> findQuote(MarketPriceService marketPriceService, PriceSpec priceSpec, Market market) {
         if (priceSpec instanceof FixPriceSpec) {
-            return Optional.of(getFixePriceQuote((FixPriceSpec) priceSpec));
+            return Optional.of(getFixPriceQuote((FixPriceSpec) priceSpec));
         } else if (priceSpec instanceof MarketPriceSpec) {
             return findMarketPriceQuote(marketPriceService, market);
         } else if (priceSpec instanceof FloatPriceSpec) {
@@ -103,7 +103,7 @@ public class PriceUtil {
         }
     }
 
-    public static PriceQuote getFixePriceQuote(FixPriceSpec fixPriceSpec) {
+    public static PriceQuote getFixPriceQuote(FixPriceSpec fixPriceSpec) {
         return fixPriceSpec.getPriceQuote();
     }
 

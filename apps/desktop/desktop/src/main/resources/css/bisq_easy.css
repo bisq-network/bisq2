@@ -303,6 +303,11 @@
     -fx-opacity: 1;
 }
 
+.offers-list {
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
 .create-offer-button {
     -fx-background-color: -fx-default-button;
     -fx-text-fill: -fx-light-text-color;

@@ -28,6 +28,7 @@ import bisq.desktop.components.controls.DropdownTitleMenuItem;
 import bisq.desktop.components.controls.SearchBox;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
+import bisq.desktop.components.table.StandardTable;
 import bisq.desktop.main.content.chat.ChatView;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.i18n.Res;
@@ -321,7 +322,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         favouritesTableView.hideVerticalScrollbar();
         favouritesTableView.hideHorizontalScrollbar();
         favouritesTableView.setFixedCellSize(getController().getMarketSelectionListCellHeight());
-        configTableView(favouritesTableView);
+        configMarketsTableView(favouritesTableView);
 
         marketsTableView = new BisqTableView<>(getModel().getSortedMarketChannelItems(), false);
         marketsTableView.getStyleClass().addAll("market-selection-list", "markets-list");
@@ -329,7 +330,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         marketsTableView.hideHorizontalScrollbar();
         marketsTableView.setFixedCellSize(getController().getMarketSelectionListCellHeight());
         marketsTableView.setPlaceholder(new Label());
-        configTableView(marketsTableView);
+        configMarketsTableView(marketsTableView);
         VBox.setVgrow(marketsTableView, Priority.ALWAYS);
 
         marketSelectionList = new VBox(header, Layout.hLine(), subheader, appliedFiltersSection, favouritesTableView,
@@ -398,7 +399,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         return createOfferButton;
     }
 
-    private void configTableView(BisqTableView<MarketChannelItem> tableView) {
+    private void configMarketsTableView(BisqTableView<MarketChannelItem> tableView) {
         BisqTableColumn<MarketChannelItem> marketLogoTableColumn = new BisqTableColumn.Builder<MarketChannelItem>()
                 .fixWidth(55)
                 .setCellFactory(BisqEasyOfferbookUtil.getMarketLogoCellFactory())
@@ -578,13 +579,55 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         subheader.setAlignment(Pos.CENTER);
         subheader.getStyleClass().add("market-selection-subheader");
 
-        offerListTableView = new BisqTableView<>(getModel().getSortedOfferMessageItems(), false);
+        StandardTable<OfferMessageItem> offerMessageItemTable = new StandardTable<>(getModel().getSortedOfferMessageItems(),
+                "", getModel().getFilterOfferMessageItems(), getModel().getFilterOfferMessageMenuItemToggleGroup());
+        offerListTableView = offerMessageItemTable.getTableView();
+        offerListTableView.getStyleClass().add("offers-list");
+        offerListTableView.allowVerticalScrollbar();
+        offerListTableView.hideHorizontalScrollbar();
+        offerListTableView.setFixedCellSize(getController().getMarketSelectionListCellHeight());
+        offerListTableView.setPlaceholder(new Label());
+        configOffersTableView(offerListTableView);
+        VBox.setVgrow(offerListTableView, Priority.ALWAYS);
 
         offerList = new VBox(header, Layout.hLine(), subheader, offerListTableView);
-        offerList.setPrefWidth(210);
-        offerList.setMinWidth(210);
+        offerList.setPrefWidth(410);
+        offerList.setMinWidth(410);
         offerList.setFillWidth(true);
         offerList.getStyleClass().add("chat-container");
+    }
+
+    private void configOffersTableView(BisqTableView<OfferMessageItem> tableView) {
+        // TODO: Work out the exact widths
+        // TODO: Add comparator for sorting
+        BisqTableColumn<OfferMessageItem> userProfileTableColumn = new BisqTableColumn.Builder<OfferMessageItem>()
+                .title(Res.get("bisqEasy.offerbook.offerList.table.columns.peerProfile"))
+                .left()
+                .fixWidth(150)
+                .setCellFactory(BisqEasyOfferbookUtil.getOfferMessageUserProfileCellFactory())
+                .isSortable(true)
+                .build();
+
+        BisqTableColumn<OfferMessageItem> priceTableColumn = new BisqTableColumn.Builder<OfferMessageItem>()
+                .title(Res.get("bisqEasy.offerbook.offerList.table.columns.price"))
+                .left()
+                .fixWidth(80)
+                .setCellFactory(BisqEasyOfferbookUtil.getOfferMessagePriceCellFactory())
+                .isSortable(true)
+                .build();
+
+        BisqTableColumn<OfferMessageItem> fiatAmountTableColumn = new BisqTableColumn.Builder<OfferMessageItem>()
+                .title(Res.get("bisqEasy.offerbook.offerList.table.columns.fiatAmount"))
+                .left()
+                .fixWidth(200)
+                .setCellFactory(BisqEasyOfferbookUtil.getOfferMessageFiatAmountCellFactory())
+                .isSortable(true)
+                .build();
+
+        tableView.getColumns().add(tableView.getSelectionMarkerColumn());
+        tableView.getColumns().add(userProfileTableColumn);
+        tableView.getColumns().add(priceTableColumn);
+        tableView.getColumns().add(fiatAmountTableColumn);
     }
 
     private static final class DropdownFilterMenuItem<T> extends DropdownMenuItem {
