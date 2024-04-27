@@ -33,7 +33,7 @@ public class PercentageFormatter {
         DEFAULT_FORMAT.setRoundingMode(RoundingMode.HALF_UP);
         DEFAULT_FORMAT.setMinimumFractionDigits(2);
         DEFAULT_FORMAT.setMaximumFractionDigits(2);
-        DEFAULT_FORMAT.applyPattern("#.##");
+        DEFAULT_FORMAT.applyPattern("0.00");
     }
 
     public static String formatToPercentWithSymbol(double value) {

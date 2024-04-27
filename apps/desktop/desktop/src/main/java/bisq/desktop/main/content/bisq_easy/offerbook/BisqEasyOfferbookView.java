@@ -610,7 +610,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
 
         BisqTableColumn<OfferMessageItem> priceTableColumn = new BisqTableColumn.Builder<OfferMessageItem>()
                 .title(Res.get("bisqEasy.offerbook.offerList.table.columns.price"))
-                .left()
+                .right()
                 .fixWidth(80)
                 .setCellFactory(BisqEasyOfferbookUtil.getOfferMessagePriceCellFactory())
                 .isSortable(true)
