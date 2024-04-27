@@ -17,16 +17,18 @@
 
 package bisq.desktop.main.content.bisq_easy.offerbook;
 
-import bisq.chat.bisqeasy.BisqEasyOfferMessage;
+import bisq.chat.ChatMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 @EqualsAndHashCode
 @Getter
 public class OfferMessageItem {
-    private final BisqEasyOfferMessage offerMessage;
+    private final ChatMessage offerMessage;
 
-    OfferMessageItem(BisqEasyOfferMessage offerMessage) {
+    OfferMessageItem(ChatMessage offerMessage) {
         this.offerMessage = offerMessage;
     }
+
+    //void dispose() {}
 }

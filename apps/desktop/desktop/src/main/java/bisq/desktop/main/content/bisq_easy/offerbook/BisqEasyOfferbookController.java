@@ -24,6 +24,7 @@ import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessage;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannelService;
+import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.currency.Market;
 import bisq.common.observable.Pin;
@@ -50,6 +51,7 @@ import org.fxmisc.easybind.Subscription;
 
 import java.lang.ref.WeakReference;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -64,7 +66,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     private final BisqEasyOfferbookModel bisqEasyOfferbookModel;
     private final SetChangeListener<Market> favouriteMarketsListener;
     private Pin offerOnlySettingsPin, bisqEasyPrivateTradeChatChannelsPin, selectedChannelPin,
-            marketPriceByCurrencyMapPin, favouriteMarketsPin;
+            marketPriceByCurrencyMapPin, favouriteMarketsPin, offerMessagesPin;
     private Subscription marketSelectorSearchPin, selectedMarketFilterPin, selectedOfferDirectionOrOwnerFilterPin,
             selectedPeerReputationFilterPin, selectedMarketSortTypePin;
 
@@ -227,6 +229,10 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     public void onDeactivate() {
         super.onDeactivate();
 
+        if (offerMessagesPin != null) {
+            offerMessagesPin.unbind();
+        }
+
         offerOnlySettingsPin.unbind();
         bisqEasyPrivateTradeChatChannelsPin.unbind();
         selectedChannelPin.unbind();
@@ -255,7 +261,6 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
             if (chatChannel instanceof BisqEasyOfferbookChannel) {
                 BisqEasyOfferbookChannel channel = (BisqEasyOfferbookChannel) chatChannel;
 
-                // FIXME (low prio): marketChannelItems needs to be a hashmap
                 model.getMarketChannelItems().stream()
                         .filter(item -> item.getChannel().equals(channel))
                         .findAny()
@@ -278,6 +283,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                 model.getChannelIconNode().set(marketsImage);
 
                 updateMarketPrice();
+                bindOfferMessages(channel);
             }
         });
     }
@@ -348,5 +354,44 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
 
     double getMarketSelectionListCellHeight() {
         return MARKET_SELECTION_LIST_CELL_HEIGHT;
+    }
+
+    private void bindOfferMessages(BisqEasyOfferbookChannel channel) {
+        offerMessagesPin = channel.getChatMessages().addObserver(new CollectionObserver<>() {
+            @Override
+            public void add(BisqEasyOfferbookMessage element) {
+                if (element.hasBisqEasyOffer()) {
+                    UIThread.run(() -> {
+                        OfferMessageItem item = new OfferMessageItem(element);
+                        model.getOfferMessageItems().add(item);
+                    });
+                }
+            }
+
+            @Override
+            public void remove(Object element) {
+                if (element instanceof BisqEasyOfferbookMessage && ((BisqEasyOfferbookMessage) element).hasBisqEasyOffer()) {
+                    UIThread.run(() -> {
+                        BisqEasyOfferbookMessage offerMessage = (BisqEasyOfferbookMessage) element;
+                        Optional<OfferMessageItem> toRemove =
+                                model.getOfferMessageItems().stream()
+                                        .filter(item -> item.getOfferMessage().getId().equals(offerMessage.getId()))
+                                        .findAny();
+                        toRemove.ifPresent(item -> {
+                            //item.dispose();
+                            model.getOfferMessageItems().remove(item);
+                        });
+                    });
+                }
+            }
+
+            @Override
+            public void clear() {
+                UIThread.run(() -> {
+                    //model.getOfferMessageItems().forEach(OfferMessageItem::dispose);
+                    model.getOfferMessageItems().clear();
+                });
+            }
+        });
     }
 }
