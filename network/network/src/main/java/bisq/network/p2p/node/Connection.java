@@ -101,6 +101,8 @@ public abstract class Connection {
     private volatile long sendMessageTimestamp;
     private volatile long receiveMessageTimestamp;
     private final long sendMessageMinThrottleTime;
+    private final long minThrottleTime = 20;
+    private final long maxThrottleTime = 1000;
     private final long receiveMessageMinThrottleTime;
 
     protected Connection(Socket socket,
@@ -269,9 +271,14 @@ public abstract class Connection {
 
     private void throttleSendMessage() {
         long passed = System.currentTimeMillis() - sendMessageTimestamp;
-        if (passed < sendMessageMinThrottleTime) {
+        double peersLoad = peersNetworkLoadSnapshot.getCurrentNetworkLoad().getLoad();
+        long throttleTime = minThrottleTime + Math.round(sendMessageMinThrottleTime * peersLoad);
+        throttleTime = MathUtils.bounded(minThrottleTime, maxThrottleTime, throttleTime);
+        log.error("throttleSendMessage throttleTime={}, peersLoad={} ", throttleTime, peersLoad);
+        if (passed < throttleTime) {
             try {
-                long sleepTime = MathUtils.bounded(1, 1000, sendMessageMinThrottleTime - passed);
+                long sleepTime = throttleTime - passed;
+                sleepTime = MathUtils.bounded(1, maxThrottleTime, sleepTime);
                 log.warn("Throttle send message with a pause of {} ms", sleepTime);
                 Thread.sleep(sleepTime);
             } catch (InterruptedException ignore) {
@@ -282,9 +289,12 @@ public abstract class Connection {
 
     private void throttleReceiveMessage() {
         long passed = System.currentTimeMillis() - receiveMessageTimestamp;
-        if (passed < receiveMessageMinThrottleTime) {
+        long throttleTime = receiveMessageMinThrottleTime;
+        throttleTime = MathUtils.bounded(minThrottleTime, maxThrottleTime, throttleTime);
+        if (passed < throttleTime) {
             try {
-                long sleepTime = MathUtils.bounded(1, 1000, receiveMessageMinThrottleTime - passed);
+                long sleepTime = throttleTime - passed;
+                sleepTime = MathUtils.bounded(1, maxThrottleTime, sleepTime);
                 log.warn("Throttle receive message with a pause of {} ms", sleepTime);
                 Thread.sleep(sleepTime);
             } catch (InterruptedException ignore) {
