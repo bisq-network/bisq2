@@ -30,11 +30,11 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Overlay;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.components.UserProfileSelection;
-import bisq.desktop.main.content.user.reputation.accountAge.AccountAgeView;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.reputation.AccountAgeService;
+import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -45,13 +45,13 @@ public class AccountAgeTab3Controller implements Controller {
     @Getter
     private final AccountAgeTab3View view;
     private final UserIdentityService userIdentityService;
-    private final AccountAgeView parentView;
+    private final VBox popupOwner;
     private final AccountAgeService accountAgeService;
     private Pin selectedUserProfilePin;
 
-    public AccountAgeTab3Controller(ServiceProvider serviceProvider, AccountAgeView parentView) {
+    public AccountAgeTab3Controller(ServiceProvider serviceProvider, VBox popupOwner) {
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
-        this.parentView = parentView;
+        this.popupOwner = popupOwner;
         UserProfileSelection userProfileSelection = new UserProfileSelection(serviceProvider);
         accountAgeService = serviceProvider.getUserService().getReputationService().getAccountAgeService();
 
@@ -72,7 +72,7 @@ public class AccountAgeTab3Controller implements Controller {
                 }
         );
 
-        model.getRequestCertificateButtonDisabled().bind(model.getSignedMessage().isEmpty());
+        model.getRequestCertificateButtonDisabled().bind(model.getJsonData().isEmpty());
     }
 
     @Override
@@ -98,7 +98,7 @@ public class AccountAgeTab3Controller implements Controller {
     }
 
     public void onRequestAuthorization() {
-        String signedMessage = model.getSignedMessage().get();
+        String signedMessage = model.getJsonData().get();
         if (signedMessage.startsWith(PREFIX)) {
             signedMessage = signedMessage.replace(PREFIX, "");
         }
@@ -108,7 +108,7 @@ public class AccountAgeTab3Controller implements Controller {
             new Popup().information(Res.get("user.reputation.request.success"))
                     .animationType(Overlay.AnimationType.SlideDownFromCenterTop)
                     .transitionsType(Transitions.Type.LIGHT_BLUR_LIGHT)
-                    .owner(parentView.getRoot())
+                    .owner(popupOwner)
                     .onClose(this::onClose)
                     .show();
         }
