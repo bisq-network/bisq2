@@ -67,14 +67,18 @@ public class OfferMessageItem {
         initialize();
     }
 
+    void dispose() {
+        marketPriceByCurrencyMapPin.unbind();
+    }
+
+    Monetary getMinAmount() {
+        return minMaxAmount.getFirst();
+    }
+
     private void initialize() {
         marketPriceByCurrencyMapPin = marketPriceService.getMarketPriceByCurrencyMap().addObserver(() ->
                 UIThread.run(this::updatePriceSpecAsPercent));
         updatePriceSpecAsPercent();
-    }
-
-    void dispose() {
-        marketPriceByCurrencyMapPin.unbind();
     }
 
     private Pair<Monetary, Monetary> retrieveMinMaxAmount() {

@@ -53,6 +53,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.util.Comparator;
+
 @Slf4j
 public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView, BisqEasyOfferbookModel> {
     private final ListChangeListener<MarketChannelItem> listChangeListener;
@@ -598,13 +600,13 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     }
 
     private void configOffersTableView(BisqTableView<OfferMessageItem> tableView) {
-        // TODO: Add comparator for sorting
         // TODO: Add selection logic
         BisqTableColumn<OfferMessageItem> userProfileTableColumn = new BisqTableColumn.Builder<OfferMessageItem>()
                 .title(Res.get("bisqEasy.offerbook.offerList.table.columns.peerProfile"))
                 .left()
                 .fixWidth(170)
                 .setCellFactory(BisqEasyOfferbookUtil.getOfferMessageUserProfileCellFactory())
+                .comparator(Comparator.comparing(OfferMessageItem::getUserNickname))
                 .isSortable(true)
                 .build();
 
@@ -613,6 +615,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
                 .right()
                 .fixWidth(75)
                 .setCellFactory(BisqEasyOfferbookUtil.getOfferMessagePriceCellFactory())
+                .comparator(Comparator.comparing(OfferMessageItem::getPriceSpecAsPercent))
                 .isSortable(true)
                 .build();
 
@@ -624,6 +627,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
                 .left()
                 .fixWidth(200)
                 .setCellFactory(BisqEasyOfferbookUtil.getOfferMessageFiatAmountCellFactory())
+                .comparator(Comparator.comparing(OfferMessageItem::getMinAmount))
                 .isSortable(true)
                 .build();
         fiatAmountTableColumn.applyTitleProperty(getModel().getFiatAmountTitle());
