@@ -36,9 +36,9 @@ public class NativeTorProcess {
     private final Path torrcPath;
     private Optional<Process> process = Optional.empty();
 
-    public NativeTorProcess(Path torDataDirPath) {
+    public NativeTorProcess(Path torBinaryPath, Path torDataDirPath) {
+        this.torBinaryPath = torBinaryPath;
         this.torDataDirPath = torDataDirPath;
-        this.torBinaryPath = torDataDirPath.resolve("tor");
         this.torrcPath = torDataDirPath.resolve("torrc");
     }
 
@@ -53,8 +53,10 @@ public class NativeTorProcess {
                 ARG_OWNER_PID, ownerPid
         );
 
-        Map<String, String> environment = processBuilder.environment();
-        environment.put("LD_PRELOAD", LdPreload.computeLdPreloadVariable(torDataDirPath));
+        if (torBinaryPath.startsWith(torDataDirPath)) {
+            Map<String, String> environment = processBuilder.environment();
+            environment.put("LD_PRELOAD", LdPreload.computeLdPreloadVariable(torDataDirPath));
+        }
 
         processBuilder.redirectError(ProcessBuilder.Redirect.DISCARD);
         processBuilder.redirectOutput(ProcessBuilder.Redirect.DISCARD);
@@ -81,6 +83,20 @@ public class NativeTorProcess {
                 throw new CouldNotWaitForTorShutdownException(e);
             }
         });
+    }
+
+    public static Optional<Path> getSystemTorPath() {
+        String pathEnvironmentVariable = System.getenv("PATH");
+        String[] searchPaths = pathEnvironmentVariable.split(":");
+
+        for (var path : searchPaths) {
+            File torBinary = new File(path, "tor");
+            if (torBinary.exists()) {
+                return Optional.of(torBinary.toPath());
+            }
+        }
+
+        return Optional.empty();
     }
 
     private void createTorControlDirectory() {
