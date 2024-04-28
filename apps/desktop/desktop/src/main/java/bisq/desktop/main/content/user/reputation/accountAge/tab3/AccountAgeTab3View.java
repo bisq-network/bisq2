@@ -39,7 +39,7 @@ public class AccountAgeTab3View extends View<VBox, AccountAgeTab3Model, AccountA
     private final Button closeButton, backButton, requestCertificateButton;
     private final Hyperlink learnMore;
     private MaterialTextField pubKeyHash;
-    private MaterialTextArea signedMessage;
+    private MaterialTextArea jsonData;
 
     public AccountAgeTab3View(AccountAgeTab3Model model,
                               AccountAgeTab3Controller controller,
@@ -77,7 +77,7 @@ public class AccountAgeTab3View extends View<VBox, AccountAgeTab3Model, AccountA
         pubKeyHash.textProperty().bind(model.getPubKeyHash());
         pubKeyHash.getIconButton().setOnAction(e -> controller.onCopyToClipboard(pubKeyHash.getText()));
 
-        signedMessage.textProperty().bindBidirectional(model.getSignedMessage());
+        jsonData.textProperty().bindBidirectional(model.getJsonData());
 
         closeButton.setOnAction(e -> controller.onClose());
         backButton.setOnAction(e -> controller.onBack());
@@ -92,7 +92,7 @@ public class AccountAgeTab3View extends View<VBox, AccountAgeTab3Model, AccountA
         pubKeyHash.textProperty().unbind();
         pubKeyHash.getIconButton().setOnAction(null);
 
-        signedMessage.textProperty().unbindBidirectional(model.getSignedMessage());
+        jsonData.textProperty().unbindBidirectional(model.getJsonData());
 
         closeButton.setOnAction(null);
         backButton.setOnAction(null);
@@ -139,12 +139,12 @@ public class AccountAgeTab3View extends View<VBox, AccountAgeTab3Model, AccountA
     private VBox createAndGetStepFour() {
         Label title = createAndGetStepLabel(Res.get("user.reputation.accountAge.import.step4.title"));
         Label instruction = createAndGetStepInstructionLabel(Res.get("user.reputation.accountAge.import.step4.instruction"));
-        signedMessage = new MaterialTextArea(Res.get("user.reputation.accountAge.import.step4.signedMessage"));
-        signedMessage.setEditable(true);
-        signedMessage.getStyleClass().add("material-field");
-        VBox.setMargin(signedMessage, new Insets(10, 0, 15, 2));
-        UIThread.runOnNextRenderFrame(signedMessage::requestFocus);
-        VBox vBox = new VBox(title, instruction, signedMessage);
+        jsonData = new MaterialTextArea(Res.get("user.reputation.accountAge.import.step4.signedMessage"));
+        jsonData.setEditable(true);
+        jsonData.getStyleClass().add("material-field");
+        VBox.setMargin(jsonData, new Insets(10, 0, 15, 2));
+        UIThread.runOnNextRenderFrame(jsonData::requestFocus);
+        VBox vBox = new VBox(title, instruction, jsonData);
         vBox.getStyleClass().add("import-step");
         return vBox;
     }

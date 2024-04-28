@@ -19,7 +19,6 @@ package bisq.desktop.main.content.user.reputation.signedAccount.tab3;
 
 import bisq.bisq_easy.NavigationTarget;
 import bisq.common.observable.Pin;
-import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.Transitions;
@@ -31,11 +30,11 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Overlay;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.components.UserProfileSelection;
-import bisq.desktop.main.content.user.reputation.signedAccount.SignedWitnessView;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.reputation.SignedWitnessService;
+import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -46,13 +45,13 @@ public class SignedWitnessTab3Controller implements Controller {
     @Getter
     private final SignedWitnessTab3View view;
     private final UserIdentityService userIdentityService;
-    private final SignedWitnessView parentView;
+    private final VBox popupOwner;
     private final SignedWitnessService signedWitnessService;
     private Pin selectedUserProfilePin;
 
-    public SignedWitnessTab3Controller(ServiceProvider serviceProvider, SignedWitnessView parentView) {
+    public SignedWitnessTab3Controller(ServiceProvider serviceProvider, VBox popupOwner) {
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
-        this.parentView = parentView;
+        this.popupOwner = popupOwner;
         UserProfileSelection userProfileSelection = new UserProfileSelection(serviceProvider);
         signedWitnessService = serviceProvider.getUserService().getReputationService().getSignedWitnessService();
 
@@ -72,11 +71,14 @@ public class SignedWitnessTab3Controller implements Controller {
                     });
                 }
         );
+
+        model.getRequestCertificateButtonDisabled().bind(model.getJsonData().isEmpty());
     }
 
     @Override
     public void onDeactivate() {
         selectedUserProfilePin.unbind();
+        model.getRequestCertificateButtonDisabled().unbind();
     }
 
     void onBack() {
@@ -96,26 +98,26 @@ public class SignedWitnessTab3Controller implements Controller {
     }
 
     public void onRequestAuthorization() {
-        ClipboardUtil.getClipboardString().ifPresent(clipboard -> {
-            if (clipboard.startsWith(PREFIX)) {
-                String json = clipboard.replace(PREFIX, "");
-                boolean success = signedWitnessService.requestAuthorization(json);
-                if (success) {
-                    new Popup().information(Res.get("user.reputation.request.success"))
-                            .animationType(Overlay.AnimationType.SlideDownFromCenterTop)
-                            .transitionsType(Transitions.Type.LIGHT_BLUR_LIGHT)
-                            .owner(parentView.getRoot())
-                            .onClose(this::onClose)
-                            .show();
-                    return;
-                }
-            }
-            new Popup().warning(Res.get("user.reputation.request.error", StringUtils.truncate(clipboard)))
+        String jsonData = model.getJsonData().get();
+        if (jsonData.startsWith(PREFIX)) {
+            jsonData = jsonData.replace(PREFIX, "");
+        }
+
+        boolean success = signedWitnessService.requestAuthorization(jsonData);
+        if (success) {
+            new Popup().information(Res.get("user.reputation.request.success"))
                     .animationType(Overlay.AnimationType.SlideDownFromCenterTop)
                     .transitionsType(Transitions.Type.LIGHT_BLUR_LIGHT)
-                    .owner(parentView.getRoot())
+                    .owner(popupOwner)
                     .onClose(this::onClose)
                     .show();
-        });
+        } else {
+            new Popup().warning(Res.get("user.reputation.request.error", jsonData))
+                    .animationType(Overlay.AnimationType.SlideDownFromCenterTop)
+                    .transitionsType(Transitions.Type.LIGHT_BLUR_LIGHT)
+                    .owner(popupOwner)
+                    .onClose(this::onClose)
+                    .show();
+        }
     }
 }
