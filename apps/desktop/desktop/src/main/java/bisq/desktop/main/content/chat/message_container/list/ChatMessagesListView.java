@@ -98,6 +98,10 @@ public class ChatMessagesListView extends bisq.desktop.common.view.View<ChatMess
         root.getChildren().addAll(listView, scrollDownBackground, scrollDownBadge);
     }
 
+    public void scrollToChatMessage(ChatMessageListItem<?,?> chatMessageListItem) {
+        listView.scrollTo(chatMessageListItem);
+    }
+
     @Override
     protected void onViewAttached() {
         ListViewUtil.findScrollbarAsync(listView, Orientation.VERTICAL, 1000).whenComplete((scrollBar, throwable) -> {

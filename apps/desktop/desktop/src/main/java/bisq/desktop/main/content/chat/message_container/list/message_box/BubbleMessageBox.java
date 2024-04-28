@@ -39,14 +39,18 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import java.util.Optional;
 
 @Slf4j
 public abstract class BubbleMessageBox extends MessageBox {
+    private static final String HIGHLIGHTED_MESSAGE_BG_STYLE_CLASS = "highlighted-message-bg";
     protected static final double CHAT_MESSAGE_BOX_MAX_WIDTH = 630;
     protected static final double OFFER_MESSAGE_USER_ICON_SIZE = 70;
 
+    private final Subscription showHighlightedPin;
     protected final ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item;
     protected final ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list;
     protected final ChatMessagesListController controller;
@@ -85,8 +89,17 @@ public abstract class BubbleMessageBox extends MessageBox {
 
         contentVBox = new VBox();
         contentVBox.setMaxWidth(CHAT_BOX_MAX_WIDTH);
+        contentVBox.getStyleClass().add("chat-message-content-box");
         getChildren().setAll(contentVBox);
         setAlignment(Pos.CENTER);
+
+        showHighlightedPin = EasyBind.subscribe(item.getShowHighlighted(), showHighlighted -> {
+            if (showHighlighted) {
+                messageBgHBox.getStyleClass().add(HIGHLIGHTED_MESSAGE_BG_STYLE_CLASS);
+            } else {
+                messageBgHBox.getStyleClass().remove(HIGHLIGHTED_MESSAGE_BG_STYLE_CLASS);
+            }
+        });
     }
 
     protected void setUpUserNameAndDateTime() {
@@ -140,6 +153,7 @@ public abstract class BubbleMessageBox extends MessageBox {
     public void cleanup() {
         setOnMouseEntered(null);
         setOnMouseExited(null);
+        showHighlightedPin.unsubscribe();
     }
 
     private Label createAndGetSupportedLanguagesLabel() {

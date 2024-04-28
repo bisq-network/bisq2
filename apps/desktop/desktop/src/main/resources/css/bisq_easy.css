@@ -130,7 +130,8 @@
 }
 
 .market-selection-subheader,
-.offerbook-subheader {
+.offerbook-subheader,
+.offer-list-subheader {
     -fx-background-color: -bisq-dark-grey-30;
     -fx-background-radius: 0;
     -fx-max-height: 30;
@@ -138,7 +139,8 @@
     -fx-pref-height: 30;
 }
 
-.market-selection-subheader {
+.market-selection-subheader,
+.offer-list-subheader {
     -fx-padding: 0 12 0 7;
 }
 
@@ -301,6 +303,38 @@
 
 .markets-list .table-row-cell:hover .favourite-label {
     -fx-opacity: 1;
+}
+
+.offers-list.table-view {
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.offers-list.table-view .column-header .label {
+    -fx-alignment: center-left;
+    -fx-label-padding: 0 7;
+}
+
+/* BUY FROM */
+.dropdown-offer-list-direction-filter-menu .buy-from-offers {
+    -fx-label-padding: 0 0 0 5;
+    -fx-text-fill: -bisq2-green;
+}
+
+.dropdown-offer-list-direction-filter-menu:hover .buy-from-offers {
+    -fx-label-padding: 0 0 0 5;
+    -fx-text-fill: -bisq2-green-lit-20;
+}
+
+/* SELL TO */
+.dropdown-offer-list-direction-filter-menu .sell-to-offers {
+    -fx-label-padding: 0 0 0 5;
+    -fx-text-fill: -bisq2-red-lit-20;
+}
+
+.dropdown-offer-list-direction-filter-menu:hover .sell-to-offers {
+    -fx-label-padding: 0 0 0 5;
+    -fx-text-fill: -bisq2-red-lit-40;
 }
 
 .create-offer-button {

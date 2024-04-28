@@ -39,7 +39,7 @@ import java.util.Collection;
 public class DropdownMenu extends HBox {
     public static final Double INITIAL_WIDTH = 24.0;
     @Getter
-    private final Label label = new Label();
+    private Label label = new Label();
     private final ImageView defaultIcon, activeIcon;
     private final ContextMenu contextMenu = new ContextMenu();
     private ImageView buttonIcon;
@@ -75,6 +75,11 @@ public class DropdownMenu extends HBox {
 
     public void setLabel(String text) {
         label.setText(text);
+    }
+
+    public void setLabel(Label label) {
+        this.label = label;
+        getChildren().set(0, label);
     }
 
     private void toggleContextMenu() {

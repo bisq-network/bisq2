@@ -5,9 +5,13 @@ import bisq.common.currency.MarketRepository;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTooltip;
+import bisq.desktop.main.content.components.ReputationScoreDisplay;
+import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.i18n.Res;
+import bisq.presentation.formatters.PercentageFormatter;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.StringExpression;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.control.*;
@@ -50,6 +54,11 @@ public class BisqEasyOfferbookUtil {
                 .thenComparing(BisqEasyOfferbookUtil.sortByMarketNameAsc())
                 .compare(lhs, rhs);
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // MARKETS' LIST
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     static Callback<TableColumn<MarketChannelItem, MarketChannelItem>,
             TableCell<MarketChannelItem, MarketChannelItem>> getMarketLabelCellFactory(boolean isFavouritesTableView) {
@@ -162,5 +171,81 @@ public class BisqEasyOfferbookUtil {
         return numOffers > 1
                 ? Res.get("bisqEasy.offerbook.marketListCell.numOffers.tooltip.many", numOffers, quoteCurrencyName)
                 : Res.get("bisqEasy.offerbook.marketListCell.numOffers.tooltip.one", numOffers, quoteCurrencyName);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // OFFERS' LIST
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    static Callback<TableColumn<OfferMessageItem, OfferMessageItem>,
+            TableCell<OfferMessageItem, OfferMessageItem>> getOfferMessageUserProfileCellFactory() {
+        return column -> new TableCell<>() {
+            private final Label userNameLabel = new Label();
+            private final ReputationScoreDisplay reputationScoreDisplay = new ReputationScoreDisplay();
+            private final VBox nameAndReputationBox = new VBox(userNameLabel, reputationScoreDisplay);
+            private final UserProfileIcon userProfileIcon = new UserProfileIcon(30);
+            private final HBox userProfileBox = new HBox(10, userProfileIcon, nameAndReputationBox);
+
+            {
+                userNameLabel.setId("chat-user-name");
+                HBox.setMargin(userProfileIcon, new Insets(0, 0, 0, -1));
+                nameAndReputationBox.setAlignment(Pos.CENTER_LEFT);
+                userProfileBox.setAlignment(Pos.CENTER_LEFT);
+            }
+
+            @Override
+            protected void updateItem(OfferMessageItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    userNameLabel.setText(item.getUserNickname());
+                    reputationScoreDisplay.setReputationScore(item.getReputationScore());
+                    userProfileIcon.setUserProfile(item.getUserProfile());
+                    setGraphic(userProfileBox);
+                } else {
+                    setGraphic(null);
+                }
+            }
+        };
+    }
+
+    static Callback<TableColumn<OfferMessageItem, OfferMessageItem>,
+            TableCell<OfferMessageItem, OfferMessageItem>> getOfferMessagePriceCellFactory() {
+        return column -> new TableCell<>() {
+            private final Label priceSpecAsPercentLabel = new Label();
+
+            @Override
+            protected void updateItem(OfferMessageItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    // TODO: react to priceSpec if it changes
+                    priceSpecAsPercentLabel.setText(PercentageFormatter.formatToPercentWithSymbol(item.getPriceSpecAsPercent()));
+                    setGraphic(priceSpecAsPercentLabel);
+                } else {
+                    setGraphic(null);
+                }
+            }
+        };
+    }
+
+    static Callback<TableColumn<OfferMessageItem, OfferMessageItem>,
+            TableCell<OfferMessageItem, OfferMessageItem>> getOfferMessageFiatAmountCellFactory() {
+        return column -> new TableCell<>() {
+            private final Label fiatAmountLabel = new Label();
+
+            @Override
+            protected void updateItem(OfferMessageItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    fiatAmountLabel.setText(item.getMinMaxAmountAsString());
+                    setGraphic(fiatAmountLabel);
+                } else {
+                    setGraphic(null);
+                }
+            }
+        };
     }
 }
