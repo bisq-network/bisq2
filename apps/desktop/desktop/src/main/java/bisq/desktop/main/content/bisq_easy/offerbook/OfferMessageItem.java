@@ -23,6 +23,7 @@ import bisq.common.data.Pair;
 import bisq.common.monetary.Monetary;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;
+import bisq.offer.Direction;
 import bisq.offer.amount.OfferAmountFormatter;
 import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.bisq_easy.BisqEasyOffer;
@@ -73,6 +74,10 @@ public class OfferMessageItem {
 
     Monetary getMinAmount() {
         return minMaxAmount.getFirst();
+    }
+
+    boolean isSellOffer() {
+        return offer.getDirection() == Direction.SELL;
     }
 
     private void initialize() {

@@ -57,6 +57,9 @@ import java.util.Comparator;
 
 @Slf4j
 public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView, BisqEasyOfferbookModel> {
+    private static final String BUY_FROM_MENU_ITEM_STYLE_CLASS = "buy-from-offers";
+    private static final String SELL_TO_MENU_ITEM_STYLE_CLASS = "sell-to-offers";
+
     private final ListChangeListener<MarketChannelItem> listChangeListener;
     private SearchBox marketSelectorSearchBox;
     private BisqTableView<MarketChannelItem> marketsTableView, favouritesTableView;
@@ -65,17 +68,19 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     private Subscription marketsTableViewSelectionPin, selectedModelItemPin, channelHeaderIconPin, selectedMarketFilterPin,
             selectedOfferDirectionOrOwnerFilterPin, selectedPeerReputationFilterPin, selectedMarketSortTypePin,
             marketSelectorSearchPin, favouritesTableViewHeightPin, favouritesTableViewSelectionPin,
-            shouldShowAppliedFiltersPin, offerListTableViewSelectionPin;
+            shouldShowAppliedFiltersPin, offerListTableViewSelectionPin, showBuyFromOfferMessageItemsPin;
     private Button createOfferButton;
-    private DropdownMenu sortAndFilterMarketsMenu, filterOffersByDirectionOrOwnerMenu, filterOffersByPeerReputationMenu;
+    private DropdownMenu sortAndFilterMarketsMenu, filterOffersByDirectionOrOwnerMenu, filterOffersByPeerReputationMenu,
+            filterOfferListByDirection;
     private DropdownSortByMenuItem sortByMostOffers, sortByNameAZ, sortByNameZA;
     private DropdownFilterMenuItem<MarketChannelItem> filterShowAll, filterWithOffers, filterFavourites;
     private DropdownFilterMenuItem<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>>
             allOffers, myOffers, buyOffers, sellOffers, allReputations, fiveStars, atLeastFourStars, atLeastThreeStars,
             atLeastTwoStars, atLeastOneStar;
     private DropdownTitleMenuItem atLeastTitle;
+    private DropdownMenuItem buyFromOffers, sellToOffers;
     private CheckBox hideUserMessagesCheckbox;
-    private Label channelHeaderIcon, marketPrice, removeWithOffersFilter, removeFavouritesFilter;
+    private Label channelHeaderIcon, marketPrice, removeWithOffersFilter, removeFavouritesFilter, offerListByDirectionFilter;
     private HBox appliedFiltersSection, withOffersDisplayHint, onlyFavouritesDisplayHint;
     private ImageView withOffersRemoveFilterDefaultIcon, withOffersRemoveFilterActiveIcon,
             favouritesRemoveFilterDefaultIcon, favouritesRemoveFilterActiveIcon;
@@ -172,6 +177,9 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         offerListTableViewSelectionPin = EasyBind.subscribe(offerListTableView.getSelectionModel().selectedItemProperty(), item -> {
            getController().onSelectOfferMessageItem(item);
         });
+        showBuyFromOfferMessageItemsPin = EasyBind.subscribe(getModel().getShowBuyFromOfferMessageItems(), showBuyFromOffers -> {
+           updateOfferListByDirectionFilter();
+        });
 
         sortByMostOffers.setOnAction(e -> getController().onSortMarkets(MarketSortType.NUM_OFFERS));
         sortByNameAZ.setOnAction(e -> getController().onSortMarkets(MarketSortType.ASC));
@@ -194,6 +202,9 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         atLeastOneStar.setOnAction(e -> setPeerReputationFilter(atLeastOneStar));
 
         createOfferButton.setOnAction(e -> getController().onCreateOffer());
+
+        buyFromOffers.setOnAction(e -> getModel().getShowBuyFromOfferMessageItems().set(true));
+        sellToOffers.setOnAction(e -> getModel().getShowBuyFromOfferMessageItems().set(false));
 
         removeWithOffersFilter.setOnMouseClicked(e -> getModel().getSelectedMarketsFilter().set(Filters.Markets.ALL));
         withOffersDisplayHint.setOnMouseEntered(e -> removeWithOffersFilter.setGraphic(withOffersRemoveFilterActiveIcon));
@@ -251,6 +262,8 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         atLeastTwoStars.setOnAction(null);
         atLeastOneStar.setOnAction(null);
         createOfferButton.setOnAction(null);
+        buyFromOffers.setOnAction(null);
+        sellToOffers.setOnAction(null);
 
         removeWithOffersFilter.setOnMouseClicked(null);
         withOffersDisplayHint.setOnMouseEntered(null);
@@ -582,9 +595,12 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         header.setPadding(new Insets(4, 0, 0, 15));
         header.getStyleClass().add("chat-header-title");
 
+        filterOfferListByDirection = createAndGetOfferListByDirectionFilter();
+
         HBox subheader = new HBox();
-        subheader.setAlignment(Pos.CENTER);
-        subheader.getStyleClass().add("market-selection-subheader");
+        subheader.setAlignment(Pos.CENTER_LEFT);
+        subheader.getStyleClass().add("offer-list-subheader");
+        subheader.getChildren().add(filterOfferListByDirection);
 
         StandardTable<OfferMessageItem> offerMessageItemTable = new StandardTable<>(getModel().getSortedOfferMessageItems(),
                 "", getModel().getFilterOfferMessageItems(), getModel().getFilterOfferMessageMenuItemToggleGroup());
@@ -602,6 +618,28 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         offerList.setMinWidth(468);
         offerList.setFillWidth(true);
         offerList.getStyleClass().add("chat-container");
+    }
+
+    private DropdownMenu createAndGetOfferListByDirectionFilter() {
+        DropdownMenu dropdownMenu = new DropdownMenu("chevron-drop-menu-grey", "chevron-drop-menu-white", false);
+        dropdownMenu.getStyleClass().add("dropdown-offer-list-direction-filter-menu");
+        offerListByDirectionFilter = new Label();
+        dropdownMenu.setLabel(offerListByDirectionFilter);
+        buyFromOffers = new DropdownMenuItem(Res.get("bisqEasy.offerbook.offerList.table.filters.offerDirection.buyFrom").toUpperCase());
+        sellToOffers = new DropdownMenuItem(Res.get("bisqEasy.offerbook.offerList.table.filters.offerDirection.sellTo").toUpperCase());
+        dropdownMenu.addMenuItems(buyFromOffers, sellToOffers);
+        return dropdownMenu;
+    }
+
+    private void updateOfferListByDirectionFilter() {
+        offerListByDirectionFilter.getStyleClass().clear();
+        if (getModel().getShowBuyFromOfferMessageItems().get()) {
+            offerListByDirectionFilter.setText(buyFromOffers.getLabelText());
+            offerListByDirectionFilter.getStyleClass().add(BUY_FROM_MENU_ITEM_STYLE_CLASS);
+        } else {
+            offerListByDirectionFilter.setText(sellToOffers.getLabelText());
+            offerListByDirectionFilter.getStyleClass().add(SELL_TO_MENU_ITEM_STYLE_CLASS);
+        }
     }
 
     private void configOffersTableView(BisqTableView<OfferMessageItem> tableView) {

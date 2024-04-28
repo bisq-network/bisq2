@@ -68,6 +68,7 @@ public final class BisqEasyOfferbookModel extends ChatModel {
     private final List<StandardTable.FilterMenuItem<OfferMessageItem>> filterOfferMessageItems = new ArrayList<>();
     private final ToggleGroup filterOfferMessageMenuItemToggleGroup = new ToggleGroup();
     private final StringProperty fiatAmountTitle = new SimpleStringProperty();
+    private final BooleanProperty showBuyFromOfferMessageItems = new SimpleBooleanProperty(true); // TODO: save user pref in settings
 
     @Setter
     private Predicate<MarketChannelItem> marketPricePredicate = marketChannelItem -> true;

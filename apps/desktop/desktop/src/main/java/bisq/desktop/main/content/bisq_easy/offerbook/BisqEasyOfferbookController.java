@@ -72,7 +72,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     private Pin offerOnlySettingsPin, bisqEasyPrivateTradeChatChannelsPin, selectedChannelPin,
             marketPriceByCurrencyMapPin, favouriteMarketsPin, offerMessagesPin;
     private Subscription marketSelectorSearchPin, selectedMarketFilterPin, selectedOfferDirectionOrOwnerFilterPin,
-            selectedPeerReputationFilterPin, selectedMarketSortTypePin;
+            selectedPeerReputationFilterPin, selectedMarketSortTypePin, showBuyFromOfferMessageItemsPin;
 
     public BisqEasyOfferbookController(ServiceProvider serviceProvider) {
         super(serviceProvider, ChatChannelDomain.BISQ_EASY_OFFERBOOK, NavigationTarget.BISQ_EASY_OFFERBOOK);
@@ -190,6 +190,12 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
             }
         });
 
+        showBuyFromOfferMessageItemsPin = EasyBind.subscribe(model.getShowBuyFromOfferMessageItems(), showBuyFromOfferMessageItems -> {
+            model.getFilteredOfferMessageItems().setPredicate(item ->
+                    showBuyFromOfferMessageItems ? item.isSellOffer() : !item.isSellOffer()
+            );
+        });
+
         MarketSortType persistedMarketSortType = settingsService.getCookie().asString(CookieKey.MARKET_SORT_TYPE).map(name ->
                         ProtobufUtils.enumFromProto(MarketSortType.class, name, MarketSortType.NUM_OFFERS))
                 .orElse(MarketSortType.NUM_OFFERS);
@@ -247,6 +253,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         marketPriceByCurrencyMapPin.unbind();
         selectedMarketSortTypePin.unsubscribe();
         favouriteMarketsPin.unbind();
+        showBuyFromOfferMessageItemsPin.unsubscribe();
         model.getFavouriteMarkets().removeListener(favouriteMarketsListener);
 
         resetSelectedChildTarget();
