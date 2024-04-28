@@ -89,6 +89,7 @@ public abstract class Connection {
     private final RequestResponseManager requestResponseManager;
 
     private NetworkEnvelopeSocket networkEnvelopeSocket;
+    private final ConnectionThrottle connectionThrottle;
     private final Handler handler;
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     @Nullable
@@ -102,10 +103,12 @@ public abstract class Connection {
                          Capability peersCapability,
                          NetworkLoadSnapshot peersNetworkLoadSnapshot,
                          ConnectionMetrics connectionMetrics,
+                         ConnectionThrottle connectionThrottle,
                          Handler handler,
                          BiConsumer<Connection, Exception> errorHandler) {
         this.peersCapability = peersCapability;
         this.peersNetworkLoadSnapshot = peersNetworkLoadSnapshot;
+        this.connectionThrottle = connectionThrottle;
         this.handler = handler;
         this.connectionMetrics = connectionMetrics;
         requestResponseManager = new RequestResponseManager(connectionMetrics);
@@ -128,6 +131,9 @@ public abstract class Connection {
                     // parsing might need some time wo we check again if connection is still active
                     if (isInputStreamActive()) {
                         checkNotNull(proto, "Proto from NetworkEnvelope.parseDelimitedFrom(inputStream) must not be null");
+
+                        connectionThrottle.throttleReceiveMessage();
+
                         long ts = System.currentTimeMillis();
                         NetworkEnvelope networkEnvelope = NetworkEnvelope.fromProto(proto);
                         long deserializeTime = System.currentTimeMillis() - ts;
@@ -213,6 +219,8 @@ public abstract class Connection {
             // We do not throw a ConnectionClosedException here
             return this;
         }
+
+        connectionThrottle.throttleSendMessage();
 
         requestResponseManager.onSent(envelopePayloadMessage);
 

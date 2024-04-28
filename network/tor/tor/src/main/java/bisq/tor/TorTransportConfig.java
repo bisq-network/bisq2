@@ -47,7 +47,9 @@ public class TorTransportConfig implements TransportConfig {
                 (int) TimeUnit.SECONDS.toMillis(config.getInt("userNodeSocketTimeout")),
                 config.getBoolean("testNetwork"),
                 parseDirectoryAuthorities(config.getList("directoryAuthorities")),
-                parseTorrcOverrideConfig(config.getConfig("torrcOverrides"))
+                parseTorrcOverrideConfig(config.getConfig("torrcOverrides")),
+                config.getInt("sendMessageThrottleTime"),
+                config.getInt("receiveMessageThrottleTime")
         );
     }
 
@@ -93,6 +95,8 @@ public class TorTransportConfig implements TransportConfig {
     private final boolean isTestNetwork;
     private final Set<DirectoryAuthority> directoryAuthorities;
     private final Map<String, String> torrcOverrides;
+    private final int sendMessageThrottleTime;
+    private final int receiveMessageThrottleTime;
 
     public TorTransportConfig(Path dataDir,
                               int defaultNodePort,
@@ -102,7 +106,9 @@ public class TorTransportConfig implements TransportConfig {
                               int userNodeSocketTimeout,
                               boolean isTestNetwork,
                               Set<DirectoryAuthority> directoryAuthorities,
-                              Map<String, String> torrcOverrides) {
+                              Map<String, String> torrcOverrides,
+                              int sendMessageThrottleTime,
+                              int receiveMessageThrottleTime) {
         this.dataDir = dataDir;
         this.defaultNodePort = defaultNodePort;
         this.bootstrapTimeout = bootstrapTimeout;
@@ -112,5 +118,7 @@ public class TorTransportConfig implements TransportConfig {
         this.isTestNetwork = isTestNetwork;
         this.directoryAuthorities = directoryAuthorities;
         this.torrcOverrides = torrcOverrides;
+        this.sendMessageThrottleTime = sendMessageThrottleTime;
+        this.receiveMessageThrottleTime = receiveMessageThrottleTime;
     }
 }

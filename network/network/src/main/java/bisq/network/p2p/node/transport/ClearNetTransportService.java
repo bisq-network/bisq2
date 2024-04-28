@@ -33,7 +33,10 @@ public class ClearNetTransportService implements TransportService {
                     config.hasPath("defaultNodePort") ? config.getInt("defaultNodePort") : -1,
                     (int) TimeUnit.SECONDS.toMillis(config.getInt("defaultNodeSocketTimeout")),
                     (int) TimeUnit.SECONDS.toMillis(config.getInt("userNodeSocketTimeout")),
-                    (int) TimeUnit.MILLISECONDS.toMillis(config.getInt("devModeDelayInMs")));
+                    config.getInt("devModeDelayInMs"),
+                    config.getInt("sendMessageThrottleTime"),
+                    config.getInt("receiveMessageThrottleTime")
+            );
         }
 
         private final Path dataDir;
@@ -41,13 +44,23 @@ public class ClearNetTransportService implements TransportService {
         private final int defaultNodeSocketTimeout;
         private final int userNodeSocketTimeout;
         private final int devModeDelayInMs;
+        private final int sendMessageThrottleTime;
+        private final int receiveMessageThrottleTime;
 
-        public Config(Path dataDir, int defaultNodePort, int defaultNodeSocketTimeout, int userNodeSocketTimeout, int devModeDelayInMs) {
+        public Config(Path dataDir,
+                      int defaultNodePort,
+                      int defaultNodeSocketTimeout,
+                      int userNodeSocketTimeout,
+                      int devModeDelayInMs,
+                      int sendMessageThrottleTime,
+                      int receiveMessageThrottleTime) {
             this.dataDir = dataDir;
             this.defaultNodePort = defaultNodePort;
             this.defaultNodeSocketTimeout = defaultNodeSocketTimeout;
             this.userNodeSocketTimeout = userNodeSocketTimeout;
             this.devModeDelayInMs = devModeDelayInMs;
+            this.sendMessageThrottleTime = sendMessageThrottleTime;
+            this.receiveMessageThrottleTime = receiveMessageThrottleTime;
         }
     }
 

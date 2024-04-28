@@ -31,4 +31,8 @@ public interface TransportConfig {
     default int getDevModeDelayInMs() {
         return 0;
     }
+
+    int getSendMessageThrottleTime(); // in ms
+
+    int getReceiveMessageThrottleTime(); // in ms
 }
