@@ -48,8 +48,8 @@ public class TorTransportConfig implements TransportConfig {
                 config.getBoolean("testNetwork"),
                 parseDirectoryAuthorities(config.getList("directoryAuthorities")),
                 parseTorrcOverrideConfig(config.getConfig("torrcOverrides")),
-                config.getInt("sendMessageMinThrottleTime"),
-                config.getInt("receiveMessageMinThrottleTime")
+                config.getInt("sendMessageThrottleTime"),
+                config.getInt("receiveMessageThrottleTime")
         );
     }
 
@@ -95,8 +95,8 @@ public class TorTransportConfig implements TransportConfig {
     private final boolean isTestNetwork;
     private final Set<DirectoryAuthority> directoryAuthorities;
     private final Map<String, String> torrcOverrides;
-    private final int sendMessageMinThrottleTime;
-    private final int receiveMessageMinThrottleTime;
+    private final int sendMessageThrottleTime;
+    private final int receiveMessageThrottleTime;
 
     public TorTransportConfig(Path dataDir,
                               int defaultNodePort,
@@ -107,8 +107,8 @@ public class TorTransportConfig implements TransportConfig {
                               boolean isTestNetwork,
                               Set<DirectoryAuthority> directoryAuthorities,
                               Map<String, String> torrcOverrides,
-                              int sendMessageMinThrottleTime,
-                              int receiveMessageMinThrottleTime) {
+                              int sendMessageThrottleTime,
+                              int receiveMessageThrottleTime) {
         this.dataDir = dataDir;
         this.defaultNodePort = defaultNodePort;
         this.bootstrapTimeout = bootstrapTimeout;
@@ -118,7 +118,7 @@ public class TorTransportConfig implements TransportConfig {
         this.isTestNetwork = isTestNetwork;
         this.directoryAuthorities = directoryAuthorities;
         this.torrcOverrides = torrcOverrides;
-        this.sendMessageMinThrottleTime = sendMessageMinThrottleTime;
-        this.receiveMessageMinThrottleTime = receiveMessageMinThrottleTime;
+        this.sendMessageThrottleTime = sendMessageThrottleTime;
+        this.receiveMessageThrottleTime = receiveMessageThrottleTime;
     }
 }

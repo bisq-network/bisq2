@@ -34,8 +34,8 @@ public class ClearNetTransportService implements TransportService {
                     (int) TimeUnit.SECONDS.toMillis(config.getInt("defaultNodeSocketTimeout")),
                     (int) TimeUnit.SECONDS.toMillis(config.getInt("userNodeSocketTimeout")),
                     config.getInt("devModeDelayInMs"),
-                    config.getInt("sendMessageMinThrottleTime"),
-                    config.getInt("receiveMessageMinThrottleTime")
+                    config.getInt("sendMessageThrottleTime"),
+                    config.getInt("receiveMessageThrottleTime")
             );
         }
 
@@ -44,23 +44,23 @@ public class ClearNetTransportService implements TransportService {
         private final int defaultNodeSocketTimeout;
         private final int userNodeSocketTimeout;
         private final int devModeDelayInMs;
-        private final int sendMessageMinThrottleTime;
-        private final int receiveMessageMinThrottleTime;
+        private final int sendMessageThrottleTime;
+        private final int receiveMessageThrottleTime;
 
         public Config(Path dataDir,
                       int defaultNodePort,
                       int defaultNodeSocketTimeout,
                       int userNodeSocketTimeout,
                       int devModeDelayInMs,
-                      int sendMessageMinThrottleTime,
-                      int receiveMessageMinThrottleTime) {
+                      int sendMessageThrottleTime,
+                      int receiveMessageThrottleTime) {
             this.dataDir = dataDir;
             this.defaultNodePort = defaultNodePort;
             this.defaultNodeSocketTimeout = defaultNodeSocketTimeout;
             this.userNodeSocketTimeout = userNodeSocketTimeout;
             this.devModeDelayInMs = devModeDelayInMs;
-            this.sendMessageMinThrottleTime = sendMessageMinThrottleTime;
-            this.receiveMessageMinThrottleTime = receiveMessageMinThrottleTime;
+            this.sendMessageThrottleTime = sendMessageThrottleTime;
+            this.receiveMessageThrottleTime = receiveMessageThrottleTime;
         }
     }
 

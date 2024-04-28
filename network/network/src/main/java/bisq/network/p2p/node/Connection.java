@@ -18,7 +18,6 @@
 package bisq.network.p2p.node;
 
 import bisq.common.util.ExceptionUtil;
-import bisq.common.util.MathUtils;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
 import bisq.network.common.Address;
@@ -90,6 +89,7 @@ public abstract class Connection {
     private final RequestResponseManager requestResponseManager;
 
     private NetworkEnvelopeSocket networkEnvelopeSocket;
+    private final ConnectionThrottle connectionThrottle;
     private final Handler handler;
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     @Nullable
@@ -98,28 +98,20 @@ public abstract class Connection {
     private final Object writeLock = new Object();
     private volatile boolean shutdownStarted;
     private volatile boolean listeningStopped;
-    private volatile long sendMessageTimestamp;
-    private volatile long receiveMessageTimestamp;
-    private final long sendMessageMinThrottleTime;
-    private final long minThrottleTime = 20;
-    private final long maxThrottleTime = 1000;
-    private final long receiveMessageMinThrottleTime;
 
     protected Connection(Socket socket,
                          Capability peersCapability,
                          NetworkLoadSnapshot peersNetworkLoadSnapshot,
                          ConnectionMetrics connectionMetrics,
+                         ConnectionThrottle connectionThrottle,
                          Handler handler,
-                         BiConsumer<Connection, Exception> errorHandler,
-                         long sendMessageMinThrottleTime,
-                         long receiveMessageMinThrottleTime) {
+                         BiConsumer<Connection, Exception> errorHandler) {
         this.peersCapability = peersCapability;
         this.peersNetworkLoadSnapshot = peersNetworkLoadSnapshot;
+        this.connectionThrottle = connectionThrottle;
         this.handler = handler;
         this.connectionMetrics = connectionMetrics;
         requestResponseManager = new RequestResponseManager(connectionMetrics);
-        this.sendMessageMinThrottleTime = sendMessageMinThrottleTime;
-        this.receiveMessageMinThrottleTime = receiveMessageMinThrottleTime;
 
         try {
             PeerSocket peerSocket = new DefaultPeerSocket(socket);
@@ -140,7 +132,7 @@ public abstract class Connection {
                     if (isInputStreamActive()) {
                         checkNotNull(proto, "Proto from NetworkEnvelope.parseDelimitedFrom(inputStream) must not be null");
 
-                        throttleReceiveMessage();
+                        connectionThrottle.throttleReceiveMessage();
 
                         long ts = System.currentTimeMillis();
                         NetworkEnvelope networkEnvelope = NetworkEnvelope.fromProto(proto);
@@ -228,7 +220,7 @@ public abstract class Connection {
             return this;
         }
 
-        throttleSendMessage();
+        connectionThrottle.throttleSendMessage();
 
         requestResponseManager.onSent(envelopePayloadMessage);
 
@@ -267,40 +259,6 @@ public abstract class Connection {
             // We wrap any exception (also expected EOFException in case of connection close), to leave handling of the exception to the caller.
             throw new ConnectionException(exception);
         }
-    }
-
-    private void throttleSendMessage() {
-        long passed = System.currentTimeMillis() - sendMessageTimestamp;
-        double peersLoad = peersNetworkLoadSnapshot.getCurrentNetworkLoad().getLoad();
-        long throttleTime = minThrottleTime + Math.round(sendMessageMinThrottleTime * peersLoad);
-        throttleTime = MathUtils.bounded(minThrottleTime, maxThrottleTime, throttleTime);
-        log.error("throttleSendMessage throttleTime={}, peersLoad={} ", throttleTime, peersLoad);
-        if (passed < throttleTime) {
-            try {
-                long sleepTime = throttleTime - passed;
-                sleepTime = MathUtils.bounded(1, maxThrottleTime, sleepTime);
-                log.warn("Throttle send message with a pause of {} ms", sleepTime);
-                Thread.sleep(sleepTime);
-            } catch (InterruptedException ignore) {
-            }
-        }
-        sendMessageTimestamp = System.currentTimeMillis();
-    }
-
-    private void throttleReceiveMessage() {
-        long passed = System.currentTimeMillis() - receiveMessageTimestamp;
-        long throttleTime = receiveMessageMinThrottleTime;
-        throttleTime = MathUtils.bounded(minThrottleTime, maxThrottleTime, throttleTime);
-        if (passed < throttleTime) {
-            try {
-                long sleepTime = throttleTime - passed;
-                sleepTime = MathUtils.bounded(1, maxThrottleTime, sleepTime);
-                log.warn("Throttle receive message with a pause of {} ms", sleepTime);
-                Thread.sleep(sleepTime);
-            } catch (InterruptedException ignore) {
-            }
-        }
-        receiveMessageTimestamp = System.currentTimeMillis();
     }
 
     void stopListening() {

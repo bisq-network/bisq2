@@ -111,8 +111,8 @@ public class Node implements Connection.Handler {
         private final int defaultNodeSocketTimeout; // in ms
         private final int userNodeSocketTimeout; // in ms
         private final int devModeDelayInMs;
-        private final int sendMessageMinThrottleTime;
-        private final int receiveMessageMinThrottleTime;
+        private final int sendMessageThrottleTime;
+        private final int receiveMessageThrottleTime;
 
         public Config(TransportType transportType,
                       Set<TransportType> supportedTransportTypes,
@@ -121,8 +121,8 @@ public class Node implements Connection.Handler {
                       int defaultNodeSocketTimeout,
                       int userNodeSocketTimeout,
                       int devModeDelayInMs,
-                      int sendMessageMinThrottleTime,
-                      int receiveMessageMinThrottleTime) {
+                      int sendMessageThrottleTime,
+                      int receiveMessageThrottleTime) {
             this.transportType = transportType;
             this.supportedTransportTypes = supportedTransportTypes;
             this.features = features;
@@ -130,8 +130,8 @@ public class Node implements Connection.Handler {
             this.defaultNodeSocketTimeout = defaultNodeSocketTimeout;
             this.userNodeSocketTimeout = userNodeSocketTimeout;
             this.devModeDelayInMs = devModeDelayInMs;
-            this.sendMessageMinThrottleTime = sendMessageMinThrottleTime;
-            this.receiveMessageMinThrottleTime = receiveMessageMinThrottleTime;
+            this.sendMessageThrottleTime = sendMessageThrottleTime;
+            this.receiveMessageThrottleTime = receiveMessageThrottleTime;
         }
     }
 
@@ -167,8 +167,7 @@ public class Node implements Connection.Handler {
     public final Observable<State> observableState = new Observable<>(State.NEW);
     @Getter
     public final NetworkLoadSnapshot networkLoadSnapshot;
-    private final int sendMessageMinThrottleTime;
-    private final int receiveMessageMinThrottleTime;
+    private final Config config;
 
     public Node(NetworkId networkId,
                 boolean isDefaultNode,
@@ -181,13 +180,12 @@ public class Node implements Connection.Handler {
         this.networkId = networkId;
         keyBundle = keyBundleService.getOrCreateKeyBundle(networkId.getKeyId());
         this.isDefaultNode = isDefaultNode;
+        this.config = config;
         transportType = config.getTransportType();
         supportedTransportTypes = config.getSupportedTransportTypes();
         features = config.getFeatures();
         socketTimeout = isDefaultNode ? config.getDefaultNodeSocketTimeout() : config.getUserNodeSocketTimeout();
         devModeDelayInMs = config.getDevModeDelayInMs();
-        sendMessageMinThrottleTime = config.getSendMessageMinThrottleTime();
-        receiveMessageMinThrottleTime = config.getReceiveMessageMinThrottleTime();
         this.banList = banList;
         this.transportService = transportService;
         this.authorizationService = authorizationService;
@@ -282,15 +280,16 @@ public class Node implements Connection.Handler {
                 return;
             }
 
+            NetworkLoadSnapshot peersNetworkLoadSnapshot = new NetworkLoadSnapshot(result.getPeersNetworkLoad());
+            ConnectionThrottle connectionThrottle = new ConnectionThrottle(peersNetworkLoadSnapshot, networkLoadSnapshot, config);
             InboundConnection connection = new InboundConnection(socket,
                     serverSocketResult,
                     result.getCapability(),
-                    new NetworkLoadSnapshot(result.getPeersNetworkLoad()),
+                    peersNetworkLoadSnapshot,
                     result.getConnectionMetrics(),
+                    connectionThrottle,
                     this,
-                    this::handleException,
-                    sendMessageMinThrottleTime,
-                    receiveMessageMinThrottleTime);
+                    this::handleException);
             inboundConnectionsByAddress.put(connection.getPeerAddress(), connection);
             DISPATCHER.submit(() -> listeners.forEach(listener -> {
                 try {
@@ -443,15 +442,16 @@ public class Node implements Connection.Handler {
                 log.info("We create an outbound connection to {} from a user node. node={}", address, getNodeInfo());
             }
 
+            NetworkLoadSnapshot peersNetworkLoadSnapshot = new NetworkLoadSnapshot(result.getPeersNetworkLoad());
+            ConnectionThrottle connectionThrottle = new ConnectionThrottle(peersNetworkLoadSnapshot, networkLoadSnapshot, config);
             OutboundConnection connection = new OutboundConnection(socket,
                     address,
                     result.getCapability(),
-                    new NetworkLoadSnapshot(result.getPeersNetworkLoad()),
+                    peersNetworkLoadSnapshot,
                     result.getConnectionMetrics(),
+                    connectionThrottle,
                     this,
-                    this::handleException,
-                    sendMessageMinThrottleTime,
-                    receiveMessageMinThrottleTime);
+                    this::handleException);
             outboundConnectionsByAddress.put(address, connection);
             DISPATCHER.submit(() -> listeners.forEach(listener -> {
                 try {
