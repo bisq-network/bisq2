@@ -314,6 +314,10 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         }
     }
 
+    void onSelectOfferMessageItem(OfferMessageItem item) {
+        chatMessageContainerController.highlightOfferChatMessage(item == null ? null : item.getMessage());
+    }
+
     double getMarketSelectionListCellHeight() {
         return MARKET_SELECTION_LIST_CELL_HEIGHT;
     }

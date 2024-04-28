@@ -56,6 +56,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -513,6 +514,18 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
 
     void onScrollToBottom() {
         applyScrollValue(1);
+    }
+
+    public void highlightOfferChatMessage(@Nullable ChatMessage message) {
+        model.getChatMessages().stream()
+                .filter(ChatMessageListItem::isBisqEasyPublicChatMessageWithOffer)
+                .forEach(item -> {
+                    boolean shouldHighlightMessage = message != null && Objects.equals(item.getChatMessage(), message);
+                    item.getShowHighlighted().set(shouldHighlightMessage);
+                    if (shouldHighlightMessage) {
+                        view.scrollToChatMessage(item);
+                    }
+                });
     }
 
 

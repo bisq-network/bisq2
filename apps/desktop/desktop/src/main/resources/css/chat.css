@@ -231,7 +231,6 @@
 .chat-my-offer-message-bg {
     -fx-padding: 20 20 15 30;
 }
-/* ... */
 
 .create-offer-message-my-offer {
     -fx-background-color: -bisq-dark-grey-10;
@@ -240,6 +239,13 @@
 
 .create-offer-box-my-offer {
     -fx-background-color: -bisq-dark-grey-40;
+}
+/* ... */
+
+.highlighted-message-bg {
+    -fx-border-width: 2px;
+    -fx-border-color: -bisq2-green;
+    -fx-border-radius: 8;
 }
 
 .trade-wizard-feedback-bg {

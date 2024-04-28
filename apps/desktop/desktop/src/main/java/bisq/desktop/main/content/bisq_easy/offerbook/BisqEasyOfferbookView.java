@@ -65,7 +65,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     private Subscription marketsTableViewSelectionPin, selectedModelItemPin, channelHeaderIconPin, selectedMarketFilterPin,
             selectedOfferDirectionOrOwnerFilterPin, selectedPeerReputationFilterPin, selectedMarketSortTypePin,
             marketSelectorSearchPin, favouritesTableViewHeightPin, favouritesTableViewSelectionPin,
-            shouldShowAppliedFiltersPin;
+            shouldShowAppliedFiltersPin, offerListTableViewSelectionPin;
     private Button createOfferButton;
     private DropdownMenu sortAndFilterMarketsMenu, filterOffersByDirectionOrOwnerMenu, filterOffersByPeerReputationMenu;
     private DropdownSortByMenuItem sortByMostOffers, sortByNameAZ, sortByNameZA;
@@ -169,6 +169,10 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         shouldShowAppliedFiltersPin = EasyBind.subscribe(getModel().getShouldShowAppliedFilters(),
                 this::updateAppliedFiltersSectionStyles);
 
+        offerListTableViewSelectionPin = EasyBind.subscribe(offerListTableView.getSelectionModel().selectedItemProperty(), item -> {
+           getController().onSelectOfferMessageItem(item);
+        });
+
         sortByMostOffers.setOnAction(e -> getController().onSortMarkets(MarketSortType.NUM_OFFERS));
         sortByNameAZ.setOnAction(e -> getController().onSortMarkets(MarketSortType.ASC));
         sortByNameZA.setOnAction(e -> getController().onSortMarkets(MarketSortType.DESC));
@@ -228,6 +232,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         selectedMarketSortTypePin.unsubscribe();
         favouritesTableViewHeightPin.unsubscribe();
         shouldShowAppliedFiltersPin.unsubscribe();
+        offerListTableViewSelectionPin.unsubscribe();
 
         sortByMostOffers.setOnAction(null);
         sortByNameAZ.setOnAction(null);
@@ -600,7 +605,6 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     }
 
     private void configOffersTableView(BisqTableView<OfferMessageItem> tableView) {
-        // TODO: Add selection logic
         BisqTableColumn<OfferMessageItem> userProfileTableColumn = new BisqTableColumn.Builder<OfferMessageItem>()
                 .title(Res.get("bisqEasy.offerbook.offerList.table.columns.peerProfile"))
                 .left()

@@ -24,6 +24,7 @@ import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import lombok.Getter;
 
+import javax.annotation.Nullable;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -111,6 +112,10 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
 
     public void setBisqEasyPeerReputationFilterPredicate(Predicate<? super ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate) {
         chatMessagesListController.setBisqEasyPeerReputationFilterPredicate(predicate);
+    }
+
+    public void highlightOfferChatMessage(@Nullable ChatMessage message) {
+        chatMessagesListController.highlightOfferChatMessage(message);
     }
 
 
