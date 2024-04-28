@@ -38,8 +38,16 @@ public class InboundConnection extends Connection {
                       ConnectionMetrics connectionMetrics,
                       Handler handler,
                       BiConsumer<Connection, Exception> errorHandler,
-                      long sendMessageMinThrottleTime) {
-        super(socket, peersCapability, peersNetworkLoadSnapshot, connectionMetrics, handler, errorHandler, sendMessageMinThrottleTime);
+                      long sendMessageMinThrottleTime,
+                      long receiveMessageMinThrottleTime) {
+        super(socket,
+                peersCapability,
+                peersNetworkLoadSnapshot,
+                connectionMetrics,
+                handler,
+                errorHandler,
+                sendMessageMinThrottleTime,
+                receiveMessageMinThrottleTime);
         this.serverSocketResult = serverSocketResult;
         log.debug("Create inboundConnection from server: {}", serverSocketResult);
     }

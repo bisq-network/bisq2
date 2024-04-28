@@ -112,6 +112,7 @@ public class Node implements Connection.Handler {
         private final int userNodeSocketTimeout; // in ms
         private final int devModeDelayInMs;
         private final int sendMessageMinThrottleTime;
+        private final int receiveMessageMinThrottleTime;
 
         public Config(TransportType transportType,
                       Set<TransportType> supportedTransportTypes,
@@ -120,7 +121,8 @@ public class Node implements Connection.Handler {
                       int defaultNodeSocketTimeout,
                       int userNodeSocketTimeout,
                       int devModeDelayInMs,
-                      int sendMessageMinThrottleTime) {
+                      int sendMessageMinThrottleTime,
+                      int receiveMessageMinThrottleTime) {
             this.transportType = transportType;
             this.supportedTransportTypes = supportedTransportTypes;
             this.features = features;
@@ -129,6 +131,7 @@ public class Node implements Connection.Handler {
             this.userNodeSocketTimeout = userNodeSocketTimeout;
             this.devModeDelayInMs = devModeDelayInMs;
             this.sendMessageMinThrottleTime = sendMessageMinThrottleTime;
+            this.receiveMessageMinThrottleTime = receiveMessageMinThrottleTime;
         }
     }
 
@@ -165,6 +168,7 @@ public class Node implements Connection.Handler {
     @Getter
     public final NetworkLoadSnapshot networkLoadSnapshot;
     private final int sendMessageMinThrottleTime;
+    private final int receiveMessageMinThrottleTime;
 
     public Node(NetworkId networkId,
                 boolean isDefaultNode,
@@ -183,6 +187,7 @@ public class Node implements Connection.Handler {
         socketTimeout = isDefaultNode ? config.getDefaultNodeSocketTimeout() : config.getUserNodeSocketTimeout();
         devModeDelayInMs = config.getDevModeDelayInMs();
         sendMessageMinThrottleTime = config.getSendMessageMinThrottleTime();
+        receiveMessageMinThrottleTime = config.getReceiveMessageMinThrottleTime();
         this.banList = banList;
         this.transportService = transportService;
         this.authorizationService = authorizationService;
@@ -284,7 +289,8 @@ public class Node implements Connection.Handler {
                     result.getConnectionMetrics(),
                     this,
                     this::handleException,
-                    sendMessageMinThrottleTime);
+                    sendMessageMinThrottleTime,
+                    receiveMessageMinThrottleTime);
             inboundConnectionsByAddress.put(connection.getPeerAddress(), connection);
             DISPATCHER.submit(() -> listeners.forEach(listener -> {
                 try {
@@ -444,7 +450,8 @@ public class Node implements Connection.Handler {
                     result.getConnectionMetrics(),
                     this,
                     this::handleException,
-                    sendMessageMinThrottleTime);
+                    sendMessageMinThrottleTime,
+                    receiveMessageMinThrottleTime);
             outboundConnectionsByAddress.put(address, connection);
             DISPATCHER.submit(() -> listeners.forEach(listener -> {
                 try {

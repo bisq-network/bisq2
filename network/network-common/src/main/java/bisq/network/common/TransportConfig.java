@@ -33,4 +33,6 @@ public interface TransportConfig {
     }
 
     int getSendMessageMinThrottleTime(); // in ms
+
+    int getReceiveMessageMinThrottleTime(); // in ms
 }

@@ -42,7 +42,8 @@ public class I2PTransportService implements TransportService {
                     config.getInt("i2cpPort"),
                     config.getBoolean("embeddedRouter"),
                     config.getBoolean("extendedI2pLogging"),
-                    config.getInt("sendMessageMinThrottleTime"));
+                    config.getInt("sendMessageMinThrottleTime"),
+                    config.getInt("receiveMessageMinThrottleTime"));
         }
 
         private final int defaultNodePort;
@@ -57,6 +58,7 @@ public class I2PTransportService implements TransportService {
         private final Path dataDir;
         private final boolean extendedI2pLogging;
         private final int sendMessageMinThrottleTime;
+        private final int receiveMessageMinThrottleTime;
 
         public Config(Path dataDir,
                       int defaultNodePort,
@@ -69,7 +71,8 @@ public class I2PTransportService implements TransportService {
                       int i2cpPort,
                       boolean embeddedRouter,
                       boolean extendedI2pLogging,
-                      int sendMessageMinThrottleTime) {
+                      int sendMessageMinThrottleTime,
+                      int receiveMessageMinThrottleTime) {
             this.dataDir = dataDir;
             this.defaultNodePort = defaultNodePort;
             this.defaultNodeSocketTimeout = defaultNodeSocketTimeout;
@@ -82,6 +85,7 @@ public class I2PTransportService implements TransportService {
             this.embeddedRouter = embeddedRouter;
             this.extendedI2pLogging = extendedI2pLogging;
             this.sendMessageMinThrottleTime = sendMessageMinThrottleTime;
+            this.receiveMessageMinThrottleTime = receiveMessageMinThrottleTime;
         }
     }
 

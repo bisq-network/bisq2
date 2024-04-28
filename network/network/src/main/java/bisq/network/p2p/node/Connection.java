@@ -101,7 +101,7 @@ public abstract class Connection {
     private volatile long sendMessageTimestamp;
     private volatile long receiveMessageTimestamp;
     private final long sendMessageMinThrottleTime;
-    private volatile long receiveMessageMinThrottleTime;
+    private final long receiveMessageMinThrottleTime;
 
     protected Connection(Socket socket,
                          Capability peersCapability,
@@ -109,13 +109,15 @@ public abstract class Connection {
                          ConnectionMetrics connectionMetrics,
                          Handler handler,
                          BiConsumer<Connection, Exception> errorHandler,
-                         long sendMessageMinThrottleTime) {
+                         long sendMessageMinThrottleTime,
+                         long receiveMessageMinThrottleTime) {
         this.peersCapability = peersCapability;
         this.peersNetworkLoadSnapshot = peersNetworkLoadSnapshot;
         this.handler = handler;
         this.connectionMetrics = connectionMetrics;
         requestResponseManager = new RequestResponseManager(connectionMetrics);
         this.sendMessageMinThrottleTime = sendMessageMinThrottleTime;
+        this.receiveMessageMinThrottleTime = receiveMessageMinThrottleTime;
 
         try {
             PeerSocket peerSocket = new DefaultPeerSocket(socket);
@@ -270,6 +272,7 @@ public abstract class Connection {
         if (passed < sendMessageMinThrottleTime) {
             try {
                 long sleepTime = MathUtils.bounded(1, 1000, sendMessageMinThrottleTime - passed);
+                log.warn("Throttle send message with a pause of {} ms", sleepTime);
                 Thread.sleep(sleepTime);
             } catch (InterruptedException ignore) {
             }
@@ -282,6 +285,7 @@ public abstract class Connection {
         if (passed < receiveMessageMinThrottleTime) {
             try {
                 long sleepTime = MathUtils.bounded(1, 1000, receiveMessageMinThrottleTime - passed);
+                log.warn("Throttle receive message with a pause of {} ms", sleepTime);
                 Thread.sleep(sleepTime);
             } catch (InterruptedException ignore) {
             }
