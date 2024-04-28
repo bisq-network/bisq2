@@ -99,7 +99,9 @@ public abstract class Connection {
     private volatile boolean shutdownStarted;
     private volatile boolean listeningStopped;
     private volatile long sendMessageTimestamp;
+    private volatile long receiveMessageTimestamp;
     private final long sendMessageMinThrottleTime;
+    private volatile long receiveMessageMinThrottleTime;
 
     protected Connection(Socket socket,
                          Capability peersCapability,
@@ -133,6 +135,9 @@ public abstract class Connection {
                     // parsing might need some time wo we check again if connection is still active
                     if (isInputStreamActive()) {
                         checkNotNull(proto, "Proto from NetworkEnvelope.parseDelimitedFrom(inputStream) must not be null");
+
+                        throttleReceiveMessage();
+
                         long ts = System.currentTimeMillis();
                         NetworkEnvelope networkEnvelope = NetworkEnvelope.fromProto(proto);
                         long deserializeTime = System.currentTimeMillis() - ts;
@@ -219,7 +224,7 @@ public abstract class Connection {
             return this;
         }
 
-        throttle();
+        throttleSendMessage();
 
         requestResponseManager.onSent(envelopePayloadMessage);
 
@@ -260,16 +265,28 @@ public abstract class Connection {
         }
     }
 
-    private void throttle() {
-        long passedSinceLastSend = System.currentTimeMillis() - sendMessageTimestamp;
-        if (passedSinceLastSend < sendMessageMinThrottleTime) {
+    private void throttleSendMessage() {
+        long passed = System.currentTimeMillis() - sendMessageTimestamp;
+        if (passed < sendMessageMinThrottleTime) {
             try {
-                long sleepTime = MathUtils.bounded(1, 1000, sendMessageMinThrottleTime - passedSinceLastSend);
+                long sleepTime = MathUtils.bounded(1, 1000, sendMessageMinThrottleTime - passed);
                 Thread.sleep(sleepTime);
             } catch (InterruptedException ignore) {
             }
         }
         sendMessageTimestamp = System.currentTimeMillis();
+    }
+
+    private void throttleReceiveMessage() {
+        long passed = System.currentTimeMillis() - receiveMessageTimestamp;
+        if (passed < receiveMessageMinThrottleTime) {
+            try {
+                long sleepTime = MathUtils.bounded(1, 1000, receiveMessageMinThrottleTime - passed);
+                Thread.sleep(sleepTime);
+            } catch (InterruptedException ignore) {
+            }
+        }
+        receiveMessageTimestamp = System.currentTimeMillis();
     }
 
     void stopListening() {
