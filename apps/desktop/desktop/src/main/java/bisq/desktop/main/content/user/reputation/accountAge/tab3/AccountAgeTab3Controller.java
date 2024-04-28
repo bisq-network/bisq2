@@ -98,14 +98,21 @@ public class AccountAgeTab3Controller implements Controller {
     }
 
     public void onRequestAuthorization() {
-        String signedMessage = model.getJsonData().get();
-        if (signedMessage.startsWith(PREFIX)) {
-            signedMessage = signedMessage.replace(PREFIX, "");
+        String jsonData = model.getJsonData().get();
+        if (jsonData.startsWith(PREFIX)) {
+            jsonData = jsonData.replace(PREFIX, "");
         }
 
-        boolean success = accountAgeService.requestAuthorization(signedMessage);
+        boolean success = accountAgeService.requestAuthorization(jsonData);
         if (success) {
             new Popup().information(Res.get("user.reputation.request.success"))
+                    .animationType(Overlay.AnimationType.SlideDownFromCenterTop)
+                    .transitionsType(Transitions.Type.LIGHT_BLUR_LIGHT)
+                    .owner(popupOwner)
+                    .onClose(this::onClose)
+                    .show();
+        } else {
+            new Popup().warning(Res.get("user.reputation.request.error", jsonData))
                     .animationType(Overlay.AnimationType.SlideDownFromCenterTop)
                     .transitionsType(Transitions.Type.LIGHT_BLUR_LIGHT)
                     .owner(popupOwner)
