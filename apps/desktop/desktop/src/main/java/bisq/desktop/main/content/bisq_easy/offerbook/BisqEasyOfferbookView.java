@@ -614,8 +614,8 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         VBox.setVgrow(offerListTableView, Priority.ALWAYS);
 
         offerList = new VBox(header, Layout.hLine(), subheader, offerListTableView);
-        offerList.setPrefWidth(468);
-        offerList.setMinWidth(468);
+        offerList.setPrefWidth(438);
+        offerList.setMinWidth(438);
         offerList.setFillWidth(true);
         offerList.getStyleClass().add("chat-container");
     }
@@ -667,7 +667,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
 
         BisqTableColumn<OfferMessageItem> fiatAmountTableColumn = new BisqTableColumn.Builder<OfferMessageItem>()
                 .left()
-                .fixWidth(200)
+                .fixWidth(170)
                 .setCellFactory(BisqEasyOfferbookUtil.getOfferMessageFiatAmountCellFactory())
                 .comparator(Comparator.comparing(OfferMessageItem::getMinAmount))
                 .isSortable(true)
