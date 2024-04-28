@@ -310,6 +310,7 @@
 
 .offers-list.table-view .column-header .label {
     -fx-alignment: center-left;
+    -fx-label-padding: 0 7;
 }
 
 .create-offer-button {

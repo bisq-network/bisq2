@@ -591,15 +591,15 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         VBox.setVgrow(offerListTableView, Priority.ALWAYS);
 
         offerList = new VBox(header, Layout.hLine(), subheader, offerListTableView);
-        offerList.setPrefWidth(483);
-        offerList.setMinWidth(483);
+        offerList.setPrefWidth(468);
+        offerList.setMinWidth(468);
         offerList.setFillWidth(true);
         offerList.getStyleClass().add("chat-container");
     }
 
     private void configOffersTableView(BisqTableView<OfferMessageItem> tableView) {
-        // TODO: Work out the exact widths
         // TODO: Add comparator for sorting
+        // TODO: Add selection logic
         BisqTableColumn<OfferMessageItem> userProfileTableColumn = new BisqTableColumn.Builder<OfferMessageItem>()
                 .title(Res.get("bisqEasy.offerbook.offerList.table.columns.peerProfile"))
                 .left()
@@ -621,12 +621,12 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
                 .build();
 
         BisqTableColumn<OfferMessageItem> fiatAmountTableColumn = new BisqTableColumn.Builder<OfferMessageItem>()
-                .title(Res.get("bisqEasy.offerbook.offerList.table.columns.fiatAmount"))
                 .left()
                 .fixWidth(200)
                 .setCellFactory(BisqEasyOfferbookUtil.getOfferMessageFiatAmountCellFactory())
                 .isSortable(true)
                 .build();
+        fiatAmountTableColumn.applyTitleProperty(getModel().getFiatAmountTitle());
 
         tableView.getColumns().add(tableView.getSelectionMarkerColumn());
         tableView.getColumns().add(userProfileTableColumn);

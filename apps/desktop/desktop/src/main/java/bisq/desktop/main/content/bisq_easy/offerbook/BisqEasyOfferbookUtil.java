@@ -11,6 +11,7 @@ import bisq.i18n.Res;
 import bisq.presentation.formatters.PercentageFormatter;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.StringExpression;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.control.*;
@@ -188,6 +189,7 @@ public class BisqEasyOfferbookUtil {
 
             {
                 userNameLabel.setId("chat-user-name");
+                HBox.setMargin(userProfileIcon, new Insets(0, 0, 0, -1));
                 nameAndReputationBox.setAlignment(Pos.CENTER_LEFT);
                 userProfileBox.setAlignment(Pos.CENTER_LEFT);
             }

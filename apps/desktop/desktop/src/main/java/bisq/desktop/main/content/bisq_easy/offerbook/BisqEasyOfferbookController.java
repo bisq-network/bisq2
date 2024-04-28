@@ -38,6 +38,7 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardController;
 import bisq.desktop.main.content.chat.ChatController;
 import bisq.desktop.main.content.components.MarketImageComposition;
+import bisq.i18n.Res;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.settings.CookieKey;
@@ -284,6 +285,8 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                         market.getBaseCurrencyCode().toLowerCase(),
                         market.getQuoteCurrencyCode().toLowerCase());
                 model.getChannelIconNode().set(marketsImage);
+
+                model.getFiatAmountTitle().set(Res.get("bisqEasy.offerbook.offerList.table.columns.fiatAmount", channel.getMarket().getQuoteCurrencyCode()).toUpperCase());
 
                 updateMarketPrice();
                 bindOfferMessages(channel);
