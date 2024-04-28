@@ -611,9 +611,13 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         BisqTableColumn<OfferMessageItem> priceTableColumn = new BisqTableColumn.Builder<OfferMessageItem>()
                 .title(Res.get("bisqEasy.offerbook.offerList.table.columns.price"))
                 .right()
-                .fixWidth(80)
+                .fixWidth(75)
                 .setCellFactory(BisqEasyOfferbookUtil.getOfferMessagePriceCellFactory())
                 .isSortable(true)
+                .build();
+
+        BisqTableColumn<OfferMessageItem> spacerColumn = new BisqTableColumn.Builder<OfferMessageItem>()
+                .fixWidth(20)
                 .build();
 
         BisqTableColumn<OfferMessageItem> fiatAmountTableColumn = new BisqTableColumn.Builder<OfferMessageItem>()
@@ -627,6 +631,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         tableView.getColumns().add(tableView.getSelectionMarkerColumn());
         tableView.getColumns().add(userProfileTableColumn);
         tableView.getColumns().add(priceTableColumn);
+        tableView.getColumns().add(spacerColumn);
         tableView.getColumns().add(fiatAmountTableColumn);
     }
 

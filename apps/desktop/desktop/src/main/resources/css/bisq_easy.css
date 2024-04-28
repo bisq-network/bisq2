@@ -303,9 +303,13 @@
     -fx-opacity: 1;
 }
 
-.offers-list {
+.offers-list.table-view {
     -fx-background-insets: 0;
     -fx-padding: 0;
+}
+
+.offers-list.table-view .column-header .label {
+    -fx-alignment: center-left;
 }
 
 .create-offer-button {
