@@ -591,8 +591,8 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         VBox.setVgrow(offerListTableView, Priority.ALWAYS);
 
         offerList = new VBox(header, Layout.hLine(), subheader, offerListTableView);
-        offerList.setPrefWidth(410);
-        offerList.setMinWidth(410);
+        offerList.setPrefWidth(483);
+        offerList.setMinWidth(483);
         offerList.setFillWidth(true);
         offerList.getStyleClass().add("chat-container");
     }
@@ -603,7 +603,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         BisqTableColumn<OfferMessageItem> userProfileTableColumn = new BisqTableColumn.Builder<OfferMessageItem>()
                 .title(Res.get("bisqEasy.offerbook.offerList.table.columns.peerProfile"))
                 .left()
-                .fixWidth(150)
+                .fixWidth(170)
                 .setCellFactory(BisqEasyOfferbookUtil.getOfferMessageUserProfileCellFactory())
                 .isSortable(true)
                 .build();

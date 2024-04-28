@@ -23,20 +23,16 @@ import bisq.common.data.Pair;
 import bisq.common.monetary.Monetary;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.main.content.components.ReputationScoreDisplay;
 import bisq.offer.amount.OfferAmountFormatter;
 import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.PriceUtil;
 import bisq.user.profile.UserProfile;
-import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.Optional;
 
 @Slf4j
 @Getter
@@ -45,32 +41,26 @@ public class OfferMessageItem {
     private final BisqEasyOfferbookMessage message;
     private final BisqEasyOffer offer;
     private final MarketPriceService marketPriceService;
-
-    private final Optional<UserProfile> senderUserProfile;
-    private final String nickName;
+    private final UserProfile userProfile;
+    private final String userNickname;
     private final Pair<Monetary, Monetary> minMaxAmount;
     private final String minMaxAmountAsString;
-
-    @EqualsAndHashCode.Exclude
     private final ReputationScore reputationScore;
-    @EqualsAndHashCode.Exclude
-    private final ReputationScoreDisplay reputationScoreDisplay = new ReputationScoreDisplay();
 
     private Pin marketPriceByCurrencyMapPin;
     private double priceSpecAsPercent;
 
     OfferMessageItem(BisqEasyOfferbookMessage message,
                      BisqEasyOffer offer,
-                     UserProfileService userProfileService,
+                     UserProfile userProfile,
                      ReputationService reputationService,
                      MarketPriceService marketPriceService) {
         this.message = message;
         this.offer = offer;
+        this.userProfile = userProfile;
         this.marketPriceService = marketPriceService;
-        senderUserProfile = userProfileService.findUserProfile(message.getAuthorUserProfileId());
-        nickName = senderUserProfile.map(UserProfile::getNickName).orElse("");
-        reputationScore = senderUserProfile.flatMap(reputationService::findReputationScore).orElse(ReputationScore.NONE);
-        reputationScoreDisplay.setReputationScore(reputationScore);
+        userNickname = userProfile.getNickName();
+        reputationScore = reputationService.findReputationScore(userProfile.getId()).orElse(ReputationScore.NONE);
         minMaxAmount = retrieveMinMaxAmount();
         minMaxAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, offer, false);
 

@@ -42,6 +42,7 @@ import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
+import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationService;
 import javafx.collections.ListChangeListener;
 import javafx.collections.SetChangeListener;
@@ -363,11 +364,14 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         offerMessagesPin = channel.getChatMessages().addObserver(new CollectionObserver<>() {
             @Override
             public void add(BisqEasyOfferbookMessage element) {
-                boolean shouldAddOfferMessage = element.hasBisqEasyOffer() && element.getBisqEasyOffer().isPresent();
+                Optional<UserProfile> userProfile = userProfileService.findUserProfile(element.getAuthorUserProfileId());
+                boolean shouldAddOfferMessage = element.hasBisqEasyOffer()
+                        && element.getBisqEasyOffer().isPresent()
+                        && userProfile.isPresent();
                 if (shouldAddOfferMessage) {
                     UIThread.run(() -> {
                         OfferMessageItem item = new OfferMessageItem(element, element.getBisqEasyOffer().get(),
-                                userProfileService, reputationService, marketPriceService);
+                                userProfile.get(), reputationService, marketPriceService);
                         model.getOfferMessageItems().add(item);
                     });
                 }
