@@ -994,38 +994,27 @@ public class Transitions {
         return settingsService.getUseAnimations().get();
     }
 
-    public static void expansionAnimation(Pane boxToMinimize, Pane boxToExpand, double initialWidth, double finalWidth) {
-        expansionAnimation(boxToMinimize, boxToExpand, initialWidth, finalWidth, null);
+    public static void expansionAnimation(Pane pane, double initialWidth, double finalWidth) {
+        expansionAnimation(pane, initialWidth, finalWidth, null);
     }
 
-    public static void expansionAnimation(Pane boxToMinimize, Pane boxToExpand, double initialWidth, double finalWidth,
-                                          @Nullable Runnable finishedHandler) {
-        Timeline marginExpansion = new Timeline(
-                new KeyFrame(Duration.millis(0),
-                        new KeyValue(boxToMinimize.translateXProperty(), 9)
-                ),
-                new KeyFrame(Duration.millis(100),
-                        new KeyValue(boxToMinimize.translateXProperty(), 0)
-                )
-        );
-
+    public static void expansionAnimation(Pane pane, double initialWidth, double finalWidth, @Nullable Runnable finishedHandler) {
         Timeline widthExpansion = new Timeline(
                 new KeyFrame(Duration.millis(0),
-                        new KeyValue(boxToExpand.prefWidthProperty(), initialWidth),
-                        new KeyValue(boxToExpand.minWidthProperty(), initialWidth),
-                        new KeyValue(boxToExpand.maxWidthProperty(), initialWidth)
+                        new KeyValue(pane.prefWidthProperty(), initialWidth),
+                        new KeyValue(pane.minWidthProperty(), initialWidth),
+                        new KeyValue(pane.maxWidthProperty(), initialWidth)
                 ),
-                new KeyFrame(Duration.millis(300),
-                        new KeyValue(boxToExpand.prefWidthProperty(), finalWidth),
-                        new KeyValue(boxToExpand.minWidthProperty(), finalWidth),
-                        new KeyValue(boxToExpand.maxWidthProperty(), finalWidth)
+                new KeyFrame(Duration.millis(200),
+                        new KeyValue(pane.prefWidthProperty(), finalWidth),
+                        new KeyValue(pane.minWidthProperty(), finalWidth),
+                        new KeyValue(pane.maxWidthProperty(), finalWidth)
                 )
         );
 
-        ParallelTransition transition = new ParallelTransition(marginExpansion, widthExpansion);
-        transition.play();
+        widthExpansion.play();
         if (finishedHandler != null) {
-            transition.setOnFinished(actionEvent -> finishedHandler.run());
+            widthExpansion.setOnFinished(actionEvent -> finishedHandler.run());
         }
     }
 }
