@@ -756,6 +756,18 @@
     -fx-image: url("/images/icons/sort-white.png");
 }
 
+#list-view-green {
+    -fx-image: url("/images/icons/list-view-green.png");
+}
+
+#list-view-white {
+    -fx-image: url("/images/icons/list-view-white.png");
+}
+
+#list-view-grey {
+    -fx-image: url("/images/icons/list-view-grey.png");
+}
+
 
 /* ------------------------------------------------------------------------------------ */
 /* Chat */
