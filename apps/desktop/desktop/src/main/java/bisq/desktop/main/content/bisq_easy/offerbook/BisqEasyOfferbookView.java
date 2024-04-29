@@ -86,7 +86,8 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
             marketSelectionListTitle;
     private HBox appliedFiltersSection, withOffersDisplayHint, onlyFavouritesDisplayHint;
     private ImageView withOffersRemoveFilterDefaultIcon, withOffersRemoveFilterActiveIcon,
-            favouritesRemoveFilterDefaultIcon, favouritesRemoveFilterActiveIcon;
+            favouritesRemoveFilterDefaultIcon, favouritesRemoveFilterActiveIcon, marketsGreenIcon, marketsGreyIcon,
+            marketsWhiteIcon, offerListGreenIcon, offerListGreyIcon, offerListWhiteIcon;
 
     public BisqEasyOfferbookView(BisqEasyOfferbookModel model,
                                  BisqEasyOfferbookController controller,
@@ -236,17 +237,28 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         offerListTitle.setOnMouseClicked(e ->
             Transitions.expansionAnimation(offerList, EXPANDED_OFFER_LIST_WIDTH, COLLAPSED_LIST_WIDTH + 20,
                     () -> getController().toggleOfferList()));
+        offerListTitle.setOnMouseEntered(e -> offerListTitle.setGraphic(offerListWhiteIcon));
+        offerListTitle.setOnMouseExited(e -> offerListTitle.setGraphic(offerListGreenIcon));
+
         collapsedOfferListTitle.setOnMouseClicked(e -> {
             getController().toggleOfferList();
             Transitions.expansionAnimation(offerList, COLLAPSED_LIST_WIDTH + 20, EXPANDED_OFFER_LIST_WIDTH);
         });
+        collapsedOfferListTitle.setOnMouseEntered(e -> collapsedOfferListTitle.setGraphic(offerListWhiteIcon));
+        collapsedOfferListTitle.setOnMouseExited(e -> collapsedOfferListTitle.setGraphic(offerListGreyIcon));
+
         marketSelectionListTitle.setOnMouseClicked(e ->
             Transitions.expansionAnimation(marketSelectionList, EXPANDED_MARKET_SELECTION_LIST_WIDTH,
                     COLLAPSED_LIST_WIDTH, () -> getController().toggleMarketSelectionList()));
+        marketSelectionListTitle.setOnMouseEntered(e -> marketSelectionListTitle.setGraphic(marketsWhiteIcon));
+        marketSelectionListTitle.setOnMouseExited(e -> marketSelectionListTitle.setGraphic(marketsGreenIcon));
+
         collapsedMarketSelectionListTitle.setOnMouseClicked(e -> {
             getController().toggleMarketSelectionList();
             Transitions.expansionAnimation(marketSelectionList, COLLAPSED_LIST_WIDTH, EXPANDED_MARKET_SELECTION_LIST_WIDTH);
         });
+        collapsedMarketSelectionListTitle.setOnMouseEntered(e -> collapsedMarketSelectionListTitle.setGraphic(marketsWhiteIcon));
+        collapsedMarketSelectionListTitle.setOnMouseExited(e -> collapsedMarketSelectionListTitle.setGraphic(marketsGreyIcon));
     }
 
     @Override
@@ -319,9 +331,20 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         onlyFavouritesDisplayHint.setOnMouseExited(null);
 
         offerListTitle.setOnMouseClicked(null);
+        offerListTitle.setOnMouseEntered(null);
+        offerListTitle.setOnMouseExited(null);
+
         collapsedOfferListTitle.setOnMouseClicked(null);
+        collapsedOfferListTitle.setOnMouseEntered(null);
+        collapsedOfferListTitle.setOnMouseExited(null);
+
         marketSelectionListTitle.setOnMouseClicked(null);
+        marketSelectionListTitle.setOnMouseEntered(null);
+        marketSelectionListTitle.setOnMouseExited(null);
+
         collapsedMarketSelectionListTitle.setOnMouseClicked(null);
+        collapsedMarketSelectionListTitle.setOnMouseEntered(null);
+        collapsedMarketSelectionListTitle.setOnMouseExited(null);
 
         getModel().getFavouriteMarketChannelItems().removeListener(listChangeListener);
     }
@@ -371,7 +394,11 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     }
 
     private void addMarketSelectionList() {
-        marketSelectionListTitle = new Label(Res.get("bisqEasy.offerbook.markets"), ImageUtil.getImageViewById("market-grey"));
+        marketsGreenIcon = ImageUtil.getImageViewById("market-green");
+        marketsGreyIcon = ImageUtil.getImageViewById("market-grey");
+        marketsWhiteIcon = ImageUtil.getImageViewById("market-white");
+
+        marketSelectionListTitle = new Label(Res.get("bisqEasy.offerbook.markets"), marketsGreenIcon);
         marketSelectionListTitle.setCursor(Cursor.HAND);
         marketSelectionListTitle.setTooltip(new BisqTooltip(Res.get("bisqEasy.offerbook.markets.ExpandedList.Tooltip")));
         HBox header = new HBox(marketSelectionListTitle);
@@ -430,7 +457,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     }
 
     private void addCollapsedMarketSelectionList() {
-        collapsedMarketSelectionListTitle = new Label("", ImageUtil.getImageViewById("market-grey"));
+        collapsedMarketSelectionListTitle = new Label("", marketsGreyIcon);
         collapsedMarketSelectionListTitle.setCursor(Cursor.HAND);
         collapsedMarketSelectionListTitle.setTooltip(new BisqTooltip(Res.get("bisqEasy.offerbook.markets.CollapsedList.Tooltip")));
         HBox header = new HBox(collapsedMarketSelectionListTitle);
@@ -677,7 +704,11 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     }
 
     private void addCollapsedOfferList() {
-        collapsedOfferListTitle = new Label("", ImageUtil.getImageViewById("list-view-grey"));
+        offerListGreenIcon = ImageUtil.getImageViewById("list-view-green");
+        offerListGreyIcon = ImageUtil.getImageViewById("list-view-grey");
+        offerListWhiteIcon = ImageUtil.getImageViewById("list-view-white");
+
+        collapsedOfferListTitle = new Label("", offerListGreyIcon);
         collapsedOfferListTitle.setCursor(Cursor.HAND);
         collapsedOfferListTitle.setTooltip(new BisqTooltip(Res.get("bisqEasy.offerbook.offerList.CollapsedList.Tooltip")));
         HBox header = new HBox(collapsedOfferListTitle);
@@ -700,7 +731,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     }
 
     private void addOfferList() {
-        offerListTitle = new Label(Res.get("bisqEasy.offerbook.offerList"), ImageUtil.getImageViewById("list-view-grey"));
+        offerListTitle = new Label(Res.get("bisqEasy.offerbook.offerList"), offerListGreenIcon);
         offerListTitle.setCursor(Cursor.HAND);
         offerListTitle.setTooltip(new BisqTooltip(Res.get("bisqEasy.offerbook.offerList.ExpandedList.Tooltip")));
         HBox header = new HBox(offerListTitle);
