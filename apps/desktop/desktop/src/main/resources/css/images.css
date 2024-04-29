@@ -768,6 +768,18 @@
     -fx-image: url("/images/icons/list-view-grey.png");
 }
 
+#market-green {
+    -fx-image: url("/images/icons/market-green.png");
+}
+
+#market-white {
+    -fx-image: url("/images/icons/market-white.png");
+}
+
+#market-grey {
+    -fx-image: url("/images/icons/market-grey.png");
+}
+
 
 /* ------------------------------------------------------------------------------------ */
 /* Chat */
