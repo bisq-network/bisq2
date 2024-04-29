@@ -72,7 +72,8 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     private Subscription marketsTableViewSelectionPin, selectedModelItemPin, channelHeaderIconPin, selectedMarketFilterPin,
             selectedOfferDirectionOrOwnerFilterPin, selectedPeerReputationFilterPin, selectedMarketSortTypePin,
             marketSelectorSearchPin, favouritesTableViewHeightPin, favouritesTableViewSelectionPin,
-            shouldShowAppliedFiltersPin, offerListTableViewSelectionPin, showBuyFromOfferMessageItemsPin;
+            shouldShowAppliedFiltersPin, offerListTableViewSelectionPin, showBuyFromOfferMessageItemsPin,
+            showOfferListExpandedPin, showMarketSelectionListExpandedPin;
     private Button createOfferButton;
     private DropdownMenu sortAndFilterMarketsMenu, filterOffersByDirectionOrOwnerMenu, filterOffersByPeerReputationMenu;
     private DropdownSortByMenuItem sortByMostOffers, sortByNameAZ, sortByNameZA;
@@ -196,6 +197,12 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
            updateOfferListByDirectionFilter();
         });
 
+        showOfferListExpandedPin = EasyBind.subscribe(getModel().getShowOfferListExpanded(),
+                showOfferListExpanded -> updateChatContainerStyleClass());
+
+        showMarketSelectionListExpandedPin = EasyBind.subscribe(getModel().getShowMarketSelectionListExpanded(),
+                showMarketSelectionListExpanded -> updateChatContainerStyleClass());
+
         sortByMostOffers.setOnAction(e -> getController().onSortMarkets(MarketSortType.NUM_OFFERS));
         sortByNameAZ.setOnAction(e -> getController().onSortMarkets(MarketSortType.ASC));
         sortByNameZA.setOnAction(e -> getController().onSortMarkets(MarketSortType.DESC));
@@ -283,6 +290,8 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         shouldShowAppliedFiltersPin.unsubscribe();
         offerListTableViewSelectionPin.unsubscribe();
         showBuyFromOfferMessageItemsPin.unsubscribe();
+        showOfferListExpandedPin.unsubscribe();
+        showMarketSelectionListExpandedPin.unsubscribe();
 
         sortByMostOffers.setOnAction(null);
         sortByNameAZ.setOnAction(null);
@@ -331,6 +340,21 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         favouritesTableView.setMinHeight(height);
         favouritesTableView.setPrefHeight(height);
         favouritesTableView.setMaxHeight(height);
+    }
+
+    private void updateChatContainerStyleClass() {
+        centerVBox.getStyleClass().clear();
+        String styleClass;
+        if (!getModel().getShowOfferListExpanded().get() && !getModel().getShowMarketSelectionListExpanded().get()) {
+            styleClass = "chat-container-with-both-lists-collapsed";
+        } else if (!getModel().getShowOfferListExpanded().get()) {
+            styleClass = "chat-container-with-offer-list-collapsed";
+        } else if (!getModel().getShowMarketSelectionListExpanded().get()) {
+            styleClass = "chat-container-with-market-selection-list-collapsed";
+        } else { // both are expanded
+            styleClass = "bisq-easy-container";
+        }
+        centerVBox.getStyleClass().add(styleClass);
     }
 
     private void setOfferDirectionOrOwnerFilter(DropdownFilterMenuItem<?> filterMenuItem) {
@@ -529,7 +553,6 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
 
         VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
         centerVBox.getChildren().addAll(titleHBox, Layout.hLine(), subheader, chatMessagesComponent);
-        centerVBox.getStyleClass().add("bisq-easy-container");
         centerVBox.setAlignment(Pos.CENTER);
     }
 

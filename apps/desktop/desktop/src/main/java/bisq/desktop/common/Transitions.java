@@ -1002,7 +1002,7 @@ public class Transitions {
                                           @Nullable Runnable finishedHandler) {
         Timeline marginExpansion = new Timeline(
                 new KeyFrame(Duration.millis(0),
-                        new KeyValue(boxToMinimize.translateXProperty(), 10)
+                        new KeyValue(boxToMinimize.translateXProperty(), 9)
                 ),
                 new KeyFrame(Duration.millis(100),
                         new KeyValue(boxToMinimize.translateXProperty(), 0)
