@@ -70,8 +70,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
             marketSelectorSearchPin, favouritesTableViewHeightPin, favouritesTableViewSelectionPin,
             shouldShowAppliedFiltersPin, offerListTableViewSelectionPin, showBuyFromOfferMessageItemsPin;
     private Button createOfferButton;
-    private DropdownMenu sortAndFilterMarketsMenu, filterOffersByDirectionOrOwnerMenu, filterOffersByPeerReputationMenu,
-            filterOfferListByDirection;
+    private DropdownMenu sortAndFilterMarketsMenu, filterOffersByDirectionOrOwnerMenu, filterOffersByPeerReputationMenu;
     private DropdownSortByMenuItem sortByMostOffers, sortByNameAZ, sortByNameZA;
     private DropdownFilterMenuItem<MarketChannelItem> filterShowAll, filterWithOffers, filterFavourites;
     private DropdownFilterMenuItem<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>>
@@ -244,6 +243,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         favouritesTableViewHeightPin.unsubscribe();
         shouldShowAppliedFiltersPin.unsubscribe();
         offerListTableViewSelectionPin.unsubscribe();
+        showBuyFromOfferMessageItemsPin.unsubscribe();
 
         sortByMostOffers.setOnAction(null);
         sortByNameAZ.setOnAction(null);
@@ -595,7 +595,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         header.setPadding(new Insets(4, 0, 0, 15));
         header.getStyleClass().add("chat-header-title");
 
-        filterOfferListByDirection = createAndGetOfferListByDirectionFilter();
+        DropdownMenu filterOfferListByDirection = createAndGetOfferListByDirectionFilter();
 
         HBox subheader = new HBox();
         subheader.setAlignment(Pos.CENTER_LEFT);
