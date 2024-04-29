@@ -374,7 +374,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     }
 
     private void addMarketSelectionList() {
-        marketSelectionListTitle = new Label(Res.get("bisqEasy.offerbook.markets"), ImageUtil.getImageViewById("market-white"));
+        marketSelectionListTitle = new Label(Res.get("bisqEasy.offerbook.markets"), ImageUtil.getImageViewById("market-grey"));
         marketSelectionListTitle.setCursor(Cursor.HAND);
         HBox header = new HBox(marketSelectionListTitle);
         header.setMinHeight(HEADER_HEIGHT);
@@ -432,12 +432,13 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     }
 
     private void addCollapsedMarketSelectionList() {
-        collapsedMarketSelectionListTitle = new Label("", ImageUtil.getImageViewById("market-white"));
+        collapsedMarketSelectionListTitle = new Label("", ImageUtil.getImageViewById("market-grey"));
         collapsedMarketSelectionListTitle.setCursor(Cursor.HAND);
         HBox header = new HBox(collapsedMarketSelectionListTitle);
         header.setMinHeight(HEADER_HEIGHT);
         header.setMaxHeight(HEADER_HEIGHT);
         header.setAlignment(Pos.CENTER);
+        header.setPadding(new Insets(4, 0, 0, 0));
 
         HBox subheader = new HBox();
         subheader.setAlignment(Pos.CENTER);
@@ -677,12 +678,13 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     }
 
     private void addCollapsedOfferList() {
-        collapsedOfferListTitle = new Label("", ImageUtil.getImageViewById("list-view-white"));
+        collapsedOfferListTitle = new Label("", ImageUtil.getImageViewById("list-view-grey"));
         collapsedOfferListTitle.setCursor(Cursor.HAND);
         HBox header = new HBox(collapsedOfferListTitle);
         header.setMinHeight(HEADER_HEIGHT);
         header.setMaxHeight(HEADER_HEIGHT);
         header.setAlignment(Pos.CENTER);
+        header.setPadding(new Insets(4, 0, 0, 0));
 
         HBox subheader = new HBox();
         subheader.setAlignment(Pos.CENTER_LEFT);
@@ -698,7 +700,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     }
 
     private void addOfferList() {
-        offerListTitle = new Label(Res.get("bisqEasy.offerbook.offerList"), ImageUtil.getImageViewById("list-view-white"));
+        offerListTitle = new Label(Res.get("bisqEasy.offerbook.offerList"), ImageUtil.getImageViewById("list-view-grey"));
         offerListTitle.setCursor(Cursor.HAND);
         HBox header = new HBox(offerListTitle);
         header.setMinHeight(HEADER_HEIGHT);
