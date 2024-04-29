@@ -999,22 +999,30 @@ public class Transitions {
     }
 
     public static void expansionAnimation(Pane pane, double initialWidth, double finalWidth, @Nullable Runnable finishedHandler) {
-        Timeline widthExpansion = new Timeline(
-                new KeyFrame(Duration.millis(0),
-                        new KeyValue(pane.prefWidthProperty(), initialWidth),
-                        new KeyValue(pane.minWidthProperty(), initialWidth),
-                        new KeyValue(pane.maxWidthProperty(), initialWidth)
-                ),
-                new KeyFrame(Duration.millis(200),
-                        new KeyValue(pane.prefWidthProperty(), finalWidth),
-                        new KeyValue(pane.minWidthProperty(), finalWidth),
-                        new KeyValue(pane.maxWidthProperty(), finalWidth)
-                )
-        );
-
-        widthExpansion.play();
-        if (finishedHandler != null) {
-            widthExpansion.setOnFinished(actionEvent -> finishedHandler.run());
+        if (getUseAnimations()) {
+            Timeline widthExpansion = new Timeline(
+                    new KeyFrame(Duration.millis(0),
+                            new KeyValue(pane.prefWidthProperty(), initialWidth, Interpolator.LINEAR),
+                            new KeyValue(pane.minWidthProperty(), initialWidth, Interpolator.LINEAR),
+                            new KeyValue(pane.maxWidthProperty(), initialWidth, Interpolator.LINEAR)
+                    ),
+                    new KeyFrame(Duration.millis(200),
+                            new KeyValue(pane.prefWidthProperty(), finalWidth, Interpolator.EASE_OUT),
+                            new KeyValue(pane.minWidthProperty(), finalWidth, Interpolator.EASE_OUT),
+                            new KeyValue(pane.maxWidthProperty(), finalWidth, Interpolator.EASE_OUT)
+                    )
+            );
+            widthExpansion.play();
+            if (finishedHandler != null) {
+                widthExpansion.setOnFinished(actionEvent -> finishedHandler.run());
+            }
+        } else {
+            pane.setPrefWidth(finalWidth);
+            pane.setMinWidth(finalWidth);
+            pane.setMaxWidth(finalWidth);
+            if (finishedHandler != null) {
+                finishedHandler.run();
+            }
         }
     }
 }
