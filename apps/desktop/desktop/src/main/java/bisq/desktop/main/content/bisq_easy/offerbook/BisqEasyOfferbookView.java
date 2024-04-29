@@ -23,10 +23,7 @@ import bisq.desktop.common.Layout;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.controls.DropdownMenu;
-import bisq.desktop.components.controls.DropdownMenuItem;
-import bisq.desktop.components.controls.DropdownTitleMenuItem;
-import bisq.desktop.components.controls.SearchBox;
+import bisq.desktop.components.controls.*;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.StandardTable;
@@ -376,6 +373,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     private void addMarketSelectionList() {
         marketSelectionListTitle = new Label(Res.get("bisqEasy.offerbook.markets"), ImageUtil.getImageViewById("market-grey"));
         marketSelectionListTitle.setCursor(Cursor.HAND);
+        marketSelectionListTitle.setTooltip(new BisqTooltip(Res.get("bisqEasy.offerbook.markets.ExpandedList.Tooltip")));
         HBox header = new HBox(marketSelectionListTitle);
         header.setMinHeight(HEADER_HEIGHT);
         header.setMaxHeight(HEADER_HEIGHT);
@@ -434,6 +432,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     private void addCollapsedMarketSelectionList() {
         collapsedMarketSelectionListTitle = new Label("", ImageUtil.getImageViewById("market-grey"));
         collapsedMarketSelectionListTitle.setCursor(Cursor.HAND);
+        collapsedMarketSelectionListTitle.setTooltip(new BisqTooltip(Res.get("bisqEasy.offerbook.markets.CollapsedList.Tooltip")));
         HBox header = new HBox(collapsedMarketSelectionListTitle);
         header.setMinHeight(HEADER_HEIGHT);
         header.setMaxHeight(HEADER_HEIGHT);
@@ -680,6 +679,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     private void addCollapsedOfferList() {
         collapsedOfferListTitle = new Label("", ImageUtil.getImageViewById("list-view-grey"));
         collapsedOfferListTitle.setCursor(Cursor.HAND);
+        collapsedOfferListTitle.setTooltip(new BisqTooltip(Res.get("bisqEasy.offerbook.offerList.CollapsedList.Tooltip")));
         HBox header = new HBox(collapsedOfferListTitle);
         header.setMinHeight(HEADER_HEIGHT);
         header.setMaxHeight(HEADER_HEIGHT);
@@ -702,6 +702,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     private void addOfferList() {
         offerListTitle = new Label(Res.get("bisqEasy.offerbook.offerList"), ImageUtil.getImageViewById("list-view-grey"));
         offerListTitle.setCursor(Cursor.HAND);
+        offerListTitle.setTooltip(new BisqTooltip(Res.get("bisqEasy.offerbook.offerList.ExpandedList.Tooltip")));
         HBox header = new HBox(offerListTitle);
         header.setMinHeight(HEADER_HEIGHT);
         header.setMaxHeight(HEADER_HEIGHT);
