@@ -337,6 +337,7 @@
     -fx-text-fill: -bisq2-red-lit-40;
 }
 
+/* COLLAPSE AND EXPAND COLUMNS */
 .collapsed-offer-list-container {
     -fx-background-color: -bisq-dark-grey-20;
     -fx-background-radius: 0 8 0 0;
@@ -344,6 +345,11 @@
 
 .chat-container-with-offer-list-collapsed {
     -fx-background-radius: 8 0 0 0 !important;
+}
+
+.collapsed-market-selection-list-container {
+    -fx-background-color: -bisq-dark-grey-20;
+    -fx-background-radius: 8 0 0 0;
 }
 
 .create-offer-button {

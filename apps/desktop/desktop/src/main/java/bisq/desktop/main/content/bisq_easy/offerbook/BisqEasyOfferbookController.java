@@ -333,6 +333,10 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         model.getShowOfferListExpanded().set(!model.getShowOfferListExpanded().get());
     }
 
+    void toggleMarketSelectionList() {
+        model.getShowMarketSelectionListExpanded().set(!model.getShowMarketSelectionListExpanded().get());
+    }
+
     private void createMarketChannels() {
         List<MarketChannelItem> marketChannelItems = bisqEasyOfferbookChannelService.getChannels().stream()
                 .map(MarketChannelItem::new)

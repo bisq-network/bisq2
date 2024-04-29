@@ -993,4 +993,31 @@ public class Transitions {
     public static boolean getUseAnimations() {
         return settingsService.getUseAnimations().get();
     }
+
+    public static ParallelTransition expansionAnimation(Pane boxToMinimize, Pane boxToExpand,
+            double initialWidth, double finalWidth) {
+        Timeline marginExpansion = new Timeline(
+                new KeyFrame(Duration.millis(0),
+                        new KeyValue(boxToMinimize.translateXProperty(), 10)
+                ),
+                new KeyFrame(Duration.millis(100),
+                        new KeyValue(boxToMinimize.translateXProperty(), 0)
+                )
+        );
+
+        Timeline widthExpansion = new Timeline(
+                new KeyFrame(Duration.millis(0),
+                        new KeyValue(boxToExpand.prefWidthProperty(), initialWidth),
+                        new KeyValue(boxToExpand.minWidthProperty(), initialWidth),
+                        new KeyValue(boxToExpand.maxWidthProperty(), initialWidth)
+                ),
+                new KeyFrame(Duration.millis(300),
+                        new KeyValue(boxToExpand.prefWidthProperty(), finalWidth),
+                        new KeyValue(boxToExpand.minWidthProperty(), finalWidth),
+                        new KeyValue(boxToExpand.maxWidthProperty(), finalWidth)
+                )
+        );
+
+        return new ParallelTransition(marginExpansion, widthExpansion);
+    }
 }

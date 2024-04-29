@@ -70,6 +70,7 @@ public final class BisqEasyOfferbookModel extends ChatModel {
     private final StringProperty fiatAmountTitle = new SimpleStringProperty();
     private final BooleanProperty showBuyFromOfferMessageItems = new SimpleBooleanProperty(true); // TODO: save user pref in settings
     private final BooleanProperty showOfferListExpanded = new SimpleBooleanProperty(true); // TODO: save user pref in settings
+    private final BooleanProperty showMarketSelectionListExpanded = new SimpleBooleanProperty(true); // TODO: save user pref in settings
 
     @Setter
     private Predicate<MarketChannelItem> marketPricePredicate = marketChannelItem -> true;
