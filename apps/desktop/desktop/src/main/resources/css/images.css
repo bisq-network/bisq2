@@ -757,27 +757,27 @@
 }
 
 #list-view-green {
-    -fx-image: url("/images/icons/list-view-green.png");
+    -fx-image: url("/images/icons/list-view/list-view-green.png");
 }
 
 #list-view-white {
-    -fx-image: url("/images/icons/list-view-white.png");
+    -fx-image: url("/images/icons/list-view/list-view-white.png");
 }
 
 #list-view-grey {
-    -fx-image: url("/images/icons/list-view-grey.png");
+    -fx-image: url("/images/icons/list-view/list-view-grey.png");
 }
 
 #market-green {
-    -fx-image: url("/images/icons/market-green.png");
+    -fx-image: url("/images/icons/market/market-green.png");
 }
 
 #market-white {
-    -fx-image: url("/images/icons/market-white.png");
+    -fx-image: url("/images/icons/market/market-white.png");
 }
 
 #market-grey {
-    -fx-image: url("/images/icons/market-grey.png");
+    -fx-image: url("/images/icons/market/market-grey.png");
 }
 
 
