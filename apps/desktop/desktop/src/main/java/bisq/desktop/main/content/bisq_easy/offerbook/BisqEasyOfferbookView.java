@@ -229,19 +229,19 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         onlyFavouritesDisplayHint.setOnMouseEntered(e -> removeFavouritesFilter.setGraphic(favouritesRemoveFilterActiveIcon));
         onlyFavouritesDisplayHint.setOnMouseExited(e -> removeFavouritesFilter.setGraphic(favouritesRemoveFilterDefaultIcon));
 
-        offerListTitle.setOnMouseClicked(e -> {
-            getController().toggleOfferList();
-        });
+        offerListTitle.setOnMouseClicked(e ->
+            Transitions.expansionAnimation(centerVBox, offerList, EXPANDED_OFFER_LIST_WIDTH, COLLAPSED_LIST_WIDTH + 20,
+                    () -> getController().toggleOfferList()));
         collapsedOfferListTitle.setOnMouseClicked(e -> {
             getController().toggleOfferList();
-            Transitions.expansionAnimation(centerVBox, offerList, 60, EXPANDED_OFFER_LIST_WIDTH).play();
+            Transitions.expansionAnimation(centerVBox, offerList, COLLAPSED_LIST_WIDTH + 20, EXPANDED_OFFER_LIST_WIDTH);
         });
-        marketSelectionListTitle.setOnMouseClicked(e -> {
-            getController().toggleMarketSelectionList();
-        });
+        marketSelectionListTitle.setOnMouseClicked(e ->
+            Transitions.expansionAnimation(centerVBox, marketSelectionList, EXPANDED_MARKET_SELECTION_LIST_WIDTH,
+                    COLLAPSED_LIST_WIDTH, () -> getController().toggleMarketSelectionList()));
         collapsedMarketSelectionListTitle.setOnMouseClicked(e -> {
             getController().toggleMarketSelectionList();
-            Transitions.expansionAnimation(centerVBox, marketSelectionList, 40, EXPANDED_MARKET_SELECTION_LIST_WIDTH).play();
+            Transitions.expansionAnimation(centerVBox, marketSelectionList, COLLAPSED_LIST_WIDTH, EXPANDED_MARKET_SELECTION_LIST_WIDTH);
         });
     }
 

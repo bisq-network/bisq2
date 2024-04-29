@@ -994,8 +994,12 @@ public class Transitions {
         return settingsService.getUseAnimations().get();
     }
 
-    public static ParallelTransition expansionAnimation(Pane boxToMinimize, Pane boxToExpand,
-            double initialWidth, double finalWidth) {
+    public static void expansionAnimation(Pane boxToMinimize, Pane boxToExpand, double initialWidth, double finalWidth) {
+        expansionAnimation(boxToMinimize, boxToExpand, initialWidth, finalWidth, null);
+    }
+
+    public static void expansionAnimation(Pane boxToMinimize, Pane boxToExpand, double initialWidth, double finalWidth,
+                                          @Nullable Runnable finishedHandler) {
         Timeline marginExpansion = new Timeline(
                 new KeyFrame(Duration.millis(0),
                         new KeyValue(boxToMinimize.translateXProperty(), 10)
@@ -1018,6 +1022,10 @@ public class Transitions {
                 )
         );
 
-        return new ParallelTransition(marginExpansion, widthExpansion);
+        ParallelTransition transition = new ParallelTransition(marginExpansion, widthExpansion);
+        transition.play();
+        if (finishedHandler != null) {
+            transition.setOnFinished(actionEvent -> finishedHandler.run());
+        }
     }
 }
