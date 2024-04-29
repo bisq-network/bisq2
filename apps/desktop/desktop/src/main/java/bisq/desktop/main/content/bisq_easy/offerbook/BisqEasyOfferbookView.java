@@ -772,8 +772,8 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         dropdownMenu.getStyleClass().add("dropdown-offer-list-direction-filter-menu");
         offerListByDirectionFilter = new Label();
         dropdownMenu.setLabel(offerListByDirectionFilter);
-        buyFromOffers = new DropdownMenuItem(Res.get("bisqEasy.offerbook.offerList.table.filters.offerDirection.buyFrom").toUpperCase());
-        sellToOffers = new DropdownMenuItem(Res.get("bisqEasy.offerbook.offerList.table.filters.offerDirection.sellTo").toUpperCase());
+        buyFromOffers = new DropdownMenuItem(Res.get("bisqEasy.offerbook.offerList.table.filters.offerDirection.buyFrom"));
+        sellToOffers = new DropdownMenuItem(Res.get("bisqEasy.offerbook.offerList.table.filters.offerDirection.sellTo"));
         dropdownMenu.addMenuItems(buyFromOffers, sellToOffers);
         return dropdownMenu;
     }
