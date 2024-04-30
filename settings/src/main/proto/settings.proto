@@ -57,4 +57,7 @@ message SettingsStore {
   repeated common.Market favouriteMarkets = 17;
   bool ignoreMinRequiredReputationScoreFromSecManager = 18;
   double maxTradePriceDeviation = 19;
+  bool showBuyFromOffers = 20;
+  bool showOfferListExpanded = 21;
+  bool showMarketSelectionListExpanded = 22;
 }

@@ -227,8 +227,8 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
 
         createOfferButton.setOnAction(e -> getController().onCreateOffer());
 
-        buyFromOffers.setOnAction(e -> getModel().getShowBuyFromOfferMessageItems().set(true));
-        sellToOffers.setOnAction(e -> getModel().getShowBuyFromOfferMessageItems().set(false));
+        buyFromOffers.setOnAction(e -> getController().onSelectBuyFromFilter());
+        sellToOffers.setOnAction(e -> getController().onSelectSellToFilter());
 
         removeWithOffersFilter.setOnMouseClicked(e -> getModel().getSelectedMarketsFilter().set(Filters.Markets.ALL));
         withOffersDisplayHint.setOnMouseEntered(e -> removeWithOffersFilter.setGraphic(withOffersRemoveFilterActiveIcon));

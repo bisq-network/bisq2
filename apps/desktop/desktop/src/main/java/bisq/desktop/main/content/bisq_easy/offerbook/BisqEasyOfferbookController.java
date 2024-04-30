@@ -70,7 +70,8 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     private final SetChangeListener<Market> favouriteMarketsListener;
     private final ReputationService reputationService = serviceProvider.getUserService().getReputationService();
     private Pin offerOnlySettingsPin, bisqEasyPrivateTradeChatChannelsPin, selectedChannelPin,
-            marketPriceByCurrencyMapPin, favouriteMarketsPin, offerMessagesPin;
+            marketPriceByCurrencyMapPin, favouriteMarketsPin, offerMessagesPin, showBuyFromOffersSettingsPin,
+            showOfferListExpandedSettingsPin, showMarketSelectionListExpandedSettingsPin;
     private Subscription marketSelectorSearchPin, selectedMarketFilterPin, selectedOfferDirectionOrOwnerFilterPin,
             selectedPeerReputationFilterPin, selectedMarketSortTypePin, showBuyFromOfferMessageItemsPin;
 
@@ -123,6 +124,9 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         model.getMarketSelectorSearchText().set("");
 
         offerOnlySettingsPin = FxBindings.bindBiDir(model.getOfferOnly()).to(settingsService.getOffersOnly());
+        showBuyFromOffersSettingsPin = FxBindings.bindBiDir(model.getShowBuyFromOfferMessageItems()).to(settingsService.getShowBuyFromOffers());
+        showOfferListExpandedSettingsPin = FxBindings.bindBiDir(model.getShowOfferListExpanded()).to(settingsService.getShowOfferListExpanded());
+        showMarketSelectionListExpandedSettingsPin = FxBindings.bindBiDir(model.getShowMarketSelectionListExpanded()).to(settingsService.getShowMarketSelectionListExpanded());
 
         ObservableArray<BisqEasyOpenTradeChannel> bisqEasyOpenTradeChannels = chatService.getBisqEasyOpenTradeChannelService().getChannels();
         bisqEasyPrivateTradeChatChannelsPin = bisqEasyOpenTradeChannels.addObserver(() ->
@@ -244,6 +248,9 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         }
 
         offerOnlySettingsPin.unbind();
+        showBuyFromOffersSettingsPin.unbind();
+        showOfferListExpandedSettingsPin.unbind();
+        showMarketSelectionListExpandedSettingsPin.unbind();
         bisqEasyPrivateTradeChatChannelsPin.unbind();
         selectedChannelPin.unbind();
         marketSelectorSearchPin.unsubscribe();
@@ -335,6 +342,14 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
 
     void toggleMarketSelectionList() {
         model.getShowMarketSelectionListExpanded().set(!model.getShowMarketSelectionListExpanded().get());
+    }
+
+    void onSelectBuyFromFilter() {
+        model.getShowBuyFromOfferMessageItems().set(true);
+    }
+
+    void onSelectSellToFilter() {
+        model.getShowBuyFromOfferMessageItems().set(false);
     }
 
     private void createMarketChannels() {
