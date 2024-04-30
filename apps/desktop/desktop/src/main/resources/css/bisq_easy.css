@@ -337,6 +337,35 @@
     -fx-text-fill: -bisq2-red-lit-40;
 }
 
+/* COLLAPSE AND EXPAND COLUMNS */
+.collapsed-offer-list-container {
+    -fx-background-color: -bisq-dark-grey-20;
+    -fx-background-radius: 0 8 0 0;
+}
+
+.collapsed-market-selection-list-container {
+    -fx-background-color: -bisq-dark-grey-20;
+    -fx-background-radius: 8 0 0 0;
+}
+
+.chat-container-with-offer-list-collapsed {
+    -fx-background-radius: 8 0 0 0;
+}
+
+.chat-container-with-market-selection-list-collapsed {
+    -fx-background-radius: 0 8 0 0;
+}
+
+.chat-container-with-both-lists-collapsed {
+    -fx-background-radius: 0;
+}
+
+.chat-container-with-offer-list-collapsed,
+.chat-container-with-market-selection-list-collapsed,
+.chat-container-with-both-lists-collapsed {
+    -fx-background-color: -bisq-dark-grey-20;
+}
+
 .create-offer-button {
     -fx-background-color: -fx-default-button;
     -fx-text-fill: -fx-light-text-color;

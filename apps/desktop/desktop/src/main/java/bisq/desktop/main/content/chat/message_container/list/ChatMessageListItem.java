@@ -108,7 +108,6 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private final MarketPriceService marketPriceService;
     private final UserIdentityService userIdentityService;
     @EqualsAndHashCode.Exclude
-    @Setter
     private final BooleanProperty showHighlighted = new SimpleBooleanProperty();
 
     public ChatMessageListItem(M chatMessage,

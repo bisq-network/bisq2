@@ -20,8 +20,10 @@ package bisq.desktop.main.content.bisq_easy.offerbook;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.desktop.common.Layout;
+import bisq.desktop.common.Transitions;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.DropdownMenu;
 import bisq.desktop.components.controls.DropdownMenuItem;
 import bisq.desktop.components.controls.DropdownTitleMenuItem;
@@ -59,19 +61,22 @@ import java.util.Comparator;
 public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView, BisqEasyOfferbookModel> {
     private static final String BUY_FROM_MENU_ITEM_STYLE_CLASS = "buy-from-offers";
     private static final String SELL_TO_MENU_ITEM_STYLE_CLASS = "sell-to-offers";
+    private static final double EXPANDED_OFFER_LIST_WIDTH = 438;
+    private static final double EXPANDED_MARKET_SELECTION_LIST_WIDTH = 210;
+    private static final double COLLAPSED_LIST_WIDTH = 40;
 
     private final ListChangeListener<MarketChannelItem> listChangeListener;
     private SearchBox marketSelectorSearchBox;
     private BisqTableView<MarketChannelItem> marketsTableView, favouritesTableView;
     private BisqTableView<OfferMessageItem> offerListTableView;
-    private VBox marketSelectionList, offerList;
+    private VBox marketSelectionList, collapsedMarketSelectionList, collapsedOfferList, offerList;
     private Subscription marketsTableViewSelectionPin, selectedModelItemPin, channelHeaderIconPin, selectedMarketFilterPin,
             selectedOfferDirectionOrOwnerFilterPin, selectedPeerReputationFilterPin, selectedMarketSortTypePin,
             marketSelectorSearchPin, favouritesTableViewHeightPin, favouritesTableViewSelectionPin,
-            shouldShowAppliedFiltersPin, offerListTableViewSelectionPin, showBuyFromOfferMessageItemsPin;
+            shouldShowAppliedFiltersPin, offerListTableViewSelectionPin, showBuyFromOfferMessageItemsPin,
+            showOfferListExpandedPin, showMarketSelectionListExpandedPin;
     private Button createOfferButton;
-    private DropdownMenu sortAndFilterMarketsMenu, filterOffersByDirectionOrOwnerMenu, filterOffersByPeerReputationMenu,
-            filterOfferListByDirection;
+    private DropdownMenu sortAndFilterMarketsMenu, filterOffersByDirectionOrOwnerMenu, filterOffersByPeerReputationMenu;
     private DropdownSortByMenuItem sortByMostOffers, sortByNameAZ, sortByNameZA;
     private DropdownFilterMenuItem<MarketChannelItem> filterShowAll, filterWithOffers, filterFavourites;
     private DropdownFilterMenuItem<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>>
@@ -80,10 +85,13 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     private DropdownTitleMenuItem atLeastTitle;
     private DropdownMenuItem buyFromOffers, sellToOffers;
     private CheckBox hideUserMessagesCheckbox;
-    private Label channelHeaderIcon, marketPrice, removeWithOffersFilter, removeFavouritesFilter, offerListByDirectionFilter;
+    private Label channelHeaderIcon, marketPrice, removeWithOffersFilter, removeFavouritesFilter,
+            offerListByDirectionFilter, collapsedOfferListTitle, offerListTitle, collapsedMarketSelectionListTitle,
+            marketSelectionListTitle;
     private HBox appliedFiltersSection, withOffersDisplayHint, onlyFavouritesDisplayHint;
     private ImageView withOffersRemoveFilterDefaultIcon, withOffersRemoveFilterActiveIcon,
-            favouritesRemoveFilterDefaultIcon, favouritesRemoveFilterActiveIcon;
+            favouritesRemoveFilterDefaultIcon, favouritesRemoveFilterActiveIcon, marketsGreenIcon, marketsGreyIcon,
+            marketsWhiteIcon, offerListGreenIcon, offerListGreyIcon, offerListWhiteIcon;
 
     public BisqEasyOfferbookView(BisqEasyOfferbookModel model,
                                  BisqEasyOfferbookController controller,
@@ -118,7 +126,9 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     @Override
     protected void configCenterVBox() {
         addMarketSelectionList();
+        addCollapsedMarketSelectionList();
         addChatBox();
+        addCollapsedOfferList();
         addOfferList();
     }
 
@@ -126,7 +136,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     protected void configContainerHBox() {
         super.configContainerHBox();
 
-        containerHBox.getChildren().setAll(marketSelectionList, centerVBox, offerList, sideBar);
+        containerHBox.getChildren().setAll(marketSelectionList, collapsedMarketSelectionList, centerVBox, collapsedOfferList, offerList, sideBar);
     }
 
     @Override
@@ -145,6 +155,14 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         onlyFavouritesDisplayHint.managedProperty().bind(getModel().getSelectedMarketsFilter().isEqualTo(Filters.Markets.FAVOURITES));
         favouritesTableView.visibleProperty().bind(Bindings.isNotEmpty(getModel().getFavouriteMarketChannelItems()));
         favouritesTableView.managedProperty().bind(Bindings.isNotEmpty(getModel().getFavouriteMarketChannelItems()));
+        collapsedOfferList.visibleProperty().bind(getModel().getShowOfferListExpanded().not());
+        collapsedOfferList.managedProperty().bind(getModel().getShowOfferListExpanded().not());
+        offerList.visibleProperty().bind(getModel().getShowOfferListExpanded());
+        offerList.managedProperty().bind(getModel().getShowOfferListExpanded());
+        collapsedMarketSelectionList.visibleProperty().bind(getModel().getShowMarketSelectionListExpanded().not());
+        collapsedMarketSelectionList.managedProperty().bind(getModel().getShowMarketSelectionListExpanded().not());
+        marketSelectionList.visibleProperty().bind(getModel().getShowMarketSelectionListExpanded());
+        marketSelectionList.managedProperty().bind(getModel().getShowMarketSelectionListExpanded());
 
         selectedModelItemPin = EasyBind.subscribe(getModel().getSelectedMarketChannelItem(), this::updateTableViewSelection);
         marketsTableViewSelectionPin = EasyBind.subscribe(marketsTableView.getSelectionModel().selectedItemProperty(), item -> {
@@ -181,6 +199,12 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
            updateOfferListByDirectionFilter();
         });
 
+        showOfferListExpandedPin = EasyBind.subscribe(getModel().getShowOfferListExpanded(),
+                showOfferListExpanded -> updateChatContainerStyleClass());
+
+        showMarketSelectionListExpandedPin = EasyBind.subscribe(getModel().getShowMarketSelectionListExpanded(),
+                showMarketSelectionListExpanded -> updateChatContainerStyleClass());
+
         sortByMostOffers.setOnAction(e -> getController().onSortMarkets(MarketSortType.NUM_OFFERS));
         sortByNameAZ.setOnAction(e -> getController().onSortMarkets(MarketSortType.ASC));
         sortByNameZA.setOnAction(e -> getController().onSortMarkets(MarketSortType.DESC));
@@ -213,6 +237,32 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         removeFavouritesFilter.setOnMouseClicked(e -> getModel().getSelectedMarketsFilter().set(Filters.Markets.ALL));
         onlyFavouritesDisplayHint.setOnMouseEntered(e -> removeFavouritesFilter.setGraphic(favouritesRemoveFilterActiveIcon));
         onlyFavouritesDisplayHint.setOnMouseExited(e -> removeFavouritesFilter.setGraphic(favouritesRemoveFilterDefaultIcon));
+
+        offerListTitle.setOnMouseClicked(e ->
+            Transitions.expansionAnimation(offerList, EXPANDED_OFFER_LIST_WIDTH, COLLAPSED_LIST_WIDTH + 20,
+                    () -> getController().toggleOfferList()));
+        offerListTitle.setOnMouseEntered(e -> offerListTitle.setGraphic(offerListWhiteIcon));
+        offerListTitle.setOnMouseExited(e -> offerListTitle.setGraphic(offerListGreenIcon));
+
+        collapsedOfferListTitle.setOnMouseClicked(e -> {
+            getController().toggleOfferList();
+            Transitions.expansionAnimation(offerList, COLLAPSED_LIST_WIDTH + 20, EXPANDED_OFFER_LIST_WIDTH);
+        });
+        collapsedOfferListTitle.setOnMouseEntered(e -> collapsedOfferListTitle.setGraphic(offerListWhiteIcon));
+        collapsedOfferListTitle.setOnMouseExited(e -> collapsedOfferListTitle.setGraphic(offerListGreyIcon));
+
+        marketSelectionListTitle.setOnMouseClicked(e ->
+            Transitions.expansionAnimation(marketSelectionList, EXPANDED_MARKET_SELECTION_LIST_WIDTH,
+                    COLLAPSED_LIST_WIDTH, () -> getController().toggleMarketSelectionList()));
+        marketSelectionListTitle.setOnMouseEntered(e -> marketSelectionListTitle.setGraphic(marketsWhiteIcon));
+        marketSelectionListTitle.setOnMouseExited(e -> marketSelectionListTitle.setGraphic(marketsGreenIcon));
+
+        collapsedMarketSelectionListTitle.setOnMouseClicked(e -> {
+            getController().toggleMarketSelectionList();
+            Transitions.expansionAnimation(marketSelectionList, COLLAPSED_LIST_WIDTH, EXPANDED_MARKET_SELECTION_LIST_WIDTH);
+        });
+        collapsedMarketSelectionListTitle.setOnMouseEntered(e -> collapsedMarketSelectionListTitle.setGraphic(marketsWhiteIcon));
+        collapsedMarketSelectionListTitle.setOnMouseExited(e -> collapsedMarketSelectionListTitle.setGraphic(marketsGreyIcon));
     }
 
     @Override
@@ -231,6 +281,14 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         onlyFavouritesDisplayHint.managedProperty().unbind();
         favouritesTableView.visibleProperty().unbind();
         favouritesTableView.managedProperty().unbind();
+        collapsedOfferList.visibleProperty().unbind();
+        collapsedOfferList.managedProperty().unbind();
+        offerList.visibleProperty().unbind();
+        offerList.managedProperty().unbind();
+        collapsedMarketSelectionList.visibleProperty().unbind();
+        collapsedMarketSelectionList.managedProperty().unbind();
+        marketSelectionList.visibleProperty().unbind();
+        marketSelectionList.managedProperty().unbind();
 
         selectedModelItemPin.unsubscribe();
         marketsTableViewSelectionPin.unsubscribe();
@@ -244,6 +302,9 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         favouritesTableViewHeightPin.unsubscribe();
         shouldShowAppliedFiltersPin.unsubscribe();
         offerListTableViewSelectionPin.unsubscribe();
+        showBuyFromOfferMessageItemsPin.unsubscribe();
+        showOfferListExpandedPin.unsubscribe();
+        showMarketSelectionListExpandedPin.unsubscribe();
 
         sortByMostOffers.setOnAction(null);
         sortByNameAZ.setOnAction(null);
@@ -273,6 +334,22 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         onlyFavouritesDisplayHint.setOnMouseEntered(null);
         onlyFavouritesDisplayHint.setOnMouseExited(null);
 
+        offerListTitle.setOnMouseClicked(null);
+        offerListTitle.setOnMouseEntered(null);
+        offerListTitle.setOnMouseExited(null);
+
+        collapsedOfferListTitle.setOnMouseClicked(null);
+        collapsedOfferListTitle.setOnMouseEntered(null);
+        collapsedOfferListTitle.setOnMouseExited(null);
+
+        marketSelectionListTitle.setOnMouseClicked(null);
+        marketSelectionListTitle.setOnMouseEntered(null);
+        marketSelectionListTitle.setOnMouseExited(null);
+
+        collapsedMarketSelectionListTitle.setOnMouseClicked(null);
+        collapsedMarketSelectionListTitle.setOnMouseEntered(null);
+        collapsedMarketSelectionListTitle.setOnMouseExited(null);
+
         getModel().getFavouriteMarketChannelItems().removeListener(listChangeListener);
     }
 
@@ -287,6 +364,21 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         favouritesTableView.setMinHeight(height);
         favouritesTableView.setPrefHeight(height);
         favouritesTableView.setMaxHeight(height);
+    }
+
+    private void updateChatContainerStyleClass() {
+        centerVBox.getStyleClass().clear();
+        String styleClass;
+        if (!getModel().getShowOfferListExpanded().get() && !getModel().getShowMarketSelectionListExpanded().get()) {
+            styleClass = "chat-container-with-both-lists-collapsed";
+        } else if (!getModel().getShowOfferListExpanded().get()) {
+            styleClass = "chat-container-with-offer-list-collapsed";
+        } else if (!getModel().getShowMarketSelectionListExpanded().get()) {
+            styleClass = "chat-container-with-market-selection-list-collapsed";
+        } else { // both are expanded
+            styleClass = "bisq-easy-container";
+        }
+        centerVBox.getStyleClass().add(styleClass);
     }
 
     private void setOfferDirectionOrOwnerFilter(DropdownFilterMenuItem<?> filterMenuItem) {
@@ -306,8 +398,14 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     }
 
     private void addMarketSelectionList() {
-        Label marketSelectionTitle = new Label(Res.get("bisqEasy.offerbook.markets"));
-        HBox header = new HBox(marketSelectionTitle);
+        marketsGreenIcon = ImageUtil.getImageViewById("market-green");
+        marketsGreyIcon = ImageUtil.getImageViewById("market-grey");
+        marketsWhiteIcon = ImageUtil.getImageViewById("market-white");
+
+        marketSelectionListTitle = new Label(Res.get("bisqEasy.offerbook.markets"), marketsGreenIcon);
+        marketSelectionListTitle.setCursor(Cursor.HAND);
+        marketSelectionListTitle.setTooltip(new BisqTooltip(Res.get("bisqEasy.offerbook.markets.ExpandedList.Tooltip")));
+        HBox header = new HBox(marketSelectionListTitle);
         header.setMinHeight(HEADER_HEIGHT);
         header.setMaxHeight(HEADER_HEIGHT);
         header.setAlignment(Pos.CENTER_LEFT);
@@ -355,10 +453,34 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
 
         marketSelectionList = new VBox(header, Layout.hLine(), subheader, appliedFiltersSection, favouritesTableView,
                 marketsTableView);
-        marketSelectionList.setPrefWidth(210);
-        marketSelectionList.setMinWidth(210);
+        marketSelectionList.setMaxWidth(EXPANDED_MARKET_SELECTION_LIST_WIDTH);
+        marketSelectionList.setPrefWidth(EXPANDED_MARKET_SELECTION_LIST_WIDTH);
+        marketSelectionList.setMinWidth(EXPANDED_MARKET_SELECTION_LIST_WIDTH);
         marketSelectionList.setFillWidth(true);
         marketSelectionList.getStyleClass().add("chat-container");
+    }
+
+    private void addCollapsedMarketSelectionList() {
+        collapsedMarketSelectionListTitle = new Label("", marketsGreyIcon);
+        collapsedMarketSelectionListTitle.setCursor(Cursor.HAND);
+        collapsedMarketSelectionListTitle.setTooltip(new BisqTooltip(Res.get("bisqEasy.offerbook.markets.CollapsedList.Tooltip")));
+        HBox header = new HBox(collapsedMarketSelectionListTitle);
+        header.setMinHeight(HEADER_HEIGHT);
+        header.setMaxHeight(HEADER_HEIGHT);
+        header.setAlignment(Pos.CENTER);
+        header.setPadding(new Insets(4, 0, 0, 0));
+
+        HBox subheader = new HBox();
+        subheader.setAlignment(Pos.CENTER);
+        subheader.getStyleClass().add("market-selection-subheader");
+
+        collapsedMarketSelectionList = new VBox(header, Layout.hLine(), subheader, Spacer.fillVBox());
+        collapsedMarketSelectionList.setMaxWidth(COLLAPSED_LIST_WIDTH);
+        collapsedMarketSelectionList.setPrefWidth(COLLAPSED_LIST_WIDTH);
+        collapsedMarketSelectionList.setMinWidth(COLLAPSED_LIST_WIDTH);
+        collapsedMarketSelectionList.setFillWidth(true);
+        collapsedMarketSelectionList.getStyleClass().add("collapsed-market-selection-list-container");
+        HBox.setMargin(collapsedMarketSelectionList, new Insets(0, -9, 0, 0));
     }
 
     private Label createAndGetRemoveFilterLabel(ImageView defaultCloseIcon) {
@@ -464,7 +586,6 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
 
         VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
         centerVBox.getChildren().addAll(titleHBox, Layout.hLine(), subheader, chatMessagesComponent);
-        centerVBox.getStyleClass().add("bisq-easy-container");
         centerVBox.setAlignment(Pos.CENTER);
     }
 
@@ -586,8 +707,37 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         }
     }
 
+    private void addCollapsedOfferList() {
+        offerListGreenIcon = ImageUtil.getImageViewById("list-view-green");
+        offerListGreyIcon = ImageUtil.getImageViewById("list-view-grey");
+        offerListWhiteIcon = ImageUtil.getImageViewById("list-view-white");
+
+        collapsedOfferListTitle = new Label("", offerListGreyIcon);
+        collapsedOfferListTitle.setCursor(Cursor.HAND);
+        collapsedOfferListTitle.setTooltip(new BisqTooltip(Res.get("bisqEasy.offerbook.offerList.CollapsedList.Tooltip")));
+        HBox header = new HBox(collapsedOfferListTitle);
+        header.setMinHeight(HEADER_HEIGHT);
+        header.setMaxHeight(HEADER_HEIGHT);
+        header.setAlignment(Pos.CENTER);
+        header.setPadding(new Insets(4, 0, 0, 0));
+
+        HBox subheader = new HBox();
+        subheader.setAlignment(Pos.CENTER_LEFT);
+        subheader.getStyleClass().add("offer-list-subheader");
+
+        collapsedOfferList = new VBox(header, Layout.hLine(), subheader, Spacer.fillVBox());
+        collapsedOfferList.setMaxWidth(COLLAPSED_LIST_WIDTH);
+        collapsedOfferList.setPrefWidth(COLLAPSED_LIST_WIDTH);
+        collapsedOfferList.setMinWidth(COLLAPSED_LIST_WIDTH);
+        collapsedOfferList.setFillWidth(true);
+        collapsedOfferList.getStyleClass().add("collapsed-offer-list-container");
+        HBox.setMargin(collapsedOfferList, new Insets(0, 0, 0, -9));
+    }
+
     private void addOfferList() {
-        Label offerListTitle = new Label(Res.get("bisqEasy.offerbook.offerList"));
+        offerListTitle = new Label(Res.get("bisqEasy.offerbook.offerList"), offerListGreenIcon);
+        offerListTitle.setCursor(Cursor.HAND);
+        offerListTitle.setTooltip(new BisqTooltip(Res.get("bisqEasy.offerbook.offerList.ExpandedList.Tooltip")));
         HBox header = new HBox(offerListTitle);
         header.setMinHeight(HEADER_HEIGHT);
         header.setMaxHeight(HEADER_HEIGHT);
@@ -595,7 +745,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         header.setPadding(new Insets(4, 0, 0, 15));
         header.getStyleClass().add("chat-header-title");
 
-        filterOfferListByDirection = createAndGetOfferListByDirectionFilter();
+        DropdownMenu filterOfferListByDirection = createAndGetOfferListByDirectionFilter();
 
         HBox subheader = new HBox();
         subheader.setAlignment(Pos.CENTER_LEFT);
@@ -614,8 +764,9 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         VBox.setVgrow(offerListTableView, Priority.ALWAYS);
 
         offerList = new VBox(header, Layout.hLine(), subheader, offerListTableView);
-        offerList.setPrefWidth(438);
-        offerList.setMinWidth(438);
+        offerList.setMaxWidth(EXPANDED_OFFER_LIST_WIDTH);
+        offerList.setPrefWidth(EXPANDED_OFFER_LIST_WIDTH);
+        offerList.setMinWidth(EXPANDED_OFFER_LIST_WIDTH);
         offerList.setFillWidth(true);
         offerList.getStyleClass().add("chat-container");
     }
@@ -625,8 +776,8 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         dropdownMenu.getStyleClass().add("dropdown-offer-list-direction-filter-menu");
         offerListByDirectionFilter = new Label();
         dropdownMenu.setLabel(offerListByDirectionFilter);
-        buyFromOffers = new DropdownMenuItem(Res.get("bisqEasy.offerbook.offerList.table.filters.offerDirection.buyFrom").toUpperCase());
-        sellToOffers = new DropdownMenuItem(Res.get("bisqEasy.offerbook.offerList.table.filters.offerDirection.sellTo").toUpperCase());
+        buyFromOffers = new DropdownMenuItem(Res.get("bisqEasy.offerbook.offerList.table.filters.offerDirection.buyFrom"));
+        sellToOffers = new DropdownMenuItem(Res.get("bisqEasy.offerbook.offerList.table.filters.offerDirection.sellTo"));
         dropdownMenu.addMenuItems(buyFromOffers, sellToOffers);
         return dropdownMenu;
     }

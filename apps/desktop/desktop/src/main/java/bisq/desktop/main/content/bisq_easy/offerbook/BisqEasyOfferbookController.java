@@ -329,6 +329,14 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         return MARKET_SELECTION_LIST_CELL_HEIGHT;
     }
 
+    void toggleOfferList() {
+        model.getShowOfferListExpanded().set(!model.getShowOfferListExpanded().get());
+    }
+
+    void toggleMarketSelectionList() {
+        model.getShowMarketSelectionListExpanded().set(!model.getShowMarketSelectionListExpanded().get());
+    }
+
     private void createMarketChannels() {
         List<MarketChannelItem> marketChannelItems = bisqEasyOfferbookChannelService.getChannels().stream()
                 .map(MarketChannelItem::new)
