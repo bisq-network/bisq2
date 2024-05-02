@@ -46,6 +46,7 @@ public class OfferMessageItem {
     private final String userNickname;
     private final Pair<Monetary, Monetary> minMaxAmount;
     private final String minMaxAmountAsString;
+    @EqualsAndHashCode.Exclude
     private final ReputationScore reputationScore;
     private final long totalScore;
 
