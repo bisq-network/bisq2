@@ -81,6 +81,9 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         getFavouriteMarkets().addObserver(this::persist);
         getIgnoreMinRequiredReputationScoreFromSecManager().addObserver(value -> persist());
         getMaxTradePriceDeviation().addObserver(value -> persist());
+        getShowBuyFromOffers().addObserver(value -> persist());
+        getShowOfferListExpanded().addObserver(value -> persist());
+        getShowMarketSelectionListExpanded().addObserver(value -> persist());
         isInitialized = true;
 
         if (DevMode.isDevMode() && getMinRequiredReputationScore().get() == DEFAULT_MIN_REQUIRED_REPUTATION_SCORE) {
@@ -189,6 +192,18 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
 
     public ObservableSet<Market> getFavouriteMarkets() {
         return persistableStore.favouriteMarkets;
+    }
+
+    public Observable<Boolean> getShowBuyFromOffers() {
+        return persistableStore.showBuyFromOffers;
+    }
+
+    public Observable<Boolean> getShowOfferListExpanded() {
+        return persistableStore.showOfferListExpanded;
+    }
+
+    public Observable<Boolean> getShowMarketSelectionListExpanded() {
+        return persistableStore.showMarketSelectionListExpanded;
     }
 
 

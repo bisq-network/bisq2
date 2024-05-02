@@ -54,6 +54,9 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     final ObservableSet<Market> favouriteMarkets = new ObservableSet<>();
     final Observable<Boolean> ignoreMinRequiredReputationScoreFromSecManager = new Observable<>();
     final Observable<Double> maxTradePriceDeviation = new Observable<>();
+    final Observable<Boolean> showBuyFromOffers = new Observable<>();
+    final Observable<Boolean> showOfferListExpanded = new Observable<>();
+    final Observable<Boolean> showMarketSelectionListExpanded = new Observable<>();
 
     public SettingsStore() {
         this(new Cookie(),
@@ -74,7 +77,10 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 false,
                 new HashSet<>(),
                 false,
-                SettingsService.DEFAULT_MAX_TRADE_PRICE_DEVIATION);
+                SettingsService.DEFAULT_MAX_TRADE_PRICE_DEVIATION,
+                true,
+                false,
+                true);
     }
 
     public SettingsStore(Cookie cookie,
@@ -95,7 +101,10 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                          boolean ignoreDiffAdjustmentFromSecManager,
                          Set<Market> favouriteMarkets,
                          boolean ignoreMinRequiredReputationScoreFromSecManager,
-                         double maxTradePriceDeviation) {
+                         double maxTradePriceDeviation,
+                         boolean showBuyFromOffers,
+                         boolean showOfferListExpanded,
+                         boolean showMarketSelectionListExpanded) {
         this.cookie = cookie;
         this.dontShowAgainMap.putAll(dontShowAgainMap);
         this.useAnimations.set(useAnimations);
@@ -115,6 +124,9 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
         this.favouriteMarkets.setAll(favouriteMarkets);
         this.ignoreMinRequiredReputationScoreFromSecManager.set(ignoreMinRequiredReputationScoreFromSecManager);
         this.maxTradePriceDeviation.set(maxTradePriceDeviation);
+        this.showBuyFromOffers.set(showBuyFromOffers);
+        this.showOfferListExpanded.set(showOfferListExpanded);
+        this.showMarketSelectionListExpanded.set(showMarketSelectionListExpanded);
     }
 
     @Override
@@ -138,7 +150,10 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 .setIgnoreDiffAdjustmentFromSecManager(ignoreDiffAdjustmentFromSecManager.get())
                 .addAllFavouriteMarkets(favouriteMarkets.stream().map(market -> market.toProto(serializeForHash)).collect(Collectors.toList()))
                 .setIgnoreMinRequiredReputationScoreFromSecManager(ignoreMinRequiredReputationScoreFromSecManager.get())
-                .setMaxTradePriceDeviation(maxTradePriceDeviation.get());
+                .setMaxTradePriceDeviation(maxTradePriceDeviation.get())
+                .setShowBuyFromOffers(showBuyFromOffers.get())
+                .setShowOfferListExpanded(showOfferListExpanded.get())
+                .setShowMarketSelectionListExpanded(showMarketSelectionListExpanded.get());
     }
 
     @Override
@@ -174,7 +189,10 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 new HashSet<>(proto.getFavouriteMarketsList().stream()
                         .map(Market::fromProto).collect(Collectors.toSet())),
                 proto.getIgnoreMinRequiredReputationScoreFromSecManager(),
-                maxTradePriceDeviation);
+                maxTradePriceDeviation,
+                proto.getShowBuyFromOffers(),
+                proto.getShowOfferListExpanded(),
+                proto.getShowMarketSelectionListExpanded());
     }
 
     @Override
@@ -208,7 +226,10 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 ignoreDiffAdjustmentFromSecManager.get(),
                 new HashSet<>(favouriteMarkets),
                 ignoreMinRequiredReputationScoreFromSecManager.get(),
-                maxTradePriceDeviation.get());
+                maxTradePriceDeviation.get(),
+                showBuyFromOffers.get(),
+                showOfferListExpanded.get(),
+                showMarketSelectionListExpanded.get());
     }
 
     @Override
@@ -233,6 +254,9 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
             favouriteMarkets.setAll(persisted.favouriteMarkets);
             ignoreMinRequiredReputationScoreFromSecManager.set(persisted.ignoreMinRequiredReputationScoreFromSecManager.get());
             maxTradePriceDeviation.set(persisted.maxTradePriceDeviation.get());
+            showBuyFromOffers.set(persisted.showBuyFromOffers.get());
+            showOfferListExpanded.set(persisted.showOfferListExpanded.get());
+            showMarketSelectionListExpanded.set(persisted.showMarketSelectionListExpanded.get());
         } catch (Exception e) {
             log.error("Exception at applyPersisted", e);
         }

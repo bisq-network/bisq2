@@ -47,6 +47,7 @@ public class OfferMessageItem {
     private final Pair<Monetary, Monetary> minMaxAmount;
     private final String minMaxAmountAsString;
     private final ReputationScore reputationScore;
+    private final long totalScore;
 
     private Pin marketPriceByCurrencyMapPin;
     private double priceSpecAsPercent;
@@ -62,6 +63,7 @@ public class OfferMessageItem {
         this.marketPriceService = marketPriceService;
         userNickname = userProfile.getNickName();
         reputationScore = reputationService.findReputationScore(userProfile.getId()).orElse(ReputationScore.NONE);
+        totalScore = reputationScore.getTotalScore();
         minMaxAmount = retrieveMinMaxAmount();
         minMaxAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, offer, false);
 

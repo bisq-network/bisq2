@@ -227,8 +227,8 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
 
         createOfferButton.setOnAction(e -> getController().onCreateOffer());
 
-        buyFromOffers.setOnAction(e -> getModel().getShowBuyFromOfferMessageItems().set(true));
-        sellToOffers.setOnAction(e -> getModel().getShowBuyFromOfferMessageItems().set(false));
+        buyFromOffers.setOnAction(e -> getController().onSelectBuyFromFilter());
+        sellToOffers.setOnAction(e -> getController().onSelectSellToFilter());
 
         removeWithOffersFilter.setOnMouseClicked(e -> getModel().getSelectedMarketsFilter().set(Filters.Markets.ALL));
         withOffersDisplayHint.setOnMouseEntered(e -> removeWithOffersFilter.setGraphic(withOffersRemoveFilterActiveIcon));
@@ -794,12 +794,16 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     }
 
     private void configOffersTableView(BisqTableView<OfferMessageItem> tableView) {
+        Comparator<OfferMessageItem> userProfileComparator = Comparator
+                .comparingLong(OfferMessageItem::getTotalScore).reversed()
+                .thenComparing(OfferMessageItem::getUserNickname);
+
         BisqTableColumn<OfferMessageItem> userProfileTableColumn = new BisqTableColumn.Builder<OfferMessageItem>()
                 .title(Res.get("bisqEasy.offerbook.offerList.table.columns.peerProfile"))
                 .left()
                 .fixWidth(170)
                 .setCellFactory(BisqEasyOfferbookUtil.getOfferMessageUserProfileCellFactory())
-                .comparator(Comparator.comparing(OfferMessageItem::getUserNickname))
+                .comparator(userProfileComparator)
                 .isSortable(true)
                 .build();
 
@@ -830,6 +834,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         tableView.getColumns().add(priceTableColumn);
         tableView.getColumns().add(spacerColumn);
         tableView.getColumns().add(fiatAmountTableColumn);
+        tableView.getSortOrder().add(userProfileTableColumn);
     }
 
     private static final class DropdownFilterMenuItem<T> extends DropdownMenuItem {
