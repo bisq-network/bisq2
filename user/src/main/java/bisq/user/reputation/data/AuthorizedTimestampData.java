@@ -40,9 +40,12 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
 @Getter
 public final class AuthorizedTimestampData implements AuthorizedDistributedData {
     public static final long TTL = TTL_30_DAYS;
+
+    @EqualsAndHashCode.Exclude
     private final MetaData metaData = new MetaData(TTL, getClass().getSimpleName());
     private final String profileId;
     private final long date;
+    @EqualsAndHashCode.Exclude
     private final boolean staticPublicKeysProvided;
 
     public AuthorizedTimestampData(String profileId, long date, boolean staticPublicKeysProvided) {

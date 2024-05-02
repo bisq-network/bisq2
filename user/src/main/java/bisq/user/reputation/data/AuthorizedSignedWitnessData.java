@@ -41,9 +41,12 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
 @Getter
 public final class AuthorizedSignedWitnessData implements AuthorizedDistributedData {
     public static final long TTL = TTL_100_DAYS;
+
+    @EqualsAndHashCode.Exclude
     private final MetaData metaData = new MetaData(TTL, HIGH_PRIORITY, getClass().getSimpleName());
     private final String profileId;
     private final long witnessSignDate;
+    @EqualsAndHashCode.Exclude
     private final boolean staticPublicKeysProvided;
 
     public AuthorizedSignedWitnessData(String profileId, long witnessSignDate, boolean staticPublicKeysProvided) {

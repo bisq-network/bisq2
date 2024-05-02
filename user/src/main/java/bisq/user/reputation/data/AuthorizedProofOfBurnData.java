@@ -43,10 +43,12 @@ import static com.google.common.base.Preconditions.checkArgument;
 @EqualsAndHashCode
 @Getter
 public final class AuthorizedProofOfBurnData implements AuthorizedDistributedData {
+    @EqualsAndHashCode.Exclude
     private final MetaData metaData = new MetaData(TTL_100_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
     private final long amount;
     private final long time;
     private final byte[] hash;
+    @EqualsAndHashCode.Exclude
     private final boolean staticPublicKeysProvided;
 
     public AuthorizedProofOfBurnData(long amount, long time, byte[] hash, boolean staticPublicKeysProvided) {

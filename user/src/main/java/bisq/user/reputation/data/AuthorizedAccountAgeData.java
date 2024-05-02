@@ -42,9 +42,11 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
 public final class AuthorizedAccountAgeData implements AuthorizedDistributedData {
     public static final long TTL = TTL_100_DAYS;
 
+    @EqualsAndHashCode.Exclude
     private final MetaData metaData = new MetaData(TTL, HIGHEST_PRIORITY, getClass().getSimpleName());
     private final String profileId;
     private final long date;
+    @EqualsAndHashCode.Exclude
     private final boolean staticPublicKeysProvided;
 
     public AuthorizedAccountAgeData(String profileId, long date, boolean staticPublicKeysProvided) {
