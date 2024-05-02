@@ -18,6 +18,7 @@
 package bisq.tor.controller;
 
 import bisq.common.observable.Observable;
+import bisq.security.keys.TorKeyPair;
 import bisq.tor.TorrcClientConfigFactory;
 import bisq.tor.controller.events.ControllerEventHandler;
 import bisq.tor.controller.events.events.BootstrapEvent;
@@ -102,18 +103,15 @@ public class NativeTorController implements BootstrapEventListener, HsDescUpload
     }
 
     public TorControlConnection.CreateHiddenServiceResult createHiddenService(
-            int hiddenServicePort, int localPort, String privateKey) throws IOException {
+            int hiddenServicePort, int localPort, TorKeyPair torKeyPair) throws IOException {
         TorControlConnection controlConnection = torControlConnection.orElseThrow();
 
         controllerEventHandler.addHsDescUploadedListener(this);
         setEventSubscriptionsOnConnection(controlConnection, List.of("HS_DESC"));
 
         TorControlConnection.CreateHiddenServiceResult result;
-        if (privateKey.isEmpty()) {
-            result = controlConnection.createHiddenService(hiddenServicePort, localPort);
-        } else {
-            result = controlConnection.createHiddenService(hiddenServicePort, localPort, privateKey);
-        }
+        result = controlConnection.createHiddenService(hiddenServicePort, localPort,
+                torKeyPair.getPrivateKeyInOpenSshFormat());
         hiddenServiceAddress.complete(result.serviceID);
 
         try {

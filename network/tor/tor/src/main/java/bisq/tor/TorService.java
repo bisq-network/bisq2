@@ -21,6 +21,7 @@ import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.util.OsUtils;
 import bisq.network.tor.common.torrc.TorrcFileGenerator;
+import bisq.security.keys.TorKeyPair;
 import bisq.tor.controller.NativeTorController;
 import bisq.tor.controller.events.events.BootstrapEvent;
 import bisq.tor.installer.TorInstaller;
@@ -110,13 +111,13 @@ public class TorService implements Service {
         return nativeTorController.getBootstrapEvent();
     }
 
-    public CompletableFuture<CreateOnionServiceResponse> createOnionService(int port, String privateOpenSshKey, String onionAddressString) {
+    public CompletableFuture<CreateOnionServiceResponse> createOnionService(int port, TorKeyPair torKeyPair, String onionAddressString) {
         log.info("Start hidden service with port {}", port);
         long ts = System.currentTimeMillis();
         try {
             @SuppressWarnings("resource") ServerSocket localServerSocket = new ServerSocket(RANDOM_PORT);
             int localPort = localServerSocket.getLocalPort();
-            return onionServicePublishService.publish(privateOpenSshKey, onionAddressString, port, localPort)
+            return onionServicePublishService.publish(torKeyPair, onionAddressString, port, localPort)
                     .thenApply(onionAddress -> {
                                 log.info("Tor hidden service Ready. Took {} ms. Onion address={}",
                                         System.currentTimeMillis() - ts, onionAddress);

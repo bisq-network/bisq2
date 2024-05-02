@@ -94,34 +94,5 @@ public class TorKeyGeneration {
                 hashedByteArray[1]
         };
     }
-
-    /**
-     * The format how the private key is stored in the tor directory
-     */
-    public static String getPrivateKeyInOpenSshFormat(byte[] privateKey) {
-        // Key Format definition:
-        // https://gitlab.torproject.org/tpo/core/torspec/-/blob/main/control-spec.txt
-        byte[] secretScalar = generateSecretScalar(privateKey);
-        String encoded = java.util.Base64.getEncoder().encodeToString(secretScalar);
-        return "-----BEGIN OPENSSH PRIVATE KEY-----\n" +
-                encoded + "\n" +
-                "-----END OPENSSH PRIVATE KEY-----\n";
-    }
-
-    private static byte[] generateSecretScalar(byte[] privateKey) {
-        // https://www.rfc-editor.org/rfc/rfc8032#section-5.1
-
-        SHA512Digest sha512Digest = new SHA512Digest();
-        sha512Digest.update(privateKey, 0, privateKey.length);
-
-        byte[] secretScalar = new byte[64];
-        sha512Digest.doFinal(secretScalar, 0);
-
-        secretScalar[0] &= (byte) 248;
-        secretScalar[31] &= 127;
-        secretScalar[31] |= 64;
-
-        return secretScalar;
-    }
 }
 

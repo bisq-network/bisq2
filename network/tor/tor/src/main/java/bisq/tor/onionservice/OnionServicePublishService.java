@@ -17,6 +17,7 @@
 
 package bisq.tor.onionservice;
 
+import bisq.security.keys.TorKeyPair;
 import bisq.tor.controller.NativeTorController;
 import lombok.extern.slf4j.Slf4j;
 import net.freehaven.tor.control.TorControlConnection;
@@ -38,7 +39,7 @@ public class OnionServicePublishService {
         this.nativeTorController = nativeTorController;
     }
 
-    public synchronized CompletableFuture<OnionAddress> publish(String privateOpenSshKey, String onionAddressString, int onionServicePort, int localPort) {
+    public synchronized CompletableFuture<OnionAddress> publish(TorKeyPair torKeyPair, String onionAddressString, int onionServicePort, int localPort) {
         if (onionAddressMap.containsKey(onionAddressString)) {
             return onionAddressMap.get(onionAddressString);
         }
@@ -48,7 +49,7 @@ public class OnionServicePublishService {
 
         try {
             TorControlConnection.CreateHiddenServiceResult jTorResult =
-                    nativeTorController.createHiddenService(onionServicePort, localPort, privateOpenSshKey);
+                    nativeTorController.createHiddenService(onionServicePort, localPort, torKeyPair);
 
             var onionAddress = new OnionAddress(jTorResult.serviceID + ".onion", onionServicePort);
             completableFuture.complete(onionAddress);
