@@ -60,7 +60,7 @@ public class TorService implements Service {
         this.torDataDirPath = transportConfig.getDataDir();
         nativeTorController = new NativeTorController(transportConfig.getBootstrapTimeout(),
                 transportConfig.getHsUploadTimeout());
-        this.onionServicePublishService = new OnionServicePublishService(nativeTorController, torDataDirPath);
+        this.onionServicePublishService = new OnionServicePublishService(nativeTorController);
     }
 
     @Override

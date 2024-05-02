@@ -34,7 +34,7 @@ public class OnionServicePublishService {
     private final NativeTorController nativeTorController;
     private final Map<String, CompletableFuture<OnionAddress>> onionAddressMap = new HashMap<>();
 
-    public OnionServicePublishService(NativeTorController nativeTorController, Path torDirPath) {
+    public OnionServicePublishService(NativeTorController nativeTorController) {
         this.nativeTorController = nativeTorController;
     }
 
