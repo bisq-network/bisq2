@@ -39,7 +39,8 @@ public class OnionServicePublishService {
         this.nativeTorController = nativeTorController;
     }
 
-    public synchronized CompletableFuture<OnionAddress> publish(TorKeyPair torKeyPair, String onionAddressString, int onionServicePort, int localPort) {
+    public synchronized CompletableFuture<OnionAddress> publish(TorKeyPair torKeyPair, int onionServicePort, int localPort) {
+        String onionAddressString = torKeyPair.getOnionAddress();
         if (onionAddressMap.containsKey(onionAddressString)) {
             return onionAddressMap.get(onionAddressString);
         }
