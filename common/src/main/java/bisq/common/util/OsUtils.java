@@ -78,6 +78,11 @@ public class OsUtils {
         return isLinux() && new File("/etc/redhat-release").isFile();
     }
 
+    public static boolean isWhonix() {
+        return isLinux() && new File("/usr/share/whonix/marker").isFile() &&
+                new File("/usr/share/anon-dist/marker").isFile();
+    }
+
     public static String getInstallerExtension() {
         if (OsUtils.isMac()) {
             return ".dmg";

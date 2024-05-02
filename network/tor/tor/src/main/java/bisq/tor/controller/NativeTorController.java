@@ -60,7 +60,7 @@ public class NativeTorController implements BootstrapEventListener, HsDescUpload
         this.hsUploadTimeout = hsUploadTimeout;
     }
 
-    public void connect(int controlPort, PasswordDigest controlConnectionSecret) {
+    public void connect(int controlPort, Optional<PasswordDigest> controlConnectionSecret) {
         log.info("connect with controlPort {}", controlPort);
         boolean readyToStart = isRunning.compareAndSet(false, true);
         if (!readyToStart) {
@@ -71,7 +71,11 @@ public class NativeTorController implements BootstrapEventListener, HsDescUpload
             var controlSocket = new Socket("127.0.0.1", controlPort);
             var controlConnection = new TorControlConnection(controlSocket);
             controlConnection.launchThread(true);
-            controlConnection.authenticate(controlConnectionSecret.getSecret());
+
+            if (controlConnectionSecret.isPresent()) {
+                controlConnection.authenticate(controlConnectionSecret.get().getSecret());
+            }
+
             torControlConnection = Optional.of(controlConnection);
 
         } catch (IOException e) {
