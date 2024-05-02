@@ -43,12 +43,14 @@ import static com.google.common.base.Preconditions.checkArgument;
 @EqualsAndHashCode
 @Getter
 public final class AuthorizedBondedReputationData implements AuthorizedDistributedData {
+    @EqualsAndHashCode.Exclude
     private final MetaData metaData = new MetaData(TTL_100_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
     private final long amount;
-    private final long lockTime;
-    private final boolean staticPublicKeysProvided;
     private final long time;
     private final byte[] hash;
+    private final long lockTime;
+    @EqualsAndHashCode.Exclude
+    private final boolean staticPublicKeysProvided;
 
     public AuthorizedBondedReputationData(long amount, long time, byte[] hash, long lockTime, boolean staticPublicKeysProvided) {
         this.amount = amount;
