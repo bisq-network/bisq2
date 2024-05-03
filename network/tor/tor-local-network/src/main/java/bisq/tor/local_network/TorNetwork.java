@@ -60,7 +60,6 @@ public class TorNetwork {
                 .type(TorNode.Type.DIRECTORY_AUTHORITY)
                 .nickname(nickname)
                 .dataDir(nodeDataDir)
-                .controlPort(NetworkUtils.findFreeSystemPort())
                 .orPort(NetworkUtils.findFreeSystemPort())
                 .dirPort(NetworkUtils.findFreeSystemPort())
                 .build();
@@ -81,7 +80,6 @@ public class TorNetwork {
                 .nickname(nickname)
                 .dataDir(nodeDataDir)
 
-                .controlPort(NetworkUtils.findFreeSystemPort())
                 .orPort(NetworkUtils.findFreeSystemPort())
                 .dirPort(NetworkUtils.findFreeSystemPort())
 
@@ -101,7 +99,6 @@ public class TorNetwork {
                 .nickname(nickname)
                 .dataDir(nodeDataDir)
 
-                .controlPort(NetworkUtils.findFreeSystemPort())
                 .orPort(NetworkUtils.findFreeSystemPort())
                 .dirPort(NetworkUtils.findFreeSystemPort())
 

@@ -65,7 +65,6 @@ public class TorrcClientConfigFactory {
     private TorrcConfigGenerator baseTorrcGenerator() {
         return BaseTorrcGenerator.builder()
                 .dataDirPath(dataDir)
-                .controlPortWriteFile(dataDir.resolve(NativeTorProcess.CONTROL_DIR_NAME).resolve("control"))
                 .hashedControlPassword(hashedControlPassword.getHashedPassword())
                 .isTestNetwork(isTestNetwork)
                 .build();

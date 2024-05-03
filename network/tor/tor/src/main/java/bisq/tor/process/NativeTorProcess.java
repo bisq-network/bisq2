@@ -17,6 +17,7 @@
 
 package bisq.tor.process;
 
+import bisq.network.tor.common.torrc.BaseTorrcGenerator;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -29,7 +30,6 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class NativeTorProcess {
     public static final String ARG_OWNER_PID = "__OwningControllerProcess";
-    public static final String CONTROL_DIR_NAME = "control";
 
     private final Path torDataDirPath;
     private final Path torBinaryPath;
@@ -100,7 +100,7 @@ public class NativeTorProcess {
     }
 
     private void createTorControlDirectory() {
-        File controlDirFile = torDataDirPath.resolve(CONTROL_DIR_NAME).toFile();
+        File controlDirFile = torDataDirPath.resolve(BaseTorrcGenerator.CONTROL_DIR_NAME).toFile();
         if (!controlDirFile.exists()) {
             boolean isSuccess = controlDirFile.mkdirs();
             if (!isSuccess) {

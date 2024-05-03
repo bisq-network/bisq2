@@ -48,7 +48,6 @@ public class DirectoryAuthorityTorrcGeneratorTests {
                         .nickname("A")
                         .dataDir(daAPath)
 
-                        .controlPort(1)
                         .orPort(2)
                         .dirPort(3)
 
@@ -69,7 +68,6 @@ public class DirectoryAuthorityTorrcGeneratorTests {
                         .nickname("B")
                         .dataDir(tempDir.resolve("DA_B"))
 
-                        .controlPort(1)
                         .orPort(2)
                         .dirPort(3)
 

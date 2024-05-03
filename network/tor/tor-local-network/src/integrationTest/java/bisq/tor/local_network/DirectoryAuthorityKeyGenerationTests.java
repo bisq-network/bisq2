@@ -38,7 +38,6 @@ public class DirectoryAuthorityKeyGenerationTests {
                 .type(TorNode.Type.DIRECTORY_AUTHORITY)
                 .nickname("Nick")
                 .dataDir(dataDir)
-                .controlPort(1)
                 .orPort(2)
                 .dirPort(3)
                 .build();
