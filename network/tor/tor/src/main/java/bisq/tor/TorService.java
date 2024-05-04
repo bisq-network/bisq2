@@ -70,30 +70,40 @@ public class TorService implements Service {
             return CompletableFuture.completedFuture(true);
         }
 
-        PasswordDigest hashedControlPassword = PasswordDigest.generateDigest();
-        createTorrcConfigFile(torDataDirPath, hashedControlPassword);
+        if (!OsUtils.isWhonix()) {
+            installTorIfNotUpToDate();
 
-        Path torBinaryPath = getTorBinaryPath();
-        var nativeTorProcess = new NativeTorProcess(torBinaryPath, torDataDirPath);
-        torProcess = Optional.of(nativeTorProcess);
-        nativeTorProcess.start();
+            PasswordDigest hashedControlPassword = PasswordDigest.generateDigest();
+            createTorrcConfigFile(torDataDirPath, hashedControlPassword);
 
-        Path controlDirPath = torDataDirPath.resolve(NativeTorProcess.CONTROL_DIR_NAME);
-        Path controlPortFilePath = controlDirPath.resolve("control");
+            Path torBinaryPath = getTorBinaryPath();
+            var nativeTorProcess = new NativeTorProcess(torBinaryPath, torDataDirPath);
+            torProcess = Optional.of(nativeTorProcess);
+            nativeTorProcess.start();
 
-        return new ControlPortFilePoller(controlPortFilePath)
-                .parsePort()
-                .thenAccept(controlPort -> {
-                    nativeTorController.connect(controlPort, hashedControlPassword);
-                    nativeTorController.bindTorToConnection();
+            Path controlDirPath = torDataDirPath.resolve(NativeTorProcess.CONTROL_DIR_NAME);
+            Path controlPortFilePath = controlDirPath.resolve("control");
 
-                    nativeTorController.enableTorNetworking();
-                    nativeTorController.waitUntilBootstrapped();
+            return new ControlPortFilePoller(controlPortFilePath)
+                    .parsePort()
+                    .thenAccept(controlPort -> {
+                        nativeTorController.connect(controlPort, Optional.of(hashedControlPassword));
+                        nativeTorController.bindTorToConnection();
 
-                    int port = nativeTorController.getSocksPort().orElseThrow();
-                    torSocksProxyFactory = Optional.of(new TorSocksProxyFactory(port));
-                })
-                .thenApply(unused -> true);
+                        nativeTorController.enableTorNetworking();
+                        nativeTorController.waitUntilBootstrapped();
+
+                        int port = nativeTorController.getSocksPort().orElseThrow();
+                        torSocksProxyFactory = Optional.of(new TorSocksProxyFactory(port));
+                    })
+                    .thenApply(unused -> true);
+        } else {
+            return CompletableFuture.supplyAsync(() -> {
+                nativeTorController.connect(9051, Optional.empty());
+                torSocksProxyFactory = Optional.of(new TorSocksProxyFactory(9050));
+                return true;
+            });
+        }
     }
 
     @Override
