@@ -49,9 +49,11 @@ public final class AuthorizedMarketPriceData implements AuthorizedDistributedDat
     public static final long TTL = TimeUnit.MINUTES.toMillis(10);
 
     @ExcludeForHash
+    @EqualsAndHashCode.Exclude
     private final MetaData metaData = new MetaData(TTL, HIGH_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_500);
     // We need deterministic sorting or the map, so we use a treemap
     private final TreeMap<Market, MarketPrice> marketPriceByCurrencyMap;
+    @EqualsAndHashCode.Exclude
     private final boolean staticPublicKeysProvided;
 
     public AuthorizedMarketPriceData(TreeMap<Market, MarketPrice> marketPriceByCurrencyMap, boolean staticPublicKeysProvided) {

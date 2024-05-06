@@ -45,6 +45,7 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
     public final static int MAX_MESSAGE_LENGTH = 10_000;
 
     @ExcludeForHash
+    @EqualsAndHashCode.Exclude
     private final MetaData metaData = new MetaData(TTL_100_DAYS, HIGHEST_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_500);
     private final String id;
     private final long date;
@@ -53,6 +54,7 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
     private final String releaseNotes;
     private final String versionString;
     private final String releaseManagerProfileId;
+    @EqualsAndHashCode.Exclude
     private final boolean staticPublicKeysProvided;
     private transient final Version version;
 

@@ -47,6 +47,7 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
     public final static int MAX_MESSAGE_LENGTH = 1000;
 
     @ExcludeForHash
+    @EqualsAndHashCode.Exclude
     private final MetaData metaData = new MetaData(TTL_30_DAYS, HIGHEST_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_500);
     private final String id;
     private final long date;
@@ -58,6 +59,7 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
     private final Optional<String> minVersion;
     private final Optional<AuthorizedBondedRole> bannedRole;
     private final String securityManagerProfileId;
+    @EqualsAndHashCode.Exclude
     private final boolean staticPublicKeysProvided;
 
     public AuthorizedAlertData(String id,
