@@ -100,7 +100,8 @@ public class TorTransportService implements TransportService {
         long ts = System.currentTimeMillis();
         log.info("Start creating tor socket to {}", address);
         Socket socket = torService.getSocket(null); // Blocking call. Takes 5-15 sec usually.
-        socket.connect(new InetSocketAddress(address.getHost(), address.getPort()));
+        InetSocketAddress inetSocketAddress = InetSocketAddress.createUnresolved(address.getHost(), address.getPort());
+        socket.connect(inetSocketAddress);
         numSocketsCreated++;
         bootstrapInfo.getBootstrapState().set(BootstrapState.CONNECTED_TO_PEERS);
         bootstrapInfo.getBootstrapProgress().set(Math.min(1, 0.5 + numSocketsCreated / 10d));
