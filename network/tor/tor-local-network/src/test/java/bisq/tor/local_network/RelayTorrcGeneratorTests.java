@@ -47,7 +47,6 @@ public class RelayTorrcGeneratorTests {
                         .nickname("A")
                         .dataDir(relayAPath)
 
-                        .controlPort(1)
                         .orPort(2)
                         .dirPort(3)
 
@@ -68,7 +67,6 @@ public class RelayTorrcGeneratorTests {
                         .nickname("B")
                         .dataDir(tempDir.resolve("DA_B"))
 
-                        .controlPort(1)
                         .orPort(2)
                         .dirPort(3)
 
@@ -92,7 +90,6 @@ public class RelayTorrcGeneratorTests {
                         .nickname("A")
                         .dataDir(tempDir.resolve("dir_auth"))
 
-                        .controlPort(1)
                         .orPort(2)
                         .dirPort(3)
 

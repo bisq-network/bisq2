@@ -20,6 +20,7 @@ package bisq.tor;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.util.OsUtils;
+import bisq.network.tor.common.torrc.BaseTorrcGenerator;
 import bisq.network.tor.common.torrc.TorrcFileGenerator;
 import bisq.security.keys.TorKeyPair;
 import bisq.tor.controller.NativeTorController;
@@ -82,7 +83,7 @@ public class TorService implements Service {
             torProcess = Optional.of(nativeTorProcess);
             nativeTorProcess.start();
 
-            Path controlDirPath = torDataDirPath.resolve(NativeTorProcess.CONTROL_DIR_NAME);
+            Path controlDirPath = torDataDirPath.resolve(BaseTorrcGenerator.CONTROL_DIR_NAME);
             Path controlPortFilePath = controlDirPath.resolve("control");
 
             return new ControlPortFilePoller(controlPortFilePath)
