@@ -17,6 +17,7 @@
 
 package bisq.common.currency;
 
+import bisq.common.annotation.ExcludeForHash;
 import bisq.common.proto.NetworkProto;
 import bisq.common.proto.PersistableProto;
 import bisq.common.validation.NetworkDataValidation;
@@ -34,8 +35,10 @@ public final class Market implements NetworkProto, PersistableProto, Comparable<
 
     private final String baseCurrencyCode;
     private final String quoteCurrencyCode;
+    @ExcludeForHash
     @EqualsAndHashCode.Exclude
     private final String baseCurrencyName;
+    @ExcludeForHash
     @EqualsAndHashCode.Exclude
     private final String quoteCurrencyName;
 

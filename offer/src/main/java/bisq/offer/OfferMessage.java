@@ -17,6 +17,7 @@
 
 package bisq.offer;
 
+import bisq.common.annotation.ExcludeForHash;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.DistributedData;
@@ -27,14 +28,15 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.network.p2p.services.data.storage.MetaData.TTL_2_DAYS;
+import static bisq.network.p2p.services.data.storage.MetaData.*;
 
 @Slf4j
 @ToString
 @Getter
 @EqualsAndHashCode
 public final class OfferMessage implements DistributedData {
-    private final MetaData metaData = new MetaData(TTL_2_DAYS, getClass().getSimpleName());
+    @ExcludeForHash
+    private final MetaData metaData = new MetaData(TTL_4_DAYS, DEFAULT_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_1000);
     private final Offer<?, ?> offer;
 
     public OfferMessage(Offer<?, ?> offer) {

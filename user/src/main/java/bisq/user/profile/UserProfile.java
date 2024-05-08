@@ -17,6 +17,7 @@
 
 package bisq.user.profile;
 
+import bisq.common.annotation.ExcludeForHash;
 import bisq.common.data.ByteArray;
 import bisq.common.encoding.Hex;
 import bisq.common.proto.ProtoResolver;
@@ -60,10 +61,12 @@ public final class UserProfile implements DistributedData {
     }
 
     // We give a bit longer TTL than the chat messages to ensure the chat user is available as long the messages are 
-    private final MetaData metaData = new MetaData(TTL_15_DAYS, DEFAULT_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_10_000);
+    @ExcludeForHash
+    private final MetaData metaData = new MetaData(TTL_15_DAYS, DEFAULT_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_50_000);
     private final String nickName;
     // We need the proofOfWork for verification of the nym and cathash icon
     private final ProofOfWork proofOfWork;
+    @ExcludeForHash
     private final int avatarVersion;
     private final NetworkId networkId;
     private final String terms;
@@ -166,6 +169,7 @@ public final class UserProfile implements DistributedData {
 
     public ByteArray getProofOfBurnKey() {
         if (proofOfBurnHash == null) {
+            // Must be compatible with Bisq 1 proofOfBurn input
             proofOfBurnHash = new ByteArray(DigestUtil.hash(getId().getBytes(Charsets.UTF_8)));
         }
         return proofOfBurnHash;

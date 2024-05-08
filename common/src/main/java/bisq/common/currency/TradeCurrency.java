@@ -17,6 +17,7 @@
 
 package bisq.common.currency;
 
+import bisq.common.annotation.ExcludeForHash;
 import bisq.common.proto.PersistableProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
@@ -31,6 +32,7 @@ public abstract class TradeCurrency implements Comparable<TradeCurrency>, Persis
     public final static int MAX_NAME_LENGTH = 100;
 
     protected final String code;
+    @ExcludeForHash
     @EqualsAndHashCode.Exclude
     protected final String name;
 

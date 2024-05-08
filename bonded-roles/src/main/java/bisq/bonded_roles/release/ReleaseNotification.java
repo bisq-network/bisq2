@@ -18,6 +18,7 @@
 package bisq.bonded_roles.release;
 
 import bisq.bonded_roles.AuthorizedPubKeys;
+import bisq.common.annotation.ExcludeForHash;
 import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -34,8 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Set;
 
-import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
-import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
+import static bisq.network.p2p.services.data.storage.MetaData.*;
 
 @Slf4j
 @ToString
@@ -44,7 +44,9 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
 public final class ReleaseNotification implements AuthorizedDistributedData {
     public final static int MAX_MESSAGE_LENGTH = 10_000;
 
-    private final MetaData metaData = new MetaData(TTL_100_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    @ExcludeForHash
+    @EqualsAndHashCode.Exclude
+    private final MetaData metaData = new MetaData(TTL_100_DAYS, HIGHEST_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_500);
     private final String id;
     private final long date;
     private final boolean isPreRelease;
@@ -52,8 +54,8 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
     private final String releaseNotes;
     private final String versionString;
     private final String releaseManagerProfileId;
+    @EqualsAndHashCode.Exclude
     private final boolean staticPublicKeysProvided;
-
     private transient final Version version;
 
     public ReleaseNotification(String id,

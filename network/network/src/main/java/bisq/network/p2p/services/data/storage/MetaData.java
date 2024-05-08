@@ -35,13 +35,13 @@ import java.util.concurrent.TimeUnit;
 @ToString
 @Getter
 public final class MetaData implements NetworkProto {
-    public static final long TTL_2_DAYS = TimeUnit.DAYS.toMillis(2);
+    public static final long TTL_4_DAYS = TimeUnit.DAYS.toMillis(4);
     public static final long TTL_10_DAYS = TimeUnit.DAYS.toMillis(10);
     public static final long TTL_15_DAYS = TimeUnit.DAYS.toMillis(15);
     public static final long TTL_30_DAYS = TimeUnit.DAYS.toMillis(30);
     public static final long TTL_100_DAYS = TimeUnit.DAYS.toMillis(100);
 
-    public static final int MAX_MAP_SIZE_100 = 100;
+    public static final int MAX_MAP_SIZE_500 = 500;
     public static final int MAX_MAP_SIZE_1000 = 1000;
     public static final int MAX_MAP_SIZE_5000 = 5000;
     public static final int MAX_MAP_SIZE_10_000 = 10_000;
@@ -56,22 +56,6 @@ public final class MetaData implements NetworkProto {
     private final int priority;
     private final String className;
     private final int maxMapSize;
-
-    public MetaData(String className) {
-        this(TTL_10_DAYS, className);
-    }
-
-    public MetaData(long ttl, String className) {
-        this(ttl, className, MAX_MAP_SIZE_1000);
-    }
-
-    public MetaData(long ttl, int priority, String className) {
-        this(ttl, priority, className, MAX_MAP_SIZE_1000);
-    }
-
-    public MetaData(long ttl, String className, int maxMapSize) {
-        this(ttl, DEFAULT_PRIORITY, className, maxMapSize);
-    }
 
     public MetaData(long ttl, int priority, String className, int maxMapSize) {
         this.ttl = ttl;
@@ -107,7 +91,7 @@ public final class MetaData implements NetworkProto {
 
     public double getCostFactor() {
         double ttlImpact = MathUtils.bounded(0, 1, ttl / (double) TTL_100_DAYS);
-        double mapSizeImpact = MathUtils.bounded(0, 1, maxMapSize / (double) MAX_MAP_SIZE_10_000);
+        double mapSizeImpact = MathUtils.bounded(0, 1, maxMapSize / (double) MAX_MAP_SIZE_50_000);
         double impact = ttlImpact + mapSizeImpact;
         return MathUtils.bounded(0, 1, impact);
     }

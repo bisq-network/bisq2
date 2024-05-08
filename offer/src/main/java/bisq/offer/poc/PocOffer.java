@@ -20,6 +20,7 @@ package bisq.offer.poc;
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
+import bisq.common.annotation.ExcludeForHash;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
@@ -42,14 +43,15 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 import java.util.Optional;
 
-import static bisq.network.p2p.services.data.storage.MetaData.TTL_2_DAYS;
+import static bisq.network.p2p.services.data.storage.MetaData.*;
 
 @Slf4j
 @Getter
 @ToString
 @EqualsAndHashCode
 public final class PocOffer implements DistributedData {
-    private final MetaData metaData = new MetaData(TTL_2_DAYS, getClass().getSimpleName());
+    @ExcludeForHash
+    private final MetaData metaData = new MetaData(TTL_4_DAYS, DEFAULT_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_1000);
 
     public static final String ACCOUNT_AGE_WITNESS_HASH = "accountAgeWitnessHash";
     public static final String REFERRAL_ID = "referralId";
