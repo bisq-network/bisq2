@@ -41,10 +41,12 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
 @EqualsAndHashCode
 @Getter
 public final class AuthorizedMinRequiredReputationScoreData implements AuthorizedDistributedData {
+    @EqualsAndHashCode.Exclude
     private final MetaData metaData = new MetaData(TTL_100_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
     private final long date;
     private final long minRequiredReputationScore;
     private final String securityManagerProfileId;
+    @EqualsAndHashCode.Exclude
     private final boolean staticPublicKeysProvided;
 
     public AuthorizedMinRequiredReputationScoreData(long date,

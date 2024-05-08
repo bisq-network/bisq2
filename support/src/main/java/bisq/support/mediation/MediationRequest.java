@@ -43,15 +43,18 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @Getter
 @ToString
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@EqualsAndHashCode
 public final class MediationRequest implements MailboxMessage, ExternalNetworkMessage {
+    @EqualsAndHashCode.Exclude
     private final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
-    @EqualsAndHashCode.Include
     private final BisqEasyContract contract;
-    @EqualsAndHashCode.Include
     private final String tradeId;
+
+    @EqualsAndHashCode.Exclude
     private final UserProfile requester;
+    @EqualsAndHashCode.Exclude
     private final UserProfile peer;
+    @EqualsAndHashCode.Exclude
     private final List<BisqEasyOpenTradeMessage> chatMessages;
 
     public MediationRequest(String tradeId,

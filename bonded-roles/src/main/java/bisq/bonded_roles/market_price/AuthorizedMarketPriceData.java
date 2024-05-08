@@ -45,9 +45,12 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Getter
 public final class AuthorizedMarketPriceData implements AuthorizedDistributedData {
     public static final long TTL = TimeUnit.MINUTES.toMillis(10);
+
+    @EqualsAndHashCode.Exclude
     private final MetaData metaData = new MetaData(TTL, DEFAULT_PRIORITY, getClass().getSimpleName());
     // We need deterministic sorting or the map, so we use a treemap
     private final TreeMap<Market, MarketPrice> marketPriceByCurrencyMap;
+    @EqualsAndHashCode.Exclude
     private final boolean staticPublicKeysProvided;
 
     public AuthorizedMarketPriceData(TreeMap<Market, MarketPrice> marketPriceByCurrencyMap, boolean staticPublicKeysProvided) {
