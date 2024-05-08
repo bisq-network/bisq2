@@ -34,6 +34,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_2_DAYS;
 @Getter
 @EqualsAndHashCode
 public final class OfferMessage implements DistributedData {
+    @EqualsAndHashCode.Exclude
     private final MetaData metaData = new MetaData(TTL_2_DAYS, getClass().getSimpleName());
     private final Offer<?, ?> offer;
 

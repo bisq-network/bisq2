@@ -59,7 +59,8 @@ public final class UserProfile implements DistributedData {
                 userProfile.getNetworkId(), terms, statement);
     }
 
-    // We give a bit longer TTL than the chat messages to ensure the chat user is available as long the messages are 
+    // We give a bit longer TTL than the chat messages to ensure the chat user is available as long the messages are
+    @EqualsAndHashCode.Exclude
     private final MetaData metaData = new MetaData(TTL_15_DAYS, DEFAULT_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_10_000);
     private final String nickName;
     // We need the proofOfWork for verification of the nym and cathash icon

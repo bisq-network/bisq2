@@ -45,6 +45,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @ToString
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public final class MediationRequest implements MailboxMessage, ExternalNetworkMessage {
+    @EqualsAndHashCode.Exclude
     private final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
     @EqualsAndHashCode.Include
     private final BisqEasyContract contract;

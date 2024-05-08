@@ -59,6 +59,7 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage implement
                 bisqEasyOffer);
     }
 
+    @EqualsAndHashCode.Exclude
     private final MetaData metaData = new MetaData(TTL_30_DAYS, HIGH_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_100);
 
     private final String tradeId;

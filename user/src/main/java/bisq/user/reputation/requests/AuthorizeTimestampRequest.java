@@ -36,6 +36,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 @ToString
 @EqualsAndHashCode
 public final class AuthorizeTimestampRequest implements MailboxMessage, ExternalNetworkMessage {
+    @EqualsAndHashCode.Exclude
     private final MetaData metaData = new MetaData(TTL_10_DAYS, getClass().getSimpleName());
     private final String profileId;
 
