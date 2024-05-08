@@ -17,8 +17,10 @@ public class KeyBundle implements PersistableProto {
     private final TorKeyPair torKeyPair;
     private final String keyId;
     @ToString.Exclude
+    @EqualsAndHashCode.Exclude  // transient are excluded by default but let's make it more explicit
     private transient final byte[] encodedPrivateKey;
     @ToString.Exclude
+    @EqualsAndHashCode.Exclude  // transient are excluded by default but let's make it more explicit
     private transient final byte[] encodedPublicKey;
     // private final I2pKeyPair i2PKeyPair;
 

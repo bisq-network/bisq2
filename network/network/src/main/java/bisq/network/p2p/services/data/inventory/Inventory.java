@@ -41,6 +41,7 @@ public final class Inventory implements NetworkProto {
 
     private final List<? extends DataRequest> entries;
     private final boolean maxSizeReached;
+    @EqualsAndHashCode.Exclude  // transient are excluded by default but let's make it more explicit
     private transient final Optional<Integer> cachedSerializedSize;
 
     public Inventory(Collection<? extends DataRequest> entries, boolean maxSizeReached) {

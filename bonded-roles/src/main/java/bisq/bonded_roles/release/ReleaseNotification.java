@@ -55,6 +55,7 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
     private final String releaseManagerProfileId;
     @EqualsAndHashCode.Exclude
     private final boolean staticPublicKeysProvided;
+    @EqualsAndHashCode.Exclude  // transient are excluded by default but let's make it more explicit
     private transient final Version version;
 
     public ReleaseNotification(String id,

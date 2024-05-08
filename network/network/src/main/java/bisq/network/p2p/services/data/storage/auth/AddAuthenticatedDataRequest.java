@@ -70,6 +70,7 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
     private final byte[] signature;
     @Getter
     private final byte[] ownerPublicKeyBytes;
+    @EqualsAndHashCode.Exclude  // transient are excluded by default but let's make it more explicit
     private transient final PublicKey ownerPublicKey;
 
     public AddAuthenticatedDataRequest(AuthenticatedSequentialData authenticatedSequentialData, byte[] signature, PublicKey ownerPublicKey) {

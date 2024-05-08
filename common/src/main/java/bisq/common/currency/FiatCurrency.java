@@ -33,7 +33,8 @@ public final class FiatCurrency extends TradeCurrency {
     private final static String PREFIX = "★ ";
 
     @Getter
-    private final Currency currency;
+    @EqualsAndHashCode.Exclude  // transient are excluded by default but let's make it more explicit
+    private transient final Currency currency;
 
     public FiatCurrency(String code) {
         this(Currency.getInstance(code), LocaleRepository.getDefaultLocale());
