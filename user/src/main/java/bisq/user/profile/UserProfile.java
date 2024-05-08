@@ -166,6 +166,7 @@ public final class UserProfile implements DistributedData {
 
     public ByteArray getProofOfBurnKey() {
         if (proofOfBurnHash == null) {
+            // Must be compatible with Bisq 1 proofOfBurn input
             proofOfBurnHash = new ByteArray(DigestUtil.hash(getId().getBytes(Charsets.UTF_8)));
         }
         return proofOfBurnHash;
