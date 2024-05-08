@@ -43,6 +43,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.*;
 @EqualsAndHashCode
 @Getter
 public final class AuthorizedBondedRole implements AuthorizedDistributedData {
+    @EqualsAndHashCode.Exclude
     private final MetaData metaData = new MetaData(TTL_100_DAYS, HIGHEST_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_100);
     private final String profileId;
     private final String authorizedPublicKey;
@@ -53,6 +54,7 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
     private final NetworkId networkId;
     // The oracle node which did the validation and publishing
     private final Optional<AuthorizedOracleNode> authorizingOracleNode;
+    @EqualsAndHashCode.Exclude
     private final boolean staticPublicKeysProvided;
 
     public AuthorizedBondedRole(String profileId,
