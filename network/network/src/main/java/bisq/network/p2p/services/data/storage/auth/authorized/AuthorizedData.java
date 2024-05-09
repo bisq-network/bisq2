@@ -17,7 +17,6 @@
 
 package bisq.network.p2p.services.data.storage.auth.authorized;
 
-import bisq.common.annotation.ExcludeForHash;
 import bisq.common.encoding.Hex;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
@@ -42,8 +41,6 @@ import java.util.Optional;
 @EqualsAndHashCode(callSuper = true)
 @Getter
 public final class AuthorizedData extends AuthenticatedData {
-    // We omit the signature for the hash, otherwise we would get a new map entry for the same data at each republishing
-    @ExcludeForHash
     private final Optional<byte[]> signature;
     private final byte[] authorizedPublicKeyBytes;
     transient private final PublicKey authorizedPublicKey;
@@ -75,6 +72,15 @@ public final class AuthorizedData extends AuthenticatedData {
     public void verify() {
         signature.ifPresent(NetworkDataValidation::validateECSignature);
         NetworkDataValidation.validateECPubKey(authorizedPublicKeyBytes);
+    }
+
+    @Override
+    public byte[] serialize() {
+        // We omit the signature for the hash, otherwise we would get a new map entry for the same data at each republishing
+        return getAuthenticatedDataBuilder(false).setAuthorizedData(
+                        bisq.network.protobuf.AuthorizedData.newBuilder()
+                                .setAuthorizedPublicKeyBytes(ByteString.copyFrom(authorizedPublicKeyBytes)))
+                .build().toByteArray();
     }
 
     @Override
