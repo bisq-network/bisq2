@@ -17,7 +17,6 @@
 
 package bisq.network.p2p.services.data.storage.auth.authorized;
 
-import bisq.common.annotation.ExcludeForHash;
 import bisq.common.encoding.Hex;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
@@ -31,7 +30,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
 import java.security.PublicKey;
-import java.util.Date;
 import java.util.Optional;
 
 /**
@@ -43,8 +41,6 @@ import java.util.Optional;
 @EqualsAndHashCode(callSuper = true)
 @Getter
 public final class AuthorizedData extends AuthenticatedData {
-    // We omit the signature for the hash, otherwise we would get a new map entry for the same data at each republishing
-    @ExcludeForHash
     private final Optional<byte[]> signature;
     private final byte[] authorizedPublicKeyBytes;
     transient private final PublicKey authorizedPublicKey;
@@ -78,20 +74,13 @@ public final class AuthorizedData extends AuthenticatedData {
         NetworkDataValidation.validateECPubKey(authorizedPublicKeyBytes);
     }
 
-    // This method can be removed after ACTIVATE_EXCLUDE_FOR_HASH_DATE
     @Override
     public byte[] serialize() {
-        if (new Date().before(ACTIVATE_EXCLUDE_FOR_HASH_DATE)) {
-            // Before activation, we use old custom code for ignoring signature
-
-            // We omit the signature for the hash, otherwise we would get a new map entry for the same data at each republishing
-            return getAuthenticatedDataBuilder(false).setAuthorizedData(
-                            bisq.network.protobuf.AuthorizedData.newBuilder()
-                                    .setAuthorizedPublicKeyBytes(ByteString.copyFrom(authorizedPublicKeyBytes)))
-                    .build().toByteArray();
-        } else {
-            return super.serialize();
-        }
+        // We omit the signature for the hash, otherwise we would get a new map entry for the same data at each republishing
+        return getAuthenticatedDataBuilder(false).setAuthorizedData(
+                        bisq.network.protobuf.AuthorizedData.newBuilder()
+                                .setAuthorizedPublicKeyBytes(ByteString.copyFrom(authorizedPublicKeyBytes)))
+                .build().toByteArray();
     }
 
     @Override
