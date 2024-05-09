@@ -5,8 +5,6 @@ import bisq.common.proto.mocks.*;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 
-import java.util.Date;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
@@ -15,10 +13,6 @@ public class ExcludeForHashTest {
 
     @Test
     public void testExcludeForHash() {
-        if (new Date().before(Proto.ACTIVATE_EXCLUDE_FOR_HASH_DATE)) {
-            return;
-        }
-
         String serialized, serializeNonExcluded;
         Child child;
         Parent parent;
