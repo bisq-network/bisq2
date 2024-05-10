@@ -40,8 +40,12 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.*;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -162,39 +166,39 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
         CompletableFutureUtils.allOf(requestFromPeers())
                 .whenComplete((list, throwable) -> {
                     if (throwable != null) {
-                        if (throwable instanceof CompletionException &&
-                                throwable.getCause() instanceof CancellationException) {
-                            log.debug("requestFromPeers failed", throwable);
-                        } else {
-                            log.error("requestFromPeers failed", throwable);
-                        }
+                        log.error("We should not get an exception as we mapped all exceptions to null result values.");
+                        return;
                     } else if (list == null) {
                         log.error("requestFromPeers completed with result list = null");
-                    } else {
-                        // Repeat requests until we have received all data
-                        if (list.isEmpty()) {
-                            log.info("No matching peers for request have been found. We try again in 10 sec.");
-                            retryScheduler.ifPresent(Scheduler::stop);
-                            retryScheduler = Optional.of(Scheduler.run(this::maybeRequestInventory).after(10000));
-                        } else if (list.stream().noneMatch(Inventory::noDataMissing)) {
-                            log.info("We completed all requests but we still miss data, so we repeat requests again in 1 sec.");
-                            retryScheduler.ifPresent(Scheduler::stop);
-                            retryScheduler = Optional.of(Scheduler.run(this::maybeRequestInventory).after(1000));
-                        } else {
-                            // We got all data
-                            allDataReceived.set(true);
+                        return;
+                    }
 
-                            // We request again in 10 minutes to be sure that potentially missed data gets received.
-                            log.info("All data have been received. We start a scheduler to repeat request inventory again in {} sec. " +
-                                    "to reduce risks that we miss network data.", repeatRequestInterval / 1000);
-                            isRepeatedRequest.set(false);
-                            repeatRequestScheduler.ifPresent(Scheduler::stop);
-                            repeatRequestScheduler = Optional.of(Scheduler.run(() -> {
-                                log.info("We repeat request inventory again triggered from our scheduler.");
-                                isRepeatedRequest.set(true);
-                                maybeRequestInventory();
-                            }).after(repeatRequestInterval));
-                        }
+                    // If we got an exception in requestFromPeers(), we mapped it to a null value.
+                    list = list.stream().filter(Objects::nonNull).collect(Collectors.toList());
+
+                    // Repeat requests until we have received all data
+                    if (list.isEmpty()) {
+                        log.info("No matching peers for request have been found. We try again in 10 sec.");
+                        retryScheduler.ifPresent(Scheduler::stop);
+                        retryScheduler = Optional.of(Scheduler.run(this::maybeRequestInventory).after(10000));
+                    } else if (list.stream().noneMatch(Inventory::noDataMissing)) {
+                        log.info("We completed all requests but none responded with noDataMissing. We repeat requests again in 1 sec.");
+                        retryScheduler.ifPresent(Scheduler::stop);
+                        retryScheduler = Optional.of(Scheduler.run(this::maybeRequestInventory).after(1000));
+                    } else {
+                        // We got all data
+                        allDataReceived.set(true);
+
+                        // We request again in 10 minutes to be sure that potentially missed data gets received.
+                        log.info("All data have been received. We start a scheduler to repeat request inventory again in {} sec. " +
+                                "to reduce risks that we miss network data.", repeatRequestInterval / 1000);
+                        isRepeatedRequest.set(false);
+                        repeatRequestScheduler.ifPresent(Scheduler::stop);
+                        repeatRequestScheduler = Optional.of(Scheduler.run(() -> {
+                            log.info("We repeat request inventory again triggered from our scheduler.");
+                            isRepeatedRequest.set(true);
+                            maybeRequestInventory();
+                        }).after(repeatRequestInterval));
                     }
                 });
     }
@@ -229,13 +233,15 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
                                         }
                                     });
                                 }
-                                if (throwable != null) {
-                                    if (throwable instanceof CancellationException) {
-                                        log.debug("Inventory request failed.", throwable);
-                                    } else {
-                                        log.info("Inventory request failed.", throwable);
-                                    }
+                            })
+                            .exceptionally(throwable -> {
+                                if (throwable instanceof CancellationException) {
+                                    log.debug("Inventory request failed.", throwable);
+                                } else {
+                                    log.info("Inventory request failed.", throwable);
                                 }
+                                // We do not let exceptions break the allOf call.
+                                return null;
                             });
                 })
                 .collect(Collectors.toList());
