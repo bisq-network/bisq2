@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data.inventory;
 
+import bisq.common.observable.Observable;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.identity.NetworkId;
@@ -33,6 +34,7 @@ import bisq.network.p2p.services.data.inventory.filter.InventoryFilter;
 import bisq.network.p2p.services.data.inventory.filter.InventoryFilterType;
 import bisq.network.p2p.services.peer_group.PeerGroupManager;
 import bisq.network.p2p.services.peer_group.PeerGroupService;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -58,11 +60,14 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
     private final int maxPeersForRequest;
     private final int maxPendingRequests;
     private final Map<String, InventoryHandler> requestHandlerMap = new ConcurrentHashMap<>();
-    private final AtomicBoolean allDataReceived = new AtomicBoolean();
     private final AtomicBoolean isRepeatedRequest = new AtomicBoolean();
     private Optional<Scheduler> retryScheduler = Optional.empty();
     private Optional<Scheduler> repeatRequestScheduler = Optional.empty();
     private Optional<Scheduler> initialDelayScheduler = Optional.empty();
+    @Getter
+    private final Observable<Integer> numPendingRequests = new Observable<>(0);
+    @Getter
+    private final Observable<Boolean> allDataReceived = new Observable<>(false);
 
     public InventoryRequestService(Node node,
                                    PeerGroupManager peerGroupManager,
@@ -88,6 +93,7 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
         peerGroupManager.removeListener(this);
         requestHandlerMap.values().forEach(InventoryHandler::dispose);
         requestHandlerMap.clear();
+        numPendingRequests.set(0);
         retryScheduler.ifPresent(Scheduler::stop);
         repeatRequestScheduler.ifPresent(Scheduler::stop);
         initialDelayScheduler.ifPresent(Scheduler::stop);
@@ -115,6 +121,7 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
         if (requestHandlerMap.containsKey(key)) {
             requestHandlerMap.get(key).dispose();
             requestHandlerMap.remove(key);
+            numPendingRequests.set(requestHandlerMap.size());
         }
     }
 
@@ -198,6 +205,7 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
                     String key = getRequestHandlerMapKey(connection);
                     InventoryHandler handler = new InventoryHandler(node, connection);
                     requestHandlerMap.put(key, handler);
+                    numPendingRequests.set(requestHandlerMap.size());
                     List<Feature> peersFeatures = connection.getPeersCapability().getFeatures();
                     InventoryFilterType inventoryFilterType = getPreferredFilterType(peersFeatures).orElseThrow(); // we filtered above for presence
                     var filterService = supportedFilterServices.get(inventoryFilterType);
@@ -205,6 +213,7 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
                             .orTimeout(TIMEOUT, TimeUnit.MILLISECONDS)
                             .whenComplete((inventory, throwable) -> {
                                 requestHandlerMap.remove(key);
+                                numPendingRequests.set(requestHandlerMap.size());
                                 if (inventory != null) {
                                     inventory.getEntries().forEach(dataRequest -> {
                                         if (dataRequest instanceof AddDataRequest) {
