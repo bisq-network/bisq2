@@ -60,7 +60,7 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
     private final AtomicBoolean requestsPending = new AtomicBoolean();
     private final AtomicBoolean allDataReceived = new AtomicBoolean();
     private Optional<Scheduler> retryScheduler = Optional.empty();
-    private Optional<Scheduler> periodicScheduler = Optional.empty();
+    private Optional<Scheduler> repeatRequestScheduler = Optional.empty();
     private Optional<Scheduler> initialDelayScheduler = Optional.empty();
 
     public InventoryRequestService(Node node,
@@ -87,7 +87,7 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
         requestHandlerMap.values().forEach(InventoryHandler::dispose);
         requestHandlerMap.clear();
         retryScheduler.ifPresent(Scheduler::stop);
-        periodicScheduler.ifPresent(Scheduler::stop);
+        repeatRequestScheduler.ifPresent(Scheduler::stop);
         initialDelayScheduler.ifPresent(Scheduler::stop);
     }
 
@@ -176,12 +176,14 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
                             allDataReceived.set(true);
 
                             // We request again in 10 minutes to be sure that potentially missed data gets received.
-                            if (periodicScheduler.isEmpty()) {
-                                periodicScheduler = Optional.of(Scheduler.run(() -> {
-                                    allDataReceived.set(false);
-                                    maybeRequestInventory();
-                                }).periodically(repeatRequestInterval));
-                            }
+                            log.info("All data have been received. We start a scheduler to repeat request inventory again in {} sec. " +
+                                    "to reduce risks that we miss network data.", repeatRequestInterval / 1000);
+                            repeatRequestScheduler.ifPresent(Scheduler::stop);
+                            repeatRequestScheduler = Optional.of(Scheduler.run(() -> {
+                                log.info("We repeat request inventory again triggered from our scheduler.");
+                                allDataReceived.set(false);
+                                maybeRequestInventory();
+                            }).after(repeatRequestInterval));
                         }
                     }
                 });
