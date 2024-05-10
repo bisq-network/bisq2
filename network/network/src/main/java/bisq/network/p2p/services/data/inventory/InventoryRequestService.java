@@ -167,7 +167,7 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
         CompletableFutureUtils.allOf(requestFromPeers())
                 .whenComplete((list, throwable) -> {
                     if (throwable != null) {
-                        log.error("We should not get an exception as we mapped all exceptions to null result values.");
+                        log.error("We don't expect an exception as we mapped all exceptions to null result values.", throwable);
                         return;
                     } else if (list == null) {
                         log.error("requestFromPeers completed with result list = null");
