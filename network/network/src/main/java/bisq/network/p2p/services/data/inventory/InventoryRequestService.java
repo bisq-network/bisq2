@@ -61,6 +61,7 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
     private final AtomicBoolean allDataReceived = new AtomicBoolean();
     private Optional<Scheduler> scheduler = Optional.empty();
     private Optional<Scheduler> periodicScheduler = Optional.empty();
+    private Optional<Scheduler> initialDelayScheduler = Optional.empty();
 
     public InventoryRequestService(Node node,
                                    PeerGroupManager peerGroupManager,
@@ -89,6 +90,7 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
         scheduler = Optional.empty();
         periodicScheduler.ifPresent(Scheduler::stop);
         periodicScheduler = Optional.empty();
+        initialDelayScheduler.ifPresent(Scheduler::stop);
     }
 
 
@@ -124,7 +126,7 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
     @Override
     public void onStateChanged(PeerGroupManager.State state) {
         if (state == PeerGroupManager.State.RUNNING) {
-            maybeRequestInventory();
+            initialDelayScheduler = Optional.of(Scheduler.run(this::maybeRequestInventory).after(1000));
         }
     }
 
