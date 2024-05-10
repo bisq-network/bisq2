@@ -109,7 +109,7 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
 
     @Override
     public void onDisconnect(Connection connection, CloseReason closeReason) {
-        String key = connection.getId();
+        String key = getRequestHandlerMapKey(connection);
         if (requestHandlerMap.containsKey(key)) {
             requestHandlerMap.get(key).dispose();
             requestHandlerMap.remove(key);
@@ -190,7 +190,7 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
                 .map(connection -> {
                     // We need to handle requests from ourselves and those from our peer separate in case they happen on the same connection
                     // therefor we add the peer address
-                    String key = connection.getId() + ".peerAddress-" + connection.getPeerAddress().getFullAddress();
+                    String key = getRequestHandlerMapKey(connection);
                     InventoryHandler handler = new InventoryHandler(node, connection);
                     requestHandlerMap.put(key, handler);
                     List<Feature> peersFeatures = connection.getPeersCapability().getFeatures();
@@ -223,10 +223,10 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
 
     private List<Connection> getCandidates() {
         Stream<Connection> seeds = peerGroupService.getShuffledSeedConnections(node)
-                .filter(connection -> !requestHandlerMap.containsKey(connection.getId()))
+                .filter(connection -> !requestHandlerMap.containsKey(getRequestHandlerMapKey(connection)))
                 .limit(maxSeedsForRequest);
         Stream<Connection> peers = peerGroupService.getShuffledNonSeedConnections(node)
-                .filter(connection -> !requestHandlerMap.containsKey(connection.getId()))
+                .filter(connection -> !requestHandlerMap.containsKey(getRequestHandlerMapKey(connection)))
                 .limit(maxPeersForRequest);
         List<Connection> allConnections = Stream.concat(seeds, peers).collect(Collectors.toList());
         List<Connection> matchingConnections = allConnections.stream()
@@ -254,5 +254,9 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
         return features.stream()
                 .flatMap(feature -> InventoryFilterType.fromFeature(feature).stream())
                 .collect(Collectors.toList());
+    }
+
+    private static String getRequestHandlerMapKey(Connection connection) {
+        return connection.getPeerAddress().getFullAddress();
     }
 }
