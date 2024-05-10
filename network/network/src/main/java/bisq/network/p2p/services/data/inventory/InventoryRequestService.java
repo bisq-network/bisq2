@@ -59,6 +59,7 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
     private final Map<String, InventoryHandler> requestHandlerMap = new ConcurrentHashMap<>();
     private final AtomicBoolean requestsPending = new AtomicBoolean();
     private final AtomicBoolean allDataReceived = new AtomicBoolean();
+    private final AtomicBoolean isRepeatedRequest = new AtomicBoolean();
     private Optional<Scheduler> retryScheduler = Optional.empty();
     private Optional<Scheduler> repeatRequestScheduler = Optional.empty();
     private Optional<Scheduler> initialDelayScheduler = Optional.empty();
@@ -135,7 +136,7 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private void maybeRequestInventory() {
-        if (allDataReceived.get() || requestsPending.get()) {
+        if ((allDataReceived.get() && !isRepeatedRequest.get()) || requestsPending.get()) {
             return;
         }
 
@@ -178,10 +179,11 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
                             // We request again in 10 minutes to be sure that potentially missed data gets received.
                             log.info("All data have been received. We start a scheduler to repeat request inventory again in {} sec. " +
                                     "to reduce risks that we miss network data.", repeatRequestInterval / 1000);
+                            isRepeatedRequest.set(false);
                             repeatRequestScheduler.ifPresent(Scheduler::stop);
                             repeatRequestScheduler = Optional.of(Scheduler.run(() -> {
                                 log.info("We repeat request inventory again triggered from our scheduler.");
-                                allDataReceived.set(false);
+                                isRepeatedRequest.set(true);
                                 maybeRequestInventory();
                             }).after(repeatRequestInterval));
                         }
