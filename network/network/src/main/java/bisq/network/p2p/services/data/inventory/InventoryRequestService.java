@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data.inventory;
 
+import bisq.common.application.DevMode;
 import bisq.common.observable.Observable;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.CompletableFutureUtils;
@@ -134,7 +135,8 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
     public void onStateChanged(PeerGroupManager.State state) {
         if (state == PeerGroupManager.State.RUNNING) {
             initialDelayScheduler.ifPresent(Scheduler::stop);
-            initialDelayScheduler = Optional.of(Scheduler.run(this::maybeRequestInventory).after(1000));
+            int delay = DevMode.isDevMode() ? 100 : 1000;
+            initialDelayScheduler = Optional.of(Scheduler.run(this::maybeRequestInventory).after(delay));
         }
     }
 
@@ -255,9 +257,11 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
         }
 
         int limit = maxPendingRequests - requestHandlerMap.size();
-        return matchingConnections.stream()
+        List<Connection> candidates = matchingConnections.stream()
                 .limit(limit)
                 .collect(Collectors.toList());
+        log.info("Candidates for inventory requests={}", candidates);
+        return candidates;
     }
 
     private boolean sufficientConnections() {
