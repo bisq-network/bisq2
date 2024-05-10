@@ -59,7 +59,7 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
     private final Map<String, InventoryHandler> requestHandlerMap = new ConcurrentHashMap<>();
     private final AtomicBoolean requestsPending = new AtomicBoolean();
     private final AtomicBoolean allDataReceived = new AtomicBoolean();
-    private Optional<Scheduler> scheduler = Optional.empty();
+    private Optional<Scheduler> retryScheduler = Optional.empty();
     private Optional<Scheduler> periodicScheduler = Optional.empty();
     private Optional<Scheduler> initialDelayScheduler = Optional.empty();
 
@@ -86,10 +86,8 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
         peerGroupManager.removeListener(this);
         requestHandlerMap.values().forEach(InventoryHandler::dispose);
         requestHandlerMap.clear();
-        scheduler.ifPresent(Scheduler::stop);
-        scheduler = Optional.empty();
+        retryScheduler.ifPresent(Scheduler::stop);
         periodicScheduler.ifPresent(Scheduler::stop);
-        periodicScheduler = Optional.empty();
         initialDelayScheduler.ifPresent(Scheduler::stop);
     }
 
@@ -126,6 +124,7 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
     @Override
     public void onStateChanged(PeerGroupManager.State state) {
         if (state == PeerGroupManager.State.RUNNING) {
+            initialDelayScheduler.ifPresent(Scheduler::stop);
             initialDelayScheduler = Optional.of(Scheduler.run(this::maybeRequestInventory).after(1000));
         }
     }
@@ -142,8 +141,9 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
 
         if (peerGroupManager.getState().get() != PeerGroupManager.State.RUNNING) {
             // Not ready yet, lets try again later
-            scheduler.ifPresent(Scheduler::stop);
-            scheduler = Optional.of(Scheduler.run(this::maybeRequestInventory).after(5000));
+            log.info("PeerGroupManager.State is not RUNNING. We try again in 5 sec.");
+            retryScheduler.ifPresent(Scheduler::stop);
+            retryScheduler = Optional.of(Scheduler.run(this::maybeRequestInventory).after(5000));
             return;
         }
 
@@ -165,12 +165,12 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
                         // Repeat requests until we have received all data
                         if (list.isEmpty()) {
                             log.info("No matching peers for request have been found. We try again in 10 sec.");
-                            scheduler.ifPresent(Scheduler::stop);
-                            scheduler = Optional.of(Scheduler.run(this::maybeRequestInventory).after(10000));
+                            retryScheduler.ifPresent(Scheduler::stop);
+                            retryScheduler = Optional.of(Scheduler.run(this::maybeRequestInventory).after(10000));
                         } else if (list.stream().noneMatch(Inventory::noDataMissing)) {
-                            // We still miss data, so repeat requests
-                            scheduler.ifPresent(Scheduler::stop);
-                            scheduler = Optional.of(Scheduler.run(this::maybeRequestInventory).after(1000));
+                            log.info("We completed all requests but we still miss data, so we repeat requests again in 1 sec.");
+                            retryScheduler.ifPresent(Scheduler::stop);
+                            retryScheduler = Optional.of(Scheduler.run(this::maybeRequestInventory).after(1000));
                         } else {
                             // We got all data
                             allDataReceived.set(true);
