@@ -56,8 +56,8 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
     private final long repeatRequestInterval;
     private final int maxSeedsForRequest;
     private final int maxPeersForRequest;
+    private final int maxPendingRequests;
     private final Map<String, InventoryHandler> requestHandlerMap = new ConcurrentHashMap<>();
-    private final AtomicBoolean requestsPending = new AtomicBoolean();
     private final AtomicBoolean allDataReceived = new AtomicBoolean();
     private final AtomicBoolean isRepeatedRequest = new AtomicBoolean();
     private Optional<Scheduler> retryScheduler = Optional.empty();
@@ -78,6 +78,7 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
         repeatRequestInterval = config.getRepeatRequestInterval();
         maxSeedsForRequest = config.getMaxSeedsForRequest();
         maxPeersForRequest = config.getMaxPeersForRequest();
+        maxPendingRequests = config.getMaxPendingRequests();
         node.addListener(this);
         peerGroupManager.addListener(this);
     }
@@ -136,7 +137,7 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private void maybeRequestInventory() {
-        if ((allDataReceived.get() && !isRepeatedRequest.get()) || requestsPending.get()) {
+        if ((allDataReceived.get() && !isRepeatedRequest.get()) || requestHandlerMap.size() > maxPendingRequests) {
             return;
         }
 
@@ -149,10 +150,8 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
         }
 
         log.info("Start inventory requests");
-        requestsPending.set(true);
         CompletableFutureUtils.allOf(requestFromPeers())
                 .whenComplete((list, throwable) -> {
-                    requestsPending.set(false);
                     if (throwable != null) {
                         if (throwable instanceof CompletionException &&
                                 throwable.getCause() instanceof CancellationException) {
@@ -241,7 +240,11 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
         if (matchingConnections.isEmpty() && !allConnections.isEmpty()) {
             log.warn("We did not find any peer which matches our inventory filter type settings");
         }
-        return matchingConnections;
+
+        int limit = maxPendingRequests - requestHandlerMap.size();
+        return matchingConnections.stream()
+                .limit(limit)
+                .collect(Collectors.toList());
     }
 
     private boolean sufficientConnections() {
