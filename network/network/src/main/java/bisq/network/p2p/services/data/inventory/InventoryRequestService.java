@@ -203,6 +203,10 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
                     // We need to handle requests from ourselves and those from our peer separate in case they happen on the same connection
                     // therefor we add the peer address
                     String key = getRequestHandlerMapKey(connection);
+                    if (requestHandlerMap.containsKey(key)) {
+                        return CompletableFuture.<Inventory>failedFuture(new RuntimeException("There is a pending request for key " + key));
+                    }
+
                     InventoryHandler handler = new InventoryHandler(node, connection);
                     requestHandlerMap.put(key, handler);
                     numPendingRequests.set(requestHandlerMap.size());
