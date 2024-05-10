@@ -22,6 +22,10 @@
     -fx-image: url("/images/i2p.png");
 }
 
+#inventory-completed {
+    -fx-image: url("/images/icons/check-white.png");
+}
+
 #info {
     -fx-image: url("/images/info.png");
 }

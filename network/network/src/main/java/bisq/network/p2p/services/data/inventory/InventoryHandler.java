@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.data.inventory;
 
 import bisq.common.util.ByteUnit;
+import bisq.common.util.MathUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
@@ -49,6 +50,7 @@ class InventoryHandler implements Connection.Listener {
     private final Connection connection;
     private final CompletableFuture<Inventory> future = new CompletableFuture<>();
     private final int nonce;
+    private long requestTs;
 
     InventoryHandler(Node node, Connection connection) {
         this.node = node;
@@ -59,6 +61,7 @@ class InventoryHandler implements Connection.Listener {
     }
 
     CompletableFuture<Inventory> request(InventoryFilter inventoryFilter) {
+        requestTs = System.currentTimeMillis();
         log.info("Send InventoryRequest to {} with {}", connection.getPeerAddress(), inventoryFilter.getDetails());
         InventoryRequest inventoryRequest = new InventoryRequest(inventoryFilter, nonce);
         runAsync(() -> node.send(inventoryRequest, connection), NetworkService.NETWORK_IO_POOL)
@@ -80,8 +83,8 @@ class InventoryHandler implements Connection.Listener {
                 removeListeners();
                 future.complete(response.getInventory());
             } else {
-                log.warn("{} received InventoryResponse from {} with invalid nonce {}. Request nonce was {}. Connection={}",
-                        node, connection.getPeerAddress(), response.getRequestNonce(), nonce, connection.getId());
+                log.warn("Received InventoryResponse from {} with invalid nonce {}. Request nonce was {}. Connection={}",
+                        connection.getPeerAddress(), response.getRequestNonce(), nonce, connection.getId());
             }
         }
     }
@@ -132,10 +135,14 @@ class InventoryHandler implements Connection.Listener {
         if (report.isEmpty()) {
             report = "No items received";
         }
-        String maxSizeReached = inventory.isMaxSizeReached() ? "; \nResponse got truncated because max size was reached" : "";
+        String maxSizeReached = inventory.isMaxSizeReached()
+                ? "Still missing data. Response got truncated because max size was reached"
+                : "All data received from peer";
         String size = ByteUnit.BYTE.toKB((double) inventory.getCachedSerializedSize().orElse(0)) + " KB";
+        String passed = MathUtils.roundDouble((System.currentTimeMillis() - requestTs) / 1000d, 2) + " sec.";
         log.info("\n##########################################################################################\n" +
                 "Received " + size + " of inventory data from: " + connection.getPeerAddress().getFullAddress() +
+                " after " + passed + "; \n" +
                 maxSizeReached +
                 "\n##########################################################################################\n" +
                 report +

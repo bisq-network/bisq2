@@ -58,10 +58,10 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
     private final int menuTop;
     private final LeftNavButton authorizedRole;
     private final Label version;
-    private final HBox networkInfoRoot;
+    private final VBox networkInfoRoot;
     private Subscription navigationTargetSubscription, menuExpandedSubscription, selectedNavigationButtonPin, newVersionAvailablePin;
 
-    public LeftNavView(LeftNavModel model, LeftNavController controller, HBox networkInfoRoot) {
+    public LeftNavView(LeftNavModel model, LeftNavController controller, VBox networkInfoRoot) {
         super(new AnchorPane(), model, controller);
 
         this.networkInfoRoot = networkInfoRoot;
@@ -167,7 +167,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         Pane logoAndVersion = new Pane(logoExpanded, logoCollapsed, version);
 
         Layout.pinToAnchorPane(mainMenuItems, menuTop, 0, 0, MARKER_WIDTH);
-        Layout.pinToAnchorPane(networkInfoRoot, null, null, 18, 0);
+        Layout.pinToAnchorPane(networkInfoRoot, null, null, 40, 0);
         root.getChildren().addAll(logoAndVersion, selectionMarker, mainMenuItems, horizontalExpandIcon, horizontalCollapseIcon, networkInfoRoot);
     }
 
