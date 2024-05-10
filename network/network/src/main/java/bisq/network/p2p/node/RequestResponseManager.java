@@ -1,5 +1,6 @@
 package bisq.network.p2p.node;
 
+import bisq.common.util.StringUtils;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.Request;
 import bisq.network.p2p.message.Response;
@@ -38,7 +39,8 @@ public class RequestResponseManager {
                     pendingRequests.remove(requestId);
                     connectionMetrics.addRtt(System.currentTimeMillis() - ts);
                 } else {
-                    log.warn("We received a Response message but did not had a matching request. envelopePayloadMessage={}", envelopePayloadMessage);
+                    log.warn("We received a Response message but did not had a matching request. envelopePayloadMessage={}",
+                            StringUtils.truncate(envelopePayloadMessage.toString(), 500));
                 }
                 log.debug("onReceived {} requestId={}", envelopePayloadMessage.getClass().getSimpleName(), requestId);
             }
@@ -51,7 +53,8 @@ public class RequestResponseManager {
             String requestId = ((Request) envelopePayloadMessage).getRequestId();
             synchronized (pendingRequests) {
                 if (pendingRequests.containsKey(requestId)) {
-                    log.warn("We sent a Request message but we had already an entry in our map for that requestId. envelopePayloadMessage={}", envelopePayloadMessage);
+                    log.warn("We sent a Request message but we had already an entry in our map for that requestId. envelopePayloadMessage={}",
+                            StringUtils.truncate(envelopePayloadMessage.toString(), 500));
                 }
                 pendingRequests.put(requestId, System.currentTimeMillis());
                 log.debug("onSent {} requestId={}", envelopePayloadMessage.getClass().getSimpleName(), requestId);
