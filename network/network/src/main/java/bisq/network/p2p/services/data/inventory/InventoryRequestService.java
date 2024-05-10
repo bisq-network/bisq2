@@ -197,7 +197,7 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
                     InventoryFilterType inventoryFilterType = getPreferredFilterType(peersFeatures).orElseThrow(); // we filtered above for presence
                     var filterService = supportedFilterServices.get(inventoryFilterType);
                     return handler.request(filterService.getFilter())
-                            .orTimeout(TIMEOUT, TimeUnit.SECONDS)
+                            .orTimeout(TIMEOUT, TimeUnit.MILLISECONDS)
                             .whenComplete((inventory, throwable) -> {
                                 requestHandlerMap.remove(key);
                                 if (inventory != null) {
