@@ -49,7 +49,8 @@ public class NativeTorProcess {
         String ownerPid = Pid.getMyPid();
         var processBuilder = new ProcessBuilder(
                 torBinaryPath.toAbsolutePath().toString(),
-                "-f", absoluteTorrcPathAsString,
+                "--torrc-file", absoluteTorrcPathAsString,
+                "--defaults-torrc", absoluteTorrcPathAsString,
                 ARG_OWNER_PID, ownerPid
         );
 
