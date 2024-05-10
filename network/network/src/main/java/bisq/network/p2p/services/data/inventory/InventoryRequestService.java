@@ -21,6 +21,7 @@ import bisq.common.application.DevMode;
 import bisq.common.observable.Observable;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.CompletableFutureUtils;
+import bisq.common.util.ExceptionUtil;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
@@ -235,10 +236,10 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
                                 }
                             })
                             .exceptionally(throwable -> {
-                                if (throwable instanceof CancellationException) {
-                                    log.debug("Inventory request failed.", throwable);
+                                if (throwable instanceof CancellationException || throwable.getCause() instanceof CancellationException) {
+                                    log.debug("Inventory request future got cancelled.", throwable);
                                 } else {
-                                    log.info("Inventory request failed.", throwable);
+                                    log.info("Inventory request to {} failed with: {}", connection.getPeerAddress().getFullAddress(), ExceptionUtil.getMessageOrToString(throwable));
                                 }
                                 // We do not let exceptions break the allOf call.
                                 return null;
@@ -263,11 +264,9 @@ public class InventoryRequestService implements Node.Listener, PeerGroupManager.
         }
 
         int limit = maxPendingRequests - requestHandlerMap.size();
-        List<Connection> candidates = matchingConnections.stream()
+        return matchingConnections.stream()
                 .limit(limit)
                 .collect(Collectors.toList());
-        log.info("Candidates for inventory requests={}", candidates);
-        return candidates;
     }
 
     private boolean sufficientConnections() {
