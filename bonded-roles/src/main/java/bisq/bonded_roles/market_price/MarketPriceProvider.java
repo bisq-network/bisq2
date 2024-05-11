@@ -2,6 +2,7 @@ package bisq.bonded_roles.market_price;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.util.ProtobufUtils;
+import bisq.i18n.Res;
 import com.google.common.base.Enums;
 import lombok.Getter;
 import lombok.Setter;
@@ -13,7 +14,7 @@ import javax.annotation.Nullable;
 @Slf4j
 @ToString
 public enum MarketPriceProvider implements ProtoEnum {
-    BISQAGGREGATE("Bisq price aggregator"),
+    BISQAGGREGATE(Res.get("component.marketPrice.provider.BISQAGGREGATE")),
     COINGECKO("CoinGecko"),
     POLO("Poloniex"),
     BITFINEX("Bitfinex"),
