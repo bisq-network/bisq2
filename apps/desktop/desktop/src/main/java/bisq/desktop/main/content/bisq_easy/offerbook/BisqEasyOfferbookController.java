@@ -330,7 +330,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     }
 
     void onSelectOfferMessageItem(OfferMessageItem item) {
-        chatMessageContainerController.highlightOfferChatMessage(item == null ? null : item.getMessage());
+        chatMessageContainerController.highlightOfferChatMessage(item == null ? null : item.getBisqEasyOfferbookMessage());
     }
 
     double getMarketSelectionListCellHeight() {
@@ -401,16 +401,18 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         model.getOfferMessageItems().clear();
         offerMessagesPin = channel.getChatMessages().addObserver(new CollectionObserver<>() {
             @Override
-            public void add(BisqEasyOfferbookMessage element) {
-                Optional<UserProfile> userProfile = userProfileService.findUserProfile(element.getAuthorUserProfileId());
-                boolean shouldAddOfferMessage = element.hasBisqEasyOffer()
-                        && element.getBisqEasyOffer().isPresent()
+            public void add(BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
+                Optional<UserProfile> userProfile = userProfileService.findUserProfile(bisqEasyOfferbookMessage.getAuthorUserProfileId());
+                boolean shouldAddOfferMessage = bisqEasyOfferbookMessage.hasBisqEasyOffer()
+                        && bisqEasyOfferbookMessage.getBisqEasyOffer().isPresent()
                         && userProfile.isPresent();
                 if (shouldAddOfferMessage) {
                     UIThread.run(() -> {
-                        OfferMessageItem item = new OfferMessageItem(element, element.getBisqEasyOffer().get(),
-                                userProfile.get(), reputationService, marketPriceService);
-                        model.getOfferMessageItems().add(item);
+                        if (model.getOfferMessageItems().stream()
+                                .noneMatch(item -> item.getBisqEasyOfferbookMessage().equals(bisqEasyOfferbookMessage))) {
+                            OfferMessageItem item = new OfferMessageItem(bisqEasyOfferbookMessage, userProfile.get(), reputationService, marketPriceService);
+                            model.getOfferMessageItems().add(item);
+                        }
                     });
                 }
             }
@@ -421,7 +423,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                     UIThread.run(() -> {
                         BisqEasyOfferbookMessage offerMessage = (BisqEasyOfferbookMessage) element;
                         Optional<OfferMessageItem> toRemove = model.getOfferMessageItems().stream()
-                                .filter(item -> item.getMessage().getId().equals(offerMessage.getId()))
+                                .filter(item -> item.getBisqEasyOfferbookMessage().getId().equals(offerMessage.getId()))
                                 .findAny();
                         toRemove.ifPresent(item -> {
                             item.dispose();
