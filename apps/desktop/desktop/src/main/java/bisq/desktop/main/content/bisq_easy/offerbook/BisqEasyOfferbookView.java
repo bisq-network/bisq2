@@ -819,19 +819,20 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
                 .build();
 
         BisqTableColumn<OfferMessageItem> fiatAmountTableColumn = new BisqTableColumn.Builder<OfferMessageItem>()
-                .left()
+                .titleProperty(getModel().getFiatAmountTitle())
+                .right()
                 .fixWidth(170)
                 .setCellFactory(BisqEasyOfferbookUtil.getOfferMessageFiatAmountCellFactory())
                 .comparator(Comparator.comparing(OfferMessageItem::getMinAmount))
                 .isSortable(true)
                 .build();
-        fiatAmountTableColumn.applyTitleProperty(getModel().getFiatAmountTitle());
 
         tableView.getColumns().add(tableView.getSelectionMarkerColumn());
         tableView.getColumns().add(userProfileTableColumn);
         tableView.getColumns().add(priceTableColumn);
         tableView.getColumns().add(spacerColumn);
         tableView.getColumns().add(fiatAmountTableColumn);
+
         tableView.getSortOrder().add(userProfileTableColumn);
     }
 

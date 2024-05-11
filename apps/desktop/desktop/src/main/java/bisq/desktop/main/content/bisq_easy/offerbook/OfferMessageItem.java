@@ -49,9 +49,8 @@ public class OfferMessageItem {
     private final String minMaxAmountAsString;
     private final ReputationScore reputationScore;
     private final long totalScore;
-
-    private Pin marketPriceByCurrencyMapPin;
     private double priceSpecAsPercent;
+    private Pin marketPriceByCurrencyMapPin;
 
     OfferMessageItem(BisqEasyOfferbookMessage message,
                      BisqEasyOffer offer,
