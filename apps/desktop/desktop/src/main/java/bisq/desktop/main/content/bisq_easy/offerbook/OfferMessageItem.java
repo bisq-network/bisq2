@@ -37,36 +37,34 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-@EqualsAndHashCode
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class OfferMessageItem {
-    private final BisqEasyOfferbookMessage message;
-    private final BisqEasyOffer offer;
+    @EqualsAndHashCode.Include
+    private final BisqEasyOfferbookMessage bisqEasyOfferbookMessage;
+    private final BisqEasyOffer bisqEasyOffer;
     private final MarketPriceService marketPriceService;
     private final UserProfile userProfile;
     private final String userNickname;
     private final Pair<Monetary, Monetary> minMaxAmount;
     private final String minMaxAmountAsString;
-    @EqualsAndHashCode.Exclude
     private final ReputationScore reputationScore;
     private final long totalScore;
-
-    private Pin marketPriceByCurrencyMapPin;
     private double priceSpecAsPercent;
+    private Pin marketPriceByCurrencyMapPin;
 
-    OfferMessageItem(BisqEasyOfferbookMessage message,
-                     BisqEasyOffer offer,
+    OfferMessageItem(BisqEasyOfferbookMessage bisqEasyOfferbookMessage,
                      UserProfile userProfile,
                      ReputationService reputationService,
                      MarketPriceService marketPriceService) {
-        this.message = message;
-        this.offer = offer;
+        this.bisqEasyOfferbookMessage = bisqEasyOfferbookMessage;
+        this.bisqEasyOffer = bisqEasyOfferbookMessage.getBisqEasyOffer().orElseThrow();
         this.userProfile = userProfile;
         this.marketPriceService = marketPriceService;
         userNickname = userProfile.getNickName();
         reputationScore = reputationService.findReputationScore(userProfile.getId()).orElse(ReputationScore.NONE);
         totalScore = reputationScore.getTotalScore();
         minMaxAmount = retrieveMinMaxAmount();
-        minMaxAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, offer, false);
+        minMaxAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, bisqEasyOffer, false);
 
         initialize();
     }
@@ -79,8 +77,8 @@ public class OfferMessageItem {
         return minMaxAmount.getFirst();
     }
 
-    boolean isSellOffer() {
-        return offer.getDirection() == Direction.SELL;
+    boolean isBuyOffer() {
+        return bisqEasyOffer.getDirection() == Direction.BUY;
     }
 
     private void initialize() {
@@ -90,12 +88,12 @@ public class OfferMessageItem {
     }
 
     private Pair<Monetary, Monetary> retrieveMinMaxAmount() {
-        Monetary minAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, offer).orElseThrow();
-        Monetary maxAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, offer).orElseThrow();
+        Monetary minAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, bisqEasyOffer).orElseThrow();
+        Monetary maxAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, bisqEasyOffer).orElseThrow();
         return new Pair<>(minAmount, maxAmount);
     }
 
     private void updatePriceSpecAsPercent() {
-        priceSpecAsPercent = PriceUtil.findPercentFromMarketPrice(marketPriceService, offer).orElseThrow();
+        priceSpecAsPercent = PriceUtil.findPercentFromMarketPrice(marketPriceService, bisqEasyOffer).orElseThrow();
     }
 }

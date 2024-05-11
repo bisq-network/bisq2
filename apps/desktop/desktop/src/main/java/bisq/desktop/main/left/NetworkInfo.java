@@ -108,7 +108,10 @@ public class NetworkInfo {
                                             model.setAllInventoryDataReceived(allDataReceived);
 
                                             if (allDataReceived) {
-                                                inventoryRequestAnimation.stop();
+                                                if (inventoryRequestAnimation != null) {
+                                                    inventoryRequestAnimation.stop();
+                                                }
+
                                                 model.setInventoryRequestsInfo(Res.get("navigation.network.info.inventoryRequest.completed"));
                                             }
                                             model.inventoryDataChangeFlag.set(!model.inventoryDataChangeFlag.get());
