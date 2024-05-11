@@ -34,14 +34,18 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-@Getter
+
 @EqualsAndHashCode(callSuper = true)
 public final class HashSetFilter extends InventoryFilter {
     // FilterEntry has about 26 bytes (hash of 20 bytes + integer + some overhead). 200_000 items are about 4.8 MB)
     // We should aim to be much below that limit.
     public final static int MAX_ENTRIES = 200_000;
 
+    @Getter
     private final List<HashSetFilterEntry> filterEntries;
+
+    // As creating the HashSet at each request costs resources we cache it.
+    private transient Set<HashSetFilterEntry> filterEntriesAsSet;
 
     public HashSetFilter(List<HashSetFilterEntry> filterEntries) {
         this(InventoryFilterType.HASH_SET, filterEntries);
@@ -91,6 +95,9 @@ public final class HashSetFilter extends InventoryFilter {
     }
 
     public Set<HashSetFilterEntry> getFilterEntriesAsSet() {
-        return new HashSet<>(filterEntries);
+        if (filterEntriesAsSet == null) {
+            filterEntriesAsSet = new HashSet<>(filterEntries);
+        }
+        return filterEntriesAsSet;
     }
 }
