@@ -23,11 +23,7 @@ import bisq.desktop.common.Layout;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.controls.BisqTooltip;
-import bisq.desktop.components.controls.DropdownMenu;
-import bisq.desktop.components.controls.DropdownMenuItem;
-import bisq.desktop.components.controls.DropdownTitleMenuItem;
-import bisq.desktop.components.controls.SearchBox;
+import bisq.desktop.components.controls.*;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.StandardTable;
@@ -74,7 +70,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
             selectedOfferDirectionOrOwnerFilterPin, selectedPeerReputationFilterPin, selectedMarketSortTypePin,
             marketSelectorSearchPin, favouritesTableViewHeightPin, favouritesTableViewSelectionPin,
             shouldShowAppliedFiltersPin, offerListTableViewSelectionPin, showBuyFromOfferMessageItemsPin,
-            showOfferListExpandedPin, showMarketSelectionListExpandedPin;
+            showOfferListExpandedPin, showMarketSelectionListCollapsedPin;
     private Button createOfferButton;
     private DropdownMenu sortAndFilterMarketsMenu, filterOffersByDirectionOrOwnerMenu, filterOffersByPeerReputationMenu;
     private DropdownSortByMenuItem sortByMostOffers, sortByNameAZ, sortByNameZA;
@@ -159,10 +155,10 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         collapsedOfferList.managedProperty().bind(getModel().getShowOfferListExpanded().not());
         offerList.visibleProperty().bind(getModel().getShowOfferListExpanded());
         offerList.managedProperty().bind(getModel().getShowOfferListExpanded());
-        collapsedMarketSelectionList.visibleProperty().bind(getModel().getShowMarketSelectionListExpanded().not());
-        collapsedMarketSelectionList.managedProperty().bind(getModel().getShowMarketSelectionListExpanded().not());
-        marketSelectionList.visibleProperty().bind(getModel().getShowMarketSelectionListExpanded());
-        marketSelectionList.managedProperty().bind(getModel().getShowMarketSelectionListExpanded());
+        collapsedMarketSelectionList.visibleProperty().bind(getModel().getShowMarketSelectionListCollapsed());
+        collapsedMarketSelectionList.managedProperty().bind(getModel().getShowMarketSelectionListCollapsed());
+        marketSelectionList.visibleProperty().bind(getModel().getShowMarketSelectionListCollapsed().not());
+        marketSelectionList.managedProperty().bind(getModel().getShowMarketSelectionListCollapsed().not());
 
         selectedModelItemPin = EasyBind.subscribe(getModel().getSelectedMarketChannelItem(), this::updateTableViewSelection);
         marketsTableViewSelectionPin = EasyBind.subscribe(marketsTableView.getSelectionModel().selectedItemProperty(), item -> {
@@ -202,8 +198,8 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         showOfferListExpandedPin = EasyBind.subscribe(getModel().getShowOfferListExpanded(),
                 showOfferListExpanded -> updateChatContainerStyleClass());
 
-        showMarketSelectionListExpandedPin = EasyBind.subscribe(getModel().getShowMarketSelectionListExpanded(),
-                showMarketSelectionListExpanded -> updateChatContainerStyleClass());
+        showMarketSelectionListCollapsedPin = EasyBind.subscribe(getModel().getShowMarketSelectionListCollapsed(),
+                showMarketSelectionListCollapsed -> updateChatContainerStyleClass());
 
         sortByMostOffers.setOnAction(e -> getController().onSortMarkets(MarketSortType.NUM_OFFERS));
         sortByNameAZ.setOnAction(e -> getController().onSortMarkets(MarketSortType.ASC));
@@ -304,7 +300,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         offerListTableViewSelectionPin.unsubscribe();
         showBuyFromOfferMessageItemsPin.unsubscribe();
         showOfferListExpandedPin.unsubscribe();
-        showMarketSelectionListExpandedPin.unsubscribe();
+        showMarketSelectionListCollapsedPin.unsubscribe();
 
         sortByMostOffers.setOnAction(null);
         sortByNameAZ.setOnAction(null);
@@ -369,11 +365,13 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     private void updateChatContainerStyleClass() {
         centerVBox.getStyleClass().clear();
         String styleClass;
-        if (!getModel().getShowOfferListExpanded().get() && !getModel().getShowMarketSelectionListExpanded().get()) {
+        boolean showMarketSelectionListCollapsed = getModel().getShowMarketSelectionListCollapsed().get();
+        boolean showOfferListCollapsed = !getModel().getShowOfferListExpanded().get();
+        if (showOfferListCollapsed && showMarketSelectionListCollapsed) {
             styleClass = "chat-container-with-both-lists-collapsed";
-        } else if (!getModel().getShowOfferListExpanded().get()) {
+        } else if (showOfferListCollapsed) {
             styleClass = "chat-container-with-offer-list-collapsed";
-        } else if (!getModel().getShowMarketSelectionListExpanded().get()) {
+        } else if (showMarketSelectionListCollapsed) {
             styleClass = "chat-container-with-market-selection-list-collapsed";
         } else { // both are expanded
             styleClass = "bisq-easy-container";

@@ -56,7 +56,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     final Observable<Double> maxTradePriceDeviation = new Observable<>();
     final Observable<Boolean> showBuyFromOffers = new Observable<>();
     final Observable<Boolean> showOfferListExpanded = new Observable<>();
-    final Observable<Boolean> showMarketSelectionListExpanded = new Observable<>();
+    final Observable<Boolean> showMarketSelectionListCollapsed = new Observable<>();
 
     public SettingsStore() {
         this(new Cookie(),
@@ -80,7 +80,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 SettingsService.DEFAULT_MAX_TRADE_PRICE_DEVIATION,
                 true,
                 false,
-                true);
+                false);
     }
 
     public SettingsStore(Cookie cookie,
@@ -104,7 +104,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                          double maxTradePriceDeviation,
                          boolean showBuyFromOffers,
                          boolean showOfferListExpanded,
-                         boolean showMarketSelectionListExpanded) {
+                         boolean showMarketSelectionListCollapsed) {
         this.cookie = cookie;
         this.dontShowAgainMap.putAll(dontShowAgainMap);
         this.useAnimations.set(useAnimations);
@@ -126,7 +126,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
         this.maxTradePriceDeviation.set(maxTradePriceDeviation);
         this.showBuyFromOffers.set(showBuyFromOffers);
         this.showOfferListExpanded.set(showOfferListExpanded);
-        this.showMarketSelectionListExpanded.set(showMarketSelectionListExpanded);
+        this.showMarketSelectionListCollapsed.set(showMarketSelectionListCollapsed);
     }
 
     @Override
@@ -153,7 +153,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 .setMaxTradePriceDeviation(maxTradePriceDeviation.get())
                 .setShowBuyFromOffers(showBuyFromOffers.get())
                 .setShowOfferListExpanded(showOfferListExpanded.get())
-                .setShowMarketSelectionListExpanded(showMarketSelectionListExpanded.get());
+                .setShowMarketSelectionListCollapsed(showMarketSelectionListCollapsed.get());
     }
 
     @Override
@@ -192,7 +192,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 maxTradePriceDeviation,
                 proto.getShowBuyFromOffers(),
                 proto.getShowOfferListExpanded(),
-                proto.getShowMarketSelectionListExpanded());
+                proto.getShowMarketSelectionListCollapsed());
     }
 
     @Override
@@ -229,7 +229,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 maxTradePriceDeviation.get(),
                 showBuyFromOffers.get(),
                 showOfferListExpanded.get(),
-                showMarketSelectionListExpanded.get());
+                showMarketSelectionListCollapsed.get());
     }
 
     @Override
@@ -256,7 +256,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
             maxTradePriceDeviation.set(persisted.maxTradePriceDeviation.get());
             showBuyFromOffers.set(persisted.showBuyFromOffers.get());
             showOfferListExpanded.set(persisted.showOfferListExpanded.get());
-            showMarketSelectionListExpanded.set(persisted.showMarketSelectionListExpanded.get());
+            showMarketSelectionListCollapsed.set(persisted.showMarketSelectionListCollapsed.get());
         } catch (Exception e) {
             log.error("Exception at applyPersisted", e);
         }

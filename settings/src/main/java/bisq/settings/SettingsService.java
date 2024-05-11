@@ -83,7 +83,7 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         getMaxTradePriceDeviation().addObserver(value -> persist());
         getShowBuyFromOffers().addObserver(value -> persist());
         getShowOfferListExpanded().addObserver(value -> persist());
-        getShowMarketSelectionListExpanded().addObserver(value -> persist());
+        getShowMarketSelectionListCollapsed().addObserver(value -> persist());
         isInitialized = true;
 
         if (DevMode.isDevMode() && getMinRequiredReputationScore().get() == DEFAULT_MIN_REQUIRED_REPUTATION_SCORE) {
@@ -202,8 +202,8 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         return persistableStore.showOfferListExpanded;
     }
 
-    public Observable<Boolean> getShowMarketSelectionListExpanded() {
-        return persistableStore.showMarketSelectionListExpanded;
+    public Observable<Boolean> getShowMarketSelectionListCollapsed() {
+        return persistableStore.showMarketSelectionListCollapsed;
     }
 
 

@@ -22,14 +22,7 @@ import bisq.common.currency.Market;
 import bisq.desktop.components.table.StandardTable;
 import bisq.desktop.main.content.chat.ChatModel;
 import javafx.beans.Observable;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableSet;
@@ -70,7 +63,7 @@ public final class BisqEasyOfferbookModel extends ChatModel {
     private final StringProperty fiatAmountTitle = new SimpleStringProperty();
     private final BooleanProperty showBuyFromOfferMessageItems = new SimpleBooleanProperty();
     private final BooleanProperty showOfferListExpanded = new SimpleBooleanProperty();
-    private final BooleanProperty showMarketSelectionListExpanded = new SimpleBooleanProperty();
+    private final BooleanProperty showMarketSelectionListCollapsed = new SimpleBooleanProperty();
 
     @Setter
     private Predicate<MarketChannelItem> marketPricePredicate = marketChannelItem -> true;
