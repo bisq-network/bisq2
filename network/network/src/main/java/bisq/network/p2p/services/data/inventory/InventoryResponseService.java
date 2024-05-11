@@ -78,12 +78,18 @@ public class InventoryResponseService implements Node.Listener {
         InventoryFilterType inventoryFilterType = inventoryFilter.getInventoryFilterType();
         if (filterServiceMap.containsKey(inventoryFilterType)) {
             FilterService<? extends InventoryFilter> filterService = filterServiceMap.get(inventoryFilterType);
+            long ts = System.currentTimeMillis();
             Inventory inventory = filterService.createInventory(inventoryFilter);
             NetworkService.NETWORK_IO_POOL.submit(() -> {
                 try {
                     node.send(new InventoryResponse(inventory, request.getNonce()), connection);
+                    log.info("Successfully sent an InventoryResponse to peer {} with {} kb. Took {} ms",
+                            connection.getPeerAddress(),
+                            ByteUnit.BYTE.toKB(inventory.getSerializedSize()),
+                            System.currentTimeMillis() - ts);
                 } catch (Exception e) {
-                    log.warn("Error at send InventoryResponse. {}", ExceptionUtil.getMessageOrToString(e));
+                    log.warn("Error at sending InventoryResponse to {}. {}", connection.getPeerAddress(),
+                            ExceptionUtil.getMessageOrToString(e));
                 }
             });
         } else {

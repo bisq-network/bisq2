@@ -189,7 +189,7 @@ public class PeerExchangeService implements Node.Listener {
             boolean await = latch.await(2, MINUTES);
             checkArgument(await, "CountDownLatch not completed in 2 minutes");
         } catch (Exception e) {
-            log.error("Error at CountDownLatch.await: {}", ExceptionUtil.getMessageOrToString(e));
+            log.info("Error at CountDownLatch.await: {}", ExceptionUtil.getMessageOrToString(e));
             peerExchangeScheduler.ifPresent(Scheduler::stop);
             peerExchangeScheduler = Optional.of(Scheduler.run(() -> startInitialPeerExchange(minSuccess))
                     .after(peerExchangeDelaySec, TimeUnit.SECONDS)

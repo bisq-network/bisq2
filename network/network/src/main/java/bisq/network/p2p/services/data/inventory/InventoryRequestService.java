@@ -168,6 +168,9 @@ public class InventoryRequestService implements Node.Listener {
         return handler.request(filterService.getFilter())
                 .orTimeout(TIMEOUT, TimeUnit.MILLISECONDS)
                 .whenComplete((inventory, throwable) -> {
+                    if (throwable != null) {
+                        handler.dispose();
+                    }
                     requestHandlerMap.remove(key);
                     numPendingRequests.set(requestHandlerMap.size());
                 });
