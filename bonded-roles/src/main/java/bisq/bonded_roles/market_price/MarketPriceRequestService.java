@@ -22,7 +22,6 @@ import bisq.common.currency.MarketRepository;
 import bisq.common.currency.TradeCurrency;
 import bisq.common.data.Pair;
 import bisq.common.monetary.PriceQuote;
-import bisq.common.observable.Observable;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.timer.Scheduler;
@@ -47,10 +46,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 
 @Slf4j
@@ -123,7 +123,6 @@ public class MarketPriceRequestService {
     }
 
     private final Config conf;
-    private final long interval;
     private final NetworkService networkService;
     @Getter
     private final ObservableHashMap<Market, MarketPrice> marketPriceByCurrencyMap = new ObservableHashMap<>();
@@ -133,12 +132,14 @@ public class MarketPriceRequestService {
     private Scheduler scheduler;
     private long initialDelay = 0;
     @Getter
-    private final bisq.common.observable.Observable<Provider> selectedProvider = new Observable<>();
+    private Optional<Provider> mostRecentProvider = Optional.empty();
+    private final AtomicReference<Provider> selectedProvider = new AtomicReference<>();
     private final Set<Provider> candidates = new HashSet<>();
     private final Set<Provider> providersFromConfig = new HashSet<>();
     private final Set<Provider> fallbackProviders = new HashSet<>();
     private final Set<Provider> failedProviders = new HashSet<>();
     private final int numTotalCandidates;
+    private long timeSinceLastResponse;
     private final boolean noProviderAvailable;
     private volatile boolean shutdownStarted;
 
@@ -147,7 +148,6 @@ public class MarketPriceRequestService {
                                      NetworkService networkService) {
         this.conf = conf;
         this.networkService = networkService;
-        interval = conf.getInterval();
         userAgent = "bisq-v2/" + version.toString();
 
         Set<TransportType> supportedTransportTypes = networkService.getSupportedTransportTypes();
@@ -188,11 +188,16 @@ public class MarketPriceRequestService {
     }
 
     private void startRequesting() {
+        if (scheduler != null) {
+            scheduler.stop();
+            scheduler = null;
+        }
         scheduler = Scheduler.run(() -> {
             request().whenComplete((result, throwable) -> {
                 if (throwable != null) {
                     if (scheduler != null) {
                         scheduler.stop();
+                        scheduler = null;
                     }
                     // Increase delay (up to 30 sec.) for retry each time it fails by 5 sec.
                     initialDelay += 5;
@@ -200,7 +205,7 @@ public class MarketPriceRequestService {
                     startRequesting();
                 }
             });
-        }).periodically(initialDelay, interval, TimeUnit.SECONDS);
+        }).periodically(initialDelay, conf.getInterval(), TimeUnit.SECONDS);
     }
 
     private CompletableFuture<Void> request() {
@@ -244,8 +249,10 @@ public class MarketPriceRequestService {
                         log.info("Received market price from {} after {} ms", client.getBaseUrl() + param, System.currentTimeMillis() - ts);
                         Map<Market, MarketPrice> map = parseResponse(json);
                         long now = System.currentTimeMillis();
-                        log.info("Market price request from {} resulted in {} items took {} ms",
-                                client.getBaseUrl(), map.size(), now - ts);
+                        String sinceLastResponse = timeSinceLastResponse == 0 ? "" : "Time since last response: " + (now - timeSinceLastResponse) / 1000 + " sec";
+                        log.info("Market price request from {} resulted in {} items took {} ms. {}",
+                                client.getBaseUrl(), map.size(), now - ts, sinceLastResponse);
+                        timeSinceLastResponse = now;
 
                         // We only use those market prices for which we have a market in the repository
                         Map<Market, MarketPrice> filtered = map.entrySet().stream()
@@ -255,6 +262,7 @@ public class MarketPriceRequestService {
                                         Map.Entry::getValue));
                         marketPriceByCurrencyMap.clear();
                         marketPriceByCurrencyMap.putAll(filtered);
+                        mostRecentProvider = Optional.of(selectedProvider.get());
                         selectedProvider.set(selectNextProvider());
                         shutdownHttpClient(client);
                     } catch (Exception e) {
@@ -286,7 +294,7 @@ public class MarketPriceRequestService {
                         }
                     }
                 }, POOL)
-                .orTimeout(conf.getTimeoutInSeconds(), MILLISECONDS);
+                .orTimeout(conf.getTimeoutInSeconds(), SECONDS);
     }
 
     private Map<Market, MarketPrice> parseResponse(String json) {
