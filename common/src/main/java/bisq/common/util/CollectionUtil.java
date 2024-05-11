@@ -26,7 +26,8 @@ import java.util.stream.Stream;
 public class CollectionUtil {
     @Nullable
     public static <T> T getRandomElement(Collection<T> collection) {
-        return collection.isEmpty() ?
+        // Got a weird exception with size = -1 (Hashset), so we use the size check instead of isEmpty.
+        return collection.size() <= 1 ?
                 null :
                 new ArrayList<>(collection).get(new Random().nextInt(collection.size()));
     }
