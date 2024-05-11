@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.node.network_load;
 
+import bisq.common.util.ClassUtils;
 import bisq.network.p2p.message.NetworkEnvelope;
 import lombok.Getter;
 import lombok.ToString;
@@ -70,7 +71,7 @@ public class ConnectionMetrics {
         spentSendMessageTimePerMinute.putIfAbsent(ageInMinutes, new AtomicLong());
         spentSendMessageTimePerMinute.get(ageInMinutes).getAndAdd(spentTime);
 
-        String name = networkEnvelope.getEnvelopePayloadMessage().getClass().getSimpleName();
+        String name = ClassUtils.getClassName(networkEnvelope.getEnvelopePayloadMessage().getClass());
         numSentMessagesByMessageClassName.putIfAbsent(name, new AtomicLong());
         numSentMessagesByMessageClassName.get(name).getAndIncrement();
     }
@@ -89,7 +90,7 @@ public class ConnectionMetrics {
         deserializeTimePerMinute.putIfAbsent(ageInMinutes, new AtomicLong());
         deserializeTimePerMinute.get(ageInMinutes).getAndAdd(deserializeTime);
 
-        String name = networkEnvelope.getEnvelopePayloadMessage().getClass().getSimpleName();
+        String name = ClassUtils.getClassName(networkEnvelope.getEnvelopePayloadMessage().getClass());
         numReceivedMessagesByMessageClassName.putIfAbsent(name, new AtomicLong());
         numReceivedMessagesByMessageClassName.get(name).getAndIncrement();
     }
