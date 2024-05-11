@@ -61,7 +61,7 @@ public final class BisqEasyOfferbookModel extends ChatModel {
     private final List<StandardTable.FilterMenuItem<OfferMessageItem>> filterOfferMessageItems = new ArrayList<>();
     private final ToggleGroup filterOfferMessageMenuItemToggleGroup = new ToggleGroup();
     private final StringProperty fiatAmountTitle = new SimpleStringProperty();
-    private final BooleanProperty showBuyFromOfferMessageItems = new SimpleBooleanProperty();
+    private final BooleanProperty showBuyOffers = new SimpleBooleanProperty();
     private final BooleanProperty showOfferListExpanded = new SimpleBooleanProperty();
     private final BooleanProperty showMarketSelectionListCollapsed = new SimpleBooleanProperty();
 

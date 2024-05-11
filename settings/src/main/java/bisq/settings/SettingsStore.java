@@ -54,7 +54,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     final ObservableSet<Market> favouriteMarkets = new ObservableSet<>();
     final Observable<Boolean> ignoreMinRequiredReputationScoreFromSecManager = new Observable<>();
     final Observable<Double> maxTradePriceDeviation = new Observable<>();
-    final Observable<Boolean> showBuyFromOffers = new Observable<>();
+    final Observable<Boolean> showBuyOffers = new Observable<>();
     final Observable<Boolean> showOfferListExpanded = new Observable<>();
     final Observable<Boolean> showMarketSelectionListCollapsed = new Observable<>();
 
@@ -78,7 +78,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 new HashSet<>(),
                 false,
                 SettingsService.DEFAULT_MAX_TRADE_PRICE_DEVIATION,
-                true,
+                false,
                 false,
                 false);
     }
@@ -102,7 +102,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                          Set<Market> favouriteMarkets,
                          boolean ignoreMinRequiredReputationScoreFromSecManager,
                          double maxTradePriceDeviation,
-                         boolean showBuyFromOffers,
+                         boolean showBuyOffers,
                          boolean showOfferListExpanded,
                          boolean showMarketSelectionListCollapsed) {
         this.cookie = cookie;
@@ -124,7 +124,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
         this.favouriteMarkets.setAll(favouriteMarkets);
         this.ignoreMinRequiredReputationScoreFromSecManager.set(ignoreMinRequiredReputationScoreFromSecManager);
         this.maxTradePriceDeviation.set(maxTradePriceDeviation);
-        this.showBuyFromOffers.set(showBuyFromOffers);
+        this.showBuyOffers.set(showBuyOffers);
         this.showOfferListExpanded.set(showOfferListExpanded);
         this.showMarketSelectionListCollapsed.set(showMarketSelectionListCollapsed);
     }
@@ -151,7 +151,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 .addAllFavouriteMarkets(favouriteMarkets.stream().map(market -> market.toProto(serializeForHash)).collect(Collectors.toList()))
                 .setIgnoreMinRequiredReputationScoreFromSecManager(ignoreMinRequiredReputationScoreFromSecManager.get())
                 .setMaxTradePriceDeviation(maxTradePriceDeviation.get())
-                .setShowBuyFromOffers(showBuyFromOffers.get())
+                .setShowBuyOffers(showBuyOffers.get())
                 .setShowOfferListExpanded(showOfferListExpanded.get())
                 .setShowMarketSelectionListCollapsed(showMarketSelectionListCollapsed.get());
     }
@@ -190,7 +190,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                         .map(Market::fromProto).collect(Collectors.toSet())),
                 proto.getIgnoreMinRequiredReputationScoreFromSecManager(),
                 maxTradePriceDeviation,
-                proto.getShowBuyFromOffers(),
+                proto.getShowBuyOffers(),
                 proto.getShowOfferListExpanded(),
                 proto.getShowMarketSelectionListCollapsed());
     }
@@ -227,7 +227,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 new HashSet<>(favouriteMarkets),
                 ignoreMinRequiredReputationScoreFromSecManager.get(),
                 maxTradePriceDeviation.get(),
-                showBuyFromOffers.get(),
+                showBuyOffers.get(),
                 showOfferListExpanded.get(),
                 showMarketSelectionListCollapsed.get());
     }
@@ -254,7 +254,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
             favouriteMarkets.setAll(persisted.favouriteMarkets);
             ignoreMinRequiredReputationScoreFromSecManager.set(persisted.ignoreMinRequiredReputationScoreFromSecManager.get());
             maxTradePriceDeviation.set(persisted.maxTradePriceDeviation.get());
-            showBuyFromOffers.set(persisted.showBuyFromOffers.get());
+            showBuyOffers.set(persisted.showBuyOffers.get());
             showOfferListExpanded.set(persisted.showOfferListExpanded.get());
             showMarketSelectionListCollapsed.set(persisted.showMarketSelectionListCollapsed.get());
         } catch (Exception e) {

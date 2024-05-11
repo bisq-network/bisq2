@@ -79,8 +79,8 @@ public class OfferMessageItem {
         return minMaxAmount.getFirst();
     }
 
-    boolean isSellOffer() {
-        return offer.getDirection() == Direction.SELL;
+    boolean isBuyOffer() {
+        return offer.getDirection() == Direction.BUY;
     }
 
     private void initialize() {

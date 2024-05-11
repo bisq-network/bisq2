@@ -70,10 +70,10 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     private final SetChangeListener<Market> favouriteMarketsListener;
     private final ReputationService reputationService = serviceProvider.getUserService().getReputationService();
     private Pin offerOnlySettingsPin, bisqEasyPrivateTradeChatChannelsPin, selectedChannelPin,
-            marketPriceByCurrencyMapPin, favouriteMarketsPin, offerMessagesPin, showBuyFromOffersSettingsPin,
+            marketPriceByCurrencyMapPin, favouriteMarketsPin, offerMessagesPin, showBuyOffersPin,
             showOfferListExpandedSettingsPin, showMarketSelectionListCollapsedSettingsPin;
     private Subscription marketSelectorSearchPin, selectedMarketFilterPin, selectedOfferDirectionOrOwnerFilterPin,
-            selectedPeerReputationFilterPin, selectedMarketSortTypePin, showBuyFromOfferMessageItemsPin;
+            selectedPeerReputationFilterPin, selectedMarketSortTypePin, showBuyOffersFromModelPin;
 
     public BisqEasyOfferbookController(ServiceProvider serviceProvider) {
         super(serviceProvider, ChatChannelDomain.BISQ_EASY_OFFERBOOK, NavigationTarget.BISQ_EASY_OFFERBOOK);
@@ -124,7 +124,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         model.getMarketSelectorSearchText().set("");
 
         offerOnlySettingsPin = FxBindings.bindBiDir(model.getOfferOnly()).to(settingsService.getOffersOnly());
-        showBuyFromOffersSettingsPin = FxBindings.bindBiDir(model.getShowBuyFromOfferMessageItems()).to(settingsService.getShowBuyFromOffers());
+        showBuyOffersPin = FxBindings.bindBiDir(model.getShowBuyOffers()).to(settingsService.getShowBuyOffers());
         showOfferListExpandedSettingsPin = FxBindings.bindBiDir(model.getShowOfferListExpanded()).to(settingsService.getShowOfferListExpanded());
         showMarketSelectionListCollapsedSettingsPin = FxBindings.bindBiDir(model.getShowMarketSelectionListCollapsed())
                 .to(settingsService.getShowMarketSelectionListCollapsed());
@@ -195,9 +195,9 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
             }
         });
 
-        showBuyFromOfferMessageItemsPin = EasyBind.subscribe(model.getShowBuyFromOfferMessageItems(), showBuyFromOfferMessageItems -> {
+        showBuyOffersFromModelPin = EasyBind.subscribe(model.getShowBuyOffers(), showBuyOffers -> {
             model.getFilteredOfferMessageItems().setPredicate(item ->
-                    showBuyFromOfferMessageItems ? item.isSellOffer() : !item.isSellOffer()
+                    showBuyOffers == item.isBuyOffer()
             );
         });
 
@@ -249,7 +249,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         }
 
         offerOnlySettingsPin.unbind();
-        showBuyFromOffersSettingsPin.unbind();
+        showBuyOffersPin.unbind();
         showOfferListExpandedSettingsPin.unbind();
         showMarketSelectionListCollapsedSettingsPin.unbind();
         bisqEasyPrivateTradeChatChannelsPin.unbind();
@@ -261,7 +261,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         marketPriceByCurrencyMapPin.unbind();
         selectedMarketSortTypePin.unsubscribe();
         favouriteMarketsPin.unbind();
-        showBuyFromOfferMessageItemsPin.unsubscribe();
+        showBuyOffersFromModelPin.unsubscribe();
         model.getFavouriteMarkets().removeListener(favouriteMarketsListener);
 
         resetSelectedChildTarget();
@@ -346,11 +346,11 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     }
 
     void onSelectBuyFromFilter() {
-        model.getShowBuyFromOfferMessageItems().set(true);
+        model.getShowBuyOffers().set(false);
     }
 
     void onSelectSellToFilter() {
-        model.getShowBuyFromOfferMessageItems().set(false);
+        model.getShowBuyOffers().set(true);
     }
 
     private void createMarketChannels() {

@@ -81,7 +81,7 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         getFavouriteMarkets().addObserver(this::persist);
         getIgnoreMinRequiredReputationScoreFromSecManager().addObserver(value -> persist());
         getMaxTradePriceDeviation().addObserver(value -> persist());
-        getShowBuyFromOffers().addObserver(value -> persist());
+        getShowBuyOffers().addObserver(value -> persist());
         getShowOfferListExpanded().addObserver(value -> persist());
         getShowMarketSelectionListCollapsed().addObserver(value -> persist());
         isInitialized = true;
@@ -194,8 +194,8 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         return persistableStore.favouriteMarkets;
     }
 
-    public Observable<Boolean> getShowBuyFromOffers() {
-        return persistableStore.showBuyFromOffers;
+    public Observable<Boolean> getShowBuyOffers() {
+        return persistableStore.showBuyOffers;
     }
 
     public Observable<Boolean> getShowOfferListExpanded() {
