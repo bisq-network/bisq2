@@ -18,10 +18,13 @@
 package bisq.bonded_roles.market_price;
 
 import bisq.bonded_roles.BondedRoleType;
+import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
+import bisq.bonded_roles.bonded_role.BondedRole;
 import bisq.common.application.Service;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
+import bisq.common.encoding.Hex;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
@@ -55,8 +58,11 @@ public class MarketPriceService implements Service, PersistenceClient<MarketPric
     @Getter
     private final Persistence<MarketPriceStore> persistence;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
+    @Getter
     private final MarketPriceRequestService marketPriceRequestService;
     private Pin marketPriceByCurrencyMapPin;
+    @Getter
+    private Optional<AuthorizedBondedRole> marketPriceProvidingOracle = Optional.empty();
 
     public MarketPriceService(com.typesafe.config.Config marketPrice,
                               Version version,
@@ -106,6 +112,11 @@ public class MarketPriceService implements Service, PersistenceClient<MarketPric
         if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedMarketPriceData) {
             if (isAuthorized(authorizedData)) {
                 AuthorizedMarketPriceData authorizedMarketPriceData = (AuthorizedMarketPriceData) authorizedData.getAuthorizedDistributedData();
+                String authorizedDataPubKey = Hex.encode(authorizedData.getAuthorizedPublicKeyBytes());
+                marketPriceProvidingOracle = authorizedBondedRolesService.getBondedRoles().stream()
+                        .map(BondedRole::getAuthorizedBondedRole)
+                        .filter(authorizedBondedRole -> authorizedBondedRole.getAuthorizedPublicKey().equals(authorizedDataPubKey))
+                        .findAny();
                 Map<Market, MarketPrice> map = authorizedMarketPriceData.getMarketPriceByCurrencyMap().entrySet().stream()
                         .peek(e -> e.getValue().setSource(MarketPrice.Source.PROPAGATED_IN_NETWORK))
                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));

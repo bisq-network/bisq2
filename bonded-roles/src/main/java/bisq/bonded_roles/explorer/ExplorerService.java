@@ -132,6 +132,7 @@ public class ExplorerService {
     private final Set<Provider> providersFromConfig = new HashSet<>();
     private final Set<Provider> fallbackProviders = new HashSet<>();
     private final Set<Provider> failedProviders = new HashSet<>();
+    private Optional<BaseHttpClient> httpClient = Optional.empty();
     private final int numTotalCandidates;
     private final boolean noProviderAvailable;
     private volatile boolean shutdownStarted;
@@ -169,7 +170,8 @@ public class ExplorerService {
 
     public CompletableFuture<Boolean> shutdown() {
         shutdownStarted = true;
-        return CompletableFuture.completedFuture(true);
+        return httpClient.map(BaseHttpClient::shutdown)
+                .orElse(CompletableFuture.completedFuture(true));
     }
 
     public CompletableFuture<Tx> requestTx(String txId) {
@@ -191,6 +193,7 @@ public class ExplorerService {
         return CompletableFuture.supplyAsync(() -> {
             Provider provider = checkNotNull(selectedProvider.get(), "Selected provider must not be null.");
             BaseHttpClient client = networkService.getHttpClient(provider.baseUrl, userAgent, provider.transportType);
+            httpClient = Optional.of(client);
             long ts = System.currentTimeMillis();
             String param = provider.getApiPath() + provider.getTxPath() + txId;
             try {
