@@ -83,8 +83,9 @@ class InventoryHandler implements Connection.Listener {
                 removeListeners();
                 future.complete(response.getInventory());
             } else {
-                log.warn("Received InventoryResponse from {} with invalid nonce {}. Request nonce was {}. Connection={}",
-                        connection.getPeerAddress(), response.getRequestNonce(), nonce, connection.getId());
+                log.warn("Received InventoryResponse from {} with invalid nonce {}. Request nonce was {}. Peer address={}",
+                        connection.getPeerAddress(), response.getRequestNonce(), nonce,
+                        connection.getPeerAddress().getFullAddress());
             }
         }
     }
