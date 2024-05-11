@@ -40,6 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -182,7 +183,13 @@ public class InventoryRequestService implements Node.Listener {
     private void requestInventoryFromPeers() {
         // We don't care about results. We just run on all candidates and hope that some provide results.
         // In the worst case that none provided results we get repeated anyway later again.
-        getCandidates().forEach(this::requestInventory);
+        getCandidates().forEach(connection -> {
+            requestInventory(connection);
+            try {
+                Thread.sleep(new Random().nextInt(2000) + 500);
+            } catch (InterruptedException ignore) {
+            }
+        });
     }
 
     private List<Connection> getCandidates() {
