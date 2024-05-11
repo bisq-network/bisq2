@@ -206,8 +206,8 @@ public class PeerGroupManager implements Node.Listener {
                 setState(PeerGroupManager.State.STARTING);
                 // blocking
                 peerExchangeService.startInitialPeerExchange(1);
-                log.info("{} completed doInitialPeerExchange. Start periodic tasks with interval: {} ms",
-                        nodeInfo, config.getHouseKeepingInterval());
+                log.info("Completed doInitialPeerExchange. Start periodic tasks with interval: {} ms",
+                        config.getHouseKeepingInterval());
                 scheduler = Optional.of(Scheduler.run(this::doHouseKeeping)
                         .periodically(config.getHouseKeepingInterval())
                         .name("PeerGroupService.scheduler-" + nodeInfo));
@@ -290,9 +290,9 @@ public class PeerGroupManager implements Node.Listener {
                 .filter(this::allowDisconnect)
                 .filter(this::hasNoPendingRequests)
                 .filter(inbound -> outboundAddresses.contains(inbound.getPeerAddress()))
-                .peek(inbound -> log.info("{} -> {}: Send CloseConnectionMessage as we have an " +
+                .peek(inbound -> log.info("{}: Send CloseConnectionMessage as we have an " +
                                 "outbound connection with the same address.",
-                        node, inbound.getPeerAddress()))
+                        inbound.getPeerAddress()))
                 .forEach(inbound -> node.closeConnectionGracefully(inbound, CloseReason.DUPLICATE_CONNECTION));
     }
 
@@ -305,9 +305,9 @@ public class PeerGroupManager implements Node.Listener {
                 .filter(peerGroupService::isSeed)
                 .sorted(comparingForSkip())
                 .skip(config.getMaxSeeds())
-                .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as we have too " +
+                .peek(connection -> log.info("{}: Send CloseConnectionMessage as we have too " +
                                 "many connections to seeds.",
-                        node, connection.getPeerAddress()))
+                        connection.getPeerAddress()))
                 .forEach(connection -> node.closeConnectionGracefully(connection, CloseReason.TOO_MANY_CONNECTIONS_TO_SEEDS));
     }
 
@@ -320,9 +320,9 @@ public class PeerGroupManager implements Node.Listener {
                 .sorted(comparingForSkip())
                 .filter(connection -> connection.createdBefore(maxAgeDate))
                 .skip(minNumConnectedPeers)
-                .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as the connection age " +
+                .peek(connection -> log.info("{}: Send CloseConnectionMessage as the connection age " +
                                 "is too old.",
-                        node, connection.getPeerAddress()))
+                        connection.getPeerAddress()))
                 .forEach(connection -> node.closeConnectionGracefully(connection, CloseReason.AGED_CONNECTION));
     }
 
@@ -332,8 +332,8 @@ public class PeerGroupManager implements Node.Listener {
                 .filter(this::allowDisconnect)
                 .sorted(comparingForSkip())
                 .skip(peerGroupService.getMaxInboundConnections())
-                .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as we have too many inbound connections.",
-                        node, connection.getPeerAddress()))
+                .peek(connection -> log.info("{}: Send CloseConnectionMessage as we have too many inbound connections.",
+                        connection.getPeerAddress()))
                 .forEach(connection -> node.closeConnectionGracefully(connection, CloseReason.TOO_MANY_INBOUND_CONNECTIONS));
     }
 
@@ -343,8 +343,8 @@ public class PeerGroupManager implements Node.Listener {
                 .filter(this::allowDisconnect)
                 .sorted(comparingForSkip())
                 .skip(peerGroupService.getMaxNumConnectedPeers())
-                .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as we have too many connections.",
-                        node, connection.getPeerAddress()))
+                .peek(connection -> log.info("{}: Send CloseConnectionMessage as we have too many connections.",
+                        connection.getPeerAddress()))
                 .forEach(connection -> node.closeConnectionGracefully(connection, CloseReason.TOO_MANY_CONNECTIONS));
     }
 

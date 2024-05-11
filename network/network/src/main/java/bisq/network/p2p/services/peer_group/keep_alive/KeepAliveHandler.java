@@ -47,8 +47,8 @@ class KeepAliveHandler implements Connection.Listener {
     }
 
     CompletableFuture<Void> request() {
-        log.info("{} send Ping to {} with nonce {}. Connection={}",
-                node, connection.getPeerAddress(), nonce, connection.getId());
+        log.info("Send Ping to {} with nonce {}. Connection={}",
+                connection.getPeerAddress(), nonce, connection.getId());
         supplyAsync(() -> node.send(new Ping(nonce), connection), NetworkService.NETWORK_IO_POOL)
                 .whenComplete((c, throwable) -> {
                     if (throwable != null) {
@@ -64,13 +64,13 @@ class KeepAliveHandler implements Connection.Listener {
         if (envelopePayloadMessage instanceof Pong) {
             Pong pong = (Pong) envelopePayloadMessage;
             if (pong.getRequestNonce() == nonce) {
-                log.info("{} received Pong from {} with nonce {}. Connection={}",
-                        node, connection.getPeerAddress(), pong.getRequestNonce(), connection.getId());
+                log.info("Received Pong from {} with nonce {}. Connection={}",
+                        connection.getPeerAddress(), pong.getRequestNonce(), connection.getId());
                 removeListeners();
                 future.complete(null);
             } else {
-                log.warn("{} received Pong from {} with invalid nonce {}. Request nonce was {}. Connection={}",
-                        node, connection.getPeerAddress(), pong.getRequestNonce(), nonce, connection.getId());
+                log.warn("Received Pong from {} with invalid nonce {}. Request nonce was {}. Connection={}",
+                        connection.getPeerAddress(), pong.getRequestNonce(), nonce, connection.getId());
             }
         }
     }

@@ -69,13 +69,13 @@ class PeerExchangeRequestHandler implements Connection.Listener {
                         .collect(Collectors.toList()).toString());
                 log.debug("{} received PeerExchangeResponse from {} with {}",
                         node, connection.getPeerAddress(), addresses);*/
-                log.info("{} received PeerExchangeResponse from {} with {} peers",
-                        node, connection.getPeerAddress(), response.getPeers().size());
+                log.info("Received PeerExchangeResponse from {} with {} peers",
+                        connection.getPeerAddress(), response.getPeers().size());
                 removeListeners();
                 future.complete(new HashSet<>(response.getPeers()));
             } else {
-                log.warn("{} received a PeerExchangeResponse from {} with an invalid nonce. response.nonce()={}, nonce={}",
-                        node, connection.getPeerAddress(), response.getNonce(), nonce);
+                log.warn("Received a PeerExchangeResponse from {} with an invalid nonce. response.nonce()={}, nonce={}",
+                        connection.getPeerAddress(), response.getNonce(), nonce);
             }
         }
     }
