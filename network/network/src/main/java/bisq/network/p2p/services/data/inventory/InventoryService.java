@@ -45,10 +45,10 @@ public class InventoryService {
     @Getter
     public static final class Config {
         private final int maxSizeInKb;  // Default config value is 2000 (about 2MB)
-        private final long repeatRequestInterval;
+        private final long repeatRequestInterval; // Default 10 min
         private final int maxSeedsForRequest;
         private final int maxPeersForRequest;
-        private final int maxPendingRequests;
+        private final int maxPendingRequests; // Default 5
         private final List<InventoryFilterType> myPreferredFilterTypes; // Lower list index means higher preference
 
         public static Config from(com.typesafe.config.Config config) {

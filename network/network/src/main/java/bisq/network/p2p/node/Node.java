@@ -272,7 +272,9 @@ public class Node implements Connection.Handler {
 
             // As time passed we check again if connection is still not available
             if (inboundConnectionsByAddress.containsKey(address)) {
-                log.warn("{} have already an InboundConnection from {}. This can happen when a " + "handshake was in progress while we received a new connection from that address. " + "We will close the socket of that new connection and use the existing instead.", this, address);
+                log.warn("Have already an InboundConnection from {}. This can happen when a " +
+                        "handshake was in progress while we received a new connection from that address. " +
+                        "We will close the socket of that new connection and use the existing instead.", address);
                 try {
                     socket.close();
                 } catch (IOException ignore) {
@@ -350,7 +352,7 @@ public class Node implements Connection.Handler {
         } catch (Exception exception) {
             if (connection.isRunning() && !(exception.getCause() instanceof SocketException)) {
                 handleException(connection, exception);
-                log.debug("Send message failed on {}", this, exception);
+                log.debug("Send message failed", exception);
                 closeConnection(connection, CloseReason.EXCEPTION.exception(exception));
             }
             throw new ConnectionClosedException(connection);
@@ -405,7 +407,9 @@ public class Node implements Connection.Handler {
 
         // As time passed we check again if connection is still not available
         if (outboundConnectionsByAddress.containsKey(address)) {
-            log.warn("{} has already an OutboundConnection to {}. This can happen while we " + "we waited for the socket creation at the createOutboundConnection method. " + "We will close the socket and use the existing connection instead.", this, address);
+            log.warn("Has already an OutboundConnection to {}. This can happen while we " +
+                    "we waited for the socket creation at the createOutboundConnection method. " +
+                    "We will close the socket and use the existing connection instead.", address);
             try {
                 socket.close();
             } catch (IOException ignore) {
@@ -430,7 +434,10 @@ public class Node implements Connection.Handler {
 
             // As time passed we check again if connection is still not available
             if (outboundConnectionsByAddress.containsKey(address)) {
-                log.warn("{} has already an OutboundConnection to {}. This can happen when a " + "handshake was in progress while we started a new connection to that address and as the " + "handshake was not completed we did not consider that as an available connection. " + "We will close the socket of that new connection and use the existing instead.", this, address);
+                log.warn("Has already an OutboundConnection to {}. This can happen when a " +
+                        "handshake was in progress while we started a new connection to that address and as the " +
+                        "handshake was not completed we did not consider that as an available connection. " +
+                        "We will close the socket of that new connection and use the existing instead.", address);
                 try {
                     socket.close();
                 } catch (IOException ignore) {
@@ -516,8 +523,8 @@ public class Node implements Connection.Handler {
         if (isAuthorized) {
             if (envelopePayloadMessage instanceof CloseConnectionMessage) {
                 CloseConnectionMessage closeConnectionMessage = (CloseConnectionMessage) envelopePayloadMessage;
-                log.debug("{} received CloseConnectionMessage from {} with reason: {}",
-                        this, connection.getPeerAddress(), closeConnectionMessage.getCloseReason());
+                log.debug("Received CloseConnectionMessage from {} with reason: {}",
+                        connection.getPeerAddress(), closeConnectionMessage.getCloseReason());
                 closeConnection(connection, CloseReason.CLOSE_MSG_RECEIVED.details(closeConnectionMessage.getCloseReason().name()));
             } else {
                 // We got called from Connection on the dispatcher thread, so no mapping needed here.
@@ -552,7 +559,7 @@ public class Node implements Connection.Handler {
         if (isAuthorized) {
             if (envelopePayloadMessage instanceof CloseConnectionMessage) {
                 CloseConnectionMessage closeConnectionMessage = (CloseConnectionMessage) envelopePayloadMessage;
-                log.debug("{} received CloseConnectionMessage from {} with reason: {}", this, connection.getPeerAddress(), closeConnectionMessage.getCloseReason());
+                log.debug("Received CloseConnectionMessage from {} with reason: {}", connection.getPeerAddress(), closeConnectionMessage.getCloseReason());
                 // closeConnection(connection, CloseReason.CLOSE_MSG_RECEIVED.details(closeConnectionMessage.getCloseReason().name()));
             } else {
                 // We got called from Connection on the dispatcher thread, so no mapping needed here.
@@ -568,17 +575,21 @@ public class Node implements Connection.Handler {
     @Override
     public void handleConnectionClosed(Connection connection, CloseReason closeReason) {
         Address peerAddress = connection.getPeerAddress();
-        log.debug("{} got called onConnectionClosed. connection={}, peerAddress={}", this, connection, peerAddress);
+        log.debug("Got called onConnectionClosed. connection={}, peerAddress={}", connection, peerAddress);
         boolean wasRemoved = false;
         if (connection instanceof InboundConnection) {
             wasRemoved = inboundConnectionsByAddress.remove(peerAddress) != null;
             if (!wasRemoved) {
-                log.debug("{} did not had entry in inboundConnections at onConnectionClosed. " + "This can happen if different threads triggered a close. connection={}, peerAddress={}", this, connection, peerAddress);
+                log.debug("Did not had entry in inboundConnections at onConnectionClosed. " +
+                                "This can happen if different threads triggered a close. connection={}, peerAddress={}",
+                        connection, peerAddress);
             }
         } else if (connection instanceof OutboundConnection) {
             wasRemoved = outboundConnectionsByAddress.remove(peerAddress) != null;
             if (!wasRemoved) {
-                log.debug("{} did not had entry in outboundConnections at onConnectionClosed. " + "This can happen if different threads triggered a close. connection={}, peerAddress={}", this, connection, peerAddress);
+                log.debug("Did not had entry in outboundConnections at onConnectionClosed. " +
+                                "This can happen if different threads triggered a close. connection={}, peerAddress={}",
+                        connection, peerAddress);
             }
         }
         if (wasRemoved) {
@@ -597,7 +608,7 @@ public class Node implements Connection.Handler {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public void closeConnection(Connection connection, CloseReason closeReason) {
-        log.debug("{} got called closeConnection for {}, closeReason={}", this, connection, closeReason);
+        log.debug("Got called closeConnection for {}, closeReason={}", connection, closeReason);
         connection.shutdown(closeReason);
     }
 
@@ -689,7 +700,7 @@ public class Node implements Connection.Handler {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private void handleException(Connection connection, Throwable exception) {
-        log.debug("{} got called handleException. connection={}, exception={}", this, connection, exception.getMessage());
+        log.debug("Got called handleException. connection={}, exception={}", connection, exception.getMessage());
         if (isShutdown()) {
             return;
         }
@@ -699,12 +710,12 @@ public class Node implements Connection.Handler {
     }
 
     private void handleException(Throwable exception) {
-        log.debug("{} got called handleException. exception={}", this, exception.getMessage());
+        log.debug("Got called handleException. exception={}", exception.getMessage());
 
         if (isShutdown()) {
             return;
         }
-        String msg = "Exception: ";
+        String msg = "Exception:";
         if (exception instanceof EOFException) {
             log.info(msg, exception);
         } else if (exception instanceof ConnectException) {
@@ -713,7 +724,8 @@ public class Node implements Connection.Handler {
             log.debug(msg, exception);
         } else if (exception instanceof UnknownHostException) {
             log.warn("UnknownHostException. Might happen if we try to connect to wrong network type.", exception);
-        } else if (exception instanceof SocketTimeoutException) {
+        } else if (exception instanceof SocketTimeoutException ||
+                (exception instanceof ConnectionException && exception.getCause() instanceof SocketTimeoutException)) {
             log.info(msg, exception);
         } else {
             log.error(msg, exception);

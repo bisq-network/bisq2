@@ -85,7 +85,7 @@ public class PeerExchangeService implements Node.Listener {
             List<Peer> myPeers = new ArrayList<>(peerExchangeStrategy.getPeersForReporting(peerAddress));
             peerExchangeStrategy.addReportedPeers(new HashSet<>(request.getPeers()), peerAddress);
             NETWORK_IO_POOL.submit(() -> node.send(new PeerExchangeResponse(request.getNonce(), myPeers), connection));
-            log.debug("{} sent PeerExchangeResponse with my myPeers {}", node, myPeers);
+            log.debug("Sent PeerExchangeResponse with my myPeers {}", myPeers);
         }
     }
 
@@ -212,8 +212,8 @@ public class PeerExchangeService implements Node.Listener {
 
                 // We request and wait for response
                 Set<Peer> reportedPeers = handler.request(myPeers).join();
-                log.info("{} completed peer exchange with {} and received {} reportedPeers.",
-                        node, peerAddress, reportedPeers.size());
+                log.info("Completed peer exchange with {} and received {} reportedPeers.",
+                        peerAddress, reportedPeers.size());
                 peerExchangeStrategy.addReportedPeers(reportedPeers, peerAddress);
                 requestHandlerMap.remove(connectionId);
                 log.info("Peer exchange with {} completed", peerAddress);

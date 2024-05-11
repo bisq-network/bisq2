@@ -49,8 +49,8 @@ class NetworkLoadExchangeHandler implements Connection.Listener {
 
     CompletableFuture<Void> request() {
         NetworkLoad myNetworkLoad = node.getNetworkLoadSnapshot().getCurrentNetworkLoad();
-        log.info("{} send NetworkLoadRequest to {} with nonce {} and my networkLoad {}. Connection={}",
-                node, connection.getPeerAddress(), nonce, myNetworkLoad, connection.getId());
+        log.info("Send NetworkLoadRequest to {} with nonce {} and my networkLoad {}. Connection={}",
+                connection.getPeerAddress(), nonce, myNetworkLoad, connection.getId());
         supplyAsync(() -> node.send(new NetworkLoadExchangeRequest(nonce, myNetworkLoad), connection), NetworkService.NETWORK_IO_POOL)
                 .whenComplete((c, throwable) -> {
                     if (throwable != null) {
@@ -67,14 +67,14 @@ class NetworkLoadExchangeHandler implements Connection.Listener {
             NetworkLoadExchangeResponse response = (NetworkLoadExchangeResponse) envelopePayloadMessage;
             if (response.getRequestNonce() == nonce) {
                 NetworkLoad peersNetworkLoad = response.getNetworkLoad();
-                log.info("{} received NetworkLoadResponse from {} with nonce {} and peers networkLoad {}. Connection={}",
-                        node, connection.getPeerAddress(), response.getRequestNonce(), peersNetworkLoad, connection.getId());
+                log.info("Received NetworkLoadResponse from {} with nonce {} and peers networkLoad {}. Connection={}",
+                        connection.getPeerAddress(), response.getRequestNonce(), peersNetworkLoad, connection.getId());
                 removeListeners();
                 connection.getPeersNetworkLoadSnapshot().updateNetworkLoad(peersNetworkLoad);
                 future.complete(null);
             } else {
-                log.warn("{} received NetworkLoadResponse from {} with invalid nonce {}. Request nonce was {}. Connection={}",
-                        node, connection.getPeerAddress(), response.getRequestNonce(), nonce, connection.getId());
+                log.warn("Received NetworkLoadResponse from {} with invalid nonce {}. Request nonce was {}. Connection={}",
+                        connection.getPeerAddress(), response.getRequestNonce(), nonce, connection.getId());
             }
         }
     }
