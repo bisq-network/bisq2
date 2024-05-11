@@ -219,6 +219,15 @@
     -fx-alignment: center-right;
 }
 
+/* Hack to apply alignment to header. See: https://stackoverflow.com/questions/23576867/javafx-how-to-align-only-one-column-header-in-tableview */
+.table-view .column-header#left .label {
+    -fx-alignment: center-left;
+}
+
+.table-view .column-header#right .label {
+    -fx-alignment: center-right;
+}
+
 
 /* table-cell */
 .table-view .table-cell {

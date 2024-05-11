@@ -116,11 +116,15 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
             tableColumn.buttonClass = buttonClass;
             tableColumn.updateItemWithButtonHandler = updateItemWithButtonHandler;
             tableColumn.updateItemWithInputTextFieldHandler = updateItemWithInputTextFieldHandler;
+
             if (left) {
                 tableColumn.getStyleClass().add("left");
-            }
-            if (right) {
+                // Hack to apply alignment to header. See: https://stackoverflow.com/questions/23576867/javafx-how-to-align-only-one-column-header-in-tableview
+                tableColumn.setId("left");
+            } else if (right) {
                 tableColumn.getStyleClass().add("right");
+                // Hack to apply alignment to header. See: https://stackoverflow.com/questions/23576867/javafx-how-to-align-only-one-column-header-in-tableview
+                tableColumn.setId("right");
             }
 
             tableColumn.setSortable(isSortable);
