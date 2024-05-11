@@ -121,7 +121,7 @@ public class NetworkLoadService {
                 .forEach(map -> {
                     map.forEach((name, value) -> {
                         numSentMessagesByMessageClassName.putIfAbsent(name, new AtomicLong());
-                        numSentMessagesByMessageClassName.get(name).getAndIncrement();
+                        numSentMessagesByMessageClassName.get(name).addAndGet(value.get());
                     });
                 });
         StringBuilder numSentMsgPerClassName = new StringBuilder();
@@ -138,7 +138,7 @@ public class NetworkLoadService {
                 .forEach(map -> {
                     map.forEach((name, value) -> {
                         numReceivedMessagesByMessageClassName.putIfAbsent(name, new AtomicLong());
-                        numReceivedMessagesByMessageClassName.get(name).getAndIncrement();
+                        numReceivedMessagesByMessageClassName.get(name).addAndGet(value.get());
                     });
                 });
         StringBuilder numRecMsgPerClassName = new StringBuilder();
@@ -157,8 +157,8 @@ public class NetworkLoadService {
                 .append("\nNumber of messages received in last hour: ").append(numMessagesReceivedOfLastHour)
                 .append("\nNumber of messages received by class name:").append(numRecMsgPerClassName)
                 .append("\nSize of network DB: ").append(ByteUnit.BYTE.toMB(networkDatabaseSize)).append(" MB")
-                .append("\nData sent in last hour: ").append(ByteUnit.BYTE.toKB(sentBytesOfLastHour)).append(" KB")
-                .append("\nData received in last hour: ").append(ByteUnit.BYTE.toKB(receivedBytesOfLastHour)).append(" KB")
+                .append("\nData sent in last hour: ").append(ByteUnit.BYTE.toMB(sentBytesOfLastHour)).append(" MB")
+                .append("\nData received in last hour: ").append(ByteUnit.BYTE.toMB(receivedBytesOfLastHour)).append(" MB")
                 .append("\nTime for message sending in last hour: ").append(spentSendMessageTimeOfLastHour / 1000d).append(" sec.")
                 .append("\nTime for message deserializing in last hour: ").append(deserializeTimeOfLastHour / 1000d).append(" sec.")
                 .append("\n////////////////////////////////////////////////////////////////////////////////////////////////////");
