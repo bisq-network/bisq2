@@ -37,8 +37,9 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-@EqualsAndHashCode
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class OfferMessageItem {
+    @EqualsAndHashCode.Include
     private final BisqEasyOfferbookMessage message;
     private final BisqEasyOffer offer;
     private final MarketPriceService marketPriceService;
@@ -46,7 +47,6 @@ public class OfferMessageItem {
     private final String userNickname;
     private final Pair<Monetary, Monetary> minMaxAmount;
     private final String minMaxAmountAsString;
-    @EqualsAndHashCode.Exclude
     private final ReputationScore reputationScore;
     private final long totalScore;
 
