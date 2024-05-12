@@ -41,7 +41,11 @@ public abstract class Executable<T extends ApplicationService> implements ShutDo
         if (applicationService != null) {
             applicationService.shutdown()
                     .thenRun(() -> {
-                        shutDownHandlers.forEach(Runnable::run);
+                        try {
+                            shutDownHandlers.forEach(Runnable::run);
+                        } catch (Exception e) {
+                            log.error("Exception at running shutDownHandlers", e);
+                        }
                         exitJvm();
                     });
         } else {

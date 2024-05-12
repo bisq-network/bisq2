@@ -15,16 +15,22 @@ package bisq.desktop.common.threading;/*
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
+import bisq.common.util.ExceptionUtil;
 import javafx.application.Platform;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class UIThread {
     public static void run(Runnable task) {
-        if (Platform.isFxApplicationThread()) {
-            task.run();
-        } else {
-            Platform.runLater(task);
+        try {
+            if (Platform.isFxApplicationThread()) {
+                task.run();
+            } else {
+                Platform.runLater(task);
+            }
+        } catch (Exception e) {
+            log.error("Exception at UIThread.run: {}", ExceptionUtil.getMessageOrToString(e));
+            throw e;
         }
     }
 
