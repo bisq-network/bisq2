@@ -19,6 +19,7 @@ package bisq.network.p2p.services.data.inventory;
 
 import bisq.common.observable.Observable;
 import bisq.common.timer.Scheduler;
+import bisq.common.util.CollectionUtil;
 import bisq.common.util.ExceptionUtil;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
@@ -40,14 +41,14 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -58,17 +59,13 @@ public class InventoryRequestService implements Node.Listener {
     private final PeerGroupService peerGroupService;
     private final DataService dataService;
     private final Map<InventoryFilterType, FilterService<? extends InventoryFilter>> supportedFilterServices;
-    private final List<InventoryFilterType> myPreferredInventoryFilterTypes;
-    private final long repeatRequestInterval;
-    private final int maxSeedsForRequest;
-    private final int maxPeersForRequest;
-    private final int maxPendingRequests;
-    private final Map<String, InventoryHandler> requestHandlerMap = new ConcurrentHashMap<>();
-    private Optional<Scheduler> periodicRequestScheduler = Optional.empty();
+    private final InventoryService.Config config;
     @Getter
     private final Observable<Integer> numPendingRequests = new Observable<>(0);
     @Getter
     private final Observable<Boolean> allDataReceived = new Observable<>(false);
+    private final Map<String, InventoryHandler> requestHandlerMap = new ConcurrentHashMap<>();
+    private Optional<Scheduler> periodicRequestScheduler = Optional.empty();
 
     public InventoryRequestService(Node node,
                                    PeerGroupManager peerGroupManager,
@@ -79,11 +76,8 @@ public class InventoryRequestService implements Node.Listener {
         peerGroupService = peerGroupManager.getPeerGroupService();
         this.dataService = dataService;
         this.supportedFilterServices = supportedFilterServices;
-        myPreferredInventoryFilterTypes = config.getMyPreferredFilterTypes();
-        repeatRequestInterval = config.getRepeatRequestInterval();
-        maxSeedsForRequest = config.getMaxSeedsForRequest();
-        maxPeersForRequest = config.getMaxPeersForRequest();
-        maxPendingRequests = config.getMaxPendingRequests();
+        this.config = config;
+
         node.addListener(this);
     }
 
@@ -106,7 +100,7 @@ public class InventoryRequestService implements Node.Listener {
     public void onConnection(Connection connection) {
         if (!allDataReceived.get() &&
                 canUseCandidate(connection) &&
-                requestHandlerMap.size() < maxPendingRequests) {
+                requestHandlerMap.size() < config.getMaxPendingRequestsAtStartup()) {
             requestInventory(connection)
                     .whenComplete((inventory, throwable) -> {
                         if (throwable != null) {
@@ -115,13 +109,13 @@ public class InventoryRequestService implements Node.Listener {
                         } else if (!allDataReceived.get() && inventory.noDataMissing()) {
                             allDataReceived.set(true);
                             node.removeListener(this);
-                            startPeriodicRequests();
+                            startPeriodicRequests(config.getRepeatRequestInterval());
                         }
 
                         // In case of an error or if we completed without all data received and no other request is
                         // open (unlikely) we request using 3 existing peers.
                         if (!allDataReceived.get() && requestHandlerMap.isEmpty()) {
-                            getCandidates().stream().limit(3).forEach(this::requestInventory);
+                            getCandidatesForPeriodicRequests().stream().limit(3).forEach(this::requestInventory);
                         }
                     });
         }
@@ -176,32 +170,48 @@ public class InventoryRequestService implements Node.Listener {
                 });
     }
 
-
-    private void startPeriodicRequests() {
-        checkArgument(periodicRequestScheduler.isEmpty());
-        periodicRequestScheduler = Optional.of(Scheduler.run(this::requestInventoryFromPeers)
-                .periodically(repeatRequestInterval));
+    private void startPeriodicRequests(long interval) {
+        periodicRequestScheduler.ifPresent(Scheduler::stop);
+        periodicRequestScheduler = Optional.of(Scheduler.run(() -> {
+                    List<Connection> candidatesForPeriodicRequests = getCandidatesForPeriodicRequests();
+                    int numCandidates = candidatesForPeriodicRequests.size();
+                    AtomicBoolean allDataReceived = new AtomicBoolean();
+                    AtomicInteger numCompleted = new AtomicInteger();
+                    candidatesForPeriodicRequests.forEach(connection -> {
+                        requestInventory(connection)
+                                .whenComplete((inventory, throwable) -> {
+                                    if (throwable != null) {
+                                        log.error("Exception at periodic inventory request to peer {}: {}",
+                                                connection.getPeerAddress().getFullAddress(), ExceptionUtil.getMessageOrToString(throwable));
+                                    } else if (inventory.noDataMissing()) {
+                                        allDataReceived.set(true);
+                                    }
+                                    if (numCompleted.incrementAndGet() == numCandidates) {
+                                        if (allDataReceived.get()) {
+                                            long repeatRequestInterval = config.getRepeatRequestInterval();
+                                            log.info("We got {} requests completed and have all data received. " +
+                                                            "We repeat requests in {} seconds",
+                                                    numCandidates, repeatRequestInterval / 1000);
+                                            startPeriodicRequests(repeatRequestInterval);
+                                        } else {
+                                            log.info("We got {} requests completed but still data missing. " +
+                                                    "We repeat requests in 1 second", numCandidates);
+                                            startPeriodicRequests(1000);
+                                        }
+                                    }
+                                });
+                    });
+                })
+                .after(interval));
     }
 
-    private void requestInventoryFromPeers() {
-        // We don't care about results. We just run on all candidates and hope that some provide results.
-        // In the worst case that none provided results we get repeated anyway later again.
-        getCandidates().forEach(connection -> {
-            requestInventory(connection);
-            try {
-                Thread.sleep(new Random().nextInt(2000) + 500);
-            } catch (InterruptedException ignore) {
-            }
-        });
-    }
-
-    private List<Connection> getCandidates() {
+    private List<Connection> getCandidatesForPeriodicRequests() {
         Stream<Connection> seeds = peerGroupService.getShuffledSeedConnections(node)
-                .limit(maxSeedsForRequest);
+                .limit(config.getMaxSeedsForRequest());
         Stream<Connection> peers = peerGroupService.getShuffledNonSeedConnections(node)
-                .limit(maxPeersForRequest);
-        int limit = maxPendingRequests - requestHandlerMap.size();
-        return Stream.concat(seeds, peers)
+                .limit(config.getMaxPeersForRequest());
+        int limit = config.getMaxPendingRequestsAtPeriodicRequests() - requestHandlerMap.size();
+        return CollectionUtil.toShuffledList(Stream.concat(seeds, peers)).stream()
                 .filter(this::canUseCandidate)
                 .limit(limit)
                 .collect(Collectors.toList());
@@ -210,7 +220,7 @@ public class InventoryRequestService implements Node.Listener {
     // Get first match with peers feature based on order of myPreferredFilterTypes
     private Optional<InventoryFilterType> getPreferredFilterType(List<Feature> peersFeatures) {
         List<InventoryFilterType> peersInventoryFilterTypes = toFilterTypes(peersFeatures);
-        return myPreferredInventoryFilterTypes.stream()
+        return config.getMyPreferredFilterTypes().stream()
                 .filter(peersInventoryFilterTypes::contains)
                 .findFirst();
     }
