@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.peer_group;
 
 import bisq.common.timer.Scheduler;
+import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
 import bisq.network.common.Address;
 import bisq.network.identity.NetworkId;
@@ -379,12 +380,14 @@ public class PeerGroupManager implements Node.Listener {
     }
 
     private void maybeRemovePersistedPeers() {
-        List<Peer> persistedPeers = new ArrayList<>(peerGroupService.getPersistedPeers());
-        int exceeding = persistedPeers.size() - config.getMaxPersisted();
-        if (exceeding > 0) {
-            persistedPeers.sort(Comparator.comparing(Peer::getDate));
-            List<Peer> outDated = persistedPeers.subList(0, Math.min(exceeding, persistedPeers.size()));
-            log.info("Remove {} persisted peers: {}", outDated.size(), outDated);
+        List<Peer> outDated = peerGroupService.getPersistedPeers().stream()
+                .sorted()
+                .skip(config.getMaxPersisted())
+                .collect(Collectors.toList());
+        if (!outDated.isEmpty()) {
+            log.info("Remove {} persisted peers: {}",
+                    outDated.size(),
+                    outDated.stream().sorted().map(e -> StringUtils.formatTime(e.getAge())).collect(Collectors.toList()));
             peerGroupService.removePersistedPeers(outDated);
         }
     }
