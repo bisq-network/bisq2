@@ -48,7 +48,8 @@ public class InventoryService {
         private final long repeatRequestInterval; // Default 10 min
         private final int maxSeedsForRequest;
         private final int maxPeersForRequest;
-        private final int maxPendingRequests; // Default 5
+        private final int maxPendingRequestsAtStartup; // Default 5
+        private final int maxPendingRequestsAtPeriodicRequests; // Default 2
         private final List<InventoryFilterType> myPreferredFilterTypes; // Lower list index means higher preference
 
         public static Config from(com.typesafe.config.Config config) {
@@ -56,7 +57,8 @@ public class InventoryService {
                     SECONDS.toMillis(config.getLong("repeatRequestIntervalInSeconds")),
                     config.getInt("maxSeedsForRequest"),
                     config.getInt("maxPeersForRequest"),
-                    config.getInt("maxPendingRequests"),
+                    config.getInt("maxPendingRequestsAtStartup"),
+                    config.getInt("maxPendingRequestsAtPeriodicRequests"),
                     new ArrayList<>(config.getEnumList(InventoryFilterType.class, "myPreferredFilterTypes")));
         }
 
@@ -64,13 +66,15 @@ public class InventoryService {
                       long repeatRequestInterval,
                       int maxSeedsForRequest,
                       int maxPeersForRequest,
-                      int maxPendingRequests,
+                      int maxPendingRequestsAtStartup,
+                      int maxPendingRequestsAtPeriodicRequests,
                       List<InventoryFilterType> myPreferredFilterTypes) {
             this.maxSizeInKb = maxSizeInKb;
             this.repeatRequestInterval = repeatRequestInterval;
             this.maxSeedsForRequest = maxSeedsForRequest;
             this.maxPeersForRequest = maxPeersForRequest;
-            this.maxPendingRequests = maxPendingRequests;
+            this.maxPendingRequestsAtStartup = maxPendingRequestsAtStartup;
+            this.maxPendingRequestsAtPeriodicRequests = maxPendingRequestsAtPeriodicRequests;
             this.myPreferredFilterTypes = myPreferredFilterTypes;
         }
     }

@@ -131,7 +131,7 @@ public class NetworkInfo {
                                                 }
                                         )
                                         .periodically(250);
-                                model.setMaxInventoryRequests(String.valueOf(inventoryService.getConfig().getMaxPendingRequests()));
+                                model.setMaxInventoryRequests(String.valueOf(inventoryService.getConfig().getMaxPendingRequestsAtStartup()));
 
                                 model.inventoryDataChangeFlag.set(!model.inventoryDataChangeFlag.get());
                             });
