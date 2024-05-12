@@ -202,16 +202,12 @@ public class PeerExchangeStrategy {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     Set<Peer> getPeersForReporting(Address requesterAddress) {
-        long hiPriorityLimit = Math.round(REPORTED_PEERS_LIMIT * 0.75);
         Set<Peer> connectedPeers = getSortedAllConnectedPeers()
                 .filter(peer -> notSameAddress(requesterAddress, peer))
-                .limit(hiPriorityLimit)
                 .collect(Collectors.toSet());
-
-        long lowPriorityLimit = Math.round(REPORTED_PEERS_LIMIT * 0.25);
         Set<Peer> reportedPeers = getSortedReportedPeers()
                 .filter(peer -> notSameAddress(requesterAddress, peer))
-                .limit(lowPriorityLimit)
+                .limit(Math.round(REPORTED_PEERS_LIMIT))
                 .collect(Collectors.toSet());
 
         Set<Peer> peers = new HashSet<>(connectedPeers);
