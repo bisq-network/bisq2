@@ -101,24 +101,35 @@ public class InventoryRequestService implements Node.Listener {
         if (!allDataReceived.get() &&
                 canUseCandidate(connection) &&
                 requestHandlerMap.size() < config.getMaxPendingRequestsAtStartup()) {
-            requestInventory(connection)
-                    .whenComplete((inventory, throwable) -> {
-                        if (throwable != null) {
-                            log.error("Exception at inventory request to peer {}: {}",
-                                    connection.getPeerAddress().getFullAddress(), ExceptionUtil.getMessageOrToString(throwable));
-                        } else if (!allDataReceived.get() && inventory.noDataMissing()) {
-                            allDataReceived.set(true);
-                            node.removeListener(this);
-                            startPeriodicRequests(config.getRepeatRequestInterval());
-                        }
-
-                        // In case of an error or if we completed without all data received and no other request is
-                        // open (unlikely) we request using 3 existing peers.
-                        if (!allDataReceived.get() && requestHandlerMap.isEmpty()) {
-                            getCandidatesForPeriodicRequests().stream().limit(3).forEach(this::requestInventory);
-                        }
-                    });
+            requestInventoryFromFreshConnection(connection);
         }
+    }
+
+    private void requestInventoryFromFreshConnection(Connection connection) {
+        requestInventory(connection)
+                .whenComplete((inventory, throwable) -> {
+                    if (throwable != null) {
+                        log.error("Exception at inventory request to peer {}: {}",
+                                connection.getPeerAddress().getFullAddress(), ExceptionUtil.getMessageOrToString(throwable));
+                    } else {
+                        if (!allDataReceived.get()) {
+                            if (inventory.allDataReceived()) {
+                                allDataReceived.set(true);
+                                node.removeListener(this);
+                                startPeriodicRequests(config.getRepeatRequestInterval());
+                            } else {
+                                // We use same connection for repeated request until we have all data
+                                requestInventoryFromFreshConnection(connection);
+                            }
+                        }
+                    }
+
+                    // In case of an error or if we completed without all data received and no other request is
+                    // open (unlikely) we request using 3 existing peers.
+                    if (!allDataReceived.get() && requestHandlerMap.isEmpty()) {
+                        getCandidatesForPeriodicRequests().stream().limit(3).forEach(this::requestInventory);
+                    }
+                });
     }
 
     @Override
@@ -183,7 +194,7 @@ public class InventoryRequestService implements Node.Listener {
                                     if (throwable != null) {
                                         log.error("Exception at periodic inventory request to peer {}: {}",
                                                 connection.getPeerAddress().getFullAddress(), ExceptionUtil.getMessageOrToString(throwable));
-                                    } else if (inventory.noDataMissing()) {
+                                    } else if (inventory.allDataReceived()) {
                                         allDataReceived.set(true);
                                     }
                                     if (numCompleted.incrementAndGet() == numCandidates) {
