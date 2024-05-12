@@ -218,6 +218,8 @@ public class NetworkLoadService {
                 .append("\n----------------------------------------------------------------------------------------------------\n");
         log.info(sb.toString());
 
-        return MathUtils.bounded(0, 1, load);
+        //TODO load calculation has some bugs at spentSendTimeImpact. Until fixed we limit load to 0.1 to avoid high difficulty
+        return MathUtils.bounded(0, 0.1, load);
+        //return MathUtils.bounded(0, 1, load);
     }
 }
