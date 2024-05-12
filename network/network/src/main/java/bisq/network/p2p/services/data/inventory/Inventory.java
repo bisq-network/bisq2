@@ -91,7 +91,7 @@ public final class Inventory implements NetworkProto {
         return new Inventory(entries, proto.getMaxSizeReached(), Optional.of(proto.getSerializedSize()));
     }
 
-    public boolean noDataMissing() {
+    public boolean allDataReceived() {
         return !maxSizeReached;
     }
 }
