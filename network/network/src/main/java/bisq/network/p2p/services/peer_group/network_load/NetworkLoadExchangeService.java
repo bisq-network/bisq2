@@ -55,7 +55,7 @@ public class NetworkLoadExchangeService implements Node.Listener {
     public void initialize() {
         scheduler = Optional.of(Scheduler.run(this::requestFromAll)
                 .periodically(INITIAL_DELAY, INTERVAL, TimeUnit.SECONDS)
-                .name("NetworkLoadExchangeService.scheduler-" + node.getNodeInfo()));
+                .name("NetworkLoadExchangeService.scheduler"));
     }
 
     public void shutdown() {
