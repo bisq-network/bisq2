@@ -119,7 +119,10 @@ public class InventoryRequestService implements Node.Listener {
                                 startPeriodicRequests(config.getRepeatRequestInterval());
                             } else {
                                 // We use same connection for repeated request until we have all data
-                                requestInventoryFromFreshConnection(connection);
+                                if (canUseCandidate(connection) &&
+                                        requestHandlerMap.size() < config.getMaxPendingRequestsAtStartup()) {
+                                    requestInventoryFromFreshConnection(connection);
+                                }
                             }
                         }
                     }
