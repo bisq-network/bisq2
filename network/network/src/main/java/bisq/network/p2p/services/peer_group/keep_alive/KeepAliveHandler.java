@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.peer_group.keep_alive;
 
+import bisq.common.util.MathUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
@@ -37,6 +38,7 @@ class KeepAliveHandler implements Connection.Listener {
     private final Connection connection;
     private final CompletableFuture<Void> future = new CompletableFuture<>();
     private final int nonce;
+    private long requestTs;
 
     KeepAliveHandler(Node node, Connection connection) {
         this.node = node;
@@ -49,6 +51,7 @@ class KeepAliveHandler implements Connection.Listener {
     CompletableFuture<Void> request() {
         log.info("Send Ping to {} with nonce {}. Connection={}",
                 connection.getPeerAddress(), nonce, connection.getId());
+        requestTs = System.currentTimeMillis();
         supplyAsync(() -> node.send(new Ping(nonce), connection), NetworkService.NETWORK_IO_POOL)
                 .whenComplete((c, throwable) -> {
                     if (throwable != null) {
@@ -64,8 +67,9 @@ class KeepAliveHandler implements Connection.Listener {
         if (envelopePayloadMessage instanceof Pong) {
             Pong pong = (Pong) envelopePayloadMessage;
             if (pong.getRequestNonce() == nonce) {
-                log.info("Received Pong from {} with nonce {}. Connection={}",
-                        connection.getPeerAddress(), pong.getRequestNonce(), connection.getId());
+                String passed = MathUtils.roundDouble((System.currentTimeMillis() - requestTs) / 1000d, 2) + " sec.";
+                log.info("Received Pong after {} from {} with nonce {}. Connection={}",
+                        passed, connection.getPeerAddress(), pong.getRequestNonce(), connection.getId());
                 removeListeners();
                 future.complete(null);
             } else {
