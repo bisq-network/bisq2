@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.peer_group.exchange;
 
+import bisq.common.util.MathUtils;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
@@ -38,6 +39,7 @@ class PeerExchangeRequestHandler implements Connection.Listener {
     private final Connection connection;
     private final CompletableFuture<Set<Peer>> future = new CompletableFuture<>();
     private final int nonce;
+    private long requestTs;
 
     PeerExchangeRequestHandler(Node node, Connection connection) {
         this.node = node;
@@ -49,6 +51,7 @@ class PeerExchangeRequestHandler implements Connection.Listener {
     CompletableFuture<Set<Peer>> request(Set<Peer> peersForPeerExchange) {
         log.debug("{} send PeerExchangeRequest to {} with {} peers",
                 node, connection.getPeerAddress(), peersForPeerExchange.size());
+        requestTs = System.currentTimeMillis();
         try {
             // We get called from the IO thread, so we do not use the async send method
             node.send(new PeerExchangeRequest(nonce, new ArrayList<>(peersForPeerExchange)), connection);
@@ -69,8 +72,9 @@ class PeerExchangeRequestHandler implements Connection.Listener {
                         .collect(Collectors.toList()).toString());
                 log.debug("{} received PeerExchangeResponse from {} with {}",
                         node, connection.getPeerAddress(), addresses);*/
-                log.info("Received PeerExchangeResponse from {} with {} peers",
-                        connection.getPeerAddress(), response.getPeers().size());
+                String passed = MathUtils.roundDouble((System.currentTimeMillis() - requestTs) / 1000d, 2) + " sec.";
+                log.info("Received PeerExchangeResponse after {} from {} with {} peers",
+                        passed, connection.getPeerAddress(), response.getPeers().size());
                 removeListeners();
                 future.complete(new HashSet<>(response.getPeers()));
             } else {

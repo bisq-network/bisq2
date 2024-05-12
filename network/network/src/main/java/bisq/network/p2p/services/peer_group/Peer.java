@@ -45,12 +45,7 @@ public final class Peer implements NetworkProto, Comparable<Peer> {
     private final boolean isOutboundConnection;
     private final long created;
 
-
-    public Peer(Capability capability, NetworkLoad networkLoad, boolean isOutboundConnection) {
-        this(capability, networkLoad, isOutboundConnection, System.currentTimeMillis());
-    }
-
-    private Peer(Capability capability, NetworkLoad networkLoad, boolean isOutboundConnection, long created) {
+    public Peer(Capability capability, NetworkLoad networkLoad, boolean isOutboundConnection, long created) {
         this.capability = capability;
         this.networkLoad = networkLoad;
         this.isOutboundConnection = isOutboundConnection;

@@ -213,4 +213,13 @@ public class StringUtils {
         int digitGroups = (int) (Math.log10(size) / Math.log10(1024));
         return new DecimalFormat("#,##0.###").format(size / Math.pow(1024, digitGroups)) + " " + units[digitGroups];
     }
+
+    public static String formatTime(long time) {
+        double sec = MathUtils.roundDouble(time / 1000d, 2);
+        long min = (int) sec / 60;
+        sec = sec % 60;
+        long hours = min / 60;
+        min = min % 60;
+        return String.format("%02d:%02d:%02.2f", hours, min, sec);
+    }
 }
