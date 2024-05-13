@@ -46,8 +46,6 @@ public class TradeWizardAmountModel implements Model {
     @Setter
     private boolean isCreateOfferMode;
     @Setter
-    private Optional<PriceQuote> bestOffersPrice = Optional.empty();
-    @Setter
     private Optional<Monetary> baseSideAmount = Optional.empty();
     private final BooleanProperty showRangeAmounts = new SimpleBooleanProperty();
     private final BooleanProperty isMinAmountEnabled = new SimpleBooleanProperty();
@@ -63,7 +61,6 @@ public class TradeWizardAmountModel implements Model {
         fiatPaymentMethods = new ArrayList<>();
         headline = null;
         isCreateOfferMode = false;
-        bestOffersPrice = Optional.empty();
         baseSideAmount = Optional.empty();
         showRangeAmounts.set(false);
         isMinAmountEnabled.set(false);
