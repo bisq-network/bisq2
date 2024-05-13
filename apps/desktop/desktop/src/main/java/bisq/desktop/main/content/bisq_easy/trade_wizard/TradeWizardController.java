@@ -34,7 +34,6 @@ import bisq.desktop.main.content.bisq_easy.trade_wizard.review.TradeWizardReview
 import bisq.desktop.main.content.bisq_easy.trade_wizard.select_offer.TradeWizardSelectOfferController;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
-import bisq.offer.Direction;
 import javafx.collections.ListChangeListener;
 import javafx.event.EventHandler;
 import javafx.scene.input.KeyEvent;
@@ -155,8 +154,8 @@ public class TradeWizardController extends NavigationController implements InitW
             tradeWizardAmountController.setMarket(market);
             updateNextButtonDisabledState();
         });
-        amountSpecPin = EasyBind.subscribe(tradeWizardAmountController.getAmountSpec(),
-                amountSpec -> tradeWizardSelectOfferController.setAmountSpec(amountSpec));
+        amountSpecPin = EasyBind.subscribe(tradeWizardAmountController.getQuoteSideAmountSpec(),
+                amountSpec -> tradeWizardSelectOfferController.setQuoteSideAmountSpec(amountSpec));
         priceSpecPin = EasyBind.subscribe(tradeWizardPriceController.getPriceSpec(),
                 priceSpec -> tradeWizardSelectOfferController.setPriceSpec(priceSpec));
         selectedBisqEasyOfferPin = EasyBind.subscribe(tradeWizardSelectOfferController.getSelectedBisqEasyOffer(),
@@ -193,13 +192,13 @@ public class TradeWizardController extends NavigationController implements InitW
                         tradeWizardDirectionController.getDirection().get(),
                         tradeWizardMarketController.getMarket().get(),
                         tradeWizardPaymentMethodController.getFiatPaymentMethods(),
-                        tradeWizardAmountController.getAmountSpec().get(),
+                        tradeWizardAmountController.getQuoteSideAmountSpec().get(),
                         tradeWizardPriceController.getPriceSpec().get()
                 );
                 model.getNextButtonText().set(Res.get("bisqEasy.tradeWizard.review.nextButton.createOffer"));
             } else {
                 tradeWizardReviewController.setDataForTakeOffer(tradeWizardSelectOfferController.getSelectedBisqEasyOffer().get(),
-                        tradeWizardAmountController.getAmountSpec().get(),
+                        tradeWizardAmountController.getQuoteSideAmountSpec().get(),
                         tradeWizardPaymentMethodController.getFiatPaymentMethods()
                 );
                 model.getNextButtonText().set(Res.get("bisqEasy.tradeWizard.review.nextButton.takeOffer"));

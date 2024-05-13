@@ -21,7 +21,7 @@ import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.common.currency.Market;
 import bisq.desktop.common.view.Model;
 import bisq.offer.Direction;
-import bisq.offer.amount.spec.AmountSpec;
+import bisq.offer.amount.spec.QuoteSideAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.spec.MarketPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
@@ -50,7 +50,7 @@ class TradeWizardSelectOfferModel implements Model {
     @Setter
     private PriceSpec priceSpec = new MarketPriceSpec();
     @Setter
-    private AmountSpec amountSpec;
+    private QuoteSideAmountSpec quoteSideAmountSpec;
     @Setter
     private String headline;
     @Setter
@@ -69,7 +69,7 @@ class TradeWizardSelectOfferModel implements Model {
         market = null;
         fiatPaymentMethods.clear();
         priceSpec = new MarketPriceSpec();
-        amountSpec = null;
+        quoteSideAmountSpec = null;
         headline = null;
         subHeadLine = null;
         selectedItem = null;

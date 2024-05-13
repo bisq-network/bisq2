@@ -34,7 +34,7 @@ import bisq.network.identity.NetworkId;
 import bisq.offer.Direction;
 import bisq.offer.amount.OfferAmountFormatter;
 import bisq.offer.amount.OfferAmountUtil;
-import bisq.offer.amount.spec.AmountSpec;
+import bisq.offer.amount.spec.QuoteSideAmountSpec;
 import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.payment_method.PaymentMethodSpec;
@@ -130,9 +130,9 @@ public class TradeWizardSelectOfferController implements Controller {
         }
     }
 
-    public void setAmountSpec(AmountSpec amountSpec) {
+    public void setQuoteSideAmountSpec(QuoteSideAmountSpec amountSpec) {
         if (amountSpec != null) {
-            model.setAmountSpec(amountSpec);
+            model.setQuoteSideAmountSpec(amountSpec);
             resetSelectedOffer();
         }
     }
@@ -152,7 +152,7 @@ public class TradeWizardSelectOfferController implements Controller {
     public void onActivate() {
         Direction direction = model.getDirection();
         Market market = model.getMarket();
-        AmountSpec amountSpec = model.getAmountSpec();
+        QuoteSideAmountSpec amountSpec = model.getQuoteSideAmountSpec();
         PriceSpec priceSpec = model.getPriceSpec();
 
         boolean hasAmountRange = amountSpec instanceof RangeAmountSpec;
@@ -271,13 +271,13 @@ public class TradeWizardSelectOfferController implements Controller {
                     return false;
                 }
 
-                Optional<Monetary> myQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, model.getAmountSpec(), model.getPriceSpec(), model.getMarket());
+                Optional<Monetary> myQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, model.getQuoteSideAmountSpec(), model.getPriceSpec(), model.getMarket());
                 Optional<Monetary> peersQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, peersOffer);
                 if (myQuoteSideMinOrFixedAmount.orElseThrow().getValue() > peersQuoteSideMaxOrFixedAmount.orElseThrow().getValue()) {
                     return false;
                 }
 
-                Optional<Monetary> myQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, model.getAmountSpec(), model.getPriceSpec(), model.getMarket());
+                Optional<Monetary> myQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, model.getQuoteSideAmountSpec(), model.getPriceSpec(), model.getMarket());
                 Optional<Monetary> peersQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, peersOffer);
                 if (myQuoteSideMaxOrFixedAmount.orElseThrow().getValue() < peersQuoteSideMinOrFixedAmount.orElseThrow().getValue()) {
                     return false;

@@ -33,8 +33,8 @@ import bisq.desktop.main.content.bisq_easy.components.AmountComponent;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.offer.amount.OfferAmountUtil;
-import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.amount.spec.AmountSpecUtil;
+import bisq.offer.amount.spec.QuoteSideAmountSpec;
 import bisq.offer.amount.spec.QuoteSideFixedAmountSpec;
 import bisq.offer.amount.spec.QuoteSideRangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
@@ -138,8 +138,8 @@ public class TradeWizardAmountController implements Controller {
         model.reset();
     }
 
-    public ReadOnlyObjectProperty<AmountSpec> getAmountSpec() {
-        return model.getAmountSpec();
+    public ReadOnlyObjectProperty<QuoteSideAmountSpec> getQuoteSideAmountSpec() {
+        return model.getQuoteSideAmountSpec();
     }
 
     public ReadOnlyBooleanProperty getIsMinAmountEnabled() {
@@ -279,11 +279,11 @@ public class TradeWizardAmountController implements Controller {
     }
 
     private void applyFixedAmountSpec(long maxOrFixAmount) {
-        model.getAmountSpec().set(new QuoteSideFixedAmountSpec(maxOrFixAmount));
+        model.getQuoteSideAmountSpec().set(new QuoteSideFixedAmountSpec(maxOrFixAmount));
     }
 
     private void applyRangeAmountSpec(long minAmount, long maxOrFixAmount) {
-        model.getAmountSpec().set(new QuoteSideRangeAmountSpec(minAmount, maxOrFixAmount));
+        model.getQuoteSideAmountSpec().set(new QuoteSideRangeAmountSpec(minAmount, maxOrFixAmount));
     }
 
     private void applyBestOfferQuote() {
@@ -302,7 +302,7 @@ public class TradeWizardAmountController implements Controller {
             } else {
                 getMarketPriceQuote().ifPresent(maxOrFixAmountComponent::setQuote);
             }
-            AmountSpecUtil.findQuoteSideFixedAmountFromSpec(model.getAmountSpec().get(), model.getMarket().getQuoteCurrencyCode())
+            AmountSpecUtil.findQuoteSideFixedAmountFromSpec(model.getQuoteSideAmountSpec().get(), model.getMarket().getQuoteCurrencyCode())
                     .ifPresent(amount -> UIThread.runOnNextRenderFrame(() -> maxOrFixAmountComponent.setQuoteSideAmount(amount)));
         }
     }
@@ -332,13 +332,13 @@ public class TradeWizardAmountController implements Controller {
                 return false;
             }
 
-            Optional<Monetary> myQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, model.getAmountSpec().get(), MARKET_PRICE_SPEC, model.getMarket());
+            Optional<Monetary> myQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, model.getQuoteSideAmountSpec().get(), MARKET_PRICE_SPEC, model.getMarket());
             Optional<Monetary> peersQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, peersOffer);
             if (myQuoteSideMinOrFixedAmount.orElseThrow().getValue() > peersQuoteSideMaxOrFixedAmount.orElseThrow().getValue()) {
                 return false;
             }
 
-            Optional<Monetary> myQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, model.getAmountSpec().get(), MARKET_PRICE_SPEC, model.getMarket());
+            Optional<Monetary> myQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, model.getQuoteSideAmountSpec().get(), MARKET_PRICE_SPEC, model.getMarket());
             Optional<Monetary> peersQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, peersOffer);
             if (myQuoteSideMaxOrFixedAmount.orElseThrow().getValue() < peersQuoteSideMinOrFixedAmount.orElseThrow().getValue()) {
                 return false;

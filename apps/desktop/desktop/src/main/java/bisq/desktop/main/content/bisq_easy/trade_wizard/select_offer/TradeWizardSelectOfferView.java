@@ -315,7 +315,7 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
             priceAsLong = PriceUtil.findQuote(marketPriceService, bisqEasyOffer).map(PriceQuote::getValue).orElse(0L);
             priceDisplayString = OfferPriceFormatter.formatQuote(marketPriceService, bisqEasyOffer, false);
             Monetary baseAmountAsMonetary = OfferAmountUtil.findBaseSideFixedAmount(marketPriceService,
-                            model.getAmountSpec(),
+                            model.getQuoteSideAmountSpec(),
                             bisqEasyOffer.getPriceSpec(),
                             bisqEasyOffer.getMarket())
                     .orElse(Monetary.from(0, model.getMarket().getBaseCurrencyCode()));
