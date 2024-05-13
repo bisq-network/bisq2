@@ -92,9 +92,9 @@ public class TradeWizardController extends NavigationController implements InitW
                 this::setMainButtonsVisibleState,
                 this::closeAndNavigateTo);
         tradeWizardMarketController = new TradeWizardMarketController(serviceProvider, this::onNext);
-        tradeWizardPriceController = new TradeWizardPriceController(serviceProvider);
-        tradeWizardAmountController = new TradeWizardAmountController(serviceProvider);
-        tradeWizardPaymentMethodController = new TradeWizardPaymentMethodController(serviceProvider, this::onNext);
+        tradeWizardPriceController = new TradeWizardPriceController(serviceProvider, view.getRoot());
+        tradeWizardAmountController = new TradeWizardAmountController(serviceProvider, view.getRoot());
+        tradeWizardPaymentMethodController = new TradeWizardPaymentMethodController(serviceProvider, view.getRoot(), this::onNext);
         tradeWizardSelectOfferController = new TradeWizardSelectOfferController(serviceProvider,
                 this::onBack,
                 this::onNext,
@@ -272,7 +272,9 @@ public class TradeWizardController extends NavigationController implements InitW
             nextIndex++;
         }
         if (nextIndex < model.getChildTargets().size()) {
-            if (isInvalid()) return;
+            if (!validate()) {
+                return;
+            }
 
             model.setAnimateRightOut(false);
             model.getCurrentIndex().set(nextIndex);
@@ -294,7 +296,9 @@ public class TradeWizardController extends NavigationController implements InitW
             prevIndex--;
         }
         if (prevIndex >= 0) {
-            if (isInvalid()) return;
+            if (!validate()) {
+                return;
+            }
 
             model.setAnimateRightOut(true);
             model.getCurrentIndex().set(prevIndex);
@@ -305,19 +309,15 @@ public class TradeWizardController extends NavigationController implements InitW
         }
     }
 
-    private boolean isInvalid() {
+    private boolean validate() {
         if (model.getSelectedChildTarget().get() == NavigationTarget.TRADE_WIZARD_PRICE) {
-            if (!tradeWizardPriceController.isValid()) {
-                tradeWizardPriceController.handleInvalidInput();
-                return true;
-            }
+            return tradeWizardPriceController.validate();
+        } else if (model.getSelectedChildTarget().get() == NavigationTarget.TRADE_WIZARD_AMOUNT) {
+            return tradeWizardAmountController.validate();
         } else if (model.getSelectedChildTarget().get() == NavigationTarget.TRADE_WIZARD_PAYMENT_METHOD) {
-            if (!tradeWizardPaymentMethodController.isValid()) {
-                tradeWizardPaymentMethodController.handleInvalidInput();
-                return true;
-            }
+            return tradeWizardPaymentMethodController.validate();
         }
-        return false;
+        return true;
     }
 
     private boolean isTakeOfferItem(int index) {

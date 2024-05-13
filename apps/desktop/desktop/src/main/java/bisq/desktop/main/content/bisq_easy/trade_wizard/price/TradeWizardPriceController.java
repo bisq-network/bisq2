@@ -32,12 +32,12 @@ import bisq.presentation.formatters.PriceFormatter;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.scene.layout.Region;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import javax.annotation.Nullable;
 import java.util.Optional;
 
 import static bisq.presentation.formatters.PercentageFormatter.formatToPercentWithSymbol;
@@ -49,16 +49,16 @@ public class TradeWizardPriceController implements Controller {
     @Getter
     private final TradeWizardPriceView view;
     private final PriceInput priceInput;
+    private final Region owner;
     private final MarketPriceService marketPriceService;
     private final SettingsService settingsService;
     private Subscription priceInputPin, isPriceInvalidPin, priceSpecPin, percentageInputPin;
-    @Nullable
-    private Popup invalidPricePopup;
 
-    public TradeWizardPriceController(ServiceProvider serviceProvider) {
+    public TradeWizardPriceController(ServiceProvider serviceProvider, Region owner) {
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         settingsService = serviceProvider.getSettingsService();
         priceInput = new PriceInput(serviceProvider.getBondedRolesService().getMarketPriceService());
+        this.owner = owner;
         model = new TradeWizardPriceModel();
         view = new TradeWizardPriceView(model, this, priceInput);
     }
@@ -86,12 +86,15 @@ public class TradeWizardPriceController implements Controller {
         model.reset();
     }
 
-    public boolean isValid() {
-        return model.getInvalidPercentageErrorMessage().get() == null;
-    }
-
-    public void handleInvalidInput() {
-        maybeShowErrorPopup();
+    public boolean validate() {
+        if (model.getErrorMessage().get() == null) {
+            return true;
+        } else {
+            new Popup().invalid(model.getErrorMessage().get())
+                    .owner(owner)
+                    .show();
+            return false;
+        }
     }
 
     @Override
@@ -105,7 +108,7 @@ public class TradeWizardPriceController implements Controller {
         priceInputPin = EasyBind.subscribe(priceInput.getQuote(), this::onQuoteInput);
         isPriceInvalidPin = EasyBind.subscribe(priceInput.getValidationResult(), validationResult -> {
             if (validationResult != null && !validationResult.isValid) {
-                model.getInvalidPercentageErrorMessage().set(validationResult.errorMessage);
+                model.getErrorMessage().set(validationResult.errorMessage);
                 model.setLastValidPriceQuote(null);
             }
         });
@@ -146,7 +149,7 @@ public class TradeWizardPriceController implements Controller {
                 model.getPercentageInput().set(percentageAsString);
                 onPercentageInput(percentageAsString);
             } catch (Exception e) {
-                model.getInvalidPercentageErrorMessage().set(Res.get("bisqEasy.price.warn.invalidPrice.numberFormatException"));
+                model.getErrorMessage().set(Res.get("bisqEasy.price.warn.invalidPrice.numberFormatException"));
             }
         }
     }
@@ -159,7 +162,7 @@ public class TradeWizardPriceController implements Controller {
             return;
         }
 
-        model.getInvalidPercentageErrorMessage().set(null);
+        model.getErrorMessage().set(null);
         try {
             double percentage = parse(percentageAsString);
             if (!validatePercentage(percentage)) {
@@ -178,9 +181,9 @@ public class TradeWizardPriceController implements Controller {
             }
             applyPriceSpec();
         } catch (NumberFormatException e) {
-            model.getInvalidPercentageErrorMessage().set(Res.get("bisqEasy.price.warn.invalidPrice.numberFormatException"));
+            model.getErrorMessage().set(Res.get("bisqEasy.price.warn.invalidPrice.numberFormatException"));
         } catch (Exception e) {
-            model.getInvalidPercentageErrorMessage().set(Res.get("bisqEasy.price.warn.invalidPrice.exception", e.getMessage()));
+            model.getErrorMessage().set(Res.get("bisqEasy.price.warn.invalidPrice.exception", e.getMessage()));
         }
     }
 
@@ -250,10 +253,10 @@ public class TradeWizardPriceController implements Controller {
 
     private boolean validatePercentage(double percentage) {
         if (percentage >= -0.1 && percentage <= 0.5) {
-            model.getInvalidPercentageErrorMessage().set(null);
+            model.getErrorMessage().set(null);
             return true;
         } else {
-            model.getInvalidPercentageErrorMessage().set(Res.get("bisqEasy.price.warn.invalidPrice.outOfRange"));
+            model.getErrorMessage().set(Res.get("bisqEasy.price.warn.invalidPrice.outOfRange"));
             return false;
         }
     }
@@ -266,7 +269,7 @@ public class TradeWizardPriceController implements Controller {
             }
             return optionalPercentage.orElse(0d);
         } catch (Exception e) {
-            model.getInvalidPercentageErrorMessage().set(Res.get("bisqEasy.price.warn.invalidPrice.outOfRange"));
+            model.getErrorMessage().set(Res.get("bisqEasy.price.warn.invalidPrice.outOfRange"));
             return 0;
         }
     }
@@ -290,22 +293,6 @@ public class TradeWizardPriceController implements Controller {
                     priceInput.setQuote(newPriceQuote);
                 }
             });
-        }
-    }
-
-    private void maybeShowErrorPopup() {
-        String invalidPriceErrorMessage = model.getInvalidPercentageErrorMessage().get();
-        if (invalidPriceErrorMessage == null) {
-            return;
-        }
-        if (invalidPricePopup == null) {
-            invalidPricePopup = new Popup();
-            invalidPricePopup.warning(invalidPriceErrorMessage)
-                    .onClose(() -> {
-                        invalidPricePopup = null;
-                        resetInvalidPrice();
-                    })
-                    .show();
         }
     }
 

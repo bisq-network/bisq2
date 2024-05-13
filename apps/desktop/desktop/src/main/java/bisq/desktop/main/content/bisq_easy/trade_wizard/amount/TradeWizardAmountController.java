@@ -28,6 +28,7 @@ import bisq.common.monetary.PriceQuote;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.BisqEasyServiceUtil;
 import bisq.desktop.main.content.bisq_easy.components.AmountComponent;
 import bisq.i18n.Res;
@@ -53,6 +54,7 @@ import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationService;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.scene.layout.Region;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -75,6 +77,7 @@ public class TradeWizardAmountController implements Controller {
     private final SettingsService settingsService;
     private final MarketPriceService marketPriceService;
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
+    private final Region owner;
     private final UserProfileService userProfileService;
     private final ReputationService reputationService;
     private final UserIdentityService userIdentityService;
@@ -82,7 +85,7 @@ public class TradeWizardAmountController implements Controller {
     private Subscription isMinAmountEnabledPin, maxOrFixAmountCompBaseSideAmountPin, minAmountCompBaseSideAmountPin,
             maxAmountCompQuoteSideAmountPin, minAmountCompQuoteSideAmountPin, priceTooltipPin;
 
-    public TradeWizardAmountController(ServiceProvider serviceProvider) {
+    public TradeWizardAmountController(ServiceProvider serviceProvider, Region owner) {
         settingsService = serviceProvider.getSettingsService();
         bisqEasyService = serviceProvider.getBisqEasyService();
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
@@ -90,6 +93,7 @@ public class TradeWizardAmountController implements Controller {
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         reputationService = serviceProvider.getUserService().getReputationService();
         bisqEasyOfferbookChannelService = serviceProvider.getChatService().getBisqEasyOfferbookChannelService();
+        this.owner = owner;
         model = new TradeWizardAmountModel();
 
         minAmountComponent = new AmountComponent(serviceProvider, true);
@@ -130,6 +134,18 @@ public class TradeWizardAmountController implements Controller {
     public void setFiatPaymentMethods(List<FiatPaymentMethod> fiatPaymentMethods) {
         if (fiatPaymentMethods != null) {
             model.setFiatPaymentMethods(fiatPaymentMethods);
+        }
+    }
+
+    public boolean validate() {
+        // No errorMessage set yet... We reset the amount to a valid value in case input is invalid
+        if (model.getErrorMessage().get() == null) {
+            return true;
+        } else {
+            new Popup().invalid(model.getErrorMessage().get())
+                    .owner(owner)
+                    .show();
+            return false;
         }
     }
 

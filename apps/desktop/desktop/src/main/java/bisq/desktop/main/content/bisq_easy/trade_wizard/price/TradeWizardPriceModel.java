@@ -40,7 +40,7 @@ public class TradeWizardPriceModel implements Model {
     private final StringProperty priceAsString = new SimpleStringProperty();
     private final BooleanProperty useFixPrice = new SimpleBooleanProperty();
     private final ObjectProperty<PriceSpec> priceSpec = new SimpleObjectProperty<>(new MarketPriceSpec());
-    private final StringProperty invalidPercentageErrorMessage = new SimpleStringProperty();
+    private final StringProperty errorMessage = new SimpleStringProperty();
     @Nullable
     @Setter
     private PriceQuote lastValidPriceQuote;
@@ -58,7 +58,7 @@ public class TradeWizardPriceModel implements Model {
         priceAsString.set(null);
         useFixPrice.set(false);
         priceSpec.set(null);
-        invalidPercentageErrorMessage.set(null);
+        errorMessage.set(null);
         lastValidPriceQuote = null;
         feedbackSentence.set(null);
         shouldShowLearnWhyOverlay.set(false);

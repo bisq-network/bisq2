@@ -55,6 +55,7 @@ public class TradeWizardAmountModel implements Model {
     private final StringProperty priceTooltip = new SimpleStringProperty();
     private final ObjectProperty<QuoteSideAmountSpec> quoteSideAmountSpec = new SimpleObjectProperty<>();
     private final ObjectProperty<PriceQuote> priceQuote = new SimpleObjectProperty<>();
+    private final StringProperty errorMessage = new SimpleStringProperty();
 
     public void reset() {
         direction = null;
@@ -70,5 +71,6 @@ public class TradeWizardAmountModel implements Model {
         priceTooltip.set(null);
         quoteSideAmountSpec.set(null);
         priceQuote.set(null);
+        errorMessage.set(null);
     }
 }
