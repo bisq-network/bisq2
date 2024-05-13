@@ -23,6 +23,7 @@ import bisq.common.monetary.Monetary;
 import bisq.i18n.Res;
 import bisq.offer.Offer;
 import bisq.offer.amount.spec.AmountSpec;
+import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.presentation.formatters.AmountFormatter;
 import lombok.extern.slf4j.Slf4j;
@@ -148,6 +149,14 @@ public class OfferAmountFormatter {
 
     public static String formatQuoteAmount(MarketPriceService marketPriceService, Offer offer, boolean withCode) {
         return formatQuoteAmount(marketPriceService, offer.getAmountSpec(), offer.getPriceSpec(), offer.getMarket(), offer.hasAmountRange(), withCode);
+    }
+
+    public static String formatQuoteAmount(MarketPriceService marketPriceService,
+                                           AmountSpec amountSpec,
+                                           PriceSpec priceSpec,
+                                           Market market,
+                                           boolean withCode) {
+        return formatQuoteAmount(marketPriceService, amountSpec, priceSpec, market, amountSpec instanceof RangeAmountSpec, withCode);
     }
 
     public static String formatQuoteAmount(MarketPriceService marketPriceService,

@@ -32,16 +32,7 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.presentation.formatters.AmountFormatter;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.ReadOnlyBooleanProperty;
-import javafx.beans.property.ReadOnlyObjectProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -63,8 +54,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class AmountComponent {
-    private static final Coin MIN_RANGE_BASE_SIDE_VALUE = Coin.asBtcFromValue(10000);
-    private static final Coin MAX_RANGE_BASE_SIDE_VALUE = Coin.asBtcFromValue(1000000);
+    public static final Coin MIN_RANGE_BASE_SIDE_VALUE = Coin.asBtcFromValue(10000);
+    public static final Coin MAX_RANGE_BASE_SIDE_VALUE = Coin.asBtcFromValue(1000000);
 
     private final Controller controller;
 
@@ -113,6 +104,10 @@ public class AmountComponent {
         if (priceQuote != null) {
             controller.setQuote(priceQuote);
         }
+    }
+
+    public ReadOnlyObjectProperty<PriceQuote> getQuote() {
+        return controller.price.getQuote();
     }
 
     public void reset() {
@@ -341,7 +336,7 @@ public class AmountComponent {
 
         private Subscription subscribeToAmountValidity(AmountInput amountInput, Runnable autocorrect) {
             return EasyBind.subscribe(amountInput.isAmountValidProperty(), isAmountValid -> {
-                if(!amountInput.isAmountValidProperty().get()) {
+                if (!amountInput.isAmountValidProperty().get()) {
                     autocorrect.run();
                     amountInput.isAmountValidProperty().set(true);
                 }

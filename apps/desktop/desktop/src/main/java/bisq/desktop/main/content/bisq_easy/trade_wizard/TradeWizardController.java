@@ -155,9 +155,14 @@ public class TradeWizardController extends NavigationController implements InitW
             updateNextButtonDisabledState();
         });
         amountSpecPin = EasyBind.subscribe(tradeWizardAmountController.getQuoteSideAmountSpec(),
-                amountSpec -> tradeWizardSelectOfferController.setQuoteSideAmountSpec(amountSpec));
+                quoteSideAmountSpec -> {
+                    tradeWizardSelectOfferController.setQuoteSideAmountSpec(quoteSideAmountSpec);
+                });
         priceSpecPin = EasyBind.subscribe(tradeWizardPriceController.getPriceSpec(),
-                priceSpec -> tradeWizardSelectOfferController.setPriceSpec(priceSpec));
+                priceSpec -> {
+                    tradeWizardAmountController.updateQuoteSideAmountSpecWithPriceSpec(priceSpec);
+                    tradeWizardSelectOfferController.setPriceSpec(priceSpec);
+                });
         selectedBisqEasyOfferPin = EasyBind.subscribe(tradeWizardSelectOfferController.getSelectedBisqEasyOffer(),
                 selectedBisqEasyOffer -> {
                     tradeWizardReviewController.setSelectedBisqEasyOffer(selectedBisqEasyOffer);
