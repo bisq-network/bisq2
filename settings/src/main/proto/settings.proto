@@ -60,4 +60,5 @@ message SettingsStore {
   bool showBuyOffers = 20;
   bool showOfferListExpanded = 21;
   bool showMarketSelectionListCollapsed = 22;
+  string backupLocation = 23;
 }
