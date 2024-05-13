@@ -65,7 +65,7 @@ public class TradeWizardPriceView extends View<VBox, TradeWizardPriceModel, Trad
         subtitleLabel.setAlignment(Pos.CENTER);
         subtitleLabel.getStyleClass().add("bisq-text-3");
         subtitleLabel.setWrapText(true);
-        subtitleLabel.setMaxWidth(500);
+        subtitleLabel.setMaxWidth(450);
 
         // Pricing model selection
         percentagePrice = new Button(Res.get("bisqEasy.price.percentage.title"));

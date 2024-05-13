@@ -23,14 +23,7 @@ import bisq.desktop.common.view.Model;
 import bisq.offer.Direction;
 import bisq.offer.price.spec.MarketPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -62,7 +55,7 @@ public class TradeWizardPriceModel implements Model {
         percentageAsString.set(null);
         priceAsString.set(null);
         useFixPrice.set(false);
-        priceSpec.set(new MarketPriceSpec());
+        priceSpec.set(null);
         invalidPriceErrorMessage.set(null);
         lastValidPriceQuote = null;
         feedbackSentence.set(null);

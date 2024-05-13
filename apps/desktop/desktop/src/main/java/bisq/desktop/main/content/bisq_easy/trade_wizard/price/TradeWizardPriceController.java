@@ -27,11 +27,7 @@ import bisq.desktop.main.content.bisq_easy.components.PriceInput;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.offer.price.PriceUtil;
-import bisq.offer.price.spec.FixPriceSpec;
-import bisq.offer.price.spec.FloatPriceSpec;
-import bisq.offer.price.spec.MarketPriceSpec;
-import bisq.offer.price.spec.PriceSpec;
-import bisq.offer.price.spec.PriceSpecUtil;
+import bisq.offer.price.spec.*;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
@@ -102,6 +98,9 @@ public class TradeWizardPriceController implements Controller {
     public void onActivate() {
         settingsService.getCookie().asBoolean(CookieKey.CREATE_OFFER_USE_FIX_PRICE, getCookieSubKey())
                 .ifPresent(useFixPrice -> model.getUseFixPrice().set(useFixPrice));
+        if (model.getPriceSpec().get() == null) {
+            model.getPriceSpec().set(new MarketPriceSpec());
+        }
 
         priceInputPin = EasyBind.subscribe(priceInput.getQuote(), this::onQuoteInput);
         isPriceInvalidPin = EasyBind.subscribe(priceInput.getValidationResult(), validationResult -> {
