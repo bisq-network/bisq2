@@ -272,17 +272,8 @@ public class TradeWizardController extends NavigationController implements InitW
             nextIndex++;
         }
         if (nextIndex < model.getChildTargets().size()) {
-            if (model.getSelectedChildTarget().get() == NavigationTarget.TRADE_WIZARD_PRICE) {
-                if (!tradeWizardPriceController.isValid()) {
-                    tradeWizardPriceController.handleInvalidInput();
-                    return;
-                }
-            } else if (model.getSelectedChildTarget().get() == NavigationTarget.TRADE_WIZARD_PAYMENT_METHOD) {
-                if (!tradeWizardPaymentMethodController.isValid()) {
-                    tradeWizardPaymentMethodController.handleInvalidInput();
-                    return;
-                }
-            }
+            if (isInvalid()) return;
+
             model.setAnimateRightOut(false);
             model.getCurrentIndex().set(nextIndex);
             NavigationTarget nextTarget = model.getChildTargets().get(nextIndex);
@@ -303,6 +294,8 @@ public class TradeWizardController extends NavigationController implements InitW
             prevIndex--;
         }
         if (prevIndex >= 0) {
+            if (isInvalid()) return;
+
             model.setAnimateRightOut(true);
             model.getCurrentIndex().set(prevIndex);
             NavigationTarget nextTarget = model.getChildTargets().get(prevIndex);
@@ -310,6 +303,21 @@ public class TradeWizardController extends NavigationController implements InitW
             Navigation.navigateTo(nextTarget);
             updateNextButtonDisabledState();
         }
+    }
+
+    private boolean isInvalid() {
+        if (model.getSelectedChildTarget().get() == NavigationTarget.TRADE_WIZARD_PRICE) {
+            if (!tradeWizardPriceController.isValid()) {
+                tradeWizardPriceController.handleInvalidInput();
+                return true;
+            }
+        } else if (model.getSelectedChildTarget().get() == NavigationTarget.TRADE_WIZARD_PAYMENT_METHOD) {
+            if (!tradeWizardPaymentMethodController.isValid()) {
+                tradeWizardPaymentMethodController.handleInvalidInput();
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean isTakeOfferItem(int index) {
