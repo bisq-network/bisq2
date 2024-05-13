@@ -20,16 +20,12 @@ package bisq.desktop.main.content.bisq_easy.trade_wizard.amount;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
+import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
 import bisq.desktop.common.view.Model;
 import bisq.offer.Direction;
-import bisq.offer.amount.spec.AmountSpec;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import bisq.offer.amount.spec.QuoteSideAmountSpec;
+import javafx.beans.property.*;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -51,10 +47,15 @@ public class TradeWizardAmountModel implements Model {
     private boolean isCreateOfferMode;
     @Setter
     private Optional<PriceQuote> bestOffersPrice = Optional.empty();
+    @Setter
+    private Optional<Monetary> baseSideAmount = Optional.empty();
     private final BooleanProperty showRangeAmounts = new SimpleBooleanProperty();
     private final BooleanProperty isMinAmountEnabled = new SimpleBooleanProperty();
     private final StringProperty toggleButtonText = new SimpleStringProperty();
-    private final ObjectProperty<AmountSpec> amountSpec = new SimpleObjectProperty<>();
+    private final StringProperty priceTooltip = new SimpleStringProperty();
+    private final ObjectProperty<QuoteSideAmountSpec> quoteSideAmountSpec = new SimpleObjectProperty<>();
+    private final ObjectProperty<PriceQuote> priceQuote = new SimpleObjectProperty<>();
+    private final StringProperty errorMessage = new SimpleStringProperty();
 
     public void reset() {
         direction = null;
@@ -63,9 +64,13 @@ public class TradeWizardAmountModel implements Model {
         headline = null;
         isCreateOfferMode = false;
         bestOffersPrice = Optional.empty();
+        baseSideAmount = Optional.empty();
         showRangeAmounts.set(false);
         isMinAmountEnabled.set(false);
         toggleButtonText.set(null);
-        amountSpec.set(null);
+        priceTooltip.set(null);
+        quoteSideAmountSpec.set(null);
+        priceQuote.set(null);
+        errorMessage.set(null);
     }
 }

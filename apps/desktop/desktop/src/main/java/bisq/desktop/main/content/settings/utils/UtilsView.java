@@ -109,6 +109,7 @@ public class UtilsView extends View<VBox, UtilsModel, UtilsController> {
         backupLocation.validate();
         setBackupLocationButton.defaultButtonProperty().bind(model.getBackupButtonDefault().not());
         backupButton.defaultButtonProperty().bind(model.getBackupButtonDefault());
+        backupButton.disableProperty().bind(model.getBackupButtonDisabled());
 
         openLogFileButton.setOnAction(e -> controller.onOpenLogFile());
         openDataDirButton.setOnAction(e -> controller.onOpenDataDir());
@@ -139,6 +140,7 @@ public class UtilsView extends View<VBox, UtilsModel, UtilsController> {
         backupLocation.textProperty().unbindBidirectional(model.getBackupLocation());
         setBackupLocationButton.defaultButtonProperty().unbind();
         backupButton.defaultButtonProperty().unbind();
+        backupButton.disableProperty().unbind();
 
         openLogFileButton.setOnAction(null);
         openDataDirButton.setOnAction(null);

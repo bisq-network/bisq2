@@ -23,14 +23,7 @@ import bisq.desktop.common.view.Model;
 import bisq.offer.Direction;
 import bisq.offer.price.spec.MarketPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -43,30 +36,33 @@ public class TradeWizardPriceModel implements Model {
     @Setter
     private Direction direction;
     private final DoubleProperty percentage = new SimpleDoubleProperty();
-    private final StringProperty percentageAsString = new SimpleStringProperty();
+    private final StringProperty percentageInput = new SimpleStringProperty();
     private final StringProperty priceAsString = new SimpleStringProperty();
     private final BooleanProperty useFixPrice = new SimpleBooleanProperty();
     private final ObjectProperty<PriceSpec> priceSpec = new SimpleObjectProperty<>(new MarketPriceSpec());
-    private final StringProperty invalidPriceErrorMessage = new SimpleStringProperty();
+    private final StringProperty errorMessage = new SimpleStringProperty();
     @Nullable
     @Setter
     private PriceQuote lastValidPriceQuote;
     private final StringProperty feedbackSentence = new SimpleStringProperty();
     private final BooleanProperty shouldShowLearnWhyOverlay = new SimpleBooleanProperty();
     private final BooleanProperty shouldShowFeedback = new SimpleBooleanProperty();
+    @Setter
+    private boolean isFocused;
 
     public void reset() {
         market = null;
         direction = null;
         percentage.set(0d);
-        percentageAsString.set(null);
+        percentageInput.set(null);
         priceAsString.set(null);
         useFixPrice.set(false);
-        priceSpec.set(new MarketPriceSpec());
-        invalidPriceErrorMessage.set(null);
+        priceSpec.set(null);
+        errorMessage.set(null);
         lastValidPriceQuote = null;
         feedbackSentence.set(null);
         shouldShowLearnWhyOverlay.set(false);
         shouldShowFeedback.set(false);
+        isFocused = false;
     }
 }

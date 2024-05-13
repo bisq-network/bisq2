@@ -49,11 +49,13 @@ public class TradeWizardPaymentMethodController implements Controller {
     private final TradeWizardPaymentMethodView view;
     private final SettingsService settingsService;
     private final Runnable onNextHandler;
+    private final Region owner;
     private Subscription customMethodPin;
 
-    public TradeWizardPaymentMethodController(ServiceProvider serviceProvider, Runnable onNextHandler) {
+    public TradeWizardPaymentMethodController(ServiceProvider serviceProvider, Region owner, Runnable onNextHandler) {
         settingsService = serviceProvider.getSettingsService();
         this.onNextHandler = onNextHandler;
+        this.owner = owner;
 
         model = new TradeWizardPaymentMethodModel();
         view = new TradeWizardPaymentMethodView(model, this);
@@ -63,18 +65,19 @@ public class TradeWizardPaymentMethodController implements Controller {
         return model.getSelectedFiatPaymentMethods();
     }
 
-    public boolean isValid() {
+    public boolean validate() {
         if (getCustomFiatPaymentMethodNameNotEmpty()) {
             tryAddCustomPaymentMethodAndNavigateNext();
             return true;
         }
-        return !model.getSelectedFiatPaymentMethods().isEmpty();
-    }
-
-    public void handleInvalidInput() {
-        new Popup().invalid(Res.get("bisqEasy.tradeWizard.paymentMethod.warn.noPaymentMethodSelected"))
-                .owner((Region) view.getRoot().getParent().getParent())
-                .show();
+        if (model.getSelectedFiatPaymentMethods().isEmpty()) {
+            new Popup().invalid(Res.get("bisqEasy.tradeWizard.paymentMethod.warn.noPaymentMethodSelected"))
+                    .owner(owner)
+                    .show();
+            return false;
+        } else {
+            return true;
+        }
     }
 
     public boolean getCustomFiatPaymentMethodNameNotEmpty() {

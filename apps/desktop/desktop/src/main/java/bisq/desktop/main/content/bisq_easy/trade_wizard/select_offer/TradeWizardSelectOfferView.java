@@ -198,12 +198,14 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
 
         // Price
         if (model.getDirection().isBuy()) {
-            tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+            BisqTableColumn<ListItem> priceColumn = new BisqTableColumn.Builder<ListItem>()
                     .title(Res.get("bisqEasy.tradeWizard.review.table.price", model.getMarket().getMarketCodes()))
                     .minWidth(160)
                     .valueSupplier(ListItem::getPriceDisplayString)
                     .comparator(Comparator.comparing(ListItem::getPriceAsLong))
-                    .build());
+                    .build();
+            tableView.getColumns().add(priceColumn);
+            tableView.getSortOrder().add(priceColumn);
         }
 
         // BTC amount
@@ -313,7 +315,7 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
             priceAsLong = PriceUtil.findQuote(marketPriceService, bisqEasyOffer).map(PriceQuote::getValue).orElse(0L);
             priceDisplayString = OfferPriceFormatter.formatQuote(marketPriceService, bisqEasyOffer, false);
             Monetary baseAmountAsMonetary = OfferAmountUtil.findBaseSideFixedAmount(marketPriceService,
-                            model.getAmountSpec(),
+                            model.getQuoteSideAmountSpec(),
                             bisqEasyOffer.getPriceSpec(),
                             bisqEasyOffer.getMarket())
                     .orElse(Monetary.from(0, model.getMarket().getBaseCurrencyCode()));

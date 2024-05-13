@@ -24,6 +24,7 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.util.OsUtils;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -57,6 +58,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     final Observable<Boolean> showBuyOffers = new Observable<>();
     final Observable<Boolean> showOfferListExpanded = new Observable<>();
     final Observable<Boolean> showMarketSelectionListCollapsed = new Observable<>();
+    final Observable<String> backupLocation = new Observable<>();
 
     public SettingsStore() {
         this(new Cookie(),
@@ -80,7 +82,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 SettingsService.DEFAULT_MAX_TRADE_PRICE_DEVIATION,
                 false,
                 false,
-                false);
+                false,
+                OsUtils.getHomeDirectory());
     }
 
     public SettingsStore(Cookie cookie,
@@ -104,7 +107,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                          double maxTradePriceDeviation,
                          boolean showBuyOffers,
                          boolean showOfferListExpanded,
-                         boolean showMarketSelectionListCollapsed) {
+                         boolean showMarketSelectionListCollapsed,
+                         String backupLocation) {
         this.cookie = cookie;
         this.dontShowAgainMap.putAll(dontShowAgainMap);
         this.useAnimations.set(useAnimations);
@@ -127,6 +131,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
         this.showBuyOffers.set(showBuyOffers);
         this.showOfferListExpanded.set(showOfferListExpanded);
         this.showMarketSelectionListCollapsed.set(showMarketSelectionListCollapsed);
+        this.backupLocation.set(backupLocation);
     }
 
     @Override
@@ -153,7 +158,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 .setMaxTradePriceDeviation(maxTradePriceDeviation.get())
                 .setShowBuyOffers(showBuyOffers.get())
                 .setShowOfferListExpanded(showOfferListExpanded.get())
-                .setShowMarketSelectionListCollapsed(showMarketSelectionListCollapsed.get());
+                .setShowMarketSelectionListCollapsed(showMarketSelectionListCollapsed.get())
+                .setBackupLocation(backupLocation.get());
     }
 
     @Override
@@ -192,7 +198,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 maxTradePriceDeviation,
                 proto.getShowBuyOffers(),
                 proto.getShowOfferListExpanded(),
-                proto.getShowMarketSelectionListCollapsed());
+                proto.getShowMarketSelectionListCollapsed(),
+                proto.getBackupLocation());
     }
 
     @Override
@@ -229,7 +236,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 maxTradePriceDeviation.get(),
                 showBuyOffers.get(),
                 showOfferListExpanded.get(),
-                showMarketSelectionListCollapsed.get());
+                showMarketSelectionListCollapsed.get(),
+                backupLocation.get());
     }
 
     @Override
@@ -257,6 +265,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
             showBuyOffers.set(persisted.showBuyOffers.get());
             showOfferListExpanded.set(persisted.showOfferListExpanded.get());
             showMarketSelectionListCollapsed.set(persisted.showMarketSelectionListCollapsed.get());
+            backupLocation.set(persisted.backupLocation.get());
         } catch (Exception e) {
             log.error("Exception at applyPersisted", e);
         }
