@@ -197,12 +197,19 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
         tableView.getSortOrder().add(reputationColumn);
 
         // Price
+        Comparator<ListItem> comparator = (o1, o2) -> {
+            if (o1.getBisqEasyOffer().getDirection().isSell()) {
+                return Long.compare(o1.getPriceAsLong(), o2.getPriceAsLong());
+            } else {
+                return Long.compare(o2.getPriceAsLong(), o1.getPriceAsLong());
+            }
+        };
         if (model.getDirection().isBuy()) {
             BisqTableColumn<ListItem> priceColumn = new BisqTableColumn.Builder<ListItem>()
                     .title(Res.get("bisqEasy.tradeWizard.review.table.price", model.getMarket().getMarketCodes()))
                     .minWidth(160)
                     .valueSupplier(ListItem::getPriceDisplayString)
-                    .comparator(Comparator.comparing(ListItem::getPriceAsLong))
+                    .comparator(comparator)
                     .build();
             tableView.getColumns().add(priceColumn);
             tableView.getSortOrder().add(priceColumn);
@@ -303,6 +310,7 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
         @EqualsAndHashCode.Exclude
         private final ReputationScore reputationScore;
         private final BisqEasyOffer bisqEasyOffer;
+
 
         public ListItem(BisqEasyOffer bisqEasyOffer,
                         TradeWizardSelectOfferModel model,

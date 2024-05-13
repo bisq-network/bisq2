@@ -63,6 +63,8 @@ import org.fxmisc.easybind.Subscription;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -297,9 +299,8 @@ public class TradeWizardAmountController implements Controller {
                 model.getPriceTooltip().set(Res.get("bisqEasy.component.amount.baseSide.tooltip.btcAmount.marketPrice"));
             }
         } else {
-            applyBestOfferQuote();
             // Use best price of matching offer if any match found, otherwise market price.
-            Optional<String> bestOffersPriceTooltip = model.getBestOffersPrice()
+            Optional<String> bestOffersPriceTooltip = findBestOfferQuote()
                     .map(bestOffersPrice -> Res.get("bisqEasy.component.amount.baseSide.tooltip.bestOfferPrice",
                             PriceFormatter.formatWithCode(bestOffersPrice)));
             String marketPriceTooltipWithMaybeBuyerInfo = String.format("%s%s",
@@ -378,27 +379,38 @@ public class TradeWizardAmountController implements Controller {
         model.getQuoteSideAmountSpec().set(new QuoteSideRangeAmountSpec(minAmount, maxOrFixAmount));
     }
 
-    private void applyBestOfferQuote() {
+    private Optional<PriceQuote> findBestOfferQuote() {
         // Only used in wizard mode where we do not show min/max amounts
         Optional<BisqEasyOfferbookChannel> optionalChannel = bisqEasyOfferbookChannelService.findChannel(model.getMarket());
-        if (optionalChannel.isPresent() && model.getMarket() != null) {
-            // TODO: for direction SELL use highest offer price (i.e. max)
-            Optional<PriceQuote> bestOffersPrice = optionalChannel.get().getChatMessages().stream()
-                    .filter(chatMessage -> chatMessage.getBisqEasyOffer().isPresent())
-                    .map(chatMessage -> chatMessage.getBisqEasyOffer().get())
-                    .filter(this::filterOffers)
-                    .map(Offer::getPriceSpec)
-                    .flatMap(priceSpec -> PriceUtil.findQuote(marketPriceService, priceSpec, model.getMarket()).or(this::getMarketPriceQuote).stream())
-                    .min(Comparator.comparing(PriceQuote::getValue));
-            model.setBestOffersPrice(bestOffersPrice);
-            if (bestOffersPrice.isPresent()) {
-                maxOrFixAmountComponent.setQuote(bestOffersPrice.get());
-            } else {
-                getMarketPriceQuote().ifPresent(maxOrFixAmountComponent::setQuote);
-            }
-            AmountSpecUtil.findQuoteSideFixedAmountFromSpec(model.getQuoteSideAmountSpec().get(), model.getMarket().getQuoteCurrencyCode())
-                    .ifPresent(amount -> UIThread.runOnNextRenderFrame(() -> maxOrFixAmountComponent.setQuoteSideAmount(amount)));
+        if (optionalChannel.isEmpty() || model.getMarket() == null) {
+            return Optional.empty();
         }
+
+        List<BisqEasyOffer> bisqEasyOffers = optionalChannel.get().getChatMessages().stream()
+                .filter(chatMessage -> chatMessage.getBisqEasyOffer().isPresent())
+                .map(chatMessage -> chatMessage.getBisqEasyOffer().get())
+                .filter(this::filterOffers)
+                .collect(Collectors.toList());
+        boolean isSellOffer = bisqEasyOffers.stream()
+                .map(Offer::getDirection)
+                .map(Direction::isSell)
+                .findAny()
+                .orElse(false);
+        Stream<PriceQuote> priceQuoteStream = bisqEasyOffers.stream()
+                .map(Offer::getPriceSpec)
+                .flatMap(priceSpec -> PriceUtil.findQuote(marketPriceService, priceSpec, model.getMarket()).or(this::getMarketPriceQuote).stream());
+        Optional<PriceQuote> bestOffersPrice = isSellOffer
+                ? priceQuoteStream.min(Comparator.comparing(PriceQuote::getValue))
+                : priceQuoteStream.max(Comparator.comparing(PriceQuote::getValue));
+        if (bestOffersPrice.isPresent()) {
+            maxOrFixAmountComponent.setQuote(bestOffersPrice.get());
+        } else {
+            getMarketPriceQuote().ifPresent(maxOrFixAmountComponent::setQuote);
+        }
+        AmountSpecUtil.findQuoteSideFixedAmountFromSpec(model.getQuoteSideAmountSpec().get(), model.getMarket().getQuoteCurrencyCode())
+                .ifPresent(amount -> UIThread.runOnNextRenderFrame(() -> maxOrFixAmountComponent.setQuoteSideAmount(amount)));
+
+        return bestOffersPrice;
     }
 
     // Used for finding best price quote of available matching offers
