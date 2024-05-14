@@ -272,7 +272,7 @@ public class TradeWizardController extends NavigationController implements InitW
             nextIndex++;
         }
         if (nextIndex < model.getChildTargets().size()) {
-            if (!validate()) {
+            if (!validate(true)) {
                 return;
             }
 
@@ -296,7 +296,7 @@ public class TradeWizardController extends NavigationController implements InitW
             prevIndex--;
         }
         if (prevIndex >= 0) {
-            if (!validate()) {
+            if (!validate(false)) {
                 return;
             }
 
@@ -309,12 +309,13 @@ public class TradeWizardController extends NavigationController implements InitW
         }
     }
 
-    private boolean validate() {
+    private boolean validate(boolean calledFromNext) {
         if (model.getSelectedChildTarget().get() == NavigationTarget.TRADE_WIZARD_PRICE) {
             return tradeWizardPriceController.validate();
         } else if (model.getSelectedChildTarget().get() == NavigationTarget.TRADE_WIZARD_AMOUNT) {
             return tradeWizardAmountController.validate();
-        } else if (model.getSelectedChildTarget().get() == NavigationTarget.TRADE_WIZARD_PAYMENT_METHOD) {
+        } else if (calledFromNext && model.getSelectedChildTarget().get() == NavigationTarget.TRADE_WIZARD_PAYMENT_METHOD) {
+            // For PaymentMethod we tolerate to go back without having one selected
             return tradeWizardPaymentMethodController.validate();
         }
         return true;
