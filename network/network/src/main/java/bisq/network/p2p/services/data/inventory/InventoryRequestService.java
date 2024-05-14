@@ -195,7 +195,7 @@ public class InventoryRequestService implements Node.Listener {
                         requestInventory(connection)
                                 .whenComplete((inventory, throwable) -> {
                                     if (throwable != null) {
-                                        log.error("Exception at periodic inventory request to peer {}: {}",
+                                        log.info("Exception at periodic inventory request to peer {}: {}",
                                                 connection.getPeerAddress().getFullAddress(), ExceptionUtil.getMessageOrToString(throwable));
                                     } else if (inventory.allDataReceived()) {
                                         allDataReceived.set(true);

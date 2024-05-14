@@ -686,7 +686,7 @@ public class Node implements Connection.Handler {
 
     @Override
     public String toString() {
-        return findMyAddress().map(address -> "Node with address " + StringUtils.truncate(address.toString(), 8))
+        return findMyAddress().map(address -> "Node with address " + address.getFullAddress())
                 .orElse("Node with networkId " + networkId.getInfo());
     }
 
