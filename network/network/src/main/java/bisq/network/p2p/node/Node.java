@@ -718,7 +718,7 @@ public class Node implements Connection.Handler {
         }
         String msg = "Exception:";
         if (exception instanceof EOFException) {
-            log.info(msg, exception);
+            log.info("Exception: {}", ExceptionUtil.getMessageOrToString(exception));
         } else if (exception instanceof ConnectException) {
             log.debug(msg, exception);
         } else if (exception instanceof SocketException) {
@@ -726,7 +726,7 @@ public class Node implements Connection.Handler {
         } else if (exception instanceof UnknownHostException) {
             log.warn("UnknownHostException. Might happen if we try to connect to wrong network type.", exception);
         } else if (exception instanceof SocketTimeoutException) {
-            log.info(msg, exception);
+            log.info("Exception: {}", ExceptionUtil.getMessageOrToString(exception));
         } else if (exception instanceof ConnectionException) {
             ConnectionException connectionException = (ConnectionException) exception;
             if (connectionException.getCause() instanceof SocketTimeoutException) {
@@ -741,7 +741,7 @@ public class Node implements Connection.Handler {
                         log.warn(msg, exception);
                         break;
                     case PROTOBUF_IS_NULL:
-                        log.info(msg, exception);
+                        log.info("Exception: {}", ExceptionUtil.getMessageOrToString(exception));
                         break;
                     case AUTHORIZATION_FAILED:
                         log.warn(msg, exception);
