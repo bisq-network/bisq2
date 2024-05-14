@@ -83,7 +83,7 @@ public class ConnectionThrottle {
                 pause = MathUtils.bounded(1, MAX_THROTTLE_TIME, pause);
                 String logMessage = String.format("Pause '%s' message for %d ms. Network=%f", direction, pause, load);
                 long passedSinceLastLog = now - lastLoggedTs.get();
-                if (passedSinceLastLog > MAX_LOG_FREQUENCY) {
+                if (passedSinceLastLog < MAX_LOG_FREQUENCY) {
                     LAST_LOGS.add(logMessage);
                     if (lastLoggedTs.get() == 0) {
                         lastLoggedTs.set(now);
