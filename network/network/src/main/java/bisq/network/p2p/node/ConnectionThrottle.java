@@ -21,6 +21,9 @@ import bisq.common.util.MathUtils;
 import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -38,6 +41,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class ConnectionThrottle {
     private static final long MIN_THROTTLE_TIME = 20;
     private static final long MAX_THROTTLE_TIME = 1000;
+    private static final long MAX_LOG_FREQUENCY = TimeUnit.SECONDS.toMillis(30);
 
     private final NetworkLoadSnapshot peersNetworkLoadSnapshot;
     private final NetworkLoadSnapshot myNetworkLoadSnapshot;
@@ -45,6 +49,8 @@ public class ConnectionThrottle {
     private final long receiveMessageThrottleTime;
     private final AtomicLong sendMessageTimestamp = new AtomicLong();
     private final AtomicLong receiveMessageTimestamp = new AtomicLong();
+    private long lastLoggedTs;
+    private final List<String> lastLogs = new ArrayList<>();
 
     public ConnectionThrottle(NetworkLoadSnapshot peersNetworkLoadSnapshot,
                               NetworkLoadSnapshot myNetworkLoadSnapshot,
@@ -64,7 +70,8 @@ public class ConnectionThrottle {
     }
 
     private void throttle(AtomicLong timestamp, NetworkLoadSnapshot networkLoadSnapshot, long throttleTime, String direction) {
-        long passed = System.currentTimeMillis() - timestamp.get();
+        long now = System.currentTimeMillis();
+        long passed = now - timestamp.get();
         double load = networkLoadSnapshot.getCurrentNetworkLoad().getLoad();
         throttleTime = MIN_THROTTLE_TIME + Math.round(throttleTime * load);
         throttleTime = MathUtils.bounded(MIN_THROTTLE_TIME, MAX_THROTTLE_TIME, throttleTime);
@@ -72,11 +79,28 @@ public class ConnectionThrottle {
             try {
                 long pause = throttleTime - passed;
                 pause = MathUtils.bounded(1, MAX_THROTTLE_TIME, pause);
-                log.info("Throttle {} message with a pause of {} ms. Network load={}", direction, pause, load);
+                String logMessage = String.format("Pause '%s' message for %d ms. Network=%f", direction, pause, load);
+                long passedSinceLastLog = now - lastLoggedTs;
+                if (passedSinceLastLog > MAX_LOG_FREQUENCY) {
+                    lastLogs.add(logMessage);
+                    if (lastLoggedTs == 0) {
+                        lastLoggedTs = now;
+                    }
+                } else {
+                    if (lastLogs.isEmpty()) {
+                        log.info(logMessage);
+                    } else {
+                        lastLogs.add(logMessage);
+                        log.info("{} accumulated log messages in the past {} sec. Log message (max 5 displayed): {}",
+                                lastLogs.size(), passedSinceLastLog / 1000, lastLogs.subList(0, Math.min(5, lastLogs.size())));
+                        lastLogs.clear();
+                    }
+                    lastLoggedTs = now;
+                }
                 Thread.sleep(pause);
             } catch (InterruptedException ignore) {
             }
         }
-        timestamp.set(System.currentTimeMillis());
+        timestamp.set(now);
     }
 }
