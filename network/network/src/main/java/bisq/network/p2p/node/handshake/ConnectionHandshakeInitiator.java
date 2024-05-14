@@ -38,6 +38,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
+import static bisq.network.p2p.node.ConnectionException.Reason.ADDRESS_BANNED;
+import static bisq.network.p2p.node.ConnectionException.Reason.AUTHORIZATION_FAILED;
+
 @Slf4j
 public class ConnectionHandshakeInitiator {
     private final Capability myCapability;
@@ -95,8 +98,9 @@ public class ConnectionHandshakeInitiator {
                     responseNetworkEnvelope);
         }
         ConnectionHandshake.Response response = (ConnectionHandshake.Response) responseNetworkEnvelope.getEnvelopePayloadMessage();
-        if (banList.isBanned(response.getCapability().getAddress())) {
-            throw new ConnectionException("Peers address is in quarantine. response=" + response);
+        Address address = response.getCapability().getAddress();
+        if (banList.isBanned(address)) {
+            throw new ConnectionException(ADDRESS_BANNED, "PeerAddress is banned. address=" + address);
         }
 
         boolean isAuthorized = authorizationService.isAuthorized(response,
@@ -106,7 +110,7 @@ public class ConnectionHandshakeInitiator {
                 myCapability.getAddress().getFullAddress());
 
         if (!isAuthorized) {
-            throw new ConnectionException("ConnectionHandshake.Response authorization failed. AuthorizationToken=" + responseNetworkEnvelope.getAuthorizationToken());
+            throw new ConnectionException(AUTHORIZATION_FAILED, "ConnectionHandshake.Response authorization failed. AuthorizationToken=" + responseNetworkEnvelope.getAuthorizationToken());
         }
 
         log.debug("Servers capability {}, load={}", response.getCapability(), response.getNetworkLoad());

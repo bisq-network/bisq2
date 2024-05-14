@@ -35,6 +35,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.util.List;
 
+import static bisq.network.p2p.node.ConnectionException.Reason.*;
+
 @Slf4j
 public class ConnectionHandshakeResponder {
     private final BanList banList;
@@ -70,7 +72,7 @@ public class ConnectionHandshakeResponder {
         Address peerAddress = requestersCapability.getAddress();
         Address myAddress = capability.getAddress();
         if (!OnionAddressValidation.verify(myAddress, peerAddress, request.getSignatureDate(), request.getAddressOwnershipProof())) {
-            throw new ConnectionException("Peer couldn't proof its onion address: " + peerAddress.getFullAddress() +
+            throw new ConnectionException(ONION_ADDRESS_VERIFICATION_FAILED, "Peer couldn't proof its onion address: " + peerAddress.getFullAddress() +
                     ", Proof: " + Hex.encode(request.getAddressOwnershipProof().orElseThrow()));
         }
 
@@ -106,7 +108,7 @@ public class ConnectionHandshakeResponder {
         );
 
         if (!isAuthorized) {
-            throw new ConnectionException("ConnectionHandshake.Request authorization failed. AuthorizationToken=" + requestNetworkEnvelope.getAuthorizationToken());
+            throw new ConnectionException(AUTHORIZATION_FAILED, "ConnectionHandshake.Request authorization failed. AuthorizationToken=" + requestNetworkEnvelope.getAuthorizationToken());
         }
 
         log.debug("Clients capability {}, load={}", request.getCapability(), request.getNetworkLoad());
@@ -122,7 +124,7 @@ public class ConnectionHandshakeResponder {
     private void verifyPeerIsNotBanned(ConnectionHandshake.Request request) {
         Address peerAddress = request.getCapability().getAddress();
         if (banList.isBanned(peerAddress)) {
-            throw new ConnectionException("Peers address is in quarantine. request=" + request);
+            throw new ConnectionException(ADDRESS_BANNED, "PeerAddress is banned. address=" + peerAddress);
         }
     }
 

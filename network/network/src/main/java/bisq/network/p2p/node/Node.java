@@ -60,6 +60,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 import static bisq.network.NetworkService.DISPATCHER;
+import static bisq.network.p2p.node.ConnectionException.Reason.ADDRESS_BANNED;
 import static bisq.network.p2p.node.Node.State.*;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.CompletableFuture.runAsync;
@@ -395,7 +396,7 @@ public class Node implements Connection.Handler {
 
     private Connection createOutboundConnection(Address address, Capability myCapability) {
         if (banList.isBanned(address)) {
-            throw new ConnectionException("Create outbound connection failed. PeerAddress is banned. address=" + address);
+            throw new ConnectionException(ADDRESS_BANNED, "PeerAddress is banned. address=" + address);
         }
         Socket socket;
         try {
@@ -686,7 +687,7 @@ public class Node implements Connection.Handler {
 
     @Override
     public String toString() {
-        return findMyAddress().map(address -> "Node with address " + StringUtils.truncate(address.toString(), 8))
+        return findMyAddress().map(address -> "Node with address " + address.getFullAddress())
                 .orElse("Node with networkId " + networkId.getInfo());
     }
 
@@ -724,11 +725,39 @@ public class Node implements Connection.Handler {
             log.debug(msg, exception);
         } else if (exception instanceof UnknownHostException) {
             log.warn("UnknownHostException. Might happen if we try to connect to wrong network type.", exception);
-        } else if (exception instanceof SocketTimeoutException ||
-                (exception instanceof ConnectionException && exception.getCause() instanceof SocketTimeoutException)) {
+        } else if (exception instanceof SocketTimeoutException) {
             log.info(msg, exception);
+        } else if (exception instanceof ConnectionException) {
+            ConnectionException connectionException = (ConnectionException) exception;
+            if (connectionException.getCause() instanceof SocketTimeoutException) {
+                handleException(connectionException.getCause());
+            }
+            if (connectionException.getReason() != null) {
+                switch (connectionException.getReason()) {
+                    case UNSPECIFIED:
+                        log.error("Unspecified connectionException reason. {}", msg, exception);
+                        break;
+                    case INVALID_NETWORK_VERSION:
+                        log.warn(msg, exception);
+                        break;
+                    case PROTOBUF_IS_NULL:
+                        log.info(msg, exception);
+                        break;
+                    case AUTHORIZATION_FAILED:
+                        log.warn(msg, exception);
+                        break;
+                    case ONION_ADDRESS_VERIFICATION_FAILED:
+                        log.warn(msg, exception);
+                        break;
+                    case ADDRESS_BANNED:
+                        log.warn(msg, exception);
+                        break;
+                    default:
+                        log.error("Unhandled connectionException reason. {}", msg, exception);
+                }
+            }
         } else {
-            log.error(msg, exception);
+            log.error("Unhandled exception type {}", msg, exception);
         }
     }
 

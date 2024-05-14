@@ -44,6 +44,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Optional;
 
+import static bisq.network.p2p.node.ConnectionException.Reason.*;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
@@ -231,7 +232,8 @@ public final class ConnectionHandshake {
 
             bisq.network.protobuf.NetworkEnvelope responseProto = networkEnvelopeSocket.receiveNextEnvelope();
             if (responseProto == null) {
-                throw new ConnectionException("Response NetworkEnvelope protobuf is null. peerAddress=" + peerAddress);
+                throw new ConnectionException(PROTOBUF_IS_NULL,
+                        "Response NetworkEnvelope protobuf is null. peerAddress=" + peerAddress);
             }
 
             long startDeserializeTs = System.currentTimeMillis();
@@ -244,8 +246,9 @@ public final class ConnectionHandshake {
                         responseNetworkEnvelope);
             }
             Response response = (Response) responseNetworkEnvelope.getEnvelopePayloadMessage();
-            if (banList.isBanned(response.getCapability().getAddress())) {
-                throw new ConnectionException("Peers address is in quarantine. response=" + response);
+            Address address = response.getCapability().getAddress();
+            if (banList.isBanned(address)) {
+                throw new ConnectionException(ADDRESS_BANNED, "PeerAddress is banned. address=" + address);
             }
 
             boolean isAuthorized = authorizationService.isAuthorized(response,
@@ -255,7 +258,7 @@ public final class ConnectionHandshake {
                     myAddress.getFullAddress());
 
             if (!isAuthorized) {
-                throw new ConnectionException("ConnectionHandshake.Response authorization failed at outbound connection attempt. AuthorizationToken=" + responseNetworkEnvelope.getAuthorizationToken());
+                throw new ConnectionException(AUTHORIZATION_FAILED, "ConnectionHandshake.Response authorization failed at outbound connection attempt. AuthorizationToken=" + responseNetworkEnvelope.getAuthorizationToken());
             }
 
             connectionMetrics.onReceived(responseNetworkEnvelope, deserializeTime);
@@ -284,7 +287,8 @@ public final class ConnectionHandshake {
             ConnectionMetrics connectionMetrics = new ConnectionMetrics();
             bisq.network.protobuf.NetworkEnvelope requestProto = networkEnvelopeSocket.receiveNextEnvelope();
             if (requestProto == null) {
-                throw new ConnectionException("Request NetworkEnvelope protobuf is null");
+                throw new ConnectionException(PROTOBUF_IS_NULL,
+                        "Request NetworkEnvelope protobuf is null");
             }
             long ts = System.currentTimeMillis();
             NetworkEnvelope requestNetworkEnvelope = NetworkEnvelope.fromProto(requestProto);
@@ -300,7 +304,7 @@ public final class ConnectionHandshake {
             Capability requestersCapability = request.getCapability();
             Address peerAddress = requestersCapability.getAddress();
             if (banList.isBanned(peerAddress)) {
-                throw new ConnectionException("Peers address is in quarantine. request=" + request);
+                throw new ConnectionException(ADDRESS_BANNED, "PeerAddress is banned. address=" + peerAddress);
             }
 
             Address myAddress = capability.getAddress();
@@ -312,11 +316,11 @@ public final class ConnectionHandshake {
                     StringUtils.createUid(),
                     myAddress.getFullAddress());
             if (!isAuthorized) {
-                throw new ConnectionException("Authorization of inbound connection request failed. AuthorizationToken=" + requestNetworkEnvelope.getAuthorizationToken());
+                throw new ConnectionException(AUTHORIZATION_FAILED, "Authorization of inbound connection request failed. AuthorizationToken=" + requestNetworkEnvelope.getAuthorizationToken());
             }
 
             if (!OnionAddressValidation.verify(myAddress, peerAddress, request.getSignatureDate(), request.getAddressOwnershipProof())) {
-                throw new ConnectionException("Peer couldn't proof its onion address: " + peerAddress.getFullAddress() +
+                throw new ConnectionException(ONION_ADDRESS_VERIFICATION_FAILED, "Peer couldn't proof its onion address: " + peerAddress.getFullAddress() +
                         ", Proof: " + Hex.encode(request.getAddressOwnershipProof().orElseThrow()));
             }
 
