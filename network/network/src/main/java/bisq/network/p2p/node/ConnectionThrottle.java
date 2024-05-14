@@ -21,8 +21,8 @@ import bisq.common.util.MathUtils;
 import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -43,14 +43,16 @@ public class ConnectionThrottle {
     private static final long MAX_THROTTLE_TIME = 1000;
     private static final long MAX_LOG_FREQUENCY = TimeUnit.SECONDS.toMillis(30);
 
+    // We apply the log throttle globally, so we use static fields
+    private static AtomicLong lastLoggedTs = new AtomicLong();
+    private static final List<String> LAST_LOGS = new CopyOnWriteArrayList<>();
+
     private final NetworkLoadSnapshot peersNetworkLoadSnapshot;
     private final NetworkLoadSnapshot myNetworkLoadSnapshot;
     private final long sendMessageThrottleTime;
     private final long receiveMessageThrottleTime;
     private final AtomicLong sendMessageTimestamp = new AtomicLong();
     private final AtomicLong receiveMessageTimestamp = new AtomicLong();
-    private long lastLoggedTs;
-    private final List<String> lastLogs = new ArrayList<>();
 
     public ConnectionThrottle(NetworkLoadSnapshot peersNetworkLoadSnapshot,
                               NetworkLoadSnapshot myNetworkLoadSnapshot,
@@ -80,22 +82,22 @@ public class ConnectionThrottle {
                 long pause = throttleTime - passed;
                 pause = MathUtils.bounded(1, MAX_THROTTLE_TIME, pause);
                 String logMessage = String.format("Pause '%s' message for %d ms. Network=%f", direction, pause, load);
-                long passedSinceLastLog = now - lastLoggedTs;
+                long passedSinceLastLog = now - lastLoggedTs.get();
                 if (passedSinceLastLog > MAX_LOG_FREQUENCY) {
-                    lastLogs.add(logMessage);
-                    if (lastLoggedTs == 0) {
-                        lastLoggedTs = now;
+                    LAST_LOGS.add(logMessage);
+                    if (lastLoggedTs.get() == 0) {
+                        lastLoggedTs.set(now);
                     }
                 } else {
-                    if (lastLogs.isEmpty()) {
+                    if (LAST_LOGS.isEmpty()) {
                         log.info(logMessage);
                     } else {
-                        lastLogs.add(logMessage);
+                        LAST_LOGS.add(logMessage);
                         log.info("{} accumulated log messages in the past {} sec. Log message (max 5 displayed): {}",
-                                lastLogs.size(), passedSinceLastLog / 1000, lastLogs.subList(0, Math.min(5, lastLogs.size())));
-                        lastLogs.clear();
+                                LAST_LOGS.size(), passedSinceLastLog / 1000, LAST_LOGS.subList(0, Math.min(5, LAST_LOGS.size())));
+                        LAST_LOGS.clear();
                     }
-                    lastLoggedTs = now;
+                    lastLoggedTs.set(now);
                 }
                 Thread.sleep(pause);
             } catch (InterruptedException ignore) {
