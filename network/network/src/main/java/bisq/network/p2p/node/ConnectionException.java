@@ -17,9 +17,27 @@
 
 package bisq.network.p2p.node;
 
+import lombok.Getter;
+
 import java.util.concurrent.CompletionException;
 
 public class ConnectionException extends CompletionException {
+    public enum Reason {
+        UNSPECIFIED,
+        INVALID_NETWORK_VERSION,
+        PROTOBUF_IS_NULL,
+        AUTHORIZATION_FAILED,
+        ONION_ADDRESS_VERIFICATION_FAILED,
+        ADDRESS_BANNED
+    }
+
+    @Getter
+    private Reason reason = Reason.UNSPECIFIED;
+
+    public ConnectionException(Reason reason, String message) {
+        super(message);
+        this.reason = reason;
+    }
 
     public ConnectionException(String message) {
         super(message);
