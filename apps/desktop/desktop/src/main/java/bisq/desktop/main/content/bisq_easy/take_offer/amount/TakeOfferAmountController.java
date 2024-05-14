@@ -72,6 +72,9 @@ public class TakeOfferAmountController implements Controller {
             log.error("optionalQuoteSideMinOrFixedAmount or optionalQuoteSideMaxOrFixedAmount is not present");
         }
 
+        PriceUtil.findQuote(marketPriceService, bisqEasyOffer.getPriceSpec(), bisqEasyOffer.getMarket())
+                .ifPresent(amountComponent::setQuote);
+
         amountComponent.setDescription(Res.get("bisqEasy.takeOffer.amount.description",
                 OfferAmountFormatter.formatQuoteSideMinAmount(marketPriceService, bisqEasyOffer, false),
                 OfferAmountFormatter.formatQuoteSideMaxAmount(marketPriceService, bisqEasyOffer)));
