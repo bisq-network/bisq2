@@ -45,6 +45,7 @@ public final class AuthorizedData extends AuthenticatedData {
     private final byte[] authorizedPublicKeyBytes;
     transient private final PublicKey authorizedPublicKey;
 
+    // At remove, we do not need to authorizedPublicKey as the normal keypair is used to verify right to remove.
     public AuthorizedData(AuthorizedDistributedData authorizedDistributedData,
                           PublicKey authorizedPublicKey) {
         this(authorizedDistributedData, Optional.empty(), authorizedPublicKey, authorizedPublicKey.getEncoded());

@@ -27,6 +27,7 @@ import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
 import bisq.security.keys.KeyBundleService;
 import bisq.security.keys.KeyGeneration;
+import bisq.user.reputation.ReputationDataUtil;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -89,6 +90,8 @@ public class SeedNodeService implements Service {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
+        ReputationDataUtil.cleanupMap(networkService);
+
         optionalConfig.ifPresent(config -> {
             String privateKey = config.getPrivateKey();
             PrivateKey authorizedPrivateKey = KeyGeneration.getPrivateKeyFromHex(privateKey);

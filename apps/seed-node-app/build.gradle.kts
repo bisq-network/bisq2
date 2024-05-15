@@ -13,6 +13,7 @@ dependencies {
     implementation("bisq:bonded-roles")
     implementation("bisq:application")
     implementation("bisq:identity")
+    implementation("bisq:user")
 
     implementation("network:network-common")
     implementation("network:network")
