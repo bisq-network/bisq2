@@ -63,7 +63,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -261,19 +260,17 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
     private void republishAuthorizedBondedRoles() {
         networkService.getDataService()
                 .ifPresent(dataService -> {
-                    List<AuthorizedData> authorizedDataList = dataService.getAuthorizedData().collect(Collectors.toList());
-                    authorizedDataList.forEach(authorizedData -> {
-                        AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
-                        if (data instanceof AuthorizedBondedRole) {
-                            AuthorizedBondedRole authorizedBondedRole = (AuthorizedBondedRole) data;
-                            authorizedBondedRole.getAuthorizingOracleNode().ifPresent(authorizingOracleNode -> {
-                                if (authorizingOracleNode.equals(authorizedOracleNode)) {
-                                    log.info("Republish {}", authorizedBondedRole);
-                                    publishAuthorizedData(authorizedBondedRole);
-                                }
+                    dataService.getAuthorizedData()
+                            .map(AuthorizedData::getAuthorizedDistributedData)
+                            .filter(authorizedDistributedData -> authorizedDistributedData instanceof AuthorizedBondedRole)
+                            .map(authorizedDistributedData -> (AuthorizedBondedRole) authorizedDistributedData)
+                            .flatMap(authorizedBondedRole -> authorizedBondedRole.getAuthorizingOracleNode().stream())
+                            .filter(authorizingOracleNode -> authorizingOracleNode.equals(authorizedOracleNode))
+                            .forEach(authorizedBondedRole -> {
+                                // TODO deactivate republishing until issues are resolved
+                                // log.info("Republish AuthorizedBondedRole {}", authorizedBondedRole);
+                                //publishAuthorizedData(authorizedBondedRole);
                             });
-                        }
-                    });
                 });
     }
 
@@ -423,13 +420,13 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
         if (name.equals("MEDIATOR")) {
             return "MEDIATOR"; // 5k
         } else if (name.equals("ARBITRATOR")) {
-            return "MOBILE_NOTIFICATIONS_RELAY_OPERATOR"; // 10k; Bisq 1 ARBITRATOR would require 100k! 
+            return "MOBILE_NOTIFICATIONS_RELAY_OPERATOR"; // 10k; Bisq 1 ARBITRATOR would require 100k!
         } else if (name.equals("MODERATOR")) {
             return "YOUTUBE_ADMIN"; // 5k; repurpose unused role
         } else if (name.equals("SECURITY_MANAGER")) {
             return "BITCOINJ_MAINTAINER"; // 10k repurpose unused role
         } else if (name.equals("RELEASE_MANAGER")) {
-            return "FORUM_ADMIN"; // 10k; repurpose unused role 
+            return "FORUM_ADMIN"; // 10k; repurpose unused role
         } else if (name.equals("ORACLE_NODE")) {
             return "NETLAYER_MAINTAINER"; // 10k; repurpose unused role
         } else if (name.equals("SEED_NODE")) {
