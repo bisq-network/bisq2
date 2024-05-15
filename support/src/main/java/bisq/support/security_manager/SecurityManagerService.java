@@ -35,8 +35,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.KeyPair;
-import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.util.Date;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -103,8 +101,6 @@ public class SecurityManagerService implements Service {
         UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
         String profileId = userIdentity.getId();
         KeyPair keyPair = userIdentity.getIdentity().getKeyBundle().getKeyPair();
-        PublicKey authorizedPublicKey = keyPair.getPublic();
-        PrivateKey authorizedPrivateKey = keyPair.getPrivate();
         AuthorizedAlertData authorizedAlertData = new AuthorizedAlertData(StringUtils.createUid(),
                 new Date().getTime(),
                 alertType,
@@ -116,10 +112,7 @@ public class SecurityManagerService implements Service {
                 bannedRole,
                 profileId,
                 staticPublicKeysProvided);
-        return networkService.publishAuthorizedData(authorizedAlertData,
-                        keyPair,
-                        authorizedPrivateKey,
-                        authorizedPublicKey)
+        return networkService.publishAuthorizedData(authorizedAlertData, keyPair)
                 .thenApply(broadCastDataResult -> true);
     }
 
@@ -132,16 +125,11 @@ public class SecurityManagerService implements Service {
         UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
         String profileId = userIdentity.getId();
         KeyPair keyPair = userIdentity.getIdentity().getKeyBundle().getKeyPair();
-        PublicKey authorizedPublicKey = keyPair.getPublic();
-        PrivateKey authorizedPrivateKey = keyPair.getPrivate();
         AuthorizedDifficultyAdjustmentData data = new AuthorizedDifficultyAdjustmentData(new Date().getTime(),
                 difficultyAdjustmentFactor,
                 profileId,
                 staticPublicKeysProvided);
-        return networkService.publishAuthorizedData(data,
-                        keyPair,
-                        authorizedPrivateKey,
-                        authorizedPublicKey)
+        return networkService.publishAuthorizedData(data, keyPair)
                 .thenApply(broadCastDataResult -> true);
     }
 
@@ -149,16 +137,11 @@ public class SecurityManagerService implements Service {
         UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
         String profileId = userIdentity.getId();
         KeyPair keyPair = userIdentity.getIdentity().getKeyBundle().getKeyPair();
-        PublicKey authorizedPublicKey = keyPair.getPublic();
-        PrivateKey authorizedPrivateKey = keyPair.getPrivate();
         AuthorizedMinRequiredReputationScoreData data = new AuthorizedMinRequiredReputationScoreData(new Date().getTime(),
                 minRequiredReputationScore,
                 profileId,
                 staticPublicKeysProvided);
-        return networkService.publishAuthorizedData(data,
-                        keyPair,
-                        authorizedPrivateKey,
-                        authorizedPublicKey)
+        return networkService.publishAuthorizedData(data, keyPair)
                 .thenApply(broadCastDataResult -> true);
     }
 
