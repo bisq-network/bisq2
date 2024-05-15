@@ -731,6 +731,7 @@ public class Node implements Connection.Handler {
             ConnectionException connectionException = (ConnectionException) exception;
             if (connectionException.getCause() instanceof SocketTimeoutException) {
                 handleException(connectionException.getCause());
+                return;
             }
             if (connectionException.getReason() != null) {
                 switch (connectionException.getReason()) {
