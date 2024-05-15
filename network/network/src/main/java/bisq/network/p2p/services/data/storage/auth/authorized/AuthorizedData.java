@@ -75,9 +75,9 @@ public final class AuthorizedData extends AuthenticatedData {
     }
 
     @Override
-    public byte[] serialize() {
+    public byte[] serializeForHash() {
         // We omit the signature for the hash, otherwise we would get a new map entry for the same data at each republishing
-        return getAuthenticatedDataBuilder(false).setAuthorizedData(
+        return getAuthenticatedDataBuilder(true).setAuthorizedData(
                         bisq.network.protobuf.AuthorizedData.newBuilder()
                                 .setAuthorizedPublicKeyBytes(ByteString.copyFrom(authorizedPublicKeyBytes)))
                 .build().toByteArray();

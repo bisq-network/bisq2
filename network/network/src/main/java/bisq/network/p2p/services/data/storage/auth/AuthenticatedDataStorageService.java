@@ -342,14 +342,14 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
     }
 
     // Useful for debugging state of the store
-    private void maybeLogMapState(String methodName, DataStore<AuthenticatedDataRequest> persisted) {
+    private void maybeLogMapState(String methodName, DataStore<AuthenticatedDataRequest> dataStore) {
         if (DevMode.isDevMode() || methodName.equals("onPersistedApplied")) {
-            var added = persisted.getMap().values().stream()
+            var added = dataStore.getMap().values().stream()
                     .filter(authenticatedDataRequest -> authenticatedDataRequest instanceof AddAuthenticatedDataRequest)
                     .map(authenticatedDataRequest -> (AddAuthenticatedDataRequest) authenticatedDataRequest)
                     .map(e -> e.getAuthenticatedSequentialData().getAuthenticatedData().getDistributedData().getClass().getSimpleName())
                     .collect(Collectors.toList());
-            var removed = persisted.getMap().values().stream()
+            var removed = dataStore.getMap().values().stream()
                     .filter(authenticatedDataRequest -> authenticatedDataRequest instanceof RemoveAuthenticatedDataRequest)
                     .map(authenticatedDataRequest -> (RemoveAuthenticatedDataRequest) authenticatedDataRequest)
                     .map(RemoveAuthenticatedDataRequest::getClassName)
@@ -357,7 +357,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             var className = Stream.concat(added.stream(), removed.stream())
                     .findAny().orElse(persistence.getFileName().replace("Store", "")); // Remove trailing Store postfix
             log.info("Method: {}; map entry: {}; num AddRequests: {}; num RemoveRequests={}; map size:{}",
-                    methodName, className, added.size(), removed.size(), persisted.getMap().size());
+                    methodName, className, added.size(), removed.size(), dataStore.getMap().size());
         }
     }
 }
