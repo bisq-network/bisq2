@@ -262,13 +262,13 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
         networkService.getDataService()
                 .ifPresent(dataService -> {
                     List<AuthorizedData> authorizedDataList = dataService.getAuthorizedData().collect(Collectors.toList());
-                    log.info("republish AuthorizedBondedRoles for {} authorizedDataList items", authorizedDataList.size());
                     authorizedDataList.forEach(authorizedData -> {
                         AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
                         if (data instanceof AuthorizedBondedRole) {
                             AuthorizedBondedRole authorizedBondedRole = (AuthorizedBondedRole) data;
                             authorizedBondedRole.getAuthorizingOracleNode().ifPresent(authorizingOracleNode -> {
                                 if (authorizingOracleNode.equals(authorizedOracleNode)) {
+                                    log.info("Republish {}", authorizedBondedRole);
                                     publishAuthorizedData(authorizedBondedRole);
                                 }
                             });

@@ -43,11 +43,9 @@ public class MarketPricePropagationService implements Service {
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
         marketPriceByCurrencyMapPin = marketPriceRequestService.getMarketPriceByCurrencyMap().addObserver(() -> {
-            if (marketPriceRequestService.getMarketPriceByCurrencyMap().isEmpty()) {
-                return;
+            if (!marketPriceRequestService.getMarketPriceByCurrencyMap().isEmpty()) {
+                publishAuthorizedData(new AuthorizedMarketPriceData(new TreeMap<>(marketPriceRequestService.getMarketPriceByCurrencyMap()), staticPublicKeysProvided));
             }
-            publishAuthorizedData(new AuthorizedMarketPriceData(new TreeMap<>(marketPriceRequestService.getMarketPriceByCurrencyMap()),
-                    staticPublicKeysProvided));
         });
 
         return marketPriceRequestService.initialize();
