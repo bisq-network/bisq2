@@ -30,7 +30,7 @@ in [the Bisq wiki](https://bisq.wiki/Bisq_Easy).
    ```
 
 2. **Install Dependencies:**
-   See our [Installation Guide](./docs/dev/build.md) for detailed instructions.
+   Bisq requires JDK 17. See our [Installation Guide](./docs/dev/build.md) for detailed instructions.
 
 3. **Run desktop client:**
    ```bash
