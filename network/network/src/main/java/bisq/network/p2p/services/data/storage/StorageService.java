@@ -459,21 +459,7 @@ public class StorageService {
                                     return oldValue;
                                 }
                             }));
-           /* if (cleaned.size() < map.size()) {
-                log.error("{}\nAuthenticatedSequentialData.hash {}\n" +
-                                "getAuthenticatedData.hash {}\n" +
-                                "AuthorizedDistributedData.hash {}",
-                        storeKey,
-                        map.values().stream().map(e -> (AddAuthenticatedDataRequest) e).map(e -> new ByteArray(DigestUtil.hash(e.getAuthenticatedSequentialData().serializeForHash()))).collect(Collectors.toList()),
-                        map.values().stream().map(e -> (AddAuthenticatedDataRequest) e).map(e -> new ByteArray(DigestUtil.hash(e.getAuthenticatedSequentialData().getAuthenticatedData().serializeForHash()))).collect(Collectors.toList()),
-                        map.values().stream().map(e -> (AddAuthenticatedDataRequest) e)
-                                .map(e -> typeFilter.apply((AuthorizedDistributedData) e.getAuthenticatedSequentialData().getAuthenticatedData().getDistributedData()).get())
-                                .map(e -> new ByteArray(DigestUtil.hash(e.serializeForHash())))
-                                .collect(Collectors.toList())
-                );
-                log.error("");
-            }*/
-            log.error("{}: size of cleaned map {}, size of original map={}", storeKey, cleaned.size(), map.size());
+            log.info("cleanupMap for {}: size of cleaned map {}; size of original map={}", storeKey, cleaned.size(), map.size());
             map.clear();
             map.putAll(cleaned);
             authenticatedDataStorageService.persist();
