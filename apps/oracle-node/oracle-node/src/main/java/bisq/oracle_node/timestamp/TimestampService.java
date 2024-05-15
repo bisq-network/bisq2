@@ -82,7 +82,8 @@ public class TimestampService implements Service, PersistenceClient<TimestampSto
         networkService.addConfidentialMessageListener(this);
         authorizedBondedRolesService.addListener(this);
 
-        persistableStore.getTimestampsByProfileId().forEach((key, value) -> publishAuthorizedData(new AuthorizedTimestampData(key, value, staticPublicKeysProvided)));
+        // TODO deactivate republishing until issues are resolved
+        // persistableStore.getTimestampsByProfileId().forEach((key, value) -> publishAuthorizedData(new AuthorizedTimestampData(key, value, staticPublicKeysProvided)));
 
         return CompletableFuture.completedFuture(true);
     }
@@ -135,14 +136,6 @@ public class TimestampService implements Service, PersistenceClient<TimestampSto
         return authorizedBondedRolesService.hasAuthorizedPubKey(authorizedData, BondedRoleType.ORACLE_NODE);
     }
 
-    private CompletableFuture<Boolean> publishAuthorizedData(AuthorizedDistributedData data) {
-        return networkService.publishAuthorizedData(data,
-                        identity.getNetworkIdWithKeyPair().getKeyPair(),
-                        authorizedPrivateKey,
-                        authorizedPublicKey)
-                .thenApply(broadCastDataResult -> true);
-    }
-
     private void processAuthorizeTimestampRequest(AuthorizeTimestampRequest request) {
         String profileId = request.getProfileId();
         long date;
@@ -156,5 +149,13 @@ public class TimestampService implements Service, PersistenceClient<TimestampSto
             date = persistableStore.getTimestampsByProfileId().get(profileId);
         }
         publishAuthorizedData(new AuthorizedTimestampData(profileId, date, staticPublicKeysProvided));
+    }
+
+    private CompletableFuture<Boolean> publishAuthorizedData(AuthorizedDistributedData data) {
+        return networkService.publishAuthorizedData(data,
+                        identity.getNetworkIdWithKeyPair().getKeyPair(),
+                        authorizedPrivateKey,
+                        authorizedPublicKey)
+                .thenApply(broadCastDataResult -> true);
     }
 }
