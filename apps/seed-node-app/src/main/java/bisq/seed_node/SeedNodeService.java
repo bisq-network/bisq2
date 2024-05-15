@@ -35,7 +35,6 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class SeedNodeService implements Service {
@@ -108,13 +107,14 @@ public class SeedNodeService implements Service {
             String defaultKeyId = keyBundleService.getDefaultKeyId();
             KeyPair keyPair = keyBundleService.getOrCreateKeyBundle(defaultKeyId).getKeyPair();
 
+            // TODO deactivate republishing until issues are resolved
             // Repeat 3 times at startup to republish to ensure the data gets well distributed
-            startupScheduler = Scheduler.run(() -> publishMyBondedRole(authorizedBondedRole, keyPair, authorizedPrivateKey, authorizedPublicKey))
+           /* startupScheduler = Scheduler.run(() -> publishMyBondedRole(authorizedBondedRole, keyPair, authorizedPrivateKey, authorizedPublicKey))
                     .repeated(1, 10, TimeUnit.SECONDS, 3);
 
             // We have 30 days TTL for the data, we republish after 25 days to ensure the data does not expire
             scheduler = Scheduler.run(() -> publishMyBondedRole(authorizedBondedRole, keyPair, authorizedPrivateKey, authorizedPublicKey))
-                    .periodically(25, TimeUnit.DAYS);
+                    .periodically(25, TimeUnit.DAYS);*/
         });
         return CompletableFuture.completedFuture(true);
     }

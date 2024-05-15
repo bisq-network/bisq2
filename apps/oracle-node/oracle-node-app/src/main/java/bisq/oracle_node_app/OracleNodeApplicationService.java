@@ -19,7 +19,6 @@ package bisq.oracle_node_app;
 
 import bisq.application.ApplicationService;
 import bisq.bonded_roles.BondedRolesService;
-import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.bonded_roles.market_price.MarketPriceRequestService;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
@@ -41,7 +40,6 @@ public class OracleNodeApplicationService extends ApplicationService {
     private final SecurityService securityService;
     private final NetworkService networkService;
     private final OracleNodeService oracleNodeService;
-    private final AuthorizedBondedRolesService authorizedBondedRolesService;
     private final BondedRolesService bondedRolesService;
 
     public OracleNodeApplicationService(String[] args) {
@@ -62,14 +60,12 @@ public class OracleNodeApplicationService extends ApplicationService {
                 networkService
         );
 
-        com.typesafe.config.Config bondedRolesConfig = getConfig("bondedRoles");
-        authorizedBondedRolesService = new AuthorizedBondedRolesService(networkService, bondedRolesConfig.getBoolean("ignoreSecurityManager"));
-
         bondedRolesService = new BondedRolesService(BondedRolesService.Config.from(getConfig("bondedRoles")),
                 config.getVersion(),
                 persistenceService,
                 networkService);
 
+        com.typesafe.config.Config bondedRolesConfig = getConfig("bondedRoles");
         com.typesafe.config.Config marketPriceConfig = bondedRolesConfig.getConfig("marketPrice");
         MarketPriceRequestService marketPriceRequestService = new MarketPriceRequestService(
                 MarketPriceRequestService.Config.from(marketPriceConfig),
@@ -81,7 +77,7 @@ public class OracleNodeApplicationService extends ApplicationService {
                 identityService,
                 networkService,
                 persistenceService,
-                authorizedBondedRolesService,
+                bondedRolesService.getAuthorizedBondedRolesService(),
                 marketPriceRequestService);
     }
 
@@ -90,7 +86,6 @@ public class OracleNodeApplicationService extends ApplicationService {
         return securityService.initialize()
                 .thenCompose(result -> networkService.initialize())
                 .thenCompose(result -> identityService.initialize())
-                .thenCompose(result -> authorizedBondedRolesService.initialize())
                 .thenCompose(result -> bondedRolesService.initialize())
                 .thenCompose(result -> oracleNodeService.initialize())
                 .orTimeout(5, TimeUnit.MINUTES)
@@ -111,7 +106,6 @@ public class OracleNodeApplicationService extends ApplicationService {
         // We shut down services in opposite order as they are initialized
         return supplyAsync(() -> oracleNodeService.shutdown()
                 .thenCompose(result -> bondedRolesService.shutdown())
-                .thenCompose(result -> authorizedBondedRolesService.shutdown())
                 .thenCompose(result -> identityService.shutdown())
                 .thenCompose(result -> networkService.shutdown())
                 .thenCompose(result -> securityService.shutdown())
