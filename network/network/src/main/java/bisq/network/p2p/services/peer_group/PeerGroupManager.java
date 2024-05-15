@@ -374,7 +374,7 @@ public class PeerGroupManager implements Node.Listener {
         if (exceeding > 0) {
             reportedPeers.sort(Comparator.comparing(Peer::getDate));
             List<Peer> outDated = reportedPeers.subList(0, Math.min(exceeding, reportedPeers.size()));
-            log.info("Remove {} reported peers: {}", outDated.size(), outDated);
+            log.info("Remove {} reported peers: {}", outDated.size(), StringUtils.truncate(outDated.toString(), 500));
             peerGroupService.removeReportedPeers(outDated);
         }
     }
