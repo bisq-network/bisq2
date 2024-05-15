@@ -48,17 +48,17 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
     public static AddAuthenticatedDataRequest from(AuthenticatedDataStorageService store, AuthenticatedData authenticatedData, KeyPair keyPair)
             throws GeneralSecurityException {
 
-        byte[] hash = DigestUtil.hash(authenticatedData.serializeForHash());
+        byte[] hashForStoreMap = DigestUtil.hash(authenticatedData.serializeForHash());
         byte[] pubKeyHash = DigestUtil.hash(keyPair.getPublic().getEncoded());
-        int sequenceNumber = store.getSequenceNumber(hash) + 1;
+        int sequenceNumber = store.getSequenceNumber(hashForStoreMap) + 1;
         AuthenticatedSequentialData data = new AuthenticatedSequentialData(authenticatedData, sequenceNumber, pubKeyHash, System.currentTimeMillis());
-        byte[] serialized = data.serializeForHash();
-        byte[] signature = SignatureUtil.sign(serialized, keyPair.getPrivate());
-         /*  log.error("hash={}", Hex.encode(hash));
+        byte[] hashForSignature = data.serializeForHash();
+        byte[] signature = SignatureUtil.sign(hashForSignature, keyPair.getPrivate());
+         /*  log.error("hashForStoreMap={}", Hex.encode(hashForStoreMap));
         log.error("keyPair.getPublic().getEncoded()={}", Hex.encode(keyPair.getPublic().getEncoded()));
         log.error("pubKeyHash={}", Hex.encode(pubKeyHash));
         log.error("sequenceNumber={}", sequenceNumber);
-        log.error("serialized={}", Hex.encode(serialized));
+        log.error("hashForSignature={}", Hex.encode(hashForSignature));
         log.error("signature={}", Hex.encode(signature));
         log.error("data={}", data);*/
         return new AddAuthenticatedDataRequest(data, signature, keyPair.getPublic());

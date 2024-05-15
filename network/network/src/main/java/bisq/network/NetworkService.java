@@ -281,8 +281,9 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                 NETWORK_IO_POOL);
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Add/remove data
+    // AuthenticatedData
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<BroadcastResult> publishAuthenticatedData(DistributedData distributedData, KeyPair keyPair) {
@@ -296,6 +297,11 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         DefaultAuthenticatedData authenticatedData = new DefaultAuthenticatedData(distributedData);
         return dataService.get().removeAuthenticatedData(authenticatedData, ownerKeyPair);
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // AuthorizedData
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<BroadcastResult> publishAuthorizedData(AuthorizedDistributedData authorizedDistributedData,
                                                                     KeyPair keyPair) {
@@ -331,6 +337,11 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         AuthorizedData authorizedData = new AuthorizedData(authorizedDistributedData, authorizedPublicKey);
         return dataService.get().removeAuthorizedData(authorizedData, ownerKeyPair);
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // AppendOnlyData
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<BroadcastResult> publishAppendOnlyData(AppendOnlyData appendOnlyData) {
         checkArgument(dataService.isPresent(), "DataService must be supported when addData is called.");
