@@ -415,26 +415,26 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
     }
 
     private String toBisq1RoleTypeName(BondedRoleType bondedRoleType) {
-        //todo (refactor, low prio) use switch
         String name = bondedRoleType.name();
-        if (name.equals("MEDIATOR")) {
-            return "MEDIATOR"; // 5k
-        } else if (name.equals("ARBITRATOR")) {
-            return "MOBILE_NOTIFICATIONS_RELAY_OPERATOR"; // 10k; Bisq 1 ARBITRATOR would require 100k!
-        } else if (name.equals("MODERATOR")) {
-            return "YOUTUBE_ADMIN"; // 5k; repurpose unused role
-        } else if (name.equals("SECURITY_MANAGER")) {
-            return "BITCOINJ_MAINTAINER"; // 10k repurpose unused role
-        } else if (name.equals("RELEASE_MANAGER")) {
-            return "FORUM_ADMIN"; // 10k; repurpose unused role
-        } else if (name.equals("ORACLE_NODE")) {
-            return "NETLAYER_MAINTAINER"; // 10k; repurpose unused role
-        } else if (name.equals("SEED_NODE")) {
-            return "SEED_NODE_OPERATOR"; // 10k
-        } else if (name.equals("EXPLORER_NODE")) {
-            return "BSQ_EXPLORER_OPERATOR"; // 10k; Explorer operator
-        } else if (name.equals("MARKET_PRICE_NODE")) {
-            return "DATA_RELAY_NODE_OPERATOR"; // 10k; price node
+        switch (name) {
+            case "MEDIATOR":
+                return "MEDIATOR"; // 5k
+            case "MODERATOR":
+                return "YOUTUBE_ADMIN"; // 5k; repurpose unused role
+            case "ARBITRATOR":
+                return "MOBILE_NOTIFICATIONS_RELAY_OPERATOR"; // 10k; Bisq 1 ARBITRATOR would require 100k!
+            case "SECURITY_MANAGER":
+                return "BITCOINJ_MAINTAINER"; // 10k; repurpose unused role
+            case "RELEASE_MANAGER":
+                return "FORUM_ADMIN"; // 10k; repurpose unused role
+            case "ORACLE_NODE":
+                return "NETLAYER_MAINTAINER"; // 10k; repurpose unused role
+            case "SEED_NODE":
+                return "SEED_NODE_OPERATOR"; // 10k
+            case "EXPLORER_NODE":
+                return "BSQ_EXPLORER_OPERATOR"; // 10k; Explorer operator
+            case "MARKET_PRICE_NODE":
+                return "DATA_RELAY_NODE_OPERATOR"; // 10k; price node
         }
         return name;
     }
