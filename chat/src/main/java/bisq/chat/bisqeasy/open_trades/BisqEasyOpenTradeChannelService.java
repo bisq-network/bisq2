@@ -149,8 +149,8 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
                 .orElse(CompletableFuture.failedFuture(new RuntimeException("makerUserProfile not found from message.authorUserProfileId")));
     }
 
-    public CompletableFuture<SendMessageResult> sendSystemMessage(String text,
-                                                                  BisqEasyOpenTradeChannel channel) {
+    public CompletableFuture<SendMessageResult> sendTradeLogMessage(String text,
+                                                                    BisqEasyOpenTradeChannel channel) {
         return sendMessage(text, Optional.empty(), ChatMessageType.PROTOCOL_LOG_MESSAGE, channel);
     }
 
@@ -206,7 +206,7 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
         checkArgument(channel.getMediator().isPresent());
         UserProfile receiverUserProfile = channel.getMyUserIdentity().getUserProfile();
         UserProfile senderUserProfile = channel.getMediator().get();
-        BisqEasyOpenTradeMessage systemMessage = new BisqEasyOpenTradeMessage(channel.getTradeId(),
+        BisqEasyOpenTradeMessage tradeLogMessage = new BisqEasyOpenTradeMessage(channel.getTradeId(),
                 StringUtils.createUid(),
                 channel.getId(),
                 senderUserProfile,
@@ -219,7 +219,7 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
                 channel.getMediator(),
                 ChatMessageType.PROTOCOL_LOG_MESSAGE,
                 Optional.empty());
-        channel.addChatMessage(systemMessage);
+        channel.addChatMessage(tradeLogMessage);
     }
 
     public Optional<BisqEasyOpenTradeChannel> findChannel(String offerId, String peersUserProfileId) {

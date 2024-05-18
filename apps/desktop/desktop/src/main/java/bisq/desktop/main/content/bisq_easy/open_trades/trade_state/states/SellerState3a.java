@@ -81,7 +81,7 @@ public class SellerState3a extends BaseState {
 
         private void onBtcSent() {
             String txId = model.getTxId().get();
-            sendSystemMessage(Res.get("bisqEasy.tradeState.info.seller.phase3a.tradeLogMessage",
+            sendTradeLogMessage(Res.get("bisqEasy.tradeState.info.seller.phase3a.tradeLogMessage",
                     model.getChannel().getMyUserIdentity().getUserName(), txId));
             bisqEasyTradeService.sellerConfirmBtcSent(model.getBisqEasyTrade(), txId);
         }

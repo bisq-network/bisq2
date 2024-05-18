@@ -44,10 +44,10 @@ public class MyProtocolLogMessageBox extends PeerProtocolLogMessageBox {
         deliveryState.setCursor(Cursor.HAND);
         deliveryState.setTooltip(new BisqTooltip(true));
 
-        systemMessageBg.getChildren().remove(message);
+        tradeLogMessageBg.getChildren().remove(message);
         HBox hBox = new HBox(10, message, deliveryState);
         hBox.setAlignment(Pos.CENTER);
-        systemMessageBg.getChildren().add(0, hBox);
+        tradeLogMessageBg.getChildren().add(0, hBox);
 
         deliveryState.getTooltip().textProperty().bind(item.getMessageDeliveryStatusTooltip());
 
