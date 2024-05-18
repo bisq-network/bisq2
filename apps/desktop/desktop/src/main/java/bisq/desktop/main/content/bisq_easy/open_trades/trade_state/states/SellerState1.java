@@ -124,7 +124,7 @@ public class SellerState1 extends BaseState {
                 return;
             }
             sendTradeLogMessage(Res.get("bisqEasy.tradeState.info.seller.phase1.tradeLogMessage",
-                    model.getChannel().getMyUserIdentity().getUserName()));
+                    model.getChannel().getMyUserIdentity().getUserName(), model.getPaymentAccountData().get()));
             bisqEasyTradeService.sellerSendsPaymentAccount(model.getBisqEasyTrade(), paymentAccountData);
         }
 
