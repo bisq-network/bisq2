@@ -227,7 +227,8 @@ public class TakeOfferReviewController implements Controller {
         BisqEasyContract contract = bisqEasyTrade.getContract();
 
         mainButtonsVisibleHandler.accept(false);
-        bisqEasyOpenTradeChannelService.sendTakeOfferMessage(bisqEasyTrade.getId(), bisqEasyOffer, contract.getMediator())
+        String tradeId = bisqEasyTrade.getId();
+        bisqEasyOpenTradeChannelService.sendTakeOfferMessage(tradeId, bisqEasyOffer, contract.getMediator())
                 .thenAccept(result -> UIThread.run(() -> {
                     // In case the user has switched to another market we want to select that market in the offer book
                     ChatChannelSelectionService chatChannelSelectionService =
@@ -235,6 +236,13 @@ public class TakeOfferReviewController implements Controller {
                     bisqEasyOfferbookChannelService.findChannel(contract.getOffer().getMarket())
                             .ifPresent(chatChannelSelectionService::selectChannel);
                     model.getTakeOfferStatus().set(TakeOfferReviewModel.TakeOfferStatus.SUCCESS);
+                    bisqEasyOpenTradeChannelService.findChannelByTradeId(tradeId)
+                            .ifPresent(channel -> {
+                                String taker = userIdentityService.getSelectedUserIdentity().getUserProfile().getUserName();
+                                String maker = channel.getPeer().getUserName();
+                                String message = Res.get("bisqEasy.takeOffer.tradeLogMessage", taker, maker);
+                                chatService.getBisqEasyOpenTradeChannelService().sendTradeLogMessage(message, channel);
+                            });
                 }));
     }
 

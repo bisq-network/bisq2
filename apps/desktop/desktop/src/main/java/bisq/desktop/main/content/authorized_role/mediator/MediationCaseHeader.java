@@ -125,7 +125,7 @@ public class MediationCaseHeader {
 
         private void doClose() {
             MediatorView.ListItem listItem = model.getMediationCaseListItem().get();
-            channelService.sendSystemMessage(Res.get("authorizedRole.mediator.close.systemMessage"),
+            channelService.sendTradeLogMessage(Res.get("authorizedRole.mediator.close.tradeLogMessage"),
                     listItem.getChannel());
             mediatorService.closeMediationCase(listItem.getMediationCase());
             onCloseHandler.run();
@@ -133,7 +133,7 @@ public class MediationCaseHeader {
 
         private void doReOpen() {
             MediatorView.ListItem listItem = model.getMediationCaseListItem().get();
-            channelService.sendSystemMessage(Res.get("authorizedRole.mediator"),
+            channelService.sendTradeLogMessage(Res.get("authorizedRole.mediator"),
                     listItem.getChannel());
             mediatorService.reOpenMediationCase(listItem.getMediationCase());
             onReOpenHandler.run();

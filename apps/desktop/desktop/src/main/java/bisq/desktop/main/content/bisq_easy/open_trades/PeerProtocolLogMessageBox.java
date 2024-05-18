@@ -30,7 +30,7 @@ import javafx.scene.layout.VBox;
 
 public class PeerProtocolLogMessageBox extends MessageBox {
     protected final ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item;
-    protected final VBox systemMessageBg = new VBox();
+    protected final VBox tradeLogMessageBg = new VBox();
     protected final VBox contentVBox;
     protected final Label message, dateTime;
 
@@ -45,18 +45,18 @@ public class PeerProtocolLogMessageBox extends MessageBox {
         dateTime = new Label(item.getDate());
         dateTime.getStyleClass().addAll("text-fill-grey-dimmed", "system-message-labels");
 
-        systemMessageBg.setSpacing(5);
-        systemMessageBg.getChildren().addAll(message, dateTime);
-        systemMessageBg.setFillWidth(true);
-        systemMessageBg.setAlignment(Pos.CENTER);
-        systemMessageBg.getStyleClass().add("system-message-background");
-        HBox.setHgrow(systemMessageBg, Priority.ALWAYS);
+        tradeLogMessageBg.setSpacing(5);
+        tradeLogMessageBg.getChildren().addAll(message, dateTime);
+        tradeLogMessageBg.setFillWidth(true);
+        tradeLogMessageBg.setAlignment(Pos.CENTER);
+        tradeLogMessageBg.getStyleClass().add("system-message-background");
+        HBox.setHgrow(tradeLogMessageBg, Priority.ALWAYS);
 
         setFillWidth(true);
         HBox.setHgrow(this, Priority.ALWAYS);
         setPadding(new Insets(0));
 
-        contentVBox = new VBox(systemMessageBg);
+        contentVBox = new VBox(tradeLogMessageBg);
         contentVBox.setMaxWidth(CHAT_BOX_MAX_WIDTH);
         getChildren().setAll(contentVBox);
         setAlignment(Pos.CENTER);

@@ -123,8 +123,8 @@ public class SellerState1 extends BaseState {
                 new Popup().warning(Res.get("validation.tooLong", UserProfile.MAX_LENGTH_STATEMENT)).show();
                 return;
             }
-            sendSystemMessage(Res.get("bisqEasy.tradeState.info.seller.phase1.systemMessage",
-                    model.getChannel().getMyUserIdentity().getUserName()));
+            sendTradeLogMessage(Res.get("bisqEasy.tradeState.info.seller.phase1.tradeLogMessage",
+                    model.getChannel().getMyUserIdentity().getUserName(), model.getPaymentAccountData().get()));
             bisqEasyTradeService.sellerSendsPaymentAccount(model.getBisqEasyTrade(), paymentAccountData);
         }
 

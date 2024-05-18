@@ -35,6 +35,6 @@ public final class LeaveChatMessageBox extends MyProtocolLogMessageBox {
         hyperlink.setGraphic(ImageUtil.getImageViewById("leave-chat-green"));
         hyperlink.getStyleClass().addAll("system-message-labels", "leave-chat-message");
         hyperlink.setOnAction(e -> controller.onLeaveChannel());
-        systemMessageBg.getChildren().setAll(message, hyperlink, dateTime);
+        tradeLogMessageBg.getChildren().setAll(message, hyperlink, dateTime);
     }
 }
