@@ -19,7 +19,6 @@ package bisq.desktop.main.content.bisq_easy.offerbook;
 
 import bisq.chat.ChatChannelDomain;
 import bisq.common.currency.Market;
-import bisq.desktop.components.table.StandardTable;
 import bisq.desktop.main.content.chat.ChatModel;
 import javafx.beans.Observable;
 import javafx.beans.property.*;
@@ -28,13 +27,10 @@ import javafx.collections.ObservableList;
 import javafx.collections.ObservableSet;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
-import javafx.scene.control.ToggleGroup;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Predicate;
 
 @Slf4j
@@ -58,8 +54,6 @@ public final class BisqEasyOfferbookModel extends ChatModel {
     private final ObservableList<OfferMessageItem> offerMessageItems = FXCollections.observableArrayList();
     private final FilteredList<OfferMessageItem> filteredOfferMessageItems = new FilteredList<>(offerMessageItems);
     private final SortedList<OfferMessageItem> sortedOfferMessageItems = new SortedList<>(filteredOfferMessageItems);
-    private final List<StandardTable.FilterMenuItem<OfferMessageItem>> filterOfferMessageItems = new ArrayList<>();
-    private final ToggleGroup filterOfferMessageMenuItemToggleGroup = new ToggleGroup();
     private final StringProperty fiatAmountTitle = new SimpleStringProperty();
     private final BooleanProperty showBuyOffers = new SimpleBooleanProperty();
     private final BooleanProperty showOfferListExpanded = new SimpleBooleanProperty();

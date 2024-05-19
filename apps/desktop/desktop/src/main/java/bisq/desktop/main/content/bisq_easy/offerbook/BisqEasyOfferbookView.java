@@ -750,8 +750,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         subheader.getStyleClass().add("offer-list-subheader");
         subheader.getChildren().add(filterOfferListByDirection);
 
-        StandardTable<OfferMessageItem> offerMessageItemTable = new StandardTable<>(getModel().getSortedOfferMessageItems(),
-                "", getModel().getFilterOfferMessageItems(), getModel().getFilterOfferMessageMenuItemToggleGroup());
+        StandardTable<OfferMessageItem> offerMessageItemTable = new StandardTable<>(getModel().getSortedOfferMessageItems());
         offerListTableView = offerMessageItemTable.getTableView();
         offerListTableView.getStyleClass().add("offers-list");
         offerListTableView.allowVerticalScrollbar();
