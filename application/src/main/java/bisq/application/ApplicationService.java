@@ -123,12 +123,12 @@ public abstract class ApplicationService implements Service {
         com.typesafe.config.Config defaultTypesafeConfig = ConfigFactory.load(configFileName);
         defaultTypesafeConfig.checkValid(ConfigFactory.defaultReference(), configFileName);
 
-        String appName = resolveAppName(args, defaultTypesafeConfig);
+        String appName = resolveAppName(args, defaultTypesafeConfig.getConfig("application"));
         Path appDataDir = OptionUtils.findOptionValue(args, "--data-dir")
                 .map(Path::of)
                 .orElse(OsUtils.getUserDataDir().resolve(appName));
         File customConfigFile = Path.of(appDataDir.toString(), "bisq.conf").toFile();
-        com.typesafe.config.Config typesafeConfig = defaultTypesafeConfig;
+        com.typesafe.config.Config typesafeConfig;
         boolean customConfigProvided = customConfigFile.exists();
         if (customConfigProvided) {
             try {
@@ -137,6 +137,8 @@ public abstract class ApplicationService implements Service {
                 System.err.println("Error when reading custom config file " + ExceptionUtil.getMessageOrToString(e));
                 throw new RuntimeException(e);
             }
+        } else {
+            typesafeConfig = defaultTypesafeConfig;
         }
 
         typesafeAppConfig = typesafeConfig.getConfig("application");
