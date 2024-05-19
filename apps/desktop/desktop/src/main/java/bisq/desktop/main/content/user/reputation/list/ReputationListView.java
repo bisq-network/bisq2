@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.user.reputation.list;
 
 import bisq.common.monetary.Coin;
+import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.table.BisqTableColumn;
@@ -64,7 +65,8 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
         standardTable = new StandardTable<>(model.getSortedList(),
                 Res.get("user.reputation.table.headline"),
                 model.getFilterItems(),
-                model.getFilterMenuItemToggleGroup());
+                model.getFilterMenuItemToggleGroup(),
+                this::applySearchPredicate);
         tableView = standardTable.getTableView();
         configTableView();
 
@@ -74,6 +76,7 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
     @Override
     protected void onViewAttached() {
         standardTable.initialize();
+        standardTable.resetSearch();
         valueColumn.visibleProperty().bind(model.getValueColumnVisible());
         userProfileIdOfScoreUpdatePin = EasyBind.subscribe(model.getUserProfileIdOfScoreUpdate(), profileId -> {
             if (profileId != null) {
@@ -111,6 +114,16 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
         valueColumn.visibleProperty().unbind();
         userProfileIdOfScoreUpdatePin.unsubscribe();
         selectedReputationSourcePin.unsubscribe();
+    }
+
+    private void applySearchPredicate(String searchText) {
+        model.getFilteredList().setPredicate(item ->
+                StringUtils.isEmpty(searchText) ||
+                        item.getUserName().contains(searchText) ||
+                        item.getUserProfile().getNym().contains(searchText) ||
+                        item.getTotalScoreString().contains(searchText) ||
+                        item.getProfileAgeString().contains(searchText) ||
+                        item.getValueProperty().get().contains(searchText));
     }
 
     private void configTableView() {
