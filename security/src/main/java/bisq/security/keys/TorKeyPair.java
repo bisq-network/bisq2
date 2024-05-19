@@ -50,16 +50,19 @@ public class TorKeyPair implements PersistableProto {
                 proto.getOnionAddress());
     }
 
+    public String getBase64SecretScalar() {
+        // Key Format definition:
+        // https://gitlab.torproject.org/tpo/core/torspec/-/blob/main/control-spec.txt
+        byte[] secretScalar = generateSecretScalar(privateKey);
+        return java.util.Base64.getEncoder().encodeToString(secretScalar);
+    }
+
     /**
      * The format how the private key is stored in the tor directory
      */
     public String getPrivateKeyInOpenSshFormat() {
-        // Key Format definition:
-        // https://gitlab.torproject.org/tpo/core/torspec/-/blob/main/control-spec.txt
-        byte[] secretScalar = generateSecretScalar(privateKey);
-        String encoded = java.util.Base64.getEncoder().encodeToString(secretScalar);
         return "-----BEGIN OPENSSH PRIVATE KEY-----\n" +
-                encoded + "\n" +
+                getBase64SecretScalar() + "\n" +
                 "-----END OPENSSH PRIVATE KEY-----\n";
     }
 
