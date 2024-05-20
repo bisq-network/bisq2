@@ -41,7 +41,6 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
 import java.security.KeyPair;
 import java.util.Optional;
 import java.util.Random;
@@ -84,8 +83,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     private final Config config;
     @Getter
     private final Observable<UserIdentity> newlyCreatedUserIdentity = new Observable<>();
-    @Nullable
-    private ExecutorService rePublishUserProfilesExecutor;
+    private Optional<ExecutorService> rePublishUserProfilesExecutor = Optional.empty();
     private int republishDelay;
     private Optional<Scheduler> rePublishAllUserProfilesScheduler = Optional.empty();
 
@@ -113,9 +111,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     public CompletableFuture<Boolean> shutdown() {
         rePublishAllUserProfilesScheduler.ifPresent(Scheduler::stop);
         return CompletableFuture.supplyAsync(() -> {
-            if (rePublishUserProfilesExecutor != null) {
-                ExecutorFactory.shutdownAndAwaitTermination(rePublishUserProfilesExecutor, 100);
-            }
+            rePublishUserProfilesExecutor.ifPresent(rePublishUserProfilesExecutor -> ExecutorFactory.shutdownAndAwaitTermination(rePublishUserProfilesExecutor, 100));
             return true;
         });
     }
@@ -295,9 +291,9 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     }
 
     private void rePublishUserProfiles(Set<UserIdentity> userIdentities) {
-        if (rePublishUserProfilesExecutor == null) {
-            rePublishUserProfilesExecutor = ExecutorFactory.newSingleThreadExecutor("rePublishUserProfilesExecutor");
-            rePublishUserProfilesExecutor.submit(() -> {
+        if (rePublishUserProfilesExecutor.isEmpty()) {
+            rePublishUserProfilesExecutor = Optional.of(ExecutorFactory.newSingleThreadExecutor("rePublishUserProfilesExecutor"));
+            rePublishUserProfilesExecutor.get().submit(() -> {
                 republishDelay = 1000 + new Random().nextInt(30_000);
                 userIdentities.forEach(userIdentity -> {
                     publishUserProfile(userIdentity.getUserProfile(), userIdentity.getNetworkIdWithKeyPair().getKeyPair());
@@ -308,8 +304,8 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
                     } catch (InterruptedException ignore) {
                     }
                 });
-                rePublishUserProfilesExecutor.shutdownNow();
-                rePublishUserProfilesExecutor = null;
+                rePublishUserProfilesExecutor.get().shutdownNow();
+                rePublishUserProfilesExecutor = Optional.empty();
             });
         } else {
             log.warn("called rePublishUserProfiles while previous call to rePublishUserProfiles has not completed yet. We ignore that call.");
