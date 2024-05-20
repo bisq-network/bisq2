@@ -30,27 +30,29 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 public class ReputationScore implements Comparable<ReputationScore> {
     public final static double MAX_VALUE = 10_000_000;
-    public static final ReputationScore NONE = new ReputationScore(0, 0, 0, 0);
-    
+    public static final ReputationScore NONE = new ReputationScore(0, 0, Integer.MAX_VALUE);
+
     private final long totalScore;
     private final double fiveSystemScore;
     private final int ranking;
-    private final double relativeRanking;
 
-    public ReputationScore(long totalScore, double fiveSystemScore, int ranking, double relativeRanking) {
+    public ReputationScore(long totalScore, double fiveSystemScore, int ranking) {
         this.totalScore = totalScore;
         this.fiveSystemScore = fiveSystemScore;
         this.ranking = ranking;
-        this.relativeRanking = relativeRanking;
     }
 
     public String getTooltipString() {
-        return Res.get("user.reputation.score.tooltip", totalScore, ranking);
+        return Res.get("user.reputation.score.tooltip", totalScore, getRankingAsString());
     }
 
     @Override
     public int compareTo(@NonNull ReputationScore o) {
         return Double.compare(totalScore, o.getTotalScore());
+    }
+
+    public String getRankingAsString() {
+        return ranking == Integer.MAX_VALUE ? "-" : String.valueOf(ranking);
     }
 
     public boolean hasReputation() {

@@ -180,10 +180,9 @@ public class ReputationListController implements Controller {
     }
 
     private void addFilterMenuItem(ReputationSource reputationSource) {
-        String title = Res.get("user.reputation.source." + reputationSource.name());
         StandardTable.FilterMenuItem<ReputationListView.ListItem> filterMenuItem = new StandardTable.FilterMenuItem<>(
                 model.getFilterMenuItemToggleGroup(),
-                title,
+                reputationSource.getDisplayString(),
                 Optional.of(reputationSource),
                 item -> item.getReputationSources().contains(reputationSource));
         model.getFilterItems().add(filterMenuItem);

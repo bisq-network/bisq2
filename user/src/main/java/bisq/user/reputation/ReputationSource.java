@@ -17,10 +17,16 @@
 
 package bisq.user.reputation;
 
+import bisq.i18n.Res;
+
 public enum ReputationSource {
     BURNED_BSQ,
     BSQ_BOND,
     PROFILE_AGE,
     BISQ1_ACCOUNT_AGE,
-    BISQ1_SIGNED_ACCOUNT_AGE_WITNESS
+    BISQ1_SIGNED_ACCOUNT_AGE_WITNESS;
+
+    public String getDisplayString() {
+        return Res.get("user.reputation.source." + name());
+    }
 }

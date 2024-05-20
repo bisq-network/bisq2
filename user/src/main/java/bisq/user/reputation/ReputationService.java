@@ -119,8 +119,12 @@ public class ReputationService implements Service {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+    public ReputationScore getReputationScore(String userProfileId) {
+        return findReputationScore(userProfileId).orElse(new ReputationScore(0, 0, scoreByUserProfileId.size()));
+    }
+
     public ReputationScore getReputationScore(UserProfile userProfile) {
-        return findReputationScore(userProfile).orElse(ReputationScore.NONE);
+        return findReputationScore(userProfile).orElse(new ReputationScore(0, 0, scoreByUserProfileId.size()));
     }
 
     public Optional<ReputationScore> findReputationScore(UserProfile userProfile) {
@@ -135,8 +139,7 @@ public class ReputationService implements Service {
         double fiveSystemScore = getFiveSystemScore(score);
         int index = getIndex(score, scoreByUserProfileId.values());
         int rank = scoreByUserProfileId.size() - index;
-        double relativeRanking = (index + 1) / (double) scoreByUserProfileId.size();
-        return Optional.of(new ReputationScore(score, fiveSystemScore, rank, relativeRanking));
+        return Optional.of(new ReputationScore(score, fiveSystemScore, rank));
     }
 
     private void onUserProfileScoreChanged(String userProfileId) {

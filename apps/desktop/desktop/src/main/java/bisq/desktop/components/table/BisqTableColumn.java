@@ -29,6 +29,7 @@ import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.util.Callback;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Comparator;
@@ -65,6 +66,8 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
     };
     private BiConsumer<S, TextField> updateItemWithInputTextFieldHandler = (item, field) -> {
     };
+    @Getter
+    private boolean includeForCsv;
 
     public static class Builder<S> {
         private Optional<String> title = Optional.empty();
@@ -81,6 +84,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
         private Optional<Comparator<S>> comparator = Optional.empty();
         private Optional<TableColumn.SortType> sortType = Optional.empty();
         private boolean isSortable = true;
+        private boolean includeForCsv = true;
         private DefaultCellFactory defaultCellFactory = DefaultCellFactory.TEXT;
         private Consumer<S> onActionHandler = item -> {
         };
@@ -115,7 +119,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
             tableColumn.buttonClass = buttonClass;
             tableColumn.updateItemWithButtonHandler = updateItemWithButtonHandler;
             tableColumn.updateItemWithInputTextFieldHandler = updateItemWithInputTextFieldHandler;
-
+            tableColumn.includeForCsv = includeForCsv;
             if (left) {
                 tableColumn.getStyleClass().add("left");
                 // Hack to apply alignment to header. See: https://stackoverflow.com/questions/23576867/javafx-how-to-align-only-one-column-header-in-tableview
@@ -215,6 +219,11 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
 
         public Builder<S> isSortable(boolean value) {
             this.isSortable = value;
+            return this;
+        }
+
+        public Builder<S> includeForCsv(boolean value) {
+            this.includeForCsv = value;
             return this;
         }
 
