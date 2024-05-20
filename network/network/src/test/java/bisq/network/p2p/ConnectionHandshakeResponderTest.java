@@ -139,11 +139,10 @@ public class ConnectionHandshakeResponderTest {
 
         when(banList.isBanned(Address.localHost(1234))).thenReturn(true);
 
-        Exception exception = assertThrows(ConnectionException.class, handshakeResponder::verifyAndBuildRespond);
+        ConnectionException exception = assertThrows(ConnectionException.class, handshakeResponder::verifyAndBuildRespond);
 
-        assertThat(exception.getMessage())
-                .containsIgnoringCase("Peer")
-                .containsIgnoringCase("quarantine");
+        assertThat(exception.getReason())
+                .isEqualTo(ConnectionException.Reason.ADDRESS_BANNED);
     }
 
     @Test
