@@ -138,12 +138,13 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             model.statement.set(userProfile.getStatement());
             model.terms.set(userProfile.getTerms());
 
-            // todo (low prio) add tooltip
             model.reputationScore.set(reputationService.getReputationScore(userProfile));
 
             model.profileAge.set(reputationService.getProfileAgeService().getProfileAge(userProfile)
                     .map(TimeFormatter::formatAgeInDays)
                     .orElse(Res.get("data.na")));
+
+            model.lastSeen.set(TimeFormatter.formatAge(userProfileService.getLastSeen(userProfile)));
 
             // If we selected our own user we don't show certain features
             model.isPeer.set(!userIdentityService.isUserIdentityPresent(userProfile.getId()));
@@ -205,6 +206,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
         private final StringProperty terms = new SimpleStringProperty();
         private final ObjectProperty<ReputationScore> reputationScore = new SimpleObjectProperty<>();
         private final StringProperty profileAge = new SimpleStringProperty();
+        private final StringProperty lastSeen = new SimpleStringProperty();
         private final BooleanProperty ignoreUserSelected = new SimpleBooleanProperty();
         private final StringProperty ignoreButtonText = new SimpleStringProperty();
         private final BooleanProperty isPeer = new SimpleBooleanProperty();
@@ -219,7 +221,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final ImageView catIconImageView;
-        private final Label nickName, botId, userProfileId, addressByTransport, statement, totalReputationScore, profileAge;
+        private final Label nickName, botId, userProfileId, addressByTransport, statement, totalReputationScore, profileAge, lastSeen;
         private final Hyperlink privateMsg, mention, ignore, report;
         private final VBox statementBox, termsBox, optionsVBox;
         private final ReputationScoreDisplay reputationScoreDisplay;
@@ -283,6 +285,10 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             VBox profileAgeBox = profileAgeTriple.getThird();
             profileAge = profileAgeTriple.getSecond();
 
+            Triple<Label, Label, VBox> lastSeenTriple = getInfoBox(Res.get("chat.sideBar.userProfile.lastSeen"));
+            VBox lastSeenBox = lastSeenTriple.getThird();
+            lastSeen = lastSeenTriple.getSecond();
+
             privateMsg = new Hyperlink(Res.get("chat.sideBar.userProfile.sendPrivateMessage"));
             mention = new Hyperlink(Res.get("chat.sideBar.userProfile.mention"));
             ignore = new Hyperlink();
@@ -317,7 +323,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             VBox.setMargin(reputationBox, new Insets(4, 0, 0, 0));
             root.getChildren().addAll(header,
                     nickName, catIconImageView, botId, userProfileId, addressByTransport,
-                    reputationBox, totalReputationScoreBox, profileAgeBox, statementBox, termsBox,
+                    reputationBox, totalReputationScoreBox, profileAgeBox, lastSeenBox, statementBox, termsBox,
                     optionsVBox);
         }
 
@@ -337,6 +343,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             termsBox.visibleProperty().bind(model.terms.isEmpty().not());
             termsBox.managedProperty().bind(model.terms.isEmpty().not());
             profileAge.textProperty().bind(model.profileAge);
+            lastSeen.textProperty().bind(model.lastSeen);
             ignore.textProperty().bind(model.ignoreButtonText);
             optionsVBox.visibleProperty().bind(model.isPeer);
             optionsVBox.managedProperty().bind(model.isPeer);
@@ -379,6 +386,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             terms.visibleProperty().unbind();
             terms.managedProperty().unbind();
             profileAge.textProperty().unbind();
+            lastSeen.textProperty().unbind();
             ignore.textProperty().unbind();
             optionsVBox.visibleProperty().unbind();
             optionsVBox.managedProperty().unbind();

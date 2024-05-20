@@ -410,7 +410,11 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                     UIThread.run(() -> {
                         if (model.getOfferMessageItems().stream()
                                 .noneMatch(item -> item.getBisqEasyOfferbookMessage().equals(bisqEasyOfferbookMessage))) {
-                            OfferMessageItem item = new OfferMessageItem(bisqEasyOfferbookMessage, userProfile.get(), reputationService, marketPriceService);
+                            OfferMessageItem item = new OfferMessageItem(bisqEasyOfferbookMessage,
+                                    userProfile.get(),
+                                    reputationService,
+                                    marketPriceService,
+                                    userProfileService);
                             model.getOfferMessageItems().add(item);
                         }
                     });

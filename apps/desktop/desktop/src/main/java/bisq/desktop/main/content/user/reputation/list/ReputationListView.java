@@ -240,6 +240,7 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
 
                 if (item != null && !empty) {
                     userName.setText(item.getUserName());
+                    userProfileIcon.setLastSeen(item.getFormattedLastSeen());
                     userProfileIcon.setUserProfile(item.getUserProfile());
                     setGraphic(hBox);
                 } else {
@@ -329,7 +330,7 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
 
             selectedTogglePin = EasyBind.subscribe(toggleGroup.selectedToggleProperty(), this::selectedToggleChanged);
 
-            lastSeen = System.currentTimeMillis() - userProfileService.findUserProfileLastRepublishDate(userProfile).orElse(0L);
+            lastSeen = userProfileService.getLastSeen(userProfile);
             formattedLastSeen = TimeFormatter.formatAge(lastSeen);
         }
 

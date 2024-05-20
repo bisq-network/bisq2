@@ -109,6 +109,7 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
 
         peersUserProfilePin = EasyBind.subscribe(model.getPeersUserProfile(), userProfile -> {
             if (userProfile != null) {
+                chatPeerUserProfileDisplay.setLastSeen(model.getPeerLastSeen());
                 chatPeerUserProfileDisplay.setUserProfile(userProfile);
                 chatPeerUserProfileDisplay.setReputationScore(model.getPeersReputationScore());
             }
@@ -116,6 +117,7 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
 
         myUserProfilePin = EasyBind.subscribe(model.getMyUserProfile(), userProfile -> {
             if (userProfile != null) {
+                chatMyUserProfileDisplay.setLastSeen(model.getMyselfLastSeen());
                 chatMyUserProfileDisplay.setUserProfile(userProfile);
                 chatMyUserProfileDisplay.setReputationScore(model.getMyUserReputationScore());
             }

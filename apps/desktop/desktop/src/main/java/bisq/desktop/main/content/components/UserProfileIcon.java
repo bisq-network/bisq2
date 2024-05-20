@@ -19,9 +19,11 @@ package bisq.desktop.main.content.components;
 
 import bisq.desktop.components.cathash.CatHash;
 import bisq.desktop.components.controls.BisqTooltip;
+import bisq.i18n.Res;
 import bisq.user.profile.UserProfile;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -30,7 +32,15 @@ import static bisq.desktop.main.content.components.UserProfileDisplay.DEFAULT_IC
 
 @Slf4j
 public class UserProfileIcon extends ImageView {
+    @Getter
     private BisqTooltip tooltip;
+    @Nullable
+    private String lastSeen;
+    @Nullable
+    @Getter
+    private String tooltipText;
+    @Nullable
+    private UserProfile userProfile;
 
     public UserProfileIcon() {
         this(DEFAULT_ICON_SIZE);
@@ -40,9 +50,16 @@ public class UserProfileIcon extends ImageView {
         setSize(size);
     }
 
+    public void setLastSeen(@Nullable String lastSeen) {
+        this.lastSeen = lastSeen;
+        applyTooltipText();
+    }
+
     public void setUserProfile(@Nullable UserProfile userProfile) {
+        this.userProfile = userProfile;
         if (userProfile != null) {
-            tooltip = new BisqTooltip(userProfile.getTooltipString());
+            tooltip = new BisqTooltip();
+            applyTooltipText();
             tooltip.getStyleClass().add("medium-dark-tooltip");
             Tooltip.install(this, tooltip);
             setImage(CatHash.getImage(userProfile));
@@ -61,5 +78,14 @@ public class UserProfileIcon extends ImageView {
     public void setSize(double size) {
         setFitWidth(size);
         setFitHeight(size);
+    }
+
+    private void applyTooltipText() {
+        if (userProfile != null && tooltip != null) {
+            String tooltipString = userProfile.getTooltipString();
+            String lastSeenString = lastSeen != null ? "\n" + Res.get("user.userProfile.lastSeenAgo", lastSeen) : "";
+            tooltipText = tooltipString + lastSeenString;
+            tooltip.setText(tooltipText);
+        }
     }
 }

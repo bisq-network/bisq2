@@ -34,7 +34,6 @@ import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
-import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -119,9 +118,9 @@ public abstract class BubbleMessageBox extends MessageBox {
             userName.setText(author.getUserName());
             userName.setOnMouseClicked(e -> controller.onMention(author));
 
+            userProfileIcon.setLastSeen(item.getFormattedLastSeen());
             userProfileIcon.setUserProfile(author);
             userProfileIcon.setCursor(Cursor.HAND);
-            Tooltip.install(userProfileIcon, new BisqTooltip(author.getTooltipString()));
             userProfileIcon.setOnMouseClicked(e -> controller.onShowChatUserDetails(item.getChatMessage()));
         });
     }

@@ -266,7 +266,8 @@ public final class BisqEasyOpenTradesController extends BaseChatController<BisqE
                 model.getListItems().add(new BisqEasyOpenTradesView.ListItem(channel,
                         trade,
                         reputationService,
-                        chatNotificationService));
+                        chatNotificationService,
+                        userProfileService));
                 maybeSelectFirst();
                 updateVisibility();
             }

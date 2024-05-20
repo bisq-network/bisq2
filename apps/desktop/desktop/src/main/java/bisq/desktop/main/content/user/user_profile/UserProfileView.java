@@ -64,7 +64,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
 
     private final Button createNewProfileButton, deleteButton, saveButton;
     private final SplitPane deleteWrapper;
-    private final MaterialTextField nymId, profileId, profileAge, reputationScoreField, statement;
+    private final MaterialTextField nymId, profileId, profileAge, lastSeen, reputationScoreField, statement;
     private final ImageView catIconImageView;
     private final MaterialTextArea terms;
     private final VBox formVBox;
@@ -122,6 +122,9 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         profileAge = addField(Res.get("user.userProfile.profileAge"));
         profileAge.setIconTooltip(Res.get("user.userProfile.profileAge.tooltip"));
 
+        lastSeen = addField(Res.get("user.userProfile.lastSeen"));
+        lastSeen.setIconTooltip(Res.get("user.userProfile.lastSeen.tooltip"));
+
         reputationScoreField = addField(Res.get("user.userProfile.reputation"));
 
         statement = addField(Res.get("user.userProfile.statement"), STATEMENT_PROMPT);
@@ -153,6 +156,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         nymId.textProperty().bind(model.getNymId());
         profileId.textProperty().bind(model.getProfileId());
         profileAge.textProperty().bind(model.getProfileAge());
+        lastSeen.textProperty().bind(model.getLastSeen());
         reputationScoreField.textProperty().bind(model.getReputationScoreValue());
         statement.textProperty().bindBidirectional(model.getStatement());
         terms.textProperty().bindBidirectional(model.getTerms());
@@ -192,6 +196,37 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         }));
     }
 
+    @Override
+    protected void onViewDetached() {
+        nymId.textProperty().unbind();
+        profileId.textProperty().unbind();
+        profileAge.textProperty().unbind();
+        lastSeen.textProperty().unbind();
+        reputationScoreField.textProperty().unbind();
+        statement.textProperty().unbindBidirectional(model.getStatement());
+        terms.textProperty().unbindBidirectional(model.getTerms());
+        catIconImageView.imageProperty().unbind();
+        saveButton.disableProperty().unbind();
+        deleteButton.disableProperty().unbind();
+        deleteWrapper.tooltipProperty().unbind();
+
+        reputationScorePin.unsubscribe();
+        useDeleteTooltipPin.unsubscribe();
+        selectedChatUserIdentityPin.unsubscribe();
+        isValidSelectionPin.unsubscribe();
+
+        deleteButton.setOnAction(null);
+        saveButton.setOnAction(null);
+        createNewProfileButton.setOnAction(null);
+        learnMore.setOnAction(null);
+        comboBox.setOnChangeConfirmed(null);
+        comboBox.getIsValidSelection().set(true);
+
+        comboBox.resetValidation();
+        statement.resetValidation();
+        terms.resetValidation();
+    }
+
     private void disableEditableTextBoxes() {
         statement.setEditable(false);
         statement.setPromptText("");
@@ -229,36 +264,6 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         var validStatement = statement.validate();
         var validTerms = terms.validate();
         return validComboboxSelection && validStatement && validTerms;
-    }
-
-    @Override
-    protected void onViewDetached() {
-        nymId.textProperty().unbind();
-        profileId.textProperty().unbind();
-        profileAge.textProperty().unbind();
-        reputationScoreField.textProperty().unbind();
-        statement.textProperty().unbindBidirectional(model.getStatement());
-        terms.textProperty().unbindBidirectional(model.getTerms());
-        catIconImageView.imageProperty().unbind();
-        saveButton.disableProperty().unbind();
-        deleteButton.disableProperty().unbind();
-        deleteWrapper.tooltipProperty().unbind();
-
-        reputationScorePin.unsubscribe();
-        useDeleteTooltipPin.unsubscribe();
-        selectedChatUserIdentityPin.unsubscribe();
-        isValidSelectionPin.unsubscribe();
-
-        deleteButton.setOnAction(null);
-        saveButton.setOnAction(null);
-        createNewProfileButton.setOnAction(null);
-        learnMore.setOnAction(null);
-        comboBox.setOnChangeConfirmed(null);
-        comboBox.getIsValidSelection().set(true);
-
-        comboBox.resetValidation();
-        statement.resetValidation();
-        terms.resetValidation();
     }
 
     private MaterialTextField addField(String description) {

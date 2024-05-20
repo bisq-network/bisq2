@@ -194,6 +194,7 @@ public class MediationCaseHeader {
         protected void onViewAttached() {
             mediationCaseListItemPin = EasyBind.subscribe(model.getMediationCaseListItem(), item -> {
                 if (item != null) {
+                    makerProfileDisplay.setLastSeen(item.getMaker().getFormattedLastSeen());
                     makerProfileDisplay.setUserProfile(item.getMaker().getUserProfile());
                     makerProfileDisplay.setReputationScore(item.getMaker().getReputationScore());
                     boolean isMakerRequester = item.isMakerRequester();
@@ -207,6 +208,7 @@ public class MediationCaseHeader {
 
                     direction.setText(item.getDirection());
 
+                    takerProfileDisplay.setLastSeen(item.getTaker().getFormattedLastSeen());
                     takerProfileDisplay.setUserProfile(item.getTaker().getUserProfile());
                     takerProfileDisplay.setReputationScore(item.getTaker().getReputationScore());
                     if (!isMakerRequester) {
@@ -220,10 +222,12 @@ public class MediationCaseHeader {
 
                     tradeId.getSecond().setText(item.getShortTradeId());
                 } else {
+                    takerProfileDisplay.setLastSeen(null);
                     makerProfileDisplay.setUserProfile(null);
                     makerProfileDisplay.setReputationScore(null);
                     makerProfileDisplay.getTooltip().setText(null);
                     direction.setText(null);
+                    takerProfileDisplay.setLastSeen(null);
                     takerProfileDisplay.setUserProfile(null);
                     takerProfileDisplay.setReputationScore(null);
                     takerProfileDisplay.getTooltip().setText(null);

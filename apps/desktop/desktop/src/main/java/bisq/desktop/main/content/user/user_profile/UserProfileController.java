@@ -30,9 +30,11 @@ import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.presentation.formatters.TimeFormatter;
+import bisq.user.UserService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
+import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ProfileAgeService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
@@ -52,11 +54,14 @@ public class UserProfileController implements Controller {
     private final ReputationService reputationService;
     private final ProfileAgeService profileAgeService;
     private final BisqEasyService bisqEasyService;
+    private final UserProfileService userProfileService;
     private Pin userProfilesPin, selectedUserProfilePin, reputationChangedPin;
 
     public UserProfileController(ServiceProvider serviceProvider) {
-        userIdentityService = serviceProvider.getUserService().getUserIdentityService();
-        reputationService = serviceProvider.getUserService().getReputationService();
+        UserService userService = serviceProvider.getUserService();
+        userIdentityService = userService.getUserIdentityService();
+        reputationService = userService.getReputationService();
+        userProfileService = userService.getUserProfileService();
         profileAgeService = reputationService.getProfileAgeService();
         bisqEasyService = serviceProvider.getBisqEasyService();
 
@@ -88,6 +93,8 @@ public class UserProfileController implements Controller {
                         model.getProfileAge().set(profileAgeService.getProfileAge(userIdentity.getUserProfile())
                                 .map(TimeFormatter::formatAgeInDays)
                                 .orElse(Res.get("data.na")));
+
+                        model.getLastSeen().set(TimeFormatter.formatAge(userProfileService.getLastSeen(userProfile)));
                     });
                 }
         );
