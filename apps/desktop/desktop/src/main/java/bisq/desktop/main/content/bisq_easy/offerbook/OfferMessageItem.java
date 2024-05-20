@@ -28,7 +28,9 @@ import bisq.offer.amount.OfferAmountFormatter;
 import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.PriceUtil;
+import bisq.presentation.formatters.TimeFormatter;
 import bisq.user.profile.UserProfile;
+import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import lombok.EqualsAndHashCode;
@@ -50,12 +52,15 @@ public class OfferMessageItem {
     private final ReputationScore reputationScore;
     private final long totalScore;
     private double priceSpecAsPercent;
+    private final long lastSeen;
+    private final String formattedLastSeen;
     private Pin marketPriceByCurrencyMapPin;
 
     OfferMessageItem(BisqEasyOfferbookMessage bisqEasyOfferbookMessage,
                      UserProfile userProfile,
                      ReputationService reputationService,
-                     MarketPriceService marketPriceService) {
+                     MarketPriceService marketPriceService,
+                     UserProfileService userProfileService) {
         this.bisqEasyOfferbookMessage = bisqEasyOfferbookMessage;
         this.bisqEasyOffer = bisqEasyOfferbookMessage.getBisqEasyOffer().orElseThrow();
         this.userProfile = userProfile;
@@ -65,6 +70,9 @@ public class OfferMessageItem {
         totalScore = reputationScore.getTotalScore();
         minMaxAmount = retrieveMinMaxAmount();
         minMaxAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, bisqEasyOffer, false);
+
+        lastSeen = userProfileService.getLastSeen(userProfile);
+        formattedLastSeen = TimeFormatter.formatAge(lastSeen);
 
         initialize();
     }

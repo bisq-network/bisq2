@@ -86,6 +86,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     private final Observable<UserIdentity> newlyCreatedUserIdentity = new Observable<>();
     @Nullable
     private ExecutorService rePublishUserProfilesExecutor;
+    private int republishDelay = 1000 + new Random().nextInt(30_000);
 
     public UserIdentityService(Config config,
                                PersistenceService persistenceService,
@@ -297,8 +298,9 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
                     publishPublicUserProfile(userIdentity.getUserProfile(),
                             userIdentity.getNetworkIdWithKeyPair().getKeyPair());
                     try {
-                        // Add random delay of 1-31 sec
-                        Thread.sleep(1000 + new Random().nextInt(30_000));
+                        Thread.sleep(republishDelay);
+                        // Add random delay at each iteration
+                        republishDelay += 30_000 + new Random().nextInt(120_000);
                     } catch (InterruptedException ignore) {
                     }
                 });

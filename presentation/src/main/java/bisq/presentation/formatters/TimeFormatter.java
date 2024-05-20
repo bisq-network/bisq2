@@ -50,6 +50,9 @@ public class TimeFormatter {
     }
 
     public static String formatAge(long duration) {
+        if (duration < 0) {
+            return Res.get("data.na");
+        }
         long sec = duration / 1000;
         long min = sec / 60;
         sec = sec % 60;

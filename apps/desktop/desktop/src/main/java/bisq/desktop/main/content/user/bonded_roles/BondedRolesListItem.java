@@ -24,8 +24,10 @@ import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.common.Address;
 import bisq.network.common.AddressByTransportTypeMap;
+import bisq.presentation.formatters.TimeFormatter;
 import bisq.user.UserService;
 import bisq.user.profile.UserProfile;
+import bisq.user.profile.UserProfileService;
 import com.google.common.base.Joiner;
 import com.google.gson.GsonBuilder;
 import lombok.EqualsAndHashCode;
@@ -58,17 +60,23 @@ public class BondedRolesListItem {
     private final boolean staticPublicKeysProvided;
     private final boolean isRootNode;
     private final boolean isRootSeedNode;
+    private final long lastSeen;
+    private final String formattedLastSeen;
 
     public BondedRolesListItem(BondedRole bondedRole, UserService userService, NetworkService networkService) {
         AuthorizedBondedRole authorizedBondedRoleData = bondedRole.getAuthorizedBondedRole();
         isBanned = bondedRole.isBanned() ? Res.get("confirmation.yes") : "";
-        userProfile = userService.getUserProfileService().findUserProfile(authorizedBondedRoleData.getProfileId());
+        UserProfileService userProfileService = userService.getUserProfileService();
+        userProfile = userProfileService.findUserProfile(authorizedBondedRoleData.getProfileId());
         userProfileId = userProfile.map(UserProfile::getId).orElse(Res.get("data.na"));
         userName = userProfile.map(UserProfile::getUserName).orElse(Res.get("data.na"));
         bondUserName = authorizedBondedRoleData.getBondUserName();
         signature = authorizedBondedRoleData.getSignatureBase64();
         bondedRoleType = authorizedBondedRoleData.getBondedRoleType();
         staticPublicKeysProvided = authorizedBondedRoleData.staticPublicKeysProvided();
+
+        lastSeen = userProfile.map(userProfileService::getLastSeen).orElse(-1L);
+        formattedLastSeen = TimeFormatter.formatAge(lastSeen);
 
         Optional<AddressByTransportTypeMap> addressByTransportTypeMap = authorizedBondedRoleData.getAddressByTransportTypeMap();
         if (addressByTransportTypeMap.isPresent()) {

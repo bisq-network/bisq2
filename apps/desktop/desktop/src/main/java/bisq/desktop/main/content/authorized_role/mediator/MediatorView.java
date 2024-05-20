@@ -40,6 +40,7 @@ import bisq.support.mediation.MediationCase;
 import bisq.trade.bisq_easy.BisqEasyTradeFormatter;
 import bisq.trade.bisq_easy.BisqEasyTradeUtils;
 import bisq.user.profile.UserProfile;
+import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import javafx.geometry.Insets;
@@ -291,6 +292,7 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
                                                boolean isRequester,
                                                ListItem.Trader trader) {
         UserProfileDisplay userProfileDisplay = new UserProfileDisplay(trader.getUserProfile());
+        userProfileDisplay.setLastSeen(trader.getFormattedLastSeen());
         userProfileDisplay.setReputationScore(trader.getReputationScore());
         if (isRequester) {
             userProfileDisplay.getStyleClass().add("mediator-table-requester");
@@ -332,6 +334,7 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
                  MediationCase mediationCase,
                  BisqEasyOpenTradeChannel channel) {
             reputationService = serviceProvider.getUserService().getReputationService();
+            UserProfileService userProfileService = serviceProvider.getUserService().getUserProfileService();
             chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
 
             this.channel = channel;
@@ -341,8 +344,8 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
             List<UserProfile> traders = new ArrayList<>(channel.getTraders());
             offer.getMakerNetworkId().getId();
 
-            Trader trader1 = new Trader(traders.get(0), reputationService);
-            Trader trader2 = new Trader(traders.get(1), reputationService);
+            Trader trader1 = new Trader(traders.get(0), reputationService, userProfileService);
+            Trader trader2 = new Trader(traders.get(1), reputationService, userProfileService);
             if (offer.getMakerNetworkId().getId().equals(trader1.getUserProfile().getId())) {
                 maker = trader1;
                 taker = trader2;
@@ -410,8 +413,10 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
             private final String profileAgeString;
             private final ReputationScore reputationScore;
             private final long totalReputationScore, profileAge;
+            private final long lastSeen;
+            private final String formattedLastSeen;
 
-            Trader(UserProfile userProfile, ReputationService reputationService) {
+            Trader(UserProfile userProfile, ReputationService reputationService, UserProfileService userProfileService) {
                 this.userProfile = userProfile;
                 userName = userProfile.getUserName();
 
@@ -424,6 +429,9 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
                 profileAgeString = optionalProfileAge
                         .map(TimeFormatter::formatAgeInDays)
                         .orElse(Res.get("data.na"));
+
+                lastSeen = userProfileService.getLastSeen(userProfile);
+                formattedLastSeen = TimeFormatter.formatAge(lastSeen);
             }
         }
     }

@@ -32,6 +32,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.chat.ChatController;
 import bisq.i18n.Res;
+import bisq.presentation.formatters.TimeFormatter;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationService;
 import lombok.extern.slf4j.Slf4j;
@@ -111,9 +112,11 @@ public abstract class PrivateChatsController extends ChatController<PrivateChats
                 TwoPartyPrivateChatChannel channel = (TwoPartyPrivateChatChannel) chatChannel;
                 applyPeersIcon(channel);
                 UserProfile peer = channel.getPeer();
+                model.setPeerLastSeen(TimeFormatter.formatAge(userProfileService.getLastSeen(peer)));
                 model.getPeersUserProfile().set(peer);
                 model.setPeersReputationScore(reputationService.getReputationScore(peer));
                 UserProfile myProfile = channel.getMyUserIdentity().getUserProfile();
+                model.setMyselfLastSeen(TimeFormatter.formatAge(userProfileService.getLastSeen(myProfile)));
                 model.getMyUserProfile().set(myProfile);
                 model.setMyUserReputationScore(reputationService.getReputationScore(myProfile));
                 model.getListItems().stream()

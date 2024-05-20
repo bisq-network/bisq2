@@ -39,10 +39,12 @@ import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.DateFormatter;
+import bisq.presentation.formatters.TimeFormatter;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeFormatter;
 import bisq.trade.bisq_easy.BisqEasyTradeUtils;
 import bisq.user.profile.UserProfile;
+import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import javafx.beans.property.SimpleStringProperty;
@@ -369,6 +371,7 @@ public final class BisqEasyOpenTradesView extends BaseChatView {
                 if (item != null && !empty) {
                     UserProfileIcon userProfileIcon = new UserProfileIcon();
                     UserProfile userProfile = item.getChannel().getMyUserIdentity().getUserProfile();
+                    userProfileIcon.setLastSeen(item.getFormattedLastSeen());
                     userProfileIcon.setUserProfile(userProfile);
                     // Tooltip is not working if we add directly to the cell therefor we wrap into a StackPane
                     setGraphic(new StackPane(userProfileIcon));
@@ -431,11 +434,14 @@ public final class BisqEasyOpenTradesView extends BaseChatView {
         private final ReputationScore reputationScore;
         private final StringProperty numTradeNotification = new SimpleStringProperty();
         private final Pin changedChatNotificationPin;
+        private final long lastSeen;
+        private final String formattedLastSeen;
 
         public ListItem(BisqEasyOpenTradeChannel channel,
                         BisqEasyTrade trade,
                         ReputationService reputationService,
-                        ChatNotificationService chatNotificationService) {
+                        ChatNotificationService chatNotificationService,
+                        UserProfileService userProfileService) {
             this.channel = channel;
             this.trade = trade;
 
@@ -462,6 +468,9 @@ public final class BisqEasyOpenTradesView extends BaseChatView {
             paymentMethod = contract.getQuoteSidePaymentMethodSpec().getShortDisplayString();
             myRole = BisqEasyTradeFormatter.getMakerTakerRole(trade);
             reputationScore = reputationService.getReputationScore(peersUserProfile);
+
+            lastSeen = userProfileService.getLastSeen(peersUserProfile);
+            formattedLastSeen = TimeFormatter.formatAge(lastSeen);
 
             changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(notification -> {
                 if (notification == null ||

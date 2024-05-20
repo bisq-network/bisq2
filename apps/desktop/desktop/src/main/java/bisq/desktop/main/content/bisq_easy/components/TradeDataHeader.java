@@ -27,8 +27,10 @@ import bisq.desktop.main.content.bisq_easy.BisqEasyServiceUtil;
 import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
+import bisq.presentation.formatters.TimeFormatter;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.user.profile.UserProfile;
+import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import javafx.beans.property.ObjectProperty;
@@ -42,6 +44,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -71,11 +74,13 @@ public class TradeDataHeader {
         private final Model model;
         private final ReputationService reputationService;
         private final ServiceProvider serviceProvider;
+        private final UserProfileService userProfileService;
         private Subscription channelPin;
 
         private Controller(ServiceProvider serviceProvider, String peerDescription) {
             this.serviceProvider = serviceProvider;
             reputationService = serviceProvider.getUserService().getReputationService();
+            userProfileService = serviceProvider.getUserService().getUserProfileService();
 
             model = new Model(peerDescription);
             view = new View(model, this);
@@ -101,7 +106,8 @@ public class TradeDataHeader {
 
                 UserProfile peerUserProfile = channel.getPeer();
                 model.getReputationScore().set(reputationService.findReputationScore(peerUserProfile).orElse(ReputationScore.NONE));
-                model.getUserProfile().set(peerUserProfile);
+                model.setPeerLastSeen(TimeFormatter.formatAge(userProfileService.getLastSeen(peerUserProfile)));
+                model.getPeersUserProfile().set(peerUserProfile);
                 model.getTradeId().set(bisqEasyTrade.getShortId());
 
                 long baseSideAmount = bisqEasyTrade.getContract().getBaseSideAmount();
@@ -143,7 +149,7 @@ public class TradeDataHeader {
 
         private final ObjectProperty<BisqEasyOpenTradeChannel> channel = new SimpleObjectProperty<>();
         private final ObjectProperty<BisqEasyTrade> bisqEasyTrade = new SimpleObjectProperty<>();
-        private final ObjectProperty<UserProfile> userProfile = new SimpleObjectProperty<>();
+        private final ObjectProperty<UserProfile> peersUserProfile = new SimpleObjectProperty<>();
         private final ObjectProperty<ReputationScore> reputationScore = new SimpleObjectProperty<>();
         private final StringProperty direction = new SimpleStringProperty();
         private final StringProperty leftAmountDescription = new SimpleStringProperty();
@@ -153,6 +159,8 @@ public class TradeDataHeader {
         private final StringProperty rightAmount = new SimpleStringProperty();
         private final StringProperty rightCode = new SimpleStringProperty();
         private final StringProperty tradeId = new SimpleStringProperty();
+        @Setter
+        private String peerLastSeen;
 
         public Model(String peerDescription) {
             this.peerDescription = peerDescription;
@@ -212,7 +220,10 @@ public class TradeDataHeader {
             rightAmount.getFirst().getThird().textProperty().bind(model.getRightCode());
             tradeId.getSecond().textProperty().bind(model.getTradeId());
 
-            userProfilePin = EasyBind.subscribe(model.getUserProfile(), peersUserProfileDisplay::setUserProfile);
+            userProfilePin = EasyBind.subscribe(model.getPeersUserProfile(), peersUserProfile -> {
+                peersUserProfileDisplay.setLastSeen(model.getPeerLastSeen());
+                peersUserProfileDisplay.setUserProfile(peersUserProfile);
+            });
             reputationScorePin = EasyBind.subscribe(model.getReputationScore(), peersUserProfileDisplay::setReputationScore);
         }
 

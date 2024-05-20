@@ -42,6 +42,7 @@ import bisq.offer.Direction;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.payment_method.PaymentMethodSpecFormatter;
 import bisq.presentation.formatters.DateFormatter;
+import bisq.presentation.formatters.TimeFormatter;
 import bisq.trade.Trade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.user.identity.UserIdentityService;
@@ -68,9 +69,11 @@ import static bisq.desktop.main.content.chat.message_container.ChatMessageContai
 
 @Slf4j
 @Getter
-@EqualsAndHashCode
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChannel<M>> implements Comparable<ChatMessageListItem<M, C>> {
+    @EqualsAndHashCode.Include
     private final M chatMessage;
+    @EqualsAndHashCode.Include
     private final C chatChannel;
     private final String message;
     private final String date;
@@ -78,30 +81,22 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private final Optional<UserProfile> senderUserProfile;
     private final String nym;
     private final String nickName;
-    @EqualsAndHashCode.Exclude
     private final ReputationScore reputationScore;
-    @EqualsAndHashCode.Exclude
     private final ReputationScoreDisplay reputationScoreDisplay = new ReputationScoreDisplay();
     private final boolean offerAlreadyTaken;
-    @EqualsAndHashCode.Exclude
     private final StringProperty messageDeliveryStatusTooltip = new SimpleStringProperty();
-    @EqualsAndHashCode.Exclude
     private final ObjectProperty<AwesomeIcon> messageDeliveryStatusIcon = new SimpleObjectProperty<>();
-    @EqualsAndHashCode.Exclude
+    private final long lastSeen;
+    private final String formattedLastSeen;
     @Nullable
     private MessageDeliveryStatus messageDeliveryStatus;
-    @EqualsAndHashCode.Exclude
     @Nullable
     private String messageId;
-    @EqualsAndHashCode.Exclude
     private Optional<String> messageDeliveryStatusIconColor = Optional.empty();
-    @EqualsAndHashCode.Exclude
     private final Set<Pin> mapPins = new HashSet<>();
-    @EqualsAndHashCode.Exclude
     private final Set<Pin> statusPins = new HashSet<>();
     private final MarketPriceService marketPriceService;
     private final UserIdentityService userIdentityService;
-    @EqualsAndHashCode.Exclude
     private final BooleanProperty showHighlighted = new SimpleBooleanProperty();
 
     public ChatMessageListItem(M chatMessage,
@@ -153,6 +148,9 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
             message = chatMessage.getText() + editPostFix;
             offerAlreadyTaken = false;
         }
+
+        lastSeen = senderUserProfile.map(userProfileService::getLastSeen).orElse(-1L);
+        formattedLastSeen = TimeFormatter.formatAge(lastSeen);
 
         mapPins.add(networkService.getMessageDeliveryStatusByMessageId().addObserver(new HashMapObserver<>() {
             @Override
