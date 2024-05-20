@@ -26,7 +26,6 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.*;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
-import bisq.desktop.components.table.StandardTable;
 import bisq.desktop.main.content.chat.ChatView;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.i18n.Res;
@@ -750,8 +749,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         subheader.getStyleClass().add("offer-list-subheader");
         subheader.getChildren().add(filterOfferListByDirection);
 
-        StandardTable<OfferMessageItem> offerMessageItemTable = new StandardTable<>(getModel().getSortedOfferMessageItems());
-        offerListTableView = offerMessageItemTable.getTableView();
+        offerListTableView = new BisqTableView<>(getModel().getSortedOfferMessageItems());
         offerListTableView.getStyleClass().add("offers-list");
         offerListTableView.allowVerticalScrollbar();
         offerListTableView.hideHorizontalScrollbar();

@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.user.reputation.list;
 
+import bisq.common.data.Pair;
 import bisq.common.monetary.Coin;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
@@ -30,6 +31,7 @@ import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.TimeFormatter;
 import bisq.user.profile.UserProfile;
+import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import bisq.user.reputation.ReputationSource;
@@ -50,6 +52,7 @@ import org.fxmisc.easybind.Subscription;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 public class ReputationListView extends View<VBox, ReputationListModel, ReputationListController> {
@@ -106,6 +109,47 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
                 }
             });
         });
+
+        List<String> csvHeaders = standardTable.buildCsvHeaders();
+        csvHeaders.add(Res.get("user.reputation.ranking").toUpperCase());
+        csvHeaders.addAll(Stream.of(ReputationSource.values())
+                .map(reputationSource -> reputationSource.getDisplayString().toUpperCase())
+                .collect(Collectors.toList()));
+        csvHeaders.add(Res.get("component.standardTable.csv.plainValue", Res.get("user.reputation.table.columns.lastSeen").toUpperCase()));
+        csvHeaders.addAll(Stream.of(ReputationSource.values())
+                .map(reputationSource -> Res.get("component.standardTable.csv.plainValue", reputationSource.getDisplayString().toUpperCase()))
+                .collect(Collectors.toList()));
+        standardTable.setCsvHeaders(Optional.of(csvHeaders));
+
+        List<List<String>> csvData = tableView.getItems().stream()
+                .map(item -> {
+                    List<String> cellDataInRow = standardTable.getBisqTableColumnsForCsv()
+                            .map(bisqTableColumn -> bisqTableColumn.resolveValueForCsv(item))
+                            .collect(Collectors.toList());
+
+                    // Add ranking
+                    cellDataInRow.add(item.getReputationScore().getRankingAsString());
+
+                    // Add formatted values
+                    cellDataInRow.addAll(item.getValuePairBySource().entrySet().stream()
+                            .sorted(Comparator.comparingLong(o -> o.getKey().ordinal()))
+                            .map(Map.Entry::getValue)
+                            .map(Pair::getSecond)
+                            .collect(Collectors.toList()));
+
+                    // Add lastSeen plain value
+                    cellDataInRow.add(String.valueOf(item.getLastSeen()));
+
+                    // Add plain values (for better filter/sorting)
+                    cellDataInRow.addAll(item.getValuePairBySource().entrySet().stream()
+                            .sorted(Comparator.comparingLong(o -> o.getKey().ordinal()))
+                            .map(Map.Entry::getValue)
+                            .map(e -> String.valueOf(e.getFirst()))
+                            .collect(Collectors.toList()));
+                    return cellDataInRow;
+                })
+                .collect(Collectors.toList());
+        standardTable.setCsvData(Optional.of(csvData));
     }
 
     @Override
@@ -123,7 +167,7 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
                         item.getUserProfile().getNym().contains(searchText) ||
                         item.getTotalScoreString().contains(searchText) ||
                         item.getProfileAgeString().contains(searchText) ||
-                        item.getValueProperty().get().contains(searchText));
+                        item.getValueAsStringProperty().get().contains(searchText));
     }
 
     private void configTableView() {
@@ -139,6 +183,13 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
                 .left()
                 .comparator(Comparator.comparing(ListItem::getProfileAge))
                 .valueSupplier(ListItem::getProfileAgeString)
+                .includeForCsv(false)
+                .build());
+        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+                .title(Res.get("user.reputation.table.columns.lastSeen"))
+                .left()
+                .comparator(Comparator.comparing(ListItem::getLastSeen))
+                .valueSupplier(ListItem::getFormattedLastSeen)
                 .build());
 
         scoreColumn = new BisqTableColumn.Builder<ListItem>()
@@ -152,7 +203,8 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
         valueColumn = new BisqTableColumn.Builder<ListItem>()
                 .titleProperty(model.getFilteredValueTitle())
                 .comparator(Comparator.comparing(ListItem::getValue))
-                .valuePropertySupplier(ListItem::getValueProperty)
+                .valuePropertySupplier(ListItem::getValueAsStringProperty)
+                .includeForCsv(false)
                 .build();
         tableView.getColumns().add(valueColumn);
 
@@ -161,12 +213,13 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
                 .comparator(Comparator.comparing(ListItem::getTotalScore))
                 .sortType(TableColumn.SortType.DESCENDING)
                 .setCellFactory(getStarsCellFactory())
-                .valueSupplier(ListItem::getTotalScoreString)
+                .includeForCsv(false)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .isSortable(false)
                 .title(Res.get("user.reputation.table.columns.details"))
                 .setCellFactory(getDetailsCellFactory())
+                .includeForCsv(false)
                 .build());
     }
 
@@ -240,26 +293,34 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
     public static class ListItem {
         private final ReputationService reputationService;
         private final UserProfile userProfile;
-        private final Map<ReputationSource, Long> amountBySource = new HashMap<>();
+        private final Map<ReputationSource, Pair<Long, String>> valuePairBySource = new HashMap<>();
+        private final long lastSeen;
+        private final String formattedLastSeen;
         private ReputationScore reputationScore;
         private final String userName;
         private final ReputationListController controller;
         private final ToggleGroup toggleGroup;
+        private final UserProfileService userProfileService;
         private final String profileAgeString;
         private final long profileAge;
         private long totalScore;
         private String totalScoreString;
         private long value;
-        private final StringProperty valueProperty = new SimpleStringProperty();
+        private final StringProperty valueAsStringProperty = new SimpleStringProperty();
         private final Set<ReputationSource> reputationSources = new HashSet<>();
         private final Subscription selectedTogglePin;
 
-        ListItem(UserProfile userProfile, ReputationService reputationService, ReputationListController controller, ToggleGroup toggleGroup) {
+        ListItem(UserProfile userProfile,
+                 ReputationService reputationService,
+                 ReputationListController controller,
+                 ToggleGroup toggleGroup,
+                 UserProfileService userProfileService) {
             this.reputationService = reputationService;
             this.userProfile = userProfile;
             userName = userProfile.getUserName();
             this.controller = controller;
             this.toggleGroup = toggleGroup;
+            this.userProfileService = userProfileService;
             applyReputationScore(userProfile.getId());
             profileAge = reputationService.getProfileAgeService().getProfileAge(userProfile).orElse(0L);
             profileAgeString = reputationService.getProfileAgeService().getProfileAge(userProfile)
@@ -267,6 +328,9 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
                     .orElse(Res.get("data.na"));
 
             selectedTogglePin = EasyBind.subscribe(toggleGroup.selectedToggleProperty(), this::selectedToggleChanged);
+
+            lastSeen = System.currentTimeMillis() - userProfileService.findUserProfileLastRepublishDate(userProfile).orElse(0L);
+            formattedLastSeen = TimeFormatter.formatAge(lastSeen);
         }
 
         public void dispose() {
@@ -275,60 +339,78 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
 
         void applyReputationScore(String userProfileId) {
             Optional<ReputationSource> selectedReputationSource = controller.resolveReputationSource(toggleGroup.getSelectedToggle());
-            reputationScore = reputationService.findReputationScore(userProfileId).orElse(ReputationScore.NONE);
-            if (selectedReputationSource.isEmpty() || !amountBySource.containsKey(selectedReputationSource.get())) {
+            reputationScore = reputationService.getReputationScore(userProfileId);
+            if (selectedReputationSource.isEmpty() || !valuePairBySource.containsKey(selectedReputationSource.get())) {
                 totalScore = reputationScore.getTotalScore();
                 totalScoreString = String.valueOf(totalScore);
-                valueProperty.set(String.valueOf(totalScore));
+                valueAsStringProperty.set(String.valueOf(totalScore));
             } else {
-                value = amountBySource.get(selectedReputationSource.get());
-                switch (selectedReputationSource.get()) {
-                    case BURNED_BSQ:
-                    case BSQ_BOND:
-                        valueProperty.set(AmountFormatter.formatAmount(Coin.asBsqFromValue(value)));
-                        break;
-                    case PROFILE_AGE:
-                    case BISQ1_ACCOUNT_AGE:
-                    case BISQ1_SIGNED_ACCOUNT_AGE_WITNESS:
-                        valueProperty.set(TimeFormatter.formatAgeInDays(value));
-                        break;
-                }
+                Pair<Long, String> pair = valuePairBySource.get(selectedReputationSource.get());
+                value = pair.getFirst();
+                valueAsStringProperty.set(pair.getSecond());
             }
 
             updateAmountBySource();
         }
 
         private void updateAmountBySource() {
-            Optional.ofNullable(reputationService.getProofOfBurnService().getDataSetByHash().get(userProfile.getProofOfBurnKey()))
-                    .ifPresent(dataSet -> amountBySource.putIfAbsent(ReputationSource.BURNED_BSQ,
-                            dataSet.stream().mapToLong(AuthorizedProofOfBurnData::getAmount).sum()));
+            applyReputationSourceValue(ReputationSource.BURNED_BSQ,
+                    Optional.ofNullable(reputationService.getProofOfBurnService().getDataSetByHash().get(userProfile.getProofOfBurnKey()))
+                            .map(dataSet -> dataSet.stream().mapToLong(AuthorizedProofOfBurnData::getAmount).sum())
+                            .orElse(0L));
 
-            Optional.ofNullable(reputationService.getBondedReputationService().getDataSetByHash().get(userProfile.getBondedReputationKey()))
-                    .ifPresent(dataSet -> amountBySource.putIfAbsent(ReputationSource.BSQ_BOND,
-                            dataSet.stream().mapToLong(AuthorizedBondedReputationData::getAmount).sum()));
+            applyReputationSourceValue(ReputationSource.BSQ_BOND,
+                    Optional.ofNullable(reputationService.getBondedReputationService().getDataSetByHash().get(userProfile.getBondedReputationKey()))
+                            .map(dataSet -> dataSet.stream().mapToLong(AuthorizedBondedReputationData::getAmount).sum())
+                            .orElse(0L));
 
-            Optional.ofNullable(reputationService.getAccountAgeService().getDataSetByHash().get(userProfile.getAccountAgeKey()))
-                    .ifPresent(dataSet -> amountBySource.putIfAbsent(ReputationSource.BISQ1_ACCOUNT_AGE,
-                            dataSet.stream().mapToLong(AuthorizedAccountAgeData::getDate).sum()));
 
-            Optional.ofNullable(reputationService.getSignedWitnessService().getDataSetByHash().get(userProfile.getSignedWitnessKey()))
-                    .ifPresent(dataSet -> amountBySource.putIfAbsent(ReputationSource.BISQ1_SIGNED_ACCOUNT_AGE_WITNESS,
-                            dataSet.stream().mapToLong(AuthorizedSignedWitnessData::getWitnessSignDate).sum()));
+            applyReputationSourceValue(ReputationSource.BISQ1_ACCOUNT_AGE,
+                    Optional.ofNullable(reputationService.getAccountAgeService().getDataSetByHash().get(userProfile.getAccountAgeKey()))
+                            .map(dataSet -> dataSet.stream().mapToLong(AuthorizedAccountAgeData::getDate).sum())
+                            .orElse(0L));
 
-            Optional.ofNullable(reputationService.getProfileAgeService().getDataSetByHash().get(userProfile.getProfileAgeKey()))
-                    .ifPresent(dataSet -> amountBySource.putIfAbsent(ReputationSource.PROFILE_AGE,
-                            dataSet.stream().mapToLong(AuthorizedTimestampData::getDate).sum()));
+            applyReputationSourceValue(ReputationSource.BISQ1_SIGNED_ACCOUNT_AGE_WITNESS,
+                    Optional.ofNullable(reputationService.getSignedWitnessService().getDataSetByHash().get(userProfile.getSignedWitnessKey()))
+                            .map(dataSet -> dataSet.stream().mapToLong(AuthorizedSignedWitnessData::getWitnessSignDate).sum())
+                            .orElse(0L));
+
+            applyReputationSourceValue(ReputationSource.PROFILE_AGE,
+                    Optional.ofNullable(reputationService.getProfileAgeService().getDataSetByHash().get(userProfile.getProfileAgeKey()))
+                            .map(dataSet -> dataSet.stream().mapToLong(AuthorizedTimestampData::getDate).sum())
+                            .orElse(0L));
+        }
+
+        private void applyReputationSourceValue(ReputationSource reputationSource, long value) {
+            valuePairBySource.putIfAbsent(reputationSource, new Pair<>(value, formatReputationSourceValue(reputationSource, value)));
+        }
+
+        private String formatReputationSourceValue(ReputationSource reputationSource, long value) {
+            switch (reputationSource) {
+                case BURNED_BSQ:
+                case BSQ_BOND:
+                    return AmountFormatter.formatAmount(Coin.asBsqFromValue(value));
+                case PROFILE_AGE:
+                case BISQ1_ACCOUNT_AGE:
+                case BISQ1_SIGNED_ACCOUNT_AGE_WITNESS:
+                    return value > 0 ? TimeFormatter.formatAgeInDays(value) : "";
+                default:
+                    return String.valueOf(value);
+            }
         }
 
         private void selectedToggleChanged(Toggle selectedToggle) {
             Optional<ReputationSource> selectedReputationSource = controller.resolveReputationSource(selectedToggle);
-            reputationSources.addAll(amountBySource.entrySet().stream()
-                    .filter(e -> e.getValue() > 0)
+            reputationSources.addAll(getFilteredReputationSources(selectedReputationSource));
+            applyReputationScore(userProfile.getId());
+        }
+
+        private Set<ReputationSource> getFilteredReputationSources(Optional<ReputationSource> selectedReputationSource) {
+            return valuePairBySource.entrySet().stream()
+                    .filter(e -> e.getValue().getFirst() > 0)
                     .filter(e -> selectedReputationSource.isEmpty() || e.getKey().equals(selectedReputationSource.get()))
                     .map(Map.Entry::getKey)
-                    .collect(Collectors.toSet()));
-
-            applyReputationScore(userProfile.getId());
+                    .collect(Collectors.toSet());
         }
     }
 }

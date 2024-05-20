@@ -122,7 +122,7 @@ public class ReputationDetailsPopup extends VBox {
 
         MaterialTextField ranking = new MaterialTextField(Res.get("user.reputation.ranking"));
         ranking.setEditable(false);
-        ranking.setText(String.valueOf(reputationScore.getRanking()));
+        ranking.setText(reputationScore.getRankingAsString());
         ranking.setMaxWidth(400);
 
         HBox row2 = new HBox(20, totalScore, ranking);
@@ -197,7 +197,7 @@ public class ReputationDetailsPopup extends VBox {
             this.score = score;
             this.lockTime = optionalLockTime.orElse(0L);
             age = TimeFormatter.getAgeInDays(date);
-            sourceString = Res.get("user.reputation.source." + reputationSource.name());
+            sourceString = reputationSource.getDisplayString();
             ageString = TimeFormatter.formatAgeInDays(date);
             amountString = optionalAmount.map(amount -> AmountFormatter.formatAmountWithCode(Coin.fromValue(amount, "BSQ"))).orElse("-");
             scoreString = String.valueOf(score);

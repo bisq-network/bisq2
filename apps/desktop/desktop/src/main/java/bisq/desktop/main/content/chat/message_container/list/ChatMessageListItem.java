@@ -51,15 +51,9 @@ import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import com.google.common.base.Joiner;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;

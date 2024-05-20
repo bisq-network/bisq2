@@ -21,15 +21,13 @@ import javafx.collections.transformation.SortedList;
 import javafx.css.PseudoClass;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Hyperlink;
-import javafx.scene.control.Label;
-import javafx.scene.control.Toggle;
-import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -64,6 +62,10 @@ public class StandardTable<T> extends VBox {
     private final ChangeListener<Toggle> toggleChangeListener;
     private final ListChangeListener<T> listChangeListener;
     private Subscription searchTextPin;
+    @Setter
+    private Optional<List<String>> csvHeaders = Optional.empty();
+    @Setter
+    private Optional<List<List<String>>> csvData = Optional.empty();
 
     public StandardTable(SortedList<T> sortedList) {
         this(sortedList, Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
@@ -164,16 +166,8 @@ public class StandardTable<T> extends VBox {
         filterItems.ifPresent(filterItems -> filterItems.forEach(StandardTable.FilterMenuItem::initialize));
         searchTextHandler.ifPresent(stringConsumer -> searchTextPin = EasyBind.subscribe(searchBox.textProperty(), stringConsumer));
         exportHyperlink.setOnAction(ev -> {
-            List<String> headers = getBisqTableColumnStream()
-                    .map(BisqTableColumn::getHeaderForCsv)
-                    .collect(Collectors.toList());
-
-            List<List<String>> data = tableView.getItems().stream()
-                    .map(item -> getBisqTableColumnStream()
-                            .map(bisqTableColumn -> bisqTableColumn.resolveValueForCsv(item))
-                            .collect(Collectors.toList()))
-                    .collect(Collectors.toList());
-
+            List<String> headers = csvHeaders.orElse(buildCsvHeaders());
+            List<List<String>> data = csvData.orElse(buildCsvData());
             String csv = Csv.toCsv(headers, data);
             String initialFileName = headline.orElse("Bisq-table-data") + ".csv";
             FileChooserUtil.saveFile(tableView.getScene(), initialFileName)
@@ -202,14 +196,30 @@ public class StandardTable<T> extends VBox {
         searchBox.clear();
     }
 
-    private Stream<BisqTableColumn<T>> getBisqTableColumnStream() {
+    public Stream<BisqTableColumn<T>> getBisqTableColumnsForCsv() {
         return tableView.getColumns().stream()
                 .filter(column -> column instanceof BisqTableColumn)
                 .map(column -> {
                     @SuppressWarnings("unchecked")
                     BisqTableColumn<T> bisqTableColumn = (BisqTableColumn<T>) column;
                     return bisqTableColumn;
-                });
+                })
+                .filter(TableColumnBase::isVisible)
+                .filter(BisqTableColumn::isIncludeForCsv);
+    }
+
+    public List<String> buildCsvHeaders() {
+        return getBisqTableColumnsForCsv()
+                .map(BisqTableColumn::getHeaderForCsv)
+                .collect(Collectors.toList());
+    }
+
+    public List<List<String>> buildCsvData() {
+        return tableView.getItems().stream()
+                .map(item -> getBisqTableColumnsForCsv()
+                        .map(bisqTableColumn -> bisqTableColumn.resolveValueForCsv(item))
+                        .collect(Collectors.toList()))
+                .collect(Collectors.toList());
     }
 
     private void selectedFilterMenuItemChanged() {

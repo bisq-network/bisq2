@@ -84,7 +84,8 @@ public class ReputationListController implements Controller {
                     ReputationListView.ListItem listItem = new ReputationListView.ListItem(userProfile,
                             reputationService,
                             ReputationListController.this,
-                            model.getFilterMenuItemToggleGroup());
+                            model.getFilterMenuItemToggleGroup(),
+                            userProfileService);
                     model.getListItems().add(listItem);
                 });
             }
@@ -96,7 +97,8 @@ public class ReputationListController implements Controller {
                             .map(userProfile -> new ReputationListView.ListItem(userProfile,
                                     reputationService,
                                     ReputationListController.this,
-                                    model.getFilterMenuItemToggleGroup()))
+                                    model.getFilterMenuItemToggleGroup(),
+                                    userProfileService))
                             .collect(Collectors.toList());
                     model.getListItems().setAll(listItems);
                 });
@@ -180,10 +182,9 @@ public class ReputationListController implements Controller {
     }
 
     private void addFilterMenuItem(ReputationSource reputationSource) {
-        String title = Res.get("user.reputation.source." + reputationSource.name());
         StandardTable.FilterMenuItem<ReputationListView.ListItem> filterMenuItem = new StandardTable.FilterMenuItem<>(
                 model.getFilterMenuItemToggleGroup(),
-                title,
+                reputationSource.getDisplayString(),
                 Optional.of(reputationSource),
                 item -> item.getReputationSources().contains(reputationSource));
         model.getFilterItems().add(filterMenuItem);
