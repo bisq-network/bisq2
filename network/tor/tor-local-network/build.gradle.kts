@@ -10,5 +10,6 @@ application {
 
 dependencies {
     implementation(project(":tor-common"))
+    implementation(project(":tor"))
     implementation(libs.chimp.jtorctl)
 }

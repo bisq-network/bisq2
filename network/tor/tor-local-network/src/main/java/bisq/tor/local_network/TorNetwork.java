@@ -21,8 +21,10 @@ import bisq.common.util.NetworkUtils;
 import bisq.network.tor.common.torrc.DirectoryAuthority;
 import bisq.network.tor.common.torrc.TorrcConfigGenerator;
 import bisq.network.tor.common.torrc.TorrcFileGenerator;
+import bisq.tor.installer.TorInstaller;
 import bisq.tor.local_network.da.DirectoryAuthorityFactory;
 import bisq.tor.local_network.torrc.TestNetworkTorrcGeneratorFactory;
+import bisq.tor.process.LdPreload;
 
 import java.io.File;
 import java.io.IOException;
@@ -109,6 +111,7 @@ public class TorNetwork {
 
     public void start() throws IOException {
         generateTorrcFiles();
+        installTor();
         startProcesses();
     }
 
@@ -145,6 +148,12 @@ public class TorNetwork {
         }
     }
 
+    private void installTor() {
+        Path torBinaryDirPath = rootDataDir.resolve("tor_binary");
+        var torInstaller = new TorInstaller(torBinaryDirPath);
+        torInstaller.installIfNotUpToDate();
+    }
+
     private void startProcesses() throws IOException {
         for (TorNode directoryAuthority : directoryAuthorities) {
             Process process = createAndStartTorProcess(directoryAuthority);
@@ -163,10 +172,19 @@ public class TorNetwork {
     }
 
     private Process createAndStartTorProcess(TorNode torNode) throws IOException {
+        String absoluteTorBinaryPath = rootDataDir.resolve("tor_binary")
+                .resolve("tor")
+                .toAbsolutePath()
+                .toString();
         String absoluteTorrcPathAsString = torNode.getTorrcPath()
                 .toAbsolutePath()
                 .toString();
-        var processBuilder = new ProcessBuilder("tor", "-f", absoluteTorrcPathAsString);
+        var processBuilder = new ProcessBuilder(absoluteTorBinaryPath, "-f", absoluteTorrcPathAsString);
+
+        Map<String, String> environment = processBuilder.environment();
+        Path torDataDirPath = rootDataDir.resolve("tor_binary");
+        environment.put("LD_PRELOAD", LdPreload.computeLdPreloadVariable(torDataDirPath));
+
         processBuilder.redirectError(ProcessBuilder.Redirect.DISCARD);
         processBuilder.redirectOutput(ProcessBuilder.Redirect.DISCARD);
         return processBuilder.start();
