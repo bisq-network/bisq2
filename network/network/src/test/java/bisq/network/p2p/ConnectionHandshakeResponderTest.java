@@ -41,6 +41,7 @@ import java.nio.file.Path;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -139,11 +140,8 @@ public class ConnectionHandshakeResponderTest {
 
         when(banList.isBanned(Address.localHost(1234))).thenReturn(true);
 
-        Exception exception = assertThrows(ConnectionException.class, handshakeResponder::verifyAndBuildRespond);
-
-        assertThat(exception.getMessage())
-                .containsIgnoringCase("Peer")
-                .containsIgnoringCase("quarantine");
+        ConnectionException exception = assertThrows(ConnectionException.class, handshakeResponder::verifyAndBuildRespond);
+        assertEquals(exception.getReason(), ConnectionException.Reason.ADDRESS_BANNED);
     }
 
     @Test
