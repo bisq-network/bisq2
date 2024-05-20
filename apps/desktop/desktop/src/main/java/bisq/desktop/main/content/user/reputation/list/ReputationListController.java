@@ -84,7 +84,8 @@ public class ReputationListController implements Controller {
                     ReputationListView.ListItem listItem = new ReputationListView.ListItem(userProfile,
                             reputationService,
                             ReputationListController.this,
-                            model.getFilterMenuItemToggleGroup());
+                            model.getFilterMenuItemToggleGroup(),
+                            userProfileService);
                     model.getListItems().add(listItem);
                 });
             }
@@ -96,7 +97,8 @@ public class ReputationListController implements Controller {
                             .map(userProfile -> new ReputationListView.ListItem(userProfile,
                                     reputationService,
                                     ReputationListController.this,
-                                    model.getFilterMenuItemToggleGroup()))
+                                    model.getFilterMenuItemToggleGroup(),
+                                    userProfileService))
                             .collect(Collectors.toList());
                     model.getListItems().setAll(listItems);
                 });

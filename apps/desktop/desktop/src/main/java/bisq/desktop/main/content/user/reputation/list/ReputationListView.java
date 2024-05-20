@@ -31,6 +31,7 @@ import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.TimeFormatter;
 import bisq.user.profile.UserProfile;
+import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import bisq.user.reputation.ReputationSource;
@@ -110,10 +111,11 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
         });
 
         List<String> csvHeaders = standardTable.buildCsvHeaders();
-        csvHeaders.add(Res.get("user.reputation.ranking"));
+        csvHeaders.add(Res.get("user.reputation.ranking").toUpperCase());
         csvHeaders.addAll(Stream.of(ReputationSource.values())
                 .map(reputationSource -> reputationSource.getDisplayString().toUpperCase())
                 .collect(Collectors.toList()));
+        csvHeaders.add(Res.get("component.standardTable.csv.plainValue", Res.get("user.reputation.table.columns.lastSeen").toUpperCase()));
         csvHeaders.addAll(Stream.of(ReputationSource.values())
                 .map(reputationSource -> Res.get("component.standardTable.csv.plainValue", reputationSource.getDisplayString().toUpperCase()))
                 .collect(Collectors.toList()));
@@ -134,6 +136,10 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
                             .map(Map.Entry::getValue)
                             .map(Pair::getSecond)
                             .collect(Collectors.toList()));
+
+                    // Add lastSeen plain value
+                    cellDataInRow.add(String.valueOf(item.getLastSeen()));
+
                     // Add plain values (for better filter/sorting)
                     cellDataInRow.addAll(item.getValuePairBySource().entrySet().stream()
                             .sorted(Comparator.comparingLong(o -> o.getKey().ordinal()))
@@ -178,6 +184,12 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
                 .comparator(Comparator.comparing(ListItem::getProfileAge))
                 .valueSupplier(ListItem::getProfileAgeString)
                 .includeForCsv(false)
+                .build());
+        tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
+                .title(Res.get("user.reputation.table.columns.lastSeen"))
+                .left()
+                .comparator(Comparator.comparing(ListItem::getLastSeen))
+                .valueSupplier(ListItem::getFormattedLastSeen)
                 .build());
 
         scoreColumn = new BisqTableColumn.Builder<ListItem>()
@@ -282,10 +294,13 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
         private final ReputationService reputationService;
         private final UserProfile userProfile;
         private final Map<ReputationSource, Pair<Long, String>> valuePairBySource = new HashMap<>();
+        private final long lastSeen;
+        private final String formattedLastSeen;
         private ReputationScore reputationScore;
         private final String userName;
         private final ReputationListController controller;
         private final ToggleGroup toggleGroup;
+        private final UserProfileService userProfileService;
         private final String profileAgeString;
         private final long profileAge;
         private long totalScore;
@@ -295,12 +310,17 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
         private final Set<ReputationSource> reputationSources = new HashSet<>();
         private final Subscription selectedTogglePin;
 
-        ListItem(UserProfile userProfile, ReputationService reputationService, ReputationListController controller, ToggleGroup toggleGroup) {
+        ListItem(UserProfile userProfile,
+                 ReputationService reputationService,
+                 ReputationListController controller,
+                 ToggleGroup toggleGroup,
+                 UserProfileService userProfileService) {
             this.reputationService = reputationService;
             this.userProfile = userProfile;
             userName = userProfile.getUserName();
             this.controller = controller;
             this.toggleGroup = toggleGroup;
+            this.userProfileService = userProfileService;
             applyReputationScore(userProfile.getId());
             profileAge = reputationService.getProfileAgeService().getProfileAge(userProfile).orElse(0L);
             profileAgeString = reputationService.getProfileAgeService().getProfileAge(userProfile)
@@ -308,6 +328,9 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
                     .orElse(Res.get("data.na"));
 
             selectedTogglePin = EasyBind.subscribe(toggleGroup.selectedToggleProperty(), this::selectedToggleChanged);
+
+            lastSeen = System.currentTimeMillis() - userProfileService.findUserProfileLastRepublishDate(userProfile).orElse(0L);
+            formattedLastSeen = TimeFormatter.formatAge(lastSeen);
         }
 
         public void dispose() {

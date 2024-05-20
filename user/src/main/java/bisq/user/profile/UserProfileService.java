@@ -139,6 +139,11 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
         }
     }
 
+    public Optional<Long> findUserProfileLastRepublishDate(UserProfile userProfile) {
+        return networkService.findCreationDate(userProfile,
+                distributedData -> distributedData instanceof UserProfile && distributedData.equals(userProfile));
+    }
+
     private void processUserProfileAdded(UserProfile userProfile) {
         Optional<UserProfile> optionalUserProfile = findUserProfile(userProfile.getId());
         if (optionalUserProfile.isEmpty() || !optionalUserProfile.get().equals(userProfile)) {

@@ -48,6 +48,8 @@ import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.append.AppendOnlyData;
+import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedSequentialData;
 import bisq.network.p2p.services.data.storage.auth.DefaultAuthenticatedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
@@ -72,6 +74,7 @@ import java.security.PublicKey;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Predicate;
 
 import static bisq.network.common.TransportType.TOR;
 import static bisq.network.p2p.services.data.DataService.Listener;
@@ -296,6 +299,17 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         checkArgument(dataService.isPresent(), "DataService must be supported when removeData is called.");
         DefaultAuthenticatedData authenticatedData = new DefaultAuthenticatedData(distributedData);
         return dataService.get().removeAuthenticatedData(authenticatedData, ownerKeyPair);
+    }
+
+    public Optional<Long> findCreationDate(DistributedData distributedData, Predicate<DistributedData> predicate) {
+        return dataService.flatMap(dataService -> dataService.getStorageService().getOrCreateAuthenticatedDataStore(distributedData.getClassName()).join()
+                .getPersistableStore().getMap().values().stream()
+                .filter(authenticatedDataRequest -> authenticatedDataRequest instanceof AddAuthenticatedDataRequest)
+                .map(authenticatedDataRequest -> (AddAuthenticatedDataRequest) authenticatedDataRequest)
+                .map(AddAuthenticatedDataRequest::getAuthenticatedSequentialData)
+                .filter(sequentialData -> predicate.test(sequentialData.getAuthenticatedData().getDistributedData()))
+                .map(AuthenticatedSequentialData::getCreated)
+                .findAny());
     }
 
 

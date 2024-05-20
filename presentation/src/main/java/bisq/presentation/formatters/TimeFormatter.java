@@ -49,6 +49,24 @@ public class TimeFormatter {
         return String.format("%02d:%02d", min, sec);
     }
 
+    public static String formatAge(long duration) {
+        long sec = duration / 1000;
+        long min = sec / 60;
+        sec = sec % 60;
+        long hours = min / 60;
+        min = min % 60;
+        long days = hours / 24;
+        hours = hours % 24;
+        if (days > 0) {
+            String dayString = Res.getAsSingularOrPlural("temporal.day", days);
+            return String.format("%s, %d hours, %d min, %d sec", dayString, hours, min, sec);
+        } else if (hours > 0) {
+            return String.format("%d hours, %d min, %d sec", hours, min, sec);
+        } else {
+            return String.format("%d min, %d sec", min, sec);
+        }
+    }
+
     public static String getAgeInSeconds(long duration) {
         long sec = duration / 1000;
         return sec + " sec";
