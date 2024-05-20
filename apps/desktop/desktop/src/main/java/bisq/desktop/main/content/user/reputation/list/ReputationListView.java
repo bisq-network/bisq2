@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.user.reputation.list;
 
 import bisq.common.monetary.Coin;
+import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.table.BisqTableColumn;
@@ -64,7 +65,8 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
         standardTable = new StandardTable<>(model.getSortedList(),
                 Res.get("user.reputation.table.headline"),
                 model.getFilterItems(),
-                model.getFilterMenuItemToggleGroup());
+                model.getFilterMenuItemToggleGroup(),
+                this::applySearchPredicate);
         tableView = standardTable.getTableView();
         configTableView();
 
@@ -74,6 +76,7 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
     @Override
     protected void onViewAttached() {
         standardTable.initialize();
+        standardTable.resetSearch();
         valueColumn.visibleProperty().bind(model.getValueColumnVisible());
         userProfileIdOfScoreUpdatePin = EasyBind.subscribe(model.getUserProfileIdOfScoreUpdate(), profileId -> {
             if (profileId != null) {
@@ -113,12 +116,23 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
         selectedReputationSourcePin.unsubscribe();
     }
 
+    private void applySearchPredicate(String searchText) {
+        model.getFilteredList().setPredicate(item ->
+                StringUtils.isEmpty(searchText) ||
+                        item.getUserName().contains(searchText) ||
+                        item.getUserProfile().getNym().contains(searchText) ||
+                        item.getTotalScoreString().contains(searchText) ||
+                        item.getProfileAgeString().contains(searchText) ||
+                        item.getValueProperty().get().contains(searchText));
+    }
+
     private void configTableView() {
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("user.reputation.table.columns.userProfile"))
                 .left()
                 .comparator(Comparator.comparing(ListItem::getUserName))
                 .setCellFactory(getUserProfileCellFactory())
+                .valueSupplier(ListItem::getUserName)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("user.reputation.table.columns.profileAge"))
@@ -147,6 +161,7 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
                 .comparator(Comparator.comparing(ListItem::getTotalScore))
                 .sortType(TableColumn.SortType.DESCENDING)
                 .setCellFactory(getStarsCellFactory())
+                .valueSupplier(ListItem::getTotalScoreString)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .isSortable(false)

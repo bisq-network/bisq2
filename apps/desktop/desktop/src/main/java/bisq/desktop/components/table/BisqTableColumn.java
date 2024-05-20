@@ -20,6 +20,7 @@ package bisq.desktop.components.table;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.controlsfx.control.PopOver;
 import bisq.desktop.components.overlay.PopOverWrapper;
+import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -38,7 +39,6 @@ import java.util.function.Function;
 
 @Slf4j
 public class BisqTableColumn<S> extends TableColumn<S, S> {
-
     public enum DefaultCellFactory {
         TEXT,
         TEXT_INPUT,
@@ -65,7 +65,6 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
     };
     private BiConsumer<S, TextField> updateItemWithInputTextFieldHandler = (item, field) -> {
     };
-    private final Optional<Callback<TableColumn<S, S>, TableCell<S, S>>> cellFactory = Optional.empty();
 
     public static class Builder<S> {
         private Optional<String> title = Optional.empty();
@@ -289,6 +288,26 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
         }
     }
 
+    public String getHeaderForCsv() {
+        return titleLabel.getText();
+    }
+
+    // If custom cellFactories are used we need to set any of the value supplier methods in the builder for providing
+    // the data for csv export
+    public String resolveValueForCsv(S item) {
+        if (value.isPresent()) {
+            return value.get();
+        } else if (valueSupplier.isPresent()) {
+            return valueSupplier.get().apply(item);
+        } else if (valuePropertySupplier.isPresent()) {
+            return valuePropertySupplier.get().apply(item).get();
+        } else if (valuePropertyBiDirBindingSupplier.isPresent()) {
+            return valuePropertyBiDirBindingSupplier.get().apply(item).get();
+        } else {
+            return Res.get("data.na");
+        }
+    }
+
     public void applyTitle(String title) {
         titleLabel.setText(title);
         setGraphic(titleLabel);
@@ -340,7 +359,6 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                     @Override
                     public TableCell<S, S> call(TableColumn<S, S> column) {
                         return new TableCell<>() {
-
                             @Override
                             public void updateItem(final S item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -382,8 +400,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
         setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<S, S> call(TableColumn<S,
-                            S> column) {
+                    public TableCell<S, S> call(TableColumn<S, S> column) {
                         return new TableCell<>() {
 
                             private final TextField textField = new TextField();
