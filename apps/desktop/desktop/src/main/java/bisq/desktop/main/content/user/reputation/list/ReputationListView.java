@@ -132,6 +132,7 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
                 .left()
                 .comparator(Comparator.comparing(ListItem::getUserName))
                 .setCellFactory(getUserProfileCellFactory())
+                .valueSupplier(ListItem::getUserName)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("user.reputation.table.columns.profileAge"))
@@ -160,6 +161,7 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
                 .comparator(Comparator.comparing(ListItem::getTotalScore))
                 .sortType(TableColumn.SortType.DESCENDING)
                 .setCellFactory(getStarsCellFactory())
+                .valueSupplier(ListItem::getTotalScoreString)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ListItem>()
                 .isSortable(false)

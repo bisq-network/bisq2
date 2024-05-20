@@ -93,12 +93,9 @@ public class UtilsController implements Controller {
         if (StringUtils.isEmpty(path)) {
             path = OsUtils.getHomeDirectory();
         }
-        File directory = FileChooserUtil.chooseDirectory(getView().getRoot().getScene(),
-                path,
-                Res.get("settings.utils.backup.selectLocation"));
-        if (directory != null) {
-            model.getBackupLocation().set(directory.getAbsolutePath());
-        }
+        String title = Res.get("settings.utils.backup.selectLocation");
+        FileChooserUtil.chooseDirectory(getView().getRoot().getScene(), path, title)
+                .ifPresent(directory -> model.getBackupLocation().set(directory.getAbsolutePath()));
     }
 
     void onBackup() {
