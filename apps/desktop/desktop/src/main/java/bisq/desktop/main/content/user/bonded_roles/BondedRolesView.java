@@ -107,8 +107,9 @@ public abstract class BondedRolesView<M extends BondedRolesModel, C extends Bond
                         userName.setTooltip(null);
                         userName.setStyle("-fx-text-fill: -fx-light-text-color;");
                     }
-                    userProfileIcon.setLastSeen(item.getFormattedLastSeen());
-                    item.getUserProfile().ifPresent(userProfileIcon::setUserProfile);
+
+                    item.getUserProfile().ifPresent(userProfile ->
+                            userProfileIcon.applyData(userProfile, item.getLastSeenAsString(), item.getLastSeen()));
                     setGraphic(hBox);
                 } else {
                     setGraphic(null);

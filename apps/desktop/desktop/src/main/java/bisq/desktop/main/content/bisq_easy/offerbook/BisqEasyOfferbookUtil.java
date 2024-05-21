@@ -201,8 +201,7 @@ public class BisqEasyOfferbookUtil {
                 if (item != null && !empty) {
                     userNameLabel.setText(item.getUserNickname());
                     reputationScoreDisplay.setReputationScore(item.getReputationScore());
-                    userProfileIcon.setLastSeen(item.getFormattedLastSeen());
-                    userProfileIcon.setUserProfile(item.getUserProfile());
+                    userProfileIcon.applyData(item.getUserProfile(), item.getLastSeenAsString(), item.getLastSeen());
                     setGraphic(userProfileBox);
                 } else {
                     setGraphic(null);

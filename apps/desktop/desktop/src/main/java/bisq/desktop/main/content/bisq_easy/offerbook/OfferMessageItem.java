@@ -53,7 +53,7 @@ public class OfferMessageItem {
     private final long totalScore;
     private double priceSpecAsPercent;
     private final long lastSeen;
-    private final String formattedLastSeen;
+    private final String lastSeenAsString;
     private Pin marketPriceByCurrencyMapPin;
 
     OfferMessageItem(BisqEasyOfferbookMessage bisqEasyOfferbookMessage,
@@ -72,7 +72,7 @@ public class OfferMessageItem {
         minMaxAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, bisqEasyOffer, false);
 
         lastSeen = userProfileService.getLastSeen(userProfile);
-        formattedLastSeen = TimeFormatter.formatAge(lastSeen);
+        lastSeenAsString = TimeFormatter.formatAge(lastSeen);
 
         initialize();
     }

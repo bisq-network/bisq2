@@ -291,9 +291,8 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
                                                ListItem item,
                                                boolean isRequester,
                                                ListItem.Trader trader) {
-        UserProfileDisplay userProfileDisplay = new UserProfileDisplay(trader.getUserProfile());
-        userProfileDisplay.setLastSeen(trader.getFormattedLastSeen());
-        userProfileDisplay.setReputationScore(trader.getReputationScore());
+        UserProfileDisplay userProfileDisplay = new UserProfileDisplay();
+        userProfileDisplay.applyData(trader.getUserProfile(), trader.getLastSeenAsString(), trader.getLastSeen());
         if (isRequester) {
             userProfileDisplay.getStyleClass().add("mediator-table-requester");
         }
@@ -405,16 +404,17 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
         }
 
         @Getter
-        @EqualsAndHashCode
+        @EqualsAndHashCode(onlyExplicitlyIncluded = true)
         static class Trader {
-            private final String userName;
+            @EqualsAndHashCode.Include
             private final UserProfile userProfile;
+            private final String userName;
             private final String totalReputationScoreString;
             private final String profileAgeString;
             private final ReputationScore reputationScore;
             private final long totalReputationScore, profileAge;
             private final long lastSeen;
-            private final String formattedLastSeen;
+            private final String lastSeenAsString;
 
             Trader(UserProfile userProfile, ReputationService reputationService, UserProfileService userProfileService) {
                 this.userProfile = userProfile;
@@ -431,7 +431,7 @@ public class MediatorView extends View<ScrollPane, MediatorModel, MediatorContro
                         .orElse(Res.get("data.na"));
 
                 lastSeen = userProfileService.getLastSeen(userProfile);
-                formattedLastSeen = TimeFormatter.formatAge(lastSeen);
+                lastSeenAsString = TimeFormatter.formatAge(lastSeen);
             }
         }
     }

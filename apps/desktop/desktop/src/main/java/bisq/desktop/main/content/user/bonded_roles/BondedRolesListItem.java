@@ -42,26 +42,29 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
-@EqualsAndHashCode
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Getter
 @ToString
 public class BondedRolesListItem {
+    @EqualsAndHashCode.Include
     private final Optional<UserProfile> userProfile;
+    @EqualsAndHashCode.Include
     private final String roleTypeString;
-    private final String bondUserName;
-    private final String signature;
-    private final String userProfileId;
-    private final String userName;
+    @EqualsAndHashCode.Include
     private final BondedRoleType bondedRoleType;
+    @EqualsAndHashCode.Include
+    private final String bondUserName;
+    private final String userProfileId;
+    private final String signature;
+    private final String userName;
     private final String address;
     private final String addressInfoJson;
-    @EqualsAndHashCode.Exclude
     private final String isBanned;
     private final boolean staticPublicKeysProvided;
     private final boolean isRootNode;
     private final boolean isRootSeedNode;
     private final long lastSeen;
-    private final String formattedLastSeen;
+    private final String lastSeenAsString;
 
     public BondedRolesListItem(BondedRole bondedRole, UserService userService, NetworkService networkService) {
         AuthorizedBondedRole authorizedBondedRoleData = bondedRole.getAuthorizedBondedRole();
@@ -76,7 +79,7 @@ public class BondedRolesListItem {
         staticPublicKeysProvided = authorizedBondedRoleData.staticPublicKeysProvided();
 
         lastSeen = userProfile.map(userProfileService::getLastSeen).orElse(-1L);
-        formattedLastSeen = TimeFormatter.formatAge(lastSeen);
+        lastSeenAsString = TimeFormatter.formatAge(lastSeen);
 
         Optional<AddressByTransportTypeMap> addressByTransportTypeMap = authorizedBondedRoleData.getAddressByTransportTypeMap();
         if (addressByTransportTypeMap.isPresent()) {

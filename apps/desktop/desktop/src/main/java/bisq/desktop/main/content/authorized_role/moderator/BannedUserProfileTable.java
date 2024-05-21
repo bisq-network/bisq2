@@ -31,11 +31,13 @@ import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.i18n.Res;
 import bisq.network.SendMessageResult;
+import bisq.presentation.formatters.TimeFormatter;
 import bisq.support.moderator.ModeratorService;
 import bisq.support.moderator.ReportToModeratorMessage;
 import bisq.user.banned.BannedUserProfileData;
 import bisq.user.banned.BannedUserService;
 import bisq.user.profile.UserProfile;
+import bisq.user.profile.UserProfileService;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Pos;
@@ -74,10 +76,12 @@ public class BannedUserProfileTable {
         private final Model model;
         private final BannedUserService bannedUserService;
         private final ModeratorService moderatorService;
+        private final UserProfileService userProfileService;
         private Pin bannedUserListItemsPin;
 
         private Controller(ServiceProvider serviceProvider) {
             bannedUserService = serviceProvider.getUserService().getBannedUserService();
+            userProfileService = serviceProvider.getUserService().getUserProfileService();
             moderatorService = serviceProvider.getSupportService().getModeratorService();
 
             model = new Model();
@@ -87,7 +91,7 @@ public class BannedUserProfileTable {
         @Override
         public void onActivate() {
             bannedUserListItemsPin = FxBindings.<BannedUserProfileData, View.ListItem>bind(model.getListItems())
-                    .map(View.ListItem::new)
+                    .map(bannedUserProfileData -> new View.ListItem(bannedUserProfileData, userProfileService))
                     .to(bannedUserService.getBannedUserProfileDataSet());
         }
 
@@ -221,7 +225,7 @@ public class BannedUserProfileTable {
 
                     if (item != null && !empty) {
                         userName.setText(item.getUserName());
-                        userProfileIcon.setUserProfile(item.getUserProfile());
+                        userProfileIcon.applyData(item.getUserProfile(), item.getLastSeenAsString(), item.getLastSeen());
                         setGraphic(hBox);
                     } else {
                         setGraphic(null);
@@ -269,16 +273,22 @@ public class BannedUserProfileTable {
         }
 
         @Getter
-        @EqualsAndHashCode
+        @EqualsAndHashCode(onlyExplicitlyIncluded = true)
         private static class ListItem {
+            @EqualsAndHashCode.Include
             private final BannedUserProfileData bannedUserProfileData;
+            @EqualsAndHashCode.Include
             private final UserProfile userProfile;
             private final String userName;
+            private final long lastSeen;
+            private final String lastSeenAsString;
 
-            private ListItem(BannedUserProfileData bannedUserProfileData) {
+            private ListItem(BannedUserProfileData bannedUserProfileData, UserProfileService userProfileService) {
                 this.bannedUserProfileData = bannedUserProfileData;
                 userProfile = bannedUserProfileData.getUserProfile();
                 userName = userProfile.getUserName();
+                lastSeen = userProfileService.getLastSeen(userProfile);
+                lastSeenAsString = TimeFormatter.formatAge(lastSeen);
             }
         }
     }

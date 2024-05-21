@@ -21,69 +21,112 @@ import bisq.desktop.components.cathash.CatHash;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.i18n.Res;
 import bisq.user.profile.UserProfile;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.StackPane;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.util.concurrent.TimeUnit;
 
 import static bisq.desktop.main.content.components.UserProfileDisplay.DEFAULT_ICON_SIZE;
 
 @Slf4j
-public class UserProfileIcon extends ImageView {
+public class UserProfileIcon extends StackPane {
     @Getter
-    private BisqTooltip tooltip;
+    private final BisqTooltip tooltip = new BisqTooltip();
     @Nullable
-    private String lastSeen;
+    private String lastSeenAsString;
     @Nullable
     @Getter
     private String tooltipText;
     @Nullable
     private UserProfile userProfile;
+    private final ImageView userProfileIcon = new ImageView();
+    private final ImageView lastSeenDot = new ImageView();
+    private double size;
+    private long lastSeen;
 
     public UserProfileIcon() {
         this(DEFAULT_ICON_SIZE);
     }
 
     public UserProfileIcon(double size) {
+        setAlignment(Pos.CENTER);
+        getChildren().addAll(userProfileIcon, lastSeenDot);
         setSize(size);
     }
 
-    public void setLastSeen(@Nullable String lastSeen) {
+    public void applyData(@Nullable UserProfile userProfile, @Nullable String lastSeenAsString, long lastSeen) {
+        this.lastSeenAsString = lastSeenAsString;
+        setLastSeen(lastSeen);
+        setUserProfile(userProfile);
+    }
+
+    public void setLastSeen(long lastSeen) {
         this.lastSeen = lastSeen;
+        updateLastSeenDot();
+    }
+
+    public void setLastSeenAsString(@Nullable String lastSeenAsString) {
+        this.lastSeenAsString = lastSeenAsString;
         applyTooltipText();
     }
 
     public void setUserProfile(@Nullable UserProfile userProfile) {
         this.userProfile = userProfile;
         if (userProfile != null) {
-            tooltip = new BisqTooltip();
             applyTooltipText();
             tooltip.getStyleClass().add("medium-dark-tooltip");
             Tooltip.install(this, tooltip);
-            setImage(CatHash.getImage(userProfile));
+            userProfileIcon.setImage(CatHash.getImage(userProfile));
         } else {
-            setImage(null);
-            if (tooltip != null) {
-                Tooltip.uninstall(this, tooltip);
-            }
+            releaseResources();
         }
     }
 
     public void releaseResources() {
-        setImage(null);
+        userProfileIcon.setImage(null);
+        if (tooltip != null) {
+            Tooltip.uninstall(this, tooltip);
+        }
     }
 
     public void setSize(double size) {
-        setFitWidth(size);
-        setFitHeight(size);
+        this.size = size;
+        userProfileIcon.setFitWidth(size);
+        userProfileIcon.setFitHeight(size);
+        updateLastSeenDot();
+
+        // We want to keep it centered, so we apply it to both sides with inverted numbers
+        double adjustMent = size * 0.9;
+        double right = -adjustMent / 2;
+        double bottom = -adjustMent / 2;
+        double top = adjustMent / 2;
+        double left = adjustMent / 2;
+        StackPane.setMargin(lastSeenDot, new Insets(top, right, bottom, left));
+    }
+
+    private void updateLastSeenDot() {
+        boolean wasSeenRecently = lastSeen > 0 && lastSeen < TimeUnit.HOURS.toMillis(6);
+        lastSeenDot.setManaged(wasSeenRecently);
+        lastSeenDot.setVisible(wasSeenRecently);
+        if (wasSeenRecently) {
+            boolean wasSeenMostRecently = lastSeen < TimeUnit.HOURS.toMillis(3);
+            String color = wasSeenMostRecently ? "green" : "yellow";
+            String sizePostFix = size < 60 ? "-small-dot" : "-dot";
+            String id = color + sizePostFix;
+            lastSeenDot.setId(id);
+        }
     }
 
     private void applyTooltipText() {
         if (userProfile != null && tooltip != null) {
             String tooltipString = userProfile.getTooltipString();
-            String lastSeenString = lastSeen != null ? "\n" + Res.get("user.userProfile.lastSeenAgo", lastSeen) : "";
+            String lastSeenString = lastSeenAsString != null ? "\n" + Res.get("user.userProfile.lastSeenAgo", lastSeenAsString) : "";
             tooltipText = tooltipString + lastSeenString;
             tooltip.setText(tooltipText);
         }

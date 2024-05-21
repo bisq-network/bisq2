@@ -106,7 +106,9 @@ public class TradeDataHeader {
 
                 UserProfile peerUserProfile = channel.getPeer();
                 model.getReputationScore().set(reputationService.findReputationScore(peerUserProfile).orElse(ReputationScore.NONE));
-                model.setPeerLastSeen(TimeFormatter.formatAge(userProfileService.getLastSeen(peerUserProfile)));
+                long lastSeen = userProfileService.getLastSeen(peerUserProfile);
+                model.setPeerLastSeen(lastSeen);
+                model.setPeerLastSeenAsString(TimeFormatter.formatAge(lastSeen));
                 model.getPeersUserProfile().set(peerUserProfile);
                 model.getTradeId().set(bisqEasyTrade.getShortId());
 
@@ -160,7 +162,9 @@ public class TradeDataHeader {
         private final StringProperty rightCode = new SimpleStringProperty();
         private final StringProperty tradeId = new SimpleStringProperty();
         @Setter
-        private String peerLastSeen;
+        private String peerLastSeenAsString;
+        @Setter
+        private long peerLastSeen;
 
         public Model(String peerDescription) {
             this.peerDescription = peerDescription;
@@ -221,8 +225,7 @@ public class TradeDataHeader {
             tradeId.getSecond().textProperty().bind(model.getTradeId());
 
             userProfilePin = EasyBind.subscribe(model.getPeersUserProfile(), peersUserProfile -> {
-                peersUserProfileDisplay.setLastSeen(model.getPeerLastSeen());
-                peersUserProfileDisplay.setUserProfile(peersUserProfile);
+                peersUserProfileDisplay.applyData(peersUserProfile, model.getPeerLastSeenAsString(), model.getPeerLastSeen());
             });
             reputationScorePin = EasyBind.subscribe(model.getReputationScore(), peersUserProfileDisplay::setReputationScore);
         }
