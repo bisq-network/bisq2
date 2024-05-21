@@ -87,7 +87,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private final StringProperty messageDeliveryStatusTooltip = new SimpleStringProperty();
     private final ObjectProperty<AwesomeIcon> messageDeliveryStatusIcon = new SimpleObjectProperty<>();
     private final long lastSeen;
-    private final String formattedLastSeen;
+    private final String lastSeenAsString;
     @Nullable
     private MessageDeliveryStatus messageDeliveryStatus;
     @Nullable
@@ -150,7 +150,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         }
 
         lastSeen = senderUserProfile.map(userProfileService::getLastSeen).orElse(-1L);
-        formattedLastSeen = TimeFormatter.formatAge(lastSeen);
+        lastSeenAsString = TimeFormatter.formatAge(lastSeen);
 
         mapPins.add(networkService.getMessageDeliveryStatusByMessageId().addObserver(new HashMapObserver<>() {
             @Override

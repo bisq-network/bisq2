@@ -101,7 +101,7 @@ public class PeerTextMessageBox extends BubbleMessageBox {
         // Message
         quotedMessageVBox.setId("chat-message-quote-box-peer-msg");
         message.setAlignment(Pos.CENTER_LEFT);
-        message.maxWidthProperty().bind(list.widthProperty().subtract(140));//165
+        message.maxWidthProperty().bind(list.widthProperty().subtract(140));
         VBox messageVBox = new VBox(quotedMessageVBox, message);
         HBox.setMargin(messageVBox, new Insets(0, 0, 0, -10));
 

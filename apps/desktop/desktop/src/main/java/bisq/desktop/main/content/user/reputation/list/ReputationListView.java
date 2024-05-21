@@ -189,7 +189,7 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
                 .title(Res.get("user.reputation.table.columns.lastSeen"))
                 .left()
                 .comparator(Comparator.comparing(ListItem::getLastSeen))
-                .valueSupplier(ListItem::getFormattedLastSeen)
+                .valueSupplier(ListItem::getLastSeenAsString)
                 .build());
 
         scoreColumn = new BisqTableColumn.Builder<ListItem>()
@@ -240,8 +240,7 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
 
                 if (item != null && !empty) {
                     userName.setText(item.getUserName());
-                    userProfileIcon.setLastSeen(item.getFormattedLastSeen());
-                    userProfileIcon.setUserProfile(item.getUserProfile());
+                    userProfileIcon.applyData(item.getUserProfile(), item.getLastSeenAsString(), item.getLastSeen());
                     setGraphic(hBox);
                 } else {
                     setGraphic(null);
@@ -288,27 +287,30 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
         };
     }
 
-    @EqualsAndHashCode
+    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     @Getter
     @ToString
     public static class ListItem {
-        private final ReputationService reputationService;
+        @EqualsAndHashCode.Include
         private final UserProfile userProfile;
-        private final Map<ReputationSource, Pair<Long, String>> valuePairBySource = new HashMap<>();
-        private final long lastSeen;
-        private final String formattedLastSeen;
-        private ReputationScore reputationScore;
         private final String userName;
-        private final ReputationListController controller;
-        private final ToggleGroup toggleGroup;
-        private final UserProfileService userProfileService;
+        private ReputationScore reputationScore;
         private final String profileAgeString;
         private final long profileAge;
         private long totalScore;
         private String totalScoreString;
+        private final Map<ReputationSource, Pair<Long, String>> valuePairBySource = new HashMap<>();
         private long value;
         private final StringProperty valueAsStringProperty = new SimpleStringProperty();
         private final Set<ReputationSource> reputationSources = new HashSet<>();
+        private final long lastSeen;
+        private final String lastSeenAsString;
+
+        private final ToggleGroup toggleGroup;
+        private final ReputationListController controller;
+        private final ReputationService reputationService;
+        private final UserProfileService userProfileService;
+
         private final Subscription selectedTogglePin;
 
         ListItem(UserProfile userProfile,
@@ -331,7 +333,7 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
             selectedTogglePin = EasyBind.subscribe(toggleGroup.selectedToggleProperty(), this::selectedToggleChanged);
 
             lastSeen = userProfileService.getLastSeen(userProfile);
-            formattedLastSeen = TimeFormatter.formatAge(lastSeen);
+            lastSeenAsString = TimeFormatter.formatAge(lastSeen);
         }
 
         public void dispose() {

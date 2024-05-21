@@ -194,8 +194,7 @@ public class MediationCaseHeader {
         protected void onViewAttached() {
             mediationCaseListItemPin = EasyBind.subscribe(model.getMediationCaseListItem(), item -> {
                 if (item != null) {
-                    makerProfileDisplay.setLastSeen(item.getMaker().getFormattedLastSeen());
-                    makerProfileDisplay.setUserProfile(item.getMaker().getUserProfile());
+                    makerProfileDisplay.applyData(item.getMaker().getUserProfile(), item.getMaker().getLastSeenAsString(), item.getMaker().getLastSeen());
                     makerProfileDisplay.setReputationScore(item.getMaker().getReputationScore());
                     boolean isMakerRequester = item.isMakerRequester();
                     if (isMakerRequester) {
@@ -208,8 +207,7 @@ public class MediationCaseHeader {
 
                     direction.setText(item.getDirection());
 
-                    takerProfileDisplay.setLastSeen(item.getTaker().getFormattedLastSeen());
-                    takerProfileDisplay.setUserProfile(item.getTaker().getUserProfile());
+                    takerProfileDisplay.applyData(item.getTaker().getUserProfile(), item.getTaker().getLastSeenAsString(), item.getTaker().getLastSeen());
                     takerProfileDisplay.setReputationScore(item.getTaker().getReputationScore());
                     if (!isMakerRequester) {
                         takerProfileDisplay.getStyleClass().add("mediator-header-requester");
@@ -222,13 +220,11 @@ public class MediationCaseHeader {
 
                     tradeId.getSecond().setText(item.getShortTradeId());
                 } else {
-                    takerProfileDisplay.setLastSeen(null);
-                    makerProfileDisplay.setUserProfile(null);
+                    makerProfileDisplay.applyData(null, null, -1);
                     makerProfileDisplay.setReputationScore(null);
                     makerProfileDisplay.getTooltip().setText(null);
                     direction.setText(null);
-                    takerProfileDisplay.setLastSeen(null);
-                    takerProfileDisplay.setUserProfile(null);
+                    takerProfileDisplay.applyData(null, null, -1);
                     takerProfileDisplay.setReputationScore(null);
                     takerProfileDisplay.getTooltip().setText(null);
                     tradeId.getSecond().setText(null);

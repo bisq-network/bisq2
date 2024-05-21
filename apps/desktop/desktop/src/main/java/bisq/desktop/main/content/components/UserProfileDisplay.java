@@ -72,9 +72,22 @@ public class UserProfileDisplay extends HBox {
         }
     }
 
-    public void setLastSeen(String lastSeen) {
-        userProfileIcon.setLastSeen(lastSeen);
+    public void applyData(@Nullable UserProfile userProfile, @Nullable String lastSeenAsString, long lastSeen) {
+        if (userProfile != null) {
+            this.userProfile = userProfile;
+            userName.setText(userProfile.getUserName());
+        }
+        userProfileIcon.applyData(userProfile, lastSeenAsString, lastSeen);
         applyTooltip();
+    }
+
+    public void setLastSeenAsString(String lastSeen) {
+        userProfileIcon.setLastSeenAsString(lastSeen);
+        applyTooltip();
+    }
+
+    public void setLastSeen(long lastSeen) {
+        userProfileIcon.setLastSeen(lastSeen);
     }
 
     public void setUserProfile(@Nullable UserProfile userProfile) {
@@ -103,8 +116,7 @@ public class UserProfileDisplay extends HBox {
     }
 
     public void setIconSize(double size) {
-        userProfileIcon.setFitWidth(size);
-        userProfileIcon.setFitHeight(size);
+        userProfileIcon.setSize(size);
     }
 
     public void setReputationScore(@Nullable ReputationScore reputationScore) {

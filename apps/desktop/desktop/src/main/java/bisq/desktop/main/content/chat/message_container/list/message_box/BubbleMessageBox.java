@@ -118,8 +118,7 @@ public abstract class BubbleMessageBox extends MessageBox {
             userName.setText(author.getUserName());
             userName.setOnMouseClicked(e -> controller.onMention(author));
 
-            userProfileIcon.setLastSeen(item.getFormattedLastSeen());
-            userProfileIcon.setUserProfile(author);
+            userProfileIcon.applyData(author, item.getLastSeenAsString(), item.getLastSeen());
             userProfileIcon.setCursor(Cursor.HAND);
             userProfileIcon.setOnMouseClicked(e -> controller.onShowChatUserDetails(item.getChatMessage()));
         });
