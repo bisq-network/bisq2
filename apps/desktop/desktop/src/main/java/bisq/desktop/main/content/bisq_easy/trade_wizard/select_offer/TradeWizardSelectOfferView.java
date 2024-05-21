@@ -21,7 +21,6 @@ import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.data.Pair;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
-import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.cathash.CatHash;
 import bisq.desktop.components.containers.Spacer;
@@ -44,7 +43,6 @@ import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import javafx.util.Callback;
@@ -243,8 +241,8 @@ class TradeWizardSelectOfferView extends View<VBox, TradeWizardSelectOfferModel,
                         int size = 30;
                         catIcon.setFitWidth(size);
                         catIcon.setFitHeight(size);
-                        StackPane catIconWithRing = ImageUtil.addRingToNode(catIcon, size, 1.5, "-bisq-dark-grey-50");
-                        hBox = new HBox(10, catIconWithRing, userName);
+                        //StackPane catIconWithRing = ImageUtil.addRingToNode(catIcon, size, 1.5, "-bisq-dark-grey-50");
+                        hBox = new HBox(10, catIcon, userName);
                         hBox.setAlignment(Pos.CENTER);
                     }
 
