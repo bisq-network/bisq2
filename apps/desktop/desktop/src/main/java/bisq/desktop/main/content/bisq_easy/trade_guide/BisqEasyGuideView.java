@@ -66,8 +66,8 @@ public class BisqEasyGuideView extends TabView<BisqEasyGuideModel, BisqEasyGuide
 
         root.setPrefWidth(OverlayModel.WIDTH);
         double height = model.isTradeRulesConfirmed()
-                ? OverlayModel.HEIGHT - 10
-                : OverlayModel.HEIGHT + 30;
+                ? OverlayModel.HEIGHT + 10
+                : OverlayModel.HEIGHT + 60;
         root.setPrefHeight(height);
     }
 
