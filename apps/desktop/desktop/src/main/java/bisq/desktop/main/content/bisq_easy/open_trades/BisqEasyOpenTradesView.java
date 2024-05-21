@@ -114,7 +114,9 @@ public final class BisqEasyOpenTradesView extends BaseChatView {
 
         VBox.setMargin(chatMessagesComponent, new Insets(0, 30, 15, 30));
         VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
+
         chatVBox = new VBox(tradeDataHeader, Layout.hLine(), chatMessagesComponent);
+        chatVBox.setAlignment(Pos.CENTER);
         chatVBox.getStyleClass().add("bisq-easy-container");
 
         VBox.setMargin(tradeWelcomeViewRoot, new Insets(0, 0, 10, 0));
