@@ -102,9 +102,11 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
 
-        // We delay publishing to be better bootstrapped 
+        // We delay publishing to be better bootstrapped
+        long initialDelay = TimeUnit.SECONDS.toMillis(5);
+        long delay = TimeUnit.HOURS.toMillis(3);
         rePublishAllUserProfilesScheduler = Optional.of(Scheduler.run(this::rePublishAllUserProfiles)
-                .periodically(5, 600, TimeUnit.SECONDS));
+                .periodically(initialDelay, delay, TimeUnit.MILLISECONDS));
         return CompletableFuture.completedFuture(true);
     }
 
