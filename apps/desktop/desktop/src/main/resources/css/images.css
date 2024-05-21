@@ -821,6 +821,22 @@
     -fx-image: url("/images/chat/leave-chat-red-lit-10.png");
 }
 
+#green-dot {
+    -fx-image: url("/images/chat/green-dot.png");
+}
+
+#green-small-dot {
+    -fx-image: url("/images/chat/green-small-dot.png");
+}
+
+#yellow-dot {
+    -fx-image: url("/images/chat/yellow-dot.png");
+}
+
+#yellow-small-dot {
+    -fx-image: url("/images/chat/yellow-small-dot.png");
+}
+
 /* ------------------------------------------------------------------------------------ */
 /* Markets */
 /* ------------------------------------------------------------------------------------ */
