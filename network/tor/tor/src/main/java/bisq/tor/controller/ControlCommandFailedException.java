@@ -18,6 +18,10 @@
 package bisq.tor.controller;
 
 public class ControlCommandFailedException extends RuntimeException {
+    public ControlCommandFailedException(String message) {
+        super(message);
+    }
+
     public ControlCommandFailedException(String message, Throwable cause) {
         super(message, cause);
     }
