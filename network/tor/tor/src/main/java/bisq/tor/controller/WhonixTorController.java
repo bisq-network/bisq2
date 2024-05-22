@@ -1,6 +1,8 @@
 package bisq.tor.controller;
 
+import bisq.common.encoding.Hex;
 import bisq.security.keys.TorKeyPair;
+import net.freehaven.tor.control.PasswordDigest;
 
 import java.io.*;
 import java.net.Socket;
@@ -25,17 +27,42 @@ public class WhonixTorController implements AutoCloseable {
         controlSocket.close();
     }
 
+    public void authenticate(PasswordDigest passwordDigest) throws IOException {
+        byte[] secret = passwordDigest.getSecret();
+        String secretHex = Hex.encode(secret);
+        String command = "AUTHENTICATE " + secretHex + "\r\n";
+
+        sendCommand(command);
+        String reply = receiveReply();
+
+        if (reply.equals("250 OK")) {
+            return;
+        }
+
+        if (reply.startsWith("515 Authentication failed")) {
+            throw new TorControlAuthenticationFailed(reply);
+        }
+    }
+
     public void addOnion(TorKeyPair torKeyPair, int onionPort, int localPort) throws IOException {
         String base64SecretScalar = torKeyPair.getBase64SecretScalar();
         String command = "ADD_ONION " + "ED25519-V3:" + base64SecretScalar + " Port=" + onionPort + "," + localPort + "\r\n";
-        byte[] commandBytes = command.getBytes(StandardCharsets.US_ASCII);
 
+        sendCommand(command);
+        String reply = receiveReply();
+    }
+
+    private void sendCommand(String command) throws IOException {
+        byte[] commandBytes = command.getBytes(StandardCharsets.US_ASCII);
         outputStream.write(commandBytes);
         outputStream.flush();
+    }
 
+    private String receiveReply() throws IOException {
         String reply = bufferedReader.readLine();
         if (reply.equals("510 Command filtered")) {
             throw new TorCommandFilteredException();
         }
+        return reply;
     }
 }
