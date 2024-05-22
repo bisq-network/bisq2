@@ -7,6 +7,7 @@ import net.freehaven.tor.control.PasswordDigest;
 import java.io.*;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 public class WhonixTorController implements AutoCloseable {
     private final Socket controlSocket;
@@ -58,6 +59,19 @@ public class WhonixTorController implements AutoCloseable {
         String reply = receiveReply();
         if (!reply.equals("250 OK")) {
             throw new ControlCommandFailedException("Couldn't reset config: " + configName);
+        }
+    }
+
+    public void setEvents(List<String> events) throws IOException {
+        var stringBuilder = new StringBuffer("SETEVENTS");
+        events.forEach(event -> stringBuilder.append(" ").append(event));
+        stringBuilder.append("\r\n");
+
+        String command = stringBuilder.toString();
+        sendCommand(command);
+        String reply = receiveReply();
+        if (!reply.equals("250 OK")) {
+            throw new ControlCommandFailedException("Couldn't set events: " + events);
         }
     }
 
