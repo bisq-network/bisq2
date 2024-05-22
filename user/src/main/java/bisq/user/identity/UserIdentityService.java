@@ -84,7 +84,6 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     @Getter
     private final Observable<UserIdentity> newlyCreatedUserIdentity = new Observable<>();
     private Optional<ExecutorService> rePublishUserProfilesExecutor = Optional.empty();
-    private int republishDelay;
     private Optional<Scheduler> rePublishAllUserProfilesScheduler = Optional.empty();
 
     public UserIdentityService(Config config,
@@ -296,13 +295,11 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         if (rePublishUserProfilesExecutor.isEmpty()) {
             rePublishUserProfilesExecutor = Optional.of(ExecutorFactory.newSingleThreadExecutor("rePublishUserProfilesExecutor"));
             rePublishUserProfilesExecutor.get().submit(() -> {
-                republishDelay = 1000 + new Random().nextInt(30_000);
                 userIdentities.forEach(userIdentity -> {
                     publishUserProfile(userIdentity.getUserProfile(), userIdentity.getNetworkIdWithKeyPair().getKeyPair());
                     try {
+                        int republishDelay = 60_000 + new Random().nextInt(180_000);
                         Thread.sleep(republishDelay);
-                        // Add random delay at each iteration
-                        republishDelay += 30_000 + new Random().nextInt(120_000);
                     } catch (InterruptedException ignore) {
                     }
                 });
@@ -315,7 +312,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     }
 
     private CompletableFuture<BroadcastResult> publishUserProfile(UserProfile userProfile, KeyPair keyPair) {
-        log.info("publishPublicUserProfile {}", userProfile.getUserName());
+        log.info("publishUserProfile {}", userProfile.getUserName());
         persistableStore.setLastUserProfilePublishingDate(System.currentTimeMillis());
         persist();
         return networkService.publishAuthenticatedData(userProfile, keyPair);
