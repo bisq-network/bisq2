@@ -25,6 +25,8 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.scene.layout.StackPane;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -46,7 +48,7 @@ public class UserProfileIcon extends StackPane {
     @Nullable
     private UserProfile userProfile;
     private final ImageView userProfileIcon = new ImageView();
-    private final ImageView lastSeenDot = new ImageView();
+    private final Circle lastSeenDot = new Circle();
     private double size;
     private long lastSeen;
 
@@ -112,15 +114,20 @@ public class UserProfileIcon extends StackPane {
 
     private void updateLastSeenDot() {
         boolean wasSeenRecently = lastSeen > 0 && lastSeen < TimeUnit.HOURS.toMillis(6);
-        lastSeenDot.setManaged(wasSeenRecently);
-        lastSeenDot.setVisible(wasSeenRecently);
-        if (wasSeenRecently) {
-            boolean wasSeenMostRecently = lastSeen < TimeUnit.HOURS.toMillis(3);
-            String color = wasSeenMostRecently ? "green" : "yellow";
-            String sizePostFix = size < 60 ? "-small-dot" : "-dot";
-            String id = color + sizePostFix;
-            lastSeenDot.setId(id);
+        boolean wasSeenMostRecently = lastSeen < TimeUnit.HOURS.toMillis(3);
+        String color;
+        if (wasSeenMostRecently) {
+            color = "#66b65a"; //  -bisq2-green-lit-10
+        } else if (wasSeenRecently) {
+            color = "#d0831f"; // -bisq2-yellow
+        } else {
+            color = "#808080"; // -bisq-mid-grey-20
         }
+        double sizePostFix = size < 60 ? 2.5 : 5;
+        lastSeenDot.setRadius(sizePostFix);
+        lastSeenDot.setFill(Color.web(color));
+        String id = color + sizePostFix;
+        lastSeenDot.setId(id);
     }
 
     private void applyTooltipText() {
