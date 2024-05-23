@@ -837,6 +837,14 @@
     -fx-image: url("/images/chat/yellow-small-dot.png");
 }
 
+#grey-dot {
+    -fx-image: url("/images/chat/grey-dot.png");
+}
+
+#grey-small-dot {
+    -fx-image: url("/images/chat/grey-small-dot.png");
+}
+
 /* ------------------------------------------------------------------------------------ */
 /* Markets */
 /* ------------------------------------------------------------------------------------ */

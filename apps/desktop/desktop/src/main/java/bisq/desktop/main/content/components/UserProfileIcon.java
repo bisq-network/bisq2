@@ -112,15 +112,20 @@ public class UserProfileIcon extends StackPane {
 
     private void updateLastSeenDot() {
         boolean wasSeenRecently = lastSeen > 0 && lastSeen < TimeUnit.HOURS.toMillis(6);
-        lastSeenDot.setManaged(wasSeenRecently);
-        lastSeenDot.setVisible(wasSeenRecently);
+        String color;
         if (wasSeenRecently) {
             boolean wasSeenMostRecently = lastSeen < TimeUnit.HOURS.toMillis(3);
-            String color = wasSeenMostRecently ? "green" : "yellow";
-            String sizePostFix = size < 60 ? "-small-dot" : "-dot";
-            String id = color + sizePostFix;
-            lastSeenDot.setId(id);
+            if (wasSeenMostRecently) {
+                color = "green";
+            } else {
+                color = "yellow";
+            }
+        } else {
+            color = "grey";
         }
+        String sizePostFix = size < 60 ? "-small-dot" : "-dot";
+        String id = color + sizePostFix;
+        lastSeenDot.setId(id);
     }
 
     private void applyTooltipText() {
