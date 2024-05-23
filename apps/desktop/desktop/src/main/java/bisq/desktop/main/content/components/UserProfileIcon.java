@@ -126,8 +126,6 @@ public class UserProfileIcon extends StackPane {
         double sizePostFix = size < 60 ? 2.5 : 5;
         lastSeenDot.setRadius(sizePostFix);
         lastSeenDot.setFill(Color.web(color));
-        String id = color + sizePostFix;
-        lastSeenDot.setId(id);
     }
 
     private void applyTooltipText() {
