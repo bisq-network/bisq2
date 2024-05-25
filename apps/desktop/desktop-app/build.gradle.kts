@@ -13,7 +13,7 @@ application {
 version = "2.0.4"
 
 javafx {
-    version = "17.0.1"
+    version = "21.0.2"
     modules = listOf("javafx.controls", "javafx.media")
 }
 
