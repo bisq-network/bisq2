@@ -12,7 +12,7 @@ repositories {
 java {
     toolchain {
         // We use the Java 21 toolchain to use jpackage to create the binaries.
-        languageVersion.set(JavaLanguageVersion.of(21))
+        languageVersion.set(JavaLanguageVersion.of(22))
     }
 }
 
