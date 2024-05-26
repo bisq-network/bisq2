@@ -38,6 +38,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import org.fxmisc.easybind.EasyBind;
@@ -210,10 +211,10 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         message.setVisible(false);
         message.setManaged(false);
 
-        editInputField.setOnKeyPressed(event -> {
-            if (event.getCode() == KeyCode.ENTER) {
-                event.consume();
-                if (event.isShiftDown()) {
+        editInputField.addEventFilter(KeyEvent.KEY_PRESSED, keyEvent -> {
+            if (keyEvent.getCode() == KeyCode.ENTER) {
+                keyEvent.consume();
+                if (keyEvent.isShiftDown()) {
                     editInputField.appendText(System.getProperty("line.separator"));
                 } else if (!editInputField.getText().isEmpty()) {
                     controller.onSaveEditedMessage(item.getChatMessage(), editInputField.getText().trim());
