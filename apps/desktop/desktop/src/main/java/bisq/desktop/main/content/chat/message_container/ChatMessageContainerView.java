@@ -13,6 +13,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
@@ -70,10 +71,10 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
             }
         });
 
-        inputField.setOnKeyPressed(event -> {
-            if (event.getCode() == KeyCode.ENTER) {
-                event.consume();
-                if (event.isShiftDown()) {
+        inputField.addEventFilter(KeyEvent.KEY_PRESSED, keyEvent -> {
+            if (keyEvent.getCode() == KeyCode.ENTER) {
+                keyEvent.consume();
+                if (keyEvent.isShiftDown()) {
                     inputField.appendText(System.getProperty("line.separator"));
                 } else if (!inputField.getText().isEmpty()) {
                     controller.onSendMessage(inputField.getText().trim());
@@ -81,6 +82,7 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
                 }
             }
         });
+
         sendButton.setOnAction(event -> {
             controller.onSendMessage(inputField.getText().trim());
             inputField.clear();
