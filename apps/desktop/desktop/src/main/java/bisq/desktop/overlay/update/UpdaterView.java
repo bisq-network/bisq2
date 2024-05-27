@@ -104,7 +104,7 @@ public class UpdaterView extends View<VBox, UpdaterModel, UpdaterController> {
         configTableView();
 
         VBox.setMargin(releaseNotes, new Insets(-10, 0, 10, 0));
-        VBox.setMargin(downloadUrl, new Insets(-20, 0, 20, -5));
+        VBox.setMargin(downloadUrl, new Insets(-20, 0, 20, 0));
         VBox.setMargin(verificationInfo, new Insets(-10, 0, 0, 0));
         root.getChildren().addAll(headline, releaseNotesHeadline,
                 releaseNotes, furtherInfo, downloadUrl,
