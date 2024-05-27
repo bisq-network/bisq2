@@ -25,6 +25,7 @@ import bisq.chat.ChatService;
 import bisq.common.data.Triple;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Layout;
+import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.cathash.CatHash;
 import bisq.desktop.components.containers.Spacer;
@@ -362,6 +363,12 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
                     totalReputationScore.setText(String.valueOf(reputationScore.getTotalScore()));
                 }
             });
+
+            //todo add animation or popup to signal copy
+            botId.setOnMouseClicked(e ->
+                    ClipboardUtil.copyToClipboard(model.userProfile.getNym()));
+            addressByTransport.setOnMouseClicked(e ->
+                    ClipboardUtil.copyToClipboard(model.userProfile.getAddressByTransportDisplayString()));
 
             privateMsg.setOnAction(e -> controller.onSendPrivateMessage());
             mention.setOnAction(e -> controller.onMentionUser());
