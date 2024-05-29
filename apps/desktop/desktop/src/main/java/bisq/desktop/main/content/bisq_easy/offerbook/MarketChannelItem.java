@@ -21,7 +21,9 @@ import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.currency.Market;
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.components.MarketImageComposition;
+import bisq.i18n.Res;
 import bisq.settings.FavouriteMarketsService;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
@@ -100,6 +102,13 @@ class MarketChannelItem {
     }
 
     private void addAsFavourite() {
+        if (!FavouriteMarketsService.canAddNewFavourite()) {
+            new Popup().information(Res.get("bisqEasy.offerbook.marketListCell.favourites.maxReached.popup"))
+                    .closeButtonText(Res.get("confirmation.ok"))
+                    .show();
+            return;
+        }
+
         FavouriteMarketsService.addFavourite(getMarket());
     }
 

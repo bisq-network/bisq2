@@ -31,10 +31,7 @@ public class FavouriteMarketsService {
 
     public static void addFavourite(Market market) {
         ObservableSet<Market> favouriteMarkets = SettingsService.getInstance().getFavouriteMarkets();
-        log.info("Current number of favourite markets: {}", favouriteMarkets.size());
-
-        if (favouriteMarkets.size() == MAX_ALLOWED_FAVOURITES) {
-            log.info("Cannot add more favourites. Max number of favourites ({}) reached.", MAX_ALLOWED_FAVOURITES);
+        if (!canAddNewFavourite()) {
             return;
         }
 
@@ -57,6 +54,17 @@ public class FavouriteMarketsService {
         } else {
             log.info("Attempted to remove a market that is not in favourites.");
         }
+    }
+
+    public static boolean canAddNewFavourite() {
+        ObservableSet<Market> favouriteMarkets = SettingsService.getInstance().getFavouriteMarkets();
+        log.info("Current number of favourite markets: {}", favouriteMarkets.size());
+
+        if (favouriteMarkets.size() == MAX_ALLOWED_FAVOURITES) {
+            log.info("Cannot add more favourites. Max number of favourites ({}) reached.", MAX_ALLOWED_FAVOURITES);
+            return false;
+        }
+        return true;
     }
 
     private static void persist() {
