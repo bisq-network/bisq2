@@ -52,6 +52,15 @@ public class WhonixTorController implements AutoCloseable {
         String reply = receiveReply();
     }
 
+    public void takeOwnership() throws IOException {
+        String command = "TAKEOWNERSHIP\r\n";
+        sendCommand(command);
+        String reply = receiveReply();
+        if (!reply.equals("250 OK")) {
+            throw new ControlCommandFailedException("Couldn't take ownership");
+        }
+    }
+
     private void sendCommand(String command) throws IOException {
         byte[] commandBytes = command.getBytes(StandardCharsets.US_ASCII);
         outputStream.write(commandBytes);
