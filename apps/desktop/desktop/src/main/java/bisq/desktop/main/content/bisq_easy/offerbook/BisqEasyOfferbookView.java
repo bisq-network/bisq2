@@ -72,8 +72,8 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
             showBuyFromOffersPin, showOfferListExpandedPin, showMarketSelectionListCollapsedPin;
     private Button createOfferButton;
     private DropdownMenu sortAndFilterMarketsMenu;
-    private DropdownSortByMenuItem sortByMostOffers, sortByNameAZ, sortByNameZA;
-    private DropdownFilterMenuItem filterShowAll, filterWithOffers, filterFavourites;
+    private SortAndFilterMarketsDropdownMenuItem<MarketSortType> sortByMostOffers, sortByNameAZ, sortByNameZA;
+    private SortAndFilterMarketsDropdownMenuItem<MarketFilter> filterShowAll, filterWithOffers, filterFavourites;
     private DropdownMenuItem buyFromOffers, sellToOffers;
     private CheckBox hideUserMessagesCheckbox;
     private Label channelHeaderIcon, marketPrice, removeWithOffersFilter, removeFavouritesFilter,
@@ -464,15 +464,12 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         // Sorting options
         DropdownTitleMenuItem sortTitle = new DropdownTitleMenuItem(
                 Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.sortTitle"));
-        sortByMostOffers = new DropdownSortByMenuItem("check-white", "check-white",
-                Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.mostOffers"),
-                MarketSortType.NUM_OFFERS);
-        sortByNameAZ = new DropdownSortByMenuItem("check-white", "check-white",
-                Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.nameAZ"),
-                MarketSortType.ASC);
-        sortByNameZA = new DropdownSortByMenuItem("check-white", "check-white",
-                Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.nameZA"),
-                MarketSortType.DESC);
+        sortByMostOffers = new SortAndFilterMarketsDropdownMenuItem<>("check-white", "check-white",
+                Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.mostOffers"), MarketSortType.NUM_OFFERS);
+        sortByNameAZ = new SortAndFilterMarketsDropdownMenuItem<>("check-white", "check-white",
+                Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.nameAZ"), MarketSortType.ASC);
+        sortByNameZA = new SortAndFilterMarketsDropdownMenuItem<>("check-white", "check-white",
+                Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.nameZA"), MarketSortType.DESC);
 
         // Separator
         SeparatorMenuItem separator = new SeparatorMenuItem();
@@ -480,11 +477,11 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         // Filter options
         DropdownTitleMenuItem filterTitle = new DropdownTitleMenuItem(
                 Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.filterTitle"));
-        filterWithOffers = new DropdownFilterMenuItem("check-white", "check-white",
+        filterWithOffers = new SortAndFilterMarketsDropdownMenuItem<>("check-white", "check-white",
                 Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.withOffers"), MarketFilter.WITH_OFFERS);
-        filterFavourites = new DropdownFilterMenuItem("check-white", "check-white",
+        filterFavourites = new SortAndFilterMarketsDropdownMenuItem<>("check-white", "check-white",
                 Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.favourites"), MarketFilter.FAVOURITES);
-        filterShowAll = new DropdownFilterMenuItem("check-white", "check-white",
+        filterShowAll = new SortAndFilterMarketsDropdownMenuItem<>("check-white", "check-white",
                 Res.get("bisqEasy.offerbook.dropdownMenu.sortAndFilterMarkets.all"), MarketFilter.ALL);
 
         dropdownMenu.addMenuItems(sortTitle, sortByMostOffers, sortByNameAZ, sortByNameZA, separator, filterTitle,
@@ -552,9 +549,10 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         }
 
         sortAndFilterMarketsMenu.getMenuItems().stream()
-                .filter(menuItem -> menuItem instanceof DropdownFilterMenuItem)
-                .map(menuItem -> (DropdownFilterMenuItem) menuItem)
-                .forEach(menuItem -> menuItem.updateSelection(marketFilter == menuItem.getMarketFilter()));
+                .filter(menuItem -> menuItem instanceof SortAndFilterMarketsDropdownMenuItem &&
+                        ((SortAndFilterMarketsDropdownMenuItem<?>) menuItem).getMenuItem() instanceof MarketFilter)
+                .map(menuItem -> (SortAndFilterMarketsDropdownMenuItem<MarketFilter>) menuItem)
+                .forEach(menuItem -> menuItem.updateSelection(marketFilter == menuItem.getMenuItem()));
 
         marketsTableView.getSelectionModel().select(getModel().getSelectedMarketChannelItem().get());
     }
@@ -565,9 +563,10 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         }
 
         sortAndFilterMarketsMenu.getMenuItems().stream()
-                .filter(menuItem -> menuItem instanceof DropdownSortByMenuItem)
-                .map(menuItem -> (DropdownSortByMenuItem) menuItem)
-                .forEach(menuItem -> menuItem.updateSelection(marketSortType == menuItem.marketSortType));
+                .filter(menuItem -> menuItem instanceof SortAndFilterMarketsDropdownMenuItem &&
+                        ((SortAndFilterMarketsDropdownMenuItem<?>) menuItem).getMenuItem() instanceof MarketSortType)
+                .map(menuItem -> (SortAndFilterMarketsDropdownMenuItem<MarketSortType>) menuItem)
+                .forEach(menuItem -> menuItem.updateSelection(marketSortType == menuItem.getMenuItem()));
     }
 
     private void updateAppliedFiltersSectionStyles(boolean shouldShowAppliedFilters) {
@@ -705,42 +704,17 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         tableView.getSortOrder().add(userProfileTableColumn);
     }
 
-    private static final class DropdownFilterMenuItem extends DropdownMenuItem {
+    @Getter
+    private static final class SortAndFilterMarketsDropdownMenuItem<T> extends DropdownMenuItem {
         private static final PseudoClass SELECTED_PSEUDO_CLASS = PseudoClass.getPseudoClass("selected");
 
-        @Getter
-        private final MarketFilter marketFilter;
+        private final T menuItem;
 
-        DropdownFilterMenuItem(String defaultIconId,
-                               String activeIconId,
-                               String text,
-                               MarketFilter marketFilter) {
+        SortAndFilterMarketsDropdownMenuItem(String defaultIconId, String activeIconId, String text, T menuItem) {
             super(defaultIconId, activeIconId, text);
 
-            this.marketFilter = marketFilter;
-            getStyleClass().add("dropdown-filter-menu-item");
-            updateSelection(false);
-        }
-
-        void updateSelection(boolean isSelected) {
-            getContent().pseudoClassStateChanged(SELECTED_PSEUDO_CLASS, isSelected);
-        }
-    }
-
-    private static final class DropdownSortByMenuItem extends DropdownMenuItem {
-        private static final PseudoClass SELECTED_PSEUDO_CLASS = PseudoClass.getPseudoClass("selected");
-
-        @Getter
-        private final MarketSortType marketSortType;
-
-        DropdownSortByMenuItem(String defaultIconId,
-                               String activeIconId,
-                               String text,
-                               MarketSortType marketSortType) {
-            super(defaultIconId, activeIconId, text);
-
-            this.marketSortType = marketSortType;
-            getStyleClass().add("dropdown-sort-by-menu-item");
+            this.menuItem = menuItem;
+            getStyleClass().add("dropdown-menu-item");
             updateSelection(false);
         }
 
