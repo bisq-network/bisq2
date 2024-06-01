@@ -62,6 +62,15 @@ public class WhonixTorController implements AutoCloseable {
         }
     }
 
+    public void setConfig(String configName, String configValue) throws IOException {
+        String command = "SETCONF " + configName + "=" + configValue + "\r\n";
+        sendCommand(command);
+        String reply = receiveReply();
+        if (!reply.equals("250 OK")) {
+            throw new ControlCommandFailedException("Couldn't set config: " + configName + "=" + configValue);
+        }
+    }
+
     public void setEvents(List<String> events) throws IOException {
         var stringBuilder = new StringBuffer("SETEVENTS");
         events.forEach(event -> stringBuilder.append(" ").append(event));
