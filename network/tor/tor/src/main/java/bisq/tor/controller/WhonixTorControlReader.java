@@ -33,14 +33,13 @@ public class WhonixTorControlReader implements AutoCloseable {
                 String line;
                 while ((line = bufferedReader.readLine()) != null) {
 
-                    if (isStatusClientEvent(line)) {
+                    if (isEvent(line)) {
                         Optional<BootstrapEvent> bootstrapEventOptional = BootstrapEventParser.tryParse(line);
-
                         if (bootstrapEventOptional.isPresent()) {
                             BootstrapEvent bootstrapEvent = bootstrapEventOptional.get();
                             bootstrapEventListeners.forEach(listener -> listener.onBootstrapStatusEvent(bootstrapEvent));
                         } else {
-                            log.info("Unknown status client event: {}", line);
+                            log.info("Unknown Tor event: {}", line);
                         }
 
                     } else {
@@ -81,8 +80,8 @@ public class WhonixTorControlReader implements AutoCloseable {
         bootstrapEventListeners.remove(listener);
     }
 
-    private boolean isStatusClientEvent(String line) {
+    private boolean isEvent(String line) {
         // 650 STATUS_CLIENT NOTICE CIRCUIT_ESTABLISHED
-        return line.startsWith("650 STATUS_CLIENT");
+        return line.startsWith("650");
     }
 }

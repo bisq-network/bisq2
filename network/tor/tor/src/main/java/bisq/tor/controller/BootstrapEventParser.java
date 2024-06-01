@@ -7,16 +7,22 @@ import java.util.Optional;
 public class BootstrapEventParser {
     public static Optional<BootstrapEvent> tryParse(String line) {
         // 650 STATUS_CLIENT NOTICE BOOTSTRAP PROGRESS=50 TAG=loading_descriptors SUMMARY="Loading relay descriptors"
-        String[] parts = line.split(" ");
+        if (isStatusClientEvent(line)) {
+            String[] parts = line.split(" ");
 
-        if (isBootstrapEvent(parts)) {
-            BootstrapEvent bootstrapEvent = parseBootstrapEvent(parts);
-            return Optional.of(bootstrapEvent);
+            if (isBootstrapEvent(parts)) {
+                BootstrapEvent bootstrapEvent = parseBootstrapEvent(parts);
+                return Optional.of(bootstrapEvent);
+            }
         }
 
         return Optional.empty();
     }
 
+    private static boolean isStatusClientEvent(String line) {
+        // 650 STATUS_CLIENT NOTICE CIRCUIT_ESTABLISHED
+        return line.startsWith("650 STATUS_CLIENT");
+    }
 
     private static boolean isBootstrapEvent(String[] parts) {
         // 650 STATUS_CLIENT NOTICE BOOTSTRAP PROGRESS=50 TAG=loading_descriptors SUMMARY="Loading relay descriptors"
