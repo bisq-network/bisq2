@@ -220,10 +220,12 @@ public class BisqEasyOfferbookUtil {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    // TODO: react to priceSpec if it changes
-                    priceSpecAsPercentLabel.setText(PercentageFormatter.formatToPercentWithSymbol(item.getPriceSpecAsPercent()));
+                    StringExpression priceSpecAsPercent = Bindings.createStringBinding(() ->
+                            PercentageFormatter.formatToPercentWithSymbol(item.getPriceSpecAsPercent()));
+                    priceSpecAsPercentLabel.textProperty().bind(priceSpecAsPercent);
                     setGraphic(priceSpecAsPercentLabel);
                 } else {
+                    priceSpecAsPercentLabel.textProperty().unbind();
                     setGraphic(null);
                 }
             }
