@@ -2,6 +2,7 @@ package bisq.tor.controller;
 
 import bisq.common.encoding.Hex;
 import bisq.security.keys.TorKeyPair;
+import bisq.tor.controller.events.listener.BootstrapEventListener;
 import net.freehaven.tor.control.PasswordDigest;
 
 import java.io.*;
@@ -92,6 +93,14 @@ public class WhonixTorController implements AutoCloseable {
         if (!reply.equals("250 OK")) {
             throw new ControlCommandFailedException("Couldn't take ownership");
         }
+    }
+
+    public void addBootstrapEventListener(BootstrapEventListener listener) {
+        whonixTorControlReader.addBootstrapEventListener(listener);
+    }
+
+    public void removeBootstrapEventListener(BootstrapEventListener listener) {
+        whonixTorControlReader.removeBootstrapEventListener(listener);
     }
 
     private void sendCommand(String command) throws IOException {
