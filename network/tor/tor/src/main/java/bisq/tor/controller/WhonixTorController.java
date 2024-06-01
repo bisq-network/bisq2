@@ -11,21 +11,22 @@ import java.util.List;
 
 public class WhonixTorController implements AutoCloseable {
     private final Socket controlSocket;
-    private final BufferedReader bufferedReader;
+    private final WhonixTorControlReader whonixTorControlReader;
     private final OutputStream outputStream;
 
     public WhonixTorController() throws IOException {
         controlSocket = new Socket("127.0.0.1", 9051);
-
-        InputStream inputStream = controlSocket.getInputStream();
-        bufferedReader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.US_ASCII));
-
+        whonixTorControlReader = new WhonixTorControlReader(controlSocket.getInputStream());
         outputStream = controlSocket.getOutputStream();
     }
 
     @Override
     public void close() throws IOException {
         controlSocket.close();
+    }
+
+    public void initialize() {
+        whonixTorControlReader.start();
     }
 
     public void authenticate(PasswordDigest passwordDigest) throws IOException {
@@ -99,8 +100,8 @@ public class WhonixTorController implements AutoCloseable {
         outputStream.flush();
     }
 
-    private String receiveReply() throws IOException {
-        String reply = bufferedReader.readLine();
+    private String receiveReply() {
+        String reply = whonixTorControlReader.readLine();
         if (reply.equals("510 Command filtered")) {
             throw new TorCommandFilteredException();
         }
