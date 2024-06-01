@@ -64,6 +64,7 @@ public class TradeStateController implements Controller {
     private final BisqEasyOpenTradeChannelService channelService;
     private final BisqEasyOpenTradeSelectionService selectionService;
     private final MediationRequestService mediationRequestService;
+    private final DontShowAgainService dontShowAgainService;
     private Pin bisqEasyTradeStatePin, errorMessagePin, peersErrorMessagePin, isInMediationPin;
     private Subscription channelPin, hasBuyerAcceptedPriceSpecPin;
 
@@ -74,6 +75,7 @@ public class TradeStateController implements Controller {
         channelService = chatService.getBisqEasyOpenTradeChannelService();
         selectionService = chatService.getBisqEasyOpenTradesSelectionService();
         mediationRequestService = serviceProvider.getSupportService().getMediationRequestService();
+        dontShowAgainService = serviceProvider.getDontShowAgainService();
 
         tradePhaseBox = new TradePhaseBox(serviceProvider);
         tradeDataHeader = new TradeDataHeader(serviceProvider, Res.get("bisqEasy.tradeState.header.peer").toUpperCase());
@@ -129,7 +131,7 @@ public class TradeStateController implements Controller {
             errorMessagePin = bisqEasyTrade.errorMessageObservable().addObserver(errorMessage -> {
                 if (errorMessage != null) {
                     String key = "errorMessage_" + model.getBisqEasyTrade().get().getId();
-                    if (DontShowAgainService.showAgain(key)) {
+                    if (dontShowAgainService.showAgain(key)) {
                         UIThread.run(() -> new Popup().error(Res.get("bisqEasy.openTrades.failed.popup",
                                         errorMessage,
                                         StringUtils.truncate(bisqEasyTrade.getErrorStackTrace(), 500)))
@@ -142,7 +144,7 @@ public class TradeStateController implements Controller {
             peersErrorMessagePin = bisqEasyTrade.peersErrorMessageObservable().addObserver(peersErrorMessage -> {
                         if (peersErrorMessage != null) {
                             String key = "peersErrorMessage_" + model.getBisqEasyTrade().get().getId();
-                            if (DontShowAgainService.showAgain(key)) {
+                            if (dontShowAgainService.showAgain(key)) {
                                 UIThread.run(() -> new Popup().error(Res.get("bisqEasy.openTrades.failedAtPeer.popup",
                                                 peersErrorMessage,
                                                 StringUtils.truncate(bisqEasyTrade.getPeersErrorStackTrace(), 500)))

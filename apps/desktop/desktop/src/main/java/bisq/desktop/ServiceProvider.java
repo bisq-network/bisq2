@@ -35,6 +35,7 @@ import bisq.offer.OfferService;
 import bisq.persistence.PersistenceService;
 import bisq.presentation.notifications.SendNotificationService;
 import bisq.security.SecurityService;
+import bisq.settings.DontShowAgainService;
 import bisq.settings.FavouriteMarketsService;
 import bisq.settings.SettingsService;
 import bisq.support.SupportService;
@@ -71,6 +72,7 @@ public class ServiceProvider {
     private final BisqEasyService bisqEasyService;
     private final AlertNotificationsService alertNotificationsService;
     private final FavouriteMarketsService favouriteMarketsService;
+    private final DontShowAgainService dontShowAgainService;
 
     public ServiceProvider(ShutDownHandler shutDownHandler,
                            ApplicationService.Config config,
@@ -92,7 +94,8 @@ public class ServiceProvider {
                            UpdaterService updaterService,
                            BisqEasyService bisqEasyService,
                            AlertNotificationsService alertNotificationsService,
-                           FavouriteMarketsService favouriteMarketsService) {
+                           FavouriteMarketsService favouriteMarketsService,
+                           DontShowAgainService dontShowAgainService) {
         this.shutDownHandler = shutDownHandler;
         this.config = config;
         this.persistenceService = persistenceService;
@@ -114,5 +117,6 @@ public class ServiceProvider {
         this.bisqEasyService = bisqEasyService;
         this.alertNotificationsService = alertNotificationsService;
         this.favouriteMarketsService = favouriteMarketsService;
+        this.dontShowAgainService = dontShowAgainService;
     }
 }
