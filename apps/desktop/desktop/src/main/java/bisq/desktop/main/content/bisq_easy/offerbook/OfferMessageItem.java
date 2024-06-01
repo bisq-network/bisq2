@@ -97,8 +97,8 @@ public class OfferMessageItem {
         updatePriceSpecAsPercent();
 
         reputationChangedPin = reputationService.getChangedUserProfileScore().addObserver(userProfileId ->
-                UIThread.run(this::applyReputationScore));
-        applyReputationScore();
+                UIThread.run(this::updateReputationScore));
+        updateReputationScore();
     }
 
     private Pair<Monetary, Monetary> retrieveMinMaxAmount() {
@@ -111,7 +111,7 @@ public class OfferMessageItem {
         priceSpecAsPercent = PriceUtil.findPercentFromMarketPrice(marketPriceService, bisqEasyOffer).orElseThrow();
     }
 
-    private void applyReputationScore() {
+    private void updateReputationScore() {
         reputationScore.set(reputationService.getReputationScore(userProfile));
         totalScore = reputationScore.get().getTotalScore();
     }
