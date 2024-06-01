@@ -17,9 +17,6 @@
 
 package bisq.desktop.main.content.bisq_easy.offerbook;
 
-import bisq.chat.ChatChannel;
-import bisq.chat.ChatMessage;
-import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import lombok.Getter;
 
 import java.util.function.Predicate;
@@ -28,10 +25,6 @@ class Filters {
     interface FilterPredicate<T> {
         Predicate<T> getPredicate();
     }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // MARKETS' FILTERS
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Getter
     enum Markets implements FilterPredicate<MarketChannelItem> {
@@ -42,46 +35,6 @@ class Filters {
         private final Predicate<MarketChannelItem> predicate;
 
         Markets(Predicate<MarketChannelItem> predicate) {
-            this.predicate = predicate;
-        }
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // OFFERS' FILTERS
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    @Getter
-    enum OfferDirectionOrOwner implements FilterPredicate<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> {
-        ALL(item -> true),
-        MINE(item -> !item.isBisqEasyPublicChatMessageWithOffer() || item.isBisqEasyPublicChatMessageWithMyOffer()),
-        BUY(item -> !item.isBisqEasyPublicChatMessageWithOffer() || item.isBisqEasyPublicChatMessageWithPeerBuyOffer()),
-        SELL(item -> !item.isBisqEasyPublicChatMessageWithOffer() || item.isBisqEasyPublicChatMessageWithPeerSellOffer());
-
-        private final Predicate<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate;
-
-        OfferDirectionOrOwner(Predicate<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate) {
-            this.predicate = predicate;
-        }
-    }
-
-    @Getter
-    enum PeerReputation implements FilterPredicate<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> {
-        ALL(item -> true),
-        FIVE_STARS(item -> !item.isBisqEasyPublicChatMessageWithOffer()
-                || (item.isPeerMessage() && item.getReputationStarCount() == 5)),
-        AT_LEAST_FOUR_STARS(item -> !item.isBisqEasyPublicChatMessageWithOffer()
-                || (item.isPeerMessage() && item.getReputationStarCount() >= 4)),
-        AT_LEAST_THREE_STARS(item -> !item.isBisqEasyPublicChatMessageWithOffer()
-                || (item.isPeerMessage() && item.getReputationStarCount() >= 3)),
-        AT_LEAST_TWO_STARS(item -> !item.isBisqEasyPublicChatMessageWithOffer()
-                || (item.isPeerMessage() && item.getReputationStarCount() >= 2)),
-        AT_LEAST_ONE_STAR(item -> !item.isBisqEasyPublicChatMessageWithOffer()
-                || (item.isPeerMessage() && item.getReputationStarCount() >= 1));
-
-        private final Predicate<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate;
-
-        PeerReputation(Predicate<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate) {
             this.predicate = predicate;
         }
     }

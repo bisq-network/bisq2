@@ -17,8 +17,6 @@
 
 package bisq.desktop.main.content.bisq_easy.offerbook;
 
-import bisq.chat.ChatChannel;
-import bisq.chat.ChatMessage;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.utils.ImageUtil;
@@ -27,7 +25,6 @@ import bisq.desktop.components.controls.*;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.main.content.chat.ChatView;
-import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.i18n.Res;
 import javafx.beans.binding.Bindings;
 import javafx.collections.ListChangeListener;
@@ -66,18 +63,13 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     private BisqTableView<OfferMessageItem> offerListTableView;
     private VBox marketSelectionList, collapsedMarketSelectionList, collapsedOfferList, offerList;
     private Subscription marketsTableViewSelectionPin, selectedModelItemPin, channelHeaderIconPin, selectedMarketFilterPin,
-            selectedOfferDirectionOrOwnerFilterPin, selectedPeerReputationFilterPin, selectedMarketSortTypePin,
-            marketSelectorSearchPin, favouritesTableViewHeightPin, favouritesTableViewSelectionPin,
-            shouldShowAppliedFiltersPin, offerListTableViewSelectionPin, showBuyFromOffersPin,
-            showOfferListExpandedPin, showMarketSelectionListCollapsedPin;
+            selectedMarketSortTypePin, marketSelectorSearchPin, favouritesTableViewHeightPin,
+            favouritesTableViewSelectionPin, shouldShowAppliedFiltersPin, offerListTableViewSelectionPin,
+            showBuyFromOffersPin, showOfferListExpandedPin, showMarketSelectionListCollapsedPin;
     private Button createOfferButton;
-    private DropdownMenu sortAndFilterMarketsMenu, filterOffersByDirectionOrOwnerMenu, filterOffersByPeerReputationMenu;
+    private DropdownMenu sortAndFilterMarketsMenu;
     private DropdownSortByMenuItem sortByMostOffers, sortByNameAZ, sortByNameZA;
     private DropdownFilterMenuItem<MarketChannelItem> filterShowAll, filterWithOffers, filterFavourites;
-    private DropdownFilterMenuItem<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>>
-            allOffers, myOffers, buyOffers, sellOffers, allReputations, fiveStars, atLeastFourStars, atLeastThreeStars,
-            atLeastTwoStars, atLeastOneStar;
-    private DropdownTitleMenuItem atLeastTitle;
     private DropdownMenuItem buyFromOffers, sellToOffers;
     private CheckBox hideUserMessagesCheckbox;
     private Label channelHeaderIcon, marketPrice, removeWithOffersFilter, removeFavouritesFilter,
@@ -177,10 +169,6 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
 
         channelHeaderIconPin = EasyBind.subscribe(model.getChannelIconNode(), this::updateChannelHeaderIcon);
         selectedMarketFilterPin = EasyBind.subscribe(getModel().getSelectedMarketsFilter(), this::updateSelectedMarketFilter);
-        selectedOfferDirectionOrOwnerFilterPin = EasyBind.subscribe(getModel().getSelectedOfferDirectionOrOwnerFilter(), filter ->
-                updateSelectedFilterInDropdownMenu(filter, filterOffersByDirectionOrOwnerMenu));
-        selectedPeerReputationFilterPin = EasyBind.subscribe(getModel().getSelectedPeerReputationFilter(), filter ->
-                updateSelectedFilterInDropdownMenu(filter, filterOffersByPeerReputationMenu));
         selectedMarketSortTypePin = EasyBind.subscribe(getModel().getSelectedMarketSortType(), this::updateMarketSortType);
         favouritesTableViewHeightPin = EasyBind.subscribe(getModel().getFavouritesTableViewHeight(),
                 height -> updateFavouritesTableViewHeight(height.doubleValue()));
@@ -207,18 +195,6 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         filterWithOffers.setOnAction(e -> getModel().getSelectedMarketsFilter().set(Filters.Markets.WITH_OFFERS));
         filterShowAll.setOnAction(e -> getModel().getSelectedMarketsFilter().set(Filters.Markets.ALL));
         filterFavourites.setOnAction(e -> getModel().getSelectedMarketsFilter().set(Filters.Markets.FAVOURITES));
-
-        allOffers.setOnAction(e -> setOfferDirectionOrOwnerFilter(allOffers));
-        myOffers.setOnAction(e -> setOfferDirectionOrOwnerFilter(myOffers));
-        buyOffers.setOnAction(e -> setOfferDirectionOrOwnerFilter(buyOffers));
-        sellOffers.setOnAction(e -> setOfferDirectionOrOwnerFilter(sellOffers));
-
-        allReputations.setOnAction(e -> setPeerReputationFilter(allReputations));
-        fiveStars.setOnAction(e -> setPeerReputationFilter(fiveStars));
-        atLeastFourStars.setOnAction(e -> setPeerReputationFilter(atLeastFourStars));
-        atLeastThreeStars.setOnAction(e -> setPeerReputationFilter(atLeastThreeStars));
-        atLeastTwoStars.setOnAction(e -> setPeerReputationFilter(atLeastTwoStars));
-        atLeastOneStar.setOnAction(e -> setPeerReputationFilter(atLeastOneStar));
 
         createOfferButton.setOnAction(e -> getController().onCreateOffer());
 
@@ -291,8 +267,6 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         favouritesTableViewSelectionPin.unsubscribe();
         channelHeaderIconPin.unsubscribe();
         selectedMarketFilterPin.unsubscribe();
-        selectedOfferDirectionOrOwnerFilterPin.unsubscribe();
-        selectedPeerReputationFilterPin.unsubscribe();
         selectedMarketSortTypePin.unsubscribe();
         favouritesTableViewHeightPin.unsubscribe();
         shouldShowAppliedFiltersPin.unsubscribe();
@@ -307,16 +281,6 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         filterWithOffers.setOnAction(null);
         filterShowAll.setOnAction(null);
         filterFavourites.setOnAction(null);
-        allOffers.setOnAction(null);
-        myOffers.setOnAction(null);
-        buyOffers.setOnAction(null);
-        sellOffers.setOnAction(null);
-        allReputations.setOnAction(null);
-        fiveStars.setOnAction(null);
-        atLeastFourStars.setOnAction(null);
-        atLeastThreeStars.setOnAction(null);
-        atLeastTwoStars.setOnAction(null);
-        atLeastOneStar.setOnAction(null);
         createOfferButton.setOnAction(null);
         buyFromOffers.setOnAction(null);
         sellToOffers.setOnAction(null);
@@ -376,14 +340,6 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
             styleClass = "bisq-easy-container";
         }
         centerVBox.getStyleClass().add(styleClass);
-    }
-
-    private void setOfferDirectionOrOwnerFilter(DropdownFilterMenuItem<?> filterMenuItem) {
-        getModel().getSelectedOfferDirectionOrOwnerFilter().set((Filters.OfferDirectionOrOwner) filterMenuItem.getFilter());
-    }
-
-    private void setPeerReputationFilter(DropdownFilterMenuItem<?> filterMenuItem) {
-        getModel().getSelectedPeerReputationFilter().set((Filters.PeerReputation) filterMenuItem.getFilter());
     }
 
     private BisqEasyOfferbookModel getModel() {
@@ -566,12 +522,8 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         hideUserMessagesHBox.getStyleClass().add("offerbook-subheader-checkbox");
         hideUserMessagesHBox.setAlignment(Pos.CENTER);
 
-        filterOffersByPeerReputationMenu = createAndGetPeerReputationFilterMenu();
-        filterOffersByDirectionOrOwnerMenu = createAndGetOfferDirectionOrOwnerFilterMenu();
-
         searchBox.getStyleClass().add("offerbook-search-box");
-        HBox subheaderContent = new HBox(30, searchBox, Spacer.fillHBox(), hideUserMessagesHBox,
-                filterOffersByPeerReputationMenu, filterOffersByDirectionOrOwnerMenu);
+        HBox subheaderContent = new HBox(30, searchBox, Spacer.fillHBox(), hideUserMessagesHBox);
         subheaderContent.getStyleClass().add("offerbook-subheader-content");
         HBox.setHgrow(subheaderContent, Priority.ALWAYS);
 
@@ -584,55 +536,6 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
         centerVBox.getChildren().addAll(titleHBox, Layout.hLine(), subheader, chatMessagesComponent);
         centerVBox.setAlignment(Pos.CENTER);
-    }
-
-    private DropdownMenu createAndGetOfferDirectionOrOwnerFilterMenu() {
-        DropdownMenu dropdownMenu = new DropdownMenu("chevron-drop-menu-grey", "chevron-drop-menu-white", false);
-        dropdownMenu.setTooltip(Res.get("bisqEasy.offerbook.dropdownMenu.filterOffersByDirectionOrOwner.tooltip"));
-        dropdownMenu.getStyleClass().add("dropdown-offers-filter-menu");
-
-        allOffers = new DropdownFilterMenuItem<>("check-white", "check-white",
-                Res.get("bisqEasy.offerbook.dropdownMenu.filterOffersByDirectionOrOwner.allOffers"), Filters.OfferDirectionOrOwner.ALL);
-        myOffers = new DropdownFilterMenuItem<>("check-white", "check-white",
-                Res.get("bisqEasy.offerbook.dropdownMenu.filterOffersByDirectionOrOwner.myOffers"), Filters.OfferDirectionOrOwner.MINE);
-        buyOffers = new DropdownFilterMenuItem<>("check-white", "check-white",
-                Res.get("bisqEasy.offerbook.dropdownMenu.filterOffersByDirectionOrOwner.buyOffers"), Filters.OfferDirectionOrOwner.BUY);
-        sellOffers = new DropdownFilterMenuItem<>("check-white", "check-white",
-                Res.get("bisqEasy.offerbook.dropdownMenu.filterOffersByDirectionOrOwner.sellOffers"), Filters.OfferDirectionOrOwner.SELL);
-
-        dropdownMenu.addMenuItems(sellOffers, buyOffers, myOffers, allOffers);
-        return dropdownMenu;
-    }
-
-    private DropdownMenu createAndGetPeerReputationFilterMenu() {
-        DropdownMenu dropdownMenu = new DropdownMenu("chevron-drop-menu-grey", "chevron-drop-menu-white", false);
-        dropdownMenu.setTooltip(Res.get("bisqEasy.offerbook.dropdownMenu.filterOffersByPeerReputation.tooltip"));
-        dropdownMenu.getStyleClass().add("dropdown-offers-filter-menu");
-
-        allReputations = new DropdownFilterMenuItem<>("check-white", "check-white",
-                Res.get("bisqEasy.offerbook.dropdownMenu.filterOffersByPeerReputation.allReputations"),
-                Filters.PeerReputation.ALL);
-        fiveStars = new DropdownFilterMenuItem<>("check-white", "check-white",
-                Res.get("bisqEasy.offerbook.dropdownMenu.filterOffersByPeerReputation.fiveStars"),
-                Filters.PeerReputation.FIVE_STARS);
-        atLeastTitle = new DropdownTitleMenuItem(
-                Res.get("bisqEasy.offerbook.dropdownMenu.filterOffersByPeerReputation.atLeastTitle"));
-        atLeastFourStars = new DropdownFilterMenuItem<>("check-white", "check-white",
-                Res.get("bisqEasy.offerbook.dropdownMenu.filterOffersByPeerReputation.atLeastFourStars"),
-                Filters.PeerReputation.AT_LEAST_FOUR_STARS);
-        atLeastThreeStars = new DropdownFilterMenuItem<>("check-white", "check-white",
-                Res.get("bisqEasy.offerbook.dropdownMenu.filterOffersByPeerReputation.atLeastThreeStars"),
-                Filters.PeerReputation.AT_LEAST_THREE_STARS);
-        atLeastTwoStars = new DropdownFilterMenuItem<>("check-white", "check-white",
-                Res.get("bisqEasy.offerbook.dropdownMenu.filterOffersByPeerReputation.atLeastTwoStars"),
-                Filters.PeerReputation.AT_LEAST_TWO_STARS);
-        atLeastOneStar = new DropdownFilterMenuItem<>("check-white", "check-white",
-                Res.get("bisqEasy.offerbook.dropdownMenu.filterOffersByPeerReputation.atLeastOneStar"),
-                Filters.PeerReputation.AT_LEAST_ONE_STAR);
-
-        dropdownMenu.addMenuItems(fiveStars, atLeastTitle, atLeastFourStars, atLeastThreeStars, atLeastTwoStars,
-                atLeastOneStar, allReputations);
-        return dropdownMenu;
     }
 
     private void updateChannelHeaderIcon(Node node) {
@@ -663,45 +566,11 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
                 .forEach(menuItem -> menuItem.updateSelection(marketSortType == menuItem.marketSortType));
     }
 
-    private <T> void updateSelectedFilterInDropdownMenu(T selectedFilter, DropdownMenu dropdownMenu) {
-        if (selectedFilter == null) {
-            return;
-        }
-
-        dropdownMenu.getMenuItems().stream()
-                .filter(menuItem -> menuItem instanceof DropdownFilterMenuItem)
-                .forEach(menuItem -> {
-                    DropdownFilterMenuItem<?> filterMenuItem = (DropdownFilterMenuItem<?>) menuItem;
-                    filterMenuItem.updateSelection(selectedFilter == filterMenuItem.getFilter());
-                    if (selectedFilter == filterMenuItem.getFilter()) {
-                        String menuItemLabel = ((DropdownFilterMenuItem<?>) menuItem).getLabelText();
-                        if (selectedFilter instanceof Filters.PeerReputation) {
-                            menuItemLabel = createPeerReputationLabel((Filters.PeerReputation) selectedFilter, menuItemLabel);
-                        }
-                        dropdownMenu.setLabel(menuItemLabel);
-                    }
-                });
-    }
-
     private void updateAppliedFiltersSectionStyles(boolean shouldShowAppliedFilters) {
         appliedFiltersSection.getStyleClass().clear();
         appliedFiltersSection.getStyleClass().add(shouldShowAppliedFilters
                 ? "market-selection-show-applied-filters"
                 : "market-selection-no-filters");
-    }
-
-    private String createPeerReputationLabel(Filters.PeerReputation filter, String label) {
-        switch (filter) {
-            case AT_LEAST_FOUR_STARS:
-            case AT_LEAST_THREE_STARS:
-            case AT_LEAST_TWO_STARS:
-            case AT_LEAST_ONE_STAR:
-                return String.format("%s %s", atLeastTitle.getLabelText().replace(":", ""), label);
-            case FIVE_STARS:
-            case ALL:
-            default:
-                return label;
-        }
     }
 
     private void addCollapsedOfferList() {
