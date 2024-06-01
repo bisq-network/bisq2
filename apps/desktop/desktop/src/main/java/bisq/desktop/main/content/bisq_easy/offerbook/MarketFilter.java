@@ -21,21 +21,15 @@ import lombok.Getter;
 
 import java.util.function.Predicate;
 
-class Filters {
-    interface FilterPredicate<T> {
-        Predicate<T> getPredicate();
-    }
+@Getter
+enum MarketFilter {
+    ALL(item -> true),
+    FAVOURITES(item -> item.getIsFavourite().get()),
+    WITH_OFFERS(item -> item.getNumOffers().get() > 0);
 
-    @Getter
-    enum Markets implements FilterPredicate<MarketChannelItem> {
-        ALL(item -> true),
-        FAVOURITES(item -> item.getIsFavourite().get()),
-        WITH_OFFERS(item -> item.getNumOffers().get() > 0);
+    private final Predicate<MarketChannelItem> predicate;
 
-        private final Predicate<MarketChannelItem> predicate;
-
-        Markets(Predicate<MarketChannelItem> predicate) {
-            this.predicate = predicate;
-        }
+    MarketFilter(Predicate<MarketChannelItem> predicate) {
+        this.predicate = predicate;
     }
 }
