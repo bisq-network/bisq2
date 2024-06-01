@@ -37,6 +37,7 @@ import bisq.network.NetworkServiceConfig;
 import bisq.offer.OfferService;
 import bisq.presentation.notifications.SendNotificationService;
 import bisq.security.SecurityService;
+import bisq.settings.FavouriteMarketsService;
 import bisq.settings.SettingsService;
 import bisq.support.SupportService;
 import bisq.trade.TradeService;
@@ -94,6 +95,7 @@ public class DesktopApplicationService extends ApplicationService {
     private final UpdaterService updaterService;
     private final BisqEasyService bisqEasyService;
     private final AlertNotificationsService alertNotificationsService;
+    private final FavouriteMarketsService favouriteMarketsService;
 
     public DesktopApplicationService(String[] args, ShutDownHandler shutDownHandler) {
         super("desktop", args);
@@ -183,6 +185,8 @@ public class DesktopApplicationService extends ApplicationService {
 
         alertNotificationsService = new AlertNotificationsService(settingsService, bondedRolesService.getAlertService());
 
+        favouriteMarketsService = new FavouriteMarketsService(settingsService);
+
         // TODO (refactor, low prio): Not sure if ServiceProvider is still needed as we added BisqEasyService which exposes most of the services.
         serviceProvider = new ServiceProvider(shutDownHandler,
                 getConfig(),
@@ -203,7 +207,8 @@ public class DesktopApplicationService extends ApplicationService {
                 tradeService,
                 updaterService,
                 bisqEasyService,
-                alertNotificationsService);
+                alertNotificationsService,
+                favouriteMarketsService);
     }
 
     @Override
@@ -249,6 +254,7 @@ public class DesktopApplicationService extends ApplicationService {
                 .thenCompose(result -> updaterService.initialize())
                 .thenCompose(result -> bisqEasyService.initialize())
                 .thenCompose(result -> alertNotificationsService.initialize())
+                .thenCompose(result -> favouriteMarketsService.initialize())
                 .orTimeout(STARTUP_TIMEOUT_SEC, TimeUnit.SECONDS)
                 .handle((result, throwable) -> {
                     if (throwable == null) {
@@ -273,14 +279,15 @@ public class DesktopApplicationService extends ApplicationService {
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
         // We shut down services in opposite order as they are initialized
-        return supplyAsync(() -> bisqEasyService.shutdown()
+        return supplyAsync(() -> favouriteMarketsService.shutdown()
+                .thenCompose(result -> alertNotificationsService.shutdown())
+                .thenCompose(result -> bisqEasyService.shutdown())
                 .thenCompose(result -> updaterService.shutdown())
                 .thenCompose(result -> tradeService.shutdown())
                 .thenCompose(result -> supportService.shutdown())
                 .thenCompose(result -> sendNotificationService.shutdown())
                 .thenCompose(result -> chatService.shutdown())
                 .thenCompose(result -> offerService.shutdown())
-                .thenCompose(result -> alertNotificationsService.shutdown())
                 .thenCompose(result -> settingsService.shutdown())
                 .thenCompose(result -> userService.shutdown())
                 .thenCompose(result -> contractService.shutdown())

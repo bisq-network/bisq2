@@ -17,20 +17,29 @@
 
 package bisq.settings;
 
+import bisq.common.application.Service;
 import bisq.common.currency.Market;
 import bisq.common.observable.collection.ObservableSet;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.concurrent.CompletableFuture;
+
 @Slf4j
-public class FavouriteMarketsService {
+public class FavouriteMarketsService implements Service {
     private static final int MAX_ALLOWED_FAVOURITES = 5;
 
-    public static boolean isFavourite(Market market) {
-        return SettingsService.getInstance().getFavouriteMarkets().contains(market);
+    private final SettingsService settingsService;
+
+    public FavouriteMarketsService(SettingsService settingsService) {
+        this.settingsService = settingsService;
     }
 
-    public static void addFavourite(Market market) {
-        ObservableSet<Market> favouriteMarkets = SettingsService.getInstance().getFavouriteMarkets();
+    public boolean isFavourite(Market market) {
+        return settingsService.getFavouriteMarkets().contains(market);
+    }
+
+    public void addFavourite(Market market) {
+        ObservableSet<Market> favouriteMarkets = settingsService.getFavouriteMarkets();
         if (!canAddNewFavourite()) {
             return;
         }
@@ -44,8 +53,8 @@ public class FavouriteMarketsService {
         }
     }
 
-    public static void removeFavourite(Market market) {
-        ObservableSet<Market> favouriteMarkets = SettingsService.getInstance().getFavouriteMarkets();
+    public void removeFavourite(Market market) {
+        ObservableSet<Market> favouriteMarkets = settingsService.getFavouriteMarkets();
 
         if (favouriteMarkets.contains(market)) {
             favouriteMarkets.remove(market);
@@ -56,8 +65,8 @@ public class FavouriteMarketsService {
         }
     }
 
-    public static boolean canAddNewFavourite() {
-        ObservableSet<Market> favouriteMarkets = SettingsService.getInstance().getFavouriteMarkets();
+    public boolean canAddNewFavourite() {
+        ObservableSet<Market> favouriteMarkets = settingsService.getFavouriteMarkets();
         log.info("Current number of favourite markets: {}", favouriteMarkets.size());
 
         if (favouriteMarkets.size() == MAX_ALLOWED_FAVOURITES) {
@@ -67,7 +76,15 @@ public class FavouriteMarketsService {
         return true;
     }
 
-    private static void persist() {
-        SettingsService.getInstance().persist();
+    private void persist() {
+        settingsService.persist();
+    }
+
+    public CompletableFuture<Boolean> initialize() {
+        return CompletableFuture.completedFuture(true);
+    }
+
+    public CompletableFuture<Boolean> shutdown() {
+        return CompletableFuture.completedFuture(true);
     }
 }

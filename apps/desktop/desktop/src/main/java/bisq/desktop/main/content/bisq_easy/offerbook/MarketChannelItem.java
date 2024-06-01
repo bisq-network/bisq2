@@ -44,13 +44,15 @@ class MarketChannelItem {
     private static final ColorAdjust SELECTED_COLOR_ADJUST = new ColorAdjust();
 
     private final BisqEasyOfferbookChannel channel;
+    private final FavouriteMarketsService favouriteMarketsService;
     private final Market market;
     private final Node marketLogo;
     private final IntegerProperty numOffers = new SimpleIntegerProperty(0);
     private final BooleanProperty isFavourite = new SimpleBooleanProperty(false);
 
-    MarketChannelItem(BisqEasyOfferbookChannel channel) {
+    MarketChannelItem(BisqEasyOfferbookChannel channel, FavouriteMarketsService favouriteMarketsService) {
         this.channel = channel;
+        this.favouriteMarketsService = favouriteMarketsService;
         market = channel.getMarket();
         marketLogo = MarketImageComposition.createMarketLogo(market.getQuoteCurrencyCode());
         marketLogo.setCache(true);
@@ -98,21 +100,21 @@ class MarketChannelItem {
     }
 
     private boolean isFavourite() {
-        return FavouriteMarketsService.isFavourite(getMarket());
+        return favouriteMarketsService.isFavourite(getMarket());
     }
 
     private void addAsFavourite() {
-        if (!FavouriteMarketsService.canAddNewFavourite()) {
+        if (!favouriteMarketsService.canAddNewFavourite()) {
             new Popup().information(Res.get("bisqEasy.offerbook.marketListCell.favourites.maxReached.popup"))
                     .closeButtonText(Res.get("confirmation.ok"))
                     .show();
             return;
         }
 
-        FavouriteMarketsService.addFavourite(getMarket());
+        favouriteMarketsService.addFavourite(getMarket());
     }
 
     private void removeFromFavourites() {
-        FavouriteMarketsService.removeFavourite(getMarket());
+        favouriteMarketsService.removeFavourite(getMarket());
     }
 }
