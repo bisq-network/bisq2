@@ -42,6 +42,7 @@ import bisq.i18n.Res;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.settings.CookieKey;
+import bisq.settings.FavouriteMarketsService;
 import bisq.settings.SettingsService;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationService;
@@ -66,9 +67,10 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     private final SettingsService settingsService;
     private final MarketPriceService marketPriceService;
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
+    private final ReputationService reputationService;
+    private final FavouriteMarketsService favouriteMarketsService;
     private final BisqEasyOfferbookModel bisqEasyOfferbookModel;
     private final SetChangeListener<Market> favouriteMarketsListener;
-    private final ReputationService reputationService = serviceProvider.getUserService().getReputationService();
     private Pin offerOnlySettingsPin, bisqEasyPrivateTradeChatChannelsPin, selectedChannelPin,
             marketPriceByCurrencyMapPin, favouriteMarketsPin, offerMessagesPin, showBuyOffersPin,
             showOfferListExpandedSettingsPin, showMarketSelectionListCollapsedSettingsPin;
@@ -78,9 +80,11 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     public BisqEasyOfferbookController(ServiceProvider serviceProvider) {
         super(serviceProvider, ChatChannelDomain.BISQ_EASY_OFFERBOOK, NavigationTarget.BISQ_EASY_OFFERBOOK);
 
-        bisqEasyOfferbookChannelService = chatService.getBisqEasyOfferbookChannelService();
         settingsService = serviceProvider.getSettingsService();
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
+        bisqEasyOfferbookChannelService = chatService.getBisqEasyOfferbookChannelService();
+        reputationService = serviceProvider.getUserService().getReputationService();
+        favouriteMarketsService = serviceProvider.getFavouriteMarketsService();
         bisqEasyOfferbookModel = getModel();
         favouriteMarketsListener = change -> {
             if (change.wasAdded()) {
@@ -355,7 +359,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
 
     private void createMarketChannels() {
         List<MarketChannelItem> marketChannelItems = bisqEasyOfferbookChannelService.getChannels().stream()
-                .map(MarketChannelItem::new)
+                .map(channel -> new MarketChannelItem(channel, favouriteMarketsService))
                 .collect(Collectors.toList());
         model.getMarketChannelItems().setAll(marketChannelItems);
     }

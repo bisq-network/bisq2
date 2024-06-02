@@ -47,6 +47,7 @@ public class PreferencesController implements Controller {
     private final ChatNotificationService chatNotificationService;
     private final DifficultyAdjustmentService difficultyAdjustmentService;
     private final MinRequiredReputationScoreService minRequiredReputationScoreService;
+    private final DontShowAgainService dontShowAgainService;
 
     private Pin chatNotificationTypePin, useAnimationsPin, preventStandbyModePin, offerOnlyPin, closeMyOfferWhenTakenPin,
             supportedLanguageCodesPin, minRequiredReputationScorePin, ignoreDiffAdjustmentFromSecManagerPin,
@@ -60,6 +61,7 @@ public class PreferencesController implements Controller {
         chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
         difficultyAdjustmentService = serviceProvider.getBondedRolesService().getDifficultyAdjustmentService();
         minRequiredReputationScoreService = serviceProvider.getBondedRolesService().getMinRequiredReputationScoreService();
+        dontShowAgainService = serviceProvider.getDontShowAgainService();
         model = new PreferencesModel();
         view = new PreferencesView(model, this);
     }
@@ -193,7 +195,7 @@ public class PreferencesController implements Controller {
     }
 
     void onResetDontShowAgain() {
-        DontShowAgainService.resetDontShowAgain();
+        dontShowAgainService.resetDontShowAgain();
     }
 
     void onClearNotifications() {

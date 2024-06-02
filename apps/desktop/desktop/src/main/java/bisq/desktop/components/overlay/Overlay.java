@@ -82,12 +82,14 @@ public abstract class Overlay<T extends Overlay<T>> {
     private static String baseDir;
     public static SettingsService settingsService;
     private static ShutDownHandler shutdownHandler;
+    private static DontShowAgainService dontShowAgainService;
 
     public static void init(ServiceProvider serviceProvider, Region primaryStageOwner) {
         Overlay.primaryStageOwner = primaryStageOwner;
         Overlay.baseDir = serviceProvider.getConfig().getBaseDir().toAbsolutePath().toString();
         Overlay.settingsService = serviceProvider.getSettingsService();
         Overlay.shutdownHandler = serviceProvider.getShutDownHandler();
+        Overlay.dontShowAgainService = serviceProvider.getDontShowAgainService();
     }
 
 
@@ -201,7 +203,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void show(boolean showAgainChecked) {
-        if (dontShowAgainId == null || DontShowAgainService.showAgain(dontShowAgainId)) {
+        if (dontShowAgainId == null || dontShowAgainService.showAgain(dontShowAgainId)) {
             createGridPane();
             if (LanguageRepository.isDefaultLanguageRTL()) {
                 getRootContainer().setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT);
@@ -967,8 +969,8 @@ public abstract class Overlay<T extends Overlay<T>> {
             buttonBox.getChildren().add(0, dontShowAgainCheckBox);
 
             dontShowAgainCheckBox.setSelected(isChecked);
-            DontShowAgainService.putDontShowAgain(dontShowAgainId, isChecked);
-            dontShowAgainCheckBox.setOnAction(e -> DontShowAgainService.putDontShowAgain(dontShowAgainId, dontShowAgainCheckBox.isSelected()));
+            dontShowAgainService.putDontShowAgain(dontShowAgainId, isChecked);
+            dontShowAgainCheckBox.setOnAction(e -> dontShowAgainService.putDontShowAgain(dontShowAgainId, dontShowAgainCheckBox.isSelected()));
         }
     }
 

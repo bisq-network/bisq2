@@ -33,11 +33,13 @@ public class WelcomeController implements Controller {
     @Getter
     private final WelcomeView view;
     private final OverlayController overlayController;
+    private final DontShowAgainService dontShowAgainService;
 
     public WelcomeController(ServiceProvider serviceProvider) {
         overlayController = OverlayController.getInstance();
         WelcomeModel model = new WelcomeModel();
         view = new WelcomeView(model, this);
+        dontShowAgainService = serviceProvider.getDontShowAgainService();
     }
 
     @Override
@@ -55,7 +57,7 @@ public class WelcomeController implements Controller {
     }
 
     void onNext() {
-        DontShowAgainService.dontShowAgain(WELCOME);
+        dontShowAgainService.dontShowAgain(WELCOME);
         Navigation.navigateTo(NavigationTarget.ONBOARDING_GENERATE_NYM);
     }
 }

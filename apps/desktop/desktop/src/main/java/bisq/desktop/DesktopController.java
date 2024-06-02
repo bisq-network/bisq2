@@ -71,6 +71,7 @@ public class DesktopController extends NavigationController {
     private final UserIdentityService userIdentityService;
     private final ChatNotificationService chatNotificationService;
     private final ServiceProvider serviceProvider;
+    private final DontShowAgainService dontShowAgainService;
     private PreventStandbyModeService preventStandbyModeService;
 
     private final Observable<State> applicationServiceState;
@@ -81,6 +82,7 @@ public class DesktopController extends NavigationController {
                              JavaFxApplicationData applicationJavaFxApplicationData,
                              Runnable onActivatedHandler) {
         super(NavigationTarget.PRIMARY_STAGE);
+
         this.applicationServiceState = applicationServiceState;
         this.applicationJavaFxApplicationData = applicationJavaFxApplicationData;
         this.serviceProvider = serviceProvider;
@@ -89,6 +91,7 @@ public class DesktopController extends NavigationController {
         settingsService = serviceProvider.getSettingsService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
+        dontShowAgainService = serviceProvider.getDontShowAgainService();
     }
 
     public void init() {
@@ -98,7 +101,7 @@ public class DesktopController extends NavigationController {
 
         splashController = new SplashController(applicationServiceState, serviceProvider);
 
-        Browser.initialize(applicationJavaFxApplicationData.getHostServices(), serviceProvider.getSettingsService());
+        Browser.initialize(applicationJavaFxApplicationData.getHostServices(), settingsService, dontShowAgainService);
         Transitions.setSettingsService(settingsService);
         AnchorPane viewRoot = view.getRoot();
         preventStandbyModeService = new PreventStandbyModeService(serviceProvider);
@@ -212,7 +215,7 @@ public class DesktopController extends NavigationController {
         boolean hasUserIdentities = serviceProvider.getUserService().getUserIdentityService().hasUserIdentities();
 
         if (!hasUserIdentities) {
-            if (DontShowAgainService.showAgain(WELCOME)) {
+            if (dontShowAgainService.showAgain(WELCOME)) {
                 Navigation.navigateTo(NavigationTarget.ONBOARDING_WELCOME);
             } else {
                 Navigation.navigateTo(NavigationTarget.ONBOARDING_GENERATE_NYM);
