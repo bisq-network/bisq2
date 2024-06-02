@@ -71,9 +71,9 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     private final FavouriteMarketsService favouriteMarketsService;
     private final BisqEasyOfferbookModel bisqEasyOfferbookModel;
     private final SetChangeListener<Market> favouriteMarketsListener;
-    private Pin offerOnlySettingsPin, bisqEasyPrivateTradeChatChannelsPin, selectedChannelPin,
-            marketPriceByCurrencyMapPin, favouriteMarketsPin, offerMessagesPin, showBuyOffersPin,
-            showOfferListExpandedSettingsPin, showMarketSelectionListCollapsedSettingsPin;
+    private Pin bisqEasyPrivateTradeChatChannelsPin, selectedChannelPin, marketPriceByCurrencyMapPin,
+            favouriteMarketsPin, offerMessagesPin, showBuyOffersPin, showOfferListExpandedSettingsPin,
+            showMarketSelectionListCollapsedSettingsPin;
     private Subscription marketSelectorSearchPin, selectedMarketFilterPin, selectedMarketSortTypePin,
             showBuyOffersFromModelPin;
 
@@ -127,7 +127,6 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
 
         model.getMarketSelectorSearchText().set("");
 
-        offerOnlySettingsPin = FxBindings.bindBiDir(model.getOfferOnly()).to(settingsService.getOffersOnly());
         showBuyOffersPin = FxBindings.bindBiDir(model.getShowBuyOffers()).to(settingsService.getShowBuyOffers());
         showOfferListExpandedSettingsPin = FxBindings.bindBiDir(model.getShowOfferListExpanded()).to(settingsService.getShowOfferListExpanded());
         showMarketSelectionListCollapsedSettingsPin = FxBindings.bindBiDir(model.getShowMarketSelectionListCollapsed())
@@ -231,7 +230,6 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
             offerMessagesPin.unbind();
         }
 
-        offerOnlySettingsPin.unbind();
         showBuyOffersPin.unbind();
         showOfferListExpandedSettingsPin.unbind();
         showMarketSelectionListCollapsedSettingsPin.unbind();
