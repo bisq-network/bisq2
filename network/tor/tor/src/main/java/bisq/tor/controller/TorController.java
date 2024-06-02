@@ -57,6 +57,30 @@ public class TorController implements BootstrapEventListener {
         waitUntilBootstrapped();
     }
 
+    public Optional<Integer> getSocksPort() {
+        try {
+            TorControlProtocol torControlProtocol = getTorControlProtocol();
+            String socksListenersString = torControlProtocol.getInfo("net/listeners/socks");
+
+            String socksListener;
+            if (socksListenersString.contains(" ")) {
+                String[] socksPorts = socksListenersString.split(" ");
+                socksListener = socksPorts[0];
+            } else {
+                socksListener = socksListenersString;
+            }
+
+            // "127.0.0.1:12345"
+            socksListener = socksListener.replace("\"", "");
+            String portString = socksListener.split(":")[1];
+
+            int port = Integer.parseInt(portString);
+            return Optional.of(port);
+        } catch (IOException e) {
+            return Optional.empty();
+        }
+    }
+
     @Override
     public void onBootstrapStatusEvent(BootstrapEvent bootstrapEvent) {
         log.info("Tor bootstrap event: {}", bootstrapEvent);
