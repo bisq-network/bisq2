@@ -34,7 +34,6 @@ public class ChatMessagesListModel implements bisq.desktop.common.view.Model {
     private final BooleanProperty layoutChildrenDone = new SimpleBooleanProperty();
 
     private final BooleanProperty isPublicChannel = new SimpleBooleanProperty();
-    private final ObjectProperty<ChatMessage> selectedChatMessageForMoreOptionsPopup = new SimpleObjectProperty<>(null);
     private final ChatChannelDomain chatChannelDomain;
     @Setter
     private Predicate<? super ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> searchPredicate = e -> true;
