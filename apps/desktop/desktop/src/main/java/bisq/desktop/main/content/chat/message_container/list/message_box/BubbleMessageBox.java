@@ -25,6 +25,7 @@ import bisq.desktop.common.Icons;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqTooltip;
+import bisq.desktop.components.controls.DropdownMenu;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListModel;
@@ -61,6 +62,7 @@ public abstract class BubbleMessageBox extends MessageBox {
     protected Label supportedLanguages, userName, dateTime, message;
     protected HBox userNameAndDateHBox, messageBgHBox, messageHBox;
     protected VBox userProfileIconVbox;
+    protected DropdownMenu moreOptionsMenu;
 
     public BubbleMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
                             ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
@@ -133,7 +135,7 @@ public abstract class BubbleMessageBox extends MessageBox {
 
     private void addOnMouseEventHandlers() {
         setOnMouseEntered(e -> {
-            if (model.getSelectedChatMessageForMoreOptionsPopup().get() != null) {
+            if (moreOptionsMenu != null && moreOptionsMenu.getIsMenuShowing().get()) {
                 return;
             }
             dateTime.setVisible(true);
@@ -141,7 +143,7 @@ public abstract class BubbleMessageBox extends MessageBox {
         });
 
         setOnMouseExited(e -> {
-            if (model.getSelectedChatMessageForMoreOptionsPopup().get() == null) {
+            if (moreOptionsMenu == null || !moreOptionsMenu.getIsMenuShowing().get()) {
                 dateTime.setVisible(false);
                 reactionsHBox.setVisible(false);
             }
@@ -152,6 +154,7 @@ public abstract class BubbleMessageBox extends MessageBox {
     public void cleanup() {
         setOnMouseEntered(null);
         setOnMouseExited(null);
+
         showHighlightedPin.unsubscribe();
     }
 
