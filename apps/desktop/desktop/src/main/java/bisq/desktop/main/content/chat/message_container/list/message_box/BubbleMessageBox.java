@@ -23,6 +23,7 @@ import bisq.chat.Citation;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.desktop.common.Icons;
 import bisq.desktop.common.utils.ClipboardUtil;
+import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
@@ -157,8 +158,8 @@ public abstract class BubbleMessageBox extends MessageBox {
     private Label createAndGetSupportedLanguagesLabel() {
         Label label = new Label();
         if (item.isBisqEasyPublicChatMessageWithOffer()) {
+            label.setGraphic(ImageUtil.getImageViewById("language-grey"));
             BisqEasyOfferbookMessage chatMessage = (BisqEasyOfferbookMessage) item.getChatMessage();
-            label.setText(item.getSupportedLanguageCodes(chatMessage));
             label.setTooltip(new BisqTooltip(item.getSupportedLanguageCodesForTooltip(chatMessage)));
         }
         return label;

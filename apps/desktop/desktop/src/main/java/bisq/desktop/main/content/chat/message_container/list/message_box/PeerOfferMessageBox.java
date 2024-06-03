@@ -49,7 +49,8 @@ public final class PeerOfferMessageBox extends PeerTextMessageBox {
                                ChatMessagesListController controller, ChatMessagesListModel model) {
         super(item, list, controller, model);
 
-        reactionsHBox.getChildren().setAll(replyIcon, pmIcon, moreOptionsIcon, supportedLanguages, Spacer.fillHBox());
+        HBox.setMargin(supportedLanguages, new Insets(5, 0, -5, 0));
+        reactionsHBox.getChildren().setAll(replyIcon, pmIcon, supportedLanguages, moreOptionsIcon, Spacer.fillHBox());
 
         VBox.setMargin(userNameAndDateHBox, new Insets(-5, 0, 5, 10));
         contentVBox.getChildren().setAll(userNameAndDateHBox, messageBgHBox, reactionsHBox);

@@ -70,8 +70,8 @@ public class PeerTextMessageBox extends BubbleMessageBox {
         pmIcon = getIconWithToolTip(AwesomeIcon.COMMENT_ALT, Res.get("chat.message.privateMessage"));
         moreOptionsIcon = getIconWithToolTip(AwesomeIcon.ELLIPSIS_HORIZONTAL, Res.get("chat.message.moreOptions"));
         HBox.setMargin(replyIcon, new Insets(4, 0, -4, 10));
-        HBox.setMargin(pmIcon, new Insets(4, 0, -4, 0));
-        HBox.setMargin(moreOptionsIcon, new Insets(6, 0, -6, 0));
+        HBox.setMargin(pmIcon, new Insets(3, 0, -3, 0));
+        HBox.setMargin(moreOptionsIcon, new Insets(5, 0, -5, 0));
         reactionsHBox.setVisible(false);
     }
 
