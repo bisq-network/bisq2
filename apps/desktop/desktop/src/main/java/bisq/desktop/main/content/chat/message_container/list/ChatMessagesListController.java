@@ -26,14 +26,10 @@ import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.view.Navigation;
-import bisq.desktop.components.controls.BisqPopup;
-import bisq.desktop.components.controls.BisqPopupMenu;
-import bisq.desktop.components.controls.BisqPopupMenuItem;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.BisqEasyServiceUtil;
 import bisq.desktop.main.content.bisq_easy.take_offer.TakeOfferController;
@@ -54,7 +50,6 @@ import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -63,7 +58,6 @@ import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -386,29 +380,6 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
             CommonPublicChatMessage commonPublicChatMessage = (CommonPublicChatMessage) chatMessage;
             chatService.getCommonPublicChatChannelServices().get(model.getChatChannelDomain()).publishEditedChatMessage(commonPublicChatMessage, editedText, userIdentity);
         }
-    }
-
-    void onOpenMoreOptions(Node owner, ChatMessage chatMessage, Runnable onClose) {
-        if (chatMessage.equals(model.getSelectedChatMessageForMoreOptionsPopup().get())) {
-            return;
-        }
-        model.getSelectedChatMessageForMoreOptionsPopup().set(chatMessage);
-
-        List<BisqPopupMenuItem> items = new ArrayList<>();
-        items.add(new BisqPopupMenuItem(Res.get("chat.message.contextMenu.copyMessage"),
-                () -> onCopyMessage(chatMessage)));
-        if (!model.isMyMessage(chatMessage)) {
-            if (chatMessage instanceof PublicChatMessage) {
-                items.add(new BisqPopupMenuItem(Res.get("chat.message.contextMenu.ignoreUser"),
-                        () -> onIgnoreUser(chatMessage)));
-            }
-            items.add(new BisqPopupMenuItem(Res.get("chat.message.contextMenu.reportUser"),
-                    () -> onReportUser(chatMessage)));
-        }
-
-        BisqPopupMenu menu = new BisqPopupMenu(items, onClose);
-        menu.setAlignment(BisqPopup.Alignment.LEFT);
-        menu.show(owner);
     }
 
     public void onReportUser(ChatMessage chatMessage) {
