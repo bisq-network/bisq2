@@ -28,7 +28,6 @@ import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.DropdownMenu;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
-import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListModel;
 import bisq.desktop.main.content.components.UserProfileIcon;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
@@ -55,7 +54,6 @@ public abstract class BubbleMessageBox extends MessageBox {
     protected final ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item;
     protected final ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list;
     protected final ChatMessagesListController controller;
-    protected final ChatMessagesListModel model;
     protected final UserProfileIcon userProfileIcon = new UserProfileIcon(60);
     protected final HBox reactionsHBox = new HBox(20);
     protected final VBox quotedMessageVBox, contentVBox;
@@ -66,12 +64,10 @@ public abstract class BubbleMessageBox extends MessageBox {
 
     public BubbleMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
                             ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
-                            ChatMessagesListController controller,
-                            ChatMessagesListModel model) {
+                            ChatMessagesListController controller) {
         this.item = item;
         this.list = list;
         this.controller = controller;
-        this.model = model;
 
         setUpUserNameAndDateTime();
         setUpUserProfileIcon();

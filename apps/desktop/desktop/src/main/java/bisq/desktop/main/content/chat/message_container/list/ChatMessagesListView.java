@@ -71,7 +71,7 @@ public class ChatMessagesListView extends bisq.desktop.common.view.View<ChatMess
         VBox placeholder = ChatUtil.createEmptyChatPlaceholder(placeholderTitle, placeholderDescription);
         listView.setPlaceholder(placeholder);
 
-        listView.setCellFactory(new ChatMessageListCellFactory(controller, model));
+        listView.setCellFactory(new ChatMessageListCellFactory(controller));
 
         // https://stackoverflow.com/questions/20621752/javafx-make-listview-not-selectable-via-mouse
         listView.setSelectionModel(new NoSelectionModel<>());
