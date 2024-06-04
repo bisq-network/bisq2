@@ -1,6 +1,7 @@
 package bisq.tor.controller;
 
 import bisq.tor.controller.events.events.BootstrapEvent;
+import bisq.tor.controller.events.listener.BootstrapEventListener;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.BufferedReader;
@@ -8,14 +9,18 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 
 @Slf4j
 public class WhonixTorControlReader implements AutoCloseable {
     private final BufferedReader bufferedReader;
     private final BlockingQueue<String> replies = new LinkedBlockingQueue<>();
+    private final List<BootstrapEventListener> bootstrapEventListeners = new CopyOnWriteArrayList<>();
+
     private Optional<Thread> workerThread = Optional.empty();
 
     public WhonixTorControlReader(InputStream inputStream) {
@@ -29,10 +34,11 @@ public class WhonixTorControlReader implements AutoCloseable {
                 while ((line = bufferedReader.readLine()) != null) {
 
                     if (isStatusClientEvent(line)) {
-                        Optional<BootstrapEvent> bootstrapEvent = BootstrapEventParser.tryParse(line);
+                        Optional<BootstrapEvent> bootstrapEventOptional = BootstrapEventParser.tryParse(line);
 
-                        if (bootstrapEvent.isPresent()) {
-                            log.info("{}", bootstrapEvent.get());
+                        if (bootstrapEventOptional.isPresent()) {
+                            BootstrapEvent bootstrapEvent = bootstrapEventOptional.get();
+                            bootstrapEventListeners.forEach(listener -> listener.onBootstrapStatusEvent(bootstrapEvent));
                         } else {
                             log.info("Unknown status client event: {}", line);
                         }
@@ -65,6 +71,14 @@ public class WhonixTorControlReader implements AutoCloseable {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public void addBootstrapEventListener(BootstrapEventListener listener) {
+        bootstrapEventListeners.add(listener);
+    }
+
+    public void removeBootstrapEventListener(BootstrapEventListener listener) {
+        bootstrapEventListeners.remove(listener);
     }
 
     private boolean isStatusClientEvent(String line) {
