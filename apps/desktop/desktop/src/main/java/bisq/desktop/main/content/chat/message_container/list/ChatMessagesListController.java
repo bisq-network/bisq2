@@ -3,7 +3,12 @@ package bisq.desktop.main.content.chat.message_container.list;
 import bisq.bisq_easy.BisqEasyService;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.market_price.MarketPriceService;
-import bisq.chat.*;
+import bisq.chat.ChatChannel;
+import bisq.chat.ChatChannelDomain;
+import bisq.chat.ChatChannelSelectionService;
+import bisq.chat.ChatMessage;
+import bisq.chat.ChatMessageType;
+import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.BisqEasyOfferMessage;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
@@ -245,16 +250,6 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
 
     public void setSearchPredicate(Predicate<? super ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate) {
         model.setSearchPredicate(Objects.requireNonNullElseGet(predicate, () -> e -> true));
-        applyPredicate();
-    }
-
-    public void setBisqEasyOfferDirectionOrOwnerFilterPredicate(Predicate<? super ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate) {
-        model.setBisqEasyOfferDirectionOrOwnerFilterPredicate(Objects.requireNonNullElseGet(predicate, () -> e -> true));
-        applyPredicate();
-    }
-
-    public void setBisqEasyPeerReputationFilterPredicate(Predicate<? super ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate) {
-        model.setBisqEasyPeerReputationFilterPredicate(Objects.requireNonNullElseGet(predicate, () -> e -> true));
         applyPredicate();
     }
 
@@ -579,8 +574,6 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                     userProfileService.findUserProfile(senderUserProfile.get().getId()).isPresent();
         };
         model.getFilteredChatMessages().setPredicate(item -> model.getSearchPredicate().test(item)
-                && model.getBisqEasyOfferDirectionOrOwnerFilterPredicate().test(item)
-                && model.getBisqEasyPeerReputationFilterPredicate().test(item)
                 && predicate.test(item));
     }
 

@@ -14,7 +14,11 @@ import javafx.beans.binding.StringExpression;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
-import javafx.scene.control.*;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -186,6 +190,7 @@ public class BisqEasyOfferbookUtil {
             private final VBox nameAndReputationBox = new VBox(userNameLabel, reputationScoreDisplay);
             private final UserProfileIcon userProfileIcon = new UserProfileIcon(30);
             private final HBox userProfileBox = new HBox(10, userProfileIcon, nameAndReputationBox);
+            private Subscription reputationScorePin;
 
             {
                 userNameLabel.setId("chat-user-name");
@@ -200,10 +205,13 @@ public class BisqEasyOfferbookUtil {
 
                 if (item != null && !empty) {
                     userNameLabel.setText(item.getUserNickname());
-                    reputationScoreDisplay.setReputationScore(item.getReputationScore());
+                    reputationScorePin = EasyBind.subscribe(item.getReputationScore(), reputationScoreDisplay::setReputationScore);
                     userProfileIcon.applyData(item.getUserProfile(), item.getLastSeenAsString(), item.getLastSeen());
                     setGraphic(userProfileBox);
                 } else {
+                    if (reputationScorePin != null) {
+                        reputationScorePin.unsubscribe();
+                    }
                     setGraphic(null);
                 }
             }
@@ -220,10 +228,12 @@ public class BisqEasyOfferbookUtil {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    // TODO: react to priceSpec if it changes
-                    priceSpecAsPercentLabel.setText(PercentageFormatter.formatToPercentWithSymbol(item.getPriceSpecAsPercent()));
+                    StringExpression priceSpecAsPercent = Bindings.createStringBinding(() ->
+                            PercentageFormatter.formatToPercentWithSymbol(item.getPriceSpecAsPercent()));
+                    priceSpecAsPercentLabel.textProperty().bind(priceSpecAsPercent);
                     setGraphic(priceSpecAsPercentLabel);
                 } else {
+                    priceSpecAsPercentLabel.textProperty().unbind();
                     setGraphic(null);
                 }
             }

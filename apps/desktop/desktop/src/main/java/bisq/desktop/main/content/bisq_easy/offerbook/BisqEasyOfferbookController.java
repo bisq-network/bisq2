@@ -74,8 +74,8 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
     private Pin offerOnlySettingsPin, bisqEasyPrivateTradeChatChannelsPin, selectedChannelPin,
             marketPriceByCurrencyMapPin, favouriteMarketsPin, offerMessagesPin, showBuyOffersPin,
             showOfferListExpandedSettingsPin, showMarketSelectionListCollapsedSettingsPin;
-    private Subscription marketSelectorSearchPin, selectedMarketFilterPin, selectedOfferDirectionOrOwnerFilterPin,
-            selectedPeerReputationFilterPin, selectedMarketSortTypePin, showBuyOffersFromModelPin;
+    private Subscription marketSelectorSearchPin, selectedMarketFilterPin, selectedMarketSortTypePin,
+            showBuyOffersFromModelPin;
 
     public BisqEasyOfferbookController(ServiceProvider serviceProvider) {
         super(serviceProvider, ChatChannelDomain.BISQ_EASY_OFFERBOOK, NavigationTarget.BISQ_EASY_OFFERBOOK);
@@ -153,9 +153,8 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
             updateFilteredMarketChannelItems();
         });
 
-        Filters.Markets persistedMarketsFilter = settingsService.getCookie().asString(CookieKey.MARKETS_FILTER).map(name ->
-                        ProtobufUtils.enumFromProto(Filters.Markets.class, name, Filters.Markets.ALL))
-                .orElse(Filters.Markets.ALL);
+        MarketFilter persistedMarketsFilter = settingsService.getCookie().asString(CookieKey.MARKETS_FILTER).map(name ->
+                        ProtobufUtils.enumFromProto(MarketFilter.class, name, MarketFilter.ALL)).orElse(MarketFilter.ALL);
         model.getSelectedMarketsFilter().set(persistedMarketsFilter);
 
         selectedMarketFilterPin = EasyBind.subscribe(model.getSelectedMarketsFilter(), filter -> {
@@ -164,7 +163,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
                 settingsService.setCookie(CookieKey.MARKETS_FILTER, model.getSelectedMarketsFilter().get().name());
                 updateFilteredMarketChannelItems();
             }
-            model.getShouldShowAppliedFilters().set(filter == Filters.Markets.WITH_OFFERS || filter == Filters.Markets.FAVOURITES);
+            model.getShouldShowAppliedFilters().set(filter == MarketFilter.WITH_OFFERS || filter == MarketFilter.FAVOURITES);
         });
 
         marketPriceByCurrencyMapPin = marketPriceService.getMarketPriceByCurrencyMap().addObserver(() -> {
@@ -178,26 +177,6 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         model.getMarketChannelItems().addListener(new WeakReference<>(
                 (ListChangeListener<? super MarketChannelItem>) c -> updateFilteredMarketChannelItems()
         ).get());
-
-        selectedOfferDirectionOrOwnerFilterPin = EasyBind.subscribe(model.getSelectedOfferDirectionOrOwnerFilter(), filter -> {
-            if (filter == null) {
-                // By default, show all offers (any direction or owner)
-                model.getSelectedOfferDirectionOrOwnerFilter().set(Filters.OfferDirectionOrOwner.ALL);
-                chatMessageContainerController.setBisqEasyOfferDirectionOrOwnerFilterPredicate(model.getSelectedOfferDirectionOrOwnerFilter().get().getPredicate());
-            } else {
-                chatMessageContainerController.setBisqEasyOfferDirectionOrOwnerFilterPredicate(filter.getPredicate());
-            }
-        });
-
-        selectedPeerReputationFilterPin = EasyBind.subscribe(model.getSelectedPeerReputationFilter(), filter -> {
-            if (filter == null) {
-                // By default, show all offers (with any reputation)
-                model.getSelectedPeerReputationFilter().set(Filters.PeerReputation.ALL);
-                chatMessageContainerController.setBisqEasyPeerReputationFilterPredicate(model.getSelectedPeerReputationFilter().get().getPredicate());
-            } else {
-                chatMessageContainerController.setBisqEasyPeerReputationFilterPredicate(filter.getPredicate());
-            }
-        });
 
         showBuyOffersFromModelPin = EasyBind.subscribe(model.getShowBuyOffers(), showBuyOffers -> {
             model.getFilteredOfferMessageItems().setPredicate(item ->
@@ -260,8 +239,6 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         selectedChannelPin.unbind();
         marketSelectorSearchPin.unsubscribe();
         selectedMarketFilterPin.unsubscribe();
-        selectedOfferDirectionOrOwnerFilterPin.unsubscribe();
-        selectedPeerReputationFilterPin.unsubscribe();
         marketPriceByCurrencyMapPin.unbind();
         selectedMarketSortTypePin.unsubscribe();
         favouriteMarketsPin.unbind();

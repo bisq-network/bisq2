@@ -200,22 +200,17 @@
 }
 
 /* Drop down sort & filter menu */
-.dropdown-menu-popup .dropdown-filter-menu-item .dropdown-menu-item-content .menu-item-icon,
-.dropdown-menu-popup .dropdown-filter-menu-item:hover .dropdown-menu-item-content .menu-item-icon,
-.dropdown-menu-popup .dropdown-sort-by-menu-item .dropdown-menu-item-content .menu-item-icon,
-.dropdown-menu-popup .dropdown-sort-by-menu-item:hover .dropdown-menu-item-content .menu-item-icon {
+.dropdown-menu-popup .dropdown-menu-item .dropdown-menu-item-content .menu-item-icon,
+.dropdown-menu-popup .dropdown-menu-item:hover .dropdown-menu-item-content .menu-item-icon {
     -fx-opacity: 0;
 }
 
-.dropdown-menu-popup .dropdown-filter-menu-item .dropdown-menu-item-content:selected .menu-item-icon,
-.dropdown-menu-popup .dropdown-filter-menu-item:hover .dropdown-menu-item-content:selected .menu-item-icon,
-.dropdown-menu-popup .dropdown-sort-by-menu-item .dropdown-menu-item-content:selected .menu-item-icon,
-.dropdown-menu-popup .dropdown-sort-by-menu-item:hover .dropdown-menu-item-content:selected .menu-item-icon {
+.dropdown-menu-popup .dropdown-menu-item .dropdown-menu-item-content:selected .menu-item-icon,
+.dropdown-menu-popup .dropdown-menu-item:hover .dropdown-menu-item-content:selected .menu-item-icon {
     -fx-opacity: 1;
 }
 
-.dropdown-menu-popup .dropdown-filter-menu-item .dropdown-menu-item-content:selected .label,
-.dropdown-menu-popup .dropdown-sort-by-menu-item .dropdown-menu-item-content:selected .label {
+.dropdown-menu-popup .dropdown-menu-item .dropdown-menu-item-content:selected .label {
     -fx-text-fill: -fx-light-text-color;
 }
 

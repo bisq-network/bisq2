@@ -288,7 +288,7 @@ public class StandardTable<T> extends VBox {
             this.filter = filter;
 
             setToggleGroup(toggleGroup);
-            getStyleClass().add("dropdown-filter-menu-item");
+            getStyleClass().add("dropdown-menu-item");
 
             toggleChangeListener = (observable, oldValue, newValue) -> toggleChanged();
         }

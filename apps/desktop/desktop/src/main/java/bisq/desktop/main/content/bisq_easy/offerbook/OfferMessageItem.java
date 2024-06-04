@@ -33,6 +33,8 @@ import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -45,16 +47,17 @@ public class OfferMessageItem {
     private final BisqEasyOfferbookMessage bisqEasyOfferbookMessage;
     private final BisqEasyOffer bisqEasyOffer;
     private final MarketPriceService marketPriceService;
+    private final ReputationService reputationService;
     private final UserProfile userProfile;
     private final String userNickname;
     private final Pair<Monetary, Monetary> minMaxAmount;
     private final String minMaxAmountAsString;
-    private final ReputationScore reputationScore;
-    private final long totalScore;
-    private double priceSpecAsPercent;
     private final long lastSeen;
     private final String lastSeenAsString;
-    private Pin marketPriceByCurrencyMapPin;
+    private final ObjectProperty<ReputationScore> reputationScore = new SimpleObjectProperty<>();
+    private long totalScore;
+    private double priceSpecAsPercent;
+    private Pin marketPriceByCurrencyMapPin, reputationChangedPin;
 
     OfferMessageItem(BisqEasyOfferbookMessage bisqEasyOfferbookMessage,
                      UserProfile userProfile,
@@ -64,13 +67,11 @@ public class OfferMessageItem {
         this.bisqEasyOfferbookMessage = bisqEasyOfferbookMessage;
         this.bisqEasyOffer = bisqEasyOfferbookMessage.getBisqEasyOffer().orElseThrow();
         this.userProfile = userProfile;
+        this.reputationService = reputationService;
         this.marketPriceService = marketPriceService;
         userNickname = userProfile.getNickName();
-        reputationScore = reputationService.findReputationScore(userProfile.getId()).orElse(ReputationScore.NONE);
-        totalScore = reputationScore.getTotalScore();
         minMaxAmount = retrieveMinMaxAmount();
         minMaxAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, bisqEasyOffer, false);
-
         lastSeen = userProfileService.getLastSeen(userProfile);
         lastSeenAsString = TimeFormatter.formatAge(lastSeen);
 
@@ -79,6 +80,7 @@ public class OfferMessageItem {
 
     void dispose() {
         marketPriceByCurrencyMapPin.unbind();
+        reputationChangedPin.unbind();
     }
 
     Monetary getMinAmount() {
@@ -93,6 +95,10 @@ public class OfferMessageItem {
         marketPriceByCurrencyMapPin = marketPriceService.getMarketPriceByCurrencyMap().addObserver(() ->
                 UIThread.run(this::updatePriceSpecAsPercent));
         updatePriceSpecAsPercent();
+
+        reputationChangedPin = reputationService.getChangedUserProfileScore().addObserver(userProfileId ->
+                UIThread.run(this::updateReputationScore));
+        updateReputationScore();
     }
 
     private Pair<Monetary, Monetary> retrieveMinMaxAmount() {
@@ -103,5 +109,10 @@ public class OfferMessageItem {
 
     private void updatePriceSpecAsPercent() {
         priceSpecAsPercent = PriceUtil.findPercentFromMarketPrice(marketPriceService, bisqEasyOffer).orElseThrow();
+    }
+
+    private void updateReputationScore() {
+        reputationScore.set(reputationService.getReputationScore(userProfile));
+        totalScore = reputationScore.get().getTotalScore();
     }
 }
