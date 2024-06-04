@@ -15,8 +15,8 @@ public class WhonixTorController implements AutoCloseable {
     private final WhonixTorControlReader whonixTorControlReader;
     private final OutputStream outputStream;
 
-    public WhonixTorController() throws IOException {
-        controlSocket = new Socket("127.0.0.1", 9051);
+    public WhonixTorController(int port) throws IOException {
+        controlSocket = new Socket("127.0.0.1", port);
         whonixTorControlReader = new WhonixTorControlReader(controlSocket.getInputStream());
         outputStream = controlSocket.getOutputStream();
     }
