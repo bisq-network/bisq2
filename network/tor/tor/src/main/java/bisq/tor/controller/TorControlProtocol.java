@@ -55,6 +55,16 @@ public class TorControlProtocol implements AutoCloseable {
         String reply = receiveReply();
     }
 
+    public String getInfo(String keyword) throws IOException {
+        String command = "GETINFO " + keyword + "\r\n";
+        sendCommand(command);
+        String reply = receiveReply();
+        if (!reply.startsWith("250-")) {
+            throw new ControlCommandFailedException("Couldn't get info: " + keyword);
+        }
+        return reply;
+    }
+
     public void resetConf(String configName) throws IOException {
         String command = "RESETCONF " + configName + "\r\n";
         sendCommand(command);
