@@ -32,12 +32,12 @@ public class TorController implements BootstrapEventListener {
         this.bootstrapTimeout = bootstrapTimeout;
     }
 
-    public void initialize(int controlPort, PasswordDigest hashedControlPassword) throws IOException {
-        var torControlProtocol = new TorControlProtocol(controlPort);
-        this.torControlProtocol = Optional.of(torControlProtocol);
+    public void initialize(int controlPort) throws IOException {
+        initialize(controlPort, Optional.empty());
+    }
 
-        torControlProtocol.initialize();
-        torControlProtocol.authenticate(hashedControlPassword);
+    public void initialize(int controlPort, PasswordDigest hashedControlPassword) throws IOException {
+        initialize(controlPort, Optional.of(hashedControlPassword));
     }
 
     public void shutdown() {
@@ -87,6 +87,16 @@ public class TorController implements BootstrapEventListener {
         this.bootstrapEvent.set(bootstrapEvent);
         if (bootstrapEvent.isDoneEvent()) {
             isBootstrappedCountdownLatch.countDown();
+        }
+    }
+
+    private void initialize(int controlPort, Optional<PasswordDigest> hashedControlPassword) throws IOException {
+        var torControlProtocol = new TorControlProtocol(controlPort);
+        this.torControlProtocol = Optional.of(torControlProtocol);
+
+        torControlProtocol.initialize();
+        if (hashedControlPassword.isPresent()) {
+            torControlProtocol.authenticate(hashedControlPassword.get());
         }
     }
 
