@@ -10,12 +10,12 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-public class WhonixTorController implements AutoCloseable {
+public class TorControlProtocol implements AutoCloseable {
     private final Socket controlSocket;
     private final WhonixTorControlReader whonixTorControlReader;
     private final OutputStream outputStream;
 
-    public WhonixTorController(int port) throws IOException {
+    public TorControlProtocol(int port) throws IOException {
         controlSocket = new Socket("127.0.0.1", port);
         whonixTorControlReader = new WhonixTorControlReader(controlSocket.getInputStream());
         outputStream = controlSocket.getOutputStream();
