@@ -5,15 +5,24 @@ import bisq.security.keys.TorKeyPair;
 import bisq.tor.controller.events.listener.BootstrapEventListener;
 import net.freehaven.tor.control.PasswordDigest;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class TorControlProtocol implements AutoCloseable {
     private final Socket controlSocket;
     private final WhonixTorControlReader whonixTorControlReader;
     private final OutputStream outputStream;
+
+    // MidReplyLine = StatusCode "-" ReplyLine
+    private final Pattern midReplyLinePattern = Pattern.compile("^\\d+-.+");
+    // DataReplyLine = StatusCode "+" ReplyLine CmdData
+    private final Pattern dataReplyLinePattern = Pattern.compile("^\\d+\\+.+");
 
     public TorControlProtocol(int port) throws IOException {
         controlSocket = new Socket("127.0.0.1", port);
@@ -36,7 +45,7 @@ public class TorControlProtocol implements AutoCloseable {
         String command = "AUTHENTICATE " + secretHex + "\r\n";
 
         sendCommand(command);
-        String reply = receiveReply();
+        String reply = receiveReply().findFirst().orElseThrow();
 
         if (reply.equals("250 OK")) {
             return;
@@ -52,23 +61,21 @@ public class TorControlProtocol implements AutoCloseable {
         String command = "ADD_ONION " + "ED25519-V3:" + base64SecretScalar + " Port=" + onionPort + "," + localPort + "\r\n";
 
         sendCommand(command);
-        String reply = receiveReply();
+        Stream<String> replyStream = receiveReply();
+        assertTwoLineOkReply(replyStream, "ADD_ONION");
     }
 
     public String getInfo(String keyword) throws IOException {
         String command = "GETINFO " + keyword + "\r\n";
         sendCommand(command);
-        String reply = receiveReply();
-        if (!reply.startsWith("250-")) {
-            throw new ControlCommandFailedException("Couldn't get info: " + keyword);
-        }
-        return reply;
+        Stream<String> replyStream = receiveReply();
+        return assertTwoLineOkReply(replyStream, "GETINFO");
     }
 
     public void resetConf(String configName) throws IOException {
         String command = "RESETCONF " + configName + "\r\n";
         sendCommand(command);
-        String reply = receiveReply();
+        String reply = receiveReply().findFirst().orElseThrow();
         if (!reply.equals("250 OK")) {
             throw new ControlCommandFailedException("Couldn't reset config: " + configName);
         }
@@ -77,7 +84,7 @@ public class TorControlProtocol implements AutoCloseable {
     public void setConfig(String configName, String configValue) throws IOException {
         String command = "SETCONF " + configName + "=" + configValue + "\r\n";
         sendCommand(command);
-        String reply = receiveReply();
+        String reply = receiveReply().findFirst().orElseThrow();
         if (!reply.equals("250 OK")) {
             throw new ControlCommandFailedException("Couldn't set config: " + configName + "=" + configValue);
         }
@@ -90,7 +97,7 @@ public class TorControlProtocol implements AutoCloseable {
 
         String command = stringBuilder.toString();
         sendCommand(command);
-        String reply = receiveReply();
+        String reply = receiveReply().findFirst().orElseThrow();
         if (!reply.equals("250 OK")) {
             throw new ControlCommandFailedException("Couldn't set events: " + events);
         }
@@ -99,7 +106,7 @@ public class TorControlProtocol implements AutoCloseable {
     public void takeOwnership() throws IOException {
         String command = "TAKEOWNERSHIP\r\n";
         sendCommand(command);
-        String reply = receiveReply();
+        String reply = receiveReply().findFirst().orElseThrow();
         if (!reply.equals("250 OK")) {
             throw new ControlCommandFailedException("Couldn't take ownership");
         }
@@ -119,11 +126,47 @@ public class TorControlProtocol implements AutoCloseable {
         outputStream.flush();
     }
 
-    private String receiveReply() {
+    private Stream<String> receiveReply() {
+        String reply = tryReadNextReply();
+        var streamBuilder = Stream.<String>builder();
+        streamBuilder.add(reply);
+
+        while (isMultilineReply(reply)) {
+            reply = tryReadNextReply();
+            streamBuilder.add(reply);
+        }
+
+        return streamBuilder.build();
+    }
+
+    private String tryReadNextReply() {
         String reply = whonixTorControlReader.readLine();
         if (reply.equals("510 Command filtered")) {
             throw new TorCommandFilteredException();
         }
         return reply;
+    }
+
+    private boolean isMultilineReply(String reply) {
+        return midReplyLinePattern.matcher(reply).matches() || dataReplyLinePattern.matcher(reply).matches();
+    }
+
+    private String assertTwoLineOkReply(Stream<String> replyStream, String commandName) {
+        List<String> replies = replyStream.collect(Collectors.toList());
+        if (replies.size() != 2) {
+            throw new ControlCommandFailedException("Invalid " + commandName + " reply: " + replies);
+        }
+
+        String firstLine = replies.get(0);
+        if (!firstLine.startsWith("250-")) {
+            throw new ControlCommandFailedException("Invalid " + commandName + " reply: " + replies);
+        }
+
+        String secondLine = replies.get(1);
+        if (!secondLine.equals("250 OK")) {
+            throw new ControlCommandFailedException("Invalid " + commandName + " reply: " + replies);
+        }
+
+        return firstLine;
     }
 }
