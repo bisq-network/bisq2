@@ -20,7 +20,6 @@ package bisq.chat.notifications;
 import bisq.chat.*;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannelService;
-import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeMessage;
@@ -315,15 +314,6 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
                 !chatService.getChatChannelSelectionService(chatChannel.getChatChannelDomain()).getSelectedChannel().get().equals(chatChannel)) {
             consumeNotification(chatNotification);
             return;
-        }
-
-        // If user has set "Show offers only" in settings we mark messages as consumed
-        if (chatMessage instanceof BisqEasyOfferbookMessage) {
-            BisqEasyOfferbookMessage bisqEasyOfferbookMessage = (BisqEasyOfferbookMessage) chatMessage;
-            if (settingsService.getOffersOnly().get() && !bisqEasyOfferbookMessage.hasBisqEasyOffer()) {
-                consumeNotification(chatNotification);
-                return;
-            }
         }
 
         ChatChannelNotificationType notificationType = chatChannel.getChatChannelNotificationType().get();

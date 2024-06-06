@@ -254,15 +254,6 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
         }
 
         if (chatChannel instanceof BisqEasyOfferbookChannel) {
-            String dontShowAgainId = "sendMsgOfferOnlyWarn";
-            if (settingsService.getOffersOnly().get()) {
-                new Popup().information(Res.get("chat.message.send.offerOnly.warn"))
-                        .actionButtonText(Res.get("confirmation.yes"))
-                        .onAction(() -> settingsService.getOffersOnly().set(false))
-                        .closeButtonText(Res.get("confirmation.no"))
-                        .dontShowAgainId(dontShowAgainId)
-                        .show();
-            }
             chatService.getBisqEasyOfferbookChannelService().publishChatMessage(text, citation, (BisqEasyOfferbookChannel) chatChannel, userIdentity);
         } else if (chatChannel instanceof BisqEasyOpenTradeChannel) {
             if (settingsService.getTradeRulesConfirmed().get() || ((BisqEasyOpenTradeChannel) chatChannel).isMediator()) {
