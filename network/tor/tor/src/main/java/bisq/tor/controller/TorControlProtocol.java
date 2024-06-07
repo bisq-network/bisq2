@@ -3,6 +3,7 @@ package bisq.tor.controller;
 import bisq.common.encoding.Hex;
 import bisq.security.keys.TorKeyPair;
 import bisq.tor.controller.events.listener.BootstrapEventListener;
+import bisq.tor.controller.events.listener.HsDescEventListener;
 import net.freehaven.tor.control.PasswordDigest;
 
 import java.io.IOException;
@@ -117,6 +118,14 @@ public class TorControlProtocol implements AutoCloseable {
 
     public void removeBootstrapEventListener(BootstrapEventListener listener) {
         whonixTorControlReader.removeBootstrapEventListener(listener);
+    }
+
+    public void addHsDescEventListener(HsDescEventListener listener) {
+        whonixTorControlReader.addHsDescEventListener(listener);
+    }
+
+    public void removeHsDescEventListener(HsDescEventListener listener) {
+        whonixTorControlReader.removeHsDescEventListener(listener);
     }
 
     private void sendCommand(String command) throws IOException {
