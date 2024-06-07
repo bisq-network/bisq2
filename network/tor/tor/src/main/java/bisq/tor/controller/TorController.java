@@ -1,9 +1,13 @@
 package bisq.tor.controller;
 
 import bisq.common.observable.Observable;
+import bisq.security.keys.TorKeyPair;
 import bisq.tor.TorrcClientConfigFactory;
 import bisq.tor.controller.events.events.BootstrapEvent;
+import bisq.tor.controller.events.events.HsDescEvent;
 import bisq.tor.controller.events.listener.BootstrapEventListener;
+import bisq.tor.controller.events.listener.HsDescEventListener;
+import bisq.tor.controller.exceptions.HsDescUploadFailedException;
 import bisq.tor.controller.exceptions.TorBootstrapFailedException;
 import bisq.tor.process.NativeTorProcess;
 import lombok.Getter;
@@ -15,21 +19,27 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class TorController implements BootstrapEventListener {
+public class TorController implements BootstrapEventListener, HsDescEventListener {
     private final int bootstrapTimeout; // in ms
+    private final int hsUploadTimeout; // in ms
     private final CountDownLatch isBootstrappedCountdownLatch = new CountDownLatch(1);
     @Getter
     private final Observable<BootstrapEvent> bootstrapEvent = new Observable<>();
 
+    private final Map<String, CountDownLatch> onionServicePublishedLatchMap = new ConcurrentHashMap<>();
+
     private Optional<TorControlProtocol> torControlProtocol = Optional.empty();
 
-    public TorController(int bootstrapTimeout) {
+    public TorController(int bootstrapTimeout, int hsUploadTimeout) {
         this.bootstrapTimeout = bootstrapTimeout;
+        this.hsUploadTimeout = hsUploadTimeout;
     }
 
     public void initialize(int controlPort) throws IOException {
@@ -55,6 +65,24 @@ public class TorController implements BootstrapEventListener {
         subscribeToBootstrapEvents();
         enableNetworking();
         waitUntilBootstrapped();
+    }
+
+    public void publish(TorKeyPair torKeyPair, int onionServicePort, int localPort) throws IOException, InterruptedException {
+        String onionAddress = torKeyPair.getOnionAddress();
+        var onionServicePublishedLatch = new CountDownLatch(1);
+        onionServicePublishedLatchMap.put(onionAddress, onionServicePublishedLatch);
+
+        subscribeToHsDescEvents();
+        TorControlProtocol torControlProtocol = getTorControlProtocol();
+        torControlProtocol.addOnion(torKeyPair, onionServicePort, localPort);
+
+        boolean isSuccess = onionServicePublishedLatch.await(hsUploadTimeout, TimeUnit.MILLISECONDS);
+        if (!isSuccess) {
+            throw new HsDescUploadFailedException("HS_DESC upload timer triggered.");
+        }
+
+        torControlProtocol.removeHsDescEventListener(this);
+        torControlProtocol.setEvents(Collections.emptyList());
     }
 
     public Optional<Integer> getSocksPort() {
@@ -90,6 +118,16 @@ public class TorController implements BootstrapEventListener {
         }
     }
 
+    @Override
+    public void onHsDescEvent(HsDescEvent hsDescEvent) {
+        log.info("Tor HS_DESC event: {}", hsDescEvent);
+        if (hsDescEvent.getAction() == HsDescEvent.Action.UPLOADED) {
+            String onionAddress = hsDescEvent.getHsAddress() + ".onion";
+            CountDownLatch countDownLatch = onionServicePublishedLatchMap.get(onionAddress);
+            countDownLatch.countDown();
+        }
+    }
+
     private void initialize(int controlPort, Optional<PasswordDigest> hashedControlPassword) throws IOException {
         var torControlProtocol = new TorControlProtocol(controlPort);
         this.torControlProtocol = Optional.of(torControlProtocol);
@@ -110,6 +148,12 @@ public class TorController implements BootstrapEventListener {
         TorControlProtocol torControlProtocol = getTorControlProtocol();
         torControlProtocol.addBootstrapEventListener(this);
         torControlProtocol.setEvents(List.of("STATUS_CLIENT"));
+    }
+
+    private void subscribeToHsDescEvents() throws IOException {
+        TorControlProtocol torControlProtocol = getTorControlProtocol();
+        torControlProtocol.addHsDescEventListener(this);
+        torControlProtocol.setEvents(List.of("HS_DESC"));
     }
 
     private void enableNetworking() throws IOException {
