@@ -20,9 +20,8 @@ public class TorControlProtocol implements AutoCloseable {
     private final OutputStream outputStream;
 
     // MidReplyLine = StatusCode "-" ReplyLine
-    private final Pattern midReplyLinePattern = Pattern.compile("^\\d+-.+");
     // DataReplyLine = StatusCode "+" ReplyLine CmdData
-    private final Pattern dataReplyLinePattern = Pattern.compile("^\\d+\\+.+");
+    private final Pattern multiLineReplyPattern = Pattern.compile("^\\d+[-+].+");
 
     public TorControlProtocol(int port) throws IOException {
         controlSocket = new Socket("127.0.0.1", port);
@@ -148,7 +147,7 @@ public class TorControlProtocol implements AutoCloseable {
     }
 
     private boolean isMultilineReply(String reply) {
-        return midReplyLinePattern.matcher(reply).matches() || dataReplyLinePattern.matcher(reply).matches();
+        return multiLineReplyPattern.matcher(reply).matches();
     }
 
     private String assertTwoLineOkReply(Stream<String> replyStream, String commandName) {
