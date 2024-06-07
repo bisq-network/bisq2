@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class TorController implements BootstrapEventListener {
-    private final int bootstrapTimeout;
+    private final int bootstrapTimeout; // in ms
     private final CountDownLatch isBootstrappedCountdownLatch = new CountDownLatch(1);
     @Getter
     private final Observable<BootstrapEvent> bootstrapEvent = new Observable<>();
