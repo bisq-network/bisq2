@@ -4,9 +4,10 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
+
 @SuperBuilder
 @Getter
 @ToString(callSuper = true)
-public class HsDescUploadEvent extends HsDescCreatedOrReceivedEvent {
-    private final String hsDirIndex;
+public class HsDescCreatedOrReceivedEvent extends HsDescEvent {
+    private final String descriptorId;
 }

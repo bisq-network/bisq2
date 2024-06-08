@@ -1,9 +1,6 @@
 package bisq.tor.controller;
 
-import bisq.tor.controller.events.events.HsDescCreatedEvent;
-import bisq.tor.controller.events.events.HsDescEvent;
-import bisq.tor.controller.events.events.HsDescUploadEvent;
-import bisq.tor.controller.events.events.HsDescUploadedEventV2;
+import bisq.tor.controller.events.events.*;
 
 import java.util.Optional;
 
@@ -11,7 +8,7 @@ public class HsDescEventParser {
     public static Optional<HsDescEvent> tryParse(String[] parts) {
         if (HsDescEvent.Action.CREATED.isAction(parts)) {
             // 650 HS_DESC CREATED <onion_address> UNKNOWN UNKNOWN <descriptor_id>
-            HsDescCreatedEvent hsDescEvent = HsDescCreatedEvent.builder()
+            HsDescCreatedOrReceivedEvent hsDescEvent = HsDescCreatedOrReceivedEvent.builder()
                     .action(HsDescEvent.Action.CREATED)
                     .hsAddress(parts[3])
                     .authType(parts[4])
@@ -41,6 +38,30 @@ public class HsDescEventParser {
                     .hsDir(parts[5])
                     .build();
             return Optional.of(hsDescEvent);
+
+        } else if (HsDescEvent.Action.RECEIVED.isAction(parts)) {
+            // 650 HS_DESC RECEIVED <onion_address> <auth_type> <hs_dir> <descriptor_id>
+            HsDescCreatedOrReceivedEvent hsDescEvent = HsDescCreatedOrReceivedEvent.builder()
+                    .action(HsDescEvent.Action.RECEIVED)
+                    .hsAddress(parts[3])
+                    .authType(parts[4])
+                    .hsDir(parts[5])
+                    .descriptorId(parts[6])
+                    .build();
+            return Optional.of(hsDescEvent);
+
+        } else if (HsDescEvent.Action.FAILED.isAction(parts)) {
+            // 650 HS_DESC FAILED <onion_address> <auth_type> <hs_dir> <descriptor_id> REASON=NOT_FOUND
+            HsDescCreatedOrReceivedEvent hsDescEvent = HsDescFailedEvent.builder()
+                    .action(HsDescEvent.Action.FAILED)
+                    .hsAddress(parts[3])
+                    .authType(parts[4])
+                    .hsDir(parts[5])
+                    .descriptorId(parts[6])
+                    .reason(parts[7])
+                    .build();
+            return Optional.of(hsDescEvent);
+
         } else {
             return Optional.empty();
         }
