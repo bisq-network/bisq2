@@ -72,6 +72,15 @@ public class TorControlProtocol implements AutoCloseable {
         return assertTwoLineOkReply(replyStream, "GETINFO");
     }
 
+    public void hsFetch(String hsAddress) throws IOException {
+        String command = "HSFETCH " + hsAddress + "\r\n";
+        sendCommand(command);
+        String reply = receiveReply().findFirst().orElseThrow();
+        if (!reply.equals("250 OK")) {
+            throw new ControlCommandFailedException("Couldn't initiate HSFETCH for : " + hsAddress);
+        }
+    }
+
     public void resetConf(String configName) throws IOException {
         String command = "RESETCONF " + configName + "\r\n";
         sendCommand(command);
