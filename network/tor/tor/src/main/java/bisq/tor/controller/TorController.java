@@ -33,7 +33,7 @@ public class TorController implements BootstrapEventListener, HsDescEventListene
     @Getter
     private final Observable<BootstrapEvent> bootstrapEvent = new Observable<>();
 
-    private final Map<String, CountDownLatch> onionServicePublishedLatchMap = new ConcurrentHashMap<>();
+    private final Map<String, CountDownLatch> pendingOnionServicePublishLatchMap = new ConcurrentHashMap<>();
 
     private Optional<TorControlProtocol> torControlProtocol = Optional.empty();
 
@@ -70,7 +70,7 @@ public class TorController implements BootstrapEventListener, HsDescEventListene
     public void publish(TorKeyPair torKeyPair, int onionServicePort, int localPort) throws IOException, InterruptedException {
         String onionAddress = torKeyPair.getOnionAddress();
         var onionServicePublishedLatch = new CountDownLatch(1);
-        onionServicePublishedLatchMap.put(onionAddress, onionServicePublishedLatch);
+        pendingOnionServicePublishLatchMap.put(onionAddress, onionServicePublishedLatch);
 
         subscribeToHsDescEvents();
         TorControlProtocol torControlProtocol = getTorControlProtocol();
@@ -123,8 +123,11 @@ public class TorController implements BootstrapEventListener, HsDescEventListene
         log.info("Tor HS_DESC event: {}", hsDescEvent);
         if (hsDescEvent.getAction() == HsDescEvent.Action.UPLOADED) {
             String onionAddress = hsDescEvent.getHsAddress() + ".onion";
-            CountDownLatch countDownLatch = onionServicePublishedLatchMap.get(onionAddress);
-            countDownLatch.countDown();
+            CountDownLatch countDownLatch = pendingOnionServicePublishLatchMap.get(onionAddress);
+            if (countDownLatch != null) {
+                countDownLatch.countDown();
+                pendingOnionServicePublishLatchMap.remove(onionAddress);
+            }
         }
     }
 
