@@ -5,6 +5,7 @@ import bisq.security.keys.TorKeyPair;
 import bisq.tor.TorrcClientConfigFactory;
 import bisq.tor.controller.events.events.BootstrapEvent;
 import bisq.tor.controller.events.events.HsDescEvent;
+import bisq.tor.controller.events.events.HsDescFailedEvent;
 import bisq.tor.controller.events.listener.BootstrapEventListener;
 import bisq.tor.controller.events.listener.HsDescEventListener;
 import bisq.tor.controller.exceptions.HsDescUploadFailedException;
@@ -21,9 +22,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 @Slf4j
 public class TorController implements BootstrapEventListener, HsDescEventListener {
@@ -34,6 +33,8 @@ public class TorController implements BootstrapEventListener, HsDescEventListene
     private final Observable<BootstrapEvent> bootstrapEvent = new Observable<>();
 
     private final Map<String, CountDownLatch> pendingOnionServicePublishLatchMap = new ConcurrentHashMap<>();
+    private final Map<String, CompletableFuture<Boolean>> pendingIsOnionServiceOnlineLookupFutureMap =
+            new ConcurrentHashMap<>();
 
     private Optional<TorControlProtocol> torControlProtocol = Optional.empty();
 
@@ -65,6 +66,27 @@ public class TorController implements BootstrapEventListener, HsDescEventListene
         subscribeToBootstrapEvents();
         enableNetworking();
         waitUntilBootstrapped();
+    }
+
+    public CompletableFuture<Boolean> isOnionServiceOnline(String onionAddress) throws IOException, ExecutionException, InterruptedException, TimeoutException {
+        var onionServiceLookupCompletableFuture = new CompletableFuture<Boolean>();
+        pendingIsOnionServiceOnlineLookupFutureMap.put(onionAddress, onionServiceLookupCompletableFuture);
+        subscribeToHsDescEvents();
+
+        TorControlProtocol torControlProtocol = getTorControlProtocol();
+        String serviceId = onionAddress.replace(".onion", "");
+        torControlProtocol.hsFetch(serviceId);
+
+        onionServiceLookupCompletableFuture.thenRun(() -> {
+            torControlProtocol.removeHsDescEventListener(this);
+            try {
+                torControlProtocol.setEvents(Collections.emptyList());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        return onionServiceLookupCompletableFuture;
     }
 
     public void publish(TorKeyPair torKeyPair, int onionServicePort, int localPort) throws IOException, InterruptedException {
@@ -121,13 +143,34 @@ public class TorController implements BootstrapEventListener, HsDescEventListene
     @Override
     public void onHsDescEvent(HsDescEvent hsDescEvent) {
         log.info("Tor HS_DESC event: {}", hsDescEvent);
-        if (hsDescEvent.getAction() == HsDescEvent.Action.UPLOADED) {
-            String onionAddress = hsDescEvent.getHsAddress() + ".onion";
-            CountDownLatch countDownLatch = pendingOnionServicePublishLatchMap.get(onionAddress);
-            if (countDownLatch != null) {
-                countDownLatch.countDown();
-                pendingOnionServicePublishLatchMap.remove(onionAddress);
-            }
+
+        String onionAddress = hsDescEvent.getHsAddress() + ".onion";
+        CompletableFuture<Boolean> completableFuture;
+        switch (hsDescEvent.getAction()) {
+            case FAILED:
+                HsDescFailedEvent hsDescFailedEvent = (HsDescFailedEvent) hsDescEvent;
+                if (hsDescFailedEvent.getReason().equals("REASON=NOT_FOUND")) {
+                    completableFuture = pendingIsOnionServiceOnlineLookupFutureMap.get(onionAddress);
+                    if (completableFuture != null) {
+                        completableFuture.complete(false);
+                        pendingIsOnionServiceOnlineLookupFutureMap.remove(onionAddress);
+                    }
+                }
+                break;
+            case RECEIVED:
+                completableFuture = pendingIsOnionServiceOnlineLookupFutureMap.get(onionAddress);
+                if (completableFuture != null) {
+                    completableFuture.complete(true);
+                    pendingIsOnionServiceOnlineLookupFutureMap.remove(onionAddress);
+                }
+                break;
+            case UPLOADED:
+                CountDownLatch countDownLatch = pendingOnionServicePublishLatchMap.get(onionAddress);
+                if (countDownLatch != null) {
+                    countDownLatch.countDown();
+                    pendingOnionServicePublishLatchMap.remove(onionAddress);
+                }
+                break;
         }
     }
 
