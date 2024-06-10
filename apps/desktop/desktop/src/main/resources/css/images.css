@@ -784,6 +784,18 @@
     -fx-image: url("/images/icons/market/market-grey.png");
 }
 
+#language-green {
+    -fx-image: url("/images/icons/language/language_green.png");
+}
+
+#language-grey {
+    -fx-image: url("/images/icons/language/language_grey.png");
+}
+
+#language-white {
+    -fx-image: url("/images/icons/language/language_white.png");
+}
+
 
 /* ------------------------------------------------------------------------------------ */
 /* Chat */
