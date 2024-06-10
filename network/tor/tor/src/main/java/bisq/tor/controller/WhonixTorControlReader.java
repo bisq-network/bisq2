@@ -1,7 +1,9 @@
 package bisq.tor.controller;
 
 import bisq.tor.controller.events.events.BootstrapEvent;
+import bisq.tor.controller.events.events.HsDescEvent;
 import bisq.tor.controller.events.listener.BootstrapEventListener;
+import bisq.tor.controller.events.listener.HsDescEventListener;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.BufferedReader;
@@ -20,6 +22,7 @@ public class WhonixTorControlReader implements AutoCloseable {
     private final BufferedReader bufferedReader;
     private final BlockingQueue<String> replies = new LinkedBlockingQueue<>();
     private final List<BootstrapEventListener> bootstrapEventListeners = new CopyOnWriteArrayList<>();
+    private final List<HsDescEventListener> hsDescEventListeners = new CopyOnWriteArrayList<>();
 
     private Optional<Thread> workerThread = Optional.empty();
 
@@ -34,11 +37,31 @@ public class WhonixTorControlReader implements AutoCloseable {
                 while ((line = bufferedReader.readLine()) != null) {
 
                     if (isEvent(line)) {
-                        Optional<BootstrapEvent> bootstrapEventOptional = BootstrapEventParser.tryParse(line);
-                        if (bootstrapEventOptional.isPresent()) {
-                            BootstrapEvent bootstrapEvent = bootstrapEventOptional.get();
-                            bootstrapEventListeners.forEach(listener -> listener.onBootstrapStatusEvent(bootstrapEvent));
-                        } else {
+                        String[] parts = line.split(" ");
+
+                        boolean parsedEvent = false;
+                        if (parts.length > 2) {
+                            String eventType = parts[1];
+
+                            if (isStatusClientEvent(eventType)) {
+                                Optional<BootstrapEvent> bootstrapEventOptional = BootstrapEventParser.tryParse(parts);
+                                if (bootstrapEventOptional.isPresent()) {
+                                    parsedEvent = true;
+                                    BootstrapEvent bootstrapEvent = bootstrapEventOptional.get();
+                                    bootstrapEventListeners.forEach(listener -> listener.onBootstrapStatusEvent(bootstrapEvent));
+                                }
+
+                            } else if (isHsDescEvent(eventType)) {
+                                Optional<HsDescEvent> hsDescEventOptional = HsDescEventParser.tryParse(parts);
+                                if (hsDescEventOptional.isPresent()) {
+                                    parsedEvent = true;
+                                    HsDescEvent hsDescEvent = hsDescEventOptional.get();
+                                    hsDescEventListeners.forEach(listener -> listener.onHsDescEvent(hsDescEvent));
+                                }
+                            }
+                        }
+
+                        if (!parsedEvent) {
                             log.info("Unknown Tor event: {}", line);
                         }
 
@@ -80,8 +103,26 @@ public class WhonixTorControlReader implements AutoCloseable {
         bootstrapEventListeners.remove(listener);
     }
 
+    public void addHsDescEventListener(HsDescEventListener listener) {
+        hsDescEventListeners.add(listener);
+    }
+
+    public void removeHsDescEventListener(HsDescEventListener listener) {
+        hsDescEventListeners.remove(listener);
+    }
+
     private boolean isEvent(String line) {
         // 650 STATUS_CLIENT NOTICE CIRCUIT_ESTABLISHED
         return line.startsWith("650");
+    }
+
+    private static boolean isStatusClientEvent(String eventType) {
+        // 650 STATUS_CLIENT NOTICE CIRCUIT_ESTABLISHED
+        return eventType.equals("STATUS_CLIENT");
+    }
+
+    private static boolean isHsDescEvent(String eventType) {
+        // 650 HS_DESC CREATED <onion_address> UNKNOWN UNKNOWN <descriptor_id>
+        return eventType.equals("HS_DESC");
     }
 }

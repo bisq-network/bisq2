@@ -3,6 +3,7 @@ package bisq.tor.controller;
 import bisq.common.encoding.Hex;
 import bisq.security.keys.TorKeyPair;
 import bisq.tor.controller.events.listener.BootstrapEventListener;
+import bisq.tor.controller.events.listener.HsDescEventListener;
 import net.freehaven.tor.control.PasswordDigest;
 
 import java.io.IOException;
@@ -20,9 +21,8 @@ public class TorControlProtocol implements AutoCloseable {
     private final OutputStream outputStream;
 
     // MidReplyLine = StatusCode "-" ReplyLine
-    private final Pattern midReplyLinePattern = Pattern.compile("^\\d+-.+");
     // DataReplyLine = StatusCode "+" ReplyLine CmdData
-    private final Pattern dataReplyLinePattern = Pattern.compile("^\\d+\\+.+");
+    private final Pattern multiLineReplyPattern = Pattern.compile("^\\d+[-+].+");
 
     public TorControlProtocol(int port) throws IOException {
         controlSocket = new Socket("127.0.0.1", port);
@@ -70,6 +70,15 @@ public class TorControlProtocol implements AutoCloseable {
         sendCommand(command);
         Stream<String> replyStream = receiveReply();
         return assertTwoLineOkReply(replyStream, "GETINFO");
+    }
+
+    public void hsFetch(String hsAddress) throws IOException {
+        String command = "HSFETCH " + hsAddress + "\r\n";
+        sendCommand(command);
+        String reply = receiveReply().findFirst().orElseThrow();
+        if (!reply.equals("250 OK")) {
+            throw new ControlCommandFailedException("Couldn't initiate HSFETCH for : " + hsAddress);
+        }
     }
 
     public void resetConf(String configName) throws IOException {
@@ -120,6 +129,14 @@ public class TorControlProtocol implements AutoCloseable {
         whonixTorControlReader.removeBootstrapEventListener(listener);
     }
 
+    public void addHsDescEventListener(HsDescEventListener listener) {
+        whonixTorControlReader.addHsDescEventListener(listener);
+    }
+
+    public void removeHsDescEventListener(HsDescEventListener listener) {
+        whonixTorControlReader.removeHsDescEventListener(listener);
+    }
+
     private void sendCommand(String command) throws IOException {
         byte[] commandBytes = command.getBytes(StandardCharsets.US_ASCII);
         outputStream.write(commandBytes);
@@ -148,7 +165,7 @@ public class TorControlProtocol implements AutoCloseable {
     }
 
     private boolean isMultilineReply(String reply) {
-        return midReplyLinePattern.matcher(reply).matches() || dataReplyLinePattern.matcher(reply).matches();
+        return multiLineReplyPattern.matcher(reply).matches();
     }
 
     private String assertTwoLineOkReply(Stream<String> replyStream, String commandName) {
