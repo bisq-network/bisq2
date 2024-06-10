@@ -161,13 +161,14 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
     }
 
     private void applySearchPredicate(String searchText) {
+        String string = searchText.toLowerCase();
         model.getFilteredList().setPredicate(item ->
-                StringUtils.isEmpty(searchText) ||
-                        item.getUserName().contains(searchText) ||
-                        item.getUserProfile().getNym().contains(searchText) ||
-                        item.getTotalScoreString().contains(searchText) ||
-                        item.getProfileAgeString().contains(searchText) ||
-                        item.getValueAsStringProperty().get().contains(searchText));
+                StringUtils.isEmpty(string) ||
+                        item.getUserName().toLowerCase().contains(string) ||
+                        item.getUserProfile().getNym().toLowerCase().contains(string) ||
+                        item.getTotalScoreString().contains(string) ||
+                        item.getProfileAgeString().contains(string) ||
+                        item.getValueAsStringProperty().get().toLowerCase().contains(string));
     }
 
     private void configTableView() {
