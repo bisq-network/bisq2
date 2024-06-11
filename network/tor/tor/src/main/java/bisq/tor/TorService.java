@@ -23,11 +23,9 @@ import bisq.common.util.OsUtils;
 import bisq.network.tor.common.torrc.BaseTorrcGenerator;
 import bisq.network.tor.common.torrc.TorrcFileGenerator;
 import bisq.security.keys.TorKeyPair;
-import bisq.tor.controller.NativeTorController;
+import bisq.tor.controller.TorController;
 import bisq.tor.controller.events.events.BootstrapEvent;
 import bisq.tor.installer.TorInstaller;
-import bisq.tor.onionservice.CreateOnionServiceResponse;
-import bisq.tor.onionservice.OnionServicePublishService;
 import bisq.tor.process.NativeTorProcess;
 import bisq.tor.process.control_port.ControlPortFilePoller;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
@@ -40,7 +38,8 @@ import java.net.Socket;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
+import java.util.Set;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
@@ -49,8 +48,8 @@ public class TorService implements Service {
 
     private final TorTransportConfig transportConfig;
     private final Path torDataDirPath;
-    private final NativeTorController nativeTorController;
-    private final OnionServicePublishService onionServicePublishService;
+    private final TorController torController;
+    private final Set<String> publishedOnionServices = new CopyOnWriteArraySet<>();
 
     private final AtomicBoolean isRunning = new AtomicBoolean();
 
@@ -60,9 +59,7 @@ public class TorService implements Service {
     public TorService(TorTransportConfig transportConfig) {
         this.transportConfig = transportConfig;
         this.torDataDirPath = transportConfig.getDataDir();
-        nativeTorController = new NativeTorController(transportConfig.getBootstrapTimeout(),
-                transportConfig.getHsUploadTimeout());
-        this.onionServicePublishService = new OnionServicePublishService(nativeTorController);
+        torController = new TorController(transportConfig.getBootstrapTimeout(), transportConfig.getHsUploadTimeout());
     }
 
     @Override
@@ -89,19 +86,16 @@ public class TorService implements Service {
             return new ControlPortFilePoller(controlPortFilePath)
                     .parsePort()
                     .thenAccept(controlPort -> {
-                        nativeTorController.connect(controlPort, Optional.of(hashedControlPassword));
-                        nativeTorController.bindTorToConnection();
+                        torController.initialize(controlPort, hashedControlPassword);
+                        torController.bootstrapTor();
 
-                        nativeTorController.enableTorNetworking();
-                        nativeTorController.waitUntilBootstrapped();
-
-                        int port = nativeTorController.getSocksPort().orElseThrow();
+                        int port = torController.getSocksPort();
                         torSocksProxyFactory = Optional.of(new TorSocksProxyFactory(port));
                     })
                     .thenApply(unused -> true);
         } else {
             return CompletableFuture.supplyAsync(() -> {
-                nativeTorController.connect(9051, Optional.empty());
+                torController.initialize(9051);
                 torSocksProxyFactory = Optional.of(new TorSocksProxyFactory(9050));
                 return true;
             });
@@ -112,38 +106,46 @@ public class TorService implements Service {
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
         return CompletableFuture.supplyAsync(() -> {
-            nativeTorController.shutdown();
+            torController.shutdown();
             torProcess.ifPresent(NativeTorProcess::waitUntilExited);
             return true;
         });
     }
 
-    public Observable<BootstrapEvent> getBootstrapEvent() {
-        return nativeTorController.getBootstrapEvent();
-    }
-
-    public CompletableFuture<CreateOnionServiceResponse> createOnionService(int port, TorKeyPair torKeyPair) {
+    public CompletableFuture<ServerSocket> createOnionService(int port, TorKeyPair torKeyPair) {
         log.info("Start hidden service with port {}", port);
         long ts = System.currentTimeMillis();
         try {
-            @SuppressWarnings("resource") ServerSocket localServerSocket = new ServerSocket(RANDOM_PORT);
+            var localServerSocket = new ServerSocket(RANDOM_PORT);
             int localPort = localServerSocket.getLocalPort();
-            return onionServicePublishService.publish(torKeyPair, port, localPort)
-                    .thenApply(onionAddress -> {
-                                log.info("Tor hidden service Ready. Took {} ms. Onion address={}",
-                                        System.currentTimeMillis() - ts, onionAddress);
-                                return new CreateOnionServiceResponse(localServerSocket, onionAddress);
-                            }
-                    );
 
-        } catch (IOException e) {
+            String onionAddress = torKeyPair.getOnionAddress();
+            if (!publishedOnionServices.contains(onionAddress)) {
+                torController.publish(torKeyPair, port, localPort);
+                publishedOnionServices.add(onionAddress);
+            }
+
+            log.info("Tor hidden service Ready. Took {} ms. Onion address={}",
+                    System.currentTimeMillis() - ts, onionAddress);
+
+            return CompletableFuture.completedFuture(localServerSocket);
+
+        } catch (IOException | InterruptedException e) {
             log.error("Can't create onion service", e);
             return CompletableFuture.failedFuture(e);
         }
     }
 
     public boolean isOnionServiceOnline(String onionUrl) {
-        return nativeTorController.isHiddenServiceAvailable(onionUrl);
+        try {
+            return torController.isOnionServiceOnline(onionUrl).get(1, TimeUnit.MINUTES);
+        } catch (ExecutionException | InterruptedException | TimeoutException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Observable<BootstrapEvent> getBootstrapEvent() {
+        return torController.getBootstrapEvent();
     }
 
     public Socket getSocket(String streamId) throws IOException {
