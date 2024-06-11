@@ -55,13 +55,7 @@ public class TorController implements BootstrapEventListener, HsDescEventListene
     }
 
     public void shutdown() {
-        torControlProtocol.ifPresent(torControlProtocol -> {
-            try {
-                torControlProtocol.close();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        });
+        torControlProtocol.ifPresent(TorControlProtocol::close);
     }
 
     public void bootstrapTor() {

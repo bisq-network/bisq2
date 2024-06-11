@@ -45,8 +45,12 @@ public class TorControlProtocol implements AutoCloseable {
     }
 
     @Override
-    public void close() throws IOException {
-        controlSocket.close();
+    public void close() {
+        try {
+            controlSocket.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void authenticate(PasswordDigest passwordDigest) {
