@@ -4,14 +4,17 @@ import bisq.common.encoding.Hex;
 import bisq.security.keys.TorKeyPair;
 import bisq.tor.controller.events.listener.BootstrapEventListener;
 import bisq.tor.controller.events.listener.HsDescEventListener;
+import bisq.tor.controller.exceptions.CannotConnectWithTorException;
 import bisq.tor.controller.exceptions.CannotSendCommandToTorException;
 import net.freehaven.tor.control.PasswordDigest;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -19,25 +22,31 @@ import java.util.stream.Stream;
 public class TorControlProtocol implements AutoCloseable {
     private final Socket controlSocket;
     private final WhonixTorControlReader whonixTorControlReader;
-    private final OutputStream outputStream;
+    private Optional<OutputStream> outputStream = Optional.empty();
 
     // MidReplyLine = StatusCode "-" ReplyLine
     // DataReplyLine = StatusCode "+" ReplyLine CmdData
     private final Pattern multiLineReplyPattern = Pattern.compile("^\\d+[-+].+");
 
-    public TorControlProtocol(int port) throws IOException {
-        controlSocket = new Socket("127.0.0.1", port);
-        whonixTorControlReader = new WhonixTorControlReader(controlSocket.getInputStream());
-        outputStream = controlSocket.getOutputStream();
+    public TorControlProtocol() {
+        controlSocket = new Socket();
+        whonixTorControlReader = new WhonixTorControlReader();
+    }
+
+    public void initialize(int port) {
+        try {
+            var socketAddress = new InetSocketAddress("127.0.0.1", port);
+            controlSocket.connect(socketAddress);
+            whonixTorControlReader.start(controlSocket.getInputStream());
+            outputStream = Optional.of(controlSocket.getOutputStream());
+        } catch (IOException e) {
+            throw new CannotConnectWithTorException(e);
+        }
     }
 
     @Override
     public void close() throws IOException {
         controlSocket.close();
-    }
-
-    public void initialize() {
-        whonixTorControlReader.start();
     }
 
     public void authenticate(PasswordDigest passwordDigest) {
@@ -140,6 +149,7 @@ public class TorControlProtocol implements AutoCloseable {
 
     private void sendCommand(String command) {
         try {
+            @SuppressWarnings("resource") OutputStream outputStream = this.outputStream.orElseThrow();
             byte[] commandBytes = command.getBytes(StandardCharsets.US_ASCII);
             outputStream.write(commandBytes);
             outputStream.flush();

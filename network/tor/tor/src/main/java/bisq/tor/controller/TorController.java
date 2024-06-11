@@ -46,11 +46,11 @@ public class TorController implements BootstrapEventListener, HsDescEventListene
         this.hsUploadTimeout = hsUploadTimeout;
     }
 
-    public void initialize(int controlPort) throws IOException {
+    public void initialize(int controlPort) {
         initialize(controlPort, Optional.empty());
     }
 
-    public void initialize(int controlPort, PasswordDigest hashedControlPassword) throws IOException {
+    public void initialize(int controlPort, PasswordDigest hashedControlPassword) {
         initialize(controlPort, Optional.of(hashedControlPassword));
     }
 
@@ -167,11 +167,11 @@ public class TorController implements BootstrapEventListener, HsDescEventListene
         }
     }
 
-    private void initialize(int controlPort, Optional<PasswordDigest> hashedControlPassword) throws IOException {
-        var torControlProtocol = new TorControlProtocol(controlPort);
+    private void initialize(int controlPort, Optional<PasswordDigest> hashedControlPassword) {
+        var torControlProtocol = new TorControlProtocol();
         this.torControlProtocol = Optional.of(torControlProtocol);
 
-        torControlProtocol.initialize();
+        torControlProtocol.initialize(controlPort);
         hashedControlPassword.ifPresent(torControlProtocol::authenticate);
     }
 
