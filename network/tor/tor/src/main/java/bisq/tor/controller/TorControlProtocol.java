@@ -4,13 +4,17 @@ import bisq.common.encoding.Hex;
 import bisq.security.keys.TorKeyPair;
 import bisq.tor.controller.events.listener.BootstrapEventListener;
 import bisq.tor.controller.events.listener.HsDescEventListener;
+import bisq.tor.controller.exceptions.CannotConnectWithTorException;
+import bisq.tor.controller.exceptions.CannotSendCommandToTorException;
 import net.freehaven.tor.control.PasswordDigest;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -18,28 +22,38 @@ import java.util.stream.Stream;
 public class TorControlProtocol implements AutoCloseable {
     private final Socket controlSocket;
     private final WhonixTorControlReader whonixTorControlReader;
-    private final OutputStream outputStream;
+    private Optional<OutputStream> outputStream = Optional.empty();
 
     // MidReplyLine = StatusCode "-" ReplyLine
     // DataReplyLine = StatusCode "+" ReplyLine CmdData
     private final Pattern multiLineReplyPattern = Pattern.compile("^\\d+[-+].+");
 
-    public TorControlProtocol(int port) throws IOException {
-        controlSocket = new Socket("127.0.0.1", port);
-        whonixTorControlReader = new WhonixTorControlReader(controlSocket.getInputStream());
-        outputStream = controlSocket.getOutputStream();
+    public TorControlProtocol() {
+        controlSocket = new Socket();
+        whonixTorControlReader = new WhonixTorControlReader();
+    }
+
+    public void initialize(int port) {
+        try {
+            var socketAddress = new InetSocketAddress("127.0.0.1", port);
+            controlSocket.connect(socketAddress);
+            whonixTorControlReader.start(controlSocket.getInputStream());
+            outputStream = Optional.of(controlSocket.getOutputStream());
+        } catch (IOException e) {
+            throw new CannotConnectWithTorException(e);
+        }
     }
 
     @Override
-    public void close() throws IOException {
-        controlSocket.close();
+    public void close() {
+        try {
+            controlSocket.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    public void initialize() {
-        whonixTorControlReader.start();
-    }
-
-    public void authenticate(PasswordDigest passwordDigest) throws IOException {
+    public void authenticate(PasswordDigest passwordDigest) {
         byte[] secret = passwordDigest.getSecret();
         String secretHex = Hex.encode(secret);
         String command = "AUTHENTICATE " + secretHex + "\r\n";
@@ -56,7 +70,7 @@ public class TorControlProtocol implements AutoCloseable {
         }
     }
 
-    public void addOnion(TorKeyPair torKeyPair, int onionPort, int localPort) throws IOException {
+    public void addOnion(TorKeyPair torKeyPair, int onionPort, int localPort) {
         String base64SecretScalar = torKeyPair.getBase64SecretScalar();
         String command = "ADD_ONION " + "ED25519-V3:" + base64SecretScalar + " Port=" + onionPort + "," + localPort + "\r\n";
 
@@ -65,14 +79,14 @@ public class TorControlProtocol implements AutoCloseable {
         assertTwoLineOkReply(replyStream, "ADD_ONION");
     }
 
-    public String getInfo(String keyword) throws IOException {
+    public String getInfo(String keyword) {
         String command = "GETINFO " + keyword + "\r\n";
         sendCommand(command);
         Stream<String> replyStream = receiveReply();
         return assertTwoLineOkReply(replyStream, "GETINFO");
     }
 
-    public void hsFetch(String hsAddress) throws IOException {
+    public void hsFetch(String hsAddress) {
         String command = "HSFETCH " + hsAddress + "\r\n";
         sendCommand(command);
         String reply = receiveReply().findFirst().orElseThrow();
@@ -81,7 +95,7 @@ public class TorControlProtocol implements AutoCloseable {
         }
     }
 
-    public void resetConf(String configName) throws IOException {
+    public void resetConf(String configName) {
         String command = "RESETCONF " + configName + "\r\n";
         sendCommand(command);
         String reply = receiveReply().findFirst().orElseThrow();
@@ -90,7 +104,7 @@ public class TorControlProtocol implements AutoCloseable {
         }
     }
 
-    public void setConfig(String configName, String configValue) throws IOException {
+    public void setConfig(String configName, String configValue) {
         String command = "SETCONF " + configName + "=" + configValue + "\r\n";
         sendCommand(command);
         String reply = receiveReply().findFirst().orElseThrow();
@@ -99,7 +113,7 @@ public class TorControlProtocol implements AutoCloseable {
         }
     }
 
-    public void setEvents(List<String> events) throws IOException {
+    public void setEvents(List<String> events) {
         var stringBuilder = new StringBuffer("SETEVENTS");
         events.forEach(event -> stringBuilder.append(" ").append(event));
         stringBuilder.append("\r\n");
@@ -112,7 +126,7 @@ public class TorControlProtocol implements AutoCloseable {
         }
     }
 
-    public void takeOwnership() throws IOException {
+    public void takeOwnership() {
         String command = "TAKEOWNERSHIP\r\n";
         sendCommand(command);
         String reply = receiveReply().findFirst().orElseThrow();
@@ -137,10 +151,15 @@ public class TorControlProtocol implements AutoCloseable {
         whonixTorControlReader.removeHsDescEventListener(listener);
     }
 
-    private void sendCommand(String command) throws IOException {
-        byte[] commandBytes = command.getBytes(StandardCharsets.US_ASCII);
-        outputStream.write(commandBytes);
-        outputStream.flush();
+    private void sendCommand(String command) {
+        try {
+            @SuppressWarnings("resource") OutputStream outputStream = this.outputStream.orElseThrow();
+            byte[] commandBytes = command.getBytes(StandardCharsets.US_ASCII);
+            outputStream.write(commandBytes);
+            outputStream.flush();
+        } catch (IOException e) {
+            throw new CannotSendCommandToTorException(e);
+        }
     }
 
     private Stream<String> receiveReply() {

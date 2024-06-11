@@ -19,20 +19,17 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 @Slf4j
 public class WhonixTorControlReader implements AutoCloseable {
-    private final BufferedReader bufferedReader;
     private final BlockingQueue<String> replies = new LinkedBlockingQueue<>();
     private final List<BootstrapEventListener> bootstrapEventListeners = new CopyOnWriteArrayList<>();
     private final List<HsDescEventListener> hsDescEventListeners = new CopyOnWriteArrayList<>();
 
     private Optional<Thread> workerThread = Optional.empty();
 
-    public WhonixTorControlReader(InputStream inputStream) {
-        bufferedReader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.US_ASCII));
-    }
-
-    public void start() {
+    public void start(InputStream inputStream) {
         Thread thread = new Thread(() -> {
             try {
+                var bufferedReader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.US_ASCII));
+
                 String line;
                 while ((line = bufferedReader.readLine()) != null) {
 
