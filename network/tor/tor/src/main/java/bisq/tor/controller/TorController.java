@@ -15,7 +15,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.freehaven.tor.control.PasswordDigest;
 
-import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
@@ -29,6 +28,8 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class TorController implements BootstrapEventListener, HsDescEventListener {
+    private final TorControlProtocol torControlProtocol = new TorControlProtocol();
+
     private final int bootstrapTimeout; // in ms
     private final int hsUploadTimeout; // in ms
     private final CountDownLatch isBootstrappedCountdownLatch = new CountDownLatch(1);
@@ -38,8 +39,6 @@ public class TorController implements BootstrapEventListener, HsDescEventListene
     private final Map<String, CountDownLatch> pendingOnionServicePublishLatchMap = new ConcurrentHashMap<>();
     private final Map<String, CompletableFuture<Boolean>> pendingIsOnionServiceOnlineLookupFutureMap =
             new ConcurrentHashMap<>();
-
-    private Optional<TorControlProtocol> torControlProtocol = Optional.empty();
 
     public TorController(int bootstrapTimeout, int hsUploadTimeout) {
         this.bootstrapTimeout = bootstrapTimeout;
@@ -55,7 +54,7 @@ public class TorController implements BootstrapEventListener, HsDescEventListene
     }
 
     public void shutdown() {
-        torControlProtocol.ifPresent(TorControlProtocol::close);
+        torControlProtocol.close();
     }
 
     public void bootstrapTor() {
@@ -70,7 +69,6 @@ public class TorController implements BootstrapEventListener, HsDescEventListene
         pendingIsOnionServiceOnlineLookupFutureMap.put(onionAddress, onionServiceLookupCompletableFuture);
         subscribeToHsDescEvents();
 
-        TorControlProtocol torControlProtocol = getTorControlProtocol();
         String serviceId = onionAddress.replace(".onion", "");
         torControlProtocol.hsFetch(serviceId);
 
@@ -88,7 +86,6 @@ public class TorController implements BootstrapEventListener, HsDescEventListene
         pendingOnionServicePublishLatchMap.put(onionAddress, onionServicePublishedLatch);
 
         subscribeToHsDescEvents();
-        TorControlProtocol torControlProtocol = getTorControlProtocol();
         torControlProtocol.addOnion(torKeyPair, onionServicePort, localPort);
 
         boolean isSuccess = onionServicePublishedLatch.await(hsUploadTimeout, TimeUnit.MILLISECONDS);
@@ -101,9 +98,7 @@ public class TorController implements BootstrapEventListener, HsDescEventListene
     }
 
     public int getSocksPort() {
-        TorControlProtocol torControlProtocol = getTorControlProtocol();
         String socksListenersString = torControlProtocol.getInfo("net/listeners/socks");
-
         String socksListener;
         if (socksListenersString.contains(" ")) {
             String[] socksPorts = socksListenersString.split(" ");
@@ -162,47 +157,34 @@ public class TorController implements BootstrapEventListener, HsDescEventListene
     }
 
     private void initialize(int controlPort, Optional<PasswordDigest> hashedControlPassword) {
-        var torControlProtocol = new TorControlProtocol();
-        this.torControlProtocol = Optional.of(torControlProtocol);
-
         torControlProtocol.initialize(controlPort);
         hashedControlPassword.ifPresent(torControlProtocol::authenticate);
     }
 
     private void bindToBisq() {
-        TorControlProtocol torControlProtocol = getTorControlProtocol();
         torControlProtocol.takeOwnership();
         torControlProtocol.resetConf(NativeTorProcess.ARG_OWNER_PID);
     }
 
     private void subscribeToBootstrapEvents() {
-        TorControlProtocol torControlProtocol = getTorControlProtocol();
         torControlProtocol.addBootstrapEventListener(this);
         torControlProtocol.setEvents(List.of("STATUS_CLIENT"));
     }
 
     private void subscribeToHsDescEvents() {
-        TorControlProtocol torControlProtocol = getTorControlProtocol();
         torControlProtocol.addHsDescEventListener(this);
         torControlProtocol.setEvents(List.of("HS_DESC"));
     }
 
     private void enableNetworking() {
-        TorControlProtocol torControlProtocol = getTorControlProtocol();
         torControlProtocol.setConfig(TorrcClientConfigFactory.DISABLE_NETWORK_CONFIG_KEY, "0");
     }
 
     private void waitUntilBootstrapped() {
         try {
             while (true) {
-                if (torControlProtocol.isEmpty()) {
-                    throw new TorBootstrapFailedException("Tor is not initializing.");
-                }
-
                 boolean isSuccess = isBootstrappedCountdownLatch.await(bootstrapTimeout, TimeUnit.MILLISECONDS);
-
                 if (isSuccess) {
-                    TorControlProtocol torControlProtocol = this.torControlProtocol.get();
                     torControlProtocol.removeBootstrapEventListener(this);
                     torControlProtocol.setEvents(Collections.emptyList());
                     break;
@@ -220,9 +202,5 @@ public class TorController implements BootstrapEventListener, HsDescEventListene
         Instant timestamp = bootstrapEvent.getTimestamp();
         Instant bootstrapTimeoutAgo = Instant.now().minus(bootstrapTimeout, ChronoUnit.MILLIS);
         return bootstrapTimeoutAgo.isAfter(timestamp);
-    }
-
-    private TorControlProtocol getTorControlProtocol() {
-        return this.torControlProtocol.orElseThrow();
     }
 }
