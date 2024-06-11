@@ -25,7 +25,6 @@ import bisq.common.util.StringUtils;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
-import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListModel;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
 import javafx.geometry.Insets;
@@ -46,8 +45,8 @@ public final class PeerOfferMessageBox extends PeerTextMessageBox {
 
     public PeerOfferMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
                                ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
-                               ChatMessagesListController controller, ChatMessagesListModel model) {
-        super(item, list, controller, model);
+                               ChatMessagesListController controller) {
+        super(item, list, controller);
 
         HBox.setMargin(copyIcon, new Insets(4, 0, -4, 0));
         HBox.setMargin(supportedLanguages, new Insets(5, 0, -5, 0));

@@ -26,7 +26,6 @@ import bisq.desktop.components.controls.DropdownMenu;
 import bisq.desktop.components.controls.DropdownMenuItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
-import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListModel;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
 import de.jensd.fx.fontawesome.AwesomeIcon;
@@ -47,8 +46,8 @@ public final class MyOfferMessageBox extends BubbleMessageBox {
 
     public MyOfferMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
                              ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
-                             ChatMessagesListController controller, ChatMessagesListModel model) {
-        super(item, list, controller, model);
+                             ChatMessagesListController controller) {
+        super(item, list, controller);
 
         // User profile icon
         userProfileIcon.setSize(OFFER_MESSAGE_USER_ICON_SIZE);
