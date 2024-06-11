@@ -10,6 +10,7 @@ import net.freehaven.tor.control.PasswordDigest;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
@@ -20,6 +21,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class TorControlProtocol implements AutoCloseable {
+    private static final int MAX_CONNECTION_ATTEMPTS = 10;
+
     private final Socket controlSocket;
     private final WhonixTorControlReader whonixTorControlReader;
     private Optional<OutputStream> outputStream = Optional.empty();
@@ -35,11 +38,10 @@ public class TorControlProtocol implements AutoCloseable {
 
     public void initialize(int port) {
         try {
-            var socketAddress = new InetSocketAddress("127.0.0.1", port);
-            controlSocket.connect(socketAddress);
+            connectToTor(port);
             whonixTorControlReader.start(controlSocket.getInputStream());
             outputStream = Optional.of(controlSocket.getOutputStream());
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             throw new CannotConnectWithTorException(e);
         }
     }
@@ -149,6 +151,22 @@ public class TorControlProtocol implements AutoCloseable {
 
     public void removeHsDescEventListener(HsDescEventListener listener) {
         whonixTorControlReader.removeHsDescEventListener(listener);
+    }
+
+    private void connectToTor(int port) throws InterruptedException {
+        int connectionAttempt = 0;
+        while (connectionAttempt < MAX_CONNECTION_ATTEMPTS) {
+            try {
+                var socketAddress = new InetSocketAddress("127.0.0.1", port);
+                controlSocket.connect(socketAddress);
+                break;
+            } catch (ConnectException e) {
+                connectionAttempt++;
+                Thread.sleep(200);
+            } catch (IOException e) {
+                throw new CannotConnectWithTorException(e);
+            }
+        }
     }
 
     private void sendCommand(String command) {
