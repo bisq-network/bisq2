@@ -41,13 +41,11 @@ import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
+import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
-import javafx.scene.control.Hyperlink;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
@@ -227,6 +225,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
         private final VBox statementBox, termsBox, optionsVBox;
         private final ReputationScoreDisplay reputationScoreDisplay;
         private final TextArea terms;
+        private final BisqIconButton copyIdButton, copyAddressButton;
         private final Button closeButton;
         private Subscription catHashNodeSubscription;
 
@@ -256,11 +255,19 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             catIconImageView.setFitWidth(100);
             catIconImageView.setFitHeight(100);
 
+            copyIdButton = new BisqIconButton();
+            copyIdButton.setIcon(AwesomeIcon.COPY);
+
+            copyAddressButton = new BisqIconButton();
+            copyAddressButton.setIcon(AwesomeIcon.COPY);
+
             botId = new Label();
             botId.getStyleClass().add("chat-side-bar-user-profile-details");
             botId.setTooltip(new BisqTooltip(model.nym.get()));
             botId.setAlignment(Pos.CENTER_LEFT);
             botId.setTextAlignment(TextAlignment.LEFT);
+            botId.setGraphic(copyIdButton);
+            botId.setContentDisplay(ContentDisplay.RIGHT);
 
             userProfileId = new Label();
             userProfileId.getStyleClass().add("chat-side-bar-user-profile-details");
@@ -270,6 +277,8 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             addressByTransport.setWrapText(true);
             addressByTransport.getStyleClass().add("chat-side-bar-user-profile-details");
             addressByTransport.setTooltip(new BisqTooltip(model.addressByTransportTooltip.get()));
+            addressByTransport.setGraphic(copyAddressButton);
+            addressByTransport.setContentDisplay(ContentDisplay.RIGHT);
 
             Label reputationHeadline = new Label(Res.get("chat.sideBar.userProfile.reputation").toUpperCase());
             reputationHeadline.getStyleClass().add("chat-side-bar-user-profile-small-headline");
@@ -364,10 +373,9 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
                 }
             });
 
-            //todo add animation or popup to signal copy
-            botId.setOnMouseClicked(e ->
+            copyIdButton.setOnMouseClicked(e ->
                     ClipboardUtil.copyToClipboard(model.userProfile.getNym()));
-            addressByTransport.setOnMouseClicked(e ->
+            copyAddressButton.setOnMouseClicked(e ->
                     ClipboardUtil.copyToClipboard(model.userProfile.getAddressByTransportDisplayString()));
 
             privateMsg.setOnAction(e -> controller.onSendPrivateMessage());
