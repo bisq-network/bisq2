@@ -371,10 +371,16 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
                 }
             });
 
-            botIdCopyButton.setOnMouseClicked(e ->
-                    ClipboardUtil.copyToClipboard(model.userProfile.getNym()));
+            botId.setOnMouseEntered(e -> botIdCopyButton.setVisible(true));
+            botId.setOnMouseExited(e -> botIdCopyButton.setVisible(false));
+            botIdCopyButton.setOnMouseClicked(e -> ClipboardUtil.copyToClipboard(model.getUserProfile().getNym()));
+            userProfileId.setOnMouseEntered(e -> userProfileIdCopyButton.setVisible(true));
+            userProfileId.setOnMouseExited(e -> userProfileIdCopyButton.setVisible(false));
+            userProfileIdCopyButton.setOnMouseClicked(e -> ClipboardUtil.copyToClipboard(model.getUserProfile().getId()));
+            addressByTransport.setOnMouseEntered(e -> addressByTransportCopyButton.setVisible(true));
+            addressByTransport.setOnMouseExited(e -> addressByTransportCopyButton.setVisible(false));
             addressByTransportCopyButton.setOnMouseClicked(e ->
-                    ClipboardUtil.copyToClipboard(model.userProfile.getAddressByTransportDisplayString()));
+                    ClipboardUtil.copyToClipboard(model.getUserProfile().getAddressByTransportDisplayString()));
 
             privateMsg.setOnAction(e -> controller.onSendPrivateMessage());
             mention.setOnAction(e -> controller.onMentionUser());
@@ -408,6 +414,16 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
 
             catHashNodeSubscription.unsubscribe();
 
+            botId.setOnMouseEntered(null);
+            botId.setOnMouseExited(null);
+            botIdCopyButton.setOnMouseClicked(null);
+            userProfileId.setOnMouseEntered(null);
+            userProfileId.setOnMouseExited(null);
+            userProfileIdCopyButton.setOnMouseClicked(null);
+            addressByTransport.setOnMouseEntered(null);
+            addressByTransport.setOnMouseExited(null);
+            addressByTransportCopyButton.setOnMouseClicked(null);
+
             privateMsg.setOnAction(null);
             mention.setOnAction(null);
             ignore.setOnAction(null);
@@ -434,6 +450,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             label.setContentDisplay(ContentDisplay.RIGHT);
             BisqIconButton copyButton = new BisqIconButton();
             copyButton.setIcon(AwesomeIcon.COPY);
+            copyButton.setVisible(false);
             label.setGraphic(copyButton);
             return new Pair<>(label, copyButton);
         }
