@@ -22,6 +22,7 @@ import bisq.chat.ChatChannel;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessage;
 import bisq.chat.ChatService;
+import bisq.common.data.Pair;
 import bisq.common.data.Triple;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Layout;
@@ -42,7 +43,12 @@ import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -224,12 +230,13 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final ImageView catIconImageView;
-        private final Label nickName, botId, userProfileId, addressByTransport, statement, totalReputationScore, profileAge, lastSeen;
+        private final Label nickName, botId, userProfileId, addressByTransport, statement, totalReputationScore,
+                profileAge, lastSeen;
         private final Hyperlink privateMsg, mention, ignore, report;
         private final VBox statementBox, termsBox, optionsVBox;
         private final ReputationScoreDisplay reputationScoreDisplay;
         private final TextArea terms;
-        private final BisqIconButton copyIdButton, copyAddressButton;
+        private final BisqIconButton botIdCopyButton, userProfileIdCopyButton, addressByTransportCopyButton;
         private final Button closeButton;
         private Subscription catHashNodeSubscription;
 
@@ -259,30 +266,17 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             catIconImageView.setFitWidth(100);
             catIconImageView.setFitHeight(100);
 
-            copyIdButton = new BisqIconButton();
-            copyIdButton.setIcon(AwesomeIcon.COPY);
+            Pair<Label, BisqIconButton> botIdLabelAndButton = createAndGetProfileDetailsLabelAndButton();
+            botId = botIdLabelAndButton.getFirst();
+            botIdCopyButton = botIdLabelAndButton.getSecond();
 
-            copyAddressButton = new BisqIconButton();
-            copyAddressButton.setIcon(AwesomeIcon.COPY);
+            Pair<Label, BisqIconButton> userProfileIdLabelAndButton = createAndGetProfileDetailsLabelAndButton();
+            userProfileId = userProfileIdLabelAndButton.getFirst();
+            userProfileIdCopyButton = userProfileIdLabelAndButton.getSecond();
 
-            botId = new Label();
-            botId.getStyleClass().add("chat-side-bar-user-profile-details");
-            botId.setTooltip(new BisqTooltip(model.nym.get()));
-            botId.setAlignment(Pos.CENTER_LEFT);
-            botId.setTextAlignment(TextAlignment.LEFT);
-            botId.setGraphic(copyIdButton);
-            botId.setContentDisplay(ContentDisplay.RIGHT);
-
-            userProfileId = new Label();
-            userProfileId.getStyleClass().add("chat-side-bar-user-profile-details");
-            userProfileId.setTooltip(new BisqTooltip(model.userProfileIdString.get()));
-
-            addressByTransport = new Label();
-            addressByTransport.setWrapText(true);
-            addressByTransport.getStyleClass().add("chat-side-bar-user-profile-details");
-            addressByTransport.setTooltip(new BisqTooltip(model.addressByTransportTooltip.get()));
-            addressByTransport.setGraphic(copyAddressButton);
-            addressByTransport.setContentDisplay(ContentDisplay.RIGHT);
+            Pair<Label, BisqIconButton> addressByTransportLabelAndButton = createAndGetProfileDetailsLabelAndButton();
+            addressByTransport = addressByTransportLabelAndButton.getFirst();
+            addressByTransportCopyButton = addressByTransportLabelAndButton.getSecond();
 
             Label reputationHeadline = new Label(Res.get("chat.sideBar.userProfile.reputation").toUpperCase());
             reputationHeadline.getStyleClass().add("chat-side-bar-user-profile-small-headline");
@@ -377,9 +371,9 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
                 }
             });
 
-            copyIdButton.setOnMouseClicked(e ->
+            botIdCopyButton.setOnMouseClicked(e ->
                     ClipboardUtil.copyToClipboard(model.userProfile.getNym()));
-            copyAddressButton.setOnMouseClicked(e ->
+            addressByTransportCopyButton.setOnMouseClicked(e ->
                     ClipboardUtil.copyToClipboard(model.userProfile.getAddressByTransportDisplayString()));
 
             privateMsg.setOnAction(e -> controller.onSendPrivateMessage());
@@ -421,7 +415,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             closeButton.setOnAction(null);
         }
 
-        private Triple<Label, Label, VBox> getInfoBox(String title) {
+        private static Triple<Label, Label, VBox> getInfoBox(String title) {
             Label headline = new Label(title.toUpperCase());
             headline.getStyleClass().add("chat-side-bar-user-profile-small-headline");
             Label value = new Label();
@@ -429,6 +423,19 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             value.getStyleClass().add("chat-side-bar-user-profile-small-value");
             VBox vBox = new VBox(2.5, headline, value);
             return new Triple<>(headline, value, vBox);
+        }
+
+        private static Pair<Label, BisqIconButton> createAndGetProfileDetailsLabelAndButton() {
+            Label label = new Label();
+            label.getStyleClass().add("chat-side-bar-user-profile-details");
+            label.setTooltip(new BisqTooltip());
+            label.setAlignment(Pos.CENTER_LEFT);
+            label.setTextAlignment(TextAlignment.LEFT);
+            label.setContentDisplay(ContentDisplay.RIGHT);
+            BisqIconButton copyButton = new BisqIconButton();
+            copyButton.setIcon(AwesomeIcon.COPY);
+            label.setGraphic(copyButton);
+            return new Pair<>(label, copyButton);
         }
     }
 }
