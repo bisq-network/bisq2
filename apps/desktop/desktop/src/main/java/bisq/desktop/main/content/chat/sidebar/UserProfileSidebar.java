@@ -276,7 +276,10 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
 
             Pair<Label, BisqIconButton> addressByTransportLabelAndButton = createAndGetProfileDetailsLabelAndButton();
             addressByTransport = addressByTransportLabelAndButton.getFirst();
+            addressByTransport.setWrapText(true);
             addressByTransportCopyButton = addressByTransportLabelAndButton.getSecond();
+
+            VBox userProfileDetailsBox = new VBox(5, botId, userProfileId, addressByTransport);
 
             Label reputationHeadline = new Label(Res.get("chat.sideBar.userProfile.reputation").toUpperCase());
             reputationHeadline.getStyleClass().add("chat-side-bar-user-profile-small-headline");
@@ -326,11 +329,9 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
 
             VBox.setMargin(header, new Insets(0, -20, 0, 0));
             VBox.setMargin(nickName, new Insets(10, 0, 0, 0));
-            VBox.setMargin(userProfileId, new Insets(-10, 0, 0, 0));
-            VBox.setMargin(addressByTransport, new Insets(-10, 0, 0, 0));
             VBox.setMargin(reputationBox, new Insets(4, 0, 0, 0));
             root.getChildren().addAll(header,
-                    nickName, catIconImageView, botId, userProfileId, addressByTransport,
+                    nickName, catIconImageView, userProfileDetailsBox,
                     reputationBox, totalReputationScoreBox, profileAgeBox, lastSeenBox, statementBox, termsBox,
                     optionsVBox);
         }
