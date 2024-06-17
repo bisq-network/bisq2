@@ -53,7 +53,6 @@ import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
-import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.ContentDisplay;
@@ -114,7 +113,6 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
         private final Runnable closeHandler;
         private final BannedUserService bannedUserService;
 
-
         private Controller(ServiceProvider serviceProvider,
                            UserProfile userProfile,
                            ChatChannel<? extends ChatMessage> selectedChannel,
@@ -144,7 +142,6 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             model.addressByTransport.set(userProfile.getAddressByTransportDisplayString(26));
             model.addressByTransportTooltip.set(userProfile.getAddressByTransportDisplayString());
 
-            model.ignoreButtonText.set(Res.get("chat.sideBar.userProfile.ignore"));
             model.statement.set(userProfile.getStatement());
             model.terms.set(userProfile.getTerms());
 
@@ -176,10 +173,8 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             model.ignoreUserSelected.set(!model.ignoreUserSelected.get());
             if (model.ignoreUserSelected.get()) {
                 userProfileService.ignoreUserProfile(model.userProfile);
-                model.ignoreButtonText.set(Res.get("chat.sideBar.userProfile.undoIgnore"));
             } else {
                 userProfileService.undoIgnoreUserProfile(model.userProfile);
-                model.ignoreButtonText.set(Res.get("chat.sideBar.userProfile.ignore"));
             }
             model.ignoreUserStateHandler.ifPresent(Runnable::run);
         }
@@ -218,7 +213,6 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
         private final StringProperty profileAge = new SimpleStringProperty();
         private final StringProperty lastSeen = new SimpleStringProperty();
         private final BooleanProperty ignoreUserSelected = new SimpleBooleanProperty();
-        private final StringProperty ignoreButtonText = new SimpleStringProperty();
         private final BooleanProperty isPeer = new SimpleBooleanProperty();
 
         private Model(ChatService chatService, UserProfile userProfile, ChatChannel<? extends ChatMessage> selectedChannel) {
@@ -233,8 +227,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
         private final ImageView catIconImageView;
         private final Label nickName, botId, userProfileId, addressByTransport, statement, totalReputationScore,
                 profileAge, lastSeen;
-        private final StandardButton privateMsg, mention, report;
-        private final Hyperlink ignore;
+        private final StandardButton privateMsg, mention, ignore, undoIgnore, report;
         private final VBox statementBox, termsBox, optionsVBox;
         private final ReputationScoreDisplay reputationScoreDisplay;
         private final TextArea terms;
@@ -306,12 +299,10 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
                     "channels-private-chats-grey", "channels-private-chats-white");
             mention = new StandardButton(Res.get("chat.sideBar.userProfile.mention"),
                     "mention-grey", "mention-white");
-            // ignore
+            ignore = new StandardButton(Res.get("chat.sideBar.userProfile.ignore"), "", "");
+            undoIgnore = new StandardButton(Res.get("chat.sideBar.userProfile.undoIgnore"), "", "");
             report = new StandardButton(Res.get("chat.sideBar.userProfile.report"),
                     "report-grey", "report-white");
-
-            ignore = new Hyperlink();
-            ignore.getStyleClass().add("chat-side-bar-user-profile-small-hyperlink");
 
             Triple<Label, Label, VBox> statementTriple = getInfoBox(Res.get("chat.sideBar.userProfile.statement"));
             statementBox = statementTriple.getThird();
@@ -328,7 +319,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
 
             Region separator = Layout.hLine();
             VBox.setMargin(separator, new Insets(20, -20, 10, -20));
-            optionsVBox = new VBox(5, separator, privateMsg, mention, ignore, report);
+            optionsVBox = new VBox(5, separator, privateMsg, mention, ignore, undoIgnore, report);
             optionsVBox.setAlignment(Pos.CENTER_LEFT);
 
             VBox.setMargin(header, new Insets(0, -20, 0, 0));
@@ -357,7 +348,10 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             termsBox.managedProperty().bind(model.terms.isEmpty().not());
             profileAge.textProperty().bind(model.profileAge);
             lastSeen.textProperty().bind(model.lastSeen);
-            ignore.textProperty().bind(model.ignoreButtonText);
+            ignore.visibleProperty().bind(model.ignoreUserSelected.not());
+            ignore.managedProperty().bind(model.ignoreUserSelected.not());
+            undoIgnore.visibleProperty().bind(model.ignoreUserSelected);
+            undoIgnore.managedProperty().bind(model.ignoreUserSelected);
             optionsVBox.visibleProperty().bind(model.isPeer);
             optionsVBox.managedProperty().bind(model.isPeer);
             privateMsg.visibleProperty().bind(model.isPeer);
@@ -390,6 +384,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             privateMsg.setOnAction(e -> controller.onSendPrivateMessage());
             mention.setOnAction(e -> controller.onMentionUser());
             ignore.setOnAction(e -> controller.onToggleIgnoreUser());
+            undoIgnore.setOnAction(e -> controller.onToggleIgnoreUser());
             report.setOnAction(e -> controller.onReportUser());
             closeButton.setOnAction(e -> controller.onClose());
         }
@@ -411,7 +406,10 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             terms.managedProperty().unbind();
             profileAge.textProperty().unbind();
             lastSeen.textProperty().unbind();
-            ignore.textProperty().unbind();
+            ignore.visibleProperty().unbind();
+            ignore.managedProperty().unbind();
+            undoIgnore.visibleProperty().unbind();
+            undoIgnore.managedProperty().unbind();
             optionsVBox.visibleProperty().unbind();
             optionsVBox.managedProperty().unbind();
             privateMsg.visibleProperty().unbind();
@@ -432,6 +430,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             privateMsg.setOnAction(null);
             mention.setOnAction(null);
             ignore.setOnAction(null);
+            undoIgnore.setOnAction(null);
             report.setOnAction(null);
             closeButton.setOnAction(null);
         }
