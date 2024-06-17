@@ -299,8 +299,10 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
                     "channels-private-chats-grey", "channels-private-chats-white");
             mention = new StandardButton(Res.get("chat.sideBar.userProfile.mention"),
                     "mention-grey", "mention-white");
-            ignore = new StandardButton(Res.get("chat.sideBar.userProfile.ignore"), "", "");
-            undoIgnore = new StandardButton(Res.get("chat.sideBar.userProfile.undoIgnore"), "", "");
+            ignore = new StandardButton(Res.get("chat.sideBar.userProfile.ignore"),
+                    "ignore-grey", "ignore-white");
+            undoIgnore = new StandardButton(Res.get("chat.sideBar.userProfile.undoIgnore"),
+                    "undo-ignore-grey", "undo-ignore-white");
             report = new StandardButton(Res.get("chat.sideBar.userProfile.report"),
                     "report-grey", "report-white");
 
@@ -319,7 +321,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
 
             Region separator = Layout.hLine();
             VBox.setMargin(separator, new Insets(20, -20, 10, -20));
-            optionsVBox = new VBox(5, separator, privateMsg, mention, ignore, undoIgnore, report);
+            optionsVBox = new VBox(10, separator, privateMsg, mention, ignore, undoIgnore, report);
             optionsVBox.setAlignment(Pos.CENTER_LEFT);
 
             VBox.setMargin(header, new Insets(0, -20, 0, 0));
