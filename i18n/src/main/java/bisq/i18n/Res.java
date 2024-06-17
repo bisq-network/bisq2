@@ -18,6 +18,7 @@
 package bisq.i18n;
 
 import bisq.common.application.DevMode;
+import com.google.common.base.Joiner;
 import lombok.extern.slf4j.Slf4j;
 
 import java.text.MessageFormat;
@@ -28,6 +29,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class Res {
+    // We use non-printing characters as separator. See: https://en.wikipedia.org/wiki/Delimiter#ASCII_delimited_text
+    private static final char ARGS_SEPARATOR = 0x1f;
+    private static final char PARAM_SEPARATOR = 0x1e;
 
     private static final List<String> BUNDLE_NAMES = List.of(
             "default",
@@ -110,6 +114,33 @@ public class Res {
 
     public static boolean has(String key) {
         return bundles.stream().anyMatch(bundle -> bundle.containsKey(key));
+    }
+
+
+    public static String encode(String key, Object... arguments) {
+        if (arguments.length == 0) {
+            return key;
+        }
+
+        String args = Joiner.on(ARGS_SEPARATOR).join(arguments);
+        return key + PARAM_SEPARATOR + args;
+    }
+
+    public static String decode(String encoded) {
+        String separator = String.valueOf(Res.PARAM_SEPARATOR);
+        if (!encoded.contains(separator)) {
+            return Res.get(encoded);
+        }
+
+        String[] tokens = encoded.split(separator);
+        String key = tokens[0];
+        if (tokens.length == 1) {
+            return Res.get(key);
+        }
+
+        String argumentList = tokens[1];
+        Object[] arguments = argumentList.split(String.valueOf(ARGS_SEPARATOR));
+        return Res.get(key, arguments);
     }
 }
 
