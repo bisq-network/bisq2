@@ -19,6 +19,7 @@ package bisq.rest_api;
 
 import bisq.account.AccountService;
 import bisq.application.ApplicationService;
+import bisq.application.ApplicationVersion;
 import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatService;
@@ -117,7 +118,7 @@ public class RestApiApplicationService extends ApplicationService {
                 networkService);
 
         bondedRolesService = new BondedRolesService(BondedRolesService.Config.from(getConfig("bondedRoles")),
-                config.getVersion(),
+                ApplicationVersion.getVersion(),
                 persistenceService,
                 networkService);
 

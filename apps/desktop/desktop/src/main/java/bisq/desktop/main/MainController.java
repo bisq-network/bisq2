@@ -18,8 +18,9 @@
 package bisq.desktop.main;
 
 import bisq.application.ApplicationService;
+import bisq.application.ApplicationVersion;
 import bisq.bisq_easy.NavigationTarget;
-import bisq.bonded_roles.security_manager.alert.AlertNotificationsService;
+import bisq.common.util.Version;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
@@ -77,8 +78,9 @@ public class MainController extends NavigationController {
             String baseDirPath = config.getBaseDir().toAbsolutePath().toString();
             Optional<String> versionFromVersionFile = UpdaterUtils.readVersionFromVersionFile(baseDirPath);
             if (versionFromVersionFile.isPresent()) {
-                if (!config.getVersion().toString().equals(versionFromVersionFile.get())) {
-                    String errorMsg = "Version of application (v" + config.getVersion() +
+                Version version = ApplicationVersion.getVersion();
+                if (!version.toString().equals(versionFromVersionFile.get())) {
+                    String errorMsg = "Version of application (v" + version +
                             ") does not match version from version file in data directory (v" + versionFromVersionFile.get() + ")";
                     new Popup().warning(errorMsg)
                             .useShutDownButton()

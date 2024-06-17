@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.left;
 
+import bisq.application.ApplicationVersion;
 import bisq.bisq_easy.BisqEasyNotificationsService;
 import bisq.bisq_easy.ChatChannelDomainNavigationTargetMapper;
 import bisq.bisq_easy.NavigationTarget;
@@ -65,7 +66,7 @@ public class LeftNavController implements Controller {
 
         NetworkInfo networkInfo = new NetworkInfo(serviceProvider, this::onNavigationTargetSelected);
         model = new LeftNavModel(serviceProvider.getWalletService().isPresent());
-        model.setVersion("v" + serviceProvider.getConfig().getVersion().toString());
+        model.setVersion("v" + ApplicationVersion.getVersion().toString());
         view = new LeftNavView(model, this, networkInfo.getRoot());
     }
 

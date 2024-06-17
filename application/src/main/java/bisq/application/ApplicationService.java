@@ -76,7 +76,6 @@ public abstract class ApplicationService implements Service {
                     .orElse(OsUtils.getUserDataDir().resolve(appName));
             return new Config(appDataDir,
                     appName,
-                    config.getString("version"),
                     config.getBoolean("devMode"),
                     config.getString("keyIds"),
                     config.getBoolean("ignoreSigningKeyInResourcesCheck"),
@@ -85,7 +84,6 @@ public abstract class ApplicationService implements Service {
 
         private final Path baseDir;
         private final String appName;
-        private final Version version;
         private final boolean devMode;
         private final List<String> keyIds;
         private final boolean ignoreSigningKeyInResourcesCheck;
@@ -93,14 +91,12 @@ public abstract class ApplicationService implements Service {
 
         public Config(Path baseDir,
                       String appName,
-                      String version,
                       boolean devMode,
                       String keyIds,
                       boolean ignoreSigningKeyInResourcesCheck,
                       boolean ignoreSignatureVerification) {
             this.baseDir = baseDir;
             this.appName = appName;
-            this.version = new Version(version);
             this.devMode = devMode;
             // We want to use the keyIds at the DesktopApplicationLauncher as a simple format. 
             // Using the typesafe format with indexes would require a more complicate parsing as we do not use 
@@ -156,7 +152,7 @@ public abstract class ApplicationService implements Service {
         LogSetup.setLevel(Level.INFO);
         log.info(AsciiLogo.getAsciiLogo());
         log.info("Data directory: {}", config.getBaseDir());
-        log.info("Version: {}", config.getVersion());
+        log.info("Version: {}", ApplicationVersion.getVersion());
         if (customConfigProvided) {
             log.info("Using custom config file");
         }

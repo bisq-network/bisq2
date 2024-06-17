@@ -19,6 +19,7 @@ package bisq.desktop_app;
 
 import bisq.account.AccountService;
 import bisq.application.ApplicationService;
+import bisq.application.ApplicationVersion;
 import bisq.application.ShutDownHandler;
 import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
@@ -130,7 +131,7 @@ public class DesktopApplicationService extends ApplicationService {
                 networkService);
 
         bondedRolesService = new BondedRolesService(BondedRolesService.Config.from(getConfig("bondedRoles")),
-                config.getVersion(),
+                ApplicationVersion.getVersion(),
                 getPersistenceService(),
                 networkService);
 

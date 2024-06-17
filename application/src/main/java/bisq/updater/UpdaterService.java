@@ -18,6 +18,7 @@
 package bisq.updater;
 
 import bisq.application.ApplicationService;
+import bisq.application.ApplicationVersion;
 import bisq.bonded_roles.release.ReleaseNotification;
 import bisq.bonded_roles.release.ReleaseNotificationsService;
 import bisq.common.application.Service;
@@ -119,7 +120,7 @@ public class UpdaterService implements Service {
         }
 
         Version newVersion = releaseNotification.getVersion();
-        Version installedVersion = config.getVersion();
+        Version installedVersion = ApplicationVersion.getVersion();
         if (newVersion.belowOrEqual(installedVersion)) {
             log.debug("Our installed version is the same or higher as the version of the new releaseNotification.");
             return;

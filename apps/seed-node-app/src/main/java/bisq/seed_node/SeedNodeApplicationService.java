@@ -18,6 +18,7 @@
 package bisq.seed_node;
 
 import bisq.application.ApplicationService;
+import bisq.application.ApplicationVersion;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
@@ -66,7 +67,7 @@ public class SeedNodeApplicationService extends ApplicationService {
                 networkService);
 
         bondedRolesService = new BondedRolesService(BondedRolesService.Config.from(getConfig("bondedRoles")),
-                config.getVersion(),
+                ApplicationVersion.getVersion(),
                 persistenceService,
                 networkService);
 
