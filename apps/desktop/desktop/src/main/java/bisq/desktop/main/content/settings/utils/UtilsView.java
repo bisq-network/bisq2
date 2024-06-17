@@ -41,7 +41,7 @@ public class UtilsView extends View<VBox, UtilsModel, UtilsController> {
     private final Button setBackupLocationButton, backupButton;
     private final MaterialTextField backupLocation;
     private final Hyperlink webpage, dao, sourceCode, community, contribute,
-            openLogFileButton, openDataDirButton, chatRules, tradeGuide, walletGuide, license, tac;
+            openLogFileButton, openTorLogFileButton, openDataDirButton, chatRules, tradeGuide, walletGuide, license, tac;
 
     public UtilsView(UtilsModel model, UtilsController controller) {
         super(new VBox(50), model, controller);
@@ -64,7 +64,9 @@ public class UtilsView extends View<VBox, UtilsModel, UtilsController> {
         localDataHeadline.getStyleClass().add("large-thin-headline");
         openDataDirButton = new Hyperlink(Res.get("settings.utils.localData.openDataDir"));
         openLogFileButton = new Hyperlink(Res.get("settings.utils.localData.openLogFile"));
-        VBox localDataBox = new VBox(5, openDataDirButton, openLogFileButton);
+        openTorLogFileButton = new Hyperlink(Res.get("settings.utils.localData.openTorLogFile"));
+
+        VBox localDataBox = new VBox(5, openDataDirButton, openLogFileButton, openTorLogFileButton);
 
         Label rulesHeadline = new Label(Res.get("settings.utils.rules.headline"));
         rulesHeadline.getStyleClass().add("large-thin-headline");
@@ -112,6 +114,7 @@ public class UtilsView extends View<VBox, UtilsModel, UtilsController> {
         backupButton.disableProperty().bind(model.getBackupButtonDisabled());
 
         openLogFileButton.setOnAction(e -> controller.onOpenLogFile());
+        openTorLogFileButton.setOnAction(e -> controller.onOpenTorLogFile());
         openDataDirButton.setOnAction(e -> controller.onOpenDataDir());
         setBackupLocationButton.setOnAction(e -> controller.onSetBackupLocation());
         backupButton.setOnAction(e -> onBackupButtonPressed());
@@ -143,6 +146,7 @@ public class UtilsView extends View<VBox, UtilsModel, UtilsController> {
         backupButton.disableProperty().unbind();
 
         openLogFileButton.setOnAction(null);
+        openTorLogFileButton.setOnAction(null);
         openDataDirButton.setOnAction(null);
         setBackupLocationButton.setOnAction(null);
         backupButton.setOnAction(null);
