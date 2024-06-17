@@ -946,10 +946,19 @@ public abstract class Overlay<T extends Overlay<T>> {
         zipLogButton.setOnAction(event -> {
             URI uri = URI.create("jar:file:" + Paths.get(baseDir,"bisq2-logs.zip").toUri().getPath());
             Map<String, String> env = Map.of("create", "true");
+            List<Path> logPaths = Arrays.asList(
+                    Path.of(baseDir).resolve("bisq.log"),
+                    Path.of(baseDir + "/tor/").resolve("debug.log"));
             try (FileSystem zipfs = FileSystems.newFileSystem(uri, env)) {
-                Files.copy(Path.of(baseDir).resolve("bisq.log"), zipfs.getPath("/bisq.log"), StandardCopyOption.REPLACE_EXISTING);
-                //TODO - when multi-transport support arrives, check which transports are being used and collect all instances of debug.log
-                Files.copy(Path.of(baseDir + "/tor/").resolve("debug.log"), zipfs.getPath("/debug.log"), StandardCopyOption.REPLACE_EXISTING);
+                logPaths.forEach(logPath -> {
+                    if (logPath.toFile().isFile()) {
+                        try {
+                            Files.copy(logPath, zipfs.getPath(logPath.toFile().getName()), StandardCopyOption.REPLACE_EXISTING);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                });
             } catch (IOException e) {
                 throw new RuntimeException(e);
         }});
