@@ -889,6 +889,25 @@
     -fx-font-family: "IBM Plex Sans";
 }
 
+/*******************************************************************************
+ *                                                                             *
+ * Standard Button                                                             *
+ *                                                                             *
+ ******************************************************************************/
+
+.standard-button {
+    -fx-padding: 0;
+    -fx-border-width: 0;
+    -fx-background-color: transparent;
+    -fx-cursor: hand;
+    -fx-text-fill: -fx-mid-text-color;
+}
+
+.standard-button:hover {
+    -fx-background-color: transparent;
+    -fx-text-fill: -fx-light-text-color;
+}
+
 
 /*******************************************************************************
  *                                                                             *
