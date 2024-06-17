@@ -233,8 +233,8 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
         private final ImageView catIconImageView;
         private final Label nickName, botId, userProfileId, addressByTransport, statement, totalReputationScore,
                 profileAge, lastSeen;
-        private final StandardButton privateMsg, mention;
-        private final Hyperlink ignore, report;
+        private final StandardButton privateMsg, mention, report;
+        private final Hyperlink ignore;
         private final VBox statementBox, termsBox, optionsVBox;
         private final ReputationScoreDisplay reputationScoreDisplay;
         private final TextArea terms;
@@ -306,11 +306,12 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
                     "channels-private-chats-grey", "channels-private-chats-white");
             mention = new StandardButton(Res.get("chat.sideBar.userProfile.mention"),
                     "mention-grey", "mention-white");
+            // ignore
+            report = new StandardButton(Res.get("chat.sideBar.userProfile.report"),
+                    "report-grey", "report-white");
 
             ignore = new Hyperlink();
-            report = new Hyperlink(Res.get("chat.sideBar.userProfile.report"));
             ignore.getStyleClass().add("chat-side-bar-user-profile-small-hyperlink");
-            report.getStyleClass().add("chat-side-bar-user-profile-small-hyperlink");
 
             Triple<Label, Label, VBox> statementTriple = getInfoBox(Res.get("chat.sideBar.userProfile.statement"));
             statementBox = statementTriple.getThird();
