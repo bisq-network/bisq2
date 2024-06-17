@@ -440,8 +440,8 @@ public class TradeWizardReviewController implements Controller {
                             .ifPresent(channel -> {
                                 String taker = userIdentityService.getSelectedUserIdentity().getUserProfile().getUserName();
                                 String maker = channel.getPeer().getUserName();
-                                String message = Res.get("bisqEasy.takeOffer.tradeLogMessage", taker, maker);
-                                chatService.getBisqEasyOpenTradeChannelService().sendTradeLogMessage(message, channel);
+                                String encoded = Res.encode("bisqEasy.takeOffer.tradeLogMessage", taker, maker);
+                                chatService.getBisqEasyOpenTradeChannelService().sendTradeLogMessage(encoded, channel);
                             });
                 }));
     }

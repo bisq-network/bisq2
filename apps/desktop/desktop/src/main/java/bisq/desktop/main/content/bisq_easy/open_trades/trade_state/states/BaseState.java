@@ -96,8 +96,8 @@ public abstract class BaseState {
                     .findFirst();
         }
 
-        protected void sendTradeLogMessage(String message) {
-            chatService.getBisqEasyOpenTradeChannelService().sendTradeLogMessage(message, model.getChannel());
+        protected void sendTradeLogMessage(String encoded) {
+            chatService.getBisqEasyOpenTradeChannelService().sendTradeLogMessage(encoded, model.getChannel());
         }
     }
 

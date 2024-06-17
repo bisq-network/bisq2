@@ -87,8 +87,8 @@ public class OpenTradesUtils {
                     .information(Res.get("bisqEasy.mediation.request.confirm.msg"))
                     .actionButtonText(Res.get("bisqEasy.mediation.request.confirm.openMediation"))
                     .onAction(() -> {
-                        String tradeLogMessage = Res.get("bisqEasy.mediation.requester.tradeLogMessage", channel.getMyUserIdentity().getUserName());
-                        channelService.sendTradeLogMessage(tradeLogMessage, channel);
+                        String encoded = Res.encode("bisqEasy.mediation.requester.tradeLogMessage", channel.getMyUserIdentity().getUserName());
+                        channelService.sendTradeLogMessage(encoded, channel);
 
                         channel.setIsInMediation(true);
                         mediationRequestService.requestMediation(channel, contract);

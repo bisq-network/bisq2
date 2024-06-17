@@ -21,6 +21,7 @@ import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.desktop.main.content.chat.message_container.list.message_box.MessageBox;
+import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -37,7 +38,8 @@ public class PeerProtocolLogMessageBox extends MessageBox {
     public PeerProtocolLogMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item) {
         this.item = item;
 
-        message = new Label(item.getMessage());
+        String decoded = Res.decode(item.getMessage());
+        message = new Label(decoded);
         message.getStyleClass().addAll("text-fill-white", "system-message-labels");
         message.setAlignment(Pos.CENTER);
         message.setWrapText(true);
