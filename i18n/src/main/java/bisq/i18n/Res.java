@@ -22,29 +22,39 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class Res {
+
+    private static final List<String> BUNDLE_NAMES = List.of(
+            "default",
+            "application",
+            "chat",
+            "trade_apps",
+            "bisq_easy",
+            "academy",
+            "user",
+            "authorized_role",
+            "payment_method",
+            "wallet",
+            "settings"
+    );
+
     private static final List<ResourceBundle> bundles = new ArrayList<>();
 
     public static void setLanguage(String languageCode) {
-        Locale locale = Locale.forLanguageTag(languageCode);
+        Locale locale = "en".equalsIgnoreCase(languageCode) ? new Locale("") : Locale.forLanguageTag(languageCode);
+
         bundles.clear();
-        bundles.addAll(List.of(
-                ResourceBundle.getBundle("default", locale),
-                ResourceBundle.getBundle("application", locale),
-                ResourceBundle.getBundle("chat", locale),
-                ResourceBundle.getBundle("trade_apps", locale),
-                ResourceBundle.getBundle("bisq_easy", locale),
-                ResourceBundle.getBundle("academy", locale),
-                ResourceBundle.getBundle("user", locale),
-                ResourceBundle.getBundle("authorized_role", locale),
-                ResourceBundle.getBundle("payment_method", locale),
-                ResourceBundle.getBundle("wallet", locale),
-                ResourceBundle.getBundle("settings", locale)
-        ));
+
+        bundles.addAll(
+                BUNDLE_NAMES.stream()
+                        .map(bundleName -> ResourceBundle.getBundle(bundleName, locale))
+                        .collect(Collectors.toList())
+        );
     }
 
     public static String get(String key, Object... arguments) {
