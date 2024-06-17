@@ -17,6 +17,7 @@
 
 package bisq.bonded_roles.market_price;
 
+import bisq.common.application.ApplicationVersion;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.common.currency.TradeCurrency;
@@ -28,7 +29,6 @@ import bisq.common.timer.Scheduler;
 import bisq.common.util.CollectionUtil;
 import bisq.common.util.ExceptionUtil;
 import bisq.common.util.MathUtils;
-import bisq.common.util.Version;
 import bisq.network.NetworkService;
 import bisq.network.common.TransportType;
 import bisq.network.http.BaseHttpClient;
@@ -144,11 +144,10 @@ public class MarketPriceRequestService {
     private volatile boolean shutdownStarted;
 
     public MarketPriceRequestService(Config conf,
-                                     Version version,
                                      NetworkService networkService) {
         this.conf = conf;
         this.networkService = networkService;
-        userAgent = "bisq-v2/" + version.toString();
+        userAgent = "bisq-v2/" + ApplicationVersion.getVersion().toString();
 
         Set<TransportType> supportedTransportTypes = networkService.getSupportedTransportTypes();
         conf.providers.stream()

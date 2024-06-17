@@ -26,7 +26,6 @@ import bisq.bonded_roles.security_manager.alert.AlertService;
 import bisq.bonded_roles.security_manager.difficulty_adjustment.DifficultyAdjustmentService;
 import bisq.bonded_roles.security_manager.min_reputation_score.MinRequiredReputationScoreService;
 import bisq.common.application.Service;
-import bisq.common.util.Version;
 import bisq.network.NetworkService;
 import bisq.persistence.PersistenceService;
 import lombok.Getter;
@@ -67,13 +66,11 @@ public class BondedRolesService implements Service {
     private final MinRequiredReputationScoreService minRequiredReputationScoreService;
     private final ReleaseNotificationsService releaseNotificationsService;
 
-    public BondedRolesService(Config config, Version version, PersistenceService persistenceService, NetworkService networkService) {
+    public BondedRolesService(Config config, PersistenceService persistenceService, NetworkService networkService) {
         authorizedBondedRolesService = new AuthorizedBondedRolesService(networkService, config.isIgnoreSecurityManager());
         bondedRoleRegistrationService = new BondedRoleRegistrationService(networkService, authorizedBondedRolesService);
-        marketPriceService = new MarketPriceService(config.getMarketPrice(), version, persistenceService, networkService, authorizedBondedRolesService);
-        explorerService = new ExplorerService(ExplorerService.Config.from(config.getBlockchainExplorer()),
-                networkService,
-                version);
+        marketPriceService = new MarketPriceService(config.getMarketPrice(), persistenceService, networkService, authorizedBondedRolesService);
+        explorerService = new ExplorerService(ExplorerService.Config.from(config.getBlockchainExplorer()), networkService);
         alertService = new AlertService(authorizedBondedRolesService);
         difficultyAdjustmentService = new DifficultyAdjustmentService(authorizedBondedRolesService);
         minRequiredReputationScoreService = new MinRequiredReputationScoreService(authorizedBondedRolesService);
