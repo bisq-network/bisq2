@@ -893,6 +893,18 @@
     -fx-image: url("/images/chat/ignore/ignore-white.png");
 }
 
+#undo-ignore-green {
+    -fx-image: url("/images/chat/undo-ignore/undo-ignore-green.png");
+}
+
+#undo-ignore-grey {
+    -fx-image: url("/images/chat/undo-ignore/undo-ignore-grey.png");
+}
+
+#undo-ignore-white {
+    -fx-image: url("/images/chat/undo-ignore/undo-ignore-white.png");
+}
+
 
 /* ------------------------------------------------------------------------------------ */
 /* Markets */
