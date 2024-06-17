@@ -869,6 +869,18 @@
     -fx-image: url("/images/chat/mention/mention-white.png");
 }
 
+#report-green {
+    -fx-image: url("/images/chat/report/report-green.png");
+}
+
+#report-grey {
+    -fx-image: url("/images/chat/report/report-grey.png");
+}
+
+#report-white {
+    -fx-image: url("/images/chat/report/report-white.png");
+}
+
 
 /* ------------------------------------------------------------------------------------ */
 /* Markets */
