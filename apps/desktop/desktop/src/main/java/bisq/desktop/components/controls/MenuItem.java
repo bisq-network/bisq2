@@ -33,7 +33,7 @@ public class MenuItem extends Button {
         setText(text);
         setGraphic(buttonIcon);
         setGraphicTextGap(10);
-        getStyleClass().add("standard-button");
+        getStyleClass().add("menu-item");
 
         attachListeners();
     }

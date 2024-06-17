@@ -895,7 +895,7 @@
  *                                                                             *
  ******************************************************************************/
 
-.standard-button {
+.button.menu-item {
     -fx-padding: 0;
     -fx-border-width: 0;
     -fx-background-color: transparent;
@@ -903,7 +903,7 @@
     -fx-text-fill: -fx-mid-text-color;
 }
 
-.standard-button:hover {
+.button.menu-item:hover {
     -fx-background-color: transparent;
     -fx-text-fill: -fx-light-text-color;
 }
