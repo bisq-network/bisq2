@@ -881,6 +881,18 @@
     -fx-image: url("/images/chat/report/report-white.png");
 }
 
+#ignore-green {
+    -fx-image: url("/images/chat/ignore/ignore-green.png");
+}
+
+#ignore-grey {
+    -fx-image: url("/images/chat/ignore/ignore-grey.png");
+}
+
+#ignore-white {
+    -fx-image: url("/images/chat/ignore/ignore-white.png");
+}
+
 
 /* ------------------------------------------------------------------------------------ */
 /* Markets */
