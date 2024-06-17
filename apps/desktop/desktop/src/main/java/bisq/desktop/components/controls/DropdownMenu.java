@@ -54,6 +54,8 @@ public class DropdownMenu extends HBox {
     private boolean isFirstRun = false;
     @Setter
     private boolean openUpwards = false;
+    @Setter
+    private boolean openToTheRight = false;
 
     public DropdownMenu(String defaultIconId, String activeIconId, boolean useIconOnly) {
         defaultIcon = ImageUtil.getImageViewById(defaultIconId);
@@ -92,11 +94,9 @@ public class DropdownMenu extends HBox {
 
     private void toggleContextMenu() {
         if (!contextMenu.isShowing()) {
-            contextMenu.setAnchorLocation(openUpwards
-                    ? PopupWindow.AnchorLocation.WINDOW_BOTTOM_RIGHT
-                    : PopupWindow.AnchorLocation.WINDOW_TOP_RIGHT);
+            contextMenu.setAnchorLocation(getAnchorLocation());
             Bounds bounds = localToScreen(getBoundsInLocal());
-            double x = bounds.getMaxX();
+            double x = openToTheRight ? bounds.getMinX() : bounds.getMaxX();
             double y = openUpwards ? bounds.getMinY() - 3 : bounds.getMaxY() + 3;
             contextMenu.show(this, x, y);
         } else {
@@ -179,6 +179,18 @@ public class DropdownMenu extends HBox {
             getChildren().remove(buttonIcon);
             buttonIcon = newIcon;
             getChildren().add(buttonIcon);
+        }
+    }
+
+    private PopupWindow.AnchorLocation getAnchorLocation() {
+        if (!openUpwards) {
+            return openToTheRight
+                    ? PopupWindow.AnchorLocation.WINDOW_TOP_LEFT
+                    : PopupWindow.AnchorLocation.WINDOW_TOP_RIGHT;
+        } else {
+            return openToTheRight
+                    ? PopupWindow.AnchorLocation.WINDOW_BOTTOM_LEFT
+                    : PopupWindow.AnchorLocation.WINDOW_BOTTOM_RIGHT;
         }
     }
 }
