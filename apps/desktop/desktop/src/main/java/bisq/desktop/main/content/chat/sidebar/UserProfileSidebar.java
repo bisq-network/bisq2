@@ -317,7 +317,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
 
             // Options
             privateMsg = new StandardButton(Res.get("chat.sideBar.userProfile.sendPrivateMessage"),
-                    "channels-private-chats-grey", "channels-private-chats-white");
+                    "private-chat-grey", "private-chat-white");
             mention = new StandardButton(Res.get("chat.sideBar.userProfile.mention"),
                     "mention-grey", "mention-white");
             ignore = new StandardButton(Res.get("chat.sideBar.userProfile.ignore"),
