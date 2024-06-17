@@ -857,6 +857,19 @@
     -fx-image: url("/images/chat/grey-small-dot.png");
 }
 
+#mention-green {
+    -fx-image: url("/images/chat/mention/mention-green.png");
+}
+
+#mention-grey {
+    -fx-image: url("/images/chat/mention/mention-grey.png");
+}
+
+#mention-white {
+    -fx-image: url("/images/chat/mention/mention-white.png");
+}
+
+
 /* ------------------------------------------------------------------------------------ */
 /* Markets */
 /* ------------------------------------------------------------------------------------ */
