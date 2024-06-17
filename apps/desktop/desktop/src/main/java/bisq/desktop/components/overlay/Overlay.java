@@ -939,7 +939,7 @@ public abstract class Overlay<T extends Overlay<T>> {
         gridPane.getChildren().add(logButton);
         logButton.setOnAction(event -> OsUtils.open(new File(baseDir, "bisq.log")));
 
-        Button zipLogButton = new Button(Res.get("popup.zipLogs.log"));
+        Button zipLogButton = new Button(Res.get("popup.reportError.zipLogs"));
         GridPane.setHalignment(zipLogButton, HPos.LEFT);
         GridPane.setRowIndex(zipLogButton, gridPane.getRowCount());
         gridPane.getChildren().add(zipLogButton);
