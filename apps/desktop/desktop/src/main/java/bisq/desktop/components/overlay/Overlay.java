@@ -71,6 +71,9 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.nio.file.*;
 import java.util.*;
 
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
@@ -935,6 +938,21 @@ public abstract class Overlay<T extends Overlay<T>> {
         GridPane.setRowIndex(logButton, gridPane.getRowCount());
         gridPane.getChildren().add(logButton);
         logButton.setOnAction(event -> OsUtils.open(new File(baseDir, "bisq.log")));
+
+        Button zipLogButton = new Button(Res.get("popup.zipLogs.log"));
+        GridPane.setHalignment(zipLogButton, HPos.LEFT);
+        GridPane.setRowIndex(zipLogButton, gridPane.getRowCount());
+        gridPane.getChildren().add(zipLogButton);
+        zipLogButton.setOnAction(event -> {
+            URI uri = URI.create("jar:file:" + baseDir + "/bisq2-logs.zip");
+            Map<String, String> env = Map.of("create", "true");
+            try (FileSystem zipfs = FileSystems.newFileSystem(uri, env)) {
+                Files.copy(Path.of(baseDir).resolve("bisq.log"), zipfs.getPath("/bisq.log"), StandardCopyOption.REPLACE_EXISTING);
+                //TODO - when multi-transport support arrives, check which transports are being used and collect all instances of debug.log
+                Files.copy(Path.of(baseDir + "/tor/").resolve("debug.log"), zipfs.getPath("/debug.log"), StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+        }});
 
         Button gitHubButton = new Button(Res.get("popup.reportError.gitHub"));
         GridPane.setHalignment(gitHubButton, HPos.RIGHT);
