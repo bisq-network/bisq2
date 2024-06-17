@@ -30,7 +30,7 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.cathash.CatHash;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
-import bisq.desktop.components.controls.StandardButton;
+import bisq.desktop.components.controls.MenuItem;
 import bisq.desktop.main.content.components.ReportToModeratorWindow;
 import bisq.desktop.main.content.components.ReputationScoreDisplay;
 import bisq.i18n.Res;
@@ -219,7 +219,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
         private final ImageView catIconImageView;
         private final Label nickName, botId, userId, addressByTransport, statement, totalReputationScore,
                 profileAge, lastSeen, terms;
-        private final StandardButton privateMsg, mention, ignore, undoIgnore, report;
+        private final MenuItem privateMsg, mention, ignore, undoIgnore, report;
         private final VBox statementBox, termsBox, optionsVBox;
         private final ReputationScoreDisplay reputationScoreDisplay;
         private final BisqIconButton botIdCopyButton, userIdCopyButton, addressByTransportCopyButton;
@@ -309,15 +309,15 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             VBox.setVgrow(scrollPane, Priority.ALWAYS);
 
             // Options
-            privateMsg = new StandardButton(Res.get("chat.sideBar.userProfile.sendPrivateMessage"),
+            privateMsg = new MenuItem(Res.get("chat.sideBar.userProfile.sendPrivateMessage"),
                     "private-chat-grey", "private-chat-white");
-            mention = new StandardButton(Res.get("chat.sideBar.userProfile.mention"),
+            mention = new MenuItem(Res.get("chat.sideBar.userProfile.mention"),
                     "mention-grey", "mention-white");
-            ignore = new StandardButton(Res.get("chat.sideBar.userProfile.ignore"),
+            ignore = new MenuItem(Res.get("chat.sideBar.userProfile.ignore"),
                     "ignore-grey", "ignore-white");
-            undoIgnore = new StandardButton(Res.get("chat.sideBar.userProfile.undoIgnore"),
+            undoIgnore = new MenuItem(Res.get("chat.sideBar.userProfile.undoIgnore"),
                     "undo-ignore-grey", "undo-ignore-white");
-            report = new StandardButton(Res.get("chat.sideBar.userProfile.report"),
+            report = new MenuItem(Res.get("chat.sideBar.userProfile.report"),
                     "report-grey", "report-white");
 
             Region separator = Layout.hLine();

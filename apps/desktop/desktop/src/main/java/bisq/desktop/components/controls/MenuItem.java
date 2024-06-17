@@ -21,11 +21,11 @@ import bisq.desktop.common.utils.ImageUtil;
 import javafx.scene.control.Button;
 import javafx.scene.image.ImageView;
 
-public class StandardButton extends Button {
+public class MenuItem extends Button {
     private final ImageView defaultIcon, activeIcon;
     private ImageView buttonIcon;
 
-    public StandardButton(String text, String defaultIconId, String activeIconId) {
+    public MenuItem(String text, String defaultIconId, String activeIconId) {
         defaultIcon = ImageUtil.getImageViewById(defaultIconId);
         activeIcon = ImageUtil.getImageViewById(activeIconId);
         buttonIcon = defaultIcon;
