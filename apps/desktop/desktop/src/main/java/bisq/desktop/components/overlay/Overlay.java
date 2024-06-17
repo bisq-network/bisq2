@@ -944,7 +944,7 @@ public abstract class Overlay<T extends Overlay<T>> {
         GridPane.setRowIndex(zipLogButton, gridPane.getRowCount());
         gridPane.getChildren().add(zipLogButton);
         zipLogButton.setOnAction(event -> {
-            URI uri = URI.create("jar:file:" + baseDir + "/bisq2-logs.zip");
+            URI uri = URI.create("jar:file:" + Paths.get(baseDir,"bisq2-logs.zip").toUri().getPath());
             Map<String, String> env = Map.of("create", "true");
             try (FileSystem zipfs = FileSystems.newFileSystem(uri, env)) {
                 Files.copy(Path.of(baseDir).resolve("bisq.log"), zipfs.getPath("/bisq.log"), StandardCopyOption.REPLACE_EXISTING);
