@@ -230,7 +230,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             super(new VBox(15), model, controller);
 
             double width = 260;
-            root.setPadding(new Insets(0, 20, 20, 20));
+            root.setPadding(new Insets(0, 20, 0, 20));
             root.setAlignment(Pos.TOP_CENTER);
             root.setMinWidth(width);
             root.setMaxWidth(width);
@@ -324,6 +324,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             VBox.setMargin(separator, new Insets(-15, -20, 10, -20));
             optionsVBox = new VBox(10, separator, privateMsg, mention, ignore, undoIgnore, report);
             optionsVBox.setAlignment(Pos.CENTER_LEFT);
+            optionsVBox.setPadding(new Insets(0, 0, 20, 0));
 
             VBox.setMargin(header, new Insets(0, -20, 0, 0));
             VBox.setMargin(nickName, new Insets(10, 0, 0, 0));
