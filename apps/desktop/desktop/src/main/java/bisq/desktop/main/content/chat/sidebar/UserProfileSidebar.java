@@ -54,13 +54,9 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.control.TextArea;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -222,11 +218,10 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final ImageView catIconImageView;
         private final Label nickName, botId, userId, addressByTransport, statement, totalReputationScore,
-                profileAge, lastSeen;
+                profileAge, lastSeen, terms;
         private final StandardButton privateMsg, mention, ignore, undoIgnore, report;
         private final VBox statementBox, termsBox, optionsVBox;
         private final ReputationScoreDisplay reputationScoreDisplay;
-        private final TextArea terms;
         private final BisqIconButton botIdCopyButton, userIdCopyButton, addressByTransportCopyButton;
         private final Button closeButton;
         private Subscription catHashNodeSubscription;
@@ -239,6 +234,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             root.setAlignment(Pos.TOP_CENTER);
             root.setMinWidth(width);
             root.setMaxWidth(width);
+            VBox.setVgrow(root, Priority.ALWAYS);
 
             // Header
             Label headline = new Label(Res.get("chat.sideBar.userProfile.headline"));
@@ -299,21 +295,18 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             statementBox = statementTriple.getThird();
             statement = statementTriple.getSecond();
 
-            Label termsHeadline = new Label(Res.get("chat.sideBar.userProfile.terms").toUpperCase());
-            termsHeadline.getStyleClass().add("chat-side-bar-user-profile-small-headline");
-            terms = new TextArea();
-            terms.setMaxWidth(root.getMaxWidth() - 40);
-            terms.setMaxHeight(100);
-            terms.setWrapText(true);
-            terms.getStyleClass().add("chat-side-bar-user-profile");
-            termsBox = new VBox(7.5, termsHeadline, terms);
+            Triple<Label, Label, VBox> termsTriple = getInfoBox(Res.get("chat.sideBar.userProfile.terms"));
+            termsBox = termsTriple.getThird();
+            terms = termsTriple.getSecond();
 
             VBox content = new VBox(15, botIdBox, userIdBox, addressByTransportBox,
                     totalReputationScoreBox, profileAgeBox, lastSeenBox, statementBox, termsBox);
             content.setMaxWidth(width - 15); // Remove the scrollbar
-            content.setPadding(new Insets(0, 10, 0, 20));
+            content.setPadding(new Insets(0, 10, 20, 20));
             ScrollPane scrollPane = new ScrollPane(content);
             scrollPane.setMinWidth(width);
+            VBox.setVgrow(content, Priority.ALWAYS);
+            VBox.setVgrow(scrollPane, Priority.ALWAYS);
 
             // Options
             privateMsg = new StandardButton(Res.get("chat.sideBar.userProfile.sendPrivateMessage"),
