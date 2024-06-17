@@ -22,7 +22,6 @@ import bisq.chat.ChatChannel;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessage;
 import bisq.chat.ChatService;
-import bisq.common.data.Pair;
 import bisq.common.data.Triple;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Layout;
@@ -31,7 +30,6 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.cathash.CatHash;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
-import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.StandardButton;
 import bisq.desktop.main.content.components.ReportToModeratorWindow;
 import bisq.desktop.main.content.components.ReputationScoreDisplay;
@@ -53,16 +51,16 @@ import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
 import javafx.scene.control.ContentDisplay;
+import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextArea;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.TextAlignment;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -135,12 +133,11 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
 
             String nickName = userProfile.getNickName();
             model.nickName.set(isUserProfileBanned() ? Res.get("user.userProfile.userName.banned", nickName) : nickName);
-            model.nym.set(Res.get("chat.sideBar.userProfile.nym", userProfile.getNym()));
-            model.userProfileIdString.set(Res.get("chat.sideBar.userProfile.id", userProfile.getId()));
+            model.nym.set(userProfile.getNym());
+            model.userProfileIdString.set(userProfile.getId());
             model.catHashNode.set(CatHash.getImage(userProfile));
 
             model.addressByTransport.set(userProfile.getAddressByTransportDisplayString(26));
-            model.addressByTransportTooltip.set(userProfile.getAddressByTransportDisplayString());
 
             model.statement.set(userProfile.getStatement());
             model.terms.set(userProfile.getTerms());
@@ -205,7 +202,6 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
         private final StringProperty nickName = new SimpleStringProperty();
         private final StringProperty nym = new SimpleStringProperty();
         private final StringProperty addressByTransport = new SimpleStringProperty();
-        private final StringProperty addressByTransportTooltip = new SimpleStringProperty();
         private final StringProperty userProfileIdString = new SimpleStringProperty();
         private final StringProperty statement = new SimpleStringProperty();
         private final StringProperty terms = new SimpleStringProperty();
@@ -225,23 +221,24 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final ImageView catIconImageView;
-        private final Label nickName, botId, userProfileId, addressByTransport, statement, totalReputationScore,
+        private final Label nickName, botId, userId, addressByTransport, statement, totalReputationScore,
                 profileAge, lastSeen;
         private final StandardButton privateMsg, mention, ignore, undoIgnore, report;
         private final VBox statementBox, termsBox, optionsVBox;
         private final ReputationScoreDisplay reputationScoreDisplay;
         private final TextArea terms;
-        private final BisqIconButton botIdCopyButton, userProfileIdCopyButton, addressByTransportCopyButton;
+        private final BisqIconButton botIdCopyButton, userIdCopyButton, addressByTransportCopyButton;
         private final Button closeButton;
         private Subscription catHashNodeSubscription;
 
         private View(Model model, Controller controller) {
             super(new VBox(15), model, controller);
 
+            double width = 260;
             root.setPadding(new Insets(0, 20, 20, 20));
             root.setAlignment(Pos.TOP_CENTER);
-            root.setMinWidth(260);
-            root.setMaxWidth(260);
+            root.setMinWidth(width);
+            root.setMaxWidth(width);
 
             // Header
             Label headline = new Label(Res.get("chat.sideBar.userProfile.headline"));
@@ -267,21 +264,24 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             reputationScoreDisplay.setAlignment(Pos.CENTER);
             VBox.setMargin(reputationScoreDisplay, new Insets(0, 0, 5, 0));
 
-            // User profile details
-            Pair<Label, BisqIconButton> botIdLabelAndButton = createAndGetProfileDetailsLabelAndButton();
-            botId = botIdLabelAndButton.getFirst();
-            botIdCopyButton = botIdLabelAndButton.getSecond();
+            // User details
+            Triple<Label, Label, VBox> botIdTriple = getInfoBox(Res.get("chat.sideBar.userProfile.nym"));
+            VBox botIdBox = botIdTriple.getThird();
+            botIdCopyButton = createAndGetCopyButton();
+            botId = botIdTriple.getSecond();
+            botId.setGraphic(botIdCopyButton);
 
-            Pair<Label, BisqIconButton> userProfileIdLabelAndButton = createAndGetProfileDetailsLabelAndButton();
-            userProfileId = userProfileIdLabelAndButton.getFirst();
-            userProfileIdCopyButton = userProfileIdLabelAndButton.getSecond();
+            Triple<Label, Label, VBox> userIdTriple = getInfoBox(Res.get("chat.sideBar.userProfile.id"));
+            VBox userIdBox = userIdTriple.getThird();
+            userIdCopyButton = createAndGetCopyButton();
+            userId = userIdTriple.getSecond();
+            userId.setGraphic(userIdCopyButton);
 
-            Pair<Label, BisqIconButton> addressByTransportLabelAndButton = createAndGetProfileDetailsLabelAndButton();
-            addressByTransport = addressByTransportLabelAndButton.getFirst();
-            addressByTransport.setWrapText(true);
-            addressByTransportCopyButton = addressByTransportLabelAndButton.getSecond();
-
-            VBox userProfileDetailsBox = new VBox(5, botId, userProfileId, addressByTransport);
+            Triple<Label, Label, VBox> addressByTransportTriple = getInfoBox(Res.get("chat.sideBar.userProfile.transportAddress"));
+            VBox addressByTransportBox = addressByTransportTriple.getThird();
+            addressByTransportCopyButton = createAndGetCopyButton();
+            addressByTransport = addressByTransportTriple.getSecond();
+            addressByTransport.setGraphic(addressByTransportCopyButton);
 
             Triple<Label, Label, VBox> totalReputationScoreTriple = getInfoBox(Res.get("chat.sideBar.userProfile.totalReputationScore"));
             VBox totalReputationScoreBox = totalReputationScoreTriple.getThird();
@@ -308,6 +308,13 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             terms.getStyleClass().add("chat-side-bar-user-profile");
             termsBox = new VBox(7.5, termsHeadline, terms);
 
+            VBox content = new VBox(15, botIdBox, userIdBox, addressByTransportBox,
+                    totalReputationScoreBox, profileAgeBox, lastSeenBox, statementBox, termsBox);
+            content.setMaxWidth(width - 15); // Remove the scrollbar
+            content.setPadding(new Insets(0, 10, 0, 20));
+            ScrollPane scrollPane = new ScrollPane(content);
+            scrollPane.setMinWidth(width);
+
             // Options
             privateMsg = new StandardButton(Res.get("chat.sideBar.userProfile.sendPrivateMessage"),
                     "channels-private-chats-grey", "channels-private-chats-white");
@@ -321,27 +328,21 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
                     "report-grey", "report-white");
 
             Region separator = Layout.hLine();
-            VBox.setMargin(separator, new Insets(20, -20, 10, -20));
+            VBox.setMargin(separator, new Insets(-15, -20, 10, -20));
             optionsVBox = new VBox(10, separator, privateMsg, mention, ignore, undoIgnore, report);
             optionsVBox.setAlignment(Pos.CENTER_LEFT);
 
             VBox.setMargin(header, new Insets(0, -20, 0, 0));
             VBox.setMargin(nickName, new Insets(10, 0, 0, 0));
-            root.getChildren().addAll(header,
-                    nickName, catIconImageView, reputationScoreDisplay, userProfileDetailsBox,
-                    totalReputationScoreBox, profileAgeBox, lastSeenBox, statementBox, termsBox,
-                    optionsVBox);
+            root.getChildren().addAll(header, nickName, catIconImageView, reputationScoreDisplay, scrollPane, optionsVBox);
         }
 
         @Override
         protected void onViewAttached() {
             nickName.textProperty().bind(model.nickName);
             botId.textProperty().bind(model.nym);
-            botId.getTooltip().textProperty().bind(model.nym);
-            userProfileId.textProperty().bind(model.userProfileIdString);
-            userProfileId.getTooltip().textProperty().bind(model.userProfileIdString);
+            userId.textProperty().bind(model.userProfileIdString);
             addressByTransport.textProperty().bind(model.addressByTransport);
-            addressByTransport.getTooltip().textProperty().bind(model.addressByTransportTooltip);
             statement.textProperty().bind(model.statement);
             statementBox.visibleProperty().bind(model.statement.isEmpty().not());
             statementBox.managedProperty().bind(model.statement.isEmpty().not());
@@ -375,9 +376,9 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             botId.setOnMouseEntered(e -> botIdCopyButton.setVisible(true));
             botId.setOnMouseExited(e -> botIdCopyButton.setVisible(false));
             botIdCopyButton.setOnMouseClicked(e -> ClipboardUtil.copyToClipboard(model.getUserProfile().getNym()));
-            userProfileId.setOnMouseEntered(e -> userProfileIdCopyButton.setVisible(true));
-            userProfileId.setOnMouseExited(e -> userProfileIdCopyButton.setVisible(false));
-            userProfileIdCopyButton.setOnMouseClicked(e -> ClipboardUtil.copyToClipboard(model.getUserProfile().getId()));
+            userId.setOnMouseEntered(e -> userIdCopyButton.setVisible(true));
+            userId.setOnMouseExited(e -> userIdCopyButton.setVisible(false));
+            userIdCopyButton.setOnMouseClicked(e -> ClipboardUtil.copyToClipboard(model.getUserProfile().getId()));
             addressByTransport.setOnMouseEntered(e -> addressByTransportCopyButton.setVisible(true));
             addressByTransport.setOnMouseExited(e -> addressByTransportCopyButton.setVisible(false));
             addressByTransportCopyButton.setOnMouseClicked(e ->
@@ -395,11 +396,8 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
         protected void onViewDetached() {
             nickName.textProperty().unbind();
             botId.textProperty().unbind();
-            botId.getTooltip().textProperty().unbind();
-            userProfileId.textProperty().unbind();
-            userProfileId.getTooltip().textProperty().unbind();
+            userId.textProperty().unbind();
             addressByTransport.textProperty().unbind();
-            addressByTransport.getTooltip().textProperty().unbind();
             statement.textProperty().unbind();
             statementBox.visibleProperty().unbind();
             statementBox.managedProperty().unbind();
@@ -422,9 +420,9 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             botId.setOnMouseEntered(null);
             botId.setOnMouseExited(null);
             botIdCopyButton.setOnMouseClicked(null);
-            userProfileId.setOnMouseEntered(null);
-            userProfileId.setOnMouseExited(null);
-            userProfileIdCopyButton.setOnMouseClicked(null);
+            userId.setOnMouseEntered(null);
+            userId.setOnMouseExited(null);
+            userIdCopyButton.setOnMouseClicked(null);
             addressByTransport.setOnMouseEntered(null);
             addressByTransport.setOnMouseExited(null);
             addressByTransportCopyButton.setOnMouseClicked(null);
@@ -443,22 +441,16 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             Label value = new Label();
             value.setWrapText(true);
             value.getStyleClass().add("chat-side-bar-user-profile-small-value");
+            value.setContentDisplay(ContentDisplay.RIGHT);
             VBox vBox = new VBox(2.5, headline, value);
             return new Triple<>(headline, value, vBox);
         }
 
-        private static Pair<Label, BisqIconButton> createAndGetProfileDetailsLabelAndButton() {
-            Label label = new Label();
-            label.getStyleClass().add("chat-side-bar-user-profile-details");
-            label.setTooltip(new BisqTooltip());
-            label.setAlignment(Pos.CENTER_LEFT);
-            label.setTextAlignment(TextAlignment.LEFT);
-            label.setContentDisplay(ContentDisplay.RIGHT);
+        private static BisqIconButton createAndGetCopyButton() {
             BisqIconButton copyButton = new BisqIconButton();
             copyButton.setIcon(AwesomeIcon.COPY);
             copyButton.setVisible(false);
-            label.setGraphic(copyButton);
-            return new Pair<>(label, copyButton);
+            return copyButton;
         }
     }
 }
