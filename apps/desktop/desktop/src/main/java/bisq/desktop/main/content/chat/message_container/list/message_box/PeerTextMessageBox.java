@@ -74,7 +74,7 @@ public class PeerTextMessageBox extends BubbleMessageBox {
         moreOptionsMenu = new DropdownMenu("ellipsis-h-grey", "ellipsis-h-white", true);
         moreOptionsMenu.setTooltip(Res.get("chat.message.moreOptions"));
         moreOptionsMenu.addMenuItems(ignoreUserMenuItem, reportUserMenuItem);
-        moreOptionsMenu.setOpenUpwards(true);
+        moreOptionsMenu.setOpenToTheRight(true);
 
         HBox.setMargin(replyIcon, new Insets(4, 0, -4, 10));
         HBox.setMargin(pmIcon, new Insets(3, 0, -3, 0));
