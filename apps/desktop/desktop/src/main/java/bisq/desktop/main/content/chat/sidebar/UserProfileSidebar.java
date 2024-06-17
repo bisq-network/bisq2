@@ -243,6 +243,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             root.setMinWidth(260);
             root.setMaxWidth(260);
 
+            // Header
             Label headline = new Label(Res.get("chat.sideBar.userProfile.headline"));
             headline.setId("chat-sidebar-headline");
 
@@ -251,6 +252,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             HBox.setMargin(closeButton, new Insets(10, 10, 0, 0));
             HBox header = new HBox(headline, Spacer.fillHBox(), closeButton);
 
+            // Nickname, name and reputation
             nickName = new Label();
             nickName.getStyleClass().add("chat-side-bar-user-profile-nickname");
             if (controller.isUserProfileBanned()) {
@@ -261,6 +263,11 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             catIconImageView.setFitWidth(100);
             catIconImageView.setFitHeight(100);
 
+            reputationScoreDisplay = new ReputationScoreDisplay();
+            reputationScoreDisplay.setAlignment(Pos.CENTER);
+            VBox.setMargin(reputationScoreDisplay, new Insets(0, 0, 5, 0));
+
+            // User profile details
             Pair<Label, BisqIconButton> botIdLabelAndButton = createAndGetProfileDetailsLabelAndButton();
             botId = botIdLabelAndButton.getFirst();
             botIdCopyButton = botIdLabelAndButton.getSecond();
@@ -276,13 +283,6 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
 
             VBox userProfileDetailsBox = new VBox(5, botId, userProfileId, addressByTransport);
 
-            Label reputationHeadline = new Label(Res.get("chat.sideBar.userProfile.reputation").toUpperCase());
-            reputationHeadline.getStyleClass().add("chat-side-bar-user-profile-small-headline");
-            reputationScoreDisplay = new ReputationScoreDisplay();
-            reputationScoreDisplay.setAlignment(Pos.CENTER_LEFT);
-            VBox.setMargin(reputationScoreDisplay, new Insets(0, 0, 5, 0));
-            VBox reputationBox = new VBox(5, reputationHeadline, reputationScoreDisplay);
-
             Triple<Label, Label, VBox> totalReputationScoreTriple = getInfoBox(Res.get("chat.sideBar.userProfile.totalReputationScore"));
             VBox totalReputationScoreBox = totalReputationScoreTriple.getThird();
             totalReputationScore = totalReputationScoreTriple.getSecond();
@@ -294,17 +294,6 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             Triple<Label, Label, VBox> lastSeenTriple = getInfoBox(Res.get("chat.sideBar.userProfile.lastSeen"));
             VBox lastSeenBox = lastSeenTriple.getThird();
             lastSeen = lastSeenTriple.getSecond();
-
-            privateMsg = new StandardButton(Res.get("chat.sideBar.userProfile.sendPrivateMessage"),
-                    "channels-private-chats-grey", "channels-private-chats-white");
-            mention = new StandardButton(Res.get("chat.sideBar.userProfile.mention"),
-                    "mention-grey", "mention-white");
-            ignore = new StandardButton(Res.get("chat.sideBar.userProfile.ignore"),
-                    "ignore-grey", "ignore-white");
-            undoIgnore = new StandardButton(Res.get("chat.sideBar.userProfile.undoIgnore"),
-                    "undo-ignore-grey", "undo-ignore-white");
-            report = new StandardButton(Res.get("chat.sideBar.userProfile.report"),
-                    "report-grey", "report-white");
 
             Triple<Label, Label, VBox> statementTriple = getInfoBox(Res.get("chat.sideBar.userProfile.statement"));
             statementBox = statementTriple.getThird();
@@ -319,6 +308,18 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             terms.getStyleClass().add("chat-side-bar-user-profile");
             termsBox = new VBox(7.5, termsHeadline, terms);
 
+            // Options
+            privateMsg = new StandardButton(Res.get("chat.sideBar.userProfile.sendPrivateMessage"),
+                    "channels-private-chats-grey", "channels-private-chats-white");
+            mention = new StandardButton(Res.get("chat.sideBar.userProfile.mention"),
+                    "mention-grey", "mention-white");
+            ignore = new StandardButton(Res.get("chat.sideBar.userProfile.ignore"),
+                    "ignore-grey", "ignore-white");
+            undoIgnore = new StandardButton(Res.get("chat.sideBar.userProfile.undoIgnore"),
+                    "undo-ignore-grey", "undo-ignore-white");
+            report = new StandardButton(Res.get("chat.sideBar.userProfile.report"),
+                    "report-grey", "report-white");
+
             Region separator = Layout.hLine();
             VBox.setMargin(separator, new Insets(20, -20, 10, -20));
             optionsVBox = new VBox(10, separator, privateMsg, mention, ignore, undoIgnore, report);
@@ -326,10 +327,9 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
 
             VBox.setMargin(header, new Insets(0, -20, 0, 0));
             VBox.setMargin(nickName, new Insets(10, 0, 0, 0));
-            VBox.setMargin(reputationBox, new Insets(4, 0, 0, 0));
             root.getChildren().addAll(header,
-                    nickName, catIconImageView, userProfileDetailsBox,
-                    reputationBox, totalReputationScoreBox, profileAgeBox, lastSeenBox, statementBox, termsBox,
+                    nickName, catIconImageView, reputationScoreDisplay, userProfileDetailsBox,
+                    totalReputationScoreBox, profileAgeBox, lastSeenBox, statementBox, termsBox,
                     optionsVBox);
         }
 
