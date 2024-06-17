@@ -18,9 +18,9 @@
 package bisq.oracle_node_app;
 
 import bisq.application.ApplicationService;
-import bisq.application.ApplicationVersion;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.market_price.MarketPriceRequestService;
+import bisq.common.application.ApplicationVersion;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;

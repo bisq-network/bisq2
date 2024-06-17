@@ -17,7 +17,7 @@
 
 package bisq.desktop.splash;
 
-import bisq.application.ApplicationVersion;
+import bisq.common.application.ApplicationVersion;
 import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;

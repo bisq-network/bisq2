@@ -19,10 +19,10 @@ package bisq.rest_api;
 
 import bisq.account.AccountService;
 import bisq.application.ApplicationService;
-import bisq.application.ApplicationVersion;
 import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatService;
+import bisq.common.application.ApplicationVersion;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.util.CompletableFutureUtils;

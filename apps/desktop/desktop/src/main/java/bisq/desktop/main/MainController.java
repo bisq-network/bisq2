@@ -18,8 +18,8 @@
 package bisq.desktop.main;
 
 import bisq.application.ApplicationService;
-import bisq.application.ApplicationVersion;
 import bisq.bisq_easy.NavigationTarget;
+import bisq.common.application.ApplicationVersion;
 import bisq.common.util.Version;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;

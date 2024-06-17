@@ -18,9 +18,9 @@
 package bisq.updater;
 
 import bisq.application.ApplicationService;
-import bisq.application.ApplicationVersion;
 import bisq.bonded_roles.release.ReleaseNotification;
 import bisq.bonded_roles.release.ReleaseNotificationsService;
+import bisq.common.application.ApplicationVersion;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.CollectionObserver;

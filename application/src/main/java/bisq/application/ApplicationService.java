@@ -17,6 +17,7 @@
 
 package bisq.application;
 
+import bisq.common.application.ApplicationVersion;
 import bisq.common.application.DevMode;
 import bisq.common.application.Service;
 import bisq.common.currency.FiatCurrencyRepository;

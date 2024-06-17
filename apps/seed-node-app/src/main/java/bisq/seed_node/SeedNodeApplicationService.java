@@ -18,8 +18,8 @@
 package bisq.seed_node;
 
 import bisq.application.ApplicationService;
-import bisq.application.ApplicationVersion;
 import bisq.bonded_roles.BondedRolesService;
+import bisq.common.application.ApplicationVersion;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;

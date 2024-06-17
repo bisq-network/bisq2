@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.application;
+package bisq.common.application;
 
 import bisq.common.util.FileUtils;
 import bisq.common.util.Version;
