@@ -857,6 +857,67 @@
     -fx-image: url("/images/chat/grey-small-dot.png");
 }
 
+#mention-green {
+    -fx-image: url("/images/chat/mention/mention-green.png");
+}
+
+#mention-grey {
+    -fx-image: url("/images/chat/mention/mention-grey.png");
+}
+
+#mention-white {
+    -fx-image: url("/images/chat/mention/mention-white.png");
+}
+
+#report-green {
+    -fx-image: url("/images/chat/report/report-green.png");
+}
+
+#report-grey {
+    -fx-image: url("/images/chat/report/report-grey.png");
+}
+
+#report-white {
+    -fx-image: url("/images/chat/report/report-white.png");
+}
+
+#ignore-green {
+    -fx-image: url("/images/chat/ignore/ignore-green.png");
+}
+
+#ignore-grey {
+    -fx-image: url("/images/chat/ignore/ignore-grey.png");
+}
+
+#ignore-white {
+    -fx-image: url("/images/chat/ignore/ignore-white.png");
+}
+
+#undo-ignore-green {
+    -fx-image: url("/images/chat/undo-ignore/undo-ignore-green.png");
+}
+
+#undo-ignore-grey {
+    -fx-image: url("/images/chat/undo-ignore/undo-ignore-grey.png");
+}
+
+#undo-ignore-white {
+    -fx-image: url("/images/chat/undo-ignore/undo-ignore-white.png");
+}
+
+#private-chat-green {
+    -fx-image: url("/images/chat/private-chat/private-chat-green.png");
+}
+
+#private-chat-grey {
+    -fx-image: url("/images/chat/private-chat/private-chat-grey.png");
+}
+
+#private-chat-white {
+    -fx-image: url("/images/chat/private-chat/private-chat-white.png");
+}
+
+
 /* ------------------------------------------------------------------------------------ */
 /* Markets */
 /* ------------------------------------------------------------------------------------ */
