@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.trade_wizard;
 
+import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.ServiceProvider;
@@ -26,6 +27,7 @@ import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.amount.TradeWizardAmountController;
+import bisq.desktop.main.content.bisq_easy.trade_wizard.btc_payment_method.TradeWizardBtcPaymentMethodController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.direction.TradeWizardDirectionController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.fiat_payment_method.TradeWizardFiatPaymentMethodController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.market.TradeWizardMarketController;
@@ -35,6 +37,7 @@ import bisq.desktop.main.content.bisq_easy.trade_wizard.select_offer.TradeWizard
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.scene.input.KeyEvent;
 import lombok.EqualsAndHashCode;
@@ -70,10 +73,12 @@ public class TradeWizardController extends NavigationController implements InitW
     private final TradeWizardMarketController tradeWizardMarketController;
     private final TradeWizardPriceController tradeWizardPriceController;
     private final TradeWizardAmountController tradeWizardAmountController;
+    private final TradeWizardBtcPaymentMethodController tradeWizardBitcoinPaymentMethodController;
     private final TradeWizardFiatPaymentMethodController tradeWizardFiatPaymentMethodController;
     private final TradeWizardSelectOfferController tradeWizardSelectOfferController;
     private final TradeWizardReviewController tradeWizardReviewController;
     private final EventHandler<KeyEvent> onKeyPressedHandler = this::onKeyPressed;
+    private final ListChangeListener<BitcoinPaymentMethod> bitcoinPaymentMethodsListener;
     private final ListChangeListener<FiatPaymentMethod> fiatPaymentMethodsListener;
     private Subscription directionPin, marketPin, amountSpecPin, priceSpecPin, selectedBisqEasyOfferPin,
             isBackButtonHighlightedPin;
@@ -94,6 +99,7 @@ public class TradeWizardController extends NavigationController implements InitW
         tradeWizardMarketController = new TradeWizardMarketController(serviceProvider, this::onNext);
         tradeWizardPriceController = new TradeWizardPriceController(serviceProvider, view.getRoot());
         tradeWizardAmountController = new TradeWizardAmountController(serviceProvider, view.getRoot());
+        tradeWizardBitcoinPaymentMethodController = new TradeWizardBtcPaymentMethodController(serviceProvider, view.getRoot(), this::onNext);
         tradeWizardFiatPaymentMethodController = new TradeWizardFiatPaymentMethodController(serviceProvider, view.getRoot(), this::onNext);
         tradeWizardSelectOfferController = new TradeWizardSelectOfferController(serviceProvider,
                 this::onBack,
@@ -103,6 +109,10 @@ public class TradeWizardController extends NavigationController implements InitW
                 this::setMainButtonsVisibleState,
                 this::closeAndNavigateTo);
 
+        bitcoinPaymentMethodsListener = c -> {
+            c.next();
+            handleBitcoinPaymentMethodsUpdate();
+        };
         fiatPaymentMethodsListener = c -> {
             c.next();
             handleFiatPaymentMethodsUpdate();
@@ -144,11 +154,13 @@ public class TradeWizardController extends NavigationController implements InitW
             tradeWizardMarketController.setDirection(direction);
             tradeWizardSelectOfferController.setDirection(direction);
             tradeWizardAmountController.setDirection(direction);
+            tradeWizardBitcoinPaymentMethodController.setDirection(direction);
             tradeWizardFiatPaymentMethodController.setDirection(direction);
             tradeWizardPriceController.setDirection(direction);
         });
         marketPin = EasyBind.subscribe(tradeWizardMarketController.getMarket(), market -> {
             tradeWizardSelectOfferController.setMarket(market);
+            tradeWizardBitcoinPaymentMethodController.setMarket(market);
             tradeWizardFiatPaymentMethodController.setMarket(market);
             tradeWizardPriceController.setMarket(market);
             tradeWizardAmountController.setMarket(market);
@@ -172,6 +184,7 @@ public class TradeWizardController extends NavigationController implements InitW
                 isBackButtonHighlighted -> model.getIsBackButtonHighlighted().set(isBackButtonHighlighted));
 
         handleFiatPaymentMethodsUpdate();
+        tradeWizardBitcoinPaymentMethodController.getBitcoinPaymentMethods().addListener(bitcoinPaymentMethodsListener);
         tradeWizardFiatPaymentMethodController.getFiatPaymentMethods().addListener(fiatPaymentMethodsListener);
     }
 
@@ -186,6 +199,7 @@ public class TradeWizardController extends NavigationController implements InitW
         priceSpecPin.unsubscribe();
         selectedBisqEasyOfferPin.unsubscribe();
         isBackButtonHighlightedPin.unsubscribe();
+        tradeWizardBitcoinPaymentMethodController.getBitcoinPaymentMethods().removeListener(bitcoinPaymentMethodsListener);
         tradeWizardFiatPaymentMethodController.getFiatPaymentMethods().removeListener(fiatPaymentMethodsListener);
     }
 
@@ -196,6 +210,7 @@ public class TradeWizardController extends NavigationController implements InitW
                 tradeWizardReviewController.setDataForCreateOffer(
                         tradeWizardDirectionController.getDirection().get(),
                         tradeWizardMarketController.getMarket().get(),
+                        tradeWizardBitcoinPaymentMethodController.getBitcoinPaymentMethods(),
                         tradeWizardFiatPaymentMethodController.getFiatPaymentMethods(),
                         tradeWizardAmountController.getQuoteSideAmountSpec().get(),
                         tradeWizardPriceController.getPriceSpec().get()
@@ -204,6 +219,7 @@ public class TradeWizardController extends NavigationController implements InitW
             } else {
                 tradeWizardReviewController.setDataForTakeOffer(tradeWizardSelectOfferController.getSelectedBisqEasyOffer().get(),
                         tradeWizardAmountController.getQuoteSideAmountSpec().get(),
+                        tradeWizardBitcoinPaymentMethodController.getBitcoinPaymentMethods(),
                         tradeWizardFiatPaymentMethodController.getFiatPaymentMethods()
                 );
                 model.getNextButtonText().set(Res.get("bisqEasy.tradeWizard.review.nextButton.takeOffer"));
@@ -235,6 +251,9 @@ public class TradeWizardController extends NavigationController implements InitW
             }
             case TRADE_WIZARD_PRICE: {
                 return Optional.of(tradeWizardPriceController);
+            }
+            case TRADE_WIZARD_BITCOIN_PAYMENT_METHOD: {
+                return Optional.of(tradeWizardBitcoinPaymentMethodController);
             }
             case TRADE_WIZARD_FIAT_PAYMENT_METHOD: {
                 return Optional.of(tradeWizardFiatPaymentMethodController);
@@ -314,6 +333,9 @@ public class TradeWizardController extends NavigationController implements InitW
             return tradeWizardPriceController.validate();
         } else if (model.getSelectedChildTarget().get() == NavigationTarget.TRADE_WIZARD_AMOUNT) {
             return tradeWizardAmountController.validate();
+        } else if (calledFromNext && model.getSelectedChildTarget().get() == NavigationTarget.TRADE_WIZARD_BITCOIN_PAYMENT_METHOD) {
+            // For PaymentMethod we tolerate to go back without having one selected
+            return tradeWizardBitcoinPaymentMethodController.validate();
         } else if (calledFromNext && model.getSelectedChildTarget().get() == NavigationTarget.TRADE_WIZARD_FIAT_PAYMENT_METHOD) {
             // For PaymentMethod we tolerate to go back without having one selected
             return tradeWizardFiatPaymentMethodController.validate();
@@ -343,6 +365,7 @@ public class TradeWizardController extends NavigationController implements InitW
         tradeWizardMarketController.reset();
         tradeWizardPriceController.reset();
         tradeWizardAmountController.reset();
+        tradeWizardBitcoinPaymentMethodController.reset();
         tradeWizardFiatPaymentMethodController.reset();
         tradeWizardSelectOfferController.reset();
         tradeWizardReviewController.reset();
@@ -372,8 +395,16 @@ public class TradeWizardController extends NavigationController implements InitW
     }
 
     private void handleFiatPaymentMethodsUpdate() {
-        tradeWizardSelectOfferController.setFiatPaymentMethods(tradeWizardFiatPaymentMethodController.getFiatPaymentMethods());
-        tradeWizardAmountController.setFiatPaymentMethods(tradeWizardFiatPaymentMethodController.getFiatPaymentMethods());
-        tradeWizardReviewController.setFiatPaymentMethods(tradeWizardFiatPaymentMethodController.getFiatPaymentMethods());
+        ObservableList<FiatPaymentMethod> fiatPaymentMethods = tradeWizardFiatPaymentMethodController.getFiatPaymentMethods();
+        tradeWizardSelectOfferController.setFiatPaymentMethods(fiatPaymentMethods);
+        tradeWizardAmountController.setFiatPaymentMethods(fiatPaymentMethods);
+        tradeWizardReviewController.setFiatPaymentMethods(fiatPaymentMethods);
+    }
+
+    private void handleBitcoinPaymentMethodsUpdate() {
+        ObservableList<BitcoinPaymentMethod> bitcoinPaymentMethods = tradeWizardBitcoinPaymentMethodController.getBitcoinPaymentMethods();
+        tradeWizardSelectOfferController.setBitcoinPaymentMethods(bitcoinPaymentMethods);
+        tradeWizardAmountController.setBitcoinPaymentMethods(bitcoinPaymentMethods);
+        tradeWizardReviewController.setBitcoinPaymentMethods(bitcoinPaymentMethods);
     }
 }

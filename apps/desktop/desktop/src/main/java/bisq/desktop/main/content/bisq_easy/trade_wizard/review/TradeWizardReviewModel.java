@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.trade_wizard.review;
 
+import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
@@ -47,7 +48,9 @@ class TradeWizardReviewModel implements Model {
     @Setter
     private BisqEasyOfferbookChannel selectedChannel;
     @Setter
-    private FiatPaymentMethod takersSelectedPaymentMethod;
+    private BitcoinPaymentMethod takersSelectedBitcoinPaymentMethod;
+    @Setter
+    private FiatPaymentMethod takersSelectedFiatPaymentMethod;
     @Setter
     private Monetary minBaseSideAmount;
     @Setter
@@ -63,21 +66,29 @@ class TradeWizardReviewModel implements Model {
     @Setter
     private PriceSpec priceSpec;
     @Setter
+    private List<BitcoinPaymentMethod> bitcoinPaymentMethods;
+    @Setter
     private List<FiatPaymentMethod> fiatPaymentMethods;
     @Setter
     private BisqEasyOfferbookMessage myOfferMessage;
     @Setter
     private String headline;
     @Setter
-    private String headerPaymentMethod;
+    private String headerBitcoinPaymentMethod;
+    @Setter
+    private String headerFiatPaymentMethod;
     @Setter
     private String detailsHeadline;
     @Setter
     private boolean isRangeAmount;
     @Setter
-    private String paymentMethodDescription;
+    private String bitcoinPaymentMethodDescription;
     @Setter
-    private String paymentMethod;
+    private String bitcoinPaymentMethod;
+    @Setter
+    private String fiatPaymentMethodDescription;
+    @Setter
+    private String fiatPaymentMethod;
 
     @Setter
     private String priceDescription;
@@ -89,7 +100,8 @@ class TradeWizardReviewModel implements Model {
     private String fee;
     @Setter
     private String feeDetails;
-    private final ObservableList<FiatPaymentMethod> takersPaymentMethods = FXCollections.observableArrayList();
+    private final ObservableList<BitcoinPaymentMethod> takersBitcoinPaymentMethods = FXCollections.observableArrayList();
+    private final ObservableList<FiatPaymentMethod> takersFiatPaymentMethods = FXCollections.observableArrayList();
     private final BooleanProperty showCreateOfferSuccess = new SimpleBooleanProperty();
     private final ObjectProperty<TakeOfferStatus> takeOfferStatus = new SimpleObjectProperty<>(TakeOfferStatus.NOT_STARTED);
     @Setter
@@ -100,7 +112,8 @@ class TradeWizardReviewModel implements Model {
         bisqEasyOffer = null;
         bisqEasyTrade = null;
         selectedChannel = null;
-        takersSelectedPaymentMethod = null;
+        takersSelectedBitcoinPaymentMethod = null;
+        takersSelectedFiatPaymentMethod = null;
         minBaseSideAmount = null;
         maxBaseSideAmount = null;
         fixBaseSideAmount = null;
@@ -108,6 +121,7 @@ class TradeWizardReviewModel implements Model {
         maxQuoteSideAmount = null;
         fixQuoteSideAmount = null;
         priceSpec = null;
+        bitcoinPaymentMethods = null;
         fiatPaymentMethods = null;
         myOfferMessage = null;
         headline = null;
@@ -115,11 +129,14 @@ class TradeWizardReviewModel implements Model {
         priceDescription = null;
         price = null;
         priceDetails = null;
-        paymentMethodDescription = null;
-        paymentMethod = null;
+        bitcoinPaymentMethodDescription = null;
+        bitcoinPaymentMethod = null;
+        fiatPaymentMethodDescription = null;
+        fiatPaymentMethod = null;
         fee = null;
         feeDetails = null;
-        takersPaymentMethods.clear();
+        takersBitcoinPaymentMethods.clear();
+        takersFiatPaymentMethods.clear();
         showCreateOfferSuccess.set(false);
         takeOfferStatus.set(TakeOfferStatus.NOT_STARTED);
         marketPrice = 0;
