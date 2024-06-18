@@ -27,7 +27,7 @@ import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.amount.TradeWizardAmountController;
-import bisq.desktop.main.content.bisq_easy.trade_wizard.btc_payment_method.TradeWizardBtcPaymentMethodController;
+import bisq.desktop.main.content.bisq_easy.trade_wizard.btc_payment_method.TradeWizardBitcoinPaymentMethodController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.direction.TradeWizardDirectionController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.fiat_payment_method.TradeWizardFiatPaymentMethodController;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.market.TradeWizardMarketController;
@@ -73,7 +73,7 @@ public class TradeWizardController extends NavigationController implements InitW
     private final TradeWizardMarketController tradeWizardMarketController;
     private final TradeWizardPriceController tradeWizardPriceController;
     private final TradeWizardAmountController tradeWizardAmountController;
-    private final TradeWizardBtcPaymentMethodController tradeWizardBitcoinPaymentMethodController;
+    private final TradeWizardBitcoinPaymentMethodController tradeWizardBitcoinPaymentMethodController;
     private final TradeWizardFiatPaymentMethodController tradeWizardFiatPaymentMethodController;
     private final TradeWizardSelectOfferController tradeWizardSelectOfferController;
     private final TradeWizardReviewController tradeWizardReviewController;
@@ -99,7 +99,7 @@ public class TradeWizardController extends NavigationController implements InitW
         tradeWizardMarketController = new TradeWizardMarketController(serviceProvider, this::onNext);
         tradeWizardPriceController = new TradeWizardPriceController(serviceProvider, view.getRoot());
         tradeWizardAmountController = new TradeWizardAmountController(serviceProvider, view.getRoot());
-        tradeWizardBitcoinPaymentMethodController = new TradeWizardBtcPaymentMethodController(serviceProvider, view.getRoot(), this::onNext);
+        tradeWizardBitcoinPaymentMethodController = new TradeWizardBitcoinPaymentMethodController(serviceProvider, view.getRoot(), this::onNext);
         tradeWizardFiatPaymentMethodController = new TradeWizardFiatPaymentMethodController(serviceProvider, view.getRoot(), this::onNext);
         tradeWizardSelectOfferController = new TradeWizardSelectOfferController(serviceProvider,
                 this::onBack,

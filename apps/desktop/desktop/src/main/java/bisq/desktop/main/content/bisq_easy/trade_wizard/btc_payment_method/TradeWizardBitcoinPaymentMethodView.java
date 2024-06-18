@@ -40,7 +40,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class TradeWizardBtcPaymentMethodView extends View<VBox, TradeWizardBtcPaymentMethodModel, TradeWizardBtcPaymentMethodController> {
+public class TradeWizardBitcoinPaymentMethodView extends View<VBox, TradeWizardBitcoinPaymentMethodModel, TradeWizardBitcoinPaymentMethodController> {
     private final MaterialTextField custom;
     private final ListChangeListener<BitcoinPaymentMethod> paymentMethodListener;
     private final FlowPane flowPane;
@@ -48,7 +48,7 @@ public class TradeWizardBtcPaymentMethodView extends View<VBox, TradeWizardBtcPa
     private final BisqIconButton addButton;
     private Subscription addCustomMethodIconEnabledPin;
 
-    public TradeWizardBtcPaymentMethodView(TradeWizardBtcPaymentMethodModel model, TradeWizardBtcPaymentMethodController controller) {
+    public TradeWizardBitcoinPaymentMethodView(TradeWizardBitcoinPaymentMethodModel model, TradeWizardBitcoinPaymentMethodController controller) {
         super(new VBox(10), model, controller);
 
         root.setAlignment(Pos.TOP_CENTER);

@@ -29,7 +29,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Getter
-public class TradeWizardBtcPaymentMethodModel implements Model {
+public class TradeWizardBitcoinPaymentMethodModel implements Model {
     @Setter
     private Direction direction;
     @Setter
