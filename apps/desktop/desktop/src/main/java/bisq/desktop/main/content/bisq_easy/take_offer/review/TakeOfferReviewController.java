@@ -277,8 +277,8 @@ public class TakeOfferReviewController implements Controller {
         reviewDataDisplay.setToReceiveAmountDescription(toReceiveAmountDescription.toUpperCase());
         reviewDataDisplay.setToReceiveAmount(toReceiveAmount);
         reviewDataDisplay.setToReceiveCode(toReceiveCode);
-        reviewDataDisplay.setPaymentMethodDescription(Res.get("bisqEasy.tradeWizard.review.paymentMethodDescription").toUpperCase());
-        reviewDataDisplay.setPaymentMethod(model.getPaymentMethod());
+        reviewDataDisplay.setFiatPaymentMethodDescription(Res.get("bisqEasy.tradeWizard.review.paymentMethodDescription.fiat").toUpperCase());
+        reviewDataDisplay.setFiatPaymentMethod(model.getPaymentMethod());
     }
 
     @Override

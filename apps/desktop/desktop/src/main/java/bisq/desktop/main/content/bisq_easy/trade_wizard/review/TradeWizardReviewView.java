@@ -192,8 +192,8 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
         price.setText(model.getPrice());
         priceDetails.setText(model.getPriceDetails());
 
-        paymentMethodDescription.setText(model.getPaymentMethodDescription());
-        paymentMethod.setText(model.getPaymentMethod());
+        paymentMethodDescription.setText(model.getFiatPaymentMethodDescription());
+        paymentMethod.setText(model.getFiatPaymentMethod());
         fee.setText(model.getFee());
         feeDetails.setText(model.getFeeDetails());
 
@@ -213,8 +213,8 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
 
         takeOfferStatusPin = EasyBind.subscribe(model.getTakeOfferStatus(), this::showTakeOfferStatusFeedback);
 
-        if (model.getTakersPaymentMethods().size() > 1) {
-            paymentMethodsComboBox = new ComboBox<>(model.getTakersPaymentMethods());
+        if (model.getTakersFiatPaymentMethods().size() > 1) {
+            paymentMethodsComboBox = new ComboBox<>(model.getTakersFiatPaymentMethods());
             paymentMethodsComboBox.getStyleClass().add("trade-wizard-review-payment-combo-box");
             GridPane.setMargin(paymentMethodValuePane, new Insets(-8, 0, -8, 0));
             paymentMethodValuePane.getChildren().setAll(paymentMethodsComboBox);
@@ -230,10 +230,10 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
                 }
             });
 
-            paymentMethodsComboBox.getSelectionModel().select(model.getTakersSelectedPaymentMethod());
+            paymentMethodsComboBox.getSelectionModel().select(model.getTakersSelectedFiatPaymentMethod());
             paymentMethodsComboBox.setOnAction(e -> {
                 if (paymentMethodsComboBox.getSelectionModel().getSelectedItem() == null) {
-                    paymentMethodsComboBox.getSelectionModel().select(model.getTakersSelectedPaymentMethod());
+                    paymentMethodsComboBox.getSelectionModel().select(model.getTakersSelectedFiatPaymentMethod());
                     return;
                 }
                 controller.onSelectFiatPaymentMethod(paymentMethodsComboBox.getSelectionModel().getSelectedItem());
