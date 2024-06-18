@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.trade_wizard.review;
 
+import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.common.application.DevMode;
 import bisq.desktop.common.Transitions;
@@ -50,16 +51,18 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
     private final static int FEEDBACK_WIDTH = 700;
 
     private final Label headline, detailsHeadline,
-            paymentMethod, paymentMethodDescription, fee, feeDetails,
+            bitcoinPaymentMethod, bitcoinPaymentMethodDescription, fiatPaymentMethod, fiatPaymentMethodDescription, fee, feeDetails,
             priceDetails, priceDescription;
     private final VBox takeOfferStatus, sendTakeOfferMessageFeedback, createOfferSuccess, takeOfferSuccess;
     private final Button createOfferSuccessButton, takeOfferSuccessButton;
     private final GridPane content;
-    private final StackPane paymentMethodValuePane;
+    private final StackPane bitcoinPaymentMethodValuePane, fiatPaymentMethodValuePane;
     private final MultiStyleLabelPane price;
     private final HBox reviewDataDisplay;
     @Nullable
-    private ComboBox<FiatPaymentMethod> paymentMethodsComboBox;
+    private ComboBox<BitcoinPaymentMethod> bitcoinPaymentMethodsComboBox;
+    @Nullable
+    private ComboBox<FiatPaymentMethod> fiatPaymentMethodsComboBox;
     private WaitingAnimation takeOfferSendMessageWaitingAnimation;
     private Subscription showCreateOfferSuccessPin, takeOfferStatusPin;
     private boolean minWaitingTimePassed = false;
@@ -131,16 +134,28 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
         content.add(priceDetails, 2, rowIndex);
 
         rowIndex++;
-        paymentMethodDescription = new Label();
-        paymentMethodDescription.getStyleClass().add(descriptionStyle);
-        content.add(paymentMethodDescription, 0, rowIndex);
+        bitcoinPaymentMethodDescription = new Label();
+        bitcoinPaymentMethodDescription.getStyleClass().add(descriptionStyle);
+        content.add(bitcoinPaymentMethodDescription, 0, rowIndex);
 
-        paymentMethod = new Label();
-        paymentMethod.getStyleClass().add(valueStyle);
-        paymentMethodValuePane = new StackPane(paymentMethod);
-        paymentMethodValuePane.setAlignment(Pos.TOP_LEFT);
-        GridPane.setColumnSpan(paymentMethodValuePane, 3);
-        content.add(paymentMethodValuePane, 1, rowIndex);
+        bitcoinPaymentMethod = new Label();
+        bitcoinPaymentMethod.getStyleClass().add(valueStyle);
+        bitcoinPaymentMethodValuePane = new StackPane(bitcoinPaymentMethod);
+        bitcoinPaymentMethodValuePane.setAlignment(Pos.TOP_LEFT);
+        GridPane.setColumnSpan(bitcoinPaymentMethodValuePane, 3);
+        content.add(bitcoinPaymentMethodValuePane, 1, rowIndex);
+
+        rowIndex++;
+        fiatPaymentMethodDescription = new Label();
+        fiatPaymentMethodDescription.getStyleClass().add(descriptionStyle);
+        content.add(fiatPaymentMethodDescription, 0, rowIndex);
+
+        fiatPaymentMethod = new Label();
+        fiatPaymentMethod.getStyleClass().add(valueStyle);
+        fiatPaymentMethodValuePane = new StackPane(fiatPaymentMethod);
+        fiatPaymentMethodValuePane.setAlignment(Pos.TOP_LEFT);
+        GridPane.setColumnSpan(fiatPaymentMethodValuePane, 3);
+        content.add(fiatPaymentMethodValuePane, 1, rowIndex);
 
         rowIndex++;
         Label feeInfoDescription = new Label(Res.get("bisqEasy.tradeWizard.review.feeDescription"));
@@ -192,8 +207,12 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
         price.setText(model.getPrice());
         priceDetails.setText(model.getPriceDetails());
 
-        paymentMethodDescription.setText(model.getFiatPaymentMethodDescription());
-        paymentMethod.setText(model.getFiatPaymentMethod());
+        bitcoinPaymentMethodDescription.setText(model.getBitcoinPaymentMethodDescription());
+        bitcoinPaymentMethod.setText(model.getBitcoinPaymentMethod());
+
+        fiatPaymentMethodDescription.setText(model.getFiatPaymentMethodDescription());
+        fiatPaymentMethod.setText(model.getFiatPaymentMethod());
+
         fee.setText(model.getFee());
         feeDetails.setText(model.getFeeDetails());
 
@@ -213,12 +232,43 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
 
         takeOfferStatusPin = EasyBind.subscribe(model.getTakeOfferStatus(), this::showTakeOfferStatusFeedback);
 
+        if (model.getTakersBitcoinPaymentMethods().size() > 1) {
+            bitcoinPaymentMethodsComboBox = new ComboBox<>(model.getTakersBitcoinPaymentMethods());
+            bitcoinPaymentMethodsComboBox.getStyleClass().add("trade-wizard-review-payment-combo-box");
+            GridPane.setMargin(bitcoinPaymentMethodValuePane, new Insets(-8, 0, -8, 0));
+            bitcoinPaymentMethodValuePane.getChildren().setAll(bitcoinPaymentMethodsComboBox);
+            bitcoinPaymentMethodsComboBox.setConverter(new StringConverter<>() {
+                @Override
+                public String toString(BitcoinPaymentMethod method) {
+                    return method != null ? method.getDisplayString() : "";
+                }
+
+                @Override
+                public BitcoinPaymentMethod fromString(String string) {
+                    return null;
+                }
+            });
+
+            bitcoinPaymentMethodsComboBox.getSelectionModel().select(model.getTakersSelectedBitcoinPaymentMethod());
+            bitcoinPaymentMethodsComboBox.setOnAction(e -> {
+                if (bitcoinPaymentMethodsComboBox.getSelectionModel().getSelectedItem() == null) {
+                    bitcoinPaymentMethodsComboBox.getSelectionModel().select(model.getTakersSelectedBitcoinPaymentMethod());
+                    return;
+                }
+                controller.onSelectBitcoinPaymentMethod(bitcoinPaymentMethodsComboBox.getSelectionModel().getSelectedItem());
+            });
+        } else {
+            GridPane.setMargin(bitcoinPaymentMethodValuePane, new Insets(0, 0, 0, 0));
+            bitcoinPaymentMethodValuePane.getChildren().setAll(bitcoinPaymentMethod);
+        }
+
+
         if (model.getTakersFiatPaymentMethods().size() > 1) {
-            paymentMethodsComboBox = new ComboBox<>(model.getTakersFiatPaymentMethods());
-            paymentMethodsComboBox.getStyleClass().add("trade-wizard-review-payment-combo-box");
-            GridPane.setMargin(paymentMethodValuePane, new Insets(-8, 0, -8, 0));
-            paymentMethodValuePane.getChildren().setAll(paymentMethodsComboBox);
-            paymentMethodsComboBox.setConverter(new StringConverter<>() {
+            fiatPaymentMethodsComboBox = new ComboBox<>(model.getTakersFiatPaymentMethods());
+            fiatPaymentMethodsComboBox.getStyleClass().add("trade-wizard-review-payment-combo-box");
+            GridPane.setMargin(fiatPaymentMethodValuePane, new Insets(-8, 0, -8, 0));
+            fiatPaymentMethodValuePane.getChildren().setAll(fiatPaymentMethodsComboBox);
+            fiatPaymentMethodsComboBox.setConverter(new StringConverter<>() {
                 @Override
                 public String toString(FiatPaymentMethod method) {
                     return method != null ? method.getDisplayString() : "";
@@ -230,17 +280,17 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
                 }
             });
 
-            paymentMethodsComboBox.getSelectionModel().select(model.getTakersSelectedFiatPaymentMethod());
-            paymentMethodsComboBox.setOnAction(e -> {
-                if (paymentMethodsComboBox.getSelectionModel().getSelectedItem() == null) {
-                    paymentMethodsComboBox.getSelectionModel().select(model.getTakersSelectedFiatPaymentMethod());
+            fiatPaymentMethodsComboBox.getSelectionModel().select(model.getTakersSelectedFiatPaymentMethod());
+            fiatPaymentMethodsComboBox.setOnAction(e -> {
+                if (fiatPaymentMethodsComboBox.getSelectionModel().getSelectedItem() == null) {
+                    fiatPaymentMethodsComboBox.getSelectionModel().select(model.getTakersSelectedFiatPaymentMethod());
                     return;
                 }
-                controller.onSelectFiatPaymentMethod(paymentMethodsComboBox.getSelectionModel().getSelectedItem());
+                controller.onSelectFiatPaymentMethod(fiatPaymentMethodsComboBox.getSelectionModel().getSelectedItem());
             });
         } else {
-            GridPane.setMargin(paymentMethodValuePane, new Insets(0, 0, 0, 0));
-            paymentMethodValuePane.getChildren().setAll(paymentMethod);
+            GridPane.setMargin(fiatPaymentMethodValuePane, new Insets(0, 0, 0, 0));
+            fiatPaymentMethodValuePane.getChildren().setAll(fiatPaymentMethod);
         }
 
         if (model.isRangeAmount()) {
@@ -260,8 +310,11 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
 
         takeOfferSendMessageWaitingAnimation.stop();
 
-        if (paymentMethodsComboBox != null) {
-            paymentMethodsComboBox.setOnAction(null);
+        if (bitcoinPaymentMethodsComboBox != null) {
+            bitcoinPaymentMethodsComboBox.setOnAction(null);
+        }
+        if (fiatPaymentMethodsComboBox != null) {
+            fiatPaymentMethodsComboBox.setOnAction(null);
         }
     }
 
