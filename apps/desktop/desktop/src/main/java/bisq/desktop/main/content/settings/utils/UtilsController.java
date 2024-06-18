@@ -84,6 +84,10 @@ public class UtilsController implements Controller {
         OsUtils.open(Path.of(baseDir, "bisq.log").toFile());
     }
 
+    void onOpenTorLogFile() {
+        OsUtils.open(Path.of(baseDir, "tor", "debug.log").toFile());
+    }
+
     void onOpenDataDir() {
         OsUtils.open(baseDir);
     }
