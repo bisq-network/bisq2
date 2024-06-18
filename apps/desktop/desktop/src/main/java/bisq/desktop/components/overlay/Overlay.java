@@ -941,9 +941,6 @@ public abstract class Overlay<T extends Overlay<T>> {
 
         Label zipLogLabel = new Label();
         Button zipLogButton = new Button(Res.get("popup.reportError.zipLogs"));
-//        GridPane.setHalignment(zipLogButton, HPos.LEFT);
-//        GridPane.setRowIndex(zipLogButton, gridPane.getRowCount());
-//        gridPane.getChildren().add(zipLogButton);
         zipLogButton.setOnAction(event -> {
             URI uri = URI.create("jar:file:" + Paths.get(baseDir,"bisq2-logs.zip").toUri().getPath());
             Map<String, String> env = Map.of("create", "true");
@@ -955,7 +952,7 @@ public abstract class Overlay<T extends Overlay<T>> {
                     if (logPath.toFile().isFile()) {
                         try {
                             Files.copy(logPath, zipfs.getPath(logPath.toFile().getName()), StandardCopyOption.REPLACE_EXISTING);
-                            zipLogLabel.setText("Zipped to " + uri);
+                            zipLogLabel.setText("Zipped to: " + uri);
                         } catch (IOException e) {
                             throw new RuntimeException(e);
                         }
