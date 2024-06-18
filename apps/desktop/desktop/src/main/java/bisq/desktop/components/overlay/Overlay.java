@@ -993,7 +993,7 @@ public abstract class Overlay<T extends Overlay<T>> {
         GridPane.setMargin(buttonBox, new Insets(buttonDistance, 0, 0, 0));
         gridPane.add(buttonBox, 0, gridPane.getRowCount(), 2, 1);
 
-        Label versionLabel = new Label("Version: " + ApplicationVersion.getVersion().toString());
+        Label versionLabel = new Label(Res.get("popup.version", ApplicationVersion.getVersion().toString()));
         buttonBox.getChildren().add(0, versionLabel);
 
         if (actionHandlerOptional.isPresent() || actionButtonText != null) {
