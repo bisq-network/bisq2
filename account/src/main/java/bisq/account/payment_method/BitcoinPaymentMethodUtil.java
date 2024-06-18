@@ -52,7 +52,7 @@ public class BitcoinPaymentMethodUtil {
             case MULTISIG:
             case MONERO_SWAP:
             case BSQ_SWAP:
-                return List.of(BitcoinPaymentRail.MAIN_CHAIN);    // Require BTC main chain
+                return List.of(BitcoinPaymentRail.ONCHAIN);    // Require BTC main chain
             case LIGHTNING_ESCROW:
                 return List.of(BitcoinPaymentRail.LN);
             case LIQUID_SWAP:

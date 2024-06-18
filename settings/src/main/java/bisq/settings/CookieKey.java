@@ -41,7 +41,8 @@ public enum CookieKey {
     USE_TRANSIENT_NOTIFICATIONS,
     MARKETS_FILTER,
     MARKET_SORT_TYPE,
-    SELECTED_MARKET_CODES;
+    SELECTED_MARKET_CODES,
+    CREATE_OFFER_BITCOIN_METHODS;
 
     @Getter
     private final boolean useSubKey;

@@ -18,10 +18,8 @@
 package bisq.desktop.main.content.bisq_easy.trade_wizard.btc_payment_method;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
-import bisq.common.currency.Market;
 import bisq.desktop.common.view.Model;
 import bisq.offer.Direction;
-import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
@@ -37,21 +35,11 @@ public class TradeWizardBitcoinPaymentMethodModel implements Model {
     private final ObservableList<BitcoinPaymentMethod> bitcoinPaymentMethod = FXCollections.observableArrayList();
     private final SortedList<BitcoinPaymentMethod> sortedBitcoinPaymentMethods = new SortedList<>(bitcoinPaymentMethod);
     private final ObservableList<BitcoinPaymentMethod> selectedBitcoinPaymentMethods = FXCollections.observableArrayList();
-    private final ObservableList<BitcoinPaymentMethod> addedCustomBitcoinPaymentMethods = FXCollections.observableArrayList();
-    private final StringProperty customBitcoinPaymentMethodName = new SimpleStringProperty("");
-    private final BooleanProperty isPaymentMethodsEmpty = new SimpleBooleanProperty();
-    private final BooleanProperty isAddCustomMethodIconEnabled = new SimpleBooleanProperty();
-    private final ObjectProperty<Market> market = new SimpleObjectProperty<>();
 
     void reset() {
         direction = null;
         headline = null;
         bitcoinPaymentMethod.clear();
         selectedBitcoinPaymentMethods.clear();
-        addedCustomBitcoinPaymentMethods.clear();
-        customBitcoinPaymentMethodName.set("");
-        isPaymentMethodsEmpty.set(false);
-        isAddCustomMethodIconEnabled.set(false);
-        market.set(null);
     }
 }
