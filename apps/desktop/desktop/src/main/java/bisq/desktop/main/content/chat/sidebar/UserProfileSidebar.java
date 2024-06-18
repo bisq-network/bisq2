@@ -261,23 +261,20 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             VBox.setMargin(reputationScoreDisplay, new Insets(0, 0, 5, 0));
 
             // User details
-            Triple<Label, Label, VBox> botIdTriple = getInfoBox(Res.get("chat.sideBar.userProfile.nym"));
+            Triple<Label, BisqIconButton, VBox> botIdTriple = getInfoBoxWithCopyButton(Res.get("chat.sideBar.userProfile.nym"));
             VBox botIdBox = botIdTriple.getThird();
-            botIdCopyButton = createAndGetCopyButton();
-            botId = botIdTriple.getSecond();
-            botId.setGraphic(botIdCopyButton);
+            botIdCopyButton = botIdTriple.getSecond();
+            botId = botIdTriple.getFirst();
 
-            Triple<Label, Label, VBox> userIdTriple = getInfoBox(Res.get("chat.sideBar.userProfile.id"));
+            Triple<Label, BisqIconButton, VBox> userIdTriple = getInfoBoxWithCopyButton(Res.get("chat.sideBar.userProfile.id"));
             VBox userIdBox = userIdTriple.getThird();
-            userIdCopyButton = createAndGetCopyButton();
-            userId = userIdTriple.getSecond();
-            userId.setGraphic(userIdCopyButton);
+            userIdCopyButton = userIdTriple.getSecond();
+            userId = userIdTriple.getFirst();
 
-            Triple<Label, Label, VBox> addressByTransportTriple = getInfoBox(Res.get("chat.sideBar.userProfile.transportAddress"));
+            Triple<Label, BisqIconButton, VBox> addressByTransportTriple = getInfoBoxWithCopyButton(Res.get("chat.sideBar.userProfile.transportAddress"));
             VBox addressByTransportBox = addressByTransportTriple.getThird();
-            addressByTransportCopyButton = createAndGetCopyButton();
-            addressByTransport = addressByTransportTriple.getSecond();
-            addressByTransport.setGraphic(addressByTransportCopyButton);
+            addressByTransportCopyButton = addressByTransportTriple.getSecond();
+            addressByTransport = addressByTransportTriple.getFirst();
 
             Triple<Label, Label, VBox> totalReputationScoreTriple = getInfoBox(Res.get("chat.sideBar.userProfile.totalReputationScore"));
             VBox totalReputationScoreBox = totalReputationScoreTriple.getThird();
@@ -370,6 +367,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             botId.setOnMouseEntered(e -> botIdCopyButton.setVisible(true));
             botId.setOnMouseExited(e -> botIdCopyButton.setVisible(false));
             botIdCopyButton.setOnMouseClicked(e -> ClipboardUtil.copyToClipboard(model.getUserProfile().getNym()));
+
             userId.setOnMouseEntered(e -> userIdCopyButton.setVisible(true));
             userId.setOnMouseExited(e -> userIdCopyButton.setVisible(false));
             userIdCopyButton.setOnMouseClicked(e -> ClipboardUtil.copyToClipboard(model.getUserProfile().getId()));
@@ -435,16 +433,30 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             Label value = new Label();
             value.setWrapText(true);
             value.getStyleClass().add("chat-side-bar-user-profile-small-value");
-            value.setContentDisplay(ContentDisplay.RIGHT);
             VBox vBox = new VBox(2.5, headline, value);
             return new Triple<>(headline, value, vBox);
         }
 
-        private static BisqIconButton createAndGetCopyButton() {
+        private static Triple<Label, BisqIconButton, VBox> getInfoBoxWithCopyButton(String title) {
+            Label headline = new Label(title.toUpperCase());
+            headline.getStyleClass().add("chat-side-bar-user-profile-small-headline");
+
+            Label value = new Label();
+            value.setWrapText(true);
+            value.getStyleClass().add("chat-side-bar-user-profile-small-value");
+            value.setContentDisplay(ContentDisplay.RIGHT);
+
             BisqIconButton copyButton = new BisqIconButton();
             copyButton.setIcon(AwesomeIcon.COPY);
             copyButton.setVisible(false);
-            return copyButton;
+            copyButton.setMinWidth(30);
+            copyButton.setAlignment(Pos.BOTTOM_RIGHT);
+            HBox.setMargin(copyButton, new Insets(0, 0, 5, 0));
+
+            HBox hBox = new HBox(value, Spacer.fillHBox(), copyButton);
+            hBox.setAlignment(Pos.BOTTOM_LEFT);
+            VBox vBox = new VBox(2.5, headline, hBox);
+            return new Triple<>(value, copyButton, vBox);
         }
     }
 }
