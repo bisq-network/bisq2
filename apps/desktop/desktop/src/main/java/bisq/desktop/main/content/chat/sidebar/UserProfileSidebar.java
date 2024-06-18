@@ -220,7 +220,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
         private final Label nickName, botId, userId, addressByTransport, statement, totalReputationScore,
                 profileAge, lastSeen, terms;
         private final MenuItem privateMsg, mention, ignore, undoIgnore, report;
-        private final VBox statementBox, termsBox, optionsVBox;
+        private final VBox botIdBox, userIdBox, addressByTransportBox, statementBox, termsBox, optionsVBox;
         private final ReputationScoreDisplay reputationScoreDisplay;
         private final BisqIconButton botIdCopyButton, userIdCopyButton, addressByTransportCopyButton;
         private final Button closeButton;
@@ -262,17 +262,17 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
 
             // User details
             Triple<Label, BisqIconButton, VBox> botIdTriple = getInfoBoxWithCopyButton(Res.get("chat.sideBar.userProfile.nym"));
-            VBox botIdBox = botIdTriple.getThird();
+            botIdBox = botIdTriple.getThird();
             botIdCopyButton = botIdTriple.getSecond();
             botId = botIdTriple.getFirst();
 
             Triple<Label, BisqIconButton, VBox> userIdTriple = getInfoBoxWithCopyButton(Res.get("chat.sideBar.userProfile.id"));
-            VBox userIdBox = userIdTriple.getThird();
+            userIdBox = userIdTriple.getThird();
             userIdCopyButton = userIdTriple.getSecond();
             userId = userIdTriple.getFirst();
 
             Triple<Label, BisqIconButton, VBox> addressByTransportTriple = getInfoBoxWithCopyButton(Res.get("chat.sideBar.userProfile.transportAddress"));
-            VBox addressByTransportBox = addressByTransportTriple.getThird();
+            addressByTransportBox = addressByTransportTriple.getThird();
             addressByTransportCopyButton = addressByTransportTriple.getSecond();
             addressByTransport = addressByTransportTriple.getFirst();
 
@@ -364,15 +364,14 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
                 }
             });
 
-            botId.setOnMouseEntered(e -> botIdCopyButton.setVisible(true));
-            botId.setOnMouseExited(e -> botIdCopyButton.setVisible(false));
+            botIdBox.setOnMouseEntered(e -> botIdCopyButton.setVisible(true));
+            botIdBox.setOnMouseExited(e -> botIdCopyButton.setVisible(false));
             botIdCopyButton.setOnMouseClicked(e -> ClipboardUtil.copyToClipboard(model.getUserProfile().getNym()));
-
-            userId.setOnMouseEntered(e -> userIdCopyButton.setVisible(true));
-            userId.setOnMouseExited(e -> userIdCopyButton.setVisible(false));
+            userIdBox.setOnMouseEntered(e -> userIdCopyButton.setVisible(true));
+            userIdBox.setOnMouseExited(e -> userIdCopyButton.setVisible(false));
             userIdCopyButton.setOnMouseClicked(e -> ClipboardUtil.copyToClipboard(model.getUserProfile().getId()));
-            addressByTransport.setOnMouseEntered(e -> addressByTransportCopyButton.setVisible(true));
-            addressByTransport.setOnMouseExited(e -> addressByTransportCopyButton.setVisible(false));
+            addressByTransportBox.setOnMouseEntered(e -> addressByTransportCopyButton.setVisible(true));
+            addressByTransportBox.setOnMouseExited(e -> addressByTransportCopyButton.setVisible(false));
             addressByTransportCopyButton.setOnMouseClicked(e ->
                     ClipboardUtil.copyToClipboard(model.getUserProfile().getAddressByTransportDisplayString()));
 
@@ -409,14 +408,14 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
 
             catHashNodeSubscription.unsubscribe();
 
-            botId.setOnMouseEntered(null);
-            botId.setOnMouseExited(null);
+            botIdBox.setOnMouseEntered(null);
+            botIdBox.setOnMouseExited(null);
             botIdCopyButton.setOnMouseClicked(null);
-            userId.setOnMouseEntered(null);
-            userId.setOnMouseExited(null);
+            userIdBox.setOnMouseEntered(null);
+            userIdBox.setOnMouseExited(null);
             userIdCopyButton.setOnMouseClicked(null);
-            addressByTransport.setOnMouseEntered(null);
-            addressByTransport.setOnMouseExited(null);
+            addressByTransportBox.setOnMouseEntered(null);
+            addressByTransportBox.setOnMouseExited(null);
             addressByTransportCopyButton.setOnMouseClicked(null);
 
             privateMsg.setOnAction(null);
@@ -430,9 +429,11 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
         private static Triple<Label, Label, VBox> getInfoBox(String title) {
             Label headline = new Label(title.toUpperCase());
             headline.getStyleClass().add("chat-side-bar-user-profile-small-headline");
+
             Label value = new Label();
             value.setWrapText(true);
             value.getStyleClass().add("chat-side-bar-user-profile-small-value");
+
             VBox vBox = new VBox(2.5, headline, value);
             return new Triple<>(headline, value, vBox);
         }
