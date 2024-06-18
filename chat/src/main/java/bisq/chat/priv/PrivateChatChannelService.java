@@ -123,8 +123,9 @@ public abstract class PrivateChatChannelService<
     }
 
     protected CompletableFuture<SendMessageResult> sendLeaveMessage(C channel, UserProfile receiver, long date) {
+        String encoded = Res.encode("chat.privateChannel.message.leave", channel.getMyUserIdentity().getUserProfile().getUserName());
         return sendMessage(StringUtils.createUid(),
-                Res.get("chat.privateChannel.message.leave", channel.getMyUserIdentity().getUserProfile().getUserName()),
+                encoded,
                 Optional.empty(),
                 channel,
                 receiver,

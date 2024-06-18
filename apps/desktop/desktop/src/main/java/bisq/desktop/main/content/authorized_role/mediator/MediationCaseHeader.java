@@ -125,16 +125,14 @@ public class MediationCaseHeader {
 
         private void doClose() {
             MediatorView.ListItem listItem = model.getMediationCaseListItem().get();
-            channelService.sendTradeLogMessage(Res.get("authorizedRole.mediator.close.tradeLogMessage"),
-                    listItem.getChannel());
+            channelService.sendTradeLogMessage(Res.encode("authorizedRole.mediator.close.tradeLogMessage"), listItem.getChannel());
             mediatorService.closeMediationCase(listItem.getMediationCase());
             onCloseHandler.run();
         }
 
         private void doReOpen() {
             MediatorView.ListItem listItem = model.getMediationCaseListItem().get();
-            channelService.sendTradeLogMessage(Res.get("authorizedRole.mediator"),
-                    listItem.getChannel());
+            channelService.sendTradeLogMessage(Res.encode("authorizedRole.mediator"), listItem.getChannel());
             mediatorService.reOpenMediationCase(listItem.getMediationCase());
             onReOpenHandler.run();
         }

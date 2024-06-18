@@ -220,15 +220,18 @@ public class TradeStateController implements Controller {
 
     void doInterruptTrade() {
         BisqEasyTrade trade = model.getBisqEasyTrade().get();
+        String encoded;
+        BisqEasyOpenTradeChannel channel = model.getChannel().get();
+        String userName = channel.getMyUserIdentity().getUserName();
         switch (model.getTradeCloseType()) {
             case REJECT:
-                channelService.sendTradeLogMessage(Res.get("bisqEasy.openTrades.tradeLogMessage.rejected",
-                        model.getChannel().get().getMyUserIdentity().getUserName()), model.getChannel().get());
+                encoded = Res.encode("bisqEasy.openTrades.tradeLogMessage.rejected", userName);
+                channelService.sendTradeLogMessage(encoded, channel);
                 bisqEasyTradeService.rejectTrade(trade);
                 break;
             case CANCEL:
-                channelService.sendTradeLogMessage(Res.get("bisqEasy.openTrades.tradeLogMessage.cancelled",
-                        model.getChannel().get().getMyUserIdentity().getUserName()), model.getChannel().get());
+                encoded = Res.encode("bisqEasy.openTrades.tradeLogMessage.cancelled", userName);
+                channelService.sendTradeLogMessage(encoded, channel);
                 bisqEasyTradeService.cancelTrade(trade);
                 break;
             case COMPLETED:
@@ -286,14 +289,14 @@ public class TradeStateController implements Controller {
                 break;
             case TAKER_SENT_TAKE_OFFER_REQUEST:
 
-            // Seller
+                // Seller
             case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS:
             case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS:
             case MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS_:
             case MAKER_DID_NOT_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS:
             case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS:
             case TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS:
-            // Buyer
+                // Buyer
             case MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA:
             case MAKER_DID_NOT_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA:
             case MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA:
