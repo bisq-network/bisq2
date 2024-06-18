@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.trade_wizard.payment_method;
+package bisq.desktop.main.content.bisq_easy.trade_wizard.fiat_payment_method;
 
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.desktop.common.threading.UIThread;
@@ -40,7 +40,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class TradeWizardPaymentMethodView extends View<VBox, TradeWizardPaymentMethodModel, TradeWizardPaymentMethodController> {
+public class TradeWizardFiatPaymentMethodView extends View<VBox, TradeWizardFiatPaymentMethodModel, TradeWizardFiatPaymentMethodController> {
     private final MaterialTextField custom;
     private final ListChangeListener<FiatPaymentMethod> paymentMethodListener;
     private final FlowPane flowPane;
@@ -48,7 +48,7 @@ public class TradeWizardPaymentMethodView extends View<VBox, TradeWizardPaymentM
     private final BisqIconButton addButton;
     private Subscription addCustomMethodIconEnabledPin;
 
-    public TradeWizardPaymentMethodView(TradeWizardPaymentMethodModel model, TradeWizardPaymentMethodController controller) {
+    public TradeWizardFiatPaymentMethodView(TradeWizardFiatPaymentMethodModel model, TradeWizardFiatPaymentMethodController controller) {
         super(new VBox(10), model, controller);
 
         root.setAlignment(Pos.TOP_CENTER);
