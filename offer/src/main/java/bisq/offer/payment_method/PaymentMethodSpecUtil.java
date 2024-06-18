@@ -34,7 +34,7 @@ public class PaymentMethodSpecUtil {
     }
 
     public static List<BitcoinPaymentMethodSpec> createBitcoinMainChainPaymentMethodSpec() {
-        return createBitcoinPaymentMethodSpecs(List.of(BitcoinPaymentMethod.fromPaymentRail(BitcoinPaymentRail.MAIN_CHAIN)));
+        return createBitcoinPaymentMethodSpecs(List.of(BitcoinPaymentMethod.fromPaymentRail(BitcoinPaymentRail.ONCHAIN)));
     }
 
     public static List<FiatPaymentMethodSpec> createFiatPaymentMethodSpecs(List<FiatPaymentMethod> paymentMethods) {

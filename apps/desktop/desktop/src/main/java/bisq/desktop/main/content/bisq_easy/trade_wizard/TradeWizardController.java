@@ -139,6 +139,7 @@ public class TradeWizardController extends NavigationController implements InitW
                 NavigationTarget.TRADE_WIZARD_DIRECTION,
                 NavigationTarget.TRADE_WIZARD_MARKET,
                 NavigationTarget.TRADE_WIZARD_AMOUNT,
+                NavigationTarget.TRADE_WIZARD_BITCOIN_PAYMENT_METHOD,
                 NavigationTarget.TRADE_WIZARD_FIAT_PAYMENT_METHOD,
                 NavigationTarget.TRADE_WIZARD_TAKE_OFFER_OFFER,
                 NavigationTarget.TRADE_WIZARD_REVIEW_OFFER
@@ -160,7 +161,6 @@ public class TradeWizardController extends NavigationController implements InitW
         });
         marketPin = EasyBind.subscribe(tradeWizardMarketController.getMarket(), market -> {
             tradeWizardSelectOfferController.setMarket(market);
-            tradeWizardBitcoinPaymentMethodController.setMarket(market);
             tradeWizardFiatPaymentMethodController.setMarket(market);
             tradeWizardPriceController.setMarket(market);
             tradeWizardAmountController.setMarket(market);
