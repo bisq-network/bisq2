@@ -939,10 +939,11 @@ public abstract class Overlay<T extends Overlay<T>> {
         gridPane.getChildren().add(logButton);
         logButton.setOnAction(event -> OsUtils.open(new File(baseDir, "bisq.log")));
 
+        Label zipLogLabel = new Label();
         Button zipLogButton = new Button(Res.get("popup.reportError.zipLogs"));
-        GridPane.setHalignment(zipLogButton, HPos.LEFT);
-        GridPane.setRowIndex(zipLogButton, gridPane.getRowCount());
-        gridPane.getChildren().add(zipLogButton);
+//        GridPane.setHalignment(zipLogButton, HPos.LEFT);
+//        GridPane.setRowIndex(zipLogButton, gridPane.getRowCount());
+//        gridPane.getChildren().add(zipLogButton);
         zipLogButton.setOnAction(event -> {
             URI uri = URI.create("jar:file:" + Paths.get(baseDir,"bisq2-logs.zip").toUri().getPath());
             Map<String, String> env = Map.of("create", "true");
@@ -954,6 +955,7 @@ public abstract class Overlay<T extends Overlay<T>> {
                     if (logPath.toFile().isFile()) {
                         try {
                             Files.copy(logPath, zipfs.getPath(logPath.toFile().getName()), StandardCopyOption.REPLACE_EXISTING);
+                            zipLogLabel.setText("Zipped to " + uri);
                         } catch (IOException e) {
                             throw new RuntimeException(e);
                         }
@@ -961,10 +963,18 @@ public abstract class Overlay<T extends Overlay<T>> {
                 });
             } catch (IOException e) {
                 throw new RuntimeException(e);
-        }});
+            }});
+
+        HBox zipLogHbox = new HBox(10);
+        zipLogHbox.setAlignment(Pos.CENTER_LEFT);
+
+        zipLogHbox.getChildren().addAll(zipLogButton, zipLogLabel);
+        GridPane.setHalignment(zipLogHbox, HPos.LEFT);
+        GridPane.setRowIndex(zipLogHbox, gridPane.getRowCount());
+        gridPane.getChildren().add(zipLogHbox);
 
         Button gitHubButton = new Button(Res.get("popup.reportError.gitHub"));
-        GridPane.setHalignment(gitHubButton, HPos.RIGHT);
+        GridPane.setHalignment(gitHubButton, HPos.LEFT);
         GridPane.setRowIndex(gitHubButton, gridPane.getRowCount());
         gridPane.getChildren().add(gitHubButton);
         gitHubButton.setOnAction(event -> {
