@@ -18,6 +18,7 @@
 package bisq.desktop.components.overlay;
 
 import bisq.application.ShutDownHandler;
+import bisq.common.application.ApplicationVersion;
 import bisq.common.locale.LanguageRepository;
 import bisq.common.util.OsUtils;
 import bisq.common.util.StringUtils;
@@ -987,9 +988,13 @@ public abstract class Overlay<T extends Overlay<T>> {
         }
 
         buttonBox = new HBox(10);
+        buttonBox.setAlignment(Pos.CENTER);
         GridPane.setHalignment(buttonBox, buttonAlignment);
         GridPane.setMargin(buttonBox, new Insets(buttonDistance, 0, 0, 0));
         gridPane.add(buttonBox, 0, gridPane.getRowCount(), 2, 1);
+
+        Label versionLabel = new Label("Version: " + ApplicationVersion.getVersion().toString());
+        buttonBox.getChildren().add(0, versionLabel);
 
         if (actionHandlerOptional.isPresent() || actionButtonText != null) {
             actionButton = new Button(actionButtonText == null ? Res.get("confirmation.ok") : actionButtonText);
