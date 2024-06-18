@@ -17,7 +17,10 @@
 
 package bisq.desktop.main.content.bisq_easy.trade_wizard.btc_payment_method;
 
-import bisq.account.payment_method.*;
+import bisq.account.payment_method.BitcoinPaymentMethod;
+import bisq.account.payment_method.BitcoinPaymentMethodUtil;
+import bisq.account.payment_method.PaymentMethod;
+import bisq.account.payment_method.PaymentMethodUtil;
 import bisq.common.currency.Market;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
@@ -40,22 +43,22 @@ import java.util.HashSet;
 import java.util.List;
 
 @Slf4j
-public class TradeWizardBtcPaymentMethodController implements Controller {
-    private final TradeWizardBtcPaymentMethodModel model;
+public class TradeWizardBitcoinPaymentMethodController implements Controller {
+    private final TradeWizardBitcoinPaymentMethodModel model;
     @Getter
-    private final TradeWizardBtcPaymentMethodView view;
+    private final TradeWizardBitcoinPaymentMethodView view;
     private final SettingsService settingsService;
     private final Runnable onNextHandler;
     private final Region owner;
     private Subscription customMethodPin;
 
-    public TradeWizardBtcPaymentMethodController(ServiceProvider serviceProvider, Region owner, Runnable onNextHandler) {
+    public TradeWizardBitcoinPaymentMethodController(ServiceProvider serviceProvider, Region owner, Runnable onNextHandler) {
         settingsService = serviceProvider.getSettingsService();
         this.onNextHandler = onNextHandler;
         this.owner = owner;
 
-        model = new TradeWizardBtcPaymentMethodModel();
-        view = new TradeWizardBtcPaymentMethodView(model, this);
+        model = new TradeWizardBitcoinPaymentMethodModel();
+        view = new TradeWizardBitcoinPaymentMethodView(model, this);
     }
 
     public ObservableList<BitcoinPaymentMethod> getBitcoinPaymentMethods() {
