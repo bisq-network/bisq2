@@ -19,8 +19,10 @@ package bisq.bisq_easy;
 
 import bisq.account.AccountService;
 import bisq.bonded_roles.BondedRolesService;
+import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
+import bisq.common.currency.MarketRepository;
 import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
 import bisq.contract.ContractService;
@@ -31,6 +33,7 @@ import bisq.offer.OfferService;
 import bisq.persistence.PersistenceService;
 import bisq.presentation.notifications.SendNotificationService;
 import bisq.security.SecurityService;
+import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import bisq.support.SupportService;
 import bisq.trade.TradeService;
@@ -65,9 +68,11 @@ public class BisqEasyService implements Service {
     private final UserIdentityService userIdentityService;
     private final BisqEasyNotificationsService bisqEasyNotificationsService;
     private final Observable<Long> minRequiredReputationScore = new Observable<>();
+    private final MarketPriceService marketPriceService;
     private Pin difficultyAdjustmentFactorPin, ignoreDiffAdjustmentFromSecManagerPin,
             mostRecentDiffAdjustmentValueOrDefaultPin, minRequiredReputationScorePin,
-            ignoreMinRequiredReputationScoreFromSecManagerPin, mostRecentMinRequiredReputationScoreOrDefaultPin;
+            ignoreMinRequiredReputationScoreFromSecManagerPin, mostRecentMinRequiredReputationScoreOrDefaultPin,
+            selectedMarketPin;
 
     public BisqEasyService(PersistenceService persistenceService,
                            SecurityService securityService,
@@ -90,6 +95,7 @@ public class BisqEasyService implements Service {
         this.networkService = networkService;
         this.identityService = identityService;
         this.bondedRolesService = bondedRolesService;
+        marketPriceService = bondedRolesService.getMarketPriceService();
         this.accountService = accountService;
         this.offerService = offerService;
         this.contractService = contractService;
@@ -120,9 +126,19 @@ public class BisqEasyService implements Service {
         ignoreMinRequiredReputationScoreFromSecManagerPin = settingsService.getIgnoreMinRequiredReputationScoreFromSecManager().addObserver(e -> applyMinRequiredReputationScore());
         mostRecentMinRequiredReputationScoreOrDefaultPin = bondedRolesService.getMinRequiredReputationScoreService().getMostRecentValueOrDefault().addObserver(e -> applyMinRequiredReputationScore());
 
+        settingsService.getCookie().asString(CookieKey.SELECTED_MARKET_CODES)
+                .flatMap(MarketRepository::findAnyFiatMarketByMarketCodes)
+                .ifPresentOrElse(marketPriceService::setSelectedMarket,
+                        () -> marketPriceService.setSelectedMarket(MarketRepository.getDefault()));
+
+        selectedMarketPin = marketPriceService.getSelectedMarket().addObserver(market -> {
+            if (market != null) {
+                settingsService.setCookie(CookieKey.SELECTED_MARKET_CODES, market.getMarketCodes());
+            }
+        });
+
         return bisqEasyNotificationsService.initialize();
     }
-
 
     public CompletableFuture<Boolean> shutdown() {
         if (difficultyAdjustmentFactorPin != null) {
@@ -132,6 +148,7 @@ public class BisqEasyService implements Service {
             minRequiredReputationScorePin.unbind();
             ignoreMinRequiredReputationScoreFromSecManagerPin.unbind();
             mostRecentMinRequiredReputationScoreOrDefaultPin.unbind();
+            selectedMarketPin.unbind();
         }
         return bisqEasyNotificationsService.shutdown();
     }
