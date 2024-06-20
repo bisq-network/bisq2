@@ -964,8 +964,8 @@ public abstract class Overlay<T extends Overlay<T>> {
                     if (logPath.toFile().isFile()) {
                         try {
                             Files.copy(logPath, zipfs.getPath(logPath.toFile().getName()), StandardCopyOption.REPLACE_EXISTING);
-                            zipLogLabel.setText(Res.get("popup.reportError.zippedTo", baseDir + "/bisq2-logs.zip"));
-                            OsUtils.open(baseDir);
+                            zipLogLabel.setText(Res.get("popup.reportError.zippedTo", zipDirectory[0] + "/bisq2-logs.zip"));
+                            OsUtils.open(zipDirectory[0]);
                         } catch (IOException e) {
                             throw new RuntimeException(e);
                         }
