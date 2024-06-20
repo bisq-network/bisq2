@@ -949,6 +949,11 @@ public abstract class Overlay<T extends Overlay<T>> {
         MaterialTextField zipTextField = new MaterialTextField(Res.get("popup.reportError.zipNewDirectory"), zipDirectory[0] + "/bisq2-logs.zip");
 
         zipLogButton.setOnAction(event -> {
+            try {
+                Files.createDirectories(Paths.get(zipDirectory[0]));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
             URI uri = URI.create("jar:file:" + Paths.get(zipDirectory[0],"bisq2-logs.zip").toUri().getRawPath());
             Map<String, String> env = Map.of("create", "true");
             List<Path> logPaths = Arrays.asList(
