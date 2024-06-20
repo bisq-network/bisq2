@@ -31,6 +31,7 @@ import bisq.desktop.components.containers.BisqGridPane;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.BusyAnimation;
+import bisq.desktop.components.controls.MaterialTextField;
 import bisq.i18n.Res;
 import bisq.settings.DontShowAgainService;
 import bisq.settings.SettingsService;
@@ -940,9 +941,15 @@ public abstract class Overlay<T extends Overlay<T>> {
         logButton.setOnAction(event -> OsUtils.open(new File(baseDir, "bisq.log")));
 
         Label zipLogLabel = new Label();
+        zipLogLabel.setText(Res.get("popup.reportError.zipCurrentDirectory", baseDir + "/bisq2-logs.zip"));
         Button zipLogButton = new Button(Res.get("popup.reportError.zipLogs"));
+        Button zipChangeDirectoryButton = new Button(Res.get("popup.reportError.zipChangeDirectory"));
+        String[] zipDirectory = new String[1];
+        zipDirectory[0] = baseDir;
+        MaterialTextField zipTextField = new MaterialTextField(Res.get("popup.reportError.zipNewDirectory"), zipDirectory[0] + "/bisq2-logs.zip");
+
         zipLogButton.setOnAction(event -> {
-            URI uri = URI.create("jar:file:" + Paths.get(baseDir,"bisq2-logs.zip").toUri().getRawPath());
+            URI uri = URI.create("jar:file:" + Paths.get(zipDirectory[0],"bisq2-logs.zip").toUri().getRawPath());
             Map<String, String> env = Map.of("create", "true");
             List<Path> logPaths = Arrays.asList(
                     Path.of(baseDir).resolve("bisq.log"),
@@ -966,7 +973,19 @@ public abstract class Overlay<T extends Overlay<T>> {
         HBox zipLogHbox = new HBox(10);
         zipLogHbox.setAlignment(Pos.CENTER_LEFT);
 
-        zipLogHbox.getChildren().addAll(zipLogButton, zipLogLabel);
+        zipChangeDirectoryButton.setOnAction(event -> {
+            if (zipLogHbox.getChildren().contains(zipLogLabel)) {
+                zipLogHbox.getChildren().remove(zipLogLabel);
+                zipLogHbox.getChildren().add(1, zipTextField);
+            } else {
+                zipDirectory[0] = zipTextField.getText();
+                zipLogLabel.setText(Res.get("popup.reportError.zipCurrentDirectory", zipDirectory[0] + "/bisq2-logs.zip"));
+                zipLogHbox.getChildren().remove(zipTextField);
+                zipLogHbox.getChildren().add(zipLogLabel);
+            }
+        });
+
+        zipLogHbox.getChildren().addAll(zipLogButton, zipChangeDirectoryButton, zipLogLabel);
         GridPane.setHalignment(zipLogHbox, HPos.LEFT);
         GridPane.setRowIndex(zipLogHbox, gridPane.getRowCount());
         gridPane.getChildren().add(zipLogHbox);
