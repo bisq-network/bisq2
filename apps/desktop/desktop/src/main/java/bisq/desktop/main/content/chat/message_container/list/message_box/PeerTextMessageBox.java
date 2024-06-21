@@ -49,9 +49,9 @@ public class PeerTextMessageBox extends BubbleMessageBox {
         setUpPeerMessage();
         setMargin(userNameAndDateHBox, new Insets(-5, 0, -5, 10));
         messageHBox.getChildren().setAll(messageBgHBox, Spacer.fillHBox());
-        reactionsHBox.getChildren().setAll(replyIcon, pmIcon, copyIcon, moreOptionsMenu, Spacer.fillHBox());
+        actionsHBox.getChildren().setAll(replyIcon, pmIcon, copyIcon, moreOptionsMenu, Spacer.fillHBox());
 
-        contentVBox.getChildren().setAll(userNameAndDateHBox, messageHBox, reactionsHBox);
+        contentVBox.getChildren().setAll(userNameAndDateHBox, messageHBox, actionsHBox);
     }
 
     @Override
@@ -82,7 +82,7 @@ public class PeerTextMessageBox extends BubbleMessageBox {
         HBox.setMargin(pmIcon, new Insets(3, 0, -3, 0));
         HBox.setMargin(copyIcon, new Insets(4, 0, -4, 0));
         HBox.setMargin(moreOptionsMenu, new Insets(2, 0, -2, 0));
-        reactionsHBox.setVisible(false);
+        actionsHBox.setVisible(false);
     }
 
     @Override
@@ -104,7 +104,7 @@ public class PeerTextMessageBox extends BubbleMessageBox {
         isMenuShowingPin = EasyBind.subscribe(moreOptionsMenu.getIsMenuShowing(), isShowing -> {
            if (!isShowing && !isHover()) {
                dateTime.setVisible(false);
-               reactionsHBox.setVisible(false);
+               actionsHBox.setVisible(false);
            }
         });
     }
