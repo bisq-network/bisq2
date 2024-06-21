@@ -307,10 +307,15 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
 
             // Options
             privateMsg = new MenuItem("private-chat-grey", "private-chat-white", Res.get("chat.sideBar.userProfile.sendPrivateMessage"));
+            privateMsg.setPrefWidth(width );
             mention = new MenuItem("mention-grey", "mention-white", Res.get("chat.sideBar.userProfile.mention"));
+            mention.setPrefWidth(width);
             ignore = new MenuItem("ignore-grey", "ignore-white", Res.get("chat.sideBar.userProfile.ignore"));
+            ignore.setPrefWidth(width);
             undoIgnore = new MenuItem("undo-ignore-grey", "undo-ignore-white", Res.get("chat.sideBar.userProfile.undoIgnore"));
+            undoIgnore.setPrefWidth(width);
             report = new MenuItem("report-grey", "report-white", Res.get("chat.sideBar.userProfile.report"));
+            report.setPrefWidth(width);
 
             Region separator = Layout.hLine();
             VBox.setMargin(separator, new Insets(-15, -20, 10, -20));
