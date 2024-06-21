@@ -49,7 +49,7 @@ public class PeerTextMessageBox extends BubbleMessageBox {
         setUpPeerMessage();
         setMargin(userNameAndDateHBox, new Insets(-5, 0, -5, 10));
         messageHBox.getChildren().setAll(messageBgHBox, Spacer.fillHBox());
-        actionsHBox.getChildren().setAll(replyIcon, pmIcon, copyIcon, moreOptionsMenu, Spacer.fillHBox());
+        actionsHBox.getChildren().setAll(replyIcon, pmIcon, copyIcon, moreActionsMenu, Spacer.fillHBox());
 
         contentVBox.getChildren().setAll(userNameAndDateHBox, messageHBox, actionsHBox);
     }
@@ -73,15 +73,15 @@ public class PeerTextMessageBox extends BubbleMessageBox {
                 Res.get("chat.message.contextMenu.ignoreUser"));
         reportUserMenuItem = new DropdownMenuItem("report-grey", "report-white",
                 Res.get("chat.message.contextMenu.reportUser"));
-        moreOptionsMenu = new DropdownMenu("ellipsis-h-grey", "ellipsis-h-white", true);
-        moreOptionsMenu.setTooltip(Res.get("chat.message.moreOptions"));
-        moreOptionsMenu.addMenuItems(ignoreUserMenuItem, reportUserMenuItem);
-        moreOptionsMenu.setOpenToTheRight(true);
+        moreActionsMenu = new DropdownMenu("ellipsis-h-grey", "ellipsis-h-white", true);
+        moreActionsMenu.setTooltip(Res.get("chat.message.moreOptions"));
+        moreActionsMenu.addMenuItems(ignoreUserMenuItem, reportUserMenuItem);
+        moreActionsMenu.setOpenToTheRight(true);
 
         HBox.setMargin(replyIcon, new Insets(4, 0, -4, 10));
         HBox.setMargin(pmIcon, new Insets(3, 0, -3, 0));
         HBox.setMargin(copyIcon, new Insets(4, 0, -4, 0));
-        HBox.setMargin(moreOptionsMenu, new Insets(2, 0, -2, 0));
+        HBox.setMargin(moreActionsMenu, new Insets(2, 0, -2, 0));
         actionsHBox.setVisible(false);
     }
 
@@ -101,7 +101,7 @@ public class PeerTextMessageBox extends BubbleMessageBox {
         pmIcon.setVisible(chatMessage instanceof PublicChatMessage);
         pmIcon.setManaged(chatMessage instanceof PublicChatMessage);
 
-        isMenuShowingPin = EasyBind.subscribe(moreOptionsMenu.getIsMenuShowing(), isShowing -> {
+        isMenuShowingPin = EasyBind.subscribe(moreActionsMenu.getIsMenuShowing(), isShowing -> {
            if (!isShowing && !isHover()) {
                dateTime.setVisible(false);
                actionsHBox.setVisible(false);

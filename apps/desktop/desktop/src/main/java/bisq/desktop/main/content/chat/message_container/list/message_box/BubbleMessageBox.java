@@ -60,7 +60,7 @@ public abstract class BubbleMessageBox extends MessageBox {
     protected Label supportedLanguages, userName, dateTime, message;
     protected HBox userNameAndDateHBox, messageBgHBox, messageHBox;
     protected VBox userProfileIconVbox;
-    protected DropdownMenu moreOptionsMenu;
+    protected DropdownMenu moreActionsMenu;
 
     public BubbleMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
                             ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
@@ -131,7 +131,7 @@ public abstract class BubbleMessageBox extends MessageBox {
 
     private void addOnMouseEventHandlers() {
         setOnMouseEntered(e -> {
-            if (moreOptionsMenu != null && moreOptionsMenu.getIsMenuShowing().get()) {
+            if (moreActionsMenu != null && moreActionsMenu.getIsMenuShowing().get()) {
                 return;
             }
             dateTime.setVisible(true);
@@ -139,7 +139,7 @@ public abstract class BubbleMessageBox extends MessageBox {
         });
 
         setOnMouseExited(e -> {
-            if (moreOptionsMenu == null || !moreOptionsMenu.getIsMenuShowing().get()) {
+            if (moreActionsMenu == null || !moreActionsMenu.getIsMenuShowing().get()) {
                 dateTime.setVisible(false);
                 actionsHBox.setVisible(false);
             }
