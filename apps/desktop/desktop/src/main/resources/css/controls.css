@@ -1012,3 +1012,23 @@
     -fx-text-fill: -fx-mid-text-color;
     -fx-font-family: "IBM Plex Sans";
 }
+
+
+/*******************************************************************************
+ *                                                                             *
+ * Drawer Menu                                                                 *
+ *                                                                             *
+ ******************************************************************************/
+
+.drawer-menu {
+    -fx-background-color: transparent;
+    -fx-background-radius: 6;
+    -fx-border-width: 0;
+    -fx-cursor: hand;
+}
+
+.drawer-menu:hover,
+.drawer-menu-active {
+    -fx-background-color: -bisq-dark-grey-40;
+    -fx-effect: null;
+}

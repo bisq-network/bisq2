@@ -917,6 +917,18 @@
     -fx-image: url("/images/chat/private-chat/private-chat-white.png");
 }
 
+#reactions-green {
+    -fx-image: url("/images/chat/reactions/reactions-green.png");
+}
+
+#reactions-grey {
+    -fx-image: url("/images/chat/reactions/reactions-grey.png");
+}
+
+#reactions-white {
+    -fx-image: url("/images/chat/reactions/reactions-white.png");
+}
+
 
 /* ------------------------------------------------------------------------------------ */
 /* Markets */

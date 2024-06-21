@@ -18,12 +18,11 @@
 package bisq.desktop.components.controls;
 
 import bisq.desktop.common.utils.ImageUtil;
+import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.image.ImageView;
 
 public class DrawerMenu extends Button {
-    private static final String ICON_CSS_STYLE = "menu-item-icon";
-
     private final DrawerPopup drawerPopup = new DrawerPopup();
     private final ImageView defaultIcon, activeIcon;
     private ImageView buttonIcon;
@@ -31,12 +30,17 @@ public class DrawerMenu extends Button {
     public DrawerMenu(String defaultIconId, String activeIconId) {
         defaultIcon = ImageUtil.getImageViewById(defaultIconId);
         activeIcon = ImageUtil.getImageViewById(activeIconId);
-        defaultIcon.getStyleClass().add(ICON_CSS_STYLE);
-        activeIcon.getStyleClass().add(ICON_CSS_STYLE);
         buttonIcon = defaultIcon;
         setGraphic(buttonIcon);
-        attachListeners();
         getStyleClass().add("drawer-menu");
+        setAlignment(Pos.CENTER);
+
+        double size = 29;
+        setMaxSize(size, size);
+        setMinSize(size, size);
+        setPrefSize(size, size);
+
+        attachListeners();
     }
 
     private void attachListeners() {

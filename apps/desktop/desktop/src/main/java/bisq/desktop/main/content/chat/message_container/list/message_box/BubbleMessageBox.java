@@ -25,6 +25,7 @@ import bisq.desktop.common.Icons;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqTooltip;
+import bisq.desktop.components.controls.DrawerMenu;
 import bisq.desktop.components.controls.DropdownMenu;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
@@ -61,6 +62,7 @@ public abstract class BubbleMessageBox extends MessageBox {
     protected HBox userNameAndDateHBox, messageBgHBox, messageHBox;
     protected VBox userProfileIconVbox;
     protected DropdownMenu moreActionsMenu;
+    protected DrawerMenu reactMenu;
 
     public BubbleMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
                             ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
@@ -68,6 +70,7 @@ public abstract class BubbleMessageBox extends MessageBox {
         this.item = item;
         this.list = list;
         this.controller = controller;
+        reactMenu = createAndGetReactMenu();
 
         setUpUserNameAndDateTime();
         setUpUserProfileIcon();
@@ -237,5 +240,10 @@ public abstract class BubbleMessageBox extends MessageBox {
 
     protected static void onCopyMessage(String chatMessageText) {
         ClipboardUtil.copyToClipboard(chatMessageText);
+    }
+
+    private DrawerMenu createAndGetReactMenu() {
+        DrawerMenu drawerMenu = new DrawerMenu("reactions-grey", "reactions-green");
+        return drawerMenu;
     }
 }

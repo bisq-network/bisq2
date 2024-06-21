@@ -49,7 +49,7 @@ public class PeerTextMessageBox extends BubbleMessageBox {
         setUpPeerMessage();
         setMargin(userNameAndDateHBox, new Insets(-5, 0, -5, 10));
         messageHBox.getChildren().setAll(messageBgHBox, Spacer.fillHBox());
-        actionsHBox.getChildren().setAll(replyIcon, pmIcon, copyIcon, moreActionsMenu, Spacer.fillHBox());
+        actionsHBox.getChildren().setAll(replyIcon, pmIcon, copyIcon, reactMenu, moreActionsMenu, Spacer.fillHBox());
 
         contentVBox.getChildren().setAll(userNameAndDateHBox, messageHBox, actionsHBox);
     }
@@ -82,6 +82,7 @@ public class PeerTextMessageBox extends BubbleMessageBox {
         HBox.setMargin(pmIcon, new Insets(3, 0, -3, 0));
         HBox.setMargin(copyIcon, new Insets(4, 0, -4, 0));
         HBox.setMargin(moreActionsMenu, new Insets(2, 0, -2, 0));
+        HBox.setMargin(reactMenu, new Insets(2, 0, -2, 0));
         actionsHBox.setVisible(false);
     }
 
