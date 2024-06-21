@@ -210,7 +210,7 @@
     -fx-opacity: 1;
 }
 
-.dropdown-menu-popup .dropdown-menu-item .dropdown-menu-item-content:selected .label {
+.dropdown-menu-popup .dropdown-menu-item .dropdown-menu-item-content:selected {
     -fx-text-fill: -fx-light-text-color;
 }
 

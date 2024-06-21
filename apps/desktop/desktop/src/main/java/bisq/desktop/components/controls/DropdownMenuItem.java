@@ -17,36 +17,15 @@
 
 package bisq.desktop.components.controls;
 
-import bisq.desktop.common.utils.ImageUtil;
-import javafx.geometry.Pos;
 import javafx.scene.control.CustomMenuItem;
-import javafx.scene.control.Label;
-import javafx.scene.image.ImageView;
-import javafx.scene.layout.HBox;
 
 public class DropdownMenuItem extends CustomMenuItem {
-    private static final String ICON_CSS_STYLE = "menu-item-icon";
-
-    private final HBox content;
-    private final Label label;
-    private ImageView defaultIcon, activeIcon, buttonIcon;
+    private final MenuItem menuItem;
 
     public DropdownMenuItem(String defaultIconId, String activeIconId, String text) {
-        label = new Label(text);
-        content = new HBox(8, label);
-        content.getStyleClass().add("dropdown-menu-item-content");
-        content.setAlignment(Pos.CENTER_LEFT);
-        setContent(content);
-
-        if (defaultIconId != null && activeIconId != null) {
-            defaultIcon = ImageUtil.getImageViewById(defaultIconId);
-            activeIcon = ImageUtil.getImageViewById(activeIconId);
-            defaultIcon.getStyleClass().add(ICON_CSS_STYLE);
-            activeIcon.getStyleClass().add(ICON_CSS_STYLE);
-            buttonIcon = defaultIcon;
-            content.getChildren().add(0, buttonIcon);
-            attachListeners();
-        }
+        menuItem = new MenuItem(defaultIconId, activeIconId, text);
+        menuItem.getStyleClass().add("dropdown-menu-item-content");
+        setContent(menuItem);
     }
 
     public DropdownMenuItem(String text) {
@@ -58,34 +37,18 @@ public class DropdownMenuItem extends CustomMenuItem {
     }
 
     public void setLabelText(String text) {
-        label.setText(text);
+        menuItem.setText(text);
     }
 
     public Double getWidth() {
-        return content.getWidth();
+        return menuItem.getWidth();
     }
 
     public void updateWidth(Double width) {
-        content.setPrefWidth(width);
+        menuItem.setPrefWidth(width);
     }
 
     public String getLabelText() {
-        return label.getText();
-    }
-
-    private void attachListeners() {
-        content.setOnMouseEntered(e -> updateIcon(activeIcon));
-        content.setOnMouseExited(e -> updateIcon(defaultIcon));
-        content.setOnMouseClicked(e -> updateIcon(defaultIcon));
-    }
-
-    private void updateIcon(ImageView newIcon) {
-        if (buttonIcon != newIcon) {
-            content.getChildren().remove(buttonIcon);
-            buttonIcon = newIcon;
-            if (buttonIcon != null) {
-                content.getChildren().add(0, buttonIcon);
-            }
-        }
+        return menuItem.getText();
     }
 }

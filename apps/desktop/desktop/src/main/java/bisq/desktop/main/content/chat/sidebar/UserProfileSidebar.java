@@ -306,16 +306,11 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             VBox.setVgrow(scrollPane, Priority.ALWAYS);
 
             // Options
-            privateMsg = new MenuItem(Res.get("chat.sideBar.userProfile.sendPrivateMessage"),
-                    "private-chat-grey", "private-chat-white");
-            mention = new MenuItem(Res.get("chat.sideBar.userProfile.mention"),
-                    "mention-grey", "mention-white");
-            ignore = new MenuItem(Res.get("chat.sideBar.userProfile.ignore"),
-                    "ignore-grey", "ignore-white");
-            undoIgnore = new MenuItem(Res.get("chat.sideBar.userProfile.undoIgnore"),
-                    "undo-ignore-grey", "undo-ignore-white");
-            report = new MenuItem(Res.get("chat.sideBar.userProfile.report"),
-                    "report-grey", "report-white");
+            privateMsg = new MenuItem("private-chat-grey", "private-chat-white", Res.get("chat.sideBar.userProfile.sendPrivateMessage"));
+            mention = new MenuItem("mention-grey", "mention-white", Res.get("chat.sideBar.userProfile.mention"));
+            ignore = new MenuItem("ignore-grey", "ignore-white", Res.get("chat.sideBar.userProfile.ignore"));
+            undoIgnore = new MenuItem("undo-ignore-grey", "undo-ignore-white", Res.get("chat.sideBar.userProfile.undoIgnore"));
+            report = new MenuItem("report-grey", "report-white", Res.get("chat.sideBar.userProfile.report"));
 
             Region separator = Layout.hLine();
             VBox.setMargin(separator, new Insets(-15, -20, 10, -20));

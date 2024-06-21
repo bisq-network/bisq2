@@ -18,36 +18,50 @@
 package bisq.desktop.components.controls;
 
 import bisq.desktop.common.utils.ImageUtil;
+import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.image.ImageView;
 
 public class MenuItem extends Button {
-    private final ImageView defaultIcon, activeIcon;
-    private ImageView buttonIcon;
+    private static final String ICON_CSS_STYLE = "menu-item-icon";
 
-    public MenuItem(String text, String defaultIconId, String activeIconId) {
-        defaultIcon = ImageUtil.getImageViewById(defaultIconId);
-        activeIcon = ImageUtil.getImageViewById(activeIconId);
-        buttonIcon = defaultIcon;
+    private ImageView defaultIcon, activeIcon, buttonIcon;
 
+    public MenuItem(String defaultIconId, String activeIconId, String text) {
         setText(text);
-        setGraphic(buttonIcon);
         setGraphicTextGap(10);
         getStyleClass().add("menu-item");
+        setAlignment(Pos.CENTER_LEFT);
 
-        attachListeners();
+        if (defaultIconId != null && activeIconId != null) {
+            defaultIcon = ImageUtil.getImageViewById(defaultIconId);
+            activeIcon = ImageUtil.getImageViewById(activeIconId);
+            defaultIcon.getStyleClass().add(ICON_CSS_STYLE);
+            activeIcon.getStyleClass().add(ICON_CSS_STYLE);
+            buttonIcon = defaultIcon;
+            setGraphic(buttonIcon);
+            attachListeners();
+        }
+    }
+
+    public MenuItem(String text) {
+        this(null, null, text);
+    }
+
+    public MenuItem(String defaultIconId, String activeIconId) {
+        this(defaultIconId, activeIconId, "");
     }
 
     private void attachListeners() {
-        setOnMouseExited(e -> updateIcon(defaultIcon));
         setOnMouseEntered(e -> updateIcon(activeIcon));
+        setOnMouseExited(e -> updateIcon(defaultIcon));
+        setOnMouseClicked(e -> updateIcon(defaultIcon));
     }
 
     private void updateIcon(ImageView newIcon) {
         if (buttonIcon != newIcon) {
-            getChildren().remove(buttonIcon);
             buttonIcon = newIcon;
-            getChildren().add(buttonIcon);
+            setGraphic(buttonIcon);
         }
     }
 }
