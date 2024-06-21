@@ -48,7 +48,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
     private final static String EDITED_POST_FIX = " " + Res.get("chat.message.wasEdited");
 
     private final Label deliveryState;
-    private final Subscription reactionsVisiblePropertyPin, messageDeliveryStatusIconPin;
+    private final Subscription actionsBoxVisiblePropertyPin, messageDeliveryStatusIconPin;
     private Label editIcon, deleteIcon, copyIcon;
     private BisqTextArea editInputField;
     private Button saveEditButton, cancelEditButton;
@@ -85,7 +85,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         HBox.setMargin(deliveryState, new Insets(0, 10, 0, 0));
         HBox deliveryStateHBox = new HBox(Spacer.fillHBox(), actionsHBox);
 
-        reactionsVisiblePropertyPin = EasyBind.subscribe(actionsHBox.visibleProperty(), v -> {
+        actionsBoxVisiblePropertyPin = EasyBind.subscribe(actionsHBox.visibleProperty(), v -> {
             if (v) {
                 deliveryStateHBox.getChildren().remove(deliveryState);
                 if (!actionsHBox.getChildren().contains(deliveryState)) {
@@ -139,7 +139,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
     }
 
     @Override
-    protected void setUpReactions() {
+    protected void setUpActions() {
         editIcon = getIconWithToolTip(AwesomeIcon.EDIT, Res.get("action.edit"));
         copyIcon = getIconWithToolTip(AwesomeIcon.COPY, Res.get("action.copyToClipboard"));
         deleteIcon = getIconWithToolTip(AwesomeIcon.REMOVE_SIGN, Res.get("action.delete"));
@@ -169,7 +169,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
     }
 
     @Override
-    protected void addReactionsHandlers() {
+    protected void addActionsHandlers() {
         ChatMessage chatMessage = item.getChatMessage();
         boolean isPublicChannel = item.isPublicChannel();
         boolean allowEditing = isPublicChannel;
@@ -262,8 +262,8 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         editInputField.setOnKeyPressed(null);
         userProfileIcon.releaseResources();
 
-        if (reactionsVisiblePropertyPin != null) {
-            reactionsVisiblePropertyPin.unsubscribe();
+        if (actionsBoxVisiblePropertyPin != null) {
+            actionsBoxVisiblePropertyPin.unsubscribe();
         }
 
         if (messageDeliveryStatusIconPin != null) {

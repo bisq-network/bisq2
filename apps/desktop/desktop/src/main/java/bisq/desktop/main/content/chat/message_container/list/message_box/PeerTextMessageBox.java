@@ -63,7 +63,7 @@ public class PeerTextMessageBox extends BubbleMessageBox {
     }
 
     @Override
-    protected void setUpReactions() {
+    protected void setUpActions() {
         replyIcon = getIconWithToolTip(AwesomeIcon.REPLY, Res.get("chat.message.reply"));
         pmIcon = getIconWithToolTip(AwesomeIcon.COMMENT_ALT, Res.get("chat.message.privateMessage"));
         copyIcon = getIconWithToolTip(AwesomeIcon.COPY, Res.get("action.copyToClipboard"));
@@ -86,7 +86,7 @@ public class PeerTextMessageBox extends BubbleMessageBox {
     }
 
     @Override
-    protected void addReactionsHandlers() {
+    protected void addActionsHandlers() {
         ChatMessage chatMessage = item.getChatMessage();
 
         replyIcon.setOnMouseClicked(e -> controller.onReply(chatMessage));

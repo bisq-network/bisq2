@@ -71,8 +71,8 @@ public abstract class BubbleMessageBox extends MessageBox {
 
         setUpUserNameAndDateTime();
         setUpUserProfileIcon();
-        setUpReactions();
-        addReactionsHandlers();
+        setUpActions();
+        addActionsHandlers();
         addOnMouseEventHandlers();
 
         supportedLanguages = createAndGetSupportedLanguagesLabel();
@@ -123,10 +123,10 @@ public abstract class BubbleMessageBox extends MessageBox {
         });
     }
 
-    protected void setUpReactions() {
+    protected void setUpActions() {
     }
 
-    protected void addReactionsHandlers() {
+    protected void addActionsHandlers() {
     }
 
     private void addOnMouseEventHandlers() {
