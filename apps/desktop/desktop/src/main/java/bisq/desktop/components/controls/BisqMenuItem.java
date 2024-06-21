@@ -22,15 +22,15 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.image.ImageView;
 
-public class MenuItem extends Button {
+public class BisqMenuItem extends Button {
     private static final String ICON_CSS_STYLE = "menu-item-icon";
 
     private ImageView defaultIcon, activeIcon, buttonIcon;
 
-    public MenuItem(String defaultIconId, String activeIconId, String text) {
+    public BisqMenuItem(String defaultIconId, String activeIconId, String text) {
         setText(text);
         setGraphicTextGap(10);
-        getStyleClass().add("menu-item");
+        getStyleClass().add("bisq-menu-item");
         setAlignment(Pos.CENTER_LEFT);
 
         if (defaultIconId != null && activeIconId != null) {
@@ -44,11 +44,11 @@ public class MenuItem extends Button {
         }
     }
 
-    public MenuItem(String text) {
+    public BisqMenuItem(String text) {
         this(null, null, text);
     }
 
-    public MenuItem(String defaultIconId, String activeIconId) {
+    public BisqMenuItem(String defaultIconId, String activeIconId) {
         this(defaultIconId, activeIconId, "");
     }
 

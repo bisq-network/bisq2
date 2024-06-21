@@ -891,11 +891,11 @@
 
 /*******************************************************************************
  *                                                                             *
- * Menu Item                                                                   *
+ * Bisq Menu Item                                                                   *
  *                                                                             *
  ******************************************************************************/
 
-.button.menu-item {
+.button.bisq-menu-item {
     -fx-padding: 0;
     -fx-border-width: 0;
     -fx-background-color: transparent;
@@ -903,7 +903,7 @@
     -fx-text-fill: -fx-mid-text-color;
 }
 
-.button.menu-item:hover {
+.button.bisq-menu-item:hover {
     -fx-background-color: transparent;
     -fx-text-fill: -fx-light-text-color;
 }
@@ -974,7 +974,7 @@
     -fx-text-fill: -fx-light-text-color;
 }
 
-.dropdown-menu-popup .menu-item:hover {
+.dropdown-menu-popup .bisq-menu-item:hover {
     -fx-effect: null;
     -fx-background-radius: 0;
 }

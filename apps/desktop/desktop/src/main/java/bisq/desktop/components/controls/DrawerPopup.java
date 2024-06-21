@@ -17,8 +17,8 @@
 
 package bisq.desktop.components.controls;
 
-import javafx.scene.control.PopupControl;
+import javafx.scene.layout.HBox;
 
-public class DrawerPopup extends PopupControl {
+public class DrawerPopup extends HBox {
 
 }

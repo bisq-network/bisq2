@@ -56,7 +56,7 @@ public abstract class BubbleMessageBox extends MessageBox {
     protected final ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list;
     protected final ChatMessagesListController controller;
     protected final UserProfileIcon userProfileIcon = new UserProfileIcon(60);
-    protected final HBox actionsHBox = new HBox(20);
+    protected final HBox actionsHBox = new HBox(10);
     protected final VBox quotedMessageVBox, contentVBox;
     protected Label supportedLanguages, userName, dateTime, message;
     protected HBox userNameAndDateHBox, messageBgHBox, messageHBox;

@@ -20,10 +20,10 @@ package bisq.desktop.components.controls;
 import javafx.scene.control.CustomMenuItem;
 
 public class DropdownMenuItem extends CustomMenuItem {
-    private final MenuItem menuItem;
+    private final BisqMenuItem menuItem;
 
     public DropdownMenuItem(String defaultIconId, String activeIconId, String text) {
-        menuItem = new MenuItem(defaultIconId, activeIconId, text);
+        menuItem = new BisqMenuItem(defaultIconId, activeIconId, text);
         menuItem.getStyleClass().add("dropdown-menu-item-content");
         setContent(menuItem);
     }
