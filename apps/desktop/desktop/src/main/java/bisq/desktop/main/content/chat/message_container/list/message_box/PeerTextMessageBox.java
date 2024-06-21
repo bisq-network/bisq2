@@ -68,7 +68,7 @@ public class PeerTextMessageBox extends BubbleMessageBox {
         pmIcon = getIconWithToolTip(AwesomeIcon.COMMENT_ALT, Res.get("chat.message.privateMessage"));
         copyIcon = getIconWithToolTip(AwesomeIcon.COPY, Res.get("action.copyToClipboard"));
 
-        // More options dropdown menu
+        // More actions dropdown menu
         ignoreUserMenuItem = new DropdownMenuItem("ignore-grey", "ignore-white",
                 Res.get("chat.message.contextMenu.ignoreUser"));
         reportUserMenuItem = new DropdownMenuItem("report-grey", "report-white",
