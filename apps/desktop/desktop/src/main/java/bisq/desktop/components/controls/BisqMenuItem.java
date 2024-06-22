@@ -52,6 +52,14 @@ public class BisqMenuItem extends Button {
         this(defaultIconId, activeIconId, "");
     }
 
+    public void useIconOnly() {
+        double size = 29;
+        setMaxSize(size, size);
+        setMinSize(size, size);
+        setPrefSize(size, size);
+        setAlignment(Pos.CENTER);
+    }
+
     private void attachListeners() {
         setOnMouseEntered(e -> updateIcon(activeIcon));
         setOnMouseExited(e -> updateIcon(defaultIcon));

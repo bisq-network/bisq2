@@ -17,42 +17,40 @@
 
 package bisq.desktop.components.controls;
 
-import bisq.desktop.common.utils.ImageUtil;
-import javafx.geometry.Pos;
-import javafx.scene.control.Button;
-import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
 
-public class DrawerMenu extends Button {
-    private final DrawerPopup drawerPopup = new DrawerPopup();
-    private final ImageView defaultIcon, activeIcon;
-    private ImageView buttonIcon;
+public class DrawerMenu extends HBox {
+    private final BisqMenuItem menuButton;
+    private final HBox itemsHBox = new HBox(new BisqMenuItem("test"));
 
     public DrawerMenu(String defaultIconId, String activeIconId) {
-        defaultIcon = ImageUtil.getImageViewById(defaultIconId);
-        activeIcon = ImageUtil.getImageViewById(activeIconId);
-        buttonIcon = defaultIcon;
-        setGraphic(buttonIcon);
-        getStyleClass().add("drawer-menu");
-        setAlignment(Pos.CENTER);
+        menuButton = new BisqMenuItem(defaultIconId, activeIconId);
+        menuButton.useIconOnly();
 
-        double size = 29;
-        setMaxSize(size, size);
-        setMinSize(size, size);
-        setPrefSize(size, size);
+        itemsHBox.getStyleClass().add("drawer-menu-items");
+        itemsHBox.setVisible(false);
+        itemsHBox.setManaged(false);
+
+        getChildren().addAll(menuButton, itemsHBox);
+        getStyleClass().add("drawer-menu");
 
         attachListeners();
     }
 
-    private void attachListeners() {
-        setOnMouseEntered(e -> updateIcon(activeIcon));
-        setOnMouseExited(e -> updateIcon(defaultIcon));
-        setOnMouseClicked(e -> updateIcon(defaultIcon));
+    public void hideMenu() {
+        itemsHBox.setVisible(false);
+        itemsHBox.setManaged(false);
     }
 
-    private void updateIcon(ImageView newIcon) {
-        if (buttonIcon != newIcon) {
-            buttonIcon = newIcon;
-            setGraphic(buttonIcon);
-        }
+    private void attachListeners() {
+        menuButton.setOnAction(event -> {
+            toggleItemsHBox();
+        });
+    }
+
+    private void toggleItemsHBox() {
+        // TODO: Add width transition
+        itemsHBox.setVisible(!itemsHBox.isVisible());
+        itemsHBox.setManaged(!itemsHBox.isManaged());
     }
 }
