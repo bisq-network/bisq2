@@ -24,7 +24,6 @@ import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.desktop.common.Icons;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.utils.ImageUtil;
-import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.DrawerMenu;
 import bisq.desktop.components.controls.DropdownMenu;
@@ -244,7 +243,7 @@ public abstract class BubbleMessageBox extends MessageBox {
     }
 
     private DrawerMenu createAndGetReactMenu() {
-        DrawerMenu drawerMenu = new DrawerMenu("reactions-grey", "reactions-green");
+        DrawerMenu drawerMenu = new DrawerMenu("react-grey", "react-green");
         return drawerMenu;
     }
 }

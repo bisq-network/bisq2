@@ -17,40 +17,49 @@
 
 package bisq.desktop.components.controls;
 
+import javafx.geometry.Bounds;
 import javafx.scene.layout.HBox;
 
 public class DrawerMenu extends HBox {
     private final BisqMenuItem menuButton;
-    private final HBox itemsHBox = new HBox(new BisqMenuItem("test"));
+    private final HBox itemsHBox = new HBox();
+    private final BisqPopup drawerPopup = new BisqPopup();
 
     public DrawerMenu(String defaultIconId, String activeIconId) {
         menuButton = new BisqMenuItem(defaultIconId, activeIconId);
         menuButton.useIconOnly();
 
         itemsHBox.getStyleClass().add("drawer-menu-items");
-        itemsHBox.setVisible(false);
-        itemsHBox.setManaged(false);
+        drawerPopup.setContentNode(itemsHBox);
 
-        getChildren().addAll(menuButton, itemsHBox);
+        getChildren().add(menuButton);
         getStyleClass().add("drawer-menu");
 
         attachListeners();
     }
 
-    public void hideMenu() {
-        itemsHBox.setVisible(false);
-        itemsHBox.setManaged(false);
-    }
-
     private void attachListeners() {
-        menuButton.setOnAction(event -> {
-            toggleItemsHBox();
+        menuButton.setOnAction(e -> {
+            togglePopup();
+        });
+
+        drawerPopup.setOnHidden(e -> {
+            setPrefWidth(menuButton.getWidth());
+        });
+
+        drawerPopup.setOnShowing(e -> {
+            setPrefWidth(menuButton.getWidth() + itemsHBox.getWidth());
         });
     }
 
-    private void toggleItemsHBox() {
-        // TODO: Add width transition
-        itemsHBox.setVisible(!itemsHBox.isVisible());
-        itemsHBox.setManaged(!itemsHBox.isManaged());
+    private void togglePopup() {
+        if (!drawerPopup.isShowing()) {
+            Bounds bounds = localToScreen(getBoundsInLocal());
+            double x = bounds.getMaxX();
+            double y = bounds.getMinY();
+            drawerPopup.show(this, x, y);
+        } else {
+            drawerPopup.hide();
+        }
     }
 }
