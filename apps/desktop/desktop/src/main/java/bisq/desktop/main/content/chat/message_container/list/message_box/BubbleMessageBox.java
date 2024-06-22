@@ -24,6 +24,7 @@ import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.desktop.common.Icons;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.utils.ImageUtil;
+import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.DrawerMenu;
 import bisq.desktop.components.controls.DropdownMenu;
@@ -58,11 +59,12 @@ public abstract class BubbleMessageBox extends MessageBox {
     protected final UserProfileIcon userProfileIcon = new UserProfileIcon(60);
     protected final HBox actionsHBox = new HBox(10);
     protected final VBox quotedMessageVBox, contentVBox;
+    protected final DrawerMenu reactMenu;
     protected Label supportedLanguages, userName, dateTime, message;
     protected HBox userNameAndDateHBox, messageBgHBox, messageHBox;
     protected VBox userProfileIconVbox;
     protected DropdownMenu moreActionsMenu;
-    protected DrawerMenu reactMenu;
+    protected BisqMenuItem happyReaction, laughReaction;
 
     public BubbleMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
                             ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
@@ -145,6 +147,7 @@ public abstract class BubbleMessageBox extends MessageBox {
             if (moreActionsMenu == null || !moreActionsMenu.getIsMenuShowing().get()) {
                 dateTime.setVisible(false);
                 actionsHBox.setVisible(false);
+                reactMenu.hideMenu();
             }
         });
     }
@@ -244,6 +247,11 @@ public abstract class BubbleMessageBox extends MessageBox {
 
     private DrawerMenu createAndGetReactMenu() {
         DrawerMenu drawerMenu = new DrawerMenu("react-grey", "react-green");
+        happyReaction = new BisqMenuItem("happy-grey", "happy-white");
+        happyReaction.useIconOnly();
+        laughReaction = new BisqMenuItem("laugh-grey", "laugh-white");
+        laughReaction.useIconOnly();
+        drawerMenu.addItems(happyReaction, laughReaction);
         return drawerMenu;
     }
 }

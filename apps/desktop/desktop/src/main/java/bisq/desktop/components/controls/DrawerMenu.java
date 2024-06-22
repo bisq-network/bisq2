@@ -17,49 +17,49 @@
 
 package bisq.desktop.components.controls;
 
-import javafx.geometry.Bounds;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.layout.HBox;
 
 public class DrawerMenu extends HBox {
     private final BisqMenuItem menuButton;
     private final HBox itemsHBox = new HBox();
-    private final BisqPopup drawerPopup = new BisqPopup();
 
     public DrawerMenu(String defaultIconId, String activeIconId) {
         menuButton = new BisqMenuItem(defaultIconId, activeIconId);
         menuButton.useIconOnly();
 
         itemsHBox.getStyleClass().add("drawer-menu-items");
-        drawerPopup.setContentNode(itemsHBox);
+        itemsHBox.setVisible(false);
+        itemsHBox.setManaged(false);
+        itemsHBox.setSpacing(5);
+        itemsHBox.setAlignment(Pos.CENTER);
+        itemsHBox.setPadding(new Insets(0, 5, 0, 0));
 
-        getChildren().add(menuButton);
+        getChildren().addAll(menuButton, itemsHBox);
         getStyleClass().add("drawer-menu");
 
         attachListeners();
     }
 
+    public void addItems(BisqMenuItem... items) {
+        itemsHBox.getChildren().addAll(items);
+    }
+
+    public void hideMenu() {
+        itemsHBox.setVisible(false);
+        itemsHBox.setManaged(false);
+    }
+
     private void attachListeners() {
         menuButton.setOnAction(e -> {
-            togglePopup();
-        });
-
-        drawerPopup.setOnHidden(e -> {
-            setPrefWidth(menuButton.getWidth());
-        });
-
-        drawerPopup.setOnShowing(e -> {
-            setPrefWidth(menuButton.getWidth() + itemsHBox.getWidth());
+            toggleItemsHBox();
         });
     }
 
-    private void togglePopup() {
-        if (!drawerPopup.isShowing()) {
-            Bounds bounds = localToScreen(getBoundsInLocal());
-            double x = bounds.getMaxX();
-            double y = bounds.getMinY();
-            drawerPopup.show(this, x, y);
-        } else {
-            drawerPopup.hide();
-        }
+    private void toggleItemsHBox() {
+        // TODO: Add width transition
+        itemsHBox.setVisible(!itemsHBox.isVisible());
+        itemsHBox.setManaged(!itemsHBox.isManaged());
     }
 }
