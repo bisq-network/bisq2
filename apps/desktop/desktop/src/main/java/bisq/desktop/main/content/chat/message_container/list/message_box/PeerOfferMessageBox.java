@@ -23,6 +23,7 @@ import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.data.Pair;
 import bisq.common.util.StringUtils;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
 import bisq.i18n.Res;
@@ -41,6 +42,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 public final class PeerOfferMessageBox extends PeerTextMessageBox {
     private Button takeOfferButton;
+    private Button moreInfoButton;
     private Label peerNickName;
 
     public PeerOfferMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
@@ -72,11 +74,19 @@ public final class PeerOfferMessageBox extends PeerTextMessageBox {
         HBox takeOfferTitle = takeOfferLabelAndButton.getFirst();
         takeOfferButton = takeOfferLabelAndButton.getSecond();
 
+        //Right next to the buy/sell button
+        //add info icon which triggers info popup with more information about the offer.
+        moreInfoButton = BisqIconButton.createInfoIconButton(Res.get("offer.moreInfo"));
+        BisqEasyOfferbookMessage bisqEasyOfferbookMessage = (BisqEasyOfferbookMessage) item.getChatMessage();
+
+        moreInfoButton.setOnAction(e -> controller.onMoreInfo(bisqEasyOfferbookMessage));
+
         // Message
         message.getStyleClass().add("chat-peer-offer-message");
 
         // Offer content
-        VBox offerMessage = new VBox(10, takeOfferTitle, message, takeOfferButton);
+        HBox buttonRow = new HBox(30, takeOfferButton, moreInfoButton);
+        VBox offerMessage = new VBox(10, takeOfferTitle, message, buttonRow);
         Region separator = new Region();
         separator.getStyleClass().add("take-offer-vLine");
         HBox offerContent = new HBox(15, userProfileIconVbox, reputationVBox, separator, offerMessage);
