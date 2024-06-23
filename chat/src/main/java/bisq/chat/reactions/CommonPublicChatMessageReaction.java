@@ -17,9 +17,8 @@
 
 package bisq.chat.reactions;
 
-import bisq.network.p2p.services.data.storage.DistributedData;
+import bisq.chat.ChatChannelDomain;
 import bisq.network.p2p.services.data.storage.MetaData;
-import com.google.protobuf.Message;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -27,41 +26,53 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-@ToString
-@EqualsAndHashCode
-public class CommonPublicChatMessageReaction implements DistributedData {
+@ToString(callSuper = true)
+@EqualsAndHashCode(callSuper = true)
+public class CommonPublicChatMessageReaction extends ChatMessageReaction {
     @EqualsAndHashCode.Exclude
     private final MetaData metaData = new MetaData(MetaData.TTL_10_DAYS, MetaData.LOW_PRIORITY, getClass().getSimpleName(), MetaData.MAX_MAP_SIZE_10_000);
 
-    @Override
-    public MetaData getMetaData() {
-        return null;
-    }
+    public CommonPublicChatMessageReaction(String id,
+                                           String userProfileId,
+                                           String chatChannelId,
+                                           ChatChannelDomain chatChannelDomain,
+                                           String chatMessageId,
+                                           long reactionId,
+                                           boolean isRemoved,
+                                           long date) {
+        super(id, userProfileId, chatChannelId, chatChannelDomain, chatMessageId, reactionId, isRemoved, date);
 
-    @Override
-    public boolean isDataInvalid(byte[] pubKeyHash) {
-        return false;
-    }
-
-    @Override
-    public double getCostFactor() {
-        return 0.5;
+        verify();
     }
 
     @Override
     public void verify() {
+        super.verify();
     }
 
     @Override
-    public Message.Builder getBuilder(boolean serializeForHash) {
-        return null;
+    public bisq.chat.protobuf.ChatMessageReaction.Builder getBuilder(boolean serializeForHash) {
+        return getChatMessageReactionBuilder(serializeForHash)
+                .setCommonPublicChatMessage(toCommonPublicChatMessageProto(serializeForHash));
     }
 
-    @Override
-    public Message toProto(boolean serializeForHash) {
-        return null;
+    public static CommonPublicChatMessageReaction fromProto(bisq.chat.protobuf.ChatMessageReaction baseProto) {
+        return new CommonPublicChatMessageReaction(
+                baseProto.getId(),
+                baseProto.getUserProfileId(),
+                baseProto.getChatChannelId(),
+                ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
+                baseProto.getChatMessageId(),
+                baseProto.getReactionId(),
+                baseProto.getIsRemoved(),
+                baseProto.getDate());
     }
 
-    // API
-    //getReactionsForMessage(String messageId, String channelId)
+    private bisq.chat.protobuf.CommonPublicChatMessage toCommonPublicChatMessageProto(boolean serializeForHash) {
+        return resolveBuilder(getCommonPublicChatMessageBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    private bisq.chat.protobuf.CommonPublicChatMessage.Builder getCommonPublicChatMessageBuilder(boolean serializeForHash) {
+        return bisq.chat.protobuf.CommonPublicChatMessage.newBuilder();
+    }
 }

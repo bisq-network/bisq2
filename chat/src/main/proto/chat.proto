@@ -172,15 +172,22 @@ message ChatNotificationsStore {
 }
 
 // Reactions
-message CommonPublicChatMessageReaction {
+message ChatMessageReaction {
   string id = 1;
   string userProfileId = 2;
-  CommonPublicChatMessage commonPublicChatMessage = 3;
-  uint64 reactionId = 4;
-  bool isRemoved = 5;
-  sint64 date = 6;
+  string chatChannelId = 3;
+  ChatChannelDomain chatChannelDomain = 4;
+  string chatMessageId = 5;
+  sint64 reactionId = 6;
+  bool isRemoved = 7;
+  sint64 date = 8;
+  oneof message {
+    TwoPartyPrivateChatMessage twoPartyPrivateChatMessage = 20;
+    CommonPublicChatMessage commonPublicChatMessage = 21;
+    BisqEasyOpenTradeMessage bisqEasyOpenTradeMessage = 22;
+    BisqEasyOfferbookMessage bisqEasyOfferbookMessage = 23;
+  }
 }
 
-message CommonPublicChatMessageReactionStore {
-  repeated CommonPublicChatMessageReaction commonPublicChatMessageReaction = 1;
+message CommonPublicChatMessageReaction {
 }
