@@ -14,6 +14,7 @@ import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.gradle.jvm.toolchain.JavaToolchainService
 import org.gradle.jvm.toolchain.JvmImplementation
 import org.gradle.jvm.toolchain.JvmVendorSpec
+import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.findByType
 import org.gradle.kotlin.dsl.register
 import java.io.File
@@ -27,6 +28,8 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
     }
 
     override fun apply(project: Project) {
+        val extension = project.extensions.create<PackagingPluginExtension>("packaging")
+
         val installDistTask: TaskProvider<Sync> = project.tasks.named("installDist", Sync::class.java)
 
         val generateHashesTask = project.tasks.register<Sha256HashTask>("generateHashes") {
@@ -51,6 +54,7 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
             jvmArgs.set(javaApplicationExtension.applicationDefaultJvmArgs)
 
             licenseFile.set(File(project.projectDir.parentFile.parentFile.parentFile, "LICENSE"))
+            appName.set(extension.name)
             appVersion.set(APP_VERSION)
 
             val packageResourcesDirFile = File(project.projectDir, "package")

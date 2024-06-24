@@ -40,7 +40,7 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
             mutableListOf(
                     "--dest", jPackageConfig.outputDirPath.toAbsolutePath().toString(),
 
-                    "--name", "Bisq 2",
+                    "--name", appConfig.name,
                     "--copyright", "Copyright © 2013-${Year.now()} - The Bisq developers",
                     "--vendor", "Bisq",
                     "--license-file", appConfig.licenceFilePath,

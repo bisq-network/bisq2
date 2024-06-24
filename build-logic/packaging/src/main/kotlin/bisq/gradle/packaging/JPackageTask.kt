@@ -36,6 +36,9 @@ abstract class JPackageTask : DefaultTask() {
     abstract val licenseFile: RegularFileProperty
 
     @get:Input
+    abstract val appName: Property<String>
+
+    @get:Input
     abstract val appVersion: Property<String>
 
     @get:InputDirectory
@@ -57,11 +60,12 @@ abstract class JPackageTask : DefaultTask() {
                 runtimeImageDirPath = runtimeImageDirectory.asFile.get().toPath(),
 
                 appConfig = JPackageAppConfig(
-                        appVersion = appVersion.get(),
-                        mainJarFileName = mainJarFile.asFile.get().name,
-                        mainClassName = mainClassName.get(),
-                        jvmArgs = jvmArgs.get(),
-                        licenceFilePath = licenseFile.asFile.get().absolutePath
+                    name = appName.get(),
+                    appVersion = appVersion.get(),
+                    mainJarFileName = mainJarFile.asFile.get().name,
+                    mainClassName = mainClassName.get(),
+                    jvmArgs = jvmArgs.get(),
+                    licenceFilePath = licenseFile.asFile.get().absolutePath
                 ),
 
                 packageFormatConfigs = getPackageFormatConfigs()
@@ -81,7 +85,7 @@ abstract class JPackageTask : DefaultTask() {
 
             OS.MAC_OS -> {
                 val resourcesPath = packagePath.resolve("macosx")
-                MacPackage(resourcesPath)
+                MacPackage(resourcesPath, appName.get())
             }
 
             OS.LINUX -> {
