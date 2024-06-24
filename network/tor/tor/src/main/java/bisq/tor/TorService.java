@@ -32,6 +32,7 @@ import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.extern.slf4j.Slf4j;
 import net.freehaven.tor.control.PasswordDigest;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -76,6 +77,16 @@ public class TorService implements Service {
             createTorrcConfigFile(torDataDirPath, hashedControlPassword);
 
             Path torBinaryPath = getTorBinaryPath();
+            if (!isTorRunning(torBinaryPath.toString())) {
+                File lockFile = torDataDirPath.resolve("lock").toFile();
+                if (lockFile.exists()) {
+                    boolean isSuccess = lockFile.delete();
+                    if (!isSuccess) {
+                        throw new IllegalStateException("Couldn't remove tor lock file.");
+                    }
+                }
+            }
+
             var nativeTorProcess = new NativeTorProcess(torBinaryPath, torDataDirPath);
             torProcess = Optional.of(nativeTorProcess);
             nativeTorProcess.start();
@@ -168,6 +179,14 @@ public class TorService implements Service {
 
         installTorIfNotUpToDate();
         return torDataDirPath.resolve("tor");
+    }
+
+    private boolean isTorRunning(String absoluteTorBinaryPath) {
+        return ProcessHandle.allProcesses()
+                .anyMatch(processHandle -> processHandle.info()
+                        .commandLine()
+                        .orElse("")
+                        .startsWith(absoluteTorBinaryPath));
     }
 
     private void installTorIfNotUpToDate() {
