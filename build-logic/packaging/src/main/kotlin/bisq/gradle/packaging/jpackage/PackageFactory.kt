@@ -45,6 +45,11 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
 
             val process: Process = processBuilder.start()
             process.waitFor(15, TimeUnit.MINUTES)
+
+            val exitCode = process.exitValue()
+            if (exitCode != 0) {
+                throw IllegalStateException("JPackage failed with exit code $exitCode.")
+            }
         }
     }
 
