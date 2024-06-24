@@ -64,7 +64,9 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
             outputDirectory.set(project.layout.buildDirectory.dir("packaging/jpackage/packages"))
         }
 
-        ReleaseBinariesTaskFactory.registerCopyReleaseBinariesTask(project)
+        val releaseBinariesTaskFactory = ReleaseBinariesTaskFactory(project)
+        releaseBinariesTaskFactory.registerCopyReleaseBinariesTask()
+        releaseBinariesTaskFactory.registerCopyMaintainerPublicKeysTask()
     }
 
     private fun getHashFileForOs(project: Project): Provider<RegularFile> {
