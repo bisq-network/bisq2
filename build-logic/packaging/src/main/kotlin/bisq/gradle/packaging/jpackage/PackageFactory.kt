@@ -21,8 +21,17 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
             val processBuilder = ProcessBuilder(absoluteBinaryPath)
                     .inheritIO()
 
+            var commonArgs: Map<String, String> = jPackageCommonArgs
+
+            val osSpecificOverrideArgs = getOsSpecificOverrideArgs(filetypeAndCustomCommands.first)
+            if (osSpecificOverrideArgs.isNotEmpty()) {
+                val mutableMap: MutableMap<String, String> = jPackageCommonArgs.toMutableMap()
+                mutableMap.putAll(osSpecificOverrideArgs)
+                commonArgs = mutableMap
+            }
+
             val allCommands = processBuilder.command()
-            jPackageCommonArgs.forEach { (key, value) ->
+            commonArgs.forEach { (key, value) ->
                 allCommands.add(key)
                 allCommands.add(value)
             }
@@ -44,6 +53,7 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
             "--dest" to jPackageConfig.outputDirPath.toAbsolutePath().toString(),
 
             "--name" to appConfig.name,
+            "--description" to "A decentralized bitcoin exchange network.",
             "--copyright" to "Copyright © 2013-${Year.now()} - The Bisq developers",
             "--vendor" to "Bisq",
             "--license-file" to appConfig.licenceFilePath,
@@ -57,6 +67,14 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
 
             "--runtime-image" to jPackageConfig.runtimeImageDirPath.toAbsolutePath().toString()
         )
+
+    private fun getOsSpecificOverrideArgs(fileType: String): Map<String, String> =
+        if (jPackageConfig.appConfig.name == "Bisq" && fileType == "exe") {
+            // Needed for Windows OS notification support
+            mutableMapOf("--description" to "Bisq 2")
+        } else {
+            emptyMap()
+        }
 
     private fun deleteFileOrDirectory(dir: File) {
         val files = dir.listFiles()

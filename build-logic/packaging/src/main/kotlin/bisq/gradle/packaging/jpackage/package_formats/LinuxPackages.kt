@@ -11,8 +11,6 @@ class LinuxPackages(private val resourcesPath: Path, private val appName: String
                 resourcesPath.resolve("icon.png")
                         .toAbsolutePath().toString(),
 
-                "--description", "A decentralized bitcoin exchange network.",
-
                 "--linux-package-name", appName.toLowerCase().replace(" ", ""),
                 "--linux-app-release", "1",
 

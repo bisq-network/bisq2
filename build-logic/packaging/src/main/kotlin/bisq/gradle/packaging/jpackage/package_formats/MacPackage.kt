@@ -10,6 +10,5 @@ class MacPackage(private val resourcesPath: Path, private val appName: String) :
                     "--resource-dir", resourcesPath.toAbsolutePath().toString(),
                     "--mac-package-name", appName,
                     "--icon", resourcesPath.resolve("Bisq2.icns").toAbsolutePath().toString(),
-                    "--description", "A decentralized bitcoin exchange network.",
             )
 }
