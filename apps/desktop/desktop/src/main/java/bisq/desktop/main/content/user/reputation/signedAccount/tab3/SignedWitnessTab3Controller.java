@@ -90,7 +90,7 @@ public class SignedWitnessTab3Controller implements Controller {
     }
 
     void onCopyToClipboard(String pubKeyHash) {
-        ClipboardUtil.copyToClipboard(PREFIX + pubKeyHash);
+        ClipboardUtil.copyToClipboard(pubKeyHash);
     }
 
     void onClose() {
