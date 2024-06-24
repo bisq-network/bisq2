@@ -12,6 +12,7 @@ application {
 
 packaging {
     name.set("Bisq 2")
+    version.set("2.0.4")
 }
 
 javafx {

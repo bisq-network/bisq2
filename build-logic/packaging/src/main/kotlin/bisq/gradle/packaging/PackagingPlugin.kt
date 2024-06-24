@@ -23,7 +23,6 @@ import javax.inject.Inject
 class PackagingPlugin @Inject constructor(private val javaToolchainService: JavaToolchainService) : Plugin<Project> {
 
     companion object {
-        const val APP_VERSION = "2.0.4"
         const val OUTPUT_DIR_PATH = "packaging/jpackage/packages"
     }
 
@@ -34,7 +33,7 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
 
         val generateHashesTask = project.tasks.register<Sha256HashTask>("generateHashes") {
             inputDirFile.set(installDistTask.map { File(it.destinationDir, "lib") })
-            outputFile.set(getHashFileForOs(project))
+            outputFile.set(getHashFileForOs(project, extension))
         }
 
         val jarTask: TaskProvider<Jar> = project.tasks.named("jar", Jar::class.java)
@@ -55,7 +54,7 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
 
             licenseFile.set(File(project.projectDir.parentFile.parentFile.parentFile, "LICENSE"))
             appName.set(extension.name)
-            appVersion.set(APP_VERSION)
+            appVersion.set(extension.version)
 
             val packageResourcesDirFile = File(project.projectDir, "package")
             packageResourcesDir.set(packageResourcesDirFile)
@@ -72,17 +71,19 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
         releaseBinariesTaskFactory.registerCopyReleaseBinariesTask()
         releaseBinariesTaskFactory.registerCopyMaintainerPublicKeysTask()
         releaseBinariesTaskFactory.registerCopySigningPublicKeyTask()
-        releaseBinariesTaskFactory.registerMergeOsSpecificJarHashesTask()
+        releaseBinariesTaskFactory.registerMergeOsSpecificJarHashesTask(extension.version)
     }
 
-    private fun getHashFileForOs(project: Project): Provider<RegularFile> {
+    private fun getHashFileForOs(project: Project, extension: PackagingPluginExtension): Provider<RegularFile> {
         val osName = when (getOS()) {
             OS.LINUX -> "linux"
             OS.MAC_OS -> "mac"
             OS.WINDOWS -> "win"
         }
 
-        return project.layout.buildDirectory.file("$OUTPUT_DIR_PATH/desktop-$APP_VERSION-all-$osName.jar.SHA-256")
+        return extension.version.flatMap { version ->
+            project.layout.buildDirectory.file("$OUTPUT_DIR_PATH/desktop-$version-all-$osName.jar.SHA-256")
+        }
     }
 
     private fun getProjectJdkDirectory(project: Project): Provider<Directory> {
