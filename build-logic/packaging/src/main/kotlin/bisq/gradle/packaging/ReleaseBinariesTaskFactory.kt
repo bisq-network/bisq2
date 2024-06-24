@@ -20,6 +20,7 @@ class ReleaseBinariesTaskFactory(private val project: Project) {
         val releaseDir: Provider<Directory> = project.layout.buildDirectory.dir("packaging/release")
         project.tasks.register<Copy>("copyReleaseBinaries") {
             from(inputBinariesProperty)
+            include("*.dmg", "*.deb", "*.exe", "*.rpm")
             into(releaseDir)
             /* Bisq 1: "Bisq-1.9.15.dmg"          -> "Bisq-1.9.15.dmg"
                        "bisq_1.9.15-1_amd64.deb"  -> "Bisq-64bit-1.9.15.deb"
@@ -78,11 +79,14 @@ class ReleaseBinariesTaskFactory(private val project: Project) {
     fun registerMergeOsSpecificJarHashesTask() {
         val files = project.files(
             inputBinariesProperty.map { inputDir ->
-                "$inputDir/desktop-${PackagingPlugin.APP_VERSION}-all-mac.jar.SHA-256" },
+                "$inputDir/desktop-${PackagingPlugin.APP_VERSION}-all-mac.jar.SHA-256"
+            },
             inputBinariesProperty.map { inputDir ->
-                "$inputDir/desktop-${PackagingPlugin.APP_VERSION}-all-linux.jar.SHA-256" },
+                "$inputDir/desktop-${PackagingPlugin.APP_VERSION}-all-linux.jar.SHA-256"
+            },
             inputBinariesProperty.map { inputDir ->
-                "$inputDir/desktop-${PackagingPlugin.APP_VERSION}-all-windows.jar.SHA-256" }
+                "$inputDir/desktop-${PackagingPlugin.APP_VERSION}-all-windows.jar.SHA-256"
+            }
         )
         val mergedShaFile: Provider<RegularFile> = project.layout.buildDirectory
             .file("packaging/release/Bisq-${PackagingPlugin.APP_VERSION}.jar.txt")
