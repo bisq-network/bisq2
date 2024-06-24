@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit
 class PackageFactory(private val jPackagePath: Path, private val jPackageConfig: JPackageConfig) {
 
     fun createPackages() {
-        val jPackageCommonArgs: List<String> = createCommonArguments(jPackageConfig.appConfig)
+        val jPackageCommonArgs: Map<String, String> = createCommonArguments(jPackageConfig.appConfig)
 
         val packageFormatConfigs = jPackageConfig.packageFormatConfigs
         val perPackageCommand = packageFormatConfigs.packageFormats
@@ -22,7 +22,10 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
                     .inheritIO()
 
             val allCommands = processBuilder.command()
-            allCommands.addAll(jPackageCommonArgs)
+            jPackageCommonArgs.forEach { (key, value) ->
+                allCommands.add(key)
+                allCommands.add(value)
+            }
 
             val jPackageTempPath = jPackageConfig.outputDirPath.parent.resolve("temp_${filetypeAndCustomCommands.first}")
             deleteFileOrDirectory(jPackageTempPath.toFile())
@@ -36,24 +39,24 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
         }
     }
 
-    private fun createCommonArguments(appConfig: JPackageAppConfig): List<String> =
-            mutableListOf(
-                    "--dest", jPackageConfig.outputDirPath.toAbsolutePath().toString(),
+    private fun createCommonArguments(appConfig: JPackageAppConfig): Map<String, String> =
+        mutableMapOf(
+            "--dest" to jPackageConfig.outputDirPath.toAbsolutePath().toString(),
 
-                    "--name", appConfig.name,
-                    "--copyright", "Copyright © 2013-${Year.now()} - The Bisq developers",
-                    "--vendor", "Bisq",
-                    "--license-file", appConfig.licenceFilePath,
-                    "--app-version", appConfig.appVersion,
+            "--name" to appConfig.name,
+            "--copyright" to "Copyright © 2013-${Year.now()} - The Bisq developers",
+            "--vendor" to "Bisq",
+            "--license-file" to appConfig.licenceFilePath,
+            "--app-version" to appConfig.appVersion,
 
-                    "--input", jPackageConfig.inputDirPath.toAbsolutePath().toString(),
-                    "--main-jar", appConfig.mainJarFileName,
+            "--input" to jPackageConfig.inputDirPath.toAbsolutePath().toString(),
+            "--main-jar" to appConfig.mainJarFileName,
 
-                    "--main-class", appConfig.mainClassName,
-                    "--java-options", appConfig.jvmArgs.joinToString(separator = " "),
+            "--main-class" to appConfig.mainClassName,
+            "--java-options" to appConfig.jvmArgs.joinToString(separator = " "),
 
-                    "--runtime-image", jPackageConfig.runtimeImageDirPath.toAbsolutePath().toString()
-            )
+            "--runtime-image" to jPackageConfig.runtimeImageDirPath.toAbsolutePath().toString()
+        )
 
     private fun deleteFileOrDirectory(dir: File) {
         val files = dir.listFiles()
