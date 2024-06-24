@@ -21,12 +21,35 @@ class ReleaseBinariesTaskFactory(private val project: Project) {
         project.tasks.register<Copy>("copyReleaseBinaries") {
             from(inputBinariesProperty)
             into(releaseDir)
+            /* Bisq 1: "Bisq-1.9.15.dmg"          -> "Bisq-1.9.15.dmg"
+                       "bisq_1.9.15-1_amd64.deb"  -> "Bisq-64bit-1.9.15.deb"
+                       "Bisq-1.9.15.exe"          -> "Bisq-64bit-1.9.15.exe"
+                       "bisq-1.9.15-1.x86_64.rpm" -> "Bisq-64bit-1.9.15.rpm"
+
+               Bisq 2: "bisq2_2.0.4-1_amd64.deb"  -> "Bisq-2.0.4.deb"
+                       "Bisq 2-2.0.4.dmg"         -> "Bisq-2.0.4.dmg"
+                       "Bisq 2-2.0.4.exe"         -> "Bisq-2.0.4.exe"
+                       "bisq2-2.0.4-1.x86_64.rpm" -> "Bisq-2.0.4.rpm" */
             rename { fileName: String ->
-                fileName.replace("Bisq 2", "Bisq") // "Bisq 2-2.0.4.exe", "Bisq 2-2.0.4.dmg"
-                    .replace("bisq2_", "Bisq-") // "bisq2_2.0.4-1_amd64.deb"
-                    .replace("bisq2-", "Bisq-") // "bisq2-2.0.4-1.x86_64.rpm"
-                    .replace("-1_amd64", "")
-                    .replace("-1.x86_64", "")
+                if (fileName.startsWith("Bisq 2") || fileName.contains("bisq2")) {
+                    fileName.replace("Bisq 2", "Bisq") // "Bisq 2-2.0.4.exe", "Bisq 2-2.0.4.dmg"
+                        .replace("bisq2_", "Bisq-") // "bisq2_2.0.4-1_amd64.deb"
+                        .replace("bisq2-", "Bisq-") // "bisq2-2.0.4-1.x86_64.rpm"
+                        .replace("-1_amd64", "")
+                        .replace("-1.x86_64", "")
+                } else {
+                    if (fileName.endsWith(".exe")) { // "Bisq-64bit-1.9.15.exe"
+                        fileName.replace("Bisq-", "Bisq-64bit-")
+                    } else if (fileName.endsWith(".rpm")) { //  Bisq-64bit-1.9.15.rpm
+                        fileName.replace("bisq-", "Bisq-64bit-")
+                            .replace("-1.x86_64.rpm", ".rpm")// "bisq-1.9.15-1.x86_64.rpm"
+                    } else if (fileName.endsWith(".deb")) { // "bisq_1.9.15-1_amd64.deb"
+                        fileName.replace("bisq_", "Bisq-64bit-")
+                            .replace("-1_amd64.deb", ".deb")//  "Bisq-64bit-1.9.15.deb"
+                    } else {
+                        fileName
+                    }
+                }
             }
         }
     }
