@@ -1,3 +1,5 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
 plugins {
     id("bisq.java-library")
     id("bisq.gradle.desktop.regtest.BisqDesktopRegtestPlugin")
@@ -55,6 +57,12 @@ tasks {
                 )
             )
         }
+    }
+
+    named<ShadowJar>("shadowJar") {
+        archiveClassifier.set(
+            System.getProperty("os.name").toLowerCase() + "-all"
+        )
     }
 
     distZip {
