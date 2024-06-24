@@ -5,7 +5,6 @@ import org.gradle.api.Project
 import org.gradle.api.file.Directory
 import org.gradle.api.file.RegularFile
 import org.gradle.api.plugins.JavaApplication
-import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Sync
 import org.gradle.api.tasks.TaskProvider
@@ -44,7 +43,7 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
         project.tasks.register<JPackageTask>("generateInstallers") {
             dependsOn(generateHashesTask)
 
-            jdkDirectory.set(getJPackageJdkDirectory())
+            jdkDirectory.set(getJPackageJdkDirectory(extension))
 
             distDirFile.set(installDistTask.map { it.destinationDir })
             mainJarFile.set(jarTask.flatMap { it.archiveFile })
@@ -60,8 +59,7 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
             packageResourcesDir.set(packageResourcesDirFile)
 
             runtimeImageDirectory.set(
-                if (getOS() == OS.MAC_OS) getJPackageJdkDirectory()
-                else getJPackageJdkDirectory()
+                getJPackageJdkDirectory(extension)
             )
 
             outputDirectory.set(project.layout.buildDirectory.dir("packaging/jpackage/packages"))
@@ -86,21 +84,23 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
         }
     }
 
-    private fun getProjectJdkDirectory(project: Project): Provider<Directory> {
-        val javaExtension = project.extensions.findByType<JavaPluginExtension>()
-        checkNotNull(javaExtension) { "Can't find JavaPluginExtension extension." }
-
-        val toolchain = javaExtension.toolchain
-        val projectLauncherProvider = javaToolchainService.launcherFor(toolchain)
-        return projectLauncherProvider.map { it.metadata.installationPath }
-    }
-
-    private fun getJPackageJdkDirectory(): Provider<Directory> {
+    private fun getJPackageJdkDirectory(extension: PackagingPluginExtension): Provider<Directory> {
         val launcherProvider = javaToolchainService.launcherFor {
-            languageVersion.set(JavaLanguageVersion.of(17))
+            languageVersion.set(getJavaLanguageVersion(extension))
             vendor.set(JvmVendorSpec.AZUL)
             implementation.set(JvmImplementation.VENDOR_SPECIFIC)
         }
         return launcherProvider.map { it.metadata.installationPath }
+    }
+
+    private fun getJavaLanguageVersion(extension: PackagingPluginExtension): Provider<JavaLanguageVersion> {
+        val javaVersion = extension.name.map { appName ->
+            if (appName == "Bisq" && getOS() == OS.MAC_OS) {
+                15
+            } else {
+                17
+            }
+        }
+        return javaVersion.map { JavaLanguageVersion.of(it) }
     }
 }
