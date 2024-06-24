@@ -2,6 +2,7 @@ package bisq.gradle.packaging
 
 import org.gradle.api.Project
 import org.gradle.api.file.Directory
+import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Copy
 import org.gradle.kotlin.dsl.register
@@ -10,13 +11,13 @@ class ReleaseBinariesTaskFactory(private val project: Project) {
     companion object {
         private const val MAINTAINER_PUBLIC_KEY_DIRECTORY: String = "maintainer_public_keys"
     }
+
     private val releaseDir: Provider<Directory> = project.layout.buildDirectory.dir("packaging/release")
+    private val inputBinariesProperty: Provider<String> = project.providers
+        .gradleProperty("bisq.release.binaries_path")
 
     fun registerCopyReleaseBinariesTask() {
-        val inputBinariesProperty: Provider<String> = project.providers
-            .gradleProperty("bisq.release.binaries_path")
         val releaseDir: Provider<Directory> = project.layout.buildDirectory.dir("packaging/release")
-
         project.tasks.register<Copy>("copyReleaseBinaries") {
             from(inputBinariesProperty)
             into(releaseDir)
@@ -48,6 +49,23 @@ class ReleaseBinariesTaskFactory(private val project: Project) {
             from(signingPublicKey)
             into(releaseDir)
             rename { "signingkey.asc" }
+        }
+    }
+
+    fun registerMergeOsSpecificJarHashesTask() {
+        val files = project.files(
+            inputBinariesProperty.map { inputDir ->
+                "$inputDir/desktop-${PackagingPlugin.APP_VERSION}-all-mac.jar.SHA-256" },
+            inputBinariesProperty.map { inputDir ->
+                "$inputDir/desktop-${PackagingPlugin.APP_VERSION}-all-linux.jar.SHA-256" },
+            inputBinariesProperty.map { inputDir ->
+                "$inputDir/desktop-${PackagingPlugin.APP_VERSION}-all-windows.jar.SHA-256" }
+        )
+        val mergedShaFile: Provider<RegularFile> = project.layout.buildDirectory
+            .file("packaging/release/Bisq-${PackagingPlugin.APP_VERSION}.jar.txt")
+        project.tasks.register<MergeOsSpecificJarHashesTask>("mergeOsSpecificJarHashes") {
+            hashFiles.setFrom(files)
+            outputFile.set(mergedShaFile)
         }
     }
 }
