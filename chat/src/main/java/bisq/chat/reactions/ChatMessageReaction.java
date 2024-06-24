@@ -78,7 +78,8 @@ public abstract class ChatMessageReaction implements DistributedData {
     @Override
     public void verify() {
         // TODO: Add CheckArgument that the reactionId exists
-        NetworkDataValidation.validateId(id);
+        // TODO: Add CheckArgument that the reactionID < the number of reactions allowed
+        // as reactions for a message
         NetworkDataValidation.validateProfileId(userProfileId);
         NetworkDataValidation.validateText(chatChannelId, 200); // For private channels we combine user profile IDs for channelId
         NetworkDataValidation.validateDate(date);

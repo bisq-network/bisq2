@@ -22,6 +22,7 @@ import bisq.chat.priv.PrivateChatChannelService;
 import bisq.chat.priv.PrivateChatMessage;
 import bisq.chat.pub.PublicChatChannel;
 import bisq.chat.pub.PublicChatMessage;
+import bisq.chat.reactions.Reaction;
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
@@ -437,6 +438,15 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                     service.leaveChannel(chatChannel.getId());
                     chatService.getChatChannelSelectionServices().get(model.getChatChannelDomain()).maybeSelectFirstChannel();
                 });
+    }
+
+    public void onReactMessage(ChatMessage chatMessage, Reaction reaction) {
+        UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
+        if (chatMessage instanceof CommonPublicChatMessage) {
+            CommonPublicChatMessage commonPublicChatMessage = (CommonPublicChatMessage) chatMessage;
+            chatService.getCommonPublicChatChannelServices().get(model.getChatChannelDomain())
+                    .publishChatMessageReaction(commonPublicChatMessage, reaction, userIdentity);
+        }
     }
 
 

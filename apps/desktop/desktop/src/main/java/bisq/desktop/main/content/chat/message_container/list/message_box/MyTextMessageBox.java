@@ -20,6 +20,7 @@ package bisq.desktop.main.content.chat.message_container.list.message_box;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
+import bisq.chat.reactions.Reaction;
 import bisq.desktop.common.Icons;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTextArea;
@@ -177,7 +178,8 @@ public final class MyTextMessageBox extends BubbleMessageBox {
             allowEditing = allowEditing && bisqEasyOfferbookMessage.getBisqEasyOffer().isEmpty();
         }
 
-        copyIcon.setOnMouseClicked(e -> onCopyMessage(chatMessage));
+        //copyIcon.setOnMouseClicked(e -> onCopyMessage(chatMessage));
+        copyIcon.setOnMouseClicked(e -> toggleReaction(Reaction.HAPPY));
         if (allowEditing) {
             editIcon.setOnMouseClicked(e -> onEditMessage());
         }
@@ -233,6 +235,10 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         message.setVisible(true);
         message.setManaged(true);
         editInputField.setOnKeyPressed(null);
+    }
+
+    private void toggleReaction(Reaction reaction) {
+        controller.onReactMessage(item.getChatMessage(), reaction);
     }
 
     @Override

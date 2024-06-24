@@ -18,6 +18,8 @@
 package bisq.chat.pub;
 
 import bisq.chat.*;
+import bisq.chat.reactions.CommonPublicChatMessageReaction;
+import bisq.chat.reactions.Reaction;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkIdWithKeyPair;
 import bisq.network.p2p.services.data.BroadcastResult;
@@ -30,6 +32,7 @@ import bisq.user.profile.UserProfile;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.KeyPair;
+import java.util.Date;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -91,6 +94,26 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
         KeyPair keyPair = userIdentity.getNetworkIdWithKeyPair().getKeyPair();
         return userIdentityService.maybePublishUserProfile(userIdentity.getUserProfile(), keyPair)
                 .thenCompose(nil -> networkService.publishAuthenticatedData(message, keyPair));
+    }
+
+    // TODO: move to separate service
+    public CompletableFuture<BroadcastResult> publishChatMessageReaction(M message,
+                                                                         Reaction reaction,
+                                                                         UserIdentity userIdentity) {
+        if (bannedUserService.isUserProfileBanned(userIdentity.getId())) {
+            return CompletableFuture.failedFuture(new RuntimeException());
+        }
+        // TODO: add reaction locally
+        // Sender adds the message at sending to avoid the delayed display if using the received message from the network.
+        //findChannel(message.getChannelId()).ifPresent(channel -> addMessage(message, channel));
+
+        CommonPublicChatMessageReaction chatMessageReaction = new CommonPublicChatMessageReaction(
+                CommonPublicChatMessageReaction.createId(message.getChannelId(), message.getId(), String.valueOf(reaction.ordinal())),
+                userIdentity.getId(), message.getChannelId(), message.getChatChannelDomain(), message.getId(),
+                reaction.ordinal(), false, System.currentTimeMillis());
+        KeyPair keyPair = userIdentity.getNetworkIdWithKeyPair().getKeyPair();
+        return userIdentityService.maybePublishUserProfile(userIdentity.getUserProfile(), keyPair)
+                .thenCompose(nil -> networkService.publishAuthenticatedData(chatMessageReaction, keyPair));
     }
 
     public CompletableFuture<BroadcastResult> publishEditedChatMessage(M originalChatMessage,
