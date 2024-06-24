@@ -90,7 +90,7 @@ abstract class JPackageTask : DefaultTask() {
 
             OS.LINUX -> {
                 val resourcesPath = packagePath.resolve("linux")
-                LinuxPackages(resourcesPath)
+                LinuxPackages(resourcesPath, appName.get())
             }
         }
     }
