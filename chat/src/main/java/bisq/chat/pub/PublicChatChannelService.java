@@ -17,7 +17,12 @@
 
 package bisq.chat.pub;
 
-import bisq.chat.*;
+import bisq.chat.ChatChannel;
+import bisq.chat.ChatChannelDomain;
+import bisq.chat.ChatChannelService;
+import bisq.chat.ChatMessage;
+import bisq.chat.Citation;
+import bisq.chat.reactions.ChatMessageReaction;
 import bisq.chat.reactions.CommonPublicChatMessageReaction;
 import bisq.chat.reactions.Reaction;
 import bisq.network.NetworkService;
@@ -32,9 +37,11 @@ import bisq.user.profile.UserProfile;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.KeyPair;
-import java.util.Date;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public abstract class PublicChatChannelService<M extends PublicChatMessage, C extends PublicChatChannel<M>, S extends PersistableStore<S>>
@@ -168,4 +175,24 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
     protected abstract M createEditedChatMessage(M originalChatMessage, String editedText, UserProfile userProfile);
 
     protected abstract void maybeAddDefaultChannels();
+
+    protected <T extends ChatMessageReaction> void processAddedReaction(T chatMessageReaction) {
+        int reactionIdx = chatMessageReaction.getReactionId();
+        checkArgument(reactionIdx >= 0 && reactionIdx < Reaction.values().length, "Invalid reaction id: " + reactionIdx);
+
+        Reaction reaction = Reaction.values()[reactionIdx];
+        String userId = chatMessageReaction.getUserProfileId();
+        findChannel(chatMessageReaction.getChatChannelId())
+                .flatMap(channel -> channel.getChatMessages().stream()
+                        .filter(message -> message.getId().equals(chatMessageReaction.getChatMessageId()))
+                        .findFirst())
+                .ifPresent(message -> {
+                    HashSet<String> userIds = message.getUserReactions().computeIfAbsent(reaction, k -> new HashSet<>());
+                    if (chatMessageReaction.isRemoved()) {
+                        userIds.remove(userId);
+                    } else {
+                        userIds.add(userId);
+                    }
+                });
+    }
 }

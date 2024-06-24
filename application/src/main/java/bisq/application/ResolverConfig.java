@@ -29,6 +29,8 @@ import bisq.chat.ChatMessage;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeMessage;
 import bisq.chat.common.CommonPublicChatMessage;
+import bisq.chat.reactions.ChatMessageReaction;
+import bisq.chat.reactions.CommonPublicChatMessageReaction;
 import bisq.chat.two_party.TwoPartyPrivateChatMessage;
 import bisq.common.proto.NetworkStorageWhiteList;
 import bisq.network.p2p.message.NetworkMessageResolver;
@@ -52,6 +54,7 @@ public class ResolverConfig {
         // Register resolvers for distributedData
         // Abstract classes
         DistributedDataResolver.addResolver("chat.ChatMessage", ChatMessage.getDistributedDataResolver());
+        DistributedDataResolver.addResolver("chat.ChatMessageReaction", ChatMessageReaction.getDistributedDataResolver());
 
         // Final classes
         DistributedDataResolver.addResolver("user.UserProfile", UserProfile.getResolver());
@@ -105,6 +108,9 @@ public class ResolverConfig {
         NetworkStorageWhiteList.add(BisqEasyReportErrorMessage.class);
         NetworkStorageWhiteList.add(BisqEasyTakeOfferRequest.class);
         NetworkStorageWhiteList.add(BisqEasyTakeOfferResponse.class);
+
+        // ChatMessageReaction subclasses
+        NetworkStorageWhiteList.add(CommonPublicChatMessageReaction.class);
 
         // From network module. As it is used as mailbox message we add it here as well.
         NetworkStorageWhiteList.add(AckMessage.class);

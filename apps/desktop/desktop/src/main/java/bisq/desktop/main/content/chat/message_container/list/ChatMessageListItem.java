@@ -23,11 +23,14 @@ import bisq.chat.ChatMessage;
 import bisq.chat.Citation;
 import bisq.chat.bisqeasy.BisqEasyOfferMessage;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
+import bisq.chat.common.CommonPublicChatMessage;
 import bisq.chat.priv.PrivateChatMessage;
 import bisq.chat.pub.PublicChatChannel;
+import bisq.chat.reactions.Reaction;
 import bisq.common.locale.LanguageRepository;
 import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
+import bisq.common.observable.collection.ObservableSet;
 import bisq.common.observable.map.HashMapObserver;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
@@ -48,6 +51,7 @@ import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
+import bisq.user.protobuf.User;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import com.google.common.base.Joiner;
@@ -98,6 +102,8 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private final MarketPriceService marketPriceService;
     private final UserIdentityService userIdentityService;
     private final BooleanProperty showHighlighted = new SimpleBooleanProperty();
+    private Optional<Pin> userReactionsPin = Optional.empty();
+    private final ObservableSet<String> happyReaction = new ObservableSet<>();
 
     public ChatMessageListItem(M chatMessage,
                                C chatChannel,
@@ -151,6 +157,49 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
 
         lastSeen = senderUserProfile.map(userProfileService::getLastSeen).orElse(-1L);
         lastSeenAsString = TimeFormatter.formatAge(lastSeen);
+
+        if (chatMessage instanceof CommonPublicChatMessage) {
+            CommonPublicChatMessage commonPublicChatMessage = (CommonPublicChatMessage) chatMessage;
+            userReactionsPin = Optional.ofNullable(commonPublicChatMessage.getUserReactions().addObserver(new HashMapObserver<>() {
+                @Override
+                public void put(Reaction key, HashSet<String> value) {
+                    if (key == Reaction.HAPPY) {
+                        value.forEach(userId -> {
+                                Optional<UserProfile> userProfile = userProfileService.findUserProfile(userId);
+                                if (userProfile.isPresent()) {
+                                    happyReaction.add(userProfile.get().getNickName());
+                                    System.out.println("happy reaction from: " + userProfile.get().getNickName());
+                                }
+                        });
+                    }
+                }
+
+                @Override
+                public void putAll(Map<? extends Reaction, ? extends HashSet<String>> map) {
+                    map.forEach((key, value) -> {
+                        if (key == Reaction.HAPPY) {
+                            value.forEach(userId -> {
+                                Optional<UserProfile> userProfile = userProfileService.findUserProfile(userId);
+                                if (userProfile.isPresent()) {
+                                    happyReaction.add(userProfile.get().getNickName());
+                                    System.out.println("happy reaction from: " + userProfile.get().getNickName());
+                                }
+                            });
+                        }
+                    });
+                }
+
+                @Override
+                public void remove(Object key) {
+
+                }
+
+                @Override
+                public void clear() {
+
+                }
+            }));
+        }
 
         mapPins.add(networkService.getMessageDeliveryStatusByMessageId().addObserver(new HashMapObserver<>() {
             @Override
@@ -259,6 +308,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     public void dispose() {
         mapPins.forEach(Pin::unbind);
         statusPins.forEach(Pin::unbind);
+        userReactionsPin.ifPresent(Pin::unbind);
     }
 
     public boolean hasTradeChatOffer() {

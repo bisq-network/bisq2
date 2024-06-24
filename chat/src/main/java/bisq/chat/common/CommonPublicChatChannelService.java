@@ -20,6 +20,7 @@ package bisq.chat.common;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.Citation;
 import bisq.chat.pub.PublicChatChannelService;
+import bisq.chat.reactions.CommonPublicChatMessageReaction;
 import bisq.common.observable.collection.ObservableArray;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
@@ -84,6 +85,8 @@ public final class CommonPublicChatChannelService extends PublicChatChannelServi
         DistributedData distributedData = authenticatedData.getDistributedData();
         if (distributedData instanceof CommonPublicChatMessage) {
             processAddedMessage((CommonPublicChatMessage) distributedData);
+        } else if (distributedData instanceof CommonPublicChatMessageReaction) {
+            processAddedReaction((CommonPublicChatMessageReaction) distributedData);
         }
     }
 

@@ -19,16 +19,17 @@ package bisq.chat.reactions;
 
 import bisq.chat.ChatChannelDomain;
 import bisq.common.encoding.Hex;
+import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
+import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-@ToString
 @EqualsAndHashCode
 public abstract class ChatMessageReaction implements DistributedData {
     public static String createId(String channelId, String messageId, String reactionId) {
@@ -40,7 +41,7 @@ public abstract class ChatMessageReaction implements DistributedData {
     private final String chatChannelId;
     private final ChatChannelDomain chatChannelDomain;
     private final String chatMessageId;
-    private final long reactionId;
+    private final int reactionId;
     private final boolean isRemoved;
     private final long date;
 
@@ -49,7 +50,7 @@ public abstract class ChatMessageReaction implements DistributedData {
                                String chatChannelId,
                                ChatChannelDomain chatChannelDomain,
                                String chatMessageId,
-                               long reactionId,
+                               int reactionId,
                                boolean isRemoved,
                                long date) {
         this.id = id;
@@ -102,6 +103,50 @@ public abstract class ChatMessageReaction implements DistributedData {
                 .setDate(date);
     }
 
-    // PUBLIC API
-    //getReactionsForMessage(String messageId, String channelId)
+    public static ChatMessageReaction fromProto(bisq.chat.protobuf.ChatMessageReaction proto) {
+        switch (proto.getMessageCase()) {
+            // TODO: Implement reactions for the remaining messages
+            case COMMONPUBLICCHATMESSAGEREACTION: {
+                return CommonPublicChatMessageReaction.fromProto(proto);
+            }
+            case MESSAGE_NOT_SET: {
+                throw new UnresolvableProtobufMessageException(proto);
+            }
+        }
+        throw new UnresolvableProtobufMessageException(proto);
+    }
+
+    public static ProtoResolver<DistributedData> getDistributedDataResolver() {
+        return any -> {
+            try {
+                bisq.chat.protobuf.ChatMessageReaction proto = any.unpack(bisq.chat.protobuf.ChatMessageReaction.class);
+                switch (proto.getMessageCase()) {
+                    // TODO: Implement reactions for the remaining messages
+                    case COMMONPUBLICCHATMESSAGEREACTION: {
+                        return CommonPublicChatMessageReaction.fromProto(proto);
+                    }
+                    case MESSAGE_NOT_SET: {
+                        throw new UnresolvableProtobufMessageException(proto);
+                    }
+                }
+                throw new UnresolvableProtobufMessageException(proto);
+            } catch (InvalidProtocolBufferException e) {
+                throw new UnresolvableProtobufMessageException(e);
+            }
+        };
+    }
+
+    @Override
+    public String toString() {
+        return "ChatMessageReaction{" +
+                "\r\n                    id='" + id + '\'' +
+                ",\r\n                    userProfileId=" + userProfileId +
+                ",\r\n                    chatChannelId=" + chatChannelId +
+                ",\r\n                    chatChannelDomain=" + chatChannelDomain +
+                ",\r\n                    chatMessageId='" + chatMessageId + '\'' +
+                ",\r\n                    reactionId='" + reactionId + '\'' +
+                ",\r\n                    isRemoved='" + isRemoved + '\'' +
+                ",\r\n                    date=" + date +
+                "\r\n}";
+    }
 }

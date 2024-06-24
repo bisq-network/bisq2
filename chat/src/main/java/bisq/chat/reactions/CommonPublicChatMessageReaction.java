@@ -37,7 +37,7 @@ public class CommonPublicChatMessageReaction extends ChatMessageReaction {
                                            String chatChannelId,
                                            ChatChannelDomain chatChannelDomain,
                                            String chatMessageId,
-                                           long reactionId,
+                                           int reactionId,
                                            boolean isRemoved,
                                            long date) {
         super(id, userProfileId, chatChannelId, chatChannelDomain, chatMessageId, reactionId, isRemoved, date);
@@ -53,10 +53,13 @@ public class CommonPublicChatMessageReaction extends ChatMessageReaction {
     @Override
     public bisq.chat.protobuf.ChatMessageReaction.Builder getBuilder(boolean serializeForHash) {
         return getChatMessageReactionBuilder(serializeForHash)
-                .setCommonPublicChatMessage(toCommonPublicChatMessageProto(serializeForHash));
+                .setCommonPublicChatMessageReaction(toCommonPublicChatMessageReactionProto(serializeForHash));
     }
 
     public static CommonPublicChatMessageReaction fromProto(bisq.chat.protobuf.ChatMessageReaction baseProto) {
+//        System.out.println("From proto");
+//        System.out.println(baseProto);
+
         return new CommonPublicChatMessageReaction(
                 baseProto.getId(),
                 baseProto.getUserProfileId(),
@@ -68,11 +71,11 @@ public class CommonPublicChatMessageReaction extends ChatMessageReaction {
                 baseProto.getDate());
     }
 
-    private bisq.chat.protobuf.CommonPublicChatMessage toCommonPublicChatMessageProto(boolean serializeForHash) {
-        return resolveBuilder(getCommonPublicChatMessageBuilder(serializeForHash), serializeForHash).build();
+    private bisq.chat.protobuf.CommonPublicChatMessageReaction toCommonPublicChatMessageReactionProto(boolean serializeForHash) {
+        return resolveBuilder(getCommonPublicChatMessageReactionBuilder(serializeForHash), serializeForHash).build();
     }
 
-    private bisq.chat.protobuf.CommonPublicChatMessage.Builder getCommonPublicChatMessageBuilder(boolean serializeForHash) {
-        return bisq.chat.protobuf.CommonPublicChatMessage.newBuilder();
+    private bisq.chat.protobuf.CommonPublicChatMessageReaction.Builder getCommonPublicChatMessageReactionBuilder(boolean serializeForHash) {
+        return bisq.chat.protobuf.CommonPublicChatMessageReaction.newBuilder();
     }
 }
