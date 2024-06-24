@@ -7,6 +7,9 @@ import org.gradle.api.tasks.Copy
 import org.gradle.kotlin.dsl.register
 
 class ReleaseBinariesTaskFactory(private val project: Project) {
+    companion object {
+        private const val MAINTAINER_PUBLIC_KEY_DIRECTORY: String = "maintainer_public_keys"
+    }
     private val releaseDir: Provider<Directory> = project.layout.buildDirectory.dir("packaging/release")
 
     fun registerCopyReleaseBinariesTask() {
@@ -28,14 +31,23 @@ class ReleaseBinariesTaskFactory(private val project: Project) {
     }
 
     fun registerCopyMaintainerPublicKeysTask() {
-        val publicKeyDirectory = "maintainer_public_keys"
         val maintainerPublicKeys = project.layout.files(
-            "$publicKeyDirectory/387C8307.asc",
-            "$publicKeyDirectory/E222AA02.asc"
+            "$MAINTAINER_PUBLIC_KEY_DIRECTORY/387C8307.asc",
+            "$MAINTAINER_PUBLIC_KEY_DIRECTORY/E222AA02.asc"
         )
         project.tasks.register<Copy>("copyMaintainerPublicKeys") {
             from(maintainerPublicKeys)
             into(releaseDir)
+        }
+    }
+
+    fun registerCopySigningPublicKeyTask() {
+        val signingPublicKey = project.layout.projectDirectory
+            .file("$MAINTAINER_PUBLIC_KEY_DIRECTORY/E222AA02.asc")
+        project.tasks.register<Copy>("copySigningPublicKey") {
+            from(signingPublicKey)
+            into(releaseDir)
+            rename { "signingkey.asc" }
         }
     }
 }
