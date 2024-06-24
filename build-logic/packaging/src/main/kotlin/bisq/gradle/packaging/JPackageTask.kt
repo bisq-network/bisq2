@@ -33,7 +33,7 @@ abstract class JPackageTask : DefaultTask() {
     abstract val jvmArgs: SetProperty<String>
 
     @get:InputFile
-    abstract val licenseFile: RegularFileProperty
+    abstract val licenseFile: Property<File>
 
     @get:Input
     abstract val appName: Property<String>
@@ -65,7 +65,7 @@ abstract class JPackageTask : DefaultTask() {
                     mainJarFileName = mainJarFile.asFile.get().name,
                     mainClassName = mainClassName.get(),
                     jvmArgs = jvmArgs.get(),
-                    licenceFilePath = licenseFile.asFile.get().absolutePath
+                    licenceFilePath = licenseFile.get().absolutePath
                 ),
 
                 packageFormatConfigs = getPackageFormatConfigs()

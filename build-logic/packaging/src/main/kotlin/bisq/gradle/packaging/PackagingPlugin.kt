@@ -51,7 +51,13 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
             mainClassName.set(javaApplicationExtension.mainClass)
             jvmArgs.set(javaApplicationExtension.applicationDefaultJvmArgs)
 
-            licenseFile.set(File(project.projectDir.parentFile.parentFile.parentFile, "LICENSE"))
+            val licenseFileProvider: Provider<File> = extension.name.map { name ->
+                val licenseDir = if (name == "Bisq") project.projectDir.parentFile
+                else project.projectDir.parentFile.parentFile.parentFile
+                return@map File(licenseDir, "LICENSE")
+            }
+            licenseFile.set(licenseFileProvider)
+
             appName.set(extension.name)
             appVersion.set(extension.version)
 
