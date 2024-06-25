@@ -23,6 +23,7 @@ import bisq.chat.Citation;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.reactions.Reaction;
 import bisq.desktop.common.Icons;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqMenuItem;
@@ -39,6 +40,7 @@ import javafx.scene.Cursor;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
@@ -53,7 +55,7 @@ public abstract class BubbleMessageBox extends MessageBox {
     protected static final double CHAT_MESSAGE_BOX_MAX_WIDTH = 630;
     protected static final double OFFER_MESSAGE_USER_ICON_SIZE = 70;
 
-    private final Subscription showHighlightedPin;
+    private final Subscription showHighlightedPin, reactionsPin;
     protected final ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item;
     protected final ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list;
     protected final ChatMessagesListController controller;
@@ -61,11 +63,12 @@ public abstract class BubbleMessageBox extends MessageBox {
     protected final HBox actionsHBox = new HBox(10);
     protected final VBox quotedMessageVBox, contentVBox;
     protected final DrawerMenu reactMenu;
+    protected final Pane addedReactions = new Pane();
     protected Label supportedLanguages, userName, dateTime, message;
     protected HBox userNameAndDateHBox, messageBgHBox, messageHBox;
     protected VBox userProfileIconVbox;
     protected DropdownMenu moreActionsMenu;
-    protected BisqMenuItem happyReaction, laughReaction;
+    protected BisqMenuItem happyReactionMenu, laughReactionMenu;
 
     public BubbleMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
                             ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
@@ -102,6 +105,12 @@ public abstract class BubbleMessageBox extends MessageBox {
                 messageBgHBox.getStyleClass().add(HIGHLIGHTED_MESSAGE_BG_STYLE_CLASS);
             } else {
                 messageBgHBox.getStyleClass().remove(HIGHLIGHTED_MESSAGE_BG_STYLE_CLASS);
+            }
+        });
+
+        reactionsPin = EasyBind.subscribe(item.getReactionsNode(), node -> {
+            if (node != null) {
+                UIThread.run(() -> addedReactions.getChildren().setAll(node));
             }
         });
     }
@@ -157,10 +166,11 @@ public abstract class BubbleMessageBox extends MessageBox {
     public void cleanup() {
         setOnMouseEntered(null);
         setOnMouseExited(null);
-        happyReaction.setOnAction(null);
-        laughReaction.setOnAction(null);
+        happyReactionMenu.setOnAction(null);
+        laughReactionMenu.setOnAction(null);
 
         showHighlightedPin.unsubscribe();
+        reactionsPin.unsubscribe();
     }
 
     private Label createAndGetSupportedLanguagesLabel() {
@@ -228,7 +238,7 @@ public abstract class BubbleMessageBox extends MessageBox {
     }
 
     private HBox createAndGetMessageBox() {
-        HBox hBox = new HBox();
+        HBox hBox = new HBox(5);
         VBox.setMargin(hBox, new Insets(10, 0, 0, 0));
         return hBox;
     }
@@ -250,13 +260,13 @@ public abstract class BubbleMessageBox extends MessageBox {
 
     private DrawerMenu createAndGetReactMenu() {
         DrawerMenu drawerMenu = new DrawerMenu("react-grey", "react-green");
-        happyReaction = new BisqMenuItem("happy-grey", "happy-white");
-        happyReaction.useIconOnly();
-        happyReaction.setOnAction(e -> toggleReaction(Reaction.HAPPY));
-        laughReaction = new BisqMenuItem("laugh-grey", "laugh-white");
-        laughReaction.useIconOnly();
-        laughReaction.setOnAction(e -> toggleReaction(Reaction.LAUGH));
-        drawerMenu.addItems(happyReaction, laughReaction);
+        happyReactionMenu = new BisqMenuItem("happy-grey", "happy-white");
+        happyReactionMenu.useIconOnly();
+        happyReactionMenu.setOnAction(e -> toggleReaction(Reaction.HAPPY));
+        laughReactionMenu = new BisqMenuItem("laugh-grey", "laugh-white");
+        laughReactionMenu.useIconOnly();
+        laughReactionMenu.setOnAction(e -> toggleReaction(Reaction.LAUGH));
+        drawerMenu.addItems(happyReactionMenu, laughReactionMenu);
         return drawerMenu;
     }
 

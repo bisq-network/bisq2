@@ -30,10 +30,10 @@ import bisq.chat.reactions.Reaction;
 import bisq.common.locale.LanguageRepository;
 import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
-import bisq.common.observable.collection.ObservableSet;
 import bisq.common.observable.map.HashMapObserver;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.main.content.bisq_easy.BisqEasyServiceUtil;
 import bisq.desktop.main.content.components.ReputationScoreDisplay;
 import bisq.i18n.Res;
@@ -51,19 +51,33 @@ import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
-import bisq.user.protobuf.User;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import com.google.common.base.Joiner;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
+import javafx.scene.control.Label;
+import javafx.scene.layout.HBox;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.text.DateFormat;
-import java.util.*;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -103,7 +117,8 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private final UserIdentityService userIdentityService;
     private final BooleanProperty showHighlighted = new SimpleBooleanProperty();
     private Optional<Pin> userReactionsPin = Optional.empty();
-    private final ObservableSet<String> happyReaction = new ObservableSet<>();
+    private final Set<Reaction> addedReactions = new HashSet<>();
+    private final SimpleObjectProperty<Node> reactionsNode = new SimpleObjectProperty<>();
 
     public ChatMessageListItem(M chatMessage,
                                C chatChannel,
@@ -158,41 +173,58 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         lastSeen = senderUserProfile.map(userProfileService::getLastSeen).orElse(-1L);
         lastSeenAsString = TimeFormatter.formatAge(lastSeen);
 
+        // TODO: Release all the listeners when destroying this object
+
         if (chatMessage instanceof CommonPublicChatMessage) {
             CommonPublicChatMessage commonPublicChatMessage = (CommonPublicChatMessage) chatMessage;
             userReactionsPin = Optional.ofNullable(commonPublicChatMessage.getUserReactions().addObserver(new HashMapObserver<>() {
                 @Override
                 public void put(Reaction key, HashSet<String> value) {
+                    addedReactions.add(key);
+                    setupDisplayReactionsNode();
+
+                    // TODO: Add tooltip with user nickname, label with count, etc
+                    AtomicInteger count = new AtomicInteger();
                     value.forEach(userId -> {
-                            Optional<UserProfile> userProfile = userProfileService.findUserProfile(userId);
-                            if (userProfile.isPresent()) {
-                                happyReaction.add(userProfile.get().getNickName());
-                                System.out.println(key + " reaction from: " + userProfile.get().getNickName());
-                            }
+                        Optional<UserProfile> userProfile = userProfileService.findUserProfile(userId);
+                        if (userProfile.isPresent()) {
+                            count.incrementAndGet();
+                            System.out.println(key + " reaction from: " + userProfile.get().getNickName());
+                        }
                     });
+                    System.out.println(key + " count: " + count.get());
                 }
 
                 @Override
                 public void putAll(Map<? extends Reaction, ? extends HashSet<String>> map) {
                     map.forEach((key, value) -> {
+                        addedReactions.add(key);
+                        setupDisplayReactionsNode();
+
+                        // TODO: Add tooltip with user nickname, label with count, etc
+                        AtomicInteger count = new AtomicInteger();
                         value.forEach(userId -> {
                             Optional<UserProfile> userProfile = userProfileService.findUserProfile(userId);
                             if (userProfile.isPresent()) {
-                                happyReaction.add(userProfile.get().getNickName());
+                                count.incrementAndGet();
                                 System.out.println(key + " reaction from: " + userProfile.get().getNickName());
                             }
                         });
+                        System.out.println(key + " count: " + count.get());
                     });
                 }
 
                 @Override
                 public void remove(Object key) {
-
+                    Reaction reaction = (Reaction) key;
+                    addedReactions.remove(reaction);
+                    setupDisplayReactionsNode();
                 }
 
                 @Override
                 public void clear() {
-
+                    addedReactions.clear();
+                    setupDisplayReactionsNode();
                 }
             }));
         }
@@ -384,5 +416,16 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                                 .map(toStringFunction)
                                 .collect(Collectors.toList())))
                 .orElse("");
+    }
+
+    private void setupDisplayReactionsNode() {
+        HBox reactions = new HBox(5);
+        reactions.setAlignment(Pos.BOTTOM_LEFT);
+        addedReactions.stream().sorted().forEach(reaction -> {
+            Label label = new Label();
+            label.setGraphic(ImageUtil.getImageViewById(reaction.toString().toLowerCase() + "-green"));
+            reactions.getChildren().add(label);
+        });
+        reactionsNode.set(reactions);
     }
 }
