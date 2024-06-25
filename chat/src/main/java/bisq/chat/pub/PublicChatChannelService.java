@@ -209,6 +209,7 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
                         .filter(message -> message.getId().equals(chatMessageReaction.getChatMessageId()))
                         .findFirst())
                 .ifPresent(message -> {
+                    // TODO: Improve logic
                     if (message.getUserReactions().containsKey(reaction)) {
                         if (chatMessageReaction.isRemoved()) {
                             message.getUserReactions().get(reaction).remove(userId);
@@ -239,11 +240,12 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
                         .filter(message -> message.getId().equals(chatMessageReaction.getChatMessageId()))
                         .findFirst())
                 .ifPresent(message -> {
+                    // TODO: Review logic
                     if (message.getUserReactions().containsKey(reaction)) {
                         message.getUserReactions().get(reaction).remove(userId);
-                        if (message.getUserReactions().get(reaction).isEmpty()) {
-                            message.getUserReactions().remove(reaction);
-                        }
+//                        if (message.getUserReactions().get(reaction).isEmpty()) {
+//                            message.getUserReactions().remove(reaction);
+//                        }
                     }
                     message.getChatMessageReactions().remove(chatMessageReaction.getId());
                 });

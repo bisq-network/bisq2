@@ -929,16 +929,12 @@
     -fx-image: url("/images/chat/message-actions/react/react-white.png");
 }
 
-#laugh-green {
+#react-laugh {
+    -fx-image: url("/images/chat/message-actions/laugh/laugh-green.png");
+}
+
+#laugh {
     -fx-image: url("/images/chat/reactions/laugh/laugh-green.png");
-}
-
-#laugh-grey {
-    -fx-image: url("/images/chat/reactions/laugh/laugh-grey.png");
-}
-
-#laugh-white {
-    -fx-image: url("/images/chat/reactions/laugh/laugh-white.png");
 }
 
 #react-happy {
