@@ -941,16 +941,12 @@
     -fx-image: url("/images/chat/reactions/laugh/laugh-white.png");
 }
 
-#happy-green {
+#react-happy {
+    -fx-image: url("/images/chat/message-actions/happy/happy-green.png");
+}
+
+#happy {
     -fx-image: url("/images/chat/reactions/happy/happy-green.png");
-}
-
-#happy-grey {
-    -fx-image: url("/images/chat/reactions/happy/happy-grey.png");
-}
-
-#happy-white {
-    -fx-image: url("/images/chat/reactions/happy/happy-white.png");
 }
 
 

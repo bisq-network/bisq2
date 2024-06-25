@@ -259,7 +259,7 @@ public abstract class BubbleMessageBox extends MessageBox {
 
     private DrawerMenu createAndGetReactMenu() {
         DrawerMenu drawerMenu = new DrawerMenu("react-grey", "react-green");
-        happyReactionMenu = new BisqMenuItem("happy-grey", "happy-white");
+        happyReactionMenu = new BisqMenuItem("react-happy", "react-happy");
         happyReactionMenu.useIconOnly();
         happyReactionMenu.setOnAction(e -> toggleReaction(Reaction.HAPPY));
         laughReactionMenu = new BisqMenuItem("laugh-grey", "laugh-white");

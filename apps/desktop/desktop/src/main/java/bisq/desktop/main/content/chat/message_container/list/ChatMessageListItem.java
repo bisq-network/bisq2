@@ -427,7 +427,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         reactions.setAlignment(Pos.BOTTOM_LEFT);
         addedReactions.stream().sorted().forEach(reaction -> {
             Label label = new Label();
-            label.setGraphic(ImageUtil.getImageViewById(reaction.toString().toLowerCase() + "-green"));
+            label.setGraphic(ImageUtil.getImageViewById(reaction.toString().toLowerCase()));
             reactions.getChildren().add(label);
         });
         reactionsNode.set(reactions);
