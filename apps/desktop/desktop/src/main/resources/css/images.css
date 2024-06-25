@@ -945,6 +945,14 @@
     -fx-image: url("/images/chat/reactions/happy/happy-green.png");
 }
 
+#react-heart {
+    -fx-image: url("/images/chat/message-actions/heart/heart-green.png");
+}
+
+#heart {
+    -fx-image: url("/images/chat/reactions/heart/heart-green.png");
+}
+
 
 /* ------------------------------------------------------------------------------------ */
 /* Markets */

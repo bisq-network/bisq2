@@ -67,7 +67,7 @@ public abstract class BubbleMessageBox extends MessageBox {
     protected HBox userNameAndDateHBox, messageBgHBox, messageHBox;
     protected VBox userProfileIconVbox;
     protected DropdownMenu moreActionsMenu;
-    protected BisqMenuItem happyReactionMenu, laughReactionMenu;
+    protected BisqMenuItem happyReactionMenu, laughReactionMenu, heartReactionMenu;
 
     public BubbleMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
                             ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
@@ -167,6 +167,7 @@ public abstract class BubbleMessageBox extends MessageBox {
         setOnMouseExited(null);
         happyReactionMenu.setOnAction(null);
         laughReactionMenu.setOnAction(null);
+        heartReactionMenu.setOnAction(null);
 
         showHighlightedPin.unsubscribe();
         reactionsPin.unsubscribe();
@@ -265,7 +266,10 @@ public abstract class BubbleMessageBox extends MessageBox {
         laughReactionMenu = new BisqMenuItem("react-laugh", "react-laugh");
         laughReactionMenu.useIconOnly();
         laughReactionMenu.setOnAction(e -> toggleReaction(Reaction.LAUGH));
-        drawerMenu.addItems(happyReactionMenu, laughReactionMenu);
+        heartReactionMenu = new BisqMenuItem("react-heart", "react-heart");
+        heartReactionMenu.useIconOnly();
+        heartReactionMenu.setOnAction(e -> toggleReaction(Reaction.HEART));
+        drawerMenu.addItems(happyReactionMenu, laughReactionMenu, heartReactionMenu);
         return drawerMenu;
     }
 
