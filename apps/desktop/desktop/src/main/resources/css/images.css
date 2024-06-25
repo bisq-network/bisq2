@@ -918,15 +918,15 @@
 }
 
 #react-green {
-    -fx-image: url("/images/chat/reactions/react/react-green.png");
+    -fx-image: url("/images/chat/message-actions/react/react-green.png");
 }
 
 #react-grey {
-    -fx-image: url("/images/chat/reactions/react/react-grey.png");
+    -fx-image: url("/images/chat/message-actions/react/react-grey.png");
 }
 
 #react-white {
-    -fx-image: url("/images/chat/reactions/react/react-white.png");
+    -fx-image: url("/images/chat/message-actions/react/react-white.png");
 }
 
 #laugh-green {
