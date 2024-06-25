@@ -969,6 +969,14 @@
     -fx-image: url("/images/chat/reactions/thumbs-up/thumbs-up-green.png");
 }
 
+#react-party {
+    -fx-image: url("/images/chat/message-actions/party/party-green.png");
+}
+
+#party {
+    -fx-image: url("/images/chat/reactions/party/party-green.png");
+}
+
 
 /* ------------------------------------------------------------------------------------ */
 /* Markets */
