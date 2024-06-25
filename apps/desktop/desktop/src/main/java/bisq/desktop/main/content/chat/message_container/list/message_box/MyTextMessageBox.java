@@ -20,7 +20,6 @@ package bisq.desktop.main.content.chat.message_container.list.message_box;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
-import bisq.chat.reactions.Reaction;
 import bisq.desktop.common.Icons;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTextArea;
@@ -76,7 +75,8 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         userProfileIcon.setSize(30);
         userProfileIconVbox.setAlignment(Pos.TOP_LEFT);
         HBox.setMargin(deleteIcon, new Insets(0, 10, 0, 0));
-        actionsHBox.getChildren().setAll(Spacer.fillHBox(), editIcon, copyIcon, deleteIcon);
+        // TODO: Remove reactMenu from MyText, not prod ready yet
+        actionsHBox.getChildren().setAll(Spacer.fillHBox(), editIcon, copyIcon, reactMenu, deleteIcon);
         HBox.setMargin(messageVBox, new Insets(0, -15, 0, 0));
         HBox.setMargin(userProfileIconVbox, new Insets(7.5, 0, -5, 5));
         HBox.setMargin(editInputField, new Insets(6, -10, -25, 0));
@@ -145,6 +145,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         deleteIcon = getIconWithToolTip(AwesomeIcon.REMOVE_SIGN, Res.get("action.delete"));
         HBox.setMargin(editIcon, new Insets(1, 0, -1, 0));
         HBox.setMargin(copyIcon, new Insets(1, 0, -1, 0));
+        HBox.setMargin(reactMenu, new Insets(2, 0, -2, 0));
         HBox.setMargin(deleteIcon, new Insets(1, 0, -1, 0));
         actionsHBox.setVisible(false);
     }
@@ -178,8 +179,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
             allowEditing = allowEditing && bisqEasyOfferbookMessage.getBisqEasyOffer().isEmpty();
         }
 
-        //copyIcon.setOnMouseClicked(e -> onCopyMessage(chatMessage));
-        copyIcon.setOnMouseClicked(e -> toggleReaction(Reaction.HAPPY));
+        copyIcon.setOnMouseClicked(e -> onCopyMessage(chatMessage));
         if (allowEditing) {
             editIcon.setOnMouseClicked(e -> onEditMessage());
         }
@@ -235,10 +235,6 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         message.setVisible(true);
         message.setManaged(true);
         editInputField.setOnKeyPressed(null);
-    }
-
-    private void toggleReaction(Reaction reaction) {
-        controller.onReactMessage(item.getChatMessage(), reaction);
     }
 
     @Override

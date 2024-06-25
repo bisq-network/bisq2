@@ -163,29 +163,25 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
             userReactionsPin = Optional.ofNullable(commonPublicChatMessage.getUserReactions().addObserver(new HashMapObserver<>() {
                 @Override
                 public void put(Reaction key, HashSet<String> value) {
-                    if (key == Reaction.HAPPY) {
-                        value.forEach(userId -> {
-                                Optional<UserProfile> userProfile = userProfileService.findUserProfile(userId);
-                                if (userProfile.isPresent()) {
-                                    happyReaction.add(userProfile.get().getNickName());
-                                    System.out.println("happy reaction from: " + userProfile.get().getNickName());
-                                }
-                        });
-                    }
+                    value.forEach(userId -> {
+                            Optional<UserProfile> userProfile = userProfileService.findUserProfile(userId);
+                            if (userProfile.isPresent()) {
+                                happyReaction.add(userProfile.get().getNickName());
+                                System.out.println(key + " reaction from: " + userProfile.get().getNickName());
+                            }
+                    });
                 }
 
                 @Override
                 public void putAll(Map<? extends Reaction, ? extends HashSet<String>> map) {
                     map.forEach((key, value) -> {
-                        if (key == Reaction.HAPPY) {
-                            value.forEach(userId -> {
-                                Optional<UserProfile> userProfile = userProfileService.findUserProfile(userId);
-                                if (userProfile.isPresent()) {
-                                    happyReaction.add(userProfile.get().getNickName());
-                                    System.out.println("happy reaction from: " + userProfile.get().getNickName());
-                                }
-                            });
-                        }
+                        value.forEach(userId -> {
+                            Optional<UserProfile> userProfile = userProfileService.findUserProfile(userId);
+                            if (userProfile.isPresent()) {
+                                happyReaction.add(userProfile.get().getNickName());
+                                System.out.println(key + " reaction from: " + userProfile.get().getNickName());
+                            }
+                        });
                     });
                 }
 

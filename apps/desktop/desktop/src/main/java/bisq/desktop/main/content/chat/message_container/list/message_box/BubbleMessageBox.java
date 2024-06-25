@@ -21,6 +21,7 @@ import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.chat.Citation;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
+import bisq.chat.reactions.Reaction;
 import bisq.desktop.common.Icons;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.utils.ImageUtil;
@@ -156,6 +157,8 @@ public abstract class BubbleMessageBox extends MessageBox {
     public void cleanup() {
         setOnMouseEntered(null);
         setOnMouseExited(null);
+        happyReaction.setOnAction(null);
+        laughReaction.setOnAction(null);
 
         showHighlightedPin.unsubscribe();
     }
@@ -249,9 +252,15 @@ public abstract class BubbleMessageBox extends MessageBox {
         DrawerMenu drawerMenu = new DrawerMenu("react-grey", "react-green");
         happyReaction = new BisqMenuItem("happy-grey", "happy-white");
         happyReaction.useIconOnly();
+        happyReaction.setOnAction(e -> toggleReaction(Reaction.HAPPY));
         laughReaction = new BisqMenuItem("laugh-grey", "laugh-white");
         laughReaction.useIconOnly();
+        laughReaction.setOnAction(e -> toggleReaction(Reaction.LAUGH));
         drawerMenu.addItems(happyReaction, laughReaction);
         return drawerMenu;
+    }
+
+    private void toggleReaction(Reaction reaction) {
+        controller.onReactMessage(item.getChatMessage(), reaction);
     }
 }

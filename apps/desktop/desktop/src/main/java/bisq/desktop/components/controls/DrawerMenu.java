@@ -34,7 +34,7 @@ public class DrawerMenu extends HBox {
         itemsHBox.setManaged(false);
         itemsHBox.setSpacing(5);
         itemsHBox.setAlignment(Pos.CENTER);
-        itemsHBox.setPadding(new Insets(0, 5, 0, 0));
+        itemsHBox.setPadding(new Insets(0, 0, 0, 5));
 
         getChildren().addAll(menuButton, itemsHBox);
         getStyleClass().add("drawer-menu");
