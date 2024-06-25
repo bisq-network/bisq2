@@ -67,7 +67,7 @@ public abstract class BubbleMessageBox extends MessageBox {
     protected HBox userNameAndDateHBox, messageBgHBox, messageHBox;
     protected VBox userProfileIconVbox;
     protected DropdownMenu moreActionsMenu;
-    protected BisqMenuItem happyReactionMenu, laughReactionMenu, heartReactionMenu;
+    protected BisqMenuItem happyReactionMenu, laughReactionMenu, heartReactionMenu, thumbsDownReactionMenu;
 
     public BubbleMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
                             ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
@@ -168,6 +168,7 @@ public abstract class BubbleMessageBox extends MessageBox {
         happyReactionMenu.setOnAction(null);
         laughReactionMenu.setOnAction(null);
         heartReactionMenu.setOnAction(null);
+        thumbsDownReactionMenu.setOnAction(null);
 
         showHighlightedPin.unsubscribe();
         reactionsPin.unsubscribe();
@@ -269,7 +270,10 @@ public abstract class BubbleMessageBox extends MessageBox {
         heartReactionMenu = new BisqMenuItem("react-heart", "react-heart");
         heartReactionMenu.useIconOnly();
         heartReactionMenu.setOnAction(e -> toggleReaction(Reaction.HEART));
-        drawerMenu.addItems(happyReactionMenu, laughReactionMenu, heartReactionMenu);
+        thumbsDownReactionMenu = new BisqMenuItem("react-thumbsdown", "react-thumbsdown");
+        thumbsDownReactionMenu.useIconOnly();
+        thumbsDownReactionMenu.setOnAction(e -> toggleReaction(Reaction.THUMBS_DOWN));
+        drawerMenu.addItems(happyReactionMenu, laughReactionMenu, heartReactionMenu, thumbsDownReactionMenu);
         return drawerMenu;
     }
 

@@ -953,6 +953,14 @@
     -fx-image: url("/images/chat/reactions/heart/heart-green.png");
 }
 
+#react-thumbsdown {
+    -fx-image: url("/images/chat/message-actions/thumbs-down/thumbs-down-green.png");
+}
+
+#thumbsdown {
+    -fx-image: url("/images/chat/reactions/thumbs-down/thumbs-down-green.png");
+}
+
 
 /* ------------------------------------------------------------------------------------ */
 /* Markets */
