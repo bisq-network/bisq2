@@ -103,26 +103,6 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
                 .thenCompose(nil -> networkService.publishAuthenticatedData(message, keyPair));
     }
 
-    // TODO: move to separate service
-    public CompletableFuture<BroadcastResult> publishChatMessageReaction(M message,
-                                                                         Reaction reaction,
-                                                                         UserIdentity userIdentity) {
-        if (bannedUserService.isUserProfileBanned(userIdentity.getId())) {
-            return CompletableFuture.failedFuture(new RuntimeException());
-        }
-        // TODO: add reaction locally
-        // Sender adds the message at sending to avoid the delayed display if using the received message from the network.
-        //findChannel(message.getChannelId()).ifPresent(channel -> addMessage(message, channel));
-
-        CommonPublicChatMessageReaction chatMessageReaction = new CommonPublicChatMessageReaction(
-                CommonPublicChatMessageReaction.createId(message.getChannelId(), message.getId(), String.valueOf(reaction.ordinal())),
-                userIdentity.getId(), message.getChannelId(), message.getChatChannelDomain(), message.getId(),
-                reaction.ordinal(), false, System.currentTimeMillis());
-        KeyPair keyPair = userIdentity.getNetworkIdWithKeyPair().getKeyPair();
-        return userIdentityService.maybePublishUserProfile(userIdentity.getUserProfile(), keyPair)
-                .thenCompose(nil -> networkService.publishAuthenticatedData(chatMessageReaction, keyPair));
-    }
-
     public CompletableFuture<BroadcastResult> publishEditedChatMessage(M originalChatMessage,
                                                                        String editedText,
                                                                        UserIdentity userIdentity) {
@@ -136,6 +116,48 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
 
     public CompletableFuture<BroadcastResult> deleteChatMessage(M chatMessage, NetworkIdWithKeyPair networkIdWithKeyPair) {
         return networkService.removeAuthenticatedData(chatMessage, networkIdWithKeyPair.getKeyPair());
+    }
+
+    public CompletableFuture<BroadcastResult> publishChatMessageReaction(M message,
+                                                                         Reaction reaction,
+                                                                         UserIdentity userIdentity) {
+        if (bannedUserService.isUserProfileBanned(userIdentity.getId())) {
+            return CompletableFuture.failedFuture(new RuntimeException());
+        }
+
+        // TODO: add reaction locally
+        // Sender adds the message at sending to avoid the delayed display if using the received message from the network.
+        //findChannel(message.getChannelId()).ifPresent(channel -> addMessage(message, channel));
+
+        CommonPublicChatMessageReaction chatMessageReaction = createChatMessageReaction(message, reaction, userIdentity);
+        KeyPair keyPair = userIdentity.getNetworkIdWithKeyPair().getKeyPair();
+        return userIdentityService.maybePublishUserProfile(userIdentity.getUserProfile(), keyPair)
+                .thenCompose(nil -> networkService.publishAuthenticatedData(chatMessageReaction, keyPair));
+    }
+
+    public <R extends ChatMessageReaction> CompletableFuture<BroadcastResult> publishChatMessageReaction(R chatMessageReaction,
+                                                                                                         UserIdentity userIdentity) {
+        if (bannedUserService.isUserProfileBanned(userIdentity.getId())) {
+            return CompletableFuture.failedFuture(new RuntimeException());
+        }
+
+        // TODO: add reaction locally
+        // Sender adds the message at sending to avoid the delayed display if using the received message from the network.
+        //findChannel(message.getChannelId()).ifPresent(channel -> addMessage(message, channel));
+
+        KeyPair keyPair = userIdentity.getNetworkIdWithKeyPair().getKeyPair();
+        return userIdentityService.maybePublishUserProfile(userIdentity.getUserProfile(), keyPair)
+                .thenCompose(nil -> networkService.publishAuthenticatedData(chatMessageReaction, keyPair));
+    }
+
+    public <R extends ChatMessageReaction> CompletableFuture<BroadcastResult> publishEditedChatMessageReaction(R originalChatMessage,
+                                                                                                               UserIdentity userIdentity) {
+        KeyPair ownerKeyPair = userIdentity.getNetworkIdWithKeyPair().getKeyPair();
+        return networkService.removeAuthenticatedData(originalChatMessage, ownerKeyPair)
+                .thenCompose(result -> {
+                    CommonPublicChatMessageReaction chatMessageReaction = createEditedChatMessageReaction(originalChatMessage, userIdentity);
+                    return publishChatMessageReaction(chatMessageReaction, userIdentity);
+                });
     }
 
     @Override
@@ -176,7 +198,7 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
 
     protected abstract void maybeAddDefaultChannels();
 
-    protected <T extends ChatMessageReaction> void processAddedReaction(T chatMessageReaction) {
+    protected <R extends ChatMessageReaction> void processAddedReaction(R chatMessageReaction) {
         int reactionIdx = chatMessageReaction.getReactionId();
         checkArgument(reactionIdx >= 0 && reactionIdx < Reaction.values().length, "Invalid reaction id: " + reactionIdx);
 
@@ -187,12 +209,70 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
                         .filter(message -> message.getId().equals(chatMessageReaction.getChatMessageId()))
                         .findFirst())
                 .ifPresent(message -> {
-                    HashSet<String> userIds = message.getUserReactions().computeIfAbsent(reaction, k -> new HashSet<>());
-                    if (chatMessageReaction.isRemoved()) {
-                        userIds.remove(userId);
+                    if (message.getUserReactions().containsKey(reaction)) {
+                        if (chatMessageReaction.isRemoved()) {
+                            message.getUserReactions().get(reaction).remove(userId);
+                            if (message.getUserReactions().get(reaction).isEmpty()) {
+                                message.getUserReactions().remove(reaction);
+                            }
+                        } else {
+                            message.getUserReactions().get(reaction).add(userId);
+                        }
                     } else {
+                        HashSet<String> userIds = new HashSet<>();
                         userIds.add(userId);
+                        message.getUserReactions().put(reaction, userIds);
                     }
+
+                    message.getChatMessageReactions().put(chatMessageReaction.getId(), chatMessageReaction);
                 });
+    }
+
+    protected <R extends ChatMessageReaction> void processRemovedMessage(R chatMessageReaction) {
+        int reactionIdx = chatMessageReaction.getReactionId();
+        checkArgument(reactionIdx >= 0 && reactionIdx < Reaction.values().length, "Invalid reaction id: " + reactionIdx);
+
+        Reaction reaction = Reaction.values()[reactionIdx];
+        String userId = chatMessageReaction.getUserProfileId();
+        findChannel(chatMessageReaction.getChatChannelId())
+                .flatMap(channel -> channel.getChatMessages().stream()
+                        .filter(message -> message.getId().equals(chatMessageReaction.getChatMessageId()))
+                        .findFirst())
+                .ifPresent(message -> {
+                    if (message.getUserReactions().containsKey(reaction)) {
+                        message.getUserReactions().get(reaction).remove(userId);
+                        if (message.getUserReactions().get(reaction).isEmpty()) {
+                            message.getUserReactions().remove(reaction);
+                        }
+                    }
+                    message.getChatMessageReactions().remove(chatMessageReaction.getId());
+                });
+    }
+
+    // TODO: Make this a class generic when adding more message types (for now we only have one).
+    private CommonPublicChatMessageReaction createChatMessageReaction(M message, Reaction reaction, UserIdentity userIdentity) {
+        return new CommonPublicChatMessageReaction(
+                CommonPublicChatMessageReaction.createId(message.getChannelId(),
+                        message.getId(), reaction.ordinal(), userIdentity.getId()),
+                userIdentity.getId(),
+                message.getChannelId(),
+                message.getChatChannelDomain(),
+                message.getId(),
+                reaction.ordinal(),
+                false,
+                System.currentTimeMillis());
+    };
+
+    // TODO: Make this a class generic when adding more message types (for now we only have one).
+    private <R extends ChatMessageReaction> CommonPublicChatMessageReaction createEditedChatMessageReaction(R originalChatMessageReaction,
+                                                                              UserIdentity userIdentity) {
+        return new CommonPublicChatMessageReaction(originalChatMessageReaction.getId(),
+                userIdentity.getId(),
+                originalChatMessageReaction.getChatChannelId(),
+                originalChatMessageReaction.getChatChannelDomain(),
+                originalChatMessageReaction.getChatMessageId(),
+                originalChatMessageReaction.getReactionId(),
+                !originalChatMessageReaction.isRemoved(),
+                originalChatMessageReaction.getDate());
     }
 }

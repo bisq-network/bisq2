@@ -40,7 +40,6 @@ import javafx.scene.Cursor;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
@@ -61,9 +60,9 @@ public abstract class BubbleMessageBox extends MessageBox {
     protected final ChatMessagesListController controller;
     protected final UserProfileIcon userProfileIcon = new UserProfileIcon(60);
     protected final HBox actionsHBox = new HBox(10);
+    protected final HBox addedReactions = new HBox();
     protected final VBox quotedMessageVBox, contentVBox;
     protected final DrawerMenu reactMenu;
-    protected final Pane addedReactions = new Pane();
     protected Label supportedLanguages, userName, dateTime, message;
     protected HBox userNameAndDateHBox, messageBgHBox, messageHBox;
     protected VBox userProfileIconVbox;

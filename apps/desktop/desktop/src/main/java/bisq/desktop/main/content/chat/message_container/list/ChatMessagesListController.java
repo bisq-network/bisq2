@@ -22,6 +22,7 @@ import bisq.chat.priv.PrivateChatChannelService;
 import bisq.chat.priv.PrivateChatMessage;
 import bisq.chat.pub.PublicChatChannel;
 import bisq.chat.pub.PublicChatMessage;
+import bisq.chat.reactions.ChatMessageReaction;
 import bisq.chat.reactions.Reaction;
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.common.observable.Pin;
@@ -444,8 +445,19 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
         UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
         if (chatMessage instanceof CommonPublicChatMessage) {
             CommonPublicChatMessage commonPublicChatMessage = (CommonPublicChatMessage) chatMessage;
-            chatService.getCommonPublicChatChannelServices().get(model.getChatChannelDomain())
-                    .publishChatMessageReaction(commonPublicChatMessage, reaction, userIdentity);
+            Optional<ChatMessageReaction> chatMessageReaction = Optional.ofNullable(commonPublicChatMessage.getChatMessageReactions().get(
+                    ChatMessageReaction.createId(commonPublicChatMessage.getChannelId(),
+                            commonPublicChatMessage.getId(), reaction.ordinal(), userIdentity.getId())
+            ));
+
+            if (chatMessageReaction.isPresent()) {
+                // user has already reacted to this message with this reaction, therefore toggling reaction state
+                chatService.getCommonPublicChatChannelServices().get(model.getChatChannelDomain())
+                        .publishEditedChatMessageReaction(chatMessageReaction.get(), userIdentity);
+            } else {
+                chatService.getCommonPublicChatChannelServices().get(model.getChatChannelDomain())
+                        .publishChatMessageReaction(commonPublicChatMessage, reaction, userIdentity);
+            }
         }
     }
 

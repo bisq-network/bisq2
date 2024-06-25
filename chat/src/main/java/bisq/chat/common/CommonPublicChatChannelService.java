@@ -77,6 +77,8 @@ public final class CommonPublicChatChannelService extends PublicChatChannelServi
         DistributedData distributedData = authenticatedData.getDistributedData();
         if (distributedData instanceof CommonPublicChatMessage) {
             processRemovedMessage((CommonPublicChatMessage) distributedData);
+        } else if (distributedData instanceof CommonPublicChatMessageReaction) {
+            processRemovedMessage((CommonPublicChatMessageReaction) distributedData);
         }
     }
 

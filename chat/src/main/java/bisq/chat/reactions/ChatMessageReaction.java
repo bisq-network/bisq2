@@ -28,12 +28,14 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Slf4j
 @Getter
 @EqualsAndHashCode
 public abstract class ChatMessageReaction implements DistributedData {
-    public static String createId(String channelId, String messageId, String reactionId) {
-        return channelId + "." + messageId + "." + reactionId;
+    public static String createId(String channelId, String messageId, int reactionId, String userProfileId) {
+        return String.format("%s.%s.%s.%s", channelId, messageId, reactionId, userProfileId);
     }
 
     private final String id;
@@ -78,9 +80,8 @@ public abstract class ChatMessageReaction implements DistributedData {
 
     @Override
     public void verify() {
-        // TODO: Add CheckArgument that the reactionId exists
-        // TODO: Add CheckArgument that the reactionID < the number of reactions allowed
-        // as reactions for a message
+        checkArgument(reactionId >= 0 && reactionId < Reaction.values().length, "Invalid reaction id: " + reactionId);
+
         NetworkDataValidation.validateProfileId(userProfileId);
         NetworkDataValidation.validateText(chatChannelId, 200); // For private channels we combine user profile IDs for channelId
         NetworkDataValidation.validateDate(date);

@@ -58,7 +58,7 @@ public class CommonPublicChatMessageReaction extends ChatMessageReaction {
 
     public static CommonPublicChatMessageReaction fromProto(bisq.chat.protobuf.ChatMessageReaction baseProto) {
 //        System.out.println("From proto");
-//        System.out.println(baseProto);
+//        System.out.println(baseProto.toString());
 
         return new CommonPublicChatMessageReaction(
                 baseProto.getId(),

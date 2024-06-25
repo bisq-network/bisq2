@@ -197,6 +197,10 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
 
                 @Override
                 public void putAll(Map<? extends Reaction, ? extends HashSet<String>> map) {
+                    if (map.isEmpty()) {
+                        return;
+                    }
+
                     map.forEach((key, value) -> {
                         addedReactions.add(key);
                         setupDisplayReactionsNode();
