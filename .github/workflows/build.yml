@@ -81,3 +81,4 @@ jobs:
           uses: transifex/cli-action@v2
           with:
             token: ${{ secrets.TX_TOKEN }}
+            args: push -s
