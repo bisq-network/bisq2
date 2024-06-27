@@ -5,7 +5,6 @@ import org.gradle.api.Project
 import org.gradle.api.file.Directory
 import org.gradle.api.file.RegularFile
 import org.gradle.api.plugins.JavaApplication
-import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Sync
 import org.gradle.api.tasks.TaskProvider
@@ -14,6 +13,7 @@ import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.gradle.jvm.toolchain.JavaToolchainService
 import org.gradle.jvm.toolchain.JvmImplementation
 import org.gradle.jvm.toolchain.JvmVendorSpec
+import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.findByType
 import org.gradle.kotlin.dsl.register
 import java.io.File
@@ -22,16 +22,17 @@ import javax.inject.Inject
 class PackagingPlugin @Inject constructor(private val javaToolchainService: JavaToolchainService) : Plugin<Project> {
 
     companion object {
-        const val APP_VERSION = "2.0.4"
         const val OUTPUT_DIR_PATH = "packaging/jpackage/packages"
     }
 
     override fun apply(project: Project) {
+        val extension = project.extensions.create<PackagingPluginExtension>("packaging")
+
         val installDistTask: TaskProvider<Sync> = project.tasks.named("installDist", Sync::class.java)
 
         val generateHashesTask = project.tasks.register<Sha256HashTask>("generateHashes") {
             inputDirFile.set(installDistTask.map { File(it.destinationDir, "lib") })
-            outputFile.set(getHashFileForOs(project))
+            outputFile.set(getHashFileForOs(project, extension))
         }
 
         val jarTask: TaskProvider<Jar> = project.tasks.named("jar", Jar::class.java)
@@ -42,7 +43,7 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
         project.tasks.register<JPackageTask>("generateInstallers") {
             dependsOn(generateHashesTask)
 
-            jdkDirectory.set(getJPackageJdkDirectory())
+            jdkDirectory.set(getJPackageJdkDirectory(extension))
 
             distDirFile.set(installDistTask.map { it.destinationDir })
             mainJarFile.set(jarTask.flatMap { it.archiveFile })
@@ -50,46 +51,62 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
             mainClassName.set(javaApplicationExtension.mainClass)
             jvmArgs.set(javaApplicationExtension.applicationDefaultJvmArgs)
 
-            licenseFile.set(File(project.projectDir.parentFile.parentFile.parentFile, "LICENSE"))
-            appVersion.set(APP_VERSION)
+            val licenseFileProvider: Provider<File> = extension.name.map { name ->
+                val licenseDir = if (name == "Bisq") project.projectDir.parentFile
+                else project.projectDir.parentFile.parentFile.parentFile
+                return@map File(licenseDir, "LICENSE")
+            }
+            licenseFile.set(licenseFileProvider)
+
+            appName.set(extension.name)
+            appVersion.set(extension.version)
 
             val packageResourcesDirFile = File(project.projectDir, "package")
             packageResourcesDir.set(packageResourcesDirFile)
 
             runtimeImageDirectory.set(
-                if (getOS() == OS.MAC_OS) getJPackageJdkDirectory()
-                else getJPackageJdkDirectory()
+                getJPackageJdkDirectory(extension)
             )
 
             outputDirectory.set(project.layout.buildDirectory.dir("packaging/jpackage/packages"))
         }
+
+        val releaseBinariesTaskFactory = ReleaseBinariesTaskFactory(project)
+        releaseBinariesTaskFactory.registerCopyReleaseBinariesTask()
+        releaseBinariesTaskFactory.registerCopyMaintainerPublicKeysTask()
+        releaseBinariesTaskFactory.registerCopySigningPublicKeyTask()
+        releaseBinariesTaskFactory.registerMergeOsSpecificJarHashesTask(extension.version)
     }
 
-    private fun getHashFileForOs(project: Project): Provider<RegularFile> {
+    private fun getHashFileForOs(project: Project, extension: PackagingPluginExtension): Provider<RegularFile> {
         val osName = when (getOS()) {
             OS.LINUX -> "linux"
             OS.MAC_OS -> "mac"
             OS.WINDOWS -> "win"
         }
 
-        return project.layout.buildDirectory.file("$OUTPUT_DIR_PATH/desktop-$APP_VERSION-all-$osName.jar.SHA-256")
+        return extension.version.flatMap { version ->
+            project.layout.buildDirectory.file("$OUTPUT_DIR_PATH/desktop-$version-all-$osName.jar.SHA-256")
+        }
     }
 
-    private fun getProjectJdkDirectory(project: Project): Provider<Directory> {
-        val javaExtension = project.extensions.findByType<JavaPluginExtension>()
-        checkNotNull(javaExtension) { "Can't find JavaPluginExtension extension." }
-
-        val toolchain = javaExtension.toolchain
-        val projectLauncherProvider = javaToolchainService.launcherFor(toolchain)
-        return projectLauncherProvider.map { it.metadata.installationPath }
-    }
-
-    private fun getJPackageJdkDirectory(): Provider<Directory> {
+    private fun getJPackageJdkDirectory(extension: PackagingPluginExtension): Provider<Directory> {
         val launcherProvider = javaToolchainService.launcherFor {
-            languageVersion.set(JavaLanguageVersion.of(17))
+            languageVersion.set(getJavaLanguageVersion(extension))
             vendor.set(JvmVendorSpec.AZUL)
             implementation.set(JvmImplementation.VENDOR_SPECIFIC)
         }
         return launcherProvider.map { it.metadata.installationPath }
+    }
+
+    private fun getJavaLanguageVersion(extension: PackagingPluginExtension): Provider<JavaLanguageVersion> {
+        val javaVersion = extension.name.map { appName ->
+            if (appName == "Bisq" && getOS() == OS.MAC_OS) {
+                15
+            } else {
+                17
+            }
+        }
+        return javaVersion.map { JavaLanguageVersion.of(it) }
     }
 }

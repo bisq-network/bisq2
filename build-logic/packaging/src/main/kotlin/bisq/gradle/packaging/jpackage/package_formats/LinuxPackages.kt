@@ -2,7 +2,7 @@ package bisq.gradle.packaging.jpackage.package_formats
 
 import java.nio.file.Path
 
-class LinuxPackages(private val resourcesPath: Path) : JPackagePackageFormatConfigs {
+class LinuxPackages(private val resourcesPath: Path, private val appName: String) : JPackagePackageFormatConfigs {
     override val packageFormats = setOf(PackageFormat.DEB, PackageFormat.RPM)
 
     override fun createArgumentsForJPackage(packageFormat: PackageFormat): List<String> {
@@ -11,9 +11,7 @@ class LinuxPackages(private val resourcesPath: Path) : JPackagePackageFormatConf
                 resourcesPath.resolve("icon.png")
                         .toAbsolutePath().toString(),
 
-                "--description", "A decentralized bitcoin exchange network.",
-
-                "--linux-package-name", "bisq2",
+                "--linux-package-name", appName.toLowerCase().replace(" ", ""),
                 "--linux-app-release", "1",
 
                 "--linux-menu-group", "Network",

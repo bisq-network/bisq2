@@ -10,6 +10,11 @@ application {
     mainClass.set("bisq.desktop_app_launcher.DesktopAppLauncher")
 }
 
+packaging {
+    name.set("Bisq 2")
+    version.set("2.0.4")
+}
+
 javafx {
     version = "17.0.1"
     modules = listOf("javafx.controls", "javafx.media")

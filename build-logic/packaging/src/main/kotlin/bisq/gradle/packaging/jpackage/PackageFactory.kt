@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit
 class PackageFactory(private val jPackagePath: Path, private val jPackageConfig: JPackageConfig) {
 
     fun createPackages() {
-        val jPackageCommonArgs: List<String> = createCommonArguments(jPackageConfig.appConfig)
+        val jPackageCommonArgs: Map<String, String> = createCommonArguments(jPackageConfig.appConfig)
 
         val packageFormatConfigs = jPackageConfig.packageFormatConfigs
         val perPackageCommand = packageFormatConfigs.packageFormats
@@ -21,8 +21,20 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
             val processBuilder = ProcessBuilder(absoluteBinaryPath)
                     .inheritIO()
 
+            var commonArgs: Map<String, String> = jPackageCommonArgs
+
+            val osSpecificOverrideArgs = getOsSpecificOverrideArgs(filetypeAndCustomCommands.first)
+            if (osSpecificOverrideArgs.isNotEmpty()) {
+                val mutableMap: MutableMap<String, String> = jPackageCommonArgs.toMutableMap()
+                mutableMap.putAll(osSpecificOverrideArgs)
+                commonArgs = mutableMap
+            }
+
             val allCommands = processBuilder.command()
-            allCommands.addAll(jPackageCommonArgs)
+            commonArgs.forEach { (key, value) ->
+                allCommands.add(key)
+                allCommands.add(value)
+            }
 
             val jPackageTempPath = jPackageConfig.outputDirPath.parent.resolve("temp_${filetypeAndCustomCommands.first}")
             deleteFileOrDirectory(jPackageTempPath.toFile())
@@ -33,27 +45,41 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
 
             val process: Process = processBuilder.start()
             process.waitFor(15, TimeUnit.MINUTES)
+
+            val exitCode = process.exitValue()
+            if (exitCode != 0) {
+                throw IllegalStateException("JPackage failed with exit code $exitCode.")
+            }
         }
     }
 
-    private fun createCommonArguments(appConfig: JPackageAppConfig): List<String> =
-            mutableListOf(
-                    "--dest", jPackageConfig.outputDirPath.toAbsolutePath().toString(),
+    private fun createCommonArguments(appConfig: JPackageAppConfig): Map<String, String> =
+        mutableMapOf(
+            "--dest" to jPackageConfig.outputDirPath.toAbsolutePath().toString(),
 
-                    "--name", "Bisq 2",
-                    "--copyright", "Copyright © 2013-${Year.now()} - The Bisq developers",
-                    "--vendor", "Bisq",
-                    "--license-file", appConfig.licenceFilePath,
-                    "--app-version", appConfig.appVersion,
+            "--name" to appConfig.name,
+            "--description" to "A decentralized bitcoin exchange network.",
+            "--copyright" to "Copyright © 2013-${Year.now()} - The Bisq developers",
+            "--vendor" to "Bisq",
+            "--license-file" to appConfig.licenceFilePath,
+            "--app-version" to appConfig.appVersion,
 
-                    "--input", jPackageConfig.inputDirPath.toAbsolutePath().toString(),
-                    "--main-jar", appConfig.mainJarFileName,
+            "--input" to jPackageConfig.inputDirPath.toAbsolutePath().toString(),
+            "--main-jar" to appConfig.mainJarFileName,
 
-                    "--main-class", appConfig.mainClassName,
-                    "--java-options", appConfig.jvmArgs.joinToString(separator = " "),
+            "--main-class" to appConfig.mainClassName,
+            "--java-options" to appConfig.jvmArgs.joinToString(separator = " "),
 
-                    "--runtime-image", jPackageConfig.runtimeImageDirPath.toAbsolutePath().toString()
-            )
+            "--runtime-image" to jPackageConfig.runtimeImageDirPath.toAbsolutePath().toString()
+        )
+
+    private fun getOsSpecificOverrideArgs(fileType: String): Map<String, String> =
+        if (jPackageConfig.appConfig.name == "Bisq" && fileType == "exe") {
+            // Needed for Windows OS notification support
+            mutableMapOf("--description" to "Bisq 2")
+        } else {
+            emptyMap()
+        }
 
     private fun deleteFileOrDirectory(dir: File) {
         val files = dir.listFiles()
