@@ -18,6 +18,7 @@
 package bisq.desktop.components.overlay;
 
 import bisq.application.ShutDownHandler;
+import bisq.common.application.ApplicationVersion;
 import bisq.common.locale.LanguageRepository;
 import bisq.common.util.OsUtils;
 import bisq.common.util.StringUtils;
@@ -27,11 +28,11 @@ import bisq.desktop.common.Icons;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.ClipboardUtil;
+import bisq.desktop.common.utils.FileChooserUtil;
 import bisq.desktop.components.containers.BisqGridPane;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.BusyAnimation;
-import bisq.desktop.components.controls.MaterialTextField;
 import bisq.i18n.Res;
 import bisq.settings.DontShowAgainService;
 import bisq.settings.SettingsService;
@@ -54,10 +55,7 @@ import javafx.geometry.NodeOrientation;
 import javafx.geometry.Pos;
 import javafx.scene.PerspectiveCamera;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Hyperlink;
-import javafx.scene.control.Label;
+import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
@@ -220,12 +218,13 @@ public abstract class Overlay<T extends Overlay<T>> {
             }
 
             addContent();
+            addButtons();
+            addDontShowAgainCheckBox(showAgainChecked);
+
             if (showReportErrorButtons) {
                 addReportErrorButtons();
             }
 
-            addButtons();
-            addDontShowAgainCheckBox(showAgainChecked);
             applyStyles();
             onShow();
         }
@@ -412,16 +411,29 @@ public abstract class Overlay<T extends Overlay<T>> {
     }
 
     public T error(Throwable throwable) {
-        return error(StringUtils.truncate(Throwables.getStackTraceAsString(throwable), 800));
+        return error(Throwables.getStackTraceAsString(throwable));
     }
 
     public T error(String message) {
         type = Type.ERROR;
         showReportErrorButtons();
         width = 800;
-        if (headline == null)
-            this.headline = Res.get("popup.headline.error");
-        processMessage(message);
+        if (headline == null) {
+            this.headline = Res.get("popup.reportBug");
+        }
+
+        processMessage(Res.get("popup.reportError"));
+
+        String version = ApplicationVersion.getVersion().getVersionAsString();
+        String osInfo = OsUtils.getOsInfo();
+        String errorReport = Res.get("popup.reportBug.report", version, osInfo, message);
+        TextArea errorReportTextArea = new TextArea(errorReport);
+        errorReportTextArea.setPrefWidth(width);
+        errorReportTextArea.setWrapText(true);
+        errorReportTextArea.getStyleClass().add("error-log");
+
+        content(errorReportTextArea);
+
         return cast();
     }
 
@@ -931,81 +943,50 @@ public abstract class Overlay<T extends Overlay<T>> {
     }
 
     private void addReportErrorButtons() {
-        messageLabel.setText(Res.get("popup.reportError", truncatedMessage));
-
         Button logButton = new Button(Res.get("popup.reportError.log"));
-        GridPane.setMargin(logButton, new Insets(20, 0, 0, 0));
-        GridPane.setHalignment(logButton, HPos.LEFT);
-        GridPane.setRowIndex(logButton, gridPane.getRowCount());
-        gridPane.getChildren().add(logButton);
         logButton.setOnAction(event -> OsUtils.open(new File(baseDir, "bisq.log")));
 
-        Label zipLogLabel = new Label();
-        zipLogLabel.setText(Res.get("popup.reportError.zipCurrentDirectory", baseDir + "/bisq2-logs.zip"));
         Button zipLogButton = new Button(Res.get("popup.reportError.zipLogs"));
-        Button zipChangeDirectoryButton = new Button(Res.get("popup.reportError.zipChangeDirectory"));
-        String[] zipDirectory = new String[1];
-        zipDirectory[0] = baseDir;
-        MaterialTextField zipTextField = new MaterialTextField(Res.get("popup.reportError.zipNewDirectory"), zipDirectory[0] + "/bisq2-logs.zip");
-
         zipLogButton.setOnAction(event -> {
-            try {
-                Files.createDirectories(Paths.get(zipDirectory[0]));
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            URI uri = URI.create("jar:file:" + Paths.get(zipDirectory[0],"bisq2-logs.zip").toUri().getRawPath());
-            Map<String, String> env = Map.of("create", "true");
-            List<Path> logPaths = Arrays.asList(
-                    Path.of(baseDir).resolve("bisq.log"),
-                    Path.of(baseDir + "/tor/").resolve("debug.log"));
-            try (FileSystem zipfs = FileSystems.newFileSystem(uri, env)) {
-                logPaths.forEach(logPath -> {
-                    if (logPath.toFile().isFile()) {
-                        try {
-                            Files.copy(logPath, zipfs.getPath(logPath.toFile().getName()), StandardCopyOption.REPLACE_EXISTING);
-                            zipLogLabel.setText(Res.get("popup.reportError.zippedTo", zipDirectory[0] + "/bisq2-logs.zip"));
-                            OsUtils.open(zipDirectory[0]);
+            FileChooserUtil.chooseDirectory(getRootContainer().getScene(), baseDir, "")
+                    .ifPresent(directory -> {
+                        String zipDirectory = directory.getAbsolutePath();
+                        URI uri = URI.create("jar:file:" + Paths.get(zipDirectory, "bisq2-logs.zip").toUri().getRawPath());
+                        Map<String, String> env = Map.of("create", "true");
+                        List<Path> logPaths = Arrays.asList(
+                                Path.of(baseDir).resolve("bisq.log"),
+                                Path.of(baseDir + "/tor/").resolve("debug.log"));
+                        try (FileSystem zipFileSystem = FileSystems.newFileSystem(uri, env)) {
+                            logPaths.forEach(logPath -> {
+                                if (logPath.toFile().isFile()) {
+                                    try {
+                                        Files.copy(logPath, zipFileSystem.getPath(logPath.toFile().getName()), StandardCopyOption.REPLACE_EXISTING);
+                                    } catch (IOException e) {
+                                        throw new RuntimeException(e);
+                                    }
+                                }
+                            });
+                            OsUtils.open(zipDirectory);
                         } catch (IOException e) {
                             throw new RuntimeException(e);
                         }
-                    }
-                });
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }});
-
-        HBox zipLogHbox = new HBox(10);
-        zipLogHbox.setAlignment(Pos.CENTER_LEFT);
-
-        zipChangeDirectoryButton.setOnAction(event -> {
-            if (zipLogHbox.getChildren().contains(zipLogLabel)) {
-                zipLogHbox.getChildren().remove(zipLogLabel);
-                zipLogHbox.getChildren().add(1, zipTextField);
-            } else {
-                zipDirectory[0] = zipTextField.getText();
-                zipLogLabel.setText(Res.get("popup.reportError.zipCurrentDirectory", zipDirectory[0] + "/bisq2-logs.zip"));
-                zipLogHbox.getChildren().remove(zipTextField);
-                zipLogHbox.getChildren().add(zipLogLabel);
-            }
+                    });
         });
-
-        zipLogHbox.getChildren().addAll(zipLogButton, zipChangeDirectoryButton, zipLogLabel);
-        GridPane.setHalignment(zipLogHbox, HPos.LEFT);
-        GridPane.setRowIndex(zipLogHbox, gridPane.getRowCount());
-        gridPane.getChildren().add(zipLogHbox);
 
         Button gitHubButton = new Button(Res.get("popup.reportError.gitHub"));
-        GridPane.setHalignment(gitHubButton, HPos.LEFT);
-        GridPane.setRowIndex(gitHubButton, gridPane.getRowCount());
-        gridPane.getChildren().add(gitHubButton);
         gitHubButton.setOnAction(event -> {
-            if (message != null) {
-                ClipboardUtil.copyToClipboard(message);
+            if (content instanceof TextArea) {
+                TextArea errorReportTextArea = (TextArea) content;
+                ClipboardUtil.copyToClipboard(errorReportTextArea.getText());
+                Browser.open("https://github.com/bisq-network/bisq2/issues");
             }
-            Browser.open("https://github.com/bisq-network/bisq2/issues");
             hide();
         });
+
+        buttonBox.getChildren().add(0, Spacer.fillHBox());
+        buttonBox.getChildren().add(0, gitHubButton);
+        buttonBox.getChildren().add(0, zipLogButton);
+        buttonBox.getChildren().add(0, logButton);
     }
 
     protected void addBusyAnimation() {

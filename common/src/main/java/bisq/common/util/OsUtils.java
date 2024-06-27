@@ -101,6 +101,10 @@ public class OsUtils {
         return System.getProperty("os.version");
     }
 
+    public static String getOsInfo() {
+        return getOSName() + " (" + getOSArchitecture() + ") v." + getVersionString();
+    }
+
     public static Version getVersion() {
         return new Version(getVersionString());
     }
