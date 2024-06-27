@@ -38,9 +38,8 @@ public class CommonPublicChatMessageReaction extends ChatMessageReaction {
                                            ChatChannelDomain chatChannelDomain,
                                            String chatMessageId,
                                            int reactionId,
-                                           boolean isRemoved,
                                            long date) {
-        super(id, userProfileId, chatChannelId, chatChannelDomain, chatMessageId, reactionId, isRemoved, date);
+        super(id, userProfileId, chatChannelId, chatChannelDomain, chatMessageId, reactionId, date);
 
         verify();
     }
@@ -57,9 +56,6 @@ public class CommonPublicChatMessageReaction extends ChatMessageReaction {
     }
 
     public static CommonPublicChatMessageReaction fromProto(bisq.chat.protobuf.ChatMessageReaction baseProto) {
-//        System.out.println("From proto");
-//        System.out.println(baseProto.toString());
-
         return new CommonPublicChatMessageReaction(
                 baseProto.getId(),
                 baseProto.getUserProfileId(),
@@ -67,7 +63,6 @@ public class CommonPublicChatMessageReaction extends ChatMessageReaction {
                 ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
                 baseProto.getChatMessageId(),
                 baseProto.getReactionId(),
-                baseProto.getIsRemoved(),
                 baseProto.getDate());
     }
 

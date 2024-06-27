@@ -179,7 +179,6 @@ message ChatMessageReaction {
   ChatChannelDomain chatChannelDomain = 4;
   string chatMessageId = 5;
   sint32 reactionId = 6;
-  bool isRemoved = 7;
   sint64 date = 8;
   oneof message {
     CommonPublicChatMessageReaction commonPublicChatMessageReaction = 20;

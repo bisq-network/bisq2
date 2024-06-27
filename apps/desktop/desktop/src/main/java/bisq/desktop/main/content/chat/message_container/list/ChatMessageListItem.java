@@ -26,10 +26,12 @@ import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.common.CommonPublicChatMessage;
 import bisq.chat.priv.PrivateChatMessage;
 import bisq.chat.pub.PublicChatChannel;
+import bisq.chat.reactions.ChatMessageReaction;
 import bisq.chat.reactions.Reaction;
 import bisq.common.locale.LanguageRepository;
 import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
+import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.observable.map.HashMapObserver;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
@@ -73,17 +75,18 @@ import javax.annotation.Nullable;
 import java.text.DateFormat;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static bisq.chat.ChatMessageType.LEAVE;
 import static bisq.chat.ChatMessageType.PROTOCOL_LOG_MESSAGE;
 import static bisq.desktop.main.content.chat.message_container.ChatMessageContainerView.EDITED_POST_FIX;
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
@@ -117,7 +120,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private final UserIdentityService userIdentityService;
     private final BooleanProperty showHighlighted = new SimpleBooleanProperty();
     private Optional<Pin> userReactionsPin = Optional.empty();
-    private final Set<Reaction> addedReactions = new HashSet<>();
+    private final HashMap<Reaction, Set<UserProfile>> userReactions = new HashMap<>();
     private final SimpleObjectProperty<Node> reactionsNode = new SimpleObjectProperty<>();
 
     public ChatMessageListItem(M chatMessage,
@@ -177,58 +180,53 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
 
         if (chatMessage instanceof CommonPublicChatMessage) {
             CommonPublicChatMessage commonPublicChatMessage = (CommonPublicChatMessage) chatMessage;
-            userReactionsPin = Optional.ofNullable(commonPublicChatMessage.getUserReactions().addObserver(new HashMapObserver<>() {
+            userReactionsPin = Optional.ofNullable(commonPublicChatMessage.getChatMessageReactions().addObserver(new CollectionObserver<ChatMessageReaction>() {
                 @Override
-                public void put(Reaction key, HashSet<String> value) {
-                    addedReactions.add(key);
-                    setupDisplayReactionsNode();
+                public void add(ChatMessageReaction element) {
+                    int reactionIdx = element.getReactionId();
+                    checkArgument(reactionIdx >= 0 && reactionIdx < Reaction.values().length, "Invalid reaction id: " + reactionIdx);
 
                     // TODO: Add tooltip with user nickname, label with count, etc
-                    AtomicInteger count = new AtomicInteger();
-                    value.forEach(userId -> {
-                        Optional<UserProfile> userProfile = userProfileService.findUserProfile(userId);
-                        if (userProfile.isPresent()) {
-                            count.incrementAndGet();
-                            System.out.println(key + " reaction from: " + userProfile.get().getNickName());
+                    Reaction reaction = Reaction.values()[reactionIdx];
+                    Optional<UserProfile> userProfile = userProfileService.findUserProfile(element.getUserProfileId());
+                    userProfile.ifPresent(profile -> {
+                        if (!userReactions.containsKey(reaction)) {
+                            userReactions.put(reaction, new HashSet<>());
                         }
+                        userReactions.get(reaction).add(profile);
+                        log.info("{} reacted with {}", profile.getNickName(), reaction);
                     });
-                    System.out.println(key + " count: " + count.get());
-                }
 
-                @Override
-                public void putAll(Map<? extends Reaction, ? extends HashSet<String>> map) {
-                    if (map.isEmpty()) {
-                        return;
-                    }
-
-                    map.forEach((key, value) -> {
-                        addedReactions.add(key);
-                        setupDisplayReactionsNode();
-
-                        // TODO: Add tooltip with user nickname, label with count, etc
-                        AtomicInteger count = new AtomicInteger();
-                        value.forEach(userId -> {
-                            Optional<UserProfile> userProfile = userProfileService.findUserProfile(userId);
-                            if (userProfile.isPresent()) {
-                                count.incrementAndGet();
-                                System.out.println(key + " reaction from: " + userProfile.get().getNickName());
-                            }
-                        });
-                        System.out.println(key + " count: " + count.get());
-                    });
-                }
-
-                @Override
-                public void remove(Object key) {
-                    Reaction reaction = (Reaction) key;
-                    addedReactions.remove(reaction);
                     setupDisplayReactionsNode();
+                    logReactionsCount();
+                }
+
+                @Override
+                public void remove(Object element) {
+                    ChatMessageReaction chatMessageReaction = (ChatMessageReaction) element;
+                    int reactionIdx = chatMessageReaction.getReactionId();
+                    checkArgument(reactionIdx >= 0 && reactionIdx < Reaction.values().length, "Invalid reaction id: " + reactionIdx);
+
+                    // TODO: Add tooltip with user nickname, label with count, etc
+                    Reaction reaction = Reaction.values()[reactionIdx];
+                    Optional<UserProfile> userProfile = userProfileService.findUserProfile(chatMessageReaction.getUserProfileId());
+                    userProfile.ifPresent(profile -> {
+                        if (userReactions.containsKey(reaction)) {
+                            userReactions.get(reaction).remove(profile);
+                        }
+                        if (userReactions.containsKey(reaction) && userReactions.get(reaction).isEmpty()) {
+                            userReactions.remove(reaction);
+                        }
+                        log.info("{} removed reaction {}", profile.getNickName(), reaction);
+                    });
+
+                    setupDisplayReactionsNode();
+                    logReactionsCount();
                 }
 
                 @Override
                 public void clear() {
-                    addedReactions.clear();
-                    setupDisplayReactionsNode();
+                    userReactions.clear();
                 }
             }));
         }
@@ -425,11 +423,19 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private void setupDisplayReactionsNode() {
         HBox reactions = new HBox(5);
         reactions.setAlignment(Pos.BOTTOM_LEFT);
-        addedReactions.stream().sorted().forEach(reaction -> {
+        userReactions.keySet().stream().sorted().forEach(reaction -> {
             Label label = new Label();
             label.setGraphic(ImageUtil.getImageViewById(reaction.toString().replace("_", "").toLowerCase()));
             reactions.getChildren().add(label);
         });
         reactionsNode.set(reactions);
+    }
+
+    private void logReactionsCount() {
+        StringBuilder reactionsCount = new StringBuilder("\n");
+        userReactions.forEach((reaction, userProfileSet) -> {
+            reactionsCount.append(String.format("%s: %s\n", reaction, userProfileSet.size()));
+        });
+        log.info(reactionsCount.toString());
     }
 }

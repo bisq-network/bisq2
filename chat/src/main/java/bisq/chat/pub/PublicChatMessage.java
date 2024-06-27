@@ -22,17 +22,14 @@ import bisq.chat.ChatMessage;
 import bisq.chat.ChatMessageType;
 import bisq.chat.Citation;
 import bisq.chat.reactions.ChatMessageReaction;
-import bisq.chat.reactions.Reaction;
 import bisq.common.encoding.Hex;
-import bisq.common.observable.map.ObservableHashMap;
+import bisq.common.observable.collection.ObservableSet;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Optional;
 
 /**
@@ -44,10 +41,7 @@ import java.util.Optional;
 public abstract class PublicChatMessage extends ChatMessage implements DistributedData {
     @Getter
     @EqualsAndHashCode.Exclude
-    public transient final ObservableHashMap<Reaction, HashSet<String>> userReactions = new ObservableHashMap<>();
-    @Getter
-    @EqualsAndHashCode.Exclude
-    public transient final HashMap<String, ChatMessageReaction> chatMessageReactions = new HashMap<>();
+    public transient final ObservableSet<ChatMessageReaction> chatMessageReactions = new ObservableSet<>();
 
     protected PublicChatMessage(String messageId,
                                 ChatChannelDomain chatChannelDomain,

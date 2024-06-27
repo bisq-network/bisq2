@@ -442,22 +442,22 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
     }
 
     public void onReactMessage(ChatMessage chatMessage, Reaction reaction) {
-        UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
-        if (chatMessage instanceof CommonPublicChatMessage) {
-            CommonPublicChatMessage commonPublicChatMessage = (CommonPublicChatMessage) chatMessage;
-            Optional<ChatMessageReaction> chatMessageReaction = Optional.ofNullable(commonPublicChatMessage.getChatMessageReactions().get(
-                    ChatMessageReaction.createId(commonPublicChatMessage.getChannelId(),
-                            commonPublicChatMessage.getId(), reaction.ordinal(), userIdentity.getId())
-            ));
+        checkArgument(chatMessage instanceof CommonPublicChatMessage, "Not possible to react to a message which is not a CommonPublicChatMessage.");
 
-            if (chatMessageReaction.isPresent()) {
-                // user has already reacted to this message with this reaction, therefore toggling reaction state
-                chatService.getCommonPublicChatChannelServices().get(model.getChatChannelDomain())
-                        .publishEditedChatMessageReaction(chatMessageReaction.get(), userIdentity);
-            } else {
-                chatService.getCommonPublicChatChannelServices().get(model.getChatChannelDomain())
-                        .publishChatMessageReaction(commonPublicChatMessage, reaction, userIdentity);
-            }
+        UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
+        CommonPublicChatMessage commonPublicChatMessage = (CommonPublicChatMessage) chatMessage;
+        Optional<ChatMessageReaction> chatMessageReaction = commonPublicChatMessage.getChatMessageReactions().stream()
+                .filter(chatReaction -> Objects.equals(chatReaction.getUserProfileId(), userIdentity.getId())
+                        && chatReaction.getReactionId() == reaction.ordinal())
+                .findAny();
+
+        if (chatMessageReaction.isPresent()) {
+            // user has already reacted to this message with this reaction, therefore toggling reaction state
+            chatService.getCommonPublicChatChannelServices().get(model.getChatChannelDomain())
+                    .deleteChatMessageReaction(chatMessageReaction.get(), userIdentity.getNetworkIdWithKeyPair());
+        } else {
+            chatService.getCommonPublicChatChannelServices().get(model.getChatChannelDomain())
+                    .publishChatMessageReaction(commonPublicChatMessage, reaction, userIdentity);
         }
     }
 

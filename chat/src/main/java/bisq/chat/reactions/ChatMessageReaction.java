@@ -44,7 +44,6 @@ public abstract class ChatMessageReaction implements DistributedData {
     private final ChatChannelDomain chatChannelDomain;
     private final String chatMessageId;
     private final int reactionId;
-    private final boolean isRemoved;
     private final long date;
 
     public ChatMessageReaction(String id,
@@ -53,7 +52,6 @@ public abstract class ChatMessageReaction implements DistributedData {
                                ChatChannelDomain chatChannelDomain,
                                String chatMessageId,
                                int reactionId,
-                               boolean isRemoved,
                                long date) {
         this.id = id;
         this.userProfileId = userProfileId;
@@ -61,7 +59,6 @@ public abstract class ChatMessageReaction implements DistributedData {
         this.chatChannelDomain = chatChannelDomain;
         this.chatMessageId = chatMessageId;
         this.reactionId = reactionId;
-        this.isRemoved = isRemoved;
         this.date = date;
     }
 
@@ -100,7 +97,6 @@ public abstract class ChatMessageReaction implements DistributedData {
                 .setChatChannelDomain(chatChannelDomain.toProtoEnum())
                 .setChatMessageId(chatMessageId)
                 .setReactionId(reactionId)
-                .setIsRemoved(isRemoved)
                 .setDate(date);
     }
 
@@ -146,7 +142,6 @@ public abstract class ChatMessageReaction implements DistributedData {
                 ",\r\n                    chatChannelDomain=" + chatChannelDomain +
                 ",\r\n                    chatMessageId='" + chatMessageId + '\'' +
                 ",\r\n                    reactionId='" + reactionId + '\'' +
-                ",\r\n                    isRemoved='" + isRemoved + '\'' +
                 ",\r\n                    date=" + date +
                 "\r\n}";
     }
