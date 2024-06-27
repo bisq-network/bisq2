@@ -23,7 +23,7 @@ import javafx.scene.control.Button;
 import javafx.scene.image.ImageView;
 
 public class BisqMenuItem extends Button {
-    private static final String ICON_CSS_STYLE = "menu-item-icon";
+    public static final String ICON_CSS_STYLE = "menu-item-icon";
 
     private ImageView defaultIcon, activeIcon, buttonIcon;
 

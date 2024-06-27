@@ -17,24 +17,46 @@
 
 package bisq.desktop.components.controls;
 
-import javafx.geometry.Insets;
+import bisq.desktop.common.utils.ImageUtil;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.value.WeakChangeListener;
 import javafx.geometry.Pos;
+import javafx.scene.control.Button;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
+import lombok.Getter;
 
 public class DrawerMenu extends HBox {
-    private final BisqMenuItem menuButton;
+    private final Button menuButton = new Button();
     private final HBox itemsHBox = new HBox();
+    private final ImageView defaultIcon, hoverIcon, activeIcon;
+    @Getter
+    private final BooleanProperty isMenuShowing = new SimpleBooleanProperty(false);
+    private ImageView buttonIcon;
 
-    public DrawerMenu(String defaultIconId, String activeIconId) {
-        menuButton = new BisqMenuItem(defaultIconId, activeIconId);
-        menuButton.useIconOnly();
+    public DrawerMenu(String defaultIconId, String hoverIconId, String activeIconId) {
+        defaultIcon = ImageUtil.getImageViewById(defaultIconId);
+        hoverIcon = ImageUtil.getImageViewById(hoverIconId);
+        activeIcon = ImageUtil.getImageViewById(activeIconId);
+        defaultIcon.getStyleClass().add(BisqMenuItem.ICON_CSS_STYLE);
+        hoverIcon.getStyleClass().add(BisqMenuItem.ICON_CSS_STYLE);
+        activeIcon.getStyleClass().add(BisqMenuItem.ICON_CSS_STYLE);
+        buttonIcon = defaultIcon;
+
+        double size = 29;
+        menuButton.getStyleClass().add("bisq-menu-item");
+        menuButton.setGraphic(buttonIcon);
+        menuButton.setMaxSize(size, size);
+        menuButton.setMinSize(size, size);
+        menuButton.setPrefSize(size, size);
+        menuButton.setAlignment(Pos.CENTER);
 
         itemsHBox.getStyleClass().add("drawer-menu-items");
         itemsHBox.setVisible(false);
         itemsHBox.setManaged(false);
-        itemsHBox.setSpacing(5);
         itemsHBox.setAlignment(Pos.CENTER);
-        itemsHBox.setPadding(new Insets(0, 0, 0, 5));
 
         getChildren().addAll(menuButton, itemsHBox);
         getStyleClass().add("drawer-menu");
@@ -55,11 +77,71 @@ public class DrawerMenu extends HBox {
         menuButton.setOnAction(e -> {
             toggleItemsHBox();
         });
+        menuButton.setOnMouseEntered(e -> {
+            if (!itemsHBox.isVisible()) {
+                updateIcon(hoverIcon);
+            } else {
+                updateIcon(activeIcon);
+            }
+        });
+        menuButton.setOnMouseExited(e -> {
+            if (!itemsHBox.isVisible()) {
+                updateIcon(defaultIcon);
+            } else {
+                updateIcon(activeIcon);
+            }
+        });
+        menuButton.setOnMouseClicked(e -> {
+            if (!itemsHBox.isVisible()) {
+                updateIcon(defaultIcon);
+            } else {
+                updateIcon(activeIcon);
+            }
+        });
+
+        itemsHBox.visibleProperty().addListener(change -> {
+            if (itemsHBox.isVisible()) {
+                getStyleClass().add("drawer-menu-active");
+                isMenuShowing.setValue(true);
+            } else {
+                getStyleClass().remove("drawer-menu-active");
+                updateIcon(defaultIcon);
+                isMenuShowing.setValue(false);
+            }
+        });
+
+        sceneProperty().addListener(new WeakChangeListener<>((observable, oldScene, newScene) -> {
+            if (newScene != null) {
+                newScene.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
+                    if (itemsHBox.isVisible() && !clickedOnDrawerMenu(e)) {
+                        hideMenu();
+                    }
+                });
+            }
+        }));
+    }
+
+    private void updateIcon(ImageView newIcon) {
+        if (buttonIcon != newIcon) {
+            buttonIcon = newIcon;
+            menuButton.setGraphic(buttonIcon);
+        }
     }
 
     private void toggleItemsHBox() {
         // TODO: Add width transition
         itemsHBox.setVisible(!itemsHBox.isVisible());
         itemsHBox.setManaged(!itemsHBox.isManaged());
+    }
+
+    private boolean clickedOnDrawerMenu(MouseEvent e) {
+        double mouseX = e.getSceneX();
+        double mouseY = e.getSceneY();
+        double nodeMinX = localToScene(getBoundsInLocal()).getMinX();
+        double nodeMinY = localToScene(getBoundsInLocal()).getMinY();
+        double nodeMaxX = localToScene(getBoundsInLocal()).getMaxX();
+        double nodeMaxY = localToScene(getBoundsInLocal()).getMaxY();
+
+        return mouseX >= nodeMinX && mouseX <= nodeMaxX && mouseY >= nodeMinY && mouseY <= nodeMaxY;
     }
 }

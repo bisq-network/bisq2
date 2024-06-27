@@ -146,7 +146,7 @@ public abstract class BubbleMessageBox extends MessageBox {
 
     private void addOnMouseEventHandlers() {
         setOnMouseEntered(e -> {
-            if (moreActionsMenu != null && moreActionsMenu.getIsMenuShowing().get()) {
+            if ((moreActionsMenu != null && moreActionsMenu.getIsMenuShowing().get()) || reactMenu.getIsMenuShowing().get()) {
                 return;
             }
             dateTime.setVisible(true);
@@ -154,10 +154,9 @@ public abstract class BubbleMessageBox extends MessageBox {
         });
 
         setOnMouseExited(e -> {
-            if (moreActionsMenu == null || !moreActionsMenu.getIsMenuShowing().get()) {
+            if ((moreActionsMenu == null || !moreActionsMenu.getIsMenuShowing().get()) && !reactMenu.getIsMenuShowing().get()) {
                 dateTime.setVisible(false);
                 actionsHBox.setVisible(false);
-                reactMenu.hideMenu();
             }
         });
     }
@@ -166,6 +165,7 @@ public abstract class BubbleMessageBox extends MessageBox {
     public void cleanup() {
         setOnMouseEntered(null);
         setOnMouseExited(null);
+
         happyReactionMenu.setOnAction(null);
         laughReactionMenu.setOnAction(null);
         heartReactionMenu.setOnAction(null);
@@ -263,7 +263,7 @@ public abstract class BubbleMessageBox extends MessageBox {
     }
 
     private DrawerMenu createAndGetReactMenu() {
-        DrawerMenu drawerMenu = new DrawerMenu("react-grey", "react-green");
+        DrawerMenu drawerMenu = new DrawerMenu("react-grey", "react-white", "react-green");
         happyReactionMenu = new BisqMenuItem("react-happy", "react-happy");
         happyReactionMenu.useIconOnly();
         happyReactionMenu.setOnAction(e -> toggleReaction(Reaction.HAPPY));
@@ -289,5 +289,6 @@ public abstract class BubbleMessageBox extends MessageBox {
 
     private void toggleReaction(Reaction reaction) {
         controller.onReactMessage(item.getChatMessage(), reaction);
+        reactMenu.hideMenu();
     }
 }

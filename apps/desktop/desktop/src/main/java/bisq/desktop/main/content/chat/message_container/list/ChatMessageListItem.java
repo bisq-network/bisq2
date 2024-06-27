@@ -207,7 +207,6 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                     int reactionIdx = chatMessageReaction.getReactionId();
                     checkArgument(reactionIdx >= 0 && reactionIdx < Reaction.values().length, "Invalid reaction id: " + reactionIdx);
 
-                    // TODO: Add tooltip with user nickname, label with count, etc
                     Reaction reaction = Reaction.values()[reactionIdx];
                     Optional<UserProfile> userProfile = userProfileService.findUserProfile(chatMessageReaction.getUserProfileId());
                     userProfile.ifPresent(profile -> {
