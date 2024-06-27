@@ -61,7 +61,6 @@ public class OracleNodeApplicationService extends ApplicationService {
         );
 
         bondedRolesService = new BondedRolesService(BondedRolesService.Config.from(getConfig("bondedRoles")),
-                config.getVersion(),
                 persistenceService,
                 networkService);
 
@@ -69,7 +68,6 @@ public class OracleNodeApplicationService extends ApplicationService {
         com.typesafe.config.Config marketPriceConfig = bondedRolesConfig.getConfig("marketPrice");
         MarketPriceRequestService marketPriceRequestService = new MarketPriceRequestService(
                 MarketPriceRequestService.Config.from(marketPriceConfig),
-                config.getVersion(),
                 networkService);
 
         OracleNodeService.Config oracleNodeConfig = OracleNodeService.Config.from(getConfig("oracleNode"));

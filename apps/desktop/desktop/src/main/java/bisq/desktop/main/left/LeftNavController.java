@@ -24,6 +24,7 @@ import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.notifications.ChatNotification;
 import bisq.chat.notifications.ChatNotificationService;
+import bisq.common.application.ApplicationVersion;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
@@ -65,7 +66,7 @@ public class LeftNavController implements Controller {
 
         NetworkInfo networkInfo = new NetworkInfo(serviceProvider, this::onNavigationTargetSelected);
         model = new LeftNavModel(serviceProvider.getWalletService().isPresent());
-        model.setVersion("v" + serviceProvider.getConfig().getVersion().toString());
+        model.setVersion("v" + ApplicationVersion.getVersion().toString());
         view = new LeftNavView(model, this, networkInfo.getRoot());
     }
 

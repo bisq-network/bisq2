@@ -130,7 +130,6 @@ public class DesktopApplicationService extends ApplicationService {
                 networkService);
 
         bondedRolesService = new BondedRolesService(BondedRolesService.Config.from(getConfig("bondedRoles")),
-                config.getVersion(),
                 getPersistenceService(),
                 networkService);
 

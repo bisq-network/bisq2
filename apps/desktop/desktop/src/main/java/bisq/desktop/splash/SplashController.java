@@ -17,6 +17,7 @@
 
 package bisq.desktop.splash;
 
+import bisq.common.application.ApplicationVersion;
 import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
@@ -44,7 +45,7 @@ public class SplashController implements Controller {
         this.applicationServiceState = applicationServiceState;
         this.serviceProvider = serviceProvider;
         networkService = serviceProvider.getNetworkService();
-        model = new SplashModel(serviceProvider.getConfig().getVersion());
+        model = new SplashModel(ApplicationVersion.getVersion());
         view = new SplashView(model, this);
     }
 

@@ -18,12 +18,12 @@
 package bisq.bonded_roles.explorer;
 
 import bisq.bonded_roles.explorer.dto.Tx;
+import bisq.common.application.ApplicationVersion;
 import bisq.common.data.Pair;
 import bisq.common.observable.Observable;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.CollectionUtil;
 import bisq.common.util.ExceptionUtil;
-import bisq.common.util.Version;
 import bisq.network.NetworkService;
 import bisq.network.common.TransportType;
 import bisq.network.http.BaseHttpClient;
@@ -137,10 +137,10 @@ public class ExplorerService {
     private final boolean noProviderAvailable;
     private volatile boolean shutdownStarted;
 
-    public ExplorerService(Config conf, NetworkService networkService, Version version) {
+    public ExplorerService(Config conf, NetworkService networkService) {
         this.conf = conf;
         this.networkService = networkService;
-        userAgent = "bisq-v2/" + version.toString();
+        userAgent = "bisq-v2/" + ApplicationVersion.getVersion().toString();
 
         Set<TransportType> supportedTransportTypes = networkService.getSupportedTransportTypes();
         conf.providers.stream()

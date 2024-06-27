@@ -66,7 +66,6 @@ public class SeedNodeApplicationService extends ApplicationService {
                 networkService);
 
         bondedRolesService = new BondedRolesService(BondedRolesService.Config.from(getConfig("bondedRoles")),
-                config.getVersion(),
                 persistenceService,
                 networkService);
 
