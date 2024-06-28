@@ -62,10 +62,11 @@ public abstract class BubbleMessageBox extends MessageBox {
     protected final HBox actionsHBox = new HBox(10);
     protected final HBox addedReactions = new HBox();
     protected final VBox quotedMessageVBox, contentVBox;
-    protected final DrawerMenu reactMenu;
+    protected DrawerMenu reactMenu;
     protected Label supportedLanguages, userName, dateTime, message;
     protected HBox userNameAndDateHBox, messageBgHBox, messageHBox;
     protected VBox userProfileIconVbox;
+    protected BisqMenuItem copyAction;
     protected DropdownMenu moreActionsMenu;
     protected BisqMenuItem happyReactionMenu, laughReactionMenu, heartReactionMenu, thumbsDownReactionMenu,
             thumbsUpReactionMenu, partyReactionMenu;
@@ -76,7 +77,6 @@ public abstract class BubbleMessageBox extends MessageBox {
         this.item = item;
         this.list = list;
         this.controller = controller;
-        reactMenu = createAndGetReactMenu();
 
         setUpUserNameAndDateTime();
         setUpUserProfileIcon();
@@ -145,6 +145,10 @@ public abstract class BubbleMessageBox extends MessageBox {
     }
 
     protected void setUpActions() {
+        copyAction = new BisqMenuItem("copy-grey", "copy-white", "copy-white");
+        copyAction.useIconOnly();
+        reactMenu = createAndGetReactMenu();
+        actionsHBox.setVisible(false);
     }
 
     protected void addActionsHandlers() {

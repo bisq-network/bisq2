@@ -48,7 +48,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
 
     private final Label deliveryState;
     private final Subscription actionsBoxVisiblePropertyPin, messageDeliveryStatusIconPin;
-    private Label editIcon, deleteIcon, copyIcon;
+    private Label editIcon, deleteIcon;
     private BisqTextArea editInputField;
     private Button saveEditButton, cancelEditButton;
     private HBox editButtonsHBox;
@@ -75,7 +75,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         userProfileIcon.setSize(30);
         userProfileIconVbox.setAlignment(Pos.TOP_LEFT);
         HBox.setMargin(deleteIcon, new Insets(0, 10, 0, 0));
-        actionsHBox.getChildren().setAll(Spacer.fillHBox(), editIcon, copyIcon, deleteIcon);
+        actionsHBox.getChildren().setAll(Spacer.fillHBox(), editIcon, copyAction, deleteIcon);
         HBox.setMargin(messageVBox, new Insets(0, -15, 0, 0));
         HBox.setMargin(userProfileIconVbox, new Insets(7.5, 0, -5, 5));
         HBox.setMargin(editInputField, new Insets(6, -10, -25, 0));
@@ -139,14 +139,15 @@ public final class MyTextMessageBox extends BubbleMessageBox {
 
     @Override
     protected void setUpActions() {
+        super.setUpActions();
+
         editIcon = getIconWithToolTip(AwesomeIcon.EDIT, Res.get("action.edit"));
-        copyIcon = getIconWithToolTip(AwesomeIcon.COPY, Res.get("action.copyToClipboard"));
         deleteIcon = getIconWithToolTip(AwesomeIcon.REMOVE_SIGN, Res.get("action.delete"));
+
         HBox.setMargin(editIcon, new Insets(1, 0, -1, 0));
-        HBox.setMargin(copyIcon, new Insets(1, 0, -1, 0));
+        HBox.setMargin(copyAction, new Insets(2, 0, -2, 0));
         HBox.setMargin(reactMenu, new Insets(2, 0, -2, 0));
         HBox.setMargin(deleteIcon, new Insets(1, 0, -1, 0));
-        actionsHBox.setVisible(false);
     }
 
     private void setUpEditFunctionality() {
@@ -178,7 +179,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
             allowEditing = allowEditing && bisqEasyOfferbookMessage.getBisqEasyOffer().isEmpty();
         }
 
-        copyIcon.setOnMouseClicked(e -> onCopyMessage(chatMessage));
+        copyAction.setOnAction(e -> onCopyMessage(chatMessage));
         if (allowEditing) {
             editIcon.setOnMouseClicked(e -> onEditMessage());
         }
@@ -246,12 +247,12 @@ public final class MyTextMessageBox extends BubbleMessageBox {
 
         saveEditButton.setOnAction(null);
         cancelEditButton.setOnAction(null);
+        copyAction.setOnAction(null);
 
         userName.setOnMouseClicked(null);
         userProfileIcon.setOnMouseClicked(null);
 
         editIcon.setOnMouseClicked(null);
-        copyIcon.setOnMouseClicked(null);
         deleteIcon.setOnMouseClicked(null);
 
         editInputField.setOnKeyPressed(null);

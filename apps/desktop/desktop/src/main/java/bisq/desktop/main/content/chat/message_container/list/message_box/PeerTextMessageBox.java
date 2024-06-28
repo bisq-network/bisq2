@@ -38,7 +38,7 @@ import org.fxmisc.easybind.Subscription;
 
 public class PeerTextMessageBox extends BubbleMessageBox {
     private Subscription isMenuShowingPin;
-    protected Label replyIcon, pmIcon, copyIcon;
+    protected Label replyIcon, pmIcon;
     protected DropdownMenuItem ignoreUserMenuItem, reportUserMenuItem;
 
     public PeerTextMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
@@ -49,7 +49,7 @@ public class PeerTextMessageBox extends BubbleMessageBox {
         setUpPeerMessage();
         setMargin(userNameAndDateHBox, new Insets(-5, 0, -5, 10));
         messageHBox.getChildren().setAll(messageBgHBox, addedReactions, Spacer.fillHBox());
-        actionsHBox.getChildren().setAll(replyIcon, pmIcon, copyIcon, reactMenu, moreActionsMenu, Spacer.fillHBox());
+        actionsHBox.getChildren().setAll(replyIcon, pmIcon, copyAction, reactMenu, moreActionsMenu, Spacer.fillHBox());
 
         contentVBox.getChildren().setAll(userNameAndDateHBox, messageHBox, actionsHBox);
     }
@@ -64,9 +64,10 @@ public class PeerTextMessageBox extends BubbleMessageBox {
 
     @Override
     protected void setUpActions() {
+        super.setUpActions();
+
         replyIcon = getIconWithToolTip(AwesomeIcon.REPLY, Res.get("chat.message.reply"));
         pmIcon = getIconWithToolTip(AwesomeIcon.COMMENT_ALT, Res.get("chat.message.privateMessage"));
-        copyIcon = getIconWithToolTip(AwesomeIcon.COPY, Res.get("action.copyToClipboard"));
 
         // More actions dropdown menu
         ignoreUserMenuItem = new DropdownMenuItem("ignore-grey", "ignore-white",
@@ -80,10 +81,9 @@ public class PeerTextMessageBox extends BubbleMessageBox {
 
         HBox.setMargin(replyIcon, new Insets(4, 0, -4, 10));
         HBox.setMargin(pmIcon, new Insets(3, 0, -3, 0));
-        HBox.setMargin(copyIcon, new Insets(4, 0, -4, 0));
+        HBox.setMargin(copyAction, new Insets(2, 0, -2, 0));
         HBox.setMargin(moreActionsMenu, new Insets(2, 0, -2, 0));
         HBox.setMargin(reactMenu, new Insets(2, 0, -2, 0));
-        actionsHBox.setVisible(false);
     }
 
     @Override
@@ -92,7 +92,8 @@ public class PeerTextMessageBox extends BubbleMessageBox {
 
         replyIcon.setOnMouseClicked(e -> controller.onReply(chatMessage));
         pmIcon.setOnMouseClicked(e -> controller.onOpenPrivateChannel(chatMessage));
-        copyIcon.setOnMouseClicked(e -> onCopyMessage(chatMessage));
+
+        copyAction.setOnAction(e -> onCopyMessage(chatMessage));
         ignoreUserMenuItem.setOnAction(e -> controller.onIgnoreUser(chatMessage));
         reportUserMenuItem.setOnAction(e -> controller.onReportUser(chatMessage));
 
@@ -138,7 +139,8 @@ public class PeerTextMessageBox extends BubbleMessageBox {
         userProfileIcon.setOnMouseClicked(null);
         replyIcon.setOnMouseClicked(null);
         pmIcon.setOnMouseClicked(null);
-        copyIcon.setOnMouseClicked(null);
+
+        copyAction.setOnAction(null);
         ignoreUserMenuItem.setOnAction(null);
         reportUserMenuItem.setOnAction(null);
 

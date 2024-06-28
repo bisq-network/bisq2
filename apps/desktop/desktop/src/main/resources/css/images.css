@@ -994,6 +994,18 @@
     -fx-image: url("/images/chat/message-actions/ellipsis/ellipsis18-white.png");
 }
 
+#copy-green {
+    -fx-image: url("/images/chat/message-actions/copy/copy-green.png");
+}
+
+#copy-grey {
+    -fx-image: url("/images/chat/message-actions/copy/copy-grey.png");
+}
+
+#copy-white {
+    -fx-image: url("/images/chat/message-actions/copy/copy-white.png");
+}
+
 
 /* ------------------------------------------------------------------------------------ */
 /* Markets */
