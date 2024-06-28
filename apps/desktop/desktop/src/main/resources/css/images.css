@@ -1030,6 +1030,18 @@
     -fx-image: url("/images/chat/message-actions/open-p-chat/open-p-chat-white.png");
 }
 
+#edit-green {
+    -fx-image: url("/images/chat/message-actions/edit/edit-green.png");
+}
+
+#edit-grey {
+    -fx-image: url("/images/chat/message-actions/edit/edit-grey.png");
+}
+
+#edit-white {
+    -fx-image: url("/images/chat/message-actions/edit/edit-white.png");
+}
+
 
 /* ------------------------------------------------------------------------------------ */
 /* Markets */
