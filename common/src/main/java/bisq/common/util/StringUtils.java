@@ -222,4 +222,8 @@ public class StringUtils {
         min = min % 60;
         return String.format("%02d:%02d:%02.2f", hours, min, sec);
     }
+
+    public static String maskHomeDirectory(String string) {
+        return string.replace(OsUtils.getHomeDirectory(), "<HOME_DIR>");
+    }
 }
