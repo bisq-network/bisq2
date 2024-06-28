@@ -15,13 +15,15 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.proto;
+package bisq.chat.reactions;
 
-/**
- * Interface Proto implementations which are used for network messages.
- * We need to ensure that data received from the network is verified.
- * All data need to have an upper bound of the max. size.
- */
-public interface NetworkProto extends Proto {
-    void verify();
+public enum Reaction {
+    HAPPY,
+    HEART,
+    LAUGH,
+    PARTY,
+    SURPRISED,
+    THINKING,
+    THUMBS_DOWN,
+    THUMBS_UP
 }

@@ -22,6 +22,8 @@ import bisq.chat.priv.PrivateChatChannelService;
 import bisq.chat.priv.PrivateChatMessage;
 import bisq.chat.pub.PublicChatChannel;
 import bisq.chat.pub.PublicChatMessage;
+import bisq.chat.reactions.ChatMessageReaction;
+import bisq.chat.reactions.Reaction;
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
@@ -437,6 +439,25 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                     service.leaveChannel(chatChannel.getId());
                     chatService.getChatChannelSelectionServices().get(model.getChatChannelDomain()).maybeSelectFirstChannel();
                 });
+    }
+
+    public void onReactMessage(ChatMessage chatMessage, Reaction reaction) {
+        checkArgument(chatMessage instanceof CommonPublicChatMessage, "Not possible to react to a message which is not a CommonPublicChatMessage.");
+
+        UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
+        CommonPublicChatMessage commonPublicChatMessage = (CommonPublicChatMessage) chatMessage;
+        Optional<ChatMessageReaction> chatMessageReaction = commonPublicChatMessage.getChatMessageReactions().stream()
+                .filter(chatReaction -> Objects.equals(chatReaction.getUserProfileId(), userIdentity.getId())
+                        && chatReaction.getReactionId() == reaction.ordinal())
+                .findAny();
+
+        if (chatMessageReaction.isPresent()) {
+            chatService.getCommonPublicChatChannelServices().get(model.getChatChannelDomain())
+                    .deleteChatMessageReaction(chatMessageReaction.get(), userIdentity.getNetworkIdWithKeyPair());
+        } else {
+            chatService.getCommonPublicChatChannelServices().get(model.getChatChannelDomain())
+                    .publishChatMessageReaction(commonPublicChatMessage, reaction, userIdentity);
+        }
     }
 
 

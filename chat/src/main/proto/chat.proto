@@ -170,3 +170,20 @@ message ChatNotification {
 message ChatNotificationsStore {
   repeated ChatNotification chatNotifications = 1;
 }
+
+// Reactions
+message ChatMessageReaction {
+  string id = 1;
+  string userProfileId = 2;
+  string chatChannelId = 3;
+  ChatChannelDomain chatChannelDomain = 4;
+  string chatMessageId = 5;
+  sint32 reactionId = 6;
+  sint64 date = 8;
+  oneof message {
+    CommonPublicChatMessageReaction commonPublicChatMessageReaction = 20;
+  }
+}
+
+message CommonPublicChatMessageReaction {
+}

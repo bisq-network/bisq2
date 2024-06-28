@@ -23,14 +23,19 @@ import bisq.chat.ChatMessage;
 import bisq.chat.Citation;
 import bisq.chat.bisqeasy.BisqEasyOfferMessage;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
+import bisq.chat.common.CommonPublicChatMessage;
 import bisq.chat.priv.PrivateChatMessage;
 import bisq.chat.pub.PublicChatChannel;
+import bisq.chat.reactions.ChatMessageReaction;
+import bisq.chat.reactions.Reaction;
 import bisq.common.locale.LanguageRepository;
 import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
+import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.observable.map.HashMapObserver;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.main.content.bisq_easy.BisqEasyServiceUtil;
 import bisq.desktop.main.content.components.ReputationScoreDisplay;
 import bisq.i18n.Res;
@@ -52,25 +57,46 @@ import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import com.google.common.base.Joiner;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import javafx.beans.property.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
+import javafx.scene.control.Label;
+import javafx.scene.layout.HBox;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.text.DateFormat;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static bisq.chat.ChatMessageType.LEAVE;
 import static bisq.chat.ChatMessageType.PROTOCOL_LOG_MESSAGE;
 import static bisq.desktop.main.content.chat.message_container.ChatMessageContainerView.EDITED_POST_FIX;
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChannel<M>> implements Comparable<ChatMessageListItem<M, C>> {
+    private static final List<Reaction> REACTION_DISPLAY_ORDER = Arrays.asList(Reaction.THUMBS_UP, Reaction.THUMBS_DOWN,
+            Reaction.HAPPY, Reaction.LAUGH, Reaction.HEART, Reaction.PARTY);
+
     @EqualsAndHashCode.Include
     private final M chatMessage;
     @EqualsAndHashCode.Include
@@ -98,6 +124,9 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private final MarketPriceService marketPriceService;
     private final UserIdentityService userIdentityService;
     private final BooleanProperty showHighlighted = new SimpleBooleanProperty();
+    private Optional<Pin> userReactionsPin = Optional.empty();
+    private final HashMap<Reaction, Set<UserProfile>> userReactions = new HashMap<>();
+    private final SimpleObjectProperty<Node> reactionsNode = new SimpleObjectProperty<>();
 
     public ChatMessageListItem(M chatMessage,
                                C chatChannel,
@@ -151,6 +180,64 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
 
         lastSeen = senderUserProfile.map(userProfileService::getLastSeen).orElse(-1L);
         lastSeenAsString = TimeFormatter.formatAge(lastSeen);
+
+        // TODO: Release all the listeners when destroying this object
+
+        if (chatMessage instanceof CommonPublicChatMessage) {
+            CommonPublicChatMessage commonPublicChatMessage = (CommonPublicChatMessage) chatMessage;
+            userReactionsPin = Optional.ofNullable(commonPublicChatMessage.getChatMessageReactions().addObserver(new CollectionObserver<ChatMessageReaction>() {
+                @Override
+                public void add(ChatMessageReaction element) {
+                    int reactionIdx = element.getReactionId();
+                    checkArgument(reactionIdx >= 0 && reactionIdx < Reaction.values().length, "Invalid reaction id: " + reactionIdx);
+
+                    // TODO: Add tooltip with user nickname, label with count, etc
+                    Reaction reaction = Reaction.values()[reactionIdx];
+                    Optional<UserProfile> userProfile = userProfileService.findUserProfile(element.getUserProfileId());
+                    userProfile.ifPresent(profile -> {
+                        if (!userReactions.containsKey(reaction)) {
+                            userReactions.put(reaction, new HashSet<>());
+                        }
+                        userReactions.get(reaction).add(profile);
+                        log.info("{} reacted with {}", profile.getNickName(), reaction);
+                    });
+
+                    setupDisplayReactionsNode();
+                    logReactionsCount();
+                }
+
+                @Override
+                public void remove(Object element) {
+                    ChatMessageReaction chatMessageReaction = (ChatMessageReaction) element;
+                    int reactionIdx = chatMessageReaction.getReactionId();
+                    checkArgument(reactionIdx >= 0 && reactionIdx < Reaction.values().length, "Invalid reaction id: " + reactionIdx);
+
+                    Reaction reaction = Reaction.values()[reactionIdx];
+                    Optional<UserProfile> userProfile = userProfileService.findUserProfile(chatMessageReaction.getUserProfileId());
+                    userProfile.ifPresent(profile -> {
+                        if (userReactions.containsKey(reaction)) {
+                            userReactions.get(reaction).remove(profile);
+                        }
+                        if (userReactions.containsKey(reaction) && userReactions.get(reaction).isEmpty()) {
+                            userReactions.remove(reaction);
+                        }
+                        log.info("{} removed reaction {}", profile.getNickName(), reaction);
+                    });
+
+                    setupDisplayReactionsNode();
+                    logReactionsCount();
+                }
+
+                @Override
+                public void clear() {
+                    userReactions.clear();
+                    log.info("Clearing reactions");
+
+                    setupDisplayReactionsNode();
+                    logReactionsCount();
+                }
+            }));
+        }
 
         mapPins.add(networkService.getMessageDeliveryStatusByMessageId().addObserver(new HashMapObserver<>() {
             @Override
@@ -259,6 +346,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     public void dispose() {
         mapPins.forEach(Pin::unbind);
         statusPins.forEach(Pin::unbind);
+        userReactionsPin.ifPresent(Pin::unbind);
     }
 
     public boolean hasTradeChatOffer() {
@@ -338,5 +426,24 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                                 .map(toStringFunction)
                                 .collect(Collectors.toList())))
                 .orElse("");
+    }
+
+    private void setupDisplayReactionsNode() {
+        HBox reactions = new HBox(5);
+        reactions.setAlignment(Pos.BOTTOM_LEFT);
+        REACTION_DISPLAY_ORDER.forEach(reaction -> {
+            if (userReactions.containsKey(reaction)) {
+                reactions.getChildren().add(new Label("", ImageUtil.getImageViewById(reaction.toString().replace("_", "").toLowerCase())));
+            }
+        });
+        reactionsNode.set(reactions);
+    }
+
+    private void logReactionsCount() {
+        StringBuilder reactionsCount = new StringBuilder("\n");
+        REACTION_DISPLAY_ORDER.forEach(reaction ->
+                reactionsCount.append(String.format("%s: %s\n", reaction,
+                        userReactions.containsKey(reaction) ? userReactions.get(reaction).size() : 0)));
+        log.info(reactionsCount.toString());
     }
 }

@@ -50,10 +50,10 @@ public final class PeerOfferMessageBox extends PeerTextMessageBox {
 
         HBox.setMargin(copyIcon, new Insets(4, 0, -4, 0));
         HBox.setMargin(supportedLanguages, new Insets(5, 0, -5, 0));
-        reactionsHBox.getChildren().setAll(replyIcon, pmIcon, copyIcon, supportedLanguages, moreOptionsMenu, Spacer.fillHBox());
+        actionsHBox.getChildren().setAll(replyIcon, pmIcon, copyIcon, supportedLanguages, moreActionsMenu, Spacer.fillHBox());
 
         VBox.setMargin(userNameAndDateHBox, new Insets(-5, 0, 5, 10));
-        contentVBox.getChildren().setAll(userNameAndDateHBox, messageBgHBox, reactionsHBox);
+        contentVBox.getChildren().setAll(userNameAndDateHBox, messageBgHBox, actionsHBox);
     }
 
     @Override

@@ -30,7 +30,7 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.cathash.CatHash;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
-import bisq.desktop.components.controls.MenuItem;
+import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.main.content.components.ReportToModeratorWindow;
 import bisq.desktop.main.content.components.ReputationScoreDisplay;
 import bisq.i18n.Res;
@@ -219,7 +219,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
         private final ImageView catIconImageView;
         private final Label nickName, botId, userId, addressByTransport, statement, totalReputationScore,
                 profileAge, lastSeen, terms;
-        private final MenuItem privateMsg, mention, ignore, undoIgnore, report;
+        private final BisqMenuItem privateMsg, mention, ignore, undoIgnore, report;
         private final VBox botIdBox, userIdBox, addressByTransportBox, statementBox, termsBox, optionsVBox;
         private final ReputationScoreDisplay reputationScoreDisplay;
         private final BisqIconButton botIdCopyButton, userIdCopyButton, addressByTransportCopyButton;
@@ -306,16 +306,16 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             VBox.setVgrow(scrollPane, Priority.ALWAYS);
 
             // Options
-            privateMsg = new MenuItem(Res.get("chat.sideBar.userProfile.sendPrivateMessage"),
-                    "private-chat-grey", "private-chat-white");
-            mention = new MenuItem(Res.get("chat.sideBar.userProfile.mention"),
-                    "mention-grey", "mention-white");
-            ignore = new MenuItem(Res.get("chat.sideBar.userProfile.ignore"),
-                    "ignore-grey", "ignore-white");
-            undoIgnore = new MenuItem(Res.get("chat.sideBar.userProfile.undoIgnore"),
-                    "undo-ignore-grey", "undo-ignore-white");
-            report = new MenuItem(Res.get("chat.sideBar.userProfile.report"),
-                    "report-grey", "report-white");
+            privateMsg = new BisqMenuItem("private-chat-grey", "private-chat-white", Res.get("chat.sideBar.userProfile.sendPrivateMessage"));
+            privateMsg.setPrefWidth(width );
+            mention = new BisqMenuItem("mention-grey", "mention-white", Res.get("chat.sideBar.userProfile.mention"));
+            mention.setPrefWidth(width);
+            ignore = new BisqMenuItem("ignore-grey", "ignore-white", Res.get("chat.sideBar.userProfile.ignore"));
+            ignore.setPrefWidth(width);
+            undoIgnore = new BisqMenuItem("undo-ignore-grey", "undo-ignore-white", Res.get("chat.sideBar.userProfile.undoIgnore"));
+            undoIgnore.setPrefWidth(width);
+            report = new BisqMenuItem("report-grey", "report-white", Res.get("chat.sideBar.userProfile.report"));
+            report.setPrefWidth(width);
 
             Region separator = Layout.hLine();
             VBox.setMargin(separator, new Insets(-15, -20, 10, -20));

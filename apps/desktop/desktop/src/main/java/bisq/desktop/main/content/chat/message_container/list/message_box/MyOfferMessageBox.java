@@ -73,13 +73,13 @@ public final class MyOfferMessageBox extends BubbleMessageBox {
         messageBgHBox.getChildren().setAll(messageContent);
         messageBgHBox.setMaxWidth(Control.USE_PREF_SIZE);
 
-        // Reactions
+        // Actions
         HBox.setMargin(supportedLanguages, new Insets(5, 0, -5, 0));
         HBox.setMargin(copyIcon, new Insets(4, 10, -4, 0));
-        reactionsHBox.getChildren().setAll(Spacer.fillHBox(), supportedLanguages, copyIcon);
+        actionsHBox.getChildren().setAll(Spacer.fillHBox(), supportedLanguages, copyIcon);
 
         contentVBox.setAlignment(Pos.CENTER_RIGHT);
-        contentVBox.getChildren().setAll(userNameAndDateHBox, messageBgHBox, reactionsHBox);
+        contentVBox.getChildren().setAll(userNameAndDateHBox, messageBgHBox, actionsHBox);
     }
 
     @Override
@@ -92,13 +92,13 @@ public final class MyOfferMessageBox extends BubbleMessageBox {
     }
 
     @Override
-    protected void setUpReactions() {
+    protected void setUpActions() {
         copyIcon = getIconWithToolTip(AwesomeIcon.COPY, Res.get("action.copyToClipboard"));
-        reactionsHBox.setVisible(false);
+        actionsHBox.setVisible(false);
     }
 
     @Override
-    protected void addReactionsHandlers() {
+    protected void addActionsHandlers() {
         copyIcon.setOnMouseClicked(e -> onCopyMessage(String.format("%s\n%s", myOfferTitle.getText(), message.getText())));
     }
 

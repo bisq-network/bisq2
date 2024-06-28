@@ -48,10 +48,10 @@ public class PeerTextMessageBox extends BubbleMessageBox {
 
         setUpPeerMessage();
         setMargin(userNameAndDateHBox, new Insets(-5, 0, -5, 10));
-        messageHBox.getChildren().setAll(messageBgHBox, Spacer.fillHBox());
-        reactionsHBox.getChildren().setAll(replyIcon, pmIcon, copyIcon, moreOptionsMenu, Spacer.fillHBox());
+        messageHBox.getChildren().setAll(messageBgHBox, addedReactions, Spacer.fillHBox());
+        actionsHBox.getChildren().setAll(replyIcon, pmIcon, copyIcon, reactMenu, moreActionsMenu, Spacer.fillHBox());
 
-        contentVBox.getChildren().setAll(userNameAndDateHBox, messageHBox, reactionsHBox);
+        contentVBox.getChildren().setAll(userNameAndDateHBox, messageHBox, actionsHBox);
     }
 
     @Override
@@ -63,30 +63,31 @@ public class PeerTextMessageBox extends BubbleMessageBox {
     }
 
     @Override
-    protected void setUpReactions() {
+    protected void setUpActions() {
         replyIcon = getIconWithToolTip(AwesomeIcon.REPLY, Res.get("chat.message.reply"));
         pmIcon = getIconWithToolTip(AwesomeIcon.COMMENT_ALT, Res.get("chat.message.privateMessage"));
         copyIcon = getIconWithToolTip(AwesomeIcon.COPY, Res.get("action.copyToClipboard"));
 
-        // More options dropdown menu
+        // More actions dropdown menu
         ignoreUserMenuItem = new DropdownMenuItem("ignore-grey", "ignore-white",
                 Res.get("chat.message.contextMenu.ignoreUser"));
         reportUserMenuItem = new DropdownMenuItem("report-grey", "report-white",
                 Res.get("chat.message.contextMenu.reportUser"));
-        moreOptionsMenu = new DropdownMenu("ellipsis-h-grey", "ellipsis-h-white", true);
-        moreOptionsMenu.setTooltip(Res.get("chat.message.moreOptions"));
-        moreOptionsMenu.addMenuItems(ignoreUserMenuItem, reportUserMenuItem);
-        moreOptionsMenu.setOpenToTheRight(true);
+        moreActionsMenu = new DropdownMenu("ellipsis-h-grey", "ellipsis-h-white", true);
+        moreActionsMenu.setTooltip(Res.get("chat.message.moreOptions"));
+        moreActionsMenu.addMenuItems(ignoreUserMenuItem, reportUserMenuItem);
+        moreActionsMenu.setOpenToTheRight(true);
 
         HBox.setMargin(replyIcon, new Insets(4, 0, -4, 10));
         HBox.setMargin(pmIcon, new Insets(3, 0, -3, 0));
         HBox.setMargin(copyIcon, new Insets(4, 0, -4, 0));
-        HBox.setMargin(moreOptionsMenu, new Insets(2, 0, -2, 0));
-        reactionsHBox.setVisible(false);
+        HBox.setMargin(moreActionsMenu, new Insets(2, 0, -2, 0));
+        HBox.setMargin(reactMenu, new Insets(2, 0, -2, 0));
+        actionsHBox.setVisible(false);
     }
 
     @Override
-    protected void addReactionsHandlers() {
+    protected void addActionsHandlers() {
         ChatMessage chatMessage = item.getChatMessage();
 
         replyIcon.setOnMouseClicked(e -> controller.onReply(chatMessage));
@@ -101,10 +102,10 @@ public class PeerTextMessageBox extends BubbleMessageBox {
         pmIcon.setVisible(chatMessage instanceof PublicChatMessage);
         pmIcon.setManaged(chatMessage instanceof PublicChatMessage);
 
-        isMenuShowingPin = EasyBind.subscribe(moreOptionsMenu.getIsMenuShowing(), isShowing -> {
+        isMenuShowingPin = EasyBind.subscribe(moreActionsMenu.getIsMenuShowing(), isShowing -> {
            if (!isShowing && !isHover()) {
                dateTime.setVisible(false);
-               reactionsHBox.setVisible(false);
+               actionsHBox.setVisible(false);
            }
         });
     }

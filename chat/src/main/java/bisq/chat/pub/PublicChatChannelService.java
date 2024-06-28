@@ -17,7 +17,14 @@
 
 package bisq.chat.pub;
 
-import bisq.chat.*;
+import bisq.chat.ChatChannel;
+import bisq.chat.ChatChannelDomain;
+import bisq.chat.ChatChannelService;
+import bisq.chat.ChatMessage;
+import bisq.chat.Citation;
+import bisq.chat.reactions.ChatMessageReaction;
+import bisq.chat.reactions.CommonPublicChatMessageReaction;
+import bisq.chat.reactions.Reaction;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkIdWithKeyPair;
 import bisq.network.p2p.services.data.BroadcastResult;
@@ -108,6 +115,27 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
         return networkService.removeAuthenticatedData(chatMessage, networkIdWithKeyPair.getKeyPair());
     }
 
+    public CompletableFuture<BroadcastResult> publishChatMessageReaction(M message,
+                                                                         Reaction reaction,
+                                                                         UserIdentity userIdentity) {
+        if (bannedUserService.isUserProfileBanned(userIdentity.getId())) {
+            return CompletableFuture.failedFuture(new RuntimeException());
+        }
+
+        CommonPublicChatMessageReaction chatMessageReaction = createChatMessageReaction(message, reaction, userIdentity);
+        // Sender adds the message at sending to avoid the delayed display if using the received message from the network.
+        message.getChatMessageReactions().add(chatMessageReaction);
+
+        KeyPair keyPair = userIdentity.getNetworkIdWithKeyPair().getKeyPair();
+        return userIdentityService.maybePublishUserProfile(userIdentity.getUserProfile(), keyPair)
+                .thenCompose(nil -> networkService.publishAuthenticatedData(chatMessageReaction, keyPair));
+    }
+
+    public <R extends ChatMessageReaction> CompletableFuture<BroadcastResult> deleteChatMessageReaction(R chatMessageReaction,
+                                                                                                        NetworkIdWithKeyPair networkIdWithKeyPair) {
+        return networkService.removeAuthenticatedData(chatMessageReaction, networkIdWithKeyPair.getKeyPair());
+    }
+
     @Override
     public String getChannelTitlePostFix(ChatChannel<? extends ChatMessage> chatChannel) {
         return "";
@@ -145,4 +173,33 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
     protected abstract M createEditedChatMessage(M originalChatMessage, String editedText, UserProfile userProfile);
 
     protected abstract void maybeAddDefaultChannels();
+
+    protected <R extends ChatMessageReaction> void processAddedReaction(R chatMessageReaction) {
+        findChannel(chatMessageReaction.getChatChannelId())
+                .flatMap(channel -> channel.getChatMessages().stream()
+                        .filter(message -> message.getId().equals(chatMessageReaction.getChatMessageId()))
+                        .findFirst())
+                .ifPresent(message -> message.getChatMessageReactions().add(chatMessageReaction));
+    }
+
+    protected <R extends ChatMessageReaction> void processRemovedReaction(R chatMessageReaction) {
+        findChannel(chatMessageReaction.getChatChannelId())
+                .flatMap(channel -> channel.getChatMessages().stream()
+                        .filter(message -> message.getId().equals(chatMessageReaction.getChatMessageId()))
+                        .findFirst())
+                .ifPresent(message -> message.getChatMessageReactions().remove(chatMessageReaction));
+    }
+
+    // TODO: Make this a class generic when adding more message types (for now we only have one).
+    private CommonPublicChatMessageReaction createChatMessageReaction(M message, Reaction reaction, UserIdentity userIdentity) {
+        return new CommonPublicChatMessageReaction(
+                CommonPublicChatMessageReaction.createId(message.getChannelId(),
+                        message.getId(), reaction.ordinal(), userIdentity.getId()),
+                userIdentity.getId(),
+                message.getChannelId(),
+                message.getChatChannelDomain(),
+                message.getId(),
+                reaction.ordinal(),
+                System.currentTimeMillis());
+    };
 }

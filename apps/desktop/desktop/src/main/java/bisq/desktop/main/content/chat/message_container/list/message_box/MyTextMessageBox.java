@@ -47,7 +47,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
     private final static String EDITED_POST_FIX = " " + Res.get("chat.message.wasEdited");
 
     private final Label deliveryState;
-    private final Subscription reactionsVisiblePropertyPin, messageDeliveryStatusIconPin;
+    private final Subscription actionsBoxVisiblePropertyPin, messageDeliveryStatusIconPin;
     private Label editIcon, deleteIcon, copyIcon;
     private BisqTextArea editInputField;
     private Button saveEditButton, cancelEditButton;
@@ -75,23 +75,23 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         userProfileIcon.setSize(30);
         userProfileIconVbox.setAlignment(Pos.TOP_LEFT);
         HBox.setMargin(deleteIcon, new Insets(0, 10, 0, 0));
-        reactionsHBox.getChildren().setAll(Spacer.fillHBox(), editIcon, copyIcon, deleteIcon);
+        actionsHBox.getChildren().setAll(Spacer.fillHBox(), editIcon, copyIcon, deleteIcon);
         HBox.setMargin(messageVBox, new Insets(0, -15, 0, 0));
         HBox.setMargin(userProfileIconVbox, new Insets(7.5, 0, -5, 5));
         HBox.setMargin(editInputField, new Insets(6, -10, -25, 0));
         messageBgHBox.getChildren().setAll(messageVBox, userProfileIconVbox);
 
         HBox.setMargin(deliveryState, new Insets(0, 10, 0, 0));
-        HBox deliveryStateHBox = new HBox(Spacer.fillHBox(), reactionsHBox);
+        HBox deliveryStateHBox = new HBox(Spacer.fillHBox(), actionsHBox);
 
-        reactionsVisiblePropertyPin = EasyBind.subscribe(reactionsHBox.visibleProperty(), v -> {
+        actionsBoxVisiblePropertyPin = EasyBind.subscribe(actionsHBox.visibleProperty(), v -> {
             if (v) {
                 deliveryStateHBox.getChildren().remove(deliveryState);
-                if (!reactionsHBox.getChildren().contains(deliveryState)) {
-                    reactionsHBox.getChildren().add(deliveryState);
+                if (!actionsHBox.getChildren().contains(deliveryState)) {
+                    actionsHBox.getChildren().add(deliveryState);
                 }
             } else {
-                reactionsHBox.getChildren().remove(deliveryState);
+                actionsHBox.getChildren().remove(deliveryState);
                 if (!deliveryStateHBox.getChildren().contains(deliveryState)) {
                     deliveryStateHBox.getChildren().add(deliveryState);
                 }
@@ -123,7 +123,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         editInputField.maxWidthProperty().bind(message.widthProperty());
 
         setMargin(deliveryStateHBox, new Insets(4, 0, -3, 0));
-        messageHBox.getChildren().setAll(Spacer.fillHBox(), messageBgHBox);
+        messageHBox.getChildren().setAll(Spacer.fillHBox(), addedReactions, messageBgHBox);
 
         contentVBox.getChildren().setAll(userNameAndDateHBox, messageHBox, editButtonsHBox, deliveryStateHBox);
     }
@@ -138,14 +138,15 @@ public final class MyTextMessageBox extends BubbleMessageBox {
     }
 
     @Override
-    protected void setUpReactions() {
+    protected void setUpActions() {
         editIcon = getIconWithToolTip(AwesomeIcon.EDIT, Res.get("action.edit"));
         copyIcon = getIconWithToolTip(AwesomeIcon.COPY, Res.get("action.copyToClipboard"));
         deleteIcon = getIconWithToolTip(AwesomeIcon.REMOVE_SIGN, Res.get("action.delete"));
         HBox.setMargin(editIcon, new Insets(1, 0, -1, 0));
         HBox.setMargin(copyIcon, new Insets(1, 0, -1, 0));
+        HBox.setMargin(reactMenu, new Insets(2, 0, -2, 0));
         HBox.setMargin(deleteIcon, new Insets(1, 0, -1, 0));
-        reactionsHBox.setVisible(false);
+        actionsHBox.setVisible(false);
     }
 
     private void setUpEditFunctionality() {
@@ -168,7 +169,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
     }
 
     @Override
-    protected void addReactionsHandlers() {
+    protected void addActionsHandlers() {
         ChatMessage chatMessage = item.getChatMessage();
         boolean isPublicChannel = item.isPublicChannel();
         boolean allowEditing = isPublicChannel;
@@ -200,7 +201,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
     }
 
     private void onEditMessage() {
-        reactionsHBox.setVisible(false);
+        actionsHBox.setVisible(false);
         editInputField.setVisible(true);
         editInputField.setManaged(true);
         editInputField.setInitialHeight(message.getBoundsInLocal().getHeight());
@@ -256,8 +257,8 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         editInputField.setOnKeyPressed(null);
         userProfileIcon.releaseResources();
 
-        if (reactionsVisiblePropertyPin != null) {
-            reactionsVisiblePropertyPin.unsubscribe();
+        if (actionsBoxVisiblePropertyPin != null) {
+            actionsBoxVisiblePropertyPin.unsubscribe();
         }
 
         if (messageDeliveryStatusIconPin != null) {
