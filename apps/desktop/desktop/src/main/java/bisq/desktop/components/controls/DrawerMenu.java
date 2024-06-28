@@ -74,9 +74,7 @@ public class DrawerMenu extends HBox {
     }
 
     private void attachListeners() {
-        menuButton.setOnAction(e -> {
-            toggleItemsHBox();
-        });
+        menuButton.setOnAction(e -> toggleItemsHBox());
         menuButton.setOnMouseEntered(e -> {
             if (!itemsHBox.isVisible()) {
                 updateIcon(hoverIcon);
@@ -115,6 +113,7 @@ public class DrawerMenu extends HBox {
                 newScene.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
                     if (itemsHBox.isVisible() && !clickedOnDrawerMenu(e)) {
                         hideMenu();
+                        e.consume();
                     }
                 });
             }

@@ -54,7 +54,7 @@ public abstract class BubbleMessageBox extends MessageBox {
     protected static final double CHAT_MESSAGE_BOX_MAX_WIDTH = 630;
     protected static final double OFFER_MESSAGE_USER_ICON_SIZE = 70;
 
-    private final Subscription showHighlightedPin, reactionsPin;
+    private final Subscription showHighlightedPin, reactionsPin, reactMenuPin;
     protected final ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item;
     protected final ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list;
     protected final ChatMessagesListController controller;
@@ -113,6 +113,12 @@ public abstract class BubbleMessageBox extends MessageBox {
                 UIThread.run(() -> addedReactions.getChildren().setAll(node));
             }
         });
+
+        reactMenuPin = EasyBind.subscribe(reactMenu.getIsMenuShowing(), isShowing -> {
+            if (!isShowing && !isHover()) {
+                showDateTimeAndActionsMenu(false);
+            }
+        });
     }
 
     protected void setUpUserNameAndDateTime() {
@@ -145,20 +151,9 @@ public abstract class BubbleMessageBox extends MessageBox {
     }
 
     private void addOnMouseEventHandlers() {
-        setOnMouseEntered(e -> {
-            if ((moreActionsMenu != null && moreActionsMenu.getIsMenuShowing().get()) || reactMenu.getIsMenuShowing().get()) {
-                return;
-            }
-            dateTime.setVisible(true);
-            actionsHBox.setVisible(true);
-        });
+        setOnMouseEntered(e -> showDateTimeAndActionsMenu(true));
 
-        setOnMouseExited(e -> {
-            if ((moreActionsMenu == null || !moreActionsMenu.getIsMenuShowing().get()) && !reactMenu.getIsMenuShowing().get()) {
-                dateTime.setVisible(false);
-                actionsHBox.setVisible(false);
-            }
-        });
+        setOnMouseExited(e -> showDateTimeAndActionsMenu(false));
     }
 
     @Override
@@ -175,6 +170,22 @@ public abstract class BubbleMessageBox extends MessageBox {
 
         showHighlightedPin.unsubscribe();
         reactionsPin.unsubscribe();
+        reactMenuPin.unsubscribe();
+    }
+
+    private void showDateTimeAndActionsMenu(boolean shouldShow) {
+        if (shouldShow) {
+            if ((moreActionsMenu != null && moreActionsMenu.getIsMenuShowing().get()) || reactMenu.getIsMenuShowing().get()) {
+                return;
+            }
+            dateTime.setVisible(true);
+            actionsHBox.setVisible(true);
+        } else {
+            if ((moreActionsMenu == null || !moreActionsMenu.getIsMenuShowing().get()) && !reactMenu.getIsMenuShowing().get()) {
+                dateTime.setVisible(false);
+                actionsHBox.setVisible(false);
+            }
+        }
     }
 
     private Label createAndGetSupportedLanguagesLabel() {
