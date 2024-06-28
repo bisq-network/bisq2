@@ -278,3 +278,20 @@
     -fx-font-size: 1em;
     -fx-font-family: "IBM Plex Sans";
 }
+
+
+/*******************************************************************************
+ * Error popup                                                              *
+ ******************************************************************************/
+
+.error-log {
+    -fx-background-color: -bisq-dark-grey-30;
+}
+
+.error-log .content {
+    -fx-background-color: -bisq-dark-grey-30;
+}
+
+.error-log:focused .content {
+    -fx-background-color: -bisq-dark-grey-30;
+}

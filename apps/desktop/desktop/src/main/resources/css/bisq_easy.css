@@ -199,6 +199,15 @@
     -fx-padding: 0 10 0 10;
 }
 
+.offerbook-peer-name {
+    -fx-background-color: -bisq-dark-grey-30;
+    -fx-padding: 1 7;
+    -fx-background-radius: 4;
+    -fx-border-radius: 4;
+    -fx-border-width: 1px;
+    -fx-border-color: -bisq-dark-grey-50;
+}
+
 /* Drop down sort & filter menu */
 .dropdown-menu-popup .dropdown-menu-item .dropdown-menu-item-content .menu-item-icon,
 .dropdown-menu-popup .dropdown-menu-item:hover .dropdown-menu-item-content .menu-item-icon {

@@ -18,7 +18,9 @@
 package bisq.desktop.components.overlay;
 
 import bisq.application.ShutDownHandler;
+import bisq.common.application.ApplicationVersion;
 import bisq.common.locale.LanguageRepository;
+import bisq.common.util.FileUtils;
 import bisq.common.util.OsUtils;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
@@ -27,6 +29,7 @@ import bisq.desktop.common.Icons;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.ClipboardUtil;
+import bisq.desktop.common.utils.FileChooserUtil;
 import bisq.desktop.components.containers.BisqGridPane;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTooltip;
@@ -53,10 +56,7 @@ import javafx.geometry.NodeOrientation;
 import javafx.geometry.Pos;
 import javafx.scene.PerspectiveCamera;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Hyperlink;
-import javafx.scene.control.Label;
+import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
@@ -71,6 +71,9 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.nio.file.*;
 import java.util.*;
 
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
@@ -216,12 +219,13 @@ public abstract class Overlay<T extends Overlay<T>> {
             }
 
             addContent();
+            addButtons();
+            addDontShowAgainCheckBox(showAgainChecked);
+
             if (showReportErrorButtons) {
                 addReportErrorButtons();
             }
 
-            addButtons();
-            addDontShowAgainCheckBox(showAgainChecked);
             applyStyles();
             onShow();
         }
@@ -408,16 +412,29 @@ public abstract class Overlay<T extends Overlay<T>> {
     }
 
     public T error(Throwable throwable) {
-        return error(StringUtils.truncate(Throwables.getStackTraceAsString(throwable), 800));
+        return error(Throwables.getStackTraceAsString(throwable));
     }
 
     public T error(String message) {
         type = Type.ERROR;
         showReportErrorButtons();
         width = 800;
-        if (headline == null)
-            this.headline = Res.get("popup.headline.error");
-        processMessage(message);
+        if (headline == null) {
+            this.headline = Res.get("popup.reportBug");
+        }
+
+        processMessage(Res.get("popup.reportError"));
+
+        String version = ApplicationVersion.getVersion().getVersionAsString();
+        String osInfo = OsUtils.getOsInfo();
+        String errorReport = Res.get("popup.reportBug.report", version, osInfo, message);
+        TextArea errorReportTextArea = new TextArea(errorReport);
+        errorReportTextArea.setPrefWidth(width);
+        errorReportTextArea.setWrapText(true);
+        errorReportTextArea.getStyleClass().addAll("code-block", "error-log");
+
+        content(errorReportTextArea);
+
         return cast();
     }
 
@@ -927,26 +944,65 @@ public abstract class Overlay<T extends Overlay<T>> {
     }
 
     private void addReportErrorButtons() {
-        messageLabel.setText(Res.get("popup.reportError", truncatedMessage));
-
         Button logButton = new Button(Res.get("popup.reportError.log"));
-        GridPane.setMargin(logButton, new Insets(20, 0, 0, 0));
-        GridPane.setHalignment(logButton, HPos.LEFT);
-        GridPane.setRowIndex(logButton, gridPane.getRowCount());
-        gridPane.getChildren().add(logButton);
         logButton.setOnAction(event -> OsUtils.open(new File(baseDir, "bisq.log")));
 
+        Button zipLogButton = new Button(Res.get("popup.reportError.zipLogs"));
+        zipLogButton.setOnAction(event -> {
+            FileChooserUtil.chooseDirectory(getRootContainer().getScene(), baseDir, "")
+                    .ifPresent(directory -> {
+                        // Copy debug log file and replace users home directory with "<HOME_DIR>" to avoid that
+                        // private data gets leaked in case the user used their real name as their OS user.
+                        Path debugLogPath = Path.of(baseDir + "/tor/").resolve("debug.log");
+                        File debugLogForZipFile = Path.of(baseDir + "/tor/").resolve("debug_for_zip.log").toFile();
+                        try {
+                            if (debugLogForZipFile.exists()) {
+                                debugLogForZipFile.delete();
+                            }
+                            FileUtils.copyFile(debugLogPath.toFile(), debugLogForZipFile);
+                            String logContent = FileUtils.readAsString(debugLogForZipFile.getAbsolutePath());
+                            logContent = StringUtils.maskHomeDirectory(logContent);
+                            FileUtils.writeToFile(logContent, debugLogForZipFile);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                        String zipDirectory = directory.getAbsolutePath();
+                        URI uri = URI.create("jar:file:" + Paths.get(zipDirectory, "bisq2-logs.zip").toUri().getRawPath());
+                        Map<String, String> env = Map.of("create", "true");
+                        List<Path> logPaths = Arrays.asList(
+                                Path.of(baseDir).resolve("bisq.log"),
+                                debugLogForZipFile.toPath());
+                        try (FileSystem zipFileSystem = FileSystems.newFileSystem(uri, env)) {
+                            logPaths.forEach(logPath -> {
+                                if (logPath.toFile().isFile()) {
+                                    try {
+                                        Files.copy(logPath, zipFileSystem.getPath(logPath.toFile().getName()), StandardCopyOption.REPLACE_EXISTING);
+                                    } catch (IOException e) {
+                                        throw new RuntimeException(e);
+                                    }
+                                }
+                            });
+                            OsUtils.open(zipDirectory);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+        });
+
         Button gitHubButton = new Button(Res.get("popup.reportError.gitHub"));
-        GridPane.setHalignment(gitHubButton, HPos.RIGHT);
-        GridPane.setRowIndex(gitHubButton, gridPane.getRowCount());
-        gridPane.getChildren().add(gitHubButton);
         gitHubButton.setOnAction(event -> {
-            if (message != null) {
-                ClipboardUtil.copyToClipboard(message);
+            if (content instanceof TextArea) {
+                TextArea errorReportTextArea = (TextArea) content;
+                ClipboardUtil.copyToClipboard(errorReportTextArea.getText());
+                Browser.open("https://github.com/bisq-network/bisq2/issues");
             }
-            Browser.open("https://github.com/bisq-network/bisq2/issues");
             hide();
         });
+
+        buttonBox.getChildren().add(0, Spacer.fillHBox());
+        buttonBox.getChildren().add(0, gitHubButton);
+        buttonBox.getChildren().add(0, zipLogButton);
+        buttonBox.getChildren().add(0, logButton);
     }
 
     protected void addBusyAnimation() {
