@@ -139,8 +139,10 @@ public final class MyTextMessageBox extends BubbleMessageBox {
 
         editAction = new BisqMenuItem("edit-grey", "edit-white");
         editAction.useIconOnly();
+        editAction.setTooltip(Res.get("action.edit"));
         deleteAction = new BisqMenuItem("delete-t-grey", "delete-t-red");
         deleteAction.useIconOnly();
+        deleteAction.setTooltip(Res.get("action.delete"));
         HBox.setMargin(editAction, ACTION_ITEMS_MARGIN);
         HBox.setMargin(deleteAction, ACTION_ITEMS_MARGIN);
     }

@@ -32,6 +32,7 @@ import bisq.desktop.components.controls.DropdownMenu;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
 import bisq.desktop.main.content.components.UserProfileIcon;
+import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
@@ -141,6 +142,7 @@ public abstract class BubbleMessageBox extends MessageBox {
     protected void setUpActions() {
         copyAction = new BisqMenuItem("copy-grey", "copy-white");
         copyAction.useIconOnly();
+        copyAction.setTooltip(Res.get("action.copyToClipboard"));
         reactMenu = createAndGetReactMenu();
         actionsHBox.setVisible(false);
         reactMenuPin = EasyBind.subscribe(reactMenu.getIsMenuShowing(), isShowing -> {
@@ -274,6 +276,8 @@ public abstract class BubbleMessageBox extends MessageBox {
 
     private DrawerMenu createAndGetReactMenu() {
         DrawerMenu drawerMenu = new DrawerMenu("react-grey", "react-white", "react-green");
+        drawerMenu.setTooltip(Res.get("action.react"));
+
         thumbsUpReactionMenu = new BisqMenuItem("react-thumbsup", "react-thumbsup");
         thumbsUpReactionMenu.useIconOnly();
         thumbsUpReactionMenu.setOnAction(e -> toggleReaction(Reaction.THUMBS_UP));

@@ -20,6 +20,7 @@ package bisq.desktop.components.controls;
 import bisq.desktop.common.utils.ImageUtil;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 
 public class BisqMenuItem extends Button {
@@ -62,6 +63,12 @@ public class BisqMenuItem extends Button {
         setPrefSize(size, size);
         setAlignment(Pos.CENTER);
         getStyleClass().add("icon-only");
+    }
+
+    public void setTooltip(String tooltip) {
+        if (tooltip != null) {
+            Tooltip.install(this, new BisqTooltip(tooltip));
+        }
     }
 
     private void attachListeners() {

@@ -23,6 +23,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.WeakChangeListener;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
@@ -71,6 +72,12 @@ public class DrawerMenu extends HBox {
     public void hideMenu() {
         itemsHBox.setVisible(false);
         itemsHBox.setManaged(false);
+    }
+
+    public void setTooltip(String tooltip) {
+        if (tooltip != null) {
+            Tooltip.install(menuButton, new BisqTooltip(tooltip));
+        }
     }
 
     private void attachListeners() {

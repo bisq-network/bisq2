@@ -67,8 +67,10 @@ public class PeerTextMessageBox extends BubbleMessageBox {
 
         replyAction = new BisqMenuItem("reply-grey", "reply-white");
         replyAction.useIconOnly();
+        replyAction.setTooltip(Res.get("chat.message.reply"));
         openPrivateChatAction = new BisqMenuItem("open-p-chat-grey", "open-p-chat-white");
         openPrivateChatAction.useIconOnly();
+        openPrivateChatAction.setTooltip(Res.get("chat.message.privateMessage"));
 
         // More actions dropdown menu
         ignoreUserMenuItem = new DropdownMenuItem("ignore-grey", "ignore-white",
