@@ -51,7 +51,7 @@ import java.util.Optional;
 @Slf4j
 public abstract class BubbleMessageBox extends MessageBox {
     private static final String HIGHLIGHTED_MESSAGE_BG_STYLE_CLASS = "highlighted-message-bg";
-    protected static final double CHAT_MESSAGE_BOX_MAX_WIDTH = 630;
+    protected static final double CHAT_MESSAGE_BOX_MAX_WIDTH = 630; // TODO: it should be 510 because of reactions on min size
     protected static final double OFFER_MESSAGE_USER_ICON_SIZE = 70;
 
     private final Subscription showHighlightedPin, reactionsPin, reactMenuPin;
