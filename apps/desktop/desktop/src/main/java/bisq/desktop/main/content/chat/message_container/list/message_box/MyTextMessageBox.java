@@ -30,7 +30,6 @@ import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListCon
 import bisq.i18n.Res;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
 import de.jensd.fx.fontawesome.AwesomeDude;
-import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
@@ -49,8 +48,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
 
     private final Label deliveryState;
     private final Subscription actionsBoxVisiblePropertyPin, messageDeliveryStatusIconPin;
-    private BisqMenuItem editAction;
-    private Label deleteIcon;
+    private BisqMenuItem editAction, deleteAction;
     private BisqTextArea editInputField;
     private Button saveEditButton, cancelEditButton;
     private HBox editButtonsHBox;
@@ -76,7 +74,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         message.maxWidthProperty().bind(list.widthProperty().subtract(140));
         userProfileIcon.setSize(30);
         userProfileIconVbox.setAlignment(Pos.TOP_LEFT);
-        actionsHBox.getChildren().setAll(Spacer.fillHBox(), editAction, copyAction, deleteIcon);
+        actionsHBox.getChildren().setAll(Spacer.fillHBox(), editAction, copyAction, deleteAction);
         HBox.setMargin(messageVBox, new Insets(0, -15, 0, 0));
         HBox.setMargin(userProfileIconVbox, new Insets(7.5, 0, -5, 5));
         HBox.setMargin(editInputField, new Insets(6, -10, -25, 0));
@@ -122,10 +120,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
 
         deliveryState.getTooltip().textProperty().bind(item.getMessageDeliveryStatusTooltip());
         editInputField.maxWidthProperty().bind(message.widthProperty());
-
-        setMargin(deliveryStateHBox, new Insets(4, 0, -3, 0));
         messageHBox.getChildren().setAll(Spacer.fillHBox(), addedReactions, messageBgHBox);
-
         contentVBox.getChildren().setAll(userNameAndDateHBox, messageHBox, editButtonsHBox, deliveryStateHBox);
     }
 
@@ -144,9 +139,10 @@ public final class MyTextMessageBox extends BubbleMessageBox {
 
         editAction = new BisqMenuItem("edit-grey", "edit-white");
         editAction.useIconOnly();
-        deleteIcon = getIconWithToolTip(AwesomeIcon.REMOVE_SIGN, Res.get("action.delete"));
+        deleteAction = new BisqMenuItem("delete-t-grey", "delete-t-red");
+        deleteAction.useIconOnly();
         HBox.setMargin(editAction, ACTION_ITEMS_MARGIN);
-        HBox.setMargin(deleteIcon, ACTION_ITEMS_MARGIN);
+        HBox.setMargin(deleteAction, ACTION_ITEMS_MARGIN);
     }
 
     private void setUpEditFunctionality() {
@@ -183,13 +179,13 @@ public final class MyTextMessageBox extends BubbleMessageBox {
             editAction.setOnAction(e -> onEditMessage());
         }
         if (isPublicChannel) {
-            deleteIcon.setOnMouseClicked(e -> controller.onDeleteMessage(chatMessage));
+            deleteAction.setOnAction(e -> controller.onDeleteMessage(chatMessage));
         }
 
         editAction.setVisible(allowEditing);
         editAction.setManaged(allowEditing);
-        deleteIcon.setVisible(isPublicChannel);
-        deleteIcon.setManaged(isPublicChannel);
+        deleteAction.setVisible(isPublicChannel);
+        deleteAction.setManaged(isPublicChannel);
     }
 
     private void handleEditBox() {
@@ -248,11 +244,10 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         cancelEditButton.setOnAction(null);
         copyAction.setOnAction(null);
         editAction.setOnAction(null);
+        deleteAction.setOnAction(null);
 
         userName.setOnMouseClicked(null);
         userProfileIcon.setOnMouseClicked(null);
-
-        deleteIcon.setOnMouseClicked(null);
 
         editInputField.setOnKeyPressed(null);
         userProfileIcon.releaseResources();

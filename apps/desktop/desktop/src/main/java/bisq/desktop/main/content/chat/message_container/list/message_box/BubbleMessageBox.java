@@ -22,7 +22,6 @@ import bisq.chat.ChatMessage;
 import bisq.chat.Citation;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.reactions.Reaction;
-import bisq.desktop.common.Icons;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.utils.ImageUtil;
@@ -33,7 +32,6 @@ import bisq.desktop.components.controls.DropdownMenu;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
 import bisq.desktop.main.content.components.UserProfileIcon;
-import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
@@ -202,6 +200,7 @@ public abstract class BubbleMessageBox extends MessageBox {
             BisqEasyOfferbookMessage chatMessage = (BisqEasyOfferbookMessage) item.getChatMessage();
             label.setTooltip(new BisqTooltip(item.getSupportedLanguageCodesForTooltip(chatMessage)));
         }
+        HBox.setMargin(label, new Insets(9, 0, -9, 0));
         return label;
     }
 
@@ -263,13 +262,6 @@ public abstract class BubbleMessageBox extends MessageBox {
         HBox hBox = new HBox(5);
         VBox.setMargin(hBox, new Insets(10, 0, 0, 0));
         return hBox;
-    }
-
-    protected static Label getIconWithToolTip(AwesomeIcon icon, String tooltipString) {
-        Label iconLabel = Icons.getIcon(icon);
-        iconLabel.setCursor(Cursor.HAND);
-        iconLabel.setTooltip(new BisqTooltip(tooltipString, true));
-        return iconLabel;
     }
 
     protected static void onCopyMessage(ChatMessage chatMessage) {
