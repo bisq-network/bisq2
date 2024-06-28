@@ -430,7 +430,7 @@ public abstract class Overlay<T extends Overlay<T>> {
         TextArea errorReportTextArea = new TextArea(errorReport);
         errorReportTextArea.setPrefWidth(width);
         errorReportTextArea.setWrapText(true);
-        errorReportTextArea.getStyleClass().add("error-log");
+        errorReportTextArea.getStyleClass().addAll("code-block", "error-log");
 
         content(errorReportTextArea);
 
