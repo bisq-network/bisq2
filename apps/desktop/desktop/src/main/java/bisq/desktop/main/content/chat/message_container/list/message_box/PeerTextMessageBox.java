@@ -73,7 +73,7 @@ public class PeerTextMessageBox extends BubbleMessageBox {
                 Res.get("chat.message.contextMenu.ignoreUser"));
         reportUserMenuItem = new DropdownMenuItem("report-grey", "report-white",
                 Res.get("chat.message.contextMenu.reportUser"));
-        moreActionsMenu = new DropdownMenu("ellipsis-h-grey", "ellipsis-h-white", true);
+        moreActionsMenu = new DropdownMenu("more-actions-grey", "more-actions-white", true);
         moreActionsMenu.setTooltip(Res.get("chat.message.moreOptions"));
         moreActionsMenu.addMenuItems(ignoreUserMenuItem, reportUserMenuItem);
         moreActionsMenu.setOpenToTheRight(true);
