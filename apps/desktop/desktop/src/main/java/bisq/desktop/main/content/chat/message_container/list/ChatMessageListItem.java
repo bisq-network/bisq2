@@ -73,10 +73,12 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.text.DateFormat;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -92,6 +94,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Getter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChannel<M>> implements Comparable<ChatMessageListItem<M, C>> {
+    private static final List<Reaction> REACTION_DISPLAY_ORDER = Arrays.asList(Reaction.THUMBS_UP, Reaction.THUMBS_DOWN,
+            Reaction.HAPPY, Reaction.LAUGH, Reaction.HEART, Reaction.PARTY);
+
     @EqualsAndHashCode.Include
     private final M chatMessage;
     @EqualsAndHashCode.Include
@@ -422,19 +427,19 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private void setupDisplayReactionsNode() {
         HBox reactions = new HBox(5);
         reactions.setAlignment(Pos.BOTTOM_LEFT);
-        userReactions.keySet().stream().sorted().forEach(reaction -> {
-            Label label = new Label();
-            label.setGraphic(ImageUtil.getImageViewById(reaction.toString().replace("_", "").toLowerCase()));
-            reactions.getChildren().add(label);
+        REACTION_DISPLAY_ORDER.forEach(reaction -> {
+            if (userReactions.containsKey(reaction)) {
+                reactions.getChildren().add(new Label("", ImageUtil.getImageViewById(reaction.toString().replace("_", "").toLowerCase())));
+            }
         });
         reactionsNode.set(reactions);
     }
 
     private void logReactionsCount() {
         StringBuilder reactionsCount = new StringBuilder("\n");
-        userReactions.forEach((reaction, userProfileSet) -> {
-            reactionsCount.append(String.format("%s: %s\n", reaction, userProfileSet.size()));
-        });
+        REACTION_DISPLAY_ORDER.forEach(reaction ->
+                reactionsCount.append(String.format("%s: %s\n", reaction,
+                        userReactions.containsKey(reaction) ? userReactions.get(reaction).size() : 0)));
         log.info(reactionsCount.toString());
     }
 }

@@ -275,6 +275,12 @@ public abstract class BubbleMessageBox extends MessageBox {
 
     private DrawerMenu createAndGetReactMenu() {
         DrawerMenu drawerMenu = new DrawerMenu("react-grey", "react-white", "react-green");
+        thumbsUpReactionMenu = new BisqMenuItem("react-thumbsup", "react-thumbsup");
+        thumbsUpReactionMenu.useIconOnly();
+        thumbsUpReactionMenu.setOnAction(e -> toggleReaction(Reaction.THUMBS_UP));
+        thumbsDownReactionMenu = new BisqMenuItem("react-thumbsdown", "react-thumbsdown");
+        thumbsDownReactionMenu.useIconOnly();
+        thumbsDownReactionMenu.setOnAction(e -> toggleReaction(Reaction.THUMBS_DOWN));
         happyReactionMenu = new BisqMenuItem("react-happy", "react-happy");
         happyReactionMenu.useIconOnly();
         happyReactionMenu.setOnAction(e -> toggleReaction(Reaction.HAPPY));
@@ -284,17 +290,11 @@ public abstract class BubbleMessageBox extends MessageBox {
         heartReactionMenu = new BisqMenuItem("react-heart", "react-heart");
         heartReactionMenu.useIconOnly();
         heartReactionMenu.setOnAction(e -> toggleReaction(Reaction.HEART));
-        thumbsDownReactionMenu = new BisqMenuItem("react-thumbsdown", "react-thumbsdown");
-        thumbsDownReactionMenu.useIconOnly();
-        thumbsDownReactionMenu.setOnAction(e -> toggleReaction(Reaction.THUMBS_DOWN));
-        thumbsUpReactionMenu = new BisqMenuItem("react-thumbsup", "react-thumbsup");
-        thumbsUpReactionMenu.useIconOnly();
-        thumbsUpReactionMenu.setOnAction(e -> toggleReaction(Reaction.THUMBS_UP));
         partyReactionMenu = new BisqMenuItem("react-party", "react-party");
         partyReactionMenu.useIconOnly();
         partyReactionMenu.setOnAction(e -> toggleReaction(Reaction.PARTY));
-        drawerMenu.addItems(happyReactionMenu, laughReactionMenu, heartReactionMenu, thumbsDownReactionMenu,
-                thumbsUpReactionMenu, partyReactionMenu);
+        drawerMenu.addItems(thumbsUpReactionMenu, thumbsDownReactionMenu, happyReactionMenu, laughReactionMenu,
+                heartReactionMenu, partyReactionMenu);
         return drawerMenu;
     }
 
