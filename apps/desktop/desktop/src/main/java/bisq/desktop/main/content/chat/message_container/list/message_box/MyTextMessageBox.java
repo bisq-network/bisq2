@@ -75,8 +75,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         userProfileIcon.setSize(30);
         userProfileIconVbox.setAlignment(Pos.TOP_LEFT);
         HBox.setMargin(deleteIcon, new Insets(0, 10, 0, 0));
-        // TODO: Remove reactMenu from MyText, not prod ready yet
-        actionsHBox.getChildren().setAll(Spacer.fillHBox(), editIcon, copyIcon, reactMenu, deleteIcon);
+        actionsHBox.getChildren().setAll(Spacer.fillHBox(), editIcon, copyIcon, deleteIcon);
         HBox.setMargin(messageVBox, new Insets(0, -15, 0, 0));
         HBox.setMargin(userProfileIconVbox, new Insets(7.5, 0, -5, 5));
         HBox.setMargin(editInputField, new Insets(6, -10, -25, 0));
