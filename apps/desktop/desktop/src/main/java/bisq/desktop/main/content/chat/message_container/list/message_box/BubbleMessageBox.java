@@ -54,7 +54,7 @@ public abstract class BubbleMessageBox extends MessageBox {
     protected static final double CHAT_MESSAGE_BOX_MAX_WIDTH = 630; // TODO: it should be 510 because of reactions on min size
     protected static final double OFFER_MESSAGE_USER_ICON_SIZE = 70;
 
-    private final Subscription showHighlightedPin, reactionsPin, reactMenuPin;
+    private final Subscription showHighlightedPin, reactionsPin;
     protected final ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item;
     protected final ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list;
     protected final ChatMessagesListController controller;
@@ -63,6 +63,7 @@ public abstract class BubbleMessageBox extends MessageBox {
     protected final HBox addedReactions = new HBox();
     protected final VBox quotedMessageVBox, contentVBox;
     protected DrawerMenu reactMenu;
+    private Subscription reactMenuPin;
     protected Label supportedLanguages, userName, dateTime, message;
     protected HBox userNameAndDateHBox, messageBgHBox, messageHBox;
     protected VBox userProfileIconVbox;
@@ -113,12 +114,6 @@ public abstract class BubbleMessageBox extends MessageBox {
                 UIThread.run(() -> addedReactions.getChildren().setAll(node));
             }
         });
-
-        reactMenuPin = EasyBind.subscribe(reactMenu.getIsMenuShowing(), isShowing -> {
-            if (!isShowing && !isHover()) {
-                showDateTimeAndActionsMenu(false);
-            }
-        });
     }
 
     protected void setUpUserNameAndDateTime() {
@@ -149,6 +144,11 @@ public abstract class BubbleMessageBox extends MessageBox {
         copyAction.useIconOnly();
         reactMenu = createAndGetReactMenu();
         actionsHBox.setVisible(false);
+        reactMenuPin = EasyBind.subscribe(reactMenu.getIsMenuShowing(), isShowing -> {
+            if (!isShowing && !isHover()) {
+                showDateTimeAndActionsMenu(false);
+            }
+        });
     }
 
     protected void addActionsHandlers() {
@@ -156,7 +156,6 @@ public abstract class BubbleMessageBox extends MessageBox {
 
     private void addOnMouseEventHandlers() {
         setOnMouseEntered(e -> showDateTimeAndActionsMenu(true));
-
         setOnMouseExited(e -> showDateTimeAndActionsMenu(false));
     }
 

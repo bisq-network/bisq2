@@ -1006,6 +1006,18 @@
     -fx-image: url("/images/chat/message-actions/copy/copy-white.png");
 }
 
+#reply-green {
+    -fx-image: url("/images/chat/message-actions/reply/reply-green.png");
+}
+
+#reply-grey {
+    -fx-image: url("/images/chat/message-actions/reply/reply-grey.png");
+}
+
+#reply-white {
+    -fx-image: url("/images/chat/message-actions/reply/reply-white.png");
+}
+
 
 /* ------------------------------------------------------------------------------------ */
 /* Markets */
