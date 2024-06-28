@@ -155,6 +155,9 @@
     -fx-font-family: "IBM Plex Sans Light";
 }
 
+.chat-message-content-box .bisq-menu-item {
+}
+
 /* Peer Message Background */
 .chat-message-bg-peer-message,
 .chat-peer-offer-message-bg {

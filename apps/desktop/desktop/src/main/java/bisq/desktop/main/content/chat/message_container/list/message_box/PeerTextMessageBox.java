@@ -27,10 +27,8 @@ import bisq.desktop.components.controls.DropdownMenuItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
 import bisq.i18n.Res;
-import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -39,8 +37,7 @@ import org.fxmisc.easybind.Subscription;
 
 public class PeerTextMessageBox extends BubbleMessageBox {
     private Subscription isMenuShowingPin;
-    protected Label pmIcon;
-    protected BisqMenuItem replyAction;
+    protected BisqMenuItem replyAction, openPrivateChatAction;
     protected DropdownMenuItem ignoreUserMenuItem, reportUserMenuItem;
 
     public PeerTextMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
@@ -51,7 +48,7 @@ public class PeerTextMessageBox extends BubbleMessageBox {
         setUpPeerMessage();
         setMargin(userNameAndDateHBox, new Insets(-5, 0, -5, 10));
         messageHBox.getChildren().setAll(messageBgHBox, addedReactions, Spacer.fillHBox());
-        actionsHBox.getChildren().setAll(replyAction, pmIcon, copyAction, reactMenu, moreActionsMenu, Spacer.fillHBox());
+        actionsHBox.getChildren().setAll(replyAction, openPrivateChatAction, copyAction, reactMenu, moreActionsMenu, Spacer.fillHBox());
 
         contentVBox.getChildren().setAll(userNameAndDateHBox, messageHBox, actionsHBox);
     }
@@ -68,10 +65,10 @@ public class PeerTextMessageBox extends BubbleMessageBox {
     protected void setUpActions() {
         super.setUpActions();
 
-        pmIcon = getIconWithToolTip(AwesomeIcon.COMMENT_ALT, Res.get("chat.message.privateMessage"));
-
-        replyAction = new BisqMenuItem("reply-grey", "reply-white", "reply-white");
+        replyAction = new BisqMenuItem("reply-grey", "reply-white");
         replyAction.useIconOnly();
+        openPrivateChatAction = new BisqMenuItem("open-p-chat-grey", "open-p-chat-white");
+        openPrivateChatAction.useIconOnly();
 
         // More actions dropdown menu
         ignoreUserMenuItem = new DropdownMenuItem("ignore-grey", "ignore-white",
@@ -83,20 +80,17 @@ public class PeerTextMessageBox extends BubbleMessageBox {
         moreActionsMenu.addMenuItems(ignoreUserMenuItem, reportUserMenuItem);
         moreActionsMenu.setOpenToTheRight(true);
 
-        HBox.setMargin(replyAction, new Insets(2, 0, -2, 0));
-        HBox.setMargin(pmIcon, new Insets(3, 0, -3, 0));
-        HBox.setMargin(copyAction, new Insets(2, 0, -2, 0));
-        HBox.setMargin(reactMenu, new Insets(2, 0, -2, 0));
-        HBox.setMargin(moreActionsMenu, new Insets(2, 0, -2, 0));
+        HBox.setMargin(replyAction, ACTION_ITEMS_MARGIN);
+        HBox.setMargin(openPrivateChatAction, ACTION_ITEMS_MARGIN);
+        HBox.setMargin(moreActionsMenu, ACTION_ITEMS_MARGIN);
     }
 
     @Override
     protected void addActionsHandlers() {
         ChatMessage chatMessage = item.getChatMessage();
 
-        pmIcon.setOnMouseClicked(e -> controller.onOpenPrivateChannel(chatMessage));
-
         replyAction.setOnAction(e -> controller.onReply(chatMessage));
+        openPrivateChatAction.setOnAction(e -> controller.onOpenPrivateChannel(chatMessage));
         copyAction.setOnAction(e -> onCopyMessage(chatMessage));
         ignoreUserMenuItem.setOnAction(e -> controller.onIgnoreUser(chatMessage));
         reportUserMenuItem.setOnAction(e -> controller.onReportUser(chatMessage));
@@ -104,8 +98,8 @@ public class PeerTextMessageBox extends BubbleMessageBox {
         replyAction.setVisible(true);
         replyAction.setManaged(true);
 
-        pmIcon.setVisible(chatMessage instanceof PublicChatMessage);
-        pmIcon.setManaged(chatMessage instanceof PublicChatMessage);
+        openPrivateChatAction.setVisible(chatMessage instanceof PublicChatMessage);
+        openPrivateChatAction.setManaged(chatMessage instanceof PublicChatMessage);
 
         isMenuShowingPin = EasyBind.subscribe(moreActionsMenu.getIsMenuShowing(), isShowing -> {
            if (!isShowing && !isHover()) {
@@ -141,9 +135,9 @@ public class PeerTextMessageBox extends BubbleMessageBox {
 
         userName.setOnMouseClicked(null);
         userProfileIcon.setOnMouseClicked(null);
-        pmIcon.setOnMouseClicked(null);
 
         replyAction.setOnAction(null);
+        openPrivateChatAction.setOnAction(null);
         copyAction.setOnAction(null);
         ignoreUserMenuItem.setOnAction(null);
         reportUserMenuItem.setOnAction(null);

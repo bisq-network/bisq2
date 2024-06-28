@@ -908,6 +908,13 @@
     -fx-text-fill: -fx-light-text-color;
 }
 
+.button.bisq-menu-item.icon-only {
+}
+
+.button.bisq-menu-item.icon-only:hover {
+    -fx-background-color: -bisq-dark-grey-40 !important;
+}
+
 
 /*******************************************************************************
  *                                                                             *

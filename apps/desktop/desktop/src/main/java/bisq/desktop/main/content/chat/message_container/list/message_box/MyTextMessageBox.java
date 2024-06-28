@@ -144,10 +144,8 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         editIcon = getIconWithToolTip(AwesomeIcon.EDIT, Res.get("action.edit"));
         deleteIcon = getIconWithToolTip(AwesomeIcon.REMOVE_SIGN, Res.get("action.delete"));
 
-        HBox.setMargin(editIcon, new Insets(1, 0, -1, 0));
-        HBox.setMargin(copyAction, new Insets(2, 0, -2, 0));
-        HBox.setMargin(reactMenu, new Insets(2, 0, -2, 0));
-        HBox.setMargin(deleteIcon, new Insets(1, 0, -1, 0));
+        HBox.setMargin(editIcon, ACTION_ITEMS_MARGIN);
+        HBox.setMargin(deleteIcon, ACTION_ITEMS_MARGIN);
     }
 
     private void setUpEditFunctionality() {

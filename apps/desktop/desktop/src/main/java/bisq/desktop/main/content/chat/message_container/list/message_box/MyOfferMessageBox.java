@@ -73,7 +73,6 @@ public final class MyOfferMessageBox extends BubbleMessageBox {
 
         // Actions
         HBox.setMargin(supportedLanguages, new Insets(5, 0, -5, 0));
-        HBox.setMargin(copyAction, new Insets(4, 10, -4, 0));
         actionsHBox.getChildren().setAll(Spacer.fillHBox(), supportedLanguages, copyAction);
 
         contentVBox.setAlignment(Pos.CENTER_RIGHT);

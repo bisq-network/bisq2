@@ -53,13 +53,14 @@ public abstract class BubbleMessageBox extends MessageBox {
     private static final String HIGHLIGHTED_MESSAGE_BG_STYLE_CLASS = "highlighted-message-bg";
     protected static final double CHAT_MESSAGE_BOX_MAX_WIDTH = 630; // TODO: it should be 510 because of reactions on min size
     protected static final double OFFER_MESSAGE_USER_ICON_SIZE = 70;
+    protected static final Insets ACTION_ITEMS_MARGIN = new Insets(2, 0, -2, 0);
 
     private final Subscription showHighlightedPin, reactionsPin;
     protected final ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item;
     protected final ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list;
     protected final ChatMessagesListController controller;
     protected final UserProfileIcon userProfileIcon = new UserProfileIcon(60);
-    protected final HBox actionsHBox = new HBox(10);
+    protected final HBox actionsHBox = new HBox(5);
     protected final HBox addedReactions = new HBox();
     protected final VBox quotedMessageVBox, contentVBox;
     protected DrawerMenu reactMenu;
@@ -140,7 +141,7 @@ public abstract class BubbleMessageBox extends MessageBox {
     }
 
     protected void setUpActions() {
-        copyAction = new BisqMenuItem("copy-grey", "copy-white", "copy-white");
+        copyAction = new BisqMenuItem("copy-grey", "copy-white");
         copyAction.useIconOnly();
         reactMenu = createAndGetReactMenu();
         actionsHBox.setVisible(false);
@@ -149,6 +150,9 @@ public abstract class BubbleMessageBox extends MessageBox {
                 showDateTimeAndActionsMenu(false);
             }
         });
+
+        HBox.setMargin(copyAction, ACTION_ITEMS_MARGIN);
+        HBox.setMargin(reactMenu, ACTION_ITEMS_MARGIN);
     }
 
     protected void addActionsHandlers() {
