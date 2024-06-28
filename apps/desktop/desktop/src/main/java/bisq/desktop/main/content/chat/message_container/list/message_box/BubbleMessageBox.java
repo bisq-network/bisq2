@@ -281,6 +281,7 @@ public abstract class BubbleMessageBox extends MessageBox {
     private DrawerMenu createAndGetReactMenu() {
         DrawerMenu drawerMenu = new DrawerMenu("react-grey", "react-white", "react-green");
         drawerMenu.setTooltip(Res.get("action.react"));
+        drawerMenu.getStyleClass().add("react-menu");
 
         thumbsUpReactionMenu = new BisqMenuItem("react-thumbsup", "react-thumbsup");
         thumbsUpReactionMenu.useIconOnly();
