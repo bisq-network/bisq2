@@ -452,7 +452,6 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                 .findAny();
 
         if (chatMessageReaction.isPresent()) {
-            // user has already reacted to this message with this reaction, therefore toggling reaction state
             chatService.getCommonPublicChatChannelServices().get(model.getChatChannelDomain())
                     .deleteChatMessageReaction(chatMessageReaction.get(), userIdentity.getNetworkIdWithKeyPair());
         } else {

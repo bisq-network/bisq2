@@ -182,7 +182,7 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
                 .ifPresent(message -> message.getChatMessageReactions().add(chatMessageReaction));
     }
 
-    protected <R extends ChatMessageReaction> void processRemovedMessage(R chatMessageReaction) {
+    protected <R extends ChatMessageReaction> void processRemovedReaction(R chatMessageReaction) {
         findChannel(chatMessageReaction.getChatChannelId())
                 .flatMap(channel -> channel.getChatMessages().stream()
                         .filter(message -> message.getId().equals(chatMessageReaction.getChatMessageId()))

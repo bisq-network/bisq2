@@ -231,6 +231,10 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                 @Override
                 public void clear() {
                     userReactions.clear();
+                    log.info("Clearing reactions");
+
+                    setupDisplayReactionsNode();
+                    logReactionsCount();
                 }
             }));
         }
