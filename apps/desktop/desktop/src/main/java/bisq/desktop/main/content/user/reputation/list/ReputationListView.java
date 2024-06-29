@@ -81,8 +81,8 @@ public class ReputationListView extends View<VBox, ReputationListModel, Reputati
         standardTable.initialize();
         standardTable.resetSearch();
         valueColumn.visibleProperty().bind(model.getValueColumnVisible());
-        userProfileIdOfScoreUpdatePin = EasyBind.subscribe(model.getUserProfileIdOfScoreUpdate(), profileId -> {
-            if (profileId != null) {
+        userProfileIdOfScoreUpdatePin = EasyBind.subscribe(model.getScoreChangeTrigger(), trigger -> {
+            if (trigger != null) {
                 tableView.refresh();
             }
         });
