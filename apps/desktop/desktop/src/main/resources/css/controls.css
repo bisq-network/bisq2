@@ -1039,9 +1039,16 @@
     -fx-background-color: -bisq-dark-grey-40;
 }
 
-.drawer-menu-items {
+.drawer-menu-items.slide-right {
     -fx-border-width: 0 0 0 2;
-    -fx-border-color: -bisq-dark-grey-20;
+    -fx-border-color: -bisq-dark-grey-30;
     -fx-border-insets: 2 0 2 2;
     -fx-padding: -2 0 -2 2;
+}
+
+.drawer-menu-items.slide-left {
+    -fx-border-width: 0 2 0 0;
+    -fx-border-color: -bisq-dark-grey-30;
+    -fx-border-insets: 2 2 2 0;
+    -fx-padding: -2 2 -2 0;
 }
