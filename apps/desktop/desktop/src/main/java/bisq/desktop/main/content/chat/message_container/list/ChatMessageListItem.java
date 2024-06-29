@@ -26,6 +26,7 @@ import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.common.CommonPublicChatMessage;
 import bisq.chat.priv.PrivateChatMessage;
 import bisq.chat.pub.PublicChatChannel;
+import bisq.chat.pub.PublicChatMessage;
 import bisq.chat.reactions.ChatMessageReaction;
 import bisq.chat.reactions.Reaction;
 import bisq.common.locale.LanguageRepository;
@@ -158,8 +159,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         reputationScore = senderUserProfile.flatMap(reputationService::findReputationScore).orElse(ReputationScore.NONE);
         reputationScoreDisplay.setReputationScore(reputationScore);
 
-        if (chatMessage instanceof BisqEasyOfferbookMessage &&
-                ((BisqEasyOfferbookMessage) chatMessage).hasBisqEasyOffer()) {
+        if (isBisqEasyPublicChatMessageWithOffer()) {
             BisqEasyOfferbookMessage bisqEasyOfferbookMessage = (BisqEasyOfferbookMessage) chatMessage;
             message = getLocalizedOfferBookMessage(bisqEasyOfferbookMessage);
             if (bisqEasyOfferbookMessage.getBisqEasyOffer().isPresent()) {
@@ -183,9 +183,9 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
 
         // TODO: Release all the listeners when destroying this object
 
-        if (chatMessage instanceof CommonPublicChatMessage) {
-            CommonPublicChatMessage commonPublicChatMessage = (CommonPublicChatMessage) chatMessage;
-            userReactionsPin = Optional.ofNullable(commonPublicChatMessage.getChatMessageReactions().addObserver(new CollectionObserver<ChatMessageReaction>() {
+        if (shouldShowReactions()) {
+            PublicChatMessage publicChatMessage = (PublicChatMessage) chatMessage;
+            userReactionsPin = Optional.ofNullable(publicChatMessage.getChatMessageReactions().addObserver(new CollectionObserver<ChatMessageReaction>() {
                 @Override
                 public void add(ChatMessageReaction element) {
                     int reactionIdx = element.getReactionId();
@@ -319,16 +319,6 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         }));
     }
 
-    private String getLocalizedOfferBookMessage(BisqEasyOfferbookMessage chatMessage) {
-        BisqEasyOffer bisqEasyOffer = chatMessage.getBisqEasyOffer().orElseThrow();
-        String fiatPaymentMethods = PaymentMethodSpecFormatter.fromPaymentMethodSpecs(bisqEasyOffer.getQuoteSidePaymentMethodSpecs());
-        return BisqEasyServiceUtil.createBasicOfferBookMessage(marketPriceService,
-                bisqEasyOffer.getMarket(),
-                fiatPaymentMethods,
-                bisqEasyOffer.getAmountSpec(),
-                bisqEasyOffer.getPriceSpec());
-    }
-
     @Override
     public int compareTo(ChatMessageListItem o) {
         return Comparator.comparingLong(ChatMessage::getDate).compare(this.getChatMessage(), o.getChatMessage());
@@ -408,6 +398,12 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         return reputationScoreDisplay.getNumberOfStars();
     }
 
+    public boolean shouldShowReactions() {
+        return chatMessage instanceof PublicChatMessage
+                && (chatMessage instanceof CommonPublicChatMessage
+                || (chatMessage instanceof BisqEasyOfferMessage && !((BisqEasyOfferMessage) chatMessage).hasBisqEasyOffer()));
+    }
+
     private boolean hasBisqEasyOfferWithDirection(Direction direction) {
         if (chatMessage instanceof BisqEasyOfferMessage) {
             BisqEasyOfferMessage bisqEasyOfferMessage = (BisqEasyOfferMessage) chatMessage;
@@ -446,5 +442,15 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                 reactionsCount.append(String.format("%s: %s\n", reaction,
                         userReactions.containsKey(reaction) ? userReactions.get(reaction).size() : 0)));
         log.info(reactionsCount.toString());
+    }
+
+    private String getLocalizedOfferBookMessage(BisqEasyOfferbookMessage chatMessage) {
+        BisqEasyOffer bisqEasyOffer = chatMessage.getBisqEasyOffer().orElseThrow();
+        String fiatPaymentMethods = PaymentMethodSpecFormatter.fromPaymentMethodSpecs(bisqEasyOffer.getQuoteSidePaymentMethodSpecs());
+        return BisqEasyServiceUtil.createBasicOfferBookMessage(marketPriceService,
+                bisqEasyOffer.getMarket(),
+                fiatPaymentMethods,
+                bisqEasyOffer.getAmountSpec(),
+                bisqEasyOffer.getPriceSpec());
     }
 }
