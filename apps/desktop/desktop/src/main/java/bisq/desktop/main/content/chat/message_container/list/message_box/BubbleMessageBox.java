@@ -145,6 +145,7 @@ public abstract class BubbleMessageBox extends MessageBox {
         copyAction.useIconOnly();
         copyAction.setTooltip(Res.get("action.copyToClipboard"));
         reactMenu = createAndGetReactMenu();
+        setUpReactMenu();
         actionsHBox.setVisible(false);
         reactMenuPin = EasyBind.subscribe(reactMenu.getIsMenuShowing(), isShowing -> {
             if (!isShowing && !isHover()) {
@@ -282,7 +283,10 @@ public abstract class BubbleMessageBox extends MessageBox {
         DrawerMenu drawerMenu = new DrawerMenu("react-grey", "react-white", "react-green");
         drawerMenu.setTooltip(Res.get("action.react"));
         drawerMenu.getStyleClass().add("react-menu");
+        return drawerMenu;
+    }
 
+    private void setUpReactMenu() {
         thumbsUpReactionMenu = new BisqMenuItem("react-thumbsup", "react-thumbsup");
         thumbsUpReactionMenu.useIconOnly();
         thumbsUpReactionMenu.setOnAction(e -> toggleReaction(Reaction.THUMBS_UP));
@@ -301,9 +305,6 @@ public abstract class BubbleMessageBox extends MessageBox {
         partyReactionMenu = new BisqMenuItem("react-party", "react-party");
         partyReactionMenu.useIconOnly();
         partyReactionMenu.setOnAction(e -> toggleReaction(Reaction.PARTY));
-        drawerMenu.addItems(thumbsUpReactionMenu, thumbsDownReactionMenu, happyReactionMenu, laughReactionMenu,
-                heartReactionMenu, partyReactionMenu);
-        return drawerMenu;
     }
 
     private void toggleReaction(Reaction reaction) {

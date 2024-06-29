@@ -30,6 +30,9 @@ import javafx.scene.layout.HBox;
 import lombok.Getter;
 
 public class DrawerMenu extends HBox {
+    private static final String SLIDE_RIGHT_CSS_STYLE = "slide-right";
+    private static final String SLIDE_LEFT_CSS_STYLE = "slide-left";
+
     private final Button menuButton = new Button();
     private final HBox itemsHBox = new HBox();
     private final ImageView defaultIcon, hoverIcon, activeIcon;
@@ -54,7 +57,7 @@ public class DrawerMenu extends HBox {
         menuButton.setPrefSize(size, size);
         menuButton.setAlignment(Pos.CENTER);
 
-        itemsHBox.getStyleClass().add("drawer-menu-items");
+        itemsHBox.getStyleClass().addAll("drawer-menu-items", SLIDE_RIGHT_CSS_STYLE);
         itemsHBox.setVisible(false);
         itemsHBox.setManaged(false);
         itemsHBox.setAlignment(Pos.CENTER);
@@ -78,6 +81,12 @@ public class DrawerMenu extends HBox {
         if (tooltip != null) {
             Tooltip.install(menuButton, new BisqTooltip(tooltip));
         }
+    }
+
+    public void setSlideToTheLeft() {
+        getChildren().setAll(itemsHBox, menuButton);
+        itemsHBox.getStyleClass().remove(SLIDE_RIGHT_CSS_STYLE);
+        itemsHBox.getStyleClass().add(SLIDE_LEFT_CSS_STYLE);
     }
 
     private void attachListeners() {

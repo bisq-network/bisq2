@@ -431,6 +431,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private void setupDisplayReactionsNode() {
         HBox reactions = new HBox(5);
         reactions.setAlignment(Pos.BOTTOM_LEFT);
+        // TODO: order here should be defined by time when this was added
         REACTION_DISPLAY_ORDER.forEach(reaction -> {
             if (userReactions.containsKey(reaction)) {
                 reactions.getChildren().add(new Label("", ImageUtil.getImageViewById(reaction.toString().replace("_", "").toLowerCase())));
