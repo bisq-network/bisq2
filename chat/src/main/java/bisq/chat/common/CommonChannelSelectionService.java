@@ -41,13 +41,13 @@ import java.util.stream.Stream;
 @Getter
 public class CommonChannelSelectionService extends ChatChannelSelectionService {
     private final TwoPartyPrivateChatChannelService privateChatChannelService;
-    private final PublicChatChannelService<?, ?, ?> publicChatChannelService;
+    private final PublicChatChannelService<?, ?, ?, ?> publicChatChannelService;
     private final UserIdentityService userIdentityService;
     private Optional<TwoPartyPrivateChatChannel> lastSelectedPrivateChannel = Optional.empty();
 
     public CommonChannelSelectionService(PersistenceService persistenceService,
                                          TwoPartyPrivateChatChannelService privateChatChannelService,
-                                         PublicChatChannelService<?, ?, ?> publicChatChannelService,
+                                         PublicChatChannelService<?, ?, ?, ?> publicChatChannelService,
                                          ChatChannelDomain chatChannelDomain,
                                          UserIdentityService userIdentityService) {
         super(persistenceService, chatChannelDomain);
