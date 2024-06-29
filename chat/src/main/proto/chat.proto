@@ -182,8 +182,12 @@ message ChatMessageReaction {
   sint64 date = 8;
   oneof message {
     CommonPublicChatMessageReaction commonPublicChatMessageReaction = 20;
+    BisqEasyOfferbookMessageReaction bisqEasyOfferbookMessageReaction = 21;
   }
 }
 
 message CommonPublicChatMessageReaction {
+}
+
+message BisqEasyOfferbookMessageReaction {
 }
