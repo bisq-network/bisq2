@@ -42,6 +42,7 @@ import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.confidential.resend.ResendMessageService;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.options.OfferOptionUtil;
+import bisq.presentation.formatters.DateFormatter;
 import bisq.settings.SettingsService;
 import bisq.trade.Trade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
@@ -307,6 +308,36 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
         }
 
         Navigation.navigateTo(NavigationTarget.TAKE_OFFER, new TakeOfferController.InitData(bisqEasyOffer));
+    }
+
+    public void onMoreInfo(BisqEasyOfferbookMessage bisqEasyOfferbookMessage){
+        Object chatMessageId, chatMessageText, authorProfileID,
+                wasEdited, date, ttl, offerID, offerDate, makerNetworkID, pubKey,
+                direction, market, protocolTypes;
+
+        chatMessageId = bisqEasyOfferbookMessage.getId();
+        chatMessageText =  bisqEasyOfferbookMessage.getText();
+        String offerStr = bisqEasyOfferbookMessage.getBisqEasyOffer().get().toString();
+        authorProfileID = bisqEasyOfferbookMessage.getAuthorUserProfileId();
+        wasEdited = bisqEasyOfferbookMessage.isWasEdited();
+        date = DateFormatter.formatDate(bisqEasyOfferbookMessage.getDate());
+        ttl = bisqEasyOfferbookMessage.getMetaData().getTtl();
+        offerID = bisqEasyOfferbookMessage.getBisqEasyOffer().get().getId();
+        offerDate = bisqEasyOfferbookMessage.getBisqEasyOffer().get().getDate();
+        makerNetworkID = bisqEasyOfferbookMessage.getBisqEasyOffer().get().getMakerNetworkId().getAddressByTransportTypeMap().getMap().firstEntry().getValue();
+        pubKey = bisqEasyOfferbookMessage.getBisqEasyOffer().get().getMakerNetworkId().getPubKey().getId();
+        direction = bisqEasyOfferbookMessage.getBisqEasyOffer().get().getDirection().getDisplayString();
+        market = bisqEasyOfferbookMessage.getBisqEasyOffer().get().getMarket().toString();
+        protocolTypes = bisqEasyOfferbookMessage.getBisqEasyOffer().get().getProtocolTypes().toString();
+
+        String moreInfoMessage = Res.get("chat.message.offer.moreInfo.popup",
+                chatMessageId, chatMessageText, authorProfileID, wasEdited, date,
+                ttl, offerID, offerDate, makerNetworkID, pubKey, direction, market, protocolTypes);
+        new Popup()
+                .headline(Res.get("offer.moreInfo.popup.headline"))
+                .message(moreInfoMessage)
+                .closeButtonText(Res.get("confirmation.ok"))
+                .show();
     }
 
     public void onDeleteMessage(ChatMessage chatMessage) {
