@@ -20,6 +20,7 @@ package bisq.desktop.components.controls;
 import bisq.desktop.common.utils.ImageUtil;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 
 public class BisqMenuItem extends Button {
@@ -28,10 +29,11 @@ public class BisqMenuItem extends Button {
     private ImageView defaultIcon, activeIcon, buttonIcon;
 
     public BisqMenuItem(String defaultIconId, String activeIconId, String text) {
-        setText(text);
-        setGraphicTextGap(10);
-        getStyleClass().add("bisq-menu-item");
-        setAlignment(Pos.CENTER_LEFT);
+        if (text != null && !text.isEmpty()) {
+            setText(text);
+            setGraphicTextGap(10);
+            setAlignment(Pos.CENTER_LEFT);
+        }
 
         if (defaultIconId != null && activeIconId != null) {
             defaultIcon = ImageUtil.getImageViewById(defaultIconId);
@@ -42,6 +44,8 @@ public class BisqMenuItem extends Button {
             setGraphic(buttonIcon);
             attachListeners();
         }
+
+        getStyleClass().add("bisq-menu-item");
     }
 
     public BisqMenuItem(String text) {
@@ -49,7 +53,7 @@ public class BisqMenuItem extends Button {
     }
 
     public BisqMenuItem(String defaultIconId, String activeIconId) {
-        this(defaultIconId, activeIconId, "");
+        this(defaultIconId, activeIconId, null);
     }
 
     public void useIconOnly() {
@@ -58,6 +62,13 @@ public class BisqMenuItem extends Button {
         setMinSize(size, size);
         setPrefSize(size, size);
         setAlignment(Pos.CENTER);
+        getStyleClass().add("icon-only");
+    }
+
+    public void setTooltip(String tooltip) {
+        if (tooltip != null) {
+            Tooltip.install(this, new BisqTooltip(tooltip));
+        }
     }
 
     private void attachListeners() {

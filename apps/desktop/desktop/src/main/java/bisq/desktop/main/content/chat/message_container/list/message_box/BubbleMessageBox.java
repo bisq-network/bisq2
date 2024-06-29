@@ -21,8 +21,8 @@ import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.chat.Citation;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
+import bisq.chat.common.CommonPublicChatMessage;
 import bisq.chat.reactions.Reaction;
-import bisq.desktop.common.Icons;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.utils.ImageUtil;
@@ -33,7 +33,7 @@ import bisq.desktop.components.controls.DropdownMenu;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
 import bisq.desktop.main.content.components.UserProfileIcon;
-import de.jensd.fx.fontawesome.AwesomeIcon;
+import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
@@ -53,19 +53,22 @@ public abstract class BubbleMessageBox extends MessageBox {
     private static final String HIGHLIGHTED_MESSAGE_BG_STYLE_CLASS = "highlighted-message-bg";
     protected static final double CHAT_MESSAGE_BOX_MAX_WIDTH = 630; // TODO: it should be 510 because of reactions on min size
     protected static final double OFFER_MESSAGE_USER_ICON_SIZE = 70;
+    protected static final Insets ACTION_ITEMS_MARGIN = new Insets(2, 0, -2, 0);
 
-    private final Subscription showHighlightedPin, reactionsPin, reactMenuPin;
+    private final Subscription showHighlightedPin, reactionsPin;
     protected final ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item;
     protected final ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list;
     protected final ChatMessagesListController controller;
     protected final UserProfileIcon userProfileIcon = new UserProfileIcon(60);
-    protected final HBox actionsHBox = new HBox(10);
+    protected final HBox actionsHBox = new HBox(5);
     protected final HBox addedReactions = new HBox();
     protected final VBox quotedMessageVBox, contentVBox;
-    protected final DrawerMenu reactMenu;
+    protected DrawerMenu reactMenu;
+    private Subscription reactMenuPin;
     protected Label supportedLanguages, userName, dateTime, message;
     protected HBox userNameAndDateHBox, messageBgHBox, messageHBox;
     protected VBox userProfileIconVbox;
+    protected BisqMenuItem copyAction;
     protected DropdownMenu moreActionsMenu;
     protected BisqMenuItem happyReactionMenu, laughReactionMenu, heartReactionMenu, thumbsDownReactionMenu,
             thumbsUpReactionMenu, partyReactionMenu;
@@ -76,7 +79,6 @@ public abstract class BubbleMessageBox extends MessageBox {
         this.item = item;
         this.list = list;
         this.controller = controller;
-        reactMenu = createAndGetReactMenu();
 
         setUpUserNameAndDateTime();
         setUpUserProfileIcon();
@@ -113,12 +115,6 @@ public abstract class BubbleMessageBox extends MessageBox {
                 UIThread.run(() -> addedReactions.getChildren().setAll(node));
             }
         });
-
-        reactMenuPin = EasyBind.subscribe(reactMenu.getIsMenuShowing(), isShowing -> {
-            if (!isShowing && !isHover()) {
-                showDateTimeAndActionsMenu(false);
-            }
-        });
     }
 
     protected void setUpUserNameAndDateTime() {
@@ -145,6 +141,22 @@ public abstract class BubbleMessageBox extends MessageBox {
     }
 
     protected void setUpActions() {
+        copyAction = new BisqMenuItem("copy-grey", "copy-white");
+        copyAction.useIconOnly();
+        copyAction.setTooltip(Res.get("action.copyToClipboard"));
+        reactMenu = createAndGetReactMenu();
+        actionsHBox.setVisible(false);
+        reactMenuPin = EasyBind.subscribe(reactMenu.getIsMenuShowing(), isShowing -> {
+            if (!isShowing && !isHover()) {
+                showDateTimeAndActionsMenu(false);
+            }
+        });
+
+        reactMenu.setVisible(item.getChatMessage() instanceof CommonPublicChatMessage);
+        reactMenu.setManaged(item.getChatMessage() instanceof CommonPublicChatMessage);
+
+        HBox.setMargin(copyAction, ACTION_ITEMS_MARGIN);
+        HBox.setMargin(reactMenu, ACTION_ITEMS_MARGIN);
     }
 
     protected void addActionsHandlers() {
@@ -152,7 +164,6 @@ public abstract class BubbleMessageBox extends MessageBox {
 
     private void addOnMouseEventHandlers() {
         setOnMouseEntered(e -> showDateTimeAndActionsMenu(true));
-
         setOnMouseExited(e -> showDateTimeAndActionsMenu(false));
     }
 
@@ -195,6 +206,7 @@ public abstract class BubbleMessageBox extends MessageBox {
             BisqEasyOfferbookMessage chatMessage = (BisqEasyOfferbookMessage) item.getChatMessage();
             label.setTooltip(new BisqTooltip(item.getSupportedLanguageCodesForTooltip(chatMessage)));
         }
+        HBox.setMargin(label, new Insets(9, 0, -9, 0));
         return label;
     }
 
@@ -258,13 +270,6 @@ public abstract class BubbleMessageBox extends MessageBox {
         return hBox;
     }
 
-    protected static Label getIconWithToolTip(AwesomeIcon icon, String tooltipString) {
-        Label iconLabel = Icons.getIcon(icon);
-        iconLabel.setCursor(Cursor.HAND);
-        iconLabel.setTooltip(new BisqTooltip(tooltipString, true));
-        return iconLabel;
-    }
-
     protected static void onCopyMessage(ChatMessage chatMessage) {
         ClipboardUtil.copyToClipboard(chatMessage.getText());
     }
@@ -275,6 +280,9 @@ public abstract class BubbleMessageBox extends MessageBox {
 
     private DrawerMenu createAndGetReactMenu() {
         DrawerMenu drawerMenu = new DrawerMenu("react-grey", "react-white", "react-green");
+        drawerMenu.setTooltip(Res.get("action.react"));
+        drawerMenu.getStyleClass().add("react-menu");
+
         thumbsUpReactionMenu = new BisqMenuItem("react-thumbsup", "react-thumbsup");
         thumbsUpReactionMenu.useIconOnly();
         thumbsUpReactionMenu.setOnAction(e -> toggleReaction(Reaction.THUMBS_UP));

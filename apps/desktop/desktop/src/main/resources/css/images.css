@@ -917,6 +917,35 @@
     -fx-image: url("/images/chat/private-chat/private-chat-white.png");
 }
 
+#laugh {
+    -fx-image: url("/images/chat/reactions/laugh-20.png");
+}
+
+#happy {
+    -fx-image: url("/images/chat/reactions/happy-20.png");
+}
+
+#heart {
+    -fx-image: url("/images/chat/reactions/heart-20.png");
+}
+
+#thumbsdown {
+    -fx-image: url("/images/chat/reactions/thumbs-down-20.png");
+}
+
+#thumbsup {
+    -fx-image: url("/images/chat/reactions/thumbs-up-20.png");
+}
+
+#party {
+    -fx-image: url("/images/chat/reactions/party-20.png");
+}
+
+
+/* ------------------------------------------------------------------------------------ */
+/* Chat Message Actions */
+/* ------------------------------------------------------------------------------------ */
+
 #react-green {
     -fx-image: url("/images/chat/message-actions/react/react-green.png");
 }
@@ -933,48 +962,116 @@
     -fx-image: url("/images/chat/message-actions/react-menu/laugh-18.png");
 }
 
-#laugh {
-    -fx-image: url("/images/chat/reactions/laugh-20.png");
-}
-
 #react-happy {
     -fx-image: url("/images/chat/message-actions/react-menu/happy-18.png");
-}
-
-#happy {
-    -fx-image: url("/images/chat/reactions/happy-20.png");
-}
-
-#react-heart {
-    -fx-image: url("/images/chat/message-actions/react-menu/heart-18.png");
-}
-
-#heart {
-    -fx-image: url("/images/chat/reactions/heart-20.png");
 }
 
 #react-thumbsdown {
     -fx-image: url("/images/chat/message-actions/react-menu/thumbs-down-18.png");
 }
 
-#thumbsdown {
-    -fx-image: url("/images/chat/reactions/thumbs-down-20.png");
-}
-
 #react-thumbsup {
     -fx-image: url("/images/chat/message-actions/react-menu/thumbs-up-18.png");
-}
-
-#thumbsup {
-    -fx-image: url("/images/chat/reactions/thumbs-up-20.png");
 }
 
 #react-party {
     -fx-image: url("/images/chat/message-actions/react-menu/party-18.png");
 }
 
-#party {
-    -fx-image: url("/images/chat/reactions/party-20.png");
+#react-heart {
+    -fx-image: url("/images/chat/message-actions/react-menu/heart-18.png");
+}
+
+#more-actions-green {
+    -fx-image: url("/images/chat/message-actions/ellipsis/ellipsis18-green.png");
+}
+
+#more-actions-grey {
+    -fx-image: url("/images/chat/message-actions/ellipsis/ellipsis18-grey.png");
+}
+
+#more-actions-white {
+    -fx-image: url("/images/chat/message-actions/ellipsis/ellipsis18-white.png");
+}
+
+#copy-green {
+    -fx-image: url("/images/chat/message-actions/copy/copy-green.png");
+}
+
+#copy-grey {
+    -fx-image: url("/images/chat/message-actions/copy/copy-grey.png");
+}
+
+#copy-white {
+    -fx-image: url("/images/chat/message-actions/copy/copy-white.png");
+}
+
+#reply-green {
+    -fx-image: url("/images/chat/message-actions/reply/reply-green.png");
+}
+
+#reply-grey {
+    -fx-image: url("/images/chat/message-actions/reply/reply-grey.png");
+}
+
+#reply-white {
+    -fx-image: url("/images/chat/message-actions/reply/reply-white.png");
+}
+
+#open-p-chat-green {
+    -fx-image: url("/images/chat/message-actions/open-p-chat/open-p-chat-green.png");
+}
+
+#open-p-chat-grey {
+    -fx-image: url("/images/chat/message-actions/open-p-chat/open-p-chat-grey.png");
+}
+
+#open-p-chat-white {
+    -fx-image: url("/images/chat/message-actions/open-p-chat/open-p-chat-white.png");
+}
+
+#edit-green {
+    -fx-image: url("/images/chat/message-actions/edit/edit-green.png");
+}
+
+#edit-grey {
+    -fx-image: url("/images/chat/message-actions/edit/edit-grey.png");
+}
+
+#edit-white {
+    -fx-image: url("/images/chat/message-actions/edit/edit-white.png");
+}
+
+#delete-x-green {
+    -fx-image: url("/images/chat/message-actions/delete-x/delete-x-green.png");
+}
+
+#delete-x-grey {
+    -fx-image: url("/images/chat/message-actions/delete-x/delete-x-grey.png");
+}
+
+#delete-x-white {
+    -fx-image: url("/images/chat/message-actions/delete-x/delete-x-white.png");
+}
+
+#delete-x-red {
+    -fx-image: url("/images/chat/message-actions/delete-x/delete-x-red.png");
+}
+
+#delete-t-green {
+    -fx-image: url("/images/chat/message-actions/delete-t/delete-t-green.png");
+}
+
+#delete-t-grey {
+    -fx-image: url("/images/chat/message-actions/delete-t/delete-t-grey.png");
+}
+
+#delete-t-white {
+    -fx-image: url("/images/chat/message-actions/delete-t/delete-t-white.png");
+}
+
+#delete-t-red {
+    -fx-image: url("/images/chat/message-actions/delete-t/delete-t-red.png");
 }
 
 

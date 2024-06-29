@@ -155,6 +155,10 @@
     -fx-font-family: "IBM Plex Sans Light";
 }
 
+.chat-message-content-box .react-menu .drawer-menu-items .bisq-menu-item:hover {
+    -fx-background-color: -bisq-dark-grey-50 !important;
+}
+
 /* Peer Message Background */
 .chat-message-bg-peer-message,
 .chat-peer-offer-message-bg {

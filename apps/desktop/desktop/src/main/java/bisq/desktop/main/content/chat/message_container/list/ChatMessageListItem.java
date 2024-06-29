@@ -203,7 +203,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                     });
 
                     setupDisplayReactionsNode();
-                    logReactionsCount();
+                    //logReactionsCount();
                 }
 
                 @Override
@@ -225,7 +225,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                     });
 
                     setupDisplayReactionsNode();
-                    logReactionsCount();
+                    //logReactionsCount();
                 }
 
                 @Override
@@ -234,7 +234,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                     log.info("Clearing reactions");
 
                     setupDisplayReactionsNode();
-                    logReactionsCount();
+                    //logReactionsCount();
                 }
             }));
         }

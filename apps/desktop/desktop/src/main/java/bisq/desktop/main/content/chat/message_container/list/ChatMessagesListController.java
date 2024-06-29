@@ -317,15 +317,13 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                         boolean isBisqEasyPublicChatMessageWithOffer =
                                 chatMessage instanceof BisqEasyOfferbookMessage
                                         && ((BisqEasyOfferMessage) chatMessage).hasBisqEasyOffer();
-                        if (isBisqEasyPublicChatMessageWithOffer) {
-                            new Popup().warning(Res.get("bisqEasy.offerbook.chatMessage.deleteOffer.confirmation"))
-                                    .actionButtonText(Res.get("confirmation.yes"))
-                                    .onAction(() -> doDeleteMessage(chatMessage, authorUserIdentity))
-                                    .closeButtonText(Res.get("confirmation.no"))
-                                    .show();
-                        } else {
-                            doDeleteMessage(chatMessage, authorUserIdentity);
-                        }
+                        new Popup().warning(isBisqEasyPublicChatMessageWithOffer
+                                        ? Res.get("bisqEasy.offerbook.chatMessage.deleteOffer.confirmation")
+                                        : Res.get("bisqEasy.offerbook.chatMessage.deleteMessage.confirmation"))
+                                .actionButtonText(Res.get("confirmation.yes"))
+                                .onAction(() -> doDeleteMessage(chatMessage, authorUserIdentity))
+                                .closeButtonText(Res.get("confirmation.no"))
+                                .show();
                     } else {
                         new Popup().warning(Res.get("chat.message.delete.differentUserProfile.warn"))
                                 .closeButtonText(Res.get("confirmation.no"))

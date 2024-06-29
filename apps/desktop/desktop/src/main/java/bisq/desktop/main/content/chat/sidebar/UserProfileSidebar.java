@@ -307,7 +307,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
 
             // Options
             privateMsg = new BisqMenuItem("private-chat-grey", "private-chat-white", Res.get("chat.sideBar.userProfile.sendPrivateMessage"));
-            privateMsg.setPrefWidth(width );
+            privateMsg.setPrefWidth(width);
             mention = new BisqMenuItem("mention-grey", "mention-white", Res.get("chat.sideBar.userProfile.mention"));
             mention.setPrefWidth(width);
             ignore = new BisqMenuItem("ignore-grey", "ignore-white", Res.get("chat.sideBar.userProfile.ignore"));

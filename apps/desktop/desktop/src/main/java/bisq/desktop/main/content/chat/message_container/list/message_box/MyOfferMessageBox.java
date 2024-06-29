@@ -28,7 +28,6 @@ import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
-import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Control;
@@ -42,7 +41,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 public final class MyOfferMessageBox extends BubbleMessageBox {
     private final Label myOfferTitle;
     private DropdownMenuItem removeOffer;
-    private Label copyIcon;
 
     public MyOfferMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
                              ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
@@ -74,9 +72,7 @@ public final class MyOfferMessageBox extends BubbleMessageBox {
         messageBgHBox.setMaxWidth(Control.USE_PREF_SIZE);
 
         // Actions
-        HBox.setMargin(supportedLanguages, new Insets(5, 0, -5, 0));
-        HBox.setMargin(copyIcon, new Insets(4, 10, -4, 0));
-        actionsHBox.getChildren().setAll(Spacer.fillHBox(), supportedLanguages, copyIcon);
+        actionsHBox.getChildren().setAll(Spacer.fillHBox(), supportedLanguages, copyAction);
 
         contentVBox.setAlignment(Pos.CENTER_RIGHT);
         contentVBox.getChildren().setAll(userNameAndDateHBox, messageBgHBox, actionsHBox);
@@ -92,14 +88,8 @@ public final class MyOfferMessageBox extends BubbleMessageBox {
     }
 
     @Override
-    protected void setUpActions() {
-        copyIcon = getIconWithToolTip(AwesomeIcon.COPY, Res.get("action.copyToClipboard"));
-        actionsHBox.setVisible(false);
-    }
-
-    @Override
     protected void addActionsHandlers() {
-        copyIcon.setOnMouseClicked(e -> onCopyMessage(String.format("%s\n%s", myOfferTitle.getText(), message.getText())));
+        copyAction.setOnAction(e -> onCopyMessage(String.format("%s\n%s", myOfferTitle.getText(), message.getText())));
     }
 
     private DropdownMenu createAndGetDropdownMenu() {
@@ -133,6 +123,7 @@ public final class MyOfferMessageBox extends BubbleMessageBox {
 
     @Override
     public void cleanup() {
+        copyAction.setOnAction(null);
         removeOffer.setOnAction(null);
     }
 }
