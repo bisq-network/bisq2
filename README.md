@@ -62,13 +62,3 @@ If you are a developer check out the [dev guide](./docs/dev/dev-guide.md).
 Bisq 2 is licensed under the [AGPL-3.0 license](LICENSE). All contributions are subject to this license.
 
 ![Actions Status](https://github.com/bisq-network/bisq2/actions/workflows/build.yml/badge.svg)
-
-
-## Third-Party Content
-
-The emoji icons used in this software are from the project [Noto Emoji](https://github.com/googlefonts/noto-emoji), which is licensed under the Apache License 2.0.
-
-Modifications to the original files include:
-- Changed shapes.
-- Changed colors to fit the application design.
-- Resized images to match the application needs.
