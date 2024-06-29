@@ -31,8 +31,6 @@ public class BisqMenuItem extends Button {
     public BisqMenuItem(String defaultIconId, String activeIconId, String text) {
         if (text != null && !text.isEmpty()) {
             setText(text);
-            setGraphicTextGap(10);
-            setAlignment(Pos.CENTER_LEFT);
         }
 
         if (defaultIconId != null && activeIconId != null) {
@@ -45,6 +43,8 @@ public class BisqMenuItem extends Button {
             attachListeners();
         }
 
+        setGraphicTextGap(10);
+        setAlignment(Pos.CENTER_LEFT);
         getStyleClass().add("bisq-menu-item");
     }
 
