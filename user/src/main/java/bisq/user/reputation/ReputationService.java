@@ -19,6 +19,7 @@ package bisq.user.reputation;
 
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.application.Service;
+import bisq.common.data.Pair;
 import bisq.common.observable.Observable;
 import bisq.network.NetworkService;
 import bisq.persistence.PersistenceService;
@@ -82,11 +83,11 @@ public class ReputationService implements Service {
                 bannedUserService,
                 authorizedBondedRolesService);
 
-        proofOfBurnService.getUserProfileIdOfUpdatedScore().addObserver(this::onUserProfileScoreChanged);
-        bondedReputationService.getUserProfileIdOfUpdatedScore().addObserver(this::onUserProfileScoreChanged);
-        accountAgeService.getUserProfileIdOfUpdatedScore().addObserver(this::onUserProfileScoreChanged);
-        signedWitnessService.getUserProfileIdOfUpdatedScore().addObserver(this::onUserProfileScoreChanged);
-        profileAgeService.getUserProfileIdOfUpdatedScore().addObserver(this::onUserProfileScoreChanged);
+        proofOfBurnService.getUserProfileIdScorePair().addObserver(this::onUserProfileScoreChanged);
+        bondedReputationService.getUserProfileIdScorePair().addObserver(this::onUserProfileScoreChanged);
+        accountAgeService.getUserProfileIdScorePair().addObserver(this::onUserProfileScoreChanged);
+        signedWitnessService.getUserProfileIdScorePair().addObserver(this::onUserProfileScoreChanged);
+        profileAgeService.getUserProfileIdScorePair().addObserver(this::onUserProfileScoreChanged);
     }
 
 
@@ -142,10 +143,11 @@ public class ReputationService implements Service {
         return Optional.of(new ReputationScore(score, fiveSystemScore, rank));
     }
 
-    private void onUserProfileScoreChanged(String userProfileId) {
-        if (userProfileId == null) {
+    private void onUserProfileScoreChanged(Pair<String, Long> userProfileIdScorePair) {
+        if (userProfileIdScorePair == null) {
             return;
         }
+        String userProfileId = userProfileIdScorePair.getFirst();
         long score = proofOfBurnService.getScore(userProfileId) +
                 bondedReputationService.getScore(userProfileId) +
                 accountAgeService.getScore(userProfileId) +

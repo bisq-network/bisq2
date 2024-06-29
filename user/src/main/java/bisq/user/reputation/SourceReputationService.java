@@ -21,6 +21,7 @@ import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.application.Service;
 import bisq.common.data.ByteArray;
+import bisq.common.data.Pair;
 import bisq.common.observable.Observable;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
@@ -60,7 +61,7 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
     @Getter
     protected final Map<String, Long> scoreByUserProfileId = new ConcurrentHashMap<>();
     @Getter
-    protected final Observable<String> userProfileIdOfUpdatedScore = new Observable<>();
+    protected final Observable<Pair<String, Long>> userProfileIdScorePair = new Observable<>();
 
     public SourceReputationService(NetworkService networkService,
                                    UserIdentityService userIdentityService,
@@ -125,7 +126,7 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
     protected void putScore(String userProfileId, Set<T> dataSet) {
         long score = dataSet.stream().mapToLong(this::calculateScore).sum();
         scoreByUserProfileId.put(userProfileId, score);
-        userProfileIdOfUpdatedScore.set(userProfileId);
+        userProfileIdScorePair.set(new Pair<>(userProfileId, score));
     }
 
     protected boolean send(UserIdentity userIdentity, EnvelopePayloadMessage request) {

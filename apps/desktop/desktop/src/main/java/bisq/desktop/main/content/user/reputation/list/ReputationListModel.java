@@ -38,7 +38,7 @@ public class ReputationListModel implements Model {
     private final ObservableList<ReputationListView.ListItem> listItems = FXCollections.observableArrayList();
     private final FilteredList<ReputationListView.ListItem> filteredList = new FilteredList<>(listItems);
     private final SortedList<ReputationListView.ListItem> sortedList = new SortedList<>(filteredList);
-    private final StringProperty userProfileIdOfScoreUpdate = new SimpleStringProperty();
+    private final BooleanProperty scoreChangeTrigger = new SimpleBooleanProperty();
     private final StringProperty filteredValueTitle = new SimpleStringProperty();
     private final BooleanProperty valueColumnVisible = new SimpleBooleanProperty();
     private final ObjectProperty<ReputationSource> selectedReputationSource = new SimpleObjectProperty<>();

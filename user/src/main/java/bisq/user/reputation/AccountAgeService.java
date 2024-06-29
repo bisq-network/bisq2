@@ -19,6 +19,7 @@ package bisq.user.reputation;
 
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.data.ByteArray;
+import bisq.common.data.Pair;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.MathUtils;
 import bisq.network.NetworkService;
@@ -113,7 +114,7 @@ public class AccountAgeService extends SourceReputationService<AuthorizedAccount
                         .ifPresent(dataSetByHash::remove);
                 if (scoreByUserProfileId.containsKey(userProfileId)) {
                     scoreByUserProfileId.remove(userProfileId);
-                    userProfileIdOfUpdatedScore.set(userProfileId);
+                    userProfileIdScorePair.set(new Pair<>(userProfileId, 0L));
                 }
             }
         }
