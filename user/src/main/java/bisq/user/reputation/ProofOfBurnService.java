@@ -55,6 +55,13 @@ public class ProofOfBurnService extends SourceReputationService<AuthorizedProofO
     }
 
     @Override
+    protected boolean isValidVersion(AuthorizedProofOfBurnData data) {
+        // We added fields in AuthorizedProofOfBurnData in v2.0.5 and increased version in AuthorizedProofOfBurnData to 1.
+        // As we publish both version 0 and version 1 objects we ignore the version 0 objects to avoid duplicates.
+        return data.getVersion() > 0;
+    }
+
+    @Override
     protected ByteArray getDataKey(AuthorizedProofOfBurnData data) {
         return new ByteArray(data.getHash());
     }
