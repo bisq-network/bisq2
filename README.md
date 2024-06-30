@@ -62,5 +62,3 @@ If you are a developer check out the [dev guide](./docs/dev/dev-guide.md).
 Bisq 2 is licensed under the [AGPL-3.0 license](LICENSE). All contributions are subject to this license.
 
 ![Actions Status](https://github.com/bisq-network/bisq2/actions/workflows/build.yml/badge.svg)
-
-
