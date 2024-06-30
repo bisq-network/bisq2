@@ -127,7 +127,7 @@ public final class AuthorizedProofOfBurnData implements AuthorizedDistributedDat
     public String toString() {
         return "AuthorizedProofOfBurnData{" +
                 ",\r\n                    amount=" + amount +
-                ",\r\n                    blockTime=" + new Date(blockTime) +
+                ",\r\n                    blockTime=" + blockTime + " (" + new Date(blockTime) + ")" +
                 ",\r\n                    hash=" + Hex.encode(hash) +
                 ",\r\n                    staticPublicKeysProvided=" + staticPublicKeysProvided() +
                 ",\r\n                    authorizedPublicKeys=" + getAuthorizedPublicKeys() +
