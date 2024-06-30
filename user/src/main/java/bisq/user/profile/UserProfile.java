@@ -57,14 +57,34 @@ public final class UserProfile implements DistributedData {
     public static final int MAX_LENGTH_TERMS = 500;
     public static final int MAX_LENGTH_STATEMENT = 100;
 
-    public static UserProfile fromEdit(UserProfile userProfile, String terms, String statement) {
+    public static UserProfile forEdit(UserProfile userProfile, String terms, String statement) {
         return new UserProfile(userProfile.getNickName(), userProfile.getProofOfWork(), userProfile.getAvatarVersion(),
                 userProfile.getNetworkId(), terms, statement);
     }
 
-    public static UserProfile fromRePublish(UserProfile userProfile) {
+    public static UserProfile forRePublish(UserProfile userProfile) {
         return new UserProfile(userProfile.getNickName(), userProfile.getProofOfWork(), userProfile.getAvatarVersion(),
                 userProfile.getNetworkId(), userProfile.getTerms(), userProfile.getStatement());
+    }
+
+    public static UserProfile createNew(String nickName,
+                                        ProofOfWork proofOfWork,
+                                        int avatarVersion,
+                                        NetworkId networkId,
+                                        String terms,
+                                        String statement) {
+        return new UserProfile(nickName,
+                proofOfWork,
+                avatarVersion,
+                networkId,
+                terms,
+                statement);
+    }
+
+    public static UserProfile withVersion(UserProfile userProfile, int version) {
+        return new UserProfile(version, userProfile.getNickName(), userProfile.getProofOfWork(), userProfile.getAvatarVersion(),
+                userProfile.getNetworkId(), userProfile.getTerms(), userProfile.getStatement(),
+                ApplicationVersion.getVersion().getVersionAsString());
     }
 
     // We give a bit longer TTL than the chat messages to ensure the chat user is available as long the messages are
@@ -88,12 +108,12 @@ public final class UserProfile implements DistributedData {
     private transient ByteArray proofOfBurnHash;
     private transient ByteArray bondedReputationHash;
 
-    public UserProfile(String nickName,
-                       ProofOfWork proofOfWork,
-                       int avatarVersion,
-                       NetworkId networkId,
-                       String terms,
-                       String statement) {
+    private UserProfile(String nickName,
+                        ProofOfWork proofOfWork,
+                        int avatarVersion,
+                        NetworkId networkId,
+                        String terms,
+                        String statement) {
         this(VERSION,
                 nickName,
                 proofOfWork,
