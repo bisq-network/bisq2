@@ -32,7 +32,6 @@ import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
-import bisq.user.reputation.data.AuthorizedProofOfBurnData;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -94,11 +93,6 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
     public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
         findRelevantData(authorizedData.getAuthorizedDistributedData())
                 .ifPresent(data -> {
-                    if (data instanceof AuthorizedProofOfBurnData) {
-                        if (data.getVersion() == 0) {
-                            return;
-                        }
-                    }
                     if (isAuthorized(authorizedData) && isValidVersion(data)) {
                         ByteArray providedHash = getDataKey(data);
                         // To avoid ConcurrentModificationException
