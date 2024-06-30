@@ -18,6 +18,8 @@
 package bisq.chat.reactions;
 
 import bisq.chat.ChatChannelDomain;
+import bisq.common.encoding.Hex;
+import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -28,7 +30,8 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class CommonPublicChatMessageReaction extends ChatMessageReaction {
+public class CommonPublicChatMessageReaction extends ChatMessageReaction implements DistributedData {
+    // Metadata needs to be symmetric with CommonPublicChatMessage.
     @EqualsAndHashCode.Exclude
     private final MetaData metaData = new MetaData(MetaData.TTL_10_DAYS, MetaData.LOW_PRIORITY, getClass().getSimpleName(), MetaData.MAX_MAP_SIZE_10_000);
 
@@ -47,6 +50,19 @@ public class CommonPublicChatMessageReaction extends ChatMessageReaction {
     @Override
     public void verify() {
         super.verify();
+    }
+
+    @Override
+    public boolean isDataInvalid(byte[] pubKeyHash) {
+        // AuthorId must be pubKeyHash. We get pubKeyHash passed from the data storage layer where the signature is
+        // verified as well, so we can be sure it's the sender of the message. This check prevents against
+        // impersonation attack.
+        return !userProfileId.equals(Hex.encode(pubKeyHash));
+    }
+
+    @Override
+    public double getCostFactor() {
+        return 0.5;
     }
 
     @Override

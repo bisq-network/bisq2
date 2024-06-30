@@ -18,7 +18,7 @@
 package bisq.chat.reactions;
 
 import bisq.chat.ChatChannelDomain;
-import bisq.common.encoding.Hex;
+import bisq.common.proto.NetworkProto;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
@@ -33,13 +33,13 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @Getter
 @EqualsAndHashCode
-public abstract class ChatMessageReaction implements DistributedData {
+public abstract class ChatMessageReaction implements NetworkProto {
     public static String createId(String channelId, String messageId, int reactionId, String userProfileId) {
         return String.format("%s.%s.%s.%s", channelId, messageId, reactionId, userProfileId);
     }
 
     private final String id;
-    private final String userProfileId;
+    protected final String userProfileId;
     private final String chatChannelId;
     private final ChatChannelDomain chatChannelDomain;
     private final String chatMessageId;
@@ -60,19 +60,6 @@ public abstract class ChatMessageReaction implements DistributedData {
         this.chatMessageId = chatMessageId;
         this.reactionId = reactionId;
         this.date = date;
-    }
-
-    @Override
-    public boolean isDataInvalid(byte[] pubKeyHash) {
-        // AuthorId must be pubKeyHash. We get pubKeyHash passed from the data storage layer where the signature is
-        // verified as well, so we can be sure it's the sender of the message. This check prevents against
-        // impersonation attack.
-        return !userProfileId.equals(Hex.encode(pubKeyHash));
-    }
-
-    @Override
-    public double getCostFactor() {
-        return 0.3;
     }
 
     @Override
