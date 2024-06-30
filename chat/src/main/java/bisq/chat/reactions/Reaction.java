@@ -18,12 +18,10 @@
 package bisq.chat.reactions;
 
 public enum Reaction {
-    HAPPY,
-    HEART,
-    LAUGH,
-    PARTY,
-    SURPRISED,
-    THINKING,
+    THUMBS_UP,
     THUMBS_DOWN,
-    THUMBS_UP
+    HAPPY,
+    LAUGH,
+    HEART,
+    PARTY
 }
