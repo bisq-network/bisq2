@@ -69,7 +69,7 @@ public class ReputationDetailsPopup extends VBox {
         Optional.ofNullable(bondedReputationService.getDataSetByHash().get(userProfile.getBondedReputationKey()))
                 .ifPresent(dataSet -> listItems.addAll(dataSet.stream()
                         .map(data -> new ListItem(ReputationSource.BSQ_BOND,
-                                data.getTime(),
+                                data.getBlockTime(),
                                 bondedReputationService.calculateScore(data),
                                 Optional.of(data.getAmount()),
                                 Optional.of(data.getLockTime())))

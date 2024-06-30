@@ -78,9 +78,13 @@ public final class AuthorizedProofOfBurnData implements AuthorizedDistributedDat
 
     @Override
     public void verify() {
+        checkArgument(amount > 0);
         NetworkDataValidation.validateDate(blockTime);
         NetworkDataValidation.validateHash(hash);
-        checkArgument(amount > 0);
+        if (version > 0) {
+            NetworkDataValidation.validateBtcTxId(txId);
+            checkArgument(blockHeight > 0);
+        }
     }
 
     @Override

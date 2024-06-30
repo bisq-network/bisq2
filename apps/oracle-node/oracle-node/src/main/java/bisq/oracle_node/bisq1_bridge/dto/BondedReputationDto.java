@@ -28,8 +28,9 @@ import lombok.extern.slf4j.Slf4j;
 @Data
 public class BondedReputationDto {
     private long amount;
-    private long time;
+    private long blockTime;
     private String hash;
     private int blockHeight;
     private int lockTime;
+    private String txId;
 }

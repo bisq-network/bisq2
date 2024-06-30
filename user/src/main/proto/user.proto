@@ -118,10 +118,13 @@ message AuthorizedProofOfBurnData {
 
 message AuthorizedBondedReputationData {
   sint64 amount = 1;
-  sint64 time = 2;
+  sint64 blockTime = 2;
   bytes hash = 3;
   sint64 lockTime = 4;
   bool staticPublicKeysProvided = 5;
+  sint32 version = 6;
+  sint32 blockHeight = 7;
+  string txId = 8;
 }
 
 message AuthorizedAccountAgeData {

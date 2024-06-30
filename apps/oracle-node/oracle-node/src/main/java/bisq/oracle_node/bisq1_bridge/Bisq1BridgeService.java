@@ -247,15 +247,28 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
     }
 
     private CompletableFuture<Boolean> publishBondedReputationDtoSet(List<BondedReputationDto> bondedReputationList) {
-        return CompletableFutureUtils.allOf(bondedReputationList.stream()
-                        .map(dto -> new AuthorizedBondedReputationData(
-                                dto.getAmount(),
-                                dto.getTime(),
-                                Hex.decode(dto.getHash()),
-                                dto.getLockTime(),
-                                staticPublicKeysProvided))
-                        .map(this::publishAuthorizedData))
+        // After v2.0.6 we can remove support for version 0 data
+        Stream<AuthorizedBondedReputationData> oldVersions = bondedReputationList.stream()
+                .map(dto -> createAuthorizedBondedReputationData(dto, 0))
+                .filter(e -> ApplicationVersion.getVersion().below("2.0.7"));
+        Stream<AuthorizedBondedReputationData> newVersions = bondedReputationList.stream()
+                .map(dto -> createAuthorizedBondedReputationData(dto, 1));
+        return CompletableFutureUtils.allOf(Stream.concat(oldVersions, newVersions)
+                        .map(this::publishAuthorizedData)
+                        .collect(Collectors.toList()))
                 .thenApply(results -> !results.contains(false));
+    }
+
+    private AuthorizedBondedReputationData createAuthorizedBondedReputationData(BondedReputationDto dto, int version) {
+        return new AuthorizedBondedReputationData(
+                version,
+                dto.getBlockTime(),
+                dto.getAmount(),
+                Hex.decode(dto.getHash()),
+                dto.getLockTime(),
+                dto.getBlockHeight(),
+                dto.getTxId(),
+                staticPublicKeysProvided);
     }
 
     private CompletableFuture<Boolean> publishAuthorizedData(AuthorizedDistributedData data) {
