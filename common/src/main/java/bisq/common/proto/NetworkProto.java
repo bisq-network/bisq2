@@ -17,6 +17,8 @@
 
 package bisq.common.proto;
 
+import javax.annotation.Nonnull;
+
 /**
  * Interface Proto implementations which are used for network messages.
  * We need to ensure that data received from the network is verified.

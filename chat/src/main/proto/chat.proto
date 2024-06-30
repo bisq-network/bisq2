@@ -183,6 +183,7 @@ message ChatMessageReaction {
   oneof message {
     CommonPublicChatMessageReaction commonPublicChatMessageReaction = 20;
     BisqEasyOfferbookMessageReaction bisqEasyOfferbookMessageReaction = 21;
+    TwoPartyPrivateChatMessageReaction twoPartyPrivateChatMessageReaction = 22;
   }
 }
 
@@ -190,4 +191,10 @@ message CommonPublicChatMessageReaction {
 }
 
 message BisqEasyOfferbookMessageReaction {
+}
+
+message TwoPartyPrivateChatMessageReaction {
+  string receiverUserProfileId = 1;
+  user.UserProfile sender = 2;
+  network.identity.NetworkId receiverNetworkId = 3;
 }

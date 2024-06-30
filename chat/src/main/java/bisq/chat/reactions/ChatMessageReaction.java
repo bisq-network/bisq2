@@ -22,6 +22,7 @@ import bisq.common.proto.NetworkProto;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
+import bisq.network.p2p.message.ExternalNetworkMessage;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
@@ -71,11 +72,6 @@ public abstract class ChatMessageReaction implements NetworkProto {
         NetworkDataValidation.validateDate(date);
     }
 
-    @Override
-    public bisq.chat.protobuf.ChatMessageReaction toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
-    }
-
     protected bisq.chat.protobuf.ChatMessageReaction.Builder getChatMessageReactionBuilder(boolean serializeForHash) {
         return bisq.chat.protobuf.ChatMessageReaction.newBuilder()
                 .setId(id)
@@ -95,6 +91,9 @@ public abstract class ChatMessageReaction implements NetworkProto {
             case BISQEASYOFFERBOOKMESSAGEREACTION: {
                 return BisqEasyOfferbookMessageReaction.fromProto(proto);
             }
+            case TWOPARTYPRIVATECHATMESSAGEREACTION: {
+                return TwoPartyPrivateChatMessageReaction.fromProto(proto);
+            }
             case MESSAGE_NOT_SET: {
                 throw new UnresolvableProtobufMessageException(proto);
             }
@@ -112,6 +111,25 @@ public abstract class ChatMessageReaction implements NetworkProto {
                     }
                     case BISQEASYOFFERBOOKMESSAGEREACTION: {
                         return BisqEasyOfferbookMessageReaction.fromProto(proto);
+                    }
+                    case MESSAGE_NOT_SET: {
+                        throw new UnresolvableProtobufMessageException(proto);
+                    }
+                }
+                throw new UnresolvableProtobufMessageException(proto);
+            } catch (InvalidProtocolBufferException e) {
+                throw new UnresolvableProtobufMessageException(e);
+            }
+        };
+    }
+
+    public static ProtoResolver<ExternalNetworkMessage> getNetworkMessageResolver() {
+        return any -> {
+            try {
+                bisq.chat.protobuf.ChatMessageReaction proto = any.unpack(bisq.chat.protobuf.ChatMessageReaction.class);
+                switch (proto.getMessageCase()) {
+                    case TWOPARTYPRIVATECHATMESSAGEREACTION: {
+                        return TwoPartyPrivateChatMessageReaction.fromProto(proto);
                     }
                     case MESSAGE_NOT_SET: {
                         throw new UnresolvableProtobufMessageException(proto);

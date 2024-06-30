@@ -39,6 +39,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
+    // Metadata needs to be symmetric with TwoPartyPrivateChatMessageReaction.
     @EqualsAndHashCode.Exclude
     private final MetaData metaData = new MetaData(TTL_30_DAYS, getClass().getSimpleName(), MAX_MAP_SIZE_100);
 
@@ -84,9 +85,9 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
     }
 
     public static TwoPartyPrivateChatMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto) {
-        Optional<Citation> citation = baseProto.hasCitation() ?
-                Optional.of(Citation.fromProto(baseProto.getCitation())) :
-                Optional.empty();
+        Optional<Citation> citation = baseProto.hasCitation()
+                ? Optional.of(Citation.fromProto(baseProto.getCitation()))
+                : Optional.empty();
         bisq.chat.protobuf.TwoPartyPrivateChatMessage privateChatMessage = baseProto.getTwoPartyPrivateChatMessage();
         return new TwoPartyPrivateChatMessage(
                 baseProto.getId(),
