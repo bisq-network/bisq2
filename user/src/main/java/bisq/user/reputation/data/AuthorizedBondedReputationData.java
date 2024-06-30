@@ -94,6 +94,7 @@ public final class AuthorizedBondedReputationData implements AuthorizedDistribut
     @Override
     public bisq.user.protobuf.AuthorizedBondedReputationData.Builder getBuilder(boolean serializeForHash) {
         return bisq.user.protobuf.AuthorizedBondedReputationData.newBuilder()
+                .setVersion(version)
                 .setAmount(amount)
                 .setLockTime(lockTime)
                 .setBlockTime(blockTime)
