@@ -18,12 +18,9 @@
 package bisq.desktop.main.content.settings.network;
 
 import bisq.common.data.Pair;
-import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Model;
 import bisq.i18n.Res;
-import bisq.network.NetworkService;
 import bisq.network.common.TransportType;
-import bisq.security.keys.KeyBundleService;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -39,22 +36,16 @@ import java.util.Set;
 @Getter
 public class NetworkInfoModel implements Model {
     private final List<Pair<String, Double>> versionDistribution = new ArrayList<>();
-    private final NetworkService networkService;
     private final BooleanProperty clearNetDisabled = new SimpleBooleanProperty(false);
     private final BooleanProperty torDisabled = new SimpleBooleanProperty(false);
     private final BooleanProperty i2pDisabled = new SimpleBooleanProperty(false);
     private final Set<TransportType> supportedTransportTypes;
-
-    private final KeyBundleService keyBundleService;
     private final StringProperty myDefaultNodeAddress = new SimpleStringProperty(Res.get("data.na"));
 
-    public NetworkInfoModel(ServiceProvider serviceProvider) {
-        networkService = serviceProvider.getNetworkService();
-        supportedTransportTypes = networkService.getSupportedTransportTypes();
-        clearNetDisabled.set(!networkService.isTransportTypeSupported(TransportType.CLEAR));
-        torDisabled.set(!networkService.isTransportTypeSupported(TransportType.TOR));
-        i2pDisabled.set(!networkService.isTransportTypeSupported(TransportType.I2P));
-
-        keyBundleService = serviceProvider.getSecurityService().getKeyBundleService();
+    public NetworkInfoModel(Set<TransportType> supportedTransportTypes, boolean clearNetDisabled, boolean torDisabled, boolean i2pDisabled) {
+        this.supportedTransportTypes = supportedTransportTypes;
+        this.clearNetDisabled.set(clearNetDisabled);
+        this.torDisabled.set(torDisabled);
+        this.i2pDisabled.set(i2pDisabled);
     }
 }

@@ -22,6 +22,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.settings.network.transport.TransportTypeController;
 import bisq.i18n.Res;
+import bisq.network.NetworkService;
 import bisq.network.common.TransportType;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
@@ -33,23 +34,27 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 public class NetworkInfoController implements Controller {
-    private final ServiceProvider serviceProvider;
     @Getter
     private final NetworkInfoModel model;
     @Getter
     private final NetworkInfoView view;
+    private final ServiceProvider serviceProvider;
+    private final UserProfileService userProfileService;
     @Getter
     private final Optional<TransportTypeController> clearNetController = Optional.empty();
     @Getter
     private final Optional<TransportTypeController> torController = Optional.empty();
     @Getter
     private final Optional<TransportTypeController> i2pController = Optional.empty();
-    private final UserProfileService userProfileService;
 
     public NetworkInfoController(ServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
+        NetworkService networkService = serviceProvider.getNetworkService();
         userProfileService = serviceProvider.getUserService().getUserProfileService();
-        model = new NetworkInfoModel(serviceProvider);
+        model = new NetworkInfoModel(networkService.getSupportedTransportTypes(),
+                !networkService.isTransportTypeSupported(TransportType.CLEAR),
+                !networkService.isTransportTypeSupported(TransportType.TOR),
+                !networkService.isTransportTypeSupported(TransportType.I2P));
 
         Set<TransportType> supportedTransportTypes = serviceProvider.getNetworkService().getSupportedTransportTypes();
         view = new NetworkInfoView(model, this,
