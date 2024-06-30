@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 @Data
 public class ProofOfBurnDto {
     private long amount;
-    private long time;
+    private long blockTime;
     private String hash;
     private int blockHeight;
 }

@@ -46,14 +46,14 @@ public final class AuthorizedProofOfBurnData implements AuthorizedDistributedDat
     @EqualsAndHashCode.Exclude
     private final MetaData metaData = new MetaData(TTL_100_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
     private final long amount;
-    private final long time;
+    private final long blockTime;
     private final byte[] hash;
     @EqualsAndHashCode.Exclude
     private final boolean staticPublicKeysProvided;
 
-    public AuthorizedProofOfBurnData(long amount, long time, byte[] hash, boolean staticPublicKeysProvided) {
+    public AuthorizedProofOfBurnData(long amount, long blockTime, byte[] hash, boolean staticPublicKeysProvided) {
         this.amount = amount;
-        this.time = time;
+        this.blockTime = blockTime;
         this.hash = hash;
         this.staticPublicKeysProvided = staticPublicKeysProvided;
 
@@ -62,7 +62,7 @@ public final class AuthorizedProofOfBurnData implements AuthorizedDistributedDat
 
     @Override
     public void verify() {
-        NetworkDataValidation.validateDate(time);
+        NetworkDataValidation.validateDate(blockTime);
         NetworkDataValidation.validateHash(hash);
         checkArgument(amount > 0);
     }
@@ -71,7 +71,7 @@ public final class AuthorizedProofOfBurnData implements AuthorizedDistributedDat
     public bisq.user.protobuf.AuthorizedProofOfBurnData.Builder getBuilder(boolean serializeForHash) {
         return bisq.user.protobuf.AuthorizedProofOfBurnData.newBuilder()
                 .setAmount(amount)
-                .setTime(time)
+                .setBlockTime(blockTime)
                 .setHash(ByteString.copyFrom(hash))
                 .setStaticPublicKeysProvided(staticPublicKeysProvided);
     }
@@ -84,7 +84,7 @@ public final class AuthorizedProofOfBurnData implements AuthorizedDistributedDat
     public static AuthorizedProofOfBurnData fromProto(bisq.user.protobuf.AuthorizedProofOfBurnData proto) {
         return new AuthorizedProofOfBurnData(
                 proto.getAmount(),
-                proto.getTime(),
+                proto.getBlockTime(),
                 proto.getHash().toByteArray(),
                 proto.getStaticPublicKeysProvided());
     }
@@ -127,7 +127,7 @@ public final class AuthorizedProofOfBurnData implements AuthorizedDistributedDat
     public String toString() {
         return "AuthorizedProofOfBurnData{" +
                 ",\r\n                    amount=" + amount +
-                ",\r\n                    time=" + new Date(time) +
+                ",\r\n                    blockTime=" + new Date(blockTime) +
                 ",\r\n                    hash=" + Hex.encode(hash) +
                 ",\r\n                    staticPublicKeysProvided=" + staticPublicKeysProvided() +
                 ",\r\n                    authorizedPublicKeys=" + getAuthorizedPublicKeys() +

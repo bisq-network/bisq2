@@ -223,7 +223,7 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
         return CompletableFutureUtils.allOf(proofOfBurnList.stream()
                         .map(dto -> new AuthorizedProofOfBurnData(
                                 dto.getAmount(),
-                                dto.getTime(),
+                                dto.getBlockTime(),
                                 Hex.decode(dto.getHash()),
                                 staticPublicKeysProvided))
                         .map(this::publishAuthorizedData))

@@ -109,7 +109,7 @@ message AuthorizeTimestampRequest {
 
 message AuthorizedProofOfBurnData {
   sint64 amount = 1;
-  sint64 time = 2;
+  sint64 blockTime = 2;
   bytes hash = 3;
   bool staticPublicKeysProvided = 4;
 }
