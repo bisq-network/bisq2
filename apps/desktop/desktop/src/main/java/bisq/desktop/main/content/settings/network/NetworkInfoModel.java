@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.settings.network;
 
+import bisq.common.data.Pair;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Model;
 import bisq.i18n.Res;
@@ -30,11 +31,14 @@ import javafx.beans.property.StringProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 @Slf4j
 @Getter
 public class NetworkInfoModel implements Model {
+    private final List<Pair<String, Double>> versionDistribution = new ArrayList<>();
     private final NetworkService networkService;
     private final BooleanProperty clearNetDisabled = new SimpleBooleanProperty(false);
     private final BooleanProperty torDisabled = new SimpleBooleanProperty(false);
