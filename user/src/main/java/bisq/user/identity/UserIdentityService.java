@@ -17,7 +17,6 @@
 
 package bisq.user.identity;
 
-import bisq.common.application.ApplicationVersion;
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
 import bisq.common.observable.Observable;
@@ -202,7 +201,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     public CompletableFuture<BroadcastResult> editUserProfile(UserIdentity oldUserIdentity, String terms, String statement) {
         Identity oldIdentity = oldUserIdentity.getIdentity();
         UserProfile oldUserProfile = oldUserIdentity.getUserProfile();
-        UserProfile newUserProfile = UserProfile.from(oldUserProfile, terms, statement);
+        UserProfile newUserProfile = UserProfile.fromEdit(oldUserProfile, terms, statement);
         UserIdentity newUserIdentity = new UserIdentity(oldIdentity, newUserProfile);
 
         synchronized (lock) {
@@ -297,7 +296,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
             rePublishUserProfilesExecutor = Optional.of(ExecutorFactory.newSingleThreadExecutor("rePublishUserProfilesExecutor"));
             rePublishUserProfilesExecutor.get().submit(() -> {
                 userIdentities.forEach(userIdentity -> {
-                    UserProfile userProfile = UserProfile.from(userIdentity.getUserProfile(), ApplicationVersion.getVersion().getVersionAsString());
+                    UserProfile userProfile = UserProfile.fromRePublish(userIdentity.getUserProfile());
                     publishUserProfile(userProfile, userIdentity.getNetworkIdWithKeyPair().getKeyPair());
                     try {
                         int republishDelay = 60_000 + new Random().nextInt(180_000);
@@ -328,8 +327,8 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
                                             Identity identity) {
         checkArgument(nickName.equals(nickName.trim()) && !nickName.isEmpty(),
                 "Nickname must not have leading or trailing spaces and must not be empty.");
-        UserProfile userProfile = new UserProfile(1, nickName, proofOfWork, avatarVersion,
-                identity.getNetworkIdWithKeyPair().getNetworkId(), terms, statement, ApplicationVersion.getVersion().getVersionAsString());
+        UserProfile userProfile = new UserProfile(nickName, proofOfWork, avatarVersion,
+                identity.getNetworkIdWithKeyPair().getNetworkId(), terms, statement);
         UserIdentity userIdentity = new UserIdentity(identity, userProfile);
 
         synchronized (lock) {

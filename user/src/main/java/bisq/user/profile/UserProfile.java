@@ -18,6 +18,7 @@
 package bisq.user.profile;
 
 import bisq.common.annotation.ExcludeForHash;
+import bisq.common.application.ApplicationVersion;
 import bisq.common.data.ByteArray;
 import bisq.common.encoding.Hex;
 import bisq.common.proto.ProtoResolver;
@@ -51,18 +52,19 @@ import static bisq.network.p2p.services.data.storage.MetaData.*;
 @Slf4j
 @Getter
 public final class UserProfile implements DistributedData {
+    public static final int VERSION = 1;
     public static final int MAX_LENGTH_NICK_NAME = 100;
     public static final int MAX_LENGTH_TERMS = 500;
     public static final int MAX_LENGTH_STATEMENT = 100;
 
-    public static UserProfile from(UserProfile userProfile, String terms, String statement) {
-        return new UserProfile(1, userProfile.getNickName(), userProfile.getProofOfWork(), userProfile.getAvatarVersion(),
-                userProfile.getNetworkId(), terms, statement, userProfile.applicationVersion);
+    public static UserProfile fromEdit(UserProfile userProfile, String terms, String statement) {
+        return new UserProfile(userProfile.getNickName(), userProfile.getProofOfWork(), userProfile.getAvatarVersion(),
+                userProfile.getNetworkId(), terms, statement);
     }
 
-    public static UserProfile from(UserProfile userProfile, String version) {
-        return new UserProfile(1, userProfile.getNickName(), userProfile.getProofOfWork(), userProfile.getAvatarVersion(),
-                userProfile.getNetworkId(), userProfile.getTerms(), userProfile.getStatement(), version);
+    public static UserProfile fromRePublish(UserProfile userProfile) {
+        return new UserProfile(userProfile.getNickName(), userProfile.getProofOfWork(), userProfile.getAvatarVersion(),
+                userProfile.getNetworkId(), userProfile.getTerms(), userProfile.getStatement());
     }
 
     // We give a bit longer TTL than the chat messages to ensure the chat user is available as long the messages are
@@ -86,14 +88,30 @@ public final class UserProfile implements DistributedData {
     private transient ByteArray proofOfBurnHash;
     private transient ByteArray bondedReputationHash;
 
-    public UserProfile(int version,
-                       String nickName,
+    public UserProfile(String nickName,
                        ProofOfWork proofOfWork,
                        int avatarVersion,
                        NetworkId networkId,
                        String terms,
-                       String statement,
-                       String applicationVersion) {
+                       String statement) {
+        this(VERSION,
+                nickName,
+                proofOfWork,
+                avatarVersion,
+                networkId,
+                terms,
+                statement,
+                ApplicationVersion.getVersion().getVersionAsString());
+    }
+
+    private UserProfile(int version,
+                        String nickName,
+                        ProofOfWork proofOfWork,
+                        int avatarVersion,
+                        NetworkId networkId,
+                        String terms,
+                        String statement,
+                        String applicationVersion) {
         this.version = version;
         this.nickName = nickName;
         this.proofOfWork = proofOfWork;
