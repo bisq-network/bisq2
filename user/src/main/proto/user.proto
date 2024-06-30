@@ -31,6 +31,8 @@ message UserProfile {
   string terms = 4;
   string statement = 5;
   sint32 avatarVersion = 6;
+  sint32 version = 7;
+  string applicationVersion = 8;
 }
 
 message UserIdentity {

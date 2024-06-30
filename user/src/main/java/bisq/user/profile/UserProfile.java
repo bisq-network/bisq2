@@ -17,6 +17,7 @@
 
 package bisq.user.profile;
 
+import bisq.common.annotation.ExcludeForHash;
 import bisq.common.data.ByteArray;
 import bisq.common.encoding.Hex;
 import bisq.common.proto.ProtoResolver;
@@ -55,8 +56,13 @@ public final class UserProfile implements DistributedData {
     public static final int MAX_LENGTH_STATEMENT = 100;
 
     public static UserProfile from(UserProfile userProfile, String terms, String statement) {
-        return new UserProfile(userProfile.getNickName(), userProfile.getProofOfWork(), userProfile.getAvatarVersion(),
-                userProfile.getNetworkId(), terms, statement);
+        return new UserProfile(1, userProfile.getNickName(), userProfile.getProofOfWork(), userProfile.getAvatarVersion(),
+                userProfile.getNetworkId(), terms, statement, userProfile.applicationVersion);
+    }
+
+    public static UserProfile from(UserProfile userProfile, String version) {
+        return new UserProfile(1, userProfile.getNickName(), userProfile.getProofOfWork(), userProfile.getAvatarVersion(),
+                userProfile.getNetworkId(), userProfile.getTerms(), userProfile.getStatement(), version);
     }
 
     // We give a bit longer TTL than the chat messages to ensure the chat user is available as long the messages are
@@ -69,23 +75,33 @@ public final class UserProfile implements DistributedData {
     private final NetworkId networkId;
     private final String terms;
     private final String statement;
+    @EqualsAndHashCode.Exclude
+    @ExcludeForHash
+    private final int version;
+    @EqualsAndHashCode.Exclude
+    @ExcludeForHash(excludeOnlyInVersions = {0})
+    private final String applicationVersion;
 
     private transient String nym;
     private transient ByteArray proofOfBurnHash;
     private transient ByteArray bondedReputationHash;
 
-    public UserProfile(String nickName,
+    public UserProfile(int version,
+                       String nickName,
                        ProofOfWork proofOfWork,
                        int avatarVersion,
                        NetworkId networkId,
                        String terms,
-                       String statement) {
+                       String statement,
+                       String applicationVersion) {
+        this.version = version;
         this.nickName = nickName;
         this.proofOfWork = proofOfWork;
         this.avatarVersion = avatarVersion;
         this.networkId = networkId;
         this.terms = terms;
         this.statement = statement;
+        this.applicationVersion = applicationVersion;
 
         verify();
     }
@@ -95,17 +111,22 @@ public final class UserProfile implements DistributedData {
         NetworkDataValidation.validateText(nickName, MAX_LENGTH_NICK_NAME);
         NetworkDataValidation.validateText(terms, MAX_LENGTH_TERMS);
         NetworkDataValidation.validateText(statement, MAX_LENGTH_STATEMENT);
+        if (!applicationVersion.isEmpty()) {
+            NetworkDataValidation.validateVersion(applicationVersion);
+        }
     }
 
     @Override
     public bisq.user.protobuf.UserProfile.Builder getBuilder(boolean serializeForHash) {
         return bisq.user.protobuf.UserProfile.newBuilder()
+                .setVersion(version)
                 .setNickName(nickName)
                 .setTerms(terms)
                 .setStatement(statement)
                 .setAvatarVersion(avatarVersion)
                 .setProofOfWork(proofOfWork.toProto(serializeForHash))
-                .setNetworkId(networkId.toProto(serializeForHash));
+                .setNetworkId(networkId.toProto(serializeForHash))
+                .setApplicationVersion(applicationVersion);
     }
 
     @Override
@@ -114,12 +135,14 @@ public final class UserProfile implements DistributedData {
     }
 
     public static UserProfile fromProto(bisq.user.protobuf.UserProfile proto) {
-        return new UserProfile(proto.getNickName(),
+        return new UserProfile(proto.getVersion(),
+                proto.getNickName(),
                 ProofOfWork.fromProto(proto.getProofOfWork()),
                 proto.getAvatarVersion(),
                 NetworkId.fromProto(proto.getNetworkId()),
                 proto.getTerms(),
-                proto.getStatement());
+                proto.getStatement(),
+                proto.getApplicationVersion());
     }
 
     public static ProtoResolver<DistributedData> getResolver() {
@@ -215,7 +238,8 @@ public final class UserProfile implements DistributedData {
     @Override
     public String toString() {
         return "UserProfile{" +
-                "\r\n                    nickName='" + nickName + '\'' +
+                "\r\n                    version='" + version + '\'' +
+                ",\r\n                    nickName='" + nickName + '\'' +
                 ",\r\n                    proofOfWork=" + proofOfWork +
                 ",\r\n                    avatarVersion=" + avatarVersion +
                 ",\r\n                    networkId=" + networkId +
@@ -224,6 +248,7 @@ public final class UserProfile implements DistributedData {
                 ",\r\n                    nym='" + nym + '\'' +
                 ",\r\n                    proofOfBurnHash=" + proofOfBurnHash +
                 ",\r\n                    bondedReputationHash=" + bondedReputationHash +
+                ",\r\n                    applicationVersion=" + applicationVersion +
                 "\r\n}";
     }
 }

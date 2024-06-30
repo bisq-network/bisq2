@@ -17,6 +17,7 @@
 
 package bisq.user.identity;
 
+import bisq.common.application.ApplicationVersion;
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
 import bisq.common.observable.Observable;
@@ -296,7 +297,8 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
             rePublishUserProfilesExecutor = Optional.of(ExecutorFactory.newSingleThreadExecutor("rePublishUserProfilesExecutor"));
             rePublishUserProfilesExecutor.get().submit(() -> {
                 userIdentities.forEach(userIdentity -> {
-                    publishUserProfile(userIdentity.getUserProfile(), userIdentity.getNetworkIdWithKeyPair().getKeyPair());
+                    UserProfile userProfile = UserProfile.from(userIdentity.getUserProfile(), ApplicationVersion.getVersion().getVersionAsString());
+                    publishUserProfile(userProfile, userIdentity.getNetworkIdWithKeyPair().getKeyPair());
                     try {
                         int republishDelay = 60_000 + new Random().nextInt(180_000);
                         Thread.sleep(republishDelay);
@@ -326,8 +328,8 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
                                             Identity identity) {
         checkArgument(nickName.equals(nickName.trim()) && !nickName.isEmpty(),
                 "Nickname must not have leading or trailing spaces and must not be empty.");
-        UserProfile userProfile = new UserProfile(nickName, proofOfWork, avatarVersion,
-                identity.getNetworkIdWithKeyPair().getNetworkId(), terms, statement);
+        UserProfile userProfile = new UserProfile(1, nickName, proofOfWork, avatarVersion,
+                identity.getNetworkIdWithKeyPair().getNetworkId(), terms, statement, ApplicationVersion.getVersion().getVersionAsString());
         UserIdentity userIdentity = new UserIdentity(identity, userProfile);
 
         synchronized (lock) {
