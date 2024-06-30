@@ -132,7 +132,12 @@ public class UserProfileIcon extends StackPane {
         if (userProfile != null && tooltip != null) {
             String tooltipString = userProfile.getTooltipString();
             String lastSeenString = lastSeenAsString != null ? "\n" + Res.get("user.userProfile.lastSeenAgo", lastSeenAsString) : "";
-            tooltipText = tooltipString + lastSeenString;
+            String version = userProfile.getApplicationVersion();
+            if (version.isEmpty()) {
+                version = Res.get("data.na");
+            }
+            String versionString = lastSeenAsString != null ? "\n" + Res.get("user.userProfile.version", version) : "";
+            tooltipText = tooltipString + lastSeenString + versionString;
             tooltip.setText(tooltipText);
         }
     }

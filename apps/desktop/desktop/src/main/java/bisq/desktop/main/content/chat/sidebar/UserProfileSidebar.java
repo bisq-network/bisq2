@@ -42,12 +42,7 @@ import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -145,6 +140,11 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
                     .orElse(Res.get("data.na")));
 
             model.lastSeen.set(TimeFormatter.formatAge(userProfileService.getLastSeen(userProfile)));
+            String version = userProfile.getApplicationVersion();
+            if (version.isEmpty()) {
+                version = Res.get("data.na");
+            }
+            model.version.set(version);
 
             // If we selected our own user we don't show certain features
             model.isPeer.set(!userIdentityService.isUserIdentityPresent(userProfile.getId()));
@@ -204,6 +204,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
         private final ObjectProperty<ReputationScore> reputationScore = new SimpleObjectProperty<>();
         private final StringProperty profileAge = new SimpleStringProperty();
         private final StringProperty lastSeen = new SimpleStringProperty();
+        private final StringProperty version = new SimpleStringProperty();
         private final BooleanProperty ignoreUserSelected = new SimpleBooleanProperty();
         private final BooleanProperty isPeer = new SimpleBooleanProperty();
 
@@ -218,7 +219,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final ImageView catIconImageView;
         private final Label nickName, botId, userId, addressByTransport, statement, totalReputationScore,
-                profileAge, lastSeen, terms;
+                profileAge, lastSeen, terms, version;
         private final BisqMenuItem privateMsg, mention, ignore, undoIgnore, report;
         private final VBox botIdBox, userIdBox, addressByTransportBox, statementBox, termsBox, optionsVBox;
         private final ReputationScoreDisplay reputationScoreDisplay;
@@ -288,6 +289,10 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             VBox lastSeenBox = lastSeenTriple.getThird();
             lastSeen = lastSeenTriple.getSecond();
 
+            Triple<Label, Label, VBox> versionTriple = getInfoBox(Res.get("chat.sideBar.userProfile.version"));
+            VBox versionBox = versionTriple.getThird();
+            version = versionTriple.getSecond();
+
             Triple<Label, Label, VBox> statementTriple = getInfoBox(Res.get("chat.sideBar.userProfile.statement"));
             statementBox = statementTriple.getThird();
             statement = statementTriple.getSecond();
@@ -297,7 +302,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             terms = termsTriple.getSecond();
 
             VBox content = new VBox(15, botIdBox, userIdBox, addressByTransportBox,
-                    totalReputationScoreBox, profileAgeBox, lastSeenBox, statementBox, termsBox);
+                    totalReputationScoreBox, profileAgeBox, lastSeenBox, versionBox, statementBox, termsBox);
             content.setMaxWidth(width - 15); // Remove the scrollbar
             content.setPadding(new Insets(0, 10, 20, 20));
             ScrollPane scrollPane = new ScrollPane(content);
@@ -342,6 +347,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             termsBox.managedProperty().bind(model.terms.isEmpty().not());
             profileAge.textProperty().bind(model.profileAge);
             lastSeen.textProperty().bind(model.lastSeen);
+            version.textProperty().bind(model.version);
             ignore.visibleProperty().bind(model.ignoreUserSelected.not());
             ignore.managedProperty().bind(model.ignoreUserSelected.not());
             undoIgnore.visibleProperty().bind(model.ignoreUserSelected);
@@ -397,6 +403,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             terms.managedProperty().unbind();
             profileAge.textProperty().unbind();
             lastSeen.textProperty().unbind();
+            version.textProperty().unbind();
             ignore.visibleProperty().unbind();
             ignore.managedProperty().unbind();
             undoIgnore.visibleProperty().unbind();
