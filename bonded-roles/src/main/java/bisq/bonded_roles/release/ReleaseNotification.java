@@ -56,7 +56,7 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
     @EqualsAndHashCode.Exclude
     private final boolean staticPublicKeysProvided;
     @EqualsAndHashCode.Exclude  // transient are excluded by default but let's make it more explicit
-    private transient final Version version;
+    private transient final Version releaseVersion;
 
     public ReleaseNotification(String id,
                                long date,
@@ -75,7 +75,7 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
         this.releaseManagerProfileId = releaseManagerProfileId;
         this.staticPublicKeysProvided = staticPublicKeysProvided;
 
-        version = new Version(versionString);
+        releaseVersion = new Version(versionString);
 
         verify();
     }
