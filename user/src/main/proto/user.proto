@@ -106,12 +106,14 @@ message AuthorizeTimestampRequest {
   string profileId = 1;
 }
 
-
 message AuthorizedProofOfBurnData {
   sint64 amount = 1;
   sint64 blockTime = 2;
   bytes hash = 3;
   bool staticPublicKeysProvided = 4;
+  sint32 version = 5;
+  sint32 blockHeight = 6;
+  string txId = 7;
 }
 
 message AuthorizedBondedReputationData {

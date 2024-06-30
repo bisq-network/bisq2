@@ -31,4 +31,5 @@ public class ProofOfBurnDto {
     private long blockTime;
     private String hash;
     private int blockHeight;
+    private String txId;
 }

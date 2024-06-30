@@ -24,6 +24,7 @@ import bisq.bonded_roles.oracle.AuthorizedOracleNode;
 import bisq.bonded_roles.registration.BondedRoleRegistrationRequest;
 import bisq.bonded_roles.security_manager.alert.AlertType;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
+import bisq.common.application.ApplicationVersion;
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
 import bisq.common.timer.Scheduler;
@@ -63,6 +64,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -220,14 +223,27 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
     }
 
     private CompletableFuture<Boolean> publishProofOfBurnDtoSet(List<ProofOfBurnDto> proofOfBurnList) {
-        return CompletableFutureUtils.allOf(proofOfBurnList.stream()
-                        .map(dto -> new AuthorizedProofOfBurnData(
-                                dto.getAmount(),
-                                dto.getBlockTime(),
-                                Hex.decode(dto.getHash()),
-                                staticPublicKeysProvided))
-                        .map(this::publishAuthorizedData))
+        // After v2.0.6 we can remove support for version 0 data
+        Stream<AuthorizedProofOfBurnData> oldVersions = proofOfBurnList.stream()
+                .map(dto -> createAuthorizedProofOfBurnData(dto, 0))
+                .filter(e -> ApplicationVersion.getVersion().below("2.0.7"));
+        Stream<AuthorizedProofOfBurnData> newVersions = proofOfBurnList.stream()
+                .map(dto -> createAuthorizedProofOfBurnData(dto, 1));
+        return CompletableFutureUtils.allOf(Stream.concat(oldVersions, newVersions)
+                        .map(this::publishAuthorizedData)
+                        .collect(Collectors.toList()))
                 .thenApply(results -> !results.contains(false));
+    }
+
+    private AuthorizedProofOfBurnData createAuthorizedProofOfBurnData(ProofOfBurnDto dto, int version) {
+        return new AuthorizedProofOfBurnData(
+                version,
+                dto.getBlockTime(),
+                dto.getAmount(),
+                Hex.decode(dto.getHash()),
+                dto.getBlockHeight(),
+                dto.getTxId(),
+                staticPublicKeysProvided);
     }
 
     private CompletableFuture<Boolean> publishBondedReputationDtoSet(List<BondedReputationDto> bondedReputationList) {
