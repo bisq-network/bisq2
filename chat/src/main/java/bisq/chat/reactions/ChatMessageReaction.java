@@ -102,9 +102,11 @@ public abstract class ChatMessageReaction implements DistributedData {
 
     public static ChatMessageReaction fromProto(bisq.chat.protobuf.ChatMessageReaction proto) {
         switch (proto.getMessageCase()) {
-            // TODO: Implement reactions for the remaining messages
             case COMMONPUBLICCHATMESSAGEREACTION: {
                 return CommonPublicChatMessageReaction.fromProto(proto);
+            }
+            case BISQEASYOFFERBOOKMESSAGEREACTION: {
+                return BisqEasyOfferbookMessageReaction.fromProto(proto);
             }
             case MESSAGE_NOT_SET: {
                 throw new UnresolvableProtobufMessageException(proto);
@@ -118,9 +120,11 @@ public abstract class ChatMessageReaction implements DistributedData {
             try {
                 bisq.chat.protobuf.ChatMessageReaction proto = any.unpack(bisq.chat.protobuf.ChatMessageReaction.class);
                 switch (proto.getMessageCase()) {
-                    // TODO: Implement reactions for the remaining messages
                     case COMMONPUBLICCHATMESSAGEREACTION: {
                         return CommonPublicChatMessageReaction.fromProto(proto);
+                    }
+                    case BISQEASYOFFERBOOKMESSAGEREACTION: {
+                        return BisqEasyOfferbookMessageReaction.fromProto(proto);
                     }
                     case MESSAGE_NOT_SET: {
                         throw new UnresolvableProtobufMessageException(proto);

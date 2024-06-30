@@ -41,8 +41,8 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public abstract class PublicChatChannelService<M extends PublicChatMessage, C extends PublicChatChannel<M>, S extends PersistableStore<S>>
-        extends ChatChannelService<M, C, S> implements DataService.Listener {
+public abstract class PublicChatChannelService<M extends PublicChatMessage, C extends PublicChatChannel<M>,
+        S extends PersistableStore<S>, R extends ChatMessageReaction> extends ChatChannelService<M, C, S> implements DataService.Listener {
 
     public PublicChatChannelService(NetworkService networkService,
                                     UserService userService,
@@ -122,7 +122,7 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
             return CompletableFuture.failedFuture(new RuntimeException());
         }
 
-        CommonPublicChatMessageReaction chatMessageReaction = createChatMessageReaction(message, reaction, userIdentity);
+        R chatMessageReaction = createChatMessageReaction(message, reaction, userIdentity);
         // Sender adds the message at sending to avoid the delayed display if using the received message from the network.
         message.getChatMessageReactions().add(chatMessageReaction);
 
@@ -131,8 +131,7 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
                 .thenCompose(nil -> networkService.publishAuthenticatedData(chatMessageReaction, keyPair));
     }
 
-    public <R extends ChatMessageReaction> CompletableFuture<BroadcastResult> deleteChatMessageReaction(R chatMessageReaction,
-                                                                                                        NetworkIdWithKeyPair networkIdWithKeyPair) {
+    public CompletableFuture<BroadcastResult> deleteChatMessageReaction(R chatMessageReaction, NetworkIdWithKeyPair networkIdWithKeyPair) {
         return networkService.removeAuthenticatedData(chatMessageReaction, networkIdWithKeyPair.getKeyPair());
     }
 
@@ -174,7 +173,7 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
 
     protected abstract void maybeAddDefaultChannels();
 
-    protected <R extends ChatMessageReaction> void processAddedReaction(R chatMessageReaction) {
+    protected void processAddedReaction(R chatMessageReaction) {
         findChannel(chatMessageReaction.getChatChannelId())
                 .flatMap(channel -> channel.getChatMessages().stream()
                         .filter(message -> message.getId().equals(chatMessageReaction.getChatMessageId()))
@@ -182,7 +181,7 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
                 .ifPresent(message -> message.getChatMessageReactions().add(chatMessageReaction));
     }
 
-    protected <R extends ChatMessageReaction> void processRemovedReaction(R chatMessageReaction) {
+    protected void processRemovedReaction(R chatMessageReaction) {
         findChannel(chatMessageReaction.getChatChannelId())
                 .flatMap(channel -> channel.getChatMessages().stream()
                         .filter(message -> message.getId().equals(chatMessageReaction.getChatMessageId()))
@@ -190,16 +189,5 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
                 .ifPresent(message -> message.getChatMessageReactions().remove(chatMessageReaction));
     }
 
-    // TODO: Make this a class generic when adding more message types (for now we only have one).
-    private CommonPublicChatMessageReaction createChatMessageReaction(M message, Reaction reaction, UserIdentity userIdentity) {
-        return new CommonPublicChatMessageReaction(
-                CommonPublicChatMessageReaction.createId(message.getChannelId(),
-                        message.getId(), reaction.ordinal(), userIdentity.getId()),
-                userIdentity.getId(),
-                message.getChannelId(),
-                message.getChatChannelDomain(),
-                message.getId(),
-                reaction.ordinal(),
-                System.currentTimeMillis());
-    };
+    protected abstract R createChatMessageReaction(M message, Reaction reaction, UserIdentity userIdentity);
 }

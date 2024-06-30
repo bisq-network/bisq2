@@ -22,7 +22,9 @@ import bisq.chat.priv.PrivateChatChannelService;
 import bisq.chat.priv.PrivateChatMessage;
 import bisq.chat.pub.PublicChatChannel;
 import bisq.chat.pub.PublicChatMessage;
+import bisq.chat.reactions.BisqEasyOfferbookMessageReaction;
 import bisq.chat.reactions.ChatMessageReaction;
+import bisq.chat.reactions.CommonPublicChatMessageReaction;
 import bisq.chat.reactions.Reaction;
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.common.observable.Pin;
@@ -42,7 +44,6 @@ import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.confidential.resend.ResendMessageService;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.options.OfferOptionUtil;
-import bisq.settings.SettingsService;
 import bisq.trade.Trade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.user.banned.BannedUserService;
@@ -74,7 +75,6 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
     private final UserIdentityService userIdentityService;
     private final UserProfileService userProfileService;
     private final ReputationService reputationService;
-    private final SettingsService settingsService;
     private final Consumer<UserProfile> mentionUserHandler;
     private final Consumer<ChatMessage> replyHandler;
     private final Consumer<ChatMessage> showChatUserDetailsHandler;
@@ -102,7 +102,6 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         userProfileService = serviceProvider.getUserService().getUserProfileService();
         reputationService = serviceProvider.getUserService().getReputationService();
-        settingsService = serviceProvider.getSettingsService();
         bisqEasyService = serviceProvider.getBisqEasyService();
         bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
         bannedUserService = serviceProvider.getUserService().getBannedUserService();
@@ -440,22 +439,46 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
     }
 
     public void onReactMessage(ChatMessage chatMessage, Reaction reaction) {
-        checkArgument(chatMessage instanceof CommonPublicChatMessage, "Not possible to react to a message which is not a CommonPublicChatMessage.");
+        checkArgument(chatMessage instanceof PublicChatMessage && (chatMessage instanceof CommonPublicChatMessage
+                        || (chatMessage instanceof BisqEasyOfferMessage && !((BisqEasyOfferMessage) chatMessage).hasBisqEasyOffer())),
+                "Not possible to react to a message of type %s.", chatMessage.getClass());
 
         UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
-        CommonPublicChatMessage commonPublicChatMessage = (CommonPublicChatMessage) chatMessage;
-        Optional<ChatMessageReaction> chatMessageReaction = commonPublicChatMessage.getChatMessageReactions().stream()
+        PublicChatMessage publicChatMessage = (PublicChatMessage) chatMessage;
+        Optional<ChatMessageReaction> chatMessageReaction = publicChatMessage.getChatMessageReactions().stream()
                 .filter(chatReaction -> Objects.equals(chatReaction.getUserProfileId(), userIdentity.getId())
                         && chatReaction.getReactionId() == reaction.ordinal())
                 .findAny();
 
-        if (chatMessageReaction.isPresent()) {
-            chatService.getCommonPublicChatChannelServices().get(model.getChatChannelDomain())
-                    .deleteChatMessageReaction(chatMessageReaction.get(), userIdentity.getNetworkIdWithKeyPair());
-        } else {
-            chatService.getCommonPublicChatChannelServices().get(model.getChatChannelDomain())
-                    .publishChatMessageReaction(commonPublicChatMessage, reaction, userIdentity);
-        }
+        chatMessageReaction.ifPresentOrElse(
+                messageReaction -> deleteChatMessageReaction(messageReaction, userIdentity),
+                () -> publishChatMessageReaction(publicChatMessage, reaction, userIdentity));
+    }
+
+    public void highlightOfferChatMessage(@Nullable ChatMessage message) {
+        model.getChatMessages().stream()
+                .filter(ChatMessageListItem::isBisqEasyPublicChatMessageWithOffer)
+                .forEach(item -> {
+                    boolean shouldHighlightMessage = message != null && Objects.equals(item.getChatMessage(), message);
+                    item.getShowHighlighted().set(shouldHighlightMessage);
+                    if (shouldHighlightMessage) {
+                        view.scrollToChatMessage(item);
+                    }
+                });
+    }
+
+    public String getUserName(String userProfileId) {
+        return userProfileService.findUserProfile(userProfileId)
+                .map(UserProfile::getUserName)
+                .orElse(Res.get("data.na"));
+    }
+
+    public void onResendMessage(String messageId) {
+        resendMessageService.ifPresent(service -> service.manuallyResendMessage(messageId));
+    }
+
+    public boolean canResendMessage(String messageId) {
+        return resendMessageService.map(service -> service.canManuallyResendMessage(messageId)).orElse(false);
     }
 
 
@@ -494,18 +517,6 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
 
     void onScrollToBottom() {
         applyScrollValue(1);
-    }
-
-    public void highlightOfferChatMessage(@Nullable ChatMessage message) {
-        model.getChatMessages().stream()
-                .filter(ChatMessageListItem::isBisqEasyPublicChatMessageWithOffer)
-                .forEach(item -> {
-                    boolean shouldHighlightMessage = message != null && Objects.equals(item.getChatMessage(), message);
-                    item.getShowHighlighted().set(shouldHighlightMessage);
-                    if (shouldHighlightMessage) {
-                        view.scrollToChatMessage(item);
-                    }
-                });
     }
 
 
@@ -624,17 +635,23 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
         });
     }
 
-    public String getUserName(String userProfileId) {
-        return userProfileService.findUserProfile(userProfileId)
-                .map(UserProfile::getUserName)
-                .orElse(Res.get("data.na"));
+    private void publishChatMessageReaction(PublicChatMessage chatMessage, Reaction reaction, UserIdentity userIdentity) {
+        if (chatMessage instanceof CommonPublicChatMessage) {
+            chatService.getCommonPublicChatChannelServices().get(model.getChatChannelDomain())
+                    .publishChatMessageReaction((CommonPublicChatMessage) chatMessage, reaction, userIdentity);
+        } else if (chatMessage instanceof BisqEasyOfferbookMessage) {
+            chatService.getBisqEasyOfferbookChannelService()
+                    .publishChatMessageReaction((BisqEasyOfferbookMessage) chatMessage, reaction, userIdentity);
+        }
     }
 
-    public void onResendMessage(String messageId) {
-        resendMessageService.ifPresent(service -> service.manuallyResendMessage(messageId));
-    }
-
-    public boolean canResendMessage(String messageId) {
-        return resendMessageService.map(service -> service.canManuallyResendMessage(messageId)).orElse(false);
+    private void deleteChatMessageReaction(ChatMessageReaction messageReaction, UserIdentity userIdentity) {
+        if (messageReaction instanceof CommonPublicChatMessageReaction) {
+            chatService.getCommonPublicChatChannelServices().get(model.getChatChannelDomain())
+                    .deleteChatMessageReaction((CommonPublicChatMessageReaction) messageReaction, userIdentity.getNetworkIdWithKeyPair());
+        } else if (messageReaction instanceof BisqEasyOfferbookMessageReaction) {
+            chatService.getBisqEasyOfferbookChannelService()
+                    .deleteChatMessageReaction((BisqEasyOfferbookMessageReaction) messageReaction, userIdentity.getNetworkIdWithKeyPair());
+        }
     }
 }

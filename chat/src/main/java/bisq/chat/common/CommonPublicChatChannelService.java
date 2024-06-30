@@ -21,6 +21,7 @@ import bisq.chat.ChatChannelDomain;
 import bisq.chat.Citation;
 import bisq.chat.pub.PublicChatChannelService;
 import bisq.chat.reactions.CommonPublicChatMessageReaction;
+import bisq.chat.reactions.Reaction;
 import bisq.common.observable.collection.ObservableArray;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
@@ -30,6 +31,7 @@ import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
 import bisq.user.UserService;
+import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -39,7 +41,8 @@ import java.util.List;
 import java.util.Optional;
 
 @Slf4j
-public final class CommonPublicChatChannelService extends PublicChatChannelService<CommonPublicChatMessage, CommonPublicChatChannel, CommonPublicChatChannelStore> {
+public final class CommonPublicChatChannelService extends PublicChatChannelService<CommonPublicChatMessage,
+        CommonPublicChatChannel, CommonPublicChatChannelStore, CommonPublicChatMessageReaction> {
     @Getter
     private final CommonPublicChatChannelStore persistableStore = new CommonPublicChatChannelStore();
     @Getter
@@ -142,5 +145,20 @@ public final class CommonPublicChatChannelService extends PublicChatChannelServi
 
         getChannels().setAll(channels);
         persist();
+    }
+
+    @Override
+    protected CommonPublicChatMessageReaction createChatMessageReaction(CommonPublicChatMessage message,
+                                                                        Reaction reaction,
+                                                                        UserIdentity userIdentity) {
+        return new CommonPublicChatMessageReaction(
+                CommonPublicChatMessageReaction.createId(message.getChannelId(),
+                        message.getId(), reaction.ordinal(), userIdentity.getId()),
+                userIdentity.getId(),
+                message.getChannelId(),
+                message.getChatChannelDomain(),
+                message.getId(),
+                reaction.ordinal(),
+                System.currentTimeMillis());
     }
 }

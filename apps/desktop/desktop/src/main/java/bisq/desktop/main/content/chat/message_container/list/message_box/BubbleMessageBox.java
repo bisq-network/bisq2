@@ -153,8 +153,8 @@ public abstract class BubbleMessageBox extends MessageBox {
             }
         });
 
-        reactMenu.setVisible(item.getChatMessage() instanceof CommonPublicChatMessage);
-        reactMenu.setManaged(item.getChatMessage() instanceof CommonPublicChatMessage);
+        reactMenu.setVisible(item.shouldShowReactions());
+        reactMenu.setManaged(item.shouldShowReactions());
 
         HBox.setMargin(copyAction, ACTION_ITEMS_MARGIN);
         HBox.setMargin(reactMenu, ACTION_ITEMS_MARGIN);
