@@ -20,21 +20,15 @@ package bisq.desktop.main.content.chat.message_container.list.message_box;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
-import bisq.desktop.common.Icons;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.components.controls.BisqTextArea;
-import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
 import bisq.i18n.Res;
-import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
-import de.jensd.fx.fontawesome.AwesomeDude;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Cursor;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -46,12 +40,13 @@ import org.fxmisc.easybind.Subscription;
 public final class MyTextMessageBox extends BubbleMessageBox {
     private final static String EDITED_POST_FIX = " " + Res.get("chat.message.wasEdited");
 
-    private final Label deliveryState;
-    private final Subscription actionsBoxVisiblePropertyPin, messageDeliveryStatusIconPin;
+    private final Subscription shouldShowTryAgainPin, messageDeliveryStatusNodePin;
+    private final BisqMenuItem tryAgainMenuItem = item.getTryAgainMenuItem();
+    private final HBox deliveryStateHBox = new HBox();
     private BisqMenuItem editAction, deleteAction;
     private BisqTextArea editInputField;
     private Button saveEditButton, cancelEditButton;
-    private HBox editButtonsHBox;
+    private HBox messageStatusHbox, editButtonsHBox;
 
     public MyTextMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
                             ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
@@ -62,12 +57,6 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         setUpEditFunctionality();
         message.setAlignment(Pos.CENTER_RIGHT);
         messageBgHBox.getStyleClass().add("chat-message-bg-my-message");
-
-        // deliveryState
-        deliveryState = new Label();
-        deliveryState.setCursor(Cursor.HAND);
-        deliveryState.setTooltip(new BisqTooltip(true));
-        deliveryState.getStyleClass().add("medium-text");
 
         VBox messageVBox = new VBox(quotedMessageVBox, message, editInputField);
 
@@ -80,55 +69,41 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         HBox.setMargin(editInputField, new Insets(6, -10, -25, 0));
         messageBgHBox.getChildren().setAll(messageVBox, userProfileIconVbox);
 
-        HBox.setMargin(deliveryState, new Insets(0, 10, 0, 0));
-        HBox deliveryStateHBox = new HBox(Spacer.fillHBox(), actionsHBox);
+        // Message delivery status
+        messageStatusHbox.getChildren().addAll(tryAgainMenuItem, deliveryStateHBox);
+        messageStatusHbox.setAlignment(Pos.CENTER);
+        deliveryStateHBox.setAlignment(Pos.CENTER);
 
-        actionsBoxVisiblePropertyPin = EasyBind.subscribe(actionsHBox.visibleProperty(), v -> {
-            if (v) {
-                deliveryStateHBox.getChildren().remove(deliveryState);
-                if (!actionsHBox.getChildren().contains(deliveryState)) {
-                    actionsHBox.getChildren().add(deliveryState);
-                }
-            } else {
-                actionsHBox.getChildren().remove(deliveryState);
-                if (!deliveryStateHBox.getChildren().contains(deliveryState)) {
-                    deliveryStateHBox.getChildren().add(deliveryState);
-                }
+        messageDeliveryStatusNodePin = EasyBind.subscribe(item.getMessageDeliveryStatusNode(), node -> {
+            deliveryStateHBox.setManaged(node != null);
+            deliveryStateHBox.setVisible(node != null);
+            if (node != null) {
+                deliveryStateHBox.getChildren().setAll(node);
             }
         });
 
-        messageDeliveryStatusIconPin = EasyBind.subscribe(item.getMessageDeliveryStatusIcon(), icon -> {
-                    deliveryState.setManaged(icon != null);
-                    deliveryState.setVisible(icon != null);
-                    if (icon != null) {
-                        AwesomeDude.setIcon(deliveryState, icon, AwesomeDude.DEFAULT_ICON_SIZE);
-                        item.getMessageDeliveryStatusIconColor().ifPresent(color ->
-                                Icons.setAwesomeIconColor(deliveryState, color));
+        shouldShowTryAgainPin = EasyBind.subscribe(item.getShouldShowTryAgain(), showTryAgain -> {
+            tryAgainMenuItem.setVisible(showTryAgain);
+            tryAgainMenuItem.setManaged(showTryAgain);
+            if (showTryAgain) {
+                tryAgainMenuItem.setOnMouseClicked(e -> controller.onResendMessage(item.getMessageId()));
+            } else {
+                tryAgainMenuItem.setOnMouseClicked(null);
+            }
+        });
 
-                        boolean allowResend = item.getMessageDeliveryStatus() == MessageDeliveryStatus.FAILED;
-                        String messageId = item.getMessageId();
-                        if (allowResend && controller.canResendMessage(messageId)) {
-                            deliveryState.setOnMouseClicked(e -> controller.onResendMessage(messageId));
-                            deliveryState.setCursor(Cursor.HAND);
-                        } else {
-                            deliveryState.setOnMouseClicked(null);
-                            deliveryState.setCursor(null);
-                        }
-                    }
-                }
-        );
-
-        deliveryState.getTooltip().textProperty().bind(item.getMessageDeliveryStatusTooltip());
         editInputField.maxWidthProperty().bind(message.widthProperty());
         messageHBox.getChildren().setAll(Spacer.fillHBox(), addedReactions, messageBgHBox);
-        contentVBox.getChildren().setAll(userNameAndDateHBox, messageHBox, editButtonsHBox, deliveryStateHBox);
+        contentVBox.getChildren().setAll(userNameAndDateHBox, messageHBox, editButtonsHBox, actionsHBox);
     }
 
     @Override
     protected void setUpUserNameAndDateTime() {
         super.setUpUserNameAndDateTime();
 
-        userNameAndDateHBox = new HBox(10, dateTime, userName);
+        messageStatusHbox = new HBox(5);
+        dateTimeHBox.getChildren().add(0, messageStatusHbox);
+        userNameAndDateHBox = new HBox(10, dateTimeHBox, userName);
         userNameAndDateHBox.setAlignment(Pos.CENTER_RIGHT);
         setMargin(userNameAndDateHBox, new Insets(-5, 10, -5, 0));
     }
@@ -243,7 +218,6 @@ public final class MyTextMessageBox extends BubbleMessageBox {
 
         message.maxWidthProperty().unbind();
         editInputField.maxWidthProperty().unbind();
-        deliveryState.getTooltip().textProperty().unbind();
 
         saveEditButton.setOnAction(null);
         cancelEditButton.setOnAction(null);
@@ -257,12 +231,12 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         editInputField.setOnKeyPressed(null);
         userProfileIcon.releaseResources();
 
-        if (actionsBoxVisiblePropertyPin != null) {
-            actionsBoxVisiblePropertyPin.unsubscribe();
+        if (shouldShowTryAgainPin != null) {
+            shouldShowTryAgainPin.unsubscribe();
         }
 
-        if (messageDeliveryStatusIconPin != null) {
-            messageDeliveryStatusIconPin.unsubscribe();
+        if (messageDeliveryStatusNodePin != null) {
+            messageDeliveryStatusNodePin.unsubscribe();
         }
     }
 }

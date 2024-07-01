@@ -57,7 +57,7 @@ public class PeerTextMessageBox extends BubbleMessageBox {
     protected void setUpUserNameAndDateTime() {
         super.setUpUserNameAndDateTime();
 
-        userNameAndDateHBox = new HBox(10, userName, dateTime);
+        userNameAndDateHBox = new HBox(10, userName, dateTimeHBox);
         userNameAndDateHBox.setAlignment(Pos.CENTER_LEFT);
     }
 
@@ -107,7 +107,7 @@ public class PeerTextMessageBox extends BubbleMessageBox {
 
         isMenuShowingPin = EasyBind.subscribe(moreActionsMenu.getIsMenuShowing(), isShowing -> {
            if (!isShowing && !isHover()) {
-               dateTime.setVisible(false);
+               dateTimeHBox.setVisible(false);
                actionsHBox.setVisible(false);
            }
         });

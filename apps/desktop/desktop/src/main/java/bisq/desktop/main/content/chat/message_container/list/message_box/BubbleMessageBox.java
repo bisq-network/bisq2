@@ -65,7 +65,7 @@ public abstract class BubbleMessageBox extends MessageBox {
     protected DrawerMenu reactMenu;
     private Subscription reactMenuPin;
     protected Label supportedLanguages, userName, dateTime, message;
-    protected HBox userNameAndDateHBox, messageBgHBox, messageHBox;
+    protected HBox dateTimeHBox, userNameAndDateHBox, messageBgHBox, messageHBox;
     protected VBox userProfileIconVbox;
     protected BisqMenuItem copyAction;
     protected DropdownMenu moreActionsMenu;
@@ -121,8 +121,10 @@ public abstract class BubbleMessageBox extends MessageBox {
         userName.getStyleClass().addAll("text-fill-white", "font-size-09", "font-default");
         dateTime = new Label();
         dateTime.getStyleClass().addAll("text-fill-grey-dimmed", "font-size-09", "font-light");
-        dateTime.setVisible(false);
         dateTime.setText(item.getDate());
+        dateTimeHBox = new HBox(10, dateTime);
+        dateTimeHBox.setVisible(false);
+        dateTimeHBox.setAlignment(Pos.CENTER);
     }
 
     private void setUpUserProfileIcon() {
@@ -189,11 +191,11 @@ public abstract class BubbleMessageBox extends MessageBox {
             if ((moreActionsMenu != null && moreActionsMenu.getIsMenuShowing().get()) || reactMenu.getIsMenuShowing().get()) {
                 return;
             }
-            dateTime.setVisible(true);
+            dateTimeHBox.setVisible(true);
             actionsHBox.setVisible(true);
         } else {
             if ((moreActionsMenu == null || !moreActionsMenu.getIsMenuShowing().get()) && !reactMenu.getIsMenuShowing().get()) {
-                dateTime.setVisible(false);
+                dateTimeHBox.setVisible(false);
                 actionsHBox.setVisible(false);
             }
         }

@@ -33,6 +33,7 @@ public class PeerProtocolLogMessageBox extends MessageBox {
     protected final ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item;
     protected final VBox tradeLogMessageBg = new VBox();
     protected final VBox contentVBox;
+    protected final HBox dateTimeHBox;
     protected final Label message, dateTime;
 
     public PeerProtocolLogMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item) {
@@ -46,9 +47,11 @@ public class PeerProtocolLogMessageBox extends MessageBox {
 
         dateTime = new Label(item.getDate());
         dateTime.getStyleClass().addAll("text-fill-grey-dimmed", "system-message-labels");
+        dateTimeHBox = new HBox(10, dateTime);
+        dateTimeHBox.setAlignment(Pos.CENTER);
 
         tradeLogMessageBg.setSpacing(5);
-        tradeLogMessageBg.getChildren().addAll(message, dateTime);
+        tradeLogMessageBg.getChildren().addAll(message, dateTimeHBox);
         tradeLogMessageBg.setFillWidth(true);
         tradeLogMessageBg.setAlignment(Pos.CENTER);
         tradeLogMessageBg.getStyleClass().add("system-message-background");
