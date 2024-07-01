@@ -17,6 +17,7 @@
 
 package bisq.user.identity;
 
+import bisq.common.application.ApplicationVersion;
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
 import bisq.common.observable.Observable;
@@ -201,7 +202,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     public CompletableFuture<BroadcastResult> editUserProfile(UserIdentity oldUserIdentity, String terms, String statement) {
         Identity oldIdentity = oldUserIdentity.getIdentity();
         UserProfile oldUserProfile = oldUserIdentity.getUserProfile();
-        UserProfile newUserProfile = UserProfile.from(oldUserProfile, terms, statement);
+        UserProfile newUserProfile = UserProfile.forEdit(oldUserProfile, terms, statement);
         UserIdentity newUserIdentity = new UserIdentity(oldIdentity, newUserProfile);
 
         synchronized (lock) {
@@ -296,7 +297,8 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
             rePublishUserProfilesExecutor = Optional.of(ExecutorFactory.newSingleThreadExecutor("rePublishUserProfilesExecutor"));
             rePublishUserProfilesExecutor.get().submit(() -> {
                 userIdentities.forEach(userIdentity -> {
-                    publishUserProfile(userIdentity.getUserProfile(), userIdentity.getNetworkIdWithKeyPair().getKeyPair());
+                    UserProfile userProfile = UserProfile.forRePublish(userIdentity.getUserProfile());
+                    publishUserProfile(userProfile, userIdentity.getNetworkIdWithKeyPair().getKeyPair());
                     try {
                         int republishDelay = 60_000 + new Random().nextInt(180_000);
                         Thread.sleep(republishDelay);
@@ -315,7 +317,14 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         log.info("publishUserProfile {}", userProfile.getUserName());
         persistableStore.setLastUserProfilePublishingDate(System.currentTimeMillis());
         persist();
-        return networkService.publishAuthenticatedData(userProfile, keyPair);
+
+        // We publish both the old version and the new version to support old clients
+        if (ApplicationVersion.getVersion().below("2.0.7")) {
+            return networkService.publishAuthenticatedData(UserProfile.withVersion(userProfile, 0), keyPair)
+                    .thenCompose(e -> networkService.publishAuthenticatedData(userProfile, keyPair));
+        } else {
+            return networkService.publishAuthenticatedData(userProfile, keyPair);
+        }
     }
 
     private UserIdentity createUserIdentity(String nickName,
@@ -326,7 +335,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
                                             Identity identity) {
         checkArgument(nickName.equals(nickName.trim()) && !nickName.isEmpty(),
                 "Nickname must not have leading or trailing spaces and must not be empty.");
-        UserProfile userProfile = new UserProfile(nickName, proofOfWork, avatarVersion,
+        UserProfile userProfile = UserProfile.createNew(nickName, proofOfWork, avatarVersion,
                 identity.getNetworkIdWithKeyPair().getNetworkId(), terms, statement);
         UserIdentity userIdentity = new UserIdentity(identity, userProfile);
 
