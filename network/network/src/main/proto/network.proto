@@ -157,6 +157,7 @@ message InventoryRequest {
 message InventoryResponse {
   Inventory inventory = 1;
   sint32 requestNonce = 2;
+  sint32 version = 3;
 }
 
 message ExternalNetworkMessage {
