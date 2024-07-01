@@ -28,11 +28,22 @@ import lombok.ToString;
 @ToString
 @EqualsAndHashCode
 public final class InventoryResponse implements BroadcastMessage, Response {
+    private static final int VERSION = 1;
+
     @ExcludeForHash
+    private final int version;
+    // After v 2.0.6 version 0 should not be used anymore. Then we can remove the excludeOnlyInVersions param to
+    // not need to maintain future versions. We add though hypothetical versions 2 and 3 for safety
+    @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
     private final Inventory inventory;
     private final int requestNonce;
 
     public InventoryResponse(Inventory inventory, int requestNonce) {
+        this(VERSION, inventory, requestNonce);
+    }
+
+    private InventoryResponse(int version, Inventory inventory, int requestNonce) {
+        this.version = version;
         this.inventory = inventory;
         this.requestNonce = requestNonce;
 
@@ -56,12 +67,13 @@ public final class InventoryResponse implements BroadcastMessage, Response {
     @Override
     public bisq.network.protobuf.InventoryResponse.Builder getValueBuilder(boolean serializeForHash) {
         return bisq.network.protobuf.InventoryResponse.newBuilder()
+                .setVersion(version)
                 .setInventory(inventory.toProto(serializeForHash))
                 .setRequestNonce(requestNonce);
     }
 
     public static InventoryResponse fromProto(bisq.network.protobuf.InventoryResponse proto) {
-        return new InventoryResponse(Inventory.fromProto(proto.getInventory()), proto.getRequestNonce());
+        return new InventoryResponse(proto.getVersion(), Inventory.fromProto(proto.getInventory()), proto.getRequestNonce());
     }
 
     @Override
