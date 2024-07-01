@@ -125,9 +125,6 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private final ImageView successfulDeliveryIcon, pendingDeliveryIcon, failedDeliveryIcon;
     private final BisqMenuItem tryAgainStatus;
     private final SimpleObjectProperty<Node> messageDeliverStatusNode = new SimpleObjectProperty<>();
-    private final SimpleObjectProperty<Node> tryAgainStatusNode = new SimpleObjectProperty<>();
-    @Nullable
-    private MessageDeliveryStatus messageDeliveryStatus;
 
     public ChatMessageListItem(M chatMessage,
                                C chatChannel,
@@ -403,7 +400,6 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         UIThread.runOnNextRenderFrame(() -> {
             statusPins.add(value.addObserver(status -> {
                 UIThread.run(() -> {
-                    messageDeliveryStatus = status;
                     ChatMessageListItem.this.messageId = messageId;
                     boolean shouldShowTryAgain = false;
                     if (status != null) {
