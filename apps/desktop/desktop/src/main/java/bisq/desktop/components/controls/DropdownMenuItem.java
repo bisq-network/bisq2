@@ -18,14 +18,16 @@
 package bisq.desktop.components.controls;
 
 import javafx.scene.control.CustomMenuItem;
+import lombok.Getter;
 
 public class DropdownMenuItem extends CustomMenuItem {
-    private final BisqMenuItem menuItem;
+    @Getter
+    private final BisqMenuItem bisqMenuItem;
 
     public DropdownMenuItem(String defaultIconId, String activeIconId, String text) {
-        menuItem = new BisqMenuItem(defaultIconId, activeIconId, text);
-        menuItem.getStyleClass().add("dropdown-menu-item-content");
-        setContent(menuItem);
+        bisqMenuItem = new BisqMenuItem(defaultIconId, activeIconId, text);
+        bisqMenuItem.getStyleClass().add("dropdown-menu-item-content");
+        setContent(bisqMenuItem);
     }
 
     public DropdownMenuItem(String text) {
@@ -37,18 +39,18 @@ public class DropdownMenuItem extends CustomMenuItem {
     }
 
     public void setLabelText(String text) {
-        menuItem.setText(text);
+        bisqMenuItem.setText(text);
     }
 
     public Double getWidth() {
-        return menuItem.getWidth();
+        return bisqMenuItem.getWidth();
     }
 
     public void updateWidth(Double width) {
-        menuItem.setPrefWidth(width);
+        bisqMenuItem.setPrefWidth(width);
     }
 
     public String getLabelText() {
-        return menuItem.getText();
+        return bisqMenuItem.getText();
     }
 }
