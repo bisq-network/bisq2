@@ -121,7 +121,11 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
             }
         });
 
-        leaveChatButton.setOnAction(e -> getController().onLeaveChat());
+        // Using leaveChatButton.setOnAction leads to duplicate execution of the handler on MacOS 14.5 / M3.
+        // Might be a bug in the MacOS specific JavaFX libraries as other devs could not reproduce the issue.
+        // Using the BisqMenuItem for the event handler works.
+        leaveChatButton.getBisqMenuItem().setOnAction(e -> getController().onLeaveChat());
+
         headerDropdownMenu.visibleProperty().bind(model.getNoOpenChats().not());
         headerDropdownMenu.managedProperty().bind(model.getNoOpenChats().not());
 
