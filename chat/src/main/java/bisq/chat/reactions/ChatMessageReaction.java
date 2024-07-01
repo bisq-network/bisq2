@@ -18,10 +18,11 @@
 package bisq.chat.reactions;
 
 import bisq.chat.ChatChannelDomain;
-import bisq.common.encoding.Hex;
+import bisq.common.proto.NetworkProto;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
+import bisq.network.p2p.message.ExternalNetworkMessage;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
@@ -33,13 +34,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @Getter
 @EqualsAndHashCode
-public abstract class ChatMessageReaction implements DistributedData {
-    public static String createId(String channelId, String messageId, int reactionId, String userProfileId) {
-        return String.format("%s.%s.%s.%s", channelId, messageId, reactionId, userProfileId);
-    }
-
+public abstract class ChatMessageReaction implements NetworkProto {
     private final String id;
-    private final String userProfileId;
+    protected final String userProfileId;
     private final String chatChannelId;
     private final ChatChannelDomain chatChannelDomain;
     private final String chatMessageId;
@@ -63,19 +60,6 @@ public abstract class ChatMessageReaction implements DistributedData {
     }
 
     @Override
-    public boolean isDataInvalid(byte[] pubKeyHash) {
-        // AuthorId must be pubKeyHash. We get pubKeyHash passed from the data storage layer where the signature is
-        // verified as well, so we can be sure it's the sender of the message. This check prevents against
-        // impersonation attack.
-        return !userProfileId.equals(Hex.encode(pubKeyHash));
-    }
-
-    @Override
-    public double getCostFactor() {
-        return 0.3;
-    }
-
-    @Override
     public void verify() {
         checkArgument(reactionId >= 0 && reactionId < Reaction.values().length, "Invalid reaction id: " + reactionId);
 
@@ -84,12 +68,7 @@ public abstract class ChatMessageReaction implements DistributedData {
         NetworkDataValidation.validateDate(date);
     }
 
-    @Override
-    public bisq.chat.protobuf.ChatMessageReaction toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
-    }
-
-    protected bisq.chat.protobuf.ChatMessageReaction.Builder getChatMessageReactionBuilder(boolean serializeForHash) {
+    public bisq.chat.protobuf.ChatMessageReaction.Builder getChatMessageReactionBuilder(boolean serializeForHash) {
         return bisq.chat.protobuf.ChatMessageReaction.newBuilder()
                 .setId(id)
                 .setUserProfileId(userProfileId)
@@ -108,6 +87,9 @@ public abstract class ChatMessageReaction implements DistributedData {
             case BISQEASYOFFERBOOKMESSAGEREACTION: {
                 return BisqEasyOfferbookMessageReaction.fromProto(proto);
             }
+            case TWOPARTYPRIVATECHATMESSAGEREACTION: {
+                return TwoPartyPrivateChatMessageReaction.fromProto(proto);
+            }
             case MESSAGE_NOT_SET: {
                 throw new UnresolvableProtobufMessageException(proto);
             }
@@ -125,6 +107,25 @@ public abstract class ChatMessageReaction implements DistributedData {
                     }
                     case BISQEASYOFFERBOOKMESSAGEREACTION: {
                         return BisqEasyOfferbookMessageReaction.fromProto(proto);
+                    }
+                    case MESSAGE_NOT_SET: {
+                        throw new UnresolvableProtobufMessageException(proto);
+                    }
+                }
+                throw new UnresolvableProtobufMessageException(proto);
+            } catch (InvalidProtocolBufferException e) {
+                throw new UnresolvableProtobufMessageException(e);
+            }
+        };
+    }
+
+    public static ProtoResolver<ExternalNetworkMessage> getNetworkMessageResolver() {
+        return any -> {
+            try {
+                bisq.chat.protobuf.ChatMessageReaction proto = any.unpack(bisq.chat.protobuf.ChatMessageReaction.class);
+                switch (proto.getMessageCase()) {
+                    case TWOPARTYPRIVATECHATMESSAGEREACTION: {
+                        return TwoPartyPrivateChatMessageReaction.fromProto(proto);
                     }
                     case MESSAGE_NOT_SET: {
                         throw new UnresolvableProtobufMessageException(proto);

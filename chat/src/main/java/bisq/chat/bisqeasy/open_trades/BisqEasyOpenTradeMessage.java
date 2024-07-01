@@ -33,6 +33,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Optional;
 
@@ -110,7 +111,7 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage implement
                                      ChatMessageType chatMessageType,
                                      Optional<BisqEasyOffer> bisqEasyOffer) {
         super(messageId, chatChannelDomain, channelId, senderUserProfile, receiverUserProfileId,
-                receiverNetworkId, text, citation, date, wasEdited, chatMessageType);
+                receiverNetworkId, text, citation, date, wasEdited, chatMessageType, new ArrayList<>());
         this.tradeId = tradeId;
         this.mediator = mediator;
         this.bisqEasyOffer = bisqEasyOffer;
@@ -134,7 +135,8 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage implement
                 Optional.empty(),
                 new Date().getTime(),
                 false,
-                chatMessageType);
+                chatMessageType,
+                new ArrayList<>());
         this.tradeId = tradeId;
         this.mediator = mediator;
         this.bisqEasyOffer = Optional.of(bisqEasyOffer);
@@ -199,5 +201,4 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage implement
     public boolean hasBisqEasyOffer() {
         return bisqEasyOffer.isPresent();
     }
-
 }

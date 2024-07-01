@@ -17,6 +17,7 @@
 
 package bisq.chat;
 
+import bisq.chat.reactions.ChatMessageReaction;
 import bisq.common.application.Service;
 import bisq.common.observable.collection.ObservableArray;
 import bisq.network.NetworkService;
@@ -119,4 +120,22 @@ public abstract class ChatChannelService<M extends ChatMessage, C extends ChatCh
     }
 
     protected abstract String getChannelTitlePostFix(ChatChannel<? extends ChatMessage> chatChannel);
+
+    protected void addMessageReaction(ChatMessageReaction chatMessageReaction, M message) {
+        if (bannedUserService.isUserProfileBanned(chatMessageReaction.getUserProfileId())) {
+            log.warn("Reaction ignored as sender is banned.");
+            return;
+        }
+        synchronized (getPersistableStore()) {
+            message.getChatMessageReactions().add(chatMessageReaction);
+        }
+        persist();
+    }
+
+    protected void removeMessageReaction(ChatMessageReaction chatMessageReaction, M message) {
+        synchronized (getPersistableStore()) {
+            message.getChatMessageReactions().remove(chatMessageReaction);
+        }
+        persist();
+    }
 }

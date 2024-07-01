@@ -18,6 +18,8 @@
 package bisq.chat.reactions;
 
 import bisq.chat.ChatChannelDomain;
+import bisq.common.encoding.Hex;
+import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -30,7 +32,8 @@ import static bisq.network.p2p.services.data.storage.MetaData.*;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class BisqEasyOfferbookMessageReaction extends ChatMessageReaction {
+public class BisqEasyOfferbookMessageReaction extends ChatMessageReaction implements DistributedData {
+    // Metadata needs to be symmetric with BisqEasyOfferbookMessage.
     @EqualsAndHashCode.Exclude
     private final MetaData metaData = new MetaData(TTL_10_DAYS, LOW_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_10_000);
 
@@ -49,6 +52,24 @@ public class BisqEasyOfferbookMessageReaction extends ChatMessageReaction {
     @Override
     public void verify() {
         super.verify();
+    }
+
+    @Override
+    public bisq.chat.protobuf.ChatMessageReaction toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
+    }
+
+    @Override
+    public boolean isDataInvalid(byte[] pubKeyHash) {
+        // AuthorId must be pubKeyHash. We get pubKeyHash passed from the data storage layer where the signature is
+        // verified as well, so we can be sure it's the sender of the message. This check prevents against
+        // impersonation attack.
+        return !userProfileId.equals(Hex.encode(pubKeyHash));
+    }
+
+    @Override
+    public double getCostFactor() {
+        return 0.5;
     }
 
     @Override

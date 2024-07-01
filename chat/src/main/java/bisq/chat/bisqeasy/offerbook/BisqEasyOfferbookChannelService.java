@@ -19,15 +19,14 @@ package bisq.chat.bisqeasy.offerbook;
 
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.Citation;
-import bisq.chat.common.CommonPublicChatMessage;
 import bisq.chat.pub.PublicChatChannel;
 import bisq.chat.pub.PublicChatChannelService;
 import bisq.chat.reactions.BisqEasyOfferbookMessageReaction;
-import bisq.chat.reactions.CommonPublicChatMessageReaction;
 import bisq.chat.reactions.Reaction;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.common.observable.collection.ObservableArray;
+import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
@@ -170,14 +169,13 @@ public class BisqEasyOfferbookChannelService extends PublicChatChannelService<Bi
                                                                          Reaction reaction,
                                                                          UserIdentity userIdentity) {
         return new BisqEasyOfferbookMessageReaction(
-                BisqEasyOfferbookMessageReaction.createId(message.getChannelId(),
-                        message.getId(), reaction.ordinal(), userIdentity.getId()),
+                StringUtils.createUid(),
                 userIdentity.getId(),
                 message.getChannelId(),
                 message.getChatChannelDomain(),
                 message.getId(),
                 reaction.ordinal(),
-                System.currentTimeMillis());
+                new Date().getTime());
     }
 
     private void maybeAddPublicTradeChannel(BisqEasyOfferbookChannel channel) {

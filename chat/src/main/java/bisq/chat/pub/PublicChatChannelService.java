@@ -23,12 +23,12 @@ import bisq.chat.ChatChannelService;
 import bisq.chat.ChatMessage;
 import bisq.chat.Citation;
 import bisq.chat.reactions.ChatMessageReaction;
-import bisq.chat.reactions.CommonPublicChatMessageReaction;
 import bisq.chat.reactions.Reaction;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkIdWithKeyPair;
 import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.network.p2p.services.data.DataService;
+import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.persistence.PersistableStore;
 import bisq.user.UserService;
@@ -39,6 +39,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.security.KeyPair;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public abstract class PublicChatChannelService<M extends PublicChatMessage, C extends PublicChatChannel<M>,
@@ -123,16 +125,19 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
         }
 
         R chatMessageReaction = createChatMessageReaction(message, reaction, userIdentity);
+        checkArgument(chatMessageReaction instanceof DistributedData, "A public chat message reaction needs to implement DistributedData.");
+
         // Sender adds the message at sending to avoid the delayed display if using the received message from the network.
-        message.getChatMessageReactions().add(chatMessageReaction);
+        addMessageReaction(chatMessageReaction, message);
 
         KeyPair keyPair = userIdentity.getNetworkIdWithKeyPair().getKeyPair();
         return userIdentityService.maybePublishUserProfile(userIdentity.getUserProfile(), keyPair)
-                .thenCompose(nil -> networkService.publishAuthenticatedData(chatMessageReaction, keyPair));
+                .thenCompose(nil -> networkService.publishAuthenticatedData((DistributedData) chatMessageReaction, keyPair));
     }
 
     public CompletableFuture<BroadcastResult> deleteChatMessageReaction(R chatMessageReaction, NetworkIdWithKeyPair networkIdWithKeyPair) {
-        return networkService.removeAuthenticatedData(chatMessageReaction, networkIdWithKeyPair.getKeyPair());
+        checkArgument(chatMessageReaction instanceof DistributedData, "A public chat message reaction needs to implement DistributedData.");
+        return networkService.removeAuthenticatedData((DistributedData) chatMessageReaction, networkIdWithKeyPair.getKeyPair());
     }
 
     @Override
@@ -178,7 +183,7 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
                 .flatMap(channel -> channel.getChatMessages().stream()
                         .filter(message -> message.getId().equals(chatMessageReaction.getChatMessageId()))
                         .findFirst())
-                .ifPresent(message -> message.getChatMessageReactions().add(chatMessageReaction));
+                .ifPresent(message -> addMessageReaction(chatMessageReaction, message));
     }
 
     protected void processRemovedReaction(R chatMessageReaction) {
@@ -186,7 +191,7 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
                 .flatMap(channel -> channel.getChatMessages().stream()
                         .filter(message -> message.getId().equals(chatMessageReaction.getChatMessageId()))
                         .findFirst())
-                .ifPresent(message -> message.getChatMessageReactions().remove(chatMessageReaction));
+                .ifPresent(message -> removeMessageReaction(chatMessageReaction, message));
     }
 
     protected abstract R createChatMessageReaction(M message, Reaction reaction, UserIdentity userIdentity);

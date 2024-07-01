@@ -152,13 +152,12 @@ public final class CommonPublicChatChannelService extends PublicChatChannelServi
                                                                         Reaction reaction,
                                                                         UserIdentity userIdentity) {
         return new CommonPublicChatMessageReaction(
-                CommonPublicChatMessageReaction.createId(message.getChannelId(),
-                        message.getId(), reaction.ordinal(), userIdentity.getId()),
+                StringUtils.createUid(),
                 userIdentity.getId(),
                 message.getChannelId(),
                 message.getChatChannelDomain(),
                 message.getId(),
                 reaction.ordinal(),
-                System.currentTimeMillis());
+                new Date().getTime());
     }
 }

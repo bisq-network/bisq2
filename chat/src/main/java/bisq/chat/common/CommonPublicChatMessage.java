@@ -37,6 +37,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.*;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public final class CommonPublicChatMessage extends PublicChatMessage {
+    // Metadata needs to be symmetric with CommonPublicChatMessageReaction.
     @EqualsAndHashCode.Exclude
     private final MetaData metaData = new MetaData(TTL_10_DAYS, LOW_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_10_000);
 
@@ -100,9 +101,9 @@ public final class CommonPublicChatMessage extends PublicChatMessage {
     }
 
     public static CommonPublicChatMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto) {
-        Optional<Citation> citation = baseProto.hasCitation() ?
-                Optional.of(Citation.fromProto(baseProto.getCitation())) :
-                Optional.empty();
+        Optional<Citation> citation = baseProto.hasCitation()
+                ? Optional.of(Citation.fromProto(baseProto.getCitation()))
+                : Optional.empty();
         return new CommonPublicChatMessage(
                 baseProto.getId(),
                 ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
@@ -118,5 +119,10 @@ public final class CommonPublicChatMessage extends PublicChatMessage {
     @Override
     public double getCostFactor() {
         return 0.3;
+    }
+
+    @Override
+    public boolean canShowReactions() {
+        return true;
     }
 }

@@ -23,10 +23,8 @@ import bisq.chat.ChatMessage;
 import bisq.chat.Citation;
 import bisq.chat.bisqeasy.BisqEasyOfferMessage;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
-import bisq.chat.common.CommonPublicChatMessage;
 import bisq.chat.priv.PrivateChatMessage;
 import bisq.chat.pub.PublicChatChannel;
-import bisq.chat.pub.PublicChatMessage;
 import bisq.chat.reactions.ChatMessageReaction;
 import bisq.chat.reactions.Reaction;
 import bisq.common.locale.LanguageRepository;
@@ -183,9 +181,8 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
 
         // TODO: Release all the listeners when destroying this object
 
-        if (shouldShowReactions()) {
-            PublicChatMessage publicChatMessage = (PublicChatMessage) chatMessage;
-            userReactionsPin = Optional.ofNullable(publicChatMessage.getChatMessageReactions().addObserver(new CollectionObserver<ChatMessageReaction>() {
+        if (chatMessage.canShowReactions()) {
+            userReactionsPin = Optional.ofNullable(chatMessage.getChatMessageReactions().addObserver(new CollectionObserver<>() {
                 @Override
                 public void add(ChatMessageReaction element) {
                     int reactionIdx = element.getReactionId();
@@ -396,12 +393,6 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
 
     public double getReputationStarCount() {
         return reputationScoreDisplay.getNumberOfStars();
-    }
-
-    public boolean shouldShowReactions() {
-        return chatMessage instanceof PublicChatMessage
-                && (chatMessage instanceof CommonPublicChatMessage
-                || (chatMessage instanceof BisqEasyOfferMessage && !((BisqEasyOfferMessage) chatMessage).hasBisqEasyOffer()));
     }
 
     private boolean hasBisqEasyOfferWithDirection(Direction direction) {

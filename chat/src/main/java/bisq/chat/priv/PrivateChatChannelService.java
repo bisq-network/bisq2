@@ -18,6 +18,8 @@
 package bisq.chat.priv;
 
 import bisq.chat.*;
+import bisq.chat.reactions.Reaction;
+import bisq.chat.reactions.TwoPartyPrivateChatMessageReaction;
 import bisq.common.util.StringUtils;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
@@ -32,6 +34,7 @@ import bisq.user.profile.UserProfile;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.util.Date;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -141,12 +144,46 @@ public abstract class PrivateChatChannelService<
                 " [" + ((PrivateChatChannel<?>) chatChannel).getMyUserIdentity().getUserName() + "]";
     }
 
+    protected CompletableFuture<SendMessageResult> sendMessageReaction(M message,
+                                                                       C chatChannel,
+                                                                       UserProfile receiver,
+                                                                       Reaction reaction,
+                                                                       String messageReactionId) {
+        UserIdentity myUserIdentity = chatChannel.getMyUserIdentity();
+        if (bannedUserService.isUserProfileBanned(myUserIdentity.getUserProfile())) {
+            return CompletableFuture.failedFuture(new RuntimeException());
+        }
+        if (isPeerBanned(receiver)) {
+            return CompletableFuture.failedFuture(new RuntimeException("Peer is banned"));
+        }
+
+        TwoPartyPrivateChatMessageReaction chatMessageReaction = createAndGetNewPrivateChatMessageReaction(message,
+                myUserIdentity.getUserProfile(), receiver, reaction, messageReactionId);
+
+        addMessageReaction(chatMessageReaction, message);
+
+        NetworkId receiverNetworkId = receiver.getNetworkId();
+        NetworkIdWithKeyPair senderNetworkIdWithKeyPair = myUserIdentity.getNetworkIdWithKeyPair();
+        return networkService.confidentialSend(chatMessageReaction, receiverNetworkId, senderNetworkIdWithKeyPair);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Protected
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     protected abstract void processMessage(M message);
+
+    // TODO: Make it class generic
+    // TODO: if the conversation is started while the other peer is offline,
+    //  we need to make sure that message is processed before reaction.
+    protected void processMessageReaction(TwoPartyPrivateChatMessageReaction messageReaction) {
+        findChannel(messageReaction.getChatChannelId())
+                .flatMap(channel -> channel.getChatMessages().stream()
+                        .filter(message -> message.getId().equals(messageReaction.getChatMessageId()))
+                        .findFirst())
+                .ifPresent(message -> addMessageReaction(messageReaction, message));
+    }
 
     @Override
     protected boolean isValid(M message) {
@@ -172,4 +209,23 @@ public abstract class PrivateChatChannelService<
                                                            long time,
                                                            boolean wasEdited,
                                                            ChatMessageType chatMessageType);
+
+    // TODO: Make it class generic.
+    private TwoPartyPrivateChatMessageReaction createAndGetNewPrivateChatMessageReaction(M message,
+                                                                                         UserProfile senderUserProfile,
+                                                                                         UserProfile receiverUserProfile,
+                                                                                         Reaction reaction,
+                                                                                         String messageReactionId) {
+        return new TwoPartyPrivateChatMessageReaction(
+                messageReactionId,
+                senderUserProfile,
+                receiverUserProfile.getId(),
+                receiverUserProfile.getNetworkId(),
+                message.getChannelId(),
+                message.getChatChannelDomain(),
+                message.getId(),
+                reaction.ordinal(),
+                new Date().getTime()
+        );
+    };
 }
