@@ -175,12 +175,12 @@ public final class ConnectionHandshake {
     @ToString
     @EqualsAndHashCode
     public static final class Result {
-        private final Capability capability;
+        private final Capability peersCapability;
         private final NetworkLoad peersNetworkLoad;
         private final ConnectionMetrics connectionMetrics;
 
-        Result(Capability capability, NetworkLoad peersNetworkLoad, ConnectionMetrics connectionMetrics) {
-            this.capability = capability;
+        Result(Capability peersCapability, NetworkLoad peersNetworkLoad, ConnectionMetrics connectionMetrics) {
+            this.peersCapability = peersCapability;
             this.peersNetworkLoad = peersNetworkLoad;
             this.connectionMetrics = connectionMetrics;
         }

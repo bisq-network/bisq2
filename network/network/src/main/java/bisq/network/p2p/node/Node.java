@@ -245,7 +245,7 @@ public class Node implements Connection.Handler {
 
     private void createServerAndListen() {
         ServerSocketResult serverSocketResult = transportService.getServerSocket(networkId, keyBundle);
-        myCapability = Optional.of(new Capability(serverSocketResult.getAddress(), new ArrayList<>(supportedTransportTypes), new ArrayList<>(features)));
+        myCapability = Optional.of(Capability.myCapability(serverSocketResult.getAddress(), new ArrayList<>(supportedTransportTypes), new ArrayList<>(features)));
         server = Optional.of(new Server(serverSocketResult,
                 socket -> onClientSocket(socket, serverSocketResult, myCapability.get()),
                 exception -> {
@@ -268,7 +268,7 @@ public class Node implements Connection.Handler {
             ConnectionHandshake.Result result = connectionHandshake.onSocket(networkLoadSnapshot.getCurrentNetworkLoad()); // Blocking call
             connectionHandshakes.remove(connectionHandshake.getId());
 
-            Address address = result.getCapability().getAddress();
+            Address address = result.getPeersCapability().getAddress();
             log.debug("Inbound handshake completed: Initiated by {} to {}", address, myCapability.getAddress());
 
             // As time passed we check again if connection is still not available
@@ -287,7 +287,7 @@ public class Node implements Connection.Handler {
             ConnectionThrottle connectionThrottle = new ConnectionThrottle(peersNetworkLoadSnapshot, networkLoadSnapshot, config);
             InboundConnection connection = new InboundConnection(socket,
                     serverSocketResult,
-                    result.getCapability(),
+                    result.getPeersCapability(),
                     peersNetworkLoadSnapshot,
                     result.getConnectionMetrics(),
                     connectionThrottle,
@@ -430,7 +430,7 @@ public class Node implements Connection.Handler {
                 // For clearnet this check doesn't make sense because:
                 // - the peer binds to 127.0.0.1, therefore reports 127.0.0.1 in the handshake
                 // - we use the peer's public IP to connect to him
-                checkArgument(address.equals(result.getCapability().getAddress()), "Peers reported address must match address we used to connect");
+                checkArgument(address.equals(result.getPeersCapability().getAddress()), "Peers reported address must match address we used to connect");
             }
 
             // As time passed we check again if connection is still not available
@@ -454,7 +454,7 @@ public class Node implements Connection.Handler {
             ConnectionThrottle connectionThrottle = new ConnectionThrottle(peersNetworkLoadSnapshot, networkLoadSnapshot, config);
             OutboundConnection connection = new OutboundConnection(socket,
                     address,
-                    result.getCapability(),
+                    result.getPeersCapability(),
                     peersNetworkLoadSnapshot,
                     result.getConnectionMetrics(),
                     connectionThrottle,

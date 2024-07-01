@@ -17,6 +17,7 @@
 
 package bisq.network.p2p;
 
+import bisq.common.application.ApplicationVersion;
 import bisq.common.util.FileUtils;
 import bisq.common.util.NetworkUtils;
 import bisq.network.common.Address;
@@ -76,7 +77,7 @@ public class InboundConnectionsManagerTests {
         );
         serverSocketChannel.socket().bind(socketAddress);
 
-        Capability myCapability = new Capability(myAddress, supportedTransportTypes, new ArrayList<>());
+        Capability myCapability = createCapability(myAddress, supportedTransportTypes);
 
         Selector selector = SelectorProvider.provider().openSelector();
         InboundConnectionsManager inboundConnectionsManager = new InboundConnectionsManager(
@@ -165,7 +166,7 @@ public class InboundConnectionsManagerTests {
         );
         serverSocketChannel.socket().bind(socketAddress);
 
-        Capability myCapability = new Capability(myAddress, supportedTransportTypes, new ArrayList<>());
+        Capability myCapability = createCapability(myAddress, supportedTransportTypes);
 
         Selector selector = SelectorProvider.provider().openSelector();
         InboundConnectionsManager inboundConnectionsManager = new InboundConnectionsManager(
@@ -246,7 +247,7 @@ public class InboundConnectionsManagerTests {
     private bisq.network.protobuf.NetworkEnvelope createPoWRequest(Address myAddress, Address peerAddress) {
         List<TransportType> supportedTransportTypes = new ArrayList<>(1);
         supportedTransportTypes.add(TransportType.CLEAR);
-        Capability peerCapability = new Capability(peerAddress, supportedTransportTypes, new ArrayList<>());
+        Capability peerCapability = createCapability(peerAddress, supportedTransportTypes);
 
         ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, Optional.empty(), new NetworkLoad(), 0);
         AuthorizationService authorizationService = createAuthorizationService();
@@ -262,5 +263,9 @@ public class InboundConnectionsManagerTests {
                 new HashCashProofOfWorkService(),
                 new EquihashProofOfWorkService(),
                 Set.of(Feature.AUTHORIZATION_HASH_CASH));
+    }
+
+    private static Capability createCapability(Address address, List<TransportType> supportedTransportTypes) {
+        return new Capability(Capability.VERSION, address, supportedTransportTypes, new ArrayList<>(), ApplicationVersion.getVersion().getVersionAsString());
     }
 }

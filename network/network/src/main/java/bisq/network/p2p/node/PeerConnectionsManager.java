@@ -124,7 +124,7 @@ public class PeerConnectionsManager {
         ServerSocketResult serverSocketResult = transportService.getServerSocket(networkId, node.getKeyBundle());
         List<TransportType> supportedTransportTypes = new ArrayList<>(config.getSupportedTransportTypes());
         List<Feature> features = new ArrayList<>(config.getFeatures());
-        Capability serverCapability = new Capability(serverSocketResult.getAddress(), supportedTransportTypes, features);
+        Capability serverCapability = Capability.myCapability(serverSocketResult.getAddress(), supportedTransportTypes, features);
         ServerChannel serverChannel = new ServerChannel(
                 serverCapability,
                 myNetworkLoad,

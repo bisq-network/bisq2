@@ -29,6 +29,8 @@ message Capability {
   network.common.Address address = 1;
   repeated string supportedTransportTypes = 2;
   repeated Feature features = 3;
+  sint32 version = 4;
+  string applicationVersion = 5;
 }
 
 enum InventoryFilterType{
