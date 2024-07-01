@@ -21,6 +21,7 @@ import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessageType;
 import bisq.chat.Citation;
 import bisq.chat.priv.PrivateChatMessage;
+import bisq.chat.reactions.TwoPartyPrivateChatMessageReaction;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.user.profile.UserProfile;
@@ -29,7 +30,9 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static bisq.network.p2p.services.data.storage.MetaData.MAX_MAP_SIZE_100;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
@@ -38,7 +41,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
+public final class TwoPartyPrivateChatMessage extends PrivateChatMessage<TwoPartyPrivateChatMessageReaction> {
     // Metadata needs to be symmetric with TwoPartyPrivateChatMessageReaction.
     @EqualsAndHashCode.Exclude
     private final MetaData metaData = new MetaData(TTL_30_DAYS, getClass().getSimpleName(), MAX_MAP_SIZE_100);
@@ -53,7 +56,8 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
                                       Optional<Citation> citation,
                                       long date,
                                       boolean wasEdited,
-                                      ChatMessageType chatMessageType) {
+                                      ChatMessageType chatMessageType,
+                                      List<TwoPartyPrivateChatMessageReaction> reactions) {
         super(messageId,
                 chatChannelDomain,
                 channelId,
@@ -64,7 +68,8 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
                 citation,
                 date,
                 wasEdited,
-                chatMessageType);
+                chatMessageType,
+                reactions);
     }
 
     @Override
@@ -81,7 +86,10 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
         return bisq.chat.protobuf.TwoPartyPrivateChatMessage.newBuilder()
                 .setReceiverUserProfileId(receiverUserProfileId)
                 .setReceiverNetworkId(receiverNetworkId.toProto(serializeForHash))
-                .setSender(senderUserProfile.toProto(serializeForHash));
+                .setSender(senderUserProfile.toProto(serializeForHash))
+                .addAllChatMessageReactions(chatMessageReactions.stream()
+                        .map(reaction -> reaction.getValueBuilder(serializeForHash).build())
+                        .collect(Collectors.toList()));
     }
 
     public static TwoPartyPrivateChatMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto) {
@@ -100,7 +108,11 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
                 citation,
                 baseProto.getDate(),
                 baseProto.getWasEdited(),
-                ChatMessageType.fromProto(baseProto.getChatMessageType()));
+                ChatMessageType.fromProto(baseProto.getChatMessageType()),
+                privateChatMessage.getChatMessageReactionsList().stream()
+                        .map(TwoPartyPrivateChatMessageReaction::fromProto)
+                        .collect(Collectors.toList())
+                );
     }
 
     @Override

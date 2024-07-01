@@ -92,6 +92,7 @@ message TwoPartyPrivateChatMessage {
   string receiverUserProfileId = 1;
   user.UserProfile sender = 2;
   network.identity.NetworkId receiverNetworkId = 3;
+  repeated ChatMessageReaction chatMessageReactions = 4;
 }
 message TwoPartyPrivateChatChannel {
   user.UserIdentity myUserIdentity = 1;

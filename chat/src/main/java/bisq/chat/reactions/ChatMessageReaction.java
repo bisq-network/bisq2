@@ -72,7 +72,7 @@ public abstract class ChatMessageReaction implements NetworkProto {
         NetworkDataValidation.validateDate(date);
     }
 
-    protected bisq.chat.protobuf.ChatMessageReaction.Builder getChatMessageReactionBuilder(boolean serializeForHash) {
+    public bisq.chat.protobuf.ChatMessageReaction.Builder getChatMessageReactionBuilder(boolean serializeForHash) {
         return bisq.chat.protobuf.ChatMessageReaction.newBuilder()
                 .setId(id)
                 .setUserProfileId(userProfileId)

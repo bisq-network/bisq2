@@ -177,7 +177,7 @@ public class BisqEasyOfferbookChannelService extends PublicChatChannelService<Bi
                 message.getChatChannelDomain(),
                 message.getId(),
                 reaction.ordinal(),
-                System.currentTimeMillis());
+                new Date().getTime());
     }
 
     private void maybeAddPublicTradeChannel(BisqEasyOfferbookChannel channel) {

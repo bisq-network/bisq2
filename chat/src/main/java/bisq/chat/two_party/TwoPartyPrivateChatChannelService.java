@@ -21,6 +21,8 @@ import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessageType;
 import bisq.chat.Citation;
 import bisq.chat.priv.PrivateChatChannelService;
+import bisq.chat.reactions.Reaction;
+import bisq.chat.reactions.TwoPartyPrivateChatMessageReaction;
 import bisq.common.observable.collection.ObservableArray;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
@@ -35,6 +37,7 @@ import bisq.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -67,6 +70,8 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
         if (envelopePayloadMessage instanceof TwoPartyPrivateChatMessage) {
             processMessage((TwoPartyPrivateChatMessage) envelopePayloadMessage);
+        } else if (envelopePayloadMessage instanceof TwoPartyPrivateChatMessageReaction) {
+            processMessageReaction((TwoPartyPrivateChatMessageReaction) envelopePayloadMessage);
         }
     }
 
@@ -109,6 +114,12 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
                 new Date().getTime());
     }
 
+    public CompletableFuture<SendMessageResult> sendTextMessageReaction(TwoPartyPrivateChatMessage message,
+                                                                        TwoPartyPrivateChatChannel channel,
+                                                                        Reaction reaction) {
+        return sendMessageReaction(message, channel, channel.getPeer(), reaction, StringUtils.createUid());
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Protected
@@ -134,7 +145,8 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
                 citation,
                 new Date().getTime(),
                 wasEdited,
-                chatMessageType);
+                chatMessageType,
+                new ArrayList<>());
     }
 
     @Override

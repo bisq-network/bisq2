@@ -35,13 +35,13 @@ import java.util.Optional;
 /**
  * PublicChatMessage is added as public data to the distributed network storage.
  */
+@Getter
 @Slf4j
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public abstract class PublicChatMessage extends ChatMessage implements DistributedData {
-    @Getter
     @EqualsAndHashCode.Exclude
-    public transient final ObservableSet<ChatMessageReaction> chatMessageReactions = new ObservableSet<>();
+    protected transient final ObservableSet<ChatMessageReaction> chatMessageReactions = new ObservableSet<>();
 
     protected PublicChatMessage(String messageId,
                                 ChatChannelDomain chatChannelDomain,
@@ -62,7 +62,6 @@ public abstract class PublicChatMessage extends ChatMessage implements Distribut
     }
 
     abstract public bisq.chat.protobuf.ChatMessage.Builder getBuilder(boolean serializeForHash);
-
 
     @Override
     public boolean isDataInvalid(byte[] pubKeyHash) {

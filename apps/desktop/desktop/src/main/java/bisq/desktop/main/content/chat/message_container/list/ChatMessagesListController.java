@@ -27,6 +27,7 @@ import bisq.chat.reactions.ChatMessageReaction;
 import bisq.chat.reactions.CommonPublicChatMessageReaction;
 import bisq.chat.reactions.Reaction;
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
+import bisq.chat.two_party.TwoPartyPrivateChatMessage;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.desktop.ServiceProvider;
@@ -438,21 +439,18 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                 });
     }
 
-    public void onReactMessage(ChatMessage chatMessage, Reaction reaction) {
-        checkArgument(chatMessage instanceof PublicChatMessage && (chatMessage instanceof CommonPublicChatMessage
-                        || (chatMessage instanceof BisqEasyOfferMessage && !((BisqEasyOfferMessage) chatMessage).hasBisqEasyOffer())),
-                "Not possible to react to a message of type %s.", chatMessage.getClass());
+    public void onReactMessage(ChatMessage chatMessage, Reaction reaction, ChatChannel<?> chatChannel) {
+        checkArgument(canReactToMessage(chatMessage), "Not possible to react to a message of type %s.", chatMessage.getClass());
 
         UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
-        PublicChatMessage publicChatMessage = (PublicChatMessage) chatMessage;
-        Optional<ChatMessageReaction> chatMessageReaction = publicChatMessage.getChatMessageReactions().stream()
+        Optional<ChatMessageReaction> chatMessageReaction = chatMessage.getChatMessageReactions().stream()
                 .filter(chatReaction -> Objects.equals(chatReaction.getUserProfileId(), userIdentity.getId())
                         && chatReaction.getReactionId() == reaction.ordinal())
                 .findAny();
 
         chatMessageReaction.ifPresentOrElse(
                 messageReaction -> deleteChatMessageReaction(messageReaction, userIdentity),
-                () -> publishChatMessageReaction(publicChatMessage, reaction, userIdentity));
+                () -> publishChatMessageReaction(chatMessage, reaction, userIdentity, chatChannel));
     }
 
     public void highlightOfferChatMessage(@Nullable ChatMessage message) {
@@ -635,13 +633,19 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
         });
     }
 
-    private void publishChatMessageReaction(PublicChatMessage chatMessage, Reaction reaction, UserIdentity userIdentity) {
+    private void publishChatMessageReaction(ChatMessage chatMessage, Reaction reaction, UserIdentity userIdentity,
+                                            ChatChannel<?> chatChannel) {
         if (chatMessage instanceof CommonPublicChatMessage) {
             chatService.getCommonPublicChatChannelServices().get(model.getChatChannelDomain())
                     .publishChatMessageReaction((CommonPublicChatMessage) chatMessage, reaction, userIdentity);
         } else if (chatMessage instanceof BisqEasyOfferbookMessage) {
             chatService.getBisqEasyOfferbookChannelService()
                     .publishChatMessageReaction((BisqEasyOfferbookMessage) chatMessage, reaction, userIdentity);
+        } else if (chatMessage instanceof TwoPartyPrivateChatMessage) {
+            checkArgument(chatChannel instanceof TwoPartyPrivateChatChannel, "Channel needs to be of type TwoPartyPrivateChatChannel.");
+            TwoPartyPrivateChatChannel channel = (TwoPartyPrivateChatChannel) chatChannel;
+            chatService.getTwoPartyPrivateChatChannelServices().get(model.getChatChannelDomain())
+                    .sendTextMessageReaction((TwoPartyPrivateChatMessage) chatMessage, channel, reaction);
         }
     }
 
@@ -653,5 +657,12 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
             chatService.getBisqEasyOfferbookChannelService()
                     .deleteChatMessageReaction((BisqEasyOfferbookMessageReaction) messageReaction, userIdentity.getNetworkIdWithKeyPair());
         }
+    }
+
+    private boolean canReactToMessage(ChatMessage chatMessage) {
+        boolean isCommonChatMessage = chatMessage instanceof CommonPublicChatMessage;
+        boolean isBisqEasyOfferbookTextMessage = chatMessage instanceof BisqEasyOfferMessage && !((BisqEasyOfferMessage) chatMessage).hasBisqEasyOffer();
+        boolean isTwoPartyChatMessage = chatMessage instanceof TwoPartyPrivateChatMessage;
+        return isCommonChatMessage || isBisqEasyOfferbookTextMessage || isTwoPartyChatMessage;
     }
 }

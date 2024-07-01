@@ -101,9 +101,9 @@ public final class CommonPublicChatMessage extends PublicChatMessage {
     }
 
     public static CommonPublicChatMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto) {
-        Optional<Citation> citation = baseProto.hasCitation() ?
-                Optional.of(Citation.fromProto(baseProto.getCitation())) :
-                Optional.empty();
+        Optional<Citation> citation = baseProto.hasCitation()
+                ? Optional.of(Citation.fromProto(baseProto.getCitation()))
+                : Optional.empty();
         return new CommonPublicChatMessage(
                 baseProto.getId(),
                 ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),

@@ -128,7 +128,7 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
         checkArgument(chatMessageReaction instanceof DistributedData, "A public chat message reaction needs to implement DistributedData.");
 
         // Sender adds the message at sending to avoid the delayed display if using the received message from the network.
-        message.getChatMessageReactions().add(chatMessageReaction);
+        addMessageReaction(chatMessageReaction, message);
 
         KeyPair keyPair = userIdentity.getNetworkIdWithKeyPair().getKeyPair();
         return userIdentityService.maybePublishUserProfile(userIdentity.getUserProfile(), keyPair)
@@ -183,7 +183,7 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
                 .flatMap(channel -> channel.getChatMessages().stream()
                         .filter(message -> message.getId().equals(chatMessageReaction.getChatMessageId()))
                         .findFirst())
-                .ifPresent(message -> message.getChatMessageReactions().add(chatMessageReaction));
+                .ifPresent(message -> addMessageReaction(chatMessageReaction, message));
     }
 
     protected void processRemovedReaction(R chatMessageReaction) {
@@ -191,7 +191,7 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
                 .flatMap(channel -> channel.getChatMessages().stream()
                         .filter(message -> message.getId().equals(chatMessageReaction.getChatMessageId()))
                         .findFirst())
-                .ifPresent(message -> message.getChatMessageReactions().remove(chatMessageReaction));
+                .ifPresent(message -> removeMessageReaction(chatMessageReaction, message));
     }
 
     protected abstract R createChatMessageReaction(M message, Reaction reaction, UserIdentity userIdentity);

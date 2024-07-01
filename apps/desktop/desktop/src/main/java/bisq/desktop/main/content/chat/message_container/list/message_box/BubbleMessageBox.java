@@ -308,7 +308,7 @@ public abstract class BubbleMessageBox extends MessageBox {
     }
 
     private void toggleReaction(Reaction reaction) {
-        controller.onReactMessage(item.getChatMessage(), reaction);
+        controller.onReactMessage(item.getChatMessage(), reaction, item.getChatChannel());
         reactMenu.hideMenu();
     }
 }

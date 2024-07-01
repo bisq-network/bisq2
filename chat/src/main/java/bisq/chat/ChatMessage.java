@@ -20,7 +20,9 @@ package bisq.chat;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeMessage;
 import bisq.chat.common.CommonPublicChatMessage;
+import bisq.chat.reactions.ChatMessageReaction;
 import bisq.chat.two_party.TwoPartyPrivateChatMessage;
+import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.NetworkProto;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -203,4 +205,6 @@ public abstract class ChatMessage implements NetworkProto, Comparable<ChatMessag
     public int compareTo(@Nonnull ChatMessage o) {
         return id.compareTo(o.getId());
     }
+
+    public abstract <R extends ChatMessageReaction> ObservableSet<R> getChatMessageReactions();
 }

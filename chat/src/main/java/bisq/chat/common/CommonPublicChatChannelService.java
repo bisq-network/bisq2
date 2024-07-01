@@ -159,6 +159,6 @@ public final class CommonPublicChatChannelService extends PublicChatChannelServi
                 message.getChatChannelDomain(),
                 message.getId(),
                 reaction.ordinal(),
-                System.currentTimeMillis());
+                new Date().getTime());
     }
 }
