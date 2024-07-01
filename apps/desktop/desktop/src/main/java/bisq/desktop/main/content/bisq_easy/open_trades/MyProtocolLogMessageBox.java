@@ -34,13 +34,13 @@ public class MyProtocolLogMessageBox extends PeerProtocolLogMessageBox {
                                    ChatMessagesListController controller) {
         super(item);
 
-        BisqMenuItem tryAgainLabel = item.getTryAgainStatus();
+        BisqMenuItem tryAgainMenuItem = item.getTryAgainMenuItem();
         HBox deliveryStateHBox = new HBox();
         deliveryStateHBox.setAlignment(Pos.CENTER);
-        HBox messageStatusHbox = new HBox(5, tryAgainLabel, deliveryStateHBox);
+        HBox messageStatusHbox = new HBox(5, tryAgainMenuItem, deliveryStateHBox);
         messageStatusHbox.setAlignment(Pos.CENTER);
 
-        messageDeliveryStatusNodePin = EasyBind.subscribe(item.getMessageDeliverStatusNode(), node -> {
+        messageDeliveryStatusNodePin = EasyBind.subscribe(item.getMessageDeliveryStatusNode(), node -> {
             deliveryStateHBox.setManaged(node != null);
             deliveryStateHBox.setVisible(node != null);
             if (node != null) {
@@ -48,13 +48,13 @@ public class MyProtocolLogMessageBox extends PeerProtocolLogMessageBox {
             }
         });
 
-        shouldShowTryAgainPin = EasyBind.subscribe(item.getShouldShouldTryAgain(), showTryAgain -> {
-            tryAgainLabel.setVisible(showTryAgain);
-            tryAgainLabel.setManaged(showTryAgain);
+        shouldShowTryAgainPin = EasyBind.subscribe(item.getShouldShowTryAgain(), showTryAgain -> {
+            tryAgainMenuItem.setVisible(showTryAgain);
+            tryAgainMenuItem.setManaged(showTryAgain);
             if (showTryAgain) {
-                tryAgainLabel.setOnAction(e -> controller.onResendMessage(item.getMessageId()));
+                tryAgainMenuItem.setOnAction(e -> controller.onResendMessage(item.getMessageId()));
             } else {
-                tryAgainLabel.setOnAction(null);
+                tryAgainMenuItem.setOnAction(null);
             }
         });
 

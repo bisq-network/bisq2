@@ -121,10 +121,10 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private Optional<Pin> userReactionsPin = Optional.empty();
     private final HashMap<Reaction, Set<UserProfile>> userReactions = new HashMap<>();
     private final SimpleObjectProperty<Node> reactionsNode = new SimpleObjectProperty<>();
-    private final BooleanProperty shouldShouldTryAgain = new SimpleBooleanProperty();
+    private final BooleanProperty shouldShowTryAgain = new SimpleBooleanProperty();
     private final ImageView successfulDeliveryIcon, pendingDeliveryIcon, failedDeliveryIcon;
-    private final BisqMenuItem tryAgainStatus;
-    private final SimpleObjectProperty<Node> messageDeliverStatusNode = new SimpleObjectProperty<>();
+    private final BisqMenuItem tryAgainMenuItem;
+    private final SimpleObjectProperty<Node> messageDeliveryStatusNode = new SimpleObjectProperty<>();
 
     public ChatMessageListItem(M chatMessage,
                                C chatChannel,
@@ -239,9 +239,9 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         successfulDeliveryIcon = ImageUtil.getImageViewById("received-check-grey");
         pendingDeliveryIcon = ImageUtil.getImageViewById("sent-message-grey");
         failedDeliveryIcon = ImageUtil.getImageViewById("undelivered-message-yellow");
-        tryAgainStatus = new BisqMenuItem("try-again-grey", "try-again-white");
-        tryAgainStatus.useIconOnly(22);
-        tryAgainStatus.setTooltip(new BisqTooltip(Res.get("chat.message.resendMessage")));
+        tryAgainMenuItem = new BisqMenuItem("try-again-grey", "try-again-white");
+        tryAgainMenuItem.useIconOnly(22);
+        tryAgainMenuItem.setTooltip(new BisqTooltip(Res.get("chat.message.resendMessage")));
 
         mapPins.add(networkService.getMessageDeliveryStatusByMessageId().addObserver(new HashMapObserver<>() {
             @Override
@@ -425,9 +425,9 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                                 shouldShowTryAgain = resendMessageService.map(service -> service.canManuallyResendMessage(messageId)).orElse(false);
                                 break;
                         }
-                        messageDeliverStatusNode.set(statusLabel);
+                        messageDeliveryStatusNode.set(statusLabel);
                     }
-                    shouldShouldTryAgain.set(shouldShowTryAgain);
+                    this.shouldShowTryAgain.set(shouldShowTryAgain);
                 });
             }));
         });

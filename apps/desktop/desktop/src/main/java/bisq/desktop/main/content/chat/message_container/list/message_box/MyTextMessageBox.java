@@ -41,7 +41,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
     private final static String EDITED_POST_FIX = " " + Res.get("chat.message.wasEdited");
 
     private final Subscription shouldShowTryAgainPin, messageDeliveryStatusNodePin;
-    private final BisqMenuItem tryAgainLabel = item.getTryAgainStatus();
+    private final BisqMenuItem tryAgainMenuItem = item.getTryAgainMenuItem();
     private final HBox deliveryStateHBox = new HBox();
     private BisqMenuItem editAction, deleteAction;
     private BisqTextArea editInputField;
@@ -70,11 +70,11 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         messageBgHBox.getChildren().setAll(messageVBox, userProfileIconVbox);
 
         // Message delivery status
-        messageStatusHbox.getChildren().addAll(tryAgainLabel, deliveryStateHBox);
+        messageStatusHbox.getChildren().addAll(tryAgainMenuItem, deliveryStateHBox);
         messageStatusHbox.setAlignment(Pos.CENTER);
         deliveryStateHBox.setAlignment(Pos.CENTER);
 
-        messageDeliveryStatusNodePin = EasyBind.subscribe(item.getMessageDeliverStatusNode(), node -> {
+        messageDeliveryStatusNodePin = EasyBind.subscribe(item.getMessageDeliveryStatusNode(), node -> {
             deliveryStateHBox.setManaged(node != null);
             deliveryStateHBox.setVisible(node != null);
             if (node != null) {
@@ -82,13 +82,13 @@ public final class MyTextMessageBox extends BubbleMessageBox {
             }
         });
 
-        shouldShowTryAgainPin = EasyBind.subscribe(item.getShouldShouldTryAgain(), showTryAgain -> {
-            tryAgainLabel.setVisible(showTryAgain);
-            tryAgainLabel.setManaged(showTryAgain);
+        shouldShowTryAgainPin = EasyBind.subscribe(item.getShouldShowTryAgain(), showTryAgain -> {
+            tryAgainMenuItem.setVisible(showTryAgain);
+            tryAgainMenuItem.setManaged(showTryAgain);
             if (showTryAgain) {
-                tryAgainLabel.setOnMouseClicked(e -> controller.onResendMessage(item.getMessageId()));
+                tryAgainMenuItem.setOnMouseClicked(e -> controller.onResendMessage(item.getMessageId()));
             } else {
-                tryAgainLabel.setOnMouseClicked(null);
+                tryAgainMenuItem.setOnMouseClicked(null);
             }
         });
 
