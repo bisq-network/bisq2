@@ -405,7 +405,6 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                     if (status != null) {
                         Label statusLabel = new Label();
                         statusLabel.setTooltip(new BisqTooltip(Res.get("chat.message.deliveryState." + status.name())));
-                        statusLabel.getStyleClass().add("medium-text");
                         switch (status) {
                             // Successful delivery
                             case ACK_RECEIVED:
