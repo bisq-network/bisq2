@@ -953,6 +953,30 @@
     -fx-image: url("/images/chat/message-status/received-check-white.png");
 }
 
+#sent-message-green {
+    -fx-image: url("/images/chat/message-status/sent-message-green.png");
+}
+
+#sent-message-grey {
+    -fx-image: url("/images/chat/message-status/sent-message-grey.png");
+}
+
+#sent-message-white {
+    -fx-image: url("/images/chat/message-status/sent-message-white.png");
+}
+
+#try-again-green {
+    -fx-image: url("/images/chat/message-status/try-again-green.png");
+}
+
+#try-again-grey {
+    -fx-image: url("/images/chat/message-status/try-again-grey.png");
+}
+
+#try-again-white {
+    -fx-image: url("/images/chat/message-status/try-again-white.png");
+}
+
 
 /* ------------------------------------------------------------------------------------ */
 /* Chat Message Actions */
