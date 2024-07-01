@@ -941,6 +941,18 @@
     -fx-image: url("/images/chat/reactions/party-20.png");
 }
 
+#received-check-green {
+    -fx-image: url("/images/chat/message-status/received-check-green.png");
+}
+
+#received-check-grey {
+    -fx-image: url("/images/chat/message-status/received-check-grey.png");
+}
+
+#received-check-white {
+    -fx-image: url("/images/chat/message-status/received-check-white.png");
+}
+
 
 /* ------------------------------------------------------------------------------------ */
 /* Chat Message Actions */
