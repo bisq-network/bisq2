@@ -124,6 +124,7 @@ public abstract class BubbleMessageBox extends MessageBox {
         dateTime.setText(item.getDate());
         dateTimeHBox = new HBox(10, dateTime);
         dateTimeHBox.setVisible(false);
+        dateTimeHBox.setAlignment(Pos.CENTER);
     }
 
     private void setUpUserProfileIcon() {

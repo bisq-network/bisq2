@@ -29,7 +29,6 @@ import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -42,7 +41,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
     private final static String EDITED_POST_FIX = " " + Res.get("chat.message.wasEdited");
 
     private final Subscription shouldShowTryAgainPin, messageDeliveryStatusNodePin;
-    private final Label tryAgainLabel = item.getTryAgainStatus();
+    private final BisqMenuItem tryAgainLabel = item.getTryAgainStatus();
     private final HBox deliveryStateHBox = new HBox();
     private BisqMenuItem editAction, deleteAction;
     private BisqTextArea editInputField;
@@ -72,6 +71,8 @@ public final class MyTextMessageBox extends BubbleMessageBox {
 
         // Message delivery status
         messageStatusHbox.getChildren().addAll(tryAgainLabel, deliveryStateHBox);
+        messageStatusHbox.setAlignment(Pos.CENTER);
+        deliveryStateHBox.setAlignment(Pos.CENTER);
 
         messageDeliveryStatusNodePin = EasyBind.subscribe(item.getMessageDeliverStatusNode(), node -> {
             deliveryStateHBox.setManaged(node != null);

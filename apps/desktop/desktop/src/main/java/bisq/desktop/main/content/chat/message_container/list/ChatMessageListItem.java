@@ -35,6 +35,7 @@ import bisq.common.observable.map.HashMapObserver;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
+import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.main.content.bisq_easy.BisqEasyServiceUtil;
 import bisq.desktop.main.content.components.ReputationScoreDisplay;
@@ -60,7 +61,6 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Pos;
-import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
@@ -123,7 +123,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private final SimpleObjectProperty<Node> reactionsNode = new SimpleObjectProperty<>();
     private final BooleanProperty shouldShouldTryAgain = new SimpleBooleanProperty();
     private final ImageView successfulDeliveryIcon, pendingDeliveryIcon, failedDeliveryIcon;
-    private final Label tryAgainStatus;
+    private final BisqMenuItem tryAgainStatus;
     private final SimpleObjectProperty<Node> messageDeliverStatusNode = new SimpleObjectProperty<>();
     private final SimpleObjectProperty<Node> tryAgainStatusNode = new SimpleObjectProperty<>();
     @Nullable
@@ -242,11 +242,9 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         successfulDeliveryIcon = ImageUtil.getImageViewById("received-check-grey");
         pendingDeliveryIcon = ImageUtil.getImageViewById("sent-message-grey");
         failedDeliveryIcon = ImageUtil.getImageViewById("undelivered-message-yellow");
-        tryAgainStatus = new Label();
+        tryAgainStatus = new BisqMenuItem("try-again-grey", "try-again-white");
+        tryAgainStatus.useIconOnly();
         tryAgainStatus.setTooltip(new BisqTooltip(Res.get("chat.message.resendMessage")));
-        tryAgainStatus.setGraphic(ImageUtil.getImageViewById("try-again-grey"));
-        tryAgainStatus.getStyleClass().add("medium-text");
-        tryAgainStatus.setCursor(Cursor.HAND);
 
         mapPins.add(networkService.getMessageDeliveryStatusByMessageId().addObserver(new HashMapObserver<>() {
             @Override

@@ -19,9 +19,10 @@ package bisq.desktop.main.content.bisq_easy.open_trades;
 
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
+import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
-import javafx.scene.control.Label;
+import javafx.geometry.Pos;
 import javafx.scene.layout.HBox;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -33,9 +34,11 @@ public class MyProtocolLogMessageBox extends PeerProtocolLogMessageBox {
                                    ChatMessagesListController controller) {
         super(item);
 
-        Label tryAgainLabel = item.getTryAgainStatus();
+        BisqMenuItem tryAgainLabel = item.getTryAgainStatus();
         HBox deliveryStateHBox = new HBox();
+        deliveryStateHBox.setAlignment(Pos.CENTER);
         HBox messageStatusHbox = new HBox(5, tryAgainLabel, deliveryStateHBox);
+        messageStatusHbox.setAlignment(Pos.CENTER);
 
         messageDeliveryStatusNodePin = EasyBind.subscribe(item.getMessageDeliverStatusNode(), node -> {
             deliveryStateHBox.setManaged(node != null);
@@ -49,9 +52,9 @@ public class MyProtocolLogMessageBox extends PeerProtocolLogMessageBox {
             tryAgainLabel.setVisible(showTryAgain);
             tryAgainLabel.setManaged(showTryAgain);
             if (showTryAgain) {
-                tryAgainLabel.setOnMouseClicked(e -> controller.onResendMessage(item.getMessageId()));
+                tryAgainLabel.setOnAction(e -> controller.onResendMessage(item.getMessageId()));
             } else {
-                tryAgainLabel.setOnMouseClicked(null);
+                tryAgainLabel.setOnAction(null);
             }
         });
 
