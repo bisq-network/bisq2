@@ -76,7 +76,7 @@ jobs:
       runs-on: ubuntu-latest
       steps:
         - name: Checkout
-          uses: actions/checkout@v4.1.2
+          uses: actions/checkout@v4.1.7
         - name: Push source files using transifex client
           uses: transifex/cli-action@v2
           with:
