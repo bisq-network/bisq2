@@ -35,10 +35,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Getter
 @EqualsAndHashCode
 public abstract class ChatMessageReaction implements NetworkProto {
-    public static String createId(String channelId, String messageId, int reactionId, String userProfileId) {
-        return String.format("%s.%s.%s.%s", channelId, messageId, reactionId, userProfileId);
-    }
-
     private final String id;
     protected final String userProfileId;
     private final String chatChannelId;
