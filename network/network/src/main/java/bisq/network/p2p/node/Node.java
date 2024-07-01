@@ -61,6 +61,7 @@ import java.util.stream.Stream;
 
 import static bisq.network.NetworkService.DISPATCHER;
 import static bisq.network.p2p.node.ConnectionException.Reason.ADDRESS_BANNED;
+import static bisq.network.p2p.node.ConnectionException.Reason.HANDSHAKE_FAILED;
 import static bisq.network.p2p.node.Node.State.*;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.CompletableFuture.runAsync;
@@ -395,6 +396,27 @@ public class Node implements Connection.Handler {
     }
 
     private Connection createOutboundConnection(Address address, Capability myCapability) {
+        // At release time we might get mainy failures as most user have not updated, but as soon most have updated
+        // we have a better bet. We could also add a date or version check to flip the preferred version, but for now we
+        // keep it simple.
+        Capability candidate = Capability.withVersion(myCapability, 1);
+        log.info("Create outbound connection to {} with capability version 1", address);
+        try {
+            return doCreateOutboundConnection(address, candidate);
+        } catch (ConnectionException e) {
+            if (e.getCause() != null && e.getReason() != null && e.getReason() == HANDSHAKE_FAILED) {
+                log.warn("Handshake at creating outbound connection to {} failed. We try again with capability version 0. Error: {}",
+                        address, ExceptionUtil.getMessageOrToString(e));
+                candidate = Capability.withVersion(myCapability, 0);
+                return doCreateOutboundConnection(address, candidate);
+            } else {
+                // In case of ConnectExceptions we don't try again as peer is offline
+                throw e;
+            }
+        }
+    }
+
+    private Connection doCreateOutboundConnection(Address address, Capability myCapability) {
         if (banList.isBanned(address)) {
             throw new ConnectionException(ADDRESS_BANNED, "PeerAddress is banned. address=" + address);
         }
@@ -478,7 +500,7 @@ public class Node implements Connection.Handler {
             }
 
             handleException(throwable);
-            throw new ConnectionException(throwable);
+            throw new ConnectionException(ConnectionException.Reason.HANDSHAKE_FAILED, throwable);
         }
     }
 

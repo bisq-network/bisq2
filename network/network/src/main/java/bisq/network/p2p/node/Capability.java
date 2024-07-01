@@ -40,6 +40,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @EqualsAndHashCode
 public final class Capability implements NetworkProto {
     public static final int VERSION = 1;
+
     @ExcludeForHash
     private final int version;
     private final Address address;
@@ -50,6 +51,10 @@ public final class Capability implements NetworkProto {
 
     public static Capability myCapability(Address address, List<TransportType> supportedTransportTypes, List<Feature> features) {
         return new Capability(VERSION, address, supportedTransportTypes, features, ApplicationVersion.getVersion().getVersionAsString());
+    }
+
+    public static Capability withVersion(Capability capability, int version) {
+        return new Capability(version, capability.getAddress(), capability.getSupportedTransportTypes(), capability.getFeatures(), capability.getApplicationVersion());
     }
 
     @VisibleForTesting

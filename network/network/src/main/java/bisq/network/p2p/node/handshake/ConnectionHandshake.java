@@ -327,7 +327,9 @@ public final class ConnectionHandshake {
             log.debug("Clients capability {}, load={}", requestersCapability, request.getNetworkLoad());
             connectionMetrics.onReceived(requestNetworkEnvelope, deserializeTime);
 
-            Response response = new Response(capability, myNetworkLoad);
+            // We reply with the same version as the peer has to avoid pow hash check failures
+            Capability responseCapability = Capability.withVersion(capability, requestersCapability.getVersion());
+            Response response = new Response(responseCapability, myNetworkLoad);
             AuthorizationToken token = authorizationService.createToken(response,
                     request.getNetworkLoad(),
                     peerAddress.getFullAddress(),
