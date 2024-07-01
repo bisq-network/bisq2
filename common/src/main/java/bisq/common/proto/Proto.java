@@ -78,8 +78,17 @@ public interface Proto {
         return Arrays.stream(getClass().getDeclaredFields())
                 .peek(field -> field.setAccessible(true))
                 .filter(field -> field.isAnnotationPresent(ExcludeForHash.class))
+                .filter(field -> {
+                    int[] excludeOnlyInVersions = field.getAnnotation(ExcludeForHash.class).excludeOnlyInVersions();
+                    return excludeOnlyInVersions.length == 0 ||
+                            Arrays.stream(excludeOnlyInVersions).boxed().anyMatch(version -> version == getVersion());
+                })
                 .map(Field::getName)
                 .collect(Collectors.toSet());
+    }
+
+    default int getVersion() {
+        return 0;
     }
 
     /**

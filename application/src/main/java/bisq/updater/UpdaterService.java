@@ -119,14 +119,14 @@ public class UpdaterService implements Service {
             return;
         }
 
-        Version newVersion = releaseNotification.getVersion();
+        Version newVersion = releaseNotification.getReleaseVersion();
         Version installedVersion = ApplicationVersion.getVersion();
         if (newVersion.belowOrEqual(installedVersion)) {
             log.debug("Our installed version is the same or higher as the version of the new releaseNotification.");
             return;
         }
 
-        if (this.releaseNotification.get() != null && newVersion.belowOrEqual(this.releaseNotification.get().getVersion())) {
+        if (this.releaseNotification.get() != null && newVersion.belowOrEqual(this.releaseNotification.get().getReleaseVersion())) {
             log.debug("The version of our existing releaseNotification is the same or higher as the version of the new releaseNotification.");
             return;
         }
