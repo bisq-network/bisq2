@@ -17,22 +17,29 @@
 
 package bisq.desktop.main.content.settings.network;
 
+import bisq.common.data.Pair;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.settings.network.transport.TransportTypeController;
+import bisq.i18n.Res;
+import bisq.network.NetworkService;
 import bisq.network.common.TransportType;
+import bisq.user.profile.UserProfile;
+import bisq.user.profile.UserProfileService;
 import javafx.scene.Node;
 import lombok.Getter;
 
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 public class NetworkInfoController implements Controller {
-    private final ServiceProvider serviceProvider;
     @Getter
     private final NetworkInfoModel model;
     @Getter
     private final NetworkInfoView view;
+    private final ServiceProvider serviceProvider;
+    private final UserProfileService userProfileService;
     @Getter
     private final Optional<TransportTypeController> clearNetController = Optional.empty();
     @Getter
@@ -42,8 +49,12 @@ public class NetworkInfoController implements Controller {
 
     public NetworkInfoController(ServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
-        model = new NetworkInfoModel(serviceProvider);
-
+        NetworkService networkService = serviceProvider.getNetworkService();
+        userProfileService = serviceProvider.getUserService().getUserProfileService();
+        model = new NetworkInfoModel(networkService.getSupportedTransportTypes(),
+                !networkService.isTransportTypeSupported(TransportType.CLEAR),
+                !networkService.isTransportTypeSupported(TransportType.TOR),
+                !networkService.isTransportTypeSupported(TransportType.I2P));
 
         Set<TransportType> supportedTransportTypes = serviceProvider.getNetworkService().getSupportedTransportTypes();
         view = new NetworkInfoView(model, this,
@@ -54,6 +65,24 @@ public class NetworkInfoController implements Controller {
 
     @Override
     public void onActivate() {
+        AtomicInteger totalSize = new AtomicInteger();
+        Map<String, Set<UserProfile>> map = new HashMap<>();
+        userProfileService.getUserProfiles().forEach(userProfile -> {
+            String version = userProfile.getApplicationVersion();
+            if (version.isEmpty()) {
+                version = Res.get("data.na");
+            }
+            map.putIfAbsent(version, new HashSet<>());
+            if (!map.get(version).contains(userProfile)) {
+                totalSize.incrementAndGet();
+                map.get(version).add(userProfile);
+            }
+        });
+
+        model.getVersionDistribution().clear();
+        model.getVersionDistribution().addAll(map.entrySet().stream()
+                .map(e -> new Pair<>(e.getKey(), e.getValue().size() / (double) totalSize.get()))
+                .collect(Collectors.toList()));
     }
 
     @Override
