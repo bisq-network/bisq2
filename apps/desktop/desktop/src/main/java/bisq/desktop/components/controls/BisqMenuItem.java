@@ -57,7 +57,10 @@ public class BisqMenuItem extends Button {
     }
 
     public void useIconOnly() {
-        double size = 29;
+        useIconOnly(29);
+    }
+
+    public void useIconOnly(double size) {
         setMaxSize(size, size);
         setMinSize(size, size);
         setPrefSize(size, size);

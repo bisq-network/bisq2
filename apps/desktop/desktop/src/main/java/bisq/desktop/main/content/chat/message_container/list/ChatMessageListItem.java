@@ -243,7 +243,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         pendingDeliveryIcon = ImageUtil.getImageViewById("sent-message-grey");
         failedDeliveryIcon = ImageUtil.getImageViewById("undelivered-message-yellow");
         tryAgainStatus = new BisqMenuItem("try-again-grey", "try-again-white");
-        tryAgainStatus.useIconOnly();
+        tryAgainStatus.useIconOnly(22);
         tryAgainStatus.setTooltip(new BisqTooltip(Res.get("chat.message.resendMessage")));
 
         mapPins.add(networkService.getMessageDeliveryStatusByMessageId().addObserver(new HashMapObserver<>() {
