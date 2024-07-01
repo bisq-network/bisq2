@@ -60,7 +60,7 @@ public class ReputationDetailsPopup extends VBox {
         Optional.ofNullable(proofOfBurnService.getDataSetByHash().get(userProfile.getProofOfBurnKey()))
                 .ifPresent(dataSet -> listItems.addAll(dataSet.stream()
                         .map(data -> new ListItem(ReputationSource.BURNED_BSQ,
-                                data.getTime(),
+                                data.getBlockTime(),
                                 proofOfBurnService.calculateScore(data),
                                 data.getAmount()))
                         .collect(Collectors.toList())));
@@ -69,7 +69,7 @@ public class ReputationDetailsPopup extends VBox {
         Optional.ofNullable(bondedReputationService.getDataSetByHash().get(userProfile.getBondedReputationKey()))
                 .ifPresent(dataSet -> listItems.addAll(dataSet.stream()
                         .map(data -> new ListItem(ReputationSource.BSQ_BOND,
-                                data.getTime(),
+                                data.getBlockTime(),
                                 bondedReputationService.calculateScore(data),
                                 Optional.of(data.getAmount()),
                                 Optional.of(data.getLockTime())))
@@ -180,25 +180,25 @@ public class ReputationDetailsPopup extends VBox {
         private final long date, age, amount, score, lockTime;
         private final String dateString, timeString, sourceString, ageString, amountString, scoreString, lockTimeString;
 
-        public ListItem(ReputationSource reputationSource, long date, long score) {
-            this(reputationSource, date, score, Optional.empty(), Optional.empty());
+        public ListItem(ReputationSource reputationSource, long blockTime, long score) {
+            this(reputationSource, blockTime, score, Optional.empty(), Optional.empty());
         }
 
-        public ListItem(ReputationSource reputationSource, long date, long score, long amount) {
-            this(reputationSource, date, score, Optional.of(amount), Optional.empty());
+        public ListItem(ReputationSource reputationSource, long blockTime, long score, long amount) {
+            this(reputationSource, blockTime, score, Optional.of(amount), Optional.empty());
         }
 
-        public ListItem(ReputationSource reputationSource, long date, long score, Optional<Long> optionalAmount, Optional<Long> optionalLockTime) {
+        public ListItem(ReputationSource reputationSource, long blockTime, long score, Optional<Long> optionalAmount, Optional<Long> optionalLockTime) {
             this.reputationSource = reputationSource;
-            this.date = date;
-            dateString = DateFormatter.formatDate(date);
-            timeString = DateFormatter.formatTime(date);
+            this.date = blockTime;
+            dateString = DateFormatter.formatDate(blockTime);
+            timeString = DateFormatter.formatTime(blockTime);
             this.amount = optionalAmount.orElse(0L);
             this.score = score;
             this.lockTime = optionalLockTime.orElse(0L);
-            age = TimeFormatter.getAgeInDays(date);
+            age = TimeFormatter.getAgeInDays(blockTime);
             sourceString = reputationSource.getDisplayString();
-            ageString = TimeFormatter.formatAgeInDays(date);
+            ageString = TimeFormatter.formatAgeInDays(blockTime);
             amountString = optionalAmount.map(amount -> AmountFormatter.formatAmountWithCode(Coin.fromValue(amount, "BSQ"))).orElse("-");
             scoreString = String.valueOf(score);
             lockTimeString = optionalLockTime.map(String::valueOf).orElse("-");

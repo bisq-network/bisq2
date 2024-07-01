@@ -93,7 +93,7 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
     public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
         findRelevantData(authorizedData.getAuthorizedDistributedData())
                 .ifPresent(data -> {
-                    if (isAuthorized(authorizedData)) {
+                    if (isAuthorized(authorizedData) && isValidVersion(data)) {
                         ByteArray providedHash = getDataKey(data);
                         // To avoid ConcurrentModificationException
                         List<UserProfile> userProfiles = new ArrayList<>(userProfileService.getUserProfileById().values());
@@ -110,6 +110,10 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
                                 });
                     }
                 });
+    }
+
+    protected boolean isValidVersion(T data) {
+        return true;
     }
 
     protected abstract Optional<T> findRelevantData(AuthorizedDistributedData authorizedDistributedData);
