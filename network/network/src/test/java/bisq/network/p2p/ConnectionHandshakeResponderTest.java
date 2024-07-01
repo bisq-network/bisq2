@@ -17,6 +17,7 @@
 
 package bisq.network.p2p;
 
+import bisq.common.application.ApplicationVersion;
 import bisq.common.util.FileUtils;
 import bisq.network.common.Address;
 import bisq.network.common.TransportType;
@@ -58,7 +59,7 @@ public class ConnectionHandshakeResponderTest {
 
     public ConnectionHandshakeResponderTest() throws IOException {
         supportedTransportTypes.add(TransportType.CLEAR);
-        this.responderCapability = new Capability(Address.localHost(1234), supportedTransportTypes, new ArrayList<>());
+        this.responderCapability = createCapability(Address.localHost(1234), supportedTransportTypes);
         this.authorizationService = createAuthorizationService();
         this.handshakeResponder = new ConnectionHandshakeResponder(
                 banList,
@@ -164,7 +165,7 @@ public class ConnectionHandshakeResponderTest {
 
     @Test
     void correctPoW() throws IOException {
-        Capability peerCapability = new Capability(Address.localHost(2345), supportedTransportTypes, new ArrayList<>());
+        Capability peerCapability = createCapability(Address.localHost(2345), supportedTransportTypes);
         ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, Optional.empty(), new NetworkLoad(), 0);
         AuthorizationToken token = authorizationService.createToken(request,
                 new NetworkLoad(),
@@ -182,12 +183,16 @@ public class ConnectionHandshakeResponderTest {
     }
 
     private NetworkEnvelope createValidRequest() {
-        Capability peerCapability = new Capability(Address.localHost(2345), supportedTransportTypes, new ArrayList<>());
+        Capability peerCapability = createCapability(Address.localHost(2345), supportedTransportTypes);
         ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, Optional.empty(), new NetworkLoad(), 0);
         AuthorizationToken token = authorizationService.createToken(request,
                 new NetworkLoad(),
                 responderCapability.getAddress().getFullAddress(),
                 0, new ArrayList<>());
         return new NetworkEnvelope(token, request);
+    }
+
+    private static Capability createCapability(Address address, List<TransportType> supportedTransportTypes) {
+        return new Capability(Capability.VERSION, address, supportedTransportTypes, new ArrayList<>(), ApplicationVersion.getVersion().getVersionAsString());
     }
 }

@@ -17,6 +17,7 @@
 
 package bisq.network.p2p;
 
+import bisq.common.application.ApplicationVersion;
 import bisq.common.util.FileUtils;
 import bisq.common.util.NetworkUtils;
 import bisq.network.common.Address;
@@ -60,7 +61,7 @@ public class OutboundConnectionsMultiplexerTest {
         supportedTransportTypes.add(TransportType.CLEAR);
 
         Address serverAddress = Address.localHost(NetworkUtils.findFreeSystemPort());
-        Capability serverCapability = new Capability(serverAddress, supportedTransportTypes, new ArrayList<>());
+        Capability serverCapability = createCapability(serverAddress, supportedTransportTypes);
         ServerChannel serverChannel = new ServerChannel(
                 serverCapability,
                 new NetworkLoad(),
@@ -84,7 +85,7 @@ public class OutboundConnectionsMultiplexerTest {
 
                 AuthorizationService authorizationService = createAuthorizationService();
                 Address outboundAddress = Address.localHost(NetworkUtils.findFreeSystemPort());
-                Capability outboundCapability = new Capability(outboundAddress, supportedTransportTypes, new ArrayList<>());
+                Capability outboundCapability = createCapability(outboundAddress, supportedTransportTypes);
                 Selector selector = SelectorProvider.provider().openSelector();
 
                 var outboundConnectionManager = new OutboundConnectionManager(
@@ -132,5 +133,9 @@ public class OutboundConnectionsMultiplexerTest {
                 new HashCashProofOfWorkService(),
                 new EquihashProofOfWorkService(),
                 Set.of(Feature.AUTHORIZATION_HASH_CASH));
+    }
+
+    private static Capability createCapability(Address address, List<TransportType> supportedTransportTypes) {
+        return new Capability(Capability.VERSION, address, supportedTransportTypes, new ArrayList<>(), ApplicationVersion.getVersion().getVersionAsString());
     }
 }

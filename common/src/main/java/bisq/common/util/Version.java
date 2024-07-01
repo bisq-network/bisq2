@@ -58,6 +58,18 @@ public class Version implements Comparable<Version> {
         return compareTo(other) <= 0;
     }
 
+    public boolean above(String other) {
+        return above(new Version(other));
+    }
+
+    public boolean above(Version other) {
+        return compareTo(other) > 0;
+    }
+
+    public boolean aboveOrEqual(Version other) {
+        return compareTo(other) >= 0;
+    }
+
     @Override
     public int compareTo(Version other) {
         if (other == null) {

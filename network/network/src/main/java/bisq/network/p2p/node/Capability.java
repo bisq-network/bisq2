@@ -17,10 +17,14 @@
 
 package bisq.network.p2p.node;
 
+import bisq.common.annotation.ExcludeForHash;
+import bisq.common.application.ApplicationVersion;
 import bisq.common.proto.NetworkProto;
 import bisq.common.util.ProtobufUtils;
+import bisq.common.validation.NetworkDataValidation;
 import bisq.network.common.Address;
 import bisq.network.common.TransportType;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -35,14 +39,31 @@ import static com.google.common.base.Preconditions.checkArgument;
 @ToString
 @EqualsAndHashCode
 public final class Capability implements NetworkProto {
+    public static final int VERSION = 1;
+
+    @ExcludeForHash
+    private final int version;
     private final Address address;
     private final List<TransportType> supportedTransportTypes;
     private final List<Feature> features;
+    @ExcludeForHash(excludeOnlyInVersions = {0})
+    private final String applicationVersion;
 
-    public Capability(Address address, List<TransportType> supportedTransportTypes, List<Feature> features) {
+    public static Capability myCapability(Address address, List<TransportType> supportedTransportTypes, List<Feature> features) {
+        return new Capability(VERSION, address, supportedTransportTypes, features, ApplicationVersion.getVersion().getVersionAsString());
+    }
+
+    public static Capability withVersion(Capability capability, int version) {
+        return new Capability(version, capability.getAddress(), capability.getSupportedTransportTypes(), capability.getFeatures(), capability.getApplicationVersion());
+    }
+
+    @VisibleForTesting
+    public Capability(int version, Address address, List<TransportType> supportedTransportTypes, List<Feature> features, String applicationVersion) {
+        this.version = version;
         this.address = address;
         this.supportedTransportTypes = supportedTransportTypes;
         this.features = features;
+        this.applicationVersion = applicationVersion;
 
         // We need to sort deterministically as the data is used in the proof of work check
         Collections.sort(this.supportedTransportTypes);
@@ -55,18 +76,23 @@ public final class Capability implements NetworkProto {
     public void verify() {
         checkArgument(supportedTransportTypes.size() <= TransportType.values().length);
         checkArgument(features.size() <= Feature.values().length);
+        if (version > 0) {
+            NetworkDataValidation.validateVersion(applicationVersion);
+        }
     }
 
     @Override
     public bisq.network.protobuf.Capability.Builder getBuilder(boolean serializeForHash) {
         return bisq.network.protobuf.Capability.newBuilder()
+                .setVersion(version)
                 .setAddress(address.toProto(serializeForHash))
                 .addAllSupportedTransportTypes(supportedTransportTypes.stream()
                         .map(Enum::name)
                         .collect(Collectors.toList()))
                 .addAllFeatures(features.stream()
                         .map(Feature::toProtoEnum)
-                        .collect(Collectors.toList()));
+                        .collect(Collectors.toList()))
+                .setApplicationVersion(applicationVersion);
     }
 
     @Override
@@ -78,8 +104,10 @@ public final class Capability implements NetworkProto {
         List<TransportType> supportedTransportTypes = proto.getSupportedTransportTypesList().stream()
                 .map(e -> ProtobufUtils.enumFromProto(TransportType.class, e))
                 .collect(Collectors.toList());
-        return new Capability(Address.fromProto(proto.getAddress()),
+        return new Capability(proto.getVersion(),
+                Address.fromProto(proto.getAddress()),
                 supportedTransportTypes,
-                ProtobufUtils.fromProtoEnumList(Feature.class, proto.getFeaturesList()));
+                ProtobufUtils.fromProtoEnumList(Feature.class, proto.getFeaturesList()),
+                proto.getApplicationVersion());
     }
 }

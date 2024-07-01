@@ -40,18 +40,18 @@ import static bisq.network.p2p.node.ConnectionException.Reason.*;
 @Slf4j
 public class ConnectionHandshakeResponder {
     private final BanList banList;
-    private final Capability capability;
+    private final Capability myCapability;
     private final NetworkLoad myNetworkLoad;
     private final AuthorizationService authorizationService;
     private final NetworkEnvelopeSocketChannel networkEnvelopeSocketChannel;
 
     public ConnectionHandshakeResponder(BanList banList,
-                                        Capability capability,
+                                        Capability myCapability,
                                         NetworkLoad myNetworkLoad,
                                         AuthorizationService authorizationService,
                                         NetworkEnvelopeSocketChannel networkEnvelopeSocketChannel) {
         this.banList = banList;
-        this.capability = capability;
+        this.myCapability = myCapability;
         this.myNetworkLoad = myNetworkLoad;
         this.authorizationService = authorizationService;
         this.networkEnvelopeSocketChannel = networkEnvelopeSocketChannel;
@@ -70,7 +70,7 @@ public class ConnectionHandshakeResponder {
 
         Capability requestersCapability = request.getCapability();
         Address peerAddress = requestersCapability.getAddress();
-        Address myAddress = capability.getAddress();
+        Address myAddress = myCapability.getAddress();
         if (!OnionAddressValidation.verify(myAddress, peerAddress, request.getSignatureDate(), request.getAddressOwnershipProof())) {
             throw new ConnectionException(ONION_ADDRESS_VERIFICATION_FAILED, "Peer couldn't proof its onion address: " + peerAddress.getFullAddress() +
                     ", Proof: " + Hex.encode(request.getAddressOwnershipProof().orElseThrow()));
@@ -96,7 +96,7 @@ public class ConnectionHandshakeResponder {
 
     private void verifyPoW(NetworkEnvelope requestNetworkEnvelope) {
         ConnectionHandshake.Request request = (ConnectionHandshake.Request) requestNetworkEnvelope.getEnvelopePayloadMessage();
-        String myAddress = capability.getAddress().getFullAddress();
+        String myAddress = myCapability.getAddress().getFullAddress();
         // As the request did not know our load at the initial request, they used the NetworkLoad.INITIAL_LOAD for the
         // AuthorizationToken.
         boolean isAuthorized = authorizationService.isAuthorized(
@@ -132,7 +132,7 @@ public class ConnectionHandshakeResponder {
                                                    NetworkLoad peerNetworkLoad,
                                                    Address peerAddress,
                                                    List<Feature> requestersFeatures) {
-        ConnectionHandshake.Response response = new ConnectionHandshake.Response(capability, myNetworkLoad);
+        ConnectionHandshake.Response response = new ConnectionHandshake.Response(myCapability, myNetworkLoad);
         AuthorizationToken token = authorizationService.createToken(response,
                 peerNetworkLoad,
                 peerAddress.getFullAddress(),

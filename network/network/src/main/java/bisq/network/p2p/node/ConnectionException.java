@@ -28,7 +28,8 @@ public class ConnectionException extends CompletionException {
         PROTOBUF_IS_NULL,
         AUTHORIZATION_FAILED,
         ONION_ADDRESS_VERIFICATION_FAILED,
-        ADDRESS_BANNED
+        ADDRESS_BANNED,
+        HANDSHAKE_FAILED
     }
 
     @Getter
@@ -41,6 +42,11 @@ public class ConnectionException extends CompletionException {
 
     public ConnectionException(String message) {
         super(message);
+    }
+
+    public ConnectionException(Reason reason, Throwable throwable) {
+        super(throwable);
+        this.reason = reason;
     }
 
     public ConnectionException(Throwable throwable) {

@@ -61,6 +61,7 @@ import java.util.stream.Stream;
 
 import static bisq.network.NetworkService.DISPATCHER;
 import static bisq.network.p2p.node.ConnectionException.Reason.ADDRESS_BANNED;
+import static bisq.network.p2p.node.ConnectionException.Reason.HANDSHAKE_FAILED;
 import static bisq.network.p2p.node.Node.State.*;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.CompletableFuture.runAsync;
@@ -245,7 +246,7 @@ public class Node implements Connection.Handler {
 
     private void createServerAndListen() {
         ServerSocketResult serverSocketResult = transportService.getServerSocket(networkId, keyBundle);
-        myCapability = Optional.of(new Capability(serverSocketResult.getAddress(), new ArrayList<>(supportedTransportTypes), new ArrayList<>(features)));
+        myCapability = Optional.of(Capability.myCapability(serverSocketResult.getAddress(), new ArrayList<>(supportedTransportTypes), new ArrayList<>(features)));
         server = Optional.of(new Server(serverSocketResult,
                 socket -> onClientSocket(socket, serverSocketResult, myCapability.get()),
                 exception -> {
@@ -268,7 +269,7 @@ public class Node implements Connection.Handler {
             ConnectionHandshake.Result result = connectionHandshake.onSocket(networkLoadSnapshot.getCurrentNetworkLoad()); // Blocking call
             connectionHandshakes.remove(connectionHandshake.getId());
 
-            Address address = result.getCapability().getAddress();
+            Address address = result.getPeersCapability().getAddress();
             log.debug("Inbound handshake completed: Initiated by {} to {}", address, myCapability.getAddress());
 
             // As time passed we check again if connection is still not available
@@ -287,7 +288,7 @@ public class Node implements Connection.Handler {
             ConnectionThrottle connectionThrottle = new ConnectionThrottle(peersNetworkLoadSnapshot, networkLoadSnapshot, config);
             InboundConnection connection = new InboundConnection(socket,
                     serverSocketResult,
-                    result.getCapability(),
+                    result.getPeersCapability(),
                     peersNetworkLoadSnapshot,
                     result.getConnectionMetrics(),
                     connectionThrottle,
@@ -395,6 +396,27 @@ public class Node implements Connection.Handler {
     }
 
     private Connection createOutboundConnection(Address address, Capability myCapability) {
+        // At release time we might get mainy failures as most user have not updated, but as soon most have updated
+        // we have a better bet. We could also add a date or version check to flip the preferred version, but for now we
+        // keep it simple.
+        Capability candidate = Capability.withVersion(myCapability, 1);
+        log.info("Create outbound connection to {} with capability version 1", address);
+        try {
+            return doCreateOutboundConnection(address, candidate);
+        } catch (ConnectionException e) {
+            if (e.getCause() != null && e.getReason() != null && e.getReason() == HANDSHAKE_FAILED) {
+                log.warn("Handshake at creating outbound connection to {} failed. We try again with capability version 0. Error: {}",
+                        address, ExceptionUtil.getMessageOrToString(e));
+                candidate = Capability.withVersion(myCapability, 0);
+                return doCreateOutboundConnection(address, candidate);
+            } else {
+                // In case of ConnectExceptions we don't try again as peer is offline
+                throw e;
+            }
+        }
+    }
+
+    private Connection doCreateOutboundConnection(Address address, Capability myCapability) {
         if (banList.isBanned(address)) {
             throw new ConnectionException(ADDRESS_BANNED, "PeerAddress is banned. address=" + address);
         }
@@ -430,7 +452,7 @@ public class Node implements Connection.Handler {
                 // For clearnet this check doesn't make sense because:
                 // - the peer binds to 127.0.0.1, therefore reports 127.0.0.1 in the handshake
                 // - we use the peer's public IP to connect to him
-                checkArgument(address.equals(result.getCapability().getAddress()), "Peers reported address must match address we used to connect");
+                checkArgument(address.equals(result.getPeersCapability().getAddress()), "Peers reported address must match address we used to connect");
             }
 
             // As time passed we check again if connection is still not available
@@ -454,7 +476,7 @@ public class Node implements Connection.Handler {
             ConnectionThrottle connectionThrottle = new ConnectionThrottle(peersNetworkLoadSnapshot, networkLoadSnapshot, config);
             OutboundConnection connection = new OutboundConnection(socket,
                     address,
-                    result.getCapability(),
+                    result.getPeersCapability(),
                     peersNetworkLoadSnapshot,
                     result.getConnectionMetrics(),
                     connectionThrottle,
@@ -478,7 +500,7 @@ public class Node implements Connection.Handler {
             }
 
             handleException(throwable);
-            throw new ConnectionException(throwable);
+            throw new ConnectionException(ConnectionException.Reason.HANDSHAKE_FAILED, throwable);
         }
     }
 
