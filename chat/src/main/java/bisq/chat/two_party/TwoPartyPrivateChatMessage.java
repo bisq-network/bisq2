@@ -119,4 +119,9 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage<TwoPart
     public double getCostFactor() {
         return getCostFactor(0.1, 0.3);
     }
+
+    @Override
+    public boolean canShowReactions() {
+        return true;
+    }
 }

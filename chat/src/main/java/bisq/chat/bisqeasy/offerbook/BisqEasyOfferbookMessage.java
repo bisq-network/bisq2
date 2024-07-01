@@ -133,4 +133,9 @@ public final class BisqEasyOfferbookMessage extends PublicChatMessage implements
     public boolean hasBisqEasyOffer() {
         return bisqEasyOffer.isPresent();
     }
+
+    @Override
+    public boolean canShowReactions() {
+        return bisqEasyOffer.isEmpty();
+    }
 }

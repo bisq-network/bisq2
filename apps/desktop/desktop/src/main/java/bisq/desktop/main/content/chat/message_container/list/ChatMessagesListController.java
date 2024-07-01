@@ -440,7 +440,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
     }
 
     public void onReactMessage(ChatMessage chatMessage, Reaction reaction, ChatChannel<?> chatChannel) {
-        checkArgument(canReactToMessage(chatMessage), "Not possible to react to a message of type %s.", chatMessage.getClass());
+        checkArgument(chatMessage.canShowReactions(), "Not possible to react to a message of type %s.", chatMessage.getClass());
 
         UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
         Optional<ChatMessageReaction> chatMessageReaction = chatMessage.getChatMessageReactions().stream()
@@ -657,12 +657,5 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
             chatService.getBisqEasyOfferbookChannelService()
                     .deleteChatMessageReaction((BisqEasyOfferbookMessageReaction) messageReaction, userIdentity.getNetworkIdWithKeyPair());
         }
-    }
-
-    private boolean canReactToMessage(ChatMessage chatMessage) {
-        boolean isCommonChatMessage = chatMessage instanceof CommonPublicChatMessage;
-        boolean isBisqEasyOfferbookTextMessage = chatMessage instanceof BisqEasyOfferMessage && !((BisqEasyOfferMessage) chatMessage).hasBisqEasyOffer();
-        boolean isTwoPartyChatMessage = chatMessage instanceof TwoPartyPrivateChatMessage;
-        return isCommonChatMessage || isBisqEasyOfferbookTextMessage || isTwoPartyChatMessage;
     }
 }

@@ -207,4 +207,8 @@ public abstract class ChatMessage implements NetworkProto, Comparable<ChatMessag
     }
 
     public abstract <R extends ChatMessageReaction> ObservableSet<R> getChatMessageReactions();
+
+    public boolean canShowReactions() {
+        return false;
+    }
 }

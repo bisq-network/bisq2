@@ -21,7 +21,6 @@ import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.chat.Citation;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
-import bisq.chat.common.CommonPublicChatMessage;
 import bisq.chat.reactions.Reaction;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ClipboardUtil;
@@ -153,8 +152,8 @@ public abstract class BubbleMessageBox extends MessageBox {
             }
         });
 
-        reactMenu.setVisible(item.shouldShowReactions());
-        reactMenu.setManaged(item.shouldShowReactions());
+        reactMenu.setVisible(item.getChatMessage().canShowReactions());
+        reactMenu.setManaged(item.getChatMessage().canShowReactions());
 
         HBox.setMargin(copyAction, ACTION_ITEMS_MARGIN);
         HBox.setMargin(reactMenu, ACTION_ITEMS_MARGIN);
