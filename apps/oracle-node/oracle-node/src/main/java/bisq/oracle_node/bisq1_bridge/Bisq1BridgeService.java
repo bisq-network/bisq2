@@ -225,50 +225,55 @@ public class Bisq1BridgeService implements Service, ConfidentialMessageService.L
     private CompletableFuture<Boolean> publishProofOfBurnDtoSet(List<ProofOfBurnDto> proofOfBurnList) {
         // After v2.0.6 we can remove support for version 0 data
         Stream<AuthorizedProofOfBurnData> oldVersions = proofOfBurnList.stream()
-                .map(dto -> createAuthorizedProofOfBurnData(dto, 0))
+                .map(dto -> new AuthorizedProofOfBurnData(
+                        0,
+                        dto.getBlockTime(),
+                        dto.getAmount(),
+                        Hex.decode(dto.getHash()),
+                        dto.getBlockHeight(),
+                        dto.getTxId(),
+                        staticPublicKeysProvided))
                 .filter(e -> ApplicationVersion.getVersion().below("2.0.7"));
         Stream<AuthorizedProofOfBurnData> newVersions = proofOfBurnList.stream()
-                .map(dto -> createAuthorizedProofOfBurnData(dto, 1));
+                .map(dto -> new AuthorizedProofOfBurnData(
+                        dto.getBlockTime(),
+                        dto.getAmount(),
+                        Hex.decode(dto.getHash()),
+                        dto.getBlockHeight(),
+                        dto.getTxId(),
+                        staticPublicKeysProvided));
         return CompletableFutureUtils.allOf(Stream.concat(oldVersions, newVersions)
                         .map(this::publishAuthorizedData)
                         .collect(Collectors.toList()))
                 .thenApply(results -> !results.contains(false));
-    }
-
-    private AuthorizedProofOfBurnData createAuthorizedProofOfBurnData(ProofOfBurnDto dto, int version) {
-        return new AuthorizedProofOfBurnData(
-                version,
-                dto.getBlockTime(),
-                dto.getAmount(),
-                Hex.decode(dto.getHash()),
-                dto.getBlockHeight(),
-                dto.getTxId(),
-                staticPublicKeysProvided);
     }
 
     private CompletableFuture<Boolean> publishBondedReputationDtoSet(List<BondedReputationDto> bondedReputationList) {
         // After v2.0.6 we can remove support for version 0 data
         Stream<AuthorizedBondedReputationData> oldVersions = bondedReputationList.stream()
-                .map(dto -> createAuthorizedBondedReputationData(dto, 0))
+                .map(dto -> new AuthorizedBondedReputationData(
+                        0,
+                        dto.getBlockTime(),
+                        dto.getAmount(),
+                        Hex.decode(dto.getHash()),
+                        dto.getLockTime(),
+                        dto.getBlockHeight(),
+                        dto.getTxId(),
+                        staticPublicKeysProvided))
                 .filter(e -> ApplicationVersion.getVersion().below("2.0.7"));
         Stream<AuthorizedBondedReputationData> newVersions = bondedReputationList.stream()
-                .map(dto -> createAuthorizedBondedReputationData(dto, 1));
+                .map(dto -> new AuthorizedBondedReputationData(
+                        dto.getBlockTime(),
+                        dto.getAmount(),
+                        Hex.decode(dto.getHash()),
+                        dto.getLockTime(),
+                        dto.getBlockHeight(),
+                        dto.getTxId(),
+                        staticPublicKeysProvided));
         return CompletableFutureUtils.allOf(Stream.concat(oldVersions, newVersions)
                         .map(this::publishAuthorizedData)
                         .collect(Collectors.toList()))
                 .thenApply(results -> !results.contains(false));
-    }
-
-    private AuthorizedBondedReputationData createAuthorizedBondedReputationData(BondedReputationDto dto, int version) {
-        return new AuthorizedBondedReputationData(
-                version,
-                dto.getBlockTime(),
-                dto.getAmount(),
-                Hex.decode(dto.getHash()),
-                dto.getLockTime(),
-                dto.getBlockHeight(),
-                dto.getTxId(),
-                staticPublicKeysProvided);
     }
 
     private CompletableFuture<Boolean> publishAuthorizedData(AuthorizedDistributedData data) {

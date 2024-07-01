@@ -44,6 +44,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 @EqualsAndHashCode
 @Getter
 public final class AuthorizedBondedReputationData implements AuthorizedDistributedData {
+    private static final int VERSION = 1;
+
     @EqualsAndHashCode.Exclude
     private final MetaData metaData = new MetaData(TTL_100_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
     private final long blockTime;
@@ -58,6 +60,16 @@ public final class AuthorizedBondedReputationData implements AuthorizedDistribut
     private final int blockHeight;
     @ExcludeForHash(excludeOnlyInVersions = {0})
     private final String txId;
+
+    public AuthorizedBondedReputationData(long blockTime,
+                                          long amount,
+                                          byte[] hash,
+                                          long lockTime,
+                                          int blockHeight,
+                                          String txId,
+                                          boolean staticPublicKeysProvided) {
+        this(VERSION, blockTime, amount, hash, lockTime, blockHeight, txId, staticPublicKeysProvided);
+    }
 
     public AuthorizedBondedReputationData(int version,
                                           long blockTime,

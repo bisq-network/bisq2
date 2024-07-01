@@ -44,6 +44,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 @EqualsAndHashCode
 @Getter
 public final class AuthorizedProofOfBurnData implements AuthorizedDistributedData {
+    private static final int VERSION = 1;
+
     @EqualsAndHashCode.Exclude
     private final MetaData metaData = new MetaData(TTL_100_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
     private final long blockTime;
@@ -57,6 +59,15 @@ public final class AuthorizedProofOfBurnData implements AuthorizedDistributedDat
     private final int blockHeight;
     @ExcludeForHash(excludeOnlyInVersions = {0})
     private final String txId;
+
+    public AuthorizedProofOfBurnData(long blockTime,
+                                     long amount,
+                                     byte[] hash,
+                                     int blockHeight,
+                                     String txId,
+                                     boolean staticPublicKeysProvided) {
+        this(VERSION, blockTime, amount, hash, blockHeight, txId, staticPublicKeysProvided);
+    }
 
     public AuthorizedProofOfBurnData(int version,
                                      long blockTime,
