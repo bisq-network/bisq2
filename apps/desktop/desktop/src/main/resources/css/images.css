@@ -977,6 +977,18 @@
     -fx-image: url("/images/chat/message-status/try-again-white.png");
 }
 
+#undelivered-message-yellow {
+    -fx-image: url("/images/chat/message-status/undelivered-message-yellow.png");
+}
+
+#undelivered-message-grey {
+    -fx-image: url("/images/chat/message-status/undelivered-message-grey.png");
+}
+
+#undelivered-message-white {
+    -fx-image: url("/images/chat/message-status/undelivered-message-white.png");
+}
+
 
 /* ------------------------------------------------------------------------------------ */
 /* Chat Message Actions */
