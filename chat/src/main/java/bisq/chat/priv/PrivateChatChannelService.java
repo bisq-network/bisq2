@@ -175,6 +175,8 @@ public abstract class PrivateChatChannelService<
     protected abstract void processMessage(M message);
 
     // TODO: Make it class generic
+    // TODO: if the conversation is started while the other peer is offline,
+    //  we need to make sure that message is processed before reaction.
     protected void processMessageReaction(TwoPartyPrivateChatMessageReaction messageReaction) {
         findChannel(messageReaction.getChatChannelId())
                 .flatMap(channel -> channel.getChatMessages().stream()
