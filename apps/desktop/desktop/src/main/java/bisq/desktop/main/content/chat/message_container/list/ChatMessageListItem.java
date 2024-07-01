@@ -35,6 +35,7 @@ import bisq.common.observable.map.HashMapObserver;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.main.content.bisq_easy.BisqEasyServiceUtil;
 import bisq.desktop.main.content.components.ReputationScoreDisplay;
 import bisq.i18n.Res;
@@ -55,16 +56,14 @@ import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import com.google.common.base.Joiner;
-import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
 import javafx.geometry.Pos;
+import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -109,15 +108,11 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private final ReputationScore reputationScore;
     private final ReputationScoreDisplay reputationScoreDisplay = new ReputationScoreDisplay();
     private final boolean offerAlreadyTaken;
-    private final StringProperty messageDeliveryStatusTooltip = new SimpleStringProperty();
-    private final ObjectProperty<AwesomeIcon> messageDeliveryStatusIcon = new SimpleObjectProperty<>();
     private final long lastSeen;
     private final String lastSeenAsString;
     @Nullable
-    private MessageDeliveryStatus messageDeliveryStatus;
-    @Nullable
     private String messageId;
-    private Optional<String> messageDeliveryStatusIconColor = Optional.empty();
+    private Optional<ResendMessageService> resendMessageService;
     private final Set<Pin> mapPins = new HashSet<>();
     private final Set<Pin> statusPins = new HashSet<>();
     private final MarketPriceService marketPriceService;
@@ -126,6 +121,13 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private Optional<Pin> userReactionsPin = Optional.empty();
     private final HashMap<Reaction, Set<UserProfile>> userReactions = new HashMap<>();
     private final SimpleObjectProperty<Node> reactionsNode = new SimpleObjectProperty<>();
+    private final BooleanProperty shouldShouldTryAgain = new SimpleBooleanProperty();
+    private final ImageView successfulDeliveryIcon, pendingDeliveryIcon, failedDeliveryIcon;
+    private final Label tryAgainStatus;
+    private final SimpleObjectProperty<Node> messageDeliverStatusNode = new SimpleObjectProperty<>();
+    private final SimpleObjectProperty<Node> tryAgainStatusNode = new SimpleObjectProperty<>();
+    @Nullable
+    private MessageDeliveryStatus messageDeliveryStatus;
 
     public ChatMessageListItem(M chatMessage,
                                C chatChannel,
@@ -140,6 +142,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         this.chatChannel = chatChannel;
         this.marketPriceService = marketPriceService;
         this.userIdentityService = userIdentityService;
+        this.resendMessageService = resendMessageService;
 
         if (chatMessage instanceof PrivateChatMessage) {
             senderUserProfile = Optional.of(((PrivateChatMessage) chatMessage).getSenderUserProfile());
@@ -236,68 +239,20 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
             }));
         }
 
+        successfulDeliveryIcon = ImageUtil.getImageViewById("received-check-grey");
+        pendingDeliveryIcon = ImageUtil.getImageViewById("sent-message-grey");
+        failedDeliveryIcon = ImageUtil.getImageViewById("undelivered-message-yellow");
+        tryAgainStatus = new Label();
+        tryAgainStatus.setTooltip(new BisqTooltip(Res.get("chat.message.resendMessage")));
+        tryAgainStatus.setGraphic(ImageUtil.getImageViewById("try-again-grey"));
+        tryAgainStatus.getStyleClass().add("medium-text");
+        tryAgainStatus.setCursor(Cursor.HAND);
+
         mapPins.add(networkService.getMessageDeliveryStatusByMessageId().addObserver(new HashMapObserver<>() {
             @Override
             public void put(String messageId, Observable<MessageDeliveryStatus> value) {
                 if (messageId.equals(chatMessage.getId())) {
-                    // Delay to avoid ConcurrentModificationException
-                    UIThread.runOnNextRenderFrame(() -> {
-                        statusPins.add(value.addObserver(status -> {
-                            UIThread.run(() -> {
-                                messageDeliveryStatus = status;
-                                ChatMessageListItem.this.messageId = messageId;
-                                if (status != null) {
-                                    messageDeliveryStatusIconColor = Optional.empty();
-                                    messageDeliveryStatusTooltip.set(Res.get("chat.message.deliveryState." + status.name()));
-                                    switch (status) {
-                                        case CONNECTING:
-                                            // -bisq-mid-grey-20: #808080;
-                                            messageDeliveryStatusIconColor = Optional.of("#808080");
-                                            messageDeliveryStatusIcon.set(AwesomeIcon.SPINNER);
-                                            break;
-                                        case SENT:
-                                            // -bisq-light-grey-50: #eaeaea;
-                                            messageDeliveryStatusIconColor = Optional.of("#eaeaea");
-                                            messageDeliveryStatusIcon.set(AwesomeIcon.CIRCLE_ARROW_RIGHT);
-                                            break;
-                                        case ACK_RECEIVED:
-                                            // -bisq2-green-dim-50: #2b5724;
-                                            messageDeliveryStatusIconColor = Optional.of("#2b5724");
-                                            messageDeliveryStatusIcon.set(AwesomeIcon.OK_SIGN);
-                                            break;
-                                        case TRY_ADD_TO_MAILBOX:
-                                            // -bisq2-yellow-dim-30: #915b15;
-                                            messageDeliveryStatusIconColor = Optional.of("#915b15");
-                                            messageDeliveryStatusIcon.set(AwesomeIcon.SHARE_SIGN);
-                                            break;
-                                        case ADDED_TO_MAILBOX:
-                                            // -bisq2-yellow-dim-30: #915b15;
-                                            messageDeliveryStatusIconColor = Optional.of("#915b15");
-                                            messageDeliveryStatusIcon.set(AwesomeIcon.CLOUD_UPLOAD);
-                                            break;
-                                        case MAILBOX_MSG_RECEIVED:
-                                            // -bisq2-green-dim-50: #2b5724;
-                                            messageDeliveryStatusIconColor = Optional.of("#2b5724");
-                                            messageDeliveryStatusIcon.set(AwesomeIcon.CLOUD_DOWNLOAD);
-                                            break;
-                                        case FAILED:
-                                            if (resendMessageService.map(service -> service.canManuallyResendMessage(messageId)).orElse(false)) {
-                                                // -bisq2-yellow: #d0831f;
-                                                messageDeliveryStatusIconColor = Optional.of("#d0831f");
-                                                messageDeliveryStatusIcon.set(AwesomeIcon.REFRESH);
-                                                messageDeliveryStatusTooltip.set(Res.get("chat.message.deliveryState." + status.name()) + " " + Res.get("chat.message.resendMessage"));
-                                                break;
-                                            } else {
-                                                // -bisq2-red: #d23246;
-                                                messageDeliveryStatusIconColor = Optional.of("#d23246");
-                                                messageDeliveryStatusIcon.set(AwesomeIcon.EXCLAMATION_SIGN);
-                                                break;
-                                            }
-                                    }
-                                }
-                            });
-                        }));
-                    });
+                    updateMessageStatus(messageId, value);
                 }
             }
 
@@ -443,5 +398,44 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                 fiatPaymentMethods,
                 bisqEasyOffer.getAmountSpec(),
                 bisqEasyOffer.getPriceSpec());
+    }
+
+    private void updateMessageStatus(String messageId, Observable<MessageDeliveryStatus> value) {
+        // Delay to avoid ConcurrentModificationException
+        UIThread.runOnNextRenderFrame(() -> {
+            statusPins.add(value.addObserver(status -> {
+                UIThread.run(() -> {
+                    messageDeliveryStatus = status;
+                    ChatMessageListItem.this.messageId = messageId;
+                    boolean shouldShowTryAgain = false;
+                    if (status != null) {
+                        Label statusLabel = new Label();
+                        statusLabel.setTooltip(new BisqTooltip(Res.get("chat.message.deliveryState." + status.name())));
+                        statusLabel.getStyleClass().add("medium-text");
+                        switch (status) {
+                            // Successful delivery
+                            case ACK_RECEIVED:
+                            case MAILBOX_MSG_RECEIVED:
+                                statusLabel.setGraphic(successfulDeliveryIcon);
+                                break;
+                            // Pending deliver
+                            case CONNECTING:
+                            case SENT:
+                            case TRY_ADD_TO_MAILBOX:
+                            case ADDED_TO_MAILBOX:
+                                statusLabel.setGraphic(pendingDeliveryIcon);
+                                break;
+                            // Failed to deliver
+                            case FAILED:
+                                statusLabel.setGraphic(failedDeliveryIcon);
+                                shouldShowTryAgain = resendMessageService.map(service -> service.canManuallyResendMessage(messageId)).orElse(false);
+                                break;
+                        }
+                        messageDeliverStatusNode.set(statusLabel);
+                    }
+                    shouldShouldTryAgain.set(shouldShowTryAgain);
+                });
+            }));
+        });
     }
 }

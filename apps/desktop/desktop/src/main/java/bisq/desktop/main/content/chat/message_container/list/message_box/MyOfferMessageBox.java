@@ -75,7 +75,7 @@ public final class MyOfferMessageBox extends BubbleMessageBox {
     protected void setUpUserNameAndDateTime() {
         super.setUpUserNameAndDateTime();
 
-        userNameAndDateHBox = new HBox(10, dateTime, userName);
+        userNameAndDateHBox = new HBox(10, dateTimeHBox, userName);
         userNameAndDateHBox.setAlignment(Pos.CENTER_RIGHT);
         VBox.setMargin(userNameAndDateHBox, new Insets(0, 10, 5, 0));
     }

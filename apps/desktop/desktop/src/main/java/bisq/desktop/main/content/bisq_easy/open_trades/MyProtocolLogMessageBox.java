@@ -19,63 +19,48 @@ package bisq.desktop.main.content.bisq_easy.open_trades;
 
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
-import bisq.desktop.common.Icons;
-import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
-import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
-import de.jensd.fx.fontawesome.AwesomeDude;
-import javafx.geometry.Pos;
-import javafx.scene.Cursor;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 public class MyProtocolLogMessageBox extends PeerProtocolLogMessageBox {
-    protected final Label deliveryState;
-    private final Subscription messageDeliveryStatusIconPin;
+    private final Subscription shouldShowTryAgainPin, messageDeliveryStatusNodePin;
 
     public MyProtocolLogMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
                                    ChatMessagesListController controller) {
         super(item);
 
-        deliveryState = new Label();
-        deliveryState.setCursor(Cursor.HAND);
-        deliveryState.setTooltip(new BisqTooltip(true));
+        Label tryAgainLabel = item.getTryAgainStatus();
+        HBox deliveryStateHBox = new HBox();
+        HBox messageStatusHbox = new HBox(5, tryAgainLabel, deliveryStateHBox);
 
-        tradeLogMessageBg.getChildren().remove(message);
-        HBox hBox = new HBox(10, message, deliveryState);
-        hBox.setAlignment(Pos.CENTER);
-        tradeLogMessageBg.getChildren().add(0, hBox);
+        messageDeliveryStatusNodePin = EasyBind.subscribe(item.getMessageDeliverStatusNode(), node -> {
+            deliveryStateHBox.setManaged(node != null);
+            deliveryStateHBox.setVisible(node != null);
+            if (node != null) {
+                deliveryStateHBox.getChildren().setAll(node);
+            }
+        });
 
-        deliveryState.getTooltip().textProperty().bind(item.getMessageDeliveryStatusTooltip());
+        shouldShowTryAgainPin = EasyBind.subscribe(item.getShouldShouldTryAgain(), showTryAgain -> {
+            tryAgainLabel.setVisible(showTryAgain);
+            tryAgainLabel.setManaged(showTryAgain);
+            if (showTryAgain) {
+                tryAgainLabel.setOnMouseClicked(e -> controller.onResendMessage(item.getMessageId()));
+            } else {
+                tryAgainLabel.setOnMouseClicked(null);
+            }
+        });
 
-        messageDeliveryStatusIconPin = EasyBind.subscribe(item.getMessageDeliveryStatusIcon(), icon -> {
-                    deliveryState.setManaged(icon != null);
-                    deliveryState.setVisible(icon != null);
-                    if (icon != null) {
-                        AwesomeDude.setIcon(deliveryState, icon, AwesomeDude.DEFAULT_ICON_SIZE);
-                        item.getMessageDeliveryStatusIconColor().ifPresent(color ->
-                                Icons.setAwesomeIconColor(deliveryState, color));
-
-                        boolean allowResend = item.getMessageDeliveryStatus() == MessageDeliveryStatus.FAILED;
-                        String messageId = item.getMessageId();
-                        if (allowResend && controller.canResendMessage(messageId)) {
-                            deliveryState.setOnMouseClicked(e -> controller.onResendMessage(messageId));
-                            deliveryState.setCursor(Cursor.HAND);
-                        } else {
-                            deliveryState.setOnMouseClicked(null);
-                            deliveryState.setCursor(null);
-                        }
-                    }
-                }
-        );
+        dateTimeHBox.getChildren().add(0, messageStatusHbox);
     }
 
     @Override
     public void cleanup() {
-        deliveryState.getTooltip().textProperty().unbind();
-        messageDeliveryStatusIconPin.unsubscribe();
+        shouldShowTryAgainPin.unsubscribe();
+        messageDeliveryStatusNodePin.unsubscribe();
     }
 }
