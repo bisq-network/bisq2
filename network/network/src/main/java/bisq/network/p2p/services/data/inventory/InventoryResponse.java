@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data.inventory;
 
+import bisq.common.annotation.ExcludeForHash;
 import bisq.network.p2p.message.Response;
 import bisq.network.p2p.services.data.broadcast.BroadcastMessage;
 import lombok.EqualsAndHashCode;
@@ -27,6 +28,7 @@ import lombok.ToString;
 @ToString
 @EqualsAndHashCode
 public final class InventoryResponse implements BroadcastMessage, Response {
+    @ExcludeForHash
     private final Inventory inventory;
     private final int requestNonce;
 
