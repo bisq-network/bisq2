@@ -45,7 +45,7 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
 
     private final VBox takeOfferStatus, sendTakeOfferMessageFeedback, takeOfferSuccess;
     private final Button takeOfferSuccessButton;
-    private final Label priceDetails, paymentMethod, fee, feeDetails;
+    private final Label priceDetails, bitcoinPaymentMethod, fiatPaymentMethod, fee, feeDetails;
     private final GridPane content;
     private final MultiStyleLabelPane price;
     private Subscription takeOfferStatusPin;
@@ -118,13 +118,22 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
         content.add(priceDetails, 2, rowIndex);
 
         rowIndex++;
-        Label paymentMethodDescription = new Label(Res.get("bisqEasy.takeOffer.review.method"));
-        paymentMethodDescription.getStyleClass().add(descriptionStyle);
-        content.add(paymentMethodDescription, 0, rowIndex);
+        Label bitcoinPaymentMethodDescription = new Label(Res.get("bisqEasy.takeOffer.review.method.bitcoin"));
+        bitcoinPaymentMethodDescription.getStyleClass().add(descriptionStyle);
+        content.add(bitcoinPaymentMethodDescription, 0, rowIndex);
 
-        paymentMethod = new Label();
-        paymentMethod.getStyleClass().add(valueStyle);
-        content.add(paymentMethod, 1, rowIndex);
+        bitcoinPaymentMethod = new Label();
+        bitcoinPaymentMethod.getStyleClass().add(valueStyle);
+        content.add(bitcoinPaymentMethod, 1, rowIndex);
+
+        rowIndex++;
+        Label fiatPaymentMethodDescription = new Label(Res.get("bisqEasy.takeOffer.review.method.fiat"));
+        fiatPaymentMethodDescription.getStyleClass().add(descriptionStyle);
+        content.add(fiatPaymentMethodDescription, 0, rowIndex);
+
+        fiatPaymentMethod = new Label();
+        fiatPaymentMethod.getStyleClass().add(valueStyle);
+        content.add(fiatPaymentMethod, 1, rowIndex);
 
         rowIndex++;
         Label feeInfoDescription = new Label(Res.get("bisqEasy.tradeWizard.review.feeDescription"));
@@ -166,7 +175,11 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
         price.setText(model.getPrice());
         priceDetails.setText(model.getPriceDetails());
 
-        paymentMethod.setText(model.getPaymentMethod());
+        fiatPaymentMethod.setText(model.getFiatPaymentMethod());
+        bitcoinPaymentMethod.setText(model.getBitcoinPaymentMethod());
+
+        feeDetails.setVisible(model.isFeeDetailsVisible());
+        feeDetails.setManaged(model.isFeeDetailsVisible());
 
         fee.setText(model.getFee());
         feeDetails.setText(model.getFeeDetails());

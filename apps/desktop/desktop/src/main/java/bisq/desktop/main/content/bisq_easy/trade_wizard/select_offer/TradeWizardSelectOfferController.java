@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.trade_wizard.select_offer;
 
+import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.bisq_easy.BisqEasyService;
 import bisq.bisq_easy.NavigationTarget;
@@ -119,6 +120,13 @@ public class TradeWizardSelectOfferController implements Controller {
     public void setMarket(Market market) {
         if (market != null) {
             model.setMarket(market);
+            resetSelectedOffer();
+        }
+    }
+
+    public void setBitcoinPaymentMethods(List<BitcoinPaymentMethod> bitcoinPaymentMethods) {
+        if (bitcoinPaymentMethods != null) {
+            model.setBitcoinPaymentMethods(bitcoinPaymentMethods);
             resetSelectedOffer();
         }
     }
@@ -289,9 +297,18 @@ public class TradeWizardSelectOfferController implements Controller {
                     return false;
                 }
 
-                Set<FiatPaymentMethod> takersPaymentMethodSet = new HashSet<>(model.getFiatPaymentMethods());
+                Set<BitcoinPaymentMethod> takersBitcoinPaymentMethodSet = new HashSet<>(model.getBitcoinPaymentMethods());
+                List<BitcoinPaymentMethod> matchingBitcoinPaymentMethods = peersOffer.getBaseSidePaymentMethodSpecs().stream()
+                        .filter(e -> takersBitcoinPaymentMethodSet.contains(e.getPaymentMethod()))
+                        .map(PaymentMethodSpec::getPaymentMethod)
+                        .collect(Collectors.toList());
+                if (matchingBitcoinPaymentMethods.isEmpty()) {
+                    return false;
+                }
+
+                Set<FiatPaymentMethod> takersFiatPaymentMethodSet = new HashSet<>(model.getFiatPaymentMethods());
                 List<FiatPaymentMethod> matchingFiatPaymentMethods = peersOffer.getQuoteSidePaymentMethodSpecs().stream()
-                        .filter(e -> takersPaymentMethodSet.contains(e.getPaymentMethod()))
+                        .filter(e -> takersFiatPaymentMethodSet.contains(e.getPaymentMethod()))
                         .map(PaymentMethodSpec::getPaymentMethod)
                         .collect(Collectors.toList());
                 if (matchingFiatPaymentMethods.isEmpty()) {

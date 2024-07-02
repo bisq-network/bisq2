@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.trade_wizard.amount;
 
+import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
@@ -40,6 +41,8 @@ public class TradeWizardAmountModel implements Model {
     @Setter
     private Market market = MarketRepository.getDefault();
     @Setter
+    private List<BitcoinPaymentMethod> bitcoinPaymentMethods = new ArrayList<>();
+    @Setter
     private List<FiatPaymentMethod> fiatPaymentMethods = new ArrayList<>();
     @Setter
     private String headline;
@@ -58,6 +61,7 @@ public class TradeWizardAmountModel implements Model {
     public void reset() {
         direction = null;
         market = MarketRepository.getDefault();
+        bitcoinPaymentMethods = new ArrayList<>();
         fiatPaymentMethods = new ArrayList<>();
         headline = null;
         isCreateOfferMode = false;

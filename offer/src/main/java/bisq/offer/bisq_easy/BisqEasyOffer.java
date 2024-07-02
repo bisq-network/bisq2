@@ -1,6 +1,7 @@
 package bisq.offer.bisq_easy;
 
 
+import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.currency.Market;
@@ -39,6 +40,7 @@ public final class BisqEasyOffer extends Offer<BitcoinPaymentMethodSpec, FiatPay
                          Market market,
                          AmountSpec amountSpec,
                          PriceSpec priceSpec,
+                         List<BitcoinPaymentMethod> bitcoinPaymentMethods,
                          List<FiatPaymentMethod> fiatPaymentMethods,
                          String makersTradeTerms,
                          long requiredTotalReputationScore,
@@ -51,7 +53,7 @@ public final class BisqEasyOffer extends Offer<BitcoinPaymentMethodSpec, FiatPay
                 amountSpec,
                 priceSpec,
                 List.of(TradeProtocolType.BISQ_EASY),
-                PaymentMethodSpecUtil.createBitcoinMainChainPaymentMethodSpec(),
+                PaymentMethodSpecUtil.createBitcoinPaymentMethodSpecs(bitcoinPaymentMethods),
                 PaymentMethodSpecUtil.createFiatPaymentMethodSpecs(fiatPaymentMethods),
                 OfferOptionUtil.fromTradeTermsAndReputationScore(makersTradeTerms, requiredTotalReputationScore),
                 supportedLanguageCodes

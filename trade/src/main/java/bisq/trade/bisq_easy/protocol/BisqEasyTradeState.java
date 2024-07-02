@@ -106,7 +106,7 @@ public enum BisqEasyTradeState implements State {
     // *********************************************/
 
 
-    // Fiat settlement
+    // Fiat payment
     BUYER_SENT_FIAT_SENT_CONFIRMATION,
     SELLER_RECEIVED_FIAT_SENT_CONFIRMATION,
     SELLER_CONFIRMED_FIAT_RECEIPT,

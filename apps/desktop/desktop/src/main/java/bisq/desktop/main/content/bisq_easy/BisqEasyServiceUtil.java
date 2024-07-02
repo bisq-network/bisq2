@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy;
 
+import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.market_price.MarketPriceService;
@@ -88,28 +89,32 @@ public class BisqEasyServiceUtil {
 
     public static String createBasicOfferBookMessage(MarketPriceService marketPriceService,
                                                      Market market,
-                                                     String paymentMethodNames,
+                                                     String bitcoinPaymentMethodNames,
+                                                     String fiatPaymentMethodNames,
                                                      AmountSpec amountSpec,
                                                      PriceSpec priceSpec) {
         String priceInfo = String.format("%s %s", Res.get("bisqEasy.tradeWizard.review.chatMessage.price"), getFormattedPriceSpec(priceSpec));
         boolean hasAmountRange = amountSpec instanceof RangeAmountSpec;
         String quoteAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, amountSpec, priceSpec, market, hasAmountRange, true);
-        return Res.get("bisqEasy.tradeWizard.review.chatMessage.offerDetails", quoteAmountAsString, paymentMethodNames, priceInfo);
+        return Res.get("bisqEasy.tradeWizard.review.chatMessage.offerDetails", quoteAmountAsString, bitcoinPaymentMethodNames, fiatPaymentMethodNames, priceInfo);
     }
 
     public static String createOfferBookMessageFromPeerPerspective(String messageOwnerNickName,
                                                                    MarketPriceService marketPriceService,
                                                                    Direction direction,
                                                                    Market market,
+                                                                   List<BitcoinPaymentMethod> bitcoinPaymentMethods,
                                                                    List<FiatPaymentMethod> fiatPaymentMethods,
                                                                    AmountSpec amountSpec,
                                                                    PriceSpec priceSpec) {
-        String paymentMethodNames = PaymentMethodSpecFormatter.fromPaymentMethods(fiatPaymentMethods);
+        String bitcoinPaymentMethodNames= PaymentMethodSpecFormatter.fromPaymentMethods(bitcoinPaymentMethods);
+        String fiatPaymentMethodNames = PaymentMethodSpecFormatter.fromPaymentMethods(fiatPaymentMethods);
         return createOfferBookMessageFromPeerPerspective(messageOwnerNickName,
                 marketPriceService,
                 direction,
                 market,
-                paymentMethodNames,
+                bitcoinPaymentMethodNames,
+                fiatPaymentMethodNames,
                 amountSpec,
                 priceSpec);
     }
@@ -118,14 +123,15 @@ public class BisqEasyServiceUtil {
                                                                    MarketPriceService marketPriceService,
                                                                    Direction direction,
                                                                    Market market,
-                                                                   String paymentMethodNames,
+                                                                   String bitcoinPaymentMethodNames,
+                                                                   String fiatPaymentMethodNames,
                                                                    AmountSpec amountSpec,
                                                                    PriceSpec priceSpec) {
         String ownerNickName = StringUtils.truncate(messageOwnerNickName, 28);
         String priceInfo = String.format("%s %s", Res.get("bisqEasy.tradeWizard.review.chatMessage.price"), getFormattedPriceSpec(priceSpec));
         boolean hasAmountRange = amountSpec instanceof RangeAmountSpec;
         String quoteAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, amountSpec, priceSpec, market, hasAmountRange, true);
-        return buildOfferBookMessage(ownerNickName, direction, quoteAmountAsString, paymentMethodNames, priceInfo);
+        return buildOfferBookMessage(ownerNickName, direction, quoteAmountAsString, bitcoinPaymentMethodNames, fiatPaymentMethodNames, priceInfo);
     }
 
     public static String getFormattedPriceSpec(PriceSpec priceSpec) {
@@ -147,10 +153,13 @@ public class BisqEasyServiceUtil {
     private static String buildOfferBookMessage(String messageOwnerNickName,
                                                 Direction direction,
                                                 String quoteAmount,
-                                                String paymentMethods,
+                                                String bitcoinPaymentMethodNames,
+                                                String fiatPaymentMethodNames,
                                                 String price) {
         return direction == Direction.BUY
-                ? Res.get("bisqEasy.tradeWizard.review.chatMessage.peerMessage.sell", messageOwnerNickName, quoteAmount, paymentMethods, price)
-                : Res.get("bisqEasy.tradeWizard.review.chatMessage.peerMessage.buy", messageOwnerNickName, quoteAmount, paymentMethods, price);
+                ? Res.get("bisqEasy.tradeWizard.review.chatMessage.peerMessage.sell",
+                messageOwnerNickName, quoteAmount, bitcoinPaymentMethodNames, fiatPaymentMethodNames, price)
+                : Res.get("bisqEasy.tradeWizard.review.chatMessage.peerMessage.buy",
+                messageOwnerNickName, quoteAmount, bitcoinPaymentMethodNames, fiatPaymentMethodNames, price);
     }
 }

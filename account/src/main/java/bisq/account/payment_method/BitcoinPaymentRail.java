@@ -19,10 +19,10 @@ package bisq.account.payment_method;
 
 public enum BitcoinPaymentRail implements PaymentRail {
     CUSTOM,         // Custom defined payment rail by the user
-    MAIN_CHAIN,     // Native BTC
+    ONCHAIN,        // Native BTC
     LN,             // BTC on Lightning network (Layer 2)
     LBTC,           // BTC wrapped on the Liquid side chain
     RBTC,           // BTC wrapped on the RSK blockchain
-    WBTC,           // BTC wrapped on the ETH
+    WBTC,           // BTC wrapped on ETH
     OTHER
 }

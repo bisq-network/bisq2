@@ -27,15 +27,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class PaymentMethodSpecUtil {
-    public static List<BitcoinPaymentMethodSpec> createBitcoinPaymentMethodSpecs(List<BitcoinPaymentRail> bitcoinPaymentRails) {
-        return bitcoinPaymentRails.stream()
-                .map(BitcoinPaymentMethod::fromPaymentRail)
+    public static List<BitcoinPaymentMethodSpec> createBitcoinPaymentMethodSpecs(List<BitcoinPaymentMethod> paymentMethods) {
+        return paymentMethods.stream()
                 .map(BitcoinPaymentMethodSpec::new)
                 .collect(Collectors.toList());
     }
 
     public static List<BitcoinPaymentMethodSpec> createBitcoinMainChainPaymentMethodSpec() {
-        return createBitcoinPaymentMethodSpecs(List.of(BitcoinPaymentRail.MAIN_CHAIN));
+        return createBitcoinPaymentMethodSpecs(List.of(BitcoinPaymentMethod.fromPaymentRail(BitcoinPaymentRail.ONCHAIN)));
     }
 
     public static List<FiatPaymentMethodSpec> createFiatPaymentMethodSpecs(List<FiatPaymentMethod> paymentMethods) {

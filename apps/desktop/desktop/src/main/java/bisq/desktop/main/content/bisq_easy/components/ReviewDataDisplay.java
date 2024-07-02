@@ -80,12 +80,19 @@ public class ReviewDataDisplay {
         controller.model.getToReceiveCode().set(value);
     }
 
-    public void setPaymentMethodDescription(String value) {
-        controller.model.getPaymentMethodDescription().set(value);
+    public void setBitcoinPaymentMethodDescription(String value) {
+        controller.model.getBitcoinPaymentMethodDescription().set(value);
     }
 
-    public void setPaymentMethod(String value) {
-        controller.model.getPaymentMethod().set(value);
+    public void setFiatPaymentMethodDescription(String value) {
+        controller.model.getFiatPaymentMethodDescription().set(value);
+    }
+
+    public void setBitcoinPaymentMethod(String value) {
+        controller.model.getBitcoinPaymentMethod().set(value);
+    }
+    public void setFiatPaymentMethod(String value) {
+        controller.model.getFiatPaymentMethod().set(value);
     }
 
     private static class Controller implements bisq.desktop.common.view.Controller {
@@ -117,8 +124,10 @@ public class ReviewDataDisplay {
         private final StringProperty toReceiveAmountDescription = new SimpleStringProperty();
         private final StringProperty toReceiveAmount = new SimpleStringProperty();
         private final StringProperty toReceiveCode = new SimpleStringProperty();
-        private final StringProperty paymentMethodDescription = new SimpleStringProperty();
-        private final StringProperty paymentMethod = new SimpleStringProperty();
+        private final StringProperty bitcoinPaymentMethodDescription = new SimpleStringProperty();
+        private final StringProperty bitcoinPaymentMethod = new SimpleStringProperty();
+        private final StringProperty fiatPaymentMethodDescription = new SimpleStringProperty();
+        private final StringProperty fiatPaymentMethod = new SimpleStringProperty();
     }
 
     private static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
@@ -151,8 +160,8 @@ public class ReviewDataDisplay {
             toReceive.getFirst().getFirst().textProperty().bind(model.getToReceiveAmountDescription());
             toReceive.getFirst().getSecond().textProperty().bind(model.getToReceiveAmount());
             toReceive.getFirst().getThird().textProperty().bind(model.getToReceiveCode());
-            paymentMethod.getFirst().textProperty().bind(model.getPaymentMethodDescription());
-            paymentMethod.getSecond().textProperty().bind(model.getPaymentMethod());
+            paymentMethod.getFirst().textProperty().bind(model.getFiatPaymentMethodDescription());
+            paymentMethod.getSecond().textProperty().bind(model.getFiatPaymentMethod());
 
             isRangeAmountPin = EasyBind.subscribe(model.getIsRangeAmount(), isRangeAmount -> {
                 VBox toSendVBox = toSend.getThird();
