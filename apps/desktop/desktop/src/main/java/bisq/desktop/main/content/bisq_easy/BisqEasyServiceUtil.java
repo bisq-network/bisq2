@@ -89,13 +89,14 @@ public class BisqEasyServiceUtil {
 
     public static String createBasicOfferBookMessage(MarketPriceService marketPriceService,
                                                      Market market,
-                                                     String paymentMethodNames,
+                                                     String bitcoinPaymentMethodNames,
+                                                     String fiatPaymentMethodNames,
                                                      AmountSpec amountSpec,
                                                      PriceSpec priceSpec) {
         String priceInfo = String.format("%s %s", Res.get("bisqEasy.tradeWizard.review.chatMessage.price"), getFormattedPriceSpec(priceSpec));
         boolean hasAmountRange = amountSpec instanceof RangeAmountSpec;
         String quoteAmountAsString = OfferAmountFormatter.formatQuoteAmount(marketPriceService, amountSpec, priceSpec, market, hasAmountRange, true);
-        return Res.get("bisqEasy.tradeWizard.review.chatMessage.offerDetails", quoteAmountAsString, paymentMethodNames, priceInfo);
+        return Res.get("bisqEasy.tradeWizard.review.chatMessage.offerDetails", quoteAmountAsString, bitcoinPaymentMethodNames, fiatPaymentMethodNames, priceInfo);
     }
 
     public static String createOfferBookMessageFromPeerPerspective(String messageOwnerNickName,
