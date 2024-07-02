@@ -20,6 +20,7 @@ package bisq.common.monetary;
 import bisq.common.currency.TradeCurrency;
 import bisq.common.proto.PersistableProto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -127,4 +128,83 @@ public abstract class Monetary implements Comparable<Monetary>, PersistableProto
     public abstract String getName();
 
     public abstract Monetary round(int roundPrecision);
+
+    public long getRoundedValueForLowPrecision() {
+        return getRoundedValueForPrecision(lowPrecision);
+    }
+
+    public long getRoundedValueForPrecision(int precision) {
+        int scale = this.precision - precision;
+        double scaledDown = MathUtils.scaleDownByPowerOf10(value, scale);
+        double rounded = MathUtils.roundDouble(scaledDown, 0);
+        double scaledUp = MathUtils.scaleUpByPowerOf10(rounded, scale);
+        return MathUtils.roundDoubleToLong(scaledUp);
+    }
+
+    public boolean isLessThan(Monetary other) {
+        return isLessThan(other, precision);
+    }
+
+    public boolean isLessThan(Monetary other, int precision) {
+        return compare(other, precision, ComparisonOperator.IS_LESS_THAN);
+    }
+
+    public boolean isLessThanOrEqual(Monetary other) {
+        return isLessThanOrEqual(other, precision);
+    }
+
+    public boolean isLessThanOrEqual(Monetary other, int precision) {
+        return compare(other, precision, ComparisonOperator.IS_LESS_THAN_OR_EQUAL);
+    }
+
+    public boolean isGreaterThan(Monetary other) {
+        return isGreaterThan(other, precision);
+    }
+
+    public boolean isGreaterThan(Monetary other, int precision) {
+        return compare(other, precision, ComparisonOperator.IS_GREATER_THAN);
+    }
+
+    public boolean isGreaterThanOrEqual(Monetary other) {
+        return isGreaterThanOrEqual(other, precision);
+    }
+
+    public boolean isGreaterThanOrEqual(Monetary other, int precision) {
+        return compare(other, precision, ComparisonOperator.IS_GREATER_THAN_OR_EQUAL);
+    }
+
+    public boolean isEqual(Monetary other) {
+        return isEqual(other, precision);
+    }
+
+    public boolean isEqual(Monetary other, int precision) {
+        return compare(other, precision, ComparisonOperator.IS_EQUAL);
+    }
+
+    private boolean compare(Monetary other, int precision, ComparisonOperator comparisonOperator) {
+        long valueForPrecision = getRoundedValueForPrecision(precision);
+        long otherValueForPrecision = other.getRoundedValueForPrecision(precision);
+        switch (comparisonOperator) {
+            case IS_LESS_THAN:
+                return valueForPrecision < otherValueForPrecision;
+            case IS_LESS_THAN_OR_EQUAL:
+                return valueForPrecision <= otherValueForPrecision;
+            case IS_GREATER_THAN:
+                return valueForPrecision > otherValueForPrecision;
+            case IS_GREATER_THAN_OR_EQUAL:
+                return valueForPrecision >= otherValueForPrecision;
+            case IS_EQUAL:
+                return valueForPrecision == otherValueForPrecision;
+            default:
+                throw new IllegalArgumentException("Unsupported comparisonOperator: " + comparisonOperator);
+        }
+    }
+
+    private enum ComparisonOperator {
+        IS_LESS_THAN,
+        IS_LESS_THAN_OR_EQUAL,
+        IS_GREATER_THAN,
+        IS_GREATER_THAN_OR_EQUAL,
+        IS_EQUAL
+    }
 }
