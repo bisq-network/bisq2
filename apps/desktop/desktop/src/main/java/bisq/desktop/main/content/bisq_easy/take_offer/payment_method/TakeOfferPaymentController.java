@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.bisq_easy.take_offer.payment_method;
 
-import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
@@ -31,10 +30,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class TakeOfferPaymentController implements Controller {
@@ -47,18 +43,9 @@ public class TakeOfferPaymentController implements Controller {
         view = new TakeOfferPaymentView(model, this);
     }
 
-    public void init(BisqEasyOffer bisqEasyOffer, List<FiatPaymentMethod> takersPaymentMethods) {
+    public void init(BisqEasyOffer bisqEasyOffer) {
         List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs = bisqEasyOffer.getQuoteSidePaymentMethodSpecs();
         model.getOfferedSpecs().setAll(quoteSidePaymentMethodSpecs);
-        Set<FiatPaymentMethod> takersPaymentMethodSet = new HashSet<>(takersPaymentMethods);
-        List<FiatPaymentMethodSpec> matchingPaymentMethodSpecs = quoteSidePaymentMethodSpecs.stream()
-                .filter(e -> takersPaymentMethodSet.contains(e.getPaymentMethod()))
-                .collect(Collectors.toList());
-        // We only preselect if there is exactly one match
-        if (matchingPaymentMethodSpecs.size() == 1) {
-            model.getSelectedSpec().set(matchingPaymentMethodSpecs.get(0));
-        }
-
         model.setHeadline(bisqEasyOffer.getTakersDirection().isBuy() ?
                 Res.get("bisqEasy.takeOffer.paymentMethod.headline.buyer", bisqEasyOffer.getMarket().getQuoteCurrencyCode()) :
                 Res.get("bisqEasy.takeOffer.paymentMethod.headline.seller", bisqEasyOffer.getMarket().getQuoteCurrencyCode()));

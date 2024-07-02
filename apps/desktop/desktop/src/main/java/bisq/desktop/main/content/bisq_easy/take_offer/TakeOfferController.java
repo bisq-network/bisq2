@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.bisq_easy.take_offer;
 
-import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.utils.KeyHandlerUtil;
@@ -30,7 +29,6 @@ import bisq.desktop.main.content.bisq_easy.take_offer.payment_method.TakeOfferPa
 import bisq.desktop.main.content.bisq_easy.take_offer.review.TakeOfferReviewController;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
-import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import javafx.event.EventHandler;
@@ -42,7 +40,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -55,17 +52,9 @@ public class TakeOfferController extends NavigationController implements InitWit
     @ToString
     public static class InitData {
         private final BisqEasyOffer bisqEasyOffer;
-        private final Optional<AmountSpec> takersAmountSpec;
-        private final List<FiatPaymentMethod> takersPaymentMethods;
 
         public InitData(BisqEasyOffer bisqEasyOffer) {
-            this(bisqEasyOffer, Optional.empty(), new ArrayList<>());
-        }
-
-        public InitData(BisqEasyOffer bisqEasyOffer, Optional<AmountSpec> takersAmountSpec, List<FiatPaymentMethod> takersPaymentMethods) {
             this.bisqEasyOffer = bisqEasyOffer;
-            this.takersAmountSpec = takersAmountSpec;
-            this.takersPaymentMethods = takersPaymentMethods;
         }
     }
 
@@ -101,8 +90,8 @@ public class TakeOfferController extends NavigationController implements InitWit
     @Override
     public void initWithData(InitData initData) {
         BisqEasyOffer bisqEasyOffer = initData.getBisqEasyOffer();
-        takeOfferAmountController.init(bisqEasyOffer, initData.getTakersAmountSpec());
-        takeOfferPaymentController.init(bisqEasyOffer, initData.getTakersPaymentMethods());
+        takeOfferAmountController.init(bisqEasyOffer);
+        takeOfferPaymentController.init(bisqEasyOffer);
         takeOfferReviewController.init(bisqEasyOffer);
 
         model.setAmountVisible(bisqEasyOffer.hasAmountRange());
