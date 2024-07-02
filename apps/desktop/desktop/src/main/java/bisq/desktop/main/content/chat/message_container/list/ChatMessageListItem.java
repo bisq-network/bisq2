@@ -56,12 +56,7 @@ import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import com.google.common.base.Joiner;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
@@ -72,15 +67,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.text.DateFormat;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -437,9 +424,11 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
 
     private String getLocalizedOfferBookMessage(BisqEasyOfferbookMessage chatMessage) {
         BisqEasyOffer bisqEasyOffer = chatMessage.getBisqEasyOffer().orElseThrow();
+        String btcPaymentMethods = PaymentMethodSpecFormatter.fromPaymentMethodSpecs(bisqEasyOffer.getBaseSidePaymentMethodSpecs());
         String fiatPaymentMethods = PaymentMethodSpecFormatter.fromPaymentMethodSpecs(bisqEasyOffer.getQuoteSidePaymentMethodSpecs());
         return BisqEasyServiceUtil.createBasicOfferBookMessage(marketPriceService,
                 bisqEasyOffer.getMarket(),
+                btcPaymentMethods,
                 fiatPaymentMethods,
                 bisqEasyOffer.getAmountSpec(),
                 bisqEasyOffer.getPriceSpec());
