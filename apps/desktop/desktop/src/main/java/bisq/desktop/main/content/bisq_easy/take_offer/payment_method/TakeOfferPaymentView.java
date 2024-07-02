@@ -36,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class TakeOfferPaymentView extends View<VBox, TakeOfferPaymentModel, TakeOfferPaymentController> {
-    private final FlowPane flowPane;
+    private final FlowPane fiatFlowPane;
     private final ToggleGroup toggleGroup = new ToggleGroup();
     private final Label headlineLabel;
 
@@ -55,14 +55,14 @@ public class TakeOfferPaymentView extends View<VBox, TakeOfferPaymentModel, Take
         subtitleLabel.setWrapText(true);
         subtitleLabel.setMaxWidth(600);
 
-        flowPane = new FlowPane();
-        flowPane.setAlignment(Pos.CENTER);
-        flowPane.setVgap(20);
-        flowPane.setHgap(20);
+        fiatFlowPane = new FlowPane();
+        fiatFlowPane.setAlignment(Pos.CENTER);
+        fiatFlowPane.setVgap(20);
+        fiatFlowPane.setHgap(20);
 
         VBox.setMargin(headlineLabel, new Insets(-30, 0, 0, 0));
-        VBox.setMargin(flowPane, new Insets(25, 65, 30, 65));
-        root.getChildren().addAll(Spacer.fillVBox(), headlineLabel, subtitleLabel, flowPane, Spacer.fillVBox());
+        VBox.setMargin(fiatFlowPane, new Insets(25, 65, 30, 65));
+        root.getChildren().addAll(Spacer.fillVBox(), headlineLabel, subtitleLabel, fiatFlowPane, Spacer.fillVBox());
 
         root.setOnMousePressed(e -> root.requestFocus());
     }
@@ -70,23 +70,23 @@ public class TakeOfferPaymentView extends View<VBox, TakeOfferPaymentModel, Take
     @Override
     protected void onViewAttached() {
         headlineLabel.setText(model.getHeadline());
-        flowPane.getChildren().clear();
-        for (FiatPaymentMethodSpec spec : model.getSortedSpecs()) {
-            FiatPaymentMethod paymentMethod = spec.getPaymentMethod();
-            ChipToggleButton chipToggleButton = new ChipToggleButton(paymentMethod.getShortDisplayString(), toggleGroup);
-            if (!paymentMethod.isCustomPaymentMethod()) {
-                ImageView icon = ImageUtil.getImageViewById(paymentMethod.getName());
+        fiatFlowPane.getChildren().clear();
+        for (FiatPaymentMethodSpec spec : model.getSortedFiatPaymentMethodSpecs()) {
+            FiatPaymentMethod fiatPaymentMethod = spec.getPaymentMethod();
+            ChipToggleButton chipToggleButton = new ChipToggleButton(fiatPaymentMethod.getShortDisplayString(), toggleGroup);
+            if (!fiatPaymentMethod.isCustomPaymentMethod()) {
+                ImageView icon = ImageUtil.getImageViewById(fiatPaymentMethod.getName());
                 chipToggleButton.setLeftIcon(icon);
             }
-            chipToggleButton.setOnAction(() -> controller.onTogglePaymentMethod(spec, chipToggleButton.isSelected()));
-            chipToggleButton.setSelected(spec.equals(model.getSelectedSpec().get()));
-            flowPane.getChildren().add(chipToggleButton);
+            chipToggleButton.setOnAction(() -> controller.onToggleFiatPaymentMethod(spec, chipToggleButton.isSelected()));
+            chipToggleButton.setSelected(spec.equals(model.getSelectedFiatPaymentMethodSpec().get()));
+            fiatFlowPane.getChildren().add(chipToggleButton);
         }
     }
 
     @Override
     protected void onViewDetached() {
-        flowPane.getChildren().stream()
+        fiatFlowPane.getChildren().stream()
                 .filter(e -> e instanceof ChipToggleButton)
                 .map(e -> (ChipToggleButton) e)
                 .forEach(chipToggleButton -> chipToggleButton.setOnAction(null));

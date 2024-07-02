@@ -29,9 +29,9 @@ import lombok.Setter;
 
 @Getter
 public class TakeOfferPaymentModel implements Model {
-    private final ObservableList<FiatPaymentMethodSpec> offeredSpecs = FXCollections.observableArrayList();
-    private final SortedList<FiatPaymentMethodSpec> sortedSpecs = new SortedList<>(offeredSpecs);
-    private final ObjectProperty<FiatPaymentMethodSpec> selectedSpec = new SimpleObjectProperty<>();
+    private final ObservableList<FiatPaymentMethodSpec> offeredFiatPaymentMethodSpecs = FXCollections.observableArrayList();
+    private final SortedList<FiatPaymentMethodSpec> sortedFiatPaymentMethodSpecs = new SortedList<>(offeredFiatPaymentMethodSpecs);
+    private final ObjectProperty<FiatPaymentMethodSpec> selectedFiatPaymentMethodSpec = new SimpleObjectProperty<>();
     @Setter
     private String headline;
 }
