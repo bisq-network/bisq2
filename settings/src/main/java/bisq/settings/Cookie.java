@@ -20,12 +20,11 @@ package bisq.settings;
 import bisq.common.proto.PersistableProto;
 import bisq.settings.protobuf.CookieMapEntry;
 
+import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Serves as flexible container for persisting UI states, layout,...
@@ -33,12 +32,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Does not support observable properties.
  */
 public final class Cookie implements PersistableProto {
-    private final Map<CookieKey, String> map = new ConcurrentHashMap<>();
+    private final Map<CookieMapKey, String> map = new ConcurrentHashMap<>();
 
     public Cookie() {
     }
 
-    private Cookie(Map<CookieKey, String> map) {
+    private Cookie(Map<CookieMapKey, String> map) {
         this.map.putAll(map);
     }
 
@@ -46,9 +45,14 @@ public final class Cookie implements PersistableProto {
     public bisq.settings.protobuf.Cookie.Builder getBuilder(boolean serializeForHash) {
         return bisq.settings.protobuf.Cookie.newBuilder()
                 .addAllCookieMapEntries(map.entrySet().stream()
-                        .map(entry -> CookieMapEntry.newBuilder()
-                                .setCookieKey(entry.getKey().getKeyForProto())
-                                .setValue(entry.getValue()).build())
+                        .map(entry -> {
+                            CookieMapKey cookieMapKey = entry.getKey();
+                            CookieMapEntry.Builder builder = CookieMapEntry.newBuilder()
+                                    .setKey(cookieMapKey.getCookieKey().name())
+                                    .setValue(entry.getValue());
+                            cookieMapKey.getSubKey().ifPresent(builder::setSubKey);
+                            return builder.build();
+                        })
                         .collect(Collectors.toList()));
     }
 
@@ -60,19 +64,19 @@ public final class Cookie implements PersistableProto {
     static Cookie fromProto(bisq.settings.protobuf.Cookie proto) {
         return new Cookie(proto.getCookieMapEntriesList().stream()
                 .collect(Collectors.toMap(
-                        entry -> CookieKey.fromProto(entry.getCookieKey()),
+                        entry -> {
+                            Optional<String> subKey = entry.hasSubKey() ? Optional.of(entry.getSubKey()) : Optional.empty();
+                            return CookieMapKey.fromProto(entry.getKey(), subKey);
+                        },
                         CookieMapEntry::getValue)));
     }
 
     public Optional<String> asString(CookieKey key) {
-        return Optional.ofNullable(map.get(key));
+        return asString(key, null);
     }
 
-    public Optional<String> asString(CookieKey key, String subKey) {
-        checkNotNull(subKey, "subKey must not be null");
-        return Optional.ofNullable(map.get(key))
-                .filter(value -> subKey.equals(key.getSubKey()))
-                .map(value -> value.replace(key.getSubKey(), ""));
+    public Optional<String> asString(CookieKey key, @Nullable String subKey) {
+        return Optional.ofNullable(map.get(new CookieMapKey(key, subKey)));
     }
 
     public Optional<Double> asDouble(CookieKey key) {
@@ -107,14 +111,15 @@ public final class Cookie implements PersistableProto {
     }
 
     void putAsString(CookieKey key, String value) {
-        if (key.isUseSubKey() && value != null && !value.isEmpty()) {
-            value = key.getSubKey() + value;
-        }
-        map.put(key, value);
+        putAsString(key, null, value);
     }
 
-    void putAll(Map<CookieKey, String> map) {
-        map.forEach(this::putAsString);
+    void putAsString(CookieKey key, @Nullable String subKey, String value) {
+        map.put(new CookieMapKey(key, subKey), value);
+    }
+
+    void putAll(Map<CookieMapKey, String> map) {
+        map.forEach((key, value) -> putAsString(key.getCookieKey(), value));
     }
 
     void putAsBoolean(CookieKey key, boolean value) {
@@ -126,10 +131,14 @@ public final class Cookie implements PersistableProto {
     }
 
     void remove(CookieKey key) {
-        map.remove(key);
+        remove(key, null);
     }
 
-    Map<CookieKey, String> getMap() {
+    void remove(CookieKey key, @Nullable String subKey) {
+        map.remove(new CookieMapKey(key, subKey));
+    }
+
+    Map<CookieMapKey, String> getMap() {
         return map;
     }
 }
