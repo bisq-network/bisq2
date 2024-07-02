@@ -875,6 +875,18 @@
     -fx-font-family: "IBM Plex Sans Light";
 }
 
+.trade-wizard-review-payment-combo-box > .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled {
+    -fx-background-color: -bisq-dark-grey-50;
+}
+
+.trade-wizard-review-payment-combo-box > .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:hover {
+    -fx-background-color: -bisq-mid-grey-10;
+}
+
+.trade-wizard-review-payment-combo-box > .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected {
+    -fx-background-color: -bisq-dark-grey-30;
+}
+
 .trade-wizard-take-offer-send-message-headline {
     -fx-fill: -fx-light-text-color;
     -fx-text-fill: -fx-light-text-color;
