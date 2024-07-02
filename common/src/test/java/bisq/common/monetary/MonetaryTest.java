@@ -27,6 +27,87 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class MonetaryTest {
+
+    @Test
+    void testGetRoundedValueForPrecision() {
+        Monetary monetary = Monetary.from(123456789, "BTC");
+        assertEquals(100000000, monetary.getRoundedValueForPrecision(0));
+
+        monetary = Monetary.from(153456789, "BTC");
+        assertEquals(200000000, monetary.getRoundedValueForPrecision(0));
+
+        monetary = Monetary.from(123456789, "BTC");
+        assertEquals(123000000, monetary.getRoundedValueForPrecision(2));
+
+        monetary = Monetary.from(123456789, "BTC");
+        assertEquals(123456800, monetary.getRoundedValueForPrecision(6));
+
+
+        monetary = Monetary.from(123456789, "BTC");
+        assertEquals(123456789, monetary.getRoundedValueForPrecision(8));
+    }
+
+    @Test
+    void testComparision() {
+        Monetary monetary = Monetary.from(123456788, "BTC");
+        Monetary other = Monetary.from(123456789, "BTC");
+        assertTrue(monetary.isLessThan(other, 8));
+        assertTrue(monetary.isLessThanOrEqual(other, 7));
+        assertTrue(monetary.isEqual(other, 7));
+        assertTrue(other.isGreaterThan(monetary, 8));
+        assertTrue(other.isGreaterThanOrEqual(monetary, 7));
+        assertTrue(other.isEqual(monetary, 7));
+    }
+
+    @Test
+    void testGetRoundedValueForLowPrecision() {
+        Monetary monetary = Monetary.from(123456789, "BTC");
+        assertEquals(123460000, monetary.getRoundedValueForLowPrecision());
+
+        monetary = Monetary.from(123454999, "BTC");
+        assertEquals(123450000, monetary.getRoundedValueForLowPrecision());
+
+        monetary = Monetary.from(123455000, "BTC");
+        assertEquals(123460000, monetary.getRoundedValueForLowPrecision());
+
+        monetary = Monetary.from(123456789, "EUR");
+        assertEquals(123456800, monetary.getRoundedValueForLowPrecision());
+
+        monetary = Monetary.from(123456750, "EUR");
+        assertEquals(123456800, monetary.getRoundedValueForLowPrecision());
+
+        monetary = Monetary.from(123456749, "EUR");
+        assertEquals(123456700, monetary.getRoundedValueForLowPrecision());
+    }
+
+    @Test
+    void testBtcPrecision() {
+        Monetary monetary = Monetary.from(12345678, "BTC");
+        assertEquals(8, monetary.precision);
+        assertEquals(4, monetary.lowPrecision);
+    }
+
+    @Test
+    void testXmrPrecision() {
+        Monetary monetary = Monetary.from(12345678, "XMR");
+        assertEquals(12, monetary.precision);
+        assertEquals(4, monetary.lowPrecision);
+    }
+
+    @Test
+    void testBsqPrecision() {
+        Monetary monetary = Monetary.from(12345678, "BSQ");
+        assertEquals(2, monetary.precision);
+        assertEquals(2, monetary.lowPrecision);
+    }
+
+    @Test
+    void testFiatPrecision() {
+        Monetary monetary = Monetary.from(12345678, "EUR");
+        assertEquals(4, monetary.precision);
+        assertEquals(2, monetary.lowPrecision);
+    }
+
     @Test
     void testParse() {
         assertEquals(12345678, Coin.parse("0.12345678", "BTC", 8).getValue());
