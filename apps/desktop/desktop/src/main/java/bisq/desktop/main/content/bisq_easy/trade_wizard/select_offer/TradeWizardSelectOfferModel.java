@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.trade_wizard.select_offer;
 
+import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.common.currency.Market;
 import bisq.desktop.common.view.Model;
@@ -46,6 +47,8 @@ class TradeWizardSelectOfferModel implements Model {
     @Setter
     private Market market;
     @Setter
+    private List<BitcoinPaymentMethod> bitcoinPaymentMethods = new ArrayList<>();
+    @Setter
     private List<FiatPaymentMethod> fiatPaymentMethods = new ArrayList<>();
     @Setter
     private PriceSpec priceSpec = new MarketPriceSpec();
@@ -67,6 +70,7 @@ class TradeWizardSelectOfferModel implements Model {
     void reset() {
         direction = null;
         market = null;
+        bitcoinPaymentMethods.clear();
         fiatPaymentMethods.clear();
         priceSpec = new MarketPriceSpec();
         quoteSideAmountSpec = null;

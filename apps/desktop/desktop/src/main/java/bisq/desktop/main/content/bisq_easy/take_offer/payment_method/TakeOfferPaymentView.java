@@ -17,12 +17,14 @@
 
 package bisq.desktop.main.content.bisq_easy.take_offer.payment_method;
 
+import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.ChipToggleButton;
 import bisq.i18n.Res;
+import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -36,57 +38,116 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class TakeOfferPaymentView extends View<VBox, TakeOfferPaymentModel, TakeOfferPaymentController> {
-    private final FlowPane flowPane;
-    private final ToggleGroup toggleGroup = new ToggleGroup();
-    private final Label headlineLabel;
+    private final FlowPane fiatFlowPane, bitcoinFlowPane;
+    private final ToggleGroup bitcoinToggleGroup, fiatToggleGroup;
+    private final Label fiatHeadlineLabel, fiatSubtitleLabel, bitcoinHeadlineLabel, bitcoinSubtitleLabel;
 
     public TakeOfferPaymentView(TakeOfferPaymentModel model, TakeOfferPaymentController controller) {
         super(new VBox(10), model, controller);
 
         root.setAlignment(Pos.TOP_CENTER);
 
-        headlineLabel = new Label();
-        headlineLabel.getStyleClass().add("bisq-text-headline-2");
+        fiatHeadlineLabel = new Label();
+        fiatHeadlineLabel.getStyleClass().add("bisq-text-headline-2");
 
-        Label subtitleLabel = new Label(Res.get("bisqEasy.takeOffer.paymentMethod.subtitle"));
-        subtitleLabel.setTextAlignment(TextAlignment.CENTER);
-        subtitleLabel.setAlignment(Pos.CENTER);
-        subtitleLabel.getStyleClass().addAll("bisq-text-3");
-        subtitleLabel.setWrapText(true);
-        subtitleLabel.setMaxWidth(600);
+        fiatSubtitleLabel = new Label(Res.get("bisqEasy.takeOffer.paymentMethod.subtitle.fiat"));
+        fiatSubtitleLabel.setTextAlignment(TextAlignment.CENTER);
+        fiatSubtitleLabel.setAlignment(Pos.CENTER);
+        fiatSubtitleLabel.getStyleClass().addAll("bisq-text-3");
+        fiatSubtitleLabel.setWrapText(true);
+        fiatSubtitleLabel.setMaxWidth(600);
 
-        flowPane = new FlowPane();
-        flowPane.setAlignment(Pos.CENTER);
-        flowPane.setVgap(20);
-        flowPane.setHgap(20);
+        fiatToggleGroup = new ToggleGroup();
+        bitcoinToggleGroup = new ToggleGroup();
 
-        VBox.setMargin(headlineLabel, new Insets(-30, 0, 0, 0));
-        VBox.setMargin(flowPane, new Insets(25, 65, 30, 65));
-        root.getChildren().addAll(Spacer.fillVBox(), headlineLabel, subtitleLabel, flowPane, Spacer.fillVBox());
+        fiatFlowPane = new FlowPane();
+        fiatFlowPane.setAlignment(Pos.CENTER);
+        fiatFlowPane.setVgap(20);
+        fiatFlowPane.setHgap(20);
+
+        bitcoinHeadlineLabel = new Label();
+        bitcoinHeadlineLabel.getStyleClass().add("bisq-text-headline-2");
+
+        bitcoinSubtitleLabel = new Label(Res.get("bisqEasy.takeOffer.paymentMethod.subtitle.bitcoin"));
+        bitcoinSubtitleLabel.setTextAlignment(TextAlignment.CENTER);
+        bitcoinSubtitleLabel.setAlignment(Pos.CENTER);
+        bitcoinSubtitleLabel.getStyleClass().addAll("bisq-text-3");
+        bitcoinSubtitleLabel.setWrapText(true);
+        bitcoinSubtitleLabel.setMaxWidth(600);
+
+        bitcoinFlowPane = new FlowPane();
+        bitcoinFlowPane.setAlignment(Pos.CENTER);
+        bitcoinFlowPane.setVgap(20);
+        bitcoinFlowPane.setHgap(20);
+
+        VBox.setMargin(fiatHeadlineLabel, new Insets(-30, 0, 0, 0));
+        VBox.setMargin(fiatFlowPane, new Insets(25, 65, 10, 65));
+        VBox.setMargin(bitcoinHeadlineLabel, new Insets(10, 0, 0, 0));
+        VBox.setMargin(bitcoinFlowPane, new Insets(25, 65, 0, 65));
+        root.getChildren().addAll(Spacer.fillVBox(), fiatHeadlineLabel, fiatSubtitleLabel, fiatFlowPane,
+                bitcoinHeadlineLabel, bitcoinSubtitleLabel, bitcoinFlowPane, Spacer.fillVBox());
 
         root.setOnMousePressed(e -> root.requestFocus());
     }
 
     @Override
     protected void onViewAttached() {
-        headlineLabel.setText(model.getHeadline());
-        flowPane.getChildren().clear();
-        for (FiatPaymentMethodSpec spec : model.getSortedSpecs()) {
-            FiatPaymentMethod paymentMethod = spec.getPaymentMethod();
-            ChipToggleButton chipToggleButton = new ChipToggleButton(paymentMethod.getShortDisplayString(), toggleGroup);
-            if (!paymentMethod.isCustomPaymentMethod()) {
-                ImageView icon = ImageUtil.getImageViewById(paymentMethod.getName());
-                chipToggleButton.setLeftIcon(icon);
+        fiatHeadlineLabel.setVisible(model.isFiatMethodVisible());
+        fiatHeadlineLabel.setManaged(model.isFiatMethodVisible());
+        fiatSubtitleLabel.setVisible(model.isFiatMethodVisible());
+        fiatSubtitleLabel.setManaged(model.isFiatMethodVisible());
+        fiatFlowPane.setVisible(model.isFiatMethodVisible());
+        fiatFlowPane.setManaged(model.isFiatMethodVisible());
+        if (model.isFiatMethodVisible()) {
+            fiatHeadlineLabel.setText(model.getFiatHeadline());
+            for (FiatPaymentMethodSpec spec : model.getSortedFiatPaymentMethodSpecs()) {
+                FiatPaymentMethod paymentMethod = spec.getPaymentMethod();
+                ChipToggleButton chipToggleButton = new ChipToggleButton(paymentMethod.getShortDisplayString(), fiatToggleGroup);
+                if (!paymentMethod.isCustomPaymentMethod()) {
+                    ImageView icon = ImageUtil.getImageViewById(paymentMethod.getName());
+                    chipToggleButton.setLeftIcon(icon);
+                }
+                chipToggleButton.setOnAction(() -> controller.onToggleFiatPaymentMethod(spec, chipToggleButton.isSelected()));
+                chipToggleButton.setSelected(spec.equals(model.getSelectedFiatPaymentMethodSpec().get()));
+                fiatFlowPane.getChildren().add(chipToggleButton);
             }
-            chipToggleButton.setOnAction(() -> controller.onTogglePaymentMethod(spec, chipToggleButton.isSelected()));
-            chipToggleButton.setSelected(spec.equals(model.getSelectedSpec().get()));
-            flowPane.getChildren().add(chipToggleButton);
+        }
+
+        bitcoinHeadlineLabel.setVisible(model.isBitcoinMethodVisible());
+        bitcoinHeadlineLabel.setManaged(model.isBitcoinMethodVisible());
+        bitcoinSubtitleLabel.setVisible(model.isBitcoinMethodVisible());
+        bitcoinSubtitleLabel.setManaged(model.isBitcoinMethodVisible());
+        bitcoinFlowPane.setVisible(model.isBitcoinMethodVisible());
+        bitcoinFlowPane.setManaged(model.isBitcoinMethodVisible());
+        if (model.isBitcoinMethodVisible()) {
+            bitcoinHeadlineLabel.setText(model.getBitcoinHeadline());
+            for (BitcoinPaymentMethodSpec spec : model.getSortedBitcoinPaymentMethodSpecs()) {
+                BitcoinPaymentMethod paymentMethod = spec.getPaymentMethod();
+                ChipToggleButton chipToggleButton = new ChipToggleButton(paymentMethod.getShortDisplayString(), bitcoinToggleGroup);
+                if (!paymentMethod.isCustomPaymentMethod()) {
+                    ImageView icon = ImageUtil.getImageViewById(paymentMethod.getName());
+                    chipToggleButton.setLeftIcon(icon);
+                }
+                chipToggleButton.setOnAction(() -> controller.onToggleBitcoinPaymentMethod(spec, chipToggleButton.isSelected()));
+                chipToggleButton.setSelected(spec.equals(model.getSelectedBitcoinPaymentMethodSpec().get()));
+                bitcoinFlowPane.getChildren().add(chipToggleButton);
+            }
+
+            if (!model.isFiatMethodVisible()) {
+                VBox.setMargin(bitcoinHeadlineLabel, new Insets(-30, 0, 0, 0));
+            }
         }
     }
 
     @Override
     protected void onViewDetached() {
-        flowPane.getChildren().stream()
+        fiatFlowPane.getChildren().clear();
+        fiatFlowPane.getChildren().stream()
+                .filter(e -> e instanceof ChipToggleButton)
+                .map(e -> (ChipToggleButton) e)
+                .forEach(chipToggleButton -> chipToggleButton.setOnAction(null));
+        bitcoinFlowPane.getChildren().clear();
+        bitcoinFlowPane.getChildren().stream()
                 .filter(e -> e instanceof ChipToggleButton)
                 .map(e -> (ChipToggleButton) e)
                 .forEach(chipToggleButton -> chipToggleButton.setOnAction(null));

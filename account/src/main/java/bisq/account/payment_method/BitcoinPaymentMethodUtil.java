@@ -20,6 +20,7 @@ package bisq.account.payment_method;
 import bisq.account.protocol_type.TradeProtocolType;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class BitcoinPaymentMethodUtil {
     public static BitcoinPaymentMethod getPaymentMethod(String name) {
@@ -34,18 +35,24 @@ public class BitcoinPaymentMethodUtil {
         return BitcoinPaymentMethod.fromCustomName(name);
     }
 
-    public static List<BitcoinPaymentRail> getPaymentRails() {
+    public static List<BitcoinPaymentMethod> getAllPaymentMethods() {
+        return getAllPaymentRails().stream()
+                .map(BitcoinPaymentMethod::fromPaymentRail)
+                .collect(Collectors.toList());
+    }
+
+    public static List<BitcoinPaymentRail> getAllPaymentRails() {
         return List.of(BitcoinPaymentRail.values());
     }
 
     public static List<BitcoinPaymentRail> getPaymentRails(TradeProtocolType protocolType) {
         switch (protocolType) {
             case BISQ_EASY:
-                return getPaymentRails();               // Support any BTC rail 
+                return getAllPaymentRails();               // Support any BTC rail
             case MULTISIG:
             case MONERO_SWAP:
             case BSQ_SWAP:
-                return List.of(BitcoinPaymentRail.MAIN_CHAIN);    // Require BTC main chain
+                return List.of(BitcoinPaymentRail.ONCHAIN);    // Require BTC main chain
             case LIGHTNING_ESCROW:
                 return List.of(BitcoinPaymentRail.LN);
             case LIQUID_SWAP:

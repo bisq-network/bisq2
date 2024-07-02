@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.trade_wizard.payment_method;
+package bisq.desktop.main.content.bisq_easy.trade_wizard.fiat_payment_method;
 
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.common.currency.Market;
@@ -29,7 +29,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Getter
-public class TradeWizardPaymentMethodModel implements Model {
+public class TradeWizardFiatPaymentMethodModel implements Model {
     @Setter
     private Direction direction;
     @Setter
