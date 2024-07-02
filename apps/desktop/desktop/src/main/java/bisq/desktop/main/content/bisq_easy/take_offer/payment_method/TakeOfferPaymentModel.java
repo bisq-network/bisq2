@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.take_offer.payment_method;
 
+import bisq.common.currency.Market;
 import bisq.desktop.common.view.Model;
 import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
@@ -37,6 +38,8 @@ public class TakeOfferPaymentModel implements Model {
     private boolean bitcoinMethodVisible;
     @Setter
     private String bitcoinHeadline;
+    @Setter
+    private Market market;
 
     private final ObservableList<FiatPaymentMethodSpec> offeredFiatPaymentMethodSpecs = FXCollections.observableArrayList();
     private final SortedList<FiatPaymentMethodSpec> sortedFiatPaymentMethodSpecs = new SortedList<>(offeredFiatPaymentMethodSpecs);

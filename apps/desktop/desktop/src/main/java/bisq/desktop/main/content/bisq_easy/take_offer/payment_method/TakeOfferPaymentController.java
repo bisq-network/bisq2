@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.take_offer.payment_method;
 
 import bisq.account.payment_method.BitcoinPaymentRail;
+import bisq.account.payment_method.FiatPaymentRail;
 import bisq.common.util.ExceptionUtil;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
@@ -51,6 +52,7 @@ public class TakeOfferPaymentController implements Controller {
     }
 
     public void init(BisqEasyOffer bisqEasyOffer) {
+        model.setMarket(bisqEasyOffer.getMarket());
         model.getOfferedBitcoinPaymentMethodSpecs().setAll(bisqEasyOffer.getBaseSidePaymentMethodSpecs());
         model.getOfferedFiatPaymentMethodSpecs().setAll(bisqEasyOffer.getQuoteSidePaymentMethodSpecs());
         model.setBitcoinHeadline(bisqEasyOffer.getTakersDirection().isBuy() ?
@@ -103,6 +105,17 @@ public class TakeOfferPaymentController implements Controller {
                         log.warn("Could not create BitcoinPaymentRail from persisted name {}. {}", name, ExceptionUtil.getMessageOrToString(e));
                     }
                 });
+        settingsService.getCookie().asString(CookieKey.TAKE_OFFER_SELECTED_FIAT_METHOD, getCookieSubKey())
+                .ifPresent(name -> {
+                    try {
+                        FiatPaymentRail persisted = FiatPaymentRail.valueOf(FiatPaymentRail.class, name);
+                        model.getOfferedFiatPaymentMethodSpecs().stream()
+                                .filter(spec -> spec.getPaymentMethod().getPaymentRail() == persisted).findAny()
+                                .ifPresent(spec -> model.getSelectedFiatPaymentMethodSpec().set(spec));
+                    } catch (Exception e) {
+                        log.warn("Could not create FiatPaymentRail from persisted name {}. {}", name, ExceptionUtil.getMessageOrToString(e));
+                    }
+                });
     }
 
     @Override
@@ -112,16 +125,22 @@ public class TakeOfferPaymentController implements Controller {
     void onToggleFiatPaymentMethod(FiatPaymentMethodSpec spec, boolean selected) {
         if (selected && spec != null) {
             model.getSelectedFiatPaymentMethodSpec().set(spec);
+            settingsService.setCookie(CookieKey.TAKE_OFFER_SELECTED_FIAT_METHOD, getCookieSubKey(),
+                    spec.getPaymentMethod().getPaymentRail().name());
         } else {
             model.getSelectedFiatPaymentMethodSpec().set(null);
         }
+    }
+
+    private String getCookieSubKey() {
+        return model.getMarket().getMarketCodes();
     }
 
     void onToggleBitcoinPaymentMethod(BitcoinPaymentMethodSpec spec, boolean selected) {
         if (selected && spec != null) {
             model.getSelectedBitcoinPaymentMethodSpec().set(spec);
             settingsService.setCookie(CookieKey.TAKE_OFFER_SELECTED_BITCOIN_METHOD,
-                    model.getSelectedBitcoinPaymentMethodSpec().get().getPaymentMethod().getPaymentRail().name());
+                    spec.getPaymentMethod().getPaymentRail().name());
         } else {
             model.getSelectedBitcoinPaymentMethodSpec().set(null);
         }
