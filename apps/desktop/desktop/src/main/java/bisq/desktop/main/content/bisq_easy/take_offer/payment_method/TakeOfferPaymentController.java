@@ -17,6 +17,8 @@
 
 package bisq.desktop.main.content.bisq_easy.take_offer.payment_method;
 
+import bisq.account.payment_method.BitcoinPaymentRail;
+import bisq.common.util.ExceptionUtil;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
@@ -25,6 +27,8 @@ import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import bisq.offer.payment_method.PaymentMethodSpec;
+import bisq.settings.CookieKey;
+import bisq.settings.SettingsService;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.scene.layout.Region;
 import lombok.Getter;
@@ -37,8 +41,11 @@ public class TakeOfferPaymentController implements Controller {
     private final TakeOfferPaymentModel model;
     @Getter
     private final TakeOfferPaymentView view;
+    private final SettingsService settingsService;
 
     public TakeOfferPaymentController(ServiceProvider serviceProvider) {
+        settingsService = serviceProvider.getSettingsService();
+
         model = new TakeOfferPaymentModel();
         view = new TakeOfferPaymentView(model, this);
     }
@@ -84,6 +91,18 @@ public class TakeOfferPaymentController implements Controller {
         if (model.getOfferedFiatPaymentMethodSpecs().size() == 1) {
             model.getSelectedFiatPaymentMethodSpec().set(model.getOfferedFiatPaymentMethodSpecs().get(0));
         }
+
+        settingsService.getCookie().asString(CookieKey.TAKE_OFFER_SELECTED_BITCOIN_METHOD)
+                .ifPresent(name -> {
+                    try {
+                        BitcoinPaymentRail persisted = BitcoinPaymentRail.valueOf(BitcoinPaymentRail.class, name);
+                        model.getOfferedBitcoinPaymentMethodSpecs().stream()
+                                .filter(spec -> spec.getPaymentMethod().getPaymentRail() == persisted).findAny()
+                                .ifPresent(spec -> model.getSelectedBitcoinPaymentMethodSpec().set(spec));
+                    } catch (Exception e) {
+                        log.warn("Could not create BitcoinPaymentRail from persisted name {}. {}", name, ExceptionUtil.getMessageOrToString(e));
+                    }
+                });
     }
 
     @Override
@@ -101,6 +120,8 @@ public class TakeOfferPaymentController implements Controller {
     void onToggleBitcoinPaymentMethod(BitcoinPaymentMethodSpec spec, boolean selected) {
         if (selected && spec != null) {
             model.getSelectedBitcoinPaymentMethodSpec().set(spec);
+            settingsService.setCookie(CookieKey.TAKE_OFFER_SELECTED_BITCOIN_METHOD,
+                    model.getSelectedBitcoinPaymentMethodSpec().get().getPaymentMethod().getPaymentRail().name());
         } else {
             model.getSelectedBitcoinPaymentMethodSpec().set(null);
         }

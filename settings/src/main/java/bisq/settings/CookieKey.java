@@ -42,7 +42,8 @@ public enum CookieKey {
     MARKETS_FILTER,
     MARKET_SORT_TYPE,
     SELECTED_MARKET_CODES,
-    CREATE_OFFER_BITCOIN_METHODS;
+    CREATE_OFFER_BITCOIN_METHODS,
+    TAKE_OFFER_SELECTED_BITCOIN_METHOD;
 
     @Getter
     private final boolean useSubKey;
