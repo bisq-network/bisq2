@@ -213,6 +213,9 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
         fiatPaymentMethodDescription.setText(model.getFiatPaymentMethodDescription());
         fiatPaymentMethod.setText(model.getFiatPaymentMethod());
 
+        feeDetails.setVisible(model.isFeeDetailsVisible());
+        feeDetails.setManaged(model.isFeeDetailsVisible());
+
         fee.setText(model.getFee());
         feeDetails.setText(model.getFeeDetails());
 

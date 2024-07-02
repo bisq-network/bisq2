@@ -89,7 +89,6 @@ class TradeWizardReviewModel implements Model {
     private String fiatPaymentMethodDescription;
     @Setter
     private String fiatPaymentMethod;
-
     @Setter
     private String priceDescription;
     @Setter
@@ -100,6 +99,8 @@ class TradeWizardReviewModel implements Model {
     private String fee;
     @Setter
     private String feeDetails;
+    @Setter
+    private boolean feeDetailsVisible;
     private final ObservableList<BitcoinPaymentMethod> takersBitcoinPaymentMethods = FXCollections.observableArrayList();
     private final ObservableList<FiatPaymentMethod> takersFiatPaymentMethods = FXCollections.observableArrayList();
     private final BooleanProperty showCreateOfferSuccess = new SimpleBooleanProperty();

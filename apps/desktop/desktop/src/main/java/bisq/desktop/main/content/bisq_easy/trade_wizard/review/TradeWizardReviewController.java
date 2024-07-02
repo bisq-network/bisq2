@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.trade_wizard.review;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
+import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.account.payment_method.FiatPaymentMethod;
 import bisq.bisq_easy.BisqEasyService;
 import bisq.bisq_easy.NavigationTarget;
@@ -318,14 +319,6 @@ public class TradeWizardReviewController implements Controller {
             }
         }
 
-        model.setFee(direction.isBuy()
-                ? Res.get("bisqEasy.tradeWizard.review.fee.buyer")
-                : Res.get("bisqEasy.tradeWizard.review.fee.seller"));
-
-        model.setFeeDetails(direction.isBuy()
-                ? Res.get("bisqEasy.tradeWizard.review.feeDetails.buyer")
-                : Res.get("bisqEasy.tradeWizard.review.feeDetails.seller"));
-
         if (isCreateOfferMode) {
             model.setHeadline(Res.get("bisqEasy.tradeWizard.review.headline.maker"));
             model.setDetailsHeadline(Res.get("bisqEasy.tradeWizard.review.detailsHeadline.maker").toUpperCase());
@@ -492,6 +485,24 @@ public class TradeWizardReviewController implements Controller {
     @Override
     public void onActivate() {
         model.getShowCreateOfferSuccess().set(false);
+        Direction direction = model.getBisqEasyOffer().getDirection();
+        boolean isOnchain = model.getBitcoinPaymentMethods().stream().anyMatch(e -> e.getPaymentRail() == BitcoinPaymentRail.ONCHAIN);
+        model.setFeeDetailsVisible(isOnchain);
+        if (direction.isSell()) {
+            if (isOnchain) {
+                model.setFee(Res.get("bisqEasy.tradeWizard.review.sellerPaysMinerFee"));
+                model.setFeeDetails(Res.get("bisqEasy.tradeWizard.review.noTradeFeesLong"));
+            } else {
+                model.setFee(Res.get("bisqEasy.tradeWizard.review.noTradeFees"));
+            }
+        } else {
+            if (isOnchain) {
+                model.setFee(Res.get("bisqEasy.tradeWizard.review.noTradeFees"));
+                model.setFeeDetails(Res.get("bisqEasy.tradeWizard.review.sellerPaysMinerFeeLong"));
+            } else {
+                model.setFee(Res.get("bisqEasy.tradeWizard.review.noTradeFees"));
+            }
+        }
     }
 
     @Override

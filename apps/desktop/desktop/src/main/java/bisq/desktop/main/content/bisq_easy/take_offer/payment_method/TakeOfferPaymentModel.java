@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.bisq_easy.take_offer.payment_method;
 
 import bisq.desktop.common.view.Model;
+import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -29,9 +30,19 @@ import lombok.Setter;
 
 @Getter
 public class TakeOfferPaymentModel implements Model {
+    private final ObservableList<BitcoinPaymentMethodSpec> offeredBitcoinPaymentMethodSpecs = FXCollections.observableArrayList();
+    private final SortedList<BitcoinPaymentMethodSpec> sortedBitcoinPaymentMethodSpecs = new SortedList<>(offeredBitcoinPaymentMethodSpecs);
+    private final ObjectProperty<BitcoinPaymentMethodSpec> selectedBitcoinPaymentMethodSpec = new SimpleObjectProperty<>();
+    @Setter
+    private boolean bitcoinMethodVisible;
+    @Setter
+    private String bitcoinHeadline;
+
     private final ObservableList<FiatPaymentMethodSpec> offeredFiatPaymentMethodSpecs = FXCollections.observableArrayList();
     private final SortedList<FiatPaymentMethodSpec> sortedFiatPaymentMethodSpecs = new SortedList<>(offeredFiatPaymentMethodSpecs);
     private final ObjectProperty<FiatPaymentMethodSpec> selectedFiatPaymentMethodSpec = new SimpleObjectProperty<>();
     @Setter
-    private String headline;
+    private boolean fiatMethodVisible;
+    @Setter
+    private String fiatHeadline;
 }

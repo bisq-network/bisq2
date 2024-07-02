@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.take_offer.review;
 
+import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
@@ -43,6 +44,7 @@ import bisq.offer.Direction;
 import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.amount.spec.FixedAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.FloatPriceSpec;
@@ -120,7 +122,6 @@ public class TakeOfferReviewController implements Controller {
                     .ifPresent(model::setTakersQuoteSideAmount);
         }
 
-        Direction direction = bisqEasyOffer.getTakersDirection();
         PriceSpec priceSpec = bisqEasyOffer.getPriceSpec();
         model.setSellersPriceSpec(priceSpec);
 
@@ -129,14 +130,6 @@ public class TakeOfferReviewController implements Controller {
 
         applyPriceQuote(priceQuote);
         applyPriceDetails(priceSpec, market);
-
-        model.setFee(direction.isBuy()
-                ? Res.get("bisqEasy.takeOffer.review.fee.buyer")
-                : Res.get("bisqEasy.takeOffer.review.fee.seller"));
-
-        model.setFeeDetails(direction.isBuy()
-                ? Res.get("bisqEasy.takeOffer.review.feeDetails.buyer")
-                : Res.get("bisqEasy.takeOffer.review.feeDetails.seller"));
     }
 
     public void setTakersBaseSideAmount(Monetary amount) {
@@ -151,11 +144,17 @@ public class TakeOfferReviewController implements Controller {
         }
     }
 
+    public void setBitcoinPaymentMethodSpec(BitcoinPaymentMethodSpec spec) {
+        if (spec != null) {
+            model.setBitcoinPaymentMethodSpec(spec);
+            model.setBitcoinPaymentMethod(spec.getDisplayString());
+        }
+    }
+
     public void setFiatPaymentMethodSpec(FiatPaymentMethodSpec spec) {
         if (spec != null) {
             model.setFiatPaymentMethodSpec(spec);
-            String displayString = spec.getDisplayString();
-            model.setPaymentMethod(displayString);
+            model.setFiatPaymentMethod(spec.getDisplayString());
         }
     }
 
@@ -188,6 +187,7 @@ public class TakeOfferReviewController implements Controller {
     private void doTakeOffer(BisqEasyOffer bisqEasyOffer, UserIdentity takerIdentity, Optional<UserProfile> mediator) {
         Monetary takersBaseSideAmount = model.getTakersBaseSideAmount();
         Monetary takersQuoteSideAmount = model.getTakersQuoteSideAmount();
+        BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec = model.getBitcoinPaymentMethodSpec();
         FiatPaymentMethodSpec fiatPaymentMethodSpec = model.getFiatPaymentMethodSpec();
         PriceSpec sellersPriceSpec = model.getSellersPriceSpec();
         long marketPrice = model.getMarketPrice();
@@ -195,7 +195,7 @@ public class TakeOfferReviewController implements Controller {
                 bisqEasyOffer,
                 takersBaseSideAmount,
                 takersQuoteSideAmount,
-                bisqEasyOffer.getBaseSidePaymentMethodSpecs().get(0),
+                bitcoinPaymentMethodSpec,
                 fiatPaymentMethodSpec,
                 mediator,
                 sellersPriceSpec,
@@ -253,14 +253,23 @@ public class TakeOfferReviewController implements Controller {
         Monetary fixQuoteSideAmount = model.getTakersQuoteSideAmount();
         String formattedBaseAmount = AmountFormatter.formatAmount(fixBaseSideAmount, false);
         String formattedQuoteAmount = AmountFormatter.formatAmount(fixQuoteSideAmount);
-        Direction direction = model.getBisqEasyOffer().getTakersDirection();
-        if (direction.isSell()) {
+        Direction takersDirection = model.getBisqEasyOffer().getTakersDirection();
+        boolean isOnchain = model.getBitcoinPaymentMethodSpec().getPaymentMethod().getPaymentRail() == BitcoinPaymentRail.ONCHAIN;
+        model.setFeeDetailsVisible(isOnchain);
+        if (takersDirection.isSell()) {
             toSendAmountDescription = Res.get("bisqEasy.tradeWizard.review.toSend");
             toReceiveAmountDescription = Res.get("bisqEasy.tradeWizard.review.toReceive");
             toSendAmount = formattedBaseAmount;
             toSendCode = fixBaseSideAmount.getCode();
             toReceiveAmount = formattedQuoteAmount;
             toReceiveCode = fixQuoteSideAmount.getCode();
+
+            if (isOnchain) {
+                model.setFee(Res.get("bisqEasy.takeOffer.review.sellerPaysMinerFee"));
+                model.setFeeDetails(Res.get("bisqEasy.takeOffer.review.noTradeFeesLong"));
+            } else {
+                model.setFee(Res.get("bisqEasy.takeOffer.review.noTradeFees"));
+            }
         } else {
             toSendAmountDescription = Res.get("bisqEasy.tradeWizard.review.toPay");
             toReceiveAmountDescription = Res.get("bisqEasy.tradeWizard.review.toReceive");
@@ -268,9 +277,17 @@ public class TakeOfferReviewController implements Controller {
             toSendCode = fixQuoteSideAmount.getCode();
             toReceiveAmount = formattedBaseAmount;
             toReceiveCode = fixBaseSideAmount.getCode();
+
+            if (isOnchain) {
+                model.setFee(Res.get("bisqEasy.takeOffer.review.noTradeFees"));
+                model.setFeeDetails(Res.get("bisqEasy.takeOffer.review.sellerPaysMinerFeeLong"));
+            } else {
+                model.setFee(Res.get("bisqEasy.takeOffer.review.noTradeFees"));
+            }
         }
 
-        reviewDataDisplay.setDirection(Res.get("bisqEasy.tradeWizard.review.direction", Res.get(direction.isSell() ? "offer.sell" : "offer.buy").toUpperCase()));
+        reviewDataDisplay.setDirection(Res.get("bisqEasy.tradeWizard.review.direction",
+                Res.get(takersDirection.isSell() ? "offer.sell" : "offer.buy").toUpperCase()));
         reviewDataDisplay.setToSendAmountDescription(toSendAmountDescription.toUpperCase());
         reviewDataDisplay.setToSendAmount(toSendAmount);
         reviewDataDisplay.setToSendCode(toSendCode);
@@ -278,7 +295,8 @@ public class TakeOfferReviewController implements Controller {
         reviewDataDisplay.setToReceiveAmount(toReceiveAmount);
         reviewDataDisplay.setToReceiveCode(toReceiveCode);
         reviewDataDisplay.setFiatPaymentMethodDescription(Res.get("bisqEasy.tradeWizard.review.paymentMethodDescription.fiat").toUpperCase());
-        reviewDataDisplay.setFiatPaymentMethod(model.getPaymentMethod());
+        reviewDataDisplay.setBitcoinPaymentMethod(model.getBitcoinPaymentMethod());
+        reviewDataDisplay.setFiatPaymentMethod(model.getFiatPaymentMethod());
     }
 
     @Override
