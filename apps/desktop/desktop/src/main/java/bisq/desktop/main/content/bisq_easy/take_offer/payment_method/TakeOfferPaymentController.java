@@ -22,6 +22,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.offer.payment_method.BitcoinPaymentMethodSpec;
 import bisq.offer.payment_method.FiatPaymentMethodSpec;
 import bisq.offer.payment_method.PaymentMethodSpec;
 import javafx.beans.property.ReadOnlyObjectProperty;
@@ -30,7 +31,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Comparator;
-import java.util.List;
 
 @Slf4j
 public class TakeOfferPaymentController implements Controller {
@@ -44,22 +44,26 @@ public class TakeOfferPaymentController implements Controller {
     }
 
     public void init(BisqEasyOffer bisqEasyOffer) {
-        List<FiatPaymentMethodSpec> fiatPaymentMethodSpecs = bisqEasyOffer.getQuoteSidePaymentMethodSpecs();
-        model.getOfferedFiatPaymentMethodSpecs().setAll(fiatPaymentMethodSpecs);
-        model.setHeadline(bisqEasyOffer.getTakersDirection().isBuy() ?
-                Res.get("bisqEasy.takeOffer.paymentMethod.headline.buyer", bisqEasyOffer.getMarket().getQuoteCurrencyCode()) :
-                Res.get("bisqEasy.takeOffer.paymentMethod.headline.seller", bisqEasyOffer.getMarket().getQuoteCurrencyCode()));
+        model.getOfferedBitcoinPaymentMethodSpecs().setAll(bisqEasyOffer.getBaseSidePaymentMethodSpecs());
+        model.getOfferedFiatPaymentMethodSpecs().setAll(bisqEasyOffer.getQuoteSidePaymentMethodSpecs());
+        model.setBitcoinHeadline(bisqEasyOffer.getTakersDirection().isBuy() ?
+                Res.get("bisqEasy.takeOffer.paymentMethod.headline.bitcoin.buyer") :
+                Res.get("bisqEasy.takeOffer.paymentMethod.headline.bitcoin.seller"));
+        model.setFiatHeadline(bisqEasyOffer.getTakersDirection().isBuy() ?
+                Res.get("bisqEasy.takeOffer.paymentMethod.headline.fiat.buyer", bisqEasyOffer.getMarket().getQuoteCurrencyCode()) :
+                Res.get("bisqEasy.takeOffer.paymentMethod.headline.fiat.seller", bisqEasyOffer.getMarket().getQuoteCurrencyCode()));
     }
 
-    /**
-     * @return Enum name of FiatPayment.Method or custom name
-     */
+    public ReadOnlyObjectProperty<BitcoinPaymentMethodSpec> getSelectedBitcoinPaymentMethodSpec() {
+        return model.getSelectedBitcoinPaymentMethodSpec();
+    }
+
     public ReadOnlyObjectProperty<FiatPaymentMethodSpec> getSelectedFiatPaymentMethodSpec() {
         return model.getSelectedFiatPaymentMethodSpec();
     }
 
     public boolean isValid() {
-        return model.getSelectedFiatPaymentMethodSpec().get() != null;
+        return model.getSelectedBitcoinPaymentMethodSpec().get() != null && model.getSelectedFiatPaymentMethodSpec().get() != null;
     }
 
     public void handleInvalidInput() {
@@ -70,7 +74,16 @@ public class TakeOfferPaymentController implements Controller {
 
     @Override
     public void onActivate() {
+        model.getSortedBitcoinPaymentMethodSpecs().setComparator(Comparator.comparing(e -> e.getPaymentMethod().getPaymentRail()));
         model.getSortedFiatPaymentMethodSpecs().setComparator(Comparator.comparing(PaymentMethodSpec::getShortDisplayString));
+        model.setBitcoinMethodVisible(model.getOfferedBitcoinPaymentMethodSpecs().size() > 1);
+        model.setFiatMethodVisible(model.getOfferedFiatPaymentMethodSpecs().size() > 1);
+        if (model.getOfferedBitcoinPaymentMethodSpecs().size() == 1) {
+            model.getSelectedBitcoinPaymentMethodSpec().set(model.getOfferedBitcoinPaymentMethodSpecs().get(0));
+        }
+        if (model.getOfferedFiatPaymentMethodSpecs().size() == 1) {
+            model.getSelectedFiatPaymentMethodSpec().set(model.getOfferedFiatPaymentMethodSpecs().get(0));
+        }
     }
 
     @Override
@@ -82,6 +95,14 @@ public class TakeOfferPaymentController implements Controller {
             model.getSelectedFiatPaymentMethodSpec().set(spec);
         } else {
             model.getSelectedFiatPaymentMethodSpec().set(null);
+        }
+    }
+
+    void onToggleBitcoinPaymentMethod(BitcoinPaymentMethodSpec spec, boolean selected) {
+        if (selected && spec != null) {
+            model.getSelectedBitcoinPaymentMethodSpec().set(spec);
+        } else {
+            model.getSelectedBitcoinPaymentMethodSpec().set(null);
         }
     }
 }
