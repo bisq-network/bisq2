@@ -81,9 +81,9 @@ public class TakeOfferPaymentView extends View<VBox, TakeOfferPaymentModel, Take
         bitcoinFlowPane.setHgap(20);
 
         VBox.setMargin(fiatHeadlineLabel, new Insets(-30, 0, 0, 0));
-        VBox.setMargin(fiatFlowPane, new Insets(25, 65, 30, 65));
-        VBox.setMargin(bitcoinHeadlineLabel, new Insets(0, 0, 0, 0));
-        VBox.setMargin(bitcoinFlowPane, new Insets(25, 65, 30, 65));
+        VBox.setMargin(fiatFlowPane, new Insets(25, 65, 10, 65));
+        VBox.setMargin(bitcoinHeadlineLabel, new Insets(10, 0, 0, 0));
+        VBox.setMargin(bitcoinFlowPane, new Insets(25, 65, 0, 65));
         root.getChildren().addAll(Spacer.fillVBox(), fiatHeadlineLabel, fiatSubtitleLabel, fiatFlowPane,
                 bitcoinHeadlineLabel, bitcoinSubtitleLabel, bitcoinFlowPane, Spacer.fillVBox());
 
