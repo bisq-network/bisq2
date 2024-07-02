@@ -44,8 +44,8 @@ public class TakeOfferPaymentController implements Controller {
     }
 
     public void init(BisqEasyOffer bisqEasyOffer) {
-        List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs = bisqEasyOffer.getQuoteSidePaymentMethodSpecs();
-        model.getOfferedSpecs().setAll(quoteSidePaymentMethodSpecs);
+        List<FiatPaymentMethodSpec> fiatPaymentMethodSpecs = bisqEasyOffer.getQuoteSidePaymentMethodSpecs();
+        model.getOfferedFiatPaymentMethodSpecs().setAll(fiatPaymentMethodSpecs);
         model.setHeadline(bisqEasyOffer.getTakersDirection().isBuy() ?
                 Res.get("bisqEasy.takeOffer.paymentMethod.headline.buyer", bisqEasyOffer.getMarket().getQuoteCurrencyCode()) :
                 Res.get("bisqEasy.takeOffer.paymentMethod.headline.seller", bisqEasyOffer.getMarket().getQuoteCurrencyCode()));
@@ -55,11 +55,11 @@ public class TakeOfferPaymentController implements Controller {
      * @return Enum name of FiatPayment.Method or custom name
      */
     public ReadOnlyObjectProperty<FiatPaymentMethodSpec> getSelectedFiatPaymentMethodSpec() {
-        return model.getSelectedSpec();
+        return model.getSelectedFiatPaymentMethodSpec();
     }
 
     public boolean isValid() {
-        return model.getSelectedSpec().get() != null;
+        return model.getSelectedFiatPaymentMethodSpec().get() != null;
     }
 
     public void handleInvalidInput() {
@@ -70,18 +70,18 @@ public class TakeOfferPaymentController implements Controller {
 
     @Override
     public void onActivate() {
-        model.getSortedSpecs().setComparator(Comparator.comparing(PaymentMethodSpec::getShortDisplayString));
+        model.getSortedFiatPaymentMethodSpecs().setComparator(Comparator.comparing(PaymentMethodSpec::getShortDisplayString));
     }
 
     @Override
     public void onDeactivate() {
     }
 
-    void onTogglePaymentMethod(FiatPaymentMethodSpec spec, boolean selected) {
+    void onToggleFiatPaymentMethod(FiatPaymentMethodSpec spec, boolean selected) {
         if (selected && spec != null) {
-            model.getSelectedSpec().set(spec);
+            model.getSelectedFiatPaymentMethodSpec().set(spec);
         } else {
-            model.getSelectedSpec().set(null);
+            model.getSelectedFiatPaymentMethodSpec().set(null);
         }
     }
 }
