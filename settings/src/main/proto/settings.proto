@@ -23,8 +23,9 @@ option java_multiple_files = true;
 import "common.proto";
 
 message CookieMapEntry {
-  string cookieKey = 1;
+  string key = 1;
   string value = 2;
+  optional string subKey = 3;
 }
 message Cookie {
   repeated CookieMapEntry cookieMapEntries = 1;

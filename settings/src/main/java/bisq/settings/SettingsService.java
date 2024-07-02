@@ -237,8 +237,7 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
     }
 
     public void setCookie(CookieKey key, String subKey, boolean value) {
-        key.setSubKey(subKey);
-        setCookie(key, value);
+        setCookie(key, subKey, value);
     }
 
     public void setCookie(CookieKey key, double value) {
@@ -248,12 +247,15 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
     }
 
     public void setCookie(CookieKey key, String subKey, double value) {
-        key.setSubKey(subKey);
-        setCookie(key, value);
+        setCookie(key, subKey, value);
     }
 
     public void setCookie(CookieKey key, String value) {
-        getCookie().putAsString(key, value);
+        setCookie(key, null, value);
+    }
+
+    public void setCookie(CookieKey key, @Nullable String subKey, String value) {
+        getCookie().putAsString(key, subKey, value);
         persist();
         updateCookieChangedFlag();
     }
@@ -263,15 +265,9 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
     }
 
     public void removeCookie(CookieKey key, @Nullable String subKey) {
-        key.setSubKey(subKey);
-        getCookie().remove(key);
+        getCookie().remove(key, subKey);
         persist();
         updateCookieChangedFlag();
-    }
-
-    public void setCookie(CookieKey key, String subKey, String value) {
-        key.setSubKey(subKey);
-        setCookie(key, value);
     }
 
     private void updateCookieChangedFlag() {
