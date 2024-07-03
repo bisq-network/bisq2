@@ -3,12 +3,7 @@ package bisq.desktop.main.content.chat.message_container.list;
 import bisq.bisq_easy.BisqEasyService;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.bonded_roles.market_price.MarketPriceService;
-import bisq.chat.ChatChannel;
-import bisq.chat.ChatChannelDomain;
-import bisq.chat.ChatChannelSelectionService;
-import bisq.chat.ChatMessage;
-import bisq.chat.ChatMessageType;
-import bisq.chat.ChatService;
+import bisq.chat.*;
 import bisq.chat.bisqeasy.BisqEasyOfferMessage;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
@@ -68,6 +63,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static bisq.chat.ChatMessageType.TAKE_BISQ_EASY_OFFER;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
@@ -559,14 +555,15 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
             return !userProfileService.getIgnoredUserProfileIds().contains(senderUserProfile.get().getId()) &&
                     userProfileService.findUserProfile(senderUserProfile.get().getId()).isPresent();
         };
-        model.getFilteredChatMessages().setPredicate(item -> model.getSearchPredicate().test(item)
-                && predicate.test(item));
+        model.getFilteredChatMessages().setPredicate(item -> model.getSearchPredicate().test(item) &&
+                predicate.test(item));
     }
 
     private <M extends ChatMessage, C extends ChatChannel<M>> Pin bindChatMessages(C channel) {
         // We clear and fill the list at channel change. The addObserver triggers the add method for each item,
         // but as we have a contains() check there it will not have any effect.
         model.getChatMessages().setAll(channel.getChatMessages().stream()
+                .filter(chatMessage -> chatMessage.getChatMessageType() != TAKE_BISQ_EASY_OFFER)
                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage,
                         channel,
                         marketPriceService,
@@ -588,6 +585,9 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
             public void add(M chatMessage) {
                 UIThread.run(() -> {
                     if (model.getChatMessageIds().contains(chatMessage.getId())) {
+                        return;
+                    }
+                    if (chatMessage.getChatMessageType() == TAKE_BISQ_EASY_OFFER) {
                         return;
                     }
                     ChatMessageListItem<M, C> item = new ChatMessageListItem<>(chatMessage,
