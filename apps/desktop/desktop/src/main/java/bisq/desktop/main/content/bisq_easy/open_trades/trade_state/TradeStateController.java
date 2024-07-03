@@ -327,7 +327,7 @@ public class TradeStateController implements Controller {
                 model.getStateInfoVBox().set(new SellerState3a(serviceProvider, trade, channel).getView().getRoot());
                 break;
             case SELLER_SENT_BTC_SENT_CONFIRMATION:
-                if (trade.getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail() == BitcoinPaymentRail.ONCHAIN) {
+                if (trade.getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail() == BitcoinPaymentRail.MAIN_CHAIN) {
                     model.getStateInfoVBox().set(new SellerStateOnchain3b(serviceProvider, trade, channel).getView().getRoot());
                 } else {
                     model.getStateInfoVBox().set(new SellerStateLightning3b(serviceProvider, trade, channel).getView().getRoot());
@@ -352,7 +352,7 @@ public class TradeStateController implements Controller {
                 model.getStateInfoVBox().set(new BuyerState3a(serviceProvider, trade, channel).getView().getRoot());
                 break;
             case BUYER_RECEIVED_BTC_SENT_CONFIRMATION:
-                if (trade.getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail() == BitcoinPaymentRail.ONCHAIN) {
+                if (trade.getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail() == BitcoinPaymentRail.MAIN_CHAIN) {
                     model.getStateInfoVBox().set(new BuyerStateOnchain3b(serviceProvider, trade, channel).getView().getRoot());
                 } else {
                     model.getStateInfoVBox().set(new BuyerStateLightning3b(serviceProvider, trade, channel).getView().getRoot());

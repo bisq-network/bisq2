@@ -78,7 +78,7 @@ public class SellerState3a extends BaseState {
             model.setPaymentProofPrompt(Res.get("bisqEasy.tradeState.info.seller.phase3a.paymentProof.prompt." + name));
 
             model.setBitcoinPaymentData(model.getBisqEasyTrade().getBitcoinPaymentData().get());
-            if (paymentRail == BitcoinPaymentRail.ONCHAIN) {
+            if (paymentRail == BitcoinPaymentRail.MAIN_CHAIN) {
                 model.getBtcSentButtonDisabled().bind(model.getPaymentProof().isEmpty());
             }
         }

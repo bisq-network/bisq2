@@ -84,11 +84,7 @@ public class TradeWizardBitcoinPaymentMethodController implements Controller {
 
     @Override
     public void onActivate() {
-        List<BitcoinPaymentMethod> paymentMethods = Stream.of(BitcoinPaymentRail.ONCHAIN,
-                        BitcoinPaymentRail.LN,
-                        BitcoinPaymentRail.LBTC,
-                        BitcoinPaymentRail.RBTC
-                )
+        List<BitcoinPaymentMethod> paymentMethods = Stream.of(BitcoinPaymentRail.MAIN_CHAIN, BitcoinPaymentRail.LN)
                 .map(BitcoinPaymentMethod::fromPaymentRail)
                 .collect(Collectors.toList());
         model.getBitcoinPaymentMethods().setAll(paymentMethods);

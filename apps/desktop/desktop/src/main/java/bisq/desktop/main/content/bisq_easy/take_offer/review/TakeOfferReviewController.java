@@ -254,7 +254,7 @@ public class TakeOfferReviewController implements Controller {
         String formattedBaseAmount = AmountFormatter.formatAmount(fixBaseSideAmount, false);
         String formattedQuoteAmount = AmountFormatter.formatAmount(fixQuoteSideAmount);
         Direction takersDirection = model.getBisqEasyOffer().getTakersDirection();
-        boolean isOnchain = model.getBitcoinPaymentMethodSpec().getPaymentMethod().getPaymentRail() == BitcoinPaymentRail.ONCHAIN;
+        boolean isOnchain = model.getBitcoinPaymentMethodSpec().getPaymentMethod().getPaymentRail() == BitcoinPaymentRail.MAIN_CHAIN;
         model.setFeeDetailsVisible(isOnchain);
         if (takersDirection.isSell()) {
             toSendAmountDescription = Res.get("bisqEasy.tradeWizard.review.toSend");
