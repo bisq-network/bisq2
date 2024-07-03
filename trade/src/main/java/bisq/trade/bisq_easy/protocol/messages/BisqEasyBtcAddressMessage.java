@@ -54,7 +54,7 @@ public final class BisqEasyBtcAddressMessage extends BisqEasyTradeMessage {
         super.verify();
 
         // We tolerate non-btc address data as well (e.g. LN invoice)
-        // The minimum possible length of an LN invoice is around 190 characters
+        // The minimum possible length of an LN invoice is around 190 characters, typically around 230 chars.
         // Max. length depends on optional fields
         NetworkDataValidation.validateText(btcAddress, MAX_LENGTH);
     }
