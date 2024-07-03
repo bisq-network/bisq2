@@ -33,20 +33,15 @@ public final class Address implements NetworkProto, Comparable<Address> {
         return new Address("127.0.0.1", port);
     }
 
+    public static Address fromFullAddress(String fullAddress) {
+        StringTokenizer st = new StringTokenizer(fullAddress, ":");
+        String host = maybeConvertLocalHost(st.nextToken());
+        int port = st.hasMoreTokens() ? Integer.parseInt(st.nextToken()) : -1;
+        return new Address(host, port);
+    }
+
     private final String host;
     private final int port;
-
-    public Address(String fullAddress) {
-        StringTokenizer st = new StringTokenizer(fullAddress, ":");
-        this.host = maybeConvertLocalHost(st.nextToken());
-        if (st.hasMoreTokens()) {
-            this.port = Integer.parseInt(st.nextToken());
-        } else {
-            this.port = -1;
-        }
-
-        verify();
-    }
 
     public Address(String host, int port) {
         this.host = maybeConvertLocalHost(host);
@@ -114,7 +109,7 @@ public final class Address implements NetworkProto, Comparable<Address> {
         }
     }
 
-    private String maybeConvertLocalHost(String host) {
+    private static String maybeConvertLocalHost(String host) {
         return host.equals("localhost") ? "127.0.0.1" : host;
     }
 
