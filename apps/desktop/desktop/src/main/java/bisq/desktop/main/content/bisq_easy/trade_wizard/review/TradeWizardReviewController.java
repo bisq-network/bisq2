@@ -486,7 +486,7 @@ public class TradeWizardReviewController implements Controller {
     public void onActivate() {
         model.getShowCreateOfferSuccess().set(false);
         Direction direction = model.getBisqEasyOffer().getDirection();
-        boolean isOnchain = model.getBitcoinPaymentMethods().stream().anyMatch(e -> e.getPaymentRail() == BitcoinPaymentRail.ONCHAIN);
+        boolean isOnchain = model.getBitcoinPaymentMethods().stream().anyMatch(e -> e.getPaymentRail() == BitcoinPaymentRail.MAIN_CHAIN);
         model.setFeeDetailsVisible(isOnchain);
         if (direction.isSell()) {
             if (isOnchain) {

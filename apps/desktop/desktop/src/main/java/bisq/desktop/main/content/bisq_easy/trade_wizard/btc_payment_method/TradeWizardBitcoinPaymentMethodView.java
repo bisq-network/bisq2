@@ -120,7 +120,7 @@ public class TradeWizardBitcoinPaymentMethodView extends View<VBox, TradeWizardB
                                 closeIcon.setOnMousePressed(e -> controller.onRemoveCustomMethod(bitcoinPaymentMethod));
                             },
                             () -> {
-                                // Lookup for an image with the id of the BitcoinPaymentRail enum name (ONCHAIN)
+                                // Lookup for an image with the id of the BitcoinPaymentRail enum name (MAIN_CHAIN)
                                 ImageView icon = ImageUtil.getImageViewById(bitcoinPaymentMethod.getName());
                                 chipButton.setLeftIcon(icon);
                             });
