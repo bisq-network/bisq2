@@ -37,7 +37,6 @@ import java.util.Objects;
 
 @Slf4j
 public class ImageUtil {
-
     // Does not resolve the @2x automatically
     public static Image getImageByPath(String path) {
         try (InputStream resourceAsStream = ImageUtil.class.getClassLoader().getResourceAsStream(path)) {
@@ -124,6 +123,35 @@ public class ImageUtil {
         circle.setFill(Color.TRANSPARENT);
         pane.getChildren().addAll(node, circle);
         circle.setStyle("-fx-stroke: " + cssStrokeColor);
+        return pane;
+    }
+
+    public static StackPane getOverlappedIconsPane(String leftIconId, String rightIconId) {
+        return getOverlappedIconsPane(leftIconId, rightIconId, 20, "overlapped-icons");
+    }
+
+    public static StackPane getOverlappedIconsPane(String leftIconId, String rightIconId, double size, String circleStyle) {
+        StackPane pane = new StackPane();
+        double paneWidth = size * 2 + 1;
+        pane.setMinWidth(paneWidth);
+        pane.setMaxWidth(paneWidth);
+
+        Node leftIcon = ImageUtil.getImageViewById(leftIconId);
+
+        Node rightIcon = ImageUtil.getImageViewById(rightIconId);
+        double radius = size / 2 + 3;
+        Circle circle = new Circle(radius);
+        circle.getStyleClass().add(circleStyle);
+        StackPane rightIconWithRing = new StackPane();
+        rightIconWithRing.setMinWidth(radius * 2);
+        rightIconWithRing.setMaxWidth(radius * 2);
+        StackPane.setAlignment(circle, Pos.CENTER);
+        StackPane.setAlignment(rightIcon, Pos.CENTER);
+        rightIconWithRing.getChildren().addAll(circle, rightIcon);
+
+        StackPane.setAlignment(leftIcon, Pos.CENTER_LEFT);
+        StackPane.setAlignment(rightIconWithRing, Pos.CENTER_RIGHT);
+        pane.getChildren().addAll(leftIcon, rightIconWithRing);
         return pane;
     }
 }
