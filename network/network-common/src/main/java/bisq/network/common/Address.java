@@ -26,6 +26,8 @@ import lombok.Getter;
 
 import java.util.StringTokenizer;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @EqualsAndHashCode
 @Getter
 public final class Address implements NetworkProto, Comparable<Address> {
@@ -36,7 +38,8 @@ public final class Address implements NetworkProto, Comparable<Address> {
     public static Address fromFullAddress(String fullAddress) {
         StringTokenizer st = new StringTokenizer(fullAddress, ":");
         String host = maybeConvertLocalHost(st.nextToken());
-        int port = st.hasMoreTokens() ? Integer.parseInt(st.nextToken()) : -1;
+        checkArgument(st.hasMoreTokens(), "Full address need to contain the port after the ':'. fullAddress=" + fullAddress);
+        int port = Integer.parseInt(st.nextToken());
         return new Address(host, port);
     }
 
