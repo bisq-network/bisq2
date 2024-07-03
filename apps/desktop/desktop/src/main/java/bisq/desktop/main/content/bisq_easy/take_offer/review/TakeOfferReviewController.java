@@ -147,14 +147,14 @@ public class TakeOfferReviewController implements Controller {
     public void setBitcoinPaymentMethodSpec(BitcoinPaymentMethodSpec spec) {
         if (spec != null) {
             model.setBitcoinPaymentMethodSpec(spec);
-            model.setBitcoinPaymentMethod(spec.getDisplayString());
+            model.setBitcoinPaymentMethod(spec.getShortDisplayString());
         }
     }
 
     public void setFiatPaymentMethodSpec(FiatPaymentMethodSpec spec) {
         if (spec != null) {
             model.setFiatPaymentMethodSpec(spec);
-            model.setFiatPaymentMethod(spec.getDisplayString());
+            model.setFiatPaymentMethod(spec.getShortDisplayString());
         }
     }
 
