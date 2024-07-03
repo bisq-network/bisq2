@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 
+import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.data.Pair;
 import bisq.desktop.ServiceProvider;
@@ -36,6 +37,8 @@ import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Optional;
 
 @Slf4j
 public class SellerState3a extends BaseState {
@@ -68,8 +71,16 @@ public class SellerState3a extends BaseState {
         public void onActivate() {
             super.onActivate();
 
-            model.setBtcAddress(model.getBisqEasyTrade().getBtcAddress().get());
-            model.getBtcSentButtonDisabled().bind(model.getTxId().isEmpty());
+            BitcoinPaymentRail paymentRail = model.getBisqEasyTrade().getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail();
+            String name = paymentRail.name();
+            model.setBitcoinPaymentDescription(Res.get("bisqEasy.tradeState.info.seller.phase3a.bitcoinPayment.description." + name));
+            model.setPaymentProofDescription(Res.get("bisqEasy.tradeState.info.seller.phase3a.paymentProof.description." + name));
+            model.setPaymentProofPrompt(Res.get("bisqEasy.tradeState.info.seller.phase3a.paymentProof.prompt." + name));
+
+            model.setBitcoinPaymentData(model.getBisqEasyTrade().getBitcoinPaymentData().get());
+            if (paymentRail == BitcoinPaymentRail.ONCHAIN) {
+                model.getBtcSentButtonDisabled().bind(model.getPaymentProof().isEmpty());
+            }
         }
 
         @Override
@@ -80,19 +91,31 @@ public class SellerState3a extends BaseState {
         }
 
         private void onBtcSent() {
-            String txId = model.getTxId().get();
-            sendTradeLogMessage(Res.encode("bisqEasy.tradeState.info.seller.phase3a.tradeLogMessage",
-                    model.getChannel().getMyUserIdentity().getUserName(), txId));
-            bisqEasyTradeService.sellerConfirmBtcSent(model.getBisqEasyTrade(), txId);
+            String name = model.getBisqEasyTrade().getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail().name();
+            String proof = Res.get("bisqEasy.tradeState.info.seller.phase3a.tradeLogMessage.paymentProof." + name);
+            String userName = model.getChannel().getMyUserIdentity().getUserName();
+            if (model.getPaymentProof().get() == null) {
+                sendTradeLogMessage(Res.encode("bisqEasy.tradeState.info.seller.phase3a.tradeLogMessage.noProofProvided", userName));
+            } else {
+                sendTradeLogMessage(Res.encode("bisqEasy.tradeState.info.seller.phase3a.tradeLogMessage",
+                        userName, proof, model.getPaymentProof().get()));
+            }
+            bisqEasyTradeService.sellerConfirmBtcSent(model.getBisqEasyTrade(), Optional.ofNullable(model.getPaymentProof().get()));
         }
     }
 
     @Getter
     private static class Model extends BaseState.Model {
         @Setter
-        protected String btcAddress;
-        private final StringProperty txId = new SimpleStringProperty();
+        protected String bitcoinPaymentData;
+        private final StringProperty paymentProof = new SimpleStringProperty();
         private final BooleanProperty btcSentButtonDisabled = new SimpleBooleanProperty();
+        @Setter
+        private String bitcoinPaymentDescription;
+        @Setter
+        private String paymentProofDescription;
+        @Setter
+        private String paymentProofPrompt;
 
         protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
             super(bisqEasyTrade, channel);
@@ -100,11 +123,11 @@ public class SellerState3a extends BaseState {
     }
 
     public static class View extends BaseState.View<Model, Controller> {
-        private final Button btcSentButton;
-        private final MaterialTextField txId;
+        private final Button sentButton;
+        private final MaterialTextField paymentProof;
         private final WrappingText sendBtcHeadline, fiatReceiptConfirmed;
         private final MaterialTextField baseAmount;
-        private final MaterialTextField btcAddress;
+        private final MaterialTextField bitcoinPayment;
 
         private View(Model model, Controller controller) {
             super(model, controller);
@@ -115,21 +138,20 @@ public class SellerState3a extends BaseState {
 
             sendBtcHeadline = FormUtils.getHeadline();
             baseAmount = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.seller.phase3a.baseAmount"), "", false);
-            btcAddress = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.seller.phase3a.btcAddress"), "", false);
-            txId = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.seller.phase3a.txId"), "", true);
-            txId.setPromptText(Res.get("bisqEasy.tradeState.info.seller.phase3a.txId.prompt"));
-            btcSentButton = new Button();
-            btcSentButton.setDefaultButton(true);
+            bitcoinPayment = FormUtils.getTextField("", "", false);
+            paymentProof = FormUtils.getTextField("", "", true);
+            sentButton = new Button();
+            sentButton.setDefaultButton(true);
 
             VBox.setMargin(fiatReceiptConfirmedHBox, new Insets(0, 0, 5, 0));
-            VBox.setMargin(btcSentButton, new Insets(5, 0, 5, 0));
+            VBox.setMargin(sentButton, new Insets(5, 0, 5, 0));
             root.getChildren().addAll(
                     fiatReceiptConfirmedHBox,
                     sendBtcHeadline,
                     baseAmount,
-                    btcAddress,
-                    txId,
-                    btcSentButton);
+                    bitcoinPayment,
+                    paymentProof,
+                    sentButton);
         }
 
         @Override
@@ -138,23 +160,26 @@ public class SellerState3a extends BaseState {
 
             baseAmount.setText(model.getFormattedBaseAmount());
             baseAmount.getIconButton().setOnAction(e -> ClipboardUtil.copyToClipboard(model.getBaseAmount()));
-            btcAddress.setText(model.getBtcAddress());
-            btcSentButton.setText(Res.get("bisqEasy.tradeState.info.seller.phase3a.btcSentButton", model.getFormattedBaseAmount()));
-            txId.textProperty().bindBidirectional(model.getTxId());
+            bitcoinPayment.setDescription(model.getBitcoinPaymentDescription());
+            bitcoinPayment.setText(model.getBitcoinPaymentData());
+            sentButton.setText(Res.get("bisqEasy.tradeState.info.seller.phase3a.btcSentButton", model.getFormattedBaseAmount()));
+            paymentProof.textProperty().bindBidirectional(model.getPaymentProof());
+            paymentProof.setDescription(model.getPaymentProofDescription());
+            paymentProof.setPromptText(model.getPaymentProofPrompt());
             sendBtcHeadline.setText(Res.get("bisqEasy.tradeState.info.seller.phase3a.sendBtc", model.getFormattedBaseAmount()));
             fiatReceiptConfirmed.setText(Res.get("bisqEasy.tradeState.info.seller.phase3a.fiatPaymentReceivedCheckBox", model.getFormattedQuoteAmount()));
-            btcSentButton.setOnAction(e -> controller.onBtcSent());
-            btcSentButton.disableProperty().bind(model.getBtcSentButtonDisabled());
+            sentButton.setOnAction(e -> controller.onBtcSent());
+            sentButton.disableProperty().bind(model.getBtcSentButtonDisabled());
         }
 
         @Override
         protected void onViewDetached() {
             super.onViewDetached();
 
-            txId.textProperty().unbindBidirectional(model.getTxId());
-            btcSentButton.setOnAction(null);
+            paymentProof.textProperty().unbindBidirectional(model.getPaymentProof());
+            sentButton.setOnAction(null);
             baseAmount.getIconButton().setOnAction(null);
-            btcSentButton.disableProperty().unbind();
+            sentButton.disableProperty().unbind();
         }
     }
 }

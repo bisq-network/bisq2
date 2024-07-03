@@ -81,8 +81,8 @@ message BisqEasyTradeParty {
 
 message BisqEasyTrade {
   optional string paymentAccountData = 1;
-  optional string btcAddress = 2;
-  optional string txId = 3;
+  optional string bitcoinPaymentData = 2;
+  optional string paymentProof = 3;
   optional contract.Role interruptTradeInitiator = 4;
 }
 
@@ -120,13 +120,13 @@ message BisqEasyAccountDataMessage {
 message BisqEasyConfirmFiatSentMessage {
 }
 message BisqEasyBtcAddressMessage {
-  string btcAddress = 1;
+  string bitcoinPaymentData = 1;
   offer.Offer bisqEasyOffer = 2;
 }
 message BisqEasyConfirmFiatReceiptMessage {
 }
 message BisqEasyConfirmBtcSentMessage {
-  string txId = 1;
+  optional string paymentProof = 1;
 }
 message BisqEasyRejectTradeMessage {
 }

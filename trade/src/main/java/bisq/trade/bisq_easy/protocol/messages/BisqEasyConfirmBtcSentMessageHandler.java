@@ -24,11 +24,12 @@ import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.protocol.events.TradeMessageHandler;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Optional;
+
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class BisqEasyConfirmBtcSentMessageHandler extends TradeMessageHandler<BisqEasyTrade, BisqEasyConfirmBtcSentMessage> {
-
     public BisqEasyConfirmBtcSentMessageHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
     }
@@ -38,19 +39,21 @@ public class BisqEasyConfirmBtcSentMessageHandler extends TradeMessageHandler<Bi
         BisqEasyConfirmBtcSentMessage message = (BisqEasyConfirmBtcSentMessage) event;
         verifyMessage(message);
 
-        commitToModel(message.getTxId());
+        commitToModel(message.getPaymentProof());
     }
 
     @Override
     protected void verifyMessage(BisqEasyConfirmBtcSentMessage message) {
         super.verifyMessage(message);
 
-        checkArgument(StringUtils.isNotEmpty(message.getTxId()));
-        // We leave it flexible so that users can use other than BTC mainnet data as txId
-        checkArgument(message.getTxId().length() <= 1000);
+        message.getPaymentProof().ifPresent(paymentProof -> {
+            checkArgument(StringUtils.isNotEmpty(paymentProof));
+            // We leave it flexible so that users can use other than BTC mainnet data as txId
+            checkArgument(paymentProof.length() <= 1000);
+        });
     }
 
-    private void commitToModel(String txId) {
-        trade.getTxId().set(txId);
+    private void commitToModel(Optional<String> paymentProof) {
+        paymentProof.ifPresent(e -> trade.getPaymentProof().set(e));
     }
 }

@@ -32,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 public final class BisqEasyBtcAddressMessage extends BisqEasyTradeMessage {
     public final static int MAX_LENGTH = 1000;
 
-    private final String btcAddress;
+    private final String bitcoinPaymentData;
     private final BisqEasyOffer bisqEasyOffer;
 
     public BisqEasyBtcAddressMessage(String id,
@@ -40,11 +40,11 @@ public final class BisqEasyBtcAddressMessage extends BisqEasyTradeMessage {
                                      String protocolVersion,
                                      NetworkId sender,
                                      NetworkId receiver,
-                                     String btcAddress,
+                                     String bitcoinPaymentData,
                                      BisqEasyOffer bisqEasyOffer) {
         super(id, tradeId, protocolVersion, sender, receiver);
 
-        this.btcAddress = btcAddress;
+        this.bitcoinPaymentData = bitcoinPaymentData;
         this.bisqEasyOffer = bisqEasyOffer;
         verify();
     }
@@ -56,7 +56,7 @@ public final class BisqEasyBtcAddressMessage extends BisqEasyTradeMessage {
         // We tolerate non-btc address data as well (e.g. LN invoice)
         // The minimum possible length of an LN invoice is around 190 characters, typically around 230 chars.
         // Max. length depends on optional fields
-        NetworkDataValidation.validateText(btcAddress, MAX_LENGTH);
+        NetworkDataValidation.validateText(bitcoinPaymentData, MAX_LENGTH);
     }
 
     @Override
@@ -72,7 +72,7 @@ public final class BisqEasyBtcAddressMessage extends BisqEasyTradeMessage {
 
     private bisq.trade.protobuf.BisqEasyBtcAddressMessage.Builder getBisqEasyBtcAddressMessageBuilder(boolean serializeForHash) {
         return bisq.trade.protobuf.BisqEasyBtcAddressMessage.newBuilder()
-                .setBtcAddress(btcAddress)
+                .setBitcoinPaymentData(bitcoinPaymentData)
                 .setBisqEasyOffer(bisqEasyOffer.toProto(serializeForHash));
     }
 
@@ -84,7 +84,7 @@ public final class BisqEasyBtcAddressMessage extends BisqEasyTradeMessage {
                 proto.getProtocolVersion(),
                 NetworkId.fromProto(proto.getSender()),
                 NetworkId.fromProto(proto.getReceiver()),
-                bisqEasyBtcAddressMessage.getBtcAddress(),
+                bisqEasyBtcAddressMessage.getBitcoinPaymentData(),
                 BisqEasyOffer.fromProto(bisqEasyBtcAddressMessage.getBisqEasyOffer()));
     }
 

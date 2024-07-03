@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 
+import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.desktop.ServiceProvider;
@@ -68,12 +69,16 @@ public class BuyerState1a extends BaseState {
         @Override
         public void onActivate() {
             super.onActivate();
-            String name = model.getBisqEasyTrade().getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail().name();
+
+            BitcoinPaymentRail paymentRail = model.getBisqEasyTrade().getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail();
+            String name = paymentRail.name();
             model.setBitcoinPaymentHeadline(Res.get("bisqEasy.tradeState.info.buyer.phase1a.bitcoinPayment.headline." + name));
             model.setBitcoinPaymentDescription(Res.get("bisqEasy.tradeState.info.buyer.phase1a.bitcoinPayment.description." + name));
             model.setBitcoinPaymentPrompt(Res.get("bisqEasy.tradeState.info.buyer.phase1a.bitcoinPayment.prompt." + name));
-            model.setBitcoinPaymentHelp(Res.get("bisqEasy.tradeState.info.buyer.phase1a.bitcoinPayment.help." + name));
-            model.getSendButtonDisabled().bind(model.getBitcoinPaymentInput().isEmpty());
+            if (paymentRail == BitcoinPaymentRail.ONCHAIN) {
+                model.setBitcoinPaymentHelp(Res.get("bisqEasy.tradeState.info.buyer.phase1a.bitcoinPayment.walletHelp"));
+            }
+            model.getSendButtonDisabled().bind(model.getBitcoinPaymentData().isEmpty());
         }
 
         @Override
@@ -83,10 +88,10 @@ public class BuyerState1a extends BaseState {
             model.getSendButtonDisabled().unbind();
         }
 
-        private void onSendBtcAddress() {
+        private void onSend() {
             sendTradeLogMessage(Res.encode("bisqEasy.tradeState.info.buyer.phase1a.tradeLogMessage",
-                    model.getChannel().getMyUserIdentity().getUserName(), model.getBitcoinPaymentInput().get()));
-            bisqEasyTradeService.buyerSendBtcAddress(model.getBisqEasyTrade(), model.getBitcoinPaymentInput().get());
+                    model.getChannel().getMyUserIdentity().getUserName(), model.getBitcoinPaymentData().get()));
+            bisqEasyTradeService.buyerSendBitcoinPaymentData(model.getBisqEasyTrade(), model.getBitcoinPaymentData().get());
         }
 
         void onOpenWalletHelp() {
@@ -104,7 +109,7 @@ public class BuyerState1a extends BaseState {
         private String bitcoinPaymentPrompt;
         @Setter
         private String bitcoinPaymentHelp;
-        private final StringProperty bitcoinPaymentInput = new SimpleStringProperty();
+        private final StringProperty bitcoinPaymentData = new SimpleStringProperty();
         private final BooleanProperty sendButtonDisabled = new SimpleBooleanProperty();
 
         protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
@@ -120,14 +125,12 @@ public class BuyerState1a extends BaseState {
         private View(Model model, Controller controller) {
             super(model, controller);
 
-            bitcoinPaymentHeadline = FormUtils.getHeadline(Res.get("bisqEasy.tradeState.info.buyer.phase1a.bitcoinPayment.headline.ONCHAIN"));
+            bitcoinPaymentHeadline = FormUtils.getHeadline();
             VBox.setMargin(bitcoinPaymentHeadline, new Insets(5, 0, 0, 0));
 
-            bitcoinPayment = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.buyer.phase1a.bitcoinPayment.description.ONCHAIN"), "", true);
-            bitcoinPayment.setPromptText(Res.get("bisqEasy.tradeState.info.buyer.phase1a.bitcoinPayment.prompt.ONCHAIN"));
-            bitcoinPayment.setHelpText(Res.get("bisqEasy.tradeState.info.buyer.phase1a.bitcoinPayment.help.ONCHAIN"));
+            bitcoinPayment = FormUtils.getTextField("", "", true);
 
-            sendButton = new Button(Res.get("bisqEasy.tradeState.info.buyer.phase1a.sendBtcAddress"));
+            sendButton = new Button(Res.get("bisqEasy.tradeState.info.buyer.phase1a.send"));
             sendButton.setDefaultButton(true);
             walletInfoButton = new Button(Res.get("bisqEasy.tradeState.info.buyer.phase1a.walletHelpButton"));
             walletInfoButton.getStyleClass().add("outlined-button");
@@ -146,11 +149,11 @@ public class BuyerState1a extends BaseState {
             bitcoinPayment.setPromptText(model.getBitcoinPaymentPrompt());
             bitcoinPayment.setHelpText(model.getBitcoinPaymentHelp());
 
-            bitcoinPayment.textProperty().bindBidirectional(model.getBitcoinPaymentInput());
+            bitcoinPayment.textProperty().bindBidirectional(model.getBitcoinPaymentData());
 
             bitcoinPayment.validate();
             sendButton.disableProperty().bind(model.getSendButtonDisabled());
-            sendButton.setOnAction(e -> controller.onSendBtcAddress());
+            sendButton.setOnAction(e -> controller.onSend());
             walletInfoButton.setOnAction(e -> controller.onOpenWalletHelp());
         }
 
@@ -158,7 +161,7 @@ public class BuyerState1a extends BaseState {
         protected void onViewDetached() {
             super.onViewDetached();
 
-            bitcoinPayment.textProperty().unbindBidirectional(model.getBitcoinPaymentInput());
+            bitcoinPayment.textProperty().unbindBidirectional(model.getBitcoinPaymentData());
             sendButton.disableProperty().unbind();
             sendButton.setOnAction(null);
             walletInfoButton.setOnAction(null);
