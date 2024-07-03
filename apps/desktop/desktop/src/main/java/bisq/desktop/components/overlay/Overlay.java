@@ -219,13 +219,13 @@ public abstract class Overlay<T extends Overlay<T>> {
             }
 
             addContent();
-            addButtons();
-            addDontShowAgainCheckBox(showAgainChecked);
 
             if (showReportErrorButtons) {
                 addReportErrorButtons();
             }
 
+            addButtons();
+            addDontShowAgainCheckBox(showAgainChecked);
             applyStyles();
             onShow();
         }
@@ -999,10 +999,16 @@ public abstract class Overlay<T extends Overlay<T>> {
             hide();
         });
 
-        buttonBox.getChildren().add(0, Spacer.fillHBox());
+      /*  buttonBox.getChildren().add(0, Spacer.fillHBox());
         buttonBox.getChildren().add(0, gitHubButton);
         buttonBox.getChildren().add(0, zipLogButton);
-        buttonBox.getChildren().add(0, logButton);
+        buttonBox.getChildren().add(0, logButton);*/
+
+        HBox buttons = new HBox(10, gitHubButton, zipLogButton, logButton, Spacer.fillHBox());
+        GridPane.setHalignment(buttons, buttonAlignment);
+        GridPane.setMargin(buttons, new Insets(buttonDistance, 0, 0, 0));
+        gridPane.add(buttons, 0, gridPane.getRowCount(), 2, 1);
+
     }
 
     protected void addBusyAnimation() {

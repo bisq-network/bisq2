@@ -221,16 +221,16 @@ public class BisqEasyTradeService implements PersistenceClient<BisqEasyTradeStor
         handleBisqEasyTradeEvent(trade, new BisqEasyConfirmFiatSentEvent());
     }
 
-    public void buyerSendBtcAddress(BisqEasyTrade trade, String buyersBtcAddress) {
-        handleBisqEasyTradeEvent(trade, new BisqEasySendBtcAddressEvent(buyersBtcAddress));
+    public void buyerSendBitcoinPaymentData(BisqEasyTrade trade, String buyersBitcoinPaymentData) {
+        handleBisqEasyTradeEvent(trade, new BisqEasySendBtcAddressEvent(buyersBitcoinPaymentData));
     }
 
     public void sellerConfirmFiatReceipt(BisqEasyTrade trade) {
         handleBisqEasyTradeEvent(trade, new BisqEasyConfirmFiatReceiptEvent());
     }
 
-    public void sellerConfirmBtcSent(BisqEasyTrade trade, String txId) {
-        handleBisqEasyTradeEvent(trade, new BisqEasyConfirmBtcSentEvent(txId));
+    public void sellerConfirmBtcSent(BisqEasyTrade trade, Optional<String> paymentProof) {
+        handleBisqEasyTradeEvent(trade, new BisqEasyConfirmBtcSentEvent(paymentProof));
     }
 
     public void btcConfirmed(BisqEasyTrade trade) {

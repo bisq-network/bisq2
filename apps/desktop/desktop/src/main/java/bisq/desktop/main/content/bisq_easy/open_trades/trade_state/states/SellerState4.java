@@ -78,7 +78,7 @@ public class SellerState4 extends BaseState {
         public void onActivate() {
             super.onActivate();
 
-            model.setTxId(model.getBisqEasyTrade().getTxId().get());
+            model.setPaymentProof(model.getBisqEasyTrade().getPaymentProof().get());
         }
 
         @Override
@@ -104,7 +104,7 @@ public class SellerState4 extends BaseState {
 
         private void openExplorer() {
             ExplorerService.Provider provider = explorerService.getSelectedProvider().get();
-            String url = provider.getBaseUrl() + provider.getTxPath() + model.getTxId();
+            String url = provider.getBaseUrl() + provider.getTxPath() + model.getPaymentProof();
             Browser.open(url);
         }
     }
@@ -112,7 +112,7 @@ public class SellerState4 extends BaseState {
     @Getter
     private static class Model extends BaseState.Model {
         @Setter
-        protected String txId;
+        protected String paymentProof;
 
         protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
             super(bisqEasyTrade, channel);
@@ -122,7 +122,7 @@ public class SellerState4 extends BaseState {
     public static class View extends BaseState.View<Model, Controller> {
         private final Button leaveButton, exportButton;
         private final MaterialTextField quoteAmount, baseAmount;
-        private final MaterialTextField txId;
+        private final MaterialTextField paymentProof;
 
         private View(Model model, Controller controller) {
             super(model, controller);
@@ -135,9 +135,9 @@ public class SellerState4 extends BaseState {
             quoteAmount = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.seller.phase4.quoteAmount"), "", false);
             baseAmount = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.seller.phase4.baseAmount"), "", false);
 
-            txId = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.phase4.txId"), "", false);
-            txId.setIcon(AwesomeIcon.EXTERNAL_LINK);
-            txId.setIconTooltip(Res.get("bisqEasy.tradeState.info.phase4.txId.tooltip"));
+            paymentProof = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.phase4.txId"), "", false);
+            paymentProof.setIcon(AwesomeIcon.EXTERNAL_LINK);
+            paymentProof.setIconTooltip(Res.get("bisqEasy.tradeState.info.phase4.txId.tooltip"));
 
             HBox buttons = new HBox(leaveButton, Spacer.fillHBox(), exportButton);
 
@@ -147,7 +147,7 @@ public class SellerState4 extends BaseState {
                     headline,
                     quoteAmount,
                     baseAmount,
-                    txId,
+                    paymentProof,
                     buttons);
         }
 
@@ -155,14 +155,14 @@ public class SellerState4 extends BaseState {
         protected void onViewAttached() {
             super.onViewAttached();
 
-            txId.setText(model.getTxId());
+            paymentProof.setText(model.getPaymentProof());
 
             quoteAmount.setText(model.getFormattedQuoteAmount());
             baseAmount.setText(model.getFormattedBaseAmount());
 
             leaveButton.setOnAction(e -> controller.onLeaveChannel());
             exportButton.setOnAction(e -> controller.onExportTrade());
-            txId.getIconButton().setOnAction(e -> controller.openExplorer());
+            paymentProof.getIconButton().setOnAction(e -> controller.openExplorer());
         }
 
         @Override
@@ -171,7 +171,7 @@ public class SellerState4 extends BaseState {
 
             leaveButton.setOnAction(null);
             exportButton.setOnAction(null);
-            txId.getIconButton().setOnAction(null);
+            paymentProof.getIconButton().setOnAction(null);
         }
     }
 }

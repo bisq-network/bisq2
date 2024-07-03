@@ -30,8 +30,8 @@ public class OpenTradesUtils {
         long quoteSideAmount = contract.getQuoteSideAmount();
         String formattedBaseAmount = AmountFormatter.formatAmountWithCode(Coin.asBtcFromValue(baseSideAmount));
         String formattedQuoteAmount = AmountFormatter.formatAmountWithCode(Fiat.from(quoteSideAmount, quoteCurrencyCode));
-        String txId = Optional.ofNullable(trade.getTxId().get()).orElse("");
-        String btcAddress = Optional.ofNullable(trade.getBtcAddress().get()).orElse("");
+        String txId = Optional.ofNullable(trade.getPaymentProof().get()).orElse("");
+        String btcAddress = Optional.ofNullable(trade.getBitcoinPaymentData().get()).orElse("");
         String displayString = contract.getQuoteSidePaymentMethodSpec().getDisplayString();
         List<String> headers = List.of(
                 Res.get("bisqEasy.openTrades.table.tradeId"),

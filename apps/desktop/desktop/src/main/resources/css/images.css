@@ -521,7 +521,7 @@
 }
 
 
-/* Payment */
+/* Fiat payment methods based on enum names from FiatPaymentRailUtil */
 
 #SEPA {
     -fx-image: url("/images/payment/SEPA.png");
@@ -606,6 +606,25 @@
 #CASH_APP {
     -fx-image: url("/images/payment/CashApp.png");
 }
+
+/* Bitcoin payment method icons based on enum names from BitcoinPaymentRail */
+
+#ONCHAIN {
+    -fx-image: url("/images/bitcoin_rails/bitcoin.png");
+}
+
+#LN {
+    -fx-image: url("/images/bitcoin_rails/ln.png");
+}
+
+#LBTC {
+    -fx-image: url("/images/bitcoin_rails/liquid.png");
+}
+
+#RBTC {
+    -fx-image: url("/images/bitcoin_rails/rsk.png");
+}
+
 
 /* Onboarding icons*/
 #info-circle-solid {

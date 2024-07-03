@@ -21,13 +21,15 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.util.Optional;
+
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public class BisqEasyConfirmBtcSentEvent extends BisqEasyTradeEvent {
-    private final String txId;
+    private final Optional<String> paymentProof; // txId or preimage
 
-    public BisqEasyConfirmBtcSentEvent(String txId) {
-        this.txId = txId;
+    public BisqEasyConfirmBtcSentEvent(Optional<String> paymentProof) {
+        this.paymentProof = paymentProof;
     }
 }

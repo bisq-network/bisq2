@@ -25,9 +25,9 @@ import lombok.ToString;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public class BisqEasySendBtcAddressEvent extends BisqEasyTradeEvent {
-    private final String btcAddress;
+    private final String bitcoinPaymentData; // btc address or LN invoice
 
-    public BisqEasySendBtcAddressEvent(String btcAddress) {
-        this.btcAddress = btcAddress;
+    public BisqEasySendBtcAddressEvent(String bitcoinPaymentData) {
+        this.bitcoinPaymentData = bitcoinPaymentData;
     }
 }
