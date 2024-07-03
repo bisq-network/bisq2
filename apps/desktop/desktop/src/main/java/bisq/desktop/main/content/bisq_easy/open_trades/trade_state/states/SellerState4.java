@@ -17,10 +17,9 @@
 
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 
+import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.bonded_roles.explorer.ExplorerService;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannelService;
-import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeSelectionService;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
 import bisq.desktop.components.containers.Spacer;
@@ -53,15 +52,11 @@ public class SellerState4 extends BaseState {
 
     private static class Controller extends BaseState.Controller<Model, View> {
         private final ExplorerService explorerService;
-        private final BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService;
-        private final BisqEasyOpenTradeSelectionService bisqEasyOpenTradeSelectionService;
 
         private Controller(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
             super(serviceProvider, bisqEasyTrade, channel);
 
             explorerService = serviceProvider.getBondedRolesService().getExplorerService();
-            bisqEasyOpenTradeChannelService = serviceProvider.getChatService().getBisqEasyOpenTradeChannelService();
-            bisqEasyOpenTradeSelectionService = serviceProvider.getChatService().getBisqEasyOpenTradesSelectionService();
         }
 
         @Override
@@ -78,7 +73,13 @@ public class SellerState4 extends BaseState {
         public void onActivate() {
             super.onActivate();
 
-            model.setPaymentProof(model.getBisqEasyTrade().getPaymentProof().get());
+            BitcoinPaymentRail paymentRail = model.getBisqEasyTrade().getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail();
+            String name = paymentRail.name();
+            model.setPaymentProofDescription(Res.get("bisqEasy.tradeState.paymentProof." + name));
+            model.setBlockExplorerLinkVisible(paymentRail == BitcoinPaymentRail.MAIN_CHAIN);
+            String paymentProof = model.getBisqEasyTrade().getPaymentProof().get();
+            model.setPaymentProof(paymentProof);
+            model.setPaymentProofVisible(paymentProof != null);
         }
 
         @Override
@@ -113,6 +114,12 @@ public class SellerState4 extends BaseState {
     private static class Model extends BaseState.Model {
         @Setter
         protected String paymentProof;
+        @Setter
+        protected String paymentProofDescription;
+        @Setter
+        protected boolean blockExplorerLinkVisible;
+        @Setter
+        protected boolean paymentProofVisible;
 
         protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
             super(bisqEasyTrade, channel);
@@ -135,9 +142,7 @@ public class SellerState4 extends BaseState {
             quoteAmount = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.seller.phase4.quoteAmount"), "", false);
             baseAmount = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.seller.phase4.baseAmount"), "", false);
 
-            paymentProof = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.phase4.txId"), "", false);
-            paymentProof.setIcon(AwesomeIcon.EXTERNAL_LINK);
-            paymentProof.setIconTooltip(Res.get("bisqEasy.tradeState.info.phase4.txId.tooltip"));
+            paymentProof = FormUtils.getTextField("", "", false);
 
             HBox buttons = new HBox(leaveButton, Spacer.fillHBox(), exportButton);
 
@@ -155,14 +160,21 @@ public class SellerState4 extends BaseState {
         protected void onViewAttached() {
             super.onViewAttached();
 
+            paymentProof.setVisible(model.isPaymentProofVisible());
+            paymentProof.setManaged(model.isPaymentProofVisible());
+            paymentProof.setDescription(model.getPaymentProofDescription());
             paymentProof.setText(model.getPaymentProof());
+            if (model.isBlockExplorerLinkVisible()) {
+                paymentProof.setIcon(AwesomeIcon.EXTERNAL_LINK);
+                paymentProof.getIconButton().setOnAction(e -> controller.openExplorer());
+                paymentProof.setIconTooltip(Res.get("bisqEasy.tradeState.info.phase4.txId.tooltip"));
+            }
 
             quoteAmount.setText(model.getFormattedQuoteAmount());
             baseAmount.setText(model.getFormattedBaseAmount());
 
             leaveButton.setOnAction(e -> controller.onLeaveChannel());
             exportButton.setOnAction(e -> controller.onExportTrade());
-            paymentProof.getIconButton().setOnAction(e -> controller.openExplorer());
         }
 
         @Override

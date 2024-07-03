@@ -89,8 +89,9 @@ public class BuyerState1a extends BaseState {
         }
 
         private void onSend() {
-            sendTradeLogMessage(Res.encode("bisqEasy.tradeState.info.buyer.phase1a.tradeLogMessage",
-                    model.getChannel().getMyUserIdentity().getUserName(), model.getBitcoinPaymentData().get()));
+            String name = model.getBisqEasyTrade().getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail().name();
+            String key = "bisqEasy.tradeState.info.buyer.phase1a.tradeLogMessage." + name;
+            sendTradeLogMessage(Res.encode(key, model.getChannel().getMyUserIdentity().getUserName(), model.getBitcoinPaymentData().get()));
             bisqEasyTradeService.buyerSendBitcoinPaymentData(model.getBisqEasyTrade(), model.getBitcoinPaymentData().get());
         }
 

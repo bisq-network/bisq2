@@ -19,9 +19,9 @@ package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.components.controls.WrappingText;
 import bisq.desktop.main.content.bisq_easy.components.WaitingAnimation;
 import bisq.desktop.main.content.bisq_easy.components.WaitingState;
-import bisq.desktop.components.controls.WrappingText;
 import bisq.i18n.Res;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import javafx.scene.layout.HBox;
@@ -92,7 +92,9 @@ public class BuyerState2b extends BaseState {
             super.onViewAttached();
 
             headline.setText(Res.get("bisqEasy.tradeState.info.buyer.phase2b.headline"));
-            info.setText(Res.get("bisqEasy.tradeState.info.buyer.phase2b.info", model.getFormattedQuoteAmount()));
+            String name = model.getBisqEasyTrade().getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail().name();
+            String bitcoinPaymentData = Res.get("bisqEasy.tradeState.bitcoinPaymentData." + name);
+            info.setText(Res.get("bisqEasy.tradeState.info.buyer.phase2b.info", model.getFormattedQuoteAmount(), bitcoinPaymentData));
             waitingAnimation.play();
         }
 

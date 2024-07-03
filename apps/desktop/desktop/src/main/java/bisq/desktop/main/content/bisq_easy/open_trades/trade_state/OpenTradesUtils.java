@@ -30,15 +30,17 @@ public class OpenTradesUtils {
         long quoteSideAmount = contract.getQuoteSideAmount();
         String formattedBaseAmount = AmountFormatter.formatAmountWithCode(Coin.asBtcFromValue(baseSideAmount));
         String formattedQuoteAmount = AmountFormatter.formatAmountWithCode(Fiat.from(quoteSideAmount, quoteCurrencyCode));
-        String txId = Optional.ofNullable(trade.getPaymentProof().get()).orElse("");
-        String btcAddress = Optional.ofNullable(trade.getBitcoinPaymentData().get()).orElse("");
-        String displayString = contract.getQuoteSidePaymentMethodSpec().getDisplayString();
+        String paymentProof = Optional.ofNullable(trade.getPaymentProof().get()).orElse(Res.get("data.na"));
+        String bitcoinPaymentData = trade.getBitcoinPaymentData().get();
+        String bitcoinMethod = contract.getBaseSidePaymentMethodSpec().getDisplayString();
+        String fiatMethod = contract.getQuoteSidePaymentMethodSpec().getDisplayString();
+        String paymentMethod = bitcoinMethod + " / " + fiatMethod;
         List<String> headers = List.of(
                 Res.get("bisqEasy.openTrades.table.tradeId"),
                 Res.get("bisqEasy.openTrades.table.baseAmount"),
                 Res.get("bisqEasy.openTrades.csv.quoteAmount", quoteCurrencyCode),
-                Res.get("bisqEasy.openTrades.csv.txId"),
-                Res.get("bisqEasy.openTrades.csv.receiverAddress"),
+                Res.get("bisqEasy.openTrades.csv.txIdOrPreimage"),
+                Res.get("bisqEasy.openTrades.csv.receiverAddressOrInvoice"),
                 Res.get("bisqEasy.openTrades.csv.paymentMethod")
         );
         List<List<String>> tradeData = List.of(
@@ -46,9 +48,9 @@ public class OpenTradesUtils {
                         tradeId,
                         formattedBaseAmount,
                         formattedQuoteAmount,
-                        txId,
-                        btcAddress,
-                        displayString
+                        paymentProof,
+                        bitcoinPaymentData,
+                        paymentMethod
                 )
         );
         String csv = Csv.toCsv(headers, tradeData);
