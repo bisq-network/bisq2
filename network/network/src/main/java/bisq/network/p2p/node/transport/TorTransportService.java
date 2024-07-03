@@ -77,6 +77,7 @@ public class TorTransportService implements TransportService {
     public ServerSocketResult getServerSocket(NetworkId networkId, KeyBundle keyBundle) {
         try {
             int port = networkId.getAddressByTransportTypeMap().get(TransportType.TOR).getPort();
+            log.error("getServerSocket port {}", port);
             bootstrapInfo.getBootstrapState().set(BootstrapState.START_PUBLISH_SERVICE);
             // 25%-50% we attribute to the publishing of the hidden service. Takes usually 5-10 sec.
             bootstrapInfo.getBootstrapProgress().set(0.25);
@@ -92,7 +93,7 @@ public class TorTransportService implements TransportService {
             String onionAddress = torKeyPair.getOnionAddress();
             bootstrapInfo.getBootstrapDetails().set("My Onion service address: " + onionAddress);
 
-            Address address = new Address(onionAddress);
+            Address address = new Address(onionAddress, port);
             return new ServerSocketResult(serverSocket, address);
 
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
