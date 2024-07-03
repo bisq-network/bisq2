@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_state;
 
+import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannelService;
@@ -326,7 +327,11 @@ public class TradeStateController implements Controller {
                 model.getStateInfoVBox().set(new SellerState3a(serviceProvider, trade, channel).getView().getRoot());
                 break;
             case SELLER_SENT_BTC_SENT_CONFIRMATION:
-                model.getStateInfoVBox().set(new SellerState3b(serviceProvider, trade, channel).getView().getRoot());
+                if (trade.getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail() == BitcoinPaymentRail.ONCHAIN) {
+                    model.getStateInfoVBox().set(new SellerStateOnchain3b(serviceProvider, trade, channel).getView().getRoot());
+                } else {
+                    model.getStateInfoVBox().set(new SellerStateLightning3b(serviceProvider, trade, channel).getView().getRoot());
+                }
                 break;
 
             // Buyer
@@ -347,7 +352,11 @@ public class TradeStateController implements Controller {
                 model.getStateInfoVBox().set(new BuyerState3a(serviceProvider, trade, channel).getView().getRoot());
                 break;
             case BUYER_RECEIVED_BTC_SENT_CONFIRMATION:
-                model.getStateInfoVBox().set(new BuyerState3b(serviceProvider, trade, channel).getView().getRoot());
+                if (trade.getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail() == BitcoinPaymentRail.ONCHAIN) {
+                    model.getStateInfoVBox().set(new BuyerStateOnchain3b(serviceProvider, trade, channel).getView().getRoot());
+                } else {
+                    model.getStateInfoVBox().set(new BuyerStateLightning3b(serviceProvider, trade, channel).getView().getRoot());
+                }
                 break;
 
             case BTC_CONFIRMED:

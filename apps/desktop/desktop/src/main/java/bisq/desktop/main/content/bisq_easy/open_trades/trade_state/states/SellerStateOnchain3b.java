@@ -53,10 +53,10 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class BuyerState3b extends BaseState {
+public class SellerStateOnchain3b extends BaseState {
     private final Controller controller;
 
-    public BuyerState3b(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
+    public SellerStateOnchain3b(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
         controller = new Controller(serviceProvider, bisqEasyTrade, channel);
     }
 
@@ -235,17 +235,17 @@ public class BuyerState3b extends BaseState {
             paymentProof = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.phase3b.txId"), "", false);
             paymentProof.setIcon(AwesomeIcon.EXTERNAL_LINK);
             paymentProof.setIconTooltip(Res.get("bisqEasy.tradeState.info.phase3b.txId.tooltip"));
-            btcBalance = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.buyer.phase3b.balance"), "", false);
+            btcBalance = FormUtils.getTextField(Res.get("bisqEasy.tradeState.info.seller.phase3b.balance"), "", false);
             btcBalance.setHelpText(Res.get("bisqEasy.tradeState.info.phase3b.balance.help.explorerLookup"));
-            btcBalance.setPromptText(Res.get("bisqEasy.tradeState.info.buyer.phase3b.balance.prompt"));
+            btcBalance.setPromptText(Res.get("bisqEasy.tradeState.info.seller.phase3b.balance.prompt"));
             btcBalance.filterMouseEventOnNonEditableText();
 
             button = new Button();
             VBox.setMargin(button, new Insets(5, 0, 5, 0));
 
             waitingAnimation = new WaitingAnimation(WaitingState.BITCOIN_CONFIRMATION);
-            WrappingText headline = FormUtils.getHeadline(Res.get("bisqEasy.tradeState.info.buyer.phase3b.headline"));
-            WrappingText info = FormUtils.getInfo(Res.get("bisqEasy.tradeState.info.buyer.phase3b.info"));
+            WrappingText headline = FormUtils.getHeadline(Res.get("bisqEasy.tradeState.info.seller.phase3b.headline"));
+            WrappingText info = FormUtils.getInfo(Res.get("bisqEasy.tradeState.info.seller.phase3b.info"));
             HBox waitingInfo = createWaitingInfo(waitingAnimation, headline, info);
 
             root.getChildren().addAll(waitingInfo, paymentProof, btcBalance, button);
