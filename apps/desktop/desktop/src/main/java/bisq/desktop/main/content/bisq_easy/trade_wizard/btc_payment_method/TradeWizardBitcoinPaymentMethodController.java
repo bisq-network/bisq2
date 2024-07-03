@@ -91,7 +91,7 @@ public class TradeWizardBitcoinPaymentMethodController implements Controller {
                 )
                 .map(BitcoinPaymentMethod::fromPaymentRail)
                 .collect(Collectors.toList());
-        model.getBitcoinPaymentMethod().setAll(paymentMethods);
+        model.getBitcoinPaymentMethods().setAll(paymentMethods);
 
         model.setHeadline(model.getDirection().isBuy() ?
                 Res.get("bisqEasy.tradeWizard.paymentMethod.btc.headline.buyer") :
@@ -127,13 +127,20 @@ public class TradeWizardBitcoinPaymentMethodController implements Controller {
         return true;
     }
 
+    void onRemoveCustomMethod(BitcoinPaymentMethod bitcoinPaymentMethod) {
+        model.getAddedCustomBitcoinPaymentMethods().remove(bitcoinPaymentMethod);
+        model.getSelectedBitcoinPaymentMethods().remove(bitcoinPaymentMethod);
+        model.getBitcoinPaymentMethods().remove(bitcoinPaymentMethod);
+        setCookie();
+    }
+
     private void maybeAddBitcoinPaymentMethod(BitcoinPaymentMethod bitcoinPaymentMethod) {
         if (!model.getSelectedBitcoinPaymentMethods().contains(bitcoinPaymentMethod)) {
             model.getSelectedBitcoinPaymentMethods().add(bitcoinPaymentMethod);
             setCookie();
         }
-        if (!model.getBitcoinPaymentMethod().contains(bitcoinPaymentMethod)) {
-            model.getBitcoinPaymentMethod().add(bitcoinPaymentMethod);
+        if (!model.getBitcoinPaymentMethods().contains(bitcoinPaymentMethod)) {
+            model.getBitcoinPaymentMethods().add(bitcoinPaymentMethod);
         }
     }
 

@@ -19,6 +19,7 @@ package bisq.desktop.main.content.bisq_easy.trade_wizard.btc_payment_method;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTooltip;
@@ -28,6 +29,7 @@ import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
@@ -73,7 +75,7 @@ public class TradeWizardBitcoinPaymentMethodView extends View<VBox, TradeWizardB
     protected void onViewAttached() {
         headlineLabel.setText(model.getHeadline());
 
-        model.getBitcoinPaymentMethod().addListener(paymentMethodListener);
+        model.getBitcoinPaymentMethods().addListener(paymentMethodListener);
 
         root.setOnMousePressed(e -> root.requestFocus());
 
@@ -87,7 +89,7 @@ public class TradeWizardBitcoinPaymentMethodView extends View<VBox, TradeWizardB
                 .map(e -> (ChipButton) e)
                 .forEach(chipToggleButton -> chipToggleButton.setOnAction(null));
 
-        model.getBitcoinPaymentMethod().removeListener(paymentMethodListener);
+        model.getBitcoinPaymentMethods().removeListener(paymentMethodListener);
 
         root.setOnMousePressed(null);
     }
@@ -109,6 +111,19 @@ public class TradeWizardBitcoinPaymentMethodView extends View<VBox, TradeWizardB
                     UIThread.runOnNextRenderFrame(() -> chipButton.setSelected(false));
                 }
             });
+            model.getAddedCustomBitcoinPaymentMethods().stream()
+                    .filter(customMethod -> customMethod.equals(bitcoinPaymentMethod))
+                    .findAny()
+                    .ifPresentOrElse(
+                            customMethod -> {
+                                ImageView closeIcon = chipButton.setRightIcon("remove-white");
+                                closeIcon.setOnMousePressed(e -> controller.onRemoveCustomMethod(bitcoinPaymentMethod));
+                            },
+                            () -> {
+                                // Lookup for an image with the id of the BitcoinPaymentRail enum name (ONCHAIN)
+                                ImageView icon = ImageUtil.getImageViewById(bitcoinPaymentMethod.getName());
+                                chipButton.setLeftIcon(icon);
+                            });
             flowPane.getChildren().add(chipButton);
         }
     }

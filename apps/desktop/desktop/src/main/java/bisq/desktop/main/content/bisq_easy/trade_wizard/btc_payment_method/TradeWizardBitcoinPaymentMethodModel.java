@@ -32,14 +32,15 @@ public class TradeWizardBitcoinPaymentMethodModel implements Model {
     private Direction direction;
     @Setter
     private String headline;
-    private final ObservableList<BitcoinPaymentMethod> bitcoinPaymentMethod = FXCollections.observableArrayList();
-    private final SortedList<BitcoinPaymentMethod> sortedBitcoinPaymentMethods = new SortedList<>(bitcoinPaymentMethod);
+    private final ObservableList<BitcoinPaymentMethod> bitcoinPaymentMethods = FXCollections.observableArrayList();
+    private final SortedList<BitcoinPaymentMethod> sortedBitcoinPaymentMethods = new SortedList<>(bitcoinPaymentMethods);
     private final ObservableList<BitcoinPaymentMethod> selectedBitcoinPaymentMethods = FXCollections.observableArrayList();
+    private final ObservableList<BitcoinPaymentMethod> addedCustomBitcoinPaymentMethods = FXCollections.observableArrayList();
 
     void reset() {
         direction = null;
         headline = null;
-        bitcoinPaymentMethod.clear();
+        bitcoinPaymentMethods.clear();
         selectedBitcoinPaymentMethods.clear();
     }
 }
