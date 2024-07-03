@@ -19,6 +19,7 @@ package bisq.settings;
 
 import bisq.common.proto.PersistableProto;
 import bisq.settings.protobuf.CookieMapEntry;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.util.Map;
@@ -31,6 +32,7 @@ import java.util.stream.Collectors;
  * Should not be over-used for domain specific data where type safety and data integrity is important.
  * Does not support observable properties.
  */
+@Slf4j
 public final class Cookie implements PersistableProto {
     private final Map<CookieMapKey, String> map = new ConcurrentHashMap<>();
 
@@ -62,13 +64,18 @@ public final class Cookie implements PersistableProto {
     }
 
     static Cookie fromProto(bisq.settings.protobuf.Cookie proto) {
-        return new Cookie(proto.getCookieMapEntriesList().stream()
-                .collect(Collectors.toMap(
-                        entry -> {
-                            Optional<String> subKey = entry.hasSubKey() ? Optional.of(entry.getSubKey()) : Optional.empty();
-                            return CookieMapKey.fromProto(entry.getKey(), subKey);
-                        },
-                        CookieMapEntry::getValue)));
+        try {
+            return new Cookie(proto.getCookieMapEntriesList().stream()
+                    .collect(Collectors.toMap(
+                            entry -> {
+                                Optional<String> subKey = entry.hasSubKey() ? Optional.of(entry.getSubKey()) : Optional.empty();
+                                return CookieMapKey.fromProto(entry.getKey(), subKey);
+                            },
+                            CookieMapEntry::getValue)));
+        } catch (Exception e) {
+            log.error("Reading cookie from protobuf failed. We create a empty cookie instead.", e);
+            return new Cookie();
+        }
     }
 
     public Optional<String> asString(CookieKey key) {
