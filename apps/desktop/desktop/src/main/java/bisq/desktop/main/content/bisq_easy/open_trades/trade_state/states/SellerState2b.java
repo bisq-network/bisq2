@@ -87,10 +87,11 @@ public class SellerState2b extends BaseState {
             super(model, controller);
 
             headline = FormUtils.getHeadline();
+            WrappingText info = FormUtils.getInfo(Res.get("bisqEasy.tradeState.info.seller.phase2b.info"));
             fiatReceivedButton = new Button();
             fiatReceivedButton.setDefaultButton(true);
             VBox.setMargin(fiatReceivedButton, new Insets(5, 0, 10, 0));
-            root.getChildren().addAll(headline, fiatReceivedButton);
+            root.getChildren().addAll(headline, info, fiatReceivedButton);
         }
 
         @Override
