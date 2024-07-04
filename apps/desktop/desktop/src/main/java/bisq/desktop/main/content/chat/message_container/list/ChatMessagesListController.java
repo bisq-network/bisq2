@@ -40,6 +40,7 @@ import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.confidential.resend.ResendMessageService;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.options.OfferOptionUtil;
+import bisq.presentation.formatters.DateFormatter;
 import bisq.settings.SettingsService;
 import bisq.trade.Trade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
