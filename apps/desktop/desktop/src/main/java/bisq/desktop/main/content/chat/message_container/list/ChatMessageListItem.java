@@ -104,13 +104,14 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private final String lastSeenAsString;
     @Nullable
     private String messageId;
-    private final Set<Pin> mapPins = new HashSet<>();
-    private final Set<Pin> statusPins = new HashSet<>();
     private final MarketPriceService marketPriceService;
     private final UserIdentityService userIdentityService;
     private final BooleanProperty showHighlighted = new SimpleBooleanProperty();
 
     // Delivery status
+    private Optional<ResendMessageService> resendMessageService;
+    private final Set<Pin> mapPins = new HashSet<>();
+    private final Set<Pin> statusPins = new HashSet<>();
     private final BooleanProperty shouldShowTryAgain = new SimpleBooleanProperty();
     private final BooleanProperty hasFailedDeliveryStatus = new SimpleBooleanProperty();
     private final ImageView successfulDeliveryIcon, pendingDeliveryIcon, failedDeliveryIcon;
@@ -118,7 +119,6 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private final SimpleObjectProperty<Node> messageDeliveryStatusNode = new SimpleObjectProperty<>();
 
     // Reactions
-    private Optional<ResendMessageService> resendMessageService;
     private Optional<Pin> userReactionsPin = Optional.empty();
     private final HashMap<Reaction, Set<UserProfile>> userReactions = new HashMap<>();
     private final SimpleObjectProperty<Node> reactionsNode = new SimpleObjectProperty<>();
@@ -342,7 +342,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         return reputationScoreDisplay.getNumberOfStars();
     }
 
-    public boolean hasActiveReaction(Reaction reaction) {
+    public boolean hasAddedReaction(Reaction reaction) {
         if (getUserReactions().containsKey(reaction)) {
             Set<UserProfile> userProfileSet = getUserReactions().get(reaction);
             UserProfile myProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();

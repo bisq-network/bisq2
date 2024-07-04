@@ -129,7 +129,7 @@ public abstract class BubbleMessageBox extends MessageBox {
             }
         });
 
-        reactionMenuItems.forEach(this::updateIsReactionActive);
+        reactionMenuItems.forEach(this::updateIsReactionSelected);
     }
 
     protected void setUpUserNameAndDateTime() {
@@ -313,16 +313,16 @@ public abstract class BubbleMessageBox extends MessageBox {
     private void toggleReaction(ReactionMenuItem reactionMenuItem) {
         controller.onReactMessage(item.getChatMessage(), reactionMenuItem.getReaction(), item.getChatChannel());
         reactMenu.hideMenu();
-        updateIsReactionActive(reactionMenuItem);
+        updateIsReactionSelected(reactionMenuItem);
     }
 
-    private void updateIsReactionActive(ReactionMenuItem reactionMenuItem) {
-        reactionMenuItem.setIsReactionActive(item.hasActiveReaction(reactionMenuItem.getReaction()));
+    private void updateIsReactionSelected(ReactionMenuItem reactionMenuItem) {
+        reactionMenuItem.setIsReactionSelected(item.hasAddedReaction(reactionMenuItem.getReaction()));
     }
 
     @Getter
     public static final class ReactionMenuItem extends BisqMenuItem {
-        private static final PseudoClass ACTIVE_PSEUDO_CLASS = PseudoClass.getPseudoClass("selected");
+        private static final PseudoClass SELECTED_PSEUDO_CLASS = PseudoClass.getPseudoClass("selected");
 
         private final Reaction reaction;
 
@@ -335,8 +335,8 @@ public abstract class BubbleMessageBox extends MessageBox {
             HBox.setMargin(this, new Insets(2));
         }
 
-        public void setIsReactionActive(boolean isActive) {
-            pseudoClassStateChanged(ACTIVE_PSEUDO_CLASS, isActive);
+        public void setIsReactionSelected(boolean isSelected) {
+            pseudoClassStateChanged(SELECTED_PSEUDO_CLASS, isSelected);
         }
     }
 }
