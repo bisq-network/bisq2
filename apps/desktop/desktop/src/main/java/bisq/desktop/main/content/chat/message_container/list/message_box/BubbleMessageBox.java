@@ -128,6 +128,8 @@ public abstract class BubbleMessageBox extends MessageBox {
                 showDateTimeAndActionsMenu(false);
             }
         });
+
+        reactionMenuItems.forEach(this::updateIsReactionActive);
     }
 
     protected void setUpUserNameAndDateTime() {
@@ -304,7 +306,6 @@ public abstract class BubbleMessageBox extends MessageBox {
             String iconId = reaction.toString().replace("_", "").toLowerCase();
             ReactionMenuItem reactionMenuItem = new ReactionMenuItem(iconId, reaction);
             reactionMenuItem.setOnAction(e -> toggleReaction(reactionMenuItem));
-            updateIsReactionActive(reactionMenuItem);
             reactionMenuItems.add(reactionMenuItem);
         });
     }
@@ -321,7 +322,7 @@ public abstract class BubbleMessageBox extends MessageBox {
 
     @Getter
     public static final class ReactionMenuItem extends BisqMenuItem {
-        private static final PseudoClass ACTIVE_PSEUDO_CLASS = PseudoClass.getPseudoClass("active");
+        private static final PseudoClass ACTIVE_PSEUDO_CLASS = PseudoClass.getPseudoClass("selected");
 
         private final Reaction reaction;
 
@@ -329,7 +330,9 @@ public abstract class BubbleMessageBox extends MessageBox {
             super(iconId, iconId);
 
             this.reaction = reaction;
-            useIconOnly();
+            useIconOnly(24);
+            getStyleClass().add("reaction-menu-item");
+            HBox.setMargin(this, new Insets(2));
         }
 
         public void setIsReactionActive(boolean isActive) {

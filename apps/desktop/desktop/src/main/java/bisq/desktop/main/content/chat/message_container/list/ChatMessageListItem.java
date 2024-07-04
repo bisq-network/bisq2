@@ -384,11 +384,11 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     }
 
     private void logReactionsCount() {
-        StringBuilder reactionsCount = new StringBuilder("\n");
-        REACTION_DISPLAY_ORDER.forEach(reaction ->
-                reactionsCount.append(String.format("%s: %s\n", reaction,
-                        userReactions.containsKey(reaction) ? userReactions.get(reaction).size() : 0)));
-        log.info(reactionsCount.toString());
+//        StringBuilder reactionsCount = new StringBuilder("\n");
+//        REACTION_DISPLAY_ORDER.forEach(reaction ->
+//                reactionsCount.append(String.format("%s: %s\n", reaction,
+//                        userReactions.containsKey(reaction) ? userReactions.get(reaction).size() : 0)));
+//        log.info(reactionsCount.toString());
     }
 
     private String getLocalizedOfferBookMessage(BisqEasyOfferbookMessage chatMessage) {
