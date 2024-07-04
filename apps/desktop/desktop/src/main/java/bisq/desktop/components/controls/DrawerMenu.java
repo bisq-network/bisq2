@@ -29,6 +29,8 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import lombok.Getter;
 
+import java.util.Collection;
+
 public class DrawerMenu extends HBox {
     private static final String SLIDE_RIGHT_CSS_STYLE = "slide-right";
     private static final String SLIDE_LEFT_CSS_STYLE = "slide-left";
@@ -68,7 +70,7 @@ public class DrawerMenu extends HBox {
         attachListeners();
     }
 
-    public void addItems(BisqMenuItem... items) {
+    public void addItems(Collection<? extends BisqMenuItem> items) {
         itemsHBox.getChildren().addAll(items);
     }
 

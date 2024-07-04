@@ -104,20 +104,24 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private final String lastSeenAsString;
     @Nullable
     private String messageId;
-    private Optional<ResendMessageService> resendMessageService;
     private final Set<Pin> mapPins = new HashSet<>();
     private final Set<Pin> statusPins = new HashSet<>();
     private final MarketPriceService marketPriceService;
     private final UserIdentityService userIdentityService;
     private final BooleanProperty showHighlighted = new SimpleBooleanProperty();
-    private Optional<Pin> userReactionsPin = Optional.empty();
-    private final HashMap<Reaction, Set<UserProfile>> userReactions = new HashMap<>();
-    private final SimpleObjectProperty<Node> reactionsNode = new SimpleObjectProperty<>();
+
+    // Delivery status
     private final BooleanProperty shouldShowTryAgain = new SimpleBooleanProperty();
     private final BooleanProperty hasFailedDeliveryStatus = new SimpleBooleanProperty();
     private final ImageView successfulDeliveryIcon, pendingDeliveryIcon, failedDeliveryIcon;
     private final BisqMenuItem tryAgainMenuItem;
     private final SimpleObjectProperty<Node> messageDeliveryStatusNode = new SimpleObjectProperty<>();
+
+    // Reactions
+    private Optional<ResendMessageService> resendMessageService;
+    private Optional<Pin> userReactionsPin = Optional.empty();
+    private final HashMap<Reaction, Set<UserProfile>> userReactions = new HashMap<>();
+    private final SimpleObjectProperty<Node> reactionsNode = new SimpleObjectProperty<>();
 
     public ChatMessageListItem(M chatMessage,
                                C chatChannel,
@@ -193,7 +197,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                     });
 
                     setupDisplayReactionsNode();
-                    //logReactionsCount();
+                    logReactionsCount();
                 }
 
                 @Override
@@ -215,7 +219,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                     });
 
                     setupDisplayReactionsNode();
-                    //logReactionsCount();
+                    logReactionsCount();
                 }
 
                 @Override
@@ -224,7 +228,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                     log.info("Clearing reactions");
 
                     setupDisplayReactionsNode();
-                    //logReactionsCount();
+                    logReactionsCount();
                 }
             }));
         }
@@ -338,6 +342,15 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         return reputationScoreDisplay.getNumberOfStars();
     }
 
+    public boolean hasActiveReaction(Reaction reaction) {
+        if (getUserReactions().containsKey(reaction)) {
+            Set<UserProfile> userProfileSet = getUserReactions().get(reaction);
+            UserProfile myProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
+            return userProfileSet.contains(myProfile);
+        }
+        return false;
+    }
+
     private boolean hasBisqEasyOfferWithDirection(Direction direction) {
         if (chatMessage instanceof BisqEasyOfferMessage) {
             BisqEasyOfferMessage bisqEasyOfferMessage = (BisqEasyOfferMessage) chatMessage;
@@ -407,7 +420,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                             case MAILBOX_MSG_RECEIVED:
                                 statusLabel.setGraphic(successfulDeliveryIcon);
                                 break;
-                            // Pending deliver
+                            // Pending delivery
                             case CONNECTING:
                             case SENT:
                             case TRY_ADD_TO_MAILBOX:

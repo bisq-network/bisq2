@@ -37,6 +37,8 @@ import javafx.scene.layout.VBox;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.util.Collections;
+
 public final class MyTextMessageBox extends BubbleMessageBox {
     private final static String EDITED_POST_FIX = " " + Res.get("chat.message.wasEdited");
 
@@ -113,8 +115,8 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         super.setUpActions();
 
         reactMenu.setSlideToTheLeft();
-        reactMenu.addItems(partyReactionMenu, heartReactionMenu, laughReactionMenu, happyReactionMenu,
-                thumbsDownReactionMenu, thumbsUpReactionMenu);
+        Collections.reverse(reactionMenuItems);
+        reactMenu.addItems(reactionMenuItems);
         editAction = new BisqMenuItem("edit-grey", "edit-white");
         editAction.useIconOnly();
         editAction.setTooltip(Res.get("action.edit"));

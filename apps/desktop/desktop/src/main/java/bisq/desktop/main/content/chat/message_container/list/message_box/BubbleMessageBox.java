@@ -33,6 +33,7 @@ import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
 import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.i18n.Res;
+import javafx.css.PseudoClass;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
@@ -41,10 +42,14 @@ import javafx.scene.control.ListView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -53,6 +58,8 @@ public abstract class BubbleMessageBox extends MessageBox {
     protected static final double CHAT_MESSAGE_BOX_MAX_WIDTH = 630; // TODO: it should be 510 because of reactions on min size
     protected static final double OFFER_MESSAGE_USER_ICON_SIZE = 70;
     protected static final Insets ACTION_ITEMS_MARGIN = new Insets(2, 0, -2, 0);
+    private static final List<Reaction> REACTIONS = Arrays.asList(Reaction.THUMBS_UP, Reaction.THUMBS_DOWN, Reaction.HAPPY,
+            Reaction.LAUGH, Reaction.HEART, Reaction.PARTY);
 
     private final Subscription showHighlightedPin, reactionsPin, hasFailedDeliveryStatusPin;
     protected final ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item;
@@ -64,13 +71,12 @@ public abstract class BubbleMessageBox extends MessageBox {
     protected final VBox quotedMessageVBox, contentVBox;
     protected DrawerMenu reactMenu;
     private Subscription reactMenuPin;
+    protected List<ReactionMenuItem> reactionMenuItems = new ArrayList<>();
     protected Label supportedLanguages, userName, dateTime, message;
     protected HBox dateTimeHBox, userNameAndDateHBox, messageBgHBox, messageHBox;
     protected VBox userProfileIconVbox;
     protected BisqMenuItem copyAction;
     protected DropdownMenu moreActionsMenu;
-    protected BisqMenuItem happyReactionMenu, laughReactionMenu, heartReactionMenu, thumbsDownReactionMenu,
-            thumbsUpReactionMenu, partyReactionMenu;
 
     public BubbleMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
                             ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
@@ -182,12 +188,7 @@ public abstract class BubbleMessageBox extends MessageBox {
         setOnMouseEntered(null);
         setOnMouseExited(null);
 
-        happyReactionMenu.setOnAction(null);
-        laughReactionMenu.setOnAction(null);
-        heartReactionMenu.setOnAction(null);
-        thumbsDownReactionMenu.setOnAction(null);
-        thumbsUpReactionMenu.setOnAction(null);
-        partyReactionMenu.setOnAction(null);
+        reactionMenuItems.forEach(menuItem -> menuItem.setOnAction(null));
 
         showHighlightedPin.unsubscribe();
         reactionsPin.unsubscribe();
@@ -299,28 +300,40 @@ public abstract class BubbleMessageBox extends MessageBox {
     }
 
     private void setUpReactMenu() {
-        thumbsUpReactionMenu = new BisqMenuItem("react-thumbsup", "react-thumbsup");
-        thumbsUpReactionMenu.useIconOnly();
-        thumbsUpReactionMenu.setOnAction(e -> toggleReaction(Reaction.THUMBS_UP));
-        thumbsDownReactionMenu = new BisqMenuItem("react-thumbsdown", "react-thumbsdown");
-        thumbsDownReactionMenu.useIconOnly();
-        thumbsDownReactionMenu.setOnAction(e -> toggleReaction(Reaction.THUMBS_DOWN));
-        happyReactionMenu = new BisqMenuItem("react-happy", "react-happy");
-        happyReactionMenu.useIconOnly();
-        happyReactionMenu.setOnAction(e -> toggleReaction(Reaction.HAPPY));
-        laughReactionMenu = new BisqMenuItem("react-laugh", "react-laugh");
-        laughReactionMenu.useIconOnly();
-        laughReactionMenu.setOnAction(e -> toggleReaction(Reaction.LAUGH));
-        heartReactionMenu = new BisqMenuItem("react-heart", "react-heart");
-        heartReactionMenu.useIconOnly();
-        heartReactionMenu.setOnAction(e -> toggleReaction(Reaction.HEART));
-        partyReactionMenu = new BisqMenuItem("react-party", "react-party");
-        partyReactionMenu.useIconOnly();
-        partyReactionMenu.setOnAction(e -> toggleReaction(Reaction.PARTY));
+        REACTIONS.forEach(reaction -> {
+            String iconId = reaction.toString().replace("_", "").toLowerCase();
+            ReactionMenuItem reactionMenuItem = new ReactionMenuItem(iconId, reaction);
+            reactionMenuItem.setOnAction(e -> toggleReaction(reactionMenuItem));
+            updateIsReactionActive(reactionMenuItem);
+            reactionMenuItems.add(reactionMenuItem);
+        });
     }
 
-    private void toggleReaction(Reaction reaction) {
-        controller.onReactMessage(item.getChatMessage(), reaction, item.getChatChannel());
+    private void toggleReaction(ReactionMenuItem reactionMenuItem) {
+        controller.onReactMessage(item.getChatMessage(), reactionMenuItem.getReaction(), item.getChatChannel());
         reactMenu.hideMenu();
+        updateIsReactionActive(reactionMenuItem);
+    }
+
+    private void updateIsReactionActive(ReactionMenuItem reactionMenuItem) {
+        reactionMenuItem.setIsReactionActive(item.hasActiveReaction(reactionMenuItem.getReaction()));
+    }
+
+    @Getter
+    public static final class ReactionMenuItem extends BisqMenuItem {
+        private static final PseudoClass ACTIVE_PSEUDO_CLASS = PseudoClass.getPseudoClass("active");
+
+        private final Reaction reaction;
+
+        public ReactionMenuItem(String iconId, Reaction reaction) {
+            super(iconId, iconId);
+
+            this.reaction = reaction;
+            useIconOnly();
+        }
+
+        public void setIsReactionActive(boolean isActive) {
+            pseudoClassStateChanged(ACTIVE_PSEUDO_CLASS, isActive);
+        }
     }
 }
