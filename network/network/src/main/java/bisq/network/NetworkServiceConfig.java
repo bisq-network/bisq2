@@ -154,17 +154,17 @@ public final class NetworkServiceConfig {
         switch (transportType) {
             case TOR: {
                 return ConfigUtil.getStringList(config, "tor").stream()
-                        .map(Address::new).
+                        .map(Address::fromFullAddress).
                         collect(Collectors.toSet());
             }
             case I2P: {
                 return ConfigUtil.getStringList(config, "i2p").stream()
-                        .map(Address::new)
+                        .map(Address::fromFullAddress)
                         .collect(Collectors.toSet());
             }
             case CLEAR: {
                 return ConfigUtil.getStringList(config, "clear").stream()
-                        .map(Address::new)
+                        .map(Address::fromFullAddress)
                         .collect(Collectors.toSet());
             }
             default: {

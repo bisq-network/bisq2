@@ -38,6 +38,6 @@ public final class ServerSocketResult {
     }
 
     public ServerSocketResult(CreateOnionServiceResponse response) {
-        this(response.getServerSocket(), new Address(response.getOnionAddress().toString()));
+        this(response.getServerSocket(), Address.fromFullAddress(response.getOnionAddress().toString()));
     }
 }
