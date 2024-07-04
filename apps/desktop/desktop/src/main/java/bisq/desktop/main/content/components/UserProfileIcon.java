@@ -20,6 +20,7 @@ package bisq.desktop.main.content.components;
 import bisq.desktop.components.cathash.CatHash;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.i18n.Res;
+import bisq.user.RepublishUserProfileService;
 import bisq.user.profile.UserProfile;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -111,11 +112,11 @@ public class UserProfileIcon extends StackPane {
     }
 
     private void updateLastSeenDot() {
-        boolean wasSeenRecently = lastSeen > 0 && lastSeen < TimeUnit.HOURS.toMillis(6);
+        boolean wasActiveRecently = lastSeen > 0 && lastSeen < TimeUnit.HOURS.toMillis(1);
         String color;
-        if (wasSeenRecently) {
-            boolean wasSeenMostRecently = lastSeen < TimeUnit.HOURS.toMillis(3);
-            if (wasSeenMostRecently) {
+        if (wasActiveRecently) {
+            boolean wasActive = lastSeen < RepublishUserProfileService.MIN_PAUSE_TO_NEXT_REPUBLISH * 2;
+            if (wasActive) {
                 color = "green";
             } else {
                 color = "yellow";

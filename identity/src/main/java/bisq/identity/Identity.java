@@ -77,4 +77,8 @@ public final class Identity implements PersistableProto {
     public byte[] getPubKeyHash() {
         return networkId.getPubKey().getHash();
     }
+
+    public boolean isDefaultTag() {
+        return tag.equals(IdentityService.DEFAULT_IDENTITY_TAG);
+    }
 }

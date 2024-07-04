@@ -22,8 +22,6 @@ import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
-import bisq.common.threading.ExecutorFactory;
-import bisq.common.timer.Scheduler;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
@@ -39,16 +37,12 @@ import bisq.security.pow.ProofOfWork;
 import bisq.security.pow.hashcash.HashCashProofOfWorkService;
 import bisq.user.profile.UserProfile;
 import lombok.Getter;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.KeyPair;
 import java.util.Optional;
-import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -56,21 +50,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 public class UserIdentityService implements PersistenceClient<UserIdentityStore>, Service {
     public final static int MINT_NYM_DIFFICULTY = 65536;  // Math.pow(2, 16) = 65536;
-
-    @Getter
-    @ToString
-    public static final class Config {
-        private final long republishUserProfileInterval;
-
-        public Config(long republishUserProfileInterval) {
-            this.republishUserProfileInterval = TimeUnit.HOURS.toMillis(republishUserProfileInterval);
-        }
-
-        public static Config from(com.typesafe.config.Config typeSafeConfig) {
-            return new Config(typeSafeConfig.getLong("republishUserProfileInterval"));
-        }
-    }
-
 
     @Getter
     private final UserIdentityStore persistableStore = new UserIdentityStore();
@@ -81,18 +60,13 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     private final NetworkService networkService;
 
     private final Object lock = new Object();
-    private final Config config;
     @Getter
     private final Observable<UserIdentity> newlyCreatedUserIdentity = new Observable<>();
-    private Optional<ExecutorService> rePublishUserProfilesExecutor = Optional.empty();
-    private Optional<Scheduler> rePublishAllUserProfilesScheduler = Optional.empty();
 
-    public UserIdentityService(Config config,
-                               PersistenceService persistenceService,
+    public UserIdentityService(PersistenceService persistenceService,
                                SecurityService securityService,
                                IdentityService identityService,
                                NetworkService networkService) {
-        this.config = config;
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
         hashCashProofOfWorkService = securityService.getHashCashProofOfWorkService();
         this.identityService = identityService;
@@ -101,21 +75,11 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-
-        // We delay publishing to be better bootstrapped
-        long initialDelay = TimeUnit.SECONDS.toMillis(5);
-        long delay = TimeUnit.HOURS.toMillis(3);
-        rePublishAllUserProfilesScheduler = Optional.of(Scheduler.run(this::rePublishAllUserProfiles)
-                .periodically(initialDelay, delay, TimeUnit.MILLISECONDS));
         return CompletableFuture.completedFuture(true);
     }
 
     public CompletableFuture<Boolean> shutdown() {
-        rePublishAllUserProfilesScheduler.ifPresent(Scheduler::stop);
-        return CompletableFuture.supplyAsync(() -> {
-            rePublishUserProfilesExecutor.ifPresent(rePublishUserProfilesExecutor -> ExecutorFactory.shutdownAndAwaitTermination(rePublishUserProfilesExecutor, 100));
-            return true;
-        });
+        return CompletableFuture.completedFuture(true);
     }
 
 
@@ -233,23 +197,6 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
                 userIdentity.getIdentity().getNetworkIdWithKeyPair().getKeyPair());
     }
 
-    public CompletableFuture<Void> maybePublishUserProfile(UserProfile userProfile, KeyPair keyPair) {
-        if (shouldPublishUserProfile()) {
-            return publishUserProfile(userProfile, keyPair)
-                    .whenComplete((broadcastResult, throwable) -> {
-                        boolean success = throwable == null && !broadcastResult.isEmpty();
-                        // Publish all other user profiles as well, or republish if not successful
-                        Set<UserIdentity> userIdentities = getUserIdentities().stream()
-                                .filter(userIdentity -> !success || !userProfile.equals(userIdentity.getUserProfile()))
-                                .collect(Collectors.toSet());
-                        rePublishUserProfiles(userIdentities);
-                    })
-                    .thenApply(broadcastResult -> null);
-        } else {
-            return CompletableFuture.completedFuture(null);
-        }
-    }
-
     public boolean hasUserIdentities() {
         return !getUserIdentities().isEmpty();
     }
@@ -284,38 +231,8 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
                 .collect(Collectors.toSet());
     }
 
-    private boolean shouldPublishUserProfile() {
-        return System.currentTimeMillis() - persistableStore.getLastUserProfilePublishingDate() > config.getRepublishUserProfileInterval();
-    }
-
-    private void rePublishAllUserProfiles() {
-        rePublishUserProfiles(getUserIdentities());
-    }
-
-    private void rePublishUserProfiles(Set<UserIdentity> userIdentities) {
-        if (rePublishUserProfilesExecutor.isEmpty()) {
-            rePublishUserProfilesExecutor = Optional.of(ExecutorFactory.newSingleThreadExecutor("rePublishUserProfilesExecutor"));
-            rePublishUserProfilesExecutor.get().submit(() -> {
-                userIdentities.forEach(userIdentity -> {
-                    UserProfile userProfile = UserProfile.forRePublish(userIdentity.getUserProfile());
-                    publishUserProfile(userProfile, userIdentity.getNetworkIdWithKeyPair().getKeyPair());
-                    try {
-                        int republishDelay = 60_000 + new Random().nextInt(180_000);
-                        Thread.sleep(republishDelay);
-                    } catch (InterruptedException ignore) {
-                    }
-                });
-                rePublishUserProfilesExecutor.get().shutdownNow();
-                rePublishUserProfilesExecutor = Optional.empty();
-            });
-        } else {
-            log.warn("called rePublishUserProfiles while previous call to rePublishUserProfiles has not completed yet. We ignore that call.");
-        }
-    }
-
-    private CompletableFuture<BroadcastResult> publishUserProfile(UserProfile userProfile, KeyPair keyPair) {
+    public CompletableFuture<BroadcastResult> publishUserProfile(UserProfile userProfile, KeyPair keyPair) {
         log.info("publishUserProfile {}", userProfile.getUserName());
-        persistableStore.setLastUserProfilePublishingDate(System.currentTimeMillis());
         persist();
 
         // We publish both the old version and the new version to support old clients

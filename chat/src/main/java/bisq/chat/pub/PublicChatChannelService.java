@@ -17,11 +17,7 @@
 
 package bisq.chat.pub;
 
-import bisq.chat.ChatChannel;
-import bisq.chat.ChatChannelDomain;
-import bisq.chat.ChatChannelService;
-import bisq.chat.ChatMessage;
-import bisq.chat.Citation;
+import bisq.chat.*;
 import bisq.chat.reactions.ChatMessageReaction;
 import bisq.chat.reactions.Reaction;
 import bisq.network.NetworkService;
@@ -98,8 +94,7 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
         findChannel(message.getChannelId()).ifPresent(channel -> addMessage(message, channel));
 
         KeyPair keyPair = userIdentity.getNetworkIdWithKeyPair().getKeyPair();
-        return userIdentityService.maybePublishUserProfile(userIdentity.getUserProfile(), keyPair)
-                .thenCompose(nil -> networkService.publishAuthenticatedData(message, keyPair));
+        return networkService.publishAuthenticatedData(message, keyPair);
     }
 
     public CompletableFuture<BroadcastResult> publishEditedChatMessage(M originalChatMessage,
@@ -131,8 +126,7 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
         addMessageReaction(chatMessageReaction, message);
 
         KeyPair keyPair = userIdentity.getNetworkIdWithKeyPair().getKeyPair();
-        return userIdentityService.maybePublishUserProfile(userIdentity.getUserProfile(), keyPair)
-                .thenCompose(nil -> networkService.publishAuthenticatedData((DistributedData) chatMessageReaction, keyPair));
+        return networkService.publishAuthenticatedData((DistributedData) chatMessageReaction, keyPair);
     }
 
     public CompletableFuture<BroadcastResult> deleteChatMessageReaction(R chatMessageReaction, NetworkIdWithKeyPair networkIdWithKeyPair) {

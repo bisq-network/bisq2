@@ -39,8 +39,12 @@ import bisq.settings.Cookie;
 import bisq.settings.CookieKey;
 import bisq.settings.DontShowAgainService;
 import bisq.settings.SettingsService;
+import bisq.user.RepublishUserProfileService;
 import bisq.user.identity.UserIdentityService;
 import javafx.geometry.Rectangle2D;
+import javafx.scene.Scene;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Screen;
 import lombok.Getter;
@@ -72,7 +76,8 @@ public class DesktopController extends NavigationController {
     private final ChatNotificationService chatNotificationService;
     private final ServiceProvider serviceProvider;
     private final DontShowAgainService dontShowAgainService;
-    private PreventStandbyModeService preventStandbyModeService;
+    private final PreventStandbyModeService preventStandbyModeService;
+    private final RepublishUserProfileService republishUserProfileService;
 
     private final Observable<State> applicationServiceState;
     private final JavaFxApplicationData applicationJavaFxApplicationData;
@@ -92,6 +97,8 @@ public class DesktopController extends NavigationController {
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
         dontShowAgainService = serviceProvider.getDontShowAgainService();
+        preventStandbyModeService = new PreventStandbyModeService(serviceProvider);
+        republishUserProfileService = serviceProvider.getUserService().getRepublishUserProfileService();
     }
 
     public void init() {
@@ -104,7 +111,6 @@ public class DesktopController extends NavigationController {
         Browser.initialize(applicationJavaFxApplicationData.getHostServices(), settingsService, dontShowAgainService);
         Transitions.setSettingsService(settingsService);
         AnchorPane viewRoot = view.getRoot();
-        preventStandbyModeService = new PreventStandbyModeService(serviceProvider);
 
         Navigation.init(settingsService);
         Overlay.init(serviceProvider, viewRoot);
@@ -158,6 +164,10 @@ public class DesktopController extends NavigationController {
         } else {
             maybeShowLockScreen();
         }
+
+        Scene scene = view.getRoot().getScene();
+        scene.addEventFilter(MouseEvent.MOUSE_MOVED, e -> republishUserProfileService.userActivityDetected());
+        scene.addEventFilter(KeyEvent.KEY_PRESSED, e -> republishUserProfileService.userActivityDetected());
 
         onActivatedHandler.run();
     }

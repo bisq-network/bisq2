@@ -124,8 +124,7 @@ public class RestApiApplicationService extends ApplicationService {
 
         contractService = new ContractService(securityService);
 
-        userService = new UserService(UserService.Config.from(getConfig("user")),
-                persistenceService,
+        userService = new UserService(persistenceService,
                 securityService,
                 identityService,
                 networkService,
