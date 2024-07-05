@@ -427,11 +427,9 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                             case TRY_ADD_TO_MAILBOX:
                                 statusLabel.setGraphic(pendingDeliveryIcon);
                                 break;
-                            // Added to mailbox
                             case ADDED_TO_MAILBOX:
                                 statusLabel.setGraphic(addedToMailboxIcon);
                                 break;
-                            // Failed to deliver
                             case FAILED:
                                 statusLabel.setGraphic(failedDeliveryIcon);
                                 shouldShowTryAgain = resendMessageService.map(service -> service.canManuallyResendMessage(messageId)).orElse(false);
