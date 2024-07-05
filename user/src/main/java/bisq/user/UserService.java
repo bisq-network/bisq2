@@ -28,7 +28,6 @@ import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationService;
 import lombok.Getter;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.CompletableFuture;
@@ -37,27 +36,13 @@ import java.util.concurrent.CompletableFuture;
 @Getter
 public class UserService implements Service {
     private final BannedUserService bannedUserService;
-
-    @Getter
-    @ToString
-    public static final class Config {
-        private final UserIdentityService.Config userIdentityConfig;
-
-        public Config(UserIdentityService.Config userIdentityConfig) {
-            this.userIdentityConfig = userIdentityConfig;
-        }
-
-        public static Config from(com.typesafe.config.Config config) {
-            return new Config(UserIdentityService.Config.from(config.getConfig("userIdentity")));
-        }
-    }
+    private final RepublishUserProfileService republishUserProfileService;
 
     private final UserProfileService userProfileService;
     private final UserIdentityService userIdentityService;
     private final ReputationService reputationService;
 
-    public UserService(Config config,
-                       PersistenceService persistenceService,
+    public UserService(PersistenceService persistenceService,
                        SecurityService securityService,
                        IdentityService identityService,
                        NetworkService networkService,
@@ -68,11 +53,12 @@ public class UserService implements Service {
 
         userProfileService = new UserProfileService(persistenceService, securityService, networkService);
 
-        userIdentityService = new UserIdentityService(config.getUserIdentityConfig(),
-                persistenceService,
+        userIdentityService = new UserIdentityService(persistenceService,
                 securityService,
                 identityService,
                 networkService);
+
+        republishUserProfileService = new RepublishUserProfileService(userIdentityService);
 
         reputationService = new ReputationService(persistenceService,
                 networkService,
@@ -91,6 +77,7 @@ public class UserService implements Service {
         log.info("initialize");
         return userProfileService.initialize()
                 .thenCompose(result -> userIdentityService.initialize())
+                .thenCompose(result -> republishUserProfileService.initialize())
                 .thenCompose(result -> reputationService.initialize())
                 .thenCompose(result -> bannedUserService.initialize());
     }
@@ -98,6 +85,7 @@ public class UserService implements Service {
     public CompletableFuture<Boolean> shutdown() {
         return userProfileService.shutdown()
                 .thenCompose(result -> userIdentityService.shutdown())
+                .thenCompose(result -> republishUserProfileService.shutdown())
                 .thenCompose(result -> reputationService.shutdown())
                 .thenCompose(result -> bannedUserService.shutdown());
     }

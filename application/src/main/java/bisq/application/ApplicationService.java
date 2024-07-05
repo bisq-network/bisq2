@@ -29,7 +29,6 @@ import bisq.common.logging.LogSetup;
 import bisq.common.util.*;
 import bisq.i18n.Res;
 import bisq.persistence.PersistenceService;
-import ch.qos.logback.classic.Level;
 import com.typesafe.config.ConfigFactory;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -150,7 +149,6 @@ public abstract class ApplicationService implements Service {
         checkInstanceLock();
 
         LogSetup.setup(dataDir.resolve("bisq").toString());
-        LogSetup.setLevel(Level.INFO);
         log.info(AsciiLogo.getAsciiLogo());
         log.info("Data directory: {}", config.getBaseDir());
         log.info("Version: {}", ApplicationVersion.getVersion());

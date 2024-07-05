@@ -23,7 +23,6 @@ import bisq.common.util.OsUtils;
 import bisq.desktop_app.DesktopApp;
 import bisq.updater.DownloadedFilesVerification;
 import bisq.updater.UpdaterUtils;
-import ch.qos.logback.classic.Level;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -85,7 +84,6 @@ public class DesktopAppLauncher {
         String appName = options.getAppName().orElse(DesktopAppLauncher.APP_NAME);
         String appDataDir = OsUtils.getUserDataDir().resolve(appName).toAbsolutePath().toString();
         LogSetup.setup(Paths.get(appDataDir, "bisq").toString());
-        LogSetup.setLevel(Level.INFO);
         String version = UpdaterUtils.readVersionFromVersionFile(appDataDir)
                 .or(options::getVersion)
                 .orElse(DesktopAppLauncher.VERSION);
