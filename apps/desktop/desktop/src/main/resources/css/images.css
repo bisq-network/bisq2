@@ -1008,6 +1008,18 @@
     -fx-image: url("/images/chat/message-status/undelivered-message-white.png");
 }
 
+#mailbox-green {
+    -fx-image: url("/images/chat/message-status/mailbox-green.png");
+}
+
+#mailbox-grey {
+    -fx-image: url("/images/chat/message-status/mailbox-grey.png");
+}
+
+#mailbox-white {
+    -fx-image: url("/images/chat/message-status/mailbox-white.png");
+}
+
 
 /* ------------------------------------------------------------------------------------ */
 /* Chat Message Actions */
