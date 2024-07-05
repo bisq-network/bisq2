@@ -1,6 +1,6 @@
 /*******************************************************************************
  *                                                                             *
- * Chat domain                                                               *
+ * Chat domain                                                                 *
  *                                                                             *
  ******************************************************************************/
 
@@ -535,4 +535,16 @@
 .chat-guide-headline {
     -fx-font-family: "IBM Plex Sans Light";
     -fx-font-size: 2.15em;
+}
+
+/*******************************************************************************
+ * Reactions                                                                   *
+ ******************************************************************************/
+
+.reaction-menu-item:selected {
+    -fx-background-color: -bisq-mid-grey-10 !important;
+}
+
+.button.bisq-menu-item.reaction-menu-item.icon-only:hover {
+    -fx-background-color: -bisq-mid-grey-10 !important;
 }

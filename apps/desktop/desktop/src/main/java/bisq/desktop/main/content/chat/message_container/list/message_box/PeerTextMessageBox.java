@@ -65,8 +65,7 @@ public class PeerTextMessageBox extends BubbleMessageBox {
     protected void setUpActions() {
         super.setUpActions();
 
-        reactMenu.addItems(thumbsUpReactionMenu, thumbsDownReactionMenu, happyReactionMenu, laughReactionMenu,
-                heartReactionMenu, partyReactionMenu);
+        reactMenu.addItems(reactionMenuItems);
         replyAction = new BisqMenuItem("reply-grey", "reply-white");
         replyAction.useIconOnly();
         replyAction.setTooltip(Res.get("chat.message.reply"));
