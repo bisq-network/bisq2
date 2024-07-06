@@ -114,7 +114,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private final Set<Pin> statusPins = new HashSet<>();
     private final BooleanProperty shouldShowTryAgain = new SimpleBooleanProperty();
     private final BooleanProperty hasFailedDeliveryStatus = new SimpleBooleanProperty();
-    private final ImageView successfulDeliveryIcon, pendingDeliveryIcon, failedDeliveryIcon;
+    private final ImageView successfulDeliveryIcon, pendingDeliveryIcon, addedToMailboxIcon, failedDeliveryIcon;
     private final BisqMenuItem tryAgainMenuItem;
     private final SimpleObjectProperty<Node> messageDeliveryStatusNode = new SimpleObjectProperty<>();
 
@@ -235,6 +235,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
 
         successfulDeliveryIcon = ImageUtil.getImageViewById("received-check-grey");
         pendingDeliveryIcon = ImageUtil.getImageViewById("sent-message-grey");
+        addedToMailboxIcon = ImageUtil.getImageViewById("mailbox-grey");
         failedDeliveryIcon = ImageUtil.getImageViewById("undelivered-message-yellow");
         tryAgainMenuItem = new BisqMenuItem("try-again-grey", "try-again-white");
         tryAgainMenuItem.useIconOnly(22);
@@ -424,10 +425,11 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                             case CONNECTING:
                             case SENT:
                             case TRY_ADD_TO_MAILBOX:
-                            case ADDED_TO_MAILBOX:
                                 statusLabel.setGraphic(pendingDeliveryIcon);
                                 break;
-                            // Failed to deliver
+                            case ADDED_TO_MAILBOX:
+                                statusLabel.setGraphic(addedToMailboxIcon);
+                                break;
                             case FAILED:
                                 statusLabel.setGraphic(failedDeliveryIcon);
                                 shouldShowTryAgain = resendMessageService.map(service -> service.canManuallyResendMessage(messageId)).orElse(false);
