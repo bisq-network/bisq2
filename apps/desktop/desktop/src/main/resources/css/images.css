@@ -815,6 +815,14 @@
     -fx-image: url("/images/icons/language/language_white.png");
 }
 
+#maximize {
+    -fx-image: url("/images/icons/maximize.png");
+}
+
+#minimize {
+    -fx-image: url("/images/icons/minimize.png");
+}
+
 
 /* ------------------------------------------------------------------------------------ */
 /* Chat */

@@ -67,6 +67,7 @@ testfx-junit5-lib = { strictly = '4.0.16-alpha' }
 tukaani-lib = { strictly = '1.9' }
 typesafe-config-lib = { strictly = '1.4.2' }
 
+zxing-lib = { strictly = '3.5.3' }
 
 # Referenced in subproject's build.gradle > dependencies block in the form 'implementation libs.guava'
 # Note: keys can contain dash (protobuf-java) but the dash is replaced by dot when referenced
@@ -149,6 +150,8 @@ swagger-jaxrs2-jakarta = { module = 'io.swagger.core.v3:swagger-jaxrs2-jakarta',
 testfx-junit5 = { module = 'org.testfx:testfx-junit5', version.ref = 'testfx-junit5-lib' }
 tukaani = { module = 'org.tukaani:xz', version.ref = 'tukaani-lib' }
 typesafe-config = { module = 'com.typesafe:config', version.ref = 'typesafe-config-lib' }
+
+zxing = { module = 'com.google.zxing:javase', version.ref = 'zxing-lib' }
 
 # Defines groups of libs that are commonly used together
 # Referenced in dependencies block as 'implementation libs.bundles.i2p'

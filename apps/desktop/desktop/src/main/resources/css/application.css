@@ -304,3 +304,15 @@
 .overlapped-icons {
     -fx-fill: -bisq-dark-grey-20;
 }
+
+
+/*******************************************************************************
+ * QR code                                                              *
+ ******************************************************************************/
+
+.qr-code-display {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-background-color: white;
+    -fx-font-size: 1.1em;
+}

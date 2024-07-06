@@ -37,6 +37,7 @@ dependencies {
     implementation(libs.bundles.fontawesomefx)
     implementation(libs.bundles.fxmisc.libs)
     implementation(libs.typesafe.config)
+    implementation(libs.zxing)
 
     testImplementation(libs.testfx.junit5)
     testImplementation(libs.openjfx.monocle)
