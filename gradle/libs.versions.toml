@@ -55,6 +55,7 @@ openjfx-monocle-lib = { strictly = 'jdk-12.0.1+2'}
 protobuf-java-lib = { strictly = '3.19.4' }
 protobuf-gradle-plugin-lib = { strictly = '0.9.3' }
 
+sarxos-lib = { strictly = '0.3.12' }
 shadow-plugin = { strictly = '7.1.2' }
 slf4j-lib = { strictly = '1.7.36' }
 spring-boot-starter-web-lib = { strictly = '2.5.6' }
@@ -138,6 +139,7 @@ protobuf-java = { module = 'com.google.protobuf:protobuf-java', version.ref = 'p
 protobuf-gradle-plugin = { module = 'com.google.protobuf:protobuf-gradle-plugin', version.ref = 'protobuf-gradle-plugin-lib' }
 protobuf-java-util = { module = 'com.google.protobuf:protobuf-java-util', version.ref = 'protobuf-java-lib' }
 
+sarxos = { module = 'com.github.sarxos:webcam-capture', version.ref = 'sarxos-lib' }
 slf4j-api = { module = 'org.slf4j:slf4j-api', version.ref = 'slf4j-lib' }
 spring-boot-starter-web = { module = 'org.springframework.boot:spring-boot-starter-web', version.ref = 'spring-boot-starter-web-lib' }
 
