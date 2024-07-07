@@ -15,15 +15,22 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.components;
+package bisq.desktop.common.qr.webcam.mvc;
 
-public enum WaitingState {
-    TAKE_BISQ_EASY_OFFER,
-    ACCOUNT_DATA,
-    FIAT_PAYMENT,
-    FIAT_PAYMENT_CONFIRMATION,
-    BITCOIN_ADDRESS,
-    BITCOIN_PAYMENT,
-    BITCOIN_CONFIRMATION,
-    SCAN_WITH_CAMERA
+import bisq.desktop.common.qr.webcam.VideoSize;
+import bisq.desktop.common.view.Model;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.scene.image.Image;
+import lombok.Getter;
+
+@Getter
+public class QrCodeWebcamModel implements Model {
+    private final VideoSize videoSize;
+    private final ObjectProperty<Throwable> exception = new SimpleObjectProperty<>();
+    private final ObjectProperty<Image> webcamImage = new SimpleObjectProperty<>();
+
+    public QrCodeWebcamModel(VideoSize videoSize) {
+        this.videoSize = videoSize;
+    }
 }

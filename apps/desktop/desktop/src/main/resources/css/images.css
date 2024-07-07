@@ -178,6 +178,10 @@
     -fx-image: url("/images/waitingstates/bitcoin-confirmation.png");
 }
 
+#scan-with-camera {
+    -fx-image: url("/images/waitingstates/scan-with-camera.png");
+}
+
 #video {
     -fx-image: url("/images/video.png");
 }
@@ -821,6 +825,10 @@
 
 #minimize {
     -fx-image: url("/images/icons/minimize.png");
+}
+
+#scan-qr-code {
+    -fx-image: url("/images/icons/scan-qr-code.png");
 }
 
 

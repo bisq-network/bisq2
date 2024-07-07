@@ -15,15 +15,15 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.components;
+package bisq.desktop.common.qr.webcam.converter;
 
-public enum WaitingState {
-    TAKE_BISQ_EASY_OFFER,
-    ACCOUNT_DATA,
-    FIAT_PAYMENT,
-    FIAT_PAYMENT_CONFIRMATION,
-    BITCOIN_ADDRESS,
-    BITCOIN_PAYMENT,
-    BITCOIN_CONFIRMATION,
-    SCAN_WITH_CAMERA
+import org.bytedeco.javacv.Frame;
+
+/**
+ * Converts a JavaCV {@link Frame} to another object of type {@link T}.
+ *
+ * @param <T> The object type to convert to.
+ */
+public interface FrameConverter<T> {
+    T convert(Frame frame);
 }

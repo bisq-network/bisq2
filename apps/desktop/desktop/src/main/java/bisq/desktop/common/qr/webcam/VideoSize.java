@@ -15,15 +15,26 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.components;
+package bisq.desktop.common.qr.webcam;
 
-public enum WaitingState {
-    TAKE_BISQ_EASY_OFFER,
-    ACCOUNT_DATA,
-    FIAT_PAYMENT,
-    FIAT_PAYMENT_CONFIRMATION,
-    BITCOIN_ADDRESS,
-    BITCOIN_PAYMENT,
-    BITCOIN_CONFIRMATION,
-    SCAN_WITH_CAMERA
+import lombok.Getter;
+
+@Getter
+public enum VideoSize {
+    TINY(320, 240),
+    SMALL(480, 360),
+    SD(640, 480),
+    HD(1280, 720),
+    FULL_HD(1920, 1080),
+    QUAD_HD(2560, 1440),
+    TWO_K(2048, 1080),
+    ULTRA_HD(3840, 2160); // 4K
+
+    private final int width;
+    private final int height;
+
+    VideoSize(int width, int height) {
+        this.width = width;
+        this.height = height;
+    }
 }
