@@ -236,7 +236,8 @@ public abstract class PrivateChatChannelService<
                 message.getChatChannelDomain(),
                 message.getId(),
                 reaction.ordinal(),
-                new Date().getTime()
+                new Date().getTime(),
+                false
         );
     };
 }
