@@ -316,3 +316,10 @@
     -fx-background-color: white;
     -fx-font-size: 1.1em;
 }
+
+.qr-code-webcam {
+    -fx-fill: -fx-mid-text-color;
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-size: 1.3em;
+    -fx-font-family: "IBM Plex Sans Light";
+}

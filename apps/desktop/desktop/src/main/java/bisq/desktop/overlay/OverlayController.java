@@ -20,6 +20,7 @@ package bisq.desktop.overlay;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Transitions;
+import bisq.desktop.common.qr.webcam.mvc.QrCodeWebcamController;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
@@ -146,6 +147,9 @@ public class OverlayController extends NavigationController {
             }
             case BISQ_EASY_VIDEO: {
                 return Optional.of(new BisqEasyVideoController(serviceProvider));
+            }
+            case QR_CODE_WEBCAM: {
+                return Optional.of(new QrCodeWebcamController(serviceProvider));
             }
             case BISQ_EASY_GUIDE: {
                 return Optional.of(new BisqEasyGuideController(serviceProvider));

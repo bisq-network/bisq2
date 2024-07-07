@@ -50,6 +50,8 @@ public enum NavigationTarget {
 
     BISQ_EASY_VIDEO(OVERLAY, false),
 
+    QR_CODE_WEBCAM(OVERLAY, false),
+
     TRADE_WIZARD(OVERLAY, false),
     TRADE_WIZARD_DIRECTION(TRADE_WIZARD, false),
     TRADE_WIZARD_MARKET(TRADE_WIZARD, false),
