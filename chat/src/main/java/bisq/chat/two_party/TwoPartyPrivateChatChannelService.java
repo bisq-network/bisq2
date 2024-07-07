@@ -157,33 +157,32 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
     @Override
     protected void processMessage(TwoPartyPrivateChatMessage message) {
         if (canHandleChannelDomain(message) && isValid(message)) {
-            findChannel(message)
-                    .or(() -> {
-                        // We prevent to send leave messages after a peer has left, but there might be still 
-                        // race conditions where that might happen, so we check at receiving the message as well, so that
-                        // in cases we would get a leave message as first message (e.g. after having closed the channel) 
-                        // we do not create a channel.
-                        if (message.getChatMessageType() == ChatMessageType.LEAVE) {
-                            log.warn("We received a leave message as first message. This is not expected but might " +
-                                    "happen in some rare cases.");
-                            return Optional.empty();
-                        } else {
-                            return createAndAddChannel(message.getSenderUserProfile(), message.getReceiverUserProfileId());
-                        }
-                    })
-                    .ifPresent(channel -> addMessage(message, channel));
+            findChannel(message).or(() -> {
+                // We prevent to send leave messages after a peer has left, but there might be still
+                // race conditions where that might happen, so we check at receiving the message as well, so that
+                // in cases we would get a leave message as first message (e.g. after having closed the channel)
+                // we do not create a channel.
+                if (message.getChatMessageType() == ChatMessageType.LEAVE) {
+                    log.warn("We received a leave message as first message. This is not expected but might " + "happen in some rare cases.");
+                    return Optional.empty();
+                } else {
+                    return createAndAddChannel(message.getSenderUserProfile(), message.getReceiverUserProfileId());
+                }
+            }).ifPresent(channel -> {
+                addMessage(message, channel);
+                // Check if there are any reactions that should be added to that (or any other) message
+                processQueuedReactions();
+            });
         }
     }
 
     private Optional<TwoPartyPrivateChatChannel> createAndAddChannel(UserProfile peer, String myUserIdentityId) {
-        return userIdentityService.findUserIdentity(myUserIdentityId)
-                .map(myUserIdentity -> {
-                            TwoPartyPrivateChatChannel channel = createAndGetNewPrivateChatChannel(peer, myUserIdentity);
-                            getChannels().add(channel);
-                            persist();
-                            return channel;
-                        }
-                );
+        return userIdentityService.findUserIdentity(myUserIdentityId).map(myUserIdentity -> {
+            TwoPartyPrivateChatChannel channel = createAndGetNewPrivateChatChannel(peer, myUserIdentity);
+            getChannels().add(channel);
+            persist();
+            return channel;
+        });
     }
 
     private Optional<TwoPartyPrivateChatChannel> findChannel(ChatChannelDomain chatChannelDomain, UserProfile peer, String myUserIdentityId) {

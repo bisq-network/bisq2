@@ -332,7 +332,6 @@ public abstract class BubbleMessageBox extends MessageBox {
             this.reaction = reaction;
             useIconOnly(24);
             getStyleClass().add("reaction-menu-item");
-            HBox.setMargin(this, new Insets(2));
         }
 
         public void setIsReactionSelected(boolean isSelected) {
