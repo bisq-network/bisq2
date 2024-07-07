@@ -21,6 +21,7 @@ import bisq.chat.reactions.BisqEasyOfferbookMessageReaction;
 import bisq.chat.reactions.ChatMessageReaction;
 import bisq.chat.reactions.CommonPublicChatMessageReaction;
 import bisq.chat.reactions.Reaction;
+import bisq.chat.reactions.TwoPartyPrivateChatMessageReaction;
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.chat.two_party.TwoPartyPrivateChatMessage;
 import bisq.common.observable.Pin;
@@ -444,9 +445,13 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                         && chatReaction.getReactionId() == reaction.ordinal())
                 .findAny();
 
-        chatMessageReaction.ifPresentOrElse(
-                messageReaction -> deleteChatMessageReaction(messageReaction, userIdentity),
-                () -> publishChatMessageReaction(chatMessage, reaction, userIdentity, chatChannel));
+        if (chatMessage instanceof PrivateChatMessage) {
+            publishPrivateChatMessageReaction(chatMessage, chatChannel, reaction, chatMessageReaction);
+        } else {
+            chatMessageReaction.ifPresentOrElse(
+                    messageReaction -> deleteChatMessageReaction(messageReaction, userIdentity),
+                    () -> publishChatMessageReaction(chatMessage, reaction, userIdentity));
+        }
     }
 
     public void highlightOfferChatMessage(@Nullable ChatMessage message) {
@@ -633,19 +638,28 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
         });
     }
 
-    private void publishChatMessageReaction(ChatMessage chatMessage, Reaction reaction, UserIdentity userIdentity,
-                                            ChatChannel<?> chatChannel) {
+    private void publishChatMessageReaction(ChatMessage chatMessage, Reaction reaction, UserIdentity userIdentity) {
         if (chatMessage instanceof CommonPublicChatMessage) {
             chatService.getCommonPublicChatChannelServices().get(model.getChatChannelDomain())
                     .publishChatMessageReaction((CommonPublicChatMessage) chatMessage, reaction, userIdentity);
         } else if (chatMessage instanceof BisqEasyOfferbookMessage) {
             chatService.getBisqEasyOfferbookChannelService()
                     .publishChatMessageReaction((BisqEasyOfferbookMessage) chatMessage, reaction, userIdentity);
-        } else if (chatMessage instanceof TwoPartyPrivateChatMessage) {
+        }
+    }
+
+    private void publishPrivateChatMessageReaction(ChatMessage chatMessage, ChatChannel<?> chatChannel, Reaction reaction,
+                                                   Optional<ChatMessageReaction> messageReaction) {
+        if (chatMessage instanceof TwoPartyPrivateChatMessage) {
             checkArgument(chatChannel instanceof TwoPartyPrivateChatChannel, "Channel needs to be of type TwoPartyPrivateChatChannel.");
             TwoPartyPrivateChatChannel channel = (TwoPartyPrivateChatChannel) chatChannel;
+            boolean isRemoved = false;
+            if (messageReaction.isPresent() && messageReaction.get() instanceof TwoPartyPrivateChatMessageReaction) {
+                TwoPartyPrivateChatMessageReaction twoPartyReaction = (TwoPartyPrivateChatMessageReaction) messageReaction.get();
+                isRemoved = !twoPartyReaction.isRemoved();
+            }
             chatService.getTwoPartyPrivateChatChannelServices().get(model.getChatChannelDomain())
-                    .sendTextMessageReaction((TwoPartyPrivateChatMessage) chatMessage, channel, reaction);
+                    .sendTextMessageReaction((TwoPartyPrivateChatMessage) chatMessage, channel, reaction, isRemoved);
         }
     }
 

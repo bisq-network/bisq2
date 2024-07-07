@@ -152,7 +152,8 @@ public abstract class PrivateChatChannelService<
                                                                        C chatChannel,
                                                                        UserProfile receiver,
                                                                        Reaction reaction,
-                                                                       String messageReactionId) {
+                                                                       String messageReactionId,
+                                                                       boolean isRemoved) {
         UserIdentity myUserIdentity = chatChannel.getMyUserIdentity();
         if (bannedUserService.isUserProfileBanned(myUserIdentity.getUserProfile())) {
             return CompletableFuture.failedFuture(new RuntimeException());
@@ -162,7 +163,7 @@ public abstract class PrivateChatChannelService<
         }
 
         TwoPartyPrivateChatMessageReaction chatMessageReaction = createAndGetNewPrivateChatMessageReaction(message,
-                myUserIdentity.getUserProfile(), receiver, reaction, messageReactionId);
+                myUserIdentity.getUserProfile(), receiver, reaction, messageReactionId, isRemoved);
 
         addMessageReaction(chatMessageReaction, message);
 
@@ -226,7 +227,8 @@ public abstract class PrivateChatChannelService<
                                                                                          UserProfile senderUserProfile,
                                                                                          UserProfile receiverUserProfile,
                                                                                          Reaction reaction,
-                                                                                         String messageReactionId) {
+                                                                                         String messageReactionId,
+                                                                                         boolean isRemoved) {
         return new TwoPartyPrivateChatMessageReaction(
                 messageReactionId,
                 senderUserProfile,
@@ -237,7 +239,7 @@ public abstract class PrivateChatChannelService<
                 message.getId(),
                 reaction.ordinal(),
                 new Date().getTime(),
-                false
+                isRemoved
         );
     };
 }
