@@ -22,6 +22,7 @@ import bisq.chat.ChatMessage;
 import bisq.chat.ChatMessageType;
 import bisq.chat.Citation;
 import bisq.chat.reactions.ChatMessageReaction;
+import bisq.chat.reactions.TwoPartyPrivateChatMessageReaction;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;

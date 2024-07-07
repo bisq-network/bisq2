@@ -21,6 +21,7 @@ import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessageType;
 import bisq.chat.Citation;
 import bisq.chat.priv.PrivateChatMessage;
+import bisq.chat.reactions.ChatMessageReaction;
 import bisq.chat.reactions.TwoPartyPrivateChatMessageReaction;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -123,5 +124,23 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage<TwoPart
     @Override
     public boolean canShowReactions() {
         return true;
+    }
+
+    @Override
+    public void addChatMessageReaction(ChatMessageReaction newReaction) {
+        TwoPartyPrivateChatMessageReaction newTwoPartyReaction = (TwoPartyPrivateChatMessageReaction) newReaction;
+        getChatMessageReactions().stream()
+                .filter(twoPartyReaction -> twoPartyReaction.matches(newTwoPartyReaction))
+                .findFirst()
+                .ifPresentOrElse(
+                        existingTwoPartyReaction -> {
+                            if (newTwoPartyReaction.getDate() > existingTwoPartyReaction.getDate()) {
+                                // only update if more recent
+                                getChatMessageReactions().remove(existingTwoPartyReaction);
+                                getChatMessageReactions().add(newTwoPartyReaction);
+                            }
+                        },
+                        () -> getChatMessageReactions().add(newTwoPartyReaction)
+                );
     }
 }
