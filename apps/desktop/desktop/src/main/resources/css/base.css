@@ -133,3 +133,8 @@
                 -fx-dark-text-color
         );
 }
+
+/* Avoid color artefacts at antialias */
+.text {
+    -fx-font-smoothing-type: gray;
+}
