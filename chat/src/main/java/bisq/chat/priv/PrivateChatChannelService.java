@@ -35,7 +35,9 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -46,6 +48,8 @@ public abstract class PrivateChatChannelService<
         C extends PrivateChatChannel<M>,
         S extends PersistableStore<S>
         > extends ChatChannelService<M, C, S> implements ConfidentialMessageService.Listener {
+    // TODO: Make this generic when enabling reactions in trade messages
+    private final Set<TwoPartyPrivateChatMessageReaction> unprocessedReactions = new HashSet<>();
 
     public PrivateChatChannelService(NetworkService networkService,
                                      UserService userService,
@@ -175,14 +179,21 @@ public abstract class PrivateChatChannelService<
     protected abstract void processMessage(M message);
 
     // TODO: Make it class generic
-    // TODO: if the conversation is started while the other peer is offline,
-    //  we need to make sure that message is processed before reaction.
     protected void processMessageReaction(TwoPartyPrivateChatMessageReaction messageReaction) {
         findChannel(messageReaction.getChatChannelId())
                 .flatMap(channel -> channel.getChatMessages().stream()
                         .filter(message -> message.getId().equals(messageReaction.getChatMessageId()))
                         .findFirst())
-                .ifPresent(message -> addMessageReaction(messageReaction, message));
+                .ifPresentOrElse(
+                        message -> addMessageReaction(messageReaction, message),
+                        () -> unprocessedReactions.add(messageReaction));
+    }
+
+    protected void processQueuedReactions() {
+        unprocessedReactions.forEach(reaction -> {
+            unprocessedReactions.remove(reaction);
+            processMessageReaction(reaction);
+        });
     }
 
     @Override
