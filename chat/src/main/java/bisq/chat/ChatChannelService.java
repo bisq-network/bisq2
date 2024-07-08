@@ -127,7 +127,7 @@ public abstract class ChatChannelService<M extends ChatMessage, C extends ChatCh
             return;
         }
         synchronized (getPersistableStore()) {
-            message.getChatMessageReactions().add(chatMessageReaction);
+            message.addChatMessageReaction(chatMessageReaction);
         }
         persist();
     }

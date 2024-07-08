@@ -37,6 +37,7 @@ public abstract class PrivateChatMessageReaction extends ChatMessageReaction imp
     protected final UserProfile senderUserProfile;
     @EqualsAndHashCode.Exclude
     protected final NetworkId receiverNetworkId;
+    protected final boolean isRemoved;
 
     protected PrivateChatMessageReaction(String id,
                                          UserProfile senderUserProfile,
@@ -46,12 +47,14 @@ public abstract class PrivateChatMessageReaction extends ChatMessageReaction imp
                                          ChatChannelDomain chatChannelDomain,
                                          String chatMessageId,
                                          int reactionId,
-                                         long date) {
+                                         long date,
+                                         boolean isRemoved) {
         super(id, senderUserProfile.getId(), chatChannelId, chatChannelDomain, chatMessageId, reactionId, date);
 
         this.receiverUserProfileId = receiverUserProfileId;
         this.senderUserProfile = senderUserProfile;
         this.receiverNetworkId = receiverNetworkId;
+        this.isRemoved = isRemoved;
 
         NetworkDataValidation.validateProfileId(receiverUserProfileId);
     }

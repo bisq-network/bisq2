@@ -46,9 +46,10 @@ public final class TwoPartyPrivateChatMessageReaction extends PrivateChatMessage
                                               ChatChannelDomain chatChannelDomain,
                                               String chatMessageId,
                                               int reactionId,
-                                              long date) {
+                                              long date,
+                                              boolean isRemoved) {
         super(id, senderUserProfile, receiverUserProfileId, receiverNetworkId, chatChannelId, chatChannelDomain,
-                chatMessageId, reactionId, date);
+                chatMessageId, reactionId, date, isRemoved);
     }
 
     @Override
@@ -65,7 +66,8 @@ public final class TwoPartyPrivateChatMessageReaction extends PrivateChatMessage
         return bisq.chat.protobuf.TwoPartyPrivateChatMessageReaction.newBuilder()
                 .setReceiverUserProfileId(receiverUserProfileId)
                 .setReceiverNetworkId(receiverNetworkId.toProto(serializeForHash))
-                .setSender(senderUserProfile.toProto(serializeForHash));
+                .setSender(senderUserProfile.toProto(serializeForHash))
+                .setIsRemoved(isRemoved);
     }
 
     public static TwoPartyPrivateChatMessageReaction fromProto(bisq.chat.protobuf.ChatMessageReaction baseProto) {
@@ -79,7 +81,8 @@ public final class TwoPartyPrivateChatMessageReaction extends PrivateChatMessage
                 ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
                 baseProto.getChatMessageId(),
                 baseProto.getReactionId(),
-                baseProto.getDate());
+                baseProto.getDate(),
+                privateChatMessageReaction.getIsRemoved());
     }
 
     @Override

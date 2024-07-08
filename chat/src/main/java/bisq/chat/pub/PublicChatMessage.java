@@ -70,4 +70,9 @@ public abstract class PublicChatMessage extends ChatMessage implements Distribut
         // impersonation attack.
         return !authorUserProfileId.equals(Hex.encode(pubKeyHash));
     }
+
+    @Override
+    public void addChatMessageReaction(ChatMessageReaction reaction) {
+        getChatMessageReactions().add(reaction);
+    }
 }
