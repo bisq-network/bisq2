@@ -20,9 +20,10 @@ package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.common.util.NetworkUtils;
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.common.qr.webcam.mvc.QrCodeWebcamController;
 import bisq.desktop.common.threading.UIScheduler;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.containers.Spacer;
@@ -31,6 +32,8 @@ import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.WrappingText;
 import bisq.i18n.Res;
 import bisq.trade.bisq_easy.BisqEasyTrade;
+import bisq.webcam.QrCodeListener;
+import bisq.webcam.WebcamProcessLauncher;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -60,8 +63,13 @@ public class BuyerState1a extends BaseState {
     }
 
     private static class Controller extends BaseState.Controller<Model, View> {
+        private final String baseDir;
+        private QrCodeListener qrCodeListener;
+        private WebcamProcessLauncher webcamProcessLauncher;
+
         private Controller(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
             super(serviceProvider, bisqEasyTrade, channel);
+            baseDir = serviceProvider.getConfig().getBaseDir().toAbsolutePath().toString();
         }
 
         @Override
@@ -109,14 +117,38 @@ public class BuyerState1a extends BaseState {
         }
 
         void onScanQrCode() {
-            Navigation.navigateTo(NavigationTarget.QR_CODE_WEBCAM, new QrCodeWebcamController.InitData(this::onQrCodeData));
+            int port = NetworkUtils.selectRandomPort();
+            qrCodeListener = new QrCodeListener(port, this::onQrCodeDetected, this::onWebcamAppShutdown);
+
+
+            webcamProcessLauncher = new WebcamProcessLauncher(baseDir, port);
+
+            // Start local tcp server listening for input from qr code scan
+            qrCodeListener.start();
+
+            webcamProcessLauncher.start();
+            log.info("We start the webcam application as new Java process and listen for a QR code result. TCP listening port={}", port);
+
+            // Navigation.navigateTo(NavigationTarget.QR_CODE_WEBCAM, new QrCodeWebcamController.InitData(this::onQrCodeData));
         }
 
-        private void onQrCodeData(String qrCodeData) {
-            if (qrCodeData != null) {
-                model.bitcoinPaymentData.set(qrCodeData);
-                model.getQrCodeDetectedFromWebcam().set(true);
+        private void onQrCodeDetected(String qrCode) {
+            log.info("Qr code detected. We close webcam app and stop our qrCodeListener server.");
+            if (qrCode != null) {
+                // Once received the qr code we close both the webcam app and the server and exit
+                webcamProcessLauncher.shutdown();
+                qrCodeListener.stopServer();
+
+                UIThread.run(() -> {
+                    model.bitcoinPaymentData.set(qrCode);
+                    model.getQrCodeDetectedFromWebcam().set(true);
+                });
             }
+        }
+
+        private void onWebcamAppShutdown() {
+            log.info("Webcam app got closed without detecting a qr code. We stop our qrCodeListener server.");
+            qrCodeListener.stopServer();
         }
     }
 

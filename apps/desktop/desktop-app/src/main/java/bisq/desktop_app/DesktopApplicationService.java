@@ -31,7 +31,6 @@ import bisq.common.util.ExceptionUtil;
 import bisq.contract.ContractService;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.State;
-import bisq.desktop.common.qr.webcam.WebcamService;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
@@ -99,7 +98,6 @@ public class DesktopApplicationService extends ApplicationService {
     private final AlertNotificationsService alertNotificationsService;
     private final FavouriteMarketsService favouriteMarketsService;
     private final DontShowAgainService dontShowAgainService;
-    private final WebcamService webcamService;
 
     public DesktopApplicationService(String[] args, ShutDownHandler shutDownHandler) {
         super("desktop", args);
@@ -191,8 +189,6 @@ public class DesktopApplicationService extends ApplicationService {
 
         dontShowAgainService = new DontShowAgainService(settingsService);
 
-        webcamService = new WebcamService();
-
         // TODO (refactor, low prio): Not sure if ServiceProvider is still needed as we added BisqEasyService which exposes most of the services.
         serviceProvider = new ServiceProvider(shutDownHandler,
                 getConfig(),
@@ -215,8 +211,7 @@ public class DesktopApplicationService extends ApplicationService {
                 bisqEasyService,
                 alertNotificationsService,
                 favouriteMarketsService,
-                dontShowAgainService,
-                webcamService);
+                dontShowAgainService);
     }
 
     @Override
@@ -288,8 +283,7 @@ public class DesktopApplicationService extends ApplicationService {
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
         // We shut down services in opposite order as they are initialized
-        return supplyAsync(() -> webcamService.shutdown()
-                .thenCompose(result -> dontShowAgainService.shutdown())
+        return supplyAsync(() -> dontShowAgainService.shutdown()
                 .thenCompose(result -> favouriteMarketsService.shutdown())
                 .thenCompose(result -> alertNotificationsService.shutdown())
                 .thenCompose(result -> bisqEasyService.shutdown())
