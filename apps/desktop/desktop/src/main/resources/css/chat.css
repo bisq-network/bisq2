@@ -537,6 +537,7 @@
     -fx-font-size: 2.15em;
 }
 
+
 /*******************************************************************************
  * Reactions                                                                   *
  ******************************************************************************/
@@ -547,4 +548,8 @@
 
 .button.bisq-menu-item.reaction-menu-item.icon-only:hover {
     -fx-background-color: -bisq-mid-grey-10 !important;
+}
+
+.chat-message-content-box .drawer-menu-items {
+    -fx-spacing: 4;
 }
