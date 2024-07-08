@@ -38,7 +38,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class QrCodeWebcamView extends View<BorderPane, QrCodeWebcamModel, QrCodeWebcamController> /*implements FillStageView */ {
+public class QrCodeWebcamView extends View<BorderPane, QrCodeWebcamModel, QrCodeWebcamController> {
     private final ImageView imageView;
     private final Button closeButton;
     private final VBox waitingInfo;
