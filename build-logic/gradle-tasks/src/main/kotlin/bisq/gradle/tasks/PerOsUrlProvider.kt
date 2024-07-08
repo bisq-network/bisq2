@@ -5,6 +5,7 @@ interface PerOsUrlProvider {
 
     val linuxUrl: String
     val macOsUrl: String
+    val macOsAarch64Url: String
     val windowsUrl: String
 
     val url: String
@@ -14,6 +15,7 @@ interface PerOsUrlProvider {
         when (getOS()) {
             OS.LINUX -> linuxUrl
             OS.MAC_OS -> macOsUrl
+            OS.MAC_OS_AARCH64 -> macOsAarch64Url
             OS.WINDOWS -> windowsUrl
         }
 
