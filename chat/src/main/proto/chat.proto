@@ -198,4 +198,5 @@ message TwoPartyPrivateChatMessageReaction {
   string receiverUserProfileId = 1;
   user.UserProfile sender = 2;
   network.identity.NetworkId receiverNetworkId = 3;
+  bool isRemoved = 4;
 }

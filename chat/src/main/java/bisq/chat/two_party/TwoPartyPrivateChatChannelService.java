@@ -116,8 +116,9 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
 
     public CompletableFuture<SendMessageResult> sendTextMessageReaction(TwoPartyPrivateChatMessage message,
                                                                         TwoPartyPrivateChatChannel channel,
-                                                                        Reaction reaction) {
-        return sendMessageReaction(message, channel, channel.getPeer(), reaction, StringUtils.createUid());
+                                                                        Reaction reaction,
+                                                                        boolean isRemoved) {
+        return sendMessageReaction(message, channel, channel.getPeer(), reaction, StringUtils.createUid(), isRemoved);
     }
 
 

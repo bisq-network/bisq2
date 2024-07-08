@@ -26,6 +26,7 @@ import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.priv.PrivateChatMessage;
 import bisq.chat.pub.PublicChatChannel;
 import bisq.chat.reactions.ChatMessageReaction;
+import bisq.chat.reactions.PrivateChatMessageReaction;
 import bisq.chat.reactions.Reaction;
 import bisq.common.locale.LanguageRepository;
 import bisq.common.observable.Observable;
@@ -184,6 +185,10 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                 public void add(ChatMessageReaction element) {
                     int reactionIdx = element.getReactionId();
                     checkArgument(reactionIdx >= 0 && reactionIdx < Reaction.values().length, "Invalid reaction id: " + reactionIdx);
+
+                    if (element instanceof PrivateChatMessageReaction && ((PrivateChatMessageReaction) element).isRemoved()) {
+                        return;
+                    }
 
                     // TODO: Add tooltip with user nickname, label with count, etc
                     Reaction reaction = Reaction.values()[reactionIdx];

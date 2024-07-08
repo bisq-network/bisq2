@@ -22,6 +22,7 @@ import bisq.chat.ChatMessageType;
 import bisq.chat.Citation;
 import bisq.chat.bisqeasy.BisqEasyOfferMessage;
 import bisq.chat.priv.PrivateChatMessage;
+import bisq.chat.reactions.ChatMessageReaction;
 import bisq.common.util.StringUtils;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -200,5 +201,10 @@ public final class BisqEasyOpenTradeMessage extends PrivateChatMessage implement
     @Override
     public boolean hasBisqEasyOffer() {
         return bisqEasyOffer.isPresent();
+    }
+
+    @Override
+    public void addChatMessageReaction(ChatMessageReaction reaction) {
+        // do nothing since reactions are not supported yet.
     }
 }

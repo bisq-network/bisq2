@@ -138,6 +138,14 @@ public abstract class ChatMessageReaction implements NetworkProto {
         };
     }
 
+    public boolean matches(ChatMessageReaction other) {
+        return other.getUserProfileId().equals(getUserProfileId())
+                && other.getChatChannelId().equals(getChatChannelId())
+                && other.getChatChannelDomain() == getChatChannelDomain()
+                && other.getChatMessageId().equals(getChatMessageId())
+                && other.getReactionId() == getReactionId();
+    }
+
     @Override
     public String toString() {
         return "ChatMessageReaction{" +

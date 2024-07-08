@@ -211,4 +211,6 @@ public abstract class ChatMessage implements NetworkProto, Comparable<ChatMessag
     public boolean canShowReactions() {
         return false;
     }
+
+    public abstract void addChatMessageReaction(ChatMessageReaction reaction);
 }
