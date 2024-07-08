@@ -20,35 +20,68 @@ package bisq.webcam;
 
 import bisq.webcam.service.VideoSize;
 import bisq.webcam.service.WebcamService;
+import bisq.webcam.service.network.QrCodeSender;
+import bisq.webcam.view.WebcamView;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
-import javafx.scene.image.ImageView;
-import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
+
+import static java.util.Objects.requireNonNull;
 
 @Slf4j
 public class WebcamApp extends Application {
     private static final VideoSize VIDEO_SIZE = VideoSize.SD;
 
-    private final WebcamService webcamService = new WebcamService();
-    private final ImageView imageView = new ImageView();
-    private final Label qrCodeLabel = new Label();
+    private final WebcamService webcamService;
+    private QrCodeSender qrCodeSender;
+    private WebcamView webcamView;
+
+    public WebcamApp() {
+        webcamService = new WebcamService();
+        webcamService.setVideoSize(VIDEO_SIZE);
+    }
+
+    @Override
+    public void init() {
+        Parameters parameters = getParameters();
+        try {
+            int port = 8000;
+            String portParam = parameters.getNamed().get("port");
+            if (portParam != null) {
+                port = Integer.parseInt(portParam);
+            }
+            qrCodeSender = new QrCodeSender(port);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     @Override
     public void start(Stage primaryStage) {
-        webcamService.setVideoSize(VIDEO_SIZE);
-        VBox pane = new VBox(20, imageView, qrCodeLabel);
-        pane.setPadding(new Insets(20));
-        pane.setAlignment(Pos.CENTER);
-        primaryStage.setScene(new Scene(pane, VIDEO_SIZE.getWidth(), 2 * VIDEO_SIZE.getHeight()));
-        primaryStage.show();
+        setupStage(primaryStage);
 
         startWebcam();
+    }
+
+    private void setupStage(Stage primaryStage) {
+        webcamView = new WebcamView();
+        Scene scene = new Scene(webcamView, VIDEO_SIZE.getWidth(), VIDEO_SIZE.getHeight());
+        scene.getStylesheets().add(requireNonNull(scene.getClass().getResource("/css/webapp.css")).toExternalForm());
+        primaryStage.setScene(scene);
+        primaryStage.sizeToScene();
+        primaryStage.setOnCloseRequest(event -> {
+            event.consume();
+            onClose();
+        });
+        primaryStage.show();
+    }
+
+    private void onClose() {
+        qrCodeSender.send("shutdown")
+                .thenCompose(nil -> webcamService.shutdown()
+                        .thenRun(Platform::exit));
     }
 
     private void startWebcam() {
@@ -59,12 +92,12 @@ public class WebcamApp extends Application {
         });
         webcamService.getCapturedImage().addObserver(image -> {
             if (image != null) {
-                Platform.runLater(() -> imageView.setImage(image));
+                Platform.runLater(() -> webcamView.setWebcamImage(image));
             }
         });
         webcamService.getQrCode().addObserver(qrCode -> {
             if (qrCode != null) {
-                Platform.runLater(() -> qrCodeLabel.setText("QR code: " + qrCode));
+                qrCodeSender.send(qrCode);
             }
         });
         webcamService.initialize();
