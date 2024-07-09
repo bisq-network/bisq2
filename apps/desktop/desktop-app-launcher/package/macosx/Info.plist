@@ -9,15 +9,15 @@
   <key>CFBundleAllowMixedLocalizations</key>
   <true/>
   <key>CFBundleExecutable</key>
-  <string>Bisq 2</string>
+  <string>Bisq2</string>
   <key>CFBundleIconFile</key>
-  <string>Bisq 2.icns</string>
+  <string>Bisq2.icns</string>
   <key>CFBundleIdentifier</key>
   <string>bisq.desktop_app_launcher</string>
   <key>CFBundleInfoDictionaryVersion</key>
   <string>6.0</string>
   <key>CFBundleName</key>
-  <string>Bisq 2</string>
+  <string>Bisq2</string>
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleShortVersionString</key>

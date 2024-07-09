@@ -29,12 +29,12 @@ class ReleaseBinariesTaskFactory(private val project: Project) {
                        "bisq-1.9.15-1.x86_64.rpm" -> "Bisq-64bit-1.9.15.rpm"
 
                Bisq 2: "bisq2_2.0.4-1_amd64.deb"  -> "Bisq-2.0.4.deb"
-                       "Bisq 2-2.0.4.dmg"         -> "Bisq-2.0.4.dmg"
-                       "Bisq 2-2.0.4.exe"         -> "Bisq-2.0.4.exe"
+                       "Bisq2-2.0.4.dmg"         -> "Bisq-2.0.4.dmg"
+                       "Bisq2-2.0.4.exe"         -> "Bisq-2.0.4.exe"
                        "bisq2-2.0.4-1.x86_64.rpm" -> "Bisq-2.0.4.rpm" */
             rename { fileName: String ->
-                if (fileName.startsWith("Bisq 2") || fileName.contains("bisq2")) {
-                    fileName.replace("Bisq 2", "Bisq") // "Bisq 2-2.0.4.exe", "Bisq 2-2.0.4.dmg"
+                if (fileName.startsWith("Bisq2") || fileName.contains("bisq2")) {
+                    fileName.replace("Bisq2", "Bisq") // "Bisq2-2.0.4.exe", "Bisq2-2.0.4.dmg"
                         .replace("bisq2_", "Bisq-") // "bisq2_2.0.4-1_amd64.deb"
                         .replace("bisq2-", "Bisq-") // "bisq2-2.0.4-1.x86_64.rpm"
                         .replace("-1_amd64", "")
