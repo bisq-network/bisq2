@@ -49,7 +49,7 @@ public class PreferencesController implements Controller {
     private final MinRequiredReputationScoreService minRequiredReputationScoreService;
     private final DontShowAgainService dontShowAgainService;
 
-    private Pin chatNotificationTypePin, useAnimationsPin, preventStandbyModePin, closeMyOfferWhenTakenPin,
+    private Pin chatNotificationTypePin, useAnimationsPin, preventStandbyModePin, offerOnlyPin, closeMyOfferWhenTakenPin,
             supportedLanguageCodesPin, minRequiredReputationScorePin, ignoreDiffAdjustmentFromSecManagerPin,
             mostRecentDifficultyAdjustmentFactorOrDefaultPin, difficultyAdjustmentFactorPin, ignoreMinRequiredReputationScoreFromSecManagerPin,
             mostRecentMinRequiredReputationScoreOrDefaultPin, maxTradePriceDeviationPin;
@@ -103,6 +103,8 @@ public class PreferencesController implements Controller {
                     }
                 });
 
+        offerOnlyPin = FxBindings.bindBiDir(model.getOfferOnly())
+                .to(settingsService.getOffersOnly());
         closeMyOfferWhenTakenPin = FxBindings.bindBiDir(model.getCloseMyOfferWhenTaken())
                 .to(settingsService.getCloseMyOfferWhenTaken());
         supportedLanguageCodesPin = FxBindings.<String, String>bind(model.getSelectedSupportedLanguageCodes())
@@ -154,6 +156,7 @@ public class PreferencesController implements Controller {
     public void onDeactivate() {
         chatNotificationTypePin.unbind();
         useAnimationsPin.unbind();
+        offerOnlyPin.unbind();
         closeMyOfferWhenTakenPin.unbind();
         preventStandbyModePin.unbind();
         supportedLanguageCodesPin.unbind();

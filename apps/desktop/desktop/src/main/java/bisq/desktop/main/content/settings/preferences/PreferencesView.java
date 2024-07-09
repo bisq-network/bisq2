@@ -60,7 +60,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
     private static final double TEXT_FIELD_WIDTH = 500;
 
     private final Button resetDontShowAgain, clearNotifications, addLanguageButton;
-    private final Switch useAnimations, preventStandbyMode, closeMyOfferWhenTaken, notifyForPreRelease,
+    private final Switch useAnimations, preventStandbyMode, offersOnlySwitch, closeMyOfferWhenTaken, notifyForPreRelease,
             useTransientNotifications, ignoreDiffAdjustFromSecManagerSwitch,
             ignoreMinRequiredReputationScoreFromSecManagerSwitch;
     private final ToggleGroup notificationsToggleGroup = new ToggleGroup();
@@ -197,6 +197,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         Label tradeHeadline = new Label(Res.get("settings.preferences.trade.headline"));
         tradeHeadline.getStyleClass().add("large-thin-headline");
 
+        offersOnlySwitch = new Switch(Res.get("bisqEasy.topPane.filter.offersOnly"));
         closeMyOfferWhenTaken = new Switch(Res.get("settings.preferences.trade.closeMyOfferWhenTaken"));
 
         maxTradePriceDeviation = new MaterialTextField(Res.get("settings.preferences.trade.maxTradePriceDeviation"),
@@ -214,6 +215,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
 
         VBox tradeVBox = new VBox(10,
                 closeMyOfferWhenTaken,
+                offersOnlySwitch,
                 maxTradePriceDeviation,
                 minRequiredReputationScore, ignoreMinRequiredReputationScoreFromSecManagerSwitch
         );
@@ -259,6 +261,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         useTransientNotifications.setManaged(model.isUseTransientNotificationsVisible());
         useAnimations.selectedProperty().bindBidirectional(model.getUseAnimations());
         preventStandbyMode.selectedProperty().bindBidirectional(model.getPreventStandbyMode());
+        offersOnlySwitch.selectedProperty().bindBidirectional(model.getOfferOnly());
         ignoreDiffAdjustFromSecManagerSwitch.selectedProperty().bindBidirectional(model.getIgnoreDiffAdjustmentFromSecManager());
         ignoreMinRequiredReputationScoreFromSecManagerSwitch.selectedProperty().bindBidirectional(model.getIgnoreMinRequiredReputationScoreFromSecManager());
         closeMyOfferWhenTaken.selectedProperty().bindBidirectional(model.getCloseMyOfferWhenTaken());
@@ -319,6 +322,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         useTransientNotifications.selectedProperty().unbindBidirectional(model.getUseTransientNotifications());
         useAnimations.selectedProperty().unbindBidirectional(model.getUseAnimations());
         preventStandbyMode.selectedProperty().unbindBidirectional(model.getPreventStandbyMode());
+        offersOnlySwitch.selectedProperty().unbindBidirectional(model.getOfferOnly());
         ignoreDiffAdjustFromSecManagerSwitch.selectedProperty().unbindBidirectional(model.getIgnoreDiffAdjustmentFromSecManager());
         ignoreMinRequiredReputationScoreFromSecManagerSwitch.selectedProperty().unbindBidirectional(model.getIgnoreMinRequiredReputationScoreFromSecManager());
         closeMyOfferWhenTaken.selectedProperty().unbindBidirectional(model.getCloseMyOfferWhenTaken());

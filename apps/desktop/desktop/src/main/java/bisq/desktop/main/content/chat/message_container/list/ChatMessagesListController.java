@@ -27,6 +27,7 @@ import bisq.chat.two_party.TwoPartyPrivateChatMessage;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ClipboardUtil;
@@ -41,6 +42,7 @@ import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.confidential.resend.ResendMessageService;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.options.OfferOptionUtil;
+import bisq.settings.SettingsService;
 import bisq.trade.Trade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.user.banned.BannedUserService;
@@ -73,6 +75,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
     private final UserIdentityService userIdentityService;
     private final UserProfileService userProfileService;
     private final ReputationService reputationService;
+    private final SettingsService settingsService;
     private final Consumer<UserProfile> mentionUserHandler;
     private final Consumer<ChatMessage> replyHandler;
     private final Consumer<ChatMessage> showChatUserDetailsHandler;
@@ -86,7 +89,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
     private final Optional<ResendMessageService> resendMessageService;
     private final BisqEasyService bisqEasyService;
     private final MarketPriceService marketPriceService;
-    private Pin selectedChannelPin, chatMessagesPin;
+    private Pin selectedChannelPin, chatMessagesPin, offerOnlySettingsPin;
     private Subscription selectedChannelSubscription, focusSubscription, scrollValuePin, scrollBarVisiblePin,
             layoutChildrenDonePin;
 
@@ -100,6 +103,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         userProfileService = serviceProvider.getUserService().getUserProfileService();
         reputationService = serviceProvider.getUserService().getReputationService();
+        settingsService = serviceProvider.getSettingsService();
         bisqEasyService = serviceProvider.getBisqEasyService();
         bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
         bannedUserService = serviceProvider.getUserService().getBannedUserService();
@@ -117,6 +121,8 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
     @Override
     public void onActivate() {
         model.getSortedChatMessages().setComparator(ChatMessageListItem::compareTo);
+
+        offerOnlySettingsPin = FxBindings.subscribe(settingsService.getOffersOnly(), offerOnly -> UIThread.run(this::applyPredicate));
 
         if (selectedChannelPin != null) {
             selectedChannelPin.unbind();
@@ -147,6 +153,9 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
 
     @Override
     public void onDeactivate() {
+        if (offerOnlySettingsPin != null) {
+            offerOnlySettingsPin.unbind();
+        }
         if (selectedChannelPin != null) {
             selectedChannelPin.unbind();
             selectedChannelPin = null;
@@ -542,6 +551,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
     }
 
     private void applyPredicate() {
+        boolean offerOnly = settingsService.getOffersOnly().get();
         Predicate<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate = item -> {
             Optional<UserProfile> senderUserProfile = item.getSenderUserProfile();
             if (senderUserProfile.isEmpty()) {
@@ -551,13 +561,20 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                     bannedUserService.isUserProfileBanned(senderUserProfile.get())) {
                 return false;
             }
+
+            boolean offerOnlyPredicate = true;
+            if (item.getChatMessage() instanceof BisqEasyOfferbookMessage) {
+                BisqEasyOfferbookMessage bisqEasyOfferbookMessage = (BisqEasyOfferbookMessage) item.getChatMessage();
+                offerOnlyPredicate = !offerOnly || bisqEasyOfferbookMessage.hasBisqEasyOffer();
+            }
             // We do not display the take offer message as it has no text and is used only for sending the offer
             // to the peer and signalling the take offer event.
             if (item.getChatMessage().getChatMessageType() == ChatMessageType.TAKE_BISQ_EASY_OFFER) {
                 return false;
             }
 
-            return !userProfileService.getIgnoredUserProfileIds().contains(senderUserProfile.get().getId()) &&
+            return offerOnlyPredicate &&
+                    !userProfileService.getIgnoredUserProfileIds().contains(senderUserProfile.get().getId()) &&
                     userProfileService.findUserProfile(senderUserProfile.get().getId()).isPresent();
         };
         model.getFilteredChatMessages().setPredicate(item -> model.getSearchPredicate().test(item) &&
