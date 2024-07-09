@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.webcam;
+package bisq.desktop.webcam;
 
 import bisq.common.util.FileUtils;
 import bisq.common.util.NetworkUtils;
