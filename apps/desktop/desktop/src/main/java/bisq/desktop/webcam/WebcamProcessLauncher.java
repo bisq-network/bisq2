@@ -17,10 +17,11 @@
 
 package bisq.desktop.webcam;
 
-import bisq.common.application.ApplicationVersion;
-import bisq.common.util.OsUtils;
+import bisq.common.util.ArchiveUtil;
+import bisq.common.util.FileUtils;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.File;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -38,36 +39,31 @@ public class WebcamProcessLauncher {
     public CompletableFuture<Process> start() {
         return CompletableFuture.supplyAsync(() -> {
             try {
-                String osName = OsUtils.getOSName().replaceAll(" ", "");
-                String version = ApplicationVersion.getVersion().getVersionAsString();
+                String version = FileUtils.readStringFromResource("webcam-app/version.txt");
                 WebcamProcessLauncher.class.getResourceAsStream("");
+                String jarFilePath = baseDir + "/webcam-" + version + "-all.jar";
+                File jarFile = new File(jarFilePath);
 
-                // String jarFilePath = "/Users/dev/IdeaProjects/bisq2/apps/desktop/webcam/build/libs/webcam-" + version + "-" + osName + "-all.jar";
-                String jarFilePath = baseDir + "/webcam-" + version + "-" + osName + "-all.jar";
-                // jarFilePath = getClass().getResource("/jar/" + jarFilePath).getPath();
-                log.info("jarFilePath={} {}", jarFilePath);
-
-                //jarFilePath=file:<HOME_DIR>/Downloads/Bisq%202.app/Contents/app/webcam-2.0.4.jar!/jar/webcam-2.0.4-macosx-all.jar {}
+                if (!jarFile.exists()) {
+                    String zipFileName = "webcam-" + version + ".zip";
+                    File tempFile = new File(baseDir + "/" + zipFileName);
+                    FileUtils.resourceToFile("webcam-app/" + zipFileName, tempFile);
+                    ArchiveUtil.extractZipFile(tempFile, baseDir);
+                    FileUtils.deleteFile(tempFile);
+                    log.info("Extracted zip file {} to {}", zipFileName, baseDir);
+                }
 
                 String portParam = "--port=" + port;
-                ProcessBuilder processBuilder = new ProcessBuilder("java", "-jar", jarFilePath, portParam);
-
-              /*  processBuilder.redirectErrorStream(true);
-                File errorLogFile = new File(Path.of(baseDir,"webcam-launcher-error.log").toAbsolutePath().toString());
-                if(!errorLogFile.exists()){
-                    errorLogFile.createNewFile();
+                String iconPath = baseDir + "/bisq_icon.png";
+                File bisqIcon = new File(iconPath);
+                if (!bisqIcon.exists()) {
+                    FileUtils.resourceToFile("images/app_window/icon_512.png", bisqIcon);
                 }
-                processBuilder.redirectError(errorLogFile);*/
-
-              /*  File logFile = Path.of(baseDir,"webcam-launcher.log").toFile();
-                if(!logFile.exists()){
-                    logFile.createNewFile();
-                }
-                processBuilder.redirectOutput(logFile);*/
-
+                String jvmArgs = "-Xdock:icon=" + iconPath;
+                ProcessBuilder processBuilder = new ProcessBuilder("java", jvmArgs, "-jar", jarFilePath, portParam);
                 Process process = processBuilder.start();
                 runningProcess = Optional.of(process);
-                log.info("Process successful launched: {}", process);
+                log.info("Process successful launched: {}; port={}", process, port);
                 return process;
             } catch (Exception e) {
                 log.error("Launching process failed", e);
@@ -78,6 +74,12 @@ public class WebcamProcessLauncher {
 
     public void shutdown() {
         log.info("Process shutdown. runningProcess={}", runningProcess);
-        runningProcess.ifPresent(Process::destroy);
+        runningProcess.ifPresent(process -> {
+            process.destroy();
+            if (process.isAlive()) {
+                log.warn("Stopping webcam app process gracefully did not terminate it. We destroy it forcibly.");
+                process.destroyForcibly();
+            }
+        });
     }
 }
