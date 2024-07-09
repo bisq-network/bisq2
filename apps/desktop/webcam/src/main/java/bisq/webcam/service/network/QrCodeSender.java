@@ -24,6 +24,7 @@ import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class QrCodeSender {
@@ -46,6 +47,6 @@ public class QrCodeSender {
                 log.error("Error at sending qrCode {} to {}", qrCode, serverAddress, e);
                 throw new RuntimeException(e);
             }
-        });
+        }).orTimeout(1, TimeUnit.SECONDS);
     }
 }

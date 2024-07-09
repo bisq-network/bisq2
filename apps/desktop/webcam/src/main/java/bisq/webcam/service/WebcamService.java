@@ -34,6 +34,7 @@ import org.bytedeco.javacv.FrameGrabber;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class WebcamService implements Service {
@@ -81,16 +82,18 @@ public class WebcamService implements Service {
         }
         isRunning = false;
         return CompletableFuture.supplyAsync(() -> {
-            while (!isStopped) {
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException ignore) {
-                }
-            }
-            qrCode.set(null);
-            capturedImage.set(null);
-            return true;
-        });
+                    while (!isStopped) {
+                        try {
+                            Thread.sleep(100);
+                        } catch (InterruptedException ignore) {
+                        }
+                    }
+                    return true;
+                }).orTimeout(1, TimeUnit.SECONDS)
+                .whenComplete((result, throwable) -> {
+                    qrCode.set(null);
+                    capturedImage.set(null);
+                });
     }
 
     public CompletableFuture<FrameGrabber> findFrameGrabber() {

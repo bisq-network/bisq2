@@ -80,8 +80,8 @@ public class WebcamApp extends Application {
 
     private void onClose() {
         qrCodeSender.send("shutdown")
-                .thenCompose(nil -> webcamService.shutdown()
-                        .thenRun(Platform::exit));
+                .whenComplete((nil, throwable) -> webcamService.shutdown()
+                        .whenComplete((result, throwable1) -> Platform.exit()));
     }
 
     private void startWebcam() {
