@@ -49,6 +49,8 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
 
                         val desktopProject = project.parent?.childProjects?.filter { e -> e.key == "desktop" }?.map { e -> e.value.project }?.first()
                         desktopProject?.tasks?.let {
+                            dependsOn(it.named("copyWebcamAppVersion"))
+
                             from(webcamProject.layout.buildDirectory.dir("generated"))
                             into(desktopProject.layout.buildDirectory.dir("generated/src/main/resources/webcam-app"))
                         }
