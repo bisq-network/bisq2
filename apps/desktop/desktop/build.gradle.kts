@@ -1,5 +1,6 @@
 plugins {
     id("bisq.java-library")
+    id("bisq.gradle.copy_version.CopyWebcamAppVersionPlugin")
     alias(libs.plugins.openjfx)
 }
 
@@ -51,4 +52,11 @@ dependencies {
 
     testImplementation(libs.testfx.junit5)
     testImplementation(libs.openjfx.monocle)
+}
+
+
+tasks {
+    named<DefaultTask>("build") {
+        dependsOn(project.tasks.named("copyWebcamAppVersion"))
+    }
 }

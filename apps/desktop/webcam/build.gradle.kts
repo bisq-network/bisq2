@@ -1,7 +1,9 @@
+import bisq.gradle.tasks.VersionUtil
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
     id("bisq.java-library")
+    id("bisq.gradle.webcam_app.WebcamAppPlugin")
     application
     alias(libs.plugins.shadow)
     alias(libs.plugins.openjfx)
@@ -98,9 +100,8 @@ tasks {
     }
 
     named<ShadowJar>("shadowJar") {
-        archiveClassifier.set(
-                System.getProperty("os.name").toLowerCase() + "-all"
-        )
+        val version = VersionUtil.getVersionFromFile(project)
+        archiveClassifier.set("$version-all")
     }
 
     distZip {
