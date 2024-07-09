@@ -12,8 +12,6 @@ application {
     mainClass.set("bisq.webcam.WebcamAppLauncher")
 }
 
-version = "2.0.4"
-
 javafx {
     version = "17.0.10"
     modules = listOf("javafx.controls", "javafx.media")
