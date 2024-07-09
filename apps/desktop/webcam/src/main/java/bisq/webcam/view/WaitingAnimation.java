@@ -15,10 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.components;
+package bisq.webcam.view;
 
-import bisq.desktop.common.threading.UIScheduler;
-import bisq.desktop.common.utils.ImageUtil;
 import javafx.animation.FadeTransition;
 import javafx.animation.RotateTransition;
 import javafx.beans.value.ChangeListener;
@@ -36,22 +34,19 @@ import java.util.concurrent.TimeUnit;
 public class WaitingAnimation extends StackPane {
     public static final int INTERVAL = 1000;
 
-    private final ImageView spinningCircle;
     private ImageView waitingStateIcon;
-    private WaitingState waitingState;
     private final RotateTransition rotate;
     private final FadeTransition fadeTransition;
     private Scene scene;
     private ChangeListener<Scene> sceneListener;
     private ChangeListener<Boolean> focusListener;
-    private UIScheduler uiScheduler;
 
-    public WaitingAnimation(WaitingState waitingState) {
-        setState(waitingState);
+    public WaitingAnimation() {
 
         setAlignment(Pos.CENTER);
 
-        spinningCircle = ImageUtil.getImageViewById(getSpinningCircleIconId(waitingState));
+        ImageView spinningCircle = new ImageView();
+        spinningCircle.setId("spinning-circle");
         spinningCircle.setFitHeight(78);
         spinningCircle.setFitWidth(78);
         spinningCircle.setPreserveRatio(true);
@@ -78,10 +73,10 @@ public class WaitingAnimation extends StackPane {
                     }
                 };
                 scene = getScene();
-                scene.getWindow().focusedProperty().addListener(focusListener);
+                // scene.getWindow().focusedProperty().addListener(focusListener);
             } else {
                 if (scene != null) {
-                    scene.getWindow().focusedProperty().removeListener(focusListener);
+                    // scene.getWindow().focusedProperty().removeListener(focusListener);
                     scene = null;
                 }
                 sceneProperty().removeListener(sceneListener);
@@ -90,12 +85,6 @@ public class WaitingAnimation extends StackPane {
         sceneProperty().addListener(sceneListener);
     }
 
-    public void setState(WaitingState newWaitingState) {
-        if (waitingState != newWaitingState) {
-            waitingState = newWaitingState;
-            updateWaitingStateIcon();
-        }
-    }
 
     private void updateWaitingStateIcon() {
         if (waitingStateIcon != null) {
@@ -103,37 +92,9 @@ public class WaitingAnimation extends StackPane {
             waitingStateIcon = null;
         }
 
-        if (waitingState != null) {
-            waitingStateIcon = ImageUtil.getImageViewById(getWaitingStateIconId(waitingState));
-            getChildren().add(waitingStateIcon);
-        }
-    }
-
-    private String getWaitingStateIconId(WaitingState waitingState) {
-        switch (waitingState) {
-            case TAKE_BISQ_EASY_OFFER:
-                return "take-bisq-easy-offer";
-            case ACCOUNT_DATA:
-                return "account-data";
-            case FIAT_PAYMENT:
-                return "fiat-payment";
-            case FIAT_PAYMENT_CONFIRMATION:
-                return "fiat-payment-confirmation";
-            case BITCOIN_ADDRESS:
-                return "bitcoin-address";
-            case BITCOIN_PAYMENT:
-                return "bitcoin-payment";
-            case BITCOIN_CONFIRMATION:
-                return "bitcoin-confirmation";
-            case SCAN_WITH_CAMERA:
-                return "scan-with-camera";
-            default:
-                throw new IllegalArgumentException("Unknown WaitingState: " + waitingState);
-        }
-    }
-
-    private String getSpinningCircleIconId(WaitingState waitingState) {
-        return waitingState == WaitingState.TAKE_BISQ_EASY_OFFER ? "take-bisq-easy-offer-circle" : "spinning-circle";
+        waitingStateIcon = new ImageView();
+        waitingStateIcon.setId("scan-with-camera");
+        getChildren().add(this.waitingStateIcon);
     }
 
     public void play() {
@@ -147,15 +108,15 @@ public class WaitingAnimation extends StackPane {
 
     public void playRepeated(long initialDelay, long delay, TimeUnit timeUnit, long cycles) {
         stop();
-        uiScheduler = UIScheduler.run((this::play)).repeated(initialDelay, delay, timeUnit, cycles);
+        // uiScheduler = UIScheduler.run((this::play)).repeated(initialDelay, delay, timeUnit, cycles);
     }
 
     public void stop() {
         rotate.stop();
         fadeTransition.stop();
-        if (uiScheduler != null) {
+       /* if (uiScheduler != null) {
             uiScheduler.stop();
             uiScheduler = null;
-        }
+        }*/
     }
 }

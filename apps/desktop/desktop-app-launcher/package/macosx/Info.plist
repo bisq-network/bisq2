@@ -33,5 +33,7 @@
   <string>Copyright © 2013-2024 - The Bisq developers</string>
   <key>NSHighResolutionCapable</key>
   <string>true</string>
+  <key>NSCameraUsageDescription</key>
+  <string>Bisq requires access to the camera in order to scan QR codes</string>
  </dict>
 </plist>

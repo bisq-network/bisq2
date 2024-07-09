@@ -15,15 +15,25 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.components;
+package bisq.webcam.service.converter;
 
-public enum WaitingState {
-    TAKE_BISQ_EASY_OFFER,
-    ACCOUNT_DATA,
-    FIAT_PAYMENT,
-    FIAT_PAYMENT_CONFIRMATION,
-    BITCOIN_ADDRESS,
-    BITCOIN_PAYMENT,
-    BITCOIN_CONFIRMATION,
-    SCAN_WITH_CAMERA
+import org.bytedeco.javacv.Frame;
+import org.bytedeco.javacv.OpenCVFrameConverter;
+import org.bytedeco.opencv.opencv_core.Mat;
+
+import java.util.Objects;
+
+/**
+ * Used for converting a JavaCV {@link Frame} into a OpenCV {@link Mat}, primarily as an
+ * intermediary to then be converted into another format.
+ */
+public class FrameToMatConverter implements FrameConverter<Mat> {
+    @Override
+    public Mat convert(Frame frame) {
+        Objects.requireNonNull(frame, "Frame must not be null");
+
+        try (OpenCVFrameConverter.ToMat converter = new OpenCVFrameConverter.ToMat()) {
+            return converter.convert(frame);
+        }
+    }
 }

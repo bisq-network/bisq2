@@ -15,6 +15,7 @@ dependencyResolutionManagement {
 
 includeBuild("../..")
 
+include("webcam")
 include("desktop")
 include("desktop-app")
 include("desktop-app-launcher")

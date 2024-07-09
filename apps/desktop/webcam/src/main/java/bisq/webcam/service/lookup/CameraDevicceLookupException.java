@@ -15,15 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.bisq_easy.components;
+package bisq.webcam.service.lookup;
 
-public enum WaitingState {
-    TAKE_BISQ_EASY_OFFER,
-    ACCOUNT_DATA,
-    FIAT_PAYMENT,
-    FIAT_PAYMENT_CONFIRMATION,
-    BITCOIN_ADDRESS,
-    BITCOIN_PAYMENT,
-    BITCOIN_CONFIRMATION,
-    SCAN_WITH_CAMERA
+public class CameraDevicceLookupException extends RuntimeException {
+    public CameraDevicceLookupException(String message) {
+        super(message);
+    }
+
+    public CameraDevicceLookupException(Throwable throwable) {
+        super(throwable);
+    }
 }

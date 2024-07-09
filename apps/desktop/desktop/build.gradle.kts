@@ -8,6 +8,14 @@ javafx {
     modules = listOf("javafx.controls", "javafx.media")
 }
 
+sourceSets {
+    main {
+        resources {
+            srcDir(layout.buildDirectory.file("generated/src/main/resources"))
+        }
+    }
+}
+
 dependencies {
     implementation("bisq:persistence")
     implementation("bisq:i18n")
@@ -37,7 +45,9 @@ dependencies {
     implementation(libs.bundles.fontawesomefx)
     implementation(libs.bundles.fxmisc.libs)
     implementation(libs.typesafe.config)
-    implementation(libs.zxing)
+    implementation(libs.zxing) {
+        /* exclude(group = "org.bytedeco", module = "httpclient")*/
+    }
 
     testImplementation(libs.testfx.junit5)
     testImplementation(libs.openjfx.monocle)
