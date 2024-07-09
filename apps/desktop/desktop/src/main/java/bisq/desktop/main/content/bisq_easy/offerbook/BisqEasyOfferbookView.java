@@ -75,6 +75,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
     private SortAndFilterMarketsDropdownMenuItem<MarketSortType> sortByMostOffers, sortByNameAZ, sortByNameZA;
     private SortAndFilterMarketsDropdownMenuItem<MarketFilter> filterShowAll, filterWithOffers, filterFavourites;
     private DropdownMenuItem buyFromOffers, sellToOffers;
+    private CheckBox hideUserMessagesCheckbox;
     private Label channelHeaderIcon, marketPrice, removeWithOffersFilter, removeFavouritesFilter,
             offerListByDirectionFilter, collapsedOfferListTitle, offerListTitle, collapsedMarketSelectionListTitle,
             marketSelectionListTitle;
@@ -136,6 +137,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         favouritesTableView.initialize();
         marketsTableView.initialize();
 
+        hideUserMessagesCheckbox.selectedProperty().bindBidirectional(getModel().getOfferOnly());
         marketSelectorSearchBox.textProperty().bindBidirectional(getModel().getMarketSelectorSearchText());
         marketPrice.textProperty().bind(getModel().getMarketPrice());
         withOffersDisplayHint.visibleProperty().bind(getModel().getSelectedMarketsFilter().isEqualTo(MarketFilter.WITH_OFFERS));
@@ -245,6 +247,7 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         marketsTableView.dispose();
         favouritesTableView.dispose();
 
+        hideUserMessagesCheckbox.selectedProperty().unbindBidirectional(getModel().getOfferOnly());
         marketSelectorSearchBox.textProperty().unbindBidirectional(getModel().getMarketSelectorSearchText());
         marketPrice.textProperty().unbind();
         withOffersDisplayHint.visibleProperty().unbind();
@@ -514,8 +517,14 @@ public final class BisqEasyOfferbookView extends ChatView<BisqEasyOfferbookView,
         centerVBox.setSpacing(0);
         centerVBox.setFillWidth(true);
 
+        Label label = new Label(Res.get("bisqEasy.topPane.filter.hideUserMessages"));
+        hideUserMessagesCheckbox = new CheckBox();
+        HBox hideUserMessagesHBox = new HBox(5, label, hideUserMessagesCheckbox);
+        hideUserMessagesHBox.getStyleClass().add("offerbook-subheader-checkbox");
+        hideUserMessagesHBox.setAlignment(Pos.CENTER);
+
         searchBox.getStyleClass().add("offerbook-search-box");
-        HBox subheaderContent = new HBox(30, searchBox, Spacer.fillHBox());
+        HBox subheaderContent = new HBox(30, searchBox, Spacer.fillHBox(), hideUserMessagesHBox);
         subheaderContent.getStyleClass().add("offerbook-subheader-content");
         HBox.setHgrow(subheaderContent, Priority.ALWAYS);
 

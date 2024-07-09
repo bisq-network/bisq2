@@ -43,6 +43,7 @@ import java.util.function.Predicate;
 @Slf4j
 @Getter
 public final class BisqEasyOfferbookModel extends ChatModel {
+    private final BooleanProperty offerOnly = new SimpleBooleanProperty();
     private final BooleanProperty isTradeChannelVisible = new SimpleBooleanProperty();
     private final BooleanProperty shouldShowAppliedFilters = new SimpleBooleanProperty();
     private final ObservableList<MarketChannelItem> marketChannelItems = FXCollections.observableArrayList(p -> new Observable[]{p.getNumOffers()});
