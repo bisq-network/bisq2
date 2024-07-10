@@ -11,6 +11,7 @@ import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.common.CommonPublicChatChannel;
 import bisq.chat.pub.PublicChatChannel;
+import bisq.chat.reactions.ChatMessageReaction;
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
@@ -107,11 +108,11 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
         model.getChatDialogEnabled().set(isEnabled);
     }
 
-    public void setSearchPredicate(Predicate<? super ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate) {
+    public void setSearchPredicate(Predicate<? super ChatMessageListItem<? extends ChatMessageReaction, ? extends ChatMessage<?>, ? extends ChatChannel<? extends ChatMessage<?>>>> predicate) {
         chatMessagesListController.setSearchPredicate(predicate);
     }
 
-    public void highlightOfferChatMessage(@Nullable ChatMessage message) {
+    public void highlightOfferChatMessage(@Nullable ChatMessage<?> message) {
         chatMessagesListController.highlightOfferChatMessage(message);
     }
 
@@ -153,7 +154,7 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
     // Handlers passed to list view component
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private void replyHandler(ChatMessage chatMessage) {
+    private void replyHandler(ChatMessage<?> chatMessage) {
         if (!chatMessage.isMyMessage(userIdentityService)) {
             citationBlock.reply(chatMessage);
             // To ensure that we trigger an update we set it to null first (and don't use a
@@ -163,7 +164,7 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
         }
     }
 
-    private void showChatUserDetailsHandler(ChatMessage chatMessage) {
+    private void showChatUserDetailsHandler(ChatMessage<?> chatMessage) {
         model.setSelectedChatMessage(chatMessage);
         userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId())
                 .ifPresent(openUserProfileSidebarHandler);
@@ -231,7 +232,7 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
     }
 
 
-    protected void selectedChannelChanged(ChatChannel<? extends ChatMessage> chatChannel) {
+    protected void selectedChannelChanged(ChatChannel<? extends ChatMessage<?>> chatChannel) {
         UIThread.run(() -> {
             model.getSelectedChannel().set(chatChannel);
             applyUserProfileOrChannelChange();
@@ -244,7 +245,7 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
             return;
         }
 
-        ChatChannel<? extends ChatMessage> chatChannel = model.getSelectedChannel().get();
+        ChatChannel<? extends ChatMessage<?>> chatChannel = model.getSelectedChannel().get();
         UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
         Optional<Citation> citation = citationBlock.getCitation();
 
@@ -292,8 +293,9 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
     }
 
     private List<UserIdentity> getMyUserProfilesInChannel() {
+        Comparator<ChatMessage<?>> dateComparator = Comparator.comparing(ChatMessage::getDate);
         return model.getSelectedChannel().get().getChatMessages().stream()
-                .sorted(Comparator.comparing(ChatMessage::getDate).reversed())
+                .sorted(dateComparator.reversed())
                 .map(ChatMessage::getAuthorUserProfileId)
                 .map(userIdentityService::findUserIdentity)
                 .filter(Optional::isPresent)

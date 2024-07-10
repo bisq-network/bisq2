@@ -54,7 +54,7 @@ public class BisqEasyPrivateChatChannelSelectionService extends ChatChannelSelec
     }
 
     @Override
-    public void selectChannel(ChatChannel<? extends ChatMessage> chatChannel) {
+    public void selectChannel(ChatChannel<? extends ChatMessage<?>> chatChannel) {
         if (chatChannel != null) {
             PrivateChatChannel<?> privateChatChannel = (PrivateChatChannel<?>) chatChannel;
             userIdentityService.selectChatUserIdentity(privateChatChannel.getMyUserIdentity());
@@ -68,7 +68,7 @@ public class BisqEasyPrivateChatChannelSelectionService extends ChatChannelSelec
     }
 
     @Override
-    protected Stream<ChatChannel<?>> getAllChatChannels() {
+    protected Stream<ChatChannel<? extends ChatMessage<?>>> getAllChatChannels() {
         // fixme (low prio): cannot return publicChatChannelService.getChannels().stream() due type issues
         return Stream.concat(channelService.getChannels().stream(), Stream.empty());
     }

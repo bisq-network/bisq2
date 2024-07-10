@@ -34,7 +34,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
-public abstract class ChatChannelService<M extends ChatMessage, C extends ChatChannel<M>, S extends PersistableStore<S>>
+public abstract class ChatChannelService<M extends ChatMessage<?>, C extends ChatChannel<M>, S extends PersistableStore<S>>
         implements Service, PersistenceClient<S> {
     protected final NetworkService networkService;
     protected final UserIdentityService userIdentityService;
@@ -52,7 +52,7 @@ public abstract class ChatChannelService<M extends ChatMessage, C extends ChatCh
         this.chatChannelDomain = chatChannelDomain;
     }
 
-    public void setChatChannelNotificationType(ChatChannel<? extends ChatMessage> chatChannel,
+    public void setChatChannelNotificationType(ChatChannel<? extends ChatMessage<?>> chatChannel,
                                                ChatChannelNotificationType chatChannelNotificationType) {
         synchronized (this) {
             chatChannel.getChatChannelNotificationType().set(chatChannelNotificationType);
@@ -83,15 +83,15 @@ public abstract class ChatChannelService<M extends ChatMessage, C extends ChatCh
         return message.getChatChannelDomain() == chatChannelDomain;
     }
 
-    public Optional<C> findChannel(ChatMessage chatMessage) {
+    public Optional<C> findChannel(ChatMessage<?> chatMessage) {
         return findChannel(chatMessage.getChannelId());
     }
 
-    public String getChannelTitle(ChatChannel<? extends ChatMessage> chatChannel) {
+    public String getChannelTitle(ChatChannel<? extends ChatMessage<?>> chatChannel) {
         return chatChannel.getDisplayString() + getChannelTitlePostFix(chatChannel);
     }
 
-    public void removeExpiredMessages(ChatChannel<? extends ChatMessage> chatChannel) {
+    public void removeExpiredMessages(ChatChannel<? extends ChatMessage<?>> chatChannel) {
         findChannel(chatChannel.getId()).ifPresent(this::doRemoveExpiredMessages);
     }
 
@@ -119,7 +119,7 @@ public abstract class ChatChannelService<M extends ChatMessage, C extends ChatCh
         return getChannels().stream().findFirst();
     }
 
-    protected abstract String getChannelTitlePostFix(ChatChannel<? extends ChatMessage> chatChannel);
+    protected abstract String getChannelTitlePostFix(ChatChannel<? extends ChatMessage<?>> chatChannel);
 
     protected void addMessageReaction(ChatMessageReaction chatMessageReaction, M message) {
         if (bannedUserService.isUserProfileBanned(chatMessageReaction.getUserProfileId())) {

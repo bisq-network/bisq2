@@ -20,6 +20,7 @@ package bisq.desktop.main.content.chat.message_container.list.message_box;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
+import bisq.chat.reactions.ChatMessageReaction;
 import bisq.common.data.Pair;
 import bisq.common.util.StringUtils;
 import bisq.desktop.components.containers.Spacer;
@@ -43,8 +44,8 @@ public final class PeerOfferMessageBox extends PeerTextMessageBox {
     private Button takeOfferButton;
     private Label peerNickName;
 
-    public PeerOfferMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
-                               ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
+    public PeerOfferMessageBox(ChatMessageListItem<? extends ChatMessageReaction, ? extends ChatMessage<?>, ? extends ChatChannel<? extends ChatMessage<?>>> item,
+                               ListView<ChatMessageListItem<? extends ChatMessageReaction, ? extends ChatMessage<?>, ? extends ChatChannel<? extends ChatMessage<?>>>> list,
                                ChatMessagesListController controller) {
         super(item, list, controller);
 

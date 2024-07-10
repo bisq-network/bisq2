@@ -75,7 +75,7 @@ public class ChannelSidebar {
         return controller.view.getRoot();
     }
 
-    public void setChannel(@Nullable ChatChannel<? extends ChatMessage> chatChannel) {
+    public void setChannel(@Nullable ChatChannel<? extends ChatMessage<?>> chatChannel) {
         controller.setChannel(chatChannel);
     }
 
@@ -125,7 +125,7 @@ public class ChannelSidebar {
             }
         }
 
-        void setChannel(@Nullable ChatChannel<? extends ChatMessage> chatChannel) {
+        void setChannel(@Nullable ChatChannel<? extends ChatMessage<?>> chatChannel) {
             notificationsSidebar.setChannel(chatChannel);
 
             if (chatChannel == null) {
@@ -218,7 +218,7 @@ public class ChannelSidebar {
 
     @Getter
     private static class Model implements bisq.desktop.common.view.Model {
-        private final ObjectProperty<ChatChannel<? extends ChatMessage>> channel = new SimpleObjectProperty<>();
+        private final ObjectProperty<ChatChannel<? extends ChatMessage<?>>> channel = new SimpleObjectProperty<>();
         private final StringProperty channelTitle = new SimpleStringProperty();
         private final StringProperty description = new SimpleStringProperty();
         private final BooleanProperty descriptionVisible = new SimpleBooleanProperty();

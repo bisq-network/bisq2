@@ -95,7 +95,7 @@ public abstract class PrivateChatsController extends ChatController<PrivateChats
     }
 
     @Override
-    protected void selectedChannelChanged(ChatChannel<? extends ChatMessage> chatChannel) {
+    protected void selectedChannelChanged(ChatChannel<? extends ChatMessage<?>> chatChannel) {
         super.selectedChannelChanged(chatChannel);
 
         UIThread.run(() -> {

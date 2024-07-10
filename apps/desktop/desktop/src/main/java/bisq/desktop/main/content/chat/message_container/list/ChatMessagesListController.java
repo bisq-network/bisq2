@@ -77,8 +77,8 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
     private final ReputationService reputationService;
     private final SettingsService settingsService;
     private final Consumer<UserProfile> mentionUserHandler;
-    private final Consumer<ChatMessage> replyHandler;
-    private final Consumer<ChatMessage> showChatUserDetailsHandler;
+    private final Consumer<ChatMessage<ChatMessageReaction>> replyHandler;
+    private final Consumer<ChatMessage<ChatMessageReaction>> showChatUserDetailsHandler;
     private final ChatMessagesListModel model;
     @Getter
     private final ChatMessagesListView view;
@@ -95,8 +95,8 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
 
     public ChatMessagesListController(ServiceProvider serviceProvider,
                                       Consumer<UserProfile> mentionUserHandler,
-                                      Consumer<ChatMessage> showChatUserDetailsHandler,
-                                      Consumer<ChatMessage> replyHandler,
+                                      Consumer<ChatMessage<ChatMessageReaction>> showChatUserDetailsHandler,
+                                      Consumer<ChatMessage<ChatMessageReaction>> replyHandler,
                                       ChatChannelDomain chatChannelDomain) {
         chatService = serviceProvider.getChatService();
         chatNotificationService = chatService.getChatNotificationService();
@@ -245,7 +245,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                 .collect(Collectors.toSet()));
     }
 
-    public void setSearchPredicate(Predicate<? super ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate) {
+    public void setSearchPredicate(Predicate<? super ChatMessageListItem<? extends ChatMessageReaction, ? extends ChatMessage<?>, ? extends ChatChannel<? extends ChatMessage<?>>>> predicate) {
         model.setSearchPredicate(Objects.requireNonNullElseGet(predicate, () -> e -> true));
         applyPredicate();
     }
@@ -362,14 +362,14 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
         }
     }
 
-    public void onOpenPrivateChannel(ChatMessage chatMessage) {
+    public void onOpenPrivateChannel(ChatMessage<?> chatMessage) {
         checkArgument(!model.isMyMessage(chatMessage));
 
         userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId())
                 .ifPresent(this::createAndSelectTwoPartyPrivateChatChannel);
     }
 
-    public void onSaveEditedMessage(ChatMessage chatMessage, String editedText) {
+    public void onSaveEditedMessage(ChatMessage<?> chatMessage, String editedText) {
         checkArgument(chatMessage instanceof PublicChatMessage);
         checkArgument(model.isMyMessage(chatMessage));
 
@@ -388,10 +388,10 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
         }
     }
 
-    public void onReportUser(ChatMessage chatMessage) {
+    public void onReportUser(ChatMessage<?> chatMessage) {
         ChatChannelDomain chatChannelDomain = model.getSelectedChannel().get().getChatChannelDomain();
         if (chatMessage instanceof PrivateChatMessage) {
-            PrivateChatMessage privateChatMessage = (PrivateChatMessage) chatMessage;
+            PrivateChatMessage<?> privateChatMessage = (PrivateChatMessage<?>) chatMessage;
             Navigation.navigateTo(NavigationTarget.REPORT_TO_MODERATOR,
                     new ReportToModeratorWindow.InitData(privateChatMessage.getSenderUserProfile(), chatChannelDomain));
         } else {
@@ -401,7 +401,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
         }
     }
 
-    public void onIgnoreUser(ChatMessage chatMessage) {
+    public void onIgnoreUser(ChatMessage<?> chatMessage) {
         new Popup().warning(Res.get("chat.ignoreUser.warn"))
                 .actionButtonText(Res.get("chat.ignoreUser.confirm"))
                 .onAction(() -> doIgnoreUser(chatMessage))
@@ -409,12 +409,12 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                 .show();
     }
 
-    public void doIgnoreUser(ChatMessage chatMessage) {
+    public void doIgnoreUser(ChatMessage<?> chatMessage) {
         userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId())
                 .ifPresent(userProfileService::ignoreUserProfile);
     }
 
-    public void onCopyMessage(ChatMessage chatMessage) {
+    public void onCopyMessage(ChatMessage<?> chatMessage) {
         ClipboardUtil.copyToClipboard(chatMessage.getText());
     }
 
@@ -445,11 +445,11 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                 });
     }
 
-    public void onReactMessage(ChatMessage chatMessage, Reaction reaction, ChatChannel<?> chatChannel) {
+    public <R extends ChatMessageReaction> void onReactMessage(ChatMessage<R> chatMessage, Reaction reaction, ChatChannel<?> chatChannel) {
         checkArgument(chatMessage.canShowReactions(), "Not possible to react to a message of type %s.", chatMessage.getClass());
 
         UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
-        Optional<ChatMessageReaction> chatMessageReaction = chatMessage.getChatMessageReactions().stream()
+        Optional<R> chatMessageReaction = chatMessage.getChatMessageReactions().stream()
                 .filter(chatReaction -> Objects.equals(chatReaction.getUserProfileId(), userIdentity.getId())
                         && chatReaction.getReactionId() == reaction.ordinal())
                 .findAny();
@@ -463,7 +463,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
         }
     }
 
-    public void highlightOfferChatMessage(@Nullable ChatMessage message) {
+    public void highlightOfferChatMessage(@Nullable ChatMessage<?> message) {
         model.getChatMessages().stream()
                 .filter(ChatMessageListItem::isBisqEasyPublicChatMessageWithOffer)
                 .forEach(item -> {
@@ -552,7 +552,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
 
     private void applyPredicate() {
         boolean offerOnly = settingsService.getOffersOnly().get();
-        Predicate<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> predicate = item -> {
+        Predicate<ChatMessageListItem<? extends ChatMessageReaction, ? extends ChatMessage<?>, ? extends ChatChannel<? extends ChatMessage<?>>>> predicate = item -> {
             Optional<UserProfile> senderUserProfile = item.getSenderUserProfile();
             if (senderUserProfile.isEmpty()) {
                 return false;
@@ -581,7 +581,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                 predicate.test(item));
     }
 
-    private <M extends ChatMessage, C extends ChatChannel<M>> Pin bindChatMessages(C channel) {
+    private <R extends ChatMessageReaction, M extends ChatMessage<R>, C extends ChatChannel<M>> Pin bindChatMessages(C channel) {
         // We clear and fill the list at channel change. The addObserver triggers the add method for each item,
         // but as we have a contains() check there it will not have any effect.
         model.getChatMessages().setAll(channel.getChatMessages().stream()
@@ -612,7 +612,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                     if (chatMessage.getChatMessageType() == TAKE_BISQ_EASY_OFFER) {
                         return;
                     }
-                    ChatMessageListItem<M, C> item = new ChatMessageListItem<>(chatMessage,
+                    ChatMessageListItem<R, M, C> item = new ChatMessageListItem<>(chatMessage,
                             channel,
                             marketPriceService,
                             userProfileService,
@@ -630,8 +630,8 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
             public void remove(Object element) {
                 if (element instanceof ChatMessage) {
                     UIThread.run(() -> {
-                        ChatMessage chatMessage = (ChatMessage) element;
-                        Optional<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> toRemove =
+                        ChatMessage<?> chatMessage = (ChatMessage<?>) element;
+                        Optional<ChatMessageListItem<? extends ChatMessageReaction, ? extends ChatMessage<?>, ? extends ChatChannel<? extends ChatMessage<?>>>> toRemove =
                                 model.getChatMessages().stream()
                                         .filter(item -> item.getChatMessage().getId().equals(chatMessage.getId()))
                                         .findAny();
@@ -655,7 +655,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
         });
     }
 
-    private void publishChatMessageReaction(ChatMessage chatMessage, Reaction reaction, UserIdentity userIdentity) {
+    private <R extends ChatMessageReaction> void publishChatMessageReaction(ChatMessage<R> chatMessage, Reaction reaction, UserIdentity userIdentity) {
         if (chatMessage instanceof CommonPublicChatMessage) {
             chatService.getCommonPublicChatChannelServices().get(model.getChatChannelDomain())
                     .publishChatMessageReaction((CommonPublicChatMessage) chatMessage, reaction, userIdentity);
@@ -665,8 +665,10 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
         }
     }
 
-    private void publishPrivateChatMessageReaction(ChatMessage chatMessage, ChatChannel<?> chatChannel, Reaction reaction,
-                                                   Optional<ChatMessageReaction> messageReaction) {
+    private <R extends ChatMessageReaction> void publishPrivateChatMessageReaction(ChatMessage<R> chatMessage,
+                                                                                   ChatChannel<?> chatChannel,
+                                                                                   Reaction reaction,
+                                                                                   Optional<R> messageReaction) {
         if (chatMessage instanceof TwoPartyPrivateChatMessage) {
             checkArgument(chatChannel instanceof TwoPartyPrivateChatChannel, "Channel needs to be of type TwoPartyPrivateChatChannel.");
             TwoPartyPrivateChatChannel channel = (TwoPartyPrivateChatChannel) chatChannel;

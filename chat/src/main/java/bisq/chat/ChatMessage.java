@@ -212,5 +212,5 @@ public abstract class ChatMessage<R extends ChatMessageReaction> implements Netw
         return false;
     }
 
-    public abstract void addChatMessageReaction(R reaction);
+    public abstract void addChatMessageReaction(ChatMessageReaction reaction);
 }
