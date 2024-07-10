@@ -68,7 +68,7 @@ public class WebcamApp extends Application {
     private void setupStage(Stage primaryStage) {
         webcamView = new WebcamView();
         Scene scene = new Scene(webcamView, VIDEO_SIZE.getWidth(), VIDEO_SIZE.getHeight());
-        scene.getStylesheets().add(requireNonNull(scene.getClass().getResource("/css/webapp.css")).toExternalForm());
+        scene.getStylesheets().add(requireNonNull(this.getClass().getResource("/css/webapp.css")).toExternalForm());
         primaryStage.setScene(scene);
         primaryStage.sizeToScene();
         primaryStage.setOnCloseRequest(event -> {
