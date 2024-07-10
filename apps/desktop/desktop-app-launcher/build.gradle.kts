@@ -1,6 +1,7 @@
 plugins {
     id("bisq.java-library")
     id("bisq.gradle.desktop.regtest.BisqDesktopRegtestPlugin")
+    id("bisq.gradle.copy_version.CopyWebcamAppVersionPlugin")
     application
     id("bisq.gradle.packaging.PackagingPlugin")
     alias(libs.plugins.openjfx)
@@ -11,7 +12,7 @@ application {
 }
 
 packaging {
-    name.set("Bisq 2")
+    name.set("Bisq2")
     version.set("2.0.4")
 }
 
@@ -47,5 +48,9 @@ tasks {
 
     distTar {
         enabled = false
+    }
+
+    named<DefaultTask>("build") {
+        dependsOn(project.tasks.named("copyWebcamAppVersion"))
     }
 }

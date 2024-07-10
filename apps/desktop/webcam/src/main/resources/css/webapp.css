@@ -1,0 +1,28 @@
+@font-face {
+    font-family: "IBM Plex Sans Light";
+    src: url("/fonts/IBMPlexSans-Light.ttf");
+}
+
+.root {
+    -fx-font-family: "IBM Plex Sans";
+    -fx-font-size: 13;
+}
+
+.background {
+    -fx-background-color: #1c1c1c;
+}
+
+.connection {
+    -fx-fill: #808080;
+    -fx-text-fill: #808080;
+    -fx-font-size: 1.3em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+#spinning-circle {
+    -fx-image: url("/images/spinning-circle.png");
+}
+
+#scan-with-camera {
+    -fx-image: url("/images/scan-with-camera.png");
+}

@@ -76,7 +76,7 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
     private fun getOsSpecificOverrideArgs(fileType: String): Map<String, String> =
         if (jPackageConfig.appConfig.name == "Bisq" && fileType == "exe") {
             // Needed for Windows OS notification support
-            mutableMapOf("--description" to "Bisq 2")
+            mutableMapOf("--description" to "Bisq2")
         } else {
             emptyMap()
         }

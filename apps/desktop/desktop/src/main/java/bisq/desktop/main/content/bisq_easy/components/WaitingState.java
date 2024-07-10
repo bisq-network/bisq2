@@ -25,4 +25,5 @@ public enum WaitingState {
     BITCOIN_ADDRESS,
     BITCOIN_PAYMENT,
     BITCOIN_CONFIRMATION,
+    SCAN_WITH_CAMERA
 }

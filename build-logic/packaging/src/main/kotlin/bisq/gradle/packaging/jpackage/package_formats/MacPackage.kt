@@ -6,7 +6,7 @@ class MacPackage(private val resourcesPath: Path, private val appName: String) :
     override val packageFormats = setOf(PackageFormat.DMG)
 
     override fun createArgumentsForJPackage(packageFormat: PackageFormat): List<String> {
-        // App name is "Bisq" or "Bisq 2"
+        // App name is "Bisq" or "Bisq2"
         val iconFileName = "${appName.replace(" ", "")}.icns"
         return mutableListOf(
             "--resource-dir", resourcesPath.toAbsolutePath().toString(),

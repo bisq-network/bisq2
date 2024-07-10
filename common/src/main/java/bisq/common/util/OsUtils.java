@@ -58,16 +58,24 @@ public class OsUtils {
         return getOSName().toLowerCase().contains("mac") || getOSName().contains("darwin");
     }
 
+    public static boolean isAppleSiliconMac() {
+        return isMac() && getOSArchitecture().equals("aarch64");
+    }
+
+    public static boolean isIntelMac() {
+        return isMac() && getOSArchitecture().equals("x86_64");
+    }
+
     public static boolean isLinux() {
         return getOSName().contains("linux");
     }
 
     public static boolean isLinux32() {
-        return getOSName().contains("linux") && getOSArchitecture().equals("32");
+        return getOSName().contains("linux") && getOSBitVersion().equals("32");
     }
 
     public static boolean isLinux64() {
-        return getOSName().contains("linux") && getOSArchitecture().equals("64");
+        return getOSName().contains("linux") && getOSBitVersion().equals("64");
     }
 
     public static boolean isDebianLinux() {
@@ -102,7 +110,7 @@ public class OsUtils {
     }
 
     public static String getOsInfo() {
-        return getOSName() + " (" + getOSArchitecture() + ") v." + getVersionString();
+        return getOSName() + " / " + getOSArchitecture() + " / " + getOSBitVersion() + " v." + getVersionString();
     }
 
     public static Version getVersion() {
@@ -110,6 +118,10 @@ public class OsUtils {
     }
 
     public static String getOSArchitecture() {
+        return System.getProperty("os.arch");
+    }
+
+    public static String getOSBitVersion() {
         if (isWindows()) {
             // See: Like always windows needs extra treatment
             // https://stackoverflow.com/questions/20856694/how-to-find-the-os-bit-type
