@@ -55,16 +55,21 @@ public class WebcamProcessLauncher {
                 }
 
                 String portParam = "--port=" + port;
-                String iconPath = baseDir + "/webcam-app-icon.png";
-                File bisqIcon = new File(iconPath);
-                if (!bisqIcon.exists()) {
-                    FileUtils.resourceToFile("images/webcam/webcam-app-icon@2x.png", bisqIcon);
-                }
-                String macOsDockIconArg = "-Xdock:icon=" + iconPath;
-                String jvmArgs = OsUtils.isMac() ? macOsDockIconArg : "";
                 String pathToJavaExe = System.getProperty("java.home") + "/bin/java";
                 log.info("pathToJavaExe {}", pathToJavaExe);
-                ProcessBuilder processBuilder = new ProcessBuilder(pathToJavaExe, jvmArgs, "-jar", jarFilePath, portParam);
+                ProcessBuilder processBuilder;
+                if (OsUtils.isMac()) {
+                    String iconPath = baseDir + "/webcam-app-icon.png";
+                    File bisqIcon = new File(iconPath);
+                    if (!bisqIcon.exists()) {
+                        FileUtils.resourceToFile("images/webcam/webcam-app-icon@2x.png", bisqIcon);
+                    }
+                    String jvmArgs = "-Xdock:icon=" + iconPath;
+                    processBuilder = new ProcessBuilder(pathToJavaExe, jvmArgs, "-jar", jarFilePath, portParam);
+                } else {
+                    processBuilder = new ProcessBuilder(pathToJavaExe, "-jar", jarFilePath, portParam);
+                }
+
                 Process process = processBuilder.start();
                 runningProcess = Optional.of(process);
                 log.info("Process successful launched: {}; port={}", process, port);
