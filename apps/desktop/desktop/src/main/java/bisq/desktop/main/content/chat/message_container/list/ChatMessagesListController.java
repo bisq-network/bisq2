@@ -8,6 +8,7 @@ import bisq.chat.bisqeasy.BisqEasyOfferMessage;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeMessage;
 import bisq.chat.common.CommonPublicChatChannel;
 import bisq.chat.common.CommonPublicChatChannelService;
 import bisq.chat.common.CommonPublicChatMessage;
@@ -17,11 +18,7 @@ import bisq.chat.priv.PrivateChatChannelService;
 import bisq.chat.priv.PrivateChatMessage;
 import bisq.chat.pub.PublicChatChannel;
 import bisq.chat.pub.PublicChatMessage;
-import bisq.chat.reactions.BisqEasyOfferbookMessageReaction;
-import bisq.chat.reactions.ChatMessageReaction;
-import bisq.chat.reactions.CommonPublicChatMessageReaction;
-import bisq.chat.reactions.Reaction;
-import bisq.chat.reactions.TwoPartyPrivateChatMessageReaction;
+import bisq.chat.reactions.*;
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.chat.two_party.TwoPartyPrivateChatMessage;
 import bisq.common.observable.Pin;
@@ -77,8 +74,8 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
     private final ReputationService reputationService;
     private final SettingsService settingsService;
     private final Consumer<UserProfile> mentionUserHandler;
-    private final Consumer<ChatMessage<ChatMessageReaction>> replyHandler;
-    private final Consumer<ChatMessage<ChatMessageReaction>> showChatUserDetailsHandler;
+    private final Consumer<ChatMessage<?>> replyHandler;
+    private final Consumer<ChatMessage<?>> showChatUserDetailsHandler;
     private final ChatMessagesListModel model;
     @Getter
     private final ChatMessagesListView view;
@@ -95,8 +92,8 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
 
     public ChatMessagesListController(ServiceProvider serviceProvider,
                                       Consumer<UserProfile> mentionUserHandler,
-                                      Consumer<ChatMessage<ChatMessageReaction>> showChatUserDetailsHandler,
-                                      Consumer<ChatMessage<ChatMessageReaction>> replyHandler,
+                                      Consumer<ChatMessage<?>> showChatUserDetailsHandler,
+                                      Consumer<ChatMessage<?>> replyHandler,
                                       ChatChannelDomain chatChannelDomain) {
         chatService = serviceProvider.getChatService();
         chatNotificationService = chatService.getChatNotificationService();
@@ -315,7 +312,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
         Navigation.navigateTo(NavigationTarget.TAKE_OFFER, new TakeOfferController.InitData(bisqEasyOffer));
     }
 
-    public void onDeleteMessage(ChatMessage chatMessage) {
+    public void onDeleteMessage(ChatMessage<?> chatMessage) {
         String authorUserProfileId = chatMessage.getAuthorUserProfileId();
         userIdentityService.findUserIdentity(authorUserProfileId)
                 .ifPresent(authorUserIdentity -> {
@@ -343,7 +340,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                 });
     }
 
-    private void doDeleteMessage(ChatMessage chatMessage, UserIdentity userIdentity) {
+    private void doDeleteMessage(ChatMessage<?> chatMessage, UserIdentity userIdentity) {
         checkArgument(chatMessage instanceof PublicChatMessage);
 
         if (chatMessage instanceof BisqEasyOfferbookMessage) {
@@ -669,16 +666,22 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                                                                                    ChatChannel<?> chatChannel,
                                                                                    Reaction reaction,
                                                                                    Optional<R> messageReaction) {
+        boolean isRemoved = false;
+        if (messageReaction.isPresent() && messageReaction.get() instanceof PrivateChatMessageReaction) {
+            PrivateChatMessageReaction privateChatReaction = (PrivateChatMessageReaction) messageReaction.get();
+            isRemoved = !privateChatReaction.isRemoved();
+        }
+
         if (chatMessage instanceof TwoPartyPrivateChatMessage) {
             checkArgument(chatChannel instanceof TwoPartyPrivateChatChannel, "Channel needs to be of type TwoPartyPrivateChatChannel.");
             TwoPartyPrivateChatChannel channel = (TwoPartyPrivateChatChannel) chatChannel;
-            boolean isRemoved = false;
-            if (messageReaction.isPresent() && messageReaction.get() instanceof TwoPartyPrivateChatMessageReaction) {
-                TwoPartyPrivateChatMessageReaction twoPartyReaction = (TwoPartyPrivateChatMessageReaction) messageReaction.get();
-                isRemoved = !twoPartyReaction.isRemoved();
-            }
             chatService.getTwoPartyPrivateChatChannelServices().get(model.getChatChannelDomain())
                     .sendTextMessageReaction((TwoPartyPrivateChatMessage) chatMessage, channel, reaction, isRemoved);
+        } else if (chatMessage instanceof BisqEasyOpenTradeMessage) {
+            checkArgument(chatChannel instanceof BisqEasyOpenTradeChannel, "Channel needs to be of type BisqEasyOpenTradeChannel.");
+            BisqEasyOpenTradeChannel channel = (BisqEasyOpenTradeChannel) chatChannel;
+            chatService.getBisqEasyOpenTradeChannelService()
+                    .sendTextMessageReaction((BisqEasyOpenTradeMessage) chatMessage, channel, reaction, isRemoved);
         }
     }
 
