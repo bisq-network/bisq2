@@ -43,7 +43,8 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService<TwoPartyPrivateChatMessage, TwoPartyPrivateChatChannel, TwoPartyPrivateChatChannelStore> {
+public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService<TwoPartyPrivateChatMessageReaction,
+        TwoPartyPrivateChatMessage, TwoPartyPrivateChatChannel, TwoPartyPrivateChatChannelStore> {
     @Getter
     private final TwoPartyPrivateChatChannelStore persistableStore = new TwoPartyPrivateChatChannelStore();
     @Getter
@@ -153,6 +154,27 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
     @Override
     protected TwoPartyPrivateChatChannel createAndGetNewPrivateChatChannel(UserProfile peer, UserIdentity myUserIdentity) {
         return new TwoPartyPrivateChatChannel(peer, myUserIdentity, chatChannelDomain);
+    }
+
+    @Override
+    protected TwoPartyPrivateChatMessageReaction createAndGetNewPrivateChatMessageReaction(TwoPartyPrivateChatMessage message,
+                                                                                           UserProfile senderUserProfile,
+                                                                                           UserProfile receiverUserProfile,
+                                                                                           Reaction reaction,
+                                                                                           String messageReactionId,
+                                                                                           boolean isRemoved) {
+        return new TwoPartyPrivateChatMessageReaction(
+                messageReactionId,
+                senderUserProfile,
+                receiverUserProfile.getId(),
+                receiverUserProfile.getNetworkId(),
+                message.getChannelId(),
+                message.getChatChannelDomain(),
+                message.getId(),
+                reaction.ordinal(),
+                new Date().getTime(),
+                isRemoved
+        );
     }
 
     @Override

@@ -22,7 +22,6 @@ import bisq.chat.ChatMessage;
 import bisq.chat.ChatMessageType;
 import bisq.chat.Citation;
 import bisq.chat.reactions.ChatMessageReaction;
-import bisq.chat.reactions.TwoPartyPrivateChatMessageReaction;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
@@ -45,7 +44,8 @@ import java.util.Optional;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public abstract class PrivateChatMessage<R extends ChatMessageReaction> extends ChatMessage implements MailboxMessage, ExternalNetworkMessage, AckRequestingMessage {
+public abstract class PrivateChatMessage<R extends ChatMessageReaction> extends ChatMessage<R> implements MailboxMessage,
+        ExternalNetworkMessage, AckRequestingMessage {
     // In group channels we send a message to multiple peers but want to avoid that the message gets duplicated in our hashSet by a different receiverUserProfileId
     @EqualsAndHashCode.Exclude
     protected final String receiverUserProfileId;
@@ -128,5 +128,22 @@ public abstract class PrivateChatMessage<R extends ChatMessageReaction> extends 
     @Override
     public NetworkId getReceiver() {
         return receiverNetworkId;
+    }
+
+    @Override
+    public void addChatMessageReaction(R newReaction) {
+        getChatMessageReactions().stream()
+                .filter(privateChatReaction -> privateChatReaction.matches(newReaction))
+                .findFirst()
+                .ifPresentOrElse(
+                        existingPrivateChatReaction -> {
+                            if (newReaction.getDate() > existingPrivateChatReaction.getDate()) {
+                                // only update if more recent
+                                getChatMessageReactions().remove(existingPrivateChatReaction);
+                                getChatMessageReactions().add(newReaction);
+                            }
+                        },
+                        () -> getChatMessageReactions().add(newReaction)
+                );
     }
 }

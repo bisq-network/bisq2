@@ -437,7 +437,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
 
         chatService.findChatChannelService(chatChannel)
                 .filter(service -> service instanceof PrivateChatChannelService)
-                .map(service -> (PrivateChatChannelService<?, ?, ?>) service).stream()
+                .map(service -> (PrivateChatChannelService<?, ?, ?, ?>) service).stream()
                 .findAny()
                 .ifPresent(service -> {
                     service.leaveChannel(chatChannel.getId());

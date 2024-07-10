@@ -90,6 +90,9 @@ public abstract class ChatMessageReaction implements NetworkProto {
             case TWOPARTYPRIVATECHATMESSAGEREACTION: {
                 return TwoPartyPrivateChatMessageReaction.fromProto(proto);
             }
+            case BISQEASYOPENTRADEMESSAGEREACTION: {
+                return BisqEasyOpenTradeMessageReaction.fromProto(proto);
+            }
             case MESSAGE_NOT_SET: {
                 throw new UnresolvableProtobufMessageException(proto);
             }
@@ -126,6 +129,9 @@ public abstract class ChatMessageReaction implements NetworkProto {
                 switch (proto.getMessageCase()) {
                     case TWOPARTYPRIVATECHATMESSAGEREACTION: {
                         return TwoPartyPrivateChatMessageReaction.fromProto(proto);
+                    }
+                    case BISQEASYOPENTRADEMESSAGEREACTION: {
+                        return BisqEasyOpenTradeMessageReaction.fromProto(proto);
                     }
                     case MESSAGE_NOT_SET: {
                         throw new UnresolvableProtobufMessageException(proto);
