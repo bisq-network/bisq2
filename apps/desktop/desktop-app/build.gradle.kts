@@ -41,8 +41,9 @@ dependencies {
     implementation(project(":desktop"))
 
     implementation("network:network")
-    implementation("wallets:electrum")
-    implementation("wallets:bitcoind")
+    implementation("wallets:core")
+    // implementation("wallets:electrum")
+    // implementation("wallets:bitcoind")
 
     implementation(libs.typesafe.config)
 }

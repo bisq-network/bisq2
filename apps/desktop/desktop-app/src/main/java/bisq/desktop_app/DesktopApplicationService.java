@@ -44,10 +44,8 @@ import bisq.support.SupportService;
 import bisq.trade.TradeService;
 import bisq.updater.UpdaterService;
 import bisq.user.UserService;
-import bisq.wallets.bitcoind.BitcoinWalletService;
 import bisq.wallets.core.BitcoinWalletSelection;
 import bisq.wallets.core.WalletService;
-import bisq.wallets.electrum.ElectrumWalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -106,12 +104,12 @@ public class DesktopApplicationService extends ApplicationService {
         com.typesafe.config.Config bitcoinWalletConfig = getConfig("bitcoinWallet");
         BitcoinWalletSelection bitcoinWalletSelection = bitcoinWalletConfig.getEnum(BitcoinWalletSelection.class, "bitcoinWalletSelection");
         switch (bitcoinWalletSelection) {
-            case BITCOIND:
+           /* case BITCOIND:
                 walletService = Optional.of(new BitcoinWalletService(BitcoinWalletService.Config.from(bitcoinWalletConfig.getConfig("bitcoind")), getPersistenceService()));
                 break;
             case ELECTRUM:
                 walletService = Optional.of(new ElectrumWalletService(ElectrumWalletService.Config.from(bitcoinWalletConfig.getConfig("electrum")), config.getBaseDir()));
-                break;
+                break;*/
             case NONE:
             default:
                 walletService = Optional.empty();

@@ -39,8 +39,9 @@ dependencies {
     implementation("network:network")
     implementation("network:network-identity")
 
-    implementation("wallets:electrum")
-    implementation("wallets:bitcoind")
+    implementation("wallets:core")
+    // implementation("wallets:electrum")
+    // implementation("wallets:bitcoind")
 
     implementation(libs.google.gson)
     implementation(libs.bundles.fontawesomefx)
