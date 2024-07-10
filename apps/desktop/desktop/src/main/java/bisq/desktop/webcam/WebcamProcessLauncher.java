@@ -60,7 +60,9 @@ public class WebcamProcessLauncher {
                     FileUtils.resourceToFile("images/app_window/icon_512.png", bisqIcon);
                 }
                 String jvmArgs = "-Xdock:icon=" + iconPath;
-                ProcessBuilder processBuilder = new ProcessBuilder("java", jvmArgs, "-jar", jarFilePath, portParam);
+                String pathToJavaExe = System.getProperty("java.home") + "/bin/java";
+                log.info("pathToJavaExe {}", pathToJavaExe);
+                ProcessBuilder processBuilder = new ProcessBuilder(pathToJavaExe, jvmArgs, "-jar", jarFilePath, portParam);
                 Process process = processBuilder.start();
                 runningProcess = Optional.of(process);
                 log.info("Process successful launched: {}; port={}", process, port);
