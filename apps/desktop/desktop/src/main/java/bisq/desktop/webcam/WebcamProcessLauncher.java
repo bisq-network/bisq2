@@ -28,6 +28,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class WebcamProcessLauncher {
@@ -89,6 +90,10 @@ public class WebcamProcessLauncher {
         log.info("Process shutdown. runningProcess={}", runningProcess);
         runningProcess.ifPresent(process -> {
             process.destroy();
+            try {
+                process.waitFor(2, TimeUnit.SECONDS);
+            } catch (InterruptedException ignore) {
+            }
             if (process.isAlive()) {
                 log.warn("Stopping webcam app process gracefully did not terminate it. We destroy it forcibly.");
                 process.destroyForcibly();

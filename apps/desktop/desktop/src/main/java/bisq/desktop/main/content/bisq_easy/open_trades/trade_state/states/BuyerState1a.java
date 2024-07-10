@@ -30,7 +30,7 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.WrappingText;
-import bisq.desktop.webcam.QrCodeListener;
+import bisq.desktop.webcam.QrCodeListeningServer;
 import bisq.desktop.webcam.WebcamProcessLauncher;
 import bisq.i18n.Res;
 import bisq.trade.bisq_easy.BisqEasyTrade;
@@ -64,7 +64,7 @@ public class BuyerState1a extends BaseState {
 
     private static class Controller extends BaseState.Controller<Model, View> {
         private final String baseDir;
-        private QrCodeListener qrCodeListener;
+        private QrCodeListeningServer qrCodeListeningServer;
         private WebcamProcessLauncher webcamProcessLauncher;
 
         private Controller(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
@@ -118,13 +118,12 @@ public class BuyerState1a extends BaseState {
 
         void onScanQrCode() {
             int port = NetworkUtils.selectRandomPort();
-            qrCodeListener = new QrCodeListener(port, this::onQrCodeDetected, this::onWebcamAppShutdown);
-
+            qrCodeListeningServer = new QrCodeListeningServer(port, this::onQrCodeDetected, this::onWebcamAppShutdown);
 
             webcamProcessLauncher = new WebcamProcessLauncher(baseDir, port);
 
             // Start local tcp server listening for input from qr code scan
-            qrCodeListener.start();
+            qrCodeListeningServer.start();
 
             webcamProcessLauncher.start();
             log.info("We start the webcam application as new Java process and listen for a QR code result. TCP listening port={}", port);
@@ -137,7 +136,7 @@ public class BuyerState1a extends BaseState {
             if (qrCode != null) {
                 // Once received the qr code we close both the webcam app and the server and exit
                 webcamProcessLauncher.shutdown();
-                qrCodeListener.stopServer();
+                qrCodeListeningServer.stopServer();
 
                 UIThread.run(() -> {
                     model.bitcoinPaymentData.set(qrCode);
@@ -148,7 +147,7 @@ public class BuyerState1a extends BaseState {
 
         private void onWebcamAppShutdown() {
             log.info("Webcam app got closed without detecting a qr code. We stop our qrCodeListener server.");
-            qrCodeListener.stopServer();
+            qrCodeListeningServer.stopServer();
         }
     }
 

@@ -38,12 +38,12 @@ public class WebAppDemo {
         keepRunning();
     }
 
-    private final QrCodeListener qrCodeListener;
+    private final QrCodeListeningServer qrCodeListeningServer;
     private final WebcamProcessLauncher webcamProcessLauncher;
 
     public WebAppDemo() {
         int port = NetworkUtils.selectRandomPort();
-        qrCodeListener = new QrCodeListener(port, this::onQrCodeDetected, this::onWebcamAppShutdown);
+        qrCodeListeningServer = new QrCodeListeningServer(port, this::onQrCodeDetected, this::onWebcamAppShutdown);
 
         String baseDir = Path.of(OsUtils.getUserDataDir().toAbsolutePath().toString(), "Bisq2_webAppDemo").toAbsolutePath().toString();
         try {
@@ -54,7 +54,7 @@ public class WebAppDemo {
         webcamProcessLauncher = new WebcamProcessLauncher(baseDir, port);
 
         // Start local tcp server listening for input from qr code scan
-        qrCodeListener.start();
+        qrCodeListeningServer.start();
 
         // Start webcam app in new Java process. Once a qr code is detected we get called ourhandler.
         // If the webcam app got shut down we get called out shutDown handler
@@ -66,14 +66,14 @@ public class WebAppDemo {
         if (qrCode != null) {
             // Once received the qr code we close both the webcam app and the server and exit
             webcamProcessLauncher.shutdown();
-            qrCodeListener.stopServer();
+            qrCodeListeningServer.stopServer();
             System.exit(0);
         }
     }
 
     private void onWebcamAppShutdown() {
         log.info("onWebcamAppShutdown");
-        qrCodeListener.stopServer();
+        qrCodeListeningServer.stopServer();
         System.exit(0);
     }
 

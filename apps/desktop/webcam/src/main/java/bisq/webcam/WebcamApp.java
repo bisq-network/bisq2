@@ -19,6 +19,7 @@ package bisq.webcam;
 
 
 import bisq.common.logging.LogSetup;
+import bisq.common.timer.Scheduler;
 import bisq.common.util.FileUtils;
 import bisq.common.util.OsUtils;
 import bisq.webcam.service.VideoSize;
@@ -35,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 
 import static java.util.Objects.requireNonNull;
 
@@ -45,6 +47,7 @@ public class WebcamApp extends Application {
     private final WebcamService webcamService;
     private QrCodeSender qrCodeSender;
     private WebcamView webcamView;
+    private Optional<Scheduler> heartBeatScheduler = Optional.empty();
 
     public WebcamApp() {
         webcamService = new WebcamService();
@@ -80,6 +83,20 @@ public class WebcamApp extends Application {
         setupStage(primaryStage);
 
         startWebcam();
+
+        startHeartBeat();
+    }
+
+    private void shutdown() {
+        heartBeatScheduler.ifPresent(Scheduler::stop);
+        qrCodeSender.send(ControlSignals.SHUTDOWN.name())
+                .whenComplete((nil, throwable) -> webcamService.shutdown()
+                        .whenComplete((result, throwable1) -> Platform.exit()));
+    }
+
+    private void startHeartBeat() {
+        // Send a heart beat every second to avoid triggering server socket timeout
+        heartBeatScheduler = Optional.of(Scheduler.run(() -> qrCodeSender.send(ControlSignals.HEART_BEAT.name())).periodically(1000));
     }
 
     private void setupStage(Stage primaryStage) {
@@ -96,12 +113,6 @@ public class WebcamApp extends Application {
 
         scene.addEventHandler(KeyEvent.KEY_PRESSED,
                 event -> KeyHandlerUtil.handleShutDownKeyEvent(event, this::shutdown));
-    }
-
-    private void shutdown() {
-        qrCodeSender.send("shutdown")
-                .whenComplete((nil, throwable) -> webcamService.shutdown()
-                        .whenComplete((result, throwable1) -> Platform.exit()));
     }
 
     private void startWebcam() {
