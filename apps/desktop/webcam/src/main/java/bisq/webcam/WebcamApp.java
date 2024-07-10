@@ -18,15 +18,23 @@
 package bisq.webcam;
 
 
+import bisq.common.logging.LogSetup;
+import bisq.common.util.FileUtils;
+import bisq.common.util.OsUtils;
 import bisq.webcam.service.VideoSize;
 import bisq.webcam.service.WebcamService;
 import bisq.webcam.service.network.QrCodeSender;
 import bisq.webcam.view.WebcamView;
+import bisq.webcam.view.util.KeyHandlerUtil;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.Scene;
+import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
+
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 
 import static java.util.Objects.requireNonNull;
 
@@ -52,9 +60,18 @@ public class WebcamApp extends Application {
             if (portParam != null) {
                 port = Integer.parseInt(portParam);
             }
+
+            String logFile = OsUtils.getUserDataDir().resolve("Bisq-webcam-app").toAbsolutePath() + FileUtils.FILE_SEP + "webcam-app";
+            String logFileParam = parameters.getNamed().get("logFile");
+            if (logFileParam != null) {
+                logFile = URLDecoder.decode(logFileParam, StandardCharsets.UTF_8);
+            }
+            LogSetup.setup(logFile);
+            log.info("Webcam app logging to {}", logFile);
+
             qrCodeSender = new QrCodeSender(port);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("init failed", e);
         }
     }
 
@@ -73,12 +90,15 @@ public class WebcamApp extends Application {
         primaryStage.sizeToScene();
         primaryStage.setOnCloseRequest(event -> {
             event.consume();
-            onClose();
+            shutdown();
         });
         primaryStage.show();
+
+        scene.addEventHandler(KeyEvent.KEY_PRESSED,
+                event -> KeyHandlerUtil.handleShutDownKeyEvent(event, this::shutdown));
     }
 
-    private void onClose() {
+    private void shutdown() {
         qrCodeSender.send("shutdown")
                 .whenComplete((nil, throwable) -> webcamService.shutdown()
                         .whenComplete((result, throwable1) -> Platform.exit()));

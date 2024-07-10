@@ -17,12 +17,15 @@
 
 package bisq.desktop.webcam;
 
+import bisq.common.application.DevMode;
 import bisq.common.util.ArchiveUtil;
 import bisq.common.util.FileUtils;
 import bisq.common.util.OsUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -45,7 +48,7 @@ public class WebcamProcessLauncher {
                 String jarFilePath = baseDir + "/webcam-" + version + "-all.jar";
                 File jarFile = new File(jarFilePath);
 
-                if (!jarFile.exists()) {
+                if (!jarFile.exists() || DevMode.isDevMode()) {
                     String zipFileName = "webcam-" + version + ".zip";
                     File tempFile = new File(baseDir + "/" + zipFileName);
                     FileUtils.resourceToFile("webcam-app/" + zipFileName, tempFile);
@@ -55,6 +58,7 @@ public class WebcamProcessLauncher {
                 }
 
                 String portParam = "--port=" + port;
+                String logFileParam = "--logFile=" + URLEncoder.encode(baseDir, StandardCharsets.UTF_8) + FileUtils.FILE_SEP + "webcam-app";
                 String pathToJavaExe = System.getProperty("java.home") + "/bin/java";
                 log.info("pathToJavaExe {}", pathToJavaExe);
                 ProcessBuilder processBuilder;
@@ -65,9 +69,9 @@ public class WebcamProcessLauncher {
                         FileUtils.resourceToFile("images/webcam/webcam-app-icon@2x.png", bisqIcon);
                     }
                     String jvmArgs = "-Xdock:icon=" + iconPath;
-                    processBuilder = new ProcessBuilder(pathToJavaExe, jvmArgs, "-jar", jarFilePath, portParam);
+                    processBuilder = new ProcessBuilder(pathToJavaExe, jvmArgs, "-jar", jarFilePath, portParam, logFileParam);
                 } else {
-                    processBuilder = new ProcessBuilder(pathToJavaExe, "-jar", jarFilePath, portParam);
+                    processBuilder = new ProcessBuilder(pathToJavaExe, "-jar", jarFilePath, portParam, logFileParam);
                 }
 
                 Process process = processBuilder.start();
