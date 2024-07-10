@@ -191,9 +191,13 @@ public abstract class PrivateChatChannelService<
     }
 
     protected void processQueuedReactions() {
+        long now = new Date().getTime();
         unprocessedReactions.forEach(reaction -> {
             unprocessedReactions.remove(reaction);
-            processMessageReaction(reaction);
+            long age = now - reaction.getDate();
+            if (age < reaction.getMetaData().getTtl()) {
+                processMessageReaction(reaction);
+            }
         });
     }
 

@@ -171,7 +171,7 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
                 }
             }).ifPresent(channel -> {
                 addMessage(message, channel);
-                // Check if there are any reactions that should be added to that (or any other) message
+                // Check if there are any reactions that should be added to existing messages
                 processQueuedReactions();
             });
         }
