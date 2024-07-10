@@ -164,7 +164,8 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
                 // in cases we would get a leave message as first message (e.g. after having closed the channel)
                 // we do not create a channel.
                 if (message.getChatMessageType() == ChatMessageType.LEAVE) {
-                    log.warn("We received a leave message as first message. This is not expected but might " + "happen in some rare cases.");
+                    log.warn("We received a leave message as first message. This is not expected but might " +
+                            "happen in some rare cases.");
                     return Optional.empty();
                 } else {
                     return createAndAddChannel(message.getSenderUserProfile(), message.getReceiverUserProfileId());
