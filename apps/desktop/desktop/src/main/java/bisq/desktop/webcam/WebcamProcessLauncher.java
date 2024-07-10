@@ -54,10 +54,10 @@ public class WebcamProcessLauncher {
                 }
 
                 String portParam = "--port=" + port;
-                String iconPath = baseDir + "/bisq_icon.png";
+                String iconPath = baseDir + "/webcam-app-icon.png";
                 File bisqIcon = new File(iconPath);
                 if (!bisqIcon.exists()) {
-                    FileUtils.resourceToFile("images/app_window/icon_512.png", bisqIcon);
+                    FileUtils.resourceToFile("images/webcam/webcam-app-icon@2x.png", bisqIcon);
                 }
                 String jvmArgs = "-Xdock:icon=" + iconPath;
                 String pathToJavaExe = System.getProperty("java.home") + "/bin/java";
