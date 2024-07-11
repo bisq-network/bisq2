@@ -44,7 +44,7 @@ import java.util.Optional;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public abstract class PrivateChatMessage<R extends ChatMessageReaction> extends ChatMessage<R> implements MailboxMessage,
+public abstract class PrivateChatMessage<R extends ChatMessageReaction> extends ChatMessage implements MailboxMessage,
         ExternalNetworkMessage, AckRequestingMessage {
     // In group channels we send a message to multiple peers but want to avoid that the message gets duplicated in our hashSet by a different receiverUserProfileId
     @EqualsAndHashCode.Exclude
@@ -130,8 +130,7 @@ public abstract class PrivateChatMessage<R extends ChatMessageReaction> extends 
         return receiverNetworkId;
     }
 
-    @Override
-    public void addChatMessageReaction(R newReaction) {
+    public void addPrivateChatMessageReaction(R newReaction) {
         getChatMessageReactions().stream()
                 .filter(privateChatReaction -> privateChatReaction.matches(newReaction))
                 .findFirst()

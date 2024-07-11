@@ -312,7 +312,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
         Navigation.navigateTo(NavigationTarget.TAKE_OFFER, new TakeOfferController.InitData(bisqEasyOffer));
     }
 
-    public void onDeleteMessage(ChatMessage<?> chatMessage) {
+    public void onDeleteMessage(ChatMessage chatMessage) {
         String authorUserProfileId = chatMessage.getAuthorUserProfileId();
         userIdentityService.findUserIdentity(authorUserProfileId)
                 .ifPresent(authorUserIdentity -> {
@@ -340,7 +340,7 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                 });
     }
 
-    private void doDeleteMessage(ChatMessage<?> chatMessage, UserIdentity userIdentity) {
+    private void doDeleteMessage(ChatMessage chatMessage, UserIdentity userIdentity) {
         checkArgument(chatMessage instanceof PublicChatMessage);
 
         if (chatMessage instanceof BisqEasyOfferbookMessage) {
@@ -661,7 +661,6 @@ public class ChatMessagesListController implements bisq.desktop.common.view.Cont
                     .publishChatMessageReaction((BisqEasyOfferbookMessage) chatMessage, reaction, userIdentity);
         }
     }
-
 
     private void publishPrivateChatMessageReaction(ChatMessage chatMessage, ChatChannel<?> chatChannel, Reaction reaction,
                                                    Optional<ChatMessageReaction> messageReaction) {
