@@ -18,15 +18,25 @@
 package bisq.webcam;
 
 
+import bisq.common.logging.LogSetup;
+import bisq.common.timer.Scheduler;
+import bisq.common.util.FileUtils;
+import bisq.common.util.OsUtils;
 import bisq.webcam.service.VideoSize;
 import bisq.webcam.service.WebcamService;
 import bisq.webcam.service.network.QrCodeSender;
 import bisq.webcam.view.WebcamView;
+import bisq.webcam.view.util.KeyHandlerUtil;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.Scene;
+import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
+
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 
 import static java.util.Objects.requireNonNull;
 
@@ -37,6 +47,7 @@ public class WebcamApp extends Application {
     private final WebcamService webcamService;
     private QrCodeSender qrCodeSender;
     private WebcamView webcamView;
+    private Optional<Scheduler> heartBeatScheduler = Optional.empty();
 
     public WebcamApp() {
         webcamService = new WebcamService();
@@ -52,9 +63,18 @@ public class WebcamApp extends Application {
             if (portParam != null) {
                 port = Integer.parseInt(portParam);
             }
+
+            String logFile = OsUtils.getUserDataDir().resolve("Bisq-webcam-app").toAbsolutePath() + FileUtils.FILE_SEP + "webcam-app";
+            String logFileParam = parameters.getNamed().get("logFile");
+            if (logFileParam != null) {
+                logFile = URLDecoder.decode(logFileParam, StandardCharsets.UTF_8);
+            }
+            LogSetup.setup(logFile);
+            log.info("Webcam app logging to {}", logFile);
+
             qrCodeSender = new QrCodeSender(port);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("init failed", e);
         }
     }
 
@@ -63,25 +83,36 @@ public class WebcamApp extends Application {
         setupStage(primaryStage);
 
         startWebcam();
+
+        startHeartBeat();
+    }
+
+    private void shutdown() {
+        heartBeatScheduler.ifPresent(Scheduler::stop);
+        qrCodeSender.send(ControlSignals.SHUTDOWN.name())
+                .whenComplete((nil, throwable) -> webcamService.shutdown()
+                        .whenComplete((result, throwable1) -> Platform.exit()));
+    }
+
+    private void startHeartBeat() {
+        // Send a heart beat every second to avoid triggering server socket timeout
+        heartBeatScheduler = Optional.of(Scheduler.run(() -> qrCodeSender.send(ControlSignals.HEART_BEAT.name())).periodically(1000));
     }
 
     private void setupStage(Stage primaryStage) {
         webcamView = new WebcamView();
         Scene scene = new Scene(webcamView, VIDEO_SIZE.getWidth(), VIDEO_SIZE.getHeight());
-        scene.getStylesheets().add(requireNonNull(scene.getClass().getResource("/css/webapp.css")).toExternalForm());
+        scene.getStylesheets().add(requireNonNull(this.getClass().getResource("/css/webapp.css")).toExternalForm());
         primaryStage.setScene(scene);
         primaryStage.sizeToScene();
         primaryStage.setOnCloseRequest(event -> {
             event.consume();
-            onClose();
+            shutdown();
         });
         primaryStage.show();
-    }
 
-    private void onClose() {
-        qrCodeSender.send("shutdown")
-                .whenComplete((nil, throwable) -> webcamService.shutdown()
-                        .whenComplete((result, throwable1) -> Platform.exit()));
+        scene.addEventHandler(KeyEvent.KEY_PRESSED,
+                event -> KeyHandlerUtil.handleShutDownKeyEvent(event, this::shutdown));
     }
 
     private void startWebcam() {

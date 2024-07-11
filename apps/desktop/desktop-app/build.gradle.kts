@@ -3,7 +3,6 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 plugins {
     id("bisq.java-library")
     id("bisq.gradle.desktop.regtest.BisqDesktopRegtestPlugin")
-    id("bisq.gradle.copy_version.CopyWebcamAppVersionPlugin")
     application
     alias(libs.plugins.openjfx)
     alias(libs.plugins.shadow)
@@ -73,9 +72,5 @@ tasks {
 
     distTar {
         enabled = false
-    }
-
-    named<DefaultTask>("build") {
-        dependsOn(project.tasks.named("copyWebcamAppVersion"))
     }
 }

@@ -26,14 +26,16 @@ import java.net.Socket;
 import java.util.Scanner;
 import java.util.function.Consumer;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Slf4j
-public class QrCodeListener {
+public class QrCodeListeningServer {
     private final int port;
     private final Consumer<String> qrCodeHandler;
     private final Runnable shutdownHandler;
     private volatile boolean isStopped;
 
-    public QrCodeListener(int port, Consumer<String> qrCodeHandler, Runnable shutdownHandler) {
+    public QrCodeListeningServer(int port, Consumer<String> qrCodeHandler, Runnable shutdownHandler) {
         this.port = port;
         this.qrCodeHandler = qrCodeHandler;
         this.shutdownHandler = shutdownHandler;
@@ -43,27 +45,38 @@ public class QrCodeListener {
         new Thread(() -> {
             InetSocketAddress serverAddress = new InetSocketAddress("127.0.0.1", port);
             try (ServerSocket serverSocket = new ServerSocket()) {
+                // We set 10 seconds timeout. We expect each seond a heartbeat message.
+                serverSocket.setSoTimeout(10000);
+
                 serverSocket.bind(serverAddress);
+
                 log.info("Start listening on port {}", port);
                 while (!isStopped && !Thread.currentThread().isInterrupted()) {
                     Socket socket = serverSocket.accept();
                     try (Scanner scanner = new Scanner(socket.getInputStream())) {
                         StringBuilder stringBuilder = new StringBuilder();
-                        while (scanner.hasNextLine()) {
+                        // We only expect one line
+                        while (scanner.hasNextLine() && stringBuilder.length() == 0) {
                             String line = scanner.nextLine();
                             stringBuilder.append(line);
                         }
 
-                        String result = stringBuilder.toString();
-                        if ("shutdown".equals(result)) {
+                        String message = stringBuilder.toString();
+                        // LN invoice is usually about 230 chars. We tolerate 1000 in message validation
+                        checkArgument(message.length() < 1000, "Received message exceeds out limit of 1000 chars");
+
+                        if (ControlSignals.SHUTDOWN.name().equals(message)) {
                             shutdownHandler.run();
-                        } else if (!result.isEmpty()) {
-                            qrCodeHandler.accept(result);
+                        } else if (ControlSignals.HEART_BEAT.name().equals(message)) {
+                            log.debug(message);
+                        } else {
+                            log.info("Received: {}", message);
+                            qrCodeHandler.accept(message);
                         }
                     }
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                log.error("Server error", e);
             }
             log.info("Server stopped");
         }).start();

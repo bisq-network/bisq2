@@ -6,7 +6,6 @@ import org.gradle.api.file.Directory
 import org.gradle.api.file.RegularFile
 import org.gradle.api.plugins.JavaApplication
 import org.gradle.api.provider.Provider
-import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.Sync
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.jvm.tasks.Jar
@@ -41,23 +40,11 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
         val javaApplicationExtension = project.extensions.findByType<JavaApplication>()
         checkNotNull(javaApplicationExtension) { "Can't find JavaApplication extension." }
 
-        val addWebcamZipToResources: TaskProvider<Copy> =
-                project.tasks.register<Copy>("addWebcamZipToResources") {
-                    val webcamProject = project.parent?.childProjects?.filter { e -> e.key == "webcam" }?.map { e -> e.value.project }?.first()
-                    webcamProject?.tasks?.let {
-                        dependsOn(it.named("zipWebcamAppShadowJar"))
-
-                        val desktopProject = project.parent?.childProjects?.filter { e -> e.key == "desktop" }?.map { e -> e.value.project }?.first()
-                        desktopProject?.tasks?.let {
-                            dependsOn(it.named("copyWebcamAppVersion"))
-
-                            from(webcamProject.layout.buildDirectory.dir("generated"))
-                            into(desktopProject.layout.buildDirectory.dir("generated/src/main/resources/webcam-app"))
-                        }
-                    }
-                }
         project.tasks.register<JPackageTask>("generateInstallers") {
-            dependsOn(addWebcamZipToResources)
+            val webcamProject = project.parent?.childProjects?.filter { e -> e.key == "webcam" }?.map { e -> e.value.project }?.first()
+            webcamProject?.let {
+                dependsOn(it.tasks.named("processWebcamForDesktop"))
+            }
 
             dependsOn(generateHashesTask)
 

@@ -14,10 +14,6 @@ gradlePlugin {
             id = "bisq.gradle.webcam_app.WebcamAppPlugin"
             implementationClass = "bisq.gradle.webcam_app.WebcamAppPlugin"
         }
-        create("CopyWebcamAppVersionPlugin") {
-            id = "bisq.gradle.copy_version.CopyWebcamAppVersionPlugin"
-            implementationClass = "bisq.gradle.copy_version.CopyWebcamAppVersionPlugin"
-        }
     }
 }
 

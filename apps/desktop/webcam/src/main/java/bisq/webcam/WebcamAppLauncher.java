@@ -10,8 +10,5 @@ public class WebcamAppLauncher {
             Thread.currentThread().setName("Java FX Application Launcher");
             Application.launch(WebcamApp.class, args); //blocks until app is closed
         }).start();
-
-
-        //Application.launch(WebcamApp.class, args);
     }
 }

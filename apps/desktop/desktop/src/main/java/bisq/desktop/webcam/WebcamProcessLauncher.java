@@ -17,13 +17,18 @@
 
 package bisq.desktop.webcam;
 
+import bisq.common.application.DevMode;
 import bisq.common.util.ArchiveUtil;
 import bisq.common.util.FileUtils;
+import bisq.common.util.OsUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class WebcamProcessLauncher {
@@ -44,7 +49,7 @@ public class WebcamProcessLauncher {
                 String jarFilePath = baseDir + "/webcam-" + version + "-all.jar";
                 File jarFile = new File(jarFilePath);
 
-                if (!jarFile.exists()) {
+                if (!jarFile.exists() || DevMode.isDevMode()) {
                     String zipFileName = "webcam-" + version + ".zip";
                     File tempFile = new File(baseDir + "/" + zipFileName);
                     FileUtils.resourceToFile("webcam-app/" + zipFileName, tempFile);
@@ -54,15 +59,22 @@ public class WebcamProcessLauncher {
                 }
 
                 String portParam = "--port=" + port;
-                String iconPath = baseDir + "/webcam-app-icon.png";
-                File bisqIcon = new File(iconPath);
-                if (!bisqIcon.exists()) {
-                    FileUtils.resourceToFile("images/webcam/webcam-app-icon@2x.png", bisqIcon);
-                }
-                String jvmArgs = "-Xdock:icon=" + iconPath;
+                String logFileParam = "--logFile=" + URLEncoder.encode(baseDir, StandardCharsets.UTF_8) + FileUtils.FILE_SEP + "webcam-app";
                 String pathToJavaExe = System.getProperty("java.home") + "/bin/java";
                 log.info("pathToJavaExe {}", pathToJavaExe);
-                ProcessBuilder processBuilder = new ProcessBuilder(pathToJavaExe, jvmArgs, "-jar", jarFilePath, portParam);
+                ProcessBuilder processBuilder;
+                if (OsUtils.isMac()) {
+                    String iconPath = baseDir + "/webcam-app-icon.png";
+                    File bisqIcon = new File(iconPath);
+                    if (!bisqIcon.exists()) {
+                        FileUtils.resourceToFile("images/webcam/webcam-app-icon@2x.png", bisqIcon);
+                    }
+                    String jvmArgs = "-Xdock:icon=" + iconPath;
+                    processBuilder = new ProcessBuilder(pathToJavaExe, jvmArgs, "-jar", jarFilePath, portParam, logFileParam);
+                } else {
+                    processBuilder = new ProcessBuilder(pathToJavaExe, "-jar", jarFilePath, portParam, logFileParam);
+                }
+
                 Process process = processBuilder.start();
                 runningProcess = Optional.of(process);
                 log.info("Process successful launched: {}; port={}", process, port);
@@ -78,6 +90,10 @@ public class WebcamProcessLauncher {
         log.info("Process shutdown. runningProcess={}", runningProcess);
         runningProcess.ifPresent(process -> {
             process.destroy();
+            try {
+                process.waitFor(2, TimeUnit.SECONDS);
+            } catch (InterruptedException ignore) {
+            }
             if (process.isAlive()) {
                 log.warn("Stopping webcam app process gracefully did not terminate it. We destroy it forcibly.");
                 process.destroyForcibly();
