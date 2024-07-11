@@ -20,6 +20,7 @@ package bisq.desktop.main.content.chat.message_container.list.message_box;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
+import bisq.chat.reactions.ChatMessageReaction;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.components.controls.BisqTextArea;
@@ -50,8 +51,8 @@ public final class MyTextMessageBox extends BubbleMessageBox {
     private Button saveEditButton, cancelEditButton;
     private HBox messageStatusHbox, editButtonsHBox;
 
-    public MyTextMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
-                            ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
+    public MyTextMessageBox(ChatMessageListItem<? extends ChatMessageReaction, ? extends ChatMessage<?>, ? extends ChatChannel<? extends ChatMessage<?>>> item,
+                            ListView<ChatMessageListItem<? extends ChatMessageReaction, ? extends ChatMessage<?>, ? extends ChatChannel<? extends ChatMessage<?>>>> list,
                             ChatMessagesListController controller) {
         super(item, list, controller);
 
@@ -148,7 +149,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
 
     @Override
     protected void addActionsHandlers() {
-        ChatMessage chatMessage = item.getChatMessage();
+        ChatMessage<?> chatMessage = item.getChatMessage();
         boolean isPublicChannel = item.isPublicChannel();
         boolean allowEditing = isPublicChannel;
         if (chatMessage instanceof BisqEasyOfferbookMessage) {

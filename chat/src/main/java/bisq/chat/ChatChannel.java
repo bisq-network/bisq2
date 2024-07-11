@@ -36,7 +36,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @ToString
 @Getter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public abstract class ChatChannel<M extends ChatMessage> implements PersistableProto {
+public abstract class ChatChannel<M extends ChatMessage<?>> implements PersistableProto {
     @EqualsAndHashCode.Include
     protected final String id;
     protected final ChatChannelDomain chatChannelDomain;
@@ -67,7 +67,7 @@ public abstract class ChatChannel<M extends ChatMessage> implements PersistableP
         return resolveProto(serializeForHash);
     }
 
-    public static ChatChannel<? extends ChatMessage> fromProto(bisq.chat.protobuf.ChatChannel proto) {
+    public static ChatChannel<? extends ChatMessage<?>> fromProto(bisq.chat.protobuf.ChatChannel proto) {
         switch (proto.getMessageCase()) {
             case TWOPARTYPRIVATECHATCHANNEL: {
                 return TwoPartyPrivateChatChannel.fromProto(proto, proto.getTwoPartyPrivateChatChannel());

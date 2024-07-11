@@ -21,6 +21,8 @@ import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessageType;
 import bisq.chat.Citation;
 import bisq.chat.priv.PrivateGroupChatChannelService;
+import bisq.chat.reactions.BisqEasyOpenTradeMessageReaction;
+import bisq.chat.reactions.Reaction;
 import bisq.common.observable.collection.ObservableArray;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.StringUtils;
@@ -38,6 +40,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -48,7 +51,8 @@ import java.util.stream.Stream;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelService<BisqEasyOpenTradeMessage, BisqEasyOpenTradeChannel, BisqEasyOpenTradeChannelStore> {
+public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelService<BisqEasyOpenTradeMessageReaction,
+        BisqEasyOpenTradeMessage, BisqEasyOpenTradeChannel, BisqEasyOpenTradeChannelStore> {
 
     @Getter
     private final BisqEasyOpenTradeChannelStore persistableStore = new BisqEasyOpenTradeChannelStore();
@@ -72,6 +76,8 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
         if (envelopePayloadMessage instanceof BisqEasyOpenTradeMessage) {
             processMessage((BisqEasyOpenTradeMessage) envelopePayloadMessage);
+        } else if (envelopePayloadMessage instanceof BisqEasyOpenTradeMessageReaction) {
+            processMessageReaction((BisqEasyOpenTradeMessageReaction) envelopePayloadMessage);
         }
     }
 
@@ -180,6 +186,13 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
         }
     }
 
+    public CompletableFuture<SendMessageResult> sendTextMessageReaction(BisqEasyOpenTradeMessage message,
+                                                                        BisqEasyOpenTradeChannel channel,
+                                                                        Reaction reaction,
+                                                                        boolean isRemoved) {
+        return sendMessageReaction(message, channel, channel.getPeer(), reaction, StringUtils.createUid(), isRemoved);
+    }
+
     @Override
     public void leaveChannel(BisqEasyOpenTradeChannel channel) {
         super.leaveChannel(channel);
@@ -218,7 +231,8 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
                 false,
                 channel.getMediator(),
                 ChatMessageType.PROTOCOL_LOG_MESSAGE,
-                Optional.empty());
+                Optional.empty(),
+                new ArrayList<>());
         channel.addChatMessage(tradeLogMessage);
     }
 
@@ -265,15 +279,36 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
                 wasEdited,
                 mediator,
                 chatMessageType,
-                Optional.empty());
+                Optional.empty(),
+                new ArrayList<>());
     }
-
 
     //todo (refactor, low prio)
     @Override
     protected BisqEasyOpenTradeChannel createAndGetNewPrivateChatChannel(UserProfile peer, UserIdentity myUserIdentity) {
         throw new RuntimeException("createNewChannel not supported at PrivateTradeChannelService. " +
                 "Use mediatorCreatesNewChannel or traderCreatesNewChannel instead.");
+    }
+
+    @Override
+    protected BisqEasyOpenTradeMessageReaction createAndGetNewPrivateChatMessageReaction(BisqEasyOpenTradeMessage message,
+                                                                                         UserProfile senderUserProfile,
+                                                                                         UserProfile receiverUserProfile,
+                                                                                         Reaction reaction,
+                                                                                         String messageReactionId,
+                                                                                         boolean isRemoved) {
+        return new BisqEasyOpenTradeMessageReaction(
+                messageReactionId,
+                senderUserProfile,
+                receiverUserProfile.getId(),
+                receiverUserProfile.getNetworkId(),
+                message.getChannelId(),
+                message.getChatChannelDomain(),
+                message.getId(),
+                reaction.ordinal(),
+                new Date().getTime(),
+                isRemoved
+        );
     }
 
     @Override

@@ -46,7 +46,7 @@ import java.util.Optional;
 @ToString
 @Getter
 @EqualsAndHashCode
-public abstract class ChatMessage implements NetworkProto, Comparable<ChatMessage> {
+public abstract class ChatMessage<R extends ChatMessageReaction> implements NetworkProto, Comparable<ChatMessage<R>> {
     public static final int MAX_TEXT_LENGTH = 10_000;
 
     protected final String id;
@@ -206,7 +206,7 @@ public abstract class ChatMessage implements NetworkProto, Comparable<ChatMessag
         return id.compareTo(o.getId());
     }
 
-    public abstract <R extends ChatMessageReaction> ObservableSet<R> getChatMessageReactions();
+    public abstract ObservableSet<R> getChatMessageReactions();
 
     public boolean canShowReactions() {
         return false;

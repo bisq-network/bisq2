@@ -135,7 +135,7 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
     }
 
     @Override
-    public String getChannelTitlePostFix(ChatChannel<? extends ChatMessage> chatChannel) {
+    public String getChannelTitlePostFix(ChatChannel<? extends ChatMessage<?>> chatChannel) {
         return "";
     }
 

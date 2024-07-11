@@ -125,6 +125,7 @@ message BisqEasyOpenTradeMessage {
   user.UserProfile sender = 4;
   optional user.UserProfile mediator = 5;
   optional offer.Offer bisqEasyOffer = 6;
+  repeated ChatMessageReaction chatMessageReactions = 7;
 }
 message BisqEasyOpenTradeChannel {
   string tradeId = 1;
@@ -185,6 +186,7 @@ message ChatMessageReaction {
     CommonPublicChatMessageReaction commonPublicChatMessageReaction = 20;
     BisqEasyOfferbookMessageReaction bisqEasyOfferbookMessageReaction = 21;
     TwoPartyPrivateChatMessageReaction twoPartyPrivateChatMessageReaction = 22;
+    BisqEasyOpenTradeMessageReaction bisqEasyOpenTradeMessageReaction = 23;
   }
 }
 
@@ -195,6 +197,13 @@ message BisqEasyOfferbookMessageReaction {
 }
 
 message TwoPartyPrivateChatMessageReaction {
+  string receiverUserProfileId = 1;
+  user.UserProfile sender = 2;
+  network.identity.NetworkId receiverNetworkId = 3;
+  bool isRemoved = 4;
+}
+
+message BisqEasyOpenTradeMessageReaction {
   string receiverUserProfileId = 1;
   user.UserProfile sender = 2;
   network.identity.NetworkId receiverNetworkId = 3;

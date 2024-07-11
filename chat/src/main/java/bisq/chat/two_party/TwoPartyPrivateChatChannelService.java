@@ -43,7 +43,8 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService<TwoPartyPrivateChatMessage, TwoPartyPrivateChatChannel, TwoPartyPrivateChatChannelStore> {
+public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService<TwoPartyPrivateChatMessageReaction,
+        TwoPartyPrivateChatMessage, TwoPartyPrivateChatChannel, TwoPartyPrivateChatChannelStore> {
     @Getter
     private final TwoPartyPrivateChatChannelStore persistableStore = new TwoPartyPrivateChatChannelStore();
     @Getter
@@ -156,6 +157,27 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
     }
 
     @Override
+    protected TwoPartyPrivateChatMessageReaction createAndGetNewPrivateChatMessageReaction(TwoPartyPrivateChatMessage message,
+                                                                                           UserProfile senderUserProfile,
+                                                                                           UserProfile receiverUserProfile,
+                                                                                           Reaction reaction,
+                                                                                           String messageReactionId,
+                                                                                           boolean isRemoved) {
+        return new TwoPartyPrivateChatMessageReaction(
+                messageReactionId,
+                senderUserProfile,
+                receiverUserProfile.getId(),
+                receiverUserProfile.getNetworkId(),
+                message.getChannelId(),
+                message.getChatChannelDomain(),
+                message.getId(),
+                reaction.ordinal(),
+                new Date().getTime(),
+                isRemoved
+        );
+    }
+
+    @Override
     protected void processMessage(TwoPartyPrivateChatMessage message) {
         if (canHandleChannelDomain(message) && isValid(message)) {
             findChannel(message).or(() -> {
@@ -164,14 +186,15 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
                 // in cases we would get a leave message as first message (e.g. after having closed the channel)
                 // we do not create a channel.
                 if (message.getChatMessageType() == ChatMessageType.LEAVE) {
-                    log.warn("We received a leave message as first message. This is not expected but might " + "happen in some rare cases.");
+                    log.warn("We received a leave message as first message. This is not expected but might " +
+                            "happen in some rare cases.");
                     return Optional.empty();
                 } else {
                     return createAndAddChannel(message.getSenderUserProfile(), message.getReceiverUserProfileId());
                 }
             }).ifPresent(channel -> {
                 addMessage(message, channel);
-                // Check if there are any reactions that should be added to that (or any other) message
+                // Check if there are any reactions that should be added to existing messages
                 processQueuedReactions();
             });
         }

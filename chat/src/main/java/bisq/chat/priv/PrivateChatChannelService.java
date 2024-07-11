@@ -18,8 +18,8 @@
 package bisq.chat.priv;
 
 import bisq.chat.*;
+import bisq.chat.reactions.PrivateChatMessageReaction;
 import bisq.chat.reactions.Reaction;
-import bisq.chat.reactions.TwoPartyPrivateChatMessageReaction;
 import bisq.common.util.StringUtils;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
@@ -44,12 +44,12 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public abstract class PrivateChatChannelService<
-        M extends PrivateChatMessage,
+        R extends PrivateChatMessageReaction,
+        M extends PrivateChatMessage<R>,
         C extends PrivateChatChannel<M>,
         S extends PersistableStore<S>
         > extends ChatChannelService<M, C, S> implements ConfidentialMessageService.Listener {
-    // TODO: Make this generic when enabling reactions in trade messages
-    private final Set<TwoPartyPrivateChatMessageReaction> unprocessedReactions = new HashSet<>();
+    private final Set<R> unprocessedReactions = new HashSet<>();
 
     public PrivateChatChannelService(NetworkService networkService,
                                      UserService userService,
@@ -141,7 +141,7 @@ public abstract class PrivateChatChannelService<
     }
 
     @Override
-    public String getChannelTitlePostFix(ChatChannel<? extends ChatMessage> chatChannel) {
+    public String getChannelTitlePostFix(ChatChannel<? extends ChatMessage<?>> chatChannel) {
         checkArgument(chatChannel instanceof PrivateChatChannel,
                 "chatChannel at PrivateChatChannelService.getChannelTitlePostFix must be of type PrivateChatChannel");
         return userIdentityService.hasMultipleUserIdentities() ? "" :
@@ -162,8 +162,8 @@ public abstract class PrivateChatChannelService<
             return CompletableFuture.failedFuture(new RuntimeException("Peer is banned"));
         }
 
-        TwoPartyPrivateChatMessageReaction chatMessageReaction = createAndGetNewPrivateChatMessageReaction(message,
-                myUserIdentity.getUserProfile(), receiver, reaction, messageReactionId, isRemoved);
+        R chatMessageReaction = createAndGetNewPrivateChatMessageReaction(message, myUserIdentity.getUserProfile(),
+                receiver, reaction, messageReactionId, isRemoved);
 
         addMessageReaction(chatMessageReaction, message);
 
@@ -179,8 +179,7 @@ public abstract class PrivateChatChannelService<
 
     protected abstract void processMessage(M message);
 
-    // TODO: Make it class generic
-    protected void processMessageReaction(TwoPartyPrivateChatMessageReaction messageReaction) {
+    protected void processMessageReaction(R messageReaction) {
         findChannel(messageReaction.getChatChannelId())
                 .flatMap(channel -> channel.getChatMessages().stream()
                         .filter(message -> message.getId().equals(messageReaction.getChatMessageId()))
@@ -191,9 +190,13 @@ public abstract class PrivateChatChannelService<
     }
 
     protected void processQueuedReactions() {
+        long now = new Date().getTime();
         unprocessedReactions.forEach(reaction -> {
             unprocessedReactions.remove(reaction);
-            processMessageReaction(reaction);
+            long age = now - reaction.getDate();
+            if (age < reaction.getMetaData().getTtl()) {
+                processMessageReaction(reaction);
+            }
         });
     }
 
@@ -222,24 +225,10 @@ public abstract class PrivateChatChannelService<
                                                            boolean wasEdited,
                                                            ChatMessageType chatMessageType);
 
-    // TODO: Make it class generic.
-    private TwoPartyPrivateChatMessageReaction createAndGetNewPrivateChatMessageReaction(M message,
-                                                                                         UserProfile senderUserProfile,
-                                                                                         UserProfile receiverUserProfile,
-                                                                                         Reaction reaction,
-                                                                                         String messageReactionId,
-                                                                                         boolean isRemoved) {
-        return new TwoPartyPrivateChatMessageReaction(
-                messageReactionId,
-                senderUserProfile,
-                receiverUserProfile.getId(),
-                receiverUserProfile.getNetworkId(),
-                message.getChannelId(),
-                message.getChatChannelDomain(),
-                message.getId(),
-                reaction.ordinal(),
-                new Date().getTime(),
-                isRemoved
-        );
-    };
+    protected abstract R createAndGetNewPrivateChatMessageReaction(M message,
+                                                                   UserProfile senderUserProfile,
+                                                                   UserProfile receiverUserProfile,
+                                                                   Reaction reaction,
+                                                                   String messageReactionId,
+                                                                   boolean isRemoved);
 }

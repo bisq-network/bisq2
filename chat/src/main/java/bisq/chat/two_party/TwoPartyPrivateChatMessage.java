@@ -129,18 +129,6 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage<TwoPart
     @Override
     public void addChatMessageReaction(ChatMessageReaction newReaction) {
         TwoPartyPrivateChatMessageReaction newTwoPartyReaction = (TwoPartyPrivateChatMessageReaction) newReaction;
-        getChatMessageReactions().stream()
-                .filter(twoPartyReaction -> twoPartyReaction.matches(newTwoPartyReaction))
-                .findFirst()
-                .ifPresentOrElse(
-                        existingTwoPartyReaction -> {
-                            if (newTwoPartyReaction.getDate() > existingTwoPartyReaction.getDate()) {
-                                // only update if more recent
-                                getChatMessageReactions().remove(existingTwoPartyReaction);
-                                getChatMessageReactions().add(newTwoPartyReaction);
-                            }
-                        },
-                        () -> getChatMessageReactions().add(newTwoPartyReaction)
-                );
+        addPrivateChatMessageReaction(newTwoPartyReaction);
     }
 }

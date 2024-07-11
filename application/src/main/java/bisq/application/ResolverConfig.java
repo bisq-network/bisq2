@@ -29,10 +29,7 @@ import bisq.chat.ChatMessage;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeMessage;
 import bisq.chat.common.CommonPublicChatMessage;
-import bisq.chat.reactions.BisqEasyOfferbookMessageReaction;
-import bisq.chat.reactions.ChatMessageReaction;
-import bisq.chat.reactions.CommonPublicChatMessageReaction;
-import bisq.chat.reactions.TwoPartyPrivateChatMessageReaction;
+import bisq.chat.reactions.*;
 import bisq.chat.two_party.TwoPartyPrivateChatMessage;
 import bisq.common.proto.NetworkStorageWhiteList;
 import bisq.network.p2p.message.NetworkMessageResolver;
@@ -116,6 +113,7 @@ public class ResolverConfig {
         NetworkStorageWhiteList.add(CommonPublicChatMessageReaction.class);
         NetworkStorageWhiteList.add(BisqEasyOfferbookMessageReaction.class);
         NetworkStorageWhiteList.add(TwoPartyPrivateChatMessageReaction.class);
+        NetworkStorageWhiteList.add(BisqEasyOpenTradeMessageReaction.class);
 
         // From network module. As it is used as mailbox message we add it here as well.
         NetworkStorageWhiteList.add(AckMessage.class);
