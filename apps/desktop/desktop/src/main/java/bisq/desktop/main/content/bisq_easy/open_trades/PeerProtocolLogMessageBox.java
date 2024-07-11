@@ -19,7 +19,6 @@ package bisq.desktop.main.content.bisq_easy.open_trades;
 
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
-import bisq.chat.reactions.ChatMessageReaction;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.desktop.main.content.chat.message_container.list.message_box.MessageBox;
 import bisq.i18n.Res;
@@ -31,13 +30,13 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 public class PeerProtocolLogMessageBox extends MessageBox {
-    protected final ChatMessageListItem<? extends ChatMessageReaction, ? extends ChatMessage<?>, ? extends ChatChannel<? extends ChatMessage<?>>> item;
+    protected final ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item;
     protected final VBox tradeLogMessageBg = new VBox();
     protected final VBox contentVBox;
     protected final HBox dateTimeHBox;
     protected final Label message, dateTime;
 
-    public PeerProtocolLogMessageBox(ChatMessageListItem<? extends ChatMessageReaction, ? extends ChatMessage<?>, ? extends ChatChannel<? extends ChatMessage<?>>> item) {
+    public PeerProtocolLogMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item) {
         this.item = item;
 
         String decoded = Res.decode(item.getMessage());

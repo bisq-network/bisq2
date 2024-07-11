@@ -39,7 +39,7 @@ import java.util.Optional;
 @Slf4j
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public abstract class PublicChatMessage extends ChatMessage<ChatMessageReaction> implements DistributedData {
+public abstract class PublicChatMessage extends ChatMessage implements DistributedData {
     @EqualsAndHashCode.Exclude
     protected transient final ObservableSet<ChatMessageReaction> chatMessageReactions = new ObservableSet<>();
 

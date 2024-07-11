@@ -130,15 +130,16 @@ public abstract class PrivateChatMessage<R extends ChatMessageReaction> extends 
         return receiverNetworkId;
     }
 
-    protected void addPrivateChatMessageReaction(R newReaction) {
+    @Override
+    public void addChatMessageReaction(R newReaction) {
         getChatMessageReactions().stream()
-                .filter(twoPartyReaction -> twoPartyReaction.matches(newReaction))
+                .filter(privateChatReaction -> privateChatReaction.matches(newReaction))
                 .findFirst()
                 .ifPresentOrElse(
-                        existingReaction -> {
-                            if (newReaction.getDate() > existingReaction.getDate()) {
+                        existingPrivateChatReaction -> {
+                            if (newReaction.getDate() > existingPrivateChatReaction.getDate()) {
                                 // only update if more recent
-                                getChatMessageReactions().remove(existingReaction);
+                                getChatMessageReactions().remove(existingPrivateChatReaction);
                                 getChatMessageReactions().add(newReaction);
                             }
                         },

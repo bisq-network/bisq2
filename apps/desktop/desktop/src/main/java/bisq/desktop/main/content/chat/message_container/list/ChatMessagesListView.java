@@ -2,7 +2,6 @@ package bisq.desktop.main.content.chat.message_container.list;
 
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
-import bisq.chat.reactions.ChatMessageReaction;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.components.controls.Badge;
 import bisq.desktop.components.controls.BisqTooltip;
@@ -52,7 +51,7 @@ public class ChatMessagesListView extends bisq.desktop.common.view.View<ChatMess
         }
     }
 
-    private final ListView<ChatMessageListItem<? extends ChatMessageReaction, ? extends ChatMessage<?>, ? extends ChatChannel<? extends ChatMessage<?>>>> listView;
+    private final ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> listView;
     private final ImageView scrollDownImageView;
     private final Badge scrollDownBadge;
     private final BisqTooltip scrollDownTooltip;
@@ -99,7 +98,7 @@ public class ChatMessagesListView extends bisq.desktop.common.view.View<ChatMess
         root.getChildren().addAll(listView, scrollDownBackground, scrollDownBadge);
     }
 
-    public void scrollToChatMessage(ChatMessageListItem<?,?,?> chatMessageListItem) {
+    public void scrollToChatMessage(ChatMessageListItem<?,?> chatMessageListItem) {
         listView.scrollTo(chatMessageListItem);
     }
 

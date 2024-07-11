@@ -15,7 +15,7 @@ import javax.annotation.Nullable;
 @Getter
 public class ChatMessageContainerModel implements bisq.desktop.common.view.Model {
     private final ChatChannelDomain chatChannelDomain;
-    private final ObjectProperty<ChatChannel<? extends ChatMessage<?>>> selectedChannel = new SimpleObjectProperty<>();
+    private final ObjectProperty<ChatChannel<? extends ChatMessage>> selectedChannel = new SimpleObjectProperty<>();
     private final StringProperty textInput = new SimpleStringProperty("");
     private final BooleanProperty userProfileSelectionVisible = new SimpleBooleanProperty();
     private final ObjectProperty<Boolean> focusInputTextField = new SimpleObjectProperty<>();
@@ -24,7 +24,7 @@ public class ChatMessageContainerModel implements bisq.desktop.common.view.Model
     private final IntegerProperty caretPosition = new SimpleIntegerProperty();
     @Nullable
     @Setter
-    private ChatMessage<?> selectedChatMessage;
+    private ChatMessage selectedChatMessage;
 
     public ChatMessageContainerModel(ChatChannelDomain chatChannelDomain) {
         this.chatChannelDomain = chatChannelDomain;

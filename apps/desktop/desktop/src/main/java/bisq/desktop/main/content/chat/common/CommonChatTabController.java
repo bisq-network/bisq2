@@ -175,7 +175,7 @@ public final class CommonChatTabController extends ContentTabController<CommonCh
                     .filter(Objects::nonNull)
                     .filter(item -> item.getNavigationTarget().equals(navigationTarget))
                     .findFirst()
-                    .<ChatChannel<? extends ChatMessage<?>>>map(ChannelTabButtonModel::getChatChannel)
+                    .<ChatChannel<? extends ChatMessage>>map(ChannelTabButtonModel::getChatChannel)
                     .ifPresent(chatChannelSelectionService::selectChannel);
         }
     }

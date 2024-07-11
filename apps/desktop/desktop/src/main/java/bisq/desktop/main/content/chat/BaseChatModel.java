@@ -44,7 +44,7 @@ public abstract class BaseChatModel extends NavigationModel {
     private final StringProperty channelTitle = new SimpleStringProperty("");
     private final StringProperty channelDescription = new SimpleStringProperty("");
     private final StringProperty channelIconId = new SimpleStringProperty("");
-    private final ObjectProperty<ChatChannel<? extends ChatMessage<?>>> selectedChannel = new SimpleObjectProperty<>();
+    private final ObjectProperty<ChatChannel<? extends ChatMessage>> selectedChannel = new SimpleObjectProperty<>();
     private final ObjectProperty<Pane> chatUserDetailsRoot = new SimpleObjectProperty<>();
     private final BooleanProperty sideBarVisible = new SimpleBooleanProperty();
     private final BooleanProperty sideBarChanged = new SimpleBooleanProperty();
@@ -75,11 +75,11 @@ public abstract class BaseChatModel extends NavigationModel {
     }
 
     @Nullable
-    public ChatChannel<? extends ChatMessage<?>> getSelectedChannel() {
+    public ChatChannel<? extends ChatMessage> getSelectedChannel() {
         return selectedChannel.get();
     }
 
-    public ObjectProperty<ChatChannel<? extends ChatMessage<?>>> selectedChannelProperty() {
+    public ObjectProperty<ChatChannel<? extends ChatMessage>> selectedChannelProperty() {
         return selectedChannel;
     }
 }
