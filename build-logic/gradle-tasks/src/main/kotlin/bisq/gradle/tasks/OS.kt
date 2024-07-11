@@ -6,16 +6,12 @@ enum class OS {
     LINUX, MAC_OS, WINDOWS
 }
 
-fun getOsArch(): String = System.getProperty("os.arch").toLowerCase(Locale.US).replace(" ", "").trim()
-fun getOsName(): String = System.getProperty("os.name").toLowerCase(Locale.US).replace(" ", "").trim()
-
 fun getOS(): OS {
-    val osName = getOsName()
-    val osArch = getOsArch()
+    val osName = System.getProperty("os.name").toLowerCase(Locale.US)
     if (isLinux(osName)) {
         return OS.LINUX
     } else if (isMacOs(osName)) {
-        OS.MAC_OS
+        return OS.MAC_OS
     } else if (isWindows(osName)) {
         return OS.WINDOWS
     }

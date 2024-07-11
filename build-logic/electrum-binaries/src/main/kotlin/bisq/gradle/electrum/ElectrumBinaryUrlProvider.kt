@@ -12,9 +12,6 @@ class ElectrumBinaryUrlProvider(private val version: String) : PerOsUrlProvider 
     override val macOsUrl: String
         get() = "electrum-$version.dmg"
 
-    override val macOsAarch64Url: String
-        get() = "electrum-$version.dmg"
-
     override val windowsUrl: String
         get() = "electrum-$version.exe"
 }
