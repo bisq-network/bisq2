@@ -20,7 +20,6 @@ package bisq.desktop.main.content.chat.message_container.list.message_box;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
-import bisq.chat.reactions.ChatMessageReaction;
 import bisq.common.util.StringUtils;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqMenuItem;
@@ -42,8 +41,8 @@ public final class MyOfferMessageBox extends BubbleMessageBox {
     private final Label myOfferTitle;
     private BisqMenuItem deleteAction;
 
-    public MyOfferMessageBox(ChatMessageListItem<? extends ChatMessageReaction, ? extends ChatMessage<?>, ? extends ChatChannel<? extends ChatMessage<?>>> item,
-                             ListView<ChatMessageListItem<? extends ChatMessageReaction, ? extends ChatMessage<?>, ? extends ChatChannel<? extends ChatMessage<?>>>> list,
+    public MyOfferMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
+                             ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
                              ChatMessagesListController controller) {
         super(item, list, controller);
 

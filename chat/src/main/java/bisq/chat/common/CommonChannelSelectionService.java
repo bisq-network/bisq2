@@ -68,7 +68,7 @@ public class CommonChannelSelectionService extends ChatChannelSelectionService {
     }
 
     @Override
-    public void selectChannel(ChatChannel<? extends ChatMessage<?>> chatChannel) {
+    public void selectChannel(ChatChannel<? extends ChatMessage> chatChannel) {
         // Assume only private channels can be set to null
         if (chatChannel == null) {
             lastSelectedPrivateChannel = Optional.empty();
@@ -84,7 +84,7 @@ public class CommonChannelSelectionService extends ChatChannelSelectionService {
     }
 
     @Override
-    protected Stream<ChatChannel<? extends ChatMessage<?>>> getAllChatChannels() {
+    protected Stream<ChatChannel<?>> getAllChatChannels() {
         return Stream.concat(publicChatChannelService.getChannels().stream(),
                 privateChatChannelService.getChannels().stream());
     }

@@ -59,8 +59,8 @@ public class ChatNotification implements Notification, PersistableProto {
     public ChatNotification(String id,
                             String title,
                             String message,
-                            ChatChannel<? extends ChatMessage<?>> chatChannel,
-                            ChatMessage<?> chatMessage,
+                            ChatChannel<? extends ChatMessage> chatChannel,
+                            ChatMessage chatMessage,
                             Optional<UserProfile> senderUserProfile) {
         this(id,
                 title,

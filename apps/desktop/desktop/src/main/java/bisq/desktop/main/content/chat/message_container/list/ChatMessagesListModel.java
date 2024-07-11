@@ -3,7 +3,6 @@ package bisq.desktop.main.content.chat.message_container.list;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessage;
-import bisq.chat.reactions.ChatMessageReaction;
 import bisq.user.identity.UserIdentityService;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
@@ -28,16 +27,16 @@ import java.util.function.Predicate;
 public class ChatMessagesListModel implements bisq.desktop.common.view.Model {
     private final UserIdentityService userIdentityService;
     private final ObjectProperty<ChatChannel<?>> selectedChannel = new SimpleObjectProperty<>();
-    private final ObservableList<ChatMessageListItem<? extends ChatMessageReaction, ? extends ChatMessage<?>, ? extends ChatChannel<? extends ChatMessage<?>>>> chatMessages = FXCollections.observableArrayList();
-    private final FilteredList<ChatMessageListItem<? extends ChatMessageReaction, ? extends ChatMessage<?>, ? extends ChatChannel<? extends ChatMessage<?>>>> filteredChatMessages = new FilteredList<>(chatMessages);
-    private final SortedList<ChatMessageListItem<? extends ChatMessageReaction, ? extends ChatMessage<?>, ? extends ChatChannel<? extends ChatMessage<?>>>> sortedChatMessages = new SortedList<>(filteredChatMessages);
+    private final ObservableList<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> chatMessages = FXCollections.observableArrayList();
+    private final FilteredList<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> filteredChatMessages = new FilteredList<>(chatMessages);
+    private final SortedList<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> sortedChatMessages = new SortedList<>(filteredChatMessages);
     private final Set<String> chatMessageIds = new HashSet<>();
     private final BooleanProperty layoutChildrenDone = new SimpleBooleanProperty();
 
     private final BooleanProperty isPublicChannel = new SimpleBooleanProperty();
     private final ChatChannelDomain chatChannelDomain;
     @Setter
-    private Predicate<? super ChatMessageListItem<? extends ChatMessageReaction, ? extends ChatMessage<?>, ? extends ChatChannel<? extends ChatMessage<?>>>> searchPredicate = e -> true;
+    private Predicate<? super ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> searchPredicate = e -> true;
     @Setter
     private boolean autoScrollToBottom;
     @Setter
@@ -54,7 +53,7 @@ public class ChatMessagesListModel implements bisq.desktop.common.view.Model {
         this.chatChannelDomain = chatChannelDomain;
     }
 
-    boolean isMyMessage(ChatMessage<?> chatMessage) {
+    boolean isMyMessage(ChatMessage chatMessage) {
         return chatMessage.isMyMessage(userIdentityService);
     }
 }

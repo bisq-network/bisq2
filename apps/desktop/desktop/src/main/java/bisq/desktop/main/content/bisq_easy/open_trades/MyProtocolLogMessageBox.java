@@ -19,7 +19,6 @@ package bisq.desktop.main.content.bisq_easy.open_trades;
 
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
-import bisq.chat.reactions.ChatMessageReaction;
 import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
@@ -31,7 +30,7 @@ import org.fxmisc.easybind.Subscription;
 public class MyProtocolLogMessageBox extends PeerProtocolLogMessageBox {
     private final Subscription shouldShowTryAgainPin, messageDeliveryStatusNodePin;
 
-    public MyProtocolLogMessageBox(ChatMessageListItem<? extends ChatMessageReaction, ? extends ChatMessage<?>, ? extends ChatChannel<? extends ChatMessage<?>>> item,
+    public MyProtocolLogMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
                                    ChatMessagesListController controller) {
         super(item);
 

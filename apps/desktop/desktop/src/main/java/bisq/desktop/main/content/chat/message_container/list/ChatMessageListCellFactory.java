@@ -19,7 +19,6 @@ package bisq.desktop.main.content.chat.message_container.list;
 
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
-import bisq.chat.reactions.ChatMessageReaction;
 import bisq.desktop.main.content.bisq_easy.open_trades.MyProtocolLogMessageBox;
 import bisq.desktop.main.content.bisq_easy.open_trades.PeerProtocolLogMessageBox;
 import bisq.desktop.main.content.chat.message_container.list.message_box.LeaveChatMessageBox;
@@ -41,8 +40,8 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 final class ChatMessageListCellFactory
-        implements Callback<ListView<ChatMessageListItem<? extends ChatMessageReaction, ? extends ChatMessage<?>, ? extends ChatChannel<? extends ChatMessage<?>>>>,
-        ListCell<ChatMessageListItem<? extends ChatMessageReaction, ? extends ChatMessage<?>, ? extends ChatChannel<? extends ChatMessage<?>>>>> {
+        implements Callback<ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>>,
+        ListCell<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>>> {
     private final ChatMessagesListController controller;
 
     public ChatMessageListCellFactory(ChatMessagesListController controller) {
@@ -50,8 +49,8 @@ final class ChatMessageListCellFactory
     }
 
     @Override
-    public ListCell<ChatMessageListItem<? extends ChatMessageReaction, ? extends ChatMessage<?>, ? extends ChatChannel<? extends ChatMessage<?>>>> call(
-            ListView<ChatMessageListItem<? extends ChatMessageReaction, ? extends ChatMessage<?>, ? extends ChatChannel<? extends ChatMessage<?>>>> list) {
+    public ListCell<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> call(
+            ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list) {
         return new ListCell<>() {
             private final static double CHAT_BOX_MAX_WIDTH = 1200;
             private final static String STYLE_CLASS_WITHOUT_SCROLLBAR = "chat-message-list-cell-wo-scrollbar";
@@ -68,7 +67,7 @@ final class ChatMessageListCellFactory
             }
 
             @Override
-            public void updateItem(final ChatMessageListItem<? extends ChatMessageReaction, ? extends ChatMessage<?>, ? extends ChatChannel<? extends ChatMessage<?>>> item,
+            public void updateItem(final ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
                                    boolean empty) {
                 super.updateItem(item, empty);
 
@@ -126,8 +125,8 @@ final class ChatMessageListCellFactory
         };
     }
 
-    private MessageBox createMessage(ChatMessageListItem<? extends ChatMessageReaction, ? extends ChatMessage<?>, ? extends ChatChannel<? extends ChatMessage<?>>> item,
-                                     ListView<ChatMessageListItem<? extends ChatMessageReaction, ? extends ChatMessage<?>, ? extends ChatChannel<? extends ChatMessage<?>>>> list) {
+    private MessageBox createMessage(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
+                                     ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list) {
         if (item.isLeaveChatMessage()) {
             return new LeaveChatMessageBox(item, controller);
         }

@@ -141,7 +141,7 @@ public abstract class PrivateChatChannelService<
     }
 
     @Override
-    public String getChannelTitlePostFix(ChatChannel<? extends ChatMessage<?>> chatChannel) {
+    public String getChannelTitlePostFix(ChatChannel<? extends ChatMessage> chatChannel) {
         checkArgument(chatChannel instanceof PrivateChatChannel,
                 "chatChannel at PrivateChatChannelService.getChannelTitlePostFix must be of type PrivateChatChannel");
         return userIdentityService.hasMultipleUserIdentities() ? "" :

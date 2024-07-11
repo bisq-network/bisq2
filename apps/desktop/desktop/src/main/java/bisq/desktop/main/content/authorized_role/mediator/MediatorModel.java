@@ -34,7 +34,7 @@ import java.util.Map;
 public class MediatorModel implements Model {
     private final Map<String, StringProperty> chatMessagesByChannelId = new HashMap<>();
     private final StringProperty selectedChatMessages = new SimpleStringProperty("");
-    private final ObjectProperty<ChatChannel<? extends ChatMessage<?>>> selectedChannel = new SimpleObjectProperty<>();
+    private final ObjectProperty<ChatChannel<? extends ChatMessage>> selectedChannel = new SimpleObjectProperty<>();
 
     private final BooleanProperty showClosedCases = new SimpleBooleanProperty();
     private final BooleanProperty noOpenCases = new SimpleBooleanProperty();

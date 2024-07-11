@@ -84,8 +84,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @Getter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public final class ChatMessageListItem<R extends ChatMessageReaction, M extends ChatMessage<R>, C extends ChatChannel<M>>
-        implements Comparable<ChatMessageListItem<R, M, C>> {
+public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChannel<M>> implements Comparable<ChatMessageListItem<M, C>> {
     private static final List<Reaction> REACTION_DISPLAY_ORDER = Arrays.asList(Reaction.THUMBS_UP, Reaction.THUMBS_DOWN,
             Reaction.HAPPY, Reaction.LAUGH, Reaction.HEART, Reaction.PARTY);
 
@@ -272,8 +271,7 @@ public final class ChatMessageListItem<R extends ChatMessageReaction, M extends 
 
     @Override
     public int compareTo(ChatMessageListItem o) {
-        Comparator<ChatMessage<?>> dateComparator = Comparator.comparingLong(ChatMessage::getDate);
-        return dateComparator.compare(this.getChatMessage(), o.getChatMessage());
+        return Comparator.comparingLong(ChatMessage::getDate).compare(this.getChatMessage(), o.getChatMessage());
     }
 
     public boolean match(String filterString) {

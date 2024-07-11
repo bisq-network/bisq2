@@ -34,7 +34,7 @@ import java.util.stream.Stream;
 public abstract class ChatChannelSelectionService implements PersistenceClient<ChatChannelSelectionStore> {
     protected final ChatChannelSelectionStore persistableStore = new ChatChannelSelectionStore();
     protected final Persistence<ChatChannelSelectionStore> persistence;
-    protected final Observable<ChatChannel<? extends ChatMessage<?>>> selectedChannel = new Observable<>();
+    protected final Observable<ChatChannel<? extends ChatMessage>> selectedChannel = new Observable<>();
 
     public ChatChannelSelectionService(PersistenceService persistenceService,
                                        ChatChannelDomain chatChannelDomain) {
@@ -61,14 +61,14 @@ public abstract class ChatChannelSelectionService implements PersistenceClient<C
         return CompletableFuture.completedFuture(true);
     }
 
-    public void selectChannel(ChatChannel<? extends ChatMessage<?>> chatChannel) {
+    public void selectChannel(ChatChannel<? extends ChatMessage> chatChannel) {
         persistableStore.setSelectedChannelId(chatChannel != null ? chatChannel.getId() : null);
         persist();
 
         selectedChannel.set(chatChannel);
     }
 
-    protected abstract Stream<ChatChannel<? extends ChatMessage<?>>> getAllChatChannels();
+    protected abstract Stream<ChatChannel<?>> getAllChatChannels();
 
     public abstract void maybeSelectFirstChannel();
 }

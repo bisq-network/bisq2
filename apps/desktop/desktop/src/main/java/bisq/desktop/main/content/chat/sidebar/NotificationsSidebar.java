@@ -50,7 +50,7 @@ public class NotificationsSidebar {
         controller = new Controller(chatService);
     }
 
-    public void setChannel(@Nullable ChatChannel<? extends ChatMessage<?>> chatChannel) {
+    public void setChannel(@Nullable ChatChannel<? extends ChatMessage> chatChannel) {
         controller.applyChannel(chatChannel);
     }
 
@@ -74,7 +74,7 @@ public class NotificationsSidebar {
 
         @Override
         public void onActivate() {
-            ChatChannel<? extends ChatMessage<?>> chatChannel = model.getChannel();
+            ChatChannel<? extends ChatMessage> chatChannel = model.getChannel();
             if (chatChannel != null) {
                 selectedChannelPin = chatService.getChatChannelSelectionServices().get(chatChannel.getChatChannelDomain()).getSelectedChannel().addObserver(this::onChannelChanged);
             }
@@ -90,7 +90,7 @@ public class NotificationsSidebar {
             }
         }
 
-        private void applyChannel(@Nullable ChatChannel<? extends ChatMessage<?>> chatChannel) {
+        private void applyChannel(@Nullable ChatChannel<? extends ChatMessage> chatChannel) {
             model.channelProperty.set(chatChannel);
             if (selectedChannelPin != null) {
                 selectedChannelPin.unbind();
@@ -101,7 +101,7 @@ public class NotificationsSidebar {
             }
         }
 
-        private void onChannelChanged(@Nullable ChatChannel<? extends ChatMessage<?>> chatChannel) {
+        private void onChannelChanged(@Nullable ChatChannel<? extends ChatMessage> chatChannel) {
             if (notificationTypePin != null) {
                 notificationTypePin.unbind();
             }
@@ -112,7 +112,7 @@ public class NotificationsSidebar {
 
         void onSetNotificationType(ChatChannelNotificationType type) {
             model.notificationType.set(type);
-            ChatChannel<? extends ChatMessage<?>> chatChannel = model.getChannel();
+            ChatChannel<? extends ChatMessage> chatChannel = model.getChannel();
             if (chatChannel != null) {
                 chatService.findChatChannelService(chatChannel)
                         .ifPresent(service -> service.setChatChannelNotificationType(chatChannel, type));
@@ -121,14 +121,14 @@ public class NotificationsSidebar {
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
-        private final ObjectProperty<ChatChannel<? extends ChatMessage<?>>> channelProperty = new SimpleObjectProperty<>();
+        private final ObjectProperty<ChatChannel<? extends ChatMessage>> channelProperty = new SimpleObjectProperty<>();
         private final ObjectProperty<ChatChannelNotificationType> notificationType = new SimpleObjectProperty<>(ChatChannelNotificationType.GLOBAL_DEFAULT);
 
         private Model() {
         }
 
         @Nullable
-        public ChatChannel<? extends ChatMessage<?>> getChannel() {
+        public ChatChannel<? extends ChatMessage> getChannel() {
             return channelProperty.get();
         }
     }
@@ -139,7 +139,7 @@ public class NotificationsSidebar {
         private final ChangeListener<Toggle> toggleListener;
         private final RadioButton globalDefault, all, mention, off;
 
-        private final ChangeListener<ChatChannel<? extends ChatMessage<?>>> channelChangeListener;
+        private final ChangeListener<ChatChannel<? extends ChatMessage>> channelChangeListener;
         private Subscription selectedNotificationTypePin;
 
         private View(Model model, Controller controller) {

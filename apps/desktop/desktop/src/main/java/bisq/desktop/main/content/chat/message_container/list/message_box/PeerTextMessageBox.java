@@ -20,7 +20,6 @@ package bisq.desktop.main.content.chat.message_container.list.message_box;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.chat.pub.PublicChatMessage;
-import bisq.chat.reactions.ChatMessageReaction;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.components.controls.DropdownMenu;
@@ -41,8 +40,8 @@ public class PeerTextMessageBox extends BubbleMessageBox {
     protected BisqMenuItem replyAction, openPrivateChatAction;
     protected DropdownMenuItem ignoreUserMenuItem, reportUserMenuItem;
 
-    public PeerTextMessageBox(ChatMessageListItem<? extends ChatMessageReaction, ? extends ChatMessage<?>, ? extends ChatChannel<? extends ChatMessage<?>>> item,
-                              ListView<ChatMessageListItem<? extends ChatMessageReaction, ? extends ChatMessage<?>, ? extends ChatChannel<? extends ChatMessage<?>>>> list,
+    public PeerTextMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
+                              ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
                               ChatMessagesListController controller) {
         super(item, list, controller);
 

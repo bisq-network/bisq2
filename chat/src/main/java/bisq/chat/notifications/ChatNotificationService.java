@@ -255,7 +255,7 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
         }
     }
 
-    private <M extends ChatMessage<?>> void onChannelsChanged(ObservableArray<? extends ChatChannel<M>> channels) {
+    private <M extends ChatMessage> void onChannelsChanged(ObservableArray<? extends ChatChannel<M>> channels) {
         channels.forEach(chatChannel -> {
             String channelId = chatChannel.getId();
             if (chatMessagesByChannelIdPins.containsKey(channelId)) {
@@ -270,7 +270,7 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
                 @Override
                 public void remove(Object message) {
                     if (message instanceof ChatMessage) {
-                        ChatMessage<?> chatMessage = (ChatMessage<?>) message;
+                        ChatMessage chatMessage = (ChatMessage) message;
                         String id = ChatNotification.createId(chatChannel.getId(), chatMessage.getId());
                         removeNotification(id);
                     }
@@ -287,7 +287,7 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
         });
     }
 
-    private <M extends ChatMessage<?>> void onMessageAdded(ChatChannel<M> chatChannel, M chatMessage) {
+    private <M extends ChatMessage> void onMessageAdded(ChatChannel<M> chatChannel, M chatMessage) {
         String id = ChatNotification.createId(chatChannel.getId(), chatMessage.getId());
         ChatNotification chatNotification = persistableStore.findNotification(id)
                 .orElseGet(() -> createNotification(id, chatChannel, chatMessage));
@@ -357,10 +357,10 @@ public class ChatNotificationService implements PersistenceClient<ChatNotificati
         }
     }
 
-    private <M extends ChatMessage<?>> ChatNotification createNotification(String id, ChatChannel<M> chatChannel, M chatMessage) {
-        Optional<UserProfile> senderUserProfile = chatMessage instanceof PrivateChatMessage
-                ? Optional.of(((PrivateChatMessage<?>) chatMessage).getSenderUserProfile())
-                : userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId());
+    private <M extends ChatMessage> ChatNotification createNotification(String id, ChatChannel<M> chatChannel, M chatMessage) {
+        Optional<UserProfile> senderUserProfile = chatMessage instanceof PrivateChatMessage ?
+                Optional.of(((PrivateChatMessage) chatMessage).getSenderUserProfile()) :
+                userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId());
         String title, message;
         if (chatMessage instanceof BisqEasyOpenTradeMessage &&
                 chatMessage.getChatMessageType() == ChatMessageType.TAKE_BISQ_EASY_OFFER) {

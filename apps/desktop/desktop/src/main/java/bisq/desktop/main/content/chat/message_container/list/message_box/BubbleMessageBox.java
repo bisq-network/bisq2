@@ -21,7 +21,6 @@ import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.chat.Citation;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
-import bisq.chat.reactions.ChatMessageReaction;
 import bisq.chat.reactions.Reaction;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ClipboardUtil;
@@ -63,8 +62,8 @@ public abstract class BubbleMessageBox extends MessageBox {
             Reaction.LAUGH, Reaction.HEART, Reaction.PARTY);
 
     private final Subscription showHighlightedPin, reactionsPin, hasFailedDeliveryStatusPin;
-    protected final ChatMessageListItem<? extends ChatMessageReaction, ? extends ChatMessage<?>, ? extends ChatChannel<? extends ChatMessage<?>>> item;
-    protected final ListView<ChatMessageListItem<? extends ChatMessageReaction, ? extends ChatMessage<?>, ? extends ChatChannel<? extends ChatMessage<?>>>> list;
+    protected final ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item;
+    protected final ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list;
     protected final ChatMessagesListController controller;
     protected final UserProfileIcon userProfileIcon = new UserProfileIcon(60);
     protected final HBox actionsHBox = new HBox(5);
@@ -79,8 +78,8 @@ public abstract class BubbleMessageBox extends MessageBox {
     protected BisqMenuItem copyAction;
     protected DropdownMenu moreActionsMenu;
 
-    public BubbleMessageBox(ChatMessageListItem<? extends ChatMessageReaction, ? extends ChatMessage<?>, ? extends ChatChannel<? extends ChatMessage<?>>> item,
-                            ListView<ChatMessageListItem<? extends ChatMessageReaction, ? extends ChatMessage<?>, ? extends ChatChannel<? extends ChatMessage<?>>>> list,
+    public BubbleMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
+                            ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
                             ChatMessagesListController controller) {
         this.item = item;
         this.list = list;
@@ -287,7 +286,7 @@ public abstract class BubbleMessageBox extends MessageBox {
         return hBox;
     }
 
-    protected static void onCopyMessage(ChatMessage<?> chatMessage) {
+    protected static void onCopyMessage(ChatMessage chatMessage) {
         ClipboardUtil.copyToClipboard(chatMessage.getText());
     }
 

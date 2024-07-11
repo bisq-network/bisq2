@@ -49,7 +49,7 @@ public class BisqEasyOfferbookSelectionService extends ChatChannelSelectionServi
     }
 
     @Override
-    public void selectChannel(ChatChannel<? extends ChatMessage<?>> chatChannel) {
+    public void selectChannel(ChatChannel<? extends ChatMessage> chatChannel) {
         if (chatChannel instanceof BisqEasyOfferbookChannel) {
             channelService.removeExpiredMessages(chatChannel);
             super.selectChannel(chatChannel);
@@ -57,15 +57,14 @@ public class BisqEasyOfferbookSelectionService extends ChatChannelSelectionServi
     }
 
     @Override
-    protected Stream<ChatChannel<? extends ChatMessage<?>>> getAllChatChannels() {
+    protected Stream<ChatChannel<?>> getAllChatChannels() {
         // fixme (low prio): cannot return publicChatChannelService.getChannels().stream() due type issues
         return Stream.concat(channelService.getChannels().stream(), Stream.empty());
     }
 
     @Override
     public void maybeSelectFirstChannel() {
-        selectChannel(
-                Optional.ofNullable((BisqEasyOfferbookChannel) getSelectedChannel().get())
+        selectChannel(Optional.ofNullable((BisqEasyOfferbookChannel) getSelectedChannel().get())
                 .or(() -> channelService.getChannels().stream().findFirst())
                 .orElse(null));
     }
