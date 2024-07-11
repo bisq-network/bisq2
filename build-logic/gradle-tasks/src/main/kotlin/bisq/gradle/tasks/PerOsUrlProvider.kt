@@ -5,7 +5,6 @@ interface PerOsUrlProvider {
 
     val linuxUrl: String
     val macOsUrl: String
-    val macOsAarch64Url: String
     val windowsUrl: String
 
     val url: String
@@ -14,14 +13,7 @@ interface PerOsUrlProvider {
     private fun getUrlSuffix() =
             when (getOS()) {
                 OS.LINUX -> linuxUrl
-                OS.MAC_OS -> {
-                    if (getOsArch().contains("aarch64")) {
-                        macOsAarch64Url
-                    } else {
-                        macOsUrl
-                    }
-                }
-
+                OS.MAC_OS -> macOsUrl
                 OS.WINDOWS -> windowsUrl
             }
 
