@@ -45,7 +45,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
     private final Subscription shouldShowTryAgainPin, messageDeliveryStatusNodePin;
     private final BisqMenuItem tryAgainMenuItem = item.getTryAgainMenuItem();
     private final HBox deliveryStateHBox = new HBox();
-    private BisqMenuItem editAction, deleteAction;
+    private BisqMenuItem editAction;
     private BisqTextArea editInputField;
     private Button saveEditButton, cancelEditButton;
     private HBox messageStatusHbox, editButtonsHBox;
@@ -120,7 +120,6 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         editAction = new BisqMenuItem("edit-grey", "edit-white");
         editAction.useIconOnly();
         editAction.setTooltip(Res.get("action.edit"));
-        deleteAction = new BisqMenuItem("delete-t-grey", "delete-t-red");
         deleteAction.useIconOnly();
         deleteAction.setTooltip(Res.get("action.delete"));
         HBox.setMargin(editAction, ACTION_ITEMS_MARGIN);

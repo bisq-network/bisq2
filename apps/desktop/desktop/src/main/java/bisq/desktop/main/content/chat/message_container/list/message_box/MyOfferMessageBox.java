@@ -22,7 +22,6 @@ import bisq.chat.ChatMessage;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.util.StringUtils;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
 import bisq.i18n.Res;
@@ -39,7 +38,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 public final class MyOfferMessageBox extends BubbleMessageBox {
     private final Label myOfferTitle;
-    private BisqMenuItem deleteAction;
 
     public MyOfferMessageBox(ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item,
                              ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list,
@@ -84,7 +82,6 @@ public final class MyOfferMessageBox extends BubbleMessageBox {
     protected void setUpActions() {
         super.setUpActions();
 
-        deleteAction = new BisqMenuItem("delete-t-grey", "delete-t-red");
         deleteAction.useIconOnly();
         deleteAction.setTooltip(Res.get("offer.deleteOffer"));
         HBox.setMargin(deleteAction, ACTION_ITEMS_MARGIN);

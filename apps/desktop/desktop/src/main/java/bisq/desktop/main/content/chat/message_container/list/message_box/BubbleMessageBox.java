@@ -69,6 +69,7 @@ public abstract class BubbleMessageBox extends MessageBox {
     protected final HBox actionsHBox = new HBox(5);
     protected final HBox addedReactions = new HBox();
     protected final VBox quotedMessageVBox, contentVBox;
+    protected final BisqMenuItem deleteAction = new BisqMenuItem("delete-t-grey", "delete-t-red");
     protected DrawerMenu reactMenu;
     private Subscription reactMenuPin;
     protected List<ReactionMenuItem> reactionMenuItems = new ArrayList<>();
