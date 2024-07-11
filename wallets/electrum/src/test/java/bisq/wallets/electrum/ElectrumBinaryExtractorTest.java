@@ -18,7 +18,6 @@
 package bisq.wallets.electrum;
 
 import bisq.common.util.FileUtils;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -27,7 +26,6 @@ import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@Disabled
 public class ElectrumBinaryExtractorTest {
     private final Path destDirPath = FileUtils.createTempDir();
     private final ElectrumBinaryExtractor binaryExtractor = new ElectrumBinaryExtractor(destDirPath);
