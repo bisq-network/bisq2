@@ -3,7 +3,7 @@ package bisq.gradle.tasks
 import java.util.*
 
 enum class OS {
-    LINUX, MAC_OS, MAC_OS_AARCH64, WINDOWS
+    LINUX, MAC_OS, WINDOWS
 }
 
 fun getOsArch(): String = System.getProperty("os.arch").toLowerCase(Locale.US).replace(" ", "").trim()
@@ -15,11 +15,7 @@ fun getOS(): OS {
     if (isLinux(osName)) {
         return OS.LINUX
     } else if (isMacOs(osName)) {
-        return if (osArch.contains("aarch64")) {
-            OS.MAC_OS_AARCH64
-        } else {
-            OS.MAC_OS // x86_64
-        }
+        OS.MAC_OS
     } else if (isWindows(osName)) {
         return OS.WINDOWS
     }

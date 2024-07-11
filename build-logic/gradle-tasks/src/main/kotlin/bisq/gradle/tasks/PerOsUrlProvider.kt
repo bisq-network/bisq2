@@ -12,11 +12,17 @@ interface PerOsUrlProvider {
         get() = urlPrefix + getUrlSuffix()
 
     private fun getUrlSuffix() =
-        when (getOS()) {
-            OS.LINUX -> linuxUrl
-            OS.MAC_OS -> macOsUrl
-            OS.MAC_OS_AARCH64 -> macOsAarch64Url
-            OS.WINDOWS -> windowsUrl
-        }
+            when (getOS()) {
+                OS.LINUX -> linuxUrl
+                OS.MAC_OS -> {
+                    if (getOsArch().contains("aarch64")) {
+                        macOsAarch64Url
+                    } else {
+                        macOsUrl
+                    }
+                }
+
+                OS.WINDOWS -> windowsUrl
+            }
 
 }
