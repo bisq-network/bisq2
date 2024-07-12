@@ -20,30 +20,36 @@ package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
-import bisq.common.util.NetworkUtils;
+import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.WrappingText;
-import bisq.desktop.webcam.QrCodeListeningServer;
-import bisq.desktop.webcam.WebcamProcessLauncher;
+import bisq.desktop.webcam.WebcamAppModel;
+import bisq.desktop.webcam.WebcamAppService;
 import bisq.i18n.Res;
 import bisq.trade.bisq_easy.BisqEasyTrade;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.animation.Interpolator;
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.Timeline;
+import javafx.beans.property.*;
+import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.util.Duration;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -63,13 +69,12 @@ public class BuyerState1a extends BaseState {
     }
 
     private static class Controller extends BaseState.Controller<Model, View> {
-        private final String baseDir;
-        private QrCodeListeningServer qrCodeListeningServer;
-        private WebcamProcessLauncher webcamProcessLauncher;
+        private final WebcamAppService webcamAppService;
+        private Pin qrCodePin, imageRecognizedPin, errorMessagePin, webcamAppStatePin;
 
         private Controller(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
             super(serviceProvider, bisqEasyTrade, channel);
-            baseDir = serviceProvider.getConfig().getBaseDir().toAbsolutePath().toString();
+            webcamAppService = serviceProvider.getWebcamAppService();
         }
 
         @Override
@@ -86,7 +91,6 @@ public class BuyerState1a extends BaseState {
         public void onActivate() {
             super.onActivate();
 
-            model.getQrCodeDetectedFromWebcam().set(false);
             BitcoinPaymentRail paymentRail = model.getBisqEasyTrade().getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail();
             String name = paymentRail.name();
             model.setBitcoinPaymentHeadline(Res.get("bisqEasy.tradeState.info.buyer.phase1a.bitcoinPayment.headline." + name));
@@ -96,6 +100,10 @@ public class BuyerState1a extends BaseState {
                 model.setBitcoinPaymentHelp(Res.get("bisqEasy.tradeState.info.buyer.phase1a.bitcoinPayment.walletHelp"));
             }
             model.getSendButtonDisabled().bind(model.getBitcoinPaymentData().isEmpty());
+            // model.getScanQrCodeButtonDisabled().set(!webcamAppService.isIdle());
+            model.getScanQrCodeButtonVisible().set(webcamAppService.isIdle());
+            model.getWebcamStateIconId().set("scan-qr-code");
+            model.getWebcamState().set(null);
         }
 
         @Override
@@ -103,6 +111,22 @@ public class BuyerState1a extends BaseState {
             super.onDeactivate();
 
             model.getSendButtonDisabled().unbind();
+            unBindQrCodePins();
+        }
+
+        private void unBindQrCodePins() {
+            if (qrCodePin != null) {
+                qrCodePin.unbind();
+            }
+            if (imageRecognizedPin != null) {
+                imageRecognizedPin.unbind();
+            }
+            if (errorMessagePin != null) {
+                errorMessagePin.unbind();
+            }
+            if (webcamAppStatePin != null) {
+                webcamAppStatePin.unbind();
+            }
         }
 
         private void onSend() {
@@ -117,37 +141,87 @@ public class BuyerState1a extends BaseState {
         }
 
         void onScanQrCode() {
-            int port = NetworkUtils.selectRandomPort();
-            qrCodeListeningServer = new QrCodeListeningServer(port, this::onQrCodeDetected, this::onWebcamAppShutdown);
+            if (webcamAppService.isIdle()) {
+                model.getQrCodeDetectedFromWebcam().set(false);
+                model.getImageRecognizedFromWebcam().set(false);
+                model.getWebcamErrorMessage().set(null);
+                model.getWebcamStateVisible().set(false);
+                model.getWebcamState().set(null);
+                unBindQrCodePins();
 
-            webcamProcessLauncher = new WebcamProcessLauncher(baseDir, port);
+                WebcamAppModel webcamAppServiceModel = webcamAppService.getModel();
+                model.getWebcamStateIconId().set(null);
+                model.getWebcamStateIconId().set("webcam-state-connecting");
+                qrCodePin = webcamAppServiceModel.getQrCode().addObserver(qrCode -> {
+                    UIThread.run(() -> {
+                        model.getQrCodeDetectedFromWebcam().set(qrCode != null);
+                        if (qrCode != null) {
+                            model.getBitcoinPaymentData().set(qrCode);
+                        }
+                    });
 
-            // Start local tcp server listening for input from qr code scan
-            qrCodeListeningServer.start();
-
-            webcamProcessLauncher.start();
-            log.info("We start the webcam application as new Java process and listen for a QR code result. TCP listening port={}", port);
-
-            // Navigation.navigateTo(NavigationTarget.QR_CODE_WEBCAM, new QrCodeWebcamController.InitData(this::onQrCodeData));
-        }
-
-        private void onQrCodeDetected(String qrCode) {
-            log.info("Qr code detected. We close webcam app and stop our qrCodeListener server.");
-            if (qrCode != null) {
-                // Once received the qr code we close both the webcam app and the server and exit
-                webcamProcessLauncher.shutdown();
-                qrCodeListeningServer.stopServer();
-
-                UIThread.run(() -> {
-                    model.bitcoinPaymentData.set(qrCode);
-                    model.getQrCodeDetectedFromWebcam().set(true);
                 });
-            }
-        }
 
-        private void onWebcamAppShutdown() {
-            log.info("Webcam app got closed without detecting a qr code. We stop our qrCodeListener server.");
-            qrCodeListeningServer.stopServer();
+                imageRecognizedPin = webcamAppServiceModel.getImageRecognized().addObserver(imageRecognized -> {
+                    if (imageRecognized != null) {
+                        UIThread.run(() -> {
+                            if (imageRecognized) {
+                                model.getIsConnectingWebcam().set(false);
+                                model.getWebcamStateIconId().set("webcam-state-image-recognized");
+                                model.getWebcamState().set(Res.get("bisqEasy.tradeState.info.buyer.phase1a.scanQrCode.webcamState.imageRecognized"));
+                            }
+                        });
+                    }
+                });
+
+                errorMessagePin = webcamAppServiceModel.getUserFriendlyErrorMessage().addObserver(errorMessage -> {
+                    if (errorMessage != null) {
+                        UIThread.run(() -> {
+                            model.getIsConnectingWebcam().set(false);
+                            model.getWebcamState().set(Res.get("bisqEasy.tradeState.info.buyer.phase1a.scanQrCode.webcamState.failed"));
+                            model.getWebcamErrorMessage().set(errorMessage);
+                        });
+                    }
+                });
+
+                webcamAppStatePin = webcamAppService.getState().addObserver(state -> {
+                    if (state != null) {
+                        UIThread.run(() -> {
+                            boolean isIdle = webcamAppService.isIdle();
+                            //model.getScanQrCodeButtonDisabled().set(!isIdle);
+                            model.getScanQrCodeButtonVisible().set(isIdle);
+                            model.getWebcamStateVisible().set(!isIdle);
+                            if (state == WebcamAppService.State.STARTING || state == WebcamAppService.State.RUNNING) {
+                                if (model.getImageRecognizedFromWebcam() != null && model.getImageRecognizedFromWebcam().get()) {
+                                    model.getWebcamStateIconId().set("webcam-state-image-recognized");
+                                    model.getWebcamState().set(Res.get("bisqEasy.tradeState.info.buyer.phase1a.scanQrCode.webcamState.imageRecognized"));
+                                } else {
+                                    model.getWebcamState().set(Res.get("bisqEasy.tradeState.info.buyer.phase1a.scanQrCode.webcamState.connecting"));
+                                }
+                            } else {
+                                if (model.getQrCodeDetectedFromWebcam() != null && model.getQrCodeDetectedFromWebcam().get()) {
+                                    // model.getWebcamStateIconId().set("scan-qr-code-green");
+                                    model.getWebcamState().set(Res.get("bisqEasy.tradeState.info.buyer.phase1a.scanQrCode.webcamState.qrCodeDetected"));
+                                } else {
+                                    // model.getWebcamStateIconId().set("scan-qr-code");
+                                }
+                            }
+                            if (state == WebcamAppService.State.TERMINATED || state == WebcamAppService.State.NEW) {
+                                model.getWebcamState().set(null);
+                                if (state == WebcamAppService.State.TERMINATED) {
+                                    model.getIsConnectingWebcam().set(false);
+                                }
+                            }
+                            if (state == WebcamAppService.State.NEW || state == WebcamAppService.State.STARTING) {
+                                model.getIsConnectingWebcam().set(true);
+
+                            }
+                        });
+                    }
+                });
+
+                webcamAppService.start();
+            }
         }
     }
 
@@ -163,7 +237,16 @@ public class BuyerState1a extends BaseState {
         private String bitcoinPaymentHelp;
         private final StringProperty bitcoinPaymentData = new SimpleStringProperty();
         private final BooleanProperty sendButtonDisabled = new SimpleBooleanProperty();
+        private final ObjectProperty<WebcamAppService.State> isWebcamAppState = new SimpleObjectProperty<>();
+        private final StringProperty webcamErrorMessage = new SimpleStringProperty();
         private final BooleanProperty qrCodeDetectedFromWebcam = new SimpleBooleanProperty();
+        private final BooleanProperty imageRecognizedFromWebcam = new SimpleBooleanProperty();
+        private final BooleanProperty scanQrCodeButtonDisabled = new SimpleBooleanProperty();
+        private final BooleanProperty scanQrCodeButtonVisible = new SimpleBooleanProperty();
+        private final BooleanProperty webcamStateVisible = new SimpleBooleanProperty();
+        private final BooleanProperty isConnectingWebcam = new SimpleBooleanProperty();
+        private final StringProperty webcamStateIconId = new SimpleStringProperty();
+        private final StringProperty webcamState = new SimpleStringProperty();
 
         protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
             super(bisqEasyTrade, channel);
@@ -171,9 +254,15 @@ public class BuyerState1a extends BaseState {
     }
 
     public static class View extends BaseState.View<Model, Controller> {
+        private static final int WEBCAM_STATE_WIDTH = 300;
+
         private final Button sendButton, walletInfoButton, scanQrCodeButton;
-        private final MaterialTextField bitcoinPayment;
+        private final MaterialTextField bitcoinPayment, webcamStateMaterialTextField;
         private final WrappingText bitcoinPaymentHeadline;
+        private final ImageView webcamStateIcon;
+        private final BisqTooltip scanQrCodeButtonTooltip;
+        private final ImageView scanQrCodeButtonIcon;
+        private final Timeline webcamStateAnimationTimeline;
         private Subscription qrCodeDetectedFromWebcamPin;
 
         private View(Model model, Controller controller) {
@@ -183,24 +272,67 @@ public class BuyerState1a extends BaseState {
             VBox.setMargin(bitcoinPaymentHeadline, new Insets(5, 0, 0, 0));
 
             bitcoinPayment = FormUtils.getTextField("", "", true);
-            ImageView scanQrCodeIcon = ImageUtil.getImageViewById("scan-qr-code");
-            scanQrCodeIcon.setOpacity(0.6);
-            scanQrCodeButton = new Button("", scanQrCodeIcon);
+
+            scanQrCodeButtonIcon = ImageUtil.getImageViewById("scan-qr-code");
+            scanQrCodeButtonIcon.setOpacity(0.5);
+
+            scanQrCodeButton = new Button(null, scanQrCodeButtonIcon);
             scanQrCodeButton.setStyle("-fx-padding: 0");
             scanQrCodeButton.setPrefHeight(55);
             scanQrCodeButton.setPrefWidth(55);
-            scanQrCodeButton.setTooltip(new BisqTooltip(Res.get("bisqEasy.tradeState.info.buyer.phase1a.scanQrCode.tooltip")));
+            scanQrCodeButtonTooltip = new BisqTooltip(Res.get("bisqEasy.tradeState.info.buyer.phase1a.scanQrCode.tooltip"));
+            scanQrCodeButton.setTooltip(scanQrCodeButtonTooltip);
+
+            webcamStateIcon = ImageUtil.getImageViewById("scan-qr-code");
+            webcamStateIcon.setOpacity(0.6);
+
+            webcamStateMaterialTextField = new MaterialTextField(Res.get("bisqEasy.tradeState.info.buyer.phase1a.scanQrCode.webcamState.description"));
+            webcamStateMaterialTextField.getTextInputControl().setEditable(true);
+            webcamStateMaterialTextField.showIcon();
+            BisqIconButton iconButton = webcamStateMaterialTextField.getIconButton();
+            // If width/height are not set layout has issues when app is not focussed
+            iconButton.setMinWidth(37);
+            iconButton.setMinHeight(38);
+            iconButton.setPadding(new Insets(40, 0, 0, 0));
+            iconButton.setAlignment(Pos.CENTER_LEFT);
+            // Hack to tweak layout
+            VBox.setMargin(webcamStateIcon, new Insets(1, 0, 0, 0));
+            VBox webcamStateIconBox = new VBox(webcamStateIcon);
+            iconButton.setIcon(webcamStateIconBox);
+            webcamStateMaterialTextField.setPrefWidth(WEBCAM_STATE_WIDTH);
+
             HBox.setHgrow(bitcoinPayment, Priority.ALWAYS);
-            HBox hBox = new HBox(10, bitcoinPayment, scanQrCodeButton);
+            HBox hBox = new HBox(10, bitcoinPayment, webcamStateMaterialTextField, scanQrCodeButton);
 
             sendButton = new Button(Res.get("bisqEasy.tradeState.info.buyer.phase1a.send"));
             sendButton.setDefaultButton(true);
+
             walletInfoButton = new Button(Res.get("bisqEasy.tradeState.info.buyer.phase1a.walletHelpButton"));
             walletInfoButton.getStyleClass().add("outlined-button");
             HBox buttons = new HBox(10, sendButton, Spacer.fillHBox(), walletInfoButton);
 
             VBox.setMargin(buttons, new Insets(5, 0, 5, 0));
             root.getChildren().addAll(bitcoinPaymentHeadline, hBox, buttons);
+
+            webcamStateAnimationTimeline = new Timeline();
+            webcamStateAnimationTimeline.setCycleCount(Integer.MAX_VALUE);
+            ObservableList<KeyFrame> keyFrames = webcamStateAnimationTimeline.getKeyFrames();
+            int delay = 0;
+            Region node = webcamStateMaterialTextField.getSelectionLine();
+            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(node.prefWidthProperty(), 0, Interpolator.LINEAR)));
+            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(node.translateXProperty(), 0, Interpolator.EASE_OUT)));
+            delay += 300;
+            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(node.prefWidthProperty(), WEBCAM_STATE_WIDTH, Interpolator.EASE_OUT)));
+            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(node.translateXProperty(), 0, Interpolator.EASE_OUT)));
+            delay += 600;
+            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(node.prefWidthProperty(), WEBCAM_STATE_WIDTH, Interpolator.EASE_OUT)));
+            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(node.translateXProperty(), 0, Interpolator.EASE_OUT)));
+            delay += 300;
+            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(node.prefWidthProperty(), 0, Interpolator.EASE_OUT)));
+            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(node.translateXProperty(), WEBCAM_STATE_WIDTH, Interpolator.EASE_OUT)));
+            delay += 600;
+            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(node.prefWidthProperty(), 0, Interpolator.EASE_OUT)));
+            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(node.translateXProperty(), 0, Interpolator.EASE_OUT)));
         }
 
         @Override
@@ -213,22 +345,65 @@ public class BuyerState1a extends BaseState {
             bitcoinPayment.setHelpText(model.getBitcoinPaymentHelp());
 
             bitcoinPayment.textProperty().bindBidirectional(model.getBitcoinPaymentData());
+            //scanQrCodeButton.disableProperty().bind(model.getScanQrCodeButtonDisabled());
+            scanQrCodeButton.visibleProperty().bind(model.getScanQrCodeButtonVisible());
+            scanQrCodeButton.managedProperty().bind(scanQrCodeButton.visibleProperty());
+            webcamStateMaterialTextField.visibleProperty().bind(model.getWebcamStateVisible());
+            webcamStateMaterialTextField.managedProperty().bind(webcamStateMaterialTextField.visibleProperty());
+            webcamStateMaterialTextField.textProperty().bind(model.getWebcamState());
+            webcamStateIcon.idProperty().bind(model.getWebcamStateIconId());
+            sendButton.disableProperty().bind(model.getSendButtonDisabled());
 
             qrCodeDetectedFromWebcamPin = EasyBind.subscribe(model.getQrCodeDetectedFromWebcam(), qrCodeDetectedFromWebcam -> {
-                if (qrCodeDetectedFromWebcam) {
+                if (qrCodeDetectedFromWebcam != null && qrCodeDetectedFromWebcam) {
                     bitcoinPayment.deselect();
                     UIScheduler.run(() -> {
                         bitcoinPayment.getTextInputControl().requestFocus();
                         bitcoinPayment.deselect();
                     }).after(300);
+                    // webcamStateMarkLine.s
                 }
             });
 
-            bitcoinPayment.validate();
-            sendButton.disableProperty().bind(model.getSendButtonDisabled());
+
             sendButton.setOnAction(e -> controller.onSend());
             walletInfoButton.setOnAction(e -> controller.onOpenWalletHelp());
             scanQrCodeButton.setOnAction(e -> controller.onScanQrCode());
+
+            bitcoinPayment.validate();
+
+
+            // Transitions.fadeOut(selectionLine, 200);
+            EasyBind.subscribe(model.getIsConnectingWebcam(), webcamStateVisible -> {
+                log.error("webcamStateVisible {}", webcamStateVisible);
+                if (webcamStateVisible) {
+                    webcamStateAnimationTimeline.playFromStart();
+                    UIThread.runOnNextRenderFrame(() -> {
+
+
+                        // webcamStateMaterialTextField.deselect();
+                        // webcamStateMaterialTextField.getTextInputControl().selectHome();
+                        // webcamStateMaterialTextField.requestFocus();
+                        //root.requestFocus();
+                    });
+                    UIScheduler.run(() -> {
+                        //  webcamStateMaterialTextField.deselect();
+                        // Transitions.animateWidth(webcamStateMarkLine, webcamStateVBox.getWidth(), 1000, null);
+                    }).after(100);
+                } else {
+                    webcamStateAnimationTimeline.stop();
+                    webcamStateMaterialTextField.getSelectionLine().setTranslateX(0);
+                    webcamStateMaterialTextField.getSelectionLine().setPrefWidth(WEBCAM_STATE_WIDTH);
+                }
+            });
+
+          /*  EasyBind.subscribe(model.getWebcamStateIconId(), webcamStateIconId -> {
+                UIScheduler.run(() -> {
+                    log.error("####");
+                    webcamStateMaterialTextField.requestFocus();
+                    // Transitions.animateWidth(webcamStateMarkLine, webcamStateVBox.getWidth(), 1000, null);
+                }).after(1000);
+            });*/
         }
 
         @Override
@@ -236,11 +411,22 @@ public class BuyerState1a extends BaseState {
             super.onViewDetached();
 
             bitcoinPayment.textProperty().unbindBidirectional(model.getBitcoinPaymentData());
+            //scanQrCodeButton.disableProperty().unbind();
+            scanQrCodeButton.visibleProperty().unbind();
+            scanQrCodeButton.managedProperty().unbind();
+            webcamStateMaterialTextField.visibleProperty().unbind();
+            webcamStateMaterialTextField.managedProperty().unbind();
+            webcamStateMaterialTextField.textProperty().unbind();
+            webcamStateIcon.idProperty().unbind();
             sendButton.disableProperty().unbind();
+
             qrCodeDetectedFromWebcamPin.unsubscribe();
+
             sendButton.setOnAction(null);
             walletInfoButton.setOnAction(null);
             scanQrCodeButton.setOnAction(null);
+
+            webcamStateAnimationTimeline.stop();
         }
     }
 }

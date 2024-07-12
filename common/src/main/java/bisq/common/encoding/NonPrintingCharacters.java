@@ -15,15 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.webcam.service;
+package bisq.common.encoding;
 
-public enum ErrorCode {
-    DEVICE_PERMISSION_DENIED,
-    NUM_DEVICE_COUNT_FAILED,
-    DEVICE_LOOKUP_FAILED,
-    NO_DEVICE_FOUND,
-    EXECUTION_EXCEPTION,
-    INTERRUPTED_EXCEPTION,
-    IO_EXCEPTION,
-    TIMEOUT_EXCEPTION
+import lombok.Getter;
+
+public enum NonPrintingCharacters {
+    // See: https://en.wikipedia.org/wiki/Delimiter#ASCII_delimited_text
+    UNIT_SEPARATOR((char) 0x1f),
+    RECORD_SEPARATOR((char) 0x1e),
+    FILE_SEPARATOR((char) 0x1c);
+
+    @Getter
+    private final char nonPrintingChar;
+
+    NonPrintingCharacters(char nonPrintingChar) {
+        this.nonPrintingChar = nonPrintingChar;
+    }
 }

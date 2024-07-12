@@ -17,73 +17,68 @@
 
 package bisq.desktop.webcam;
 
+import bisq.common.threading.ExecutorFactory;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Scanner;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class QrCodeListeningServer {
-    private final int port;
-    private final Consumer<String> qrCodeHandler;
-    private final Runnable shutdownHandler;
+    private final int socketTimeout;
+    private final InputHandler inputHandler;
+    private final Consumer<Exception> errorHandler;
     private volatile boolean isStopped;
+    private Optional<ServerSocket> serverSocket = Optional.empty();
 
-    public QrCodeListeningServer(int port, Consumer<String> qrCodeHandler, Runnable shutdownHandler) {
-        this.port = port;
-        this.qrCodeHandler = qrCodeHandler;
-        this.shutdownHandler = shutdownHandler;
+    public QrCodeListeningServer(int socketTimeout, InputHandler inputHandler, Consumer<Exception> errorHandler) {
+        this.socketTimeout = socketTimeout;
+        this.inputHandler = inputHandler;
+        this.errorHandler = errorHandler;
     }
 
-    public void start() {
-        new Thread(() -> {
+    public void start(int port) {
+        isStopped = false;
+        serverSocket = Optional.empty();
+
+        CompletableFuture.runAsync(() -> {
             InetSocketAddress serverAddress = new InetSocketAddress("127.0.0.1", port);
             try (ServerSocket serverSocket = new ServerSocket()) {
-                // We set 10 seconds timeout. We expect each seond a heartbeat message.
-                serverSocket.setSoTimeout(10000);
-
+                this.serverSocket = Optional.of(serverSocket);
+                serverSocket.setSoTimeout(socketTimeout);
                 serverSocket.bind(serverAddress);
-
                 log.info("Start listening on port {}", port);
                 while (!isStopped && !Thread.currentThread().isInterrupted()) {
                     Socket socket = serverSocket.accept();
-                    try (Scanner scanner = new Scanner(socket.getInputStream())) {
-                        StringBuilder stringBuilder = new StringBuilder();
-                        // We only expect one line
-                        while (scanner.hasNextLine() && stringBuilder.length() == 0) {
-                            String line = scanner.nextLine();
-                            stringBuilder.append(line);
-                        }
-
-                        String message = stringBuilder.toString();
-                        // LN invoice is usually about 230 chars. We tolerate 1000 in message validation
-                        checkArgument(message.length() < 1000, "Received message exceeds out limit of 1000 chars");
-
-                        if (ControlSignals.SHUTDOWN.name().equals(message)) {
-                            shutdownHandler.run();
-                        } else if (ControlSignals.HEART_BEAT.name().equals(message)) {
-                            log.debug(message);
-                        } else {
-                            log.info("Received: {}", message);
-                            qrCodeHandler.accept(message);
-                        }
-                    }
+                    inputHandler.onSocket(socket);
                 }
             } catch (IOException e) {
-                log.error("Server error", e);
+                if (!isStopped) {
+                    log.error("Server error", e);
+                    errorHandler.accept(e);
+                }
             }
             log.info("Server stopped");
-        }).start();
+        }, ExecutorFactory.newSingleThreadExecutor("QrCodeListeningServer"));
     }
 
     public void stopServer() {
         log.info("stopServer");
+        if (isStopped) {
+            return;
+        }
+
         isStopped = true;
+        serverSocket.ifPresent(serverSocket -> {
+            try {
+                serverSocket.close();
+            } catch (IOException ignore) {
+            }
+        });
     }
 }

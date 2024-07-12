@@ -17,20 +17,14 @@
 
 package bisq.webcam.service;
 
+import bisq.i18n.Res;
 import lombok.Getter;
-import org.bytedeco.javacv.FrameGrabber;
 
-import java.io.IOException;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 
 @Getter
 public class WebcamException extends RuntimeException {
     private final ErrorCode errorCode;
-    private Optional<FrameGrabber.Exception> frameGrabberException = Optional.empty();
-    private Optional<ExecutionException> executionException = Optional.empty();
-    private Optional<InterruptedException> interruptedException = Optional.empty();
-    private Optional<IOException> ioException = Optional.empty();
 
     public WebcamException(ErrorCode errorCode) {
         super();
@@ -42,23 +36,22 @@ public class WebcamException extends RuntimeException {
         this.errorCode = errorCode;
     }
 
-    public WebcamException(ErrorCode errorCode, FrameGrabber.Exception frameGrabberException) {
+    public WebcamException(ErrorCode errorCode, Throwable exception) {
+        super(exception);
         this.errorCode = errorCode;
-        this.frameGrabberException = Optional.of(frameGrabberException);
     }
 
-    public WebcamException(ErrorCode errorCode, ExecutionException executionException) {
-        this.errorCode = errorCode;
-        this.executionException = Optional.of(executionException);
+    @Override
+    public String getMessage() {
+        return Optional.ofNullable(super.getMessage()).orElse("");
     }
 
-    public WebcamException(ErrorCode errorCode, InterruptedException interruptedException) {
-        this.errorCode = errorCode;
-        this.interruptedException = Optional.of(interruptedException);
-    }
-
-    public WebcamException(ErrorCode errorCode, IOException ioException) {
-        this.errorCode = errorCode;
-        this.ioException = Optional.of(ioException);
+    public String getLocalizedErrorMessage() {
+        Throwable cause = getCause();
+        while (cause instanceof WebcamException && cause.getCause() != null) {
+            cause = cause.getCause();
+        }
+        String details = Optional.ofNullable(cause).map(Throwable::getMessage).orElse(getMessage());
+        return Res.get(errorCode.name(), details);
     }
 }

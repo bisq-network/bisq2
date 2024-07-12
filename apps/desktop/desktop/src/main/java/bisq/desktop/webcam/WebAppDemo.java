@@ -17,13 +17,7 @@
 
 package bisq.desktop.webcam;
 
-import bisq.common.util.FileUtils;
-import bisq.common.util.NetworkUtils;
-import bisq.common.util.OsUtils;
 import lombok.extern.slf4j.Slf4j;
-
-import java.io.IOException;
-import java.nio.file.Path;
 
 /**
  * Demonstration of usage launching the webapp as a new java process and listening on a detected qr code.
@@ -33,7 +27,7 @@ import java.nio.file.Path;
  */
 @Slf4j
 public class WebAppDemo {
-    public static void main(String[] args) {
+   /* public static void main(String[] args) {
         new WebAppDemo();
         keepRunning();
     }
@@ -43,7 +37,7 @@ public class WebAppDemo {
 
     public WebAppDemo() {
         int port = NetworkUtils.selectRandomPort();
-        qrCodeListeningServer = new QrCodeListeningServer(port, this::onQrCodeDetected, this::onWebcamAppShutdown);
+        qrCodeListeningServer = new QrCodeListeningServer(port);
 
         String baseDir = Path.of(OsUtils.getUserDataDir().toAbsolutePath().toString(), "Bisq2_webAppDemo").toAbsolutePath().toString();
         try {
@@ -53,6 +47,39 @@ public class WebAppDemo {
         }
         webcamProcessLauncher = new WebcamProcessLauncher(baseDir, port);
 
+
+        qrCodeListeningServer.getQrCode().addObserver(qrCode -> {
+            log.info("onQrCodeDetected={}", qrCode);
+            if (qrCode != null) {
+                // Once received the qr code we close both the webcam app and the server and exit
+                webcamProcessLauncher.shutdown();
+                qrCodeListeningServer.stopServer();
+                System.exit(0);
+            }
+        });
+        qrCodeListeningServer.getImageRecognized().addObserver(value -> {
+            if (value) {
+                log.info("onWebcamImageRecognized");
+            }
+        });
+        qrCodeListeningServer.getException().addObserver(exception -> {
+            qrCodeListeningServer.stopServer();
+            webcamProcessLauncher.shutdown();
+            log.error(exception.toString());
+        });
+        qrCodeListeningServer.getWebcamAppErrorMessage().addObserver(errorMessage -> {
+            qrCodeListeningServer.stopServer();
+            webcamProcessLauncher.shutdown();
+            log.error(errorMessage);
+        });
+        qrCodeListeningServer.getIsShutdown().addObserver(isShutdown -> {
+            if (isShutdown) {
+                log.info("onWebcamAppShutdown");
+                qrCodeListeningServer.stopServer();
+                System.exit(0);
+            }
+        });
+
         // Start local tcp server listening for input from qr code scan
         qrCodeListeningServer.start();
 
@@ -61,27 +88,11 @@ public class WebAppDemo {
         webcamProcessLauncher.start();
     }
 
-    private void onQrCodeDetected(String qrCode) {
-        log.info("onQrCodeDetected={}", qrCode);
-        if (qrCode != null) {
-            // Once received the qr code we close both the webcam app and the server and exit
-            webcamProcessLauncher.shutdown();
-            qrCodeListeningServer.stopServer();
-            System.exit(0);
-        }
-    }
-
-    private void onWebcamAppShutdown() {
-        log.info("onWebcamAppShutdown");
-        qrCodeListeningServer.stopServer();
-        System.exit(0);
-    }
-
     private static void keepRunning() {
         try {
             // Avoid that the main thread is exiting
             Thread.currentThread().join();
         } catch (InterruptedException ignore) {
         }
-    }
+    }*/
 }

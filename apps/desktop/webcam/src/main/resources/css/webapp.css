@@ -12,11 +12,28 @@
     -fx-background-color: #1c1c1c;
 }
 
+.overlay-background {
+    -fx-background-color: rgba(0, 0, 0, 0.75);
+}
+
+.all-connections-failed {
+    -fx-fill: #d0831f;
+    -fx-text-fill: #d0831f;
+    -fx-font-size: 1.2em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
 
 .connection {
     -fx-fill: #808080;
     -fx-text-fill: #808080;
-    -fx-font-size: 1.3em;
+    -fx-font-size: 1.2em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.failedConnections {
+    -fx-fill: #4d4d4d;
+    -fx-text-fill: #4d4d4d;
+    -fx-font-size: 1.1em;
     -fx-font-family: "IBM Plex Sans Light";
 }
 

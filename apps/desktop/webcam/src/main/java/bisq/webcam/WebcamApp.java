@@ -35,10 +35,10 @@ import javafx.scene.Scene;
 import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
-import org.bytedeco.javacv.FrameGrabber;
 
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeoutException;
 
 import static bisq.common.webcam.ControlSignals.*;
@@ -88,11 +88,12 @@ public class WebcamApp extends Application {
             log.error("init failed", e);
         }
     }
+
     @Override
     public void start(Stage primaryStage) {
         setupStage(primaryStage);
         startWebcam();
-        // qrCodeSender.startSendingHeartBeat();
+        qrCodeSender.startSendingHeartBeat();
     }
 
     private void shutdown() {
@@ -122,10 +123,9 @@ public class WebcamApp extends Application {
     }
 
     private void handleError(Throwable throwable) {
-        String errorMessage = throwable.getMessage();
+        String errorMessage = getErrorMessage(throwable);
         Platform.runLater(() -> {
-            webcamView.setHeadline(Res.get("errorHeadline"));
-            webcamView.setErrorMessage(errorMessage);
+            webcamView.applyErrorMessage(Res.get("errorHeadline"), errorMessage);
         });
     }
 
@@ -135,9 +135,10 @@ public class WebcamApp extends Application {
                 log.error(exception.toString());
                 handleError(exception);
                 String errorMessage = getErrorMessage(exception);
+                log.error(errorMessage);
                 int endIndex = Math.min(1000 - ERROR_MESSAGE_PREFIX.name().length(), errorMessage.length());
                 errorMessage = errorMessage.substring(0, endIndex);
-                // qrCodeSender.send(ERROR_MESSAGE_PREFIX, errorMessage);
+                qrCodeSender.send(ERROR_MESSAGE_PREFIX, errorMessage);
             }
         });
         webcamService.getCapturedImage().addObserver(image -> {
@@ -154,36 +155,26 @@ public class WebcamApp extends Application {
             if (qrCode != null) {
                 qrCodeSender.send(QR_CODE_PREFIX, qrCode)
                         .whenComplete((nil, throwable) -> handleError(throwable));
-                ;
+            }
+        });
+        webcamService.getCameraDeviceLookup().getDeviceNumber().addObserver(deviceNumber -> {
+            if (deviceNumber != null) {
+                Platform.runLater(() -> webcamView.applyDeviceNumber(deviceNumber));
             }
         });
         webcamService.initialize();
     }
 
     private static String getErrorMessage(Throwable throwable) {
-        if (throwable instanceof WebcamException) {
-          /*  CameraDevicceLookupException exception = (CameraDevicceLookupException) throwable;
-            if (exception.getFrameGrabberException() !=null) {
-                log.error("exception.getCause()==FrameGrabber.Exception {}", exception.getFrameGrabberException().toString());
-                return exception.getFrameGrabberException().getMessage();
-            }else{
-                log.error("exception==CameraDevicceLookupException {}", throwable.toString());
-                return throwable.getMessage();
-            }*/
+        if (throwable instanceof CompletionException && throwable.getCause() instanceof WebcamException) {
+            return ((WebcamException) throwable.getCause()).getLocalizedErrorMessage();
+        } else if (throwable instanceof WebcamException) {
+            return ((WebcamException) throwable).getLocalizedErrorMessage();
         } else if (throwable instanceof TimeoutException) {
-
+            return Res.get("TimeoutException", throwable.getMessage());
+        } else {
+            return throwable.toString();
         }
-
-        if (throwable instanceof FrameGrabber.Exception) {
-            log.error("exception==FrameGrabber.Exception {}", throwable.toString());
-            return throwable.getMessage();
-        }
-        if (throwable.getCause() instanceof FrameGrabber.Exception) {
-            log.error("exception.getCause()==FrameGrabber.Exception {}", throwable.getCause().toString());
-            return throwable.getCause().getMessage();
-        }
-
-        return throwable.getMessage();
     }
 }
 

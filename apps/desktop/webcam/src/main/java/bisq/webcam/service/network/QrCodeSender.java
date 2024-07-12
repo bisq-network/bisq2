@@ -17,7 +17,6 @@
 
 package bisq.webcam.service.network;
 
-import bisq.common.encoding.NonPrintingCharacters;
 import bisq.common.timer.Scheduler;
 import bisq.common.webcam.ControlSignals;
 import bisq.webcam.service.ErrorCode;
@@ -31,6 +30,8 @@ import java.net.Socket;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+
+import static bisq.common.encoding.NonPrintingCharacters.UNIT_SEPARATOR;
 
 @Slf4j
 public class QrCodeSender {
@@ -55,11 +56,11 @@ public class QrCodeSender {
     }
 
     public CompletableFuture<Void> send(ControlSignals controlSignal) {
-        return doSend(NonPrintingCharacters.UNIT_SEPARATOR + controlSignal.name());
+        return doSend(UNIT_SEPARATOR.getNonPrintingChar() + controlSignal.name());
     }
 
     public CompletableFuture<Void> send(ControlSignals controlSignal, String message) {
-        return doSend(NonPrintingCharacters.UNIT_SEPARATOR + controlSignal.name() + NonPrintingCharacters.UNIT_SEPARATOR + message);
+        return doSend(UNIT_SEPARATOR.getNonPrintingChar() + controlSignal.name() + UNIT_SEPARATOR.getNonPrintingChar() + message);
     }
 
     private CompletableFuture<Void> doSend(String message) {

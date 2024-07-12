@@ -52,6 +52,7 @@ import static bisq.desktop.components.controls.validator.ValidatorBase.PSEUDO_CL
 public class MaterialTextField extends Pane {
     protected final Region bg = new Region();
     protected final Region line = new Region();
+    @Getter
     protected final Region selectionLine = new Region();
     protected final Label descriptionLabel = new Label();
     protected final TextInputControl textInputControl;
