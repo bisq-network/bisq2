@@ -14,7 +14,7 @@ jobs:
     name: Build Bisq on ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-latest, macOS-latest, windows-latest ]
+        os: [ ubuntu-latest, macOS-latest, macos-12, windows-latest ]
 
     uses: ./.github/workflows/build_bisq_module.yml
     with:
@@ -26,7 +26,7 @@ jobs:
     name: Build apps module on ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-latest, macOS-latest, windows-latest ]
+        os: [ ubuntu-latest, macOS-latest, macos-12, windows-latest ]
 
     uses: ./.github/workflows/build_bisq_module.yml
     with:
@@ -38,7 +38,7 @@ jobs:
     name: Build network module on ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-latest, macOS-latest, windows-latest ]
+        os: [ ubuntu-latest, macOS-latest, macos-12, windows-latest ]
 
     uses: ./.github/workflows/build_bisq_module.yml
     with:
@@ -50,7 +50,7 @@ jobs:
     name: Build tor module on ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-latest, macOS-latest, windows-latest ]
+        os: [ ubuntu-latest, macOS-latest, macos-12, windows-latest ]
 
     uses: ./.github/workflows/build_bisq_module.yml
     with:
@@ -62,7 +62,7 @@ jobs:
     name: Build wallet module on ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-latest, macOS-latest, windows-latest ]
+        os: [ ubuntu-latest, macOS-latest, macos-12, windows-latest ]
 
     uses: ./.github/workflows/build_bisq_module.yml
     with:
