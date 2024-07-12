@@ -31,7 +31,6 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicLong;
 
 import static bisq.desktop.webcam.WebcamAppService.State.*;
 import static com.google.common.base.Preconditions.checkArgument;
@@ -58,7 +57,6 @@ public class WebcamAppService {
     private final WebcamAppModel model;
     private final QrCodeListeningServer qrCodeListeningServer;
     private final WebcamProcessLauncher webcamProcessLauncher;
-    private final AtomicLong lastHeartBeatReceived = new AtomicLong();
     private Optional<Scheduler> checkHeartBeatUpdateScheduler = Optional.empty();
     private Optional<Scheduler> maxStartupTimescheduler = Optional.empty();
 
@@ -75,13 +73,13 @@ public class WebcamAppService {
     public void start() {
         checkArgument(isIdle(), "Start call when service is not in idle state");
 
-        lastHeartBeatReceived.set(0);
+        model.getLastHeartBeatTimestamp().set(0L);
         model.reset();
 
         setupTimeoutSchedulers();
 
         int port = NetworkUtils.selectRandomPort();
-        model.getPort().set(port);
+        model.setPort(port);
 
         // Start local tcp server listening for input from qr code scan
         qrCodeListeningServer.start(port);
@@ -117,7 +115,6 @@ public class WebcamAppService {
         qrCodeListeningServer.stopServer();
         return webcamProcessLauncher.shutdown()
                 .thenApply(terminatedGraceFully -> {
-                    log.error("set TERMINATED");
                     state.set(TERMINATED);
                     model.reset();
                     return terminatedGraceFully;
@@ -155,17 +152,17 @@ public class WebcamAppService {
         stopSchedulers();
 
         maxStartupTimescheduler = Optional.of(Scheduler.run(() -> {
-            if (lastHeartBeatReceived.get() == 0) {
+            if (model.getLastHeartBeatTimestamp().get() == 0) {
                 String errorMessage = "Have not received a heartbeat signal from the webcam app after " + STARTUP_TIME_TIMEOUT / 1000 + " seconds.";
                 log.warn(errorMessage);
-                model.getException().set(new TimeoutException(errorMessage));
+                model.getLocalException().set(new TimeoutException(errorMessage));
             } else {
                 checkHeartBeatUpdateScheduler = Optional.of(Scheduler.run(() -> {
                             long now = System.currentTimeMillis();
-                            if (now - lastHeartBeatReceived.get() > HEART_BEAT_TIMEOUT) {
+                            if (now - model.getLastHeartBeatTimestamp().get() > HEART_BEAT_TIMEOUT) {
                                 String errorMessage = "The last reeceived heartbeat signal from the webcam app is older than " + HEART_BEAT_TIMEOUT / 1000 + " seconds.";
                                 log.warn(errorMessage);
-                                model.getException().set(new TimeoutException(errorMessage));
+                                model.getLocalException().set(new TimeoutException(errorMessage));
                             }
                         })
                         .periodically(CHECK_HEART_BEAT_INTERVAL));

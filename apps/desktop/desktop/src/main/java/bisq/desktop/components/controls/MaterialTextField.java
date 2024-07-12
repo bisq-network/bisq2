@@ -45,6 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 import java.lang.ref.WeakReference;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static bisq.desktop.components.controls.validator.ValidatorBase.PSEUDO_CLASS_ERROR;
 
@@ -182,15 +183,22 @@ public class MaterialTextField extends Pane {
     }
 
     public void setValidators(ValidatorBase... validators) {
-        validationControl.setValidators(validators);
+        Stream.of(validators).forEach(this::setValidator);
+    }
+
+    public void setValidator(ValidatorBase validator) {
+        validationControl.setValidators(validator);
+        validator.hasErrorsProperty().addListener(new WeakReference<ChangeListener<Boolean>>((observable, oldValue, newValue) -> validate()).get());
     }
 
     public boolean validate() {
         resetValidation();
         boolean valid = validationControl.validate();
+        log.error("{} {}", getText(), isValid);
         isValid.set(valid);
         selectionLine.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, !valid);
         descriptionLabel.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, !valid);
+        textInputControl.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, !valid);
         errorLabel.setVisible(!valid);
         errorLabel.setManaged(errorLabel.isVisible());
         Optional<ValidatorBase> activeValidator = getActiveValidator();
@@ -264,7 +272,7 @@ public class MaterialTextField extends Pane {
     }
 
     public void setValidator(InputValidator validator) {
-        //todo
+        // todo
     }
 
     public void setStringConverter(StringConverter<Number> stringConverter) {

@@ -40,6 +40,7 @@
 .error {
     -fx-text-fill: -bisq-error !important;
     -fx-fill: -bisq-error !important;
+    -fx-background-color: -bisq-error !important;
 }
 
 .hand-cursor {
@@ -642,13 +643,17 @@
     -fx-font-family: "IBM Plex Sans Light";
 }
 
-.material-text-field-selection-line:error,
+.material-text-field-selection-line:error {
+    -fx-background-color: -bisq2-red;
+}
+
 .material-text-field-description-deselected:error,
 .material-text-field-description-read-only:error,
 .material-text-field-description-selected:error,
 .material-text-field-description-small:error,
 .material-text-field-description-big:error {
     -fx-text-fill: -bisq2-red;
+    -fx-fill: -bisq2-red;
 }
 
 .material-text-field-error {

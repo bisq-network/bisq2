@@ -21,6 +21,7 @@ import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.bisq_easy.NavigationTarget;
 import bisq.chat.bisqeasy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.observable.Pin;
+import bisq.common.util.ExceptionUtil;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
@@ -31,6 +32,7 @@ import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.WrappingText;
+import bisq.desktop.components.controls.validator.SettableErrorValidator;
 import bisq.desktop.webcam.WebcamAppModel;
 import bisq.desktop.webcam.WebcamAppService;
 import bisq.i18n.Res;
@@ -70,7 +72,7 @@ public class BuyerState1a extends BaseState {
 
     private static class Controller extends BaseState.Controller<Model, View> {
         private final WebcamAppService webcamAppService;
-        private Pin qrCodePin, imageRecognizedPin, errorMessagePin, webcamAppStatePin;
+        private Pin qrCodePin, imageRecognizedPin, webcamAppErrorMessagePin, localExceptionPin, webcamAppStatePin;
 
         private Controller(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
             super(serviceProvider, bisqEasyTrade, channel);
@@ -100,10 +102,9 @@ public class BuyerState1a extends BaseState {
                 model.setBitcoinPaymentHelp(Res.get("bisqEasy.tradeState.info.buyer.phase1a.bitcoinPayment.walletHelp"));
             }
             model.getSendButtonDisabled().bind(model.getBitcoinPaymentData().isEmpty());
-            // model.getScanQrCodeButtonDisabled().set(!webcamAppService.isIdle());
             model.getScanQrCodeButtonVisible().set(webcamAppService.isIdle());
             model.getWebcamStateIconId().set("scan-qr-code");
-            model.getWebcamState().set(null);
+            model.getWebcamStateInfo().set(null);
         }
 
         @Override
@@ -121,11 +122,14 @@ public class BuyerState1a extends BaseState {
             if (imageRecognizedPin != null) {
                 imageRecognizedPin.unbind();
             }
-            if (errorMessagePin != null) {
-                errorMessagePin.unbind();
-            }
             if (webcamAppStatePin != null) {
                 webcamAppStatePin.unbind();
+            }
+            if (webcamAppErrorMessagePin != null) {
+                webcamAppErrorMessagePin.unbind();
+            }
+            if (localExceptionPin != null) {
+                localExceptionPin.unbind();
             }
         }
 
@@ -146,12 +150,12 @@ public class BuyerState1a extends BaseState {
                 model.getImageRecognizedFromWebcam().set(false);
                 model.getWebcamErrorMessage().set(null);
                 model.getWebcamStateVisible().set(false);
-                model.getWebcamState().set(null);
+                model.getWebcamStateInfo().set(null);
+                model.getIsConnectingWebcam().set(false);
+                model.getWebcamStateIconId().set(null);
                 unBindQrCodePins();
 
                 WebcamAppModel webcamAppServiceModel = webcamAppService.getModel();
-                model.getWebcamStateIconId().set(null);
-                model.getWebcamStateIconId().set("webcam-state-connecting");
                 qrCodePin = webcamAppServiceModel.getQrCode().addObserver(qrCode -> {
                     UIThread.run(() -> {
                         model.getQrCodeDetectedFromWebcam().set(qrCode != null);
@@ -159,7 +163,6 @@ public class BuyerState1a extends BaseState {
                             model.getBitcoinPaymentData().set(qrCode);
                         }
                     });
-
                 });
 
                 imageRecognizedPin = webcamAppServiceModel.getImageRecognized().addObserver(imageRecognized -> {
@@ -168,18 +171,8 @@ public class BuyerState1a extends BaseState {
                             if (imageRecognized) {
                                 model.getIsConnectingWebcam().set(false);
                                 model.getWebcamStateIconId().set("webcam-state-image-recognized");
-                                model.getWebcamState().set(Res.get("bisqEasy.tradeState.info.buyer.phase1a.scanQrCode.webcamState.imageRecognized"));
+                                model.getWebcamStateInfo().set(Res.get("bisqEasy.tradeState.info.buyer.phase1a.scanQrCode.webcamState.imageRecognized"));
                             }
-                        });
-                    }
-                });
-
-                errorMessagePin = webcamAppServiceModel.getUserFriendlyErrorMessage().addObserver(errorMessage -> {
-                    if (errorMessage != null) {
-                        UIThread.run(() -> {
-                            model.getIsConnectingWebcam().set(false);
-                            model.getWebcamState().set(Res.get("bisqEasy.tradeState.info.buyer.phase1a.scanQrCode.webcamState.failed"));
-                            model.getWebcamErrorMessage().set(errorMessage);
                         });
                     }
                 });
@@ -187,35 +180,50 @@ public class BuyerState1a extends BaseState {
                 webcamAppStatePin = webcamAppService.getState().addObserver(state -> {
                     if (state != null) {
                         UIThread.run(() -> {
-                            boolean isIdle = webcamAppService.isIdle();
-                            //model.getScanQrCodeButtonDisabled().set(!isIdle);
+                            boolean isIdle = false;
+                            switch (state) {
+                                case NEW:
+                                    isIdle = true;
+                                    model.getIsConnectingWebcam().set(true);
+                                    model.getWebcamStateInfo().set(null);
+                                    break;
+                                case STARTING:
+                                    model.getIsConnectingWebcam().set(true);
+                                    model.getWebcamStateIconId().set("webcam-state-connecting");
+                                    model.getWebcamStateInfo().set(Res.get("bisqEasy.tradeState.info.buyer.phase1a.scanQrCode.webcamState.connecting"));
+                                    break;
+                                case RUNNING:
+                                    break;
+                                case STOPPING:
+                                    break;
+                                case TERMINATED:
+                                    isIdle = true;
+                                    model.getIsConnectingWebcam().set(false);
+                                    model.getWebcamStateInfo().set(null);
+                                    break;
+                            }
                             model.getScanQrCodeButtonVisible().set(isIdle);
                             model.getWebcamStateVisible().set(!isIdle);
-                            if (state == WebcamAppService.State.STARTING || state == WebcamAppService.State.RUNNING) {
-                                if (model.getImageRecognizedFromWebcam() != null && model.getImageRecognizedFromWebcam().get()) {
-                                    model.getWebcamStateIconId().set("webcam-state-image-recognized");
-                                    model.getWebcamState().set(Res.get("bisqEasy.tradeState.info.buyer.phase1a.scanQrCode.webcamState.imageRecognized"));
-                                } else {
-                                    model.getWebcamState().set(Res.get("bisqEasy.tradeState.info.buyer.phase1a.scanQrCode.webcamState.connecting"));
-                                }
-                            } else {
-                                if (model.getQrCodeDetectedFromWebcam() != null && model.getQrCodeDetectedFromWebcam().get()) {
-                                    // model.getWebcamStateIconId().set("scan-qr-code-green");
-                                    model.getWebcamState().set(Res.get("bisqEasy.tradeState.info.buyer.phase1a.scanQrCode.webcamState.qrCodeDetected"));
-                                } else {
-                                    // model.getWebcamStateIconId().set("scan-qr-code");
-                                }
-                            }
-                            if (state == WebcamAppService.State.TERMINATED || state == WebcamAppService.State.NEW) {
-                                model.getWebcamState().set(null);
-                                if (state == WebcamAppService.State.TERMINATED) {
-                                    model.getIsConnectingWebcam().set(false);
-                                }
-                            }
-                            if (state == WebcamAppService.State.NEW || state == WebcamAppService.State.STARTING) {
-                                model.getIsConnectingWebcam().set(true);
+                        });
+                    }
+                });
 
-                            }
+                webcamAppErrorMessagePin = webcamAppServiceModel.getWebcamAppErrorMessage().addObserver(webcamAppErrorMessage -> {
+                    if (webcamAppErrorMessage != null) {
+                        UIThread.run(() -> {
+                            model.getIsConnectingWebcam().set(false);
+                            model.getWebcamStateInfo().set(Res.get("bisqEasy.tradeState.info.buyer.phase1a.scanQrCode.webcamState.failed"));
+                            model.getWebcamErrorMessage().set(webcamAppErrorMessage);
+                        });
+                    }
+                });
+
+                localExceptionPin = webcamAppServiceModel.getLocalException().addObserver(exception -> {
+                    if (exception != null) {
+                        UIThread.run(() -> {
+                            model.getIsConnectingWebcam().set(false);
+                            model.getWebcamStateInfo().set(Res.get("bisqEasy.tradeState.info.buyer.phase1a.scanQrCode.webcamState.failed"));
+                            model.getWebcamErrorMessage().set(ExceptionUtil.getRootCauseMessage(exception));
                         });
                     }
                 });
@@ -241,12 +249,11 @@ public class BuyerState1a extends BaseState {
         private final StringProperty webcamErrorMessage = new SimpleStringProperty();
         private final BooleanProperty qrCodeDetectedFromWebcam = new SimpleBooleanProperty();
         private final BooleanProperty imageRecognizedFromWebcam = new SimpleBooleanProperty();
-        private final BooleanProperty scanQrCodeButtonDisabled = new SimpleBooleanProperty();
         private final BooleanProperty scanQrCodeButtonVisible = new SimpleBooleanProperty();
         private final BooleanProperty webcamStateVisible = new SimpleBooleanProperty();
         private final BooleanProperty isConnectingWebcam = new SimpleBooleanProperty();
         private final StringProperty webcamStateIconId = new SimpleStringProperty();
-        private final StringProperty webcamState = new SimpleStringProperty();
+        private final StringProperty webcamStateInfo = new SimpleStringProperty();
 
         protected Model(BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
             super(bisqEasyTrade, channel);
@@ -263,7 +270,9 @@ public class BuyerState1a extends BaseState {
         private final BisqTooltip scanQrCodeButtonTooltip;
         private final ImageView scanQrCodeButtonIcon;
         private final Timeline webcamStateAnimationTimeline;
-        private Subscription qrCodeDetectedFromWebcamPin;
+        private final Region webcamStateMarkerLine;
+        private final SettableErrorValidator webcamStateValidator;
+        private Subscription qrCodeDetectedFromWebcamPin, webcamStateVisiblePin;
 
         private View(Model model, Controller controller) {
             super(model, controller);
@@ -287,9 +296,13 @@ public class BuyerState1a extends BaseState {
             webcamStateIcon.setOpacity(0.6);
 
             webcamStateMaterialTextField = new MaterialTextField(Res.get("bisqEasy.tradeState.info.buyer.phase1a.scanQrCode.webcamState.description"));
+            webcamStateValidator = new SettableErrorValidator();
+            webcamStateMaterialTextField.setValidators(webcamStateValidator);
             webcamStateMaterialTextField.getTextInputControl().setEditable(true);
             webcamStateMaterialTextField.showIcon();
+            webcamStateMarkerLine = webcamStateMaterialTextField.getSelectionLine();
             BisqIconButton iconButton = webcamStateMaterialTextField.getIconButton();
+            iconButton.setMouseTransparent(true);
             // If width/height are not set layout has issues when app is not focussed
             iconButton.setMinWidth(37);
             iconButton.setMinHeight(38);
@@ -315,24 +328,7 @@ public class BuyerState1a extends BaseState {
             root.getChildren().addAll(bitcoinPaymentHeadline, hBox, buttons);
 
             webcamStateAnimationTimeline = new Timeline();
-            webcamStateAnimationTimeline.setCycleCount(Integer.MAX_VALUE);
-            ObservableList<KeyFrame> keyFrames = webcamStateAnimationTimeline.getKeyFrames();
-            int delay = 0;
-            Region node = webcamStateMaterialTextField.getSelectionLine();
-            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(node.prefWidthProperty(), 0, Interpolator.LINEAR)));
-            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(node.translateXProperty(), 0, Interpolator.EASE_OUT)));
-            delay += 300;
-            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(node.prefWidthProperty(), WEBCAM_STATE_WIDTH, Interpolator.EASE_OUT)));
-            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(node.translateXProperty(), 0, Interpolator.EASE_OUT)));
-            delay += 600;
-            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(node.prefWidthProperty(), WEBCAM_STATE_WIDTH, Interpolator.EASE_OUT)));
-            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(node.translateXProperty(), 0, Interpolator.EASE_OUT)));
-            delay += 300;
-            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(node.prefWidthProperty(), 0, Interpolator.EASE_OUT)));
-            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(node.translateXProperty(), WEBCAM_STATE_WIDTH, Interpolator.EASE_OUT)));
-            delay += 600;
-            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(node.prefWidthProperty(), 0, Interpolator.EASE_OUT)));
-            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(node.translateXProperty(), 0, Interpolator.EASE_OUT)));
+            setupWebcamStateAnimation();
         }
 
         @Override
@@ -345,14 +341,15 @@ public class BuyerState1a extends BaseState {
             bitcoinPayment.setHelpText(model.getBitcoinPaymentHelp());
 
             bitcoinPayment.textProperty().bindBidirectional(model.getBitcoinPaymentData());
-            //scanQrCodeButton.disableProperty().bind(model.getScanQrCodeButtonDisabled());
             scanQrCodeButton.visibleProperty().bind(model.getScanQrCodeButtonVisible());
             scanQrCodeButton.managedProperty().bind(scanQrCodeButton.visibleProperty());
             webcamStateMaterialTextField.visibleProperty().bind(model.getWebcamStateVisible());
             webcamStateMaterialTextField.managedProperty().bind(webcamStateMaterialTextField.visibleProperty());
-            webcamStateMaterialTextField.textProperty().bind(model.getWebcamState());
+            webcamStateMaterialTextField.textProperty().bind(model.getWebcamStateInfo());
             webcamStateIcon.idProperty().bind(model.getWebcamStateIconId());
             sendButton.disableProperty().bind(model.getSendButtonDisabled());
+            webcamStateValidator.messageProperty().bind(model.getWebcamErrorMessage());
+            webcamStateValidator.invalidProperty().bind(model.getWebcamErrorMessage().isEmpty().not());
 
             qrCodeDetectedFromWebcamPin = EasyBind.subscribe(model.getQrCodeDetectedFromWebcam(), qrCodeDetectedFromWebcam -> {
                 if (qrCodeDetectedFromWebcam != null && qrCodeDetectedFromWebcam) {
@@ -361,35 +358,11 @@ public class BuyerState1a extends BaseState {
                         bitcoinPayment.getTextInputControl().requestFocus();
                         bitcoinPayment.deselect();
                     }).after(300);
-                    // webcamStateMarkLine.s
                 }
             });
-
-
-            sendButton.setOnAction(e -> controller.onSend());
-            walletInfoButton.setOnAction(e -> controller.onOpenWalletHelp());
-            scanQrCodeButton.setOnAction(e -> controller.onScanQrCode());
-
-            bitcoinPayment.validate();
-
-
-            // Transitions.fadeOut(selectionLine, 200);
-            EasyBind.subscribe(model.getIsConnectingWebcam(), webcamStateVisible -> {
-                log.error("webcamStateVisible {}", webcamStateVisible);
+            webcamStateVisiblePin = EasyBind.subscribe(model.getIsConnectingWebcam(), webcamStateVisible -> {
                 if (webcamStateVisible) {
                     webcamStateAnimationTimeline.playFromStart();
-                    UIThread.runOnNextRenderFrame(() -> {
-
-
-                        // webcamStateMaterialTextField.deselect();
-                        // webcamStateMaterialTextField.getTextInputControl().selectHome();
-                        // webcamStateMaterialTextField.requestFocus();
-                        //root.requestFocus();
-                    });
-                    UIScheduler.run(() -> {
-                        //  webcamStateMaterialTextField.deselect();
-                        // Transitions.animateWidth(webcamStateMarkLine, webcamStateVBox.getWidth(), 1000, null);
-                    }).after(100);
                 } else {
                     webcamStateAnimationTimeline.stop();
                     webcamStateMaterialTextField.getSelectionLine().setTranslateX(0);
@@ -397,13 +370,11 @@ public class BuyerState1a extends BaseState {
                 }
             });
 
-          /*  EasyBind.subscribe(model.getWebcamStateIconId(), webcamStateIconId -> {
-                UIScheduler.run(() -> {
-                    log.error("####");
-                    webcamStateMaterialTextField.requestFocus();
-                    // Transitions.animateWidth(webcamStateMarkLine, webcamStateVBox.getWidth(), 1000, null);
-                }).after(1000);
-            });*/
+            sendButton.setOnAction(e -> controller.onSend());
+            walletInfoButton.setOnAction(e -> controller.onOpenWalletHelp());
+            scanQrCodeButton.setOnAction(e -> controller.onScanQrCode());
+
+            bitcoinPayment.validate();
         }
 
         @Override
@@ -411,7 +382,6 @@ public class BuyerState1a extends BaseState {
             super.onViewDetached();
 
             bitcoinPayment.textProperty().unbindBidirectional(model.getBitcoinPaymentData());
-            //scanQrCodeButton.disableProperty().unbind();
             scanQrCodeButton.visibleProperty().unbind();
             scanQrCodeButton.managedProperty().unbind();
             webcamStateMaterialTextField.visibleProperty().unbind();
@@ -419,14 +389,37 @@ public class BuyerState1a extends BaseState {
             webcamStateMaterialTextField.textProperty().unbind();
             webcamStateIcon.idProperty().unbind();
             sendButton.disableProperty().unbind();
+            webcamStateValidator.messageProperty().unbind();
+            webcamStateValidator.invalidProperty().unbind();
 
             qrCodeDetectedFromWebcamPin.unsubscribe();
+            webcamStateVisiblePin.unsubscribe();
 
             sendButton.setOnAction(null);
             walletInfoButton.setOnAction(null);
             scanQrCodeButton.setOnAction(null);
 
             webcamStateAnimationTimeline.stop();
+        }
+
+        private void setupWebcamStateAnimation() {
+            webcamStateAnimationTimeline.setCycleCount(Integer.MAX_VALUE);
+            ObservableList<KeyFrame> keyFrames = webcamStateAnimationTimeline.getKeyFrames();
+            int delay = 0;
+            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(webcamStateMarkerLine.prefWidthProperty(), 0, Interpolator.LINEAR)));
+            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(webcamStateMarkerLine.translateXProperty(), 0, Interpolator.EASE_OUT)));
+            delay += 300;
+            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(webcamStateMarkerLine.prefWidthProperty(), WEBCAM_STATE_WIDTH, Interpolator.EASE_OUT)));
+            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(webcamStateMarkerLine.translateXProperty(), 0, Interpolator.EASE_OUT)));
+            delay += 600;
+            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(webcamStateMarkerLine.prefWidthProperty(), WEBCAM_STATE_WIDTH, Interpolator.EASE_OUT)));
+            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(webcamStateMarkerLine.translateXProperty(), 0, Interpolator.EASE_OUT)));
+            delay += 300;
+            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(webcamStateMarkerLine.prefWidthProperty(), 0, Interpolator.EASE_OUT)));
+            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(webcamStateMarkerLine.translateXProperty(), WEBCAM_STATE_WIDTH, Interpolator.EASE_OUT)));
+            delay += 600;
+            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(webcamStateMarkerLine.prefWidthProperty(), 0, Interpolator.EASE_OUT)));
+            keyFrames.add(new KeyFrame(Duration.millis(delay), new KeyValue(webcamStateMarkerLine.translateXProperty(), 0, Interpolator.EASE_OUT)));
         }
     }
 }

@@ -50,7 +50,7 @@ public class InputHandler {
             checkArgument(message.length() < 1000, "Received message exceeds out limit of 1000 chars");
             processMessage(message);
         } catch (IOException e) {
-            model.getException().set(e);
+            model.getLocalException().set(e);
         }
     }
 

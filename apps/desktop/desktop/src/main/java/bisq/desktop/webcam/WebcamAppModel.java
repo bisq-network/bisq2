@@ -20,6 +20,7 @@ package bisq.desktop.webcam;
 import bisq.application.ApplicationService;
 import bisq.common.observable.Observable;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,27 +29,28 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class WebcamAppModel {
     private final String baseDir;
-    private final Observable<Integer> port = new Observable<>();
+    @Setter
+    private int port;
     private final Observable<Boolean> imageRecognized = new Observable<>();
     private final Observable<String> qrCode = new Observable<>();
-    private final Observable<String> webcamAppErrorMessage = new Observable<>();
-    private final Observable<String> userFriendlyErrorMessage = new Observable<>();
-    private final Observable<Throwable> exception = new Observable<>();
     private final Observable<Boolean> isShutdownSignalReceived = new Observable<>();
     private final Observable<Long> lastHeartBeatTimestamp = new Observable<>();
+    // Provided by webcam app
+    private final Observable<String> webcamAppErrorMessage = new Observable<>();
+    // Exceptions happened in our runtime
+    private final Observable<Throwable> localException = new Observable<>();
 
     public WebcamAppModel(ApplicationService.Config config) {
         baseDir = config.getBaseDir().toAbsolutePath().toString();
     }
 
     public void reset() {
-        port.set(null);
+        port = 0;
         imageRecognized.set(null);
         qrCode.set(null);
-        webcamAppErrorMessage.set(null);
-        userFriendlyErrorMessage.set(null);
-        exception.set(null);
         isShutdownSignalReceived.set(null);
         lastHeartBeatTimestamp.set(null);
+        webcamAppErrorMessage.set(null);
+        localException.set(null);
     }
 }

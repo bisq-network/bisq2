@@ -17,11 +17,7 @@
 
 package bisq.desktop.components.controls.validator;
 
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.ReadOnlyBooleanWrapper;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 import javafx.css.PseudoClass;
 import javafx.scene.Node;
 import javafx.scene.control.Control;
@@ -123,6 +119,7 @@ public abstract class ValidatorBase {
         return this.srcControl;
     }
 
+
     /**
      * Tells whether the validator is "passing" or not.
      * <p>
@@ -134,10 +131,15 @@ public abstract class ValidatorBase {
      */
     protected ReadOnlyBooleanWrapper hasErrors = new ReadOnlyBooleanWrapper(false);
 
-    /**
-     * @see #hasErrors
-     */
+    public ReadOnlyBooleanWrapper hasErrorsProperty() {
+        return hasErrors;
+    }
+
     public boolean getHasErrors() {
+        return hasErrors.get();
+    }
+
+    public boolean isHasErrors() {
         return hasErrors.get();
     }
 
