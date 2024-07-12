@@ -12,6 +12,7 @@
     -fx-background-color: #1c1c1c;
 }
 
+
 .connection {
     -fx-fill: #808080;
     -fx-text-fill: #808080;
@@ -25,4 +26,54 @@
 
 #scan-with-camera {
     -fx-image: url("/images/scan-with-camera.png");
+}
+
+#no-camera {
+    -fx-image: url("/images/no-camera.png");
+}
+
+.code-block {
+    -fx-fill: #808080;
+    -fx-text-fill: #808080;
+    -fx-font-family: "IBM Plex Mono";
+    -fx-font-size: 1em;
+}
+
+.text-area {
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+    -fx-background-color: #242424;
+    -fx-background-radius: 0;
+    -fx-border-style: none;
+    -fx-text-fill: #808080;
+    -fx-font-size: 1.25em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.text-area > .scroll-pane {
+    -fx-background-color: null;
+}
+
+.text-area > .scroll-pane > .scroll-bar:horizontal {
+    -fx-background-radius: 0;
+}
+
+.text-area > .scroll-pane > .scroll-bar:vertical {
+    -fx-background-radius: 0;
+}
+
+.text-area > .scroll-pane > .corner {
+    -fx-background-radius: 0;
+}
+
+.text-area .content {
+    /* is 1px less top and bottom than TextInput because of scrollPane border */
+    -fx-padding: 0.25em 0.583em 0.25em 0.583em; /* 3 7 3 7 */
+    -fx-cursor: text;
+    -fx-background-color: #242424;
+    -fx-background-radius: 0;
+}
+
+.text-area:focused .content {
+    -fx-background-color: #242424;
 }
