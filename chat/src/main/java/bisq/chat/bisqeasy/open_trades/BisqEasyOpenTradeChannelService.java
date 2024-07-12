@@ -342,7 +342,11 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
                             return Optional.empty();
                         }
                     })
-                    .ifPresent(channel -> addMessage(message, channel));
+                    .ifPresent(channel -> {
+                        addMessage(message, channel);
+                        // Check if there are any reactions that should be added to existing messages
+                        processQueuedReactions();
+                    });
         }
     }
 
