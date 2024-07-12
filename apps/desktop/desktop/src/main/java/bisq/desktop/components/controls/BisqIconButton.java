@@ -21,6 +21,7 @@ import bisq.desktop.common.utils.ImageUtil;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
@@ -123,6 +124,14 @@ public class BisqIconButton extends Button {
 
     public void setIcon(AwesomeIcon icon) {
         setGraphic(AwesomeDude.createIconLabel(icon));
+    }
+
+    public void setIcon(ImageView imageView) {
+        setGraphic(imageView);
+    }
+
+    public void setIcon(Node node) {
+        setGraphic(node);
     }
 
     public void setIcon(AwesomeIcon icon, String iconSize) {

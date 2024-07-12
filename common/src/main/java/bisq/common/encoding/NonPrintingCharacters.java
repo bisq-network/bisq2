@@ -15,10 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.webcam;
+package bisq.common.encoding;
 
-// Needs to be in sync with bisq.desktop.webcam.ControlSignals
-public enum ControlSignals {
-    SHUTDOWN,
-    HEART_BEAT
+import lombok.Getter;
+
+public enum NonPrintingCharacters {
+    // See: https://en.wikipedia.org/wiki/Delimiter#ASCII_delimited_text
+    UNIT_SEPARATOR((char) 0x1f),
+    RECORD_SEPARATOR((char) 0x1e),
+    FILE_SEPARATOR((char) 0x1c);
+
+    @Getter
+    private final char nonPrintingChar;
+
+    NonPrintingCharacters(char nonPrintingChar) {
+        this.nonPrintingChar = nonPrintingChar;
+    }
 }

@@ -831,6 +831,18 @@
     -fx-image: url("/images/icons/scan-qr-code.png");
 }
 
+#scan-qr-code-green {
+    -fx-image: url("/images/icons/scan-qr-code-green.png");
+}
+
+#webcam-state-image-recognized {
+    -fx-image: url("/images/icons/webcam-state-image-recognized.png");
+}
+
+#webcam-state-connecting {
+    -fx-image: url("/images/icons/webcam-state-connecting.png");
+}
+
 
 /* ------------------------------------------------------------------------------------ */
 /* Chat */

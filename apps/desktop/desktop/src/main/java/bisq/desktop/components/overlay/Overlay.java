@@ -429,6 +429,7 @@ public abstract class Overlay<T extends Overlay<T>> {
         String osInfo = OsUtils.getOsInfo();
         String errorReport = Res.get("popup.reportBug.report", version, osInfo, message);
         TextArea errorReportTextArea = new TextArea(errorReport);
+        errorReportTextArea.setEditable(false);
         errorReportTextArea.setPrefWidth(width);
         errorReportTextArea.setWrapText(true);
         errorReportTextArea.getStyleClass().addAll("code-block", "error-log");

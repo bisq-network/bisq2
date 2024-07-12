@@ -31,6 +31,7 @@ import bisq.common.util.ExceptionUtil;
 import bisq.contract.ContractService;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.State;
+import bisq.desktop.webcam.WebcamAppService;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
@@ -96,6 +97,7 @@ public class DesktopApplicationService extends ApplicationService {
     private final AlertNotificationsService alertNotificationsService;
     private final FavouriteMarketsService favouriteMarketsService;
     private final DontShowAgainService dontShowAgainService;
+    private final WebcamAppService webcamAppService;
 
     public DesktopApplicationService(String[] args, ShutDownHandler shutDownHandler) {
         super("desktop", args);
@@ -186,6 +188,7 @@ public class DesktopApplicationService extends ApplicationService {
         favouriteMarketsService = new FavouriteMarketsService(settingsService);
 
         dontShowAgainService = new DontShowAgainService(settingsService);
+        webcamAppService = new WebcamAppService(config);
 
         // TODO (refactor, low prio): Not sure if ServiceProvider is still needed as we added BisqEasyService which exposes most of the services.
         serviceProvider = new ServiceProvider(shutDownHandler,
@@ -209,7 +212,8 @@ public class DesktopApplicationService extends ApplicationService {
                 bisqEasyService,
                 alertNotificationsService,
                 favouriteMarketsService,
-                dontShowAgainService);
+                dontShowAgainService,
+                webcamAppService);
     }
 
     @Override

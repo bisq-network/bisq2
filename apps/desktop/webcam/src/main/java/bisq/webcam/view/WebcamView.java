@@ -17,36 +17,91 @@
 
 package bisq.webcam.view;
 
+import bisq.i18n.Res;
 import bisq.webcam.service.VideoSize;
+import javafx.beans.binding.BooleanBinding;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class WebcamView extends BorderPane {
+public class WebcamView extends StackPane {
     private static final VideoSize VIDEO_SIZE = VideoSize.SD;
 
     private final ImageView imageView;
-    private final VBox waitingInfo;
+    private final VBox vBox;
     private final WaitingAnimation waitingAnimation;
+    private final Label headline, failedConnections;
+    private final TextArea errorMessageTextArea;
+    private final ImageView errorIcon;
+    private final Button retryButton;
+    private int deviceNumber = -1;
 
-    public WebcamView() {
+    public WebcamView(Runnable retyHandler) {
         int videoWidth = VIDEO_SIZE.getWidth();
         int videoHeight = VIDEO_SIZE.getHeight();
 
         this.setPrefWidth(videoWidth);
         this.setPrefHeight(videoHeight + 23 + 20);
         this.getStyleClass().add("background");
+        this.setPrefWidth(videoWidth);
+        this.setPrefHeight(videoHeight);
 
         waitingAnimation = new WaitingAnimation();
-        waitingInfo = createWaitingInfo(waitingAnimation, new Label("Connecting to camera..."));
+        waitingAnimation.setAlignment(Pos.CENTER);
+
+        headline = new Label(Res.get("connecting", deviceNumber));
+        headline.setAlignment(Pos.CENTER);
+        headline.setTextAlignment(TextAlignment.CENTER);
+        headline.setWrapText(true);
+        headline.getStyleClass().add("connection");
+
+        failedConnections = new Label();
+        failedConnections.setAlignment(Pos.CENTER);
+        failedConnections.setTextAlignment(TextAlignment.CENTER);
+        failedConnections.setWrapText(true);
+        failedConnections.getStyleClass().add("failedConnections");
+
+        errorIcon = new ImageView();
+        errorIcon.setId("no-camera");
+        errorIcon.setFitHeight(78);
+        errorIcon.setFitWidth(78);
+        errorIcon.setPreserveRatio(true);
+
+        retryButton = new Button(Res.get("retry"));
+        retryButton.getStyleClass().add("retry-button");
+        retryButton.setOnAction(e -> retyHandler.run());
+
+        errorMessageTextArea = new TextArea();
+        errorMessageTextArea.setEditable(false);
+        errorMessageTextArea.setWrapText(true);
+        errorMessageTextArea.getStyleClass().addAll("code-block");
+        errorMessageTextArea.setMaxHeight(150);
+
+        setupBindings();
+
+        Region topSpacer = new Region();
+        Region bottomSpacer = new Region();
+
+        VBox.setMargin(waitingAnimation, new Insets(-VIDEO_SIZE.getHeight() / 8d, 0, 0, 0));
+        VBox.setMargin(errorIcon, new Insets(-VIDEO_SIZE.getHeight() / 12d, 0, 0, 0));
+        VBox.setMargin(errorMessageTextArea, new Insets(10, 40, -20, 40));
+        VBox.setMargin(failedConnections, new Insets(-10, 0, 0, 0));
+        VBox.setVgrow(topSpacer, Priority.ALWAYS);
+        VBox.setVgrow(bottomSpacer, Priority.ALWAYS);
+        vBox = new VBox(topSpacer, waitingAnimation, errorIcon, retryButton, headline, failedConnections, errorMessageTextArea, bottomSpacer);
+        vBox.setSpacing(20);
+        vBox.setAlignment(Pos.TOP_CENTER);
 
         imageView = new ImageView();
         imageView.setFitWidth(videoWidth);
@@ -54,35 +109,62 @@ public class WebcamView extends BorderPane {
         // Mirror image
         imageView.setScaleX(-1);
 
-        StackPane.setAlignment(waitingInfo, Pos.TOP_CENTER);
-        StackPane stackPane = new StackPane(waitingInfo, imageView);
-        stackPane.setPrefWidth(videoWidth);
-        stackPane.setPrefHeight(videoHeight);
-        this.setBottom(stackPane);
+        this.getChildren().addAll(imageView, vBox);
     }
 
     public void setWebcamImage(Image webcamImage) {
-        boolean isConnecting = webcamImage == null;
-        waitingInfo.setVisible(isConnecting);
-        waitingInfo.setManaged(isConnecting);
-        imageView.setVisible(!isConnecting);
-        imageView.setManaged(!isConnecting);
-        if (!isConnecting) {
-            imageView.setImage(webcamImage);
+        if (webcamImage != null) {
             waitingAnimation.stop();
         }
+
+        imageView.setImage(webcamImage);
+
+        BooleanBinding isImageNull = imageView.imageProperty().isNull();
+        BooleanBinding isImageNotNull = isImageNull.not();
+        imageView.visibleProperty().bind(isImageNotNull);
+        imageView.managedProperty().bind(imageView.visibleProperty());
+
+        vBox.visibleProperty().bind(isImageNull.or(errorMessageTextArea.textProperty().isEmpty().not()));
+        vBox.managedProperty().bind(vBox.visibleProperty());
     }
 
+    public void applyErrorMessage(String errorHeadline, String errorMessage) {
+        errorMessageTextArea.setText(errorMessage);
+        this.headline.setText(errorHeadline);
+        this.headline.getStyleClass().setAll("all-connections-failed");
+        vBox.getStyleClass().add("overlay-background");
+    }
 
-    private VBox createWaitingInfo(WaitingAnimation animation, Label headline) {
-        animation.setAlignment(Pos.CENTER);
-        headline.setAlignment(Pos.CENTER);
-        headline.setTextAlignment(TextAlignment.CENTER);
-        headline.getStyleClass().add("connection");
-        VBox.setMargin(animation, new Insets(VIDEO_SIZE.getHeight() / 4d, 0, 0, 0));
-        VBox waitingInfo = new VBox(animation, headline);
-        waitingInfo.setSpacing(20);
-        waitingInfo.setAlignment(Pos.TOP_CENTER);
-        return waitingInfo;
+    public void applyDeviceNumber(int deviceNumber) {
+        if (errorMessageTextArea.getText().isEmpty()) {
+            String text = Res.get("connecting", deviceNumber);
+            if (this.deviceNumber > -1) {
+                String previous = failedConnections.getText();
+                if (previous.isEmpty()) {
+                    failedConnections.setText(Res.get("connectingFailed", deviceNumber - 1));
+                } else {
+                    failedConnections.setText(previous + "\n" + Res.get("connectingFailed", deviceNumber - 1));
+                }
+            }
+            headline.setText(text);
+        }
+        this.deviceNumber = deviceNumber;
+    }
+
+    private void setupBindings() {
+        errorMessageTextArea.visibleProperty().bind(errorMessageTextArea.textProperty().isEmpty().not());
+        errorMessageTextArea.managedProperty().bind(errorMessageTextArea.visibleProperty());
+
+        failedConnections.visibleProperty().bind(failedConnections.textProperty().isEmpty().not());
+        failedConnections.managedProperty().bind(failedConnections.visibleProperty());
+
+        errorIcon.visibleProperty().bind(errorMessageTextArea.visibleProperty());
+        errorIcon.managedProperty().bind(errorIcon.visibleProperty());
+
+        retryButton.visibleProperty().bind(errorMessageTextArea.visibleProperty());
+        retryButton.managedProperty().bind(errorIcon.visibleProperty());
+
+        waitingAnimation.visibleProperty().bind(errorIcon.visibleProperty().not());
+        waitingAnimation.managedProperty().bind(waitingAnimation.visibleProperty());
     }
 }

@@ -15,10 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.webcam;
+package bisq.common.webcam;
 
-// Needs to be in sync with bisq.webcam.ControlSignals
 public enum ControlSignals {
-    SHUTDOWN,
-    HEART_BEAT
+    HEART_BEAT,
+    IMAGE_RECOGNIZED,
+    QR_CODE_PREFIX,
+    ERROR_MESSAGE_PREFIX,
+    RESTART,
+    SHUTDOWN
 }

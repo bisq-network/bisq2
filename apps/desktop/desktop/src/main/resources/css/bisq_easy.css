@@ -635,6 +635,17 @@
 }
 
 
+.bisq-easy-trade-state-webcam-state-box {
+    -fx-background-color: rgba(255, 255, 255, 0.05);
+    -fx-background-radius: 4 4 0 0;
+}
+
+.bisq-easy-trade-state-webcam-state-label {
+    -fx-text-fill: -fx-mid-text-color;
+    -fx-font-size: 1.25em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
 /*******************************************************************************
  *                                                                             *
  * Trade wizard                                                                *

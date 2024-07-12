@@ -29,6 +29,7 @@ import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.security_manager.alert.AlertNotificationsService;
 import bisq.chat.ChatService;
 import bisq.contract.ContractService;
+import bisq.desktop.webcam.WebcamAppService;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.offer.OfferService;
@@ -73,6 +74,7 @@ public class ServiceProvider {
     private final AlertNotificationsService alertNotificationsService;
     private final FavouriteMarketsService favouriteMarketsService;
     private final DontShowAgainService dontShowAgainService;
+    private final WebcamAppService webcamAppService;
 
     public ServiceProvider(ShutDownHandler shutDownHandler,
                            ApplicationService.Config config,
@@ -95,7 +97,8 @@ public class ServiceProvider {
                            BisqEasyService bisqEasyService,
                            AlertNotificationsService alertNotificationsService,
                            FavouriteMarketsService favouriteMarketsService,
-                           DontShowAgainService dontShowAgainService) {
+                           DontShowAgainService dontShowAgainService,
+                           WebcamAppService webcamAppService) {
         this.shutDownHandler = shutDownHandler;
         this.config = config;
         this.persistenceService = persistenceService;
@@ -118,5 +121,6 @@ public class ServiceProvider {
         this.alertNotificationsService = alertNotificationsService;
         this.favouriteMarketsService = favouriteMarketsService;
         this.dontShowAgainService = dontShowAgainService;
+        this.webcamAppService = webcamAppService;
     }
 }
