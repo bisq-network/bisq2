@@ -52,6 +52,7 @@ public class WebcamApp extends Application {
     private QrCodeSender qrCodeSender;
     private WebcamView webcamView;
     private boolean imageDetected;
+    private Scene scene;
 
     public WebcamApp() {
         webcamService = new WebcamService();
@@ -105,11 +106,11 @@ public class WebcamApp extends Application {
                 });
     }
 
-
     private void setupStage(Stage primaryStage) {
-        webcamView = new WebcamView();
-        Scene scene = new Scene(webcamView, VIDEO_SIZE.getWidth(), VIDEO_SIZE.getHeight());
-        scene.getStylesheets().add(requireNonNull(this.getClass().getResource("/css/webapp.css")).toExternalForm());
+        webcamView = new WebcamView(this::onRety);
+        scene = new Scene(webcamView, VIDEO_SIZE.getWidth(), VIDEO_SIZE.getHeight());
+        scene.getStylesheets().addAll(requireNonNull(this.getClass().getResource("/css/base.css")).toExternalForm(),
+                requireNonNull(this.getClass().getResource("/css/webapp.css")).toExternalForm());
         primaryStage.setScene(scene);
         primaryStage.sizeToScene();
         primaryStage.setOnCloseRequest(event -> {
@@ -122,11 +123,8 @@ public class WebcamApp extends Application {
                 event -> KeyHandlerUtil.handleShutDownKeyEvent(event, this::shutdown));
     }
 
-    private void handleError(Throwable throwable) {
-        String errorMessage = getErrorMessage(throwable);
-        Platform.runLater(() -> {
-            webcamView.applyErrorMessage(Res.get("errorHeadline"), errorMessage);
-        });
+    private void onRety() {
+        qrCodeSender.send(RESTART);
     }
 
     private void startWebcam() {
@@ -163,6 +161,13 @@ public class WebcamApp extends Application {
             }
         });
         webcamService.initialize();
+    }
+
+    private void handleError(Throwable throwable) {
+        String errorMessage = getErrorMessage(throwable);
+        Platform.runLater(() -> {
+            webcamView.applyErrorMessage(Res.get("errorHeadline"), errorMessage);
+        });
     }
 
     private static String getErrorMessage(Throwable throwable) {

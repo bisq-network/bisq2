@@ -74,55 +74,15 @@ public class InputHandler {
         } else {
             if (ControlSignals.SHUTDOWN.name().equals(message)) {
                 model.getIsShutdownSignalReceived().set(true);
+            } else if (RESTART.name().equals(message)) {
+                model.getRestartSignalReceived().set(true);
             } else if (IMAGE_RECOGNIZED.name().equals(message)) {
                 model.getImageRecognized().set(true);
             } else if (HEART_BEAT.name().equals(message)) {
-                log.debug(message);
                 model.getLastHeartBeatTimestamp().set(System.currentTimeMillis());
             } else {
                 throw new IllegalArgumentException("Not recognized message type. Message=" + message);
             }
         }
-
-
-        /*
-        *   qrCodeListeningServer.getQrCode().addObserver(qrCode -> {
-            if (qrCode != null) {
-                log.info("Qr code detected. We close webcam app and stop our qrCodeListener server.");
-                shutDownWebcam();
-                UIThread.run(() -> {
-                    model.bitcoinPaymentData.set(qrCode);
-                    model.getIsWebcamAppState().set(QR_CODE_DETECTED);
-                });
-            }
-        });
-        qrCodeListeningServer.getImageRecognized().addObserver(value -> {
-            if (value) {
-                model.getIsWebcamAppState().set(IMAGE_RECOGNIZED);
-            }
-        });
-        qrCodeListeningServer.getException().addObserver(exception -> {
-            if (exception != null) {
-                shutDownWebcam();
-                handleWebcamException(exception);
-            }
-        });
-        qrCodeListeningServer.getWebcamAppErrorMessage().addObserver(errorMessage -> {
-            if (errorMessage != null) {
-                shutDownWebcam();
-                UIThread.run(() -> {
-                    model.getWebcamErrorMessage().set(errorMessage);
-                });
-            }
-        });
-
-        qrCodeListeningServer.getIsShutdown().addObserver(isShutdown -> {
-            if (isShutdown) {
-                log.info("Webcam app got closed without detecting a qr code. We stop our qrCodeListener server.");
-                qrCodeListeningServer.stopServer();
-                UIThread.run(() -> model.getIsWebcamAppState().set(STOPPED));
-            }
-        });
-        * */
     }
 }

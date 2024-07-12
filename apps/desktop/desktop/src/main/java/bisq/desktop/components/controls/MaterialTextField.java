@@ -194,7 +194,6 @@ public class MaterialTextField extends Pane {
     public boolean validate() {
         resetValidation();
         boolean valid = validationControl.validate();
-        log.error("{} {}", getText(), isValid);
         isValid.set(valid);
         selectionLine.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, !valid);
         descriptionLabel.pseudoClassStateChanged(PSEUDO_CLASS_ERROR, !valid);

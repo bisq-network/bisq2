@@ -22,6 +22,7 @@ import bisq.webcam.service.VideoSize;
 import javafx.beans.binding.BooleanBinding;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.image.Image;
@@ -31,7 +32,6 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -42,12 +42,12 @@ public class WebcamView extends StackPane {
     private final VBox vBox;
     private final WaitingAnimation waitingAnimation;
     private final Label headline, failedConnections;
-    @Getter
     private final TextArea errorMessageTextArea;
     private final ImageView errorIcon;
+    private final Button retryButton;
     private int deviceNumber = -1;
 
-    public WebcamView() {
+    public WebcamView(Runnable retyHandler) {
         int videoWidth = VIDEO_SIZE.getWidth();
         int videoHeight = VIDEO_SIZE.getHeight();
 
@@ -78,6 +78,10 @@ public class WebcamView extends StackPane {
         errorIcon.setFitWidth(78);
         errorIcon.setPreserveRatio(true);
 
+        retryButton = new Button(Res.get("retry"));
+        retryButton.getStyleClass().add("retry-button");
+        retryButton.setOnAction(e -> retyHandler.run());
+
         errorMessageTextArea = new TextArea();
         errorMessageTextArea.setEditable(false);
         errorMessageTextArea.setWrapText(true);
@@ -95,7 +99,7 @@ public class WebcamView extends StackPane {
         VBox.setMargin(failedConnections, new Insets(-10, 0, 0, 0));
         VBox.setVgrow(topSpacer, Priority.ALWAYS);
         VBox.setVgrow(bottomSpacer, Priority.ALWAYS);
-        vBox = new VBox(topSpacer, waitingAnimation, errorIcon, headline, failedConnections, errorMessageTextArea, bottomSpacer);
+        vBox = new VBox(topSpacer, waitingAnimation, errorIcon, retryButton, headline, failedConnections, errorMessageTextArea, bottomSpacer);
         vBox.setSpacing(20);
         vBox.setAlignment(Pos.TOP_CENTER);
 
@@ -156,6 +160,9 @@ public class WebcamView extends StackPane {
 
         errorIcon.visibleProperty().bind(errorMessageTextArea.visibleProperty());
         errorIcon.managedProperty().bind(errorIcon.visibleProperty());
+
+        retryButton.visibleProperty().bind(errorMessageTextArea.visibleProperty());
+        retryButton.managedProperty().bind(errorIcon.visibleProperty());
 
         waitingAnimation.visibleProperty().bind(errorIcon.visibleProperty().not());
         waitingAnimation.managedProperty().bind(waitingAnimation.visibleProperty());

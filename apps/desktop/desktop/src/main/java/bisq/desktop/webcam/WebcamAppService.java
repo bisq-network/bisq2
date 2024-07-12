@@ -35,6 +35,8 @@ import java.util.concurrent.TimeoutException;
 import static bisq.desktop.webcam.WebcamAppService.State.*;
 import static com.google.common.base.Preconditions.checkArgument;
 
+// On MacOS one can reset the camera access permissions by `tccutil reset Camera`. This is helpful for tesing failure
+// scenarios with failed permissions.
 @Slf4j
 public class WebcamAppService {
     private static final int SOCKET_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(10);
@@ -43,7 +45,7 @@ public class WebcamAppService {
     private static final long HEART_BEAT_TIMEOUT = TimeUnit.SECONDS.toMillis(10);
     @Getter
     private final Observable<State> state = new Observable<>();
-    private Pin qrCodePin, isShutdownSignalReceivedPin;
+    private Pin qrCodePin, isShutdownSignalReceivedPin, restartSignalReceivedPin;
 
     public enum State {
         NEW,
@@ -105,6 +107,17 @@ public class WebcamAppService {
                 shutdown();
             }
         });
+        restartSignalReceivedPin = model.getRestartSignalReceived().addObserver(restartSignalReceived -> {
+            if (restartSignalReceived != null && restartSignalReceived) {
+                restart();
+            }
+        });
+    }
+
+    public CompletableFuture<Boolean> restart() {
+        // We leave triggering the start to the client, so it can initialialize its recources and to avoid delays
+        // by JavaFX thread mapping
+        return shutdown();
     }
 
     public CompletableFuture<Boolean> shutdown() {
@@ -128,6 +141,9 @@ public class WebcamAppService {
         if (isShutdownSignalReceivedPin != null) {
             isShutdownSignalReceivedPin.unbind();
         }
+        if (restartSignalReceivedPin != null) {
+            restartSignalReceivedPin.unbind();
+        }
     }
 
     public boolean isIdle() {
@@ -142,9 +158,6 @@ public class WebcamAppService {
     }
 
     private void handleException(Throwable throwable) {
-        //todo map common expections and provide user friendly strings
-           /* model.getWebcamAppErrorMessage().set(throwable.getMessage());
-            new Popup().error(throwable).show();*/
         shutdown();
     }
 

@@ -34,6 +34,7 @@ public class WebcamAppModel {
     private final Observable<Boolean> imageRecognized = new Observable<>();
     private final Observable<String> qrCode = new Observable<>();
     private final Observable<Boolean> isShutdownSignalReceived = new Observable<>();
+    private final Observable<Boolean> restartSignalReceived = new Observable<>();
     private final Observable<Long> lastHeartBeatTimestamp = new Observable<>();
     // Provided by webcam app
     private final Observable<String> webcamAppErrorMessage = new Observable<>();
@@ -49,6 +50,7 @@ public class WebcamAppModel {
         imageRecognized.set(null);
         qrCode.set(null);
         isShutdownSignalReceived.set(null);
+        restartSignalReceived.set(null);
         lastHeartBeatTimestamp.set(null);
         webcamAppErrorMessage.set(null);
         localException.set(null);

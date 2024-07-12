@@ -72,7 +72,7 @@ public class BuyerState1a extends BaseState {
 
     private static class Controller extends BaseState.Controller<Model, View> {
         private final WebcamAppService webcamAppService;
-        private Pin qrCodePin, imageRecognizedPin, webcamAppErrorMessagePin, localExceptionPin, webcamAppStatePin;
+        private Pin qrCodePin, imageRecognizedPin, webcamAppErrorMessagePin, localExceptionPin, webcamAppStatePin, restartSignalReceivedPin;
 
         private Controller(ServiceProvider serviceProvider, BisqEasyTrade bisqEasyTrade, BisqEasyOpenTradeChannel channel) {
             super(serviceProvider, bisqEasyTrade, channel);
@@ -113,6 +113,7 @@ public class BuyerState1a extends BaseState {
 
             model.getSendButtonDisabled().unbind();
             unBindQrCodePins();
+            webcamAppService.shutdown();
         }
 
         private void unBindQrCodePins() {
@@ -131,6 +132,9 @@ public class BuyerState1a extends BaseState {
             if (localExceptionPin != null) {
                 localExceptionPin.unbind();
             }
+            if (restartSignalReceivedPin != null) {
+                restartSignalReceivedPin.unbind();
+            }
         }
 
         private void onSend() {
@@ -146,14 +150,7 @@ public class BuyerState1a extends BaseState {
 
         void onScanQrCode() {
             if (webcamAppService.isIdle()) {
-                model.getQrCodeDetectedFromWebcam().set(false);
-                model.getImageRecognizedFromWebcam().set(false);
-                model.getWebcamErrorMessage().set(null);
-                model.getWebcamStateVisible().set(false);
-                model.getWebcamStateInfo().set(null);
-                model.getIsConnectingWebcam().set(false);
-                model.getWebcamStateIconId().set(null);
-                unBindQrCodePins();
+                reset();
 
                 WebcamAppModel webcamAppServiceModel = webcamAppService.getModel();
                 qrCodePin = webcamAppServiceModel.getQrCode().addObserver(qrCode -> {
@@ -228,8 +225,29 @@ public class BuyerState1a extends BaseState {
                     }
                 });
 
+                restartSignalReceivedPin = webcamAppServiceModel.getRestartSignalReceived().addObserver(restartSignalReceived -> {
+                    if (restartSignalReceived != null && restartSignalReceived) {
+                        UIScheduler.run(() -> {
+                                    onScanQrCode();
+                                }
+                        ).after(1000);
+                    }
+                });
+
                 webcamAppService.start();
             }
+        }
+
+        private void reset() {
+            model.getQrCodeDetectedFromWebcam().set(false);
+            model.getImageRecognizedFromWebcam().set(false);
+            model.getWebcamErrorMessage().set(null);
+            model.getWebcamStateVisible().set(false);
+            model.getWebcamStateInfo().set(null);
+            model.getIsConnectingWebcam().set(false);
+            model.getWebcamStateIconId().set(null);
+            model.getScanQrCodeButtonVisible().set(webcamAppService.isIdle());
+            unBindQrCodePins();
         }
     }
 

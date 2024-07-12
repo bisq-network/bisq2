@@ -18,14 +18,15 @@
 package bisq.desktop.webcam;
 
 import bisq.common.application.DevMode;
+import bisq.common.archive.ZipFileExtractor;
 import bisq.common.locale.LanguageRepository;
 import bisq.common.threading.ExecutorFactory;
-import bisq.common.util.ArchiveUtil;
 import bisq.common.util.FileUtils;
 import bisq.common.util.OsUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
+import java.io.InputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
@@ -49,12 +50,12 @@ public class WebcamProcessLauncher {
                 File jarFile = new File(jarFilePath);
 
                 if (!jarFile.exists() || DevMode.isDevMode()) {
-                    String zipFileName = "webcam-" + version + ".zip";
-                    File tempFile = new File(baseDir + "/" + zipFileName);
-                    FileUtils.resourceToFile("webcam-app/" + zipFileName, tempFile);
-                    ArchiveUtil.extractZipFile(tempFile, baseDir);
-                    FileUtils.deleteFile(tempFile);
-                    log.info("Extracted zip file {} to {}", zipFileName, baseDir);
+                    String resourcePath = "webcam-app/webcam-" + version + ".zip";
+                    InputStream inputStream = getClass().getClassLoader().getResourceAsStream(resourcePath);
+                    File destDir = new File(baseDir);
+                    ZipFileExtractor zipFileExtractor = new ZipFileExtractor(inputStream, destDir);
+                    zipFileExtractor.extractArchive();
+                    log.info("Extracted zip file {} to {}", resourcePath, baseDir);
                 }
 
                 String portParam = "--port=" + port;

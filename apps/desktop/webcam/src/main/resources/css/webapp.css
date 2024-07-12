@@ -17,8 +17,8 @@
 }
 
 .all-connections-failed {
-    -fx-fill: #d0831f;
-    -fx-text-fill: #d0831f;
+    -fx-fill: -bisq2-yellow-dim-20;
+    -fx-text-fill: -bisq2-yellow-dim-20;
     -fx-font-size: 1.2em;
     -fx-font-family: "IBM Plex Sans Light";
 }
@@ -93,4 +93,66 @@
 
 .text-area:focused .content {
     -fx-background-color: #242424;
+}
+
+
+.button {
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+    -fx-background-radius: 4;
+    -fx-background-insets: 0;
+    -fx-border-color: transparent;
+    -fx-border-radius: 4;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 1em;
+    -fx-font-family: "IBM Plex Sans";
+    -fx-padding: 5 32 5 32;
+    -fx-cursor: hand;
+}
+
+.button:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.15);
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.2), 10, 0.4, 0, 2);
+}
+
+.button:pressed {
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.25), 10, 0.35, 0, 2);
+}
+
+.button:disabled {
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+    -fx-text-fill: derive(-fx-light-text-color, -20%);
+}
+
+.button-reduced-padding {
+    -fx-label-padding: 0 -15 0 -15;
+}
+
+.button:default,
+.default-button {
+    -fx-background-color: -fx-default-button;
+    -fx-text-fill: -fx-light-text-color;
+}
+
+.button:default:hover {
+    -fx-background-color: -bisq-green-hover;
+}
+
+.button:default:pressed {
+    -fx-background-color: -bisq-green-pressed;
+}
+
+.button:default:disabled {
+    -fx-background-color: rgba(255, 255, 255, 0.2);
+    -fx-text-fill: derive(-fx-light-text-color, -20%);
+}
+
+.retry-button {
+    -fx-fill: -bisq2-yellow;
+    -fx-text-fill: -bisq2-yellow;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+    -fx-padding: 10 32 10 32;
+    -fx-font-size: 1.25em;
+    -fx-font-family: "IBM Plex Sans";
 }

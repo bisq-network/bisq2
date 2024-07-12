@@ -22,5 +22,6 @@ public enum ControlSignals {
     IMAGE_RECOGNIZED,
     QR_CODE_PREFIX,
     ERROR_MESSAGE_PREFIX,
+    RESTART,
     SHUTDOWN
 }
