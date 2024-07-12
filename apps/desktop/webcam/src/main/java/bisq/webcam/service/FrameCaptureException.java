@@ -15,14 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.webcam.service.lookup;
+package bisq.webcam.service;
 
-public class CameraDevicceLookupException extends RuntimeException {
-    public CameraDevicceLookupException(String message) {
-        super(message);
+public class FrameCaptureException extends RuntimeException {
+    public FrameCaptureException(Exception exception) {
+        super(exception);
     }
 
-    public CameraDevicceLookupException(Throwable throwable) {
-        super(throwable);
+    public FrameCaptureException(String message) {
+        super(message);
     }
 }

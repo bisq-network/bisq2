@@ -17,10 +17,11 @@
 
 package bisq.webcam.view;
 
-import javafx.animation.FadeTransition;
-import javafx.animation.RotateTransition;
+import javafx.animation.*;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
+import javafx.collections.ObservableList;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.image.ImageView;
@@ -28,30 +29,34 @@ import javafx.scene.layout.StackPane;
 import javafx.util.Duration;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.concurrent.TimeUnit;
-
 @Slf4j
 public class WaitingAnimation extends StackPane {
     public static final int INTERVAL = 1000;
 
+    private final ImageView spinningCircle;
     private ImageView waitingStateIcon;
     private final RotateTransition rotate;
     private final FadeTransition fadeTransition;
     private Scene scene;
     private ChangeListener<Scene> sceneListener;
     private ChangeListener<Boolean> focusListener;
+    private final BooleanProperty startAnimationProperty = new SimpleBooleanProperty();
+    private final Timeline timeline = new Timeline();
 
     public WaitingAnimation() {
 
         setAlignment(Pos.CENTER);
 
-        ImageView spinningCircle = new ImageView();
+        spinningCircle = new ImageView();
         spinningCircle.setId("spinning-circle");
         spinningCircle.setFitHeight(78);
         spinningCircle.setFitWidth(78);
         spinningCircle.setPreserveRatio(true);
 
-        getChildren().add(spinningCircle);
+        waitingStateIcon = new ImageView();
+        waitingStateIcon.setId("scan-with-camera");
+
+        getChildren().addAll(spinningCircle, waitingStateIcon);
 
         fadeTransition = new FadeTransition(Duration.millis(INTERVAL), spinningCircle);
         fadeTransition.setFromValue(0);
@@ -60,63 +65,59 @@ public class WaitingAnimation extends StackPane {
         rotate = new RotateTransition(Duration.millis(INTERVAL), spinningCircle);
         rotate.setByAngle(360);
 
+        timeline.setCycleCount(Integer.MAX_VALUE);
+        ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
+        keyFrames.add(new KeyFrame(Duration.millis(0), new KeyValue(startAnimationProperty, true, Interpolator.LINEAR)));
+        keyFrames.add(new KeyFrame(Duration.millis(4000), new KeyValue(startAnimationProperty, false, Interpolator.EASE_BOTH)));
+        startAnimationProperty.addListener((observable, oldValue, newValue) -> {
+            if (newValue) {
+                rotate.playFromStart();
+                fadeTransition.playFromStart();
+            }
+        });
+
+        focusListener = (observable, oldValue, newValue) -> {
+            if (newValue) {
+                playFromStart();
+            }
+        };
+
         sceneListener = (observable, oldValue, newValue) -> {
             if (newValue != null) {
-                focusListener = new ChangeListener<>() {
-                    @Override
-                    public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-                        if (newValue) {
-                            rotate.playFromStart();
-                            spinningCircle.setOpacity(0);
-                            fadeTransition.playFromStart();
-                        }
+                focusListener = (observable12, oldValue12, focus) -> {
+                    if (focus) {
+                        playFromStart();
                     }
                 };
-                scene = getScene();
-                // scene.getWindow().focusedProperty().addListener(focusListener);
+                scene = newValue;
+                scene.windowProperty().addListener((observable1, oldValue1, newValue1) -> {
+                    if (newValue1 != null) {
+                        scene.getWindow().focusedProperty().addListener(focusListener);
+                    }
+                });
+
             } else {
                 if (scene != null) {
-                    // scene.getWindow().focusedProperty().removeListener(focusListener);
+                    scene.getWindow().focusedProperty().removeListener(focusListener);
                     scene = null;
                 }
                 sceneProperty().removeListener(sceneListener);
             }
         };
         sceneProperty().addListener(sceneListener);
+
+        timeline.play();
     }
 
-
-    private void updateWaitingStateIcon() {
-        if (waitingStateIcon != null) {
-            getChildren().remove(waitingStateIcon);
-            waitingStateIcon = null;
-        }
-
-        waitingStateIcon = new ImageView();
-        waitingStateIcon.setId("scan-with-camera");
-        getChildren().add(this.waitingStateIcon);
-    }
-
-    public void play() {
-        rotate.play();
-        fadeTransition.play();
-    }
-
-    public void playIndefinitely() {
-        playRepeated(0, 4 * INTERVAL, TimeUnit.MILLISECONDS, Long.MAX_VALUE);
-    }
-
-    public void playRepeated(long initialDelay, long delay, TimeUnit timeUnit, long cycles) {
-        stop();
-        // uiScheduler = UIScheduler.run((this::play)).repeated(initialDelay, delay, timeUnit, cycles);
+    private void playFromStart() {
+        startAnimationProperty.set(false);
+        spinningCircle.setOpacity(0);
+        timeline.playFromStart();
     }
 
     public void stop() {
         rotate.stop();
         fadeTransition.stop();
-       /* if (uiScheduler != null) {
-            uiScheduler.stop();
-            uiScheduler = null;
-        }*/
+        timeline.stop();
     }
 }

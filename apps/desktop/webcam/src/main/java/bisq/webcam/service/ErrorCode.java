@@ -15,10 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.webcam;
+package bisq.webcam.service;
 
-// Needs to be in sync with bisq.webcam.ControlSignals
-public enum ControlSignals {
-    SHUTDOWN,
-    HEART_BEAT
+public enum ErrorCode {
+    DEVICE_LOOKUP_FAILED,
+    NO_DEVICE_FOUND,
+    EXECUTION_EXCEPTION,
+    INTERRUPTED_EXCEPTION,
+    IO_EXCEPTION
 }

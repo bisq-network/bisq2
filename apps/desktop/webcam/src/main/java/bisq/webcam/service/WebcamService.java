@@ -118,25 +118,24 @@ public class WebcamService implements Service {
             } catch (FrameGrabber.Exception e) {
                 log.error("Error at starting frameGrabber", e);
                 exception.set(e);
-                throw new RuntimeException(e);
+                throw new FrameCaptureException(e);
             }
 
             while (isRunning && !Thread.currentThread().isInterrupted()) {
                 try (Frame capturedFrame = frameGrabber.grabAtFrameRate()) {
                     if (capturedFrame == null) {
-                        throw new FrameGrabber.Exception("capturedFrame is null");
+                        throw new FrameCaptureException("capturedFrame is null");
                     }
                     qrCodeProcessor.process(capturedFrame).ifPresent(qrCode::set);
                     capturedImage.set(frameToImageConverter.convert(capturedFrame));
-                } catch (Exception e) {
+                } catch (FrameGrabber.Exception | InterruptedException e) {
                     exception.set(e);
-                    throw new RuntimeException(e);
+                    throw new FrameCaptureException(e);
                 }
             }
             try {
                 frameGrabber.close();
-            } catch (FrameGrabber.Exception e) {
-                log.error("Exception at closing frameGrabber", e);
+            } catch (FrameGrabber.Exception ignore) {
             }
             isStopped = true;
         });

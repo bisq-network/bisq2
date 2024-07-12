@@ -18,11 +18,14 @@
 package bisq.webcam.service.lookup;
 
 import bisq.common.threading.ExecutorFactory;
+import bisq.webcam.service.ErrorCode;
+import bisq.webcam.service.WebcamException;
 import lombok.extern.slf4j.Slf4j;
 import org.bytedeco.javacv.FrameGrabber;
 import org.bytedeco.javacv.OpenCVFrameGrabber;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 @Slf4j
 public class CameraDevicceLookup {
@@ -33,22 +36,30 @@ public class CameraDevicceLookup {
             do {
                 try {
                     return find(deviceNumber).get();
-                } catch (Exception e) {
-                    log.warn("Camera wth deviceNumber {} not found. We try the next one. Error message={}", deviceNumber, e.getMessage());
+                } catch (ExecutionException e) {
+                    if (e.getCause() instanceof WebcamException) {
+                        log.warn("Camera wth deviceNumber {} not found. We try the next one. Error message={}", deviceNumber, e.getMessage());
+                    } else {
+                        throw new WebcamException(ErrorCode.EXECUTION_EXCEPTION, e);
+                    }
+                } catch (InterruptedException e) {
+                    throw new WebcamException(ErrorCode.INTERRUPTED_EXCEPTION, e);
                 }
             } while (++deviceNumber < maxDeviceNumber);
-            throw new CameraDevicceLookupException("No camera found");
+            throw new WebcamException(ErrorCode.NO_DEVICE_FOUND);
         }, ExecutorFactory.newSingleThreadScheduledExecutor("look-up-camera"));
     }
 
     public static CompletableFuture<FrameGrabber> find(int deviceNumber) {
         log.info("Try to find camera with device number {}", deviceNumber);
         return CompletableFuture.supplyAsync(() -> {
+            // return new OpenCVFrameGrabber(deviceNumber);
+
             try (FrameGrabber frameGrabber = new OpenCVFrameGrabber(deviceNumber)) {
                 frameGrabber.start();
                 return frameGrabber;
-            } catch (Exception e) {
-                throw new CameraDevicceLookupException(e);
+            } catch (FrameGrabber.Exception e) {
+                throw new WebcamException(ErrorCode.DEVICE_LOOKUP_FAILED, e);
             }
         }, ExecutorFactory.newSingleThreadScheduledExecutor("look-up-device"));
     }
