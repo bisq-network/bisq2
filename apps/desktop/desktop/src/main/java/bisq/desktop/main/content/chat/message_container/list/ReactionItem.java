@@ -35,7 +35,7 @@ import java.util.Set;
 public class ReactionItem {
     private final Reaction reaction;
     private final String iconId;
-    private final long firstAdded = 0;
+    private long firstAdded;
     private final SimpleIntegerProperty count = new SimpleIntegerProperty();
     private final SimpleBooleanProperty selected = new SimpleBooleanProperty(false);
     Set<UserProfile> users = new HashSet<>();
@@ -48,6 +48,10 @@ public class ReactionItem {
     void addUser(ChatMessageReaction chatMessageReaction, UserProfile userProfile) {
         if (hasReactionBeenRemoved(chatMessageReaction)) {
             return;
+        }
+
+        if (firstAdded == 0) {
+            firstAdded = chatMessageReaction.getDate();
         }
 
         users.add(userProfile);
@@ -74,6 +78,6 @@ public class ReactionItem {
     }
 
     public static Comparator<ReactionItem> firstAddedComparator() {
-        return Comparator.comparing(ReactionItem::getFirstAdded);
+        return Comparator.comparingLong(ReactionItem::getFirstAdded);
     }
 }
