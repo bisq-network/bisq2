@@ -40,9 +40,11 @@ public class ActiveReactionsDisplayBox extends HBox {
     private final SortedList<ReactionItem> sortedReactionItems = new SortedList<>(filteredReactionItems);
     private final Map<ReactionItem, ChangeListener<Number>> itemChangeListeners = new HashMap<>();
     private final ListChangeListener<ReactionItem> listChangeListener;
+    private final ToggleReaction toggleReaction;
 
-    public ActiveReactionsDisplayBox(Collection<ReactionItem> reactionItems) {
+    public ActiveReactionsDisplayBox(Collection<ReactionItem> reactionItems, ToggleReaction toggleReaction) {
         this.reactionItems.addAll(reactionItems);
+        this.toggleReaction = toggleReaction;
         listChangeListener = change -> updateItems();
         sortedReactionItems.setComparator(ReactionItem.firstAddedComparator());
         initialize();
@@ -81,7 +83,7 @@ public class ActiveReactionsDisplayBox extends HBox {
         UIThread.run(() -> {
             getChildren().clear();
             getChildren().addAll(sortedReactionItems.stream()
-                    .map(ActiveReactionMenuItem::new)
+                    .map(item -> new ActiveReactionMenuItem(item, toggleReaction))
                     .collect(Collectors.toList()));
         });
     }
@@ -89,14 +91,17 @@ public class ActiveReactionsDisplayBox extends HBox {
     @Getter
     private static final class ActiveReactionMenuItem extends BisqMenuItem {
         private ReactionItem reactionItem;
+        private ToggleReaction toggleReaction;
 
-        public ActiveReactionMenuItem(ReactionItem reactionItem) {
+        public ActiveReactionMenuItem(ReactionItem reactionItem, ToggleReaction toggleReaction) {
             this(reactionItem.getIconId());
 
             this.reactionItem = reactionItem;
+            this.toggleReaction = toggleReaction;
             setText(reactionItem.getCountAsString());
             setGraphicTextGap(4);
             addStyleClasses();
+            setOnAction(e -> toggleReaction.execute(reactionItem));
         }
 
         private ActiveReactionMenuItem(String iconId) {

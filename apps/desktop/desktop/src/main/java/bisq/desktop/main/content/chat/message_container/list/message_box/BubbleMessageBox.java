@@ -31,6 +31,7 @@ import bisq.desktop.components.controls.DropdownMenu;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
 import bisq.desktop.main.content.chat.message_container.list.reactions_box.ActiveReactionsDisplayBox;
+import bisq.desktop.main.content.chat.message_container.list.reactions_box.ToggleReaction;
 import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.i18n.Res;
 import javafx.css.PseudoClass;
@@ -213,8 +214,10 @@ public abstract class BubbleMessageBox extends MessageBox {
     }
 
     private ActiveReactionsDisplayBox createAndGetActiveReactionsDisplayBox() {
-        ActiveReactionsDisplayBox displayBox = new ActiveReactionsDisplayBox(item.getUserReactions().values());
-        return displayBox;
+        ToggleReaction toggleReactionFunction = reactionItem -> {
+            controller.onReactMessage(item.getChatMessage(), reactionItem.getReaction(), item.getChatChannel());
+        };
+        return new ActiveReactionsDisplayBox(item.getUserReactions().values(), toggleReactionFunction);
     }
 
     private Label createAndGetSupportedLanguagesLabel() {
