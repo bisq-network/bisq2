@@ -60,11 +60,9 @@ import com.google.common.base.Joiner;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.HBox;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -121,7 +119,6 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     // Reactions
     private Optional<Pin> userReactionsPin = Optional.empty();
     private final HashMap<Reaction, ReactionItem> userReactions = new HashMap<>();
-    private final SimpleObjectProperty<Node> reactionsNode = new SimpleObjectProperty<>();
 
     public ChatMessageListItem(M chatMessage,
                                C chatChannel,
@@ -293,26 +290,6 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                 .orElse("");
     }
 
-    private void setupDisplayReactionsNode() {
-        HBox reactions = new HBox(5);
-        reactions.setAlignment(Pos.BOTTOM_LEFT);
-        // TODO: order here should be defined by time when this was added
-        REACTION_DISPLAY_ORDER.forEach(reaction -> {
-            if (userReactions.containsKey(reaction) && !userReactions.get(reaction).getUsers().isEmpty()) {
-                reactions.getChildren().add(new Label("", ImageUtil.getImageViewById(reaction.toString().replace("_", "").toLowerCase())));
-            }
-        });
-        reactionsNode.set(reactions);
-    }
-
-    private void logReactionsCount() {
-//        StringBuilder reactionsCount = new StringBuilder("\n");
-//        REACTION_DISPLAY_ORDER.forEach(reaction ->
-//                reactionsCount.append(String.format("%s: %s\n", reaction,
-//                        userReactions.containsKey(reaction) ? userReactions.get(reaction).size() : 0)));
-//        log.info(reactionsCount.toString());
-    }
-
     private String getLocalizedOfferBookMessage(BisqEasyOfferbookMessage chatMessage) {
         BisqEasyOffer bisqEasyOffer = chatMessage.getBisqEasyOffer().orElseThrow();
         String btcPaymentMethods = PaymentMethodSpecFormatter.fromPaymentMethodSpecs(bisqEasyOffer.getBaseSidePaymentMethodSpecs());
@@ -422,9 +399,6 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                         }
                     });
                 }
-
-                setupDisplayReactionsNode();
-                logReactionsCount();
             }
 
             @Override
@@ -435,17 +409,11 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                     Optional<UserProfile> userProfile = userProfileService.findUserProfile(chatMessageReaction.getUserProfileId());
                     userProfile.ifPresent(profile -> userReactions.get(reaction).removeUser(profile));
                 }
-
-                setupDisplayReactionsNode();
-                logReactionsCount();
             }
 
             @Override
             public void clear() {
                 userReactions.clear();
-
-                setupDisplayReactionsNode();
-                logReactionsCount();
             }
         }));
     }

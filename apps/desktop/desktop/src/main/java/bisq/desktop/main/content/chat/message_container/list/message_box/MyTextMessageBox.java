@@ -95,7 +95,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         });
 
         editInputField.maxWidthProperty().bind(message.widthProperty());
-        messageHBox.getChildren().setAll(Spacer.fillHBox(), addedReactions, messageBgHBox);
+        messageHBox.getChildren().setAll(Spacer.fillHBox(), activeReactionsDisplayHBox, messageBgHBox);
         contentVBox.getChildren().setAll(userNameAndDateHBox, messageHBox, editButtonsHBox, actionsHBox);
     }
 

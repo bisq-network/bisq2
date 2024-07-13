@@ -22,23 +22,21 @@ import bisq.chat.reactions.PrivateChatMessageReaction;
 import bisq.chat.reactions.Reaction;
 import bisq.user.profile.UserProfile;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleStringProperty;
-import lombok.EqualsAndHashCode;
+import javafx.beans.property.SimpleIntegerProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
 
 @Slf4j
 @Getter
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class ReactionItem {
-    @EqualsAndHashCode.Include
     private final Reaction reaction;
     private final String iconId;
     private final long firstAdded = 0;
-    private final SimpleStringProperty count = new SimpleStringProperty();
+    private final SimpleIntegerProperty count = new SimpleIntegerProperty();
     private final SimpleBooleanProperty selected = new SimpleBooleanProperty(false);
     Set<UserProfile> users = new HashSet<>();
 
@@ -53,15 +51,19 @@ public class ReactionItem {
         }
 
         users.add(userProfile);
-        count.set(getCount());
+        count.set(users.size());
     }
 
     void removeUser(UserProfile userProfile) {
         users.remove(userProfile);
-        count.set(getCount());
+        count.set(users.size());
     }
 
-    private String getCount() {
+    public boolean hasActiveReactions() {
+        return !users.isEmpty();
+    }
+
+    public String getCountAsString() {
         long count = users.size();
         return count < 100 ? String.valueOf(count) : "+99";
     }
@@ -69,5 +71,9 @@ public class ReactionItem {
     private boolean hasReactionBeenRemoved(ChatMessageReaction chatMessageReaction) {
         return (chatMessageReaction instanceof PrivateChatMessageReaction
                 && ((PrivateChatMessageReaction) chatMessageReaction).isRemoved());
+    }
+
+    public static Comparator<ReactionItem> firstAddedComparator() {
+        return Comparator.comparing(ReactionItem::getFirstAdded);
     }
 }
