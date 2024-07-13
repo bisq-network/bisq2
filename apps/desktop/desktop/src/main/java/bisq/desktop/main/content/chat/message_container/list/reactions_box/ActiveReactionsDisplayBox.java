@@ -96,11 +96,20 @@ public class ActiveReactionsDisplayBox extends HBox {
             this.reactionItem = reactionItem;
             setText(reactionItem.getCountAsString());
             setGraphicTextGap(4);
-            getStyleClass().add("active-reaction-menu-item");
+            addStyleClasses();
         }
 
         private ActiveReactionMenuItem(String iconId) {
             super(iconId, iconId);
+        }
+
+        private void addStyleClasses() {
+            getStyleClass().add("active-reaction-menu-item");
+            if (reactionItem.getSelected().get()) {
+                getStyleClass().add("active-reaction-selected");
+            } else {
+                getStyleClass().remove("active-reaction-selected");
+            }
         }
     }
 }

@@ -36,7 +36,7 @@ public class ReactionItem {
     private final Reaction reaction;
     private final String iconId;
     private long firstAdded;
-    private final SimpleIntegerProperty count = new SimpleIntegerProperty();
+    private final SimpleIntegerProperty count = new SimpleIntegerProperty(0);
     private final SimpleBooleanProperty selected = new SimpleBooleanProperty(false);
     Set<UserProfile> users = new HashSet<>();
 
@@ -45,7 +45,7 @@ public class ReactionItem {
         this.iconId = reaction.toString().replace("_", "").toLowerCase();
     }
 
-    void addUser(ChatMessageReaction chatMessageReaction, UserProfile userProfile) {
+    void addUser(ChatMessageReaction chatMessageReaction, UserProfile userProfile, boolean isMyUser) {
         if (hasReactionBeenRemoved(chatMessageReaction)) {
             return;
         }
@@ -54,11 +54,13 @@ public class ReactionItem {
             firstAdded = chatMessageReaction.getDate();
         }
 
+        selected.set(isMyUser);
         users.add(userProfile);
         count.set(users.size());
     }
 
-    void removeUser(UserProfile userProfile) {
+    void removeUser(UserProfile userProfile, boolean isMyUser) {
+        selected.set(!isMyUser);
         users.remove(userProfile);
         count.set(users.size());
     }

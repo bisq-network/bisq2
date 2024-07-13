@@ -395,7 +395,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                     Optional<UserProfile> userProfile = userProfileService.findUserProfile(element.getUserProfileId());
                     userProfile.ifPresent(profile -> {
                         if (!userProfileService.isChatUserIgnored(profile)) {
-                            userReactions.get(reaction).addUser(element, profile);
+                            userReactions.get(reaction).addUser(element, profile, isMyUser(profile));
                         }
                     });
                 }
@@ -407,7 +407,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                 Reaction reaction = getReactionFromOrdinal(chatMessageReaction.getReactionId());
                 if (userReactions.containsKey(reaction)) {
                     Optional<UserProfile> userProfile = userProfileService.findUserProfile(chatMessageReaction.getUserProfileId());
-                    userProfile.ifPresent(profile -> userReactions.get(reaction).removeUser(profile));
+                    userProfile.ifPresent(profile -> userReactions.get(reaction).removeUser(profile, isMyUser(profile)));
                 }
             }
 
@@ -421,5 +421,10 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private static Reaction getReactionFromOrdinal(int ordinal) {
         checkArgument(ordinal >= 0 && ordinal < Reaction.values().length, "Invalid reaction id: " + ordinal);
         return Reaction.values()[ordinal];
+    }
+
+    private boolean isMyUser(UserProfile profile) {
+        UserProfile myProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
+        return myProfile.equals(profile);
     }
 }
