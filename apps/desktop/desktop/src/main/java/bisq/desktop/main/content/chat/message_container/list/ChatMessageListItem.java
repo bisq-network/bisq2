@@ -26,7 +26,6 @@ import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.priv.PrivateChatMessage;
 import bisq.chat.pub.PublicChatChannel;
 import bisq.chat.reactions.ChatMessageReaction;
-import bisq.chat.reactions.PrivateChatMessageReaction;
 import bisq.chat.reactions.Reaction;
 import bisq.common.locale.LanguageRepository;
 import bisq.common.observable.Observable;
@@ -106,6 +105,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     @Nullable
     private String messageId;
     private final MarketPriceService marketPriceService;
+    private final UserProfileService userProfileService;
     private final UserIdentityService userIdentityService;
     private final BooleanProperty showHighlighted = new SimpleBooleanProperty();
 
@@ -121,7 +121,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
 
     // Reactions
     private Optional<Pin> userReactionsPin = Optional.empty();
-    private final HashMap<Reaction, Set<UserProfile>> userReactions = new HashMap<>();
+    private final HashMap<Reaction, ReactionItem> userReactions = new HashMap<>();
     private final SimpleObjectProperty<Node> reactionsNode = new SimpleObjectProperty<>();
 
     public ChatMessageListItem(M chatMessage,
@@ -136,11 +136,12 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         this.chatMessage = chatMessage;
         this.chatChannel = chatChannel;
         this.marketPriceService = marketPriceService;
+        this.userProfileService = userProfileService;
         this.userIdentityService = userIdentityService;
         this.resendMessageService = resendMessageService;
 
         if (chatMessage instanceof PrivateChatMessage) {
-            senderUserProfile = Optional.of(((PrivateChatMessage) chatMessage).getSenderUserProfile());
+            senderUserProfile = Optional.of(((PrivateChatMessage<?>) chatMessage).getSenderUserProfile());
         } else {
             senderUserProfile = userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId());
         }
@@ -179,64 +180,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
 
         // TODO: Release all the listeners when destroying this object
 
-        if (chatMessage.canShowReactions()) {
-            userReactionsPin = Optional.ofNullable(chatMessage.getChatMessageReactions().addObserver(new CollectionObserver<>() {
-                @Override
-                public void add(ChatMessageReaction element) {
-                    int reactionIdx = element.getReactionId();
-                    checkArgument(reactionIdx >= 0 && reactionIdx < Reaction.values().length, "Invalid reaction id: " + reactionIdx);
-
-                    if (element instanceof PrivateChatMessageReaction && ((PrivateChatMessageReaction) element).isRemoved()) {
-                        return;
-                    }
-
-                    // TODO: Add tooltip with user nickname, label with count, etc
-                    Reaction reaction = Reaction.values()[reactionIdx];
-                    Optional<UserProfile> userProfile = userProfileService.findUserProfile(element.getUserProfileId());
-                    userProfile.ifPresent(profile -> {
-                        if (!userReactions.containsKey(reaction)) {
-                            userReactions.put(reaction, new HashSet<>());
-                        }
-                        userReactions.get(reaction).add(profile);
-                        log.info("{} reacted with {}", profile.getNickName(), reaction);
-                    });
-
-                    setupDisplayReactionsNode();
-                    logReactionsCount();
-                }
-
-                @Override
-                public void remove(Object element) {
-                    ChatMessageReaction chatMessageReaction = (ChatMessageReaction) element;
-                    int reactionIdx = chatMessageReaction.getReactionId();
-                    checkArgument(reactionIdx >= 0 && reactionIdx < Reaction.values().length, "Invalid reaction id: " + reactionIdx);
-
-                    Reaction reaction = Reaction.values()[reactionIdx];
-                    Optional<UserProfile> userProfile = userProfileService.findUserProfile(chatMessageReaction.getUserProfileId());
-                    userProfile.ifPresent(profile -> {
-                        if (userReactions.containsKey(reaction)) {
-                            userReactions.get(reaction).remove(profile);
-                        }
-                        if (userReactions.containsKey(reaction) && userReactions.get(reaction).isEmpty()) {
-                            userReactions.remove(reaction);
-                        }
-                        log.info("{} removed reaction {}", profile.getNickName(), reaction);
-                    });
-
-                    setupDisplayReactionsNode();
-                    logReactionsCount();
-                }
-
-                @Override
-                public void clear() {
-                    userReactions.clear();
-                    log.info("Clearing reactions");
-
-                    setupDisplayReactionsNode();
-                    logReactionsCount();
-                }
-            }));
-        }
+        createAndSubscribeUserReactions();
 
         successfulDeliveryIcon = ImageUtil.getImageViewById("received-check-grey");
         pendingDeliveryIcon = ImageUtil.getImageViewById("sent-message-grey");
@@ -349,12 +293,15 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     }
 
     public boolean hasAddedReaction(Reaction reaction) {
+        boolean hasAddedReaction = false;
         if (getUserReactions().containsKey(reaction)) {
-            Set<UserProfile> userProfileSet = getUserReactions().get(reaction);
+            ReactionItem reactionItem = getUserReactions().get(reaction);
+            Set<UserProfile> userProfileSet = reactionItem.getUsers();
             UserProfile myProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
-            return userProfileSet.contains(myProfile);
+            hasAddedReaction = userProfileSet.contains(myProfile);
+            reactionItem.getSelected().set(hasAddedReaction);
         }
-        return false;
+        return hasAddedReaction;
     }
 
     private boolean hasBisqEasyOfferWithDirection(Direction direction) {
@@ -382,7 +329,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         reactions.setAlignment(Pos.BOTTOM_LEFT);
         // TODO: order here should be defined by time when this was added
         REACTION_DISPLAY_ORDER.forEach(reaction -> {
-            if (userReactions.containsKey(reaction)) {
+            if (userReactions.containsKey(reaction) && !userReactions.get(reaction).getUsers().isEmpty()) {
                 reactions.getChildren().add(new Label("", ImageUtil.getImageViewById(reaction.toString().replace("_", "").toLowerCase())));
             }
         });
@@ -448,5 +395,59 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                 });
             }));
         });
+    }
+
+    private void createAndSubscribeUserReactions() {
+        if (!chatMessage.canShowReactions()) {
+            return;
+        }
+
+        // Create all the ReactionItems
+        Arrays.stream(Reaction.values()).forEach(reaction -> userReactions.put(reaction, new ReactionItem(reaction)));
+
+        // Subscribe to changes
+        userReactionsPin = Optional.ofNullable(chatMessage.getChatMessageReactions().addObserver(new CollectionObserver<>() {
+            @Override
+            public void add(ChatMessageReaction element) {
+                Reaction reaction = getReactionFromOrdinal(element.getReactionId());
+                if (userReactions.containsKey(reaction)) {
+                    Optional<UserProfile> userProfile = userProfileService.findUserProfile(element.getUserProfileId());
+                    userProfile.ifPresent(profile -> {
+                        if (!userProfileService.isChatUserIgnored(profile)) {
+                            userReactions.get(reaction).addUser(element, profile);
+                        }
+                    });
+                }
+
+                setupDisplayReactionsNode();
+                logReactionsCount();
+            }
+
+            @Override
+            public void remove(Object element) {
+                ChatMessageReaction chatMessageReaction = (ChatMessageReaction) element;
+                Reaction reaction = getReactionFromOrdinal(chatMessageReaction.getReactionId());
+                if (userReactions.containsKey(reaction)) {
+                    Optional<UserProfile> userProfile = userProfileService.findUserProfile(chatMessageReaction.getUserProfileId());
+                    userProfile.ifPresent(profile -> userReactions.get(reaction).removeUser(profile));
+                }
+
+                setupDisplayReactionsNode();
+                logReactionsCount();
+            }
+
+            @Override
+            public void clear() {
+                userReactions.clear();
+
+                setupDisplayReactionsNode();
+                logReactionsCount();
+            }
+        }));
+    }
+
+    private static Reaction getReactionFromOrdinal(int ordinal) {
+        checkArgument(ordinal >= 0 && ordinal < Reaction.values().length, "Invalid reaction id: " + ordinal);
+        return Reaction.values()[ordinal];
     }
 }
