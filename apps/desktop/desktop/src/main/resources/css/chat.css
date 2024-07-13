@@ -542,10 +542,7 @@
  * Reactions                                                                   *
  ******************************************************************************/
 
-.reaction-menu-item:selected {
-    -fx-background-color: -bisq-mid-grey-10 !important;
-}
-
+.reaction-menu-item:selected,
 .button.bisq-menu-item.reaction-menu-item.icon-only:hover,
 .button.bisq-menu-item.active-reaction-menu-item:hover{
     -fx-background-color: -bisq-mid-grey-10 !important;
