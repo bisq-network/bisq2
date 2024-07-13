@@ -553,3 +553,19 @@
 .chat-message-content-box .drawer-menu-items {
     -fx-spacing: 4;
 }
+
+/* Active Reactions Display */
+
+.active-reactions-display-box {
+    -fx-spacing: 5;
+    -fx-alignment: bottom-center;
+}
+
+.button.bisq-menu-item.active-reaction-menu-item {
+    -fx-font-size: 10;
+    -fx-text-fill: -bisq-white;
+    -fx-font-family: "IBM Plex Sans SemiBold";
+    -fx-background-color: -bisq-dark-grey-40;
+    -fx-background-radius: 15;
+    -fx-padding: 5;
+}

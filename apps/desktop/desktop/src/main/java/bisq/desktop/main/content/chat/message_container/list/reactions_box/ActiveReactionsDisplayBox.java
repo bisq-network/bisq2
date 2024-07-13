@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.chat.message_container.list.reactions_box;
 
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.main.content.chat.message_container.list.ReactionItem;
 import javafx.beans.value.ChangeListener;
@@ -46,6 +47,7 @@ public class ActiveReactionsDisplayBox extends HBox {
         sortedReactionItems.setComparator(ReactionItem.firstAddedComparator());
         initialize();
         updateItems();
+        getStyleClass().add("active-reactions-display-box");
     }
 
     private void initialize() {
@@ -76,10 +78,12 @@ public class ActiveReactionsDisplayBox extends HBox {
     }
 
     private void updateItems() {
-        getChildren().clear();
-        getChildren().addAll(sortedReactionItems.stream()
-                .map(ActiveReactionMenuItem::new)
-                .collect(Collectors.toList()));
+        UIThread.run(() -> {
+            getChildren().clear();
+            getChildren().addAll(sortedReactionItems.stream()
+                    .map(ActiveReactionMenuItem::new)
+                    .collect(Collectors.toList()));
+        });
     }
 
     @Getter
@@ -90,6 +94,8 @@ public class ActiveReactionsDisplayBox extends HBox {
             this(reactionItem.getIconId());
 
             this.reactionItem = reactionItem;
+            setText(reactionItem.getCountAsString());
+            setGraphicTextGap(4);
             getStyleClass().add("active-reaction-menu-item");
         }
 

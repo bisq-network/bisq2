@@ -69,6 +69,9 @@ public class ReactionItem {
 
     public String getCountAsString() {
         long count = users.size();
+        if (count == 1) {
+            return "";
+        }
         return count < 100 ? String.valueOf(count) : "+99";
     }
 
