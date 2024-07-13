@@ -105,19 +105,18 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     @Nullable
     private String messageId;
     private final MarketPriceService marketPriceService;
-    private final UserProfileService userProfileService;
     private final UserIdentityService userIdentityService;
     private final BooleanProperty showHighlighted = new SimpleBooleanProperty();
 
     // Delivery status
-    private Optional<ResendMessageService> resendMessageService;
     private final Set<Pin> mapPins = new HashSet<>();
     private final Set<Pin> statusPins = new HashSet<>();
     private final BooleanProperty shouldShowTryAgain = new SimpleBooleanProperty();
     private final BooleanProperty hasFailedDeliveryStatus = new SimpleBooleanProperty();
-    private final ImageView successfulDeliveryIcon, pendingDeliveryIcon, addedToMailboxIcon, failedDeliveryIcon;
-    private final BisqMenuItem tryAgainMenuItem;
     private final SimpleObjectProperty<Node> messageDeliveryStatusNode = new SimpleObjectProperty<>();
+    private Optional<ResendMessageService> resendMessageService;
+    private ImageView successfulDeliveryIcon, pendingDeliveryIcon, addedToMailboxIcon, failedDeliveryIcon;
+    private BisqMenuItem tryAgainMenuItem;
 
     // Reactions
     private Optional<Pin> userReactionsPin = Optional.empty();
@@ -136,7 +135,6 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         this.chatMessage = chatMessage;
         this.chatChannel = chatChannel;
         this.marketPriceService = marketPriceService;
-        this.userProfileService = userProfileService;
         this.userIdentityService = userIdentityService;
         this.resendMessageService = resendMessageService;
 
@@ -179,38 +177,9 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         lastSeenAsString = TimeFormatter.formatAge(lastSeen);
 
         // TODO: Release all the listeners when destroying this object
-
-        createAndSubscribeUserReactions();
-
-        successfulDeliveryIcon = ImageUtil.getImageViewById("received-check-grey");
-        pendingDeliveryIcon = ImageUtil.getImageViewById("sent-message-grey");
-        addedToMailboxIcon = ImageUtil.getImageViewById("mailbox-grey");
-        failedDeliveryIcon = ImageUtil.getImageViewById("undelivered-message-yellow");
-        tryAgainMenuItem = new BisqMenuItem("try-again-grey", "try-again-white");
-        tryAgainMenuItem.useIconOnly(22);
-        tryAgainMenuItem.setTooltip(new BisqTooltip(Res.get("chat.message.resendMessage")));
-
-        mapPins.add(networkService.getMessageDeliveryStatusByMessageId().addObserver(new HashMapObserver<>() {
-            @Override
-            public void put(String messageId, Observable<MessageDeliveryStatus> value) {
-                if (messageId.equals(chatMessage.getId())) {
-                    updateMessageStatus(messageId, value);
-                }
-            }
-
-            @Override
-            public void putAll(Map<? extends String, ? extends Observable<MessageDeliveryStatus>> map) {
-                map.forEach(this::put);
-            }
-
-            @Override
-            public void remove(Object key) {
-            }
-
-            @Override
-            public void clear() {
-            }
-        }));
+        createAndAddSubscriptionToUserReactions(userProfileService);
+        initializeDeliveryStatusIcons();
+        addSubscriptionToMessageDeliveryStatus(networkService);
     }
 
     @Override
@@ -356,6 +325,41 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                 bisqEasyOffer.getPriceSpec());
     }
 
+    private void initializeDeliveryStatusIcons() {
+        successfulDeliveryIcon = ImageUtil.getImageViewById("received-check-grey");
+        pendingDeliveryIcon = ImageUtil.getImageViewById("sent-message-grey");
+        addedToMailboxIcon = ImageUtil.getImageViewById("mailbox-grey");
+        failedDeliveryIcon = ImageUtil.getImageViewById("undelivered-message-yellow");
+        tryAgainMenuItem = new BisqMenuItem("try-again-grey", "try-again-white");
+        tryAgainMenuItem.useIconOnly(22);
+        tryAgainMenuItem.setTooltip(new BisqTooltip(Res.get("chat.message.resendMessage")));
+    }
+
+    private void addSubscriptionToMessageDeliveryStatus(NetworkService networkService) {
+        mapPins.add(networkService.getMessageDeliveryStatusByMessageId().addObserver(new HashMapObserver<>() {
+            @Override
+            public void put(String messageId, Observable<MessageDeliveryStatus> value) {
+                if (messageId.equals(chatMessage.getId())) {
+                    updateMessageStatus(messageId, value);
+                }
+            }
+
+            @Override
+            public void putAll(Map<? extends String, ? extends Observable<MessageDeliveryStatus>> map) {
+                map.forEach(this::put);
+            }
+
+            @Override
+            public void remove(Object key) {
+            }
+
+            @Override
+            public void clear() {
+            }
+        }));
+
+    }
+
     private void updateMessageStatus(String messageId, Observable<MessageDeliveryStatus> value) {
         // Delay to avoid ConcurrentModificationException
         UIThread.runOnNextRenderFrame(() -> {
@@ -397,7 +401,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         });
     }
 
-    private void createAndSubscribeUserReactions() {
+    private void createAndAddSubscriptionToUserReactions(UserProfileService userProfileService) {
         if (!chatMessage.canShowReactions()) {
             return;
         }
