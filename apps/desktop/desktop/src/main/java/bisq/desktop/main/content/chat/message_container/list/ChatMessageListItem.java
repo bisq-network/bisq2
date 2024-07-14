@@ -26,7 +26,6 @@ import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.priv.PrivateChatMessage;
 import bisq.chat.pub.PublicChatChannel;
 import bisq.chat.reactions.ChatMessageReaction;
-import bisq.chat.reactions.PrivateChatMessageReaction;
 import bisq.chat.reactions.Reaction;
 import bisq.common.locale.LanguageRepository;
 import bisq.common.observable.Observable;
@@ -61,11 +60,9 @@ import com.google.common.base.Joiner;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.HBox;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -110,19 +107,18 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private final BooleanProperty showHighlighted = new SimpleBooleanProperty();
 
     // Delivery status
-    private Optional<ResendMessageService> resendMessageService;
     private final Set<Pin> mapPins = new HashSet<>();
     private final Set<Pin> statusPins = new HashSet<>();
     private final BooleanProperty shouldShowTryAgain = new SimpleBooleanProperty();
     private final BooleanProperty hasFailedDeliveryStatus = new SimpleBooleanProperty();
-    private final ImageView successfulDeliveryIcon, pendingDeliveryIcon, addedToMailboxIcon, failedDeliveryIcon;
-    private final BisqMenuItem tryAgainMenuItem;
     private final SimpleObjectProperty<Node> messageDeliveryStatusNode = new SimpleObjectProperty<>();
+    private Optional<ResendMessageService> resendMessageService;
+    private ImageView successfulDeliveryIcon, pendingDeliveryIcon, addedToMailboxIcon, failedDeliveryIcon;
+    private BisqMenuItem tryAgainMenuItem;
 
     // Reactions
     private Optional<Pin> userReactionsPin = Optional.empty();
-    private final HashMap<Reaction, Set<UserProfile>> userReactions = new HashMap<>();
-    private final SimpleObjectProperty<Node> reactionsNode = new SimpleObjectProperty<>();
+    private final HashMap<Reaction, ReactionItem> userReactions = new HashMap<>();
 
     public ChatMessageListItem(M chatMessage,
                                C chatChannel,
@@ -140,7 +136,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         this.resendMessageService = resendMessageService;
 
         if (chatMessage instanceof PrivateChatMessage) {
-            senderUserProfile = Optional.of(((PrivateChatMessage) chatMessage).getSenderUserProfile());
+            senderUserProfile = Optional.of(((PrivateChatMessage<?>) chatMessage).getSenderUserProfile());
         } else {
             senderUserProfile = userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId());
         }
@@ -178,95 +174,9 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         lastSeenAsString = TimeFormatter.formatAge(lastSeen);
 
         // TODO: Release all the listeners when destroying this object
-
-        if (chatMessage.canShowReactions()) {
-            userReactionsPin = Optional.ofNullable(chatMessage.getChatMessageReactions().addObserver(new CollectionObserver<>() {
-                @Override
-                public void add(ChatMessageReaction element) {
-                    int reactionIdx = element.getReactionId();
-                    checkArgument(reactionIdx >= 0 && reactionIdx < Reaction.values().length, "Invalid reaction id: " + reactionIdx);
-
-                    if (element instanceof PrivateChatMessageReaction && ((PrivateChatMessageReaction) element).isRemoved()) {
-                        return;
-                    }
-
-                    // TODO: Add tooltip with user nickname, label with count, etc
-                    Reaction reaction = Reaction.values()[reactionIdx];
-                    Optional<UserProfile> userProfile = userProfileService.findUserProfile(element.getUserProfileId());
-                    userProfile.ifPresent(profile -> {
-                        if (!userReactions.containsKey(reaction)) {
-                            userReactions.put(reaction, new HashSet<>());
-                        }
-                        userReactions.get(reaction).add(profile);
-                        log.info("{} reacted with {}", profile.getNickName(), reaction);
-                    });
-
-                    setupDisplayReactionsNode();
-                    logReactionsCount();
-                }
-
-                @Override
-                public void remove(Object element) {
-                    ChatMessageReaction chatMessageReaction = (ChatMessageReaction) element;
-                    int reactionIdx = chatMessageReaction.getReactionId();
-                    checkArgument(reactionIdx >= 0 && reactionIdx < Reaction.values().length, "Invalid reaction id: " + reactionIdx);
-
-                    Reaction reaction = Reaction.values()[reactionIdx];
-                    Optional<UserProfile> userProfile = userProfileService.findUserProfile(chatMessageReaction.getUserProfileId());
-                    userProfile.ifPresent(profile -> {
-                        if (userReactions.containsKey(reaction)) {
-                            userReactions.get(reaction).remove(profile);
-                        }
-                        if (userReactions.containsKey(reaction) && userReactions.get(reaction).isEmpty()) {
-                            userReactions.remove(reaction);
-                        }
-                        log.info("{} removed reaction {}", profile.getNickName(), reaction);
-                    });
-
-                    setupDisplayReactionsNode();
-                    logReactionsCount();
-                }
-
-                @Override
-                public void clear() {
-                    userReactions.clear();
-                    log.info("Clearing reactions");
-
-                    setupDisplayReactionsNode();
-                    logReactionsCount();
-                }
-            }));
-        }
-
-        successfulDeliveryIcon = ImageUtil.getImageViewById("received-check-grey");
-        pendingDeliveryIcon = ImageUtil.getImageViewById("sent-message-grey");
-        addedToMailboxIcon = ImageUtil.getImageViewById("mailbox-grey");
-        failedDeliveryIcon = ImageUtil.getImageViewById("undelivered-message-yellow");
-        tryAgainMenuItem = new BisqMenuItem("try-again-grey", "try-again-white");
-        tryAgainMenuItem.useIconOnly(22);
-        tryAgainMenuItem.setTooltip(new BisqTooltip(Res.get("chat.message.resendMessage")));
-
-        mapPins.add(networkService.getMessageDeliveryStatusByMessageId().addObserver(new HashMapObserver<>() {
-            @Override
-            public void put(String messageId, Observable<MessageDeliveryStatus> value) {
-                if (messageId.equals(chatMessage.getId())) {
-                    updateMessageStatus(messageId, value);
-                }
-            }
-
-            @Override
-            public void putAll(Map<? extends String, ? extends Observable<MessageDeliveryStatus>> map) {
-                map.forEach(this::put);
-            }
-
-            @Override
-            public void remove(Object key) {
-            }
-
-            @Override
-            public void clear() {
-            }
-        }));
+        createAndAddSubscriptionToUserReactions(userProfileService);
+        initializeDeliveryStatusIcons();
+        addSubscriptionToMessageDeliveryStatus(networkService);
     }
 
     @Override
@@ -349,12 +259,15 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     }
 
     public boolean hasAddedReaction(Reaction reaction) {
+        boolean hasAddedReaction = false;
         if (getUserReactions().containsKey(reaction)) {
-            Set<UserProfile> userProfileSet = getUserReactions().get(reaction);
+            ReactionItem reactionItem = getUserReactions().get(reaction);
+            Set<UserProfile> userProfileSet = reactionItem.getUsers();
             UserProfile myProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
-            return userProfileSet.contains(myProfile);
+            hasAddedReaction = userProfileSet.contains(myProfile);
+            reactionItem.getSelected().set(hasAddedReaction);
         }
-        return false;
+        return hasAddedReaction;
     }
 
     private boolean hasBisqEasyOfferWithDirection(Direction direction) {
@@ -377,26 +290,6 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                 .orElse("");
     }
 
-    private void setupDisplayReactionsNode() {
-        HBox reactions = new HBox(5);
-        reactions.setAlignment(Pos.BOTTOM_LEFT);
-        // TODO: order here should be defined by time when this was added
-        REACTION_DISPLAY_ORDER.forEach(reaction -> {
-            if (userReactions.containsKey(reaction)) {
-                reactions.getChildren().add(new Label("", ImageUtil.getImageViewById(reaction.toString().replace("_", "").toLowerCase())));
-            }
-        });
-        reactionsNode.set(reactions);
-    }
-
-    private void logReactionsCount() {
-//        StringBuilder reactionsCount = new StringBuilder("\n");
-//        REACTION_DISPLAY_ORDER.forEach(reaction ->
-//                reactionsCount.append(String.format("%s: %s\n", reaction,
-//                        userReactions.containsKey(reaction) ? userReactions.get(reaction).size() : 0)));
-//        log.info(reactionsCount.toString());
-    }
-
     private String getLocalizedOfferBookMessage(BisqEasyOfferbookMessage chatMessage) {
         BisqEasyOffer bisqEasyOffer = chatMessage.getBisqEasyOffer().orElseThrow();
         String btcPaymentMethods = PaymentMethodSpecFormatter.fromPaymentMethodSpecs(bisqEasyOffer.getBaseSidePaymentMethodSpecs());
@@ -407,6 +300,41 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                 fiatPaymentMethods,
                 bisqEasyOffer.getAmountSpec(),
                 bisqEasyOffer.getPriceSpec());
+    }
+
+    private void initializeDeliveryStatusIcons() {
+        successfulDeliveryIcon = ImageUtil.getImageViewById("received-check-grey");
+        pendingDeliveryIcon = ImageUtil.getImageViewById("sent-message-grey");
+        addedToMailboxIcon = ImageUtil.getImageViewById("mailbox-grey");
+        failedDeliveryIcon = ImageUtil.getImageViewById("undelivered-message-yellow");
+        tryAgainMenuItem = new BisqMenuItem("try-again-grey", "try-again-white");
+        tryAgainMenuItem.useIconOnly(22);
+        tryAgainMenuItem.setTooltip(new BisqTooltip(Res.get("chat.message.resendMessage")));
+    }
+
+    private void addSubscriptionToMessageDeliveryStatus(NetworkService networkService) {
+        mapPins.add(networkService.getMessageDeliveryStatusByMessageId().addObserver(new HashMapObserver<>() {
+            @Override
+            public void put(String messageId, Observable<MessageDeliveryStatus> value) {
+                if (messageId.equals(chatMessage.getId())) {
+                    updateMessageStatus(messageId, value);
+                }
+            }
+
+            @Override
+            public void putAll(Map<? extends String, ? extends Observable<MessageDeliveryStatus>> map) {
+                map.forEach(this::put);
+            }
+
+            @Override
+            public void remove(Object key) {
+            }
+
+            @Override
+            public void clear() {
+            }
+        }));
+
     }
 
     private void updateMessageStatus(String messageId, Observable<MessageDeliveryStatus> value) {
@@ -448,5 +376,55 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                 });
             }));
         });
+    }
+
+    private void createAndAddSubscriptionToUserReactions(UserProfileService userProfileService) {
+        if (!chatMessage.canShowReactions()) {
+            return;
+        }
+
+        // Create all the ReactionItems
+        Arrays.stream(Reaction.values()).forEach(reaction -> userReactions.put(reaction, new ReactionItem(reaction)));
+
+        // Subscribe to changes
+        userReactionsPin = Optional.ofNullable(chatMessage.getChatMessageReactions().addObserver(new CollectionObserver<>() {
+            @Override
+            public void add(ChatMessageReaction element) {
+                Reaction reaction = getReactionFromOrdinal(element.getReactionId());
+                if (userReactions.containsKey(reaction)) {
+                    Optional<UserProfile> userProfile = userProfileService.findUserProfile(element.getUserProfileId());
+                    userProfile.ifPresent(profile -> {
+                        if (!userProfileService.isChatUserIgnored(profile)) {
+                            userReactions.get(reaction).addUser(element, profile, isMyUser(profile));
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void remove(Object element) {
+                ChatMessageReaction chatMessageReaction = (ChatMessageReaction) element;
+                Reaction reaction = getReactionFromOrdinal(chatMessageReaction.getReactionId());
+                if (userReactions.containsKey(reaction)) {
+                    Optional<UserProfile> userProfile = userProfileService.findUserProfile(chatMessageReaction.getUserProfileId());
+                    userProfile.ifPresent(profile -> userReactions.get(reaction).removeUser(profile, isMyUser(profile)));
+                }
+            }
+
+            @Override
+            public void clear() {
+                userReactions.clear();
+            }
+        }));
+    }
+
+    private static Reaction getReactionFromOrdinal(int ordinal) {
+        checkArgument(ordinal >= 0 && ordinal < Reaction.values().length, "Invalid reaction id: " + ordinal);
+        return Reaction.values()[ordinal];
+    }
+
+    private boolean isMyUser(UserProfile profile) {
+        UserProfile myProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
+        return myProfile.equals(profile);
     }
 }

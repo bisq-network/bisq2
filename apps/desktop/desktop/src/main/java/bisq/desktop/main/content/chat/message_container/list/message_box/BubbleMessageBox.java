@@ -22,7 +22,6 @@ import bisq.chat.ChatMessage;
 import bisq.chat.Citation;
 import bisq.chat.bisqeasy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.reactions.Reaction;
-import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqMenuItem;
@@ -31,6 +30,8 @@ import bisq.desktop.components.controls.DrawerMenu;
 import bisq.desktop.components.controls.DropdownMenu;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
+import bisq.desktop.main.content.chat.message_container.list.reactions_box.ActiveReactionsDisplayBox;
+import bisq.desktop.main.content.chat.message_container.list.reactions_box.ToggleReaction;
 import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.i18n.Res;
 import javafx.css.PseudoClass;
@@ -61,13 +62,13 @@ public abstract class BubbleMessageBox extends MessageBox {
     private static final List<Reaction> REACTIONS = Arrays.asList(Reaction.THUMBS_UP, Reaction.THUMBS_DOWN, Reaction.HAPPY,
             Reaction.LAUGH, Reaction.HEART, Reaction.PARTY);
 
-    private final Subscription showHighlightedPin, reactionsPin, hasFailedDeliveryStatusPin;
+    private final Subscription showHighlightedPin, hasFailedDeliveryStatusPin;
     protected final ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item;
     protected final ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list;
     protected final ChatMessagesListController controller;
     protected final UserProfileIcon userProfileIcon = new UserProfileIcon(60);
     protected final HBox actionsHBox = new HBox(5);
-    protected final HBox addedReactions = new HBox();
+    protected final ActiveReactionsDisplayBox activeReactionsDisplayHBox;
     protected final VBox quotedMessageVBox, contentVBox;
     protected final BisqMenuItem deleteAction = new BisqMenuItem("delete-t-grey", "delete-t-red");
     protected DrawerMenu reactMenu;
@@ -92,6 +93,7 @@ public abstract class BubbleMessageBox extends MessageBox {
         addActionsHandlers();
         addOnMouseEventHandlers();
 
+        activeReactionsDisplayHBox = createAndGetActiveReactionsDisplayBox();
         supportedLanguages = createAndGetSupportedLanguagesLabel();
         quotedMessageVBox = createAndGetQuotedMessageVBox();
         handleQuoteMessageBox();
@@ -113,12 +115,6 @@ public abstract class BubbleMessageBox extends MessageBox {
                 messageBgHBox.getStyleClass().add(HIGHLIGHTED_MESSAGE_BG_STYLE_CLASS);
             } else {
                 messageBgHBox.getStyleClass().remove(HIGHLIGHTED_MESSAGE_BG_STYLE_CLASS);
-            }
-        });
-
-        reactionsPin = EasyBind.subscribe(item.getReactionsNode(), node -> {
-            if (node != null) {
-                UIThread.run(() -> addedReactions.getChildren().setAll(node));
             }
         });
 
@@ -194,9 +190,10 @@ public abstract class BubbleMessageBox extends MessageBox {
         reactionMenuItems.forEach(menuItem -> menuItem.setOnAction(null));
 
         showHighlightedPin.unsubscribe();
-        reactionsPin.unsubscribe();
         reactMenuPin.unsubscribe();
         hasFailedDeliveryStatusPin.unsubscribe();
+
+        activeReactionsDisplayHBox.dispose();
     }
 
     private void showDateTimeAndActionsMenu(boolean shouldShow) {
@@ -214,6 +211,13 @@ public abstract class BubbleMessageBox extends MessageBox {
                 actionsHBox.setVisible(false);
             }
         }
+    }
+
+    private ActiveReactionsDisplayBox createAndGetActiveReactionsDisplayBox() {
+        ToggleReaction toggleReactionFunction = reactionItem -> {
+            controller.onReactMessage(item.getChatMessage(), reactionItem.getReaction(), item.getChatChannel());
+        };
+        return new ActiveReactionsDisplayBox(item.getUserReactions().values(), toggleReactionFunction);
     }
 
     private Label createAndGetSupportedLanguagesLabel() {

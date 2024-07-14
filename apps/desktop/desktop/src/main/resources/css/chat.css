@@ -542,14 +542,33 @@
  * Reactions                                                                   *
  ******************************************************************************/
 
-.reaction-menu-item:selected {
-    -fx-background-color: -bisq-mid-grey-10 !important;
-}
-
-.button.bisq-menu-item.reaction-menu-item.icon-only:hover {
+.reaction-menu-item:selected,
+.button.bisq-menu-item.reaction-menu-item.icon-only:hover,
+.button.bisq-menu-item.active-reaction-menu-item:hover{
     -fx-background-color: -bisq-mid-grey-10 !important;
 }
 
 .chat-message-content-box .drawer-menu-items {
     -fx-spacing: 4;
+}
+
+.active-reactions-display-box {
+    -fx-spacing: 5;
+    -fx-alignment: bottom-center;
+}
+
+.button.bisq-menu-item.active-reaction-menu-item {
+    -fx-font-size: 10;
+    -fx-text-fill: -bisq-white;
+    -fx-font-family: "IBM Plex Sans SemiBold";
+    -fx-background-color: -bisq-dark-grey-40;
+    -fx-background-radius: 15;
+    -fx-padding: 6;
+}
+
+.button.bisq-menu-item.active-reaction-menu-item.active-reaction-selected {
+    -fx-border-width: 1px;
+    -fx-border-color: -bisq-mid-grey-20;
+    -fx-border-radius: 15;
+    -fx-padding: 5 !important;
 }
