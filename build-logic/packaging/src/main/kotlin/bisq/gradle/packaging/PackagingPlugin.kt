@@ -42,8 +42,14 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
 
         project.tasks.register<JPackageTask>("generateInstallers") {
             val webcamProject = project.parent?.childProjects?.filter { e -> e.key == "webcam" }?.map { e -> e.value.project }?.first()
-            webcamProject?.let {
-                dependsOn(it.tasks.named("processWebcamForDesktop"))
+            webcamProject?.let { webcam ->
+                val desktopProject = project.parent?.childProjects?.filter { e -> e.key == "desktop" }?.map { e -> e.value.project }?.first()
+                desktopProject?.let { desktop ->
+                    val processResourcesInDesktop = desktop.tasks.named("processResources")
+                    val processWebcamForDesktopProvider = webcam.tasks.named("processWebcamForDesktop")
+                    processResourcesInDesktop.get().dependsOn(processWebcamForDesktopProvider)
+                    dependsOn(processWebcamForDesktopProvider)
+                }
             }
 
             dependsOn(generateHashesTask)
@@ -106,9 +112,15 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
 
     private fun getJavaLanguageVersion(extension: PackagingPluginExtension): Provider<JavaLanguageVersion> {
         val javaVersion = extension.name.map { appName ->
-            if (appName == "Bisq" && getOS() == OS.MAC_OS) {
-                15
+            if (appName == "Bisq") {
+                // Bisq1
+                if (getOS() == OS.MAC_OS) {
+                    15
+                } else {
+                    17
+                }
             } else {
+                // Bisq2
                 17
             }
         }
