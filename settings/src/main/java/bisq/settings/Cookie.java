@@ -17,12 +17,14 @@
 
 package bisq.settings;
 
+import bisq.common.data.Pair;
 import bisq.common.proto.PersistableProto;
 import bisq.settings.protobuf.CookieMapEntry;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -66,12 +68,20 @@ public final class Cookie implements PersistableProto {
     static Cookie fromProto(bisq.settings.protobuf.Cookie proto) {
         try {
             return new Cookie(proto.getCookieMapEntriesList().stream()
-                    .collect(Collectors.toMap(
-                            entry -> {
-                                Optional<String> subKey = entry.hasSubKey() ? Optional.of(entry.getSubKey()) : Optional.empty();
-                                return CookieMapKey.fromProto(entry.getKey(), subKey);
-                            },
-                            CookieMapEntry::getValue)));
+                    .map(entry -> {
+                        try {
+                            Optional<String> subKey = entry.hasSubKey() ? Optional.of(entry.getSubKey()) : Optional.empty();
+                            // CookieMapKey.fromProto might fail...if so we ignore it
+                            CookieMapKey cookieMapKey = CookieMapKey.fromProto(entry.getKey(), subKey);
+                            String value = entry.getValue();
+                            return new Pair<>(cookieMapKey, value);
+                        } catch (Exception e) {
+                            log.warn("CookieMapKey could not be resolved. We ignore the entry.", e);
+                            return null;
+                        }
+                    })
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toMap(Pair::getFirst, Pair::getSecond)));
         } catch (Exception e) {
             log.error("Reading cookie from protobuf failed. We create a empty cookie instead.", e);
             return new Cookie();
