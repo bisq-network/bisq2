@@ -48,7 +48,7 @@ public class PeerTextMessageBox extends BubbleMessageBox {
         setUpPeerMessage();
         setMargin(userNameAndDateHBox, new Insets(-5, 0, -5, 10));
         messageHBox.getChildren().setAll(messageBgHBox, activeReactionsDisplayHBox, Spacer.fillHBox());
-        actionsHBox.getChildren().setAll(replyAction, openPrivateChatAction, copyAction, reactMenu, moreActionsMenu, Spacer.fillHBox());
+        actionsHBox.getChildren().setAll(replyAction, openPrivateChatAction, copyAction, reactMenuBox, moreActionsMenu, Spacer.fillHBox());
 
         contentVBox.getChildren().setAll(userNameAndDateHBox, messageHBox, actionsHBox);
     }
@@ -65,7 +65,6 @@ public class PeerTextMessageBox extends BubbleMessageBox {
     protected void setUpActions() {
         super.setUpActions();
 
-        reactMenu.addItems(reactionMenuItems);
         replyAction = new BisqMenuItem("reply-grey", "reply-white");
         replyAction.useIconOnly();
         replyAction.setTooltip(Res.get("chat.message.reply"));

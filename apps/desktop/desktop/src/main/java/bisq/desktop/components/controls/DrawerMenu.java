@@ -36,7 +36,7 @@ public class DrawerMenu extends HBox {
     private static final String SLIDE_LEFT_CSS_STYLE = "slide-left";
 
     private final Button menuButton = new Button();
-    private final HBox itemsHBox = new HBox();
+    protected final HBox itemsHBox = new HBox();
     private final ImageView defaultIcon, hoverIcon, activeIcon;
     @Getter
     private final BooleanProperty isMenuShowing = new SimpleBooleanProperty(false);

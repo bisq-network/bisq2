@@ -37,8 +37,6 @@ import javafx.scene.layout.VBox;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.Collections;
-
 public final class MyTextMessageBox extends BubbleMessageBox {
     private final static String EDITED_POST_FIX = " " + Res.get("chat.message.wasEdited");
 
@@ -65,7 +63,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         message.maxWidthProperty().bind(list.widthProperty().subtract(140));
         userProfileIcon.setSize(30);
         userProfileIconVbox.setAlignment(Pos.TOP_LEFT);
-        actionsHBox.getChildren().setAll(Spacer.fillHBox(), reactMenu, editAction, copyAction, deleteAction);
+        actionsHBox.getChildren().setAll(Spacer.fillHBox(), reactMenuBox, editAction, copyAction, deleteAction);
         HBox.setMargin(messageVBox, new Insets(0, -15, 0, 0));
         HBox.setMargin(userProfileIconVbox, new Insets(7.5, 0, -5, 5));
         HBox.setMargin(editInputField, new Insets(6, -10, -25, 0));
@@ -113,9 +111,8 @@ public final class MyTextMessageBox extends BubbleMessageBox {
     protected void setUpActions() {
         super.setUpActions();
 
-        reactMenu.setSlideToTheLeft();
-        Collections.reverse(reactionMenuItems);
-        reactMenu.addItems(reactionMenuItems);
+        reactMenuBox.setSlideToTheLeft();
+        reactMenuBox.reverseReactionsDisplayOrder();
         editAction = new BisqMenuItem("edit-grey", "edit-white");
         editAction.useIconOnly();
         editAction.setTooltip(Res.get("action.edit"));
