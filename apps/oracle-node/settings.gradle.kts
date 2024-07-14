@@ -15,7 +15,6 @@ dependencyResolutionManagement {
 
 includeBuild("../..")
 
-include("oracle-node")
 include("oracle-node-app")
 
 rootProject.name = "oracle-node"
