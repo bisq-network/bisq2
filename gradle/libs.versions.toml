@@ -47,7 +47,7 @@ jeromq-lib = { strictly = '0.5.2' }
 junit-jupiter-lib = { strictly = '5.8.2' }
 kotlindsl-plugin = { strictly = '2.1.7' }
 logback-lib = { strictly = '1.2.11' }
-lombok-lib = { strictly = '1.18.22' }
+lombok-lib = { strictly = '1.18.34' }
 mockito-lib = { strictly = '4.11.0' }
 openjfx-plugin = { strictly = '0.0.13' }
 openjfx-monocle-lib = { strictly = 'jdk-12.0.1+2'}
