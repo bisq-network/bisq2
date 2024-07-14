@@ -26,15 +26,14 @@ import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.components.controls.BisqTooltip;
-import bisq.desktop.components.controls.DrawerMenu;
 import bisq.desktop.components.controls.DropdownMenu;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
 import bisq.desktop.main.content.chat.message_container.list.reactions_box.ActiveReactionsDisplayBox;
+import bisq.desktop.main.content.chat.message_container.list.reactions_box.ReactMenuBox;
 import bisq.desktop.main.content.chat.message_container.list.reactions_box.ToggleReaction;
 import bisq.desktop.main.content.components.UserProfileIcon;
 import bisq.i18n.Res;
-import javafx.css.PseudoClass;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
@@ -43,12 +42,10 @@ import javafx.scene.control.ListView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -59,7 +56,7 @@ public abstract class BubbleMessageBox extends MessageBox {
     protected static final double CHAT_MESSAGE_BOX_MAX_WIDTH = 630; // TODO: it should be 510 because of reactions on min size
     protected static final double OFFER_MESSAGE_USER_ICON_SIZE = 70;
     protected static final Insets ACTION_ITEMS_MARGIN = new Insets(2, 0, -2, 0);
-    private static final List<Reaction> REACTIONS = Arrays.asList(Reaction.THUMBS_UP, Reaction.THUMBS_DOWN, Reaction.HAPPY,
+    private static final List<Reaction> REACTIONS_ORDER = Arrays.asList(Reaction.THUMBS_UP, Reaction.THUMBS_DOWN, Reaction.HAPPY,
             Reaction.LAUGH, Reaction.HEART, Reaction.PARTY);
 
     private final Subscription showHighlightedPin;
@@ -68,12 +65,11 @@ public abstract class BubbleMessageBox extends MessageBox {
     protected final ChatMessagesListController controller;
     protected final UserProfileIcon userProfileIcon = new UserProfileIcon(60);
     protected final HBox actionsHBox = new HBox(5);
-    protected final ActiveReactionsDisplayBox activeReactionsDisplayHBox;
     protected final VBox quotedMessageVBox, contentVBox;
     protected final BisqMenuItem deleteAction = new BisqMenuItem("delete-t-grey", "delete-t-red");
-    protected DrawerMenu reactMenu;
     private Subscription reactMenuPin;
-    protected List<ReactionMenuItem> reactionMenuItems = new ArrayList<>();
+    protected ActiveReactionsDisplayBox activeReactionsDisplayHBox;
+    protected ReactMenuBox reactMenuBox;
     protected Label supportedLanguages, userName, dateTime, message;
     protected HBox userNameAndDateHBox, messageBgHBox, messageHBox;
     protected VBox userProfileIconVbox;
@@ -89,11 +85,11 @@ public abstract class BubbleMessageBox extends MessageBox {
 
         setUpUserNameAndDateTime();
         setUpUserProfileIcon();
+        setUpReactions();
         setUpActions();
         addActionsHandlers();
         addOnMouseEventHandlers();
 
-        activeReactionsDisplayHBox = createAndGetActiveReactionsDisplayBox();
         supportedLanguages = createAndGetSupportedLanguagesLabel();
         quotedMessageVBox = createAndGetQuotedMessageVBox();
         handleQuoteMessageBox();
@@ -117,8 +113,6 @@ public abstract class BubbleMessageBox extends MessageBox {
                 messageBgHBox.getStyleClass().remove(HIGHLIGHTED_MESSAGE_BG_STYLE_CLASS);
             }
         });
-
-        reactionMenuItems.forEach(this::updateIsReactionSelected);
     }
 
     protected void setUpUserNameAndDateTime() {
@@ -144,24 +138,37 @@ public abstract class BubbleMessageBox extends MessageBox {
         });
     }
 
-    protected void setUpActions() {
-        copyAction = new BisqMenuItem("copy-grey", "copy-white");
-        copyAction.useIconOnly();
-        copyAction.setTooltip(Res.get("action.copyToClipboard"));
-        reactMenu = createAndGetReactMenu();
-        setUpReactMenu();
-        actionsHBox.setVisible(false);
-        reactMenuPin = EasyBind.subscribe(reactMenu.getIsMenuShowing(), isShowing -> {
+    private void setUpReactions() {
+        // Active Reactions Display
+        ToggleReaction toggleReactionDisplayMenuFunction = reactionItem ->
+                controller.onReactMessage(item.getChatMessage(), reactionItem.getReaction(), item.getChatChannel());
+        activeReactionsDisplayHBox = new ActiveReactionsDisplayBox(item.getUserReactions().values(), toggleReactionDisplayMenuFunction);
+
+        // React Menu
+        ToggleReaction toggleReactionReactMenuFunction = reactionItem -> {
+            controller.onReactMessage(item.getChatMessage(), reactionItem.getReaction(), item.getChatChannel());
+            reactMenuBox.hideMenu();
+        };
+        reactMenuBox = new ReactMenuBox(item.getUserReactions(), REACTIONS_ORDER, toggleReactionReactMenuFunction,
+                "react-grey", "react-white", "react-green");
+        reactMenuBox.setTooltip(Res.get("action.react"));
+        reactMenuBox.setVisible(item.getChatMessage().canShowReactions());
+        reactMenuBox.setManaged(item.getChatMessage().canShowReactions());
+
+        reactMenuPin = EasyBind.subscribe(reactMenuBox.getIsMenuShowing(), isShowing -> {
             if (!isShowing && !isHover()) {
                 showDateTimeAndActionsMenu(false);
             }
         });
+    }
 
-        reactMenu.setVisible(item.getChatMessage().canShowReactions());
-        reactMenu.setManaged(item.getChatMessage().canShowReactions());
-
+    protected void setUpActions() {
+        copyAction = new BisqMenuItem("copy-grey", "copy-white");
+        copyAction.useIconOnly();
+        copyAction.setTooltip(Res.get("action.copyToClipboard"));
+        actionsHBox.setVisible(false);
         HBox.setMargin(copyAction, ACTION_ITEMS_MARGIN);
-        HBox.setMargin(reactMenu, ACTION_ITEMS_MARGIN);
+        HBox.setMargin(reactMenuBox, ACTION_ITEMS_MARGIN);
     }
 
     protected void addActionsHandlers() {
@@ -177,34 +184,26 @@ public abstract class BubbleMessageBox extends MessageBox {
         setOnMouseEntered(null);
         setOnMouseExited(null);
 
-        reactionMenuItems.forEach(menuItem -> menuItem.setOnAction(null));
-
         showHighlightedPin.unsubscribe();
         reactMenuPin.unsubscribe();
 
         activeReactionsDisplayHBox.dispose();
+        reactMenuBox.dispose();
     }
 
     private void showDateTimeAndActionsMenu(boolean shouldShow) {
         if (shouldShow) {
-            if ((moreActionsMenu != null && moreActionsMenu.getIsMenuShowing().get()) || reactMenu.getIsMenuShowing().get()) {
+            if ((moreActionsMenu != null && moreActionsMenu.getIsMenuShowing().get()) || reactMenuBox.getIsMenuShowing().get()) {
                 return;
             }
             dateTime.setVisible(true);
             actionsHBox.setVisible(true);
         } else {
-            if ((moreActionsMenu == null || !moreActionsMenu.getIsMenuShowing().get()) && !reactMenu.getIsMenuShowing().get()) {
+            if ((moreActionsMenu == null || !moreActionsMenu.getIsMenuShowing().get()) && !reactMenuBox.getIsMenuShowing().get()) {
                 dateTime.setVisible(false);
                 actionsHBox.setVisible(false);
             }
         }
-    }
-
-    private ActiveReactionsDisplayBox createAndGetActiveReactionsDisplayBox() {
-        ToggleReaction toggleReactionFunction = reactionItem -> {
-            controller.onReactMessage(item.getChatMessage(), reactionItem.getReaction(), item.getChatChannel());
-        };
-        return new ActiveReactionsDisplayBox(item.getUserReactions().values(), toggleReactionFunction);
     }
 
     private Label createAndGetSupportedLanguagesLabel() {
@@ -284,50 +283,5 @@ public abstract class BubbleMessageBox extends MessageBox {
 
     protected static void onCopyMessage(String chatMessageText) {
         ClipboardUtil.copyToClipboard(chatMessageText);
-    }
-
-    private DrawerMenu createAndGetReactMenu() {
-        DrawerMenu drawerMenu = new DrawerMenu("react-grey", "react-white", "react-green");
-        drawerMenu.setTooltip(Res.get("action.react"));
-        drawerMenu.getStyleClass().add("react-menu");
-        return drawerMenu;
-    }
-
-    private void setUpReactMenu() {
-        REACTIONS.forEach(reaction -> {
-            String iconId = reaction.toString().replace("_", "").toLowerCase();
-            ReactionMenuItem reactionMenuItem = new ReactionMenuItem(iconId, reaction);
-            reactionMenuItem.setOnAction(e -> toggleReaction(reactionMenuItem));
-            reactionMenuItems.add(reactionMenuItem);
-        });
-    }
-
-    private void toggleReaction(ReactionMenuItem reactionMenuItem) {
-        controller.onReactMessage(item.getChatMessage(), reactionMenuItem.getReaction(), item.getChatChannel());
-        reactMenu.hideMenu();
-        updateIsReactionSelected(reactionMenuItem);
-    }
-
-    private void updateIsReactionSelected(ReactionMenuItem reactionMenuItem) {
-        reactionMenuItem.setIsReactionSelected(item.hasAddedReaction(reactionMenuItem.getReaction()));
-    }
-
-    @Getter
-    public static final class ReactionMenuItem extends BisqMenuItem {
-        private static final PseudoClass SELECTED_PSEUDO_CLASS = PseudoClass.getPseudoClass("selected");
-
-        private final Reaction reaction;
-
-        public ReactionMenuItem(String iconId, Reaction reaction) {
-            super(iconId, iconId);
-
-            this.reaction = reaction;
-            useIconOnly(24);
-            getStyleClass().add("reaction-menu-item");
-        }
-
-        public void setIsReactionSelected(boolean isSelected) {
-            pseudoClassStateChanged(SELECTED_PSEUDO_CLASS, isSelected);
-        }
     }
 }

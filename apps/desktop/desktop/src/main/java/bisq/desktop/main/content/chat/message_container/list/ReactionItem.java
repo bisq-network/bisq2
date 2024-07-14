@@ -38,31 +38,13 @@ public class ReactionItem {
     private long firstAdded;
     private final SimpleIntegerProperty count = new SimpleIntegerProperty(0);
     private final SimpleBooleanProperty selected = new SimpleBooleanProperty(false);
-    Set<UserProfile> users = new HashSet<>();
+    private final Set<UserProfile> users = new HashSet<>();
+    private UserProfile selectedUserProfile;
 
-    ReactionItem(Reaction reaction) {
+    ReactionItem(Reaction reaction, UserProfile selectedUserProfile) {
         this.reaction = reaction;
+        this.selectedUserProfile = selectedUserProfile;
         this.iconId = reaction.toString().replace("_", "").toLowerCase();
-    }
-
-    void addUser(ChatMessageReaction chatMessageReaction, UserProfile userProfile, boolean isMyUser) {
-        if (hasReactionBeenRemoved(chatMessageReaction)) {
-            return;
-        }
-
-        if (firstAdded == 0) {
-            firstAdded = chatMessageReaction.getDate();
-        }
-
-        selected.set(isMyUser);
-        users.add(userProfile);
-        count.set(users.size());
-    }
-
-    void removeUser(UserProfile userProfile, boolean isMyUser) {
-        selected.set(!isMyUser);
-        users.remove(userProfile);
-        count.set(users.size());
     }
 
     public boolean hasActiveReactions() {
@@ -71,10 +53,39 @@ public class ReactionItem {
 
     public String getCountAsString() {
         long count = users.size();
-        if (count == 1) {
+        if (count < 2) {
             return "";
         }
         return count < 100 ? String.valueOf(count) : "+99";
+    }
+
+    public static Comparator<ReactionItem> firstAddedComparator() {
+        return Comparator.comparingLong(ReactionItem::getFirstAdded);
+    }
+
+    void addUser(ChatMessageReaction chatMessageReaction, UserProfile userProfile) {
+        if (hasReactionBeenRemoved(chatMessageReaction)) {
+            return;
+        }
+
+        if (firstAdded == 0) {
+            firstAdded = chatMessageReaction.getDate();
+        }
+
+        users.add(userProfile);
+        count.set(users.size());
+        updateSelected();
+    }
+
+    void removeUser(UserProfile userProfile) {
+        users.remove(userProfile);
+        count.set(users.size());
+        updateSelected();
+    }
+
+    void setSelectedUserProfile(UserProfile selectedUserProfile) {
+        this.selectedUserProfile = selectedUserProfile;
+        updateSelected();
     }
 
     private boolean hasReactionBeenRemoved(ChatMessageReaction chatMessageReaction) {
@@ -82,7 +93,7 @@ public class ReactionItem {
                 && ((PrivateChatMessageReaction) chatMessageReaction).isRemoved());
     }
 
-    public static Comparator<ReactionItem> firstAddedComparator() {
-        return Comparator.comparingLong(ReactionItem::getFirstAdded);
+    private void updateSelected() {
+        selected.set(getUsers().contains(selectedUserProfile));
     }
 }

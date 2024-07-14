@@ -116,8 +116,9 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private BisqMenuItem tryAgainMenuItem;
 
     // Reactions
-    private Optional<Pin> userReactionsPin = Optional.empty();
+    private final Pin userIdentityPin;
     private final HashMap<Reaction, ReactionItem> userReactions = new HashMap<>();
+    private Optional<Pin> userReactionsPin = Optional.empty();
 
     public ChatMessageListItem(M chatMessage,
                                C chatChannel,
@@ -172,7 +173,8 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         lastSeen = senderUserProfile.map(userProfileService::getLastSeen).orElse(-1L);
         lastSeenAsString = TimeFormatter.formatAge(lastSeen);
 
-        // TODO: Release all the listeners when destroying this object
+        userIdentityPin = userIdentityService.getSelectedUserIdentityObservable().addObserver(userIdentity -> UIThread.run(this::onUserIdentity));
+
         createAndAddSubscriptionToUserReactions(userProfileService);
         initializeDeliveryStatusIcons();
         addSubscriptionToMessageDeliveryStatus(networkService);
@@ -196,6 +198,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         mapPins.forEach(Pin::unbind);
         statusPins.forEach(Pin::unbind);
         userReactionsPin.ifPresent(Pin::unbind);
+        userIdentityPin.unbind();
     }
 
     public boolean hasTradeChatOffer() {
@@ -380,7 +383,8 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         }
 
         // Create all the ReactionItems
-        Arrays.stream(Reaction.values()).forEach(reaction -> userReactions.put(reaction, new ReactionItem(reaction)));
+        UserProfile selectedUserProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
+        Arrays.stream(Reaction.values()).forEach(reaction -> userReactions.put(reaction, new ReactionItem(reaction, selectedUserProfile)));
 
         // Subscribe to changes
         userReactionsPin = Optional.ofNullable(chatMessage.getChatMessageReactions().addObserver(new CollectionObserver<>() {
@@ -391,7 +395,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                     Optional<UserProfile> userProfile = userProfileService.findUserProfile(element.getUserProfileId());
                     userProfile.ifPresent(profile -> {
                         if (!userProfileService.isChatUserIgnored(profile)) {
-                            userReactions.get(reaction).addUser(element, profile, isMyUser(profile));
+                            userReactions.get(reaction).addUser(element, profile);
                         }
                     });
                 }
@@ -403,7 +407,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                 Reaction reaction = getReactionFromOrdinal(chatMessageReaction.getReactionId());
                 if (userReactions.containsKey(reaction)) {
                     Optional<UserProfile> userProfile = userProfileService.findUserProfile(chatMessageReaction.getUserProfileId());
-                    userProfile.ifPresent(profile -> userReactions.get(reaction).removeUser(profile, isMyUser(profile)));
+                    userProfile.ifPresent(profile -> userReactions.get(reaction).removeUser(profile));
                 }
             }
 
@@ -419,8 +423,8 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         return Reaction.values()[ordinal];
     }
 
-    private boolean isMyUser(UserProfile profile) {
-        UserProfile myProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
-        return myProfile.equals(profile);
+    private void onUserIdentity() {
+        UserProfile selectedUserProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
+        userReactions.forEach((key, value) -> value.setSelectedUserProfile(selectedUserProfile));
     }
 }

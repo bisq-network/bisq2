@@ -155,7 +155,7 @@
     -fx-font-family: "IBM Plex Sans Light";
 }
 
-.chat-message-content-box .react-menu .drawer-menu-items .bisq-menu-item:hover {
+.chat-message-content-box .react-menu-box .drawer-menu-items .bisq-menu-item:hover {
     -fx-background-color: -bisq-dark-grey-50 !important;
 }
 
