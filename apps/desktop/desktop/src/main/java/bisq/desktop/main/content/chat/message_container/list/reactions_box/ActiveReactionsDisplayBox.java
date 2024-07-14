@@ -38,7 +38,8 @@ public class ActiveReactionsDisplayBox extends HBox {
     private final ObservableList<ReactionItem> reactionItems = FXCollections.observableArrayList();
     private final FilteredList<ReactionItem> filteredReactionItems = new FilteredList<>(reactionItems, ReactionItem::hasActiveReactions);
     private final SortedList<ReactionItem> sortedReactionItems = new SortedList<>(filteredReactionItems);
-    private final Map<ReactionItem, ChangeListener<Number>> itemChangeListeners = new HashMap<>();
+    private final Map<ReactionItem, ChangeListener<Number>> itemCountChangeListener = new HashMap<>();
+    private final Map<ReactionItem, ChangeListener<Boolean>> itemSelectedChangeListener = new HashMap<>();
     private final ListChangeListener<ReactionItem> listChangeListener;
     private final ToggleReaction toggleReaction;
 
@@ -63,19 +64,31 @@ public class ActiveReactionsDisplayBox extends HBox {
     }
 
     private void addItemListeners(ReactionItem item) {
-        ChangeListener<Number> listener = (obs, oldValue, newValue) -> {
+        ChangeListener<Number> numberChangeListener = (obs, oldValue, newValue) -> {
             int idx = reactionItems.indexOf(item);
             if (idx >= 0) {
                 reactionItems.set(idx, item);
             }
         };
-        item.getCount().addListener(listener);
-        itemChangeListeners.put(item, listener);
+        item.getCount().addListener(numberChangeListener);
+        itemCountChangeListener.put(item, numberChangeListener);
+
+        ChangeListener<Boolean> booleanChangeListener = (obs, oldValue, newValue) -> {
+            int idx = reactionItems.indexOf(item);
+            if (idx >= 0) {
+                reactionItems.set(idx, item);
+            }
+        };
+        item.getSelected().addListener(booleanChangeListener);
+        itemSelectedChangeListener.put(item, booleanChangeListener);
     }
 
     private void removeItemListeners() {
-        itemChangeListeners.forEach((item, listener) -> {
-            item.getCount().removeListener(listener);
+        itemCountChangeListener.forEach((item, changeListener) -> {
+            item.getCount().removeListener(changeListener);
+        });
+        itemSelectedChangeListener.forEach((item, changeListener) -> {
+            item.getSelected().removeListener(changeListener);
         });
     }
 
@@ -93,7 +106,7 @@ public class ActiveReactionsDisplayBox extends HBox {
         private ReactionItem reactionItem;
         private ToggleReaction toggleReaction;
 
-        public ActiveReactionMenuItem(ReactionItem reactionItem, ToggleReaction toggleReaction) {
+         private ActiveReactionMenuItem(ReactionItem reactionItem, ToggleReaction toggleReaction) {
             this(reactionItem.getIconId());
 
             this.reactionItem = reactionItem;
@@ -112,8 +125,6 @@ public class ActiveReactionsDisplayBox extends HBox {
             getStyleClass().add("active-reaction-menu-item");
             if (reactionItem.getSelected().get()) {
                 getStyleClass().add("active-reaction-selected");
-            } else {
-                getStyleClass().remove("active-reaction-selected");
             }
         }
     }
