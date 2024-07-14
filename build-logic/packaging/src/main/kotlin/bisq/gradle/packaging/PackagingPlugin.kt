@@ -42,8 +42,14 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
 
         project.tasks.register<JPackageTask>("generateInstallers") {
             val webcamProject = project.parent?.childProjects?.filter { e -> e.key == "webcam" }?.map { e -> e.value.project }?.first()
-            webcamProject?.let {
-                dependsOn(it.tasks.named("processWebcamForDesktop"))
+            webcamProject?.let { webcam ->
+                val desktopProject = project.parent?.childProjects?.filter { e -> e.key == "desktop" }?.map { e -> e.value.project }?.first()
+                desktopProject?.let { desktop ->
+                    val processResourcesInDesktop = desktop.tasks.named("processResources")
+                    val processWebcamForDesktopProvider = webcam.tasks.named("processWebcamForDesktop")
+                    processResourcesInDesktop.get().dependsOn(processWebcamForDesktopProvider)
+                    dependsOn(processWebcamForDesktopProvider)
+                }
             }
 
             dependsOn(generateHashesTask)
