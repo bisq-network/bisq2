@@ -104,8 +104,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         super.setUpUserNameAndDateTime();
 
         messageStatusHbox = new HBox(5);
-        dateTimeHBox.getChildren().add(0, messageStatusHbox);
-        userNameAndDateHBox = new HBox(10, dateTimeHBox, userName);
+        userNameAndDateHBox = new HBox(10, dateTime, messageStatusHbox, userName);
         userNameAndDateHBox.setAlignment(Pos.CENTER_RIGHT);
         setMargin(userNameAndDateHBox, new Insets(-5, 10, -5, 0));
     }
