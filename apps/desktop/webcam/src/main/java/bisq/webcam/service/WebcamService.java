@@ -20,9 +20,11 @@ package bisq.webcam.service;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.threading.ExecutorFactory;
+import bisq.common.util.OperatingSystem;
+import bisq.common.util.OsUtils;
 import bisq.webcam.service.converter.FrameToBitmapConverter;
 import bisq.webcam.service.converter.FrameToImageConverter;
-import bisq.webcam.service.lookup.CameraDeviceLookup;
+import bisq.webcam.service.lookup.*;
 import bisq.webcam.service.processor.QrCodeProcessor;
 import javafx.scene.image.Image;
 import lombok.Getter;
@@ -58,7 +60,23 @@ public class WebcamService implements Service {
         this.videoSize = VideoSize.SMALL;
         frameToImageConverter = new FrameToImageConverter();
         qrCodeProcessor = new QrCodeProcessor(new FrameToBitmapConverter());
-        cameraDeviceLookup = new CameraDeviceLookup();
+        OperatingSystem os = OsUtils.getOperatingSystem();
+        switch (os) {
+            case MAC:
+                if (OsUtils.isAppleSiliconMac()) {
+                    cameraDeviceLookup = new CameraDeviceLookupMacOSAArch64();
+                } else {
+                    cameraDeviceLookup = new CameraDeviceLookupMacOSx86();
+                }
+                break;
+            case WIN:
+                cameraDeviceLookup = new CameraDeviceLookupWindows64();
+                break;
+            case LINUX:
+            default:
+                cameraDeviceLookup = new CameraDeviceLookupLinux64();
+                break;
+        }
     }
 
     @Override
