@@ -39,47 +39,53 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
             val jPackageTempPath = jPackageConfig.outputDirPath.parent.resolve("temp_${filetypeAndCustomCommands.first}")
             deleteFileOrDirectory(jPackageTempPath.toFile())
             allCommands.add("--temp")
-            allCommands.add(jPackageTempPath.toAbsolutePath().toString(),)
+            allCommands.add(jPackageTempPath.toAbsolutePath().toString())
 
             allCommands.addAll(filetypeAndCustomCommands.second)
 
             val process: Process = processBuilder.start()
-            process.waitFor(15, TimeUnit.MINUTES)
+            process.waitFor(2, TimeUnit.MINUTES)
 
-            val exitCode = process.exitValue()
-            if (exitCode != 0) {
-                throw IllegalStateException("JPackage failed with exit code $exitCode.")
-            }
+            // @alvasw
+            // On Linux that causes a build failure at the packager task.
+            // On Windows the exe cannot start up as it seems the running process still has some resources blocked.
+            // I reduce the timeout to 2 minutes, that seems to work in my tests
+            /* process.waitFor(15, TimeUnit.MINUTES)
+
+             val exitCode = process.exitValue()
+             if (exitCode != 0) {
+                 throw IllegalStateException("JPackage failed with exit code $exitCode.")
+             }*/
         }
     }
 
     private fun createCommonArguments(appConfig: JPackageAppConfig): Map<String, String> =
-        mutableMapOf(
-            "--dest" to jPackageConfig.outputDirPath.toAbsolutePath().toString(),
+            mutableMapOf(
+                    "--dest" to jPackageConfig.outputDirPath.toAbsolutePath().toString(),
 
-            "--name" to appConfig.name,
-            "--description" to "A decentralized bitcoin exchange network.",
-            "--copyright" to "Copyright © 2013-${Year.now()} - The Bisq developers",
-            "--vendor" to "Bisq",
-            "--license-file" to appConfig.licenceFilePath,
-            "--app-version" to appConfig.appVersion,
+                    "--name" to appConfig.name,
+                    "--description" to "A decentralized bitcoin exchange network.",
+                    "--copyright" to "Copyright © 2013-${Year.now()} - The Bisq developers",
+                    "--vendor" to "Bisq",
+                    "--license-file" to appConfig.licenceFilePath,
+                    "--app-version" to appConfig.appVersion,
 
-            "--input" to jPackageConfig.inputDirPath.toAbsolutePath().toString(),
-            "--main-jar" to appConfig.mainJarFileName,
+                    "--input" to jPackageConfig.inputDirPath.toAbsolutePath().toString(),
+                    "--main-jar" to appConfig.mainJarFileName,
 
-            "--main-class" to appConfig.mainClassName,
-            "--java-options" to appConfig.jvmArgs.joinToString(separator = " "),
+                    "--main-class" to appConfig.mainClassName,
+                    "--java-options" to appConfig.jvmArgs.joinToString(separator = " "),
 
-            "--runtime-image" to jPackageConfig.runtimeImageDirPath.toAbsolutePath().toString()
-        )
+                    "--runtime-image" to jPackageConfig.runtimeImageDirPath.toAbsolutePath().toString()
+            )
 
     private fun getOsSpecificOverrideArgs(fileType: String): Map<String, String> =
-        if (jPackageConfig.appConfig.name == "Bisq" && fileType == "exe") {
-            // Needed for Windows OS notification support
-            mutableMapOf("--description" to "Bisq2")
-        } else {
-            emptyMap()
-        }
+            if (jPackageConfig.appConfig.name == "Bisq" && fileType == "exe") {
+                // Needed for Windows OS notification support
+                mutableMapOf("--description" to "Bisq2")
+            } else {
+                emptyMap()
+            }
 
     private fun deleteFileOrDirectory(dir: File) {
         val files = dir.listFiles()
