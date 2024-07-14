@@ -62,7 +62,7 @@ public abstract class BubbleMessageBox extends MessageBox {
     private static final List<Reaction> REACTIONS = Arrays.asList(Reaction.THUMBS_UP, Reaction.THUMBS_DOWN, Reaction.HAPPY,
             Reaction.LAUGH, Reaction.HEART, Reaction.PARTY);
 
-    private final Subscription showHighlightedPin, hasFailedDeliveryStatusPin;
+    private final Subscription showHighlightedPin;
     protected final ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item;
     protected final ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list;
     protected final ChatMessagesListController controller;
@@ -75,7 +75,7 @@ public abstract class BubbleMessageBox extends MessageBox {
     private Subscription reactMenuPin;
     protected List<ReactionMenuItem> reactionMenuItems = new ArrayList<>();
     protected Label supportedLanguages, userName, dateTime, message;
-    protected HBox dateTimeHBox, userNameAndDateHBox, messageBgHBox, messageHBox;
+    protected HBox userNameAndDateHBox, messageBgHBox, messageHBox;
     protected VBox userProfileIconVbox;
     protected BisqMenuItem copyAction;
     protected DropdownMenu moreActionsMenu;
@@ -118,14 +118,6 @@ public abstract class BubbleMessageBox extends MessageBox {
             }
         });
 
-        hasFailedDeliveryStatusPin = EasyBind.subscribe(item.getHasFailedDeliveryStatus(), deliveryFailed -> {
-            if (deliveryFailed) {
-                dateTimeHBox.setVisible(true);
-            } else {
-                showDateTimeAndActionsMenu(false);
-            }
-        });
-
         reactionMenuItems.forEach(this::updateIsReactionSelected);
     }
 
@@ -135,9 +127,7 @@ public abstract class BubbleMessageBox extends MessageBox {
         dateTime = new Label();
         dateTime.getStyleClass().addAll("text-fill-grey-dimmed", "font-size-09", "font-light");
         dateTime.setText(item.getDate());
-        dateTimeHBox = new HBox(10, dateTime);
-        dateTimeHBox.setVisible(false);
-        dateTimeHBox.setAlignment(Pos.CENTER);
+        dateTime.setVisible(false);
     }
 
     private void setUpUserProfileIcon() {
@@ -191,7 +181,6 @@ public abstract class BubbleMessageBox extends MessageBox {
 
         showHighlightedPin.unsubscribe();
         reactMenuPin.unsubscribe();
-        hasFailedDeliveryStatusPin.unsubscribe();
 
         activeReactionsDisplayHBox.dispose();
     }
@@ -201,13 +190,11 @@ public abstract class BubbleMessageBox extends MessageBox {
             if ((moreActionsMenu != null && moreActionsMenu.getIsMenuShowing().get()) || reactMenu.getIsMenuShowing().get()) {
                 return;
             }
-            dateTimeHBox.setVisible(true);
+            dateTime.setVisible(true);
             actionsHBox.setVisible(true);
         } else {
             if ((moreActionsMenu == null || !moreActionsMenu.getIsMenuShowing().get()) && !reactMenu.getIsMenuShowing().get()) {
-                if (!item.getHasFailedDeliveryStatus().get()) {
-                    dateTimeHBox.setVisible(false);
-                }
+                dateTime.setVisible(false);
                 actionsHBox.setVisible(false);
             }
         }

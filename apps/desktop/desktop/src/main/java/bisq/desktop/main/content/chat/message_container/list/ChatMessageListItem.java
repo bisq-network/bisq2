@@ -110,7 +110,6 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private final Set<Pin> mapPins = new HashSet<>();
     private final Set<Pin> statusPins = new HashSet<>();
     private final BooleanProperty shouldShowTryAgain = new SimpleBooleanProperty();
-    private final BooleanProperty hasFailedDeliveryStatus = new SimpleBooleanProperty();
     private final SimpleObjectProperty<Node> messageDeliveryStatusNode = new SimpleObjectProperty<>();
     private Optional<ResendMessageService> resendMessageService;
     private ImageView successfulDeliveryIcon, pendingDeliveryIcon, addedToMailboxIcon, failedDeliveryIcon;
@@ -344,7 +343,6 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                 UIThread.run(() -> {
                     ChatMessageListItem.this.messageId = messageId;
                     boolean shouldShowTryAgain = false;
-                    boolean hasFailedDeliveryStatus = false;
                     if (status != null) {
                         Label statusLabel = new Label();
                         statusLabel.setTooltip(new BisqTooltip(Res.get("chat.message.deliveryState." + status.name())));
@@ -366,13 +364,11 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                             case FAILED:
                                 statusLabel.setGraphic(failedDeliveryIcon);
                                 shouldShowTryAgain = resendMessageService.map(service -> service.canManuallyResendMessage(messageId)).orElse(false);
-                                hasFailedDeliveryStatus = true;
                                 break;
                         }
                         messageDeliveryStatusNode.set(statusLabel);
                     }
                     this.shouldShowTryAgain.set(shouldShowTryAgain);
-                    this.hasFailedDeliveryStatus.set(hasFailedDeliveryStatus);
                 });
             }));
         });
