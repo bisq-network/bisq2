@@ -11,8 +11,8 @@ repositories {
 
 java {
     toolchain {
-        // We use the Java 17 toolchain to use jpackage to create the binaries.
-        languageVersion.set(JavaLanguageVersion.of(17))
+        // We use the Java 22 toolchain to use jpackage to create the binaries.
+        languageVersion.set(JavaLanguageVersion.of(22))
     }
 }
 

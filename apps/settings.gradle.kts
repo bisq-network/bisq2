@@ -15,9 +15,9 @@ dependencyResolutionManagement {
 
 includeBuild("..")
 includeBuild("desktop")
-includeBuild("oracle-node")
 
 include("rest-api-app")
 include("seed-node-app")
+include("oracle-node-app")
 
 rootProject.name = "apps"

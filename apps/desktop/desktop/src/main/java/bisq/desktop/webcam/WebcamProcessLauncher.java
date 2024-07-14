@@ -35,37 +35,37 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class WebcamProcessLauncher {
-    private final String baseDir;
+    private final String webcamDir;
     private Optional<Process> runningProcess = Optional.empty();
 
     public WebcamProcessLauncher(String baseDir) {
-        this.baseDir = baseDir;
+        this.webcamDir = baseDir + "/webcam";
     }
 
     public CompletableFuture<Process> start(int port) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 String version = FileUtils.readStringFromResource("webcam-app/version.txt");
-                String jarFilePath = baseDir + "/webcam-" + version + "-all.jar";
+                String jarFilePath = webcamDir + "/webcam-" + version + "-all.jar";
                 File jarFile = new File(jarFilePath);
 
                 if (!jarFile.exists() || DevMode.isDevMode()) {
                     String resourcePath = "webcam-app/webcam-" + version + ".zip";
                     InputStream inputStream = getClass().getClassLoader().getResourceAsStream(resourcePath);
-                    File destDir = new File(baseDir);
+                    File destDir = new File(webcamDir);
                     ZipFileExtractor zipFileExtractor = new ZipFileExtractor(inputStream, destDir);
                     zipFileExtractor.extractArchive();
-                    log.info("Extracted zip file {} to {}", resourcePath, baseDir);
+                    log.info("Extracted zip file {} to {}", resourcePath, webcamDir);
                 }
 
                 String portParam = "--port=" + port;
-                String logFileParam = "--logFile=" + URLEncoder.encode(baseDir, StandardCharsets.UTF_8) + FileUtils.FILE_SEP + "webcam-app";
+                String logFileParam = "--logFile=" + URLEncoder.encode(webcamDir, StandardCharsets.UTF_8) + FileUtils.FILE_SEP + "webcam-app";
                 String languageParam = "--language=" + LanguageRepository.getDefaultLanguage();
 
                 String pathToJavaExe = System.getProperty("java.home") + "/bin/java";
                 ProcessBuilder processBuilder;
                 if (OsUtils.isMac()) {
-                    String iconPath = baseDir + "/webcam-app-icon.png";
+                    String iconPath = webcamDir + "/webcam-app-icon.png";
                     File bisqIcon = new File(iconPath);
                     if (!bisqIcon.exists()) {
                         FileUtils.resourceToFile("images/webcam/webcam-app-icon@2x.png", bisqIcon);

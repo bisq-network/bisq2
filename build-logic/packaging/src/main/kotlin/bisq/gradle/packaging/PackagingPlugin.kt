@@ -41,7 +41,7 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
         checkNotNull(javaApplicationExtension) { "Can't find JavaApplication extension." }
 
         project.tasks.register<JPackageTask>("generateInstallers") {
-            val webcamProject = project.parent?.childProjects?.filter { e -> e.key == "webcam" }?.map { e -> e.value.project }?.first()
+            val webcamProject = project.parent?.childProjects?.filter { e -> e.key == "webcam-app" }?.map { e -> e.value.project }?.first()
             webcamProject?.let { webcam ->
                 val desktopProject = project.parent?.childProjects?.filter { e -> e.key == "desktop" }?.map { e -> e.value.project }?.first()
                 desktopProject?.let { desktop ->
@@ -121,7 +121,7 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
                 }
             } else {
                 // Bisq2
-                17
+                22
             }
         }
         return javaVersion.map { JavaLanguageVersion.of(it) }
