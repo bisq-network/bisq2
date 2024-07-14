@@ -106,7 +106,7 @@ public class ActiveReactionsDisplayBox extends HBox {
         private ReactionItem reactionItem;
         private ToggleReaction toggleReaction;
 
-         private ActiveReactionMenuItem(ReactionItem reactionItem, ToggleReaction toggleReaction) {
+        private ActiveReactionMenuItem(ReactionItem reactionItem, ToggleReaction toggleReaction) {
             this(reactionItem.getIconId());
 
             this.reactionItem = reactionItem;
