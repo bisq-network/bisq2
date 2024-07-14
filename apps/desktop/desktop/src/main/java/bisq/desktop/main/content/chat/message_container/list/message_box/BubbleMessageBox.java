@@ -62,7 +62,7 @@ public abstract class BubbleMessageBox extends MessageBox {
     private static final List<Reaction> REACTIONS = Arrays.asList(Reaction.THUMBS_UP, Reaction.THUMBS_DOWN, Reaction.HAPPY,
             Reaction.LAUGH, Reaction.HEART, Reaction.PARTY);
 
-    private final Subscription showHighlightedPin, hasFailedDeliveryStatusPin;
+    private final Subscription showHighlightedPin;
     protected final ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item;
     protected final ListView<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> list;
     protected final ChatMessagesListController controller;
@@ -115,14 +115,6 @@ public abstract class BubbleMessageBox extends MessageBox {
                 messageBgHBox.getStyleClass().add(HIGHLIGHTED_MESSAGE_BG_STYLE_CLASS);
             } else {
                 messageBgHBox.getStyleClass().remove(HIGHLIGHTED_MESSAGE_BG_STYLE_CLASS);
-            }
-        });
-
-        hasFailedDeliveryStatusPin = EasyBind.subscribe(item.getHasFailedDeliveryStatus(), deliveryFailed -> {
-            if (deliveryFailed) {
-                dateTimeHBox.setVisible(true);
-            } else {
-                showDateTimeAndActionsMenu(false);
             }
         });
 
@@ -191,7 +183,6 @@ public abstract class BubbleMessageBox extends MessageBox {
 
         showHighlightedPin.unsubscribe();
         reactMenuPin.unsubscribe();
-        hasFailedDeliveryStatusPin.unsubscribe();
 
         activeReactionsDisplayHBox.dispose();
     }
@@ -205,9 +196,7 @@ public abstract class BubbleMessageBox extends MessageBox {
             actionsHBox.setVisible(true);
         } else {
             if ((moreActionsMenu == null || !moreActionsMenu.getIsMenuShowing().get()) && !reactMenu.getIsMenuShowing().get()) {
-                if (!item.getHasFailedDeliveryStatus().get()) {
-                    dateTimeHBox.setVisible(false);
-                }
+                dateTimeHBox.setVisible(false);
                 actionsHBox.setVisible(false);
             }
         }
