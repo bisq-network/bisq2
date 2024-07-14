@@ -33,21 +33,22 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /**
- * Adjusted version to make webcam usage work on MacOS with aarch64 architecture.
- * Tested with Mac OS 14.5 on a M3 macbook
+ * Works for Mac (Intel and aarch64) and Windows.
+ *
  * We use org.bytedeco.opencv.opencv_videoio.VideoCapture.grab calls to let it fail fast if permissions for camera
  * usage are not set. VideoCapture is also used to determine how many devices are available. Other means like using
  * OpenCVFrameGrabber.getDeviceDescriptions() did not work in that setup.
- * For testing `tccutil reset Camera` is a useful terminal command to reset camera permissions.
+ *
+ * For testing on MacOS, `tccutil reset Camera` is a useful terminal command to reset camera permissions.
  */
 @Slf4j
-public class CameraDeviceLookupMacOSAArch64 implements CameraDeviceLookup {
+public class CameraDeviceLookupDefault implements CameraDeviceLookup {
     @Getter
     private final Observable<Integer> deviceNumber = new Observable<>(0);
     @Getter
     private final Observable<Integer> numDevices = new Observable<>();
 
-    public CameraDeviceLookupMacOSAArch64() {
+    public CameraDeviceLookupDefault() {
     }
 
     public CompletableFuture<FrameGrabber> find() {

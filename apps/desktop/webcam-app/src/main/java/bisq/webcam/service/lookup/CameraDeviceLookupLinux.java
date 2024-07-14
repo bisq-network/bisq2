@@ -25,47 +25,32 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.bytedeco.javacv.FrameGrabber;
 import org.bytedeco.javacv.OpenCVFrameGrabber;
-import org.bytedeco.opencv.opencv_videoio.VideoCapture;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-// TODO find libraries which work with Intel macs
-
 /**
- * Version for webcam usage on MacOS with x86 architecture (Intel chips).
- * Tested with Mac OS 10.14 on a 2015 macbook pro, but it suffers a runtime crash caused from native libraries.
+ * Adjusted version to make webcam usage work on Linux.
+ * Tested with Ubuntu 22 on a Dell XPS laptop
+ * org.bytedeco.opencv.opencv_videoio.VideoCapture failes on that config, thus the check how many devices are available
+ * is removed and the number of devices to try is set to 3.
  */
 @Slf4j
-public class CameraDeviceLookupMacOSx86 implements CameraDeviceLookup {
+public class CameraDeviceLookupLinux implements CameraDeviceLookup {
     @Getter
     private final Observable<Integer> deviceNumber = new Observable<>(0);
     @Getter
-    private final Observable<Integer> numDevices = new Observable<>();
+    private final Observable<Integer> numDevices = new Observable<>(0);
 
-    public CameraDeviceLookupMacOSx86() {
+    public CameraDeviceLookupLinux() {
+        numDevices.set(3);
     }
 
     public CompletableFuture<FrameGrabber> find() {
         return CompletableFuture.supplyAsync(() -> {
-            try {
-                numDevices.set(findNumDevices().get());
-            } catch (ExecutionException e) {
-                Throwable cause = e.getCause();
-                if (cause instanceof WebcamException || cause instanceof TimeoutException) {
-                    ErrorCode errorCode = cause instanceof WebcamException
-                            ? ((WebcamException) cause).getErrorCode()
-                            : ErrorCode.TIMEOUT_EXCEPTION;
-                    throw new WebcamException(errorCode, cause);
-                } else {
-                    throw new WebcamException(ErrorCode.EXECUTION_EXCEPTION, e);
-                }
-            } catch (InterruptedException e) {
-                throw new WebcamException(ErrorCode.INTERRUPTED_EXCEPTION, e);
-            }
-
+            int maxDeviceNumber = 3;
             Throwable ignoredException;
             do {
                 try {
@@ -82,7 +67,7 @@ public class CameraDeviceLookupMacOSx86 implements CameraDeviceLookup {
                 } catch (InterruptedException e) {
                     throw new WebcamException(ErrorCode.INTERRUPTED_EXCEPTION, e);
                 }
-            } while (deviceNumber.get() < numDevices.get());
+            } while (deviceNumber.get() < maxDeviceNumber);
             ErrorCode errorCode = ignoredException instanceof WebcamException
                     ? ((WebcamException) ignoredException).getErrorCode()
                     : ErrorCode.NO_DEVICE_FOUND;
@@ -93,14 +78,7 @@ public class CameraDeviceLookupMacOSx86 implements CameraDeviceLookup {
     public CompletableFuture<FrameGrabber> find(int deviceNumber) {
         log.info("Try to find camera with device number {}", deviceNumber);
         return CompletableFuture.supplyAsync(() -> {
-                    try (VideoCapture capture = new VideoCapture(deviceNumber);
-                         FrameGrabber frameGrabber = new OpenCVFrameGrabber(deviceNumber)) {
-                        // We use capture.grab call to get an early error if permissions are denied
-                        boolean grabResult = capture.grab();
-                        if (!grabResult) {
-                            throw new WebcamException(ErrorCode.DEVICE_PERMISSION_DENIED);
-                        }
-
+                    try (FrameGrabber frameGrabber = new OpenCVFrameGrabber(deviceNumber)) {
                         // has a 10 sec. timeout built in
                         frameGrabber.start();
                         return frameGrabber;
@@ -110,25 +88,5 @@ public class CameraDeviceLookupMacOSx86 implements CameraDeviceLookup {
                     }
                 }, ExecutorFactory.newSingleThreadScheduledExecutor("look-up-device"))
                 .orTimeout(20, TimeUnit.SECONDS);
-    }
-
-    public CompletableFuture<Integer> findNumDevices() {
-        return CompletableFuture.supplyAsync(() -> {
-                    try (VideoCapture capture = new VideoCapture()) {
-                        int numDevices = 0;
-                        while (numDevices < 10) {
-                            boolean success = capture.open(numDevices++);
-                            if (!success) {
-                                break;
-                            }
-                        }
-                        log.error("numDevices {}", numDevices);
-                        return numDevices;
-                    } catch (Exception e) {
-                        log.error("capture.open failed. {}", e.getMessage());
-                        throw new WebcamException(ErrorCode.NUM_DEVICE_COUNT_FAILED, e);
-                    }
-                }, ExecutorFactory.newSingleThreadScheduledExecutor("look-up-device"))
-                .orTimeout(5, TimeUnit.SECONDS);
     }
 }
