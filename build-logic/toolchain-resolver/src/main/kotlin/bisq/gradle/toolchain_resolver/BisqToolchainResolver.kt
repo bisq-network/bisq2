@@ -35,7 +35,7 @@ abstract class BisqToolchainResolver : JavaToolchainResolver {
             }
 
     private fun getToolchainUrlForMacOs(javaVersion: Int): String? {
-        val osArch = System.getProperty("os.arch").toLowerCase(Locale.US)
+        val osArch = System.getProperty("os.arch").lowercase(Locale.US)
         val macOsArchName = if (osArch.contains("aarch64")) "aarch64" else "x64"
         return when (javaVersion) {
             11 -> "https://cdn.azul.com/zulu/bin/zulu11.66.15_1-ca-jdk11.0.20-macosx_" + macOsArchName + ".tar.gz"

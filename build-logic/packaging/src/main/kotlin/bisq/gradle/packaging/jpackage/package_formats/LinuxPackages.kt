@@ -11,7 +11,7 @@ class LinuxPackages(private val resourcesPath: Path, private val appName: String
                 resourcesPath.resolve("icon.png")
                         .toAbsolutePath().toString(),
 
-                "--linux-package-name", appName.toLowerCase().replace(" ", ""),
+                "--linux-package-name", appName.lowercase().replace(" ", ""),
                 "--linux-app-release", "1",
 
                 "--linux-menu-group", "Network",
