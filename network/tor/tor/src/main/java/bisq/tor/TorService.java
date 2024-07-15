@@ -19,7 +19,8 @@ package bisq.tor;
 
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
-import bisq.common.util.OsUtils;
+import bisq.common.platform.LinuxDistribution;
+import bisq.common.platform.OS;
 import bisq.network.tor.common.torrc.BaseTorrcGenerator;
 import bisq.network.tor.common.torrc.TorrcFileGenerator;
 import bisq.security.keys.TorKeyPair;
@@ -70,7 +71,7 @@ public class TorService implements Service {
             return CompletableFuture.completedFuture(true);
         }
 
-        if (!OsUtils.isWhonix()) {
+        if (!LinuxDistribution.isWhonix()) {
             installTorIfNotUpToDate();
 
             PasswordDigest hashedControlPassword = PasswordDigest.generateDigest();
@@ -170,7 +171,7 @@ public class TorService implements Service {
     }
 
     private Path getTorBinaryPath() {
-        if (OsUtils.isLinux()) {
+        if (OS.isLinux()) {
             Optional<Path> systemTorBinaryPath = NativeTorProcess.getSystemTorPath();
             if (systemTorBinaryPath.isPresent()) {
                 return systemTorBinaryPath.get();

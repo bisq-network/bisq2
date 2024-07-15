@@ -20,9 +20,9 @@ package bisq.desktop.webcam;
 import bisq.common.application.DevMode;
 import bisq.common.archive.ZipFileExtractor;
 import bisq.common.locale.LanguageRepository;
+import bisq.common.platform.OS;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.FileUtils;
-import bisq.common.util.OsUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -64,7 +64,7 @@ public class WebcamProcessLauncher {
 
                 String pathToJavaExe = System.getProperty("java.home") + "/bin/java";
                 ProcessBuilder processBuilder;
-                if (OsUtils.isMac()) {
+                if (OS.isMacOs()) {
                     String iconPath = webcamDir + "/webcam-app-icon.png";
                     File bisqIcon = new File(iconPath);
                     if (!bisqIcon.exists()) {

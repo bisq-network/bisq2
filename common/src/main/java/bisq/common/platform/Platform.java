@@ -62,6 +62,13 @@ public enum Platform {
                         return WIN_ARM_64;
                 }
         }
-        throw new IllegalStateException("Running on unsupported Platform: " + os.getOsName() + "/" + architecture.getArchitectureName());
+        throw new IllegalStateException("Running on unsupported Platform: " + os.getCanonicalName() + "/" + architecture.getCanonicalName());
+    }
+
+    public static String getDetails() {
+        return OS.getOS().getCanonicalName() + " / " +
+                Architecture.getArchitecture().getCanonicalName() + " / " +
+                Architecture.getBit() +
+                " v." + OS.getOsVersion();
     }
 }

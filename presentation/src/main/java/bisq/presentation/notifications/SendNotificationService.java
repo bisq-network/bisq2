@@ -19,8 +19,7 @@ package bisq.presentation.notifications;
 
 
 import bisq.common.application.Service;
-import bisq.common.util.OperatingSystem;
-import bisq.common.util.OsUtils;
+import bisq.common.platform.OS;
 import bisq.presentation.notifications.linux.LinuxNotificationSender;
 import bisq.presentation.notifications.osx.OsxNotificationSender;
 import bisq.presentation.notifications.other.AwtNotificationSender;
@@ -62,11 +61,9 @@ public class SendNotificationService implements Service {
 
     private NotificationSender getSender() {
         if (sender == null) {
-            if (OsUtils.getOperatingSystem() == OperatingSystem.LINUX &&
-                    LinuxNotificationSender.isSupported()) {
+            if (OS.isLinux() && LinuxNotificationSender.isSupported()) {
                 sender = new LinuxNotificationSender(baseDir, settingsService);
-            } else if (OsUtils.getOperatingSystem() == OperatingSystem.MAC &&
-                    OsxNotificationSender.isSupported()) {
+            } else if (OS.isMacOs() && OsxNotificationSender.isSupported()) {
                 sender = new OsxNotificationSender();
             } else if (SystemTray.isSupported()) {
                 sender = new AwtNotificationSender();

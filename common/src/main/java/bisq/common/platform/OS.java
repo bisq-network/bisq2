@@ -27,14 +27,14 @@ public enum OS {
     WINDOWS("win");
 
     @Getter
-    private final String osName;
+    private final String canonicalName;
 
-    OS(String osName) {
-        this.osName = osName;
+    OS(String canonicalName) {
+        this.canonicalName = canonicalName;
     }
 
     public static OS getOS() {
-        String osName = getSystemOsName();
+        String osName = getOsName();
         if (isLinux(osName)) {
             return OS.LINUX;
         } else if (isMacOs(osName)) {
@@ -45,19 +45,35 @@ public enum OS {
         throw new IllegalStateException("Running on unsupported OS: " + osName);
     }
 
+    public static boolean isLinux() {
+        return isLinux(getOsName());
+    }
+
     public static boolean isLinux(String osName) {
         return osName.contains("linux");
+    }
+
+    public static boolean isMacOs() {
+        return isMacOs(getOsName());
     }
 
     public static boolean isMacOs(String osName) {
         return osName.contains("mac") || osName.contains("darwin");
     }
 
+    public static boolean isWindows() {
+        return isWindows(getOsName());
+    }
+
     public static boolean isWindows(String osName) {
         return osName.contains("win");
     }
 
-    public static String getSystemOsName() {
+    public static String getOsName() {
         return System.getProperty("os.name").toLowerCase(Locale.US);
+    }
+
+    public static String getOsVersion() {
+        return System.getProperty("os.version");
     }
 }

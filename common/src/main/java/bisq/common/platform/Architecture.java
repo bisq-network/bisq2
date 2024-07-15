@@ -26,14 +26,14 @@ public enum Architecture {
     ARM_64("arm64");
 
     @Getter
-    private final String architectureName;
+    private final String canonicalName;
 
-    Architecture(String architectureName) {
-        this.architectureName = architectureName;
+    Architecture(String canonicalName) {
+        this.canonicalName = canonicalName;
     }
 
     public static Architecture getArchitecture() {
-        String architectureName = getSystemArchitectureName();
+        String architectureName = getOsArch();
         if (isX86_64(architectureName)) {
             return Architecture.X86_64;
         } else if (isArm64(architectureName)) {
@@ -42,19 +42,40 @@ public enum Architecture {
         throw new IllegalStateException("Running on unsupported Architecture: " + architectureName);
     }
 
+    public static boolean isX86_64() {
+        return isX86_64(getOsArch());
+    }
+
     public static boolean isX86_64(String architectureName) {
         return is64Bit(architectureName) && (architectureName.contains("x86") || architectureName.contains("amd"));
+    }
+
+    public static boolean isArm64() {
+        return isArm64(getOsArch());
     }
 
     public static boolean isArm64(String architectureName) {
         return is64Bit(architectureName) && (architectureName.contains("aarch") || architectureName.contains("arm"));
     }
 
-    public static boolean is64Bit(String architectureName) {
-        return architectureName.contains("64");
+
+    public static String getBit() {
+        return getBit(getOsArch());
     }
 
-    public static String getSystemArchitectureName() {
+    public static String getBit(String architectureName) {
+        return is64Bit(architectureName) ? "64" : "32";
+    }
+
+    public static boolean is64Bit() {
+        return is64Bit(getOsArch());
+    }
+
+    public static boolean is64Bit(String architectureName) {
+        return architectureName.contains("64") || architectureName.contains("armv8");
+    }
+
+    public static String getOsArch() {
         return System.getProperty("os.arch").toLowerCase(Locale.US);
     }
 }

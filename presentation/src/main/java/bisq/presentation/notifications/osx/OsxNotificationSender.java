@@ -16,7 +16,8 @@
  */
 package bisq.presentation.notifications.osx;
 
-import bisq.common.util.OsUtils;
+import bisq.common.platform.OS;
+import bisq.common.util.Version;
 import bisq.presentation.notifications.NotificationSender;
 import bisq.presentation.notifications.osx.foundation.Foundation;
 import bisq.presentation.notifications.osx.foundation.ID;
@@ -27,7 +28,7 @@ public class OsxNotificationSender implements NotificationSender {
     public static boolean isSupported() {
         try {
             // Requires at least Mountain Lion
-            if (OsUtils.getVersion().below("10.8.0")) {
+            if (new Version(OS.getOsVersion()).below("10.8.0")) {
                 return false;
             }
 
@@ -35,7 +36,7 @@ public class OsxNotificationSender implements NotificationSender {
             Foundation.init();
             return true;
         } catch (Throwable t) {
-            log.error("No native OSX support for notifications. OSX version: " + OsUtils.getVersion(), t);
+            log.error("No native OSX support for notifications. OSX version: " + OS.getOsVersion(), t);
             return false;
         }
     }

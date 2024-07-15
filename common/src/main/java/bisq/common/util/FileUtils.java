@@ -18,6 +18,7 @@
 package bisq.common.util;
 
 import bisq.common.observable.Observable;
+import bisq.common.platform.OS;
 import com.google.common.base.Charsets;
 import lombok.extern.slf4j.Slf4j;
 
@@ -305,7 +306,7 @@ public class FileUtils {
 
     public static boolean renameFile(File oldFile, File newFile) throws IOException {
         File target = newFile;
-        if (OsUtils.isWindows()) {
+        if (OS.isWindows()) {
             // Work around an issue on Windows whereby you can't rename over existing files.
             target = newFile.getCanonicalFile();
             if (target.exists() && !target.delete()) {
