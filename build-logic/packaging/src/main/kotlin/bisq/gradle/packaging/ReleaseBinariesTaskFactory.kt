@@ -17,6 +17,7 @@ class ReleaseBinariesTaskFactory(private val project: Project) {
     private val inputBinariesProperty: Provider<String> = project.providers
         .gradleProperty("bisq.release.binaries_path")
 
+    // TODO we need to handle the mac binaries for aarch64 and x86 to be deployed as separate dmg files
     fun registerCopyReleaseBinariesTask() {
         val releaseDir: Provider<Directory> = project.layout.buildDirectory.dir("packaging/release")
         project.tasks.register<Copy>("copyReleaseBinaries") {
