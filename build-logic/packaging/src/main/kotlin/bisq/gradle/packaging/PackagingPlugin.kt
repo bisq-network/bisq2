@@ -17,7 +17,6 @@ import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.findByType
 import org.gradle.kotlin.dsl.register
 import java.io.File
-import java.util.*
 import javax.inject.Inject
 
 class PackagingPlugin @Inject constructor(private val javaToolchainService: JavaToolchainService) : Plugin<Project> {
@@ -94,18 +93,9 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
     }
 
     private fun getHashFileForOs(project: Project, extension: PackagingPluginExtension): Provider<RegularFile> {
-        val osName = when (getOS()) {
-            OS.LINUX -> "linux"
-            OS.MAC_OS -> {
-                val osArch = System.getProperty("os.arch").lowercase(Locale.US)
-                val macOsArchName = if (osArch.contains("aarch64")) "aarch64" else "x64"
-                "mac_$macOsArchName"
-            }
-            OS.WINDOWS -> "win"
-        }
-
+        val platformName = getPlatform().platformName
         return extension.version.flatMap { version ->
-            project.layout.buildDirectory.file("$OUTPUT_DIR_PATH/desktop-$version-all-$osName.jar.SHA-256")
+            project.layout.buildDirectory.file("$OUTPUT_DIR_PATH/Bisq-$version-$platformName-all-jars.sha256")
         }
     }
 
